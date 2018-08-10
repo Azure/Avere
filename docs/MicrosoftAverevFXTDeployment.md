@@ -1,4 +1,4 @@
-# Microsoft Avere vFXT deployment
+# Avere vFXT deployment
 
 This 30 minute deployment will create from scratch a storage account backed Avere vFXT cluster.  Additionally this creates the necessary infrastructure including a VNET, the backing storage account, and the vFXT Controller.  By the end of the demo you will have the resources shown in the following diagram:
 
