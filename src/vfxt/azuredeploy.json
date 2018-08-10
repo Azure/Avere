@@ -1,0 +1,225 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "uniquename": {
+        "type": "string",
+        "metadata": {
+          "description": "The unique name used for resource names in this template"
+        }
+      },
+      "vmSize": {
+        "type": "string",
+        "defaultValue": "Standard_D4_v3",
+        "metadata": {
+          "description": "Size of the controller VM."
+        }
+      },
+      "adminUsername": {
+        "type": "string",
+        "metadata": {
+          "description": "Admin username on the controller VM."
+        }
+      },
+      "sshKeyData": {
+        "type": "string",
+        "metadata": {
+          "description": "The public SSH key used for access to the VM."
+        }
+      },
+      "imageReference": {
+        "type": "object",
+        "defaultValue": {
+          "publisher": "microsoft-avere",
+          "offer": "vfxt",
+          "sku": "avere-vfx-controller",
+          "version": "latest"
+        },
+        "metadata": {
+          "description": "The image used for the avere fxt controller."
+        }
+      },
+      "plan": {
+        "type": "object",
+        "defaultValue": {
+          "name": "avere-vfx-controller",
+          "publisher": "microsoft-avere",
+          "product": "vfxt"
+        },
+        "metadata": {
+          "description": "The image used for the avere fxt controller."
+        }
+      },
+      "usePlan": {
+        "type": "bool",
+        "defaultValue": true,
+        "metadata": {
+          "description": "Specify whether to use the plan or not.  Useful if a custom Image is used"
+        }
+      }
+    },
+    "variables": {
+      "avereBackedStorageAccountName": "[parameters('uniquename')]",
+      "controllerDNSNamePrefix": "[parameters('uniquename')]",
+      "vmSize": "[parameters('vmSize')]",
+      "adminUsername": "[parameters('adminUsername')]",
+      "sshKeyData": "[parameters('sshKeyData')]",
+      "imageReference": "[parameters('imageReference')]",
+      "plan": "[parameters('plan')]",
+      "usePlan": "[parameters('usePlan')]",
+      "storageAccountType": "Standard_LRS",
+      "storageAccountKind": "StorageV2",
+      "nicName": "[concat('vmnic-',variables('avereBackedStorageAccountName'))]",
+      "addressPrefix": "172.16.0.0/16",
+      "subnetName": "[concat('subnet-',variables('avereBackedStorageAccountName'))]",
+      "subnetPrefix": "172.16.0.0/24",
+      "publicIPAddressName": "[concat('publicip-',variables('avereBackedStorageAccountName'))]",
+      "vmName": "[concat('vm-',variables('avereBackedStorageAccountName'))]",
+      "virtualNetworkName": "[concat('vnet-',variables('avereBackedStorageAccountName'))]",
+      "sshKeyPath": "[concat('/home/',variables('adminUsername'),'/.ssh/authorized_keys')]",
+      "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+      "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]"
+    },
+    "resources": [
+      {
+        "name": "[variables('avereBackedStorageAccountName')]",
+        "type": "Microsoft.Storage/storageAccounts",
+        "apiVersion": "2017-10-01",
+        "sku": {
+          "name": "[variables('storageAccountType')]"
+        },
+        "kind": "[variables('storageAccountKind')]",
+        "location": "[resourceGroup().location]"
+      },
+      {
+        "apiVersion": "2017-10-01",
+        "type": "Microsoft.Network/publicIPAddresses",
+        "name": "[variables('publicIPAddressName')]",
+        "location": "[resourceGroup().location]",
+        "properties": {
+          "publicIPAllocationMethod": "Dynamic",
+          "dnsSettings": {
+            "domainNameLabel": "[variables('controllerDNSNamePrefix')]"
+          }
+        }
+      },
+      {
+        "apiVersion": "2017-10-01",
+        "type": "Microsoft.Network/virtualNetworks",
+        "name": "[variables('virtualNetworkName')]",
+        "location": "[resourceGroup().location]",
+        "properties": {
+          "addressSpace": {
+            "addressPrefixes": [
+              "[variables('addressPrefix')]"
+            ]
+          },
+          "subnets": [
+            {
+              "name": "[variables('subnetName')]",
+              "properties": {
+                "addressPrefix": "[variables('subnetPrefix')]"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "apiVersion": "2017-10-01",
+        "type": "Microsoft.Network/networkInterfaces",
+        "name": "[variables('nicName')]",
+        "location": "[resourceGroup().location]",
+        "dependsOn": [
+          "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
+          "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+        ],
+        "properties": {
+          "ipConfigurations": [
+            {
+              "name": "ipconfig",
+              "properties": {
+                "privateIPAllocationMethod": "Dynamic",
+                "publicIPAddress": {
+                  "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+                },
+                "subnet": {
+                  "id": "[variables('subnetRef')]"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "apiVersion": "2017-12-01",
+        "type": "Microsoft.Compute/virtualMachines",
+        "name": "[variables('vmName')]",
+        "location": "[resourceGroup().location]",
+        "plan": "[if(variables('usePlan'), variables('plan'), json('null'))]",
+        "dependsOn": [
+          "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+        ],
+        "properties": {
+          "hardwareProfile": {
+            "vmSize": "[variables('vmSize')]"
+          },
+          "osProfile": {
+            "computername": "[variables('vmName')]",
+            "adminUsername": "[variables('adminUsername')]",
+            "linuxConfiguration": {
+              "disablePasswordAuthentication": "true",
+              "ssh": {
+                "publicKeys": [
+                  {
+                    "path": "[variables('sshKeyPath')]",
+                    "keyData": "[variables('sshKeyData')]"
+                  }
+                ]
+              }
+            }
+          },
+          "storageProfile": {
+            "imageReference": "[variables('imageReference')]"
+          },
+          "networkProfile": {
+            "networkInterfaces": [
+              {
+                "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "outputs": {
+      "RESOURCE_GROUP": {
+        "type": "string",
+        "value": "[resourceGroup().name]"
+      },
+      "LOCATION": {
+        "type": "string",
+        "value": "[resourceGroup().location]"
+      },
+      "NETWORK": {
+        "type": "string",
+        "value": "[variables('virtualNetworkName')]"
+      },
+      "SUBNET": {
+        "type": "string",
+        "value": "[variables('subnetName')]"
+      },
+      "SUBNETREF": {
+        "type": "string",
+        "value": "[concat(resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName')),'/subnets/',variables('subnetName'))]"
+      },
+      "STORAGE_ACCOUNT": {
+        "type": "string",
+        "value": "[variables('avereBackedStorageAccountName')]"
+      },
+      "sshString": {
+        "type": "string",
+        "value": "[concat('ssh ', variables('adminUsername'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).dnsSettings.fqdn)]"
+      }
+    }
+  }
+  
