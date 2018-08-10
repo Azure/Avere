@@ -1,4 +1,4 @@
-# Microsoft Avere vFXT deployment
+# Avere vFXT deployment
 
 This 30 minute deployment will create from scratch a storage account backed Avere vFXT cluster.  Additionally this creates the necessary infrastructure including a VNET, the backing storage account, and the vFXT Controller.  By the end of the demo you will have the resources shown in the following diagram:
 
@@ -31,9 +31,6 @@ To install from the portal, launch the deployment by clicking the "Deploy to Azu
 
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Favereimageswestus.blob.core.windows.net%2Fgithubcontent%2Fsrc%2Fvfxt%2Fazuredeploy.json" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
-</a>
-<a href="http://armviz.io/#/?load=https%3A%2F%2Favereimageswestus.blob.core.windows.net%2Fgithubcontent%2Fsrc%2Fvfxt%2Fazuredeploy.json" target="_blank">
-<img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.png"/>
 </a>
 
 Save the output values of the deployment for the vFXT deployment, and capture `location`, `sshString`, and `subnetref` to your tracking table described at the beginning of this document.
@@ -168,4 +165,4 @@ ADMIN_PASSWORD=#UPDATE PASSWORD
 
 6. The averefxt cluster will be created in about 15 minutes.
 
-Now that you have completed the installation, visit [Using the vFXT](..docs/UseingThevFXT.md) to learn how to use the Avere vFXT cluster.
+Now that you have completed the installation, visit [Using the vFXT](UsingThevFXT.md) to learn how to use the Avere vFXT cluster.

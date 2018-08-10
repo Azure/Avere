@@ -1,0 +1,39 @@
+{
+  "jobName": {
+    "value": "jobskel1"
+  },
+  "poolId": {
+    "value": "pool1"
+  },
+  "adminUsername": {
+    "value": "azureuser"
+  },
+  "frameStart": {
+    "value": 1
+  },
+  "frameEnd": {
+    "value": 2
+  },
+  "frameStep": {
+    "value": 1
+  },
+  "nfsMountPath":
+  {
+    "value": "/nfs/default"
+  },
+  "mayaProjectPath": {
+    "value": "demoscene"
+  },
+  "sceneFile": {
+    "value": "demoscene/kongSkeleton_walk.ma"
+  },  
+  "imagesOutputBasePath": {
+    "value": "images"
+  },
+  "renderScriptPath": {
+    "value": "src/renderSkeleton.sh"
+  },
+  "additionalFlags": {
+    "value": " -fnc name.#.ext "
+  }
+}

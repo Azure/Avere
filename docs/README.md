@@ -1,19 +1,19 @@
-# Microsoft Avere vFXT Documents
+# Avere vFXT Documents
 
 <img src="images/avere_vfxt.png">
 
-The Microsoft Avere vFXT is an enterprise-scale clustered file system built for the cloud.
+The Avere vFXT is an enterprise-scale clustered file system built for the cloud.
 
 # Documentation
   * (Ron) Deployment
   * (Ron) Add core filer
-  * (Bernie) Ingest data
+  * [Getting data onto the vFXT cluster](GettingDataOntovFXT.md) - provides various strategies for how to parallelize ingress to the vFXT.
   * (Ron) Management – start / stop
   * (Bernie) Tune / Optimize
   * Troubleshoot – common problems
 
 # Quick Start Guides
-  * [Microsoft Avere vFXT deployment](MicrosoftAverevFXTDeployment.md) - A quickstart quide to deploy the vFXT into an empty environment.
+  * [Avere vFXT deployment](MicrosoftAverevFXTDeployment.md) - A quickstart quide to deploy the vFXT into an empty environment.
   * [Using the vFXT](UsingThevFXT.md) - This introduces you to the parallelization required for the vFXT.
   * [VDBench - measuring vFXT Performance](VDBench.md) - Deploys VDBench on an N-Node cluster to demonstrate the storage performance characteristics of the Avere vFXT cluster.
   * [Windows 10 Avere vFXT Mounted Workstation](Windows10AverevFXTMountedWorkstation.md) - Creates a Windows Workstation that automatically mounts the vFXT, and installs various Azure Tools.
