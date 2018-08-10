@@ -1,12 +1,12 @@
-# Microsoft Avere vFXT
+# Avere vFXT
 
 <img src="docs/images/avere_vfxt.png">
 
-The Microsoft Avere vFXT is an enterprise-scale clustered file system built for the cloud.
+The Avere vFXT is an enterprise-scale clustered file system built for the cloud.
 
 # Cloud Bursting
 
-Microsoft Avere Virtual FXT (vFXT) Edge filers act as network-attached storage (NAS) on Azure compute cloud, freeing your data to remain on-premises, while giving you complete functionality. The Avere vFXT works to:
+Avere Virtual FXT (vFXT) Edge filers act as network-attached storage (NAS) on Azure compute cloud, freeing your data to remain on-premises, while giving you complete functionality. The Avere vFXT works to:
 
   * Connect your on-premises storage to Azure's services
   * Support for NFS, SMB and multi-protocol workloads
@@ -46,7 +46,7 @@ Avere Cloud NAS with the vFXT for Azure gives you:
   * Troubleshoot – common problems
 
 # Quick Start Guides
-  * [Microsoft Avere vFXT deployment](docs/MicrosoftAverevFXTDeployment.md) - A quickstart quide to deploy the vFXT into an empty environment.
+  * [Avere vFXT deployment](docs/MicrosoftAverevFXTDeployment.md) - A quickstart quide to deploy the vFXT into an empty environment.
   * [Using the vFXT](docs/UsingThevFXT.md) - This introduces you to the parallelization required for the vFXT.
   * [VDBench - measuring vFXT Performance](docs/VDBench.md) - Deploys VDBench on an N-Node cluster to demonstrate the storage performance characteristics of the Avere vFXT cluster.
   * [Windows 10 Avere vFXT Mounted Workstation](docs/Windows10AverevFXTMountedWorkstation.md) - Creates a Windows Workstation that automatically mounts the vFXT, and installs various Azure Tools.
