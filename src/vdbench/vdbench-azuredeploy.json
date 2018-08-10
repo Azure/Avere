@@ -1,0 +1,329 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "uniqueName": {
+      "type": "string",
+      "metadata": {
+        "description": "The unique name used for the VM and the backing storage account"
+      }
+    },
+    "vmName": {
+      "type": "string",
+      "defaultValue": "avereclient",
+      "metadata": {
+        "description": "The name prefix used for the VM"
+      }
+    },
+    "averevFXTCommaSeparatedIPs": {
+      "type": "string",
+      "metadata": {
+        "description": "The vFXT node ips of the cluster."
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_D2s_v3",
+      "metadata": {
+        "description": "Size of the controller VM."
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "defaultValue": "azureuser",
+      "metadata": {
+        "description": "Admin username on the controller VM."
+      }
+    },
+    "sshKeyData": {
+      "type": "string",
+      "metadata": {
+        "description": "The public SSH key used for access to the VM."
+      }
+    },
+    "subnetRef": {
+      "type": "string",
+      "metadata": {
+        "description": "The reference to the subnet of the Avere vFXT cluster."
+      }
+    },
+    "vmCount": {
+      "type": "int",
+      "metadata": {
+        "description": "The number of nodes to deploy"
+      }
+    }
+  },
+  "variables": {
+    "masterEndpointDNSNamePrefix": "[parameters('uniqueName')]",
+    "vmName": "[parameters('vmName')]",
+    "vmSize": "[parameters('vmSize')]",
+    "adminUsername": "[parameters('adminUsername')]",
+    "sshKeyData": "[parameters('sshKeyData')]",    
+    "subnetRef": "[parameters('subnetRef')]",
+    "vmCount": "[parameters('vmCount')]",
+    "averevFXTCommaSeparatedIPs": "[parameters('averevFXTCommaSeparatedIPs')]",
+    "availabilitySet": "[concat(parameters('uniqueName'), '-multivmas')]",
+    "nsgname": "[concat(parameters('uniqueName'), '-nsgname')]",
+    "nsgid": "[resourceId('Microsoft.Network/networkSecurityGroups',variables('nsgname'))]",
+    "lbname": "[concat(parameters('uniqueName'), '-lb')]",
+    "lbid": "[resourceId('Microsoft.Network/loadBalancers',variables('lbname'))]",
+    "lbIPConfigName": "[concat(parameters('uniqueName'), '-lbIPConfigName')]",
+    "lbIPConfigNameID": "[concat(variables('lbid'),'/frontendIPConfigurations/', variables('lbIPConfigName'))]",
+    "lbBackendPoolName": "[concat(parameters('uniqueName'), '-lbBackendPoolName')]",
+    "publicIPAddressName": "[concat(parameters('uniqueName'), '-publicip')]",
+    "sshKeyPath": "[concat('/home/',variables('adminUsername'),'/.ssh/authorized_keys')]",
+    "environmentVariables": "[concat(' NODE_PREFIX=', variables('vmName'), ' NODE_COUNT=',variables('vmCount'), ' LINUX_USER=',variables('adminUsername'), ' AVEREVFXT_NODE_IPS=', variables('averevFXTCommaSeparatedIPs'))]",
+    "imageReference": {
+      "publisher": "Canonical",
+      "offer": "UbuntuServer",
+      "sku": "16.04-LTS",
+      "version": "latest"
+    }
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-12-01",
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[variables('availabilitySet')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "platformFaultDomainCount": 3,
+        "platformUpdateDomainCount": 3
+      },
+      "sku": {
+        "name": "Aligned"
+      }
+    },
+    {
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('publicIPAddressName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[variables('masterEndpointDNSNamePrefix')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('nsgname')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "ssh",
+            "properties": {
+              "description": "Allow SSH",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 200,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2017-10-01",
+      "name": "[variables('lbname')]",
+      "type": "Microsoft.Network/loadBalancers",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
+      ],
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "[variables('lbIPConfigName')]",
+            "properties": {
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+              }
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "[variables('lbBackendPoolName')]"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/loadBalancers/inboundNatRules",
+      "name": "[concat(variables('lbname'), '/', 'SSH-', variables('vmName'), '0')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('lbid')]"
+      ],
+      "properties": {
+        "frontendIPConfiguration": {
+          "id": "[variables('lbIPConfigNameID')]"
+        },
+        "protocol": "tcp",
+        "frontendPort": 22,
+        "backendPort": 22,
+        "enableFloatingIP": false
+      }
+    },
+    {
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/loadBalancers/inboundNatRules",
+      "name": "[concat(variables('lbname'), '/', 'SSH-', variables('vmName'), copyIndex(1))]",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "lbLoopNode",
+        "count": "[sub(variables('vmCount'),1)]"
+      },
+      "dependsOn": [
+        "[variables('lbid')]"
+      ],
+      "properties": {
+        "frontendIPConfiguration": {
+          "id": "[variables('lbIPConfigNameID')]"
+        },
+        "protocol": "tcp",
+        "frontendPort": "[copyIndex(2202)]",
+        "backendPort": 22,
+        "enableFloatingIP": false
+      }
+    },
+    {
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('vmName'), 'nic-', copyIndex())]",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "nicLoopNode",
+        "count": "[variables('vmCount')]"
+      },
+      "dependsOn": [
+        "[concat(variables('lbid'),'/inboundNatRules/SSH-',variables('vmName'),copyIndex())]",
+        "[variables('nsgid')]"
+      ],
+      "properties": {
+        "networkSecurityGroup": {
+          "id": "[variables('nsgid')]"
+        },
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              },
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[concat(variables('lbid'), '/backendAddressPools/', variables('lbBackendPoolName'))]"
+                }
+              ],
+              "loadBalancerInboundNatRules": [
+                {
+                  "id": "[concat(variables('lbid'),'/inboundNatRules/SSH-',variables('vmName'),copyIndex())]"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2017-12-01",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(variables('vmName'), copyIndex())]",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "vmLoopNode",
+        "count": "[variables('vmCount')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('vmName'), 'nic-', copyIndex())]",
+        "[concat('Microsoft.Compute/availabilitySets/',variables('availabilitySet'))]"
+      ],
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets',variables('availabilitySet'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[variables('vmSize')]"
+        },
+        "osProfile": {
+          "computername": "[concat(variables('vmName'), copyIndex())]",
+          "adminUsername": "[variables('adminUsername')]",
+          "customData": "[base64('#cloud-config\n\nwrite_files:\n -  encoding: gzip\n    content: !!binary |\n        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\n    path: /opt/avere/installvdbench.sh\n    permissions: \"0744\"\n\n')]",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": "true",
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[variables('sshKeyPath')]",
+                  "keyData": "[variables('sshKeyData')]"
+                }
+              ]
+            }
+          }
+        },
+        "storageProfile": {
+          "imageReference": "[variables('imageReference')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('vmName'), 'nic-', copyIndex()))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('vmName'), copyIndex(), '/configureagent')]",
+      "apiVersion": "2017-12-01",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "vmLoopNode",
+        "count": "[variables('vmCount')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'), copyIndex())]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.0",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "commandToExecute": "[concat(variables('environmentVariables'), ' /bin/bash -c \"/bin/bash /opt/avere/installvdbench.sh >> /opt/avere/vdbench-install.log 2>&1\"')]"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "RESOURCE_GROUP": {
+      "type": "string",
+      "value": "[resourceGroup().name]"
+    },
+    "LOCATION": {
+      "type": "string",
+      "value": "[resourceGroup().location]"
+    },
+    "clientAddress": {
+      "type": "string",
+      "value": "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).dnsSettings.fqdn]"
+    },
+    "sshString": {
+      "type": "string",
+      "value": "[concat('ssh ', variables('adminUsername'), '@', reference(concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).dnsSettings.fqdn)]"
+    }
+  }
+}

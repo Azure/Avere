@@ -1,0 +1,178 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "uniqueName": {
+      "type": "string",
+      "metadata": {
+        "description": "The unique name used for the VM and the backing storage account"
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_D5_v2",
+      "metadata": {
+        "description": "Size of the controller VM."
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Admin username on the controller VM."
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Password for the Virtual Machine."
+      }
+    },
+    "subnetRef": {
+      "type": "string",
+      "metadata": {
+        "description": "The reference to the subnet of the Avere vFXT cluster."
+      }
+    },
+    "avereManagementIP": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the IP address of the Avere vFXT Web UI management endpoint."
+      }
+    },
+    "avereMountIP": {
+      "type": "string",
+      "metadata": {
+        "description": "This is one of the NFS endpoints provided by the Avere vFXT cluster."
+      }
+    },
+    "avereMountPath": {
+      "type": "string",
+      "metadata": {
+        "description": "This is one of the shares provided by the Avere vFXT cluster."
+      }
+    }
+  },
+  "variables": {
+    "masterEndpointDNSNamePrefix": "[parameters('uniqueName')]",
+    "vmSize": "[parameters('vmSize')]",
+    "adminUsername": "[parameters('adminUsername')]",
+    "adminPassword": "[parameters('adminPassword')]",    
+    "subnetRef": "[parameters('subnetRef')]",
+    "avereManagementIP": "[parameters('avereManagementIP')]",
+    "avereMountIP": "[parameters('avereMountIP')]",
+    "avereMountPath": "[parameters('avereMountPath')]",
+    "nicName": "vmnic",
+    "publicIPAddressName": "publicip",
+    "vmName": "avereclient",
+    "imageReference": {
+      "publisher": "MicrosoftVisualStudio",
+      "offer": "Windows",
+      "sku": "Windows-10-N-x64",
+      "version": "latest"
+    },
+    "singleQuote": "'",
+    "windowsCustomScriptArguments": "[concat('$arguments = ',variables('singleQuote'),'-UserName ',variables('adminUsername'),' -AvereManagementIP ',variables('avereManagementIP'),' -AvereMountIP ',variables('avereMountIP'),' -AvereMountPath ',variables('avereMountPath'),variables('singleQuote'),' ; ')]",
+    "windowsCustomScriptSuffix": " $inputFile = '%SYSTEMDRIVE%\\AzureData\\CustomData.bin' ; $outputFile = '%SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.ps1' ; $inputStream = New-Object System.IO.FileStream $inputFile, ([IO.FileMode]::Open), ([IO.FileAccess]::Read), ([IO.FileShare]::Read) ; $sr = New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($inputStream, [System.IO.Compression.CompressionMode]::Decompress)) ; $sr.ReadToEnd() | Out-File($outputFile) ; Invoke-Expression('{0} {1}' -f $outputFile, $arguments) ; ",
+    "windowsCustomScript": "[concat('powershell.exe -ExecutionPolicy Unrestricted -command \"', variables('windowsCustomScriptArguments'), variables('windowsCustomScriptSuffix'), '\"')]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('publicIPAddressName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[variables('masterEndpointDNSNamePrefix')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('nicName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+              },
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2017-12-01",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('vmName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('vmSize')]"
+        },
+        "osProfile": {
+          "computername": "[variables('vmName')]",
+          "adminUsername": "[variables('adminUsername')]",
+          "adminPassword": "[variables('adminPassword')]",
+          "customData": "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"
+        },
+        "storageProfile": {
+          "imageReference": "[variables('imageReference')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('vmName'),'/installcustomscript')]",
+      "apiVersion": "2017-12-01",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Compute",
+        "type": "CustomScriptExtension",
+        "typeHandlerVersion": "1.9",
+        "settings": {
+          "commandToExecute": "[concat(variables('windowsCustomScript'),' > %SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.log 2>&1')]"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "RESOURCE_GROUP": {
+      "type": "string",
+      "value": "[resourceGroup().name]"
+    },
+    "LOCATION": {
+      "type": "string",
+      "value": "[resourceGroup().location]"
+    },
+    "clientAddress": {
+      "type": "string",
+      "value": "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).dnsSettings.fqdn]"
+    }
+  }
+}

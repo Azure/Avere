@@ -1,0 +1,30 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "uniqueName": {
+      "value": "avere8win11eastus"
+    },
+    "vmSize": {
+      "value": "Standard_D8_v3"
+    },
+    "adminUsername": {
+      "value": "azureuser"
+    },
+    "adminPassword": {
+      "value": "AvereNumber1$"
+    },
+    "subnetRef": {
+      "value": "/subscriptions/b52fce95-de5f-4b37-afca-db203a5d0b6a/resourceGroups/avereeastus/providers/Microsoft.Network/virtualNetworks/vnet-avereeastus/subnets/subnet-avereeastus"
+    },
+    "avereManagementIP": {
+      "value": "172.16.0.5"
+    },
+    "avereMountIP": {
+      "value": "172.16.0.12"
+    },
+    "avereMountPath": {
+      "value": "msazure"
+    }
+  }
+}
