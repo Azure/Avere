@@ -1,0 +1,174 @@
+{
+    "templateMetadata": {
+      "description": "Application template for working with Maya and Arnold on CentOS."
+    },
+    "parameters": {
+      "adminUsername": {
+        "type": "string",
+        "metadata": {
+          "description": "Admin username on the batch VMs."
+        }
+      },
+      "adminPassword": {
+        "type": "string",
+        "metadata": {
+          "description": "Admin password on the batch VMs."
+        }
+      },
+      "poolUniqueName": {
+        "type": "string",
+        "metadata": {
+          "description": "The unique name used for the pool"
+        }
+      },
+      "targetBatchVMSize": {
+        "type": "string",
+        "metadata": {
+          "description": "The size of the virtual machines that run the application"
+        },
+        "defaultValue": "Standard_D2_v3"
+      },
+      "targetDedicatedNodeCount": {
+        "type": "int",
+        "defaultValue": 0,
+        "metadata": {
+          "description": "The number of dedicated virtual machines in the Azure Batch pool where the job will run"
+        }
+      },
+      "targetLowPriorityNodeCount": {
+        "type": "int",
+        "defaultValue": 0,
+        "metadata": {
+          "description": "The number of low priority virtual machines in the Azure Batch pool where the job will run"
+        }
+      },
+      "maxTasksPerNode": {
+        "type": "int",
+        "defaultValue": 1,
+        "metadata": {
+          "description": "The number of tasks per node"
+        }
+      },
+      "subnetRef": {
+        "type": "string",
+        "metadata": {
+          "description": "The reference to the subnet of the Avere vFXT cluster."
+        }
+      },
+      "averevFXTCommaSeparatedIPs": {
+        "type": "string",
+        "metadata": {
+          "description": "The list of IP address for all the nodes in the Avere vFXT cluster."
+        }
+      },
+      "averevFXTPath": {
+        "type": "string",
+        "metadata": {
+          "description": "The vFXT mount path of the Avere vFXT cluster."
+        }
+      },
+      "averevFXTBootstrapIP": {
+        "type": "string",
+        "metadata": {
+          "description": "A single ip from averevFXTCommaSeparatedIPs used for bootstrap."
+        }
+      },
+      "centOSBootstrapScriptPath": {
+        "type": "string",
+        "metadata": {
+          "description": "The path of the centos bootstrap script."
+        }
+      }
+    },
+    "variables": {
+      "adminUsername": "[parameters('adminUsername')]",
+      "adminPassword": "[parameters('adminPassword')]",
+      "poolUniqueName": "[parameters('poolUniqueName')]",
+      "targetBatchVMSize": "[parameters('targetBatchVMSize')]",
+      "targetDedicatedNodeCount": "[parameters('targetDedicatedNodeCount')]",
+      "targetLowPriorityNodeCount": "[parameters('targetLowPriorityNodeCount')]",
+      "maxTasksPerNode": "[parameters('maxTasksPerNode')]",
+      "subnetRef": "[parameters('subnetRef')]",
+      "averevFXTCommaSeparatedIPs": "[parameters('averevFXTCommaSeparatedIPs')]",
+      "averevFXTPath": "[parameters('averevFXTPath')]",
+      "averevFXTBootstrapIP": "[parameters('averevFXTBootstrapIP')]",
+      "centOSBootstrapScriptPath": "[parameters('centOSBootstrapScriptPath')]",
+      "baseDirectory": "/nfs",
+      "bootstrapPath": "/b"
+    },
+    "pool": {
+      "id": "[variables('poolUniqueName')]",
+      "displayName": "[variables('poolUniqueName')]",
+      "vmSize": "[variables('targetBatchVMSize')]",
+      "virtualMachineConfiguration": {
+        "nodeAgentSKUId": "batch.node.centos 7",
+        "imageReference": {
+          "publisher": "batch",
+          "offer": "rendering-centos73",
+          "sku": "rendering"
+        }
+      },
+      "networkConfiguration": {
+        "subnetId": "[variables('subnetRef')]"
+      },
+      "resizeTimeout": "PT15M",
+      "targetDedicatedNodes": "[variables('targetDedicatedNodeCount')]",
+      "targetLowPriorityNodes": "[variables('targetLowPriorityNodeCount')]",
+      "maxTasksPerNode": "[variables('maxTasksPerNode')]",
+      "taskSchedulingPolicy": {
+        "nodeFillType": "pack"
+      },
+      "enableAutoScale": false,
+      "enableInterNodeCommunication": false,
+      "startTask": {
+        "commandLine": "sudo yum -y install nfs-utils && sudo mkdir -p $BOOTSTRAP_PATH && sudo mount -o 'proto=tcp,vers=3,mountport=4046,port=2049,nolock,mountproto=udp,mountaddr=${BOOTSTRAP_NFS_IP},addr=${BOOTSTRAP_NFS_IP}' ${BOOTSTRAP_NFS_IP}:/${BOOTSTRAP_NFS_PATH} $BOOTSTRAP_PATH && sudo -E /bin/bash ${BOOTSTRAP_PATH}${BOOTSTRAP_SCRIPT} 2>&1 | sudo tee -a /var/log/bootstrap.log && sudo umount $BOOTSTRAP_PATH && sudo rmdir $BOOTSTRAP_PATH",
+        "maxTaskRetryCount": 10,
+        "userIdentity": {
+          "userName": "azureuser"
+        },
+        "waitForSuccess": true,
+        "resourceFiles": [],
+        "environmentSettings": [
+          {
+            "name": "NFS_IP_CSV",
+            "value": "[variables('averevFXTCommaSeparatedIPs')]"
+          },
+          {
+            "name": "NFS_PATH",
+            "value": "[variables('averevFXTPath')]"
+          },
+          {
+            "name": "BASE_DIR",
+            "value": "[variables('baseDirectory')]"
+          },
+          {
+            "name": "BOOTSTRAP_PATH",
+            "value": "[variables('bootstrapPath')]"
+          },
+          {
+            "name": "BOOTSTRAP_SCRIPT",
+            "value": "[variables('centOSBootstrapScriptPath')]"
+          },
+          {
+            "name": "BOOTSTRAP_NFS_IP",
+            "value": "[variables('averevFXTBootstrapIP')]"
+          },
+          {
+            "name": "BOOTSTRAP_NFS_PATH",
+            "value": "[variables('averevFXTPath')]"
+          }
+        ]
+      },
+      "certificateReferences": [],
+      "userAccounts": [
+        {
+          "name": "[variables('adminUsername')]",
+          "password": "[variables('adminPassword')]",
+          "elevationLevel": "admin"
+        }
+      ],
+      "applicationLicenses": [
+        "maya"
+      ]
+    }
+  }

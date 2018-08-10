@@ -40,7 +40,7 @@ Avere Cloud NAS with the vFXT for Azure gives you:
 # Documentation
   * (Ron) Deployment
   * (Ron) Add core filer
-  * (Bernie) Ingest data
+  * [Getting data onto the vFXT cluster](docs/GettingDataOntovFXT.md) - provides various strategies for how to parallelize ingress to the vFXT.
   * (Ron) Management – start / stop
   * (Bernie) Tune / Optimize
   * Troubleshoot – common problems
@@ -53,14 +53,13 @@ Avere Cloud NAS with the vFXT for Azure gives you:
   * [Maya + Azure Batch + Avere vFXT Demo](docs/MayaAzureBatchAverevFXTDemo.md) - Demonstrates how to use the Autodesk Maya Renderer with Azure Batch and the Avere vFXT to generate a rendered movie.
 
 # Resources
-
   * [vFXT Guides](http://library.averesystems.com/#vfxt) 
   * [fxt_cluster](http://library.averesystems.com/#fxt_cluster) - this guide is designed for clusters of physical hardware nodes, but some information in the document is relevant for vFXT clusters as well. In particular, these sections can be useful for vFXT cluster administrators: 
-    * [Gui login](http://library.averesystems.com/create_cluster/4_8/html/initial_conﬁg.html#gui-login) - explains how to connect to the Avere Control Panel and log in. However, note that you must use a VPN or SSH tunnel to access the cluster nodes inside the|aws|VPC. Read node_ssl_tunnel for details.
-    * [Config vServer](http://library.averesystems.com/create_cluster/4_8/html/conﬁg_vserver.html#conﬁg-vserver) - has information about creating a client-facing namespace
-    * [Add Core Filer](http://library.averesystems.com/create_cluster/4_8/html/conﬁg_core_ﬁler.html#add-core-ﬁler) - documents how to add storage
-    * [Config Support](http://library.averesystems.com/create_cluster/4_8/html/conﬁg_support.html#conﬁg-support) - explains how to customize support settings and remote monitoring. 
-    * [Cluster Configuration Guide](http://library.averesystems.com/#operations) - is a complete reference of settings and options for an Avere cluster. A vFXT cluster uses a subset of these options, but many of the same conﬁguration pages apply. 
+    * [Gui login](http://library.averesystems.com/create_cluster/4_8/html/initial_config.html#gui-login) - explains how to connect to the Avere Control Panel and log in. However, note that you must use a VPN or SSH tunnel to access the cluster nodes inside the|aws|VPC. Read node_ssl_tunnel for details.
+    * [Config vServer](http://library.averesystems.com/create_cluster/4_8/html/config_vserver.html#config-vserver) - has information about creating a client-facing namespace
+    * [Add Core Filer](http://library.averesystems.com/create_cluster/4_8/html/config_core_filer.html#add-core-filer) - documents how to add storage
+    * [Config Support](http://library.averesystems.com/create_cluster/4_8/html/config_support.html#config-support) - explains how to customize support settings and remote monitoring. 
+    * [Cluster Configuration Guide](http://library.averesystems.com/#operations) - is a complete reference of settings and options for an Avere cluster. A vFXT cluster uses a subset of these options, but many of the same configuration pages apply. 
     * [Dashboard guide](http://library.averesystems.com/#operations) - explains how to use the cluster monitoring features of the Avere Control Panel.
 
 # Contributing

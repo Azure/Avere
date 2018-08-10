@@ -1,0 +1,38 @@
+{
+  "adminUsername": {
+    "value": "azureuser"
+  },
+  "adminPassword": {
+    "value": "AvereNumber1$"
+  },  
+  "poolUniqueName": {
+    "value": "pool2"
+  },
+  "targetBatchVMSize": {
+    "value": "Standard_D2_v3"
+  },
+  "targetDedicatedNodeCount": {
+    "value": 0
+  },
+  "targetLowPriorityNodeCount": {
+    "value": 250
+  },
+  "maxTasksPerNode": {
+    "value": 2
+  },
+  "subnetRef": {
+    "value": "/subscriptions/b52fce95-de5f-4b37-afca-db203a5d0b6a/resourceGroups/avereeastus/providers/Microsoft.Network/virtualNetworks/vnet-avereeastus/subnets/subnet-avereeastus"
+  },
+  "averevFXTCommaSeparatedIPs": {
+    "value": "172.16.0.12,172.16.0.13,172.16.0.14"
+  },
+  "averevFXTPath": {
+    "value": "msazure"
+  },
+  "averevFXTBootstrapIP": {
+    "value": "172.16.0.12"
+  },
+  "centOSBootstrapScriptPath": {
+    "value": "/bootstrap/centosbootstrap.sh"
+  }
+}

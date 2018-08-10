@@ -1,0 +1,158 @@
+{
+    "templateMetadata": {
+        "description": "Application template for working with Maya and Arnold on CentOS."
+    },
+    "parameters": {
+        "jobName": {
+            "type": "string",
+            "metadata": {
+                "description": "The unique name of the job."
+            }
+        },
+        "poolId": {
+            "type": "string",
+            "metadata": {
+                "description": "The ID of the pool on which to run the job."
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+              "description": "Admin username on the batch VMs."
+            }
+          },
+        "frameStart": {
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+                "description": "Index of the first frame to render"
+            }
+        },
+        "frameEnd": {
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+                "description": "Index of the last frame to render"
+            }
+        },
+        "frameStep": {
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+                "description": "Incremental step in frame sequeunce"
+            }
+        },
+        "maxTasksPerNode": {
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+              "description": "The number of tasks per node"
+            }
+        },
+        "nfsMountPath": {
+            "type": "string",
+            "metadata": {
+                "description": "The Avere vFXT mounted path"
+            }
+        },
+        "mayaProjectPath": {
+            "type": "string",
+            "metadata": {
+                "description": "The maya project path, on the nfs share, used to load the scene file."
+            }
+        },
+        "sceneFile": {
+            "type": "string",
+            "metadata": {
+                "description": "The path to the Maya scene file on the nfs share"
+            }
+        },
+        "imagesOutputBasePath": {
+            "type": "string",
+            "metadata": {
+                "description": "The rendered frames output base directory on the nfs share"
+            }
+        },
+        "renderScriptPath": {
+            "type": "string",
+            "metadata": {
+                "description": "The render script location on the nfs share."
+            }
+        },
+        "additionalFlags": {
+            "type": "string",
+            "defaultValue": " ",
+            "metadata": {
+                "description": "Any additional flags to pass to the renderer. Example: -of png"
+            }
+        }
+    },
+    "job": {
+        "type": "Microsoft.Batch/batchAccounts/jobs",
+        "properties": {
+            "id": "[parameters('jobName')]",
+            "poolInfo": {
+                "poolId": "[parameters('poolId')]"
+            },
+            "taskFactory": {
+                "type": "parametricSweep",
+                "parameterSets": [
+                    {
+                        "start": "[parameters('frameStart')]",
+                        "end": "[parameters('frameEnd')]",
+                        "step": "[parameters('frameStep')]"
+                    }
+                ],
+                "repeatTask": {
+                    "displayName": "Frame {0}",
+                    "userIdentity": {
+                        "userName": "[parameters('adminUsername')]"
+                    },
+                    "commandLine": "/bin/bash -c '/bin/bash [parameters('nfsMountPath')]/[parameters('renderScriptPath')] ; err=$? ; exit $err'",
+                    "constraints": {
+                        "maxTaskRetryCount":5
+                    },
+                    "environmentSettings": [
+                        {
+                            "name": "FLEXLM_TIMEOUT",
+                            "value": "5000000"
+                        },
+                        {
+                            "name": "FRAME_START",
+                            "value": "{0}"
+                        },
+                        {
+                            "name": "FRAME_END",
+                            "value": "{0}"
+                        },
+                        {
+                            "name": "NFS_MOUNT_POINT",
+                            "value": "[parameters('nfsMountPath')]"
+                        },
+                        {
+                            "name": "MAYA_PROJECT_PATH",
+                            "value": "[parameters('mayaProjectPath')]"
+                        },
+                        {
+                            "name": "SCENE_FILE",
+                            "value": "[parameters('sceneFile')]"
+                        },
+                        {
+                            "name": "IMAGES_OUTPUT_BASE_PATH",
+                            "value": "[parameters('imagesOutputBasePath')]"
+                        },
+                        {
+                            "name": "ADDITIONAL_FLAGS",
+                            "value": "[parameters('additionalFlags')]"
+                        },
+                        {
+                            "name": "MAX_TASKS_PER_NODE",
+                            "value": "[parameters('maxTasksPerNode')]"
+                        }
+                    ]
+                }
+            },
+            "onAllTasksComplete": "terminateJob"
+        }
+    }
+}

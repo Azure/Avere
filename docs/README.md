@@ -7,7 +7,7 @@ The Avere vFXT is an enterprise-scale clustered file system built for the cloud.
 # Documentation
   * (Ron) Deployment
   * (Ron) Add core filer
-  * (Bernie) Ingest data
+  * [Getting data onto the vFXT cluster](GettingDataOntovFXT.md) - provides various strategies for how to parallelize ingress to the vFXT.
   * (Ron) Management – start / stop
   * (Bernie) Tune / Optimize
   * Troubleshoot – common problems
