@@ -61,7 +61,7 @@ chown nobody:nogroup /nfs/node3
 
 # Using the vFXT with some Clients
 
-When testing the vFXT, you will need to start thinking in parallel, and adjust your tools to read/write in parallel as much as possible.  For example, tools like cp, and rsync run in serial, and will have poor performance on the vFXT.
+When testing the vFXT, you will need to start thinking in parallel, and adjust your tools to read/write in parallel as much as possible.  For example, tools like cp, and rsync run in serial, and will have poor performance on the vFXT.  This section provides two examples for parallelism, but for a more thorough review of the parallism required, please review [Getting data onto the vFXT cluster](GettingDataOntovFXT.md).
 
 ## Example #1: Parallel client copy
 
