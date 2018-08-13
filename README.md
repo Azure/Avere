@@ -38,7 +38,7 @@ Avere Cloud NAS with the vFXT for Azure gives you:
 <img src="http://www.averesystems.com/UserFiles/Image/CloudNas.gif">
 
 # Documentation
-  * (Ron) Deployment
+  * (Ron) Deploy new cluster
   * (Ron) Add core filer
   * [Getting data onto the vFXT cluster](docs/GettingDataOntovFXT.md) - provides various strategies for how to parallelize ingress to the vFXT.
   * (Ron) Management – start / stop
