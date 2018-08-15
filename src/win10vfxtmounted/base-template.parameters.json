@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "uniqueName": {
-      "value": "avere1win10eastus"
+      "value": "averewin10eastus"
     },
     "vmSize": {
       "value": "Standard_D8_v3"

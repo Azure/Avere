@@ -15,7 +15,7 @@
     "value": 0
   },
   "targetLowPriorityNodeCount": {
-    "value": 250
+    "value": 20
   },
   "maxTasksPerNode": {
     "value": 2

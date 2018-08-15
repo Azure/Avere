@@ -53,7 +53,9 @@ function mount_round_robin() {
         mkdir -p "${DEFAULT_MOUNT_POINT}"
         chown nfsnobody:nfsnobody "${DEFAULT_MOUNT_POINT}"
     fi
-    retrycmd_if_failure 12 20 mount "${DEFAULT_MOUNT_POINT}" || exit 1
+    if ! grep -qs "${DEFAULT_MOUNT_POINT} " /proc/mounts; then
+        retrycmd_if_failure 12 20 mount "${DEFAULT_MOUNT_POINT}" || exit 1
+    fi   
 } 
 
 function main() {

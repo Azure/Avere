@@ -9,35 +9,30 @@
 # The following environment variables must be set:
 #     FRAME_START=1
 #     FRAME_END=1
-#     NFS_MOUNT_POINT=/nfs/default
-#     MAYA_PROJECT_PATH=scenes/autodeskWallOfDScene
-#     SCENE_FILE=scenes/autodeskWallOfDScene/scenes/SEQ001/SHOT001/anim/versions/SEQ001_SHOT001_anim_v010_Imported.ma
-#     IMAGES_OUTPUT_BASE_PATH=images
+#     MAYA_PROJECT_PATH=/nfs/default/scenes/autodeskWallOfDScene
+#     SCENE_FILE=/nfs/default/scenes/autodeskWallOfDScene/scenes/SEQ001/SHOT001/anim/versions/SEQ001_SHOT001_anim_v010_Imported.ma
+#     IMAGES_OUTPUT_BASE_PATH=/nfs/default/images
+#     DEBUG_PATH=/nfs/default/debug
 #     ADDITIONAL_FLAGS=" -of png "
 #
 # This is executed as the render job from batch, using the 
 # following command line:
 #
-#     /bin/bash -c '/bin/bash [parameters('nfsMountPath')]/[parameters('renderScriptPath')] ; err=$? ; exit $err'
+#     /bin/bash -c '/bin/bash [parameters('renderScriptPath')] ; err=$? ; exit $err'
 #
 
 # if doing real work, remove or set to false
 IS_DEMO=true
 
 function log_debug_info() {
-    # dump the environment
-    echo "######################################################"
-    echo "DEBUG DUMP START"
     set
-    echo "details of mount point ${NFS_MOUNT_POINT}"
-    mount | grep ${NFS_MOUNT_POINT}
-    echo "DEBUG DUMP STOP"
-    echo "######################################################"
+    mount
+    whoami
     
     # add empty file named after this machine's ip to the mount folder for the job
     MOUNT_POINT=`mount | grep default | sed -e 's/^\([^:]*\):.*/\1/'`
     THIS_HOST=`hostname -i`
-    DEBUG_TARGET_DIR=${NFS_MOUNT_POINT}/debug/${AZ_BATCH_JOB_ID}/${MOUNT_POINT}
+    DEBUG_TARGET_DIR=${DEBUG_PATH}/${AZ_BATCH_JOB_ID}/${MOUNT_POINT}
     mkdir -p ${DEBUG_TARGET_DIR}
     touch ${DEBUG_TARGET_DIR}/${THIS_HOST}
 }
@@ -75,8 +70,8 @@ function run_demo_code() {
 
 function render_scene() {
     # render the scene
-    echo "running command: /bin/maya2018.sh -r sw ${ADDITIONAL_FLAGS} -proj ${NFS_MOUNT_POINT}/${MAYA_PROJECT_PATH} -rd ${NFS_MOUNT_POINT}/${IMAGES_OUTPUT_BASE_PATH}/${AZ_BATCH_JOB_ID} -s ${FRAME_START} -e ${FRAME_END} ${NFS_MOUNT_POINT}/${SCENE_FILE}"
-    /bin/maya2018.sh -r sw ${ADDITIONAL_FLAGS} -proj ${NFS_MOUNT_POINT}/${MAYA_PROJECT_PATH} -rd ${NFS_MOUNT_POINT}/${IMAGES_OUTPUT_BASE_PATH}/${AZ_BATCH_JOB_ID} -s ${FRAME_START} -e ${FRAME_END} ${NFS_MOUNT_POINT}/${SCENE_FILE}
+    echo "running command: /bin/maya2018.sh -r sw ${ADDITIONAL_FLAGS} -proj ${MAYA_PROJECT_PATH} -rd ${IMAGES_OUTPUT_BASE_PATH}/${AZ_BATCH_JOB_ID} -s ${FRAME_START} -e ${FRAME_END} ${SCENE_FILE}"
+    /bin/maya2018.sh -r sw ${ADDITIONAL_FLAGS} -proj ${MAYA_PROJECT_PATH} -rd ${IMAGES_OUTPUT_BASE_PATH}/${AZ_BATCH_JOB_ID} -s ${FRAME_START} -e ${FRAME_END} ${SCENE_FILE}
 }
 
 function main() {

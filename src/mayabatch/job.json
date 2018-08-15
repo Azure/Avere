@@ -49,34 +49,34 @@
               "description": "The number of tasks per node"
             }
         },
-        "nfsMountPath": {
-            "type": "string",
-            "metadata": {
-                "description": "The Avere vFXT mounted path"
-            }
-        },
         "mayaProjectPath": {
             "type": "string",
             "metadata": {
-                "description": "The maya project path, on the nfs share, used to load the scene file."
+                "description": "The maya project path used to load the scene file."
             }
         },
         "sceneFile": {
             "type": "string",
             "metadata": {
-                "description": "The path to the Maya scene file on the nfs share"
+                "description": "The path to the Maya scene file"
             }
         },
         "imagesOutputBasePath": {
             "type": "string",
             "metadata": {
-                "description": "The rendered frames output base directory on the nfs share"
+                "description": "The rendered frames output base directory"
             }
         },
         "renderScriptPath": {
             "type": "string",
             "metadata": {
-                "description": "The render script location on the nfs share."
+                "description": "The render script location."
+            }
+        },
+        "debugPath": {
+            "type": "string",
+            "metadata": {
+                "description": "The debug path location."
             }
         },
         "additionalFlags": {
@@ -108,7 +108,7 @@
                     "userIdentity": {
                         "userName": "[parameters('adminUsername')]"
                     },
-                    "commandLine": "/bin/bash -c '/bin/bash [parameters('nfsMountPath')]/[parameters('renderScriptPath')] ; err=$? ; exit $err'",
+                    "commandLine": "/bin/bash -c '/bin/bash [parameters('renderScriptPath')] ; err=$? ; exit $err'",
                     "constraints": {
                         "maxTaskRetryCount":5
                     },
@@ -126,10 +126,6 @@
                             "value": "{0}"
                         },
                         {
-                            "name": "NFS_MOUNT_POINT",
-                            "value": "[parameters('nfsMountPath')]"
-                        },
-                        {
                             "name": "MAYA_PROJECT_PATH",
                             "value": "[parameters('mayaProjectPath')]"
                         },
@@ -140,6 +136,10 @@
                         {
                             "name": "IMAGES_OUTPUT_BASE_PATH",
                             "value": "[parameters('imagesOutputBasePath')]"
+                        },
+                        {
+                            "name": "DEBUG_PATH",
+                            "value": "[parameters('debugPath')]"
                         },
                         {
                             "name": "ADDITIONAL_FLAGS",
