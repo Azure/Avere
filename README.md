@@ -46,10 +46,10 @@ Avere Cloud NAS with the vFXT for Azure gives you:
   * [Getting data onto the vFXT cluster](docs/GettingDataOntovFXT.md) - provides various strategies for how to parallelize ingress to the vFXT.
   * (Erin) Management – start / stop
   * (Erin) Tune / Optimize
-  * (Anthony) Troubleshoot – engage support
+  * [Troubleshoot – engage support](docs/EngageSupport.md)
 
 # Quick Start Guides
-  * [Avere vFXT deployment](docs/MicrosoftAverevFXTDeployment.md) - A quickstart quide to deploy the vFXT into an empty environment.
+  * [Avere vFXT deployment](docs/MicrosoftAverevFXTDeployment.md) - A quickstart guide to deploy the vFXT into an empty environment.
   * [Using the vFXT](docs/UsingThevFXT.md) - This introduces you to the parallelization required for the vFXT.
   * [VDBench - measuring vFXT Performance](docs/VDBench.md) - Deploys VDBench on an N-Node cluster to demonstrate the storage performance characteristics of the Avere vFXT cluster.
   * [Windows 10 Avere vFXT Mounted Workstation](docs/Windows10AverevFXTMountedWorkstation.md) - Creates a Windows Workstation that automatically mounts the vFXT, and installs various Azure Tools.
