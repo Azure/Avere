@@ -1,9 +1,9 @@
 # Jumpstart Deploy a vFXT Cluster
 The easiest way to create a vFXT cluster, is to use a controller node which has scripts and templates for creating the vFXT cluster. In this tutorial, you will create a controller node from the Azure portal and use it to create a vFXT cluster.
 
-[Click here](docs/JumpstartDeployPrint.md) for a printer-friendly version of this tutorial.
+[Click here](JumpstartDeployPrint.md) for a printer-friendly version of this tutorial.
 
-This Jumpstart tutorial assumes that you are a subscription owner and that you have enough quota to run vFXT instances. [Click here](docs/Prereqs.md) for quota details. Consider creating a new subscription to track project expenses.
+This Jumpstart tutorial assumes that you are a subscription owner and that you have enough quota to run vFXT instances. [Click here](Prereqs.md) for quota details. Consider creating a new subscription to track project expenses.
 
 ## Create Controller
 
@@ -23,13 +23,13 @@ After enabling programmatic access for the controller node, select the vFXT node
 
 ### Walk through the wizard
 Click Create to walk through the wizard.
-Name the instance.
-Choose HDD.
-Provide a username and password for command-line access. 
-Choose your subscription.
-Create a new resource group.
-Choose a location close to you.
-Before clicking OK, note the username, password, resource group name, and location.
+- Name the instance.
+- Choose HDD.
+- Provide a username and password for command-line access. 
+- Choose your subscription.
+- Create a new resource group.
+- Choose a location close to you.
+- Before clicking OK, note the username, password, resource group name, and location.
 
 <img src="images/4 - capture page 1 b.png">
 
@@ -76,11 +76,16 @@ Edit the cluster role template (`vi /avere-cluster.json`) and paste your subscri
 
 <img src="images/12pastesubid.png">
 
-Create the role by running the az role definition create command `az role definition create --role-definition /avere-cluster.json`
+Create the role by running the az role definition create command.
+```sh
+az role definition create --role-definition /avere-cluster.json
+```
 
 Copy and then edit the `create-minimal-cluster` template. For example:
-```cp /create-minimal-cluster ./cmc```
-```vi cmc```
+```sh
+cp /create-minimal-cluster ./cmc
+vi cmc
+```
 
 Provide the name of your resource group, location, virtual network, subnet, and cluster role. Give your cluster a name and an admin password.
 
