@@ -9,7 +9,7 @@ The vFXT creation process expects the user to have owner permissions. The contro
 
 Users must either be an owner of the subscription or at minimum be an owner of a Resource Group where the Avere controller and cluster will be installed.  
 
-If you need to allow users without any owner privileges to create vFXT clusters, there is a workaround involving creating and assigning an extra access role. This role gives significant extra permissions to these users. Reference [this link](NonOwner.md) for instructions on how to authorize non-owners to create clusters.
+If you need to allow users without any owner privileges to create vFXT clusters, there is a workaround involving creating and assigning an extra access role. This role gives significant extra permissions to these users. Reference [this link](docs/NonOwner.md) for instructions on how to authorize non-owners to create clusters.
 
 ## Quota for the vFXT cluster
 You must have sufficient quota for the following Azure components.  
