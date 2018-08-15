@@ -253,17 +253,101 @@ To use msrsync to populate an Azure cloud volume with an Avere cluster, follow t
 
    ``mrsync -P --stats -p64 -f170 --rsync -ahv --inplace /test/source-repository/ /mnt/vfxt/repository``
 
+## Parallel copy script
+
+The script below will add the executable `parallelcp`.  (This script is designed for Ubuntu; if using another distribution, you must install ``parallel`` separately.)
+
+```bash
+sudo touch /usr/bin/parallelcp && sudo chmod 755 /usr/bin/parallelcp && sudo sh -c "/bin/cat >/usr/bin/parallelcp" <<EOM 
+#!/bin/bash
+
+display_usage() { 
+    echo -e "\nUsage: \$0 SOURCE_DIR DEST_DIR\n" 
+} 
+
+if [  \$# -le 1 ] ; then 
+    display_usage
+    exit 1
+fi 
+ 
+if [[ ( \$# == "--help") ||  \$# == "-h" ]] ; then 
+    display_usage
+    exit 0
+fi 
+
+SOURCE_DIR="\$1"
+DEST_DIR="\$2"
+
+if [ ! -d "\$SOURCE_DIR" ] ; then
+    echo "Source directory \$SOURCE_DIR does not exist, or is not a directory"
+    display_usage
+    exit 2
+fi
+
+if [ ! -d "\$DEST_DIR" ] && ! mkdir -p \$DEST_DIR ; then
+    echo "Destination directory \$DEST_DIR does not exist, or is not a directory"
+    display_usage
+    exit 2
+fi
+
+if [ ! -w "\$DEST_DIR" ] ; then
+    echo "Destination directory \$DEST_DIR is not writeable, or is not a directory"
+    display_usage
+    exit 3
+fi
+
+if ! which parallel > /dev/null ; then
+    sudo apt-get update && sudo apt install -y parallel
+fi
+
+DIRJOBS=225
+JOBS=225
+find \$SOURCE_DIR -mindepth 1 -type d -print0 | sed -z "s/\$SOURCE_DIR\///" | parallel --will-cite -j\$DIRJOBS -0 "mkdir -p \$DEST_DIR/{}"
+find \$SOURCE_DIR -mindepth 1 ! -type d -print0 | sed -z "s/\$SOURCE_DIR\///" | parallel --will-cite -j\$JOBS -0 "cp -P \$SOURCE_DIR/{} \$DEST_DIR/{}"
+EOM
+```
+
+### Parallelcopy example
+
+This example uses the parallel copy script to compile ``glibc`` using source files from the Avere cluster.
+
+The source files are stored on the Avere cluster mount point, and the object files are stored on the local hard drive.
+
+This script uses parallel copy script above. Note that the ``-j`` option is used with ``parallelcp`` and ``make`` to gain parallelization.
+
+```bash
+sudo apt-get update
+sudo apt install -y gcc bison gcc binutils make parallel
+cd
+wget https://mirrors.kernel.org/gnu/libc/glibc-2.27.tar.bz2
+tar jxf glibc-2.27.tar.bz2
+ln -s /nfs/node1 avere
+time parallelcp glibc-2.27 avere/glibc-2.27
+cd
+mkdir obj
+mkdir usr
+cd obj
+/home/azureuser/avere/glibc-2.27/configure --prefix=/home/azureuser/usr
+time make -j
+```
+
+While the compile is happening, check the Analytics tab of the Avere Control Panel in your browser to see the performance characteristics of the Avere cluster. The above script will yield a pattern similar to below:
+
+<img src="images/compiling_chart.png" width="600">
+
+On the analytics page, you can add the following latency graph to understand the client latency.
+
+<img src="images/analytics_options.png">
+
+
 ## About writeback delay
 
-Part of the cluster’s cache policy includes a time limit setting called writeback delay. This setting determines the maximum amount of time a changed file can stay in the cluster cache before being copied to backend storage. When a file hits its writeback delay limit, it is preferentially copied to the backend core filer, which can limit accepting new writes is temporarily throttled. 
-
-**[ xxx not sure how this works - does it refuse writes on that file, or all files, or is it just that the cluster devotes more threads to backend writes and starves the client writes? xxx ]**
+Part of the cluster’s cache policy includes a time limit setting called writeback delay. This setting determines the maximum amount of time a changed file can stay in the cluster cache before being copied to backend storage. When a file hits its writeback delay limit, it is preferentially copied to the backend core filer, which can temporarily throttle the cache's ability to accept new writes. 
 
 When you are adding a large number of new files to the storage system, the writeback delay time might impact your write performance.
-
 For example, if your writeback delay is set to one hour while copying data to the cluster, you might see degraded write performance about one hour after starting the copy actions.
 
-**[ xxx what are the possible default writeback delay settings for Azure clusters’ cache policies? xxx ]**
+To avoid conflicts, allow sufficient time for the data to be copied onto the core filer before attempting to use the data in the cache. If you experience significant delays, contact support for advice about how to work around the issue.  
 
 Read [Cache Writeback and Scheduled Write-Through Features](http://library.averesystems.com/ops_guide/4_7/advanced_cache_features.html#cache-features-overview) to learn more about writeback settings.
 
