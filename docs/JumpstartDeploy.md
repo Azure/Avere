@@ -1,9 +1,9 @@
 # Jumpstart Deploy a vFXT Cluster
 The easiest way to create a vFXT cluster, is to use a controller node which has scripts and templates for creating the vFXT cluster. In this tutorial, you will create a controller node from the Azure portal and use it to create a vFXT cluster.
 
-[Click here](JumpstartDeployPrint.md) for a printer-friendly version of this tutorial.
+[Click here](docs/JumpstartDeployPrint.md) for a printer-friendly version of this tutorial.
 
-This Jumpstart tutorial assumes that you are a subscription owner and that you have enough quota to run vFXT instances. [Click here](Prereqs.md) for quota details. Consider creating a new subscription to track project expenses.
+This Jumpstart tutorial assumes that you are a subscription owner and that you have enough quota to run vFXT instances. [Click here](docs/Prereqs.md) for quota details. Consider creating a new subscription to track project expenses.
 
 ## Create Controller
 
