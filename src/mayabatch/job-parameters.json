@@ -17,21 +17,20 @@
   "frameStep": {
     "value": 1
   },
-  "nfsMountPath":
-  {
-    "value": "/nfs/default"
-  },
   "mayaProjectPath": {
-    "value": "demoscene"
+    "value": "/nfs/default/demoscene"
   },
   "sceneFile": {
-    "value": "demoscene/kongSkeleton_walk.ma"
+    "value": "/nfs/default/demoscene/kongSkeleton_walk.ma"
   },  
   "imagesOutputBasePath": {
-    "value": "images"
+    "value": "/nfs/default/images"
   },
   "renderScriptPath": {
-    "value": "src/renderSkeleton.sh"
+    "value": "/nfs/default/src/renderSkeleton.sh"
+  },
+  "debugPath": {
+    "value": "/nfs/default/debug"
   },
   "additionalFlags": {
     "value": " -fnc name.#.ext "
