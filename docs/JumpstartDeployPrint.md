@@ -1,7 +1,7 @@
 # Jumpstart Deploy a vFXT Cluster
 The easiest way to create a vFXT cluster, is to use a controller node which has scripts and templates for creating the vFXT cluster. In this tutorial, you will create a controller node from the Azure portal and use it to create a vFXT cluster.
 
-This Jumpstart tutorial assumes that you are a subscription owner and that you have enough quota to run vFXT instances. [Click here](docs/Prereqs.md) for quota details. Consider creating a new subscription to track project expenses.
+This Jumpstart tutorial assumes that you are a subscription owner and that you have enough quota to run vFXT instances. [Click here](Prereqs.md) for quota details. Consider creating a new subscription to track project expenses.
 
 ## Create Controller
 
@@ -15,36 +15,41 @@ After enabling programmatic access for the controller node, select the vFXT node
 
 ### Walk through the wizard
 Click Create to walk through the wizard.
-Name the instance.
-Choose HDD.
-Provide a username and password for command-line access. 
-Choose your subscription.
-Create a new resource group.
-Choose a location close to you.
-Before clicking OK, note the username, password, resource group name, and location.
-For the size, choose A0.
-Create a new virtual network and subnet. Capture this information for later.
-To access the controller remotely, we’ll need a public IP address and SSH.
-We don’t need boot diagnostics but we do need to register with Azure AD.
-Review and Create. After 5 or 6 minutes, your controller node will be up and running.
+- Name the instance.
+- Choose HDD.
+- Provide a username and password for command-line access. 
+- Choose your subscription.
+- Create a new resource group.
+- Choose a location close to you.
+- Before clicking OK, note the username, password, resource group name, and location.
+- For the size, choose A0.
+- Create a new virtual network and subnet. Capture this information for later.
+- To access the controller remotely, we’ll need a public IP address and SSH.
+- We don’t need boot diagnostics but we do need to register with Azure AD.
+- Review and Create. After 5 or 6 minutes, your controller node will be up and running.
 
 ## Create cluster
 Now that your controller node is running, you need to access the controller node, edit the templates, and run the create cluster script. 
 
 ### Access the Controller
-Copy your controller’s public IP address from the portal.
-SSH to the device with the username and password that you provided.
-The following steps are mentioned in the `/VFXT_README` file.
-Authenticate by running `az login`.
-Copy your subscription ID.
-Run ```az account set --subscription``` and paste your subscription ID.
+- Copy your controller’s public IP address from the portal.
+- SSH to the device with the username and password that you provided.
+- The following steps are mentioned in the `/VFXT_README` file.
+- Authenticate by running `az login`.
+- Copy your subscription ID.
+- Run ```az account set --subscription``` and paste your subscription ID.
 
 ### Edit the templates
 Edit the cluster role template (`vi /avere-cluster.json`) and paste your subscription ID here, too. This role gives the controller permissions to create the vFXT and the Azure components it needs.
-Create the role by running the az role definition create command `az role definition create --role-definition /avere-cluster.json`
+Create the role by running the az role definition create command.
+```sh
+az role definition create --role-definition /avere-cluster.json
+```
 Copy and then edit the `create-minimal-cluster` template. For example:
-```cp /create-minimal-cluster ./cmc```
-```vi cmc```
+```sh
+cp /create-minimal-cluster ./cmc
+vi cmc
+```
 Provide the name of your resource group, location, virtual network, subnet, and cluster role. Give your cluster a name and an admin password.
 Save the file and exit.
 
