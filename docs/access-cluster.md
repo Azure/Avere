@@ -2,13 +2,23 @@
 Now that your vFXT cluster is created, you need to configure its storage. In this tutorial, you will access the vFXT cluster by creating an SSH tunnel and accessing the interface with your browser.
 
 ## Access with a Linux host
-If using a Linux-based client, use an SSH tunneling command like `ssh -L [localPort]:[vFXTmgmtIP]:443 [username]@[controllerPublicIP]`. For example, `ssh -L 8443:10.0.0.5:443 ronh@40.117.119.51`.
+If using a Linux-based client, use an SSH tunneling command like `ssh -L [localPort]:[vFXTmgmtIP]:443 [username]@[controllerPublicIP]`.
+For example:
+```sh
+ssh -L 8443:10.0.0.5:443 ronh@40.117.119.51
+```
 Enter your SSH password
 
 ## Access with a Windows host
-If using PuTTY, add your username@ the public IP address of the controller in the hostname field. Expand SSH on the left and click Tunnels. Enter a source port like 8443. For the destination, enter the vFXT’s management IP address :443. Click Add and click Open.
+- If using PuTTY, add your username@ the public IP address of the controller in the hostname field. 
+- Expand SSH on the left.
+- Click Tunnels. 
+- Enter a source port like 8443. 
+- For the destination, enter the vFXT’s management IP address :443. 
+- Click Add.
+- Click Open.
 
-<img src="images/20-tunnel-numbered.png">
+<img src="images/20-tunnel-numbered-border-75.png">
 
 Enter your SSH password.
 
