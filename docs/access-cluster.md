@@ -7,16 +7,16 @@ For example:
 ```sh
 ssh -L 8443:10.0.0.5:443 ronh@40.117.119.51
 ```
-Enter your SSH password
+Enter your SSH password.
 
 ## Access with a Windows host
-- If using PuTTY, add your username@ the public IP address of the controller in the hostname field. 
-- Expand SSH on the left.
-- Click Tunnels. 
-- Enter a source port like 8443. 
-- For the destination, enter the vFXT’s management IP address :443. 
-- Click Add.
-- Click Open.
+If using PuTTY, add your username@ the public IP address of the controller in the hostname field. 
+1. Expand SSH on the left.
+1. Click Tunnels. 
+1. Enter a source port like 8443. 
+1. For the destination, enter the vFXT’s management IP address :443. 
+1. Click Add.
+1. Click Open.
 
 <img src="images/20-tunnel-numbered-border-75.png">
 
