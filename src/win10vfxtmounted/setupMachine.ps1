@@ -210,6 +210,8 @@ Install-ChocolatyAndPackages
     choco install -y wireshark
     Write-Log "choco install -y winscp"
     choco install -y winscp
+    Write-Log "choco install -y winmerge"
+    choco install -y winmerge
 }
 
 function
