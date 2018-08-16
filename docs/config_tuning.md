@@ -1,7 +1,7 @@
 
-# Post-creation configuration  
+# Cluster configuration and performance tuning
 
-The vfxt.py utility creates and configures the vFXT cluster. To administer the finished cluster, use the Avere Control Panel. Although many settings are set appropriately for your cloud service by the creation script, there are others that you might want to customize.
+After using the vfxt.py utility to create the vFXT cluster, a few additional setup steps and customizations are recommended. To administer the finished cluster, use the Avere Control Panel. 
 
 Post-creation configuration tasks include the following:
 
