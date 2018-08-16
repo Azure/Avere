@@ -45,7 +45,7 @@ Avere Cloud NAS with the vFXT for Azure gives you:
   * (Erin/Ron) Connecting clients - RRDNS and `mount`
   * [Getting data onto the vFXT cluster](docs/getting_data_onto_vfxt.md) - provides various strategies for how to parallelize ingress to the vFXT.
   * (Erin) Management – start / stop
-  * (Erin) Tune / Optimize
+  * [Cluster configuration and performance tuning](docs/config_tuning.md) - Additional setup and performance optimizations
   * [Troubleshoot – engage support](docs/engage_support.md)
 
 # Quick Start Guides
