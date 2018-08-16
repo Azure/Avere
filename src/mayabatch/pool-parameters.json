@@ -21,7 +21,7 @@
     "value": 2
   },
   "subnetRef": {
-    "value": "/subscriptions/b52fce95-de5f-4b37-afca-db203a5d0b6a/resourceGroups/avereeastus/providers/Microsoft.Network/virtualNetworks/vnet-avereeastus/subnets/subnet-avereeastus"
+    "value": "/subscriptions/b52fce95-de5f-4b37-afca-db203a5d0b6a/resourceGroups/avereeastus/providers/Microsoft.Network/virtualNetworks/vnet-avereeastus/subnets/subnetbatch"
   },
   "averevFXTCommaSeparatedIPs": {
     "value": "172.16.0.12,172.16.0.13,172.16.0.14"

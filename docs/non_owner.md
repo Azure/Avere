@@ -2,8 +2,7 @@
 The most straightforward way to create a Microsoft Avere vFXT cluster is to have a subscription owner run the creation script. However, it is possible to work around this requirement by creating an additional access role that gives other users sufficient permissions to install the cluster.
 A subscription owner must create the cluster creator role and use it to assign access to the appropriate users.
 
-[!NOTE]
-All of these steps must be taken by a user with owner privileges on the subscription that will be used for the cluster.
+> NOTE: All of these steps must be taken by a user with owner privileges on the subscription that will be used for the cluster.
 
 1. Copy these lines and save them in a file (for example, `averecreatecluster.json`). Use your subscription ID in the `AssignableScopes` statement.
 

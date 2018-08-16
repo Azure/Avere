@@ -61,7 +61,7 @@ chown nobody:nogroup /nfs/node3
 
 # Using the vFXT with some Clients
 
-When testing the vFXT, you will need to start thinking in parallel, and adjust your tools to read/write in parallel as much as possible.  For example, tools like cp, and rsync run in serial, and will have poor performance on the vFXT.  This section provides two examples for parallelism, but for a more thorough review of the parallism required, please review [Getting data onto the vFXT cluster](GettingDataOntovFXT.md).
+When testing the vFXT, you will need to start thinking in parallel, and adjust your tools to read/write in parallel as much as possible.  For example, tools like cp, and rsync run in serial, and will have poor performance on the vFXT.  This section provides two examples for parallelism, but for a more thorough review of the parallism required, please review [Getting data onto the vFXT cluster](getting_data_onto_vfxt.md).
 
 ## Example #1: Parallel client copy
 
@@ -177,5 +177,5 @@ for i in $(find . -type f); do dd if=$i of=/dev/null iflag=direct bs=524288 ; do
 
 Here are some other examples:
 
-  * [VDBench - measuring vFXT Performance](VDBench.md) - Deploys VDBench on an N-Node cluster to demonstrate the storage performance characteristics of the Avere vFXT cluster.
-  * [Maya + Azure Batch + Avere vFXT Demo](MayaAzureBatchAverevFXTDemo.md) - Demonstrates how to use the Autodesk Maya Renderer with Azure Batch and the Avere vFXT to generate a rendered movie.
+  * [VDBench - measuring vFXT Performance](vdbench.md) - Deploys VDBench on an N-Node cluster to demonstrate the storage performance characteristics of the Avere vFXT cluster.
+  * [Maya + Azure Batch + Avere vFXT Demo](maya_azure_batch_avere_vfxt_demo.md) - Demonstrates how to use the Autodesk Maya Renderer with Azure Batch and the Avere vFXT to generate a rendered movie.
