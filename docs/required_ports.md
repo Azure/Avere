@@ -36,8 +36,8 @@ Never expose the vFXT or the cluster controller instance directly to the public 
 
 ## SMB/CIFS
 
-| Inbound  |    |    |
-| --- | --- | --- | --- |
+| Inbound  |   |   |
+| --- | --- | --- |
 | TCP     | 445  | SMB      |
 | TCP     | 139  | SMB      |
 | UDP     | 137  | NETBIOS  |
