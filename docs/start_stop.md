@@ -63,4 +63,4 @@ Use the :ref:`settings:gui_system_maintenance` settings page to power down the c
 
 After shutting down the cluster, use the Azure portal to destroy all of the node instances.You can delete them one at a time as described above in :ref:`node_terminate` or you can use the **Virtual Machines** page to find all of the cluster VMs, select them with the checkboxes, and click the **Delete** button to remove them all in one action.
 
-![List of VMs in the portal, filtered by the term "cluster", with three of the four checked and highlighted](/images/multi_vm_delete.png)
+![List of VMs in the portal, filtered by the term "cluster", with three of the four checked and highlighted](images/multi_vm_delete.png)
