@@ -4,7 +4,7 @@ This 60 minute demo takes you through a Maya + Batch + Avere vFXT Demo.  By the 
 
 # Pre-requisites
 
-1. Install a vFXT according to [Marketplace vFXT deployment](MicrosoftAverevFXTDeployment.md).
+1. Install a vFXT according to [Marketplace vFXT deployment](avere_vfxt_deployment.md).
 
 2. On the controller, mount the vFXT shares:
     1. run the following commands:
@@ -29,7 +29,7 @@ This 60 minute demo takes you through a Maya + Batch + Avere vFXT Demo.  By the 
 
 	3. To mount all shares, now type `mount -a`
 
-3. Install a Windows 10 Avere Mounted Workstation according to [Windows 10 Avere vFXT Mounted Workstation](Windows10AverevFXTMountedWorkstation.md).
+3. Install a Windows 10 Avere Mounted Workstation according to [Windows 10 Avere vFXT Mounted Workstation](windows_10_avere_vfxt_mounted_workstation.md).
 
 # Prepare Content
 

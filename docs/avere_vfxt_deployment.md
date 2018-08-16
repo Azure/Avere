@@ -165,4 +165,4 @@ ADMIN_PASSWORD=#UPDATE PASSWORD
 
 6. The averefxt cluster will be created in about 15 minutes.
 
-Now that you have completed the installation, visit [Using the vFXT](UsingThevFXT.md) to learn how to use the Avere vFXT cluster.
+Now that you have completed the installation, visit [Using the vFXT](using_the_vfxt.md) to learn how to use the Avere vFXT cluster.
