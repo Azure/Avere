@@ -40,8 +40,8 @@ Avere Cloud NAS with the vFXT for Azure gives you:
 # Documentation
   * [Prerequisites](docs/prereqs.md)
   * [Jumpstart Deployment](docs/jumpstart_deploy.md) - The fastest way to create a vFXT cluster.
-  * (Ron) Connecting to the vFXT
-  * (Ron) Configure Storage - Add a core filer, VServer, and junction
+  * [Access the cluster](docs/access_cluster.md) - Access the Avere Control Panel from an SSH tunnel
+  * [Configure storage](docs/configure_storage.md) - Add a core filer, vserver, and junction
   * (Erin/Ron) Connecting clients - RRDNS and `mount`
   * [Getting data onto the vFXT cluster](docs/getting_data_onto_vfxt.md) - provides various strategies for how to parallelize ingress to the vFXT.
   * (Erin) Management – start / stop
