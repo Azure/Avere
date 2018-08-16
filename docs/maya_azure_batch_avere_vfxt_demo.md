@@ -4,9 +4,11 @@ This 60 minute demo takes you through a Maya + Batch + Avere vFXT Demo.  By the 
 
 # Pre-requisites
 
-1. Install a vFXT according to [Marketplace vFXT deployment](avere_vfxt_deployment.md).
+1. Install a vFXT according to [Jumpstart Deploy a vFXT Cluster](jumpstart_deploy.md), and [configure storage](configure_storage.md).
 
-2. On the controller, mount the vFXT shares:
+2. Install a Windows 10 Avere Mounted Workstation according to [Windows 10 Avere vFXT Mounted Workstation](windows_10_avere_vfxt_mounted_workstation.md).
+
+3. On the controller, mount the vFXT shares:
     1. run the following commands:
         ```bash
         sudo -s
@@ -20,16 +22,14 @@ This 60 minute demo takes you through a Maya + Batch + Avere vFXT Demo.  By the 
         chown nobody:nogroup /nfs/node3
         ```
 
-	2. Edit `/etc/fstab`, and add the following lines, *updating the ip addresses to match the vFXT*, and adding more lines if you built a larger cluster:
+    2. Edit `/etc/fstab`, and add the following lines, *updating the ip addresses to match the vFXT*, and adding more lines if you built a larger cluster:
         ```bash
         172.16.0.12:/msazure	/nfs/node1	nfs auto,rsize=524288,wsize=524288,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0
         172.16.0.13:/msazure	/nfs/node2	nfs auto,rsize=524288,wsize=524288,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0
         172.16.0.14:/msazure	/nfs/node3	nfs auto,rsize=524288,wsize=524288,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0
         ```
 
-	3. To mount all shares, now type `mount -a`
-
-3. Install a Windows 10 Avere Mounted Workstation according to [Windows 10 Avere vFXT Mounted Workstation](windows_10_avere_vfxt_mounted_workstation.md).
+    3. To mount all shares, now type `mount -a`
 
 # Prepare Content
 

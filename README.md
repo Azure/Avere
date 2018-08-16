@@ -49,8 +49,6 @@ Avere Cloud NAS with the vFXT for Azure gives you:
   * [Troubleshoot – engage support](docs/engage_support.md)
 
 # Quick Start Guides
-  * [Avere vFXT deployment](docs/avere_vfxt_deployment.md) - A quickstart guide to deploy the vFXT into an empty environment.
-  * [Using the vFXT](docs/using_the_vfxt.md) - This introduces you to the parallelization required for the vFXT.
   * [VDBench - measuring vFXT Performance](docs/vdbench.md) - Deploys VDBench on an N-Node cluster to demonstrate the storage performance characteristics of the Avere vFXT cluster.
   * [Windows 10 Avere vFXT Mounted Workstation](docs/windows_10_avere_vfxt_mounted_workstation.md) - Creates a Windows Workstation that automatically mounts the vFXT, and installs various Azure Tools.
   * [Maya + Azure Batch + Avere vFXT Demo](docs/maya_azure_batch_avere_vfxt_demo.md) - Demonstrates how to use the Autodesk Maya Renderer with Azure Batch and the Avere vFXT to generate a rendered movie.
