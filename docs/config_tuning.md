@@ -5,9 +5,9 @@ The vfxt.py utility creates and configures the vFXT cluster. To administer the f
 
 Post-creation configuration tasks include the following:
 
-- Establishing a [virtual namespace](#gns) and client mount points
+- Establishing a virtual namespace and client mount points - Read [Create a vserver](configure_storage.md#create-a-vserver) for details.
 - Configuring [round-robin DNS](#rrdns) to balance client service requests among the cluster nodes
-- Adding [backend storage](#rrdns) (these can be cloud resources or hardware NAS systems)
+- Adding backend storage (these can be cloud resources or hardware NAS systems) - Read [Configure storage](configure_storage.md) to learn more.
 - Copying data to cloud storage - Read [Moving data onto the vFXT cluster](getting_data_onto_vfxt.md) for details. 
 - Customizing port accessibility - Read [HTTPS access for cluster nodes](node_access.md) for more information.
 - Setting up proxy servers if needed - **[ xxx should this reference our ops guide or an Azure page? xxx ]**
@@ -24,7 +24,7 @@ The [FXT Cluster Creation Guide](<http://library.averesystems.com/#fxt_cluster>)
 
 - [Logging in to the Avere Control Panel](<http://library.averesystems.com/create_cluster/4_8/html/initial_config.html#gui-login>) explains how to connect to the Avere Control Panel and log in. However, note that you might need to use the cluster controller as a jump host to access the Avere Control Panel because it runs on the cluster inside the private virtual network. Read [Accessing vFXT nodes](<cluster_manage.md#node-ssl-tunnel>) for details.
 
-- <a name="gns"> </a> [Configuring VServers and Global Namespace](<http://library.averesystems.com/create_cluster/4_8/html/config_vserver.html#config-vserver>) has information about creating a client-facing namespace.
+- [Configuring VServers and Global Namespace](<http://library.averesystems.com/create_cluster/4_8/html/config_vserver.html#config-vserver>) has information about creating a client-facing namespace.
 
 - [Configuring DNS for the Avere cluster](<http://library.averesystems.com/create_cluster/4_8/html/config_network.html#dns-overview>) <a name="rrdns"> </a> explains how to configure round-robin DNS.
 
