@@ -16,7 +16,7 @@ Post-creation configuration tasks include the following:
 - Configuring AD or other directory services **[ xxx should this reference our ops guide or an Azure page? xxx ]**
 - System tuning - Read [Cluster Tuning](#cluster-tuning)  to learn more about adjusting custom settings for optimal performance in conjunction with Avere Global Services.
 
-To learn how to add or remove cluster nodes, or to destroy the cluster, read [Managing the vFXT Cluster](ManageCluster.md). 
+To learn how to add or remove cluster nodes, or to destroy the cluster, read [Managing the vFXT Cluster](manage_cluster.md). 
 
 The vfxt.py utility creates and configures the vFXT cluster. To administer the finished cluster, use the Avere Control Panel. Although many settings are set appropriately for your cloud service by the creation script, there are others that you might want to customize.
 
