@@ -1,4 +1,4 @@
-# Maya + Azure Batch + Avere vFXT Demo
+# Measuring vFXT performance with VDBench
 
 This template implements [VDBench - measuring vFXT Performance](../../docs/vdbench.md).
 

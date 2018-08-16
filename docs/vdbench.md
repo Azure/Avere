@@ -63,7 +63,7 @@ cd
 ./run_vdbench.sh inmem.conf uniquestring1
 ```
 
-4. When you login to the Avere cluster (using instructions from [here](using_the_vfxt.md#explore-the-avere-vfxt-web-ui) Watch the metrics and explore the Avere vFXT Web UI), you will see a similar performance chart to the following chart:
+4. When you login to the Avere cluster (using instructions from [here](access_cluster.md) Watch the metrics and explore the Avere vFXT Web UI), you will see a similar performance chart to the following chart:
 
 <img src="images/vdbench_inmem.png">
 
@@ -74,7 +74,7 @@ cd
 ./run_vdbench.sh ondisk.conf uniquestring2
 ```
 
-6. When you login to the Avere cluster (using instructions from [here](using_the_vfxt.md#explore-the-avere-vfxt-web-ui) Watch the metrics and explore the Avere vFXT Web UI), you will see a similar performance chart to the following chart:
+6. When you login to the Avere cluster (using instructions from [here](access_cluster.md) Watch the metrics and explore the Avere vFXT Web UI), you will see a similar performance chart to the following chart:
 
 <img src="images/vdbench_ondisk.png">
 

@@ -1,4 +1,4 @@
-# Maya + Azure Batch + Avere vFXT Demo
+# Windows 10 Avere vFXT Mounted Workstation
 
 This template implements [Windows 10 Avere vFXT Mounted Workstation](../../docs/windows_10_avere_vfxt_mounted_workstation.md).
 
