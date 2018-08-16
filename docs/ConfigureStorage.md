@@ -14,7 +14,7 @@ There are three steps to configuring storage.
 - Choose your filer class from the list. If unsure, choose “Other.”
 - Click Next.
 
-<img src="images/22addcorefiler1b">
+<img src="images/22addcorefiler1b.png">
 
 - Choose a cache policy.
 - Click “Add Filer.”
@@ -28,7 +28,7 @@ A vserver is a target for clients to mount to access storage. More information a
 - Provide the first and last IP addresses in an IP address range for your VServer
 - Click “Next.”
 
-<img src="images/23addvserver">
+<img src="images/23addvserver.png">
 
 - After several seconds, click “Next” on the vserver confirmation page.
 - Click “Next” on the “Configure a Directory Service” page.
@@ -43,6 +43,6 @@ More information about junctions can be found [here](http://library.averesystems
 - Choose the export.
 - Click “Next.”
 
-<img src="images/24addjunction">
+<img src="images/24addjunction.png">
 
 The junction will appear after a few seconds. Create additional junctions as needed.
