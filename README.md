@@ -20,7 +20,7 @@ Avere Virtual FXT (vFXT) Edge filers act as network-attached storage (NAS) on Az
 
 [Learn more about Cloud Bursting](http://www.averesystems.com/cloud-bursting)
 
-<img src="http://www.averesystems.com/UserFiles/Image/CloudBurst.gif">
+<img src="docs/images/cloud-bursting-animation.gif">
 
 # Clustered File System for Azure – Cloud NAS
 
@@ -35,7 +35,7 @@ Avere Cloud NAS with the vFXT for Azure gives you:
 
 [Learn more about Cloud NAS](http://www.averesystems.com/cloud-nas)
 
-<img src="http://www.averesystems.com/UserFiles/Image/CloudNas.gif">
+<img src="docs/images/cloud-nas-animation.gif">
 
 # Documentation
   * [Prerequisites](docs/prereqs.md)
