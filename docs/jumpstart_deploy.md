@@ -97,3 +97,6 @@ Save the file and exit.
 Run the script (`./cmc`). When the script completes, copy the management IP address.
 
 <img src="images/14mgmtip.png">
+
+### Proceed to Accessing the Cluster
+Now that the cluster is running [Click Here] https://github.com/Azure/Avere/blob/master/docs/access_cluster.md
