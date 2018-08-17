@@ -113,8 +113,8 @@
         },
         "osProfile": {
           "computername": "[variables('vmName')]",
-          "controllerAdminUsername": "[variables('controllerAdminUsername')]",
-          "controllerAdminPassword": "[variables('controllerAdminPassword')]"
+          "adminUsername": "[variables('controllerAdminUsername')]",
+          "adminPassword": "[variables('controllerAdminPassword')]"
         },
         "storageProfile": {
           "imageReference": {
@@ -135,6 +135,10 @@
     }
   ],
   "outputs": {
+    "sshString": {
+      "type": "string",
+      "value": "[concat(variables('controllerAdminUsername'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress)]"
+    },
     "RESOURCE_GROUP": {
       "type": "string",
       "value": "[resourceGroup().name]"
@@ -154,10 +158,6 @@
     "SUBNET_ID": {
       "type": "string",
       "value": "[concat(resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName')),'/subnets/',variables('subnetName'))]"
-    },
-    "sshString": {
-      "type": "string",
-      "value": "[concat('ssh ', variables('controllerAdminUsername'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress)]"
     }
   }
 }
