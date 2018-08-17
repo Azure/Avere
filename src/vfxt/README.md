@@ -1,6 +1,6 @@
 # Avere vFXT Controller - ARM template deployment
 
-This 30 minute deployment uses an ARM template to create from scratch all the necessary infrastructure to support a vFXT including the VNET, the backing storage account, and the vFXT Controller.  By the end of the demo you will have the resources shown in the following diagram:
+This 30 minute deployment uses an ARM template to create from scratch all the necessary infrastructure to support a vFXT including the VNET and the vFXT Controller.  By the end of the demo you will have the resources shown in the following diagram:
 
 <img src="../../docs/images/vfxt_deployment.png">
 
@@ -19,12 +19,7 @@ As you go through this deployment, you will need to save the following important
 
 The Avere vFXT controller helps you install and manage an Avere vFXT cluster.
 
-You can deploy the Avere vFXT through the portal, or through the cloud shell.  Here are important notes before you start deploying:
-
-  1. **Pre-reqs** review the [vFXT Prerequisites](../../docs/prereqs.md)
-  2. **SSH Key** if you need to create an ssh key, follow these [generation instructions](https://github.com/Azure/acs-engine/blob/master/docs/ssh.md#ssh-key-generation)
-  3. **No-Password Protected SSH Key** make sure you don't create a password protected SSH key.
-  4. **Unique Name** the *uniquename* below is used for creation of your storage account and DNS name.  You may encounter an error *StorageAccountAlreadyTaken*.  If this happens, please choose another unique name.
+You can deploy the Avere vFXT through the portal, or through the cloud shell.  Before deploying, please review the [vFXT Prerequisites](../../docs/prereqs.md).
 
 ## Portal Install
 
@@ -69,7 +64,9 @@ Save the output values of the deployment for the vFXT deployment, and capture `l
 
 4. Scroll-up in the deployment output to a section labelled `"outputs"` and save the values for the vFXT deployment, and capture `location`, `sshString`, and `subnetref` to your tracking table described at the beginning of this document.
 
-5. Now that you have deployed the controller, here are the next steps:
-   1. [Deploy the vFXT cluster](../../docs/jumpstart_deploy.md)
-   2. [Access the vFXT cluster](../../docs/access_cluster.md)
-   3. [Configure Storage](../../docs/configure_storage.md) - configure cloud storage using your new storage account created in this example.
+# Next Steps
+
+Now that you have deployed the controller, here are the next steps:
+  1. [Deploy the vFXT cluster](../../docs/jumpstart_deploy.md)
+  2. [Access the vFXT cluster](../../docs/access_cluster.md)
+  3. [Configure Storage](../../docs/configure_storage.md) - configure cloud storage using your new storage account created in this example.
