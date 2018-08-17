@@ -19,12 +19,12 @@ The vfxt.py script includes options to stop, restart, or destroy a cluster. It c
 **Restart a stopped cluster:** 
 
     vfxt.py --cloud-type azure --from-environment --start --resource-group GROUPNAME --admin-password PASSWORD --instances INSTANCE1_ID INSTANCE2_ID INSTANCE3_ID ...
+    
+Because the cluster is stopped, you must pass instance identifiers to specify the cluster nodes.
 
 **Destroy a cluster:**
 
     vfxt.py --cloud-type azure --from-environment --destroy --resource-group GROUPNAME --admin-password PASSWORD --management-address ADMIN_IP
-
-This example works for a running cluster; if the cluster is stopped you must pass instance identifiers to specify the cluster nodes.
 
 The option ``--quick-destroy`` can be used if you do not want to write changed data from the cluster cache.
 
@@ -40,8 +40,6 @@ The Avere Control Panel can be used to stop or reboot individual nodes, as well 
 The **FXT Nodes** settings page has controls for shutting down or rebooting individual nodes.(Note that IP addresses might move among cluster nodes when the number of active nodes changes.) Read [Cluster > FXT Nodes](<http://library.averesystems.com/ops_guide/4_7/gui_fxt_nodes.html#gui-fxt-nodes>) for more information.
 
 To stop or reboot the entire cluster, use the **System Maintenance** settings page. Read [Administration > System Maintenance](<http://library.averesystems.com/ops_guide/4_7/gui_system_maintenance.html#gui-system-maintenance>) for details.
-
-If you need to stop an instance or the entire cluster but do not intend to restart it, you can delete the instance by using tools in the Azure portal. See :ref:`terminate_instance` for more information.
 
 >[AZURE.NOTE] Although compute charges are not incurred while instances are stopped, storage charges continue, including for the storage volume used for the node's operating system and local cache storage. A node in this state shows as **stopped** in the Azure portal. A node with the status **stopped (deallocated)** no longer incurs charges because its infrastructure disks have been removed.
 
@@ -88,8 +86,8 @@ Click the **Delete** button at the top of the overview page to permanently destr
 
 >[AZURE.NOTE] If you want any remaining client changes in the cache to be written to backend storage, either use the vfxt.py ``--destroy`` option or use the Avere Control Panel to shut down the cluster cleanly before removing the node instances in the Azure portal.
 
-You can destroy node instances permanently by deleting them in the Azure portal. You can delete them one at a time as described above in :ref:`node_terminate` or you can use the **Virtual Machines** page to find all of the cluster VMs, select them with the checkboxes, and click the **Delete** button to remove them all in one action.
+You can destroy node instances permanently by deleting them in the Azure portal. You can delete them one at a time as described above, or you can use the **Virtual Machines** page to find all of the cluster VMs, select them with the checkboxes, and click the **Delete** button to remove them all in one action.
 
-![List of VMs in the portal, filtered by the term "cluster", with three of the four checked and highlighted](/images/multi_vm_delete.png)
+![List of VMs in the portal, filtered by the term "cluster", with three of the four checked and highlighted](images/multi_vm_delete.png)
 
 
