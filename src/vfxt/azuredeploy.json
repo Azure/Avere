@@ -5,27 +5,27 @@
     "controllerName": {
       "type": "string",
       "metadata": {
-        "description": "The unique name used for resource names in this template"
+        "description": "The unique name used for resource names associated with the controller"
       }
     },
-    "adminUsername": {
+    "controllerAdminUsername": {
       "type": "string",
       "defaultValue": "azureuser",
       "metadata": {
-        "description": "Admin username on all VMs."
+        "description": "The controller admin username."
       }
     },
-    "adminPassword": {
+    "controllerAdminPassword": {
       "type": "securestring",
       "metadata": {
-        "description": "Admin password on all VMs."
+        "description": "The controller admin password."
       }
     }
   },
   "variables": {
     "controllerName": "[parameters('controllerName')]",
-    "adminUsername": "[parameters('adminUsername')]",
-    "adminPassword": "[parameters('adminPassword')]",
+    "controllerAdminUsername": "[parameters('controllerAdminUsername')]",
+    "controllerAdminPassword": "[parameters('controllerAdminPassword')]",
     "nicName": "[concat('vmnic-',variables('controllerName'))]",
     "addressPrefix": "172.16.0.0/16",
     "subnetName": "[concat('subnet-',variables('controllerName'))]",
@@ -113,8 +113,8 @@
         },
         "osProfile": {
           "computername": "[variables('vmName')]",
-          "adminUsername": "[variables('adminUsername')]",
-          "adminPassword": "[variables('adminPassword')]"
+          "controllerAdminUsername": "[variables('controllerAdminUsername')]",
+          "controllerAdminPassword": "[variables('controllerAdminPassword')]"
         },
         "storageProfile": {
           "imageReference": {
@@ -157,7 +157,7 @@
     },
     "sshString": {
       "type": "string",
-      "value": "[concat('ssh ', variables('adminUsername'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress)]"
+      "value": "[concat('ssh ', variables('controllerAdminUsername'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress)]"
     }
   }
 }

@@ -5,10 +5,10 @@
     "uniquename": {
       "value": "GEN-UNIQUE"
     },
-    "adminUsername": {
+    "controllerAdminUsername": {
       "value": "azureuser"
     },
-    "adminPassword": {
+    "controllerAdminPassword": {
       "value": "GEN-PASSWORD"
     }
   }
