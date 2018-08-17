@@ -27,7 +27,7 @@ Open your browser. Navigate to https://127.0.0.1:8443. Depending on your browser
 
 <img src="images/21-browser-proceed.png">
 
-Enter the username `admin` and the vFXT password you provided.
+Enter the username `admin` and the vFXT password you provided when installing the cluster.
 
 <img src="images/21b-login.png">
 
