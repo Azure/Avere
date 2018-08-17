@@ -4,6 +4,7 @@
 
 The Avere vFXT is an enterprise-scale clustered file system built for the cloud.
 
+<!---
 # Cloud Bursting
 
 Avere Virtual FXT (vFXT) Edge filers allow you to run compute workflows in Azure Compute without having to worry about moving your NAS.  The vFXT accomplishes this by performing read-ahead caching, which aids in hiding latency when trying to use cloud computing against on-premises storage. The benefits of using this technology include:
@@ -35,6 +36,7 @@ Avere Cloud NAS with the vFXT for Azure gives you:
 [Learn more about Cloud NAS](http://www.averesystems.com/cloud-nas)
 
 <img src="docs/images/cloud-nas-animation.gif">
+--->
 
 # Documentation
   * [Prerequisites](docs/prereqs.md)
@@ -61,6 +63,10 @@ Avere Cloud NAS with the vFXT for Azure gives you:
     * [Config Support](http://library.averesystems.com/create_cluster/4_8/html/config_support.html#config-support) - explains how to customize support settings and remote monitoring. 
     * [Cluster Configuration Guide](http://library.averesystems.com/#operations) - is a complete reference of settings and options for an Avere cluster. A vFXT cluster uses a subset of these options, but many of the same configuration pages apply. 
     * [Dashboard guide](http://library.averesystems.com/#operations) - explains how to use the cluster monitoring features of the Avere Control Panel.
+
+# Use cases
+* [Cloud bursting overview](/docs/cloud_bursting.md)
+* [Cloud NAS overview](/docs/cloud_nas.md)
 
 # Contributing
 
