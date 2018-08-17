@@ -11,4 +11,4 @@ Avere Cloud NAS with the vFXT for Azure gives you:
 
 [Learn more about Cloud NAS](http://www.averesystems.com/cloud-nas)
 
-<img src="docs/images/cloud-nas-animation.gif">
+<img src="images/cloud-nas-animation.gif">

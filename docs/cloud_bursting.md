@@ -13,4 +13,4 @@ Avere Virtual FXT (vFXT) Edge filers allow you to run compute workflows in Azure
 
 [Learn more about Cloud Bursting](http://www.averesystems.com/cloud-bursting)
 
-<img src="docs/images/cloud-bursting-animation.gif">
+<img src="images/cloud-bursting-animation.gif">
