@@ -32,7 +32,7 @@ The following ``nsupdate`` commands provide an example of configuring DNS correc
 
 ## DNS Settings
 
-DNS parameters are set in [Cluster > Administrative Network](<http://library.averesystems.com/ops_guide/4_7/gui_admin_network.html#gui-admin-network>) settings page. Settings on that page include: 
+DNS parameters are set in [Cluster > Administrative Network](<http://library.averesystems.com/ops_guide/4_7/gui_admin_network.html#gui-admin-network>) settings page in the Avere Control Panel. Settings on that page include: 
 
 * DNS server address
 * DNS domain name
