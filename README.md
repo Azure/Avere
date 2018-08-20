@@ -44,9 +44,9 @@ Avere Cloud NAS with the vFXT for Azure gives you:
   * [Access the cluster](docs/access_cluster.md) - Access the Avere Control Panel from an SSH tunnel
   * [Configure storage](docs/configure_storage.md) - Add a core filer, vserver, and junction
   * (Erin/Ron) Connecting clients - RRDNS and `mount`
-  * [Getting data onto the vFXT cluster](docs/getting_data_onto_vfxt.md) - provides various strategies for how to parallelize ingress to the vFXT.
-  * (Erin) Management – start / stop
-  * [Cluster configuration and performance tuning](docs/config_tuning.md) - Additional setup and performance optimizations
+  * [Moving data to the vFXT cluster](docs/getting_data_onto_vfxt.md) - Explains how to efficiently load data onto cluster storage by using parallel copy strategies
+  * [Managing the cluster](docs/start_stop_vfxt-py.md) - How to stop, start, or decommission the cluster, and manage cluster nodes
+  * [Cluster configuration and performance tuning](docs/config_tuning.md) - Additional cluster setup and performance optimizations
   * [Troubleshoot – engage support](docs/engage_support.md)
 
 # Quick Start Guides
