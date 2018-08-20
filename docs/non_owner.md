@@ -36,10 +36,13 @@ A subscription owner must create the cluster creator role and use it to assign a
 }
 ```
 
-1. Run this command to create the role:
+2. Run this command to create the role:
 `az role definition create --role-definition <PATH_TO_FILE>`
-Example:
-`az role definition create --role-definition ./averecreatecluster.json`
-1. Assign this role to the user that will create the cluster:
+
+   Example:
+   `az role definition create --role-definition ./averecreatecluster.json`
+
+3. Assign this role to the user that will create the cluster:
 `az role assignment create --assignee <USERNAME> --scope /subscriptions/<SUBSCRIPTION_ID> --role 'avere-create-cluster'`
+
 After this procedure, the user assigned the role will be able to create and configure the network infrastructure, create the cluster controller, and use it to log in and run the template scripts to create the cluster.
