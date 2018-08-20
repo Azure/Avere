@@ -46,7 +46,7 @@ Use the SSH string you captured in the [outputs above](browse-to-outputs), ssh t
 
 Next run the following steps mentioned in the `/VFXT_README` file.
 
-1. Authenticate by running `az login`.
+1. Authenticate by running `az login`.  In this step you will need to browse to https://microsoft.com/devicelogin in any web browser, put in the unique code, authenticate to Microsoft, and then return to the shell.
 
    <img src="images/9azlogin.png">
 
@@ -81,8 +81,8 @@ Additionally add name of the cluster role name you just created, and give your c
 
 ```bash
 AVERE_CLUSTER_ROLE=<name of role created above (avere-cluster)>
-AVERE_CLUSTER_ROLE=<unique name for cluster (you can probably leave as avere-cluster)>
-ADMIN_PASSWORD=<YOUR UNIQUE PASSWORD
+CLUSTER_NAME=<unique vfxt cluster name (you can probably leave as avere-cluster)>
+ADMIN_PASSWORD=<your unique vfxt cluster password>
 ```
 
 Save the file and exit.
