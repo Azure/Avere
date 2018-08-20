@@ -1,14 +1,23 @@
 # Moving data onto the vFXT cluster
 
-Because the Avere vFXT cluster is a scalable multiclient cache, the most efficient way to copy data to it is to use multiple clients, each copying a share of the data.
+After you've created a new vFXT cluster, your first task might be to move data onto its new storage volume. However, using a simple copy command from one client is not the best option for copying data to the cluster's backend storage. 
+
+| Because the Avere vFXT cluster is a scalable multiclient cache, the most efficient way to copy data to it is to use **multiple clients**, each copying a share of the data. |
+| --- |
 
 Just as when a client writes any new file, the data is first stored in the cluster cache and then written to the back-end core filer.
 
-This is a different approach from the familiar ``cp`` or ``copy`` commands that are commonly used to using to transfer data from one storage system to another. Those are single-threaded processes that only copy one file at a time, so the file server is ingesting only one file at a time - which is a waste of the cluster’s resources.
+The familiar ``cp`` or ``copy`` commands that are commonly used to using to transfer data from one storage system to another are single-threaded processes that only copy one file at a time. This means that the file server is ingesting only one file at a time - which is a waste of the cluster’s resources.
 
-This section explains the how to create a multi-client, multithreaded file copying system to move data to the Avere cluster. It discusses the decision points, and gives practical examples for commands to achieve an efficient copy.
+This section explains strategies for creating a multi-client, multithreaded file copying system to move data to the Avere cluster. It explains file transfer concepts and decision points that can be used to achieve an efficient copy with multiple clients and simple copy commands. 
 
-It also explains how to use msrsync, which can be used to partially automate the process of dividing a dataset into buckets and then issues rsync commands to copy it. Read [](#Using the msrsync utility to populate cloud volumes).
+It also explains some utilities that can help. The ``msrsync`` utility can be used to partially automate the process of dividing a dataset into buckets and using rsync commands. The ``parallelcp`` script is another utility that reads the source directory and issues copy commands automatically.  
+
+Click the link to jump to a section:
+
+- [Manual copy example](#Manual-copy-example) - A thorough explanation using copy commands
+- [Partially automated (msrsync) example](#Using-the-msrsync-utility-to-populate-cloud-volumes) 
+- [Parallel copy example](#Using-the-parallel-copy-script)
 
 ## Strategic planning
 
@@ -20,7 +29,7 @@ When building a strategy to copy data in parallel, you should understand the tra
 
 Each copy process will have a throughput rate and a files-transferred rate, which can be measured by timing the length of the copy command and factoring the file size and file count. Measuring this is outside of the scope of this document, but it is imperative to understand whether you’ll be dealing with small or large files.
 
-## Simple example
+## Manual copy example 
 
 You can manually create a multi-threaded copy on a client by running more than one copy command at once in the background against predefined sets of files or paths.
 
@@ -34,7 +43,7 @@ cp /mnt/source/file1 /mnt/destination1/ & cp /mnt/source/file2 /mnt/destination1
 
 After issuing this command, the `jobs` command will show that two threads are running.
 
-## Predictable filename structure 
+### Predictable filename structure 
 
 If you have a directory with 1000 files that are sequentially numbered 0001-1000, you can use expressions to facilitate creating ten parallel threads that each copy 100 files:
 
@@ -51,7 +60,7 @@ cp /mnt/source/file8* /mnt/destination1/ & \
 cp /mnt/source/file9* /mnt/destination1/
 ```
 
-## Unknown filename structure
+### Unknown filename structure
 
 If your file-naming structure is not predictable, you can grab entire directories to send to backgrounded ``cp`` commands:
 
@@ -75,7 +84,7 @@ cp -R /mnt/source/dir1/dir1c /mnt/destination/dir1/ & #this cmd copies dir1c1 vi
 cp -R /mnt/source/dir1/dir1d /mnt/destination/dir1/ &
 ```
 
-## When to add mount points
+### When to add mount points
 
 After you have enough parallel threads going against a single destination filesystem mountpoint, there will be a point where adding more threads does not give more throughput (or worse, over-threading can cause a degradation) as measured in files/second or in bytes/second (depending on your type of data).  
 
@@ -106,7 +115,7 @@ cp /mnt/source/file8* /mnt/destination3/ & \
 
 In the example above, all three destination mountpoints are being targeted by the client file copy processes.
 
-## When to add clients
+### When to add clients
 
 Lastly, when you have reached the client's capabilities, adding more copy threads or additional mountpoints will not yield any additional files/sec or bytes/sec increases. In that situation, you can deploy another client with the same set of mountpoints that will be running its own sets of file copy processes. 
 
@@ -130,7 +139,7 @@ Client4: cp -R /mnt/source/dir2/dir2d /mnt/destination/dir2/ &
 Client4: cp -R /mnt/source/dir3/dir3d /mnt/destination/dir3/ &
 ```
 
-## Creating file manifests
+### Creating file manifests
 
 After understanding the approaches above (multiple copy-threads per destination, multiple destinations per client, multiple clients per network-accessible source filesystem), consider this recommendation: Build file manifests and then use them with copy commands across multiple clients.
 
@@ -233,7 +242,7 @@ To use msrsync to populate an Azure cloud volume with an Avere cluster, follow t
 1. Install msrsync and its prerequisites (rsync and Python 2.6 or later)
 2. Determine the total number of files and directories to be copied.
 
-   For example, use the Avere utility ``walkermp.py`` (available from GitHub at **[ xxx tbd xxx ]** ) to count the number of items to be copied.
+   For example, use the Avere utility ``walkermp.py`` (available soon from GitHub; contact Avere Systems for details) to count the number of items to be copied.
 
    If not using ``walkermp.py``, you can calculate the number of items with the Gnu ``find`` tool as follows:
    ```bash
@@ -253,7 +262,9 @@ To use msrsync to populate an Azure cloud volume with an Avere cluster, follow t
 
    ``mrsync -P --stats -p64 -f170 --rsync -ahv --inplace /test/source-repository/ /mnt/vfxt/repository``
 
-## Parallel copy script
+## Using the parallel copy script
+
+The ``parallelcp`` script also can be useful for moving data to your vFXT cluster's backend storage. 
 
 The script below will add the executable `parallelcp`.  (This script is designed for Ubuntu; if using another distribution, you must install ``parallel`` separately.)
 
