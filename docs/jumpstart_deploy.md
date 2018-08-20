@@ -42,23 +42,15 @@ The outputs have the information you need to deploy your Avere vFXT cluster.
 Now that your controller node is running, you need to access the controller node, edit the templates, and run the create cluster script. 
 
 ### Access the Controller
-Use the SSH string you captured in outputs, ssh to the controller using the password that you provided.
+Use the SSH string you captured in the [outputs above](browse-to-outputs), ssh to the controller using the password that you provided.
 
 Next run the following steps mentioned in the `/VFXT_README` file.
 
-<img src="images/8sshreadme.png">
+1. Authenticate by running `az login`.
 
-Authenticate by running `az login`.
+   <img src="images/9azlogin.png">
 
-<img src="images/9azlogin.png">
-
-Copy your subscription ID.
-
-<img src="images/10subid.png">
-
-Run ```az account set --subscription``` and paste your subscription ID.
-
-<img src="images/11setsub.png">
+2. Run ```az account set --subscription YOUR_SUBSCRIPTION_ID```
 
 ### Edit the templates
 Edit the cluster role template (`vi /avere-cluster.json`) and paste your subscription ID here, too. This role is used by the Avere vFXT cluster to have read access to Azure resources it needs, and write access to the network interface resources as part of the high availability (HA) capabilities.
@@ -76,9 +68,22 @@ cp /create-minimal-cluster ./cmc
 vi cmc
 ```
 
-Using the fields you captured in outputs above, provide the resource group, location, virtual network, and subnet.  Additionally add the cluster role name you just created, and give your cluster a name and an admin password.
+In the file cmc, edit the following fields you captured in [outputs above](browse-to-outputs): resource group, location, virtual network, and subnet:
 
-<img src="images/13edittemplate.png">
+```bash
+RESOURCE_GROUP=<from the Outputs>
+LOCATION=<from the Outputs>
+NETWORK=<from the Outputs>
+SUBNET=<from the Outputs>
+```
+
+Additionally add name of the cluster role name you just created, and give your cluster a name unique to your subscription and an admin password:
+
+```bash
+AVERE_CLUSTER_ROLE=<name of role created above (avere-cluster)>
+AVERE_CLUSTER_ROLE=<unique name for cluster (you can probably leave as avere-cluster)>
+ADMIN_PASSWORD=<YOUR UNIQUE PASSWORD
+```
 
 Save the file and exit.
 
@@ -88,4 +93,4 @@ Run the script (`./cmc`). When the script completes, copy the management IP addr
 <img src="images/14mgmtip.png">
 
 ### Proceed to Accessing the Cluster
-Now that the cluster is running, you can now [click here to access the cluster](https://github.com/Azure/Avere/blob/master/docs/access_cluster.md).
+Now that the cluster is running, and you have the management IP address, you can now [click here to access the cluster](https://github.com/Azure/Avere/blob/master/docs/access_cluster.md).
