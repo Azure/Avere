@@ -3,6 +3,8 @@ The easiest way to create a vFXT cluster, is to use a controller node which has 
 
 <img src="images/vfxt_deployment.png">
 
+In this tutorial, we will enable managed service identity (MSI) on the Avere vFXT cluster, but it will not be enabled on the controller.
+
 This tutorial assumes that you have done the following prerequisites:
 
 1. [Create a new subscription](prereqs.md#create-a-new-subscription)
@@ -59,7 +61,7 @@ Run ```az account set --subscription``` and paste your subscription ID.
 <img src="images/11setsub.png">
 
 ### Edit the templates
-Edit the cluster role template (`vi /avere-cluster.json`) and paste your subscription ID here, too. This role gives the controller permissions to create the vFXT and the Azure components it needs.
+Edit the cluster role template (`vi /avere-cluster.json`) and paste your subscription ID here, too. This role is used by the Avere vFXT cluster to have read access to Azure resources it needs, and write access to the network interface resources as part of the high availability (HA) capabilities.
 
 <img src="images/12pastesubid.png">
 
