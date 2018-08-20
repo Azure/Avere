@@ -121,8 +121,8 @@ Install-DesktopLinks($UserPath)
     $wshshell = New-Object -ComObject WScript.Shell
     $lnk = $wshshell.CreateShortcut("c:\Users\$UserPath\Desktop\AvereMgmt.lnk")
     $lnk.TargetPath = "https://${AvereManagementIP}/avere/fxt/index.php"
-    $AvereIconDestinationPath =  "C:\Windows\System32\Avere_large.ico"
-    $AvereIconUrl = "https://avereimageswestus.blob.core.windows.net/media/Avere_large.ico?st=2018-08-10T20%3A32%3A02Z&se=2030-08-11T20%3A32%3A00Z&sp=rl&sv=2018-03-28&sr=b&sig=AMbz%2BvotmAQDuwKOdUJkRmaEiObX%2FcxuE3VluAoOpNY%3D"
+    $AvereIconDestinationPath =  "C:\Windows\System32\avere.ico"
+    $AvereIconUrl = "https://avereimageswestus.blob.core.windows.net/media/avere.ico?st=2018-08-10T20%3A32%3A02Z&se=2030-08-11T20%3A32%3A00Z&sp=rl&sv=2018-03-28&sr=b&sig=AMbz%2BvotmAQDuwKOdUJkRmaEiObX%2FcxuE3VluAoOpNY%3D"
     DownloadFileOverHttp $AvereIconUrl $AvereIconDestinationPath
     $lnk.IconLocation = "$AvereIconDestinationPath, 0"
     $lnk.Save()
