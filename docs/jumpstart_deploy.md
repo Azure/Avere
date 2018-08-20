@@ -18,18 +18,31 @@ To install from the portal, launch the deployment by clicking the "Deploy to Azu
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 
-Update the controller name and password, and click "Purchase".  After 5 or 6 minutes, your controller node will be up and running.
+Add a name for the new resource group, update the controller name and password, and click "Purchase".  After 5 or 6 minutes, your controller node will be up and running.
+
+## Browse to outputs
+
+The outputs have the information you need to deploy your Avere vFXT cluster.
+
+1. From the notification icon on the top bar, click "Go to resource group", and this will show the new resource group that contains your controller and VNET.
+
+   <img src="images/browse_to_resource_group.png">
+
+2. On left side, click "deployments", and "Microsoft.Template"
+
+   <img src="images/deployment_template.png">
+
+3. On left side, click "outputs", and copy the values in each of the fields for creating your controller.
+
+   <img src="images/template_outputs.png">
 
 ## Create cluster
 Now that your controller node is running, you need to access the controller node, edit the templates, and run the create cluster script. 
 
 ### Access the Controller
-Copy your controller’s public IP address from the portal.
+Use the SSH string you captured in outputs, ssh to the controller using the password that you provided.
 
-<img src="images/7publicip.png">
-
-SSH to the device with the username and password that you provided.
-The following steps are mentioned in the `/VFXT_README` file.
+Next run the following steps mentioned in the `/VFXT_README` file.
 
 <img src="images/8sshreadme.png">
 
@@ -73,4 +86,4 @@ Run the script (`./cmc`). When the script completes, copy the management IP addr
 <img src="images/14mgmtip.png">
 
 ### Proceed to Accessing the Cluster
-Now that the cluster is running [Click Here] https://github.com/Azure/Avere/blob/master/docs/access_cluster.md
+Now that the cluster is running, you can now [click here to access the cluster](https://github.com/Azure/Avere/blob/master/docs/access_cluster.md).
