@@ -42,7 +42,7 @@ Current documents can be found on the documentation website at http://library.av
 
 ## Cluster tuning
 
-Because of the diverse software and hardware environments used with the Avere cluster, and differing customer requirements, many VvFXT clusters can benefit from customized performance settings. This step is typically done in conjunction with an Avere Systems representative, since it involves configuring some features that are not accessible in the Avere Control Panel.
+Because of the diverse software and hardware environments used with the Avere cluster, and differing customer requirements, many vFXT clusters can benefit from customized performance settings. This step is typically done in conjunction with an Avere Systems representative, since it involves configuring some features that are not accessible in the Avere Control Panel.
 
 The VDBench utlity can be helfpul in generating I/O workloads to test a vFXT cluster. Read [Measuring vFXT Performance](vdbench.md) to learn more. 
 
@@ -62,7 +62,7 @@ These changes might be recommended based on dataset qualities or workflow style.
 
 ### Cloud NAS or cloud gateway optimizations
 
-To take advantage of higher data speeds between the VvFXT cluster and cloud storage in a cloud NAS or gateway scenario (where the VvFXT cluster provides NAS-style access to a cloud container), Avere might recommend changing settings like these to more aggressively push data to the storage volume from the cache: 
+To take advantage of higher data speeds between the vFXT cluster and cloud storage in a cloud NAS or gateway scenario (where the vFXT cluster provides NAS-style access to a cloud container), Avere might recommend changing settings like these to more aggressively push data to the storage volume from the cache: 
 
 - Increasing the number of TCP connections between the cluster and the storage container
 - Decreasing the protocol timeout value for communication between the cluster and storage to retry writes that don't immediately succeed sooner **[ xxx this was "REST timeout" - is that accurate? Should I just say REST timeout value? xxx ]**
