@@ -2,7 +2,10 @@
 
 After you've created a new vFXT cluster, your first task might be to move data onto its new storage volume. However, using a simple copy command from one client is not the best option for copying data to the cluster's backend storage. 
 
-*Because the Avere vFXT cluster is a scalable multiclient cache, the most efficient way to copy data to it is to use **multiple clients**, each copying a share of the data.*
+----------------------------------------------------------
+Because the Avere vFXT cluster is a scalable multiclient cache, the most efficient way to copy data to it is to use **multiple clients**, each copying a share of the data.
+
+---------------------------------------------------------
 
 Just as when a client writes any new file, the data is first stored in the cluster cache and then written to the back-end core filer.
 
