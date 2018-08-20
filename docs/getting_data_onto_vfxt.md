@@ -241,7 +241,7 @@ To use msrsync to populate an Azure cloud volume with an Avere cluster, follow t
 1. Install msrsync and its prerequisites (rsync and Python 2.6 or later)
 2. Determine the total number of files and directories to be copied.
 
-   For example, use the Avere utility ``walkermp.py`` (available from GitHub at <span <span style="background-color: #FFFF00">**[ xxx tbd xxx ]** </span>) to count the number of items to be copied.
+   For example, use the Avere utility ``walkermp.py`` (available soon from GitHub; contact Avere Systems for details) to count the number of items to be copied.
 
    If not using ``walkermp.py``, you can calculate the number of items with the Gnu ``find`` tool as follows:
    ```bash
