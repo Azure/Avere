@@ -41,19 +41,20 @@ The outputs have the information you need to deploy your Avere vFXT cluster.
 ## Create cluster
 Now that your controller node is running, you need to access the controller node, edit the templates, and run the create cluster script. 
 
-### Access the Controller
-Use the SSH string you captured in the [outputs above](browse-to-outputs), ssh to the controller using the password that you provided.
+### Access the cluster
 
-Next run the following steps mentioned in the `/VFXT_README` file.
+1. SSH to the controller using the `SSHSTRING` you captured in the [outputs above](browse-to-outputs).
 
-1. Authenticate by running `az login`.  In this step you will need to browse to https://microsoft.com/devicelogin in any web browser, put in the unique code, authenticate to Microsoft, and then return to the shell.
+2. Authenticate by running `az login`.  In this step, browse to https://microsoft.com/devicelogin in any web browser, put in the unique code, authenticate to Microsoft, and then return to the shell.
 
    <img src="images/9azlogin.png">
 
-2. Run ```az account set --subscription YOUR_SUBSCRIPTION_ID```
+3. Run ```az account set --subscription YOUR_SUBSCRIPTION_ID```
 
-### Edit the templates
-Edit the cluster role template (`vi /avere-cluster.json`) and paste your subscription ID here, too. This role is used by the Avere vFXT cluster to have read access to Azure resources it needs, and write access to the network interface resources as part of the high availability (HA) capabilities.
+### Create the role
+The Avere vFXT cluster uses managed service identity (MSI) to read Azure resource properties required for operation, and write access to the network interface resources as part of the high availability (HA) capabilities.
+
+If you have already created a role for your subscription, you can skip this step.  Otherwise edit the cluster role template (`vi /avere-cluster.json`) and paste in your subscription ID.
 
 <img src="images/12pastesubid.png">
 
@@ -61,6 +62,8 @@ Create the role by running the az role definition create command.
 ```sh
 az role definition create --role-definition /avere-cluster.json
 ```
+
+### Edit the deployment template
 
 Copy and then edit the `create-minimal-cluster` template. For example:
 ```sh
@@ -77,18 +80,19 @@ NETWORK=<from the Outputs>
 SUBNET=<from the Outputs>
 ```
 
-Additionally add name of the cluster role name you just created, and give your cluster a name unique to your subscription and an admin password:
+Additionally add name of the cluster role name you just created, and add an admin password:
 
 ```bash
 AVERE_CLUSTER_ROLE=<name of role created above (avere-cluster)>
-CLUSTER_NAME=<unique vfxt cluster name (you can probably leave as avere-cluster)>
 ADMIN_PASSWORD=<your unique vfxt cluster password>
 ```
 
 Save the file and exit.
 
 ### Run the script
-Run the script (`./cmc`). When the script completes, copy the management IP address.
+Run the script by typing `./cmc &`.  The script is put into the background in case you lose your connection.  You can always look for the log output in ~/vfxt.log.
+
+When the script completes, copy the management IP address.
 
 <img src="images/14mgmtip.png">
 
