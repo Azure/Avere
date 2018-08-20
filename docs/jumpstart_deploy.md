@@ -1,57 +1,24 @@
 # Jumpstart Deploy a vFXT Cluster
-The easiest way to create a vFXT cluster, is to use a controller node which has scripts and templates for creating the vFXT cluster. In this tutorial, you will create a controller node from the Azure portal and use it to create a vFXT cluster.
+The easiest way to create a vFXT cluster, is to use a controller node which has scripts and templates for creating the vFXT cluster. In this tutorial, you will create a controller node and use it to create a vFXT cluster.  By the end of this tutorial, you will have a VNET, a controller, and a vFXT cluster as shown in the following diagram:
 
-[Click here](jumpstart_deploy_print.md) for a printer-friendly version of this tutorial.
+<img src="images/vfxt_deployment.png">
 
-This Jumpstart tutorial assumes that you are a subscription owner and that you have enough quota to run vFXT instances. [Click here](prereqs.md) for quota details. Consider creating a new subscription to track project expenses.
+This tutorial assumes that you have done the following prerequisites:
+
+1. [Create a new subscription](prereqs.md#create-a-new-subscription)
+1. [Subscription owner permissions](prereqs.md#subscription-owner-permissions).
+1. [Quota for the vFXT cluster](prereqs.md#quota-for-the-vfxt-cluster).
+1. [Accepting the Legal Terms for the marketplace images](prereqs.md#accepting-the-legal-terms-for-the-two-marketplace-images).
 
 ## Create Controller
 
-### New subscription
-Start by creating a new subscription to track all project resources and expenses.
-- Navigate to the [Subscriptions blade](https://ms.portal.azure.com/#blade/Microsoft_Azure_Billing/SubscriptionsBlade)
-- Click "+ Add" button at the top
-- Sign in, if prompted
-- Select an offer and walk through the steps for a new subscription
+To install from the portal, launch the deployment by clicking the "Deploy to Azure" button:
 
-### Find the Avere controller node image
-From the [Azure marketplace](https://ms.portal.azure.com/#blade/Microsoft_Azure_Marketplace/GalleryFeaturedMenuItemBlade/selectedMenuItemId/home), search for Avere and click the Controller node.
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Favereimageswestus.blob.core.windows.net%2Fgithubcontent%2Fsrc%2Fvfxt%2Fazuredeploy.json" target="_blank">
+<img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
+</a>
 
-<img src="images/1selectcontroller.png">
-
-### Enable Programmatic Access
-The controller node needs programmatic access. You’ll need to enable programmatic access to your subscription BELOW the Create button. You’ll only need to do this once and can skip this step in the future. 
-
-<img src="images/2 - programmatic access link b.png">
-
-<img src="images/3 - enable programmatic access b.png">
-
-After enabling programmatic access for the controller node, select the vFXT node and enable programmatic access for that image.
-
-### Walk through the wizard
-Click Create to walk through the wizard.
-- Name the instance.
-- Choose HDD.
-- Provide a username and password for command-line access. 
-- Choose your subscription.
-- Create a new resource group.
-- Choose a location close to you.
-- Before clicking OK, note the username, password, resource group name, and location.
-
-<img src="images/4 - capture page 1 b.png">
-
-For the size, choose A0.
-
-Create a new virtual network and subnet. Capture this information for later.
-To access the controller remotely, we’ll need a public IP address and SSH.
-
-<img src="images/5 - vnet info b.png">
-
-We don’t need boot diagnostics but we do need to register with Azure AD.
-
-<img src="images/6 - boot and MSI b.png">
-
-Review and Create. After 5 or 6 minutes, your controller node will be up and running.
+Update the controller name and password, and click "Purchase".  After 5 or 6 minutes, your controller node will be up and running.
 
 ## Create cluster
 Now that your controller node is running, you need to access the controller node, edit the templates, and run the create cluster script. 
