@@ -2,6 +2,10 @@
 
 This template implements a data ingestor VM containing recommended tools for parallel ingestion in to the Avere vFXT.
 
+<p align="center">
+<img src="../../docs/images/parallel_ingestion.png">
+</p>
+
 Use python 2.7 with this project.  The script `gen-arm-templates.py` takes as inputs `installdataingestor.sh`, and `base-template*.json`, and outputs to `dataingestor-azuredeploy.*.json`.
 
 The data ingestor VM contains the following tools:

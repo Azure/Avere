@@ -2,10 +2,12 @@
 
 After you've created a new vFXT cluster, your first task might be to move data onto its new storage volume. However, using a simple copy command from one client is not the best option for copying data to the cluster's backend storage. 
 
-| Because the Avere vFXT cluster is a scalable multiclient cache, the most efficient way to copy data to it is to use **multiple clients**, each copying a share of the data. |
+| Because the Avere vFXT cluster is a scalable multiclient cache, the most efficient and fastest way to copy data to it is to **parallelize ingestion** of files and objects. |
 | --- |
 
-Just as when a client writes any new file, the data is first stored in the cluster cache and then written to the back-end core filer.
+<p align="center">
+<img src="images/parallel_ingestion.png">
+</p>
 
 The familiar ``cp`` or ``copy`` commands that are commonly used to using to transfer data from one storage system to another are single-threaded processes that only copy one file at a time. This means that the file server is ingesting only one file at a time - which is a waste of the cluster’s resources.
 
@@ -13,17 +15,17 @@ This section explains strategies for creating a multi-client, multithreaded file
 
 It also explains some utilities that can help. The ``msrsync`` utility can be used to partially automate the process of dividing a dataset into buckets and using rsync commands. The ``parallelcp`` script is another utility that reads the source directory and issues copy commands automatically.  
 
-Click the link to jump to a section:
-
-- [Manual copy example](#Manual-copy-example) - A thorough explanation using copy commands
-- [Partially automated (msrsync) example](#Using-the-msrsync-utility-to-populate-cloud-volumes) 
-- [Parallel copy example](#Using-the-parallel-copy-script)
-
-To install a data ingestor VM with all these tools installed, launch the deployment by clicking the "Deploy to Azure" button:
+To install a data ingestor VM with all these parallel data ingestion tools installed, launch the deployment by clicking the "Deploy to Azure" button:
 
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Favereimageswestus.blob.core.windows.net%2Fgithubcontent%2Fsrc%2Fdataingestor%2Fdataingestor-azuredeploy.json" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
+
+Click the link to jump to a section:
+
+- [Manual copy example](#manual-copy-example) - A thorough explanation using copy commands
+- [Partially automated (msrsync) example](#using-the-msrsync-utility-to-populate-cloud-volumes) 
+- [Parallel copy example](#using-the-parallel-copy-script)
 
 ## Strategic planning
 
