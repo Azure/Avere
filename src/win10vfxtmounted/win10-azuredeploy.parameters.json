@@ -14,14 +14,14 @@
     "adminPassword": {
       "value": "AvereNumber1$"
     },
-    "subnetRef": {
-      "value": "/subscriptions/b52fce95-de5f-4b37-afca-db203a5d0b6a/resourceGroups/avereeastus/providers/Microsoft.Network/virtualNetworks/vnet-avereeastus/subnets/subnet-avereeastus"
+    "subnetId": {
+      "value": "/subscriptions/b52fce95-de5f-4b37-afca-db203a5d0b6a/resourceGroups/avereeastusd16/providers/Microsoft.Network/virtualNetworks/vnet-avereeastusd16/subnets/subnet-avereeastusd16"
     },
     "avereManagementIP": {
-      "value": "172.16.0.5"
+      "value": "10.0.0.5"
     },
     "avereMountIP": {
-      "value": "172.16.0.12"
+      "value": "10.0.0.12"
     },
     "avereMountPath": {
       "value": "msazure"

@@ -27,7 +27,7 @@
         "description": "Password for the Virtual Machine."
       }
     },
-    "subnetRef": {
+    "subnetId": {
       "type": "string",
       "metadata": {
         "description": "The reference to the subnet of the Avere vFXT cluster."
@@ -57,7 +57,7 @@
     "vmSize": "[parameters('vmSize')]",
     "adminUsername": "[parameters('adminUsername')]",
     "adminPassword": "[parameters('adminPassword')]",    
-    "subnetRef": "[parameters('subnetRef')]",
+    "subnetId": "[parameters('subnetId')]",
     "avereManagementIP": "[parameters('avereManagementIP')]",
     "avereMountIP": "[parameters('avereMountIP')]",
     "avereMountPath": "[parameters('avereMountPath')]",
@@ -106,7 +106,7 @@
                 "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
               },
               "subnet": {
-                "id": "[variables('subnetRef')]"
+                "id": "[variables('subnetId')]"
               }
             }
           }

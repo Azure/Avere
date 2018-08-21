@@ -19,6 +19,12 @@ Click the link to jump to a section:
 - [Partially automated (msrsync) example](#Using-the-msrsync-utility-to-populate-cloud-volumes) 
 - [Parallel copy example](#Using-the-parallel-copy-script)
 
+To install a data ingestor VM with all these tools installed, launch the deployment by clicking the "Deploy to Azure" button:
+
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Favereimageswestus.blob.core.windows.net%2Fgithubcontent%2Fsrc%2Fdataingestor%2Fdataingestor-azuredeploy.json" target="_blank">
+<img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
+</a>
+
 ## Strategic planning
 
 When building a strategy to copy data in parallel, you should understand the tradeoffs in file size, file count, and directory depth.
@@ -255,12 +261,12 @@ To use msrsync to populate an Azure cloud volume with an Avere cluster, follow t
 5. Issue the msrsync command to copy files:
 
    ```bash
-   msrsync -P --stats -p64 -f<ITEMS_DIV_64> --rsync -ahv --inplace <SOURCE_PATH> <DESTINATION_PATH>
+   msrsync -P --stats -p64 -f<ITEMS_DIV_64> --rsync "-ahv --inplace" <SOURCE_PATH> <DESTINATION_PATH>
    ```
 
    For example, this command is designed to move 11,000 files in 64 processes from /test/source-repository to /mnt/vfxt/repository:
 
-   ``mrsync -P --stats -p64 -f170 --rsync -ahv --inplace /test/source-repository/ /mnt/vfxt/repository``
+   ``mrsync -P --stats -p64 -f170 --rsync "-ahv --inplace" /test/source-repository/ /mnt/vfxt/repository``
 
 ## Using the parallel copy script
 
