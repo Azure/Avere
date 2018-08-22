@@ -122,7 +122,7 @@ Install-DesktopLinks($UserPath)
     $lnk = $wshshell.CreateShortcut("c:\Users\$UserPath\Desktop\AvereMgmt.lnk")
     $lnk.TargetPath = "https://${AvereManagementIP}/avere/fxt/index.php"
     $AvereIconDestinationPath =  "C:\Windows\System32\avere.ico"
-    $AvereIconUrl = "https://avereimageswestus.blob.core.windows.net/media/avere.ico?st=2018-08-10T20%3A32%3A02Z&se=2030-08-11T20%3A32%3A00Z&sp=rl&sv=2018-03-28&sr=b&sig=AMbz%2BvotmAQDuwKOdUJkRmaEiObX%2FcxuE3VluAoOpNY%3D"
+    $AvereIconUrl = "https://avereimageswestus.blob.core.windows.net/archive/avere.ico"
     DownloadFileOverHttp $AvereIconUrl $AvereIconDestinationPath
     $lnk.IconLocation = "$AvereIconDestinationPath, 0"
     $lnk.Save()
@@ -215,20 +215,22 @@ Install-ChocolatyAndPackages
 }
 
 function
-Install-WindowsMedia
+Install-WindowsPacks
 {
-    Write-Log "Debug Install-WindowsMedia"
+    Write-Log "Debug Install-WindowsPacks"
 
     #install the windows media feature
-    $DestinationPath =  "C:\AzureData\Windows_MediaFeaturePack_x64_1709.msu"
-    $DestinationLog =  "C:\AzureData\Windows_MediaFeaturePack_x64_1709.txt"
     # How do we get a non-expiring link from: https://www.microsoft.com/en-us/software-download/mediafeaturepack?
     # $WindowsMediaFeaturePackUrl = "https://software-download.microsoft.com/pr/Windows_MediaFeaturePack_x64_1709.msu?t=502e9f8c-4b72-4bd4-b8fd-bbe0eec6f3d0&e=1533550263&h=a59f3e3f9bd51b3665b0f3724a2b4346"
-    $WindowsMediaFeaturePackUrl = "https://avereimageswestus.blob.core.windows.net/media/Windows_MediaFeaturePack_x64_1709.msu?st=2018-08-06T12%3A19%3A27Z&se=2030-08-07T12%3A19%3A00Z&sp=rl&sv=2018-03-28&sr=b&sig=ryxi6CHXQR7UA2Q0aEn8n0gLRZwOB3k0dKthjQ5y14I%3D"
-    DownloadFileOverHttp $WindowsMediaFeaturePackUrl $DestinationPath
-    Write-Log "installing Windows Media: Wusa.exe $DestinationPath /quiet /log:$DestinationLog"
+
+    # install the windows pack
+    $DestinationPath =  "C:\AzureData\Windows_Pack_x64_1709.msu"
+    $DestinationLog =  "C:\AzureData\Windows_Pack_x64_1709.txt"
+    $WindowsPackUrl = "https://avereimageswestus.blob.core.windows.net/archive/Windows_Pack_x64_1709.msu"
+    DownloadFileOverHttp $WindowsPackUrl $DestinationPath
+    Write-Log "installing Windows pack: Wusa.exe $DestinationPath /quiet /log:$DestinationLog"
     Wusa.exe "$DestinationPath" /quiet /log:$DestinationLog
-    Write-Log "finished installing windows media"
+    Write-Log "finished installing windows pack"
 }
 
 try
@@ -263,10 +265,10 @@ try
             # the user path may or may not be here
         }
 
-        Write-Log "Install Windows Media and restart"
-        Install-WindowsMedia
+        Write-Log "Install Windows Packs and restart"
+        Install-WindowsPacks
         #
-        # install windows media takes about 10 minutes to install, and will reboot
+        # install windows packs takes about 10 minutes to install, and will reboot
         # the commands below should not exceed 10 minutes 
         #
         Write-Log "Install Azure Batch Explorer"
