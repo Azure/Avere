@@ -14,7 +14,9 @@ To distribute the overall load, configure your DNS domain to use round-robin loa
 
 ## Configuration Details
 
-For optimal performance, configure client-facing cluster addresses as shown in the following diagram.
+For optimal performance, configure client-facing cluster addresses as shown in the following diagram. 
+
+[Text description](averedns_text_alt.txt)
 
 ![Diagram showing configuration information for client-facing addresses - detailed description to come](images/AvereDns.png)
 
