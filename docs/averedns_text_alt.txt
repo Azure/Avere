@@ -6,7 +6,7 @@ Each of the IP address circles is connected by two arrows to a circle labeled as
 
 The connections between the IP address circles and the client circles are two arrows: one arrow labeled "PTR" that points from the IP address circle to the client circle, and one arrow labeled "A" that points from the client circle to the IP address circle.
 
-The image includes the following text. (Sorry about that, it's a legacy image that needs to be reworked when we get a moment.)
+The image includes the following text. (So sorry about that, it's a legacy image that needs to be reworked.)
 
 Text 1: Avere client-facing addresses must be configured as depicted in this diagram.
 
