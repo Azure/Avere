@@ -55,7 +55,7 @@ The junction will appear after a few seconds. Create additional junctions as nee
 
 ### Copying an Azure storage access key
 
-Follow these instructions to find a key to paste into your cloud core filer definition.
+Follow these instructions to find a key to paste into your cloud core filer definition. (This task is needed if adding an Azure container as a core filer, which is described above in [Create a core filer](#create-a-core-filer)
 
 1. In the Azure portal, browse to the storage account resource that holds the core filer container. 
 2. Under **Settings**, click **Access keys**. 
