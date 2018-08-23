@@ -1,0 +1,22 @@
+text description for DNS diagram (AvereDNS.png)
+
+The diagram shows a circle at the left labeled "avere", connected by arrows pointing toward three circles labeled with IP addresses: 10.0.0.10, 10.0.0.11, and 10.0.0.12. The arrows between the "avere" circle and the three IP circles have the caption "A". 
+
+Each of the IP address circles is connected by two arrows to a circle labeled as a client - the circle with IP 10.0.0.10 is connected to "client10", the circle with IP 10.0.0.11 is connected to "client11", and the circle with IP 10.0.0.12 is connected to "client12". 
+
+The connections between the IP address circles and the client circles are two arrows: one arrow labeled "PTR" that points from the IP address circle to the client circle, and one arrow labeled "A" that points from the client circle to the IP address circle.
+
+The image includes the following text. (Sorry about that, it's a legacy image that needs to be reworked when we get a moment.)
+
+Text 1: Avere client-facing addresses must be configured as depicted in this diagram.
+
+Text 2: "avere" is the server argument for client mount commands.
+
+Text 3: An internal-use "client*" name must exist for each Avere service address. 
+
+Text 4: named.conf modifications:
+    options {
+        rrset-order {
+            class IN A name "avere.example.com" order cyclic;
+        };
+    };
