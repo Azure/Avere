@@ -14,17 +14,28 @@ If you need to create a new Azure storage container to serve as your back-end st
 - From the Avere Control Panel, click the Settings tab at the top.
 - Click “Manage Core Filers” on the left. 
 - Click “Create.”
-- Name your core filer.
-- For a NAS core filer: 
-  * Provide a fully qualified domain name (FQDN) if available. Otherwise, provide an IP address or hostname that resolves to your core filer.
-  * Choose your filer class from the list. If unsure, choose “Other.”
-- For a cloud core filer, follow the instructions in [Adding a new cloud core filer](<http://library.averesystems.com/ops_guide/4_7/new_core_filer_cloud.html>) to supply a credential and the container name. 
-- Click Next.
 
 <img src="images/22addcorefiler1b.png">
 
-- Choose a cache policy.
-- Click “Add Filer.”
+- For a NAS core filer: 
+  * Name your core filer.
+  * Provide a fully qualified domain name (FQDN) if available. Otherwise, provide an IP address or hostname that resolves to your core filer.
+  * Choose your filer class from the list. If unsure, choose “Other.”
+  * Click **Next** and choose a cache policy. 
+  * Click **Add Filer**.
+  * Refer to [Adding a new NAS core filer](http://library.averesystems.com/ops_guide/4_7/new_core_filer_nas.html) for more detailed information.
+  
+- For a cloud core filer: 
+  * Name your core filer and click **Next**.
+  * Accept the default cache policy and continue to the third page. 
+  * In **Service type**, choose **Azure storage**. 
+  * If you have already defined a storage credential for your Azure subsccription, choose it from the list. If not, choose **Add a credential set**, name the new credential, and paste a key from the storage container into the **Access key** field. Leave the  **Private key** field blank.    
+    Read [Copying an access key](#copying-an-azure-storage-access-key), below, to learn where to find the credential.
+  * On the fourth page, enter the name of the container in **Bucket name**. 
+  * Click **Add Filer**.
+  * Refer to [Adding a new cloud core filer](<http://library.averesystems.com/ops_guide/4_7/new_core_filer_cloud.html>) for more detailed information. 
+- Click Next.
+
 The page will refresh, or you can refresh the page to display your new core filer.
 
 ## Create a junction
@@ -39,3 +50,15 @@ More information about junctions can be found [here](http://library.averesystems
 <img src="images/24addjunction.png">
 
 The junction will appear after a few seconds. Create additional junctions as needed.
+
+
+
+### Copying an Azure storage access key
+
+Follow these instructions to find a key to paste into your cloud core filer definition.
+
+1. In the Azure portal, browse to the storage account resource that holds the core filer container. 
+2. Under **Settings**, click **Access keys**. 
+3. Copy one of the keys. 
+
+<img src="images/copy_storage_key.png">
