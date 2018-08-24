@@ -12,26 +12,26 @@
       "type": "string",
       "defaultValue": "Standard_D5_v2",
       "metadata": {
-        "description": "Size of the controller VM."
+        "description": "Size of the Windows 10 VM."
       }
     },
     "adminUsername": {
       "type": "string",
       "defaultValue": "azureuser",
       "metadata": {
-        "description": "Admin username on the controller VM."
+        "description": "Admin username on the Windows 10 VM."
       }
     },
     "adminPassword": {
       "type": "securestring",
       "metadata": {
-        "description": "Password for the Virtual Machine."
+        "description": "Password for the Windows 10 VM."
       }
     },
     "subnetId": {
       "type": "string",
       "metadata": {
-        "description": "The reference to the subnet of the Avere vFXT cluster."
+        "description": "The fully qualified reference to the subnet of the Avere vFXT cluster.  Example /subscriptions/SUBSCRIPTION/resourceGroups/RESOURCEGROUP/providers/Microsoft.Network/virtualNetworks/NETWORK_NAME/subnets/SUBNET_NAME."
       }
     },
     "avereManagementIP": {
