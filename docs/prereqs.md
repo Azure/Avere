@@ -5,6 +5,7 @@ Here are the prerequisites for vFXT cluster creation.
 1. [Subscription owner permissions](#subscription-owner-permissions).
 1. [Quota for the vFXT cluster](#quota-for-the-vfxt-cluster).
 1. [Accepting the Legal Terms for the marketplace images](#accepting-the-legal-terms-for-the-two-marketplace-images).
+1. [Create an Azure RBAC Role](#create-an-azure-rbac-role)
 
 ## Create a new Subscription
 
@@ -34,12 +35,6 @@ You must have sufficient quota for the following Azure components.  Here are the
 |Premium SSD Storage|200GB OS and 1-4TB Cache per node|
 |Storage Account|v2|
 |BLOB|One LRS BLOB Container (optional)|
-<!--
-|Role|Custom role defined in advance|
-|Vnet|One vnet for the Avere cluster|
-|Subnet|One Subnet for the Avere cluster|
-|Resource Group|One Resource group|
--->
 
 ## Accepting the Legal Terms for the two marketplace images
 
@@ -74,3 +69,25 @@ Choose either cloud shell or portal to accept the legal terms for the marketplac
 
    <img src="images/3 - enable programmatic access b.png">
 
+## Create an Azure RBAC Role
+
+The Avere vFXT cluster uses managed service identity (MSI) to read Azure resource properties required for operation, and write access to the network interface resources as part of the high availability (HA) capabilities.  This RBAC role is only used for the vFXT cluster, and not used for the controller.
+
+1. Open the Cloud Shell in Azure Portal or browse to https://shell.azure.com.
+
+2. Run ```az account set --subscription YOUR_SUBSCRIPTION_ID```
+
+3. Download the role, and paste in your subscription ID, by running the following commands:
+
+```bash
+wget -O- https://averedistribution.blob.core.windows.net/public/vfxtdistdoc.tgz | tar zxf - avere-cluster.json
+vi avere-cluster.json
+```
+
+<img src="images/12pastesubid.png">
+
+4. Create the role by running the az role definition create command.
+
+```bash
+az role definition create --role-definition /avere-cluster.json
+```

@@ -4,7 +4,7 @@ This 60 minute demo takes you through a Maya + Batch + Avere vFXT Demo.  By the 
 
 # Pre-requisites
 
-1. Install a vFXT according to [Jumpstart Deploy a vFXT Cluster](jumpstart_deploy.md), and [configure storage](configure_storage.md).
+1. Install a vFXT according to [Deploy a vFXT Cluster](jumpstart_deploy.md), and [configure storage](configure_storage.md).
 
 2. Install a Windows 10 Avere Mounted Workstation according to [Windows 10 Avere vFXT Mounted Workstation](windows_10_avere_vfxt_mounted_workstation.md).
 

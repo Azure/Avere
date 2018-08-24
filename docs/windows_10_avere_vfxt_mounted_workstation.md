@@ -24,33 +24,6 @@ To install from the portal, launch the deployment by clicking the "Deploy to Azu
 
 Save the output values of the deployment for access to the Windows 10 Avere Workstation.
 
-## Cloud Shell Deployment
-
-1. To deploy, first open a cloud shell from the [portal](http://portal.azure.com) or [cloud shell](https://shell.azure.com/).
-
-2. Run the following commands in cloud shell to deploy, updating the commented variables:
-
-```bash
-# set the subscription, resource group, and location
-export DstSub=#"SUBSCRIPTION_ID"
-export DstResourceGroupName=#"example_vdbench_resourcegroup"
-export DstLocation=#"eastus2"
-
-mkdir win10
-cd win10
-
-# get the Avere vFXT controller template and edit parameters
-curl -o azuredeploy.json https://avereimageswestus.blob.core.windows.net/githubcontent/src/win10vfxtmounted/win10-azuredeploy.json
-curl -o azuredeploy.parameters.json https://avereimageswestus.blob.core.windows.net/githubcontent/src/win10vfxtmounted/win10-azuredeploy.parameters.json
-
-# deploy the template
-az account set --subscription $DstSub
-az group create --name $DstResourceGroupName --location $DstLocation
-az group deployment create --resource-group $DstResourceGroupName --template-file azuredeploy.json --parameters @azuredeploy.parameters.json
-```
-
-4. Scroll-up in the deployment output to a section labelled `"outputs"`.
-
 ## Using the Windows 10 Avere Workstation
 
 1. RDP to the clientAddress from the output parameters in the last command.
