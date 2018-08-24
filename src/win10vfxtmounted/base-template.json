@@ -5,7 +5,7 @@
     "uniqueName": {
       "type": "string",
       "metadata": {
-        "description": "The unique name used for the VM and the backing storage account"
+        "description": "The unique name used for the Windows 10 VM."
       }
     },
     "vmSize": {
@@ -46,25 +46,25 @@
         "description": "This is one of the NFS endpoints provided by the Avere vFXT cluster."
       }
     },
-    "avereMountPath": {
+    "averevFXTPath": {
       "type": "string",
       "metadata": {
-        "description": "This is one of the shares provided by the Avere vFXT cluster."
+        "description": "The Avere vFXT namespace path."
       }
     }
   },
   "variables": {
-    "masterEndpointDNSNamePrefix": "[parameters('uniqueName')]",
+    "uniqueName": "[parameters('uniqueName')]",
     "vmSize": "[parameters('vmSize')]",
     "adminUsername": "[parameters('adminUsername')]",
     "adminPassword": "[parameters('adminPassword')]",    
     "subnetId": "[parameters('subnetId')]",
     "avereManagementIP": "[parameters('avereManagementIP')]",
     "avereMountIP": "[parameters('avereMountIP')]",
-    "avereMountPath": "[parameters('avereMountPath')]",
-    "nicName": "vmnic",
-    "publicIPAddressName": "publicip",
-    "vmName": "avereclient",
+    "averevFXTPath": "[parameters('averevFXTPath')]",
+    "nicName": "[concat('vmnic-',variables('uniqueName'))]",
+    "publicIPAddressName": "[concat('publicip-',variables('uniqueName'))]",
+    "vmName": "[concat('vm-',variables('uniqueName'))]",
     "imageReference": {
       "publisher": "MicrosoftVisualStudio",
       "offer": "Windows",
@@ -72,7 +72,7 @@
       "version": "latest"
     },
     "singleQuote": "'",
-    "windowsCustomScriptArguments": "[concat('$arguments = ',variables('singleQuote'),'-UserName ',variables('adminUsername'),' -AvereManagementIP ',variables('avereManagementIP'),' -AvereMountIP ',variables('avereMountIP'),' -AvereMountPath ',variables('avereMountPath'),variables('singleQuote'),' ; ')]",
+    "windowsCustomScriptArguments": "[concat('$arguments = ',variables('singleQuote'),'-UserName ',variables('adminUsername'),' -AvereManagementIP ',variables('avereManagementIP'),' -AvereMountIP ',variables('avereMountIP'),' -AvereMountPath ',variables('averevFXTPath'),variables('singleQuote'),' ; ')]",
     "windowsCustomScriptSuffix": " $inputFile = '%SYSTEMDRIVE%\\AzureData\\CustomData.bin' ; $outputFile = '%SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.ps1' ; $inputStream = New-Object System.IO.FileStream $inputFile, ([IO.FileMode]::Open), ([IO.FileAccess]::Read), ([IO.FileShare]::Read) ; $sr = New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($inputStream, [System.IO.Compression.CompressionMode]::Decompress)) ; $sr.ReadToEnd() | Out-File($outputFile) ; Invoke-Expression('{0} {1}' -f $outputFile, $arguments) ; ",
     "windowsCustomScript": "[concat('powershell.exe -ExecutionPolicy Unrestricted -command \"', variables('windowsCustomScriptArguments'), variables('windowsCustomScriptSuffix'), '\"')]"
   },
@@ -83,10 +83,7 @@
       "name": "[variables('publicIPAddressName')]",
       "location": "[resourceGroup().location]",
       "properties": {
-        "publicIPAllocationMethod": "Dynamic",
-        "dnsSettings": {
-          "domainNameLabel": "[variables('masterEndpointDNSNamePrefix')]"
-        }
+        "publicIPAllocationMethod": "Static"
       }
     },
     {
@@ -171,9 +168,9 @@
       "type": "string",
       "value": "[resourceGroup().location]"
     },
-    "clientAddress": {
+    "clientRDPAddress": {
       "type": "string",
-      "value": "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).dnsSettings.fqdn]"
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress]"
     }
   }
 }

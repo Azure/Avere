@@ -31,7 +31,7 @@
     "subnetId": {
       "type": "string",
       "metadata": {
-        "description": "The reference to the subnet of the Avere vFXT cluster."
+        "description": "The fully qualified reference to the subnet of the Avere vFXT cluster.  Example /subscriptions/SUBSCRIPTION/resourceGroups/RESOURCEGROUP/providers/Microsoft.Network/virtualNetworks/NETWORK_NAME/subnets/SUBNET_NAME."
       }
     },
     "averevFXTCommaSeparatedIPs": {

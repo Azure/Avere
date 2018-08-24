@@ -64,7 +64,7 @@
       "averevFXTPath": {
         "type": "string",
         "metadata": {
-          "description": "The vFXT mount path of the Avere vFXT cluster."
+          "description": "The Avere vFXT namespace path."
         }
       },
       "averevFXTBootstrapIP": {

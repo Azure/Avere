@@ -5,7 +5,7 @@
     "uniqueName": {
       "type": "string",
       "metadata": {
-        "description": "The unique name used for the VM and the backing storage account"
+        "description": "The unique name used for the VM."
       }
     },
     "vmName": {
