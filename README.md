@@ -4,55 +4,27 @@
 
 The Avere vFXT is an enterprise-scale clustered file system built for the cloud.
 
-<!---
-# Cloud Bursting
-
-Avere Virtual FXT (vFXT) Edge filers allow you to run compute workflows in Azure Compute without having to worry about moving your NAS.  The vFXT accomplishes this by performing read-ahead caching, which aids in hiding latency when trying to use cloud computing against on-premises storage. The benefits of using this technology include:
-
-  * Leverage your current on-premsises NAS environment alongside Azure Compute
-  * Allows you to offset peaks in compute demand with Azure's pay-as-you-go services without moving large data sets from existing storage
-  * Hides latency to cloud compute resources with cloud caching
-  * Provides easy scaling from 3 to 24 nodes to meet growing demands in shorter periods of time
-  * Reduces cloud compute costs by as much as 90% by minimizing the use of Azure Storage during processing
-  * Eliminates the need to expand owned compute capacity, reducing data center footprint and supporting data center consolidation
-  * Allows for use of Microsoft Azure Low-priority Virtual Machines for additional savings
-  * Enterprises and companies working within HPC environments see immediate benefits of flexibility and agility to match compute resources with business demands quickly and easily.
-
-[Learn more about Cloud Bursting](http://www.averesystems.com/cloud-bursting)
-
-<img src="docs/images/cloud-bursting-animation.gif">
-
-# Clustered File System for Azure – Cloud NAS
-
-When using both Azure Storage and Azure Compute resources, you can use the vFXT to create an scale-out NAS in the public cloud, eliminating the silos between these resources. Leverage low-cost Azure Storage for HPC workloads running on Azure Compute.
-
-Avere Cloud NAS with the vFXT for Azure gives you:
-  * Scalability – clustering up to 24 nodes
-  * Low Data Latency – powerful cloud cache tiers data for optimal performance
-  * Secure AES 256-encryption
-  * Protection with Cloud Snapshots
-  * Insights with powerful analytics
-
-[Learn more about Cloud NAS](http://www.averesystems.com/cloud-nas)
-
-<img src="docs/images/cloud-nas-animation.gif">
---->
-
-# Documentation
-  * [Prerequisites](docs/prereqs.md)
-  * [Jumpstart Deployment](docs/jumpstart_deploy.md) - The fastest way to create a vFXT cluster.
-  * [Access the cluster](docs/access_cluster.md) - Access the Avere Control Panel from an SSH tunnel
-  * [Configure storage](docs/configure_storage.md) - Add a core filer, vserver, and junction
+# Quickstart
+  1. [Prerequisites](docs/prereqs.md)
+  2. [Deploy](docs/jumpstart_deploy.md) - The fastest way to create a vFXT cluster.
+  3. [Access the cluster](docs/access_cluster.md) - Access the Avere Control Panel from an SSH tunnel
+  4. [Configure storage](docs/configure_storage.md) - Add a core filer, vserver, and junction
+  
+# How-to Guides
   * (Erin/Ron) Connecting clients - RRDNS and `mount`
   * [Moving data to the vFXT cluster](docs/getting_data_onto_vfxt.md) - Explains how to efficiently load data onto cluster storage by using parallel copy strategies
   * [Managing the cluster](docs/start_stop_vfxt-py.md) - How to stop, start, or decommission the cluster, and manage cluster nodes
   * [Cluster configuration and performance tuning](docs/config_tuning.md) - Additional cluster setup and performance optimizations
   * [Troubleshoot – engage support](docs/engage_support.md)
 
-# Quick Start Guides
-  * [VDBench - measuring vFXT Performance](docs/vdbench.md) - Deploys VDBench on an N-Node cluster to demonstrate the storage performance characteristics of the Avere vFXT cluster.
+# Concepts
+* [Cloud bursting overview](/docs/cloud_bursting.md)
+* [Cloud NAS overview](/docs/cloud_nas.md)
+
+# Tutorials
+  * [Measure vFXT performance with VDBench](docs/vdbench.md) - Deploys VDBench on an N-Node cluster to demonstrate the storage performance characteristics of the Avere vFXT cluster.
   * [Windows 10 Avere vFXT Mounted Workstation](docs/windows_10_avere_vfxt_mounted_workstation.md) - Creates a Windows Workstation that automatically mounts the vFXT, and installs various Azure Tools.
-  * [Maya + Azure Batch + Avere vFXT Demo](docs/maya_azure_batch_avere_vfxt_demo.md) - Demonstrates how to use the Autodesk Maya Renderer with Azure Batch and the Avere vFXT to generate a rendered movie.
+  * [Rendering using Azure Batch and the Avere vFXT](docs/maya_azure_batch_avere_vfxt_demo.md) - Demonstrates how to use the Autodesk Maya Renderer with Azure Batch and the Avere vFXT to generate a rendered movie.
 
 # Resources
   * [vFXT Guides](http://library.averesystems.com/#vfxt) 
@@ -63,10 +35,6 @@ Avere Cloud NAS with the vFXT for Azure gives you:
     * [Config Support](http://library.averesystems.com/create_cluster/4_8/html/config_support.html#config-support) - explains how to customize support settings and remote monitoring. 
     * [Cluster Configuration Guide](http://library.averesystems.com/#operations) - is a complete reference of settings and options for an Avere cluster. A vFXT cluster uses a subset of these options, but many of the same configuration pages apply. 
     * [Dashboard guide](http://library.averesystems.com/#operations) - explains how to use the cluster monitoring features of the Avere Control Panel.
-
-# Use cases
-* [Cloud bursting overview](/docs/cloud_bursting.md)
-* [Cloud NAS overview](/docs/cloud_nas.md)
 
 # Contributing
 
