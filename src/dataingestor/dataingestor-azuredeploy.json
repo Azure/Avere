@@ -17,6 +17,7 @@
     },
     "adminUsername": {
       "type": "string",
+      "defaultValue": "azureuser",
       "metadata": {
         "description": "The admin username on the data ingestor VM."
       }
