@@ -16,17 +16,23 @@ The vfxt.py script includes options to stop, restart, or destroy a cluster. It c
 
 ### Stop a cluster
 
-    vfxt.py --cloud-type azure --from-environment --stop --resource-group GROUPNAME --admin-password PASSWORD --management-address ADMIN_IP
+```bash
+vfxt.py --cloud-type azure --from-environment --stop --resource-group GROUPNAME --admin-password PASSWORD --management-address ADMIN_IP --location LOCATION --azure-network NETWORK --azure-subnet SUBNET
+```
 
 ### Restart a stopped cluster
 
-    vfxt.py --cloud-type azure --from-environment --start --resource-group GROUPNAME --admin-password PASSWORD --instances INSTANCE1_ID INSTANCE2_ID INSTANCE3_ID ...
-    
+```bash
+vfxt.py --cloud-type azure --from-environment --start --resource-group GROUPNAME --admin-password PASSWORD --management-address ADMIN_IP --location LOCATION --azure-network NETWORK --azure-subnet SUBNET --instances INSTANCE1_ID INSTANCE2_ID INSTANCE3_ID ...
+```    
+
 Because the cluster is stopped, you must pass instance identifiers to specify the cluster nodes.
 
 ### Destroy a cluster
 
-    vfxt.py --cloud-type azure --from-environment --destroy --resource-group GROUPNAME --admin-password PASSWORD --management-address ADMIN_IP
+```bash
+vfxt.py --cloud-type azure --from-environment --destroy --resource-group GROUPNAME --admin-password PASSWORD --management-address ADMIN_IP --location LOCATION --azure-network NETWORK --azure-subnet SUBNET --management-address ADMIN_IP
+```
 
 The option ``--quick-destroy`` can be used if you do not want to write changed data from the cluster cache.
 
