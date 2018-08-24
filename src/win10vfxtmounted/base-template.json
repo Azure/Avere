@@ -17,6 +17,7 @@
     },
     "adminUsername": {
       "type": "string",
+      "defaultValue": "azureuser",
       "metadata": {
         "description": "Admin username on the controller VM."
       }

@@ -42,9 +42,9 @@ Now that your controller node is running, you need to access the controller node
 
 ### Access the cluster
 
-1. SSH to the controller using the `SSHSTRING` you captured in the [outputs above](browse-to-outputs).
+1. SSH to the controller using the `SSHSTRING` you captured in the [outputs above](#browse-to-outputs).
 
-2. Authenticate by running `az login`.  In this step, browse to https://microsoft.com/devicelogin in any web browser, put in the unique code, authenticate to Microsoft, and then return to the shell.
+2. Authenticate by running `az login`.  In this step, browse to <a href="https://microsoft.com/devicelogin" target="_blank">https://microsoft.com/devicelogin</a> in any web browser, put in the unique code, authenticate to Microsoft, and then return to the shell.
 
    <img src="images/9azlogin.png">
 
@@ -67,7 +67,7 @@ NETWORK=<from the Outputs>
 SUBNET=<from the Outputs>
 ```
 
-Additionally add name of the cluster role name you just created, and add an admin password:
+Additionally add name of the cluster role name you just created in the [prerequisites](prereqs.md#create-an-azure-rbac-role), and add an admin password:
 
 ```bash
 AVERE_CLUSTER_ROLE=<name of role created above (avere-cluster)>
@@ -84,4 +84,4 @@ When the script completes, copy the management IP address.
 <img src="images/14mgmtip.png">
 
 ### Proceed to Accessing the Cluster
-Now that the cluster is running, and you have the management IP address, you can now [click here to access the cluster](https://github.com/Azure/Avere/blob/master/docs/access_cluster.md).
+Now that the cluster is running, and you have the management IP address, you can now [click here to access the cluster](access_cluster.md).

@@ -1,0 +1,36 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "avereBackedStorageAccountName": {
+        "type": "string",
+        "metadata": {
+          "description": "The globally unique name used for the Avere Backed Azure Storage Account."
+        }
+      }
+    },
+    "variables": {
+      "avereBackedStorageAccountName": "[parameters('avereBackedStorageAccountName')]",
+      "storageAccountType": "Standard_LRS",
+      "storageAccountKind": "StorageV2"
+    },
+    "resources": [
+      {
+        "name": "[variables('avereBackedStorageAccountName')]",
+        "type": "Microsoft.Storage/storageAccounts",
+        "apiVersion": "2017-10-01",
+        "sku": {
+          "name": "[variables('storageAccountType')]"
+        },
+        "kind": "[variables('storageAccountKind')]",
+        "location": "[resourceGroup().location]"
+      }
+    ],
+    "outputs": {
+      "STORAGE_ACCOUNT": {
+        "type": "string",
+        "value": "[variables('avereBackedStorageAccountName')]"
+      }
+    }
+}
+  
