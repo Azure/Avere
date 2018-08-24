@@ -32,3 +32,6 @@ Enter the username `admin` and the vFXT password you provided when installing th
 <img src="images/21b-login.png">
 
 Click “Login” or press Enter.
+
+## Proceed to configure storage
+Now that you can access the cluster, proceed to [configure storage](configure_storage.md).
