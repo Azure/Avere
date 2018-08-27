@@ -17,10 +17,12 @@ Example: ``mount 10.0.0.12:/avere/files /mnt/vfxt``
 
 The IP address should be one of the client-facing IP addresses defined for the vserver. You can find the range of client-facing IPs in the Avere Control Panel in two places: 
 
-* The VServers table in the Dashboard 
+* The VServers table in the Dashboard - 
+ 
   ![Dashboard tab of the Avere Control Panel with the VServer tab selected in the data table below the graph, and the IP address section circled](images/ip_addresses_dashboard.png)
 
-* The Client Facing Network settings page
+* The Client Facing Network settings page - 
+
   ![Settings > VServer > Client Facing Network configuration page with a circle around the Address Range section of the table for a particular vserver](images/ip_addresses_settings.png)
 
 The junction path corresponds to the **Namespace path** field you defined when creating the junction. For example, if you used ``/avere/files`` as your namespace path, your clients would mount *IP_address*:/avere/files to their local mount point. 
