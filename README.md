@@ -14,7 +14,8 @@ The Avere vFXT is an enterprise-scale clustered file system built for the cloud.
 ## How-to Guides
   * [Parallel Data Ingest - Moving data to the vFXT cluster](docs/getting_data_onto_vfxt.md) - Explains how to use parallel copy strategies to efficiently load data onto cluster storage
   * [Managing the cluster](docs/start_stop_vfxt-py.md) - How to stop, start, or decommission the cluster, and manage cluster nodes
-  * [Cluster configuration and performance tuning](docs/config_tuning.md) - Additional cluster setup and performance optimizations
+  * [Additional configuration and reference](docs/additional_config.md) - Additional cluster setup tasks and links to supplemental documentation 
+  * [Cluster performance tuning](docs/tuning.md) - Custom performance optimizations
   * [Troubleshoot – engage support](docs/engage_support.md)
 
 ## Concepts
@@ -36,20 +37,6 @@ The Avere vFXT is an enterprise-scale clustered file system built for the cloud.
     * [Cluster Configuration Guide](http://library.averesystems.com/#operations) - is a complete reference of settings and options for an Avere cluster. A vFXT cluster uses a subset of these options, but many of the same configuration pages apply. 
     * [Dashboard guide](http://library.averesystems.com/#operations) - explains how to use the cluster monitoring features of the Avere Control Panel.
 
-### Contributing
-
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.microsoft.com.
-
-When you submit a pull request, a CLA-bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
-
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
-
 ### Legal Notices
 
 Microsoft and any contributors grant you a license to the Microsoft documentation and other content
@@ -66,3 +53,17 @@ Privacy information can be found at https://privacy.microsoft.com/en-us/
 
 Microsoft and any contributors reserve all others rights, whether under their respective copyrights, patents,
 or trademarks, whether by implication, estoppel or otherwise.
+
+### Contributing
+
+This project welcomes contributions and suggestions.  Most contributions require you to agree to a
+Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
+the rights to use your contribution. For details, visit https://cla.microsoft.com.
+
+When you submit a pull request, a CLA-bot will automatically determine whether you need to provide
+a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the instructions
+provided by the bot. You will only need to do this once across all repos using our CLA.
+
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
+For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
+contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
