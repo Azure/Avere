@@ -1,41 +1,48 @@
-# Avere vFXT
-
 <img src="docs/images/avere_vfxt.png">
 
-The Avere vFXT is an enterprise-scale clustered file system built for the cloud.
+# Avere vFXT  
+
+The Avere vFXT is an enterprise-scale clustered file system built for the cloud. It provides scalability, flexibility, and easy access to data stored in the cloud, in a datacenter, or both. High-performance computing workloads are supported with automatic hot data caching close to Azure Compute resources. 
 
 ## Quickstart
-  1. [Prerequisites](docs/prereqs.md)
-  2. [Deploy](docs/jumpstart_deploy.md) - The fastest way to create a vFXT cluster
+
+These quickstart steps walk you through creating a simple Avere vFXT cluster, setting up storage, and connecting clients.
+
+  1. [Prerequisites](docs/prereqs.md) - Preparation tasks before deploying the Avere vFXT for Azure
+  2. [Deploy](docs/jumpstart_deploy.md) - Create the vFXT cluster
   3. [Access the cluster](docs/access_cluster.md) - Access the Avere Control Panel from an SSH tunnel
-  4. [Configure storage](docs/configure_storage.md) - Add a core filer and namespace junction
-  5. [Mount the Avere vFXT Cluster](docs/mount_clients.md) - Connecting clients and configuring round-robin DNS for load balancing 
+  4. [Configure storage](docs/configure_storage.md) - Add backend storage (core filer and namespace junction)
+  5. [Mount the Avere vFXT cluster](docs/mount_clients.md) - Configure load balancing and connect clients
   
-## How-to Guides
-  * [Parallel Data Ingest - Moving data to the vFXT cluster](docs/getting_data_onto_vfxt.md) - Explains how to use parallel copy strategies to efficiently load data onto cluster storage
-  * [Managing the cluster](docs/start_stop_vfxt-py.md) - How to stop, start, or decommission the cluster, and manage cluster nodes
+## How-to guides
+
+These guides explain next steps for putting the vFXT cluster through its paces. 
+
+  * [Add data to the vFXT cluster](docs/getting_data_onto_vfxt.md) - Parallel copy strategies to efficiently load data onto cluster storage
+  * [Manage the cluster](docs/start_stop_vfxt-py.md) - How to stop, start, or decommission the cluster, and manage cluster nodes
   * [Additional configuration and reference](docs/additional_config.md) - Additional cluster setup tasks and links to supplemental documentation 
   * [Cluster performance tuning](docs/tuning.md) - Custom performance optimizations
-  * [Troubleshoot – engage support](docs/engage_support.md)
+  * [Troubleshooting and getting support](docs/engage_support.md)
 
 ## Concepts
+
   * [Cloud bursting overview](/docs/cloud_bursting.md)
   * [Cloud NAS overview](/docs/cloud_nas.md)
 
 ## Tutorials
+
+These tutorials help you understand cluster performance testing and common use-case tasks.
+
   * [Measure vFXT performance with VDBench](docs/vdbench.md) - Deploys VDBench on an N-Node cluster to demonstrate the storage performance characteristics of the Avere vFXT cluster.
   * [Windows 10 Avere vFXT Mounted Workstation](docs/windows_10_avere_vfxt_mounted_workstation.md) - Creates a Windows Workstation that automatically mounts the vFXT, and installs various Azure Tools.
   * [Rendering using Azure Batch and the Avere vFXT](docs/maya_azure_batch_avere_vfxt_demo.md) - Demonstrates how to use the Autodesk Maya Renderer with Azure Batch and the Avere vFXT to generate a rendered movie.
 
 ## Resources
-  * [vFXT Guides](http://library.averesystems.com/#vfxt) 
-  * [fxt_cluster](http://library.averesystems.com/#fxt_cluster) - this guide is designed for clusters of physical hardware nodes, but some information in the document is relevant for vFXT clusters as well. In particular, these sections can be useful for vFXT cluster administrators: 
-    * [Gui login](http://library.averesystems.com/create_cluster/4_8/html/initial_config.html#gui-login) - explains how to connect to the Avere Control Panel and log in. However, note that you must use a VPN or SSH tunnel to access the cluster nodes inside the|aws|VPC. Read node_ssl_tunnel for details.
-    * [Config vServer](http://library.averesystems.com/create_cluster/4_8/html/config_vserver.html#config-vserver) - has information about creating a client-facing namespace
-    * [Add Core Filer](http://library.averesystems.com/create_cluster/4_8/html/config_core_filer.html#add-core-filer) - documents how to add storage
-    * [Config Support](http://library.averesystems.com/create_cluster/4_8/html/config_support.html#config-support) - explains how to customize support settings and remote monitoring. 
-    * [Cluster Configuration Guide](http://library.averesystems.com/#operations) - is a complete reference of settings and options for an Avere cluster. A vFXT cluster uses a subset of these options, but many of the same configuration pages apply. 
-    * [Dashboard guide](http://library.averesystems.com/#operations) - explains how to use the cluster monitoring features of the Avere Control Panel.
+  * [vFXT guides](http://library.averesystems.com/#vfxt) - Additional documentation about the Avere vFXT cluster
+  * [vfxt.py usage](http://library.averesystems.com/#vfxt) - Usage guide for the vfxt.py script  
+  * [FXT Cluster Creation Guide](http://library.averesystems.com/#fxt_cluster) - Although this guide is for creating clusters of physical FXT appliances, some configuration information is relevant for vFXT clusters as well. 
+  * [Cluster Configuration Guide](http://library.averesystems.com/#operations) - A conceptual guide and complete settings reference for administering an Avere cluster. 
+  * [Dashboard Guide](http://library.averesystems.com/#operations) - How to use the cluster monitoring features of the Avere Control Panel.
 
 ### Legal Notices
 
