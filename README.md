@@ -9,10 +9,10 @@ The Avere vFXT is an enterprise-scale clustered file system built for the cloud.
   2. [Deploy](docs/jumpstart_deploy.md) - The fastest way to create a vFXT cluster
   3. [Access the cluster](docs/access_cluster.md) - Access the Avere Control Panel from an SSH tunnel
   4. [Configure storage](docs/configure_storage.md) - Add a core filer and namespace junction
-  5. [Mounting the Avere vFXT Cluster](docs/mount_clients.md) Connecting clients and configuring round-robin DNS for load balancing 
+  5. [Mount the Avere vFXT Cluster](docs/mount_clients.md) - Connecting clients and configuring round-robin DNS for load balancing 
   
 # How-to Guides
-  * [Parallel Data Ingest - Moving data to the vFXT cluster](docs/getting_data_onto_vfxt.md) - Explains how to efficiently load data onto cluster storage by using parallel copy strategies
+  * [Parallel Data Ingest - Moving data to the vFXT cluster](docs/getting_data_onto_vfxt.md) - Explains how to use parallel copy strategies to efficiently load data onto cluster storage
   * [Managing the cluster](docs/start_stop_vfxt-py.md) - How to stop, start, or decommission the cluster, and manage cluster nodes
   * [Cluster configuration and performance tuning](docs/config_tuning.md) - Additional cluster setup and performance optimizations
   * [Troubleshoot – engage support](docs/engage_support.md)
