@@ -5,8 +5,9 @@ This section explains how to stop, restart, and destroy cloud instances that ser
 There are several options for stopping, starting and removing vFXT clusters:
 
 - [vfxt.py](#using-vfxt.py-to-manage-a-cluster) - The cluster creation script can be used to safely stop or destroy the entire cluster from the command line.
-- [Azure portal](start_stop_portal.md) - The portal can be used to destroy cluster VMs individually, but data integrity is not guaranteed if the cluster is not shut down cleanly first.
 - [Avere Control Panel](start_stop_gui.md) - The cluster administrative tool can be used to stop or reboot single nodes as well as the entire cluster. It is the safest option to guarantee that changed cache data is written to backend storage before shutdown.
+- [Azure portal](start_stop_portal.md) - The portal can be used to destroy cluster VMs individually, but data integrity is not guaranteed if the cluster is not shut down cleanly first.
+
 
 This document covers the simplest method, using vfxt.py. For more complicated actions, read the documents linked above. 
 
