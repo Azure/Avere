@@ -29,6 +29,8 @@ To install from the portal, launch the deployment by clicking the "Deploy to Azu
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 
+At minimum you will need to provide the resource group name (or specify an existing group), the name for the controller node, and set an administrative password for the node. (Passwords must be between 12 and 72 characters and include at least three of the following character types: lowercase, uppercase, number, and special character.
+
 Save the output values of the deployment for the vFXT deployment, and capture `location`, `sshString`, and `subnetref` to your tracking table described at the beginning of this document.
 
 ## Cloud Shell install
