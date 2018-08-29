@@ -23,7 +23,7 @@ These changes might be recommended based on dataset qualities or workflow style.
 To take advantage of higher data speeds between the vFXT cluster and cloud storage in a cloud NAS or gateway scenario (where the vFXT cluster provides NAS-style access to a cloud container), Avere might recommend changing settings like these to more aggressively push data to the storage volume from the cache: 
 
 - Increasing the number of TCP connections between the cluster and the storage container
-- Decreasing the protocol timeout value for communication between the cluster and storage to retry writes that don't immediately succeed sooner **[ xxx this was "REST timeout" - is that accurate? Should I just say REST timeout value? xxx ]**
+- Decreasing the REST timeout value for communication between the cluster and storage to retry writes that don't immediately succeed sooner 
 - Increase the segment size so that each backend write segment transfers an 8MB chunk of data instead of 1MB
 
 ## Cloud bursting or hybrid WAN optimizations
