@@ -47,4 +47,12 @@ To ensure a seamless client mount, pass these settings and arguments in your mou
 
 | Preferred settings  | |
 --- | --- 
-``nointr``            | The option "nointr" is preferred for legacy kernels (prior to 2008-Apr) that support this option. Note that the option "intr" is the default.
+``nointr``            | The option "nointr" is preferred for clients with legacy kernels (prior to April 2008) that support this option. Note that the option "intr" is the default.
+
+
+## Next steps 
+
+Refer to the [How-to guides](https://github.com/Azure/Avere#how-to-guides) for additional cluster tasks, including: 
+* Moving data to the cluster core filer
+* Managing the cluster
+* Cluster tuning
