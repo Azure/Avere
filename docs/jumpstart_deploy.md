@@ -1,5 +1,7 @@
 # Deploy a vFXT cluster
-The easiest way to create a vFXT cluster is to use a cluster controller node, which has the required scripts, templates, and software infrastructure for creating the vFXT cluster. In this tutorial, you will create a controller node and use it to create a vFXT cluster.  By the end of this tutorial, you will have a virtual network (VNet), a controller, and a vFXT cluster as shown in the following diagram:
+The easiest way to create a vFXT cluster is to use a cluster controller node, a VM that has the required scripts, templates, and software infrastructure for creating the vFXT cluster. 
+
+In this tutorial, you will create a controller node and use it to create a vFXT cluster.  By the end of this tutorial, you will have a virtual network (VNet), a controller, and a vFXT cluster as shown in the following diagram:
 
 <img src="images/vfxt_deployment.png">
 
@@ -19,7 +21,7 @@ To create the cluster controller node from the portal, click the "Deploy to Azur
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 
-Add a name for the new resource group, update the controller name and password, and click "Purchase".  After five or six minutes, your controller node will be up and running.
+Add a name for the new resource group, update the controller name and password, and click **Purchase**.  After five or six minutes, your controller node will be up and running.
 
 ## Browse to outputs
 
@@ -29,36 +31,38 @@ The outputs from creating the cluster controller node include information that y
 
    <img src="images/browse_to_resource_group.png">
 
-2. On left side, click **deployments**, and then **Microsoft.Template**.
+2. On left side, click **Deployments**, and then **Microsoft.Template**.
 
    <img src="images/deployment_template.png">
 
-3. On left side, click **outputs**. Copy the values in each of the fields. 
+3. On left side, click **Outputs**. Copy the values in each of the fields. 
 
    <img src="images/template_outputs.png">
 
 ## Create cluster
-Now that your controller node is running, you need to access the controller node, edit a built-in sample script, and run the script to create the cluster script. 
+Now that your controller node is running, you need to access the controller node, edit a built-in sample script, and run the script to create the cluster. 
 
 ### Access the cluster
 
-1. SSH to the controller, using the `SSHSTRING` you captured in the [outputs above](#browse-to-outputs).
+1. SSH to the controller, using the **SSHSTRING** value from the Outputs screen [(above)](#browse-to-outputs).
 
 2. Authenticate by running `az login`. Copy the authentication code supplied in the shell, then use a web browser to load <a href="https://microsoft.com/devicelogin" target="_blank">https://microsoft.com/devicelogin</a> and authenticate with the Microsoft system. Return to the shell for confirmation.
 
    <img src="images/9azlogin.png">
 
-3. Run ```az account set --subscription YOUR_SUBSCRIPTION_ID```
+3. Specify your subscription by running this command with your subscription ID:  ```az account set --subscription YOUR_SUBSCRIPTION_ID```
 
 ### Edit the deployment template
 
-Copy and then edit the `create-minimal-cluster` template. For example:
+Copy and edit the `create-minimal-cluster` sample script. 
+
+Example:
 ```sh
 cp /create-minimal-cluster ./cmc
 vi cmc
 ```
 
-In the file you named `cmc`, edit the following fields to supply the values you captured from [outputs (above)](browse-to-outputs) for resource group, location, virtual network, and subnet:
+Edit the following fields in the `cmc` script to supply the values you captured from [outputs (above)](browse-to-outputs) for resource group, location, virtual network, and subnet:
 
 ```bash
 RESOURCE_GROUP=<from controller Outputs>
@@ -71,17 +75,17 @@ Specify the name of the cluster role you created in the [prerequisites](prereqs.
 
 ```bash
 AVERE_CLUSTER_ROLE=<name of role created above (avere-cluster)>
-ADMIN_PASSWORD=<your unique vfxt cluster password>
+ADMIN_PASSWORD=<your_unique_vfxt_cluster_password>
 ```
 
 Save the file and exit.
 
 ### Run the script
-Run the script by typing `./cmc &`.  The script is put into the background in case you lose your connection.  You can always look for the log output in ~/vfxt.log.
+Run the script by typing `./cmc &`.  (This runs the script in the background in case you lose your connection.)  You can always look for the log output in ~/vfxt.log.
 
 When the script completes, copy the management IP address.
 
 <img src="images/14mgmtip.png">
 
-### Next step: proceed to Accessing the Cluster
+### Next step: accessing the new cluster
 Now that the cluster is running and you know its management IP address, you can now [access the cluster](access_cluster.md) to add storage.
