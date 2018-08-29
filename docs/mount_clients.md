@@ -27,7 +27,7 @@ The IP address should be one of the client-facing IP addresses defined for the v
 
 The junction path corresponds to the **Namespace path** field you defined when creating the junction. For example, if you used ``/avere/files`` as your namespace path, your clients would mount *IP_address*:/avere/files to their local mount point. 
 
-**[ xxx + screenshot of create junction dialog with matching info for example xxx ]**
+!["Add new junction" dialog with /avere/files in the namespace path field](images/create_junction_example.png)
 
 In addition to the paths, include the options described below in your client mount command.
 
