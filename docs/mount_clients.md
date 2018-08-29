@@ -9,13 +9,13 @@ Follow these steps to connect client machines to access your vFXT cluster.
 
 ## IP addresses and paths
 
-The ``mount`` command from your client maps the remote path on the cluster vserver to a path in the local filesystem.  
+From your client, the ``mount`` command maps the cluster vserver to a path on the local filesystem.  
 
-The vserver path is identified with its IP address, plus the path to the junction that you defined. 
+The vserver path is identified with its IP address, plus the path to the junction that you defined.
 
 Example: ``mount 10.0.0.12:/avere/files /mnt/vfxt``
 
-The IP address should be one of the client-facing IP addresses defined for the vserver. You can find the range of client-facing IPs in the Avere Control Panel in two places: 
+The IP address is one of the client-facing IP addresses defined for the vserver. You can find the range of client-facing IPs in the Avere Control Panel in two places:
 
 * The VServers table in the Dashboard - 
  
@@ -33,7 +33,7 @@ In addition to the paths, include the options described below in your client mou
 
 ## Mount command arguments
 
-To ensure a seamless client mount, pass include these settings arguments in your mount command: 
+To ensure a seamless client mount, pass these settings and arguments in your mount command: 
 
 ``mount -o hard,nointr,proto=tcp,mountproto=tcp,retry=30 ${VSERVER_IP_ADDRESS}:/${NAMESPACE_PATH} ${LOCAL_FILESYSTEM_MOUNT_POINT}``
 
@@ -43,9 +43,8 @@ To ensure a seamless client mount, pass include these settings arguments in your
 ``hard`` | Soft mounts to the vFXT cluster are associated with application failures and possible data loss. 
 ``proto=netid`` | This option supports appropriate handling of NFS network errors.
 ``mountproto=netid`` | This option supports appropriate handling of network errors for mount operations.
-``retry=n`` | Set ``retry=30`` to avoid transient mount failures. (A different value is recommended foreground mounts.)
+``retry=n`` | Set ``retry=30`` to avoid transient mount failures. (A different value is recommended in foreground mounts.)
 
 | Preferred settings  | |
 --- | --- 
-``nointr``            | **[ xxx does this apply to Azure vFXT code? xxx ]** The option "nointr" is preferred for legacy kernels that support this option. Note that the option "intr" is the default.
-
+``nointr``            | The option "nointr" is preferred for legacy kernels (prior to 2008-Apr) that support this option. Note that the option "intr" is the default.
