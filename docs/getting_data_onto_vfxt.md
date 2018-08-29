@@ -2,20 +2,20 @@
 
 After you've created a new vFXT cluster, your first task might be to move data onto its new storage volume. However, using a simple copy command from one client is not the best option for copying data to the cluster's backend storage. 
 
-| Because the Avere vFXT cluster is a scalable multiclient cache, the most efficient and fastest way to copy data to it is to **parallelize ingestion** of files and objects. |
-| --- |
+*Because the Avere vFXT cluster is a scalable multiclient cache, the fastest and most efficient way to copy data to it is to **parallelize ingestion** of files and objects.*
 
-<p align="center">
+
+<p >
 <img src="images/parallel_ingestion.png">
 </p>
 
-The familiar ``cp`` or ``copy`` commands that are commonly used to using to transfer data from one storage system to another are single-threaded processes that only copy one file at a time. This means that the file server is ingesting only one file at a time - which is a waste of the cluster’s resources.
+The familiar ``cp`` or ``copy`` commands that are commonly used to using to transfer data from one storage system to another are single-threaded processes that copy only one file at a time. This means that the file server is ingesting only one file at a time - which is a waste of the cluster’s resources.
 
 This section explains strategies for creating a multi-client, multithreaded file copying system to move data to the Avere cluster. It explains file transfer concepts and decision points that can be used to achieve an efficient copy with multiple clients and simple copy commands. 
 
 It also explains some utilities that can help. The ``msrsync`` utility can be used to partially automate the process of dividing a dataset into buckets and using rsync commands. The ``parallelcp`` script is another utility that reads the source directory and issues copy commands automatically.  
 
-To install a data ingestor VM with all these parallel data ingestion tools installed, launch the deployment by clicking the "Deploy to Azure" button:
+To install a data ingestor VM with all of these parallel data ingestion tools installed, click the "Deploy to Azure" button:
 
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Favereimageswestus.blob.core.windows.net%2Fgithubcontent%2Fsrc%2Fdataingestor%2Fdataingestor-azuredeploy.json" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
@@ -96,7 +96,7 @@ cp -R /mnt/source/dir1/dir1d /mnt/destination/dir1/ &
 
 After you have enough parallel threads going against a single destination filesystem mountpoint, there will be a point where adding more threads does not give more throughput (or worse, over-threading can cause a degradation) as measured in files/second or in bytes/second (depending on your type of data).  
 
-When this happens, you can add additional client-side mountpoints to other vFXT IP addresses, using the same remote filesystem mountpath:
+When this happens, you can add client-side mountpoints to other vFXT cluster IP addresses, using the same remote filesystem mountpath:
 
 ```bash
 10.1.0.100:/nfs on /mnt/sourcetype nfs (rw,vers=3,proto=tcp,addr=10.1.0.100)
@@ -250,7 +250,7 @@ To use msrsync to populate an Azure cloud volume with an Avere cluster, follow t
 1. Install msrsync and its prerequisites (rsync and Python 2.6 or later)
 2. Determine the total number of files and directories to be copied.
 
-   For example, use the Avere utility ``walkermp.py`` (available soon from GitHub; contact Avere Systems for details) to count the number of items to be copied.
+   For example, use the Avere utility ``walkermp.py`` (available soon from GitHub; <!-- xxx is this in the download? xxx --> contact Avere Systems for details) to count the number of items to be copied.
 
    If not using ``walkermp.py``, you can calculate the number of items with the Gnu ``find`` tool as follows:
    ```bash
@@ -326,10 +326,10 @@ find \$SOURCE_DIR -mindepth 1 ! -type d -print0 | sed -z "s/\$SOURCE_DIR\///" | 
 EOM
 ```
 
-### Parallelcopy example
+### Parallel copy example
 
-This example uses the parallel copy script to compile ``glibc`` using source files from the Avere cluster.
-
+This example uses the parallel copy script to compile ``glibc`` using source files from the Avere cluster. 
+<!-- xxx what is stored where? what is 'the avere cluster mount point'? xxx -->
 The source files are stored on the Avere cluster mount point, and the object files are stored on the local hard drive.
 
 This script uses parallel copy script above. Note that the ``-j`` option is used with ``parallelcp`` and ``make`` to gain parallelization.
@@ -358,15 +358,15 @@ On the analytics page, you can add the following latency graph to understand the
 
 <img src="images/analytics_options.png">
 
-
+<!-- 
 ## About writeback delay
-
-Part of the cluster’s cache policy includes a time limit setting called writeback delay. This setting determines the maximum amount of time a changed file can stay in the cluster cache before being copied to backend storage. When a file hits its writeback delay limit, it is preferentially copied to the backend core filer, which can temporarily throttle the cache's ability to accept new writes. 
-
+ -->
+<!-- Part of the cluster’s cache policy includes a time limit setting called writeback delay. This setting determines the maximum amount of time a changed file can stay in the cluster cache before being copied to backend storage. When a file hits its writeback delay limit, it is preferentially copied to the backend core filer, which can temporarily throttle the cache's ability to accept new writes.  -->
+<!-- 
 When you are adding a large number of new files to the storage system, the writeback delay time might impact your write performance.
-For example, if your writeback delay is set to one hour while copying data to the cluster, you might see degraded write performance about one hour after starting the copy actions.
-
-To avoid conflicts, allow sufficient time for the data to be copied onto the core filer before attempting to use the data in the cache. If you experience significant delays, contact support for advice about how to work around the issue.  
-
+For example, if your writeback delay is set to one hour while copying data to the cluster, you might see degraded write performance about one hour after starting the copy actions. -->
+<!-- 
+To avoid conflicts, allow sufficient time for the data to be copied onto the core filer before attempting to use the data in the cache. If you experience significant delays, contact support for advice about how to work around the issue.   -->
+<!-- 
 Read [Cache Writeback and Scheduled Write-Through Features](http://library.averesystems.com/ops_guide/4_7/advanced_cache_features.html#cache-features-overview) to learn more about writeback settings.
-
+-->
