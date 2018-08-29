@@ -71,4 +71,4 @@ Save the output values of the deployment for the vFXT deployment, and capture `l
 Now that you have deployed the cluster controller node, these are the next steps:
   1. [Deploy the vFXT cluster](../../docs/jumpstart_deploy.md)
   2. [Access the vFXT cluster](../../docs/access_cluster.md)
-  3. [Configure Storage](../../docs/configure_storage.md) - configure cloud storage using your new storage account created in this example.
+  3. [Configure Storage](../../docs/configure_storage.md)
