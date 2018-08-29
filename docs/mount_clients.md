@@ -2,10 +2,10 @@
 
 Follow these steps to connect client machines to access your vFXT cluster.
 
-1. Configure a core filer and junction as described in [Configure storage](configure_storage.md)
+1. Configure a core filer and junction as described in the previous step ([Configure storage](configure_storage.md)).
 1. Set up round-robin DNS for load distribution among the cluster nodes. Details are in [Configuring DNS for the Avere cluster](configure_dns.md).
-1. Choose the IP address and junction path to mount, as explained below 
-1. Issue the mount command, with appropriate arguments (described below) 
+1. Choose the IP address and junction path to mount, as explained below. 
+1. Issue the mount command, with appropriate arguments (described below). 
 
 ## IP addresses and paths
 
