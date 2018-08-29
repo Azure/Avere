@@ -9,7 +9,7 @@
 #
 # The following environment variables must be set:
 #     NFS_IP_CSV="172.16.0.22,172.16.0.23,172.16.0.24"
-#     NFS_PATH=msazure
+#     NFS_PATH=/msazure
 #     BASE_DIR=/avere
 #     BOOTSTRAP_PATH=/b
 #     BOOTSTRAP_SCRIPT=/b/bootstrap/centosbootstrap.sh
@@ -49,7 +49,7 @@ function mount_round_robin() {
 
     # no need to write again if it is already there
     if ! grep --quiet "${DEFAULT_MOUNT_POINT}" /etc/fstab; then
-        echo "${ROUND_ROBIN_IP}:/${NFS_PATH}    ${DEFAULT_MOUNT_POINT}    nfs auto,rsize=524288,wsize=524288,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0" >> /etc/fstab
+        echo "${ROUND_ROBIN_IP}:${NFS_PATH}    ${DEFAULT_MOUNT_POINT}    nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0" >> /etc/fstab
         mkdir -p "${DEFAULT_MOUNT_POINT}"
         chown nfsnobody:nfsnobody "${DEFAULT_MOUNT_POINT}"
     fi

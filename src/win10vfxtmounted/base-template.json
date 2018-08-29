@@ -4,6 +4,7 @@
   "parameters": {
     "uniqueName": {
       "type": "string",
+      "maxLength": 12,
       "metadata": {
         "description": "The unique name used for the Windows 10 VM."
       }

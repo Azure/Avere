@@ -1,16 +1,14 @@
 #!/bin/bash -ex
 
 #
-# The following script renders the Autodesk Wall of Death Scene.  
-#
 # Save this script to any Avere vFXT volume, for example:
-#     /src/wallOfDRender.sh
+#     /src/render8gb.sh
 #
 # The following environment variables must be set:
 #     FRAME_START=1
 #     FRAME_END=1
-#     MAYA_PROJECT_PATH=/nfs/default/scenes/autodeskWallOfDScene
-#     SCENE_FILE=/nfs/default/scenes/autodeskWallOfDScene/scenes/SEQ001/SHOT001/anim/versions/SEQ001_SHOT001_anim_v010_Imported.ma
+#     MAYA_PROJECT_PATH=/nfs/default/scenes/8gbscene
+#     SCENE_FILE=/nfs/default/scenes/8gbscene/scenes/SEQ001/SHOT001/anim/versions/SEQ001_SHOT001_anim_v010_Imported.ma
 #     IMAGES_OUTPUT_BASE_PATH=/nfs/default/images
 #     DEBUG_PATH=/nfs/default/debug
 #     ADDITIONAL_FLAGS=" -of png "

@@ -196,22 +196,21 @@ Install-ChocolatyAndPackages
     choco install -y 7zip.install
     Write-Log "choco install -y putty.install"
     choco install -y putty.install
-    Write-Log "choco install -y git.install"
-    choco install -y git.install
-    Write-Log "choco install -y python2"
-    choco install -y python2
-    Write-Log "choco install -y vscode"
-    choco install -y vscode --params "/NoDesktopIcon"
     Write-Log "choco install -y notepadplusplus.install"
     choco install -y notepadplusplus.install
     Write-Log "choco install -y microsoftazurestorageexplorer"
     choco install -y microsoftazurestorageexplorer
-    Write-Log "choco install -y wireshark"
-    choco install -y wireshark
-    Write-Log "choco install -y winscp"
-    choco install -y winscp
-    Write-Log "choco install -y winmerge"
-    choco install -y winmerge
+    #Write-Log "choco install -y git.install"
+    #choco install -y git.install
+    #Write-Log "choco install -y python2"
+    #choco install -y python2
+    #Write-Log "choco install -y vscode"
+    #choco install -y vscode --params "/NoDesktopIcon"
+    #Write-Log "choco install -y wireshark"
+    #choco install -y wireshark
+    #Write-Log "choco install -y winscp"
+    #choco install -y winscp
+    #Write-Log "choco install -y winmerge"
 }
 
 function
@@ -250,8 +249,15 @@ try
         Write-Log "Install NFS"
         Install-NFS
 
-        Write-Log "Installing chocolaty and packages"
-        Install-ChocolatyAndPackages
+        try
+        {
+            Write-Log "Installing chocolaty and packages"
+            Install-ChocolatyAndPackages
+        }
+        catch
+        {
+            # chocolaty is best effort
+        }
 
         Write-Log "Writing Desktop Links"
         Install-DesktopLinks "Default"

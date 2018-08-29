@@ -27,7 +27,7 @@
     "value": "172.16.0.12,172.16.0.13,172.16.0.14"
   },
   "averevFXTPath": {
-    "value": "msazure"
+    "value": "/msazure"
   },
   "averevFXTBootstrapIP": {
     "value": "172.16.0.12"
