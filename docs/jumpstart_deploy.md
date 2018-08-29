@@ -1,5 +1,5 @@
-# Deploy a vFXT Cluster
-The easiest way to create a vFXT cluster, is to use a controller node which has scripts and templates for creating the vFXT cluster. In this tutorial, you will create a controller node and use it to create a vFXT cluster.  By the end of this tutorial, you will have a VNET, a controller, and a vFXT cluster as shown in the following diagram:
+# Deploy a vFXT cluster
+The easiest way to create a vFXT cluster is to use a cluster controller node, which has the required scripts, templates, and software infrastructure for creating the vFXT cluster. In this tutorial, you will create a controller node and use it to create a vFXT cluster.  By the end of this tutorial, you will have a virtual network (VNet), a controller, and a vFXT cluster as shown in the following diagram:
 
 <img src="images/vfxt_deployment.png">
 
@@ -8,43 +8,43 @@ This tutorial assumes that you have checked and configured the following prerequ
 1. [New subscription](prereqs.md#create-a-new-subscription)
 1. [Subscription owner permissions](prereqs.md#subscription-owner-permissions)
 1. [Quota for the vFXT cluster](prereqs.md#quota-for-the-vfxt-cluster)
-1. [Accepted terms for the marketplace images](prereqs.md#accepting-terms-for-the-two-marketplace-images)
+1. [Term acceptance for the marketplace images](prereqs.md#accepting-terms-for-the-two-marketplace-images)
 1. [Azure RBAC role](prereqs.md#create-an-azure-rbac-role)
 
-## Create Controller
+## Create controller
 
-To install from the portal, launch the deployment by clicking the "Deploy to Azure" button:
+To create the cluster controller node from the portal, click the "Deploy to Azure" button below. This deploy template creates the VM that will create and manage the Avere vFXT cluster. 
 
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Favereimageswestus.blob.core.windows.net%2Fgithubcontent%2Fsrc%2Fvfxt%2Fazuredeploy.json" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 
-Add a name for the new resource group, update the controller name and password, and click "Purchase".  After 5 or 6 minutes, your controller node will be up and running.
+Add a name for the new resource group, update the controller name and password, and click "Purchase".  After five or six minutes, your controller node will be up and running.
 
 ## Browse to outputs
 
-The outputs have the information you need to deploy your Avere vFXT cluster.
+The outputs from creating the cluster controller node include information that you need to create your Avere vFXT cluster.
 
-1. From the notification icon on the top bar, click "Go to resource group", and this will show the new resource group that contains your controller and VNET.
+1. From the notification icon on the top bar of the Azure portal, click **Go to resource group**. This will show the new resource group that contains your controller and VNet.
 
    <img src="images/browse_to_resource_group.png">
 
-2. On left side, click "deployments", and "Microsoft.Template"
+2. On left side, click **deployments**, and then **Microsoft.Template**.
 
    <img src="images/deployment_template.png">
 
-3. On left side, click "outputs", and copy the values in each of the fields for creating your controller.
+3. On left side, click **outputs**. Copy the values in each of the fields. 
 
    <img src="images/template_outputs.png">
 
 ## Create cluster
-Now that your controller node is running, you need to access the controller node, edit the templates, and run the create cluster script. 
+Now that your controller node is running, you need to access the controller node, edit a built-in sample script, and run the script to create the cluster script. 
 
 ### Access the cluster
 
-1. SSH to the controller using the `SSHSTRING` you captured in the [outputs above](#browse-to-outputs).
+1. SSH to the controller, using the `SSHSTRING` you captured in the [outputs above](#browse-to-outputs).
 
-2. Authenticate by running `az login`.  In this step, browse to <a href="https://microsoft.com/devicelogin" target="_blank">https://microsoft.com/devicelogin</a> in any web browser, put in the unique code, authenticate to Microsoft, and then return to the shell.
+2. Authenticate by running `az login`. Copy the authentication code supplied in the shell, then use a web browser to load <a href="https://microsoft.com/devicelogin" target="_blank">https://microsoft.com/devicelogin</a> and authenticate with the Microsoft system. Return to the shell for confirmation.
 
    <img src="images/9azlogin.png">
 
@@ -58,16 +58,16 @@ cp /create-minimal-cluster ./cmc
 vi cmc
 ```
 
-In the file cmc, edit the following fields you captured in [outputs above](browse-to-outputs): resource group, location, virtual network, and subnet:
+In the file you named `cmc`, edit the following fields to supply the values you captured from [outputs (above)](browse-to-outputs) for resource group, location, virtual network, and subnet:
 
 ```bash
-RESOURCE_GROUP=<from the Outputs>
-LOCATION=<from the Outputs>
-NETWORK=<from the Outputs>
-SUBNET=<from the Outputs>
+RESOURCE_GROUP=<from controller Outputs>
+LOCATION=<from controller Outputs>
+NETWORK=<from controller Outputs>
+SUBNET=<from controller Outputs>
 ```
 
-Additionally add name of the cluster role name you just created in the [prerequisites](prereqs.md#create-an-azure-rbac-role), and add an admin password:
+Specify the name of the cluster role you created in the [prerequisites](prereqs.md#create-an-azure-rbac-role), and add an administrative password for the cluster:
 
 ```bash
 AVERE_CLUSTER_ROLE=<name of role created above (avere-cluster)>
@@ -83,5 +83,5 @@ When the script completes, copy the management IP address.
 
 <img src="images/14mgmtip.png">
 
-### Proceed to Accessing the Cluster
-Now that the cluster is running, and you have the management IP address, you can now [click here to access the cluster](access_cluster.md).
+### Next step: proceed to Accessing the Cluster
+Now that the cluster is running and you know its management IP address, you can now [access the cluster](access_cluster.md) to add storage.
