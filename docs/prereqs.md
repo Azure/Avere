@@ -6,7 +6,7 @@ These tasks are prerequisites for creating an Avere vFXT cluster.
 1. [Configure subscription owner permissions](#subscription-owner-permissions)
 1. [Check quota for the vFXT cluster](#quota-for-the-vfxt-cluster)
 1. [Accept the terms for the marketplace images](#accepting-terms-for-the-two-marketplace-images)
-1. [Create an Azure RBAC ole](#create-an-azure-rbac-role)
+1. [Create an Azure RBAC role](#create-an-azure-rbac-role)
 
 **Tip:** If you don't have an Azure subscription, create a [free account](https://azure.microsoft.com/free/?WT.mc_id=A261C142F) before you begin.
 
@@ -32,7 +32,7 @@ If you need to allow users without any owner privileges to create vFXT clusters,
 ## Quota for the vFXT cluster
 You must have sufficient quota for the following Azure components. Here are the steps to [request quota increase](https://docs.microsoft.com/en-us/azure/azure-supportability/resource-manager-core-quotas-request).
 
-> NOTE: The virtual machines and SSD components listed here are for the vFXT cluster itself. You will need additional quota for the VMs and SSD you intend to use for your compute farm.  Make sure the quota is enabled for the region where you intend to run the workflow.
+**NOTE:** The virtual machines and SSD components listed here are for the vFXT cluster itself. You will need additional quota for the VMs and SSD you intend to use for your compute farm.  Make sure the quota is enabled for the region where you intend to run the workflow.
 
 |Azure component|Quota|
 |----------|-----------|
