@@ -15,6 +15,8 @@ This document covers the simplest method, using vfxt.py. For more complicated ac
 
 The vfxt.py script includes options to stop, restart, or destroy a cluster. It cannot operate on individual nodes. 
 
+vfxt.py is preinstalled on the cluster controller VM. <!-- (If you want to install it on another system, refer to http://github.com/Azure/AvereSDK) xxx not public repo ??? -->
+
 ### Stop a cluster
 
 ```bash
