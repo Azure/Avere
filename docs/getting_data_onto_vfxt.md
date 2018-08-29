@@ -1,4 +1,4 @@
-# Parallel Data Ingest - Moving data to the vFXT cluster
+# Moving data to the vFXT cluster - Parallel data ingest 
 
 After you've created a new vFXT cluster, your first task might be to move data onto its new storage volume. However, using a simple copy command from one client is not the best option for copying data to the cluster's backend storage. 
 
