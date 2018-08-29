@@ -54,7 +54,7 @@ In addition to deleting the cluster nodes, consider removing these components:
 * Network interfaces and public IPs associated with cluster components
 * Virtual networks
 * Storage accounts (**only** if they contain no important data)
-* Availability set  **[ xxx not sure what this is or if it's really a thing you can delete xxx ]**
+* Availability set 
 
 ![Azure portal "all resources" list showing resources created for a test cluster](images/all_resources_list.png)
 
