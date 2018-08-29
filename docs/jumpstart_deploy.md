@@ -3,13 +3,13 @@ The easiest way to create a vFXT cluster, is to use a controller node which has 
 
 <img src="images/vfxt_deployment.png">
 
-This tutorial assumes that you have done the following prerequisites:
+This tutorial assumes that you have checked and configured the following prerequisites:
 
-1. [Create a new subscription](prereqs.md#create-a-new-subscription)
-1. [Subscription owner permissions](prereqs.md#subscription-owner-permissions).
-1. [Quota for the vFXT cluster](prereqs.md#quota-for-the-vfxt-cluster).
-1. [Accepting the Legal Terms for the marketplace images](prereqs.md#accepting-the-legal-terms-for-the-two-marketplace-images).
-1. [Create an Azure RBAC Role](prereqs.md#create-an-azure-rbac-role)
+1. [New subscription](prereqs.md#create-a-new-subscription)
+1. [Subscription owner permissions](prereqs.md#subscription-owner-permissions)
+1. [Quota for the vFXT cluster](prereqs.md#quota-for-the-vfxt-cluster)
+1. [Accepted terms for the marketplace images](prereqs.md#accepting-terms-for-the-two-marketplace-images)
+1. [Azure RBAC role](prereqs.md#create-an-azure-rbac-role)
 
 ## Create Controller
 
