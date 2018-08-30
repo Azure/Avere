@@ -33,9 +33,9 @@ These guides explain next steps for putting the vFXT cluster through its paces.
 
 These tutorials help you understand cluster performance testing and common use-case tasks.
 
-  * [Measure vFXT performance with VDBench](docs/vdbench.md) - Deploys VDBench on an N-Node cluster to demonstrate the storage performance characteristics of the Avere vFXT cluster.
-  * [Windows 10 Avere vFXT Mounted Workstation](docs/windows_10_avere_vfxt_mounted_workstation.md) - Creates a Windows Workstation that automatically mounts the vFXT, and installs various Azure Tools.
-  * [Rendering using Azure Batch and the Avere vFXT](docs/maya_azure_batch_avere_vfxt_demo.md) - Demonstrates how to use the Autodesk Maya Renderer with Azure Batch and the Avere vFXT to generate a rendered movie.
+  * [Measure vFXT performance with vdbench](docs/vdbench.md) - Deploys vdbench on an *N*-node cluster to demonstrate the storage performance characteristics of the Avere vFXT cluster
+  * [Windows 10 workstation for Avere vFXT](docs/windows_10_avere_vfxt_mounted_workstation.md) - Creates a Windows workstation that automatically mounts the vFXT cluster and installs various Azure tools
+  * [Rendering using Azure Batch and Avere vFXT](docs/maya_azure_batch_avere_vfxt_demo.md) - Demonstrates how to use the Autodesk Maya Renderer with Azure Batch and the Avere vFXT cluster to generate a rendered movie.
 
 ## Resources
   * [vFXT guides](http://library.averesystems.com/#vfxt) - Additional documentation about the Avere vFXT cluster
