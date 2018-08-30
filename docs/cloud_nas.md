@@ -1,6 +1,6 @@
-# Clustered File System for Azure – Cloud NAS
+# Clustered file system for Azure – Cloud NAS
 
-When using both Azure Storage and Azure Compute resources, you can use the vFXT to create an scale-out NAS in the public cloud, eliminating the silos between these resources. Leverage low-cost Azure Storage for HPC workloads running on Azure Compute.
+When using both Azure Storage and Azure Compute resources, you can use the Avere vFXT to create a scale-out NAS in the public cloud, eliminating the silos between these resources. Leverage low-cost Azure Storage for HPC workloads running on Azure Compute.
 
 Avere Cloud NAS with the vFXT for Azure gives you:
   * Scalability – clustering up to 24 nodes
