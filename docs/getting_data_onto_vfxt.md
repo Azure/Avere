@@ -33,7 +33,7 @@ When building a strategy to copy data in parallel, you should understand the tra
 
 - When files are small, the metric of interest is files per second.
 
-- When files are large (10MiBi or greater,) the metric of interest is bytes per second.
+- When files are large (10MiBi or greater), the metric of interest is bytes per second.
 
 Each copy process will have a throughput rate and a files-transferred rate, which can be measured by timing the length of the copy command and factoring the file size and file count. Measuring this is outside of the scope of this document, but it is imperative to understand whether you’ll be dealing with small or large files.
 
