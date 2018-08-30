@@ -25,7 +25,7 @@ The following steps add a NAS core filer:
 
 3. Click **Create**.
 
-   <img src="images/22addcorefiler1b.png">
+   ![Screenshot of the Add new core filer page with the core filer name and its fully qualified domain name](images/22addcorefiler1b.png)
 
    * Name your core filer.
    * Provide a fully qualified domain name (FQDN) if available. Otherwise, provide an IP address or hostname that resolves to your core filer.
@@ -124,7 +124,7 @@ More information about junctions can be found [here](http://library.averesystems
 - Choose the core filer export.
 - Click **Next**.
 
-  <img src="images/24addjunction.png">
+  ![Screenshot of the "Add new junction" page with the fields completed for junction, core filer, and export](images/24addjunction.png)
 
 The junction will appear after a few seconds. Create additional junctions as needed.
 
