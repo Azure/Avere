@@ -1,8 +1,14 @@
 # Configuring DNS for the Avere cluster
 
-This section explains the basics of setting up a DNS system for your Avere cluster.
+This section explains the basics of configuring a DNS system for load balancing your Avere vFXT cluster. 
 
-* If your system is accessed by NFS clients only, using DNS is recommended but not required - it is possible to specify all network addresses by using numeric IP addresses. 
+This document *does not include* instructions for setting up and managing a DNS server in the Azure environment. 
+
+Instead of using round-robin DNS to load-balance a vFXT cluster in Azure, consider using manual methods to assign IP addresses evenly among clients when they are mounted. Several methods are described in [Mount the Avere cluster](mount_clients.md). 
+
+Keep these things in mind when deciding whether or not to use a DNS server: 
+
+* If your system is accessed by NFS clients only, using DNS is not required - it is possible to specify all network addresses by using numeric IP addresses. 
 
 * If your system supports SMB (CIFS) access, DNS is required, because you must specify a DNS domain for the Active Directory server.
 
@@ -14,30 +20,50 @@ To distribute the overall load, configure your DNS domain to use round-robin loa
 
 ## Configuration Details
 
-For optimal performance, configure client-facing cluster addresses as shown in the following diagram. 
+When clients access the cluster, RRDNS automatically balances their requests among all available interfaces.
 
-[Text description](averedns_text_alt.txt)
+For optimal performance, configure your DNS server to handle client-facing cluster addresses as shown in the following diagram.
 
-![Diagram showing configuration information for client-facing addresses - detailed description to come](images/AvereDns.png)
+A cluster vserver is shown on the left, and IP addresses appear in the center and on the right. Configure each client access point with A records and pointers as illustrated.
 
-The following ``nsupdate`` commands provide an example of configuring DNS correctly:
+![Avere cluster DNS diagram ](images/rrdns_diagram.png) [text description](rrdns_alt-text.txt)
 
-        update add avere.example.com. 86400 A 10.0.0.10
-        update add avere.example.com. 86400 A 10.0.0.11
-        update add avere.example.com. 86400 A 10.0.0.12
-        update add client10.example.com. 86400 A 10.0.0.10
-        update add client11.example.com. 86400 A 10.0.0.11
-        update add client12.example.com. 86400 A 10.0.0.12
-        update add 10.0.0.10.in-addr.arpa. 86400 PTR client10.example.com
-        update add 11.0.0.10.in-addr.arpa. 86400 PTR client11.example.com
-        update add 12.0.0.10.in-addr.arpa. 86400 PTR client12.example.com
+Each client-facing IP address must have a unique name for internal use by the cluster. (In this diagram, the client IPs are named vs1-client-IP-* for clarity, but in production you should probably use something more concise, like client*.)
 
-## DNS Settings
+Clients mount the cluster using the vserver name as the server argument. 
 
-DNS parameters are set in [Cluster > Administrative Network](<http://library.averesystems.com/ops_guide/4_7/gui_admin_network.html#gui-admin-network>) settings page in the Avere Control Panel. Settings on that page include: 
+Modify your DNS server’s ``named.conf`` file to set cyclic order for queries to your vserver. This option ensures that all of the available values are cycled through. Add a statement like the following:
+
+```
+options {
+    rrset-order {
+        class IN A name "vserver1.example.com" order cyclic;
+    };
+};
+```
+
+The following nsupdate commands provide an example of configuring DNS correctly:
+
+```
+update add vserver1.example.com. 86400 A 10.0.0.10
+update add vserver1.example.com. 86400 A 10.0.0.11
+update add vserver1.example.com. 86400 A 10.0.0.12
+update add vs1-client-IP-10.example.com. 86400 A 10.0.0.10
+update add vs1-client-IP-11.example.com. 86400 A 10.0.0.11
+update add vs1-client-IP-12.example.com. 86400 A 10.0.0.12
+update add 10.0.0.10.in-addr.arpa. 86400 PTR vs1-client-IP-10.example.com
+update add 11.0.0.10.in-addr.arpa. 86400 PTR vs1-client-IP-11.example.com
+update add 12.0.0.10.in-addr.arpa. 86400 PTR vs1-client-IP-12.example.com
+```
+
+## Cluster DNS settings
+
+Specify the DNS server that the vFXT cluster uses in the **Cluster** > **Administrative Network** settings page. Settings on that page include:
 
 * DNS server address
 * DNS domain name
 * DNS search domains
 
-Read [DNS Settings](<http://library.averesystems.com/ops_guide/4_7/gui_admin_network.html#gui-dns>) for more details about using this page.
+Read [DNS Settings](<http://library.averesystems.com/ops_guide/4_7/gui_admin_network.html#gui-dns>) in the Cluster Configuration Guide for more details about using this page.
+
+
