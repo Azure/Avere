@@ -1,4 +1,4 @@
-# Cloud Bursting
+# Cloud bursting
 
 Avere Virtual FXT (vFXT) edge filers allow you to run compute workflows in Azure Compute without having to worry about moving your NAS.  The vFXT accomplishes this by performing read-ahead caching, which aids in hiding latency when trying to use cloud computing against on-premises storage. 
 
