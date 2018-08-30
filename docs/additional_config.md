@@ -4,7 +4,7 @@ After following the [quick start](https://github.com/Azure/Avere#quickstart) ste
 
 Additional configuration tasks include:
 
-- Enabling [support](#uploads) uploads and proactive service (recommended for all clusters)
+- Enabling [support](enable_support.md) uploads and proactive service (recommended for all clusters)
 - Copying data to cloud storage - Read [Moving data onto the vFXT cluster](getting_data_onto_vfxt.md) for details. 
 - Customizing port accessibility - Read [Required ports](required_ports.md) for more information.
 - Configuring ExpressRoute or VPN access for clients - Refer to the [Azure ExpressRoute documentation](<https://docs.microsoft.com/en-us/azure/expressroute/>) or the [Azure VPN Gateway documentation](<https://docs.microsoft.com/en-us/azure/vpn-gateway/>) for details. 
