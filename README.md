@@ -11,8 +11,9 @@ These quickstart steps walk you through creating a simple Avere vFXT cluster, se
   1. [Prerequisites](docs/prereqs.md) - Preparation tasks before deploying the Avere vFXT for Azure
   2. [Deploy](docs/jumpstart_deploy.md) - Create the vFXT cluster
   3. [Access the cluster](docs/access_cluster.md) - Access the Avere Control Panel from an SSH tunnel
-  4. [Configure storage](docs/configure_storage.md) - Add backend storage (core filer and namespace junction)
-  5. [Mount the Avere vFXT cluster](docs/mount_clients.md) - Configure load balancing and connect clients
+  4. [Enable support](docs/enable_support.md) - Enable support for the cluster
+  5. [Configure storage](docs/configure_storage.md) - Add backend storage (core filer and namespace junction)
+  6. [Mount the Avere vFXT cluster](docs/mount_clients.md) - Configure load balancing and connect clients
   
 ## How-to guides
 
