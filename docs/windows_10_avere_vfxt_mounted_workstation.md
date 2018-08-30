@@ -1,16 +1,18 @@
-# Windows 10 Avere vFXT Mounted Workstation
+# Windows 10 workstation for the Avere vFXT 
 
-This 20 minute deployment will setup a Windows 10 Avere Workstation with various tools and features including:
+This 20-minute deployment sets up a Windows 10 workstation with various tools and features for working with the Avere vFXT for Azure.
 
-1. **AvereVFXT Mounted Volume** - automatically mount the Avere VFXT volume to c:\AvereVFXT, and adds a shortcut to the Desktop
+Setup includes these items: 
 
-2. **Avere Admin Page on Desktop and Edge Home Button** - the desktop and Edge browser home button points to the Avere Management Endpoint
+* **Avere vFXT mounted volume** - The Avere vFXT volume is automatically mounted to c:\AvereVFXT and a shortcut is placed on the Windows desktop
 
-3. **Media Software** - The Window Media Service Pack, and VirtualDub enable post production of content including turning rendered frames into movies.
+* **vFXT management links on desktop and Edge** - Adds a desktop shortcut and an Edge browser home button pointing to the vFXT cluster's management interface, Avere Control Panel
 
-4. **Azure Batch Explorer** - Azure Batch Explorer enables easy management and viewing of batch jobs.
+* **Media software** - Installs the Windows Media Service Pack and VirtualDub to enable post production of content (including turning rendered frames into movies)
 
-5. **Azure Storage Explorer** - Azure Storage Explorer allows management of all Azure Storage accounts.
+* **Azure Batch Explorer** - Azure Batch Explorer enables easy management and viewing of batch jobs.
+
+* **Azure Storage Explorer** - Azure Storage Explorer allows management of all Azure Storage accounts.
 
 This solution can be deployed through the portal or cloud shell.
 
@@ -22,17 +24,18 @@ To install from the portal, launch the deployment by clicking the "Deploy to Azu
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 
-Save the output values of the deployment for access to the Windows 10 Avere Workstation.
+> The source code to produce the template is located [here](../src/win10vfxtmounted)
 
-## Using the Windows 10 Avere Workstation
+Save the output values of the deployment for access to the workstation.
 
-1. RDP to the clientAddress from the output parameters in the last command.
+## Using the Windows 10 workstation
 
-2. Once logged in, notice the following:
-   1. Desktop Shortcuts for the Avere Management WebUI, Avere Mounted Volume, Batch Explorer, StorageExplorer, , and Virtual Dub
-   2. Avere Mounted Volume is mounted to c:\AvereVFXT
-   3. Avere vFXT Web UI - either opened by Desktop shortcut or "Home" button.
+1. RDP to the ``clientAddress`` value saved from the output parameters in the last command.
+
+2. Log in. You should see the following changes:
+   * Desktop shortcuts for the Avere Control Panel, mounted Avere volume, Batch Explorer, Storage Explorer, and Virtual Dub
+   * The Avere vFXT export is mounted to c:\AvereVFXT
+   * Avere Control Panel (vFXT management UI) can be opened with the desktop shortcut or "Home" button
 
 <img src="images/win10.png" width="600">
 
-The source code to produce the template is located [here](../src/win10vfxtmounted).
