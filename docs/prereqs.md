@@ -75,11 +75,11 @@ You can use the [cloud shell](#cloud-shell) or the [Azure portal](#azure-portal)
 
 2. Click one of the images and select the link to enable programmatic access. This link appears at the bottom of the image details, below the **Create** button.  
 
-   <img src="images/2 - programmatic access link b.png">
+   ![Screenshot of a link to programmatic access which is below the Create button](images/2-prog-access-link)
    
 3. Click the button to enable access for your subscription. You’ll only need to do this once for each subscription. Save the setting. 
 
-   <img src="images/3 - enable programmatic access b.png">
+   ![Screenshot showing mouse click to enable programmatic access](images/3-enable-prog-access)
 
 4. Repeat steps 2 and 3 for the other image. 
 
@@ -102,7 +102,7 @@ vi avere-cluster.json
 
 4. Edit the file to include your subscription ID. Save the file as ``avere-cluster.json``. 
 
-<img src="images/12pastesubid.png">
+![Command line output of the script displaying the management IP address near the end](images/12pastesubid.png)
 
 5. Create the role:  
 

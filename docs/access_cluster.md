@@ -28,19 +28,19 @@ In the **Configuration** panel:
 1. Click **Add**.
 1. Click **Open**.
 
-<img src="images/20-tunnel-numbered-border-75.png">
+![Screenshot of Putty application showing where to click to add a tunnel](images/20-tunnel-numbered-border-75.png)
 
 Enter your SSH password.
 
-## Connecting from the browser 
+## Connecting from the browser
 
 Open your browser. Navigate to https://127.0.0.1:8443. Depending on your browser, you might need to click **Advanced** and proceed to the page.
 
-<img src="images/21-browser-proceed.png">
+![Screenshot of browser showing how to access the advanced options and proceed to the login page](images/21-browser-proceed.png)
 
 Enter the username `admin` and the password you provided when creating the cluster.
 
-<img src="images/21b-login.png">
+![Screenshot of the Avere login page populated with the username admin and a password](images/21b-login.png)
 
 Click **Login** or press enter on your keyboard.
 

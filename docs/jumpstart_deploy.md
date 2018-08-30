@@ -48,7 +48,7 @@ Now that your controller node is running, you need to access the controller node
 
 2. Authenticate by running `az login`. Copy the authentication code supplied in the shell, then use a web browser to load <a href="https://microsoft.com/devicelogin" target="_blank">https://microsoft.com/devicelogin</a> and authenticate with the Microsoft system. Return to the shell for confirmation.
 
-   <img src="images/9azlogin.png">
+   ![Command line output of the A Z login command displaying the browser link and authentication code](images/9azlogin.png)
 
 3. Specify your subscription by running this command with your subscription ID:  ```az account set --subscription YOUR_SUBSCRIPTION_ID```
 
@@ -85,7 +85,7 @@ Run the script by typing `./cmc &`.  (This runs the script in the background in 
 
 When the script completes, copy the management IP address.
 
-<img src="images/14mgmtip.png">
+![Command line output of the script displaying the management IP address near the end](images/14mgmtip.png)
 
 ### Next step: accessing the new cluster
 Now that the cluster is running and you know its management IP address, you can now [access the cluster](access_cluster.md) to add storage.
