@@ -24,7 +24,8 @@ To install from the portal, launch the deployment by clicking the "Deploy to Azu
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 
-> The source code to produce the template is located [here](../src/win10vfxtmounted)
+
+> Tip: The source code to produce the template is located [here](../src/win10vfxtmounted)
 
 Save the output values of the deployment for access to the workstation.
 
@@ -37,5 +38,5 @@ Save the output values of the deployment for access to the workstation.
    * The Avere vFXT export is mounted to c:\AvereVFXT
    * Avere Control Panel (vFXT management UI) can be opened with the desktop shortcut or "Home" button
 
-<img src="images/win10.png" width="600">
+   <img src="images/win10.png" width="600">
 
