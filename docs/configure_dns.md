@@ -14,11 +14,11 @@ Keep these things in mind when deciding whether or not to use a DNS server:
 
 * DNS is required if you want to use Kerberos authentication.
 
-## Load Balancing
+## Load balancing
 
 To distribute the overall load, configure your DNS domain to use round-robin load distribution for client-facing IP addresses.
 
-## Configuration Details
+## Configuration details
 
 When clients access the cluster, RRDNS automatically balances their requests among all available interfaces.
 
@@ -26,7 +26,7 @@ For optimal performance, configure your DNS server to handle client-facing clust
 
 A cluster vserver is shown on the left, and IP addresses appear in the center and on the right. Configure each client access point with A records and pointers as illustrated.
 
-![Avere cluster DNS diagram ](images/rrdns_diagram.png) [text description](rrdns_alt-text.txt)
+![Avere cluster round-robin DNS diagram - separate text description file provided](images/rrdns_diagram.png) [diagram text description](rrdns_alt-text.txt)
 
 Each client-facing IP address must have a unique name for internal use by the cluster. (In this diagram, the client IPs are named vs1-client-IP-* for clarity, but in production you should probably use something more concise, like client*.)
 
