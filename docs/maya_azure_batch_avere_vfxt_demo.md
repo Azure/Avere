@@ -2,6 +2,8 @@
 
 This 60-minute demo takes you through rendering an animated movie using Maya, Batch, and the Avere vFXT cluster. 
 
+> The source code to produce the template is located [here](../src/mayabatch).
+
 ## Prerequisites
 
 1. Install a vFXT cluster according to [Deploy a vFXT cluster](jumpstart_deploy.md), and [configure storage](configure_storage.md).
@@ -149,7 +151,7 @@ Each task uses the ``render`` script that you downloaded under ``/src`` in the [
 
 2. Use Azure Batch Explorer on the Windows machine to watch the progress of the jobs, and inspect the log output.  On the Windows machine, you should start to see the images (ending in .iff) show in the ``/images`` directory.
 
-# Post-production: Build the movie from the rendered frames
+## Post-production: Build the movie from the rendered frames
 
 In the previous step, you rendered the scene into many frame files.  In this step you will take these files and build a movie file.
 
@@ -165,4 +167,3 @@ In the previous step, you rendered the scene into many frame files.  In this ste
 
    <img src="images/win10_postproduction.png">
 
-> The source code to produce the template is located [here](../src/mayabatch).
