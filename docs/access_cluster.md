@@ -44,5 +44,5 @@ Enter the username `admin` and the password you provided when creating the clust
 
 Click **Login** or press enter on your keyboard.
 
-## Next step: Configure storage
+## Next step: Enable support
 Now that you can access the cluster, enable [support](enable_support.md).
