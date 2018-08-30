@@ -37,7 +37,7 @@ Click the **Delete** button at the top of the overview page to permanently destr
 
 ## Destroying the cluster from the Azure portal
 
-**NOTE:** If you want any remaining client changes in the cache to be written to backend storage, either use the vfxt.py ``--destroy`` option or use the Avere Control Panel to shut down the cluster cleanly before removing the node instances in the Azure portal.
+**NOTE:** If you want any remaining client changes in the cache to be written to backend storage, either use the vfxt.py `--destroy` option or use the Avere Control Panel to shut down the cluster cleanly before removing the node instances in the Azure portal.
 
 You can destroy node instances permanently by deleting them in the Azure portal. You can delete them one at a time as described above, or you can use the **Virtual Machines** page to find all of the cluster VMs, select them with the checkboxes, and click the **Delete** button to remove them all in one action.
 
