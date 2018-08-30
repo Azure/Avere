@@ -1,4 +1,4 @@
-# Configuring DNS for the Avere cluster
+# Avere cluster DNS configuration
 
 This section explains the basics of configuring a DNS system for load balancing your Avere vFXT cluster. 
 
