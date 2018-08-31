@@ -1,0 +1,211 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "uniqueName": {
+      "type": "string",
+      "metadata": {
+        "description": "The unique name used for the NFS VM."
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_D16s_v3",
+      "metadata": {
+        "description": "Size of the controller VM."
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "defaultValue": "azureuser",
+      "metadata": {
+        "description": "Admin username on the controller VM."
+      }
+    },
+    "sshKeyData": {
+      "type": "string",
+      "metadata": {
+        "description": "The public SSH key used for access to the VM."
+      }
+    },
+    "dataDiskBasePath": {
+      "type": "string",
+      "defaultValue": "/datadisks",
+      "metadata": {
+        "description": "The base path to map all the data disks."
+      }
+    },
+    "vnetAddressSpacePrefix": {
+      "type": "string",
+      "defaultValue": "192.168.255.0/28",
+      "metadata": {
+        "description": "The vnet address space prefix used for both the vnet address space and the subnet space."
+      }
+    }
+  },
+  "variables": {
+    "vmName": "[parameters('uniqueName')]",
+    "vmSize": "[parameters('vmSize')]",
+    "adminUsername": "[parameters('adminUsername')]",
+    "sshKeyData": "[parameters('sshKeyData')]",    
+    "dataDiskBasePath": "[parameters('dataDiskBasePath')]",
+    "addressPrefix": "[parameters('vnetAddressSpacePrefix')]",
+    "subnetPrefix": "[parameters('vnetAddressSpacePrefix')]",
+    "publicIPAddressName": "[concat(parameters('uniqueName'), '-publicip')]",
+    "sshKeyPath": "[concat('/home/',variables('adminUsername'),'/.ssh/authorized_keys')]",
+    "environmentVariables": "[concat(' DATA_BASE=', variables('dataDiskBasePath'))]",
+    "diskSizeGB": 2048,
+    "storageAccountType": "Premium_LRS",
+    "imageReference": {
+      "publisher": "Canonical",
+      "offer": "UbuntuServer",
+      "sku": "18.04-LTS",
+      "version": "latest"
+    },
+    "subnetName": "[concat('subnet-',parameters('uniqueName'))]",
+    "virtualNetworkName": "[concat('vnet-',parameters('uniqueName'))]",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('publicIPAddressName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Static"
+      }
+    },
+    {
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('virtualNetworkName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('addressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetPrefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('vmName'), '-nic')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+              },
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2017-12-01",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(variables('vmName'))]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('vmName'), '-nic')]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('vmSize')]"
+        },
+        "osProfile": {
+          "computername": "[concat(variables('vmName'))]",
+          "adminUsername": "[variables('adminUsername')]",
+          "customData": "[base64('#cloud-config\n\nwrite_files:\n -  encoding: gzip\n    content: !!binary |\n        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\n    path: /opt/avere/installnfs.sh\n    permissions: \"0744\"\n\n')]",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": "true",
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[variables('sshKeyPath')]",
+                  "keyData": "[variables('sshKeyData')]"
+                }
+              ]
+            }
+          }
+        },
+        "storageProfile": {
+          "imageReference": "[variables('imageReference')]",
+          "dataDisks": [
+            {
+              "lun": 0,
+              "createOption": "Empty",
+              "diskSizeGB": "[variables('diskSizeGB')]",
+              "caching": "ReadWrite",
+              "managedDisk": {
+                "storageAccountType": "[variables('storageAccountType')]"
+              }
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('vmName'), '-nic'))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('vmName'), '/configureagent')]",
+      "apiVersion": "2017-12-01",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.0",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "commandToExecute": "[concat(variables('environmentVariables'), ' /bin/bash -c \"/bin/bash /opt/avere/installnfs.sh >> /opt/avere/nfs-install.log 2>&1\"')]"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "RESOURCE_GROUP": {
+      "type": "string",
+      "value": "[resourceGroup().name]"
+    },
+    "LOCATION": {
+      "type": "string",
+      "value": "[resourceGroup().location]"
+    },
+    "sshString": {
+      "type": "string",
+      "value": "[concat('ssh ', variables('adminUsername'), '@', reference(concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress)]"
+    }
+  }
+}
