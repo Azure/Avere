@@ -12,7 +12,7 @@ This solution can be deployed through the portal or cloud shell.
 
 To install from the portal, launch the deployment by clicking the "Deploy to Azure" button below:
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Favereimageswestus.blob.core.windows.net%2Fgithubcontent%2Fsrc%2Fvdbench%2Fvdbench-azuredeploy.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fvdbench%2Fvdbench-azuredeploy.json" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 
@@ -36,8 +36,8 @@ Save the output values of the deployment for access to the vdbench cluster.
    cd vdbench
 
    # get the Avere vFXT controller template and edit parameters
-   curl -o azuredeploy.json https://avereimageswestus.blob.core.windows.net/githubcontent/src/vdbench/vdbench-azuredeploy.json
-   curl -o azuredeploy.parameters.json https://avereimageswestus.blob.core.windows.net/githubcontent/src/vdbench/vdbench-azuredeploy.parameters.json
+   curl -o azuredeploy.json https://raw.githubusercontent.com/Azure/Avere/master/src/vdbench/vdbench-azuredeploy.json
+   curl -o azuredeploy.parameters.json https://raw.githubusercontent.com/Azure/Avere/master/src/vdbench/vdbench-azuredeploy.parameters.json
    vi azuredeploy.parameters.json
    
    # deploy the template

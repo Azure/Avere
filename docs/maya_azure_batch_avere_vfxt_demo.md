@@ -117,8 +117,8 @@ If you are not familiar with Azure Batch, the following pages cover the concepts
    cd ~/batch
    
    # download the batch 
-   curl -o pool.json https://avereimageswestus.blob.core.windows.net/githubcontent/src/mayabatch/pool.json
-   curl -o pool-parameters.json https://avereimageswestus.blob.core.windows.net/githubcontent/src/mayabatch/pool-parameters.json
+   curl -o pool.json https://raw.githubusercontent.com/Azure/Avere/master/src/mayabatch/pool.json
+   curl -o pool-parameters.json https://raw.githubusercontent.com/Azure/Avere/master/src/mayabatch/pool-parameters.json
    vi pool-parameters.json
    
    # login, in case you are not already logged into batch
@@ -140,8 +140,8 @@ Each task uses the ``render`` script that you downloaded under ``/src`` in the [
    cd ~/batch
    
    # download the batch 
-   curl -o job.json https://avereimageswestus.blob.core.windows.net/githubcontent/src/mayabatch/job.json
-   curl -o job-parameters.json https://avereimageswestus.blob.core.windows.net/githubcontent/src/mayabatch/job-parameters.json
+   curl -o job.json https://raw.githubusercontent.com/Azure/Avere/master/src/mayabatch/job.json
+   curl -o job-parameters.json https://raw.githubusercontent.com/Azure/Avere/master/src/mayabatch/job-parameters.json
    vi job-parameters.json
    
    # login, in case you are not already logged into batch

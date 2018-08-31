@@ -120,7 +120,7 @@
           "imageReference": {
             "publisher": "microsoft-avere",
             "offer": "vfxt",
-            "sku": "avere-vfx-controller",
+            "sku": "avere-vfxt-controller",
             "version": "latest"
           }
         },

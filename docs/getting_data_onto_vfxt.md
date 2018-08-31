@@ -17,7 +17,7 @@ It also explains some utilities that can help. The ``msrsync`` utility can be us
 
 To install a data ingestor VM with all of these parallel data ingestion tools installed, click the "Deploy to Azure" button:
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Favereimageswestus.blob.core.windows.net%2Fgithubcontent%2Fsrc%2Fdataingestor%2Fdataingestor-azuredeploy.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fdataingestor%2Fdataingestor-azuredeploy.json" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 
@@ -250,9 +250,9 @@ To use msrsync to populate an Azure cloud volume with an Avere cluster, follow t
 1. Install msrsync and its prerequisites (rsync and Python 2.6 or later)
 2. Determine the total number of files and directories to be copied.
 
-   For example, use the Avere utility ``walkermp.py`` (available soon from GitHub; <!-- xxx is this in the download? xxx --> contact Avere Systems for details) to count the number of items to be copied.
+   For example, use the Avere utility ``prime.py`` with arguments ```prime.py --directory /path/to/some/directory``` (available by downloading url https://raw.githubusercontent.com/Azure/Avere/master/src/dataingestor/prime.py).
 
-   If not using ``walkermp.py``, you can calculate the number of items with the Gnu ``find`` tool as follows:
+   If not using ``prime.py``, you can calculate the number of items with the Gnu ``find`` tool as follows:
    ```bash
    find <path> -type f |wc -l         # (counts files)
    find <path> -type d |wc -l         # (counts directories)
@@ -349,24 +349,4 @@ cd obj
 /home/azureuser/avere/glibc-2.27/configure --prefix=/home/azureuser/usr
 time make -j
 ```
-<!--
-While the compile is happening, check the Analytics tab of the Avere Control Panel in your browser to see the performance characteristics of the Avere cluster. The above script will yield a pattern similar to below:
 
-<img src="images/compiling_chart.png" width="600">
-
-On the analytics page, you can add the following latency graph to understand the client latency.
-
-<img src="images/analytics_options.png">
- -->
-<!-- 
-## About writeback delay
- -->
-<!-- Part of the cluster’s cache policy includes a time limit setting called writeback delay. This setting determines the maximum amount of time a changed file can stay in the cluster cache before being copied to backend storage. When a file hits its writeback delay limit, it is preferentially copied to the backend core filer, which can temporarily throttle the cache's ability to accept new writes.  -->
-<!-- 
-When you are adding a large number of new files to the storage system, the writeback delay time might impact your write performance.
-For example, if your writeback delay is set to one hour while copying data to the cluster, you might see degraded write performance about one hour after starting the copy actions. -->
-<!-- 
-To avoid conflicts, allow sufficient time for the data to be copied onto the core filer before attempting to use the data in the cache. If you experience significant delays, contact support for advice about how to work around the issue.   -->
-<!-- 
-Read [Cache Writeback and Scheduled Write-Through Features](http://library.averesystems.com/ops_guide/4_7/advanced_cache_features.html#cache-features-overview) to learn more about writeback settings.
--->
