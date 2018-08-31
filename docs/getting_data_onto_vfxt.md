@@ -349,7 +349,7 @@ cd obj
 /home/azureuser/avere/glibc-2.27/configure --prefix=/home/azureuser/usr
 time make -j
 ```
-
+<!--
 While the compile is happening, check the Analytics tab of the Avere Control Panel in your browser to see the performance characteristics of the Avere cluster. The above script will yield a pattern similar to below:
 
 <img src="images/compiling_chart.png" width="600">
@@ -357,7 +357,7 @@ While the compile is happening, check the Analytics tab of the Avere Control Pan
 On the analytics page, you can add the following latency graph to understand the client latency.
 
 <img src="images/analytics_options.png">
-
+ -->
 <!-- 
 ## About writeback delay
  -->
