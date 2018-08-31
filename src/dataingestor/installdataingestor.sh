@@ -140,6 +140,10 @@ function write_msrsync() {
     sudo chmod 755 $FILENAME
     sudo wget -O $FILENAME https://raw.githubusercontent.com/jbd/msrsync/master/msrsync
     sudo chmod +x $FILENAME
+
+    PRIMEFILE=/usr/bin/prime.py
+    sudo wget -O $PRIMEFILE https://raw.githubusercontent.com/Azure/Avere/master/src/dataingestor/prime.py
+    sudo chmod +x $PRIMEFILE
 }
 
 function main() {
