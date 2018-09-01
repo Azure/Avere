@@ -1,13 +1,8 @@
 #!/bin/bash -ex
 
 # variables that must be set beforehand
-#NODE_PREFIX=avereclient
-#NODE_COUNT=3
-#LINUX_USER=azureuser
-#AVEREVFXT_NODE_IPS="172.16.1.8,172.16.1.9,172.16.1.10"
-#
-# called like this:
-#  sudo NODE_PREFIX=avereclient NODE_COUNT=3 LINUX_USER=azureuser AVEREVFXT_NODE_IPS="172.16.1.8,172.16.1.9,172.16.1.10" ./install.sh
+# AVERE_NAMESPACE_PATH=/msazure
+# AVEREVFXT_NODE_IPS="172.16.1.8,172.16.1.9,172.16.1.10"
 #
 function retrycmd_if_failure() {
     retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
@@ -69,11 +64,11 @@ function mount_avere() {
     for VFXT in $(echo $AVEREVFXT_NODE_IPS | sed "s/,/ /g")
     do
         MOUNT_POINT="/nfs/node${COUNTER}"
-        echo "Mounting to $VFXT:msazure to ${MOUNT_POINT}"
+        echo "Mounting to $VFXT:$AVERE_NAMESPACE_PATH to ${MOUNT_POINT}"
         sudo mkdir -p $MOUNT_POINT
         # no need to write again if it is already there
         if grep -v --quiet $VFXT /etc/fstab; then
-            echo "$VFXT:/msazure	${MOUNT_POINT}	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0" >> /etc/fstab
+            echo "$VFXT:$AVERE_NAMESPACE_PATH	${MOUNT_POINT}	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0" >> /etc/fstab
             sudo mount ${MOUNT_POINT}
         fi
         COUNTER=$(($COUNTER + 1))

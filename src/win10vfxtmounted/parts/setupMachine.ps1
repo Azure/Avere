@@ -137,7 +137,7 @@ Write-StartupFile
 REG ADD "HKEY_CURRENT_USER\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppContainer\Storage\microsoft.microsoftedge_8wekyb3d8bbwe\MicrosoftEdge\Main" /v "HomeButtonPage" /t REG_SZ /d "https://${AvereManagementIP}/avere/fxt/index.php" /f
 REG ADD "HKEY_CURRENT_USER\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppContainer\Storage\microsoft.microsoftedge_8wekyb3d8bbwe\MicrosoftEdge\Main" /v "HomeButtonEnabled" /t REG_DWORD /d 1 /f
 REM EnableLinkedConnections is broken in Win 10 Oct Edition, so we are creating a symbolic link for now
-REM net use ${global:TargetDriveLetter}: \\${AvereMountIP}\${AvereMountPath}
+REM net use ${global:TargetDriveLetter}: \\${AvereMountIP}${AvereMountPath}
 
 "@
     ForEach($app in $global:AppxPkgs){
@@ -156,18 +156,12 @@ Install-NFS
     Enable-WindowsOptionalFeature -Online -FeatureName "ServicesForNFS-ClientOnly" -All
     Enable-WindowsOptionalFeature -Online -FeatureName "NFS-Administration" -All
     Enable-WindowsOptionalFeature -Online -FeatureName "ClientForNFS-Infrastructure" -All
-    #cmd /c mklink /D c:\Users\${UserName}\Desktop\AvereVFXT "\\${AvereMountIP}\${AvereMountPath}"
-    #cmd /c mklink /D c:\Users\Default\Desktop\AvereVFXT "\\${AvereMountIP}\${AvereMountPath}"
-    cmd /c mklink /D c:\AvereVFXT "\\${AvereMountIP}\${AvereMountPath}"
+    cmd /c mklink /D c:\AvereVFXT "\\${AvereMountIP}${AvereMountPath}"
 }
 
 function
 Install-AzureBatchExplorer
 {
-    #$DestinationPath =  "C:\AzureData\AzureBatchExplorer.exe"
-    #$Url = "https://github.com/Azure/BatchExplorer/releases/download/v0.15.0/0.15.0.BatchLabs.Setup.exe"
-    #DownloadFileOverHttp $Url $DestinationPath
-    #wusa $DestinationPath
     $DestinationPath =  "C:\AzureData\AzureBatchExplorer.zip"
     $Url = "https://github.com/Azure/BatchExplorer/releases/download/v0.15.0/0.15.0.BatchLabs-win.zip"
     DownloadFileOverHttp $Url $DestinationPath

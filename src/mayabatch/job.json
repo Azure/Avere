@@ -3,7 +3,7 @@
         "description": "Application template for working with Maya and Arnold on CentOS."
     },
     "parameters": {
-        "jobName": {
+        "jobId": {
             "type": "string",
             "metadata": {
                 "description": "The unique name of the job."
@@ -12,7 +12,7 @@
         "poolId": {
             "type": "string",
             "metadata": {
-                "description": "The ID of the pool on which to run the job."
+                "description": "The ID of the pool where the job runs."
             }
         },
         "adminUsername": {
@@ -25,28 +25,28 @@
             "type": "int",
             "defaultValue": 1,
             "metadata": {
-                "description": "Index of the first frame to render"
+                "description": "Index of the first frame to render."
             }
         },
         "frameEnd": {
             "type": "int",
             "defaultValue": 1,
             "metadata": {
-                "description": "Index of the last frame to render"
+                "description": "Index of the last frame to render."
             }
         },
         "frameStep": {
             "type": "int",
             "defaultValue": 1,
             "metadata": {
-                "description": "Incremental step in frame sequeunce"
+                "description": "Incremental step in frame sequeunce."
             }
         },
         "maxTasksPerNode": {
             "type": "int",
             "defaultValue": 1,
             "metadata": {
-              "description": "The number of tasks per node"
+              "description": "The number of tasks per node."
             }
         },
         "mayaProjectPath": {
@@ -58,13 +58,13 @@
         "sceneFile": {
             "type": "string",
             "metadata": {
-                "description": "The path to the Maya scene file"
+                "description": "The path to the Maya scene file."
             }
         },
         "imagesOutputBasePath": {
             "type": "string",
             "metadata": {
-                "description": "The rendered frames output base directory"
+                "description": "The rendered frames output base directory."
             }
         },
         "renderScriptPath": {
@@ -90,7 +90,7 @@
     "job": {
         "type": "Microsoft.Batch/batchAccounts/jobs",
         "properties": {
-            "id": "[parameters('jobName')]",
+            "id": "[parameters('jobId')]",
             "poolInfo": {
                 "poolId": "[parameters('poolId')]"
             },

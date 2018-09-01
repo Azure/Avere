@@ -2,7 +2,7 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "averevFXTCommaSeparatedIPs": {
+    "avereVServerCommaSeparatedAddresses": {
       "value": "172.16.1.4,172.16.1.6,172.16.1.5"
     },
     "uniqueName": {
@@ -11,7 +11,7 @@
     "sshKeyData": {
       "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8fhkh3jpHUQsrUIezFB5k4Rq9giJM8G1Cr0u2IRMiqG++nat5hbOr3gODpTA0h11q9bzb6nJtK7NtDzIHx+w3YNIVpcTGLiUEsfUbY53IHg7Nl/p3/gkST3g0R6BSL7Hg45SfyvpH7kwY30MoVHG/6P3go4SKlYoHXlgaaNr3fMwUTIeE9ofvyS3fcr6xxlsoB6luKuEs50h0NGsE4QEnbfSY4Yd/C1ucc3mEw+QFXBIsENHfHfZYrLNHm2L8MXYVmAH8k//5sFs4Migln9GiUgEQUT6uOjowsZyXBbXwfT11og+syPkAq4eqjiC76r0w6faVihdBYVoc/UcyupgH azureuser@linuxvm"
     },
-    "subnetRef": {
+    "subnetId": {
       "value": "/subscriptions/b52fce95-de5f-4b37-afca-db203a5d0b6a/resourceGroups/averevfxteastus2/providers/Microsoft.Network/virtualNetworks/MyVNET/subnets/subnet"
     },
     "vmCount": {

@@ -5,7 +5,7 @@
   "adminPassword": {
     "value": "AvereNumber1$"
   },  
-  "poolUniqueName": {
+  "poolId": {
     "value": "pool2"
   },
   "targetBatchVMSize": {
@@ -20,16 +20,16 @@
   "maxTasksPerNode": {
     "value": 2
   },
-  "subnetRef": {
+  "subnetId": {
     "value": "/subscriptions/b52fce95-de5f-4b37-afca-db203a5d0b6a/resourceGroups/avereeastus/providers/Microsoft.Network/virtualNetworks/vnet-avereeastus/subnets/subnetbatch"
   },
-  "averevFXTCommaSeparatedIPs": {
+  "avereVServerCommaSeparatedAddresses": {
     "value": "172.16.0.12,172.16.0.13,172.16.0.14"
   },
-  "averevFXTPath": {
+  "avereNamespacePath": {
     "value": "/msazure"
   },
-  "averevFXTBootstrapIP": {
+  "avereVServerBootstrapAddress": {
     "value": "172.16.0.12"
   },
   "centOSBootstrapScriptPath": {

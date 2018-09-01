@@ -34,7 +34,7 @@
     "vmName": "[concat('vm-',variables('controllerName'))]",
     "virtualNetworkName": "[concat('vnet-',variables('controllerName'))]",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
-    "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
+    "subnetId": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
     "vmSize": "Standard_A1_v2"
   },
   "resources": [
@@ -87,7 +87,7 @@
                 "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
               },
               "subnet": {
-                "id": "[variables('subnetRef')]"
+                "id": "[variables('subnetId')]"
               }
             }
           }
@@ -135,7 +135,7 @@
     }
   ],
   "outputs": {
-    "sshString": {
+    "SSH_STRING": {
       "type": "string",
       "value": "[concat(variables('controllerAdminUsername'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress)]"
     },

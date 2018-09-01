@@ -104,11 +104,11 @@ if __name__ == "__main__":
     # Input Arm Template Artifacts to be processed in
     # Note:  These files are not useable ARM templates on thier own or valid JSON
     # They require processing by this script.
-    ARM_INPUT_TEMPLATE_TEMPLATE                  = "base-template.json"
-    ARM_INPUT_PARAMETER_TEMPLATE                 = "base-template.parameters.json"
+    ARM_INPUT_TEMPLATE_TEMPLATE                  = "parts/base-template.json"
+    ARM_INPUT_PARAMETER_TEMPLATE                 = "parts/base-template.parameters.json"
 
     # Shell Scripts to load into YAML
-    VDBENCH_INSTALL_SCRIPT = "installnfs.sh"
+    VDBENCH_INSTALL_SCRIPT = "parts/installnfs.sh"
     
     # Output ARM Template Files.  WIll Also Output name.parameters.json for each
     ARM_OUTPUT_TEMPLATE                                   = "nfs-azuredeploy.json"

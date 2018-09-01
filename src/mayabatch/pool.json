@@ -15,16 +15,16 @@
           "description": "Admin password on the batch VMs."
         }
       },
-      "poolUniqueName": {
+      "poolId": {
         "type": "string",
         "metadata": {
-          "description": "The unique name used for the pool"
+          "description": "The id of the Azure Batch pool, this can be any unique name."
         }
       },
       "targetBatchVMSize": {
         "type": "string",
         "metadata": {
-          "description": "The size of the virtual machines that run the application"
+          "description": "The size of the virtual machines that run the jobs. "
         },
         "defaultValue": "Standard_D2_v3"
       },
@@ -32,7 +32,7 @@
         "type": "int",
         "defaultValue": 0,
         "metadata": {
-          "description": "The number of dedicated virtual machines in the Azure Batch pool where the job will run"
+          "description": "The number of dedicated virtual machines in the Azure Batch pool."
         }
       },
       "targetLowPriorityNodeCount": {
@@ -49,28 +49,28 @@
           "description": "The number of tasks per node"
         }
       },
-      "subnetRef": {
+      "subnetId": {
         "type": "string",
         "metadata": {
-          "description": "The reference to the subnet of the Avere vFXT cluster."
+          "description": "The fully qualified reference to the subnet of the Avere vFXT cluster.  Example /subscriptions/SUBSCRIPTION/resourceGroups/RESOURCEGROUP/providers/Microsoft.Network/virtualNetworks/NETWORK_NAME/subnets/SUBNET_NAME."
         }
       },
-      "averevFXTCommaSeparatedIPs": {
+      "avereVServerCommaSeparatedAddresses": {
         "type": "string",
         "metadata": {
-          "description": "The list of IP address for all the nodes in the Avere vFXT cluster."
+          "description": "A comma separated list of Avere vFXT vServer IP Addresses."
         }
       },
-      "averevFXTPath": {
+      "avereNamespacePath": {
         "type": "string",
         "metadata": {
           "description": "The Avere vFXT namespace path."
         }
       },
-      "averevFXTBootstrapIP": {
+      "avereVServerBootstrapAddress": {
         "type": "string",
         "metadata": {
-          "description": "A single ip from averevFXTCommaSeparatedIPs used for bootstrap."
+          "description": "One of the Avere vFXT vServer NFS IP addresses used for bootstrap."
         }
       },
       "centOSBootstrapScriptPath": {
@@ -83,22 +83,22 @@
     "variables": {
       "adminUsername": "[parameters('adminUsername')]",
       "adminPassword": "[parameters('adminPassword')]",
-      "poolUniqueName": "[parameters('poolUniqueName')]",
+      "poolId": "[parameters('poolId')]",
       "targetBatchVMSize": "[parameters('targetBatchVMSize')]",
       "targetDedicatedNodeCount": "[parameters('targetDedicatedNodeCount')]",
       "targetLowPriorityNodeCount": "[parameters('targetLowPriorityNodeCount')]",
       "maxTasksPerNode": "[parameters('maxTasksPerNode')]",
-      "subnetRef": "[parameters('subnetRef')]",
-      "averevFXTCommaSeparatedIPs": "[parameters('averevFXTCommaSeparatedIPs')]",
-      "averevFXTPath": "[parameters('averevFXTPath')]",
-      "averevFXTBootstrapIP": "[parameters('averevFXTBootstrapIP')]",
+      "subnetId": "[parameters('subnetId')]",
+      "avereVServerCommaSeparatedAddresses": "[parameters('avereVServerCommaSeparatedAddresses')]",
+      "avereNamespacePath": "[parameters('avereNamespacePath')]",
+      "avereVServerBootstrapAddress": "[parameters('avereVServerBootstrapAddress')]",
       "centOSBootstrapScriptPath": "[parameters('centOSBootstrapScriptPath')]",
       "baseDirectory": "/nfs",
       "bootstrapPath": "/b"
     },
     "pool": {
-      "id": "[variables('poolUniqueName')]",
-      "displayName": "[variables('poolUniqueName')]",
+      "id": "[variables('poolId')]",
+      "displayName": "[variables('poolId')]",
       "vmSize": "[variables('targetBatchVMSize')]",
       "virtualMachineConfiguration": {
         "nodeAgentSKUId": "batch.node.centos 7",
@@ -109,7 +109,7 @@
         }
       },
       "networkConfiguration": {
-        "subnetId": "[variables('subnetRef')]"
+        "subnetId": "[variables('subnetId')]"
       },
       "resizeTimeout": "PT15M",
       "targetDedicatedNodes": "[variables('targetDedicatedNodeCount')]",
@@ -124,18 +124,18 @@
         "commandLine": "sudo yum -y install nfs-utils && sudo mkdir -p $BOOTSTRAP_PATH && r=5 && for i in $(seq 1 $r); do sudo mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' ${BOOTSTRAP_NFS_IP}:${BOOTSTRAP_NFS_PATH} $BOOTSTRAP_PATH && break || [ $i == $r ] && break 0 || sleep 1; done && sudo -E /bin/bash ${BOOTSTRAP_PATH}${BOOTSTRAP_SCRIPT} 2>&1 | sudo tee -a /var/log/bootstrap.log && sudo umount $BOOTSTRAP_PATH && sudo rmdir $BOOTSTRAP_PATH",
         "maxTaskRetryCount": 10,
         "userIdentity": {
-          "userName": "azureuser"
+          "userName": "variables('adminUsername')"
         },
         "waitForSuccess": true,
         "resourceFiles": [],
         "environmentSettings": [
           {
             "name": "NFS_IP_CSV",
-            "value": "[variables('averevFXTCommaSeparatedIPs')]"
+            "value": "[variables('avereVServerCommaSeparatedAddresses')]"
           },
           {
             "name": "NFS_PATH",
-            "value": "[variables('averevFXTPath')]"
+            "value": "[variables('avereNamespacePath')]"
           },
           {
             "name": "BASE_DIR",
@@ -151,11 +151,11 @@
           },
           {
             "name": "BOOTSTRAP_NFS_IP",
-            "value": "[variables('averevFXTBootstrapIP')]"
+            "value": "[variables('avereVServerBootstrapAddress')]"
           },
           {
             "name": "BOOTSTRAP_NFS_PATH",
-            "value": "[variables('averevFXTPath')]"
+            "value": "[variables('avereNamespacePath')]"
           }
         ]
       },

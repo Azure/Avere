@@ -5,14 +5,14 @@
     "uniqueName": {
       "type": "string",
       "metadata": {
-        "description": "The unique name used for the data ingestor VM."
+        "description": "The unique name used for the data ingestor VM for resource names associated with the VM."
       }
     },
     "vmSize": {
       "type": "string",
       "defaultValue": "Standard_D4_v3",
       "metadata": {
-        "description": "Size of the client VM."
+        "description": "Size of the VM."
       }
     },
     "adminUsername": {
@@ -34,13 +34,13 @@
         "description": "The fully qualified reference to the subnet of the Avere vFXT cluster.  Example /subscriptions/SUBSCRIPTION/resourceGroups/RESOURCEGROUP/providers/Microsoft.Network/virtualNetworks/NETWORK_NAME/subnets/SUBNET_NAME."
       }
     },
-    "averevFXTCommaSeparatedIPs": {
+    "avereVServerCommaSeparatedAddresses": {
       "type": "string",
       "metadata": {
-        "description": "A comma separated list of node ips to the vFXT nodes."
+        "description": "A comma separated list of Avere vFXT vServer IP Addresses."
       }
     },
-    "averevFXTPath": {
+    "avereNamespacePath": {
       "type": "string",
       "metadata": {
         "description": "The Avere vFXT namespace path."
@@ -53,8 +53,8 @@
     "adminUsername": "[parameters('adminUsername')]",
     "adminPassword": "[parameters('adminPassword')]",
     "subnetId": "[parameters('subnetId')]",
-    "averevFXTCommaSeparatedIPs": "[parameters('averevFXTCommaSeparatedIPs')]",
-    "averevFXTPath": "[parameters('averevFXTPath')]",
+    "avereVServerCommaSeparatedAddresses": "[parameters('avereVServerCommaSeparatedAddresses')]",
+    "avereNamespacePath": "[parameters('avereNamespacePath')]",
     "nicName": "[concat('vmnic-',variables('uniqueName'))]",
     "publicIPAddressName": "[concat('publicip-',variables('uniqueName'))]",
     "vmName": "[concat('vm-',variables('uniqueName'))]",
@@ -64,7 +64,7 @@
       "sku": "18.04-LTS",
       "version": "latest"
     },
-    "environmentVariables": "[concat(' AVEREVFXT_NODE_IPS=', variables('averevFXTCommaSeparatedIPs'))]"
+    "environmentVariables": "[concat(' AVERE_NAMESPACE_PATH', variables('avereNamespacePath'), ' AVEREVFXT_NODE_IPS=', variables('avereVServerCommaSeparatedAddresses'))]"
   },
   "resources": [
     {
@@ -117,7 +117,7 @@
           "computername": "[variables('vmName')]",
           "adminUsername": "[variables('adminUsername')]",
           "adminPassword": "[variables('adminPassword')]",
-          "customData": "[base64('#cloud-config\n\nwrite_files:\n -  encoding: gzip\n    content: !!binary |\n        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\n    path: /opt/avere/installdataingestor.sh\n    permissions: \"0744\"\n\n')]"
+          "customData": "[base64('#cloud-config\n\nwrite_files:\n -  encoding: gzip\n    content: !!binary |\n        H4sIAAAAAAAC/8VXfVObSBj/Wz7FI2E6yVVCiNNrT4vXtKZTb6px1PZuxngMgSVsGxa6u6ip9rvfs0CAxNSzLzfHOOPC8/bb5z2tTWtCmTXxRAQmuda0Flx6nHqTGREgI09CnAkJEwKCqH9hwknksQD5Bu+HJ0P3aHA4PD0evBq6x4OzN44VC+9zxsmC/v71X2fu0Wh/6B4cnzq6/bTftX/t2t1nW9Xxt/po93StpYUZ8yVNGHAi+dyPA5eGbujRGeptd+BGA3wUjRLhGPYuXHlUumJGSOoY/V2QNCZJJh1jexdEREMJjx6tHHIVeBegQBkYbUE+gQ1GqbSzC0GSs6inVAdGdbh58aWinoPxO3ruE/QALpT+CSfeR7i9hXHFQ0PFRnO2hQ24QKARYRWTeogfJTC8Jn4mSQBj3Xgx1pWgsix2l1hRTcYZ2NVHMhNkiSN3CBi1cypqSPNjkLBC4l/MftHqkHipdKdEulkaePJuNOxe/qq4Cg4XHZZiLCwZpxZ+NlHYLEhdJH1PHOx+D0pNUGiC/t4jG25BEgLGHdtImHL0hDkE/e/2+Z/Di53uL53b9jkZXnCOR0NfiSYjVTR9rIA1KtfHeT3zt6fB2tiW8dzuPTCMKy5ahHNtNCkT0pvN/ofialVhTXzfEwgKccwh5IR8RrAVW343/U4pLi5ZXgBMkyVm+WJy4idxTFggwJznVVsHuvWjqipN3ytX3AjJ6YxgvPT/pqP8SJtYVHJd79+Yeg9wyb3Nxk9YSKfujLLsOs/NDXKdJlzC/vDlweDIfX0yOjobHu07LGGUScI9lLskANrGCu6NlUwH7CE2/j3rAQuFqRChvdTjSCOzJRBxkjHpepekMXxejd6h4RPHrlJdzbki23NXGHeHH7Yhgb7RhbVlgTXVO6UHK58eKqXu8ejg6MzRLYRlsSQgxk1prJG8ReocKmCUTUGiPWVqx1g3knPyTUN5Q5HIggTijwHlYGIONJgaBcoSYASRo54rTrGVeFMPb4opSDHEArwZ5mcwV7nHSTNDi657ieH/lFFMhxwkWET6VohRmHxtAOr33GZj+Sob6CaIPB5ssQQzgG+lPJGJI/10K49b/ZrvEs52D6uqp8PeXgPHcjnkLlGyK15bzf1mHhjttlGe4THYnU5dHc1Uyt3nLrLMT6t8en3wdqju6ViZ4PlCVjNpFSqZZH4ExoK5JvhRnATw9MmTdcRcnZpMz58PR4ewV7O06t1P0wIq0pk3dzPhTfNEh7qwTQL6mL1TlB0YGz04Hb07wYDsH5xgKZ6eqcOY6aB9AU3LWxNytcCcEez7F1DEudC3ZKawcI1pZGshRYZc+BzaubjjgG6aEZmlekd1v/pjpMPFg9T2crVaDdfRx4atawvQ6rWvl5g3wcTyHBs1t16Br32hnyYZ9wlaxEYmE44trCGBMcdGzBKp7Au5BWoKFh+8WkS/D3MfMa8gWsDVi3mwWZdsTbsLdJ8IbA9ennlNtJXEz8Z6tYr12yGV9vNCUb9BvgfU9gLUJlxFFCtmUUuARR+QS4tlOAAa2PIyWVmX1C5Tfq7H2LyeEMoEAv5j9PLU6fefaNUhpCxYTgkzxk8klREWgynnKeYOho5ju+qVM8H8rMZCU2hsWZaO1Aq6aV5RHJ6+6r/mB/RYYRvMHuhrssG6wS5/P5TNnwemQuJjvz9eMolAVmFhF1rTFWPBxZz5VUtsVW6XESZAyJMYIilTsWNZUyqjbNLFqW19mARWKfqVTtqk/kAbvVLJYY5qUoWGe1fdAlEmCMedRRImV8FZsSdwQbmLpjD6+LphMycenxwcDtWnxkzguCJ10/kaUBX3A1AN1O9za6AWmgUqwX0L0x7H+hQrNOFrTNU4K1vLaxIKV8Fb7LZqfYO3an0rKra50DUYi3Gbr1gFX2PnarAV20c9GQve1aHaEFhkUOn0Jn8zDkvMXrl5Fmu5ru6orvYPIEiT3ygRAAA=\n    path: /opt/avere/parts/installdataingestor.sh\n    permissions: \"0744\"\n\n')]"
         },
         "storageProfile": {
           "imageReference": "[variables('imageReference')]"
@@ -159,7 +159,7 @@
       "type": "string",
       "value": "[resourceGroup().location]"
     },
-    "sshString": {
+    "SSH_STRING": {
       "type": "string",
       "value": "[concat(variables('adminUsername'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress)]"
     }
