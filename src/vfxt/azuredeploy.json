@@ -100,7 +100,7 @@
       "name": "[variables('vmName')]",
       "location": "[resourceGroup().location]",
       "plan": {
-        "name": "avere-vfx-controller",
+        "name": "avere-vfxt-controller",
         "publisher": "microsoft-avere",
         "product": "vfxt"
       },
