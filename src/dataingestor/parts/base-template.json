@@ -4,29 +4,28 @@
   "parameters": {
     "uniqueName": {
       "type": "string",
-      "maxLength": 12,
       "metadata": {
-        "description": "The unique name used for the Windows 10 VM."
+        "description": "The unique name used for the data ingestor VM for resource names associated with the VM."
       }
     },
     "vmSize": {
       "type": "string",
-      "defaultValue": "Standard_D5_v2",
+      "defaultValue": "Standard_D4_v3",
       "metadata": {
-        "description": "Size of the Windows 10 VM."
+        "description": "Size of the VM."
       }
     },
     "adminUsername": {
       "type": "string",
       "defaultValue": "azureuser",
       "metadata": {
-        "description": "Admin username on the Windows 10 VM."
+        "description": "The admin username on the data ingestor VM."
       }
     },
     "adminPassword": {
       "type": "securestring",
       "metadata": {
-        "description": "Password for the Windows 10 VM."
+        "description": "The admin password on the data ingestor VM."
       }
     },
     "subnetId": {
@@ -35,19 +34,13 @@
         "description": "The fully qualified reference to the subnet of the Avere vFXT cluster.  Example /subscriptions/SUBSCRIPTION/resourceGroups/RESOURCEGROUP/providers/Microsoft.Network/virtualNetworks/NETWORK_NAME/subnets/SUBNET_NAME."
       }
     },
-    "avereManagementIP": {
+    "avereVServerCommaSeparatedAddresses": {
       "type": "string",
       "metadata": {
-        "description": "This is the IP address of the Avere vFXT Web UI management endpoint."
+        "description": "A comma separated list of Avere vFXT vServer IP Addresses."
       }
     },
-    "avereMountIP": {
-      "type": "string",
-      "metadata": {
-        "description": "This is one of the NFS endpoints provided by the Avere vFXT cluster."
-      }
-    },
-    "averevFXTPath": {
+    "avereNamespacePath": {
       "type": "string",
       "metadata": {
         "description": "The Avere vFXT namespace path."
@@ -58,24 +51,20 @@
     "uniqueName": "[parameters('uniqueName')]",
     "vmSize": "[parameters('vmSize')]",
     "adminUsername": "[parameters('adminUsername')]",
-    "adminPassword": "[parameters('adminPassword')]",    
+    "adminPassword": "[parameters('adminPassword')]",
     "subnetId": "[parameters('subnetId')]",
-    "avereManagementIP": "[parameters('avereManagementIP')]",
-    "avereMountIP": "[parameters('avereMountIP')]",
-    "averevFXTPath": "[parameters('averevFXTPath')]",
+    "avereVServerCommaSeparatedAddresses": "[parameters('avereVServerCommaSeparatedAddresses')]",
+    "avereNamespacePath": "[parameters('avereNamespacePath')]",
     "nicName": "[concat('vmnic-',variables('uniqueName'))]",
     "publicIPAddressName": "[concat('publicip-',variables('uniqueName'))]",
     "vmName": "[concat('vm-',variables('uniqueName'))]",
     "imageReference": {
-      "publisher": "MicrosoftVisualStudio",
-      "offer": "Windows",
-      "sku": "Windows-10-N-x64",
+      "publisher": "Canonical",
+      "offer": "UbuntuServer",
+      "sku": "18.04-LTS",
       "version": "latest"
     },
-    "singleQuote": "'",
-    "windowsCustomScriptArguments": "[concat('$arguments = ',variables('singleQuote'),'-UserName ',variables('adminUsername'),' -AvereManagementIP ',variables('avereManagementIP'),' -AvereMountIP ',variables('avereMountIP'),' -AvereMountPath ',variables('averevFXTPath'),variables('singleQuote'),' ; ')]",
-    "windowsCustomScriptSuffix": " $inputFile = '%SYSTEMDRIVE%\\AzureData\\CustomData.bin' ; $outputFile = '%SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.ps1' ; $inputStream = New-Object System.IO.FileStream $inputFile, ([IO.FileMode]::Open), ([IO.FileAccess]::Read), ([IO.FileShare]::Read) ; $sr = New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($inputStream, [System.IO.Compression.CompressionMode]::Decompress)) ; $sr.ReadToEnd() | Out-File($outputFile) ; Invoke-Expression('{0} {1}' -f $outputFile, $arguments) ; ",
-    "windowsCustomScript": "[concat('powershell.exe -ExecutionPolicy Unrestricted -command \"', variables('windowsCustomScriptArguments'), variables('windowsCustomScriptSuffix'), '\"')]"
+    "environmentVariables": "[concat(' AVERE_NAMESPACE_PATH', variables('avereNamespacePath'), ' AVEREVFXT_NODE_IPS=', variables('avereVServerCommaSeparatedAddresses'))]"
   },
   "resources": [
     {
@@ -128,7 +117,7 @@
           "computername": "[variables('vmName')]",
           "adminUsername": "[variables('adminUsername')]",
           "adminPassword": "[variables('adminPassword')]",
-          "customData": "#clusterCustomData"
+          "customData": "[base64('#clusterCustomDataInstallYaml')]"
         },
         "storageProfile": {
           "imageReference": "[variables('imageReference')]"
@@ -144,18 +133,19 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(variables('vmName'),'/installcustomscript')]",
+      "name": "[concat(variables('vmName'), '/configureagent')]",
       "apiVersion": "2017-12-01",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
       ],
       "properties": {
-        "publisher": "Microsoft.Compute",
-        "type": "CustomScriptExtension",
-        "typeHandlerVersion": "1.9",
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.0",
+        "autoUpgradeMinorVersion": true,
         "settings": {
-          "commandToExecute": "[concat(variables('windowsCustomScript'),' > %SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.log 2>&1')]"
+          "commandToExecute": "[concat(variables('environmentVariables'), ' /bin/bash -c \"/bin/bash /opt/avere/installdataingestor.sh >> /opt/avere/dataingestor-install.log 2>&1\"')]"
         }
       }
     }
@@ -169,9 +159,9 @@
       "type": "string",
       "value": "[resourceGroup().location]"
     },
-    "clientRDPAddress": {
+    "SSH_STRING": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress]"
+      "value": "[concat(variables('adminUsername'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress)]"
     }
   }
 }

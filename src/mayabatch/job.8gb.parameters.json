@@ -1,5 +1,5 @@
 {
-  "jobName": {
+  "jobId": {
     "value": "job1"
   },
   "poolId": {
@@ -18,19 +18,19 @@
     "value": 1
   },
   "mayaProjectPath": {
-    "value": "/nfs/eastus/scenes/8gbscene"
+    "value": "/nfs/default/scenes/8gbscene"
   },
   "sceneFile": {
-    "value": "/nfs/eastus/scenes/8gbscene/scenes/SEQ001/SHOT001/anim/versions/SEQ001_SHOT001_anim_v010_Imported.ma"
+    "value": "/nfs/default/scenes/8gbscene/scenes/SEQ001/SHOT001/anim/versions/SEQ001_SHOT001_anim_v010_Imported.ma"
   },  
   "imagesOutputBasePath": {
-    "value": "/nfs/eastus/images"
+    "value": "/nfs/default/images"
   },
   "renderScriptPath": {
-    "value": "/nfs/eastus/src/render8gb.sh"
+    "value": "/nfs/default/src/render8gb.sh"
   },
   "debugPath": {
-    "value": "/nfs/eastus/debug"
+    "value": "/nfs/default/debug"
   },
   "additionalFlags": {
     "value": " -fnc name.#.ext "

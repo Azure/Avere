@@ -5,21 +5,21 @@
     "uniqueName": {
       "type": "string",
       "metadata": {
-        "description": "The unique name used for the NFS VM."
+        "description": "The unique name used for the VM and for resource names associated with the VM."
       }
     },
     "vmSize": {
       "type": "string",
       "defaultValue": "Standard_D16s_v3",
       "metadata": {
-        "description": "Size of the controller VM."
+        "description": "Size of the VM."
       }
     },
     "adminUsername": {
       "type": "string",
       "defaultValue": "azureuser",
       "metadata": {
-        "description": "Admin username on the controller VM."
+        "description": "Admin username on the VM."
       }
     },
     "sshKeyData": {
@@ -139,7 +139,7 @@
         "osProfile": {
           "computername": "[concat(variables('vmName'))]",
           "adminUsername": "[variables('adminUsername')]",
-          "customData": "[base64('#cloud-config\n\nwrite_files:\n -  encoding: gzip\n    content: !!binary |\n        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\n    path: /opt/avere/installnfs.sh\n    permissions: \"0744\"\n\n')]",
+          "customData": "[base64('#cloud-config\n\nwrite_files:\n -  encoding: gzip\n    content: !!binary |\n        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\n    path: /opt/avere/parts/installnfs.sh\n    permissions: \"0744\"\n\n')]",
           "linuxConfiguration": {
             "disablePasswordAuthentication": "true",
             "ssh": {
@@ -203,7 +203,7 @@
       "type": "string",
       "value": "[resourceGroup().location]"
     },
-    "sshString": {
+    "SSH_STRING": {
       "type": "string",
       "value": "[concat('ssh ', variables('adminUsername'), '@', reference(concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress)]"
     }

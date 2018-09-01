@@ -80,11 +80,11 @@ if __name__ == "__main__":
     # Input Arm Template Artifacts to be processed in
     # Note:  These files are not useable ARM templates on thier own or valid JSON
     # They require processing by this script.
-    ARM_INPUT_TEMPLATE_TEMPLATE                  = "base-template.json"
-    ARM_INPUT_PARAMETER_TEMPLATE                 = "base-template.parameters.json"
+    ARM_INPUT_TEMPLATE_TEMPLATE                  = "parts/base-template.json"
+    ARM_INPUT_PARAMETER_TEMPLATE                 = "parts/base-template.parameters.json"
 
     # Powershell Script to save to Custom Data
-    VDBENCH_INSTALL_SCRIPT = "setupMachine.ps1"
+    VDBENCH_INSTALL_SCRIPT = "parts/setupMachine.ps1"
     
     # Output ARM Template Files.  WIll Also Output name.parameters.json for each
     ARM_OUTPUT_TEMPLATE                                   = "win10-azuredeploy.json"

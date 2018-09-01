@@ -1,6 +1,6 @@
 {
-  "jobName": {
-    "value": "jobskel1"
+  "jobId": {
+    "value": "job1"
   },
   "poolId": {
     "value": "pool1"

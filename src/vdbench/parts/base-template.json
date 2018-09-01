@@ -15,10 +15,10 @@
         "description": "The name prefix used for the VM"
       }
     },
-    "averevFXTCommaSeparatedIPs": {
+    "avereVServerCommaSeparatedAddresses": {
       "type": "string",
       "metadata": {
-        "description": "The vFXT node ips of the cluster."
+        "description": "A comma separated list of Avere vFXT vServer IP Addresses."
       }
     },
     "vmSize": {
@@ -41,16 +41,16 @@
         "description": "The public SSH key used for access to the VM."
       }
     },
-    "subnetRef": {
+    "subnetId": {
       "type": "string",
       "metadata": {
-        "description": "The reference to the subnet of the Avere vFXT cluster."
+        "description": "The fully qualified reference to the subnet of the Avere vFXT cluster.  Example /subscriptions/SUBSCRIPTION/resourceGroups/RESOURCEGROUP/providers/Microsoft.Network/virtualNetworks/NETWORK_NAME/subnets/SUBNET_NAME."
       }
     },
     "vmCount": {
       "type": "int",
       "metadata": {
-        "description": "The number of nodes to deploy"
+        "description": "The number of nodes to deploy."
       }
     }
   },
@@ -60,9 +60,9 @@
     "vmSize": "[parameters('vmSize')]",
     "adminUsername": "[parameters('adminUsername')]",
     "sshKeyData": "[parameters('sshKeyData')]",    
-    "subnetRef": "[parameters('subnetRef')]",
+    "subnetId": "[parameters('subnetId')]",
     "vmCount": "[parameters('vmCount')]",
-    "averevFXTCommaSeparatedIPs": "[parameters('averevFXTCommaSeparatedIPs')]",
+    "avereVServerCommaSeparatedAddresses": "[parameters('avereVServerCommaSeparatedAddresses')]",
     "availabilitySet": "[concat(parameters('uniqueName'), '-multivmas')]",
     "nsgname": "[concat(parameters('uniqueName'), '-nsgname')]",
     "nsgid": "[resourceId('Microsoft.Network/networkSecurityGroups',variables('nsgname'))]",
@@ -73,11 +73,11 @@
     "lbBackendPoolName": "[concat(parameters('uniqueName'), '-lbBackendPoolName')]",
     "publicIPAddressName": "[concat(parameters('uniqueName'), '-publicip')]",
     "sshKeyPath": "[concat('/home/',variables('adminUsername'),'/.ssh/authorized_keys')]",
-    "environmentVariables": "[concat(' NODE_PREFIX=', variables('vmName'), ' NODE_COUNT=',variables('vmCount'), ' LINUX_USER=',variables('adminUsername'), ' AVEREVFXT_NODE_IPS=', variables('averevFXTCommaSeparatedIPs'))]",
+    "environmentVariables": "[concat(' NODE_PREFIX=', variables('vmName'), ' NODE_COUNT=',variables('vmCount'), ' LINUX_USER=',variables('adminUsername'), ' AVEREVFXT_NODE_IPS=', variables('avereVServerCommaSeparatedAddresses'))]",
     "imageReference": {
       "publisher": "Canonical",
       "offer": "UbuntuServer",
-      "sku": "16.04-LTS",
+      "sku": "18.04-LTS",
       "version": "latest"
     }
   },
@@ -220,7 +220,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
-                "id": "[variables('subnetRef')]"
+                "id": "[variables('subnetId')]"
               },
               "loadBalancerBackendAddressPools": [
                 {
@@ -317,11 +317,11 @@
       "type": "string",
       "value": "[resourceGroup().location]"
     },
-    "clientAddress": {
+    "CLIENT_ADDRESS": {
       "type": "string",
       "value": "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).dnsSettings.fqdn]"
     },
-    "sshString": {
+    "SSH_STRING": {
       "type": "string",
       "value": "[concat('ssh ', variables('adminUsername'), '@', reference(concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).dnsSettings.fqdn)]"
     }
