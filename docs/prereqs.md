@@ -102,7 +102,7 @@ vi avere-cluster.json
 
 4. Edit the file to include your subscription ID. Save the file as ``avere-cluster.json``. 
 
-![Command line output of the script displaying the management IP address near the end](images/12pastesubid.png)
+![Console text editor showing the subscription ID and the "remove this line" selected for deletion](images/edit_role.png)
 
 5. Create the role:  
 
