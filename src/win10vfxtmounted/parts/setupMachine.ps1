@@ -156,7 +156,7 @@ Install-NFS
     Enable-WindowsOptionalFeature -Online -FeatureName "ServicesForNFS-ClientOnly" -All
     Enable-WindowsOptionalFeature -Online -FeatureName "NFS-Administration" -All
     Enable-WindowsOptionalFeature -Online -FeatureName "ClientForNFS-Infrastructure" -All
-    cmd /c mklink /D c:\AvereVFXT "\\${AvereMountIP}${AvereMountPath}"
+    cmd /c mklink /D c:\AvereVFXT "\\${AvereMountIP}${AvereMountPath}".replace("/","\\")
 }
 
 function
