@@ -124,7 +124,7 @@
         "commandLine": "sudo yum -y install nfs-utils && sudo mkdir -p $BOOTSTRAP_PATH && r=5 && for i in $(seq 1 $r); do sudo mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' ${BOOTSTRAP_NFS_IP}:${BOOTSTRAP_NFS_PATH} $BOOTSTRAP_PATH && break || [ $i == $r ] && break 0 || sleep 1; done && sudo -E /bin/bash ${BOOTSTRAP_PATH}${BOOTSTRAP_SCRIPT} 2>&1 | sudo tee -a /var/log/bootstrap.log && sudo umount $BOOTSTRAP_PATH && sudo rmdir $BOOTSTRAP_PATH",
         "maxTaskRetryCount": 10,
         "userIdentity": {
-          "userName": "variables('adminUsername')"
+          "userName": "[variables('adminUsername')]"
         },
         "waitForSuccess": true,
         "resourceFiles": [],
