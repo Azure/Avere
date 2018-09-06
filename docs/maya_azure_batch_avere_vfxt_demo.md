@@ -65,13 +65,13 @@ This step downloads the frames to render, the client mounting script, and the re
 3. Copy the following file, keeping the same name, to the Avere vFXT volume. Store it in a folder named ``bootstrap``:
 
    ```
-   https://github.com/Azure/Avere/blob/master/src/mayabatch/centosbootstrap.sh
+   https://raw.githubusercontent.com/Azure/Avere/master/src/mayabatch/centosbootstrap.sh
    ```
 	
 4. Copy the following file, keeping the same name, to the Avere vFXT volume. Store it in a folder named ``/src``:
 
    ```
-   https://github.com/Azure/Avere/blob/master/src/mayabatch/render.sh
+   https://raw.githubusercontent.com/Azure/Avere/master/src/mayabatch/render.sh
    ```
 
 ## Create an Azure Batch account and a pool
