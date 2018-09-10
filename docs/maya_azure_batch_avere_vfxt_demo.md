@@ -39,36 +39,19 @@ This 60-minute demo takes you through rendering an animated movie using Maya, Ba
 
 This step downloads the frames to render, the client mounting script, and the render task script to the appropriate machines. 
 
-1. Use the Windows 10 workstation or cluster controller to download a Maya scene to the controller's `/mnt/scene` folder.  
+1. On the controller, download a Maya scene to the controller's `/nfs/node1/demoscene` folder.  
 
-   This demo uses the walking skeleton example from https://www.turbosquid.com/3d-models/3d-model-kong-skeleton-1192846.
+   This demo uses the royalty-free cartoon candles example from https://www.turbosquid.com/3d-models/cartoon-candles-3d-model-1238207.
 
-2. Copy the downloaded unzipped scene to the folder "/demoscene" on the Avere vFXT volume.  
+2. Copy the downloaded unzipped scene to the folder `/nfs/node1/demoscene` on the Avere vFXT volume.
 
-   If you are using the Kong skeleton, you will need to change the hard-coded paths so that it renders correctly. Here are the two methods:
-
-   1. Use the Notepad++ text editor from the Windows workstation to find and replace the following two strings with the empty string:
-   
-        ```powershell
-        G:/EVERYDAY/Kong/Kong/
-        G:/EVERYDAY/Kong skeleton/KongSkeleton/
-        ```
-		
-   2. Using sed from the cluster controller: 
-   
-        ```bash
-        cd /nfs/avere1/demoscene
-        sed -i "s/G:\/EVERYDAY\/Kong\/Kong\///g" kongSkeleton_walk.ma
-        sed -i "s/G:\/EVERYDAY\/Kong skeleton\/KongSkeleton\///g" *.ma
-        ```
-	
-3. Copy the following file, keeping the same name, to the Avere vFXT volume. Store it in a folder named ``bootstrap``:
+3. Copy the following file, keeping the same name, to the Avere vFXT volume. Store it in a folder named ``/nfs/node1/bootstrap``:
 
    ```
    https://raw.githubusercontent.com/Azure/Avere/master/src/mayabatch/centosbootstrap.sh
    ```
 	
-4. Copy the following file, keeping the same name, to the Avere vFXT volume. Store it in a folder named ``/src``:
+4. Copy the following file, keeping the same name, to the Avere vFXT volume. Store it in a folder named ``/nfs/node1/src``:
 
    ```
    https://raw.githubusercontent.com/Azure/Avere/master/src/mayabatch/render.sh

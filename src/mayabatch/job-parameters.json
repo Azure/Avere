@@ -1,6 +1,6 @@
 {
   "jobId": {
-    "value": "job1"
+    "value": "job4"
   },
   "poolId": {
     "value": "pool1"
@@ -9,19 +9,19 @@
     "value": "azureuser"
   },
   "frameStart": {
-    "value": 1
+    "value": 0
   },
   "frameEnd": {
-    "value": 2
+    "value": 499
   },
   "frameStep": {
     "value": 1
   },
   "mayaProjectPath": {
-    "value": "/nfs/default/demoscene"
+    "value": "/nfs/default/demoscene/candle_MA"
   },
   "sceneFile": {
-    "value": "/nfs/default/demoscene/kongSkeleton_walk.ma"
+    "value": "/nfs/default/demoscene/candle_MA/candles_MA.ma"
   },  
   "imagesOutputBasePath": {
     "value": "/nfs/default/images"
