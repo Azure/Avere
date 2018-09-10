@@ -39,11 +39,11 @@ This 60-minute demo takes you through rendering an animated movie using Maya, Ba
 
 This step downloads the frames to render, the client mounting script, and the render task script to the appropriate machines. 
 
-1. On the controller download a Maya scene to the controller's `/nfs/node1/demoscene` folder.  
+1. On the controller, download a Maya scene to the controller's `/nfs/node1/demoscene` folder.  
 
-   This demo uses the Royalty Free cartoon candles example from https://www.turbosquid.com/3d-models/cartoon-candles-3d-model-1238207.
+   This demo uses the royalty-free cartoon candles example from https://www.turbosquid.com/3d-models/cartoon-candles-3d-model-1238207.
 
-2. Copy the downloaded unzipped scene to the folder "/nfs/node1/demoscene" on the Avere vFXT volume.
+2. Copy the downloaded unzipped scene to the folder `/nfs/node1/demoscene` on the Avere vFXT volume.
 
 3. Copy the following file, keeping the same name, to the Avere vFXT volume. Store it in a folder named ``/nfs/node1/bootstrap``:
 
