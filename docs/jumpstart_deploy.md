@@ -81,7 +81,7 @@ ADMIN_PASSWORD=<your_unique_vfxt_cluster_password>
 Save the file and exit.
 
 ### Run the script
-Run the script by typing `./cmc &`.  (This runs the script in the background in case you lose your connection.)  You can always look for the log output in ~/vfxt.log.
+Run the script by typing `./cmc`.  It is recommended to run this command inside a [terminal multiplexer](http://linuxcommand.org/lc3_adv_termmux.php) such as `screen` or `tmux` in case you lose your connection.  The output is alternatively logged to ~/vfxt.log.
 
 When the script completes, copy the management IP address.
 
