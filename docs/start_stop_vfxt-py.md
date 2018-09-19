@@ -39,6 +39,7 @@ vfxt.py --cloud-type azure --from-environment --destroy --resource-group GROUPNA
 
 The option ``--quick-destroy`` can be used if you do not want to write changed data from the cluster cache.
 
-Read the [vfxt.py usage guide](<https://download.averesystems.com/software/avere_vfxt.py_usage_guide.pdf>) for additional information.  
+Read the [vfxt.py usage guide](<https://github.com/AvereSystems/vFXT.py/blob/master/docs/README.md>) for additional information.  
+<!-- change to final location when available -->
 
 
