@@ -123,8 +123,8 @@ fi
 
 DIRJOBS=225
 JOBS=225
-find \$SOURCE_DIR -mindepth 1 -type d -print0 | sed -z "s/\$SOURCE_DIR\///" | parallel --will-cite -j\$DIRJOBS -0 "mkdir -p \$DEST_DIR/{}"
-find \$SOURCE_DIR -mindepth 1 ! -type d -print0 | sed -z "s/\$SOURCE_DIR\///" | parallel --will-cite -j\$JOBS -0 "cp -P \$SOURCE_DIR/{} \$DEST_DIR/{}"
+find \$SOURCE_DIR -mindepth 1 -type d -print0 | sed -z "s:\$SOURCE_DIR\/::" | parallel --will-cite -j\$DIRJOBS -0 "mkdir -p \$DEST_DIR/{}"
+find \$SOURCE_DIR -mindepth 1 ! -type d -print0 | sed -z "s:\$SOURCE_DIR\/::" | parallel --will-cite -j\$JOBS -0 "cp -P \$SOURCE_DIR/{} \$DEST_DIR/{}"
 EOM
 }
 
