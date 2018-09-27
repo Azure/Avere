@@ -171,7 +171,7 @@ Once we resolved the above performance issues, we were able to get the timings f
 
    <img src="images/vm_boot/boot_time_1000vms_results.png">
 
-In the above chart, and subsequent charts, 4*250 for VMSS means 4 VMSS resources each with 250 VMs per VMSS, and 40*25 means 40 groups of 25 VMs each.
+In the above chart, and subsequent charts, 4 * 250 for VMSS means four VMSS resources each with 250 VMs per VMSS, and 40 * 25 means 40 groups of 25 VMs each.
 
 Once we understood how to boot VMs quickly, we next looked at how to prepare the large binary/toolchain payload. In our experience, we have seen that customers require binaries or toolchains in the size range of 1GB to 5GB. These toolchains depend on the vertical and could be used for rendering, genomics processing, and financial modeling. Based on this understanding, we recorded the timings for 1GB and 5GB binaries.
 
