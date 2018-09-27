@@ -2,7 +2,8 @@
 
 September 2018
 
-The Avere Virtual FXT (vFXT) Edge Filers act as network-attached storage (NAS) in the cloud and support burstable high-performance computing (HPC) workloads. A common question we hear from customers is how to boot thousands of virtual machines (VMs) quickly on Azure.  
+The Avere Virtual FXT (vFXT) Edge Filers act as network-attached storage (NAS) in the cloud and support burstable high-performance computing (HPC) workloads. A common question we hear from customers is how to boot thousands of virtual machines (VMs) quickly on Azure. 
+
 Our first answer to customers is to investigate the Azure managed solutions such as [Azure CycleCloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/) and [Azure Batch](https://azure.microsoft.com/en-us/services/batch/). These two solutions remove the complexity of booting HPC sized compute workloads.
 
 However, some customers still want to deploy their own workloads from scratch or want the ability to fine tune and add features from the [Azure Quickstart Templates](https://github.com/Azure/azure-quickstart-templates). For these customers we did not have a best practices guide. This document explores booting 1000 VMs and provides some best practices for deploying VMs quickly on Azure.
@@ -30,17 +31,19 @@ We had the following hypotheses for the fastest way to boot 1000 VMs:
 
 Here is the setup for the experiment:
 
-1. Pick a region, and ensure enough quota exists for 1000 DS2v2 VMs. We chose DS2v2 because it has enough [Blobcache](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-general#dsv2-series) to hold large binary/toolchain payloads.
+1. Pick a region, and ensure enough quota exists for 1000 DS2v2 VMs. We chose DS2v2 because it has enough [Blob cache](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-general#dsv2-series) to hold large binary/toolchain payloads.
 
-2. Deploy a virtual network and storage account, and create an Avere vFXT cluster using these [deployment instructions](https://github.com/Azure/Avere/blob/master/docs/jumpstart_deploy.md). Cluster details: 
+2. Deploy a virtual network and storage account, and create an Avere vFXT cluster using these [deployment instructions](https://github.com/Azure/Avere/blob/master/docs/jumpstart_deploy.md). 
 
-   - Three nodes of Standard_E32s_v3 instances
-   - Per-node cache size: 8192GB
-   - Blob storage backend
+    Cluster details: 
+
+    - Three nodes of Standard_E32s_v3 instances
+    - Per-node cache size: 8192GB
+    - Blob storage backend
 
 3. Add a subnet named "batch" to the three-node cluster's VNet, with address space to support 1000 nodes. For this experiment we used `10.0.16.0/20` for our address space.
 
-4. Deploy another VNet, storage account, and create a six-node Avere vFXT cluster using the same options as the three-node cluster in step 2. 
+4. Deploy another VNet and storage account, and create a six-node Avere vFXT cluster using the same options as the three-node cluster in step 2. 
 
 5. Add a subnet named "batch" to the six-node cluster's VNet, with address space to support 1000 nodes. For this experiment we used `10.0.16.0/20` for our address space.
 
@@ -73,7 +76,7 @@ Here is the setup for the experiment:
     11. `mkdir -p /opt/tools1GB && /opt/create1GBfiles.sh /opt/tools1GB`
     12. `mkdir -p /opt/tools5GB && /opt/create5GBfiles.sh /opt/tools5GB`
 
-11. Setup each Avere vFXT cluster with the following:
+11. Set up each Avere vFXT cluster with the following:
     1. From the client VM - 
         1. `apt-get update`
         2. `apt-get install -y parallel nfs-common`
@@ -204,7 +207,7 @@ On the 5GB "warming" we hit some form of threshold in the stack where the VM boo
 
 The next phase of the experiment was to determine how to use the Avere vFXT to improve boot time by using it to serve the 1GB and 5GB binary/toolchain payloads. Our first few runs against the Avere proved slow. Upon further investigation we realized we had to disable "always forward" for this read workload. The "always forward" on the Avere vFXT treats all the RAM and disk memory across the Avere nodes as one shared pool. In this way, the more nodes you add, the larger your shared cache. The downside is that the probability of introducing a network hop is the inverse of your node count-1. Disabling "always forward" reduces the cache size to the amount of RAM/disk space on a single machine, but completely eliminates the network hop.
 
-Disabling "always forward" is done from any node in the Avere vFXT cluster.  From the cluster controller VM, SSH as root to the management IP address for the cluster. This will connect you to a vFXT node in the cluster. Log in using the administrative password you set for the cluster and run the following commands:
+Disabling "always forward" is an advanced command-line setting on the Avere vFXT cluster. From the cluster controller VM, SSH as root to the management IP address for the cluster. This will connect you to a vFXT node in the cluster. Log in using the administrative password you set for the cluster and run the following commands:
 
 ```bash
 averecmd support.setCustomSetting mass1.always_forward OZ 0 "comment"
