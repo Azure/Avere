@@ -204,7 +204,7 @@ On the 5GB "warming" we hit some form of threshold in the stack where the VM boo
 
 The next phase of the experiment was to determine how to use the Avere vFXT to improve boot time by using it to serve the 1GB and 5GB binary/toolchain payloads. Our first few runs against the Avere proved slow. Upon further investigation we realized we had to disable "always forward" for this read workload. The "always forward" on the Avere vFXT treats all the RAM and disk memory across the Avere nodes as one shared pool. In this way, the more nodes you add, the larger your shared cache. The downside is that the probability of introducing a network hop is the inverse of your node count-1. Disabling "always forward" reduces the cache size to the amount of RAM/disk space on a single machine, but completely eliminates the network hop.
 
-To disable always forward you will need to login to the Avere vFXT cluster.  From the cluster controller VM, SSH as root to the management IP address for the cluster. This will connect you to a vFXT node in the cluster. Log in using the administrative password you set for the cluster and run the following commands:
+Disabling "always forward" is done from any node in the Avere vFXT cluster.  From the cluster controller VM, SSH as root to the management IP address for the cluster. This will connect you to a vFXT node in the cluster. Log in using the administrative password you set for the cluster and run the following commands:
 
 ```bash
 averecmd support.setCustomSetting mass1.always_forward OZ 0 "comment"
