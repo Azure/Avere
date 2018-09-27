@@ -42,7 +42,7 @@ The outputs from creating the cluster controller node include information that y
 ## Create cluster
 Now that your controller node is running, you need to access the controller node, edit a built-in sample script, and run the script to create the cluster. 
 
-### Access the cluster
+### Access the controller
 
 1. SSH to the controller, using the **SSHSTRING** value from the Outputs screen [(above)](#browse-to-outputs).
 
