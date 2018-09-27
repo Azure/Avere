@@ -36,7 +36,7 @@ These tutorials help you understand cluster performance testing and common use-c
 
   * [Rendering using Azure Batch and Avere vFXT](docs/maya_azure_batch_avere_vfxt_demo.md) - Demonstrates how to use the Autodesk Maya Renderer with Azure Batch and the Avere vFXT cluster to generate a rendered movie.
   * [Why use the Avere vFXT for Rendering?](docs/why_avere_for_rendering.md) - shows the results of rending against NFS at various latencies and how Avere vFXT hides the latency.
-  * [Best Practices for Improving Azure Virtual Machine (VM) Boot Time](docs/azure_vm_provision_best_practices.md) - The Avere vFXT is commonly used with burstable compute workloads.  We hear from our customers that it is very challenging to boot thousands of Azure virtual machines quickly.  This article describes the best practices for booting thousands of VMs in the fastest possible time.
+  * [Best Practices for Improving Azure Virtual Machine (VM) Boot Time](docs/azure_vm_provision_best_practices.md) - The Avere vFXT is commonly used with burstable compute workloads. We hear from our customers that it is very challenging to boot thousands of Azure virtual machines quickly. This article describes best practices for booting thousands of VMs in the fastest possible time.
   * [Measure vFXT performance with vdbench](docs/vdbench.md) - Deploys vdbench on an *N*-node cluster to demonstrate the storage performance characteristics of the Avere vFXT cluster
   * [Windows 10 workstation for Avere vFXT](docs/windows_10_avere_vfxt_mounted_workstation.md) - Creates a Windows workstation within the same VNET as the Avere vFXT and automatically mounts the vFXT cluster and installs various Azure tools for debugging.
   
