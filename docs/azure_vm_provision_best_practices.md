@@ -224,8 +224,8 @@ We then collected the timings for the 1GB and 5GB payloads in the following conf
  * Mount the three-node Avere vFXT and copy payload from Avere vFXT to the OS disk of the platform image
  * Mount the three-node Avere vFXT and copy payload from the Avere vFXT to the OS disk of the custom image
  * (5GB only) Mount the six-node Avere vFXT and copy payload from the Avere vFXT to the OS disk of the custom image
- * (5GB only) Mount the six-node Avere vFXT and copy 5GB payload from the Avere vFXT to the ephemeral drive ("warming the cache for the NFS mount"
- * (5GB only) Mount the six-node Avere vFXT and copy 5GB payload from the Avere vFXT to the ephemeral drive ("warming the cache for the NFS mount"
+ * (5GB only) Mount the six-node Avere vFXT and copy 5GB payload from the Avere vFXT to the ephemeral drive ("warming the cache for the NFS mount")
+ * (5GB only) Mount the six-node Avere vFXT and copy 5GB payload from the Avere vFXT to the ephemeral drive ("warming the cache for the NFS mount")
 
  The results for the 1GB warming runs are summarized in the following chart. The results show that copying 1GB payloads from Avere results in slight performance increases in all cases but the loose VMs.
 
