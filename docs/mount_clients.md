@@ -90,6 +90,6 @@ To ensure a seamless client mount, pass these settings and arguments in your mou
 ## Next steps 
 
 Refer to the [How-to guides](https://github.com/Azure/Avere#how-to-guides) for additional cluster tasks, including: 
-* Moving data to the cluster core filer
-* Managing the cluster
-* Cluster tuning
+* [Moving data to the cluster core filer](getting_data_onto_vfxt.md)
+* [Managing the cluster](start_stop_vfxt-py.md)
+* [Cluster tuning](tuning.md)
