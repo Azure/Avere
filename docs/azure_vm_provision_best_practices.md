@@ -171,6 +171,8 @@ Once we resolved the above performance issues, we were able to get the timings f
 
    <img src="images/vm_boot/boot_time_1000vms_results.png">
 
+In the above chart, and subsequent charts, 4*250 for VMSS means 4 VMSS resources each with 250 VMs per VMSS, and 40*25 means 40 groups of 25 VMs each.
+
 Once we understood how to boot VMs quickly, we next looked at how to prepare the large binary/toolchain payload. In our experience, we have seen that customers require binaries or toolchains in the size range of 1GB to 5GB. These toolchains depend on the vertical and could be used for rendering, genomics processing, and financial modeling. Based on this understanding, we recorded the timings for 1GB and 5GB binaries.
 
 In the next round of experiments we "warmed" our toolchains by reading all bits of the toolchain, and thereby populating the Blob cache.  The purpose of "warming" is to ensure the VM is ready to perform work. A VM that has booted quickly is of no use if the first read on the toolchain takes 30 minutes. To "warm" the toolchain we copied all the bits from the toolchain on the OS disk to the ephemeral drive (from /opt/tools to /mnt/tools).
@@ -227,12 +229,12 @@ We then collected the timings for the 1GB and 5GB payloads in the following conf
  * (5GB only) Mount the six-node Avere vFXT and copy 5GB payload from the Avere vFXT to the ephemeral drive ("warming the cache for the NFS mount")
  * (5GB only) Mount the six-node Avere vFXT and copy 5GB payload from the Avere vFXT to the ephemeral drive ("warming the cache for the NFS mount")
 
- The results for the 1GB warming runs are summarized in the following chart. The results show that copying 1GB payloads from Avere results in slight performance increases in all cases but the loose VMs.
+The results for the 1GB warming runs are summarized in the following chart. The results show that copying 1GB payloads from Avere results in slight performance increases in all cases but the loose VMs.  It is interesting to note that with the increased load the more densely packed VMSS (250 VMs per VMSS) performed slightly better than the lightly packed VMSS (40 VMs per VMSS).
 
    <img src="images/vm_boot/boot_time_1000vms_and_warm_1GB_results.png">
 
 The results for the 5GB warming runs are summarized in the following chart. The first three column of results show retrieval of the 5GB payload from the OS disk of the custom image as found in Phase 1 of the experiment. The following observations can be seen:
- * As previously discussed, large VMSS groupings (250 VMs per VMSS) significantly outperform the small VMSS groupings (25 VMs per VM)
+ * As previously discussed, large VMSS groupings (250 VMs per VMSS) significantly outperform the small VMSS groupings (25 VMs per VM) for the large load.
  * For the loose VMs and the availability set VMs, copying from the Avere vFXT improves the timings, and also reduces the occurrences of VM failures
  * Using the payload directly from the Avere vFXT NFS share shows performance improvements across all VM configurations
 
