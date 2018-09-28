@@ -2,16 +2,21 @@
 
 September 2018
 
-The Avere Virtual FXT (vFXT) Edge Filers act as network-attached storage (NAS) in the cloud and support burstable high-performance computing (HPC) workloads. A common question we hear from customers is how to boot thousands of virtual machines (VMs) quickly on Azure. 
+## Abstract
 
-Our first answer to customers is to investigate the Azure managed solutions such as [Azure CycleCloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/) and [Azure Batch](https://azure.microsoft.com/en-us/services/batch/). These two solutions remove the complexity of booting HPC sized compute workloads.
+Using a combination of Azure Compute primitives and the Avere vFXT we were able decrease the 95th percentile of the boot time and payload read of 1000 VMs by 72% from 37 minutes 40 seconds down to 10 minutes 33 seconds.  This report discusses the various performance pitfalls to avoid and the optimizations available to ensure your VMs boot and are running your applications in the fastest possible time.
+
+## Introduction
+
+A common question we hear from our HPC customers is how to boot thousands of virtual machines (VMs) quickly on Azure.  Our first answer to customers is to use either of the Azure managed solutions such as [Azure CycleCloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/) and [Azure Batch](https://azure.microsoft.com/en-us/services/batch/). These two solutions remove the complexity of booting HPC sized compute workloads.
 
 However, some customers still want to deploy their own workloads from scratch or want the ability to fine tune and add features from the [Azure Quickstart Templates](https://github.com/Azure/azure-quickstart-templates). For these customers we did not have a best practices guide. This document explores booting 1000 VMs and provides some best practices for deploying VMs quickly on Azure.
 
 The main questions of this document are:
-  1. What is the fastest way to deploy 1000 VMs?
 
-  2. Can the Avere vFXT be used to serve large binary/toolchain payloads to result in improved deployment times?
+  1. What is the fastest way to boot 1000 VMs?
+
+  2. Can the Avere vFXT be used to serve large binary / toolchain payloads to result in improved deployment times?  The Avere Virtual FXT (vFXT) Edge Filers act as network-attached storage (NAS) in the cloud and support burstable high-performance computing (HPC) workloads. 
 
 This document first starts with hypotheses for these questions, and then runs various experiments to prove or disprove the hypotheses and finally concludes with best practices. Some of the best practices learned in this study can further help improve speed of boot times with [Azure CycleCloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/), and [Azure Batch](https://azure.microsoft.com/en-us/services/batch/).
 
@@ -98,11 +103,11 @@ Then with each template from the [deployer utility](https://github.com/anhowe/az
 
 ## Results
 
-We broke our experiment up into two phases:
+We divided our experiment into two phases:
 
   1. Phase 1: Determine the fastest way to boot 1000 VMs.
 
-  2. Phase 2: How much does Avere vFXT improve the delivery of the large binary/toolchain payloads?
+  2. Phase 2: How can the Avere vFXT improve the delivery and usage of a large binary/toolchain payload?
  
 ### Phase 1: Determine the fastest way to boot 1000 VMs
 
@@ -205,9 +210,9 @@ Here are the percentiles of seconds to boot and "warm" a 1GB tool chain from bit
 
 On the 5GB "warming" we hit some form of threshold in the stack where the VM boot tail grew as signified by the P100 time. We also started seeing multiple VM failures. Most of the failures we saw were because the VM rebooted and interrupted the deployment process.  The VMSS VMs outperformed the loose VMs and the availability set VMs. After running this experiment we ran an additional experiment, where we reduced the VMSS to 25 VMs per VMSS, and we ended up with much worse performance and an increase in failures. This led to a conclusion that a large VMSS group scales much better than many smaller ones.
 
-### Phase 2: How much does Avere vFXT improve the delivery of the large binary/toolchain payloads?
+### Phase 2: How can the Avere vFXT improve the delivery and usage of a large binary/toolchain payload?
 
-The next phase of the experiment was to determine how to use the Avere vFXT to improve boot time by using it to serve the 1GB and 5GB binary/toolchain payloads. Our first few runs against the Avere proved slow. Upon further investigation we realized we had to disable "always forward" for this read workload. The "always forward" on the Avere vFXT treats all the RAM and disk memory across the Avere nodes as one shared pool. In this way, the more nodes you add, the larger your shared cache. The downside is that the probability of introducing a network hop is the inverse of your node count-1. Disabling "always forward" reduces the cache size to the amount of RAM/disk space on a single machine, but completely eliminates the network hop.
+The next phase of the experiment is to determine how to use the Avere vFXT to improve boot time by using it to serve the 1GB and 5GB binary/toolchain payloads. Our first few runs against the Avere vFXT were slow. Upon further investigation we realized we had to disable "always forward" for this read workload. The "always forward" on the Avere vFXT treats all the RAM and disk memory across the Avere nodes as one shared pool. In this way, the more nodes you add, the larger your shared cache. The downside is that the probability of introducing a network hop is the inverse of your node count-1. Disabling "always forward" reduces the cache size to the amount of RAM/disk space on a single machine, but completely eliminates the network hop.
 
 Disabling "always forward" is an advanced command-line setting on the Avere vFXT cluster. From the cluster controller VM, SSH as root to the management IP address for the cluster. This will connect you to a vFXT node in the cluster. Log in using the administrative password you set for the cluster and run the following commands:
 
@@ -241,8 +246,12 @@ The results for the 5GB warming runs are summarized in the following chart. The 
    <img src="images/vm_boot/boot_time_1000vms_and_warm_5GB_results.png">
 
 The fastest configuration for booting 1000 VMs with a 5GB toolchain payload was the following:
- * Four VMSS resources each with 250 custom image VMs
+ * 40 VMSS resources each with 25 custom image VMs
  * Mount a six-node Avere vFXT for the toolchain payload
+
+It is worth shrinking the above chart to highlight a subtle performance characteristic with VMSS density.  When reading a large payload from the OS disk, either from the boot (Windows) or from the boot + payload read, it is important to use the most densely packed VMSS to get the fastest possible boot time, with the least amount of VM failures.  If you have a small payload and a small footprint, then it is better to go with a less dense VMSS for the best performance as shown in the following chart:
+
+   <img src="images/vm_boot/boot_time_1000vms_density_results.png">
 
 ## Conclusion
 
@@ -252,16 +261,14 @@ In conclusion, here are the best practices to achieve the best VM bootup times o
 
   1. **Use a managed service for VM creation** - Before deploying VMs directly, consider using an Azure managed service like [Azure CycleCloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/) or [Azure Batch](https://azure.microsoft.com/en-us/services/batch/). This hides all the complexity and issues we encountered in this experiment.
 
-  2. **Reading large binary/toolchain payloads from the custom image are slow for all VM configurations but VMSS** - Warming the cache by reading a large binary payload from a custom image is slow for loose VMs and availability set configurations. Additionally the larger the binary/toolchain payload the greater the spike in VM failures. In our configuration we were running Ubuntu, which requires about 400-500 MB to boot and reading the toolchain. We suspect for larger OSes like Windows, we will get less GB of toolchain to download before we see a spike in VM failures and a long deployment time tail.
+  2. **Use an Avere vFXT to deliver large binary/toolchain payloads** - The fastest boot times resulted when VMs were able to mount the Avere vFXT directly, and consume the binary/toolchain payloads directly from the Avere vFXT. This also resulted in fewer rebooted VMs.  This best practice can also be combined when booting with [Azure CycleCloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/) and [Azure Batch](https://azure.microsoft.com/en-us/services/batch/).
 
-  3. **Use an Avere vFXT to deliver large binary/toolchain payloads** - The fastest boot times resulted when VMs were able to mount the Avere vFXT directly, and consume the binary/toolchain payloads directly from the Avere vFXT. This also resulted in fewer rebooted VMs.  This best practice can also be combined when booting with [Azure CycleCloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/) and [Azure Batch](https://azure.microsoft.com/en-us/services/batch/).
+  3. **The Avere vFXT scales linearly as you add more nodes** - Our experiments showed that the Avere vFXT linearly scaled in throughput as more nodes were added.
 
-  4. **The Avere vFXT scales linearly as you add more nodes** - Our experiments showed that the Avere vFXT linearly scaled in throughput as more nodes were added.
+  4. **Use VMSS** - If you are unable to use a managed service, then your next best option is VMSS. As shown in our experiments VMSS consistently out performed availability sets and loose VMs.
 
-  5. **Use VMSS** - If you are unable to use a managed service, then your next best option is VMSS. As shown in our experiments VMSS consistently out performed availability sets and loose VMs.
-      
-  6. **Use a large count of VMs per VMSS** - We found that VMSS worked better when we had a large number of VMs per VMSS. For our experiments we used 250 VMs per VMSS. When we tried 40 VMs per VMSS the performance was significantly worse and also resulted in failed VMs.
+  5. **Adjust VMSS density depending on bytes used per VM** - We found that the more bytes a VM used, the better performance came from packing the VMSS more densely.  If you are booting Windows or Linux and a large toolchain payload it is best to pack your VMSS at a density of 300 VMs per VMSS for the custom image.  If you are booting linux and a very small toolchain payload, then a density of 25 VMs per VMSS will have the best performance.
 
-  7. **Manage your ARM calls** - ARM throttling was our first major problem to overcome. Once you start getting throttled, any over-provisioning to get faster times will actually increase your deployment tail. Techniques used above included using cloud-init instead of custom script extension, staggering ARM calls, and reducing polling. Additionally, using multiple subscriptions will also help work around these issues.
+  6. **Manage your ARM calls** - ARM throttling was our first major problem to overcome. Once you start getting throttled, any over-provisioning to get faster times will actually increase your deployment tail. Techniques used above included using cloud-init instead of custom script extension, staggering ARM calls, and reducing polling. Additionally, using multiple subscriptions will also help work around these issues.
 
-  8. **Loose VMs are slow** - Loose VMs were always the slowest to boot and had the longest deployment time tails.  If you want to use loose VMs consider grouping them by availability sets to get better performance.
+  7. **Loose VMs are slow** - Loose VMs were always the slowest to boot and had the longest deployment time tails.  If you want to use loose VMs consider grouping them by availability sets to get better performance.
