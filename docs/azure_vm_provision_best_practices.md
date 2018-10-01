@@ -4,13 +4,13 @@ October 2018
 
 ## Abstract
 
-Using a combination of Azure compute scalable infrastructure and the Avere vFXT we were able decrease the 95th percentile of the boot time and payload read of 1000 VMs by 72% from 37.7 minutes down to 10.5 minutes.  This report discusses the various performance pitfalls to avoid and the optimizations available to ensure your VMs boot and are running your applications in the fastest possible time.
+Using the Azure compute scalable infrastructure and the Avere vFXT we were able to decrease the 95th percentile of the combined time of boot and payload read of 1000 virtual machines by 72% from 37.7 minutes down to 10.5 minutes.  This report discusses the various performance pitfalls to avoid and the optimizations available to ensure the virtual machines boot and are running the target applications in the fastest possible time.
 
 ## Introduction
 
-A common question we hear from our HPC customers is how to boot thousands of virtual machines (VMs) quickly on Azure.  Our first answer to customers is to use either of the Azure managed solutions such as [Azure CycleCloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/) and [Azure Batch](https://azure.microsoft.com/en-us/services/batch/). These two solutions remove the complexity of booting HPC sized compute workloads.
+A common question we hear from our HPC customers is how to boot thousands of virtual machines (VMs) quickly on Azure.  Our first answer to customers is to use either of the Azure managed solutions such as [Azure CycleCloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/) or [Azure Batch](https://azure.microsoft.com/en-us/services/batch/). These two solutions remove the complexity of provisioning and booting HPC sized compute workloads.
 
-However, some customers still want to deploy their own workloads from scratch or want the ability to fine tune and add features from the [Azure Quickstart Templates](https://github.com/Azure/azure-quickstart-templates). For these customers we did not have a best practices guide. This document explores booting 1000 VMs and provides some best practices for deploying VMs quickly on Azure.
+However, some customers still want to deploy their own workloads from scratch or want the ability to fine tune and add features from the [Azure Quickstart Templates](https://github.com/Azure/azure-quickstart-templates). For these customers we did not have a best practices guide. This document explores booting 1000 VMs and provides best practices for deploying VMs quickly on Azure.
 
 The main questions of this document are:
 
@@ -255,22 +255,22 @@ It is worth shrinking the above chart to highlight a subtle performance characte
 
 ## Conclusion
 
-The above experiments reveal multiple conclusions about how to make VMs boot faster on Azure. All but one of our hypotheses are correct. The hypothesis stating that platform images are faster than custom images is incorrect.
+The above experiments reveal multiple conclusions about how to make VMs boot faster on Azure. All but one of our hypotheses are correct. As seen in our results, the hypothesis stating that platform images are faster than custom images is incorrect.
 
-Here are the best practices to achieve the fastest virtual machine bootup times on Azure and avoid long boot time tails.
+Here are the best practices to achieve the fastest virtual machine provisioning times on Azure and avoid long boot time tails.
 
   1. **Use a managed service for VM creation** - Consider using an Azure managed service like [Azure CycleCloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/) or [Azure Batch](https://azure.microsoft.com/en-us/services/batch/). An Azure managed service hides the complexity around virtual machine creation.
 
-  2. **NFS Mount all VM clients to an Avere vFXT Edge Filer for large binary / toolchain payloads** - The fastest boot times result when VMs nfs mount the Avere vFXT Edge Filer and consume the binary / toolchain payloads.  NFS mounting all VM clients to an Avere vFXT yields the following additional benefits:
-     1. The Avere vFXT becomes a single source of truth, so if the toolchain needs updating, it is changed in a single place versus pushing a new custom image, and recreating the client VMs.
+  2. **Use Azure virtual machine scale sets (VMSS)** - Experiments show that virtual machine scale sets (VMSS) consistently outperform availability sets and loose VMs.
+
+  3. **NFS Mount all virtual machine clients to an Avere vFXT Edge Filer for large binary / toolchain payloads** - The fastest boot times result when VMs NFS mount the Avere vFXT Edge Filer and consume the binary / toolchain payloads.  NFS mounting all VM clients to an Avere vFXT yields the following additional benefits:
+     1. The Avere vFXT becomes a single source of truth, so if the toolchain needs updating, it is changed in a single place versus the creation of a new custom image, and recreating the client VMs.
      2. Fewer virtual machine reboots and failures.
      3. This best practice works when using [Azure CycleCloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/) and [Azure Batch](https://azure.microsoft.com/en-us/services/batch/).
 
-  3. **The Avere vFXT scales linearly as you add more nodes** - Experiments show that the Avere vFXT linearly scales in throughput as more nodes are added.
+  4. **The Avere vFXT scales linearly as you add more nodes** - Experiments show that the Avere vFXT linearly scales in throughput as more nodes are added. 
 
-  4. **Use VMSS** - If you are not able to use an Azure managed service such as [Azure CycleCloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/) or [Azure Batch](https://azure.microsoft.com/en-us/services/batch/), then your next best option is VMSS.  Experiments show that VMSS consistently outperforms availability sets and loose VMs.
-
-  5. **Adjust VMSS density depending on bytes used per VM** - Experiments show that a more densely-packed VMSS resource scales better for a VM that consumes a large amount of bytes to boot and start the target application.  A density of 300 VMs per VMSS will work best for a Linux virtual machine with a large payload or a custom Windows image.  A density of 25 VMs per VMSS will work best for booting Linux virtual machines with a very small application or toolchain payload or can directly nfs mount a share containing the application or toolchain.
+  5. **Adjust VMSS density depending on bytes used per VM** - Experiments show that a more densely-packed VMSS resource scales better for a VM that consumes a large amount of bytes to boot and start the target application.  A density of 300 VMs per VMSS will work best for a Linux virtual machine with a large payload or a custom Windows image.  A density of 25 VMs per VMSS will work best for booting Linux virtual machines with a very small application or toolchain payload or can directly NFS mount a share containing the application or toolchain.
 
   6. **Manage your ARM calls** - ARM throttling leads to long virtual machine boot times.  Techniques to reduce ARM throttling include using cloud-init instead of custom script extension, staggering ARM calls, and reducing polling. Using multiple subscriptions will also help work around these issues.
 
