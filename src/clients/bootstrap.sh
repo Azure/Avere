@@ -42,7 +42,7 @@ function mount_round_robin() {
     if ! grep --quiet "${DEFAULT_MOUNT_POINT}" /etc/fstab; then
         echo "${ROUND_ROBIN_IP}:${NFS_PATH}    ${DEFAULT_MOUNT_POINT}    nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0" >> /etc/fstab
         mkdir -p "${DEFAULT_MOUNT_POINT}"
-        chown nfsnobody:nfsnobody "${DEFAULT_MOUNT_POINT}"
+        chown nobody:nogroup "${DEFAULT_MOUNT_POINT}"
     fi
     if ! grep -qs "${DEFAULT_MOUNT_POINT} " /proc/mounts; then
         retrycmd_if_failure 12 20 mount "${DEFAULT_MOUNT_POINT}" || exit 1
