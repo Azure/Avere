@@ -59,8 +59,8 @@ function main() {
     echo "dump env vars"
     debug_dump_env_vars
     
-    #echo "mount bootstrap and install"
-    #mount_bootstrap_and_install
+    echo "mount bootstrap and install"
+    mount_bootstrap_and_install
 }
 
 main
