@@ -57,7 +57,7 @@ function main() {
     install_nfs()
 
     echo "dump env vars"
-    echo debug_dump_env_vars()
+    debug_dump_env_vars()
     
     #echo "mount bootstrap and install"
     #mount_bootstrap_and_install()

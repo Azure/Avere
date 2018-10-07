@@ -1,10 +1,8 @@
-# Virtual Machine Client Implementations that mount Avere vFXT
+# Virtual Machine Client Implementations that mount the Avere vFXT Edge Filer
 
-This folder includes two Virtual Machine implementations to deploy multiple VMs mounted to the Avere vFXT: Virtual Machine Availability Sets (VMAS), and Virtual Machine Scale Sets (VMSS).
+This folder includes three virtual machine (VM) implementations to deploy multiple VMs mounted to the Avere vFXT: loose VMs, VM availability sets (VMAS), and VM scale sets (VMSS).
 
-In both examples, the clients are mounted roundrobin across the Avere vFXT vServer IP addresses.  A bootstrap script stored on the vFXT does this round robin mounting, and provides a mechanism to deploy software on the machine.
-
-For the default case, mount the controller, and create the bootstrap directory and download the bootstrap script for the clients.  On the cluster controller, mount the vFXT shares. 
+The clients are mounted roundrobin across the Avere vFXT vServer IP addresses done by the bootstrap script stored on the vFXT.  Before deploying the clients, you must install the bootstrap script to the Avere vFXT.  To do this, on the cluster controller, mount the vFXT shares. 
 
     1. Run the following commands:
 
