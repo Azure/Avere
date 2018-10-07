@@ -26,16 +26,41 @@ function retrycmd_if_failure() {
     echo Executed \"$@\" $i times;
 }
 
-function main() {
+function install_nfs() {
     retrycmd_if_failure 60 5 apt-get update
     retrycmd_if_failure 60 5 apt-get install -y nfs-common
+}
 
+function mount_bootstrap_and_install() {
+    echo "mount bootstrap, and run bootstrap script"
     BOOTSTRAP_BASE_DIR=$BASE_DIR/b
     mkdir -p $BOOTSTRAP_BASE_DIR
     retrycmd_if_failure 60 5 mount -o "hard,nointr,proto=tcp,mountproto=tcp,retry=30" ${BOOTSTRAP_NFS_IP}:${NFS_PATH} ${BOOTSTRAP_BASE_DIR}
     NFS_IP_CSV="$NFS_IP_CSV" NFS_PATH="$NFS_PATH" BASE_DIR="$BASE_DIR" /bin/bash ${BOOTSTRAP_BASE_DIR}${BOOTSTRAP_SCRIPT_PATH} 2>&1 | tee -a /var/log/bootstrap.log
     umount $BOOTSTRAP_BASE_DIR
     rmdir $BOOTSTRAP_BASE_DIR
+}
+
+function debug_dump_env_vars() {
+    echo "start env dump"
+    echo $(pwd)
+    echo "export BASE_DIR=$BASE_DIR"
+    echo "export BOOTSTRAP_NFS_IP=$BOOTSTRAP_NFS_IP"
+    echo "export BOOTSTRAP_SCRIPT_PATH=$BOOTSTRAP_SCRIPT_PATH"
+    echo "export NFS_IP_CSV=$NFS_IP_CSV"
+    echo "export NFS_PATH=$NFS_PATH"
+    echo "finish env dump"
+}
+
+function main() {
+    echo "install NFS"
+    install_nfs()
+
+    echo "dump env vars"
+    echo debug_dump_env_vars()
+    
+    #echo "mount bootstrap and install"
+    #mount_bootstrap_and_install()
 }
 
 main
