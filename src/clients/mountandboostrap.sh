@@ -54,13 +54,13 @@ function debug_dump_env_vars() {
 
 function main() {
     echo "install NFS"
-    install_nfs()
+    install_nfs
 
     echo "dump env vars"
-    debug_dump_env_vars()
+    debug_dump_env_vars
     
     #echo "mount bootstrap and install"
-    #mount_bootstrap_and_install()
+    #mount_bootstrap_and_install
 }
 
 main
