@@ -2,30 +2,26 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "controllerName": {
+    "servicePrincipalTenant": {
       "type": "string",
+      "minLength": 36,
+      "maxLength": 36,
       "metadata": {
-        "description": "The unique name used for resource names associated with the controller"
+        "description": "Directory ID (tenant) of the Azure Active Directory used by the az cli to deploy vFXT installation."
       }
     },
-    "controllerAdminUsername": {
+    "servicePrincipalAppId": {
       "type": "string",
-      "defaultValue": "azureuser",
+      "minLength": 36,
+      "maxLength": 36,
       "metadata": {
-        "description": "The controller admin username."
+        "description": "Azure Active Directory Application client ID (appid) used by the az cli to deploy vFXT installation."
       }
     },
-    "adminPassword": {
+    "servicePrincipalPassword": {
       "type": "securestring",
       "metadata": {
-        "description": "The admin password used for the controller and the Avere vFXT cluster."
-      }
-    },
-    "controllerVMSize": {
-      "type": "string",
-      "defaultValue": "Standard_A1_v2",
-      "metadata": {
-        "description": "The size used for the vFXT controller.  Additional sizes can be found here: https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes."
+        "description": "Azure Active Directory Application client ID password used by the az cli to deploy vFXT installation."
       }
     },
     "createVirtualNetwork?": {
@@ -57,35 +53,6 @@
         "description": "The unique name used for the virtual network subnet.  If createVirtualNetwork? is set to true, you may reuse the unique name above."
       }
     },
-    "azureAdTenantId": {
-      "type": "string",
-      "minLength": 36,
-      "maxLength": 36,
-      "metadata": {
-        "description": "Directory ID of the Azure Active Directory used by the az cli to deploy vFXT installation."
-      }
-    },
-    "azureAdClientID": {
-      "type": "string",
-      "minLength": 36,
-      "maxLength": 36,
-      "metadata": {
-        "description": "Azure Active Directory Application client ID used by the az cli to deploy vFXT installation."
-      }
-    },
-    "azureAdClientSecret": {
-      "type": "securestring",
-      "metadata": {
-        "description": "Azure Active Directory Application client ID used by the az cli to deploy vFXT installation."
-      }
-    },
-    "avereClusterRole": {
-      "type": "string",
-      "defaultValue": "avere-cluster",
-      "metadata": {
-        "description": "The unique name used for the AAD role."
-      }
-    },
     "useAvereBackedStorageAccount?": {
       "type": "bool",
       "defaultValue": true,
@@ -103,16 +70,37 @@
         "description": "A unique storage account to be created for backing the Avere vFXT.  If 'useAvereBackedStorageAccount?' is set to fault, this field is unused."
       }
     },
-    "avereCacheSizeGB": {
-      "type": "int",
-      "defaultValue": 1024,
-      "allowedValues": [
-        1024,
-        4096,
-        8192
-      ],
+    "controllerName": {
+      "type": "string",
       "metadata": {
-        "description": "The cache size in GB to use for each Avere vFXT VM."
+        "description": "The unique name used for resource names associated with the controller"
+      }
+    },
+    "controllerAdminUsername": {
+      "type": "string",
+      "defaultValue": "azureuser",
+      "metadata": {
+        "description": "The controller admin username."
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The admin password used for the controller and the Avere vFXT cluster."
+      }
+    },
+    "controllerVMSize": {
+      "type": "string",
+      "defaultValue": "Standard_A1_v2",
+      "metadata": {
+        "description": "The size used for the vFXT controller.  Additional sizes can be found here: https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes."
+      }
+    },
+    "avereClusterRole": {
+      "type": "string",
+      "defaultValue": "avere-cluster",
+      "metadata": {
+        "description": "The unique name used for the AAD role."
       }
     },
     "avereClusterName": {
@@ -143,6 +131,9 @@
     }
   },
   "variables": {
+    "servicePrincipalTenant": "[parameters('servicePrincipalTenant')]",
+    "servicePrincipalAppId": "[parameters('servicePrincipalAppId')]",
+    "servicePrincipalPassword": "[parameters('servicePrincipalPassword')]",
     "controllerName": "[parameters('controllerName')]",
     "controllerAdminUsername": "[parameters('controllerAdminUsername')]",
     "adminPassword": "[parameters('adminPassword')]",
@@ -152,16 +143,13 @@
     "virtualNetworkResourceGroup": "[parameters('virtualNetworkResourceGroup')]",
     "virtualNetworkName": "[parameters('virtualNetworkName')]",
     "virtualNetworkSubnetName": "[parameters('virtualNetworkSubnetName')]",
-    "azureAdTenantId": "[parameters('azureAdTenantId')]",
-    "azureAdClientID": "[parameters('azureAdClientID')]",
-    "azureAdClientSecret": "[parameters('azureAdClientSecret')]",
     "avereClusterRole": "[parameters('avereClusterRole')]",
     "useAvereBackedStorageAccount?": "[parameters('useAvereBackedStorageAccount?')]",
     "avereBackedStorageAccountName": "[parameters('avereBackedStorageAccountName')]",
-    "avereCacheSizeGB": "[parameters('avereCacheSizeGB')]",
     "avereClusterName": "[parameters('avereClusterName')]",
     "avereInstanceType": "[parameters('avereInstanceType')]",
     "additionalVFXTParameters": "[parameters('additionalVFXTParameters')]",
+    "avereCacheSizeGB": "[if(equals('Standard_D16s_v3',variables('avereInstanceType')),1024,4096)]",
     "addressPrefix": "10.0.0.0/16",
     "subnetPrefix": "10.0.0.0/20",
     "publicIPAddressName": "[concat('publicip-',variables('controllerName'))]",
@@ -174,7 +162,7 @@
     "createNic?": true,
     "storageAccountType": "Standard_LRS",
     "storageAccountKind": "StorageV2",
-    "environmentVariables": "[concat(' AZURE_TENANT_ID=', variables('azureAdTenantId'),' AZURE_CLIENT_ID=', variables('azureAdClientID'),' RESOURCE_GROUP=', resourceGroup().name,' LOCATION=', resourceGroup().location,' NETWORK_RESOURCE_GROUP=', variables('virtualNetworkResourceGroup'),' NETWORK=', variables('virtualNetworkName'),' SUBNET=', variables('virtualNetworkSubnetName'),' AVERE_CLUSTER_ROLE=', variables('avereClusterRole'),' CREATE_CLOUD_BACKED_CLUSTER=', variables('useAvereBackedStorageAccount?'),' STORAGE_ACCOUNT=', variables('avereBackedStorageAccountName'),' CACHE_SIZE=', variables('avereCacheSizeGB'),' CLUSTER_NAME=', variables('avereClusterName'),' INSTANCE_TYPE=', variables('avereInstanceType'),' CONTROLLER_ADMIN_USER_NAME=',variables('controllerAdminUsername'),' DEBUG=\"',variables('additionalVFXTParameters'),'\"')]"
+    "environmentVariables": "[concat(' AZURE_TENANT_ID=', variables('servicePrincipalTenant'),' AZURE_CLIENT_ID=', variables('servicePrincipalAppId'),' RESOURCE_GROUP=', resourceGroup().name,' LOCATION=', resourceGroup().location,' NETWORK_RESOURCE_GROUP=', variables('virtualNetworkResourceGroup'),' NETWORK=', variables('virtualNetworkName'),' SUBNET=', variables('virtualNetworkSubnetName'),' AVERE_CLUSTER_ROLE=', variables('avereClusterRole'),' CREATE_CLOUD_BACKED_CLUSTER=', variables('useAvereBackedStorageAccount?'),' STORAGE_ACCOUNT=', variables('avereBackedStorageAccountName'),' CACHE_SIZE=', variables('avereCacheSizeGB'),' CLUSTER_NAME=', variables('avereClusterName'),' INSTANCE_TYPE=', variables('avereInstanceType'),' CONTROLLER_ADMIN_USER_NAME=',variables('controllerAdminUsername'),' DEBUG=\"',variables('additionalVFXTParameters'),'\"')]"
   },
   "resources": [
     {
@@ -292,7 +280,7 @@
           ]
         },
         "protectedSettings": {
-          "commandToExecute": "[concat(' ADMIN_PASSWORD=', variables('adminPassword'),' AZURE_CLIENT_SECRET=',variables('azureAdClientSecret'),variables('environmentVariables'), ' /bin/bash installvfxt.sh')]"
+          "commandToExecute": "[concat(' ADMIN_PASSWORD=', variables('adminPassword'),' AZURE_CLIENT_SECRET=',variables('servicePrincipalPassword'),variables('environmentVariables'), ' /bin/bash installvfxt.sh')]"
         }
       }
     },
