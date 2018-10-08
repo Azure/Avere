@@ -36,7 +36,7 @@ function mount_bootstrap_and_install() {
     BOOTSTRAP_BASE_DIR=$BASE_DIR/b
     mkdir -p $BOOTSTRAP_BASE_DIR
     retrycmd_if_failure 60 5 mount -o "hard,nointr,proto=tcp,mountproto=tcp,retry=30" ${BOOTSTRAP_NFS_IP}:${NFS_PATH} ${BOOTSTRAP_BASE_DIR}
-    NFS_IP_CSV="$NFS_IP_CSV" NFS_PATH="$NFS_PATH" BASE_DIR="$BASE_DIR" /bin/bash ${BOOTSTRAP_BASE_DIR}${BOOTSTRAP_SCRIPT_PATH} 2>&1 | tee -a /var/log/bootstrap.log
+    /bin/bash ${BOOTSTRAP_BASE_DIR}${BOOTSTRAP_SCRIPT_PATH} 2>&1 | tee -a /var/log/bootstrap.log
     umount $BOOTSTRAP_BASE_DIR
     rmdir $BOOTSTRAP_BASE_DIR
 }
