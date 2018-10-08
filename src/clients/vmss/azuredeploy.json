@@ -103,7 +103,7 @@
         "sku": "18.04-LTS",
         "version": "latest"
     },
-    "environmentVariables": "[concat(' BASE_DIR=',variables('nfsMountBaseDir'),' BOOTSTRAP_NFS_IP=', variables('bootstrapNFSIP'),' BOOTSTRAP_SCRIPT_PATH=', variables('bootstrapScriptPath'),' NFS_IP_CSV=\"',variables('nfsCommaSeparatedAddresses'),'\"',' NFS_PATH=', variables('nfsExportPath'))]"
+    "environmentVariables": "[concat(' LINUX_USER=',variables('adminUsername'),' NODE_PREFIX=', variables('vmName'),' NODE_COUNT=',variables('vmCount'),' BASE_DIR=',variables('nfsMountBaseDir'),' BOOTSTRAP_NFS_IP=', variables('bootstrapNFSIP'),' BOOTSTRAP_SCRIPT_PATH=', variables('bootstrapScriptPath'),' NFS_IP_CSV=\"',variables('nfsCommaSeparatedAddresses'),'\"',' NFS_PATH=', variables('nfsExportPath'))]"
   },
   "resources": [
     {
