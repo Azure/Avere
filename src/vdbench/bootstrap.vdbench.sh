@@ -1,24 +1,17 @@
 #!/bin/bash
 
-# variables that must be set beforehand
-#NODE_PREFIX=avereclient
-#NODE_COUNT=3
-#LINUX_USER=azureuser
-#AVEREVFXT_NODE_IPS="172.16.1.8,172.16.1.9,172.16.1.10"
-#
-# called like this:
-#  sudo NODE_PREFIX=avereclient NODE_COUNT=3 LINUX_USER=azureuser AVEREVFXT_NODE_IPS="172.16.1.8,172.16.1.9,172.16.1.10" ./install.sh
-#
+NODE_MOUNT_PREFIX="/node"
+
 function retrycmd_if_failure() {
-    retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
+    retries=$1; max_wait_sleep=$2; shift && shift
     for i in $(seq 1 $retries); do
-        timeout $timeout ${@}
+        ${@}
         [ $? -eq 0  ] && break || \
         if [ $i -eq $retries ]; then
             echo Executed \"$@\" $i times;
             return 1
         else
-            sleep $wait_sleep
+            sleep $(($RANDOM % $max_wait_sleep))
         fi
     done
     echo Executed \"$@\" $i times;
@@ -42,9 +35,6 @@ function apt_get_update() {
 function apt_get_install() {
     retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
     for i in $(seq 1 $retries); do
-        # timeout occasionally freezes
-        #echo "timeout $timeout apt-get install --no-install-recommends -y ${@}"
-        #timeout $timeout apt-get install --no-install-recommends -y ${@}
         apt-get install --no-install-recommends -y ${@}
         echo "completed"
         [ $? -eq 0  ] && break || \
@@ -59,48 +49,46 @@ function apt_get_install() {
 }
 
 function config_linux() {
-	#hostname=`hostname -s`
-	#sudo sed -ie "s/127.0.0.1 localhost/127.0.0.1 localhost ${hostname}/" /etc/hosts
-	export DEBIAN_FRONTEND=noninteractive  
-	apt_get_update
-	apt_get_install 20 10 180 default-jre zip nfs-common csh unzip
+    export DEBIAN_FRONTEND=noninteractive  
+    apt_get_update
+    apt_get_install 20 10 180 default-jre zip csh unzip
 }
 
 function mount_avere() {
-    COUNTER=1
-    for VFXT in $(echo $AVEREVFXT_NODE_IPS | sed "s/,/ /g")
+    COUNTER=0
+    for VFXT in $(echo $NFS_IP_CSV | sed "s/,/ /g")
     do
-        MOUNT_POINT="/mnt/node${COUNTER}"
-        echo "Mounting to $VFXT:msazure to ${MOUNT_POINT}"
-        sudo mkdir -p $MOUNT_POINT
+        MOUNT_POINT="${BASE_DIR}${NODE_MOUNT_PREFIX}${COUNTER}"
+        echo "Mounting to ${VFXT}:${NFS_PATH} to ${MOUNT_POINT}"
+        mkdir -p $MOUNT_POINT
         # no need to write again if it is already there
         if grep -v --quiet $VFXT /etc/fstab; then
-            echo "$VFXT:/msazure	${MOUNT_POINT}	nfs auto,rsize=524288,wsize=524288,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0" >> /etc/fstab
-            sudo mount ${MOUNT_POINT}
+            echo "${VFXT}:${NFS_PATH}    ${MOUNT_POINT}    nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0" >> /etc/fstab
+            mount ${MOUNT_POINT}
         fi
         COUNTER=$(($COUNTER + 1))
     done
 }
 
 function install_vdbench() {
-	DIRECTORY=/home/$LINUX_USER/vdbench
-	if [ -d "$DIRECTORY" ]; then
-	  # already installed
-	  return 0
-	fi
-	mkdir $DIRECTORY
-	pushd $DIRECTORY
-    echo "curl -sSL -o vdbench50407.zip https://download.averesystems.com/software/vdbench50407.zip"
-	retrycmd_if_failure 10 5 180 curl -sSL -o vdbench50407.zip https://download.averesystems.com/software/vdbench50407.zip
-	unzip vdbench50407.zip
-	rm vdbench50407.zip
-	popd
+    DIRECTORY=/home/$LINUX_USER/vdbench
+    if [ -d "$DIRECTORY" ]; then
+      # already installed
+      return 0
+    fi
+    mkdir -p $DIRECTORY
+    pushd $DIRECTORY
+    BOOTSTRAP_PATH="$(dirname ${BASE_DIR}${NODE_MOUNT_PREFIX}0${BOOTSTRAP_SCRIPT_PATH})"
+    cp $BOOTSTRAP_PATH/vdbench*.zip .
+    unzip vdbench*.zip
+    rm vdbench*.zip
+    popd
     echo "chown -R $LINUX_USER:$LINUX_USER $DIRECTORY"
     chown -R $LINUX_USER:$LINUX_USER $DIRECTORY
 }
 
 function write_run_vdbench() {
-	FILENAME=/home/$LINUX_USER/run_vdbench.sh
+    FILENAME=/home/$LINUX_USER/run_vdbench.sh
     /bin/cat <<EOM >$FILENAME
 #!/usr/bin/env bash 
 CONF=\$1 
@@ -113,11 +101,11 @@ EOM
 }
 
 function write_copy_idrsa() {
-	FILENAME=/home/$LINUX_USER/copy_idrsa.sh
+    FILENAME=/home/$LINUX_USER/copy_idrsa.sh
     echo "#!/usr/bin/env bash" > "copy_idrsa.sh"
-    COUNTER=1
+    COUNTER=0
     while [ $COUNTER -lt $NODE_COUNT ]; do
-        echo "scp -o \"StrictHostKeyChecking no\" /home/$LINUX_USER/.ssh/id_rsa ${NODE_PREFIX}${COUNTER}:.ssh/id_rsa" >> $FILENAME
+        echo "scp -o \"StrictHostKeyChecking no\" /home/$LINUX_USER/.ssh/id_rsa ${NODE_PREFIX}-${COUNTER}:.ssh/id_rsa" >> $FILENAME
         COUNTER=$[$COUNTER+1]
     done
     chown $LINUX_USER:$LINUX_USER $FILENAME
@@ -125,16 +113,16 @@ function write_copy_idrsa() {
 }
 
 function write_azure_clients() {
-	FILENAME=/home/$LINUX_USER/azure-clients.conf
+    FILENAME=/home/$LINUX_USER/azure-clients.conf
 /bin/cat <<EOM >$FILENAME
 hd=default,user=${LINUX_USER},shell=ssh 
 EOM
-	# add each of the clients
+    # add each of the clients
     COUNTER=0
     while [ $COUNTER -lt $NODE_COUNT ]; do
         HOST_NUMBER=$(($COUNTER + 1))
         HOST_NUMBER_HEX=$( printf '%x' $HOST_NUMBER )
-        NODE_NAME="${NODE_PREFIX}${COUNTER}"
+        NODE_NAME="${NODE_PREFIX}-${COUNTER}"
         IP=$( host ${NODE_NAME} | sed -e "s/.*\ //" )
         echo "NODE NAME ${NODE_NAME}, $IP"
         echo "hd=host${HOST_NUMBER_HEX},system=${IP}">>$FILENAME
@@ -144,7 +132,7 @@ EOM
 }
 
 function write_inmem() {
-	FILENAME=/home/$LINUX_USER/inmem.conf
+    FILENAME=/home/$LINUX_USER/inmem.conf
     /bin/cat <<EOM >$FILENAME
 create_anchors=yes 
 include=azure-clients.conf 
@@ -152,10 +140,10 @@ include=azure-clients.conf
 fsd=default,depth=1,width=1,files=64,size=32m
 EOM
 
-    COUNTER=1
-    for VFXT in $(echo $AVEREVFXT_NODE_IPS | sed "s/,/ /g")
+    COUNTER=0
+    for VFXT in $(echo $NFS_IP_CSV | sed "s/,/ /g")
     do
-        MOUNT_POINT="/mnt/node${COUNTER}"
+        MOUNT_POINT="${BASE_DIR}${NODE_MOUNT_PREFIX}${COUNTER}"
         FSD_HOST="host-${COUNTER}"
         echo "fsd=fsd!${FSD_HOST},anchor=${MOUNT_POINT}/vdbench/!sizedir/!${FSD_HOST}" >> $FILENAME
         COUNTER=$(($COUNTER + 1))
@@ -188,17 +176,17 @@ EOM
 
 function write_ondisk() {
     FILENAME=/home/$LINUX_USER/ondisk.conf
-	/bin/cat <<EOM >$FILENAME
+    /bin/cat <<EOM >$FILENAME
 create_anchors=yes 
 include=azure-clients.conf 
  
 fsd=default,depth=1,width=1,files=180,size=32m
 EOM
 
-    COUNTER=1
-    for VFXT in $(echo $AVEREVFXT_NODE_IPS | sed "s/,/ /g")
+    COUNTER=0
+    for VFXT in $(echo $NFS_IP_CSV | sed "s/,/ /g")
     do
-        MOUNT_POINT="/mnt/node${COUNTER}"
+        MOUNT_POINT="${BASE_DIR}${NODE_MOUNT_PREFIX}${COUNTER}"
         FSD_HOST="host-${COUNTER}"
         echo "fsd=fsd!${FSD_HOST},anchor=${MOUNT_POINT}/!junction/!sizedir/!${FSD_HOST}" >> $FILENAME
         COUNTER=$(($COUNTER + 1))
@@ -231,19 +219,27 @@ EOM
 }
 
 function write_vdbench_files() {
-	write_run_vdbench
+    write_run_vdbench
     write_copy_idrsa
-	write_azure_clients
-	write_inmem
-	write_ondisk
+    write_azure_clients
+    write_inmem
+    write_ondisk
 }
 
-echo "config Linux"
-config_linux
-echo "mount avere"
-mount_avere
-echo "install vdbench"
-install_vdbench
-echo "write vdbench files"
-write_vdbench_files
-echo "installation complete"
+function main() {
+    echo "config Linux"
+    config_linux
+
+    echo "mount avere"
+    mount_avere
+
+    echo "install vdbench"
+    install_vdbench
+
+    echo "write vdbench files"
+    write_vdbench_files
+
+    echo "installation complete"
+}
+
+main
