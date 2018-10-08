@@ -1,56 +1,59 @@
 # Vdbench - measuring vFXT performance
 
-This is a basic setup to generate small and medium sized workloads to test the vFXT memory and disk subsystems.
+This is a basic setup to generate small and medium sized workloads to test the vFXT memory and disk subsystems.  The suggested configuration is 12 x Standard_D2s_v3 clients for each group of 3 vFXT nodes.
 
-Suggested configuration is 12 x Standard_D2s_v3 clients for each group of 3 vFXT nodes.
+[vdbench download and documentation](https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html)
 
-[vdbench 5.04.07 documentation (PDF)](https://download.averesystems.com/software/vdbench-50407.pdf)
+## Deployment
 
-This solution can be deployed through the portal or cloud shell.
+These deployment instructions describe the installation of all components required to run Vdbench:
 
-## Portal deployment
+1. Deploy an Avere vFXT as described in [Deploy](jumpstart_deploy.md).
 
-To install from the portal, launch the deployment by clicking the "Deploy to Azure" button below:
+2. If you have not already done so, ssh to the controller, and mount to the Avere vFXT:
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fvdbench%2Fvdbench-azuredeploy.json" target="_blank">
+    1. Run the following commands:
+        ```bash
+        sudo -s
+        apt-get update
+        apt-get install nfs-common
+        mkdir -p /nfs/node0
+        mkdir -p /nfs/node1
+        mkdir -p /nfs/node2
+        chown nobody:nogroup /nfs/node0
+        chown nobody:nogroup /nfs/node1
+        chown nobody:nogroup /nfs/node2
+        ```
+
+    2. Edit `/etc/fstab` to add the following lines but *using your vFXT node IP addresses*. Add more lines if your cluster has more than three nodes.
+        ```bash
+        10.0.0.12:/msazure	/nfs/node0	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
+        10.0.0.13:/msazure	/nfs/node1	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
+        10.0.0.14:/msazure	/nfs/node2	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
+        ```
+
+    3. To mount all shares, type `mount -a`
+
+4. On the controller, download the vdbench bootstrap script:
+    ```bash
+    mkdir -p /nfs/node0/bootstrap
+    cd /nfs/node0/bootstrap
+    curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.vdbench.sh https://raw.githubusercontent.com/Azure/Avere/master/src/vdbench/bootstrap.vdbench.sh
+    ```
+
+5. Download the latest vdbench from https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html, and scp to the `/bootstrap` directory.  To download you will need to create an account with Oracle and accept the license.
+
+6. Deploy the clients by clicking the "Deploy to Azure" button below, but set the following settings:
+  * SSH key is required for vdbench
+  * specify `/bootstrap/bootstrap.vdbench.sh` for the bootstrap script
+
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclients%2Fvmas%2Fazuredeploy.json" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 
-Save the output values of the deployment for access to the vdbench cluster.
-
-> Note: The source code to produce the deploy template is located [here](../src/vdbench).
-
-## Cloud shell deployment
-
-1. To deploy vdbench, first open a cloud shell from http://portal.azure.com or https://shell.azure.com.
-
-2. Run the following commands in cloud shell to deploy, updating the commented variables:
-
-   ```bash
-   # set the subscription, resource group, and location
-   export DstSub=#"SUBSCRIPTION_ID"
-   export DstResourceGroupName=#"example_vdbench_resourcegroup"
-   export DstLocation=#"eastus2"
-   
-   mkdir vdbench
-   cd vdbench
-
-   # get the Avere vFXT controller template and edit parameters
-   curl -o azuredeploy.json https://raw.githubusercontent.com/Azure/Avere/master/src/vdbench/vdbench-azuredeploy.json
-   curl -o azuredeploy.parameters.json https://raw.githubusercontent.com/Azure/Avere/master/src/vdbench/vdbench-azuredeploy.parameters.json
-   vi azuredeploy.parameters.json
-   
-   # deploy the template
-   az account set --subscription $DstSub
-   az group create --name $DstResourceGroupName --location $DstLocation
-   az group deployment create --resource-group $DstResourceGroupName --template-file azuredeploy.json --parameters @azuredeploy.parameters.json
-   ```
-
-4. Scroll up in the deployment output to the section labeled "outputs".
-
 ## Using vdbench
 
-1. After deployment is complete, log in using the SSH command found in the "outputs" list and run the following commands to set your private SSH secret:
+1. After deployment is complete, find the IP of one of the VDBench clients from the [portal](https://portal.azure.com) or https://resources.azure.com, and login from the controller and run the following commands to set your private SSH secret:
 
    ```bash
    touch ~/.ssh/id_rsa
@@ -86,4 +89,3 @@ Save the output values of the deployment for access to the vdbench cluster.
 2. Log in to the Avere Control Panel ([instructions](access_cluster.md)) to watch the performance metrics. You will see a performance chart similar to the following one:
 
    <img src="images/vdbench_ondisk.png">
-
