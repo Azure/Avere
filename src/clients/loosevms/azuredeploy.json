@@ -21,6 +21,14 @@
         "description": "The admin password for the virtual machine clients."
       }
     },
+    "sshKeyData": {
+      "type": "string",
+      "defaultValue": "",
+      "minLength": 0,
+      "metadata": {
+        "description": "The optional public SSH key used for access to the VM."
+      }
+    },
     "vmCount": {
       "type": "int",
       "metadata": {
@@ -83,6 +91,7 @@
     "uniquename": "[concat(parameters('uniquename'))]",
     "adminUsername": "[parameters('adminUsername')]",
     "adminPassword": "[parameters('adminPassword')]",
+    "sshKeyData": "[parameters('sshKeyData')]",
     "vmCount": "[parameters('vmCount')]",
     "vmSize": "[parameters('vmSize')]",
     "virtualNetworkResourceGroup": "[parameters('virtualNetworkResourceGroup')]",
@@ -97,6 +106,17 @@
     "nicName": "[concat('vmnic-',variables('uniquename'))]",
     "vmName": "[concat('vm-',variables('uniquename'))]",
     "bootstrapNFSIP": "[split(variables('nfsCommaSeparatedAddresses'),',')[0]]",
+    "sshKeyPath": "[concat('/home/',variables('adminUsername'),'/.ssh/authorized_keys')]",
+    "linuxConfiguration": {
+      "ssh": {
+        "publicKeys": [
+          {
+            "path": "[variables('sshKeyPath')]",
+            "keyData": "[variables('sshKeyData')]"
+          }
+        ]
+      }
+    },
     "imageReference": {
         "publisher": "Canonical",
         "offer": "UbuntuServer",
@@ -149,7 +169,8 @@
         "osProfile": {
           "computername": "[concat(variables('vmName'), '-', copyIndex())]",
           "adminUsername": "[variables('adminUsername')]",
-          "adminPassword": "[variables('adminPassword')]"
+          "adminPassword": "[variables('adminPassword')]",
+          "linuxConfiguration": "[if(greater(length(variables('sshKeyData')), 0), variables('linuxConfiguration'), json('null'))]"
         },
         "storageProfile": {
           "osDisk": {
