@@ -166,6 +166,10 @@ For the platform images, we encountered throttling from the Ubuntu servers that 
 
 The solution here was to wrap the apt commands in retry. Another possibility here is to try to [pre-download packages](https://www.ostechnix.com/download-packages-dependencies-locally-ubuntu/) and store them on Azure storage. We would then have to contend with storage throttling. 
 
+#### VMSS singlePlacementGroup
+
+To go past the 100 node limit on a VMSS, singlePlacementGroup must be set to "false". 
+
 #### 40-Minute Nodes
 
 Occasionally one or two nodes would take 40 minutes to boot, whereas all others were less than five minutes. The solution here was to over-provision by one or two and prune the tardy VMs. We were careful to rule out ARM throttling in this case, because over-provisioning with ARM throttling would make the deployment time tail longer.
@@ -198,7 +202,7 @@ Here are the percentiles of seconds to boot and "warm" a 1GB toolchain from bits
    | P95 | 698 | 618 | 615 |
    | P100 | 901 | 707 | 661 |
 
-Here are the percentiles of seconds to boot and "warm" a 1GB tool chain from bits stored on the custom image:
+Here are the percentiles of seconds to boot and "warm" a 5GB tool chain from bits stored on the custom image:
 
    | Percentile | Loose VMs | VM Availability Sets | VM Scale Sets | VM Scale Sets |
    | --- | --- | --- | --- | --- |
@@ -253,6 +257,12 @@ It is worth shrinking the above chart to highlight a subtle performance characte
 
    <img src="images/vm_boot/boot_time_1000vms_density_results.png">
 
+Also, if you are using the Avere vFXT only to reduce the boot time of the clients, and not for servicing HPC workload data, you can stop-deallocate the Avere vFXT after the clients have started.  In this scenario you will need to:
+ * on boot, copy the data from the Avere share to the OS Disk or data disk of the clients.
+ * ensure low priority clients have `stop-deallocate` set for the eviction policy.  This ensures the payload data sticks around.
+ * ensure the Avere vFXT nodes are started and running when scaling up.
+ * adjust NFS settings to soft and have error handling in place for when the NFS share is missing
+
 ## Conclusion
 
 The above experiments reveal multiple conclusions about how to make VMs boot faster on Azure. All but one of our hypotheses are correct. As seen in our results, the hypothesis stating that platform images are faster than custom images is incorrect.
@@ -266,7 +276,8 @@ Here are the best practices to achieve the fastest virtual machine provisioning 
   3. **NFS Mount all virtual machine clients to an Avere vFXT Edge Filer for large binary / toolchain payloads** - The fastest boot times result when VMs NFS mount the Avere vFXT Edge Filer and consume the binary / toolchain payloads.  NFS mounting all VM clients to an Avere vFXT yields the following additional benefits:
      1. The Avere vFXT becomes a single source of truth, so if the toolchain needs updating, it is changed in a single place versus the creation of a new custom image, and recreating the client VMs.
      2. Fewer virtual machine reboots and failures.
-     3. This best practice works when using [Azure CycleCloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/) and [Azure Batch](https://azure.microsoft.com/en-us/services/batch/).
+     3. If only used for reducing boot time of clients, save cost by using the above techniques to stop-deallocate the Avere vFXT nodes when not in use.
+     4. This best practice works when using [Azure CycleCloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/) and [Azure Batch](https://azure.microsoft.com/en-us/services/batch/).
 
   4. **The Avere vFXT scales linearly as you add more nodes** - Experiments show that the Avere vFXT linearly scales in throughput as more nodes are added. 
 
