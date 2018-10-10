@@ -32,6 +32,9 @@
         "name": "[variables('avereBackedStorageAccountName')]",
         "type": "Microsoft.Storage/storageAccounts",
         "apiVersion": "2017-10-01",
+        "tags": {
+          "averevfxt": "storagefiler"
+        },
         "sku": {
           "name": "[variables('storageAccountType')]"
         },

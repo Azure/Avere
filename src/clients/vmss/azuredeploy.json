@@ -144,6 +144,9 @@
       "name": "[variables('vmName')]",
       "location": "[resourceGroup().location]",
       "apiVersion": "2018-06-01",
+      "tags": {
+        "averevfxt": "client"
+      }, 
       "dependsOn": [        
       ],
       "sku": {
