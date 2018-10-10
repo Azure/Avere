@@ -1,0 +1,210 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "controllerName": {
+      "type": "string",
+      "metadata": {
+        "description": "The unique name used for resource names associated with the controller"
+      }
+    },
+    "controllerAdminUsername": {
+      "type": "string",
+      "defaultValue": "azureuser",
+      "metadata": {
+        "description": "The controller admin username."
+      }
+    },
+    "controllerAdminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The controller admin password."
+      }
+    },
+    "controllerVMSize": {
+      "type": "string",
+      "defaultValue": "Standard_A1_v2",
+      "metadata": {
+        "description": "The size used for the vFXT controller.  Additional sizes can be found here: https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes."
+      }
+    },
+    "createVirtualNetwork?": {
+      "type": "bool",
+      "defaultValue": true,
+      "allowedValues": [
+        true,
+        false
+      ],
+      "metadata": {
+        "description": "If true, create the VNET based on the virtual network resource group, virtual network name, and subnet name provided, otherwise use the virtual network based on those names."
+      }
+    },
+    "virtualNetworkResourceGroup": {
+      "type": "string",
+      "metadata": {
+        "description": "The resource group name for the VNET.  If createVirtualNetwork? is set to true, the current resource group must be specified."
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name used for the virtual network.  If createVirtualNetwork? is set to true, you may reuse the unique name above."
+      }
+    },
+    "virtualNetworkSubnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "The unique name used for the virtual network subnet.  If createVirtualNetwork? is set to true, you may reuse the unique name above."
+      }
+    }
+  },
+  "variables": {
+    "controllerName": "[parameters('controllerName')]",
+    "controllerAdminUsername": "[parameters('controllerAdminUsername')]",
+    "controllerAdminPassword": "[parameters('controllerAdminPassword')]",
+    "controllerVMSize": "[parameters('controllerVMSize')]",
+    "nicName": "[concat('vmnic-',variables('controllerName'))]",
+    "createVirtualNetwork?": "[parameters('createVirtualNetwork?')]",
+    "virtualNetworkResourceGroup": "[parameters('virtualNetworkResourceGroup')]",
+    "virtualNetworkName": "[parameters('virtualNetworkName')]",
+    "virtualNetworkSubnetName": "[parameters('virtualNetworkSubnetName')]",
+    "addressPrefix": "10.0.0.0/16",
+    "subnetPrefix": "10.0.0.0/20",
+    "publicIPAddressName": "[concat('publicip-',variables('controllerName'))]",
+    "vnetID": "[resourceId(variables('virtualNetworkResourceGroup'),'Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+    "subnetId": "[concat(variables('vnetID'),'/subnets/',variables('virtualNetworkSubnetName'))]",
+    "vmName": "[concat('vm-',variables('controllerName'))]",
+    "pipObject": {
+      "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+    },
+    "createNic?": true
+  },
+  "resources": [
+    {
+      "condition": "[variables('createVirtualNetwork?')]",
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('publicIPAddressName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Static"
+      }
+    },
+    {
+      "condition": "[variables('createVirtualNetwork?')]",
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('virtualNetworkName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('addressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('virtualNetworkSubnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetPrefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "condition": "[variables('createNic?')]",
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('nicName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": "[if(variables('createVirtualNetwork?'), variables('pipObject'), json('null'))]",
+              "subnet": {
+                "id": "[variables('subnetId')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2017-12-01",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('vmName')]",
+      "location": "[resourceGroup().location]",
+      "plan": {
+        "name": "avere-vfxt-controller",
+        "publisher": "microsoft-avere",
+        "product": "vfxt"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('controllerVMSize')]"
+        },
+        "osProfile": {
+          "computername": "[variables('vmName')]",
+          "adminUsername": "[variables('controllerAdminUsername')]",
+          "adminPassword": "[variables('controllerAdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "microsoft-avere",
+            "offer": "vfxt",
+            "sku": "avere-vfxt-controller",
+            "version": "latest"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "SSH_STRING": {
+      "type": "string",
+      "value": "[if(variables('createVirtualNetwork?'), concat(variables('controllerAdminUsername'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress), concat(variables('controllerAdminUsername'), '@', reference(resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))).ipConfigurations[0].properties.privateIPAddress))]"
+    },
+    "RESOURCE_GROUP": {
+      "type": "string",
+      "value": "[resourceGroup().name]"
+    },
+    "LOCATION": {
+      "type": "string",
+      "value": "[resourceGroup().location]"
+    },
+    "NETWORK_RESOURCE_GROUP": {
+      "type": "string",
+      "value": "[variables('virtualNetworkResourceGroup')]"
+    },
+    "NETWORK": {
+      "type": "string",
+      "value": "[variables('virtualNetworkName')]"
+    },
+    "SUBNET": {
+      "type": "string",
+      "value": "[variables('virtualNetworkSubnetName')]"
+    },
+    "SUBNET_ID": {
+      "type": "string",
+      "value": "[variables('subnetId')]"
+    }
+  }
+}
