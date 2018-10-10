@@ -109,6 +109,9 @@
     },
     {
       "apiVersion": "2017-12-01",
+      "tags": {
+        "averevfxt": "server"
+      },
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[variables('vmName')]",
       "location": "[resourceGroup().location]",
