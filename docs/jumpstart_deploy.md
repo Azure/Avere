@@ -25,7 +25,7 @@ Add a name for the new resource group, update the controller name and password, 
 
 ## Add storage endpoint
 
-While the controller is being created, add a storage endpoint to your vnet. Storage endpoints keep Azure blob traffic local rather than traveling out to the internet.
+Storage endpoints keep Azure blob traffic local rather than traveling out to the internet. While the controller is being created, add a storage endpoint to your vnet.
 
 1. From the portal, click “Virtual Networks” on the left.
 1. Select the vnet for your controller. 
