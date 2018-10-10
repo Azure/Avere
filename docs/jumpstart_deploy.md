@@ -34,7 +34,7 @@ While the controller is being created, add a storage endpoint to your vnet. Stor
 1. Leave the service at Microsoft.Storage and choose the controller’s subnet.
 1. At the bottom, click "Add."
 
-   <img src="images/service-endpoints.png">
+   <img src="images/service_endpoints.png">
 
 ## Browse to outputs
 
