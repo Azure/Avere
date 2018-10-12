@@ -89,13 +89,6 @@
         "description": "The admin password used for the controller and the Avere vFXT cluster."
       }
     },
-    "controllerVMSize": {
-      "type": "string",
-      "defaultValue": "Standard_A1_v2",
-      "metadata": {
-        "description": "The size used for the vFXT controller.  Additional sizes can be found here: https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes."
-      }
-    },
     "avereClusterRole": {
       "type": "string",
       "defaultValue": "avere-cluster",
@@ -137,7 +130,6 @@
     "controllerName": "[parameters('controllerName')]",
     "controllerAdminUsername": "[parameters('controllerAdminUsername')]",
     "adminPassword": "[parameters('adminPassword')]",
-    "controllerVMSize": "[parameters('controllerVMSize')]",
     "nicName": "[concat('vmnic-',variables('controllerName'))]",
     "createVirtualNetwork?": "[parameters('createVirtualNetwork?')]",
     "virtualNetworkResourceGroup": "[parameters('virtualNetworkResourceGroup')]",
@@ -149,6 +141,7 @@
     "avereClusterName": "[parameters('avereClusterName')]",
     "avereInstanceType": "[parameters('avereInstanceType')]",
     "additionalVFXTParameters": "[parameters('additionalVFXTParameters')]",
+    "controllerVMSize": "Standard_A1_v2",
     "avereCacheSizeGB": "[if(equals('Standard_D16s_v3',variables('avereInstanceType')),1024,4096)]",
     "addressPrefix": "10.0.0.0/16",
     "subnetPrefix": "10.0.0.0/20",
