@@ -23,6 +23,19 @@ To create the cluster controller node from the portal, click the "Deploy to Azur
 
 Add a name for the new resource group, update the controller name and password, and click **Purchase**.  After five or six minutes, your controller node will be up and running.
 
+## Add storage endpoint
+
+Storage endpoints keep Azure blob traffic local rather than traveling out to the internet. While the controller is being created, add a storage endpoint to your vnet.
+
+1. From the portal, click “Virtual Networks” on the left.
+1. Select the vnet for your controller. 
+1. Click “Service Endpoints” on the left.
+1. Click “Add” at the top.
+1. Leave the service at Microsoft.Storage and choose the controller’s subnet.
+1. At the bottom, click "Add."
+
+   <img src="images/service_endpoints.png">
+
 ## Browse to outputs
 
 The outputs from creating the cluster controller node include information that you need to create your Avere vFXT cluster.
