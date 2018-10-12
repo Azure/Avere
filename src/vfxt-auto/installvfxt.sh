@@ -41,6 +41,7 @@ function configure_vfxt_template() {
     sed -i 's/^CLUSTER_NAME/#CLUSTER_NAME/g' $VFXT_INSTALL_TEMPLATE
     sed -i 's/^ADMIN_PASSWORD/#ADMIN_PASSWORD/g' $VFXT_INSTALL_TEMPLATE
     sed -i 's/^INSTANCE_TYPE/#INSTANCE_TYPE/g' $VFXT_INSTALL_TEMPLATE
+    sed -i "s:~/vfxt.log:$AZURE_HOME_DIR/vfxt.log:g"  $VFXT_INSTALL_TEMPLATE
 }
 
 function create_vfxt() {
