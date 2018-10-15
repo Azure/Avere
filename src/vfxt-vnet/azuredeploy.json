@@ -2,32 +2,6 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "controllerName": {
-      "type": "string",
-      "metadata": {
-        "description": "The unique name used for resource names associated with the controller"
-      }
-    },
-    "controllerAdminUsername": {
-      "type": "string",
-      "defaultValue": "azureuser",
-      "metadata": {
-        "description": "The controller admin username."
-      }
-    },
-    "controllerAdminPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "The controller admin password."
-      }
-    },
-    "controllerVMSize": {
-      "type": "string",
-      "defaultValue": "Standard_A1_v2",
-      "metadata": {
-        "description": "The size used for the vFXT controller.  Additional sizes can be found here: https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes."
-      }
-    },
     "createVirtualNetwork?": {
       "type": "bool",
       "defaultValue": true,
@@ -56,18 +30,37 @@
       "metadata": {
         "description": "The unique name used for the virtual network subnet.  If createVirtualNetwork? is set to true, you may reuse the unique name above."
       }
+    },
+    "controllerName": {
+      "type": "string",
+      "metadata": {
+        "description": "The unique name used for resource names associated with the controller"
+      }
+    },
+    "controllerAdminUsername": {
+      "type": "string",
+      "defaultValue": "azureuser",
+      "metadata": {
+        "description": "The controller admin username."
+      }
+    },
+    "controllerAdminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The controller admin password."
+      }
     }
   },
   "variables": {
-    "controllerName": "[parameters('controllerName')]",
-    "controllerAdminUsername": "[parameters('controllerAdminUsername')]",
-    "controllerAdminPassword": "[parameters('controllerAdminPassword')]",
-    "controllerVMSize": "[parameters('controllerVMSize')]",
-    "nicName": "[concat('vmnic-',variables('controllerName'))]",
     "createVirtualNetwork?": "[parameters('createVirtualNetwork?')]",
     "virtualNetworkResourceGroup": "[parameters('virtualNetworkResourceGroup')]",
     "virtualNetworkName": "[parameters('virtualNetworkName')]",
     "virtualNetworkSubnetName": "[parameters('virtualNetworkSubnetName')]",
+    "controllerName": "[parameters('controllerName')]",
+    "controllerAdminUsername": "[parameters('controllerAdminUsername')]",
+    "controllerAdminPassword": "[parameters('controllerAdminPassword')]",
+    "controllerVMSize": "Standard_A1_v2",
+    "nicName": "[concat('vmnic-',variables('controllerName'))]",
     "addressPrefix": "10.0.0.0/16",
     "subnetPrefix": "10.0.0.0/20",
     "publicIPAddressName": "[concat('publicip-',variables('controllerName'))]",
