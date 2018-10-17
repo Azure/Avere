@@ -43,13 +43,19 @@ These deployment instructions describe the installation of all components requir
 
 5. Download the latest vdbench from https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html, and scp to the `/bootstrap` directory.  To download you will need to create an account with Oracle and accept the license.
 
-6. Deploy the clients by clicking the "Deploy to Azure" button below, but set the following settings:
+6. From your controller, verify your vdbench setup by running the following script.  If the script shows success, you are ready to deploy.  Otherwise you will need to fix each error listed.
+
+    ```bash
+    curl -o- https://raw.githubusercontent.com/Azure/Avere/master/src/vdbench/vdbenchVerify.sh | bash
+    ```
+
+7. Deploy the clients by clicking the "Deploy to Azure" button below, but set the following settings:
   * SSH key is required for vdbench
   * specify `/bootstrap/bootstrap.vdbench.sh` for the bootstrap script
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclients%2Fvmas%2Fazuredeploy.json" target="_blank">
-<img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
-</a>
+    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclients%2Fvmas%2Fazuredeploy.json" target="_blank">
+    <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
+    </a>
 
 ## Using vdbench
 
