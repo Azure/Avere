@@ -8,8 +8,8 @@
     "controllerAdminUsername": {
       "value": "azureuser"
     },
-    "controllerAdminPassword": {
-      "value": "GEN-PASSWORD"
+    "controllerSSHKeyData": {
+      "value": "GEN-SSHKEY"
     }
   }
 }

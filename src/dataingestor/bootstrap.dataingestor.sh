@@ -1,9 +1,7 @@
 #!/bin/bash -ex
 
-# variables that must be set beforehand
-# AVERE_NAMESPACE_PATH=/msazure
-# AVEREVFXT_NODE_IPS="172.16.1.8,172.16.1.9,172.16.1.10"
-#
+set -x
+
 function retrycmd_if_failure() {
     retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
     for i in $(seq 1 $retries); do
@@ -60,16 +58,16 @@ function config_linux() {
 }
 
 function mount_avere() {
-    COUNTER=1
-    for VFXT in $(echo $AVEREVFXT_NODE_IPS | sed "s/,/ /g")
+    COUNTER=0
+    for VFXT in $(echo $NFS_IP_CSV | sed "s/,/ /g")
     do
-        MOUNT_POINT="/nfs/node${COUNTER}"
-        echo "Mounting to $VFXT:$AVERE_NAMESPACE_PATH to ${MOUNT_POINT}"
-        sudo mkdir -p $MOUNT_POINT
+        MOUNT_POINT="${BASE_DIR}${NODE_MOUNT_PREFIX}${COUNTER}"
+        echo "Mounting to ${VFXT}:${NFS_PATH} to ${MOUNT_POINT}"
+        mkdir -p $MOUNT_POINT
         # no need to write again if it is already there
         if grep -v --quiet $VFXT /etc/fstab; then
-            echo "$VFXT:$AVERE_NAMESPACE_PATH	${MOUNT_POINT}	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0" >> /etc/fstab
-            sudo mount ${MOUNT_POINT}
+            echo "${VFXT}:${NFS_PATH}    ${MOUNT_POINT}    nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0" >> /etc/fstab
+            mount ${MOUNT_POINT}
         fi
         COUNTER=$(($COUNTER + 1))
     done
@@ -133,11 +131,11 @@ function write_msrsync() {
     FILENAME=/usr/bin/msrsync
     sudo touch $FILENAME
     sudo chmod 755 $FILENAME
-    sudo wget -O $FILENAME https://raw.githubusercontent.com/jbd/msrsync/master/msrsync
+    sudo curl --retry 5 --retry-delay 5 -o $FILENAME https://raw.githubusercontent.com/jbd/msrsync/master/msrsync
     sudo chmod +x $FILENAME
 
     PRIMEFILE=/usr/bin/prime.py
-    sudo wget -O $PRIMEFILE https://raw.githubusercontent.com/Azure/Avere/master/src/dataingestor/prime.py
+    sudo curl --retry 5 --retry-delay 5 -o $PRIMEFILE https://raw.githubusercontent.com/Azure/Avere/master/src/dataingestor/prime.py
     sudo chmod +x $PRIMEFILE
 }
 

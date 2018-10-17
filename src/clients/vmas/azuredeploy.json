@@ -15,18 +15,12 @@
         "description": "The admin username for the virtual machine clients."
       }
     },
-    "adminPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "The admin password for the virtual machine clients."
-      }
-    },
     "sshKeyData": {
       "type": "string",
       "defaultValue": "",
       "minLength": 0,
       "metadata": {
-        "description": "The optional public SSH key used for access to the VM."
+        "description": "The public SSH key used for access to the VM."
       }
     },
     "vmCount": {
@@ -63,13 +57,13 @@
     "nfsCommaSeparatedAddresses": {
       "type": "string",
       "metadata": {
-        "description": "A comma separated list of Avere vFXT vServer IP Addresses."
+        "description": "A comma separated list of Avere vFXT vServer IP Addresses. (ex. '10.0.0.12,10.0.0.13,10.0.0.14')"
       }
     },
     "nfsExportPath": {
       "type": "string",
       "metadata": {
-        "description": "The path exported from the NFS server that will be mounted."
+        "description": "The path exported from the NFS server that will be mounted. (ex. '/msazure')"
       }
     },
     "nfsMountBaseDir": {
@@ -81,16 +75,14 @@
     },
     "bootstrapScriptPath": {
       "type": "string",
-      "defaultValue": "/bootstrap/bootstrap.sh",
       "metadata": {
-        "description": "The path on the mounted NFS share to the bootstrap script used for further installation"
+        "description": "The path on the mounted NFS share to the bootstrap script used for further installation. (ex. '/bootstrap/bootstrap.sh')"
       }
     }
   },
   "variables": {
     "uniquename": "[concat(parameters('uniquename'))]",
     "adminUsername": "[parameters('adminUsername')]",
-    "adminPassword": "[parameters('adminPassword')]",
     "sshKeyData": "[parameters('sshKeyData')]",
     "vmCount": "[parameters('vmCount')]",
     "vmSize": "[parameters('vmSize')]",
@@ -108,16 +100,6 @@
     "asName": "[concat('as-',variables('uniquename'))]",
     "bootstrapNFSIP": "[split(variables('nfsCommaSeparatedAddresses'),',')[0]]",
     "sshKeyPath": "[concat('/home/',variables('adminUsername'),'/.ssh/authorized_keys')]",
-    "linuxConfiguration": {
-      "ssh": {
-        "publicKeys": [
-          {
-            "path": "[variables('sshKeyPath')]",
-            "keyData": "[variables('sshKeyData')]"
-          }
-        ]
-      }
-    },
     "imageReference": {
         "publisher": "Canonical",
         "offer": "UbuntuServer",
@@ -203,8 +185,17 @@
         "osProfile": {
           "computername": "[concat(variables('vmName'), '-', copyIndex())]",
           "adminUsername": "[variables('adminUsername')]",
-          "adminPassword": "[variables('adminPassword')]",
-          "linuxConfiguration": "[if(greater(length(variables('sshKeyData')), 0), variables('linuxConfiguration'), json('null'))]"
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": "true",
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[variables('sshKeyPath')]",
+                  "keyData": "[variables('sshKeyData')]"
+                }
+              ]
+            }
+          }
         },
         "storageProfile": {
           "osDisk": {
