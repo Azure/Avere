@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/bin/bash 
+
+set -x
 
 NODE_MOUNT_PREFIX="/node"
 
@@ -79,7 +81,14 @@ function install_vdbench() {
     mkdir -p $DIRECTORY
     pushd $DIRECTORY
     BOOTSTRAP_PATH="$(dirname ${BASE_DIR}${NODE_MOUNT_PREFIX}0${BOOTSTRAP_SCRIPT_PATH})"
-    cp $BOOTSTRAP_PATH/vdbench*.zip .
+    VDBENCHSRC="$BOOTSTRAP_PATH/vdbench*.zip"
+    
+    if ! ls $VDBENCHSRC > /dev/null 2>&1; then
+        echo "MISSING: $VDBENCHSRC, please ensure the vdbench zip is downloaded to the bootstrap directory and reinstall."
+        exit 1
+    fi
+
+    cp $VDBENCHSRC .
     unzip vdbench*.zip
     rm vdbench*.zip
     popd
