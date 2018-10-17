@@ -84,7 +84,7 @@
       }
     },
     "controllerSSHKeyData": {
-      "type": "securestring",
+      "type": "string",
       "metadata": {
         "description": "The controller public SSH key."
       }
