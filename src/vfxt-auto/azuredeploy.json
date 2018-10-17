@@ -83,10 +83,16 @@
         "description": "The controller admin username."
       }
     },
+    "controllerSSHKeyData": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The controller public SSH key."
+      }
+    },
     "adminPassword": {
       "type": "securestring",
       "metadata": {
-        "description": "The admin password used for the controller and the Avere vFXT cluster."
+        "description": "The admin password used for the Avere vFXT cluster."
       }
     },
     "avereClusterRole": {
@@ -129,6 +135,7 @@
     "servicePrincipalPassword": "[parameters('servicePrincipalPassword')]",
     "controllerName": "[parameters('controllerName')]",
     "controllerAdminUsername": "[parameters('controllerAdminUsername')]",
+    "controllerSSHKeyData": "[parameters('controllerSSHKeyData')]",
     "adminPassword": "[parameters('adminPassword')]",
     "nicName": "[concat('vmnic-',variables('controllerName'))]",
     "createVirtualNetwork?": "[parameters('createVirtualNetwork?')]",
@@ -146,6 +153,7 @@
     "addressPrefix": "10.0.0.0/16",
     "subnetPrefix": "10.0.0.0/20",
     "publicIPAddressName": "[concat('publicip-',variables('controllerName'))]",
+    "networkSecurityGroupName": "[concat('nsg-',variables('controllerName'))]",
     "vnetID": "[resourceId(variables('virtualNetworkResourceGroup'),'Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "subnetId": "[concat(variables('vnetID'),'/subnets/',variables('virtualNetworkSubnetName'))]",
     "vmName": "[concat('vm-',variables('controllerName'))]",
@@ -155,7 +163,8 @@
     "createNic?": true,
     "storageAccountType": "Standard_LRS",
     "storageAccountKind": "StorageV2",
-    "environmentVariables": "[concat(' AZURE_TENANT_ID=', variables('servicePrincipalTenant'),' AZURE_CLIENT_ID=', variables('servicePrincipalAppId'),' RESOURCE_GROUP=', resourceGroup().name,' LOCATION=', resourceGroup().location,' NETWORK_RESOURCE_GROUP=', variables('virtualNetworkResourceGroup'),' NETWORK=', variables('virtualNetworkName'),' SUBNET=', variables('virtualNetworkSubnetName'),' AVERE_CLUSTER_ROLE=', variables('avereClusterRole'),' CREATE_CLOUD_BACKED_CLUSTER=', variables('useAvereBackedStorageAccount?'),' STORAGE_ACCOUNT=', variables('avereBackedStorageAccountName'),' CACHE_SIZE=', variables('avereCacheSizeGB'),' CLUSTER_NAME=', variables('avereClusterName'),' INSTANCE_TYPE=', variables('avereInstanceType'),' CONTROLLER_ADMIN_USER_NAME=',variables('controllerAdminUsername'),' DEBUG=\"',variables('additionalVFXTParameters'),'\"')]"
+    "environmentVariables": "[concat(' AZURE_TENANT_ID=', variables('servicePrincipalTenant'),' AZURE_CLIENT_ID=', variables('servicePrincipalAppId'),' RESOURCE_GROUP=', resourceGroup().name,' LOCATION=', resourceGroup().location,' NETWORK_RESOURCE_GROUP=', variables('virtualNetworkResourceGroup'),' NETWORK=', variables('virtualNetworkName'),' SUBNET=', variables('virtualNetworkSubnetName'),' AVERE_CLUSTER_ROLE=', variables('avereClusterRole'),' CREATE_CLOUD_BACKED_CLUSTER=', variables('useAvereBackedStorageAccount?'),' STORAGE_ACCOUNT=', variables('avereBackedStorageAccountName'),' CACHE_SIZE=', variables('avereCacheSizeGB'),' CLUSTER_NAME=', variables('avereClusterName'),' INSTANCE_TYPE=', variables('avereInstanceType'),' CONTROLLER_ADMIN_USER_NAME=',variables('controllerAdminUsername'),' DEBUG=\"',variables('additionalVFXTParameters'),'\"')]",
+    "sshKeyPath": "[concat('/home/',variables('controllerAdminUsername'),'/.ssh/authorized_keys')]"
   },
   "resources": [
     {
@@ -179,6 +188,30 @@
       "location": "[resourceGroup().location]",
       "properties": {
         "publicIPAllocationMethod": "Static"
+      }
+    },
+    {
+      "condition": "[variables('createVirtualNetwork?')]",
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('networkSecurityGroupName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "default-allow-ssh",
+            "properties": {
+              "priority": 1000,
+              "sourceAddressPrefix": "*",
+              "protocol": "Tcp",
+              "destinationPortRange": "22",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*"
+            }
+          }
+        ]
       }
     },
     {
@@ -211,7 +244,8 @@
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
-        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+        "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]"
       ],
       "properties": {
         "ipConfigurations": [
@@ -251,7 +285,17 @@
         "osProfile": {
           "computername": "[variables('vmName')]",
           "adminUsername": "[variables('controllerAdminUsername')]",
-          "adminPassword": "[variables('adminPassword')]"
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": "true",
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[variables('sshKeyPath')]",
+                  "keyData": "[variables('controllerSSHKeyData')]"
+                }
+              ]
+            }
+          }
         },
         "storageProfile": {
           "imageReference": {

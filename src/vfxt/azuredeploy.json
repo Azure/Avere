@@ -15,27 +15,29 @@
         "description": "The controller admin username."
       }
     },
-    "controllerAdminPassword": {
+    "controllerSSHKeyData": {
       "type": "securestring",
       "metadata": {
-        "description": "The controller admin password."
+        "description": "The controller public SSH key."
       }
     }
   },
   "variables": {
     "controllerName": "[parameters('controllerName')]",
     "controllerAdminUsername": "[parameters('controllerAdminUsername')]",
-    "controllerAdminPassword": "[parameters('controllerAdminPassword')]",
+    "controllerSSHKeyData": "[parameters('controllerSSHKeyData')]",
     "nicName": "[concat('vmnic-',variables('controllerName'))]",
     "addressPrefix": "10.0.0.0/16",
     "subnetName": "[concat('subnet-',variables('controllerName'))]",
     "subnetPrefix": "10.0.0.0/24",
     "publicIPAddressName": "[concat('publicip-',variables('controllerName'))]",
+    "networkSecurityGroupName": "[concat('nsg-',variables('controllerName'))]",
     "vmName": "[concat('vm-',variables('controllerName'))]",
     "virtualNetworkName": "[concat('vnet-',variables('controllerName'))]",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "subnetId": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
-    "vmSize": "Standard_A1_v2"
+    "vmSize": "Standard_A1_v2",
+    "sshKeyPath": "[concat('/home/',variables('controllerAdminUsername'),'/.ssh/authorized_keys')]"
   },
   "resources": [
     {
@@ -58,6 +60,29 @@
       "location": "[resourceGroup().location]",
       "properties": {
         "publicIPAllocationMethod": "Static"
+      }
+    },
+    {
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('networkSecurityGroupName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "default-allow-ssh",
+            "properties": {
+              "priority": 1000,
+              "sourceAddressPrefix": "*",
+              "protocol": "Tcp",
+              "destinationPortRange": "22",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*"
+            }
+          }
+        ]
       }
     },
     {
@@ -88,7 +113,8 @@
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
-        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+        "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]"
       ],
       "properties": {
         "ipConfigurations": [
@@ -130,7 +156,17 @@
         "osProfile": {
           "computername": "[variables('vmName')]",
           "adminUsername": "[variables('controllerAdminUsername')]",
-          "adminPassword": "[variables('controllerAdminPassword')]"
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": "true",
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[variables('sshKeyPath')]",
+                  "keyData": "[variables('controllerSSHKeyData')]"
+                }
+              ]
+            }
+          }
         },
         "storageProfile": {
           "imageReference": {
