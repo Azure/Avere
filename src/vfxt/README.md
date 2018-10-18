@@ -1,6 +1,14 @@
 # Avere vFXT cluster controller node - ARM template deployment
 
-This template deploys an Avere Controller and an Avere vFXT cluster.
+This template implements [Deploy](../../docs/jumpstart_deploy.md).
+
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fvfxt-vnet%2Fazuredeploy.json" target="_blank">
+<img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
+</a>
+
+# Experimental: Avere vFXT controller and vFXT - ARM template deployment
+
+An experimental template to deploy everything in one deployment is listed below.  Please try and give feedback.
 
 1. The controller requires login to the az cli with "Owner" role because the script assigns roles.  The following shows how to create the service principal, but detailed instructions are [here](https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli?view=azure-cli-latest):
 
