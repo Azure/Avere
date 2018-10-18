@@ -22,7 +22,7 @@ To setup the above architecture run the following steps:
 
 2. To have enough IPs for the 500 batch nodes you will need to add a subnet to the VNET created in #1.  In the Azure Portal browse to the VNET and add a new subnet ```10.0.4.0/22``` for an additional capacity of 1024 addresses.
 
-3. Deploy an NFS NAS core filer in separate VNETs using the [NFS Deployment templates](../src/nfslatency/azuredisknfs) and with the following VNET and subnet configurations:
+3. Deploy an NFS NAS core filer in separate VNETs using the [NFS Deployment templates](../src/tutorials/nfslatency/azuredisknfs) and with the following VNET and subnet configurations:
 
    | VNET | VNET Location | Address Prefix | Subnet Prefix(s) |
    | --- | --- | --- | --- |
@@ -34,7 +34,7 @@ To setup the above architecture run the following steps:
 
 4. On each NFS server install your Maya Render scene in the directories according to [the prepare content instructions](maya_azure_batch_avere_vfxt_demo.md#prepare-content-and-infrastructure).  For this experiment we used an 8GB render scene with multiple textures.
 
-5. Setup two-way VNET peering from the Avere vFXT VNET to each of the NAS VNETs as shown in the [peering templates and parameter templates](../src/nfslatency/vnetpeering).
+5. Setup two-way VNET peering from the Avere vFXT VNET to each of the NAS VNETs as shown in the [peering templates and parameter templates](../src/tutorials/nfslatency/vnetpeering).
 
 6. [Access the Avere vFXT management UI](access_cluster.md), add each [NFS NAS as a core filer](configure_storage.md#nas-core-filer), and then for each regional NFS NAS add the following [named namespaces (junctions)](configure_storage.md#create-a-junction):
 
@@ -50,7 +50,7 @@ To setup the above architecture run the following steps:
    ```bash
    # SSH to eastus NFS server
    sudo mkdir -p /datadisks/disks1/bootstrap
-   sudo wget -O /datadisks/disks1/bootstrap/centosboostrap.sh https://raw.githubusercontent.com/Azure/Avere/master/src/nfslatency/batch/centosboostrap-nfsexperiment.sh
+   sudo wget -O /datadisks/disks1/bootstrap/centosboostrap.sh https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/nfslatency/batch/centosboostrap-nfsexperiment.sh
    # edit the file to update the IP addresses of each server
    vi centosboostrap.sh
    ```

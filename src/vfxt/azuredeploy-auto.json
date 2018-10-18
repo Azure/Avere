@@ -329,7 +329,7 @@
         "autoUpgradeMinorVersion": true,
         "settings": {
           "fileUris": [
-            "https://raw.githubusercontent.com/Azure/Avere/master/src/vfxt-auto/installvfxt.sh"
+            "https://raw.githubusercontent.com/Azure/Avere/master/src/vfxt/installvfxt.sh"
           ]
         },
         "protectedSettings": {

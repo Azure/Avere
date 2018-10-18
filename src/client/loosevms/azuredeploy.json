@@ -214,7 +214,7 @@
         "autoUpgradeMinorVersion": true,
         "settings": {
           "fileUris": [
-            "https://raw.githubusercontent.com/Azure/Avere/master/src/clients/mountandbootstrap.sh"
+            "https://raw.githubusercontent.com/Azure/Avere/master/src/client/mountandbootstrap.sh"
           ],
           "commandToExecute": "[concat(variables('environmentVariables'), ' /bin/bash mountandbootstrap.sh')]"
         }

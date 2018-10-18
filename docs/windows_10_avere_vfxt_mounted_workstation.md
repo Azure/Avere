@@ -20,12 +20,12 @@ This solution can be deployed through the portal or cloud shell.
 
 To install from the portal, launch the deployment by clicking the "Deploy to Azure" button:
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fwin10vfxtmounted%2Fwin10-azuredeploy.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclient%2Fwindowsworkstation%2Fwin10-azuredeploy.json" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 
 
-> Tip: The source code to produce the template is located [here](../src/win10vfxtmounted)
+> Tip: The source code to produce the template is located [here](../src/client/windowsworkstation)
 
 Save the output values of the deployment for access to the workstation.
 
