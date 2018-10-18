@@ -31,14 +31,14 @@ chown nobody:nogroup /nfs/node2
 ```bash
 mkdir -p /nfs/node1/bootstrap
 cd /nfs/node1/bootstrap
-curl --retry 5 --retry-delay 5 -o /nfs/node1/bootstrap/bootstrap.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clients/bootstrap.sh
+curl --retry 5 --retry-delay 5 -o /nfs/node1/bootstrap/bootstrap.sh https://raw.githubusercontent.com/Azure/Avere/master/src/client/bootstrap.sh
 ```
 
 # Loose Virtual Machines
 
 To understand how to maximize boot speed of these VMs, please review [Best Practices for Improving Azure Virtual Machine (VM) Boot Time](../../docs/azure_vm_provision_best_practices.md).
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclients%2Fvmas%2Fazuredeploy.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclient%2Fvmas%2Fazuredeploy.json" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 
@@ -46,7 +46,7 @@ To understand how to maximize boot speed of these VMs, please review [Best Pract
 
 To understand how to maximize boot speed of these VMs, please review [Best Practices for Improving Azure Virtual Machine (VM) Boot Time](../../docs/azure_vm_provision_best_practices.md).
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclients%2Fvmas%2Fazuredeploy.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclient%2Fvmas%2Fazuredeploy.json" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 
@@ -54,6 +54,6 @@ To understand how to maximize boot speed of these VMs, please review [Best Pract
 
 To understand how to maximize boot speed of these VMs, please review [Best Practices for Improving Azure Virtual Machine (VM) Boot Time](../../docs/azure_vm_provision_best_practices.md).
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclients%2Fvmss%2Fazuredeploy.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclient%2Fvmss%2Fazuredeploy.json" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>

@@ -1,0 +1,48 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "controllerName": {
+      "value": "UNIQUE"
+    },
+    "controllerAdminUsername": {
+      "value": "azureuser"
+    },
+    "controllerSSHKeyData": {
+      "value": "SSHKEY"
+    },
+    "adminPassword": {
+      "value": "PASSWORD"
+    },
+    "createVirtualNetwork?": {
+      "value": true
+    },
+    "virtualNetworkResourceGroup": {
+      "value": "UNIQUE"
+    },
+    "virtualNetworkName": {
+      "value": "UNIQUE"
+    },
+    "virtualNetworkSubnetName": {
+      "value": "UNIQUE"
+    },
+    "servicePrincipalTenant": {
+      "value": "TENANT"
+    },
+    "servicePrincipalAppId": {
+      "value": "APPID"
+    },
+    "servicePrincipalPassword": {
+      "value": "PASSWORD"
+    },
+    "useAvereBackedStorageAccount?": {
+      "value": true
+    },
+    "avereBackedStorageAccountName": {
+      "value": "UNIQUE"
+    },
+    "avereInstanceType": {
+      "value": "Standard_D16s_v3"
+    }
+  }
+}

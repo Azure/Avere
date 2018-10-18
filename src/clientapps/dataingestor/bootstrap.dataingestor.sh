@@ -135,7 +135,7 @@ function write_msrsync() {
     sudo chmod +x $FILENAME
 
     PRIMEFILE=/usr/bin/prime.py
-    sudo curl --retry 5 --retry-delay 5 -o $PRIMEFILE https://raw.githubusercontent.com/Azure/Avere/master/src/dataingestor/prime.py
+    sudo curl --retry 5 --retry-delay 5 -o $PRIMEFILE https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/dataingestor/prime.py
     sudo chmod +x $PRIMEFILE
 }
 

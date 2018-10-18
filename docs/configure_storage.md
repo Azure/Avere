@@ -46,7 +46,7 @@ The following steps create an Azure storage account with an empty container and 
 
 1. Create a general-purpose V2 storage account by clicking the "Deploy to Azure" button below.  You can add it to the same resource group as the vFXT.
 
-   <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fstorageaccount%2Fazuredeploy.json" target="_blank">
+   <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fvfxt%2Fstorageaccount%2Fazuredeploy.json" target="_blank">
       <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
    </a>
 

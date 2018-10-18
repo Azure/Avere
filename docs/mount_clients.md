@@ -42,7 +42,7 @@ function mount_round_robin() {
     fi   
 } 
 ```
-The function above is part of the [Batch example](maya_azure_batch_avere_vfxt_demo.md); the entire file is available [here](../src/mayabatch/centosbootstrap.sh).
+The function above is part of the [Batch example](maya_azure_batch_avere_vfxt_demo.md); the entire file is available [here](../src/tutorials/mayabatch/centosbootstrap.sh).
 
 ## Identifying IP addresses and paths to mount
 

@@ -2,7 +2,7 @@
 
 This 60-minute demo takes you through rendering an animated movie using Maya, Batch, and the Avere vFXT cluster. 
 
-> The source code to produce the template is located [here](../src/mayabatch).
+> The source code to produce the template is located [here](../src/tutorials/mayabatch).
 
 ## Prerequisites
 
@@ -48,13 +48,13 @@ This step downloads the frames to render, the client mounting script, and the re
 3. Copy the following file, keeping the same name, to the Avere vFXT volume. Store it in a folder named ``/nfs/node1/bootstrap``:
 
    ```
-   https://raw.githubusercontent.com/Azure/Avere/master/src/mayabatch/centosbootstrap.sh
+   https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/mayabatchcentosbootstrap.sh
    ```
 	
 4. Copy the following file, keeping the same name, to the Avere vFXT volume. Store it in a folder named ``/nfs/node1/src``:
 
    ```
-   https://raw.githubusercontent.com/Azure/Avere/master/src/mayabatch/render.sh
+   https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/mayabatch/render.sh
    ```
 
 ## Create an Azure Batch account and a pool
@@ -100,8 +100,8 @@ If you are not familiar with Azure Batch, the following pages cover the concepts
    cd ~/batch
    
    # download the batch 
-   curl -o pool.json https://raw.githubusercontent.com/Azure/Avere/master/src/mayabatch/pool.json
-   curl -o pool-parameters.json https://raw.githubusercontent.com/Azure/Avere/master/src/mayabatch/pool-parameters.json
+   curl -o pool.json https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/mayabatch/pool.json
+   curl -o pool-parameters.json https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/mayabatch/pool-parameters.json
    vi pool-parameters.json
    
    # login, in case you are not already logged into batch
@@ -123,8 +123,8 @@ Each task uses the ``render`` script that you downloaded under ``/src`` in the [
    cd ~/batch
    
    # download the batch 
-   curl -o job.json https://raw.githubusercontent.com/Azure/Avere/master/src/mayabatch/job.json
-   curl -o job-parameters.json https://raw.githubusercontent.com/Azure/Avere/master/src/mayabatch/job-parameters.json
+   curl -o job.json https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/mayabatch/job.json
+   curl -o job-parameters.json https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/mayabatch/job-parameters.json
    vi job-parameters.json
    
    # login, in case you are not already logged into batch

@@ -39,19 +39,19 @@ To install a data ingestor VM with all of these parallel data ingestion tools in
     ```bash
     mkdir -p /nfs/node0/bootstrap
     cd /nfs/node0/bootstrap
-    curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.dataingestor.sh https://raw.githubusercontent.com/Azure/Avere/master/src/dataingestor/bootstrap.dataingestor.sh
+    curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.dataingestor.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/dataingestor/bootstrap.dataingestor.sh
     ```
 
 3. From your controller, verify your dataingestor setup by running the following verify script.  If the script shows success, you are ready to deploy.  Otherwise you will need to fix each error listed.
 
     ```bash
-    curl -o- https://raw.githubusercontent.com/Azure/Avere/master/src/dataingestor/dataingestorVerify.sh | bash
+    curl -o- https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/dataingestor/dataingestorVerify.sh | bash
     ```
 
 4. Deploy the clients by clicking the "Deploy to Azure" button below, but set the following settings:
   * specify `/bootstrap/bootstrap.dataingestor.sh` for the bootstrap script
 
-    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclients%2Fvmas%2Fazuredeploy.json" target="_blank">
+    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclient%2Fvmas%2Fazuredeploy.json" target="_blank">
     <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
     </a>
 
@@ -284,7 +284,7 @@ To use msrsync to populate an Azure cloud volume with an Avere cluster, follow t
 1. Install msrsync and its prerequisites (rsync and Python 2.6 or later)
 2. Determine the total number of files and directories to be copied.
 
-   For example, use the Avere utility ``prime.py`` with arguments ```prime.py --directory /path/to/some/directory``` (available by downloading url https://raw.githubusercontent.com/Azure/Avere/master/src/dataingestor/prime.py).
+   For example, use the Avere utility ``prime.py`` with arguments ```prime.py --directory /path/to/some/directory``` (available by downloading url https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/dataingestor/prime.py).
 
    If not using ``prime.py``, you can calculate the number of items with the Gnu ``find`` tool as follows:
    ```bash
