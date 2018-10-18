@@ -10,20 +10,20 @@ The clients are mounted roundrobin across the Avere vFXT vServer IP addresses do
 sudo -s
 apt-get update
 apt-get install nfs-common
+mkdir -p /nfs/node0
 mkdir -p /nfs/node1
 mkdir -p /nfs/node2
-mkdir -p /nfs/node3
+chown nobody:nogroup /nfs/node0
 chown nobody:nogroup /nfs/node1
 chown nobody:nogroup /nfs/node2
-chown nobody:nogroup /nfs/node3
 ```
 
 2. Edit `/etc/fstab` to add the following lines but *using your vFXT node IP addresses*. Add more lines if your cluster has more than three nodes.
 
 ```bash
-10.0.0.12:/msazure	/nfs/node1	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
-10.0.0.13:/msazure	/nfs/node2	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
-10.0.0.14:/msazure	/nfs/node3	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
+10.0.0.12:/msazure	/nfs/node0	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
+10.0.0.13:/msazure	/nfs/node1	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
+10.0.0.14:/msazure	/nfs/node2	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
 ```
 
 3. To mount all shares, type `mount -a` from the cluster controller, and then run the following to download the bootstrap script.
