@@ -1,0 +1,35 @@
+{
+  "uniquename": {
+    "value": "UNIQUE"
+  },
+  "adminUsername": {
+    "value": "azureuser"
+  },
+  "sshKeyData": {
+    "value": "SSHKEY"
+  },
+  "vmCount":{
+    "value": 3
+  },
+  "virtualNetworkResourceGroup": {
+    "value": "UNIQUE"
+  },
+  "virtualNetworkName": {
+    "value": "UNIQUE"
+  },
+  "virtualNetworkSubnetName": {
+    "value": "UNIQUE"
+  },
+  "nfsCommaSeparatedAddresses": {
+    "value": "10.0.0.12,10.0.0.13,10.0.0.14"
+  },
+  "nfsExportPath": {
+    "value": "/msazure"
+  },
+  "nfsMountBaseDir": {
+    "value": "/nfs"
+  },
+  "bootstrapScriptPath": {
+    "value": "/bootstrap/bootstrap.vdbench.sh"
+  }
+}

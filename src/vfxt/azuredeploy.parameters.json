@@ -1,0 +1,27 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "controllerName": {
+      "value": "UNIQUE"
+    },
+    "controllerAdminUsername": {
+      "value": "azureuser"
+    },
+    "controllerSSHKeyData": {
+      "value": "SSHKEYData"
+    },
+    "createVirtualNetwork?": {
+      "value": true
+    },
+    "virtualNetworkResourceGroup": {
+      "value": "UNIQUE"
+    },
+    "virtualNetworkName": {
+      "value": "UNIQUE"
+    },
+    "virtualNetworkSubnetName": {
+      "value": "UNIQUE"
+    }
+  }
+}
