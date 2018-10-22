@@ -139,7 +139,7 @@
     "adminPassword": "[parameters('adminPassword')]",
     "nicName": "[concat('vmnic-',variables('controllerName'))]",
     "createVirtualNetwork?": "[parameters('createVirtualNetwork?')]",
-    "virtualNetworkResourceGroup": "[parameters('virtualNetworkResourceGroup')]",
+    "virtualNetworkResourceGroup": "[if(variables('createVirtualNetwork?'), resourceGroup().name, parameters('virtualNetworkResourceGroup'))]",
     "virtualNetworkName": "[parameters('virtualNetworkName')]",
     "virtualNetworkSubnetName": "[parameters('virtualNetworkSubnetName')]",
     "avereClusterRole": "[parameters('avereClusterRole')]",
