@@ -37,6 +37,7 @@
     },
     "virtualNetworkResourceGroup": {
       "type": "string",
+      "defaultValue": "",
       "minLength": 0,
       "metadata": {
         "description": "The resource group name for the VNET.  If createVirtualNetwork? is set to true, the current resource group must be specified, otherwise the value should be blank."
