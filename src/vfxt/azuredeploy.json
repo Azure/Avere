@@ -53,7 +53,7 @@
   },
   "variables": {
     "createVirtualNetwork?": "[parameters('createVirtualNetwork?')]",
-    "virtualNetworkResourceGroup": "[parameters('virtualNetworkResourceGroup')]",
+    "virtualNetworkResourceGroup": "[if(variables('createVirtualNetwork?'), resourceGroup().name, parameters('virtualNetworkResourceGroup'))]",
     "virtualNetworkName": "[parameters('virtualNetworkName')]",
     "virtualNetworkSubnetName": "[parameters('virtualNetworkSubnetName')]",
     "controllerName": "[parameters('controllerName')]",
