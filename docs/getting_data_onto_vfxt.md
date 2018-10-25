@@ -4,7 +4,6 @@ After you've created a new vFXT cluster, your first task might be to move data o
 
 *Because the Avere vFXT cluster is a scalable multiclient cache, the fastest and most efficient way to copy data to it is to **parallelize ingestion** of files and objects.*
 
-
 <p >
 <img src="images/parallel_ingestion.png">
 </p>
@@ -15,45 +14,7 @@ This section explains strategies for creating a multi-client, multithreaded file
 
 It also explains some utilities that can help. The ``msrsync`` utility can be used to partially automate the process of dividing a dataset into buckets and using rsync commands. The ``parallelcp`` script is another utility that reads the source directory and issues copy commands automatically.  
 
-To install a data ingestor VM with all of these parallel data ingestion tools installed, we will have the client VM pull and run the data ingestor install script from the Avere vFXT mount.  Before deploying the client VM, first setup the Avere vFXT with the install file:
-
-1. If you have not already done so, ssh to the controller, and mount to the Avere vFXT:
-
-    1. Run the following commands:
-        ```bash
-        sudo -s
-        apt-get update
-        apt-get install nfs-common
-        mkdir -p /nfs/node0
-        chown nobody:nogroup /nfs/node0
-        ```
-
-    2. Edit `/etc/fstab` to add the following lines but *using your vFXT node IP addresses*. Add more lines if your cluster has more than three nodes.
-        ```bash
-        10.0.0.12:/msazure	/nfs/node0	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
-        ```
-
-    3. To mount all shares, type `mount -a`
-
-2. On the controller, download the dataingestor bootstrap script:
-    ```bash
-    mkdir -p /nfs/node0/bootstrap
-    cd /nfs/node0/bootstrap
-    curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.dataingestor.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/dataingestor/bootstrap.dataingestor.sh
-    ```
-
-3. From your controller, verify your dataingestor setup by running the following verify script.  If the script shows success, you are ready to deploy.  Otherwise you will need to fix each error listed.
-
-    ```bash
-    curl -o- https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/dataingestor/dataingestorVerify.sh | bash
-    ```
-
-4. Deploy the clients by clicking the "Deploy to Azure" button below, but set the following settings:
-  * specify `/bootstrap/bootstrap.dataingestor.sh` for the bootstrap script
-
-    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclient%2Fvmas%2Fazuredeploy.json" target="_blank">
-    <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
-    </a>
+To install a data ingestor VM with all of these parallel data ingestion tools follow the [data ingestor tutorial](data_ingestor.md).
 
 Click the link to jump to a section:
 
