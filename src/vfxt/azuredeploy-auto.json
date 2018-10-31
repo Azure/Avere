@@ -127,7 +127,7 @@
       "defaultValue": "",
       "minLength": 0,
       "metadata": {
-        "description": "Additional parameters to provide to the vFXT.py script, ensure you do not use double quotes, use single quotes if necessary."
+        "description": "Additional parameters to provide to the vFXT.py script, ensure you do not use double quotes, use single quotes if necessary. E.g. nodes=6"
       }
     }
   },
