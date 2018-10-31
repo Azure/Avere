@@ -2,33 +2,7 @@
 
 # Avere vFXT  
 
-The Avere vFXT is an enterprise-scale clustered file system built for the cloud. It provides scalability, flexibility, and easy access to data stored in the cloud, in a datacenter, or both. High-performance computing workloads are supported with automatic hot data caching close to Azure Compute resources. 
-
-## Quickstart
-
-These quickstart steps walk you through creating a simple Avere vFXT cluster, setting up storage, and connecting clients.
-
-  1. [Prerequisites](docs/prereqs.md) - Preparation tasks before deploying the Avere vFXT for Azure
-  2. [Deploy](docs/jumpstart_deploy.md) - Create the vFXT cluster
-  3. [Access the cluster](docs/access_cluster.md) - Access the Avere Control Panel from an SSH tunnel
-  4. [Enable support](docs/enable_support.md) - Enable support for the cluster
-  5. [Configure storage](docs/configure_storage.md) - Add backend storage (core filer and namespace junction)
-  6. [Mount the Avere vFXT cluster](docs/mount_clients.md) - Configure load balancing and connect clients
-  
-## How-to guides
-
-These guides explain next steps for putting the vFXT cluster through its paces. 
-
-  * [Add data to the vFXT cluster](docs/getting_data_onto_vfxt.md) - Parallel copy strategies to efficiently load data onto cluster storage
-  * [Manage the cluster](docs/start_stop_vfxt-py.md) - How to stop, start, or decommission the cluster, and manage cluster nodes
-  * [Additional configuration and reference](docs/additional_config.md) - Additional cluster setup tasks and links to supplemental documentation 
-  * [Cluster performance tuning](docs/tuning.md) - Custom performance optimizations
-  * [Troubleshooting and getting support](docs/engage_support.md)
-
-## Concepts
-
-  * [Cloud bursting overview](/docs/cloud_bursting.md)
-  * [Cloud NAS overview](/docs/cloud_nas.md)
+The Avere vFXT is an enterprise-scale clustered file system built for the cloud. It provides scalability, flexibility, and easy access to data stored in the cloud, in a datacenter, or both. High-performance computing workloads are supported with automatic hot data caching close to Azure Compute resources.  To learn more please visit the [Avere vFXT documentation page](http://aka.ms/averedocs).
 
 ## Tutorials
 
