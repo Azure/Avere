@@ -65,7 +65,7 @@ az account set --subscription=$SUBSCRIPTION_ID
 az ad sp create-for-rbac --role="avere-create-cluster" --scopes="/subscriptions/$SUBSCRIPTION_ID"
 ```
 
-> Note: please make sure that the value for parameter --role is the same name you defined as name property used on step 3. This is the role definition name that you are assigning to the Service Principal, finally, save the output information because it will be required in the next step.
+> Note: please make sure that the value for parameter --role is the same name you defined as name property used on step 3. This is the role definition name that you are assigning to the Service Principal. Also, save the output information because it will be required in the next step.
 
 7. Deploy the script using the following "deploy to Azure" button:
 
