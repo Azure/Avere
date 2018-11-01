@@ -65,10 +65,17 @@ az account set --subscription=$SUBSCRIPTION_ID
 az ad sp create-for-rbac --role="avere-create-cluster" --scopes="/subscriptions/$SUBSCRIPTION_ID"
 ```
 
-> Note: please make sure that the value for parameter --role is the same name you defined as name property used on step 3. This is the role definition name that you are assigning to the Service Principal. Also, save the output information because it will be required in the next step.
+> Note: please make sure that the value for parameter --role is the same name you defined as name property used on step 3. This is the role definition name that you are assigning to the Service Principal.
+
+If you want to save the output information, because it is required in the next step in a file, you can use the following syntax instead:
+```bash
+az ad sp create-for-rbac --role="avere-cluster" --scopes="/subscriptions/$SUBSCRIPTION_ID" 2>&1 | tee ~/clouddrive/spinfo.json.
+```
 
 7. Deploy the script using the following "deploy to Azure" button:
 
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fvfxt%2Fazuredeploy-auto.json" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
+
+8. After your deployment completed, please check the template output for some important information like management ip address and vserver ip address range.
