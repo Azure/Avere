@@ -69,7 +69,7 @@
     "avereBackedStorageAccountName": {
       "type": "string",
       "metadata": {
-        "description": "A unique storage account to be created for backing the Avere vFXT.  If 'useAvereBackedStorageAccount?' is set to fault, this field is unused."
+        "description": "A unique storage account to be created for backing the Avere vFXT.  If 'useAvereBackedStorageAccount?' is set to false, this field is unused."
       }
     },
     "controllerName": {
@@ -127,7 +127,7 @@
       "defaultValue": "",
       "minLength": 0,
       "metadata": {
-        "description": "Additional parameters to provide to the vFXT.py script, ensure you do not use double quotes, use single quotes if necessary."
+        "description": "Additional parameters to provide to the vFXT.py script, ensure you do not use double quotes, use single quotes if necessary. E.g. --nodes 6"
       }
     }
   },
