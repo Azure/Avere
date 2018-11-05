@@ -1,4 +1,8 @@
-#!/bin/bash -x
+#!/bin/bash
+
+# report all lines, and exit on error
+set -e
+set -x
 
 ARM_TRUE="True"
 WAIT_SECONDS=600
@@ -20,7 +24,10 @@ function wait_azure_home_dir() {
 }
 
 function setup_az() {
+    # don't show the client secret
+    set +e
     az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+    set -e
 }
 
 function configure_vfxt_template() {
@@ -45,7 +52,7 @@ function configure_vfxt_template() {
 }
 
 function create_vfxt() {
-    cd AZURE_HOME_DIR
+    cd $AZURE_HOME_DIR
     $VFXT_INSTALL_TEMPLATE
 }
 
@@ -53,7 +60,8 @@ function dump_env_vars() {
     echo "start env dump"
     echo $(pwd)
     echo "export AZURE_CLIENT_ID=$AZURE_CLIENT_ID"
-    echo "export AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET"
+    # don't show the client secret, only uncomment if you are debugging
+    # echo "export AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET"
     echo "export AZURE_TENANT_ID=$AZURE_TENANT_ID"
     echo "export RESOURCE_GROUP=$RESOURCE_GROUP"
     echo "export LOCATION=$LOCATION"
