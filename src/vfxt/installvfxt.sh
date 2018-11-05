@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # report all lines, and exit on error
-set -e
 set -x
+set -e
 
 ARM_TRUE="True"
 WAIT_SECONDS=600
@@ -25,9 +25,9 @@ function wait_azure_home_dir() {
 
 function setup_az() {
     # don't show the client secret
-    set +e
+    set +x
     az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-    set -e
+    set -x
 }
 
 function configure_vfxt_template() {
