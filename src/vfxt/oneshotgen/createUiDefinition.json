@@ -299,7 +299,9 @@
         "createVirtualNetwork?": "[contains(steps('AvereVFXTConfiguration').virtualNetwork.newOrExisting, 'new')]",
         "virtualNetworkResourceGroup": "[steps('AvereVFXTConfiguration').virtualNetwork.resourceGroup]",
         "virtualNetworkName": "[steps('AvereVFXTConfiguration').virtualNetwork.name]",
-        "virtualNetworkSubnetName": "[steps('AvereVFXTConfiguration').virtualNetwork.subnets.subnet1.name]"
+        "virtualNetworkSubnetName": "[steps('AvereVFXTConfiguration').virtualNetwork.subnets.subnet1.name]",
+        "vnetAddressSpacePrefix": "[first(steps('AvereVFXTConfiguration').virtualNetwork.addressPrefixes)]",
+        "subnetAddressRangePrefix": "[steps('AvereVFXTConfiguration').virtualNetwork.subnets.subnet1.addressPrefix]"
       }
     }
   }
