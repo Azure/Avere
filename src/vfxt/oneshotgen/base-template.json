@@ -55,6 +55,20 @@
         "description": "The unique name used for the virtual network subnet.  If createVirtualNetwork? is set to true, you may reuse the unique name above."
       }
     },
+    "vnetAddressSpacePrefix":{
+      "type": "string",
+      "metadata": {
+        "description": "Virtual network address space prefix used when creating a virtual network with this deployment. E.g. 192.168.0.0/16"
+      },
+      "defaultValue": "10.0.0.0/16"
+    },
+    "subnetAddressRangePrefix":{
+      "type": "string",
+      "metadata": {
+        "description": "Subnet address range prefix used when creating a virtual network/subnet with this deployment. E.g. 192.168.0.0/24"
+      },
+      "defaultValue": "10.0.0.0/24"
+    },
     "useAvereBackedStorageAccount?": {
       "type": "bool",
       "defaultValue": true,
@@ -144,6 +158,8 @@
     "virtualNetworkResourceGroup": "[if(variables('createVirtualNetwork?'), resourceGroup().name, parameters('virtualNetworkResourceGroup'))]",
     "virtualNetworkName": "[parameters('virtualNetworkName')]",
     "virtualNetworkSubnetName": "[parameters('virtualNetworkSubnetName')]",
+    "addressPrefix": "[parameters('vnetAddressSpacePrefix')]",
+    "subnetPrefix": "[parameters('subnetAddressRangePrefix')]",
     "avereClusterRole": "[parameters('avereClusterRole')]",
     "useAvereBackedStorageAccount?": "[parameters('useAvereBackedStorageAccount?')]",
     "avereBackedStorageAccountName": "[parameters('avereBackedStorageAccountName')]",
@@ -152,8 +168,6 @@
     "additionalVFXTParameters": "[parameters('additionalVFXTParameters')]",
     "controllerVMSize": "Standard_A1_v2",
     "avereCacheSizeGB": "[if(equals('Standard_D16s_v3',variables('avereInstanceType')),1024,4096)]",
-    "addressPrefix": "10.0.0.0/16",
-    "subnetPrefix": "10.0.0.0/20",
     "publicIPAddressName": "[concat('publicip-',variables('controllerName'))]",
     "networkSecurityGroupName": "[concat('nsg-',variables('controllerName'))]",
     "vnetID": "[resourceId(variables('virtualNetworkResourceGroup'),'Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
