@@ -111,7 +111,8 @@ if __name__ == "__main__":
     VDBENCH_INSTALL_SCRIPT = "installvfxt.sh"
     
     # Output ARM Template Files.  WIll Also Output name.parameters.json for each
-    ARM_OUTPUT_TEMPLATE                                   = "azuredeploy.json"
+    ARM_OUTPUT_TEMPLATE                                   = "MainTemplate.json"
+    MARKETPLACE_UI_DEFINITION                             = "createUiDefinition.json"
     ARM_OUTPUT_TEMPLATE_FINAL                             = "../azuredeploy-auto.json"
     
     # build the ARM template for jumpboxless
@@ -124,7 +125,8 @@ if __name__ == "__main__":
     MARKETPLACE_ZIP                                   = "marketplace.zip"
     zipf = zipfile.ZipFile(MARKETPLACE_ZIP, 'w', zipfile.ZIP_DEFLATED)
     zipf.write(ARM_OUTPUT_TEMPLATE)
+    zipf.write(MARKETPLACE_UI_DEFINITION)
     zipf.close()
 
-    shutil.copyfile(ARM_OUTPUT_TEMPLATE, ARM_OUTPUT_TEMPLATE_FINAL)
+    shutil.move(ARM_OUTPUT_TEMPLATE, ARM_OUTPUT_TEMPLATE_FINAL)
     

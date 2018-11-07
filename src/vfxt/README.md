@@ -8,7 +8,11 @@ This template implements [Deploy](../../docs/jumpstart_deploy.md).
 
 # Experimental: Avere vFXT controller and vFXT - ARM template deployment
 
-An experimental template to deploy everything in one deployment is listed below.  To create, you will need to create a scoped role, and then a service principal using that role.  Here are the instructions:
+An experimental template to deploy everything in one deployment is listed below.  To create, you will need to create a scoped role, and then a service principal using that role.
+
+The construction of this template and packaging for marketplace can be found in the [oneshotgen](./oneshotgen) directory.
+
+Here are the instructions:
 
 1. Open the cloud shell in the Azure portal or browse to https://shell.azure.com.
 
