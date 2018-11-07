@@ -111,7 +111,7 @@ if __name__ == "__main__":
     VDBENCH_INSTALL_SCRIPT = "installvfxt.sh"
     
     # Output ARM Template Files.  WIll Also Output name.parameters.json for each
-    ARM_OUTPUT_TEMPLATE                                   = "MainTemplate.json"
+    ARM_OUTPUT_TEMPLATE                                   = "mainTemplate.json"
     MARKETPLACE_UI_DEFINITION                             = "createUiDefinition.json"
     ARM_OUTPUT_TEMPLATE_FINAL                             = "../azuredeploy-auto.json"
     
