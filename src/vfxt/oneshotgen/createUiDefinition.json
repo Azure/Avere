@@ -1,0 +1,305 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+    "handler": "Microsoft.Compute.MultiVm",
+    "version": "0.1.2-preview",
+    "parameters": {
+      "basics": [
+        {
+          "name": "controllerName",
+          "type": "Microsoft.Common.TextBox",
+          "label": "Controller name",
+          "toolTip": "The unique name used for resource names associated with the controller.",
+          "constraints": {
+            "required": true,
+            "regex": "^[a-z][a-z0-9]{0,19}$",
+            "validationMessage": "Only lowercase alphanumeric characters are allowed, and the value must be 1-20 characters long."
+          },
+          "visible": true
+        },
+        {
+          "name": "controllerAdminUsername",
+          "type": "Microsoft.Compute.UserNameTextBox",
+          "label": "Controller username",
+          "defaultValue": "azureuser",
+          "toolTip": "Administrative username for the Avere vFXT controller.",
+          "osPlatform": "Linux",
+          "constraints": {
+            "required": true,
+            "regex": "^[a-z][-a-z0-9]*$"
+          }
+        },
+        {
+          "name": "controllerSSHKeyData",
+          "type": "Microsoft.Compute.CredentialsCombo",
+          "label": {
+            "authenticationType": "Authentication type",
+            "sshPublicKey": "Public SSH key"
+          },
+          "constraints": {
+            "required": true
+          },
+          "options": {
+            "hidePassword": true
+          },
+          "osPlatform": "Linux"
+        }
+      ],
+      "steps": [
+        {
+          "name": "ControllerAuth",
+          "label": "Controller CLI Authentication",
+          "subLabel": {
+            "preValidation": "Set the service principal for the controller auth",
+            "postValidation": "Done"
+          },
+          "bladeTitle": "Controller CLI Authentication",
+          "elements": [
+            {
+                "name": "text1",
+                "type": "Microsoft.Common.TextBlock",
+                "visible": true,
+                "options": {
+                  "text": "The service principal is used by the controller to login to the az cli and enable running of vfxt.py.  The service principal is not used for the running Avere vFXT cluster.",
+                  "link": {
+                    "label": "Learn more",
+                    "uri": "https://github.com/Azure/Avere/tree/master/src/vfxt#experimental-avere-vfxt-controller-and-vfxt---arm-template-deployment"
+                  }
+                }
+            },
+            {
+              "name": "servicePrincipalTenant",
+              "type": "Microsoft.Common.TextBox",
+              "label": "Directory ID (tenant)",
+              "toolTip": "Directory ID (tenant) of the Azure Active Directory used by the az cli to deploy vFXT installation.",
+              "constraints": {
+                "required": true,
+                "regex": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+                "validationMessage": "Only valid GUIDs will be allowed for the tenant (Directory ID)."
+              },
+              "visible": true
+            },
+            {
+              "name": "servicePrincipalAppId",
+              "type": "Microsoft.Common.TextBox",
+              "label": "Application client ID (appid)",
+              "toolTip": "Azure Active Directory Application client ID (appid) used by the az cli to deploy vFXT installation.",
+              "constraints": {
+                "required": true,
+                "regex": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+                "validationMessage": "Only valid GUIDs will be allowed for the tenant (Directory ID)."
+              },
+              "visible": true
+            },
+            {
+              "name": "servicePrincipalPassword",
+              "type": "Microsoft.Common.PasswordBox",
+              "label": {
+                "password": "Password",
+                "confirmPassword": "Confirm password"
+              },
+              "toolTip": "Azure Active Directory Application client ID password used by the az cli to deploy vFXT installation.",
+              "constraints": {
+                "required": true
+              },
+              "options": {
+                "hideConfirmation": false
+              },
+              "visible": true
+            }
+          ]
+        },
+        {
+          "name": "AvereVFXTConfiguration",
+          "label": "Avere vFXT Configuration",
+          "subLabel": {
+            "preValidation": "Configure the Avere vFXT",
+            "postValidation": "Done"
+          },
+          "bladeTitle": "Avere vFXT Configuration",
+          "elements": [
+            {
+              "name": "adminPassword",
+              "type": "Microsoft.Common.PasswordBox",
+              "label": {
+                "password": "vFXT Node Password",
+                "confirmPassword": "Confirm password"
+              },
+              "toolTip": "The admin password used for the Avere vFXT cluster.",
+              "constraints": {
+                "required": true
+              },
+              "options": {
+                "hideConfirmation": false
+              },
+              "visible": true
+            },
+            {
+              "name": "text1",
+              "type": "Microsoft.Common.TextBlock",
+              "visible": true,
+              "options": {
+                "text": "Please provide the role name for the Avere vFXT.",
+                "link": {
+                  "label": "Learn more",
+                  "uri": "https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-pre-role"
+                }
+              }
+            },
+            {
+              "name": "avereClusterRole",
+              "type": "Microsoft.Common.TextBox",
+              "label": "Avere cluster access role",
+              "defaultValue": "avere-cluster",
+              "toolTip": "The unique name used for the AAD role.",
+              "constraints": {
+                "required": true
+              },
+              "visible": true
+            },
+            {
+              "name": "avereClusterName",
+              "type": "Microsoft.Common.TextBox",
+              "label": "Avere cluster name",
+              "toolTip": "The cluster name should be unique within the resource group.",
+              "constraints": {
+                "required": true,
+                "regex": "^[a-z]([-a-z0-9]*[a-z0-9]){0,127}$",
+                "validationMessage": "cluster name must be < 128 > 1 and match this regular expression: ^[a-z]([-a-z0-9]*[a-z0-9])?$"
+              },
+              "visible": true
+            },
+            {
+              "name": "avereInstanceType",
+              "type": "Microsoft.Compute.SizeSelector",
+              "label": "Size",
+              "toolTip": "The SKU for the Avere vFXT VM.",
+              "recommendedSizes": [
+                "Standard_D16s_v3",
+                "Standard_E32s_v3"
+              ],
+              "constraints": {
+                "allowedSizes": [
+                  "Standard_D16s_v3",
+                  "Standard_E32s_v3"
+                ]
+              },
+              "options": {
+                "hideDiskTypeFilter": true
+              },
+              "osPlatform": "Linux",
+              "imageReference": {
+                "publisher": "microsoft-avere",
+                "offer": "vfxt",
+                "sku": "avere-vfxt-controller"
+              },
+              "count": 3,
+              "visible": true
+            },
+            {
+              "name": "additionalVFXTParameters",
+              "type": "Microsoft.Common.TextBox",
+              "label": "Additional vFXT Parameters",
+              "toolTip": "Additional parameters to provide to the vFXT.py script, ensure you do not use double quotes, use single quotes if necessary. E.g. --nodes 6",
+              "constraints": {
+                "required": false
+              },
+              "visible": true
+            },
+            {
+              "name": "useAvereBackedStorageAccount",
+              "type": "Microsoft.Common.DropDown",
+              "label": "Use Avere Backed Storage Account",
+              "defaultValue": "true",
+              "toolTip": "If true, create the storage account and use that for the backing storage account.  If false, the minimal Avere vFXT cluster will be created.",
+              "constraints": {
+                "allowedValues": [
+                  {
+                    "label": "true",
+                    "value": "true"
+                  },
+                  {
+                    "label": "false",
+                    "value": "false"
+                  }
+                ],
+                "required": true
+              },
+              "visible": true
+            },
+            {
+              "name": "avereBackedStorageAccountName",
+              "type": "Microsoft.Storage.StorageAccountSelector",
+              "label": "Storage account",
+              "toolTip": "A unique storage account to be created for backing the Avere vFXT.  If 'useAvereBackedStorageAccount?' is set to false, this field is unused.",
+              "defaultValue": {
+                "type": "Standard_LRS"
+              },
+              "constraints": {
+                "allowedTypes": [
+                    "Standard_LRS"
+                ]
+              },
+              "options": {
+                "hideExisting": true
+              },
+              "visible": "[contains(steps('AvereVFXTConfiguration').useAvereBackedStorageAccount, 'true')]"
+            },
+            {
+              "name": "virtualNetwork",
+              "type": "Microsoft.Network.VirtualNetworkCombo",
+              "label": {
+                "virtualNetwork": "Virtual network",
+                "subnets": "Subnets"
+              },
+              "toolTip": {
+                "virtualNetwork": "Name of the virtual network",
+                "subnets": "Subnets for the virtual network"
+              },
+              "defaultValue": {
+                "name": "VirtualNetwork",
+                "addressPrefixSize": "/16"
+              },
+              "constraints": {
+                "minAddressPrefixSize": "/24"
+              },
+              "subnets": {
+                "subnet1": {
+                  "label": "Subnet",
+                  "defaultValue": {
+                    "name": "Subnet-1",
+                    "addressPrefixSize": "/24"
+                  },
+                  "constraints": {
+                    "minAddressPrefixSize": "/28",
+                    "minAddressCount": 12,
+                    "requireContiguousAddresses": true
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "outputs": {
+        "controllerName": "[basics('controllerName')]",
+        "controllerAdminUsername": "[basics('controllerAdminUsername')]",
+        "controllerSSHKeyData": "[basics('controllerSSHKeyData').sshPublicKey]",
+        
+        "servicePrincipalTenant": "[steps('ControllerAuth').servicePrincipalTenant]",
+        "servicePrincipalAppId": "[steps('ControllerAuth').servicePrincipalAppId]",
+        "servicePrincipalPassword": "[steps('ControllerAuth').servicePrincipalPassword]",
+        
+        "adminPassword": "[steps('AvereVFXTConfiguration').adminPassword]",
+        "avereClusterRole": "[steps('AvereVFXTConfiguration').avereClusterRole]",
+        "avereClusterName": "[steps('AvereVFXTConfiguration').avereClusterName]",
+        "avereInstanceType": "[steps('AvereVFXTConfiguration').avereInstanceType]",
+        "additionalVFXTParameters": "[steps('AvereVFXTConfiguration').additionalVFXTParameters]",
+        "useAvereBackedStorageAccount?": "[contains(steps('AvereVFXTConfiguration').useAvereBackedStorageAccount, 'true')]",
+        "avereBackedStorageAccountName": "[coalesce(steps('AvereVFXTConfiguration').avereBackedStorageAccountName.name,'nostorage')]",
+        "createVirtualNetwork?": "[contains(steps('AvereVFXTConfiguration').virtualNetwork.newOrExisting, 'new')]",
+        "virtualNetworkResourceGroup": "[steps('AvereVFXTConfiguration').virtualNetwork.resourceGroup]",
+        "virtualNetworkName": "[steps('AvereVFXTConfiguration').virtualNetwork.name]",
+        "virtualNetworkSubnetName": "[steps('AvereVFXTConfiguration').virtualNetwork.subnets.subnet1.name]"
+      }
+    }
+  }

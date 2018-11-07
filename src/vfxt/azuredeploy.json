@@ -238,7 +238,7 @@
     },
     "NETWORK_RESOURCE_GROUP": {
       "type": "string",
-      "value": "[variables('virtualNetworkResourceGroup')]"
+      "value": "[if(variables('createVirtualNetwork?'), '', variables('virtualNetworkResourceGroup'))]"
     },
     "NETWORK": {
       "type": "string",
