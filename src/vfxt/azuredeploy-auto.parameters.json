@@ -14,7 +14,7 @@
     "adminPassword": {
       "value": "PASSWORD"
     },
-    "createVirtualNetwork?": {
+    "createVirtualNetwork": {
       "value": true
     },
     "virtualNetworkResourceGroup": {
@@ -41,7 +41,7 @@
     "servicePrincipalPassword": {
       "value": "PASSWORD"
     },
-    "useAvereBackedStorageAccount?": {
+    "useAvereBackedStorageAccount": {
       "value": true
     },
     "avereBackedStorageAccountName": {

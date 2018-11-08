@@ -2,7 +2,7 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "createVirtualNetwork?": {
+    "createVirtualNetwork": {
       "type": "bool",
       "defaultValue": true,
       "allowedValues": [
@@ -18,19 +18,19 @@
       "defaultValue": "",
       "minLength": 0,
       "metadata": {
-        "description": "The resource group name for the VNET.  If createVirtualNetwork? is set to true, the current resource group must be specified, otherwise the value should be blank."
+        "description": "The resource group name for the VNET.  If createVirtualNetwork is set to true, the current resource group must be specified, otherwise the value should be blank."
       }
     },
     "virtualNetworkName": {
       "type": "string",
       "metadata": {
-        "description": "The name used for the virtual network.  If createVirtualNetwork? is set to true, you may reuse the unique name above."
+        "description": "The name used for the virtual network.  If createVirtualNetwork is set to true, you may reuse the unique name above."
       }
     },
     "virtualNetworkSubnetName": {
       "type": "string",
       "metadata": {
-        "description": "The unique name used for the virtual network subnet.  If createVirtualNetwork? is set to true, you may reuse the unique name above."
+        "description": "The unique name used for the virtual network subnet.  If createVirtualNetwork is set to true, you may reuse the unique name above."
       }
     },
     "controllerName": {
@@ -54,8 +54,8 @@
     }
   },
   "variables": {
-    "createVirtualNetwork?": "[parameters('createVirtualNetwork?')]",
-    "virtualNetworkResourceGroup": "[if(variables('createVirtualNetwork?'), resourceGroup().name, parameters('virtualNetworkResourceGroup'))]",
+    "createVirtualNetwork": "[parameters('createVirtualNetwork')]",
+    "virtualNetworkResourceGroup": "[if(variables('createVirtualNetwork'), resourceGroup().name, parameters('virtualNetworkResourceGroup'))]",
     "virtualNetworkName": "[parameters('virtualNetworkName')]",
     "virtualNetworkSubnetName": "[parameters('virtualNetworkSubnetName')]",
     "controllerName": "[parameters('controllerName')]",
@@ -91,7 +91,7 @@
       }
     },
     {
-      "condition": "[variables('createVirtualNetwork?')]",
+      "condition": "[variables('createVirtualNetwork')]",
       "apiVersion": "2017-10-01",
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[variables('publicIPAddressName')]",
@@ -124,7 +124,7 @@
       }
     },
     {
-      "condition": "[variables('createVirtualNetwork?')]",
+      "condition": "[variables('createVirtualNetwork')]",
       "apiVersion": "2017-10-01",
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('virtualNetworkName')]",
@@ -161,7 +161,7 @@
             "name": "ipconfig",
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": "[if(variables('createVirtualNetwork?'), variables('pipObject'), json('null'))]",
+              "publicIPAddress": "[if(variables('createVirtualNetwork'), variables('pipObject'), json('null'))]",
               "subnet": {
                 "id": "[variables('subnetId')]"
               }
@@ -226,7 +226,7 @@
   "outputs": {
     "SSH_STRING": {
       "type": "string",
-      "value": "[if(variables('createVirtualNetwork?'), concat(variables('controllerAdminUsername'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress), concat(variables('controllerAdminUsername'), '@', reference(resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))).ipConfigurations[0].properties.privateIPAddress))]"
+      "value": "[if(variables('createVirtualNetwork'), concat(variables('controllerAdminUsername'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress), concat(variables('controllerAdminUsername'), '@', reference(resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))).ipConfigurations[0].properties.privateIPAddress))]"
     },
     "RESOURCE_GROUP": {
       "type": "string",
@@ -238,7 +238,7 @@
     },
     "NETWORK_RESOURCE_GROUP": {
       "type": "string",
-      "value": "[if(variables('createVirtualNetwork?'), '', variables('virtualNetworkResourceGroup'))]"
+      "value": "[if(variables('createVirtualNetwork'), '', variables('virtualNetworkResourceGroup'))]"
     },
     "NETWORK": {
       "type": "string",

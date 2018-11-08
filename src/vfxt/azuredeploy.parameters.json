@@ -11,7 +11,7 @@
     "controllerSSHKeyData": {
       "value": "SSHKEYData"
     },
-    "createVirtualNetwork?": {
+    "createVirtualNetwork": {
       "value": true
     },
     "virtualNetworkResourceGroup": {
