@@ -71,8 +71,7 @@ az ad sp create-for-rbac --role="avere-create-cluster" --scopes="/subscriptions/
 
 > Note: please make sure that the value for parameter --role is the same name you defined as name property used on step 3. This is the role definition name that you are assigning to the Service Principal.
 
-If you already have a service principal to be used with password credential please use the steps outlined [here](./recover_sp_information.md) to recover the necessary information.
-
+If you already have a service principal to be used with password credential or missed the output with necessary information created in this step, please use the steps outlined [here](./recover_sp_information.md) to recover the information and add a new password.
 
 1. Deploy the script using the following "deploy to Azure" button:
 
