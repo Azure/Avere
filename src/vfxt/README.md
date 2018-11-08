@@ -71,12 +71,10 @@ az ad sp create-for-rbac --role="avere-create-cluster" --scopes="/subscriptions/
 
 > Note: please make sure that the value for parameter --role is the same name you defined as name property used on step 3. This is the role definition name that you are assigning to the Service Principal.
 
-If you want to save the output information, because it is required in the next step in a file, you can use the following syntax instead:
-```bash
-az ad sp create-for-rbac --role="avere-cluster" --scopes="/subscriptions/$SUBSCRIPTION_ID" 2>&1 | tee ~/clouddrive/spinfo.json.
-```
+If you already have a service principal to be used with password credential please use the steps outlined [here](./recover_sp_information.md) to recover the necessary information.
 
-7. Deploy the script using the following "deploy to Azure" button:
+
+1. Deploy the script using the following "deploy to Azure" button:
 
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fvfxt%2Fazuredeploy-auto.json" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
