@@ -24,7 +24,6 @@ Here are the instructions:
 /bin/cat <<EOM >avere-create-cluster.json
 {
     "AssignableScopes": [
-        "// PLACE YOUR SUBSCRIPTION IN THE BELOW LINE AND DELETE THIS LINE",
         "/subscriptions/<subscription here>"
     ],
     "Name": "avere-create-cluster",
