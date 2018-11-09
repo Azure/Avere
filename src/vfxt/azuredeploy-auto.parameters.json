@@ -14,7 +14,7 @@
     "adminPassword": {
       "value": "PASSWORD"
     },
-    "createVirtualNetwork?": {
+    "createVirtualNetwork": {
       "value": true
     },
     "virtualNetworkResourceGroup": {
@@ -26,6 +26,12 @@
     "virtualNetworkSubnetName": {
       "value": "UNIQUE"
     },
+    "vnetAddressSpacePrefix":{
+      "value": "10.0.0.0/16"
+    },
+    "subnetAddressRangePrefix":{
+      "value": "10.0.0.0/24"
+    },
     "servicePrincipalTenant": {
       "value": "TENANT"
     },
@@ -35,7 +41,7 @@
     "servicePrincipalPassword": {
       "value": "PASSWORD"
     },
-    "useAvereBackedStorageAccount?": {
+    "useAvereBackedStorageAccount": {
       "value": true
     },
     "avereBackedStorageAccountName": {

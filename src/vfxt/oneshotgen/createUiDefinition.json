@@ -230,7 +230,7 @@
               "name": "avereBackedStorageAccountName",
               "type": "Microsoft.Storage.StorageAccountSelector",
               "label": "Storage account",
-              "toolTip": "A unique storage account to be created for backing the Avere vFXT.  If 'useAvereBackedStorageAccount?' is set to false, this field is unused.",
+              "toolTip": "A unique storage account to be created for backing the Avere vFXT.  If 'useAvereBackedStorageAccount' is set to false, this field is unused.",
               "defaultValue": {
                 "type": "Standard_LRS"
               },
@@ -294,9 +294,9 @@
         "avereClusterName": "[steps('AvereVFXTConfiguration').avereClusterName]",
         "avereInstanceType": "[steps('AvereVFXTConfiguration').avereInstanceType]",
         "additionalVFXTParameters": "[steps('AvereVFXTConfiguration').additionalVFXTParameters]",
-        "useAvereBackedStorageAccount?": "[contains(steps('AvereVFXTConfiguration').useAvereBackedStorageAccount, 'true')]",
+        "useAvereBackedStorageAccount": "[contains(steps('AvereVFXTConfiguration').useAvereBackedStorageAccount, 'true')]",
         "avereBackedStorageAccountName": "[coalesce(steps('AvereVFXTConfiguration').avereBackedStorageAccountName.name,'nostorage')]",
-        "createVirtualNetwork?": "[contains(steps('AvereVFXTConfiguration').virtualNetwork.newOrExisting, 'new')]",
+        "createVirtualNetwork": "[contains(steps('AvereVFXTConfiguration').virtualNetwork.newOrExisting, 'new')]",
         "virtualNetworkResourceGroup": "[steps('AvereVFXTConfiguration').virtualNetwork.resourceGroup]",
         "virtualNetworkName": "[steps('AvereVFXTConfiguration').virtualNetwork.name]",
         "virtualNetworkSubnetName": "[steps('AvereVFXTConfiguration').virtualNetwork.subnets.subnet1.name]",

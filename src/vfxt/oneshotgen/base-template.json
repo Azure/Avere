@@ -24,7 +24,7 @@
         "description": "Azure Active Directory Application client ID password used by the az cli to deploy vFXT installation."
       }
     },
-    "createVirtualNetwork?": {
+    "createVirtualNetwork": {
       "type": "bool",
       "defaultValue": true,
       "allowedValues": [
@@ -40,19 +40,19 @@
       "defaultValue": "",
       "minLength": 0,
       "metadata": {
-        "description": "The resource group name for the VNET.  If createVirtualNetwork? is set to true, the current resource group must be specified, otherwise the value should be blank."
+        "description": "The resource group name for the VNET.  If createVirtualNetwork is set to true, the current resource group must be specified, otherwise the value should be blank."
       }
     },
     "virtualNetworkName": {
       "type": "string",
       "metadata": {
-        "description": "The name used for the virtual network.  If createVirtualNetwork? is set to true, you may reuse the unique name above."
+        "description": "The name used for the virtual network.  If createVirtualNetwork is set to true, you may reuse the unique name above."
       }
     },
     "virtualNetworkSubnetName": {
       "type": "string",
       "metadata": {
-        "description": "The unique name used for the virtual network subnet.  If createVirtualNetwork? is set to true, you may reuse the unique name above."
+        "description": "The unique name used for the virtual network subnet.  If createVirtualNetwork is set to true, you may reuse the unique name above."
       }
     },
     "vnetAddressSpacePrefix":{
@@ -69,7 +69,7 @@
       },
       "defaultValue": "10.0.0.0/24"
     },
-    "useAvereBackedStorageAccount?": {
+    "useAvereBackedStorageAccount": {
       "type": "bool",
       "defaultValue": true,
       "allowedValues": [
@@ -83,7 +83,7 @@
     "avereBackedStorageAccountName": {
       "type": "string",
       "metadata": {
-        "description": "A unique storage account to be created for backing the Avere vFXT.  If 'useAvereBackedStorageAccount?' is set to false, this field is unused."
+        "description": "A unique storage account to be created for backing the Avere vFXT.  If 'useAvereBackedStorageAccount' is set to false, this field is unused."
       }
     },
     "controllerName": {
@@ -154,14 +154,14 @@
     "controllerSSHKeyData": "[parameters('controllerSSHKeyData')]",
     "adminPassword": "[parameters('adminPassword')]",
     "nicName": "[concat('vmnic-',variables('controllerName'))]",
-    "createVirtualNetwork?": "[parameters('createVirtualNetwork?')]",
-    "virtualNetworkResourceGroup": "[if(variables('createVirtualNetwork?'), resourceGroup().name, parameters('virtualNetworkResourceGroup'))]",
+    "createVirtualNetwork": "[parameters('createVirtualNetwork')]",
+    "virtualNetworkResourceGroup": "[if(variables('createVirtualNetwork'), resourceGroup().name, parameters('virtualNetworkResourceGroup'))]",
     "virtualNetworkName": "[parameters('virtualNetworkName')]",
     "virtualNetworkSubnetName": "[parameters('virtualNetworkSubnetName')]",
     "addressPrefix": "[parameters('vnetAddressSpacePrefix')]",
     "subnetPrefix": "[parameters('subnetAddressRangePrefix')]",
     "avereClusterRole": "[parameters('avereClusterRole')]",
-    "useAvereBackedStorageAccount?": "[parameters('useAvereBackedStorageAccount?')]",
+    "useAvereBackedStorageAccount": "[parameters('useAvereBackedStorageAccount')]",
     "avereBackedStorageAccountName": "[parameters('avereBackedStorageAccountName')]",
     "avereClusterName": "[parameters('avereClusterName')]",
     "avereInstanceType": "[parameters('avereInstanceType')]",
@@ -179,7 +179,7 @@
     "createNic?": true,
     "storageAccountType": "Standard_LRS",
     "storageAccountKind": "StorageV2",
-    "environmentVariables": "[concat(' AZURE_TENANT_ID=', variables('servicePrincipalTenant'),' AZURE_CLIENT_ID=', variables('servicePrincipalAppId'),' RESOURCE_GROUP=', resourceGroup().name,' LOCATION=', resourceGroup().location,' NETWORK_RESOURCE_GROUP=', variables('virtualNetworkResourceGroup'),' NETWORK=', variables('virtualNetworkName'),' SUBNET=', variables('virtualNetworkSubnetName'),' AVERE_CLUSTER_ROLE=', variables('avereClusterRole'),' CREATE_CLOUD_BACKED_CLUSTER=', variables('useAvereBackedStorageAccount?'),' STORAGE_ACCOUNT=', variables('avereBackedStorageAccountName'),' CACHE_SIZE=', variables('avereCacheSizeGB'),' CLUSTER_NAME=', variables('avereClusterName'),' INSTANCE_TYPE=', variables('avereInstanceType'),' CONTROLLER_ADMIN_USER_NAME=',variables('controllerAdminUsername'),' DEBUG=\"',variables('additionalVFXTParameters'),'\"')]",
+    "environmentVariables": "[concat(' AZURE_TENANT_ID=', variables('servicePrincipalTenant'),' AZURE_CLIENT_ID=', variables('servicePrincipalAppId'),' RESOURCE_GROUP=', resourceGroup().name,' LOCATION=', resourceGroup().location,' NETWORK_RESOURCE_GROUP=', variables('virtualNetworkResourceGroup'),' NETWORK=', variables('virtualNetworkName'),' SUBNET=', variables('virtualNetworkSubnetName'),' AVERE_CLUSTER_ROLE=', variables('avereClusterRole'),' CREATE_CLOUD_BACKED_CLUSTER=', variables('useAvereBackedStorageAccount'),' STORAGE_ACCOUNT=', variables('avereBackedStorageAccountName'),' CACHE_SIZE=', variables('avereCacheSizeGB'),' CLUSTER_NAME=', variables('avereClusterName'),' INSTANCE_TYPE=', variables('avereInstanceType'),' CONTROLLER_ADMIN_USER_NAME=',variables('controllerAdminUsername'),' DEBUG=\"',variables('additionalVFXTParameters'),'\"')]",
     "sshKeyPath": "[concat('/home/',variables('controllerAdminUsername'),'/.ssh/authorized_keys')]",
     "vs": "Creating vserver vserver (",
     "ve": "/255.255.255.255",
@@ -201,7 +201,7 @@
       }
     },
     {
-      "condition": "[variables('createVirtualNetwork?')]",
+      "condition": "[variables('createVirtualNetwork')]",
       "apiVersion": "2017-10-01",
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[variables('publicIPAddressName')]",
@@ -211,7 +211,7 @@
       }
     },
     {
-      "condition": "[variables('createVirtualNetwork?')]",
+      "condition": "[variables('createVirtualNetwork')]",
       "apiVersion": "2017-10-01",
       "type": "Microsoft.Network/networkSecurityGroups",
       "name": "[variables('networkSecurityGroupName')]",
@@ -235,7 +235,7 @@
       }
     },
     {
-      "condition": "[variables('createVirtualNetwork?')]",
+      "condition": "[variables('createVirtualNetwork')]",
       "apiVersion": "2017-10-01",
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('virtualNetworkName')]",
@@ -273,7 +273,7 @@
             "name": "ipconfig",
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": "[if(variables('createVirtualNetwork?'), variables('pipObject'), json('null'))]",
+              "publicIPAddress": "[if(variables('createVirtualNetwork'), variables('pipObject'), json('null'))]",
               "subnet": {
                 "id": "[variables('subnetId')]"
               }
@@ -354,7 +354,7 @@
       }
     },
     {
-      "condition": "[variables('useAvereBackedStorageAccount?')]",
+      "condition": "[variables('useAvereBackedStorageAccount')]",
       "name": "[variables('avereBackedStorageAccountName')]",
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2017-10-01",
@@ -368,7 +368,7 @@
   "outputs": {
     "SSH_STRING": {
       "type": "string",
-      "value": "[if(variables('createVirtualNetwork?'), concat(variables('controllerAdminUsername'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress), concat(variables('controllerAdminUsername'), '@', reference(resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))).ipConfigurations[0].properties.privateIPAddress))]"
+      "value": "[if(variables('createVirtualNetwork'), concat(variables('controllerAdminUsername'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress), concat(variables('controllerAdminUsername'), '@', reference(resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))).ipConfigurations[0].properties.privateIPAddress))]"
     },
     "RESOURCE_GROUP": {
       "type": "string",
