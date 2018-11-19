@@ -82,6 +82,9 @@ function main() {
     echo "wait azure home dir"
     wait_azure_home_dir
 
+    #echo "dump env vars for debugging"
+    #dump_env_vars
+
     echo "setup az"
     setup_az
 
@@ -91,9 +94,6 @@ function main() {
     echo "create_vfxt"
     create_vfxt
 
-    #echo "dump env vars for debugging"
-    #dump_env_vars
-    
     echo "installation complete"
 }
 
