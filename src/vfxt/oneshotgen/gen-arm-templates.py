@@ -1,13 +1,14 @@
 #!/usr/bin/python
+import argparse
 import base64
-import os
 import gzip
+import json
+import os
+import shutil
+import subprocess
 import StringIO
 import sys
-import shutil
-import json
-import argparse
-import zipfile
+
 
 def buildb64GzipStringFromFile(file):
     # read the script file
@@ -103,7 +104,7 @@ if __name__ == "__main__":
         os.mkdir(args.output_directory)
 
     # Input Arm Template Artifacts to be processed in
-    # Note:  These files are not useable ARM templates on thier own or valid JSON
+    # Note:  These files are not useable ARM templates on their own or valid JSON
     # They require processing by this script.
     ARM_INPUT_TEMPLATE_TEMPLATE                  = "base-template.json"
     
@@ -123,10 +124,13 @@ if __name__ == "__main__":
         armTemplate.write(clusterTemplate)
 
     MARKETPLACE_ZIP                                   = "marketplace.zip"
-    zipf = zipfile.ZipFile(MARKETPLACE_ZIP, 'w', zipfile.ZIP_DEFLATED)
-    zipf.write(ARM_OUTPUT_TEMPLATE)
-    zipf.write(MARKETPLACE_UI_DEFINITION)
-    zipf.close()
+
+    # zipfile format is not compatible with Azure Marketplace so break out to powershell
+    subprocess.call(["C:\\WINDOWS\\system32\\WindowsPowerShell\\v1.0\\powershell.exe", "-Command", "Compress-Archive -Path %s, %s -Force -DestinationPath %s" % (ARM_OUTPUT_TEMPLATE, MARKETPLACE_UI_DEFINITION, MARKETPLACE_ZIP)])
+    #    zipf = zipfile.ZipFile(MARKETPLACE_ZIP, 'w', zipfile.ZIP_DEFLATED)
+    #    zipf.write(ARM_OUTPUT_TEMPLATE)
+    #    zipf.write(MARKETPLACE_UI_DEFINITION)
+    #    zipf.close()
 
     shutil.move(ARM_OUTPUT_TEMPLATE, ARM_OUTPUT_TEMPLATE_FINAL)
     
