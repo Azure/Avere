@@ -1,3 +1,5 @@
+[![Build Status](https://dev.azure.com/averevfxt/nov20-testdep/_apis/build/status/Azure.Avere)](https://dev.azure.com/averevfxt/nov20-testdep/_build/latest?definitionId=1)
+
 # Avere vFXT cluster controller node - ARM template deployment
 
 This template implements [Deploy](../../docs/jumpstart_deploy.md).
