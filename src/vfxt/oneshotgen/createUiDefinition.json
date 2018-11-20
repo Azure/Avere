@@ -118,6 +118,59 @@
           "bladeTitle": "Avere vFXT Configuration",
           "elements": [
             {
+              "name": "avereNodeCount",
+              "type": "Microsoft.Common.DropDown",
+              "label": "Avere vFXT Node Count",
+              "defaultValue": "3 nodes",
+              "toolTip": "An Avere vFXT cluster may have 3 to 12 nodes",
+              "constraints": {
+                "allowedValues": [
+                  {
+                    "label": "3 nodes",
+                    "value": 3
+                  },
+                  {
+                    "label": "4 nodes",
+                    "value": 4
+                  },
+                  {
+                    "label": "5 nodes",
+                    "value": 5
+                  },
+                  {
+                    "label": "6 nodes",
+                    "value": 6
+                  },
+                  {
+                    "label": "7 nodes",
+                    "value": 7
+                  },
+                  {
+                    "label": "8 nodes",
+                    "value": 8
+                  },
+                  {
+                    "label": "9 nodes",
+                    "value": 9
+                  },
+                  {
+                    "label": "10 nodes",
+                    "value": 10
+                  },
+                  {
+                    "label": "11 nodes",
+                    "value": 11
+                  },
+                  {
+                    "label": "12 nodes",
+                    "value": 12
+                  }
+                ],
+                "required": true
+              },
+              "visible": true
+            },
+            {
               "name": "adminPassword",
               "type": "Microsoft.Common.PasswordBox",
               "label": {
@@ -192,23 +245,34 @@
                 "offer": "vfxt",
                 "sku": "avere-vfxt-controller"
               },
-              "count": 3,
+              "count": "[steps('AvereVFXTConfiguration').avereNodeCount]",
               "visible": true
             },
             {
-              "name": "additionalVFXTParameters",
-              "type": "Microsoft.Common.TextBox",
-              "label": "Additional vFXT Parameters",
-              "toolTip": "Additional parameters to provide to the vFXT.py script, ensure you do not use double quotes, use single quotes if necessary. E.g. --nodes 6",
+              "name": "avereCacheSizeGB",
+              "type": "Microsoft.Common.DropDown",
+              "label": "Avere vFXT Cache Size",
+              "defaultValue": "1 TB",
+              "toolTip": "The attached disk cache size to use for each Avere vFXT VM",
               "constraints": {
-                "required": false
+                "allowedValues": [
+                  {
+                    "label": "1 TB",
+                    "value": 1024
+                  },
+                  {
+                    "label": "4 TB",
+                    "value": 4096
+                  }
+                ],
+                "required": true
               },
               "visible": true
             },
             {
               "name": "useAvereBackedStorageAccount",
               "type": "Microsoft.Common.DropDown",
-              "label": "Use Avere Backed Storage Account",
+              "label": "Use blob storage",
               "defaultValue": "true",
               "toolTip": "If true, create the storage account and use that for the backing storage account.  If false, the minimal Avere vFXT cluster will be created.",
               "constraints": {
@@ -289,11 +353,12 @@
         "servicePrincipalAppId": "[steps('ControllerAuth').servicePrincipalAppId]",
         "servicePrincipalPassword": "[steps('ControllerAuth').servicePrincipalPassword]",
         
+        "avereNodeCount": "[steps('AvereVFXTConfiguration').avereNodeCount]",
         "adminPassword": "[steps('AvereVFXTConfiguration').adminPassword]",
         "avereClusterRole": "[steps('AvereVFXTConfiguration').avereClusterRole]",
         "avereClusterName": "[steps('AvereVFXTConfiguration').avereClusterName]",
         "avereInstanceType": "[steps('AvereVFXTConfiguration').avereInstanceType]",
-        "additionalVFXTParameters": "[steps('AvereVFXTConfiguration').additionalVFXTParameters]",
+        "avereCacheSizeGB": "[steps('AvereVFXTConfiguration').avereCacheSizeGB]",
         "useAvereBackedStorageAccount": "[contains(steps('AvereVFXTConfiguration').useAvereBackedStorageAccount, 'true')]",
         "avereBackedStorageAccountName": "[coalesce(steps('AvereVFXTConfiguration').avereBackedStorageAccountName.name,'nostorage')]",
         "createVirtualNetwork": "[contains(steps('AvereVFXTConfiguration').virtualNetwork.newOrExisting, 'new')]",
