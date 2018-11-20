@@ -136,12 +136,24 @@
         "description": "The SKU for the Avere vFXT VM."
       }
     },
-    "additionalVFXTParameters": {
-      "type": "string",
-      "defaultValue": "",
-      "minLength": 0,
+    "avereNodeCount": {
+      "type": "int",
+      "defaultValue": 3,
+      "minValue": 3,
+      "maxValue": 12,
       "metadata": {
-        "description": "Additional parameters to provide to the vFXT.py script, ensure you do not use double quotes, use single quotes if necessary. E.g. --nodes 6"
+        "description": "The number of vFXT nodes in the Avere vFXT cluster"
+      }
+    },
+    "avereCacheSizeGB": {
+      "type": "int",
+      "defaultValue": 1024,
+      "allowedValues": [
+        1024,
+        4096
+      ],
+      "metadata": {
+        "description": "The cache size in GB to use for each Avere vFXT VM."
       }
     }
   },
@@ -165,9 +177,9 @@
     "avereBackedStorageAccountName": "[parameters('avereBackedStorageAccountName')]",
     "avereClusterName": "[parameters('avereClusterName')]",
     "avereInstanceType": "[parameters('avereInstanceType')]",
-    "additionalVFXTParameters": "[parameters('additionalVFXTParameters')]",
+    "avereCacheSizeGB": "[parameters('avereCacheSizeGB')]",
+    "additionalVFXTParameters": "[concat(' --nodes ', parameters('avereNodeCount'), ' ')]",
     "controllerVMSize": "Standard_A1_v2",
-    "avereCacheSizeGB": "[if(equals('Standard_D16s_v3',variables('avereInstanceType')),1024,4096)]",
     "publicIPAddressName": "[concat('publicip-',variables('controllerName'))]",
     "networkSecurityGroupName": "[concat('nsg-',variables('controllerName'))]",
     "vnetID": "[resourceId(variables('virtualNetworkResourceGroup'),'Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
