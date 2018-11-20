@@ -1,3 +1,5 @@
+[![Build Status](https://dev.azure.com/averevfxt/nov20-testdep/_apis/build/status/Azure.Avere)](https://dev.azure.com/averevfxt/nov20-testdep/_build/latest?definitionId=1)
+
 <img src="docs/images/avere_vfxt.png">
 
 # Avere vFXT  
