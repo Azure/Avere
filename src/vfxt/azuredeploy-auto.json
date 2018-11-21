@@ -195,7 +195,7 @@
     "sshKeyPath": "[concat('/home/',variables('controllerAdminUsername'),'/.ssh/authorized_keys')]",
     "vs": "Creating vserver vserver (",
     "ve": "/255.255.255.255",
-    "ms": "avere-cluster management address: ",
+    "ms": " management address: ",
     "maxIPLen": 15
   },
   "resources": [
