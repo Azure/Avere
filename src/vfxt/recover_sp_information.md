@@ -10,7 +10,7 @@ az ad sp list --filter "startswith(displayName,'$DISPLAY_NAME_START')" --query '
 2. If you know the exact displayName you can use this commandLine (make sure you change the variable content in the first line)
 ```bash
 DISPLAY_NAME='azure-cli-2018-10-31-19-56-28'
-az ad sp list --filter "displayName eq '$DISPLAY_NAME'" --query '[].{displayName:displayName,:appDisplayName, objectId:objectId,appId:appId,appOwnerTenantId:appOwnerTenantId}' -o table
+az ad sp list --filter "displayName eq '$DISPLAY_NAME'" --query '[].{displayName:displayName,appDisplayName:appDisplayName, objectId:objectId,appId:appId,appOwnerTenantId:appOwnerTenantId}' -o table
 ```
 
 3. Either commands will output all needed information with exception of the password as follows:
