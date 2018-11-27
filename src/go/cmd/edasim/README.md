@@ -11,3 +11,59 @@ The job uses Azure Storage Queue for work management, and uses event hub for mea
 The four components above implement the following message sequence chart:
 
 ![Message sequence chart for the job dispatch](../../../../docs/images/edasim/msc.png)
+
+# Installation Instructions for Linux
+
+ 1. If not already installed go, install golang
+
+```bash
+wget https://dl.google.com/go/go1.11.2.linux-amd64.tar.gz
+tar xvf go1.11.2.linux-amd64.tar.gz
+sudo chown -R root:root ./go
+sudo mv go /usr/local
+mkdir ~/gopath
+echo "export GOPATH=$HOME/gopath" >> ~/.profile
+echo "export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin" >> ~/.profile
+source ~/.profile
+```
+
+ 2. setup edasim code
+```bash
+go get -v go get -v github.com/azure/avere/src/go/...
+```
+
+# Storage Preparation
+
+ 1. use the portal or cloud shell to create you storage account
+ 1. create the following queues
+     1. jobcomplete
+     1. jobprocess
+     1. jobready
+     1. uploader
+ 1. use the portal or cloud shell to get the storage account key and set the following environment variables
+```bash
+export AZURE_STORAGE_ACCOUNT=YOUR_STORAGE_ACCOUNT
+export AZURE_STORAGE_ACCOUNT_KEY=YOUR_STORAGE_ACCOUNT_KEY
+```
+
+# To Run
+
+Build all the binaries:
+```bash
+cd $GOPATH/src/github.com/azure/avere/src/go/cmd/edasim
+./buildall.sh
+```
+
+To run the `jobsubmitter`, use a command like the following:
+```bash
+export JOBSDIR=~/tmp/jobs
+mkdir -p $JOBSDIR
+$GOPATH/src/github.com/azure/avere/src/go/cmd/edasim/jobsubmitter/jobsubmitter -jobBaseFilePath $JOBSDIR -jobCount 20 -userCount 4
+
+
+To run the `orchestrator`, use a command like the following:
+```bash
+export WORKDIR=~/tmp/work
+mkdir -p $WORKDIR
+$GOPATH/src/github.com/azure/avere/src/go/cmd/edasim/orchestrator/orchestrator --jobStartFileBasePath $WORKDIR
+```
