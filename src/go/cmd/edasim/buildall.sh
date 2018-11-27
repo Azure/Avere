@@ -14,4 +14,3 @@ popd
 pushd worker
 go build
 popd
-
