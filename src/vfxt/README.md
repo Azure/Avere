@@ -18,7 +18,7 @@ Here are the instructions:
 
 2. Run ```az account set --subscription YOUR_SUBSCRIPTION_ID```
 
-3. Use these commands to create the role file: 
+3. If you are a Microsoft Employee using a Microsoft Subscription skip to step 6, other use these commands to create the role file: 
 
 ```bash
 /bin/cat <<EOM >avere-create-cluster.json
@@ -60,11 +60,12 @@ EOM
 az role definition create --role-definition avere-create-cluster.json
 ```
 
-6. The following shows how to create the service principal required for use to run `az login` on the controller, but detailed instructions are [here](https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli?view=azure-cli-latest):
+6. The following shows how to create the service principal required for use to run `az login` on the controller, but detailed instructions are [here](https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli?view=azure-cli-latest).  If you are using a Microsoft Subscription substitute "avere-create-cluster" for "Avere Cluster Create" for the role name:
 
 ```bash
 SUBSCRIPTION_ID="REPLACE WITH YOUR SUBSCRIPTION ID"
 az account set --subscription=$SUBSCRIPTION_ID
+# if you are using a Microsoft Subscription substitute "avere-create-cluster" for "Avere Cluster Create" for the role name
 az ad sp create-for-rbac --role="avere-create-cluster" --scopes="/subscriptions/$SUBSCRIPTION_ID"
 ```
 
