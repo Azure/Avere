@@ -26,7 +26,7 @@ Here are the instructions:
     "AssignableScopes": [
         "/subscriptions/<subscription here>"
     ],
-    "Name": "avere-create-cluster",
+    "Name": "Avere Cluster Create",
     "IsCustom": "true",
     "Description": "Create Avere vFXT Clusters",
     "NotActions": [],
@@ -65,8 +65,7 @@ az role definition create --role-definition avere-create-cluster.json
 ```bash
 SUBSCRIPTION_ID="REPLACE WITH YOUR SUBSCRIPTION ID"
 az account set --subscription=$SUBSCRIPTION_ID
-# if you are using a Microsoft Subscription substitute "avere-create-cluster" for "Avere Cluster Create" for the role name
-az ad sp create-for-rbac --role="avere-create-cluster" --scopes="/subscriptions/$SUBSCRIPTION_ID"
+az ad sp create-for-rbac --role="Avere Cluster Create" --scopes="/subscriptions/$SUBSCRIPTION_ID"
 ```
 
 > Note: please make sure that the value for parameter --role is the same name you defined as name property used on step 3. This is the role definition name that you are assigning to the Service Principal.
