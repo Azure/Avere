@@ -60,7 +60,7 @@ EOM
 az role definition create --role-definition avere-create-cluster.json
 ```
 
-6. The following shows how to create the service principal required for use to run `az login` on the controller, but detailed instructions are [here](https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli?view=azure-cli-latest).  If you are using a Microsoft Subscription substitute "avere-create-cluster" for "Avere Cluster Create" for the role name:
+6. The following shows how to create the service principal required for use to run `az login` on the controller, but detailed instructions are [here](https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli?view=azure-cli-latest):
 
 ```bash
 SUBSCRIPTION_ID="REPLACE WITH YOUR SUBSCRIPTION ID"
