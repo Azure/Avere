@@ -37,6 +37,8 @@ type Orchestrator struct {
 	ReadyCh                     chan struct{}
 	MsgCh                       chan *azqueue.DequeuedMessage
 	DirManager                  *file.DirectoryManager
+	JobReader                   *file.ReaderWriter
+	WorkWriter                  *file.ReaderWriter
 }
 
 // InitializeOrchestrator initializes the Orchestrator
@@ -55,7 +57,12 @@ func InitializeOrchestrator(
 	jobCompleteFailedFileSizeKB int,
 	jobFailedProbability float64,
 	jobCompleteFileCount int,
-	orchestratorThreads int) *Orchestrator {
+	orchestratorThreads int,
+	eventHubSender *azure.EventHubSender) *Orchestrator {
+
+	jobReader := file.InitializeReaderWriter(JobReaderLabel, eventHubSender)
+	workWriter := file.InitializeReaderWriter(WorkStartFileWriterLabel, eventHubSender)
+
 	return &Orchestrator{
 		Context:                     ctx,
 		ReadyQueue:                  azure.InitializeQueue(ctx, storageAccount, storageAccountKey, readyQueueName),
@@ -73,6 +80,8 @@ func InitializeOrchestrator(
 		ReadyCh:                     make(chan struct{}),
 		MsgCh:                       make(chan *azqueue.DequeuedMessage, orchestratorThreads),
 		DirManager:                  file.InitializeDirectoryManager(),
+		JobReader:                   jobReader,
+		WorkWriter:                  workWriter,
 	}
 }
 
@@ -204,13 +213,16 @@ func (o *Orchestrator) JobDispatcher(syncWaitGroup *sync.WaitGroup) {
 }
 
 func (o *Orchestrator) handleMessage(msg *azqueue.DequeuedMessage) error {
-	jobConfig, err := ReadJobConfigFile(msg.Text)
+	configFilename := msg.Text
+	batchName := GetBatchName(msg.Text)
+
+	jobConfig, err := ReadJobConfigFile(o.JobReader, configFilename)
 	if err != nil {
-		log.Printf("ERROR: error reading job file '%s': %v", msg.Text, err)
+		log.Printf("ERROR: error reading job file '%s': %v", configFilename, err)
 		return err
 	}
 
-	fullPath := o.getDirectory(jobConfig.BatchName)
+	fullPath := o.getDirectory(batchName)
 
 	workerFileWriter := InitializeWorkerFileWriter(
 		jobConfig.Name,
@@ -220,8 +232,8 @@ func (o *Orchestrator) handleMessage(msg *azqueue.DequeuedMessage) error {
 		o.JobCompleteFileCount,
 		o.JobCompleteFailedFileSizeKB,
 		o.JobFailedProbability)
-	if err := workerFileWriter.WriteStartFiles(fullPath, o.JobFileSizeKB); err != nil {
-		log.Printf("ERROR: error writing start files for job '%s': %v", msg.Text, err)
+	if err := workerFileWriter.WriteStartFiles(o.WorkWriter, fullPath, o.JobFileSizeKB); err != nil {
+		log.Printf("ERROR: error writing start files for job '%s': %v", configFilename, err)
 		return err
 	}
 
