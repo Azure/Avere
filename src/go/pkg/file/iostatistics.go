@@ -63,6 +63,15 @@ func InitializeIOStatistics(
 	}
 }
 
+// InitializeIOStatisticsFromString initializes the object from a json string
+func InitializeIOStatisticsFromString(jsonString string) (*IOStatistics, error) {
+	var result IOStatistics
+	if err := json.Unmarshal([]byte(jsonString), &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
 // GetJSON returns the JSON representation of the object
 func (i *IOStatistics) GetJSON() ([]byte, error) {
 	data, err := json.Marshal(i)
@@ -70,6 +79,11 @@ func (i *IOStatistics) GetJSON() ([]byte, error) {
 		return nil, err
 	}
 	return data, nil
+}
+
+// GetCategoryKey returns a key to represent label and operation
+func (i *IOStatistics) GetCategoryKey() string {
+	return fmt.Sprintf("%s.%s", i.Label, i.Operation)
 }
 
 // CSVHeader returns the CSV header
@@ -91,7 +105,8 @@ func (i *IOStatistics) CSVHeader() []string {
 // ToStringArray returns a csv formatted string
 func (i *IOStatistics) ToStringArray() []string {
 	row := []string{}
-	row = append(row, i.StartTime.String())
+	//row = append(row, i.StartTime.String())
+	row = append(row, i.StartTime.Format("2006-01-02 15:04:05.0000000"))
 	row = append(row, i.BatchName)
 	row = append(row, i.Label)
 	row = append(row, string(i.Operation))
@@ -99,12 +114,7 @@ func (i *IOStatistics) ToStringArray() []string {
 	row = append(row, fmt.Sprintf("%d", i.CloseTimeNS))
 	row = append(row, fmt.Sprintf("%d", i.ReadWriteTimeNS))
 	row = append(row, fmt.Sprintf("%d", i.ReadWriteBytes))
+	row = append(row, fmt.Sprintf("%v", i.IsSuccess))
 	row = append(row, i.FailureMessage)
-	row = append(row, i.StartTime.String())
-	row = append(row, i.StartTime.String())
-	row = append(row, i.StartTime.String())
-	row = append(row, i.StartTime.String())
-	row = append(row, i.StartTime.String())
-	row = append(row, i.StartTime.String())
 	return row
 }

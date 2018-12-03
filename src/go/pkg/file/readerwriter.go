@@ -47,6 +47,7 @@ func (r *ReaderWriter) ReadFile(filename string, batchName string) ([]byte, erro
 
 	startCloseFile = time.Now()
 	err = f.Close()
+	finish = time.Now()
 	r.submitIOStatistics(batchName, start, ReadOperation, startReadBytes, startCloseFile, finish, len(byteValue), err)
 
 	return byteValue, err
@@ -75,6 +76,7 @@ func (r *ReaderWriter) WriteFile(filename string, data []byte, batchName string)
 
 	startCloseFile = time.Now()
 	err = f.Close()
+	finish = time.Now()
 	r.submitIOStatistics(batchName, start, WriteOperation, startWriteBytes, startCloseFile, finish, bytesWritten, err)
 
 	return err
@@ -84,24 +86,24 @@ func (r *ReaderWriter) submitIOStatistics(
 	batchName string,
 	start time.Time,
 	op Operation,
-	startReadBytes time.Time,
-	startCloseFile time.Time,
+	startReadBytesTime time.Time,
+	startCloseFileTime time.Time,
 	finish time.Time,
 	readWriteBytes int,
 	err error) {
 
 	createTimeNS := NoDuration
-	if startReadBytes.After(start) {
-		createTimeNS = startReadBytes.Sub(start)
+	if !startReadBytesTime.Before(start) {
+		createTimeNS = startReadBytesTime.Sub(start)
 	}
 
 	readWriteTimeNS := NoDuration
-	if startCloseFile.After(start) {
-		readWriteTimeNS = startCloseFile.Sub(start)
+	if !startCloseFileTime.Before(start) {
+		readWriteTimeNS = startCloseFileTime.Sub(start)
 	}
 
 	closeTimeNS := NoDuration
-	if finish.After(start) {
+	if !finish.Before(start) {
 		closeTimeNS = finish.Sub(start)
 	}
 
