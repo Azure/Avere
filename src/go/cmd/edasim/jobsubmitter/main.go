@@ -13,6 +13,7 @@ import (
 	"github.com/azure/avere/src/go/pkg/azure"
 	"github.com/azure/avere/src/go/pkg/cli"
 	"github.com/azure/avere/src/go/pkg/edasim"
+	"github.com/azure/avere/src/go/pkg/file"
 )
 
 func usage(errs ...error) {
@@ -25,6 +26,10 @@ func usage(errs ...error) {
 	fmt.Fprintf(os.Stderr, "required env vars:\n")
 	fmt.Fprintf(os.Stderr, "\t%s - azure storage account\n", azure.AZURE_STORAGE_ACCOUNT)
 	fmt.Fprintf(os.Stderr, "\t%s - azure storage account key\n", azure.AZURE_STORAGE_ACCOUNT_KEY)
+	fmt.Fprintf(os.Stderr, "\t%s - azure event hub sender name\n", azure.AZURE_EVENTHUB_SENDERKEYNAME)
+	fmt.Fprintf(os.Stderr, "\t%s - azure event hub sender key\n", azure.AZURE_EVENTHUB_SENDERKEY)
+	fmt.Fprintf(os.Stderr, "\t%s - azure event hub namespace name\n", azure.AZURE_EVENTHUB_NAMESPACENAME)
+	fmt.Fprintf(os.Stderr, "\t%s - azure event hub hub name\n", azure.AZURE_EVENTHUB_HUBNAME)
 	fmt.Fprintf(os.Stderr, "\n")
 	fmt.Fprintf(os.Stderr, "options:\n")
 	flag.PrintDefaults()
@@ -34,10 +39,14 @@ func verifyEnvVars() bool {
 	available := true
 	available = available && cli.VerifyEnvVar(azure.AZURE_STORAGE_ACCOUNT)
 	available = available && cli.VerifyEnvVar(azure.AZURE_STORAGE_ACCOUNT_KEY)
+	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_SENDERKEYNAME)
+	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_SENDERKEY)
+	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_NAMESPACENAME)
+	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_HUBNAME)
 	return available
 }
 
-func initializeApplicationVariables() (int, int, string, string, int, string, string) {
+func initializeApplicationVariables() (int, int, string, string, int, string, string, string, string, string, string) {
 	var jobCount = flag.Int("jobCount", edasim.DefaultJobCount, "the number of jobs to start")
 	var jobFileConfigSizeKB = flag.Int("jobFileConfigSizeKB", edasim.DefaultFileSizeKB, "the jobfile size in KB to write at start of job")
 	var jobBaseFilePath = flag.String("jobBaseFilePath", "", "the job file path")
@@ -53,6 +62,10 @@ func initializeApplicationVariables() (int, int, string, string, int, string, st
 
 	storageAccount := cli.GetEnv(azure.AZURE_STORAGE_ACCOUNT)
 	storageKey := cli.GetEnv(azure.AZURE_STORAGE_ACCOUNT_KEY)
+	eventHubSenderName := cli.GetEnv(azure.AZURE_EVENTHUB_SENDERKEYNAME)
+	eventHubSenderKey := cli.GetEnv(azure.AZURE_EVENTHUB_SENDERKEY)
+	eventHubNamespaceName := cli.GetEnv(azure.AZURE_EVENTHUB_NAMESPACENAME)
+	eventHubHubName := cli.GetEnv(azure.AZURE_EVENTHUB_HUBNAME)
 
 	if len(*jobBaseFilePath) == 0 {
 		fmt.Fprintf(os.Stderr, "ERROR: jobBaseFilePath is not specified\n")
@@ -78,18 +91,13 @@ func initializeApplicationVariables() (int, int, string, string, int, string, st
 		os.Exit(1)
 	}
 
-	return *jobCount, *jobFileConfigSizeKB, *jobBaseFilePath, *jobReadyQueueName, *userCount, storageAccount, storageKey
-}
-
-func getBatchName(jobCount int) string {
-	t := time.Now()
-	return fmt.Sprintf("job-%02d-%02d-%02d-%02d%02d%02d-%d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), jobCount)
+	return *jobCount, *jobFileConfigSizeKB, *jobBaseFilePath, *jobReadyQueueName, *userCount, storageAccount, storageKey, eventHubSenderName, eventHubSenderKey, eventHubNamespaceName, eventHubHubName
 }
 
 func main() {
-	jobCount, jobFileConfigSizeKB, jobBaseFilePath, jobReadyQueueName, userCount, storageAccount, storageKey := initializeApplicationVariables()
+	jobCount, jobFileConfigSizeKB, jobBaseFilePath, jobReadyQueueName, userCount, storageAccount, storageKey, eventHubSenderName, eventHubSenderKey, eventHubNamespaceName, eventHubHubName := initializeApplicationVariables()
 
-	batchName := getBatchName(jobCount)
+	batchName := edasim.GenerateBatchName(jobCount)
 	jobNamePath := path.Join(jobBaseFilePath, batchName)
 
 	if e := os.MkdirAll(jobNamePath, os.ModePerm); e != nil {
@@ -108,13 +116,30 @@ func main() {
 	jobsPerUser := jobCount / userCount
 	jobsPerUserMod := jobCount % userCount
 
+	ctx, cancel := context.WithCancel(context.Background())
+
+	eventHub, e := azure.InitializeEventHubSender(ctx,
+		eventHubSenderName,
+		eventHubSenderKey,
+		eventHubNamespaceName,
+		eventHubHubName)
+
+	if e != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: unable to initialize event hub sender.  Failed with error: %v\n", e)
+		os.Exit(1)
+	}
+
+	readerWriter := file.InitializeReaderWriter(edasim.JobWriterLabel, eventHub)
+
+	ctx = context.WithValue(ctx, edasim.ReaderWriterContextKey, readerWriter)
+
 	for i := 0; i < userCount; i++ {
-		storageQueue := azure.InitializeQueue(context.Background(), storageAccount, storageKey, jobReadyQueueName)
+		storageQueue := azure.InitializeQueue(ctx, storageAccount, storageKey, jobReadyQueueName)
 		extrajob := 0
 		if i < jobsPerUserMod {
 			extrajob = 1
 		}
-		jobSubmitter := edasim.InitializeJobSubmitter(batchName, i, storageQueue, jobsPerUser+extrajob, jobNamePath, jobFileConfigSizeKB)
+		jobSubmitter := edasim.InitializeJobSubmitter(ctx, batchName, i, storageQueue, jobsPerUser+extrajob, jobNamePath, jobFileConfigSizeKB)
 		jobSubmitters = append(jobSubmitters, jobSubmitter)
 	}
 
@@ -126,5 +151,13 @@ func main() {
 	}
 
 	userSyncWaitGroup.Wait()
+	cancel()
+	for {
+		if eventHub.IsSenderComplete() {
+			break
+		} else {
+			time.Sleep(time.Duration(10) * time.Millisecond)
+		}
+	}
 	log.Printf("Completed generation of %d jobs\n", jobCount)
 }

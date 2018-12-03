@@ -3,10 +3,9 @@ package edasim
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"path"
 
+	"github.com/azure/avere/src/go/pkg/file"
 	"github.com/azure/avere/src/go/pkg/random"
 )
 
@@ -43,15 +42,8 @@ func InitializeWorkerFileWriter(
 }
 
 // ReadWorkFile reads a work file from disk
-func ReadWorkFile(filename string) (*WorkFileWriter, error) {
-	// Open our jsonFile
-	jsonFile, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer jsonFile.Close()
-
-	byteValue, err := ioutil.ReadAll(jsonFile)
+func ReadWorkFile(reader *file.ReaderWriter, filename string) (*WorkFileWriter, error) {
+	byteValue, err := reader.ReadFile(filename, GetBatchName(filename))
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +59,7 @@ func ReadWorkFile(filename string) (*WorkFileWriter, error) {
 }
 
 // WriteStartFiles writes the required number of start files
-func (w *WorkFileWriter) WriteStartFiles(filepath string, fileSize int) error {
+func (w *WorkFileWriter) WriteStartFiles(writer *file.ReaderWriter, filepath string, fileSize int) error {
 	// read once
 	data, err := json.Marshal(w)
 	if err != nil {
@@ -87,12 +79,8 @@ func (w *WorkFileWriter) WriteStartFiles(filepath string, fileSize int) error {
 	// write the files
 	for i := 0; i < w.StartFileCount; i++ {
 		filename := w.getStartFileName(filepath, i)
-		f, err := os.Create(filename)
+		err := writer.WriteFile(filename, []byte(data), GetBatchName(filename))
 		if err != nil {
-			return err
-		}
-		defer f.Close()
-		if _, err = f.Write([]byte(data)); err != nil {
 			return err
 		}
 	}

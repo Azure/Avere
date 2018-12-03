@@ -16,4 +16,15 @@ const (
 
 	KB = 1024
 	MB = KB * KB
+
+	ReaderWriterContextKey = "ReaderWriter"
+
+	JobReaderLabel              = "JobReader"
+	JobWriterLabel              = "JobWriter"
+	JobCompleteReaderLabel      = "JobCompleteReader"
+	JobCompleteWriterLabel      = "JobCompleteWriter"
+	WorkStartFileReaderLabel    = "WorkStartFileReader"
+	WorkStartFileWriterLabel    = "WorkStartFileWriter"
+	WorkCompleteFileReaderLabel = "WorkCompleteFileReader"
+	WorkCompleteFileWriterLabel = "WorkCompleteFileWriter"
 )

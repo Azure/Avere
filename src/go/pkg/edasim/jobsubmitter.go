@@ -1,15 +1,18 @@
 package edasim
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"sync"
 
 	"github.com/azure/avere/src/go/pkg/azure"
+	"github.com/azure/avere/src/go/pkg/file"
 )
 
 // JobSubmitter defines the structure used for the job submitter process
 type JobSubmitter struct {
+	Context       context.Context
 	BatchName     string
 	ID            int
 	ReadyQueue    *azure.Queue
@@ -19,8 +22,9 @@ type JobSubmitter struct {
 }
 
 // InitializeJobSubmitter initializes the job submitter structure
-func InitializeJobSubmitter(batchName string, id int, readyQueue *azure.Queue, jobCount int, jobPath string, jobFileSizeKB int) *JobSubmitter {
+func InitializeJobSubmitter(ctx context.Context, batchName string, id int, readyQueue *azure.Queue, jobCount int, jobPath string, jobFileSizeKB int) *JobSubmitter {
 	return &JobSubmitter{
+		Context:       ctx,
 		BatchName:     batchName,
 		ID:            id,
 		ReadyQueue:    readyQueue,
@@ -35,9 +39,11 @@ func (j *JobSubmitter) Run(syncWaitGroup *sync.WaitGroup) {
 	defer syncWaitGroup.Done()
 	log.Printf("JobSubmitter %d: starting to submit %d jobs\n", j.ID, j.JobCount)
 
+	writer := j.Context.Value(ReaderWriterContextKey).(*file.ReaderWriter)
+
 	for i := 0; i < j.JobCount; i++ {
-		jobConfigFile := InitializeJobConfigFile(j.getJobName(i), j.BatchName)
-		jobFilePath, err := jobConfigFile.WriteJobConfigFile(j.JobPath, j.JobFileSizeKB)
+		jobConfigFile := InitializeJobConfigFile(j.getJobName(i))
+		jobFilePath, err := jobConfigFile.WriteJobConfigFile(writer, j.JobPath, j.JobFileSizeKB)
 		if err != nil {
 			log.Printf("ERROR writing job file: %v", err)
 			continue
