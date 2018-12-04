@@ -6,6 +6,7 @@ import (
 	"path"
 
 	"github.com/azure/avere/src/go/pkg/file"
+	"github.com/azure/avere/src/go/pkg/log"
 	"github.com/azure/avere/src/go/pkg/random"
 )
 
@@ -35,6 +36,8 @@ func initializeJobFile(name string, isCompleteFile bool) *JobConfigFile {
 
 // ReadJobConfigFile reads a job config file from disk
 func ReadJobConfigFile(reader *file.ReaderWriter, filename string) (*JobConfigFile, error) {
+	log.Debug.Printf("[ReadJobConfigFile %s", filename)
+	defer log.Debug.Printf("ReadJobConfigFile %s]", filename)
 	byteValue, err := reader.ReadFile(filename, GetBatchName(filename))
 	if err != nil {
 		return nil, err
@@ -52,6 +55,8 @@ func ReadJobConfigFile(reader *file.ReaderWriter, filename string) (*JobConfigFi
 
 // WriteJobConfigFile writes the job configuration file to disk, padding it so it makes the necessary size
 func (j *JobConfigFile) WriteJobConfigFile(writer *file.ReaderWriter, filepath string, fileSize int) (string, error) {
+	log.Debug.Printf("[WriteJobConfigFile %s", filepath)
+	defer log.Debug.Printf("WriteJobConfigFile %s]", filepath)
 	// learn the size of the current object
 	data, err := json.Marshal(j)
 	if err != nil {

@@ -2,7 +2,6 @@ package edasim
 
 import (
 	"context"
-	"log"
 	"path"
 	"sync"
 	"time"
@@ -10,6 +9,7 @@ import (
 	"github.com/Azure/azure-storage-queue-go/2017-07-29/azqueue"
 	"github.com/azure/avere/src/go/pkg/azure"
 	"github.com/azure/avere/src/go/pkg/file"
+	"github.com/azure/avere/src/go/pkg/log"
 )
 
 const (
@@ -37,8 +37,6 @@ type Orchestrator struct {
 	ReadyCh                     chan struct{}
 	MsgCh                       chan *azqueue.DequeuedMessage
 	DirManager                  *file.DirectoryManager
-	JobReader                   *file.ReaderWriter
-	WorkWriter                  *file.ReaderWriter
 }
 
 // InitializeOrchestrator initializes the Orchestrator
@@ -57,11 +55,7 @@ func InitializeOrchestrator(
 	jobCompleteFailedFileSizeKB int,
 	jobFailedProbability float64,
 	jobCompleteFileCount int,
-	orchestratorThreads int,
-	eventHubSender *azure.EventHubSender) *Orchestrator {
-
-	jobReader := file.InitializeReaderWriter(JobReaderLabel, eventHubSender)
-	workWriter := file.InitializeReaderWriter(WorkStartFileWriterLabel, eventHubSender)
+	orchestratorThreads int) *Orchestrator {
 
 	return &Orchestrator{
 		Context:                     ctx,
@@ -80,14 +74,12 @@ func InitializeOrchestrator(
 		ReadyCh:                     make(chan struct{}),
 		MsgCh:                       make(chan *azqueue.DequeuedMessage, orchestratorThreads),
 		DirManager:                  file.InitializeDirectoryManager(),
-		JobReader:                   jobReader,
-		WorkWriter:                  workWriter,
 	}
 }
 
 // Run implements the go routine entry point for the orchestrator.  This starts the various go routines for managment of the queues
 func (o *Orchestrator) Run(syncWaitGroup *sync.WaitGroup) {
-	log.Printf("started orchestrator.Run()\n")
+	log.Info.Printf("started orchestrator.Run()\n")
 	defer syncWaitGroup.Done()
 
 	// start the stats collector
@@ -112,7 +104,7 @@ func (o *Orchestrator) Run(syncWaitGroup *sync.WaitGroup) {
 	for {
 		select {
 		case <-o.Context.Done():
-			log.Printf("completed orchestrator.Run()\n")
+			log.Info.Printf("completed orchestrator.Run()\n")
 			return
 		}
 	}
@@ -121,7 +113,8 @@ func (o *Orchestrator) Run(syncWaitGroup *sync.WaitGroup) {
 // StartJobWorker implements the go routine of the worker that gets jobs from the queue
 func (o *Orchestrator) StartJobWorker(syncWaitGroup *sync.WaitGroup) {
 	defer syncWaitGroup.Done()
-	defer log.Printf("completed StartJobWorker")
+	log.Info.Printf("[StartJobWorker")
+	defer log.Info.Printf("completed StartJobWorker]")
 
 	statsChannel := GetStatsChannel(o.Context)
 
@@ -148,9 +141,9 @@ func (o *Orchestrator) StartJobWorker(syncWaitGroup *sync.WaitGroup) {
 
 // JobDispatcher dispatches jobs to workers based on input from the ready queue
 func (o *Orchestrator) JobDispatcher(syncWaitGroup *sync.WaitGroup) {
-	log.Printf("starting JobDispatcher\n")
+	log.Info.Printf("[JobDispatcher\n")
 	defer syncWaitGroup.Done()
-	defer log.Printf("completed JobDispatcher")
+	defer log.Info.Printf("JobDispatcher]")
 
 	readyWorkerCount := int32(0)
 
@@ -177,7 +170,7 @@ func (o *Orchestrator) JobDispatcher(syncWaitGroup *sync.WaitGroup) {
 		// dequeue the messages, with no more than ready workers
 		dequeue, err := o.ReadyQueue.Dequeue(readyWorkerCount, visibilityTimeout)
 		if err != nil {
-			log.Printf("ERROR: dequeuing %d messages from ready queue: %v", readyWorkerCount, err)
+			log.Error.Printf("error dequeuing %d messages from ready queue: %v", readyWorkerCount, err)
 			statsChannel.Error()
 			continue
 		}
@@ -187,7 +180,7 @@ func (o *Orchestrator) JobDispatcher(syncWaitGroup *sync.WaitGroup) {
 			for m := int32(0); m < dequeue.NumMessages(); m++ {
 				msg := dequeue.Message(m)
 				if now.After(msg.NextVisibleTime) {
-					log.Printf("ERROR: %v is after, ignoring", msg)
+					log.Error.Printf("%v is after, ignoring", msg)
 					continue
 				}
 				o.MsgCh <- msg
@@ -196,7 +189,7 @@ func (o *Orchestrator) JobDispatcher(syncWaitGroup *sync.WaitGroup) {
 			}
 		} else {
 			// otherwise sleep 10 seconds
-			log.Printf("Dispatcher: no messages, sleeping, %d ready workers", readyWorkerCount)
+			log.Info.Printf("Dispatcher: no messages, sleeping, %d ready workers", readyWorkerCount)
 			ticker := time.NewTicker(sleepTimeNoQueueMessagesTick)
 			start := time.Now()
 			for time.Since(start) < sleepTimeNoQueueMessages {
@@ -207,18 +200,20 @@ func (o *Orchestrator) JobDispatcher(syncWaitGroup *sync.WaitGroup) {
 				}
 			}
 			ticker.Stop()
-			log.Printf("Dispatcher: awake")
+			log.Info.Printf("Dispatcher: awake")
 		}
 	}
 }
 
 func (o *Orchestrator) handleMessage(msg *azqueue.DequeuedMessage) error {
+	log.Debug.Printf("[handleMessage(%s)", msg.Text)
+	defer log.Debug.Printf("handleMessage(%s)]", msg.Text)
 	configFilename := msg.Text
 	batchName := GetBatchName(msg.Text)
 
-	jobConfig, err := ReadJobConfigFile(o.JobReader, configFilename)
+	jobConfig, err := ReadJobConfigFile(JobReader, configFilename)
 	if err != nil {
-		log.Printf("ERROR: error reading job file '%s': %v", configFilename, err)
+		log.Error.Printf("error reading job file '%s': %v", configFilename, err)
 		return err
 	}
 
@@ -232,17 +227,17 @@ func (o *Orchestrator) handleMessage(msg *azqueue.DequeuedMessage) error {
 		o.JobCompleteFileCount,
 		o.JobCompleteFailedFileSizeKB,
 		o.JobFailedProbability)
-	if err := workerFileWriter.WriteStartFiles(o.WorkWriter, fullPath, o.JobFileSizeKB); err != nil {
-		log.Printf("ERROR: error writing start files for job '%s': %v", configFilename, err)
+	if err := workerFileWriter.WriteStartFiles(WorkStartFileWriter, fullPath, o.JobFileSizeKB); err != nil {
+		log.Error.Printf("error writing start files for job '%s': %v", configFilename, err)
 		return err
 	}
 
 	if err := o.ProcessQueue.Enqueue(workerFileWriter.FirstStartFile(fullPath)); err != nil {
-		log.Printf("ERROR: error enqueuing files path '%s': %v", workerFileWriter.FirstStartFile(fullPath), err)
+		log.Error.Printf("error enqueuing files path '%s': %v", workerFileWriter.FirstStartFile(fullPath), err)
 		return err
 	}
 	if _, err := o.ReadyQueue.DeleteMessage(msg.ID, msg.PopReceipt); err != nil {
-		log.Printf("ERROR: error deleting queue message from ready queue '%s': %v", msg.ID, err)
+		log.Error.Printf("error deleting queue message from ready queue '%s': %v", msg.ID, err)
 		return err
 	}
 	return nil

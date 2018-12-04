@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"sync"
@@ -13,7 +12,7 @@ import (
 	"github.com/azure/avere/src/go/pkg/azure"
 	"github.com/azure/avere/src/go/pkg/cli"
 	"github.com/azure/avere/src/go/pkg/edasim"
-	"github.com/azure/avere/src/go/pkg/file"
+	"github.com/azure/avere/src/go/pkg/log"
 )
 
 func usage(errs ...error) {
@@ -47,6 +46,7 @@ func verifyEnvVars() bool {
 }
 
 func initializeApplicationVariables() (int, int, string, string, int, string, string, string, string, string, string) {
+	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
 	var jobCount = flag.Int("jobCount", edasim.DefaultJobCount, "the number of jobs to start")
 	var jobFileConfigSizeKB = flag.Int("jobFileConfigSizeKB", edasim.DefaultFileSizeKB, "the jobfile size in KB to write at start of job")
 	var jobBaseFilePath = flag.String("jobBaseFilePath", "", "the job file path")
@@ -54,6 +54,10 @@ func initializeApplicationVariables() (int, int, string, string, int, string, st
 	var userCount = flag.Int("userCount", edasim.DefaultUserCount, "the number of concurrent users submitting jobs")
 
 	flag.Parse()
+
+	if *enableDebugging {
+		log.EnableDebugging()
+	}
 
 	if envVarsAvailable := verifyEnvVars(); !envVarsAvailable {
 		usage()
@@ -91,57 +95,79 @@ func initializeApplicationVariables() (int, int, string, string, int, string, st
 		os.Exit(1)
 	}
 
-	return *jobCount, *jobFileConfigSizeKB, *jobBaseFilePath, *jobReadyQueueName, *userCount, storageAccount, storageKey, eventHubSenderName, eventHubSenderKey, eventHubNamespaceName, eventHubHubName
+	return *jobCount,
+		*jobFileConfigSizeKB,
+		*jobBaseFilePath,
+		*jobReadyQueueName,
+		*userCount,
+		storageAccount,
+		storageKey,
+		eventHubSenderName,
+		eventHubSenderKey,
+		eventHubNamespaceName,
+		eventHubHubName
 }
 
-func main() {
-	jobCount, jobFileConfigSizeKB, jobBaseFilePath, jobReadyQueueName, userCount, storageAccount, storageKey, eventHubSenderName, eventHubSenderKey, eventHubNamespaceName, eventHubHubName := initializeApplicationVariables()
+func initializeJobSubmitters(
+	ctx context.Context,
+	userCount int,
+	jobCount int,
+	storageAccount string,
+	storageKey string,
+	jobReadyQueueName string,
+	jobBaseFilePath string,
+	jobFileConfigSizeKB int) []*edasim.JobSubmitter {
 
 	batchName := edasim.GenerateBatchName(jobCount)
+
 	jobNamePath := path.Join(jobBaseFilePath, batchName)
 
 	if e := os.MkdirAll(jobNamePath, os.ModePerm); e != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: unable to create directory '%s': %v\n", jobNamePath, e)
+		log.Error.Printf("unable to create directory '%s': %v\n", jobNamePath, e)
 		usage()
 		os.Exit(1)
 	}
 
-	log.Printf("Starting generation of %d jobs for batch %s\n", jobCount, batchName)
-	log.Printf("File Details:\n")
-	log.Printf("\tJob Path: %s\n", jobNamePath)
-	log.Printf("\tJob Filesize: %d\n", jobFileConfigSizeKB)
-	log.Printf("usercount: %d\n", userCount)
-
 	jobSubmitters := make([]*edasim.JobSubmitter, 0, userCount)
+
 	jobsPerUser := jobCount / userCount
 	jobsPerUserMod := jobCount % userCount
 
-	ctx, cancel := context.WithCancel(context.Background())
-
-	eventHub, e := azure.InitializeEventHubSender(ctx,
-		eventHubSenderName,
-		eventHubSenderKey,
-		eventHubNamespaceName,
-		eventHubHubName)
-
-	if e != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: unable to initialize event hub sender.  Failed with error: %v\n", e)
-		os.Exit(1)
-	}
-
-	readerWriter := file.InitializeReaderWriter(edasim.JobWriterLabel, eventHub)
-
-	ctx = context.WithValue(ctx, edasim.ReaderWriterContextKey, readerWriter)
-
 	for i := 0; i < userCount; i++ {
 		storageQueue := azure.InitializeQueue(ctx, storageAccount, storageKey, jobReadyQueueName)
+
+		// count the extra job if job count doesn't nicely dived into the number of users
 		extrajob := 0
 		if i < jobsPerUserMod {
 			extrajob = 1
 		}
-		jobSubmitter := edasim.InitializeJobSubmitter(ctx, batchName, i, storageQueue, jobsPerUser+extrajob, jobNamePath, jobFileConfigSizeKB)
-		jobSubmitters = append(jobSubmitters, jobSubmitter)
+
+		jobSubmitters = append(jobSubmitters, edasim.InitializeJobSubmitter(ctx, batchName, i, storageQueue, jobsPerUser+extrajob, jobNamePath, jobFileConfigSizeKB))
 	}
+
+	return jobSubmitters
+}
+
+func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	jobCount,
+		jobFileConfigSizeKB,
+		jobBaseFilePath,
+		jobReadyQueueName,
+		userCount,
+		storageAccount,
+		storageKey,
+		eventHubSenderName,
+		eventHubSenderKey,
+		eventHubNamespaceName,
+		eventHubHubName := initializeApplicationVariables()
+
+	eventHub := edasim.InitializeReaderWriters(ctx, eventHubSenderName, eventHubSenderKey, eventHubNamespaceName, eventHubHubName)
+
+	log.Info.Printf("Starting job submission of %d jobs for batch %s\n", jobCount, edasim.GenerateBatchName(jobCount))
+
+	jobSubmitters := initializeJobSubmitters(ctx, userCount, jobCount, storageAccount, storageKey, jobReadyQueueName, jobBaseFilePath, jobFileConfigSizeKB)
 
 	userSyncWaitGroup := sync.WaitGroup{}
 	userSyncWaitGroup.Add(len(jobSubmitters))
@@ -152,6 +178,9 @@ func main() {
 
 	userSyncWaitGroup.Wait()
 	cancel()
+
+	log.Info.Printf(" wait for the event hub sender to complete")
+
 	for {
 		if eventHub.IsSenderComplete() {
 			break
@@ -159,5 +188,6 @@ func main() {
 			time.Sleep(time.Duration(10) * time.Millisecond)
 		}
 	}
-	log.Printf("Completed generation of %d jobs\n", jobCount)
+
+	log.Info.Printf("Completed job submission of %d jobs\n", jobCount)
 }

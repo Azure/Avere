@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/azure/avere/src/go/pkg/azure"
 	"github.com/azure/avere/src/go/pkg/cli"
 	"github.com/azure/avere/src/go/pkg/file"
+	"github.com/azure/avere/src/go/pkg/log"
 )
 
 const (
@@ -64,8 +64,14 @@ func getEnv(envVarName string) string {
 }
 
 func initializeApplicationVariables() (string, string, string, string, string) {
+	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
 	var statsFilePath = flag.String("statsFilePath", "", "the stats file path")
+
 	flag.Parse()
+
+	if *enableDebugging {
+		log.EnableDebugging()
+	}
 
 	if envVarsAvailable := verifyEnvVars(); !envVarsAvailable {
 		usage()
@@ -95,17 +101,17 @@ func initializeApplicationVariables() (string, string, string, string, string) {
 func main() {
 	statsFilePath, eventHubSenderName, eventHubSenderKey, eventHubNamespaceName, eventHubHubName := initializeApplicationVariables()
 
-	log.Printf("Eventhub Details:\n")
-	log.Printf("\teventHubSenderName: %s\n", eventHubSenderName)
-	log.Printf("\teventHubSenderKey: %s\n", eventHubSenderKey)
-	log.Printf("\teventHubNamespaceName: %s\n", eventHubNamespaceName)
-	log.Printf("\teventHubHubName: %s\n", eventHubHubName)
+	log.Info.Printf("Eventhub Details:\n")
+	log.Info.Printf("eventHubSenderName: %s\n", eventHubSenderName)
+	log.Info.Printf("eventHubSenderKey: %s\n", eventHubSenderKey)
+	log.Info.Printf("eventHubNamespaceName: %s\n", eventHubNamespaceName)
+	log.Info.Printf("eventHubHubName: %s\n", eventHubHubName)
 
 	ioStatsCollector := file.InitializeIOStatsCollector()
 
 	provider, err := sas.NewTokenProvider(sas.TokenProviderWithKey(eventHubSenderName, eventHubSenderKey))
 	if err != nil {
-		log.Fatalf("failed to get token provider: %s\n", err)
+		log.Error.Fatalf("failed to get token provider: %s\n", err)
 	}
 
 	// get an existing hub
@@ -113,23 +119,21 @@ func main() {
 	ctx := context.Background()
 	defer hub.Close(ctx)
 	if err != nil {
-		log.Fatalf("failed to get hub: %s\n", err)
+		log.Error.Fatalf("failed to get hub: %s\n", err)
 	}
 
 	// get info about partitions in hub
 	info, err := hub.GetRuntimeInformation(ctx)
 	if err != nil {
-		log.Fatalf("failed to get runtime info: %s\n", err)
+		log.Error.Fatalf("failed to get runtime info: %s\n", err)
 	}
-	log.Printf("partition IDs: %s\n", info.PartitionIDs)
+	log.Info.Printf("partition IDs: %s\n", info.PartitionIDs)
 
 	// set up wait group to wait for expected message
 	eventReceived := make(chan struct{})
 
 	// declare handler for incoming events
 	handler := func(ctx context.Context, event *eventhubs.Event) error {
-		//log.Printf("received: %s\n", string(event.Data))
-		// notify channel that event was received
 		ioStatsCollector.RecordEvent(string(event.Data))
 		eventReceived <- struct{}{}
 		return nil
@@ -145,7 +149,7 @@ func main() {
 			receiveOption,
 		)
 		if err != nil {
-			log.Fatalf("failed to receive for partition ID %s: %s\n", partitionID, err)
+			log.Error.Fatalf("failed to receive for partition ID %s: %s\n", partitionID, err)
 		}
 	}
 
@@ -162,26 +166,14 @@ func main() {
 		case <-ticker.C:
 			if time.Since(lastStatsOutput) > statsPrintRate {
 				lastStatsOutput = time.Now()
-				log.Printf("event messages processed %d", messagesProcessed)
+				log.Info.Printf("event messages processed %d", messagesProcessed)
 			}
 		}
 	}
 
-	log.Printf("writing the files")
+	log.Info.Printf("writing the files")
 	ioStatsCollector.WriteRAWFiles(statsFilePath)
 
-	log.Printf("writing the summary file")
+	log.Info.Printf("writing the summary file")
 	ioStatsCollector.WriteBatchSummaryFiles(statsFilePath)
-
-	// 1. start the eventhub receiver
-	// 2. listen for all messages, when there are no messages for a certain time,
-	//    write out files:
-	//    all events are collected and stored per Batch/Label.operation.csv
-	//    summary: batch/summary.csv
-	// CreateTimeNS    time.Duration - SampleSize, %success, P50, P75, P95, P99, P100
-	// CloseTimeNS     time.Duration - SampleSize, %success, P50, P75, P95, P99, P100
-	// ReadWriteTimeNS time.Duration - SampleSize, %success, P50, P75, P95, P99, P100
-	// ReadWriteBytes  int  - SampleSize, %success, P50, P75, P95, P99, P100
-	// 3. upon completion
-	// sort
 }

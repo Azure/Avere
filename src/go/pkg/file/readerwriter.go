@@ -2,21 +2,20 @@ package file
 
 import (
 	"io/ioutil"
-	"log"
 	"os"
 	"time"
 
-	"github.com/azure/avere/src/go/pkg/telemetry"
+	"github.com/azure/avere/src/go/pkg/log"
 )
 
 // ReaderWriter records the time statistics for reading and writing files to an event hub
 type ReaderWriter struct {
 	label    string
-	profiler telemetry.Profiler
+	profiler log.Profiler
 }
 
 // InitializeReaderWriter initializes the file reader / writer
-func InitializeReaderWriter(label string, profiler telemetry.Profiler) *ReaderWriter {
+func InitializeReaderWriter(label string, profiler log.Profiler) *ReaderWriter {
 	return &ReaderWriter{
 		label:    label,
 		profiler: profiler,
@@ -120,8 +119,8 @@ func (r *ReaderWriter) submitIOStatistics(
 
 	jsonBytes, err := ioStats.GetJSON()
 	if err != nil {
-		log.Printf("ERROR while submitting statistics: %v", err)
+		log.Error.Printf("error encountered submitting statistics: %v", err)
 	}
-
+	log.Debug.Printf(string(jsonBytes))
 	r.profiler.RecordTiming(jsonBytes)
 }

@@ -6,6 +6,7 @@ import (
 	"path"
 
 	"github.com/azure/avere/src/go/pkg/file"
+	"github.com/azure/avere/src/go/pkg/log"
 	"github.com/azure/avere/src/go/pkg/random"
 )
 
@@ -43,6 +44,8 @@ func InitializeWorkerFileWriter(
 
 // ReadWorkFile reads a work file from disk
 func ReadWorkFile(reader *file.ReaderWriter, filename string) (*WorkFileWriter, error) {
+	log.Debug.Printf("[ReadWorkFile(%s)", filename)
+	defer log.Debug.Printf("ReadWorkFile(%s)]", filename)
 	byteValue, err := reader.ReadFile(filename, GetBatchName(filename))
 	if err != nil {
 		return nil, err
@@ -60,6 +63,8 @@ func ReadWorkFile(reader *file.ReaderWriter, filename string) (*WorkFileWriter, 
 
 // WriteStartFiles writes the required number of start files
 func (w *WorkFileWriter) WriteStartFiles(writer *file.ReaderWriter, filepath string, fileSize int) error {
+	log.Debug.Printf("[WriteStartFiles(%s)", filepath)
+	defer log.Debug.Printf("WriteStartFiles(%s)]", filepath)
 	// read once
 	data, err := json.Marshal(w)
 	if err != nil {

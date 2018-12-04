@@ -3,12 +3,12 @@ package azure
 import (
 	"container/list"
 	"context"
-	"log"
 	"sync"
 	"time"
 
 	"github.com/Azure/azure-amqp-common-go/sas"
 	eventhubs "github.com/Azure/azure-event-hubs-go"
+	"github.com/azure/avere/src/go/pkg/log"
 )
 
 const (
@@ -97,14 +97,14 @@ func (e *EventHubSender) sendEventsBatch() {
 
 	err := e.hub.SendBatch(e.ctx, eventhubs.NewEventBatch(events))
 	if err != nil {
-		log.Printf("failed to send batch: %v\n", err)
+		log.Error.Printf("failed to send batch: %v\n", err)
 	}
 }
 
 func (e *EventHubSender) sender() {
-	log.Printf("starting EventHubSender sender\n")
+	log.Info.Printf("starting EventHubSender sender\n")
 	defer func(e *EventHubSender) { e.senderComplete = true }(e)
-	defer log.Printf("completed EventHubSender sender")
+	defer log.Info.Printf("completed EventHubSender sender")
 	for {
 		select {
 		case <-e.ctx.Done():

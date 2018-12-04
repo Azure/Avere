@@ -1,13 +1,17 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
-	"log"
 	"os"
+	"os/signal"
+	"time"
 
 	"github.com/azure/avere/src/go/pkg/azure"
 	"github.com/azure/avere/src/go/pkg/cli"
+	"github.com/azure/avere/src/go/pkg/edasim"
+	"github.com/azure/avere/src/go/pkg/log"
 )
 
 func usage(errs ...error) {
@@ -63,11 +67,16 @@ func validateQueue(queueName string, queueNameLabel string) {
 }
 
 func initializeApplicationVariables() (int, string, string, string, string, string, string, string, string) {
+	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
 	var workerThreadCount = flag.Int("WorkerThreadCount", 2, "the count of worker threads")
-	var jobProcessQueueName = flag.String("jobProcessQueueName", "", "the job process queue name")
-	var jobCompleteQueueName = flag.String("jobCompleteQueueName", "", "the job completion queue name")
+	var jobProcessQueueName = flag.String("jobProcessQueueName", edasim.QueueJobProcess, "the job process queue name")
+	var jobCompleteQueueName = flag.String("jobCompleteQueueName", edasim.QueueJobComplete, "the job completion queue name")
 
 	flag.Parse()
+
+	if *enableDebugging {
+		log.EnableDebugging()
+	}
 
 	if envVarsAvailable := verifyEnvVars(); !envVarsAvailable {
 		usage()
@@ -84,26 +93,59 @@ func initializeApplicationVariables() (int, string, string, string, string, stri
 	validateQueue(*jobProcessQueueName, "jobProcessQueueName")
 	validateQueue(*jobCompleteQueueName, "jobCompleteQueueName")
 
-	return *workerThreadCount, *jobProcessQueueName, *jobCompleteQueueName, storageAccount, storageKey, eventHubSenderName, eventHubSenderKey, eventHubNamespaceName, eventHubHubName
+	return *workerThreadCount,
+		*jobProcessQueueName,
+		*jobCompleteQueueName,
+		storageAccount,
+		storageKey,
+		eventHubSenderName,
+		eventHubSenderKey,
+		eventHubNamespaceName,
+		eventHubHubName
 }
 
 func main() {
-	workerThreadCount, jobProcessQueueName, jobCompleteQueueName, storageAccount, storageKey, eventHubSenderName, eventHubSenderKey, eventHubNamespaceName, eventHubHubName := initializeApplicationVariables()
+	ctx, cancel := context.WithCancel(context.Background())
 
-	log.Printf("Starting worker\n")
+	workerThreadCount,
+		jobProcessQueueName,
+		jobCompleteQueueName,
+		storageAccount,
+		storageKey,
+		eventHubSenderName,
+		eventHubSenderKey,
+		eventHubNamespaceName,
+		eventHubHubName := initializeApplicationVariables()
 
-	log.Printf("worker thread count: %d\n", workerThreadCount)
-	log.Printf("\n")
-	log.Printf("Storage Details:\n")
-	log.Printf("\tstorage account: %s\n", storageAccount)
-	log.Printf("\tstorage account key: %s\n", storageKey)
-	log.Printf("Eventhub Details:\n")
-	log.Printf("\teventHubSenderName: %s\n", eventHubSenderName)
-	log.Printf("\teventHubSenderKey: %s\n", eventHubSenderKey)
-	log.Printf("\teventHubNamespaceName: %s\n", eventHubNamespaceName)
-	log.Printf("\teventHubHubName: %s\n", eventHubHubName)
-	log.Printf("job process queue name: %s\n", jobProcessQueueName)
-	log.Printf("job completion queue name: %s\n", jobCompleteQueueName)
+	eventHub := edasim.InitializeReaderWriters(ctx, eventHubSenderName, eventHubSenderKey, eventHubNamespaceName, eventHubHubName)
 
-	// TODO: implement uploader
+	log.Info.Printf("Starting worker\n")
+	log.Info.Printf("worker thread count: %d\n", workerThreadCount)
+	log.Info.Printf("storage account: %s\n", storageAccount)
+	log.Info.Printf("storage account key: %s\n", storageKey)
+	log.Info.Printf("job process queue name: %s\n", jobProcessQueueName)
+	log.Info.Printf("job completion queue name: %s\n", jobCompleteQueueName)
+
+	// TODO: implement worker
+
+	// wait on ctrl-c
+	sigchan := make(chan os.Signal, 10)
+	// catch all signals since this is to run as daemon
+	signal.Notify(sigchan)
+	//signal.Notify(sigchan, os.Interrupt)
+	<-sigchan
+	log.Info.Printf("Received ctrl-c, stopping services...")
+	cancel()
+
+	log.Info.Printf("wait for the event hub sender to complete")
+
+	for {
+		if eventHub.IsSenderComplete() {
+			break
+		} else {
+			time.Sleep(time.Duration(10) * time.Millisecond)
+		}
+	}
+
+	log.Info.Printf("worker finished\n")
 }
