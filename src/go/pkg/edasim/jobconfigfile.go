@@ -23,7 +23,7 @@ func InitializeJobConfigFile(name string) *JobConfigFile {
 }
 
 // InitializeJobCompleteFile sets the unique name of the job configuration and the batch name and is used to signify job completion
-func InitializeJobCompleteFile(name string, batchName string) *JobConfigFile {
+func InitializeJobCompleteFile(name string) *JobConfigFile {
 	return initializeJobFile(name, true)
 }
 
@@ -55,8 +55,15 @@ func ReadJobConfigFile(reader *file.ReaderWriter, filename string) (*JobConfigFi
 
 // WriteJobConfigFile writes the job configuration file to disk, padding it so it makes the necessary size
 func (j *JobConfigFile) WriteJobConfigFile(writer *file.ReaderWriter, filepath string, fileSize int) (string, error) {
-	log.Debug.Printf("[WriteJobConfigFile %s", filepath)
-	defer log.Debug.Printf("WriteJobConfigFile %s]", filepath)
+	filename := ""
+	if j.IsCompleteFile == true {
+		filename = path.Join(filepath, j.getJobConfigCompleteName())
+	} else {
+		filename = path.Join(filepath, j.getJobConfigName())
+	}
+
+	log.Debug.Printf("[WriteJobConfigFile(%s)", filename)
+	defer log.Debug.Printf("WriteJobConfigFile(%s)]", filename)
 	// learn the size of the current object
 	data, err := json.Marshal(j)
 	if err != nil {
@@ -71,13 +78,6 @@ func (j *JobConfigFile) WriteJobConfigFile(writer *file.ReaderWriter, filepath s
 		if err != nil {
 			return "", err
 		}
-	}
-
-	filename := ""
-	if j.IsCompleteFile {
-		filename = path.Join(filepath, j.getJobConfigName())
-	} else {
-		filename = path.Join(filepath, j.getJobConfigCompleteName())
 	}
 
 	if err := writer.WriteFile(filename, []byte(data), GetBatchName(filename)); err != nil {

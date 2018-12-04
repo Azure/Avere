@@ -28,7 +28,7 @@ type Orchestrator struct {
 	UploaderQueue               *azure.Queue
 	JobFileSizeKB               int
 	JobStartFileCount           int
-	JobProcessFilesPath         string
+	PathManager                 *file.RoundRobinPathManager
 	JobCompleteFileSizeKB       int
 	JobCompleteFailedFileSizeKB int
 	JobFailedProbability        float64
@@ -50,7 +50,7 @@ func InitializeOrchestrator(
 	uploaderQueueName string,
 	jobFileSizeKB int,
 	jobStartFileCount int,
-	jobProcessFilesPath string,
+	jobProcessFilesPaths []string,
 	jobCompleteFileSizeKB int,
 	jobCompleteFailedFileSizeKB int,
 	jobFailedProbability float64,
@@ -65,7 +65,7 @@ func InitializeOrchestrator(
 		UploaderQueue:               azure.InitializeQueue(ctx, storageAccount, storageAccountKey, uploaderQueueName),
 		JobFileSizeKB:               jobFileSizeKB,
 		JobStartFileCount:           jobStartFileCount,
-		JobProcessFilesPath:         jobProcessFilesPath,
+		PathManager:                 file.InitializeRoundRobinPathManager(jobProcessFilesPaths),
 		JobCompleteFileSizeKB:       jobCompleteFileSizeKB,
 		JobCompleteFailedFileSizeKB: jobCompleteFailedFileSizeKB,
 		JobFailedProbability:        jobFailedProbability,
@@ -244,7 +244,7 @@ func (o *Orchestrator) handleMessage(msg *azqueue.DequeuedMessage) error {
 }
 
 func (o *Orchestrator) getDirectory(batchName string) string {
-	fullPath := path.Join(o.JobProcessFilesPath, batchName)
+	fullPath := path.Join(o.PathManager.GetNextPath(), batchName)
 	o.DirManager.EnsureDirectory(fullPath)
 	return fullPath
 }

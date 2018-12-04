@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 	"sync"
 	"time"
 
@@ -45,11 +46,11 @@ func verifyEnvVars() bool {
 	return available
 }
 
-func initializeApplicationVariables() (int, int, string, string, int, string, string, string, string, string, string) {
+func initializeApplicationVariables() (int, int, []string, string, int, string, string, string, string, string, string) {
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
 	var jobCount = flag.Int("jobCount", edasim.DefaultJobCount, "the number of jobs to start")
 	var jobFileConfigSizeKB = flag.Int("jobFileConfigSizeKB", edasim.DefaultFileSizeKB, "the jobfile size in KB to write at start of job")
-	var jobBaseFilePath = flag.String("jobBaseFilePath", "", "the job file path")
+	var jobBaseFilePathCSV = flag.String("jobBaseFilePathCSV", "", "one or more job file paths separated by commas")
 	var jobReadyQueueName = flag.String("jobReadyQueueName", edasim.QueueJobReady, "the job ready queue name")
 	var userCount = flag.Int("userCount", edasim.DefaultUserCount, "the number of concurrent users submitting jobs")
 
@@ -71,16 +72,20 @@ func initializeApplicationVariables() (int, int, string, string, int, string, st
 	eventHubNamespaceName := cli.GetEnv(azure.AZURE_EVENTHUB_NAMESPACENAME)
 	eventHubHubName := cli.GetEnv(azure.AZURE_EVENTHUB_HUBNAME)
 
-	if len(*jobBaseFilePath) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: jobBaseFilePath is not specified\n")
+	if len(*jobBaseFilePathCSV) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: jobBaseFilePathCSV is not specified\n")
 		usage()
 		os.Exit(1)
 	}
 
-	if _, err := os.Stat(*jobBaseFilePath); os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "ERROR: jobBaseFilePath '%s' does not exist\n", *jobBaseFilePath)
-		usage()
-		os.Exit(1)
+	jobBaseFilePaths := strings.Split(*jobBaseFilePathCSV, ",")
+
+	for _, path := range jobBaseFilePaths {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			fmt.Fprintf(os.Stderr, "ERROR: jobBaseFilePath '%s' does not exist\n", path)
+			usage()
+			os.Exit(1)
+		}
 	}
 
 	if len(*jobReadyQueueName) == 0 {
@@ -97,7 +102,7 @@ func initializeApplicationVariables() (int, int, string, string, int, string, st
 
 	return *jobCount,
 		*jobFileConfigSizeKB,
-		*jobBaseFilePath,
+		jobBaseFilePaths,
 		*jobReadyQueueName,
 		*userCount,
 		storageAccount,
@@ -115,17 +120,23 @@ func initializeJobSubmitters(
 	storageAccount string,
 	storageKey string,
 	jobReadyQueueName string,
-	jobBaseFilePath string,
+	jobBaseFilePaths []string,
 	jobFileConfigSizeKB int) []*edasim.JobSubmitter {
 
 	batchName := edasim.GenerateBatchName(jobCount)
 
-	jobNamePath := path.Join(jobBaseFilePath, batchName)
+	jobNamePaths := make([]string, 0, len(jobBaseFilePaths))
 
-	if e := os.MkdirAll(jobNamePath, os.ModePerm); e != nil {
-		log.Error.Printf("unable to create directory '%s': %v\n", jobNamePath, e)
-		usage()
-		os.Exit(1)
+	for _, jobBaseFilePath := range jobBaseFilePaths {
+		jobNamePath := path.Join(jobBaseFilePath, batchName)
+
+		if e := os.MkdirAll(jobNamePath, os.ModePerm); e != nil {
+			log.Error.Printf("unable to create directory '%s': %v\n", jobNamePath, e)
+			usage()
+			os.Exit(1)
+		}
+
+		jobNamePaths = append(jobNamePaths, jobNamePath)
 	}
 
 	jobSubmitters := make([]*edasim.JobSubmitter, 0, userCount)
@@ -142,7 +153,7 @@ func initializeJobSubmitters(
 			extrajob = 1
 		}
 
-		jobSubmitters = append(jobSubmitters, edasim.InitializeJobSubmitter(ctx, batchName, i, storageQueue, jobsPerUser+extrajob, jobNamePath, jobFileConfigSizeKB))
+		jobSubmitters = append(jobSubmitters, edasim.InitializeJobSubmitter(ctx, batchName, i, storageQueue, jobsPerUser+extrajob, jobNamePaths, jobFileConfigSizeKB))
 	}
 
 	return jobSubmitters
@@ -153,7 +164,7 @@ func main() {
 
 	jobCount,
 		jobFileConfigSizeKB,
-		jobBaseFilePath,
+		jobBaseFilePaths,
 		jobReadyQueueName,
 		userCount,
 		storageAccount,
@@ -167,7 +178,7 @@ func main() {
 
 	log.Info.Printf("Starting job submission of %d jobs for batch %s\n", jobCount, edasim.GenerateBatchName(jobCount))
 
-	jobSubmitters := initializeJobSubmitters(ctx, userCount, jobCount, storageAccount, storageKey, jobReadyQueueName, jobBaseFilePath, jobFileConfigSizeKB)
+	jobSubmitters := initializeJobSubmitters(ctx, userCount, jobCount, storageAccount, storageKey, jobReadyQueueName, jobBaseFilePaths, jobFileConfigSizeKB)
 
 	userSyncWaitGroup := sync.WaitGroup{}
 	userSyncWaitGroup.Add(len(jobSubmitters))
