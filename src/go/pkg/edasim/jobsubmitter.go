@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/azure/avere/src/go/pkg/azure"
+	"github.com/azure/avere/src/go/pkg/file"
 	"github.com/azure/avere/src/go/pkg/log"
 )
 
@@ -16,19 +17,19 @@ type JobSubmitter struct {
 	ID            int
 	ReadyQueue    *azure.Queue
 	JobCount      int
-	JobPath       string
+	PathManager   *file.RoundRobinPathManager
 	JobFileSizeKB int
 }
 
 // InitializeJobSubmitter initializes the job submitter structure
-func InitializeJobSubmitter(ctx context.Context, batchName string, id int, readyQueue *azure.Queue, jobCount int, jobPath string, jobFileSizeKB int) *JobSubmitter {
+func InitializeJobSubmitter(ctx context.Context, batchName string, id int, readyQueue *azure.Queue, jobCount int, jobPaths []string, jobFileSizeKB int) *JobSubmitter {
 	return &JobSubmitter{
 		Context:       ctx,
 		BatchName:     batchName,
 		ID:            id,
 		ReadyQueue:    readyQueue,
 		JobCount:      jobCount,
-		JobPath:       jobPath,
+		PathManager:   file.InitializeRoundRobinPathManager(jobPaths),
 		JobFileSizeKB: jobFileSizeKB,
 	}
 }
@@ -40,7 +41,7 @@ func (j *JobSubmitter) Run(syncWaitGroup *sync.WaitGroup) {
 
 	for i := 0; i < j.JobCount; i++ {
 		jobConfigFile := InitializeJobConfigFile(j.getJobName(i))
-		jobFilePath, err := jobConfigFile.WriteJobConfigFile(JobWriter, j.JobPath, j.JobFileSizeKB)
+		jobFilePath, err := jobConfigFile.WriteJobConfigFile(JobWriter, j.PathManager.GetNextPath(), j.JobFileSizeKB)
 		if err != nil {
 			log.Error.Printf("error writing job file: %v", err)
 			continue

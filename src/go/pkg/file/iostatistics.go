@@ -26,6 +26,7 @@ type IOStatistics struct {
 	BatchName       string
 	Label           string
 	Operation       Operation
+	Path            string
 	CreateTimeNS    time.Duration
 	CloseTimeNS     time.Duration
 	ReadWriteTimeNS time.Duration
@@ -40,6 +41,7 @@ func InitializeIOStatistics(
 	batchName string,
 	label string,
 	operation Operation,
+	path string,
 	createTimeNS time.Duration,
 	closeTimeNS time.Duration,
 	readWriteTimeNS time.Duration,
@@ -54,6 +56,7 @@ func InitializeIOStatistics(
 		BatchName:       batchName,
 		Label:           label,
 		Operation:       operation,
+		Path:            path,
 		CreateTimeNS:    createTimeNS,
 		CloseTimeNS:     closeTimeNS,
 		ReadWriteTimeNS: readWriteTimeNS,
@@ -93,6 +96,7 @@ func (i *IOStatistics) CSVHeader() []string {
 	header = append(header, "BatchName")
 	header = append(header, "Label")
 	header = append(header, "Operation")
+	header = append(header, "Path")
 	header = append(header, "CreateTimeNS")
 	header = append(header, "CloseTimeNS")
 	header = append(header, "ReadWriteTimeNS")
@@ -110,6 +114,7 @@ func (i *IOStatistics) ToStringArray() []string {
 	row = append(row, i.BatchName)
 	row = append(row, i.Label)
 	row = append(row, string(i.Operation))
+	row = append(row, i.Path)
 	row = append(row, fmt.Sprintf("%d", i.CreateTimeNS))
 	row = append(row, fmt.Sprintf("%d", i.CloseTimeNS))
 	row = append(row, fmt.Sprintf("%d", i.ReadWriteTimeNS))

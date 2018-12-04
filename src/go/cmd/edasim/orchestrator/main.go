@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"time"
 
@@ -62,7 +63,7 @@ func initializeApplicationVariables(ctx context.Context) (*azure.EventHubSender,
 
 	var jobStartFileConfigSizeKB = flag.Int("jobStartFileConfigSizeKB", edasim.DefaultFileSizeKB, "the job start file size in KB to write at start of job")
 	var jobStartFileCount = flag.Int("jobStartFileCount", edasim.DefaultJobStartFiles, "the count of start job files")
-	var jobStartFileBasePath = flag.String("jobStartFileBasePath", "", "the job file path")
+	var jobStartFileBasePathCSV = flag.String("jobStartFileBasePathCSV", "", "one or more job file paths separated by commas, this is where the work files are written")
 	var jobCompleteFileSizeKB = flag.Int("jobCompleteFileSizeKB", 384, "the job complete file size in KB to write after job completed")
 	var jobCompleteFailedFileSizeKB = flag.Int("jobCompleteFailedFileSizeKB", 1024, "the job start file size in KB to write at start of job")
 	var jobFailedProbability = flag.Float64("jobFailedProbability", 0.01, "the probability of a job failure")
@@ -88,16 +89,19 @@ func initializeApplicationVariables(ctx context.Context) (*azure.EventHubSender,
 	eventHubNamespaceName := cli.GetEnv(azure.AZURE_EVENTHUB_NAMESPACENAME)
 	eventHubHubName := cli.GetEnv(azure.AZURE_EVENTHUB_HUBNAME)
 
-	if len(*jobStartFileBasePath) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: jobStartFileBasePath is not specified\n")
+	if len(*jobStartFileBasePathCSV) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: jobStartFileBasePathCSV is not specified\n")
 		usage()
 		os.Exit(1)
 	}
 
-	if _, err := os.Stat(*jobStartFileBasePath); os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "ERROR: jobStartFileBasePath '%s' does not exist\n", *jobStartFileBasePath)
-		usage()
-		os.Exit(1)
+	jobStartFilePaths := strings.Split(*jobStartFileBasePathCSV, ",")
+	for _, path := range jobStartFilePaths {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			fmt.Fprintf(os.Stderr, "ERROR: jobStartFilePath '%s' does not exist\n", path)
+			usage()
+			os.Exit(1)
+		}
 	}
 
 	validateQueue(*jobReadyQueueName, "jobReadyQueueName")
@@ -122,7 +126,7 @@ func initializeApplicationVariables(ctx context.Context) (*azure.EventHubSender,
 		*uploaderQueueName,
 		*jobStartFileConfigSizeKB,
 		*jobStartFileCount,
-		*jobStartFileBasePath,
+		jobStartFilePaths,
 		*jobCompleteFileSizeKB,
 		*jobCompleteFailedFileSizeKB,
 		*jobFailedProbability,
