@@ -3,6 +3,8 @@ package file
 import (
 	"os"
 	"sync"
+
+	"github.com/azure/avere/src/go/pkg/log"
 )
 
 // DirectoryManager ensures directories are created, and ensuring only a single create ever gets sent to filesystem
@@ -24,6 +26,7 @@ func (d *DirectoryManager) EnsureDirectory(path string) error {
 	defer d.mux.Unlock()
 
 	if _, ok := d.directories[path]; !ok {
+		log.Info.Printf("os.MkdirAll(%s)", path)
 		if e := os.MkdirAll(path, os.ModePerm); e != nil {
 			return e
 		}

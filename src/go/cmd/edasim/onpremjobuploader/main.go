@@ -1,15 +1,17 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
-	"log"
 	"os"
-	"path"
+	"os/signal"
 	"time"
 
 	"github.com/azure/avere/src/go/pkg/azure"
 	"github.com/azure/avere/src/go/pkg/cli"
+	"github.com/azure/avere/src/go/pkg/edasim"
+	"github.com/azure/avere/src/go/pkg/log"
 )
 
 func usage(errs ...error) {
@@ -56,12 +58,16 @@ func getEnv(envVarName string) string {
 	return s
 }
 
-func initializeApplicationVariables() (string, string, int, string, string, string, string, string, string) {
-	var jobFilePath = flag.String("jobFilePath", "", "the job file path")
-	var uploaderQueueName = flag.String("uploaderQueueName", "", "the uploader job queue name")
+func initializeApplicationVariables() (string, int, string, string, string, string, string, string) {
+	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
+	var uploaderQueueName = flag.String("uploaderQueueName", edasim.QueueUploader, "the uploader job queue name")
 	var threadCount = flag.Int("threadCount", 1, "the number of concurrent threads uploading jobs")
 
 	flag.Parse()
+
+	if *enableDebugging {
+		log.EnableDebugging()
+	}
 
 	if envVarsAvailable := verifyEnvVars(); !envVarsAvailable {
 		usage()
@@ -75,51 +81,62 @@ func initializeApplicationVariables() (string, string, int, string, string, stri
 	eventHubNamespaceName := cli.GetEnv(azure.AZURE_EVENTHUB_NAMESPACENAME)
 	eventHubHubName := cli.GetEnv(azure.AZURE_EVENTHUB_HUBNAME)
 
-	if len(*jobFilePath) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: jobFilePath is not specified\n")
-		usage()
-		os.Exit(1)
-	}
-
-	if _, err := os.Stat(*jobFilePath); os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "ERROR: jobFilePath '%s' does not exist\n", *jobFilePath)
-		usage()
-		os.Exit(1)
-	}
-
 	if len(*uploaderQueueName) == 0 {
 		fmt.Fprintf(os.Stderr, "ERROR: uploaderQueueName is not specified\n")
 		usage()
 		os.Exit(1)
 	}
 
-	return *jobFilePath, *uploaderQueueName, *threadCount, storageAccount, storageKey, eventHubSenderName, eventHubSenderKey, eventHubNamespaceName, eventHubHubName
-}
-
-func GetJobNamePath(fullJobPath string, jobCount int) string {
-	t := time.Now()
-	jobName := fmt.Sprintf("job-%02d-%02d-%02d-%02d%02d%02d-%d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), jobCount)
-	return path.Join(fullJobPath, jobName)
+	return *uploaderQueueName,
+		*threadCount,
+		storageAccount,
+		storageKey,
+		eventHubSenderName,
+		eventHubSenderKey,
+		eventHubNamespaceName,
+		eventHubHubName
 }
 
 func main() {
-	jobFilePath, uploaderQueueName, threadCount, storageAccount, storageKey, eventHubSenderName, eventHubSenderKey, eventHubNamespaceName, eventHubHubName := initializeApplicationVariables()
+	ctx, cancel := context.WithCancel(context.Background())
 
-	log.Printf("Starting job uploading\n")
-	log.Printf("\tJob Path: %s\n", jobFilePath)
-	log.Printf("\n")
-	log.Printf("Storage Details:\n")
-	log.Printf("\tstorage account: %s\n", storageAccount)
-	log.Printf("\tstorage account key: %s\n", storageKey)
-	log.Printf("Eventhub Details:\n")
-	log.Printf("\teventHubSenderName: %s\n", eventHubSenderName)
-	log.Printf("\teventHubSenderKey: %s\n", eventHubSenderKey)
-	log.Printf("\teventHubNamespaceName: %s\n", eventHubNamespaceName)
-	log.Printf("\teventHubHubName: %s\n", eventHubHubName)
-	log.Printf("\tuploader queue name: %s\n", uploaderQueueName)
-	log.Printf("threadCount: %d\n", threadCount)
+	uploaderQueueName,
+		threadCount,
+		storageAccount,
+		storageKey,
+		eventHubSenderName,
+		eventHubSenderKey,
+		eventHubNamespaceName,
+		eventHubHubName := initializeApplicationVariables()
 
-	// TODO - implement worker
+	eventHub := edasim.InitializeReaderWriters(ctx, eventHubSenderName, eventHubSenderKey, eventHubNamespaceName, eventHubHubName)
 
-	log.Printf("Uploader queue empty, completed uploading of jobs\n")
+	log.Info.Printf("Starting job uploading\n")
+	log.Info.Printf("storage account: %s\n", storageAccount)
+	log.Info.Printf("storage account key: %s\n", storageKey)
+	log.Info.Printf("uploader queue name: %s\n", uploaderQueueName)
+	log.Info.Printf("threadCount: %d\n", threadCount)
+
+	// TODO - implement uploader
+
+	// wait on ctrl-c
+	sigchan := make(chan os.Signal, 10)
+	// catch all signals since this is to run as daemon
+	signal.Notify(sigchan)
+	//signal.Notify(sigchan, os.Interrupt)
+	<-sigchan
+	log.Info.Printf("Received ctrl-c, stopping services...")
+	cancel()
+
+	log.Info.Printf("wait for the event hub sender to complete")
+
+	for {
+		if eventHub.IsSenderComplete() {
+			break
+		} else {
+			time.Sleep(time.Duration(10) * time.Millisecond)
+		}
+	}
+
+	log.Info.Printf("Uploader finished\n")
 }

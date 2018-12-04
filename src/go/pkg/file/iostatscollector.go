@@ -3,10 +3,11 @@ package file
 import (
 	"encoding/csv"
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"sync"
+
+	"github.com/azure/avere/src/go/pkg/log"
 )
 
 // IOStatsCollector holds a collection of events
@@ -28,7 +29,7 @@ func (i *IOStatsCollector) RecordEvent(eMsg string) {
 	defer i.mux.Unlock()
 	ios, err := InitializeIOStatisticsFromString(eMsg)
 	if err != nil {
-		log.Printf("unable to parse iostatistics, error: %v", err)
+		log.Info.Printf("unable to parse iostatistics, error: %v", err)
 		return
 	}
 
@@ -52,12 +53,12 @@ func (i *IOStatsCollector) WriteRAWFiles(statsPath string) {
 	for k, batch := range i.BatchMap {
 		batchDir := path.Join(statsPath, k)
 
-		log.Printf("mkdir all %s", batchDir)
+		log.Info.Printf("mkdir all %s", batchDir)
 		os.MkdirAll(batchDir, os.ModePerm)
 
 		for categoryName, categoryRows := range batch {
 			if categoryRows.GetRowCount() == 0 {
-				log.Printf("ERROR: there are no category rows empty, how did this object get created?")
+				log.Error.Printf("there are no category rows empty, how did this object get created?")
 				continue
 			}
 			filename := path.Join(batchDir, fmt.Sprintf("%s.csv", categoryName))
@@ -73,25 +74,25 @@ func (i *IOStatsCollector) WriteBatchSummaryFiles(statsPath string) {
 	for k, batch := range i.BatchMap {
 		batchDir := path.Join(statsPath, k)
 
-		log.Printf("mkdir all %s", batchDir)
+		log.Info.Printf("mkdir all %s", batchDir)
 		os.MkdirAll(batchDir, os.ModePerm)
 
 		summaryFilename := path.Join(batchDir, "summary.csv")
 		sf, err := os.Create(summaryFilename)
 		if err != nil {
-			log.Printf("error encountered creating file: %v", err)
+			log.Error.Printf("error encountered creating file: %v", err)
 			continue
 		}
 		sfw := csv.NewWriter(sf)
 		err = sfw.Write(GetSummaryHeader())
 		if err != nil {
-			log.Printf("error writing summary header: %v", err)
+			log.Error.Printf("error writing summary header: %v", err)
 			continue
 		}
 
 		for _, categoryRows := range batch {
 			if categoryRows.GetRowCount() == 0 {
-				log.Printf("ERROR: there are no category rows empty, how did this object get created?")
+				log.Error.Printf("there are no category rows empty, how did this object get created?")
 				continue
 			}
 			categoryRows.WriteSummaryLines(sfw)
@@ -99,7 +100,7 @@ func (i *IOStatsCollector) WriteBatchSummaryFiles(statsPath string) {
 
 		sfw.Flush()
 		if sfw.Error() != nil {
-			log.Printf("error flushing summary file: %v", sfw.Error())
+			log.Error.Printf("error flushing summary file: %v", sfw.Error())
 		}
 		sf.Close()
 	}

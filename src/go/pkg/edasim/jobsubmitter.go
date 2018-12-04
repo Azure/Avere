@@ -3,11 +3,10 @@ package edasim
 import (
 	"context"
 	"fmt"
-	"log"
 	"sync"
 
 	"github.com/azure/avere/src/go/pkg/azure"
-	"github.com/azure/avere/src/go/pkg/file"
+	"github.com/azure/avere/src/go/pkg/log"
 )
 
 // JobSubmitter defines the structure used for the job submitter process
@@ -37,26 +36,24 @@ func InitializeJobSubmitter(ctx context.Context, batchName string, id int, ready
 // Run is the entry point for the JobSubmitter go routine
 func (j *JobSubmitter) Run(syncWaitGroup *sync.WaitGroup) {
 	defer syncWaitGroup.Done()
-	log.Printf("JobSubmitter %d: starting to submit %d jobs\n", j.ID, j.JobCount)
-
-	writer := j.Context.Value(ReaderWriterContextKey).(*file.ReaderWriter)
+	log.Info.Printf("JobSubmitter %d: starting to submit %d jobs\n", j.ID, j.JobCount)
 
 	for i := 0; i < j.JobCount; i++ {
 		jobConfigFile := InitializeJobConfigFile(j.getJobName(i))
-		jobFilePath, err := jobConfigFile.WriteJobConfigFile(writer, j.JobPath, j.JobFileSizeKB)
+		jobFilePath, err := jobConfigFile.WriteJobConfigFile(JobWriter, j.JobPath, j.JobFileSizeKB)
 		if err != nil {
-			log.Printf("ERROR writing job file: %v", err)
+			log.Error.Printf("error writing job file: %v", err)
 			continue
 		}
 
 		// queue completion
 		if err := j.ReadyQueue.Enqueue(jobFilePath); err != nil {
-			log.Printf("ERROR enqueuing message '%s': %v", jobFilePath, err)
+			log.Error.Printf("error enqueuing message '%s': %v", jobFilePath, err)
 			continue
 		}
 	}
 
-	log.Printf("user %d: completed submitting %d jobs\n", j.ID, j.JobCount)
+	log.Info.Printf("user %d: completed submitting %d jobs\n", j.ID, j.JobCount)
 }
 
 func (j *JobSubmitter) getJobName(index int) string {

@@ -2,9 +2,10 @@ package edasim
 
 import (
 	"context"
-	"log"
 	"sync"
 	"time"
+
+	"github.com/azure/avere/src/go/pkg/log"
 )
 
 const (
@@ -14,9 +15,9 @@ const (
 
 // StatsCollector is a go routine that prints the queue statistics on a schedule
 func StatsCollector(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
-	log.Printf("starting Stats Collector\n")
+	log.Info.Printf("starting Stats Collector\n")
 	defer syncWaitGroup.Done()
-	defer log.Printf("StatsCollector complete")
+	defer log.Info.Printf("StatsCollector complete")
 	start := time.Now()
 
 	// for statistics
@@ -50,11 +51,11 @@ func StatsCollector(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
 		}
 		if time.Since(start) > secondsBetweenStats || !keepRunning {
 			start = start.Add(secondsBetweenStats)
-			log.Printf("jobsProcessedCount: %d", jobsProcessedCount)
-			log.Printf("processFilesWritten: %d", processFilesWritten)
-			log.Printf("completedJobsCount: %d", completedJobsCount)
-			log.Printf("uploadCount: %d", uploadCount)
-			log.Printf("errorCount: %d", errorCount)
+			log.Info.Printf("jobsProcessedCount: %d", jobsProcessedCount)
+			log.Info.Printf("processFilesWritten: %d", processFilesWritten)
+			log.Info.Printf("completedJobsCount: %d", completedJobsCount)
+			log.Info.Printf("uploadCount: %d", uploadCount)
+			log.Info.Printf("errorCount: %d", errorCount)
 		}
 	}
 }

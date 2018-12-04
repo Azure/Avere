@@ -50,7 +50,7 @@ func (q *Queue) Enqueue(message string) error {
 	return err
 }
 
-// Dequeue marks the item in the storage invisible
+// Dequeue marks the item in the storage invisible, but the message will re-appear until deleted
 func (q *Queue) Dequeue(maxMessages int32, visibilityTimeout time.Duration) (*azqueue.DequeuedMessagesResponse, error) {
 	return q.MessagesURL.Dequeue(q.Context, maxMessages, visibilityTimeout)
 }

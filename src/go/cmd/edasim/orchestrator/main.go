@@ -4,14 +4,15 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"sync"
+	"time"
 
 	"github.com/azure/avere/src/go/pkg/azure"
 	"github.com/azure/avere/src/go/pkg/cli"
 	"github.com/azure/avere/src/go/pkg/edasim"
+	"github.com/azure/avere/src/go/pkg/log"
 )
 
 func usage(errs ...error) {
@@ -52,7 +53,8 @@ func validateQueue(queueName string, queueNameLabel string) {
 	}
 }
 
-func initializeApplicationVariables(ctx context.Context) *edasim.Orchestrator {
+func initializeApplicationVariables(ctx context.Context) (*azure.EventHubSender, *edasim.Orchestrator) {
+	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
 	var jobReadyQueueName = flag.String("jobReadyQueueName", edasim.QueueJobReady, "the job read queue name")
 	var jobProcessQueueName = flag.String("jobProcessQueueName", edasim.QueueJobProcess, "the job process queue name")
 	var jobCompleteQueueName = flag.String("jobCompleteQueueName", edasim.QueueJobComplete, "the job completion queue name")
@@ -69,6 +71,10 @@ func initializeApplicationVariables(ctx context.Context) *edasim.Orchestrator {
 	var orchestratorThreads = flag.Int("orchestratorThreads", edasim.DefaultOrchestratorThreads, "the number of concurrent orechestratorthreads")
 
 	flag.Parse()
+
+	if *enableDebugging {
+		log.EnableDebugging()
+	}
 
 	if envVarsAvailable := verifyEnvVars(); !envVarsAvailable {
 		usage()
@@ -99,18 +105,14 @@ func initializeApplicationVariables(ctx context.Context) *edasim.Orchestrator {
 	validateQueue(*jobCompleteQueueName, "jobCompleteQueueName")
 	validateQueue(*uploaderQueueName, "uploaderQueueName")
 
-	eventHub, e := azure.InitializeEventHubSender(ctx,
+	eventHub := edasim.InitializeReaderWriters(
+		ctx,
 		eventHubSenderName,
 		eventHubSenderKey,
 		eventHubNamespaceName,
 		eventHubHubName)
 
-	if e != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: unable to initialize event hub sender.  Failed with error: %v\n", e)
-		os.Exit(1)
-	}
-
-	return edasim.InitializeOrchestrator(
+	return eventHub, edasim.InitializeOrchestrator(
 		ctx,
 		storageAccount,
 		storageKey,
@@ -125,8 +127,7 @@ func initializeApplicationVariables(ctx context.Context) *edasim.Orchestrator {
 		*jobCompleteFailedFileSizeKB,
 		*jobFailedProbability,
 		*jobCompleteFileCount,
-		*orchestratorThreads,
-		eventHub)
+		*orchestratorThreads)
 }
 
 func main() {
@@ -135,18 +136,31 @@ func main() {
 	syncWaitGroup := sync.WaitGroup{}
 
 	// initialize and start the orchestrator
-	orchestrator := initializeApplicationVariables(ctx)
+	eventHub, orchestrator := initializeApplicationVariables(ctx)
 	syncWaitGroup.Add(1)
 	go orchestrator.Run(&syncWaitGroup)
 
 	// wait on ctrl-c
 	sigchan := make(chan os.Signal, 10)
-	signal.Notify(sigchan, os.Interrupt)
+	// catch all signals since this is to run as daemon
+	signal.Notify(sigchan)
+	//signal.Notify(sigchan, os.Interrupt)
 	<-sigchan
-	log.Printf("Received ctrl-c, stopping services...")
+	log.Info.Printf("Received ctrl-c, stopping services...")
 	cancel()
 
-	log.Printf("Waiting for all processes to finish")
+	log.Info.Printf("Waiting for all processes to finish")
 	syncWaitGroup.Wait()
-	log.Printf("finished")
+
+	log.Info.Printf(" wait for the event hub sender to complete")
+
+	for {
+		if eventHub.IsSenderComplete() {
+			break
+		} else {
+			time.Sleep(time.Duration(10) * time.Millisecond)
+		}
+	}
+
+	log.Info.Printf("finished")
 }

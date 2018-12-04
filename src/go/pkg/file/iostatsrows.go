@@ -3,10 +3,10 @@ package file
 import (
 	"encoding/csv"
 	"fmt"
-	"log"
 	"os"
 	"sort"
 
+	"github.com/azure/avere/src/go/pkg/log"
 	"github.com/azure/avere/src/go/pkg/stats"
 )
 
@@ -54,7 +54,7 @@ func (i *IOStatsRows) GetSuccessCount() int {
 func (i *IOStatsRows) WriteCSVFile(filename string) {
 	f, err := os.Create(filename)
 	if err != nil {
-		log.Printf("error encountered creating file: %v", err)
+		log.Error.Printf("error encountered creating file: %v", err)
 		return
 	}
 	defer f.Close()
@@ -63,19 +63,19 @@ func (i *IOStatsRows) WriteCSVFile(filename string) {
 
 	err = w.Write(i.ioStatistics[0].CSVHeader())
 	if err != nil {
-		log.Printf("error encountered writing lines to file: %v", err)
+		log.Error.Printf("error encountered writing lines to file: %v", err)
 	}
 
 	for _, record := range i.ioStatistics {
 		err := w.Write(record.ToStringArray())
 		if err != nil {
-			log.Printf("error encountered writing lines to file: %v", err)
+			log.Error.Printf("error encountered writing lines to file: %v", err)
 			break
 		}
 	}
 	w.Flush()
 	if w.Error() != nil {
-		log.Printf("error flushing file: %v", w.Error())
+		log.Error.Printf("error flushing file: %v", w.Error())
 	}
 }
 
@@ -142,7 +142,7 @@ func (i *IOStatsRows) WriteSummaryRow(
 	}
 
 	if err := writer.Write(row); err != nil {
-		log.Printf("error writing summary lines: %v", err)
+		log.Error.Printf("error writing summary lines: %v", err)
 	}
 }
 
@@ -157,6 +157,7 @@ func (i *IOStatsRows) getPercentileValue(p int, fileop string) string {
 	case readWriteBytesFileOp:
 		return fmt.Sprintf("%d", i.ioStatistics[p].ReadWriteBytes)
 	default:
+		log.Error.Printf("getPercentileValue: Should never arrive here, panic!")
 		panic("getPercentileValue: Should never arrive here")
 	}
 }
