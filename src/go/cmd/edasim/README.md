@@ -12,7 +12,7 @@ The four components above implement the following message sequence chart:
 
 ![Message sequence chart for the job dispatch](../../../../docs/images/edasim/msc.png)
 
-# Installation Instructions for Linux
+## Installation Instructions for Linux
 
  1. If not already installed go, install golang
 
@@ -29,10 +29,19 @@ source ~/.profile
 
  2. setup edasim code
 ```bash
+# apply fix for storage queue, remove following lines once fix #9 is committed
+cd $GOPATH
+go get -v github.com/Azure/azure-storage-queue-go/...
+cd $GOPATH/src/github.com/Azure/azure-storage-queue-go
+git remote add anhowe https://github.com/anhowe/azure-storage-queue-go.git
+git fetch anhowe
+git cherry-pick 88364b1a71e18053edd3af5c0c71b53bb8585feb
+# get the edasim
+cd $GOPATH
 go get -v github.com/azure/avere/src/go/...
 ```
 
-# Storage Preparation
+## Storage Preparation
 
  1. use the portal or cloud shell to create you storage account
  1. create the following queues
@@ -46,7 +55,7 @@ export AZURE_STORAGE_ACCOUNT=YOUR_STORAGE_ACCOUNT
 export AZURE_STORAGE_ACCOUNT_KEY=YOUR_STORAGE_ACCOUNT_KEY
 ```
 
-# Event Hub Prepration
+## Event Hub Preparation
 
  1. use the portal or cloud shell to create an "Event Hubs Namespace" Resource with Pricing Tier "Standard" resource in the same region as the vFXT.  For this example, we created `edasimeventhub`
  1. once created, browse to the "Event Hubs Namespace" in the portal and click "+Event Hub" to add an event hub keeping the defaults of 2 partition counts and 1 day message retention.  For this example, we created event hub `edasim`
@@ -60,7 +69,7 @@ export AZURE_EVENTHUB_NAMESPACENAME="edasimeventhub"
 export AZURE_EVENTHUB_HUBNAME="edasim"
 ```
 
-# To Run
+## To Run
 
 Build all the binaries:
 ```bash
