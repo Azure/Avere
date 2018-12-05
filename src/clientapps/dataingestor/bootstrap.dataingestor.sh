@@ -65,7 +65,9 @@ function mount_avere() {
         echo "Mounting to ${VFXT}:${NFS_PATH} to ${MOUNT_POINT}"
         mkdir -p $MOUNT_POINT
         # no need to write again if it is already there
-        if grep -v --quiet $VFXT /etc/fstab; then
+        if grep -F --quiet "$VFXT" /etc/fstab; then
+            echo "not updating file, already there"
+        else
             echo "${VFXT}:${NFS_PATH}    ${MOUNT_POINT}    nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0" >> /etc/fstab
             mount ${MOUNT_POINT}
         fi

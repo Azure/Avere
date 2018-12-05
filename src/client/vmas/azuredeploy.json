@@ -78,6 +78,14 @@
       "metadata": {
         "description": "The path on the mounted NFS share to the bootstrap script used for further installation. (ex. '/bootstrap/bootstrap.sh')"
       }
+    },
+    "appEnvironmentVariables": {
+      "type": "securestring",
+      "defaultValue": "",
+      "minLength": 0,
+      "metadata": {
+        "description": "Optional environment variables set before calling the bootstrapt script.  Example: \"ENV1=foo ENV2=bar\""
+      }
     }
   },
   "variables": {
@@ -106,7 +114,7 @@
         "sku": "18.04-LTS",
         "version": "latest"
     },
-    "environmentVariables": "[concat(' LINUX_USER=',variables('adminUsername'),' NODE_PREFIX=', variables('vmName'),' NODE_COUNT=',variables('vmCount'),' BASE_DIR=',variables('nfsMountBaseDir'),' BOOTSTRAP_NFS_IP=', variables('bootstrapNFSIP'),' BOOTSTRAP_SCRIPT_PATH=', variables('bootstrapScriptPath'),' NFS_IP_CSV=\"',variables('nfsCommaSeparatedAddresses'),'\"',' NFS_PATH=', variables('nfsExportPath'))]"
+    "environmentVariables": "[concat(' ',parameters('appEnvironmentVariables'),' LINUX_USER=',variables('adminUsername'),' NODE_PREFIX=', variables('vmName'),' NODE_COUNT=',variables('vmCount'),' BASE_DIR=',variables('nfsMountBaseDir'),' BOOTSTRAP_NFS_IP=', variables('bootstrapNFSIP'),' BOOTSTRAP_SCRIPT_PATH=', variables('bootstrapScriptPath'),' NFS_IP_CSV=\"',variables('nfsCommaSeparatedAddresses'),'\"',' NFS_PATH=', variables('nfsExportPath'))]"
   },
   "resources": [
     {
