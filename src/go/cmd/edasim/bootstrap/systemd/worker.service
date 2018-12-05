@@ -1,0 +1,28 @@
+[Unit]
+Description=EDA Simulator Worker
+ConditionPathExists=/usr/local/bin/worker
+After=network.target
+ 
+[Service]
+Type=simple
+User=USERREPLACE
+Group=GROUPREPLACE
+LimitNOFILE=16384
+
+Restart=always
+RestartSec=2
+
+EnvironmentFile=/etc/default/edasim
+ExecStart=/usr/local/bin/worker
+
+# make sure log directory exists and owned by syslog
+PermissionsStartOnly=true
+ExecStartPre=/bin/mkdir -p /var/log/edasim
+ExecStartPre=/bin/chown syslog:adm /var/log/edasim
+ExecStartPre=/bin/chmod 755 /var/log/edasim
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=worker
+ 
+[Install]
+WantedBy=multi-user.target
