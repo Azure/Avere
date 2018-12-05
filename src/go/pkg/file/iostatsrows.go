@@ -87,10 +87,13 @@ func GetSummaryHeader() []string {
 	header = append(header, "SampleSize")
 	header = append(header, "%success")
 	header = append(header, "FileOp")
+	header = append(header, "P5")
+	header = append(header, "P25")
 	header = append(header, "P50")
 	header = append(header, "P75")
 	header = append(header, "P90")
 	header = append(header, "P95")
+	header = append(header, "P99")
 	return header
 }
 
@@ -104,10 +107,14 @@ func (i *IOStatsRows) WriteSummaryLines(writer *csv.Writer) {
 	sampleSize := len(i.ioStatistics)
 	percentSuccess := float64(i.GetSuccessCount()) / float64(sampleSize)
 	percentileArray := []int{
+		stats.GetPercentileIndex(float64(5), sampleSize),
+		stats.GetPercentileIndex(float64(25), sampleSize),
 		stats.GetPercentileIndex(float64(50), sampleSize),
 		stats.GetPercentileIndex(float64(75), sampleSize),
+		stats.GetPercentileIndex(float64(90), sampleSize),
 		stats.GetPercentileIndex(float64(95), sampleSize),
-		stats.GetPercentileIndex(float64(90), sampleSize)}
+		stats.GetPercentileIndex(float64(99), sampleSize),
+	}
 
 	lessCreateTimeNS := func(x, y int) bool { return i.ioStatistics[x].CreateTimeNS < i.ioStatistics[y].CreateTimeNS }
 	i.WriteSummaryRow(writer, batchName, label, sampleSize, percentSuccess, percentileArray, createTimeNSFileOp, lessCreateTimeNS)
@@ -149,11 +156,11 @@ func (i *IOStatsRows) WriteSummaryRow(
 func (i *IOStatsRows) getPercentileValue(p int, fileop string) string {
 	switch fileop {
 	case createTimeNSFileOp:
-		return fmt.Sprintf("%d", i.ioStatistics[p].CreateTimeNS)
+		return fmt.Sprintf("%d", i.ioStatistics[p].CreateTimeNS/(1000*1000))
 	case closeTimeNSFileOp:
-		return fmt.Sprintf("%d", i.ioStatistics[p].CloseTimeNS)
+		return fmt.Sprintf("%d", i.ioStatistics[p].CloseTimeNS/(1000*1000))
 	case readWriteTimeNSFileOp:
-		return fmt.Sprintf("%d", i.ioStatistics[p].ReadWriteTimeNS)
+		return fmt.Sprintf("%d", i.ioStatistics[p].ReadWriteTimeNS/(1000*1000))
 	case readWriteBytesFileOp:
 		return fmt.Sprintf("%d", i.ioStatistics[p].ReadWriteBytes)
 	default:
