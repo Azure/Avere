@@ -67,7 +67,7 @@ These deployment instructions describe the installation of all components requir
    vi ~/.ssh/id_rsa
    ```
 	
-2. Run `./copy_idrsa.sh` to copy your private key to all nodes, and to add all nodes to the "known hosts" list. (**Note** if your ssh key requires a passphrase, some extra steps are needed to make this work. Consider creating a key that does not require a passphrase for ease of use.)
+2. During installation, `copy_dirsa.sh` was installed to `~/.` on the vdbench client machine, to enable easy copying of your private key to all vdbench clients.  Run `~/copy_idrsa.sh` to copy your private key to all vdbench clients, and to add all clients to the "known hosts" list. (**Note** if your ssh key requires a passphrase, some extra steps are needed to make this work. Consider creating a key that does not require a passphrase for ease of use.)
 
 
 ### Memory test 
