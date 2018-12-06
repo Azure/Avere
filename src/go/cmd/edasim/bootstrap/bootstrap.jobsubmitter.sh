@@ -26,7 +26,7 @@ wait_azure_home_dir
 NODE_MOUNT_PREFIX="/node"
 JOB_DIR="/job"
 WORK_DIR="/work"
-ORCHESTRATOR_SERVICE=jobsubmitter
+STATS_DIR="/stats"
 
 function wait_azure_home_dir() {
     counter=0
@@ -134,10 +134,20 @@ function configure_user() {
     JOBDIRCSV=$(get_node_csv_string $JOB_DIR)
     JOBSUBMITTERSCRIPT="${AZURE_HOME_DIR}/job_submitter.sh"
     /bin/cat <<EOM >$JOBSUBMITTERSCRIPT
-jobsubmitter -userCount=16 -jobBaseFilePathCSV=${JOBDIRCSV}
+jobsubmitter -userCount=16 -jobBaseFilePathCSV=${JOBDIRCSV} -jobCount 3000
 EOM
     chown $LINUX_USER:$LINUX_USER $JOBSUBMITTERSCRIPT
     chmod 755 $JOBSUBMITTERSCRIPT
+
+    # write the jobsubmitter script file
+    STATS_COLLECTOR_SCRIPT="${AZURE_HOME_DIR}/stats_collector.sh"
+    TARGET_DIR=${BASE_DIR}${NODE_MOUNT_PREFIX}0${STATS_DIR}
+    mkdir -p ${TARGET_DIR}
+    /bin/cat <<EOM >$STATS_COLLECTOR_SCRIPT
+statscollector -statsFilePath=${TARGET_DIR}
+EOM
+    chown $LINUX_USER:$LINUX_USER $STATS_COLLECTOR_SCRIPT
+    chmod 755 $STATS_COLLECTOR_SCRIPT
 }
 
 function main() {
