@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/azure/avere/src/go/pkg/log"
+	"github.com/Azure/Avere/src/go/pkg/log"
 )
 
 const (

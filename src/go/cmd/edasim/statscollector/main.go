@@ -10,10 +10,10 @@ import (
 	"github.com/Azure/azure-amqp-common-go/persist"
 	"github.com/Azure/azure-amqp-common-go/sas"
 	eventhubs "github.com/Azure/azure-event-hubs-go"
-	"github.com/azure/avere/src/go/pkg/azure"
-	"github.com/azure/avere/src/go/pkg/cli"
-	"github.com/azure/avere/src/go/pkg/file"
-	"github.com/azure/avere/src/go/pkg/log"
+	"github.com/Azure/Avere/src/go/pkg/azure"
+	"github.com/Azure/Avere/src/go/pkg/cli"
+	"github.com/Azure/Avere/src/go/pkg/file"
+	"github.com/Azure/Avere/src/go/pkg/log"
 )
 
 const (

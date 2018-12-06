@@ -6,14 +6,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Azure/Avere/src/go/pkg/log"
 	"github.com/Azure/azure-amqp-common-go/sas"
 	eventhubs "github.com/Azure/azure-event-hubs-go"
-	"github.com/azure/avere/src/go/pkg/log"
 )
 
 const (
 	sleepTimeNoEvents = time.Duration(10) * time.Millisecond // 10ms
-	maxBatchBytes     = 128 * 1024                           // to allow for overhead, we will go half the 256 KB limit https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-programming-guide
+	maxBatchBytes     = 128 * 1024                           // to allow for overhead, we will go half the 256 KB limit https://docs.microsoft.com/en-us/Azure/event-hubs/event-hubs-programming-guide
 )
 
 // EventHubSender sends messages to Azure Event Hub

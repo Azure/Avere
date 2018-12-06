@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/Azure/Avere/src/go/pkg/log"
 	"github.com/Azure/azure-storage-queue-go/2017-07-29/azqueue"
-	"github.com/azure/avere/src/go/pkg/log"
 )
 
 const (
