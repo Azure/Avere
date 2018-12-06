@@ -44,20 +44,6 @@ func verifyEnvVars() bool {
 	return available
 }
 
-func getEnv(envVarName string) string {
-	s := os.Getenv(envVarName)
-
-	if len(s) > 0 && s[0] == '"' {
-		s = s[1:]
-	}
-
-	if len(s) > 0 && s[len(s)-1] == '"' {
-		s = s[:len(s)-1]
-	}
-
-	return s
-}
-
 func initializeApplicationVariables() (string, int, string, string, string, string, string, string) {
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
 	var uploaderQueueName = flag.String("uploaderQueueName", edasim.QueueUploader, "the uploader job queue name")
@@ -81,11 +67,7 @@ func initializeApplicationVariables() (string, int, string, string, string, stri
 	eventHubNamespaceName := cli.GetEnv(azure.AZURE_EVENTHUB_NAMESPACENAME)
 	eventHubHubName := cli.GetEnv(azure.AZURE_EVENTHUB_HUBNAME)
 
-	if len(*uploaderQueueName) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: uploaderQueueName is not specified\n")
-		usage()
-		os.Exit(1)
-	}
+	azure.FatalValidateQueueName(*uploaderQueueName)
 
 	return *uploaderQueueName,
 		*threadCount,

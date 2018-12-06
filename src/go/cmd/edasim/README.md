@@ -56,6 +56,8 @@ export AZURE_STORAGE_ACCOUNT=YOUR_STORAGE_ACCOUNT
 export AZURE_STORAGE_ACCOUNT_KEY=YOUR_STORAGE_ACCOUNT_KEY
 ```
 
+The eda simulator will automatically create the necessary queues.
+
 ## Event Hub Preparation
 
  1. use the portal or cloud shell to create an "Event Hubs Namespace" Resource with Pricing Tier "Standard" resource in the same region as the vFXT.  For this example, we created `edasimeventhub`
@@ -74,7 +76,9 @@ export AZURE_EVENTHUB_HUBNAME="edasim"
 
 Using the storage and event hub values above, build a one line string to be used later in deployment:
 
+```bash
 AZURE_STORAGE_ACCOUNT=YOUR_STORAGE_ACCOUNT AZURE_STORAGE_ACCOUNT_KEY="YOUR_STORAGE_ACCOUNT_KEY" AZURE_EVENTHUB_SENDERKEYNAME="RootManageSharedAccessKey" AZURE_EVENTHUB_SENDERKEY="PASTE_SENDER_KEY_HERE" AZURE_EVENTHUB_NAMESPACENAME="edasimeventhub" AZURE_EVENTHUB_HUBNAME="edasim"
+```
 
 ## Deployment of Avere vFXT
 

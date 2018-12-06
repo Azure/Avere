@@ -44,28 +44,6 @@ func verifyEnvVars() bool {
 	return available
 }
 
-func getEnv(envVarName string) string {
-	s := os.Getenv(envVarName)
-
-	if len(s) > 0 && s[0] == '"' {
-		s = s[1:]
-	}
-
-	if len(s) > 0 && s[len(s)-1] == '"' {
-		s = s[:len(s)-1]
-	}
-
-	return s
-}
-
-func validateQueue(queueName string, queueNameLabel string) {
-	if len(queueName) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: %s is not specified\n", queueNameLabel)
-		usage()
-		os.Exit(1)
-	}
-}
-
 func initializeApplicationVariables() (int, string, string, string, string, string, string, string, string) {
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
 	var workerThreadCount = flag.Int("WorkerThreadCount", 2, "the count of worker threads")
@@ -90,8 +68,8 @@ func initializeApplicationVariables() (int, string, string, string, string, stri
 	eventHubNamespaceName := cli.GetEnv(azure.AZURE_EVENTHUB_NAMESPACENAME)
 	eventHubHubName := cli.GetEnv(azure.AZURE_EVENTHUB_HUBNAME)
 
-	validateQueue(*jobProcessQueueName, "jobProcessQueueName")
-	validateQueue(*jobCompleteQueueName, "jobCompleteQueueName")
+	azure.FatalValidateQueueName(*jobProcessQueueName)
+	azure.FatalValidateQueueName(*jobCompleteQueueName)
 
 	return *workerThreadCount,
 		*jobProcessQueueName,

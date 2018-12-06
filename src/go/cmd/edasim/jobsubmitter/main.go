@@ -88,11 +88,7 @@ func initializeApplicationVariables() (int, int, []string, string, int, string, 
 		}
 	}
 
-	if len(*jobReadyQueueName) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: jobReadyQueueName is not specified\n")
-		usage()
-		os.Exit(1)
-	}
+	azure.FatalValidateQueueName(*jobReadyQueueName)
 
 	if *userCount < 0 {
 		fmt.Fprintf(os.Stderr, "ERROR: there must be at least 1 user to submit jobs")
@@ -176,6 +172,12 @@ func main() {
 
 	eventHub := edasim.InitializeReaderWriters(ctx, eventHubSenderName, eventHubSenderKey, eventHubNamespaceName, eventHubHubName)
 
+	// start the stats collector
+	statsChannelWaitGroup := sync.WaitGroup{}
+	ctx = edasim.SetStatsChannel(ctx)
+	statsChannelWaitGroup.Add(1)
+	go edasim.StatsCollector(ctx, &statsChannelWaitGroup)
+
 	log.Info.Printf("Starting job submission of %d jobs for batch %s\n", jobCount, edasim.GenerateBatchName(jobCount))
 
 	jobSubmitters := initializeJobSubmitters(ctx, userCount, jobCount, storageAccount, storageKey, jobReadyQueueName, jobBaseFilePaths, jobFileConfigSizeKB)
@@ -187,8 +189,12 @@ func main() {
 		go jobSubmitter.Run(&userSyncWaitGroup)
 	}
 
+	// wait for the job submitters (users) to finish
 	userSyncWaitGroup.Wait()
+
+	// close the stats channel, and wait for it to complete
 	cancel()
+	statsChannelWaitGroup.Wait()
 
 	log.Info.Printf(" wait for the event hub sender to complete")
 

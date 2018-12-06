@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
+	"regexp"
 	"time"
 
 	"github.com/Azure/azure-storage-queue-go/2017-07-29/azqueue"
+	"github.com/azure/avere/src/go/pkg/log"
 )
 
 const (
@@ -22,6 +25,31 @@ type Queue struct {
 	Context     context.Context
 }
 
+// FatalValidateQueue exits the program if the queuename is not valid
+func FatalValidateQueueName(queueName string) {
+	isValid, errorMessage := ValidateQueueName(queueName)
+	if !isValid {
+		log.Error.Printf(errorMessage)
+		os.Exit(1)
+	}
+}
+
+// ValidateQueue validates queue name according to https://docs.microsoft.com/en-us/rest/api/storageservices/naming-queues-and-metadata
+func ValidateQueueName(queueName string) (bool, string) {
+	matched, err := regexp.MatchString("^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$", queueName)
+
+	if err != nil {
+		errorMessage := fmt.Sprintf("error while parsing queue Name '%s' to server: %v", queueName, err)
+		return false, errorMessage
+	}
+
+	if !matched {
+		errorMessage := fmt.Sprintf("'%s' is not a valid queue name.  Queue needs to be 3-63 lowercase alphanumeric characters where all but the first and last character may be dash (https://docs.microsoft.com/en-us/rest/api/storageservices/naming-queues-and-metadata)", queueName)
+		return false, errorMessage
+	}
+	return true, ""
+}
+
 // InitializeQueue creates a Queue to represent the Azure Storage Queue
 func InitializeQueue(ctx context.Context, storageAccount string, storageAccountKey string, queueName string) *Queue {
 
@@ -35,6 +63,15 @@ func InitializeQueue(ctx context.Context, storageAccount string, storageAccountK
 
 	// Create a URL that references the queue in the Azure Storage account.
 	queueURL := serviceURL.NewQueueURL(queueName) // Queue names require lowercase
+
+	// create the queue if it does not already exist
+	if queueCreateResponse, err := queueURL.Create(ctx, azqueue.Metadata{}); err != nil {
+		if serr, ok := err.(azqueue.StorageError); !ok || serr.ServiceCode() != azqueue.ServiceCodeQueueAlreadyExists {
+			log.Error.Printf("error encountered: %v", serr.ServiceCode())
+		}
+	} else if queueCreateResponse.StatusCode() == 201 {
+		log.Info.Printf("successfully created queue '%s'", queueName)
+	}
 
 	messagesURL := queueURL.NewMessagesURL()
 
