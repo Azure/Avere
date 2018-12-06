@@ -98,13 +98,13 @@ func (r *ReaderWriter) submitIOStatistics(
 	}
 
 	readWriteTimeNS := NoDuration
-	if !startCloseFileTime.Before(start) {
-		readWriteTimeNS = startCloseFileTime.Sub(start)
+	if !startCloseFileTime.Before(startReadBytesTime) {
+		readWriteTimeNS = startCloseFileTime.Sub(startReadBytesTime)
 	}
 
 	closeTimeNS := NoDuration
-	if !finish.Before(start) {
-		closeTimeNS = finish.Sub(start)
+	if !finish.Before(startCloseFileTime) {
+		closeTimeNS = finish.Sub(startCloseFileTime)
 	}
 
 	ioStats := InitializeIOStatistics(
