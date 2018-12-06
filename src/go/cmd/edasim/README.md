@@ -1,14 +1,15 @@
 # EDA Simulator to test Filer Performance
 
-This EDA Simulator helps test filer performance.  The simulator has 4 components:
+This EDA Simulator helps test filer performance.  The simulator has 5 components:
  1. **jobsubmitter** - the task that submits job config files for processing
  1. **orchestrator** - the task the reads the job config files and writes workstart files, and submits work to workers for processing.  This also receives completed jobs from workers, writes a job complete file, and submits a job for upload.
  1. **worker** - the task that takes a workitem, reads the start files, and writes the complete files and or error file depending on error probability. 
  1. **uploader** - this task receives upload tasks for each completed job, and reads all job config files and job work files.
+ 1. **statscollector** - this process collects all the file statistics for each batch run and prints the raw results, and summary to the statistics output directory.
  
-The job uses Azure Storage Queue for work management, and uses event hub for measuring file statistics.  The goal of the EDA simulator is to test with various filers to understand the filer performance characteristics.  There is a tool named `statscollector` that will collect and summarize the performance runs from event hub.
+The job uses Azure Storage Queue for work management, and uses event hub for measuring file statistics.  The goal of the EDA simulator is to test with various filers to understand the filer performance characteristics.
 
-The four components above implement the following message sequence chart:
+The first four components listed above implement the following message sequence chart:
 
 ![Message sequence chart for the job dispatch](../../../../docs/images/edasim/msc.png)
 
@@ -115,10 +116,10 @@ These deployment instructions describe the installation of all components requir
     # download the bootstrap files
     mkdir /nfs/node0/bootstrap
     cd /nfs/node0/bootstrap
-    curl --retry 5 --retry-delay 5 -o bootstrap.jobsubmitter.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/bootstrap.jobsubmitter.sh
-    curl --retry 5 --retry-delay 5 -o bootstrap.orchestrator.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/bootstrap.orchestrator.sh
-    curl --retry 5 --retry-delay 5 -o bootstrap.onpremjobuploader.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/bootstrap.onpremjobuploader.sh
-    curl --retry 5 --retry-delay 5 -o bootstrap.worker.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/bootstrap.worker.sh
+    curl --retry 5 --retry-delay 5 -o bootstrap.jobsubmitter.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.jobsubmitter.sh
+    curl --retry 5 --retry-delay 5 -o bootstrap.orchestrator.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.orchestrator.sh
+    curl --retry 5 --retry-delay 5 -o bootstrap.onpremjobuploader.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.onpremjobuploader.sh
+    curl --retry 5 --retry-delay 5 -o bootstrap.worker.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.worker.sh
 
     # copy in the built binaries
     mkdir /nfs/node0/bootstrap/edasim
@@ -127,16 +128,16 @@ These deployment instructions describe the installation of all components requir
     # download the rsyslog scripts
     mkdir /nfs/node0/bootstrap/rsyslog
     cd /nfs/node0/bootstrap/rsyslog
-    curl --retry 5 --retry-delay 5 -o 30-orchestrator.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/rsyslog/30-orchestrator.conf
-    curl --retry 5 --retry-delay 5 -o 31-worker.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/rsyslog/31-worker.conf
-    curl --retry 5 --retry-delay 5 -o 32-onpremjobuploader.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/rsyslog/32-onpremjobuploader.conf
+    curl --retry 5 --retry-delay 5 -o 30-orchestrator.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/30-orchestrator.conf
+    curl --retry 5 --retry-delay 5 -o 31-worker.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/31-worker.conf
+    curl --retry 5 --retry-delay 5 -o 32-onpremjobuploader.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/32-onpremjobuploader.conf
 
     # download the service scripts
     mkdir /nfs/node0/bootstrap/systemd
     cd /nfs/node0/bootstrap/systemd
-    curl --retry 5 --retry-delay 5 -o onpremjobuploader.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/systemd/onpremjobuploader.service
-    curl --retry 5 --retry-delay 5 -o orchestrator.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/systemd/orchestrator.service
-    curl --retry 5 --retry-delay 5 -o worker.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/systemd/worker.service
+    curl --retry 5 --retry-delay 5 -o onpremjobuploader.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/onpremjobuploader.service
+    curl --retry 5 --retry-delay 5 -o orchestrator.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/orchestrator.service
+    curl --retry 5 --retry-delay 5 -o worker.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/worker.service
     ```
 
 6. Deploy one jobsubmitter client by clicking the "Deploy to Azure" button below, but set the following settings.  This creates a machine with the script `job_submitter.sh` and `stats_collector.sh` in the root.  These are the two manual parts of the run where the job batch and statscollector collects and summarizes the perf runs from each batch run.
