@@ -14,7 +14,7 @@ The four components above implement the following message sequence chart:
 
 ## Installation Instructions for Linux
 
- 1. If not already installed go, install golang
+ 1. If not already installed go, install golang:
 
 ```bash
 wget https://dl.google.com/go/go1.11.2.linux-amd64.tar.gz
@@ -25,6 +25,7 @@ mkdir ~/gopath
 echo "export GOPATH=$HOME/gopath" >> ~/.profile
 echo "export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin" >> ~/.profile
 source ~/.profile
+rm go1.11.2.linux-amd64.tar.gz
 ```
 
  2. setup edasim code
@@ -69,7 +70,13 @@ export AZURE_EVENTHUB_NAMESPACENAME="edasimeventhub"
 export AZURE_EVENTHUB_HUBNAME="edasim"
 ```
 
-## Deployment
+## Build Environment String
+
+Using the storage and event hub values above, build a one line string to be used later in deployment:
+
+AZURE_STORAGE_ACCOUNT=YOUR_STORAGE_ACCOUNT AZURE_STORAGE_ACCOUNT_KEY="YOUR_STORAGE_ACCOUNT_KEY" AZURE_EVENTHUB_SENDERKEYNAME="RootManageSharedAccessKey" AZURE_EVENTHUB_SENDERKEY="PASTE_SENDER_KEY_HERE" AZURE_EVENTHUB_NAMESPACENAME="edasimeventhub" AZURE_EVENTHUB_HUBNAME="edasim"
+
+## Deployment of Avere vFXT
 
 These deployment instructions describe the installation of all components required to run Vdbench:
 
@@ -99,24 +106,62 @@ These deployment instructions describe the installation of all components requir
 
     3. To mount all shares, type `mount -a`
 
-4. On the controller, download the vdbench bootstrap script:
+4. On the controller, setup all edasim binaries (using instructions to build above), bootstrap scripts, and service configuration files:
     ```bash
-    mkdir -p /nfs/node0/bootstrap
+    # download the bootstrap files
+    mkdir /nfs/node0/bootstrap
     cd /nfs/node0/bootstrap
-    curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.vdbench.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/bootstrap.vdbench.sh
+    curl --retry 5 --retry-delay 5 -o bootstrap.jobsubmitter.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/bootstrap.jobsubmitter.sh
+    curl --retry 5 --retry-delay 5 -o bootstrap.orchestrator.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/bootstrap.orchestrator.sh
+    curl --retry 5 --retry-delay 5 -o bootstrap.onpremjobuploader.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/bootstrap.onpremjobuploader.sh
+    curl --retry 5 --retry-delay 5 -o bootstrap.worker.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/bootstrap.worker.sh
+
+    # copy in the built binaries
+    mkdir /nfs/node0/bootstrap/edasim
+    cp $GOPATH/bin/* /nfs/node0/bootstrap/edasim
+
+    # download the rsyslog scripts
+    mkdir /nfs/node0/bootstrap/rsyslog
+    cd /nfs/node0/bootstrap/rsyslog
+    curl --retry 5 --retry-delay 5 -o 30-orchestrator.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/rsyslog/30-orchestrator.conf
+    curl --retry 5 --retry-delay 5 -o 31-worker.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/rsyslog/31-worker.conf
+    curl --retry 5 --retry-delay 5 -o 32-onpremjobuploader.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/rsyslog/32-onpremjobuploader.conf
+
+    # download the service scripts
+    mkdir /nfs/node0/bootstrap/systemd
+    cd /nfs/node0/bootstrap/systemd
+    curl --retry 5 --retry-delay 5 -o onpremjobuploader.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/systemd/onpremjobuploader.service
+    curl --retry 5 --retry-delay 5 -o orchestrator.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/systemd/orchestrator.service
+    curl --retry 5 --retry-delay 5 -o worker.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/bootstrap/systemd/worker.service
     ```
 
-5. Download the latest vdbench from https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html, and scp to the `/bootstrap` directory.  To download you will need to create an account with Oracle and accept the license.
+6. Deploy one jobsubmitter client by clicking the "Deploy to Azure" button below, but set the following settings.  This creates a machine with the script `job_submitter.sh` and `stats_collector.sh` in the root.  These are the two manual parts of the run where the job batch and statscollector collects and summarizes the perf runs from each batch run.
+  * for `appEnvironmentVariables` use the one line environment variable string you created above
+  * specify `/bootstrap/bootstrap.jobsubmitter.sh` for the job submitter.
 
-6. From your controller, verify your vdbench setup by running the following script.  If the script shows success, you are ready to deploy.  Otherwise you will need to fix each error listed.
+    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclient%2Fvmas%2Fazuredeploy.json" target="_blank">
+    <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
+    </a>
 
-    ```bash
-    curl -o- https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/vdbenchVerify.sh | bash
-    ```
+7. Deploy the orchestrator on 1-4 machines by clicking the "Deploy to Azure" button below, but set the following settings.  This creates a running orchestrator.
+  * for `appEnvironmentVariables` use the one line environment variable string you created above
+  * specify `/bootstrap/bootstrap.orchestrator.sh`.
 
-7. Deploy the clients by clicking the "Deploy to Azure" button below, but set the following settings:
-  * SSH key is required for vdbench
-  * specify `/bootstrap/bootstrap.vdbench.sh` for the bootstrap script
+    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclient%2Fvmas%2Fazuredeploy.json" target="_blank">
+    <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
+    </a>
+
+8. Deploy the worker on 6-12 machines by clicking the "Deploy to Azure" button below, but set the following settings.  This creates a running workers.
+  * for `appEnvironmentVariables` use the one line environment variable string you created above
+  * specify `/bootstrap/bootstrap.worker.sh`.
+
+    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclient%2Fvmas%2Fazuredeploy.json" target="_blank">
+    <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
+    </a>
+
+9. Deploy the uploader on 1-4 machines by clicking the "Deploy to Azure" button below, but set the following settings.  This creates a running workers.
+  * for `appEnvironmentVariables` use the one line environment variable string you created above
+  * specify `/bootstrap/bootstrap.onpremjobuploader.sh`.
 
     <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclient%2Fvmas%2Fazuredeploy.json" target="_blank">
     <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
@@ -124,22 +169,6 @@ These deployment instructions describe the installation of all components requir
 
 ## To Run
 
-Build all the binaries:
-```bash
-cd $GOPATH/src/github.com/azure/avere/src/go/cmd/edasim
-./buildall.sh
-```
+Log onto the job submitter machine, and adjust and use the `job_submitter.sh` script to submit batches of varying sizes.  After the batch is complete run the `stats_collector.sh` script to collect and summarize the stats.
 
-To run the `jobsubmitter`, use a command like the following:
-```bash
-export JOBSDIR=~/tmp/jobs
-mkdir -p $JOBSDIR
-$GOPATH/src/github.com/azure/avere/src/go/cmd/edasim/jobsubmitter/jobsubmitter -jobBaseFilePath $JOBSDIR -jobCount 20 -userCount 4
-
-
-To run the `orchestrator`, use a command like the following:
-```bash
-export WORKDIR=~/tmp/work
-mkdir -p $WORKDIR
-$GOPATH/src/github.com/azure/avere/src/go/cmd/edasim/orchestrator/orchestrator --jobStartFileBasePath $WORKDIR
-```
+To look at logs on the orchestrator, worker, or edasim machines, tail the logs under /var/log/edasim/ directory.
