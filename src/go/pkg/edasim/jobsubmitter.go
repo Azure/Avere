@@ -39,6 +39,8 @@ func (j *JobSubmitter) Run(syncWaitGroup *sync.WaitGroup) {
 	defer syncWaitGroup.Done()
 	log.Info.Printf("JobSubmitter %d: starting to submit %d jobs\n", j.ID, j.JobCount)
 
+	statsChannel := GetStatsChannel(j.Context)
+
 	for i := 0; i < j.JobCount; i++ {
 		jobConfigFile := InitializeJobConfigFile(j.getJobName(i))
 		jobFilePath, err := jobConfigFile.WriteJobConfigFile(JobWriter, j.PathManager.GetNextPath(), j.JobFileSizeKB)
@@ -52,6 +54,7 @@ func (j *JobSubmitter) Run(syncWaitGroup *sync.WaitGroup) {
 			log.Error.Printf("error enqueuing message '%s': %v", jobFilePath, err)
 			continue
 		}
+		statsChannel.JobProcessed()
 	}
 
 	log.Info.Printf("user %d: completed submitting %d jobs\n", j.ID, j.JobCount)

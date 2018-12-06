@@ -49,20 +49,6 @@ func verifyEnvVars() bool {
 	return available
 }
 
-func getEnv(envVarName string) string {
-	s := os.Getenv(envVarName)
-
-	if len(s) > 0 && s[0] == '"' {
-		s = s[1:]
-	}
-
-	if len(s) > 0 && s[len(s)-1] == '"' {
-		s = s[:len(s)-1]
-	}
-
-	return s
-}
-
 func initializeApplicationVariables() (string, string, string, string, string) {
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
 	var statsFilePath = flag.String("statsFilePath", "", "the stats file path")

@@ -46,14 +46,6 @@ func verifyEnvVars() bool {
 	return available
 }
 
-func validateQueue(queueName string, queueNameLabel string) {
-	if len(queueName) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: %s is not specified\n", queueNameLabel)
-		usage()
-		os.Exit(1)
-	}
-}
-
 func initializeApplicationVariables(ctx context.Context) (*azure.EventHubSender, *edasim.Orchestrator) {
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
 	var jobReadyQueueName = flag.String("jobReadyQueueName", edasim.QueueJobReady, "the job read queue name")
@@ -104,10 +96,10 @@ func initializeApplicationVariables(ctx context.Context) (*azure.EventHubSender,
 		}
 	}
 
-	validateQueue(*jobReadyQueueName, "jobReadyQueueName")
-	validateQueue(*jobProcessQueueName, "jobProcessQueueName")
-	validateQueue(*jobCompleteQueueName, "jobCompleteQueueName")
-	validateQueue(*uploaderQueueName, "uploaderQueueName")
+	azure.FatalValidateQueueName(*jobReadyQueueName)
+	azure.FatalValidateQueueName(*jobProcessQueueName)
+	azure.FatalValidateQueueName(*jobCompleteQueueName)
+	azure.FatalValidateQueueName(*uploaderQueueName)
 
 	eventHub := edasim.InitializeReaderWriters(
 		ctx,

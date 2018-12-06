@@ -143,6 +143,7 @@ EOM
     STATS_COLLECTOR_SCRIPT="${AZURE_HOME_DIR}/stats_collector.sh"
     TARGET_DIR=${BASE_DIR}${NODE_MOUNT_PREFIX}0${STATS_DIR}
     mkdir -p ${TARGET_DIR}
+    chown $LINUX_USER:$LINUX_USER ${TARGET_DIR}
     /bin/cat <<EOM >$STATS_COLLECTOR_SCRIPT
 statscollector -statsFilePath=${TARGET_DIR}
 EOM

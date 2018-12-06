@@ -51,11 +51,21 @@ func StatsCollector(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
 		}
 		if time.Since(start) > secondsBetweenStats || !keepRunning {
 			start = start.Add(secondsBetweenStats)
-			log.Info.Printf("jobsProcessedCount: %d", jobsProcessedCount)
-			log.Info.Printf("processFilesWritten: %d", processFilesWritten)
-			log.Info.Printf("completedJobsCount: %d", completedJobsCount)
-			log.Info.Printf("uploadCount: %d", uploadCount)
-			log.Info.Printf("errorCount: %d", errorCount)
+			if jobsProcessedCount > 0 {
+				log.Info.Printf("jobsProcessedCount: %d", jobsProcessedCount)
+			}
+			if processFilesWritten > 0 {
+				log.Info.Printf("processFilesWritten: %d", processFilesWritten)
+			}
+			if completedJobsCount > 0 {
+				log.Info.Printf("completedJobsCount: %d", completedJobsCount)
+			}
+			if uploadCount > 0 {
+				log.Info.Printf("uploadCount: %d", uploadCount)
+			}
+			if errorCount > 0 {
+				log.Info.Printf("errorCount: %d", errorCount)
+			}
 		}
 	}
 }
