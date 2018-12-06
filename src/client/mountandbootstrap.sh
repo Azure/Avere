@@ -27,8 +27,7 @@ function retrycmd_if_failure() {
 }
 
 function install_nfs() {
-    retrycmd_if_failure 60 5 apt-get update
-    retrycmd_if_failure 60 5 apt-get install -y nfs-common
+    apt-get update && apt-get install -y nfs-common
 }
 
 function mount_bootstrap_and_install() {
@@ -54,7 +53,7 @@ function debug_dump_env_vars() {
 
 function main() {
     echo "install NFS"
-    install_nfs
+    retrycmd_if_failure 60 5 install_nfs
 
     echo "dump env vars"
     debug_dump_env_vars

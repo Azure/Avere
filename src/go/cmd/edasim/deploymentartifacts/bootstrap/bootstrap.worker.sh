@@ -30,41 +30,11 @@ RSYSLOG_FILE="31-worker.conf"
 WORKER_SERVICE=worker
 WORKER_SERVICE_FILE="${WORKER_SERVICE}.service"
 
-function apt_get_update() {
-    retries=10
-    apt_update_output=/tmp/apt-get-update.out
-    for i in $(seq 1 $retries); do
-        timeout 120 apt-get update 2>&1 | tee $apt_update_output | grep -E "^([WE]:.*)|([eE]rr.*)$"
-        [ $? -ne 0  ] && cat $apt_update_output && break || \
-        cat $apt_update_output
-        if [ $i -eq $retries ]; then
-            return 1
-        else sleep 30
-        fi
-    done
-    echo Executed apt-get update $i times
-}
-
-function apt_get_install() {
-    retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
-    for i in $(seq 1 $retries); do
-        apt-get install --no-install-recommends -y ${@}
-        echo "completed"
-        [ $? -eq 0  ] && break || \
-        if [ $i -eq $retries ]; then
-            return 1
-        else
-            sleep $wait_sleep
-            apt_get_update
-        fi
-    done
-    echo Executed apt-get install --no-install-recommends -y \"$@\" $i times;
-}
-
-function config_linux() {
-    export DEBIAN_FRONTEND=noninteractive  
-    apt_get_update
-    apt_get_install 20 10 180 default-jre zip csh unzip
+function remove_quotes() {
+        QUOTED_STR=$1; shift
+        QUOTED_STR=$(sed -e 's/^"//' -e 's/"$//' <<<"$QUOTED_STR")
+        QUOTED_STR=$(sed -e "s/^'//" -e "s/'\$//" <<<"$QUOTED_STR")
+        echo $QUOTED_STR
 }
 
 function mount_avere() {
@@ -99,9 +69,9 @@ function write_system_files() {
     ENVFILE=/etc/default/edasim
     /bin/cat <<EOM >$ENVFILE
 AZURE_STORAGE_ACCOUNT=$AZURE_STORAGE_ACCOUNT
-AZURE_STORAGE_ACCOUNT_KEY="$AZURE_STORAGE_ACCOUNT_KEY"
+AZURE_STORAGE_ACCOUNT_KEY="$(remove_quotes $AZURE_STORAGE_ACCOUNT_KEY)"
 AZURE_EVENTHUB_SENDERKEYNAME=$AZURE_EVENTHUB_SENDERKEYNAME
-AZURE_EVENTHUB_SENDERKEY="$AZURE_EVENTHUB_SENDERKEY"
+AZURE_EVENTHUB_SENDERKEY="$(remove_quotes $AZURE_EVENTHUB_SENDERKEY)"
 AZURE_EVENTHUB_NAMESPACENAME=$AZURE_EVENTHUB_NAMESPACENAME
 AZURE_EVENTHUB_HUBNAME=$AZURE_EVENTHUB_HUBNAME
 EOM
@@ -133,9 +103,6 @@ function configure_service() {
 }
 
 function main() {
-    echo "config Linux"
-    config_linux
-
     echo "mount avere"
     mount_avere
 
