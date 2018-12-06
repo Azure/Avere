@@ -46,7 +46,7 @@ func verifyEnvVars() bool {
 
 func initializeApplicationVariables() (int, string, string, string, string, string, string, string, string) {
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
-	var workerThreadCount = flag.Int("WorkerThreadCount", 2, "the count of worker threads")
+	var workerThreadCount = flag.Int("workerThreadCount", 16, "the count of worker threads")
 	var jobProcessQueueName = flag.String("jobProcessQueueName", edasim.QueueJobProcess, "the job process queue name")
 	var jobCompleteQueueName = flag.String("jobCompleteQueueName", edasim.QueueJobComplete, "the job completion queue name")
 

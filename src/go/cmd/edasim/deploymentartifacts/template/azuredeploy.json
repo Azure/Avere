@@ -23,19 +23,6 @@
         "description": "The public SSH key used for access to the VM."
       }
     },
-    "vmCount": {
-      "type": "int",
-      "metadata": {
-        "description": "The number of vms to deploy."
-      }
-    },
-    "vmSize": {
-      "type": "string",
-      "defaultValue": "Standard_DS2_v2",
-      "metadata": {
-        "description": "The SKU size of vms to deploy."
-      }
-    },
     "virtualNetworkResourceGroup": {
       "type": "string",
       "metadata": {
@@ -73,18 +60,68 @@
         "description": "The base directory to contain all NFS mounts."
       }
     },
-    "bootstrapScriptPath": {
-      "type": "string",
+    "jobSubmitterVmCount": {
+      "type": "int",
+      "defaultValue": 1,
       "metadata": {
-        "description": "The path on the mounted NFS share to the bootstrap script used for further installation. (ex. '/bootstrap/bootstrap.sh')"
+        "description": "The number of jobSubmitter vms to deploy."
       }
     },
-    "appEnvironmentVariables": {
+    "jobSubmitterVmSize": {
+      "type": "string",
+      "defaultValue": "Standard_DS4_v2",
+      "metadata": {
+        "description": "The SKU size of jobSubmitter vms to deploy."
+      }
+    },
+    "orchestratorVmCount": {
+      "type": "int",
+      "defaultValue": 2,
+      "metadata": {
+        "description": "The number of orchestrator vms to deploy."
+      }
+    },
+    "orchestratorVmSize": {
+      "type": "string",
+      "defaultValue": "Standard_DS4_v2",
+      "metadata": {
+        "description": "The SKU size of orchestrator vms to deploy."
+      }
+    },
+    "workerVmCount": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "description": "The number of worker vms to deploy."
+      }
+    },
+    "workerVmSize": {
+      "type": "string",
+      "defaultValue": "Standard_DS4_v2",
+      "metadata": {
+        "description": "The SKU size of worker vms to deploy."
+      }
+    },
+    "onpremjobuploaderVmCount": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "description": "The number of onpremjobuploader vms to deploy."
+      }
+    },
+    "onpremjobuploaderVmSize": {
+      "type": "string",
+      "defaultValue": "Standard_DS4_v2",
+      "metadata": {
+        "description": "The SKU size of onpremjobuploader vms to deploy."
+      }
+    },
+    "secureAppEnvironmentVariables": {
       "type": "securestring",
       "defaultValue": "",
       "minLength": 0,
       "metadata": {
-        "description": "Optional environment variables set before calling the bootstrapt script.  Example: \"ENV1=foo ENV2=bar\""
+        "description": "Optional environment variables set before calling the bootstrap script.  Example: \"ENV1=foo ENV2=bar\""
       }
     }
   },
@@ -92,19 +129,15 @@
     "uniquename": "[concat(parameters('uniquename'))]",
     "adminUsername": "[parameters('adminUsername')]",
     "sshKeyData": "[parameters('sshKeyData')]",
-    "vmCount": "[parameters('vmCount')]",
-    "vmSize": "[parameters('vmSize')]",
     "virtualNetworkResourceGroup": "[parameters('virtualNetworkResourceGroup')]",
     "virtualNetworkName": "[parameters('virtualNetworkName')]",
     "virtualNetworkSubnetName": "[parameters('virtualNetworkSubnetName')]",
     "nfsCommaSeparatedAddresses": "[parameters('nfsCommaSeparatedAddresses')]",
     "nfsExportPath": "[parameters('nfsExportPath')]",
     "nfsMountBaseDir": "[parameters('nfsMountBaseDir')]",
-    "bootstrapScriptPath": "[parameters('bootstrapScriptPath')]",
+    
     "vnetID": "[resourceId(variables('virtualNetworkResourceGroup'),'Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "subnetId": "[concat(variables('vnetID'),'/subnets/',variables('virtualNetworkSubnetName'))]",
-    "nicName": "[concat('vmnic-',variables('uniquename'))]",
-    "vmName": "[concat('vm-',variables('uniquename'))]",
     "bootstrapNFSIP": "[split(variables('nfsCommaSeparatedAddresses'),',')[0]]",
     "sshKeyPath": "[concat('/home/',variables('adminUsername'),'/.ssh/authorized_keys')]",
     "imageReference": {
@@ -113,7 +146,35 @@
         "sku": "18.04-LTS",
         "version": "latest"
     },
-    "environmentVariables": "[concat(' ',parameters('appEnvironmentVariables'),' LINUX_USER=',variables('adminUsername'),' NODE_PREFIX=', variables('vmName'),' NODE_COUNT=',variables('vmCount'),' BASE_DIR=',variables('nfsMountBaseDir'),' BOOTSTRAP_NFS_IP=', variables('bootstrapNFSIP'),' BOOTSTRAP_SCRIPT_PATH=', variables('bootstrapScriptPath'),' NFS_IP_CSV=\"',variables('nfsCommaSeparatedAddresses'),'\"',' NFS_PATH=', variables('nfsExportPath'))]"
+    "environmentVariables": "[concat(' ',parameters('secureAppEnvironmentVariables'),' LINUX_USER=',variables('adminUsername'),' BASE_DIR=',variables('nfsMountBaseDir'),' BOOTSTRAP_NFS_IP=',variables('bootstrapNFSIP'),' NFS_IP_CSV=\"',variables('nfsCommaSeparatedAddresses'),'\"',' NFS_PATH=', variables('nfsExportPath'))]",
+
+    "jobSubmitterVmCount": "[parameters('jobSubmitterVmCount')]",
+    "jobSubmitterVmSize": "[parameters('jobSubmitterVmSize')]",
+    "jobSubmitterBootstrapScriptPath": "/bootstrap/bootstrap.jobsubmitter.sh",
+    "jobSubmitterNicName": "[concat('jobSubmitter-',variables('uniquename'))]",
+    "jobSubmitterVmName": "[concat('jobSubmitter-',variables('uniquename'))]",
+    "jobSubmitterEnvironmentVariables": "[concat(variables('environmentVariables'),' ',' NODE_PREFIX=', variables('jobSubmitterVmName'),' NODE_COUNT=',variables('jobSubmitterVmCount'),' BOOTSTRAP_SCRIPT_PATH=',variables('jobSubmitterBootstrapScriptPath'))]",
+
+    "orchestratorVmCount": "[parameters('orchestratorVmCount')]",
+    "orchestratorVmSize": "[parameters('orchestratorVmSize')]",
+    "orchestratorBootstrapScriptPath": "/bootstrap/bootstrap.orchestrator.sh",
+    "orchestratorNicName": "[concat('orchestrator-',variables('uniquename'))]",
+    "orchestratorVmName": "[concat('orchestrator-',variables('uniquename'))]",
+    "orchestratorEnvironmentVariables": "[concat(variables('environmentVariables'),' ',' NODE_PREFIX=', variables('orchestratorVmName'),' NODE_COUNT=',variables('orchestratorVmCount'),' BOOTSTRAP_SCRIPT_PATH=',variables('orchestratorBootstrapScriptPath'))]",
+    
+    "workerVmCount": "[parameters('workerVmCount')]",
+    "workerVmSize": "[parameters('workerVmSize')]",
+    "workerBootstrapScriptPath": "/bootstrap/bootstrap.worker.sh",
+    "workerNicName": "[concat('worker-',variables('uniquename'))]",
+    "workerVmName": "[concat('worker-',variables('uniquename'))]",
+    "workerEnvironmentVariables": "[concat(variables('environmentVariables'),' ',' NODE_PREFIX=', variables('workerVmName'),' NODE_COUNT=',variables('workerVmCount'),' BOOTSTRAP_SCRIPT_PATH=',variables('workerBootstrapScriptPath'))]",
+
+    "onpremjobuploaderVmCount": "[parameters('onpremjobuploaderVmCount')]",
+    "onpremjobuploaderVmSize": "[parameters('onpremjobuploaderVmSize')]",
+    "onpremjobuploaderBootstrapScriptPath": "/bootstrap/bootstrap.onpremjobuploader.sh",
+    "onpremjobuploaderNicName": "[concat('onpremjobuploader-',variables('uniquename'))]",
+    "onpremjobuploaderVmName": "[concat('onpremjobuploader-',variables('uniquename'))]",
+    "onpremjobuploaderEnvironmentVariables": "[concat(variables('environmentVariables'),' ',' NODE_PREFIX=', variables('onpremjobuploaderVmName'),' NODE_COUNT=',variables('onpremjobuploaderVmCount'),' BOOTSTRAP_SCRIPT_PATH=',variables('onpremjobuploaderBootstrapScriptPath'))]"
   },
   "resources": [
     {
@@ -131,7 +192,7 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
-      "name": "[variables('vmName')]",
+      "name": "[variables('jobSubmitterVmName')]",
       "location": "[resourceGroup().location]",
       "apiVersion": "2018-06-01",
       "tags": {
@@ -140,9 +201,9 @@
       "dependsOn": [        
       ],
       "sku": {
-        "name": "[variables('vmSize')]",
+        "name": "[variables('jobSubmitterVmSize')]",
         "tier": "Standard",
-        "capacity": "[variables('vmCount')]"
+        "capacity": "[variables('jobSubmitterVmCount')]"
       },
       "properties": {
         "overprovision": "false",
@@ -159,7 +220,7 @@
             "imageReference": "[variables('imageReference')]"
           },
           "osProfile": {
-            "computerNamePrefix": "[variables('vmName')]",
+            "computerNamePrefix": "[variables('jobSubmitterVmName')]",
             "adminUsername": "[variables('adminUsername')]",
             "linuxConfiguration": {
               "disablePasswordAuthentication": "true",
@@ -176,7 +237,7 @@
           "networkProfile": {
             "networkInterfaceConfigurations": [
               {
-                "name": "[variables('nicName')]",
+                "name": "[variables('jobSubmitterNicName')]",
                 "properties": {
                   "primary": true,
                   "ipConfigurations": [
@@ -202,11 +263,269 @@
                   "type": "CustomScript",
                   "typeHandlerVersion": "2.0",
                   "autoUpgradeMinorVersion": true,
-                  "settings": {
+                  "protectedSettings": {
                     "fileUris": [
                       "https://raw.githubusercontent.com/Azure/Avere/master/src/client/mountandbootstrap.sh"
                     ],
-                    "commandToExecute": "[concat(variables('environmentVariables'), ' /bin/bash mountandbootstrap.sh')]"
+                    "commandToExecute": "[concat(variables('jobSubmitterEnvironmentVariables'), ' /bin/bash mountandbootstrap.sh')]"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "[variables('orchestratorVmName')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2018-06-01",
+      "tags": {
+        "averevfxt": "client"
+      }, 
+      "dependsOn": [        
+      ],
+      "sku": {
+        "name": "[variables('orchestratorVmSize')]",
+        "tier": "Standard",
+        "capacity": "[variables('orchestratorVmCount')]"
+      },
+      "properties": {
+        "overprovision": "false",
+        "singlePlacementGroup": "false",
+        "upgradePolicy": {
+          "mode": "Manual"
+        },
+        "virtualMachineProfile": {
+          "storageProfile": {
+            "osDisk": {
+              "createOption": "FromImage",
+              "caching": "ReadWrite"
+            },
+            "imageReference": "[variables('imageReference')]"
+          },
+          "osProfile": {
+            "computerNamePrefix": "[variables('orchestratorVmName')]",
+            "adminUsername": "[variables('adminUsername')]",
+            "linuxConfiguration": {
+              "disablePasswordAuthentication": "true",
+              "ssh": {
+                "publicKeys": [
+                  {
+                    "path": "[variables('sshKeyPath')]",
+                    "keyData": "[variables('sshKeyData')]"
+                  }
+                ]
+              }
+            }
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "[variables('orchestratorNicName')]",
+                "properties": {
+                  "primary": true,
+                  "ipConfigurations": [
+                    {
+                      "name": "ipconfig",
+                      "properties": {
+                        "subnet": {
+                          "id": "[variables('subnetId')]"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "customScript",
+                "properties": {
+                  "publisher": "Microsoft.Azure.Extensions",
+                  "type": "CustomScript",
+                  "typeHandlerVersion": "2.0",
+                  "autoUpgradeMinorVersion": true,
+                  "protectedSettings": {
+                    "fileUris": [
+                      "https://raw.githubusercontent.com/Azure/Avere/master/src/client/mountandbootstrap.sh"
+                    ],
+                    "commandToExecute": "[concat(variables('orchestratorEnvironmentVariables'), ' /bin/bash mountandbootstrap.sh')]"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "[variables('workerVmName')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2018-06-01",
+      "tags": {
+        "averevfxt": "client"
+      }, 
+      "dependsOn": [        
+      ],
+      "sku": {
+        "name": "[variables('workerVmSize')]",
+        "tier": "Standard",
+        "capacity": "[variables('workerVmCount')]"
+      },
+      "properties": {
+        "overprovision": "false",
+        "singlePlacementGroup": "false",
+        "upgradePolicy": {
+          "mode": "Manual"
+        },
+        "virtualMachineProfile": {
+          "storageProfile": {
+            "osDisk": {
+              "createOption": "FromImage",
+              "caching": "ReadWrite"
+            },
+            "imageReference": "[variables('imageReference')]"
+          },
+          "osProfile": {
+            "computerNamePrefix": "[variables('workerVmName')]",
+            "adminUsername": "[variables('adminUsername')]",
+            "linuxConfiguration": {
+              "disablePasswordAuthentication": "true",
+              "ssh": {
+                "publicKeys": [
+                  {
+                    "path": "[variables('sshKeyPath')]",
+                    "keyData": "[variables('sshKeyData')]"
+                  }
+                ]
+              }
+            }
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "[variables('workerNicName')]",
+                "properties": {
+                  "primary": true,
+                  "ipConfigurations": [
+                    {
+                      "name": "ipconfig",
+                      "properties": {
+                        "subnet": {
+                          "id": "[variables('subnetId')]"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "customScript",
+                "properties": {
+                  "publisher": "Microsoft.Azure.Extensions",
+                  "type": "CustomScript",
+                  "typeHandlerVersion": "2.0",
+                  "autoUpgradeMinorVersion": true,
+                  "protectedSettings": {
+                    "fileUris": [
+                      "https://raw.githubusercontent.com/Azure/Avere/master/src/client/mountandbootstrap.sh"
+                    ],
+                    "commandToExecute": "[concat(variables('workerEnvironmentVariables'), ' /bin/bash mountandbootstrap.sh')]"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "[variables('onpremjobuploaderVmName')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2018-06-01",
+      "tags": {
+        "averevfxt": "client"
+      }, 
+      "dependsOn": [        
+      ],
+      "sku": {
+        "name": "[variables('onpremjobuploaderVmSize')]",
+        "tier": "Standard",
+        "capacity": "[variables('onpremjobuploaderVmCount')]"
+      },
+      "properties": {
+        "overprovision": "false",
+        "singlePlacementGroup": "false",
+        "upgradePolicy": {
+          "mode": "Manual"
+        },
+        "virtualMachineProfile": {
+          "storageProfile": {
+            "osDisk": {
+              "createOption": "FromImage",
+              "caching": "ReadWrite"
+            },
+            "imageReference": "[variables('imageReference')]"
+          },
+          "osProfile": {
+            "computerNamePrefix": "[variables('onpremjobuploaderVmName')]",
+            "adminUsername": "[variables('adminUsername')]",
+            "linuxConfiguration": {
+              "disablePasswordAuthentication": "true",
+              "ssh": {
+                "publicKeys": [
+                  {
+                    "path": "[variables('sshKeyPath')]",
+                    "keyData": "[variables('sshKeyData')]"
+                  }
+                ]
+              }
+            }
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "[variables('onpremjobuploaderNicName')]",
+                "properties": {
+                  "primary": true,
+                  "ipConfigurations": [
+                    {
+                      "name": "ipconfig",
+                      "properties": {
+                        "subnet": {
+                          "id": "[variables('subnetId')]"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "customScript",
+                "properties": {
+                  "publisher": "Microsoft.Azure.Extensions",
+                  "type": "CustomScript",
+                  "typeHandlerVersion": "2.0",
+                  "autoUpgradeMinorVersion": true,
+                  "protectedSettings": {
+                    "fileUris": [
+                      "https://raw.githubusercontent.com/Azure/Avere/master/src/client/mountandbootstrap.sh"
+                    ],
+                    "commandToExecute": "[concat(variables('onpremjobuploaderEnvironmentVariables'), ' /bin/bash mountandbootstrap.sh')]"
                   }
                 }
               }
