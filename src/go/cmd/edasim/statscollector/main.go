@@ -87,12 +87,6 @@ func initializeApplicationVariables() (string, string, string, string, string) {
 func main() {
 	statsFilePath, eventHubSenderName, eventHubSenderKey, eventHubNamespaceName, eventHubHubName := initializeApplicationVariables()
 
-	log.Info.Printf("Eventhub Details:\n")
-	log.Info.Printf("eventHubSenderName: %s\n", eventHubSenderName)
-	log.Info.Printf("eventHubSenderKey: %s\n", eventHubSenderKey)
-	log.Info.Printf("eventHubNamespaceName: %s\n", eventHubNamespaceName)
-	log.Info.Printf("eventHubHubName: %s\n", eventHubHubName)
-
 	ioStatsCollector := file.InitializeIOStatsCollector()
 
 	provider, err := sas.NewTokenProvider(sas.TokenProviderWithKey(eventHubSenderName, eventHubSenderKey))

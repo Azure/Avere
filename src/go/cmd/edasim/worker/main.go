@@ -100,7 +100,7 @@ func main() {
 	log.Info.Printf("Starting worker\n")
 	log.Info.Printf("worker thread count: %d\n", workerThreadCount)
 	log.Info.Printf("storage account: %s\n", storageAccount)
-	log.Info.Printf("storage account key: %s\n", storageKey)
+	log.Info.Printf("length of storage account key: %d\n", len(storageKey))
 	log.Info.Printf("job process queue name: %s\n", jobProcessQueueName)
 	log.Info.Printf("job completion queue name: %s\n", jobCompleteQueueName)
 

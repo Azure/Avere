@@ -95,7 +95,7 @@ func main() {
 
 	log.Info.Printf("Starting job uploading\n")
 	log.Info.Printf("storage account: %s\n", storageAccount)
-	log.Info.Printf("storage account key: %s\n", storageKey)
+	log.Info.Printf("length of storage account key: %d\n", len(storageKey))
 	log.Info.Printf("uploader queue name: %s\n", uploaderQueueName)
 	log.Info.Printf("threadCount: %d\n", threadCount)
 
