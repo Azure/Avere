@@ -140,40 +140,18 @@ These deployment instructions describe the installation of all components requir
     curl --retry 5 --retry-delay 5 -o worker.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/worker.service
     ```
 
-6. Deploy one jobsubmitter client by clicking the "Deploy to Azure" button below, but set the following settings.  This creates a machine with the script `job_submitter.sh` and `stats_collector.sh` in the root.  These are the two manual parts of the run where the job batch and statscollector collects and summarizes the perf runs from each batch run.
-  * for `appEnvironmentVariables` use the one line environment variable string you created above
-  * specify `/bootstrap/bootstrap.jobsubmitter.sh` for the job submitter.
+6. Deploy the eda simulator cluster by clicking the "Deploy to Azure" button below and for `appEnvironmentVariables` use the one line environment variable string you created above.  Here are the following nodes of the cluster:
+    1. **jobsubmitter node(s)** - VMs with the script `job_submitter.sh` and `stats_collector.sh` in the user home dir.  These are the two manual parts of the run where the job batch and statscollector collects and summarizes the perf runs from each batch run.
+    1. **orchestrator node(s)** - running orchestrators to process jobs and create work
+    1. **worker node(s)** - running orchestrators to process work
+    1. **onpremjobuploader node(s)** - running job uploaders to upload the processed work
 
-    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclient%2Fvmas%2Fazuredeploy.json" target="_blank">
-    <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
-    </a>
-
-7. Deploy the orchestrator on 1-4 machines by clicking the "Deploy to Azure" button below, but set the following settings.  This creates a running orchestrator.
-  * for `appEnvironmentVariables` use the one line environment variable string you created above
-  * specify `/bootstrap/bootstrap.orchestrator.sh`.
-
-    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclient%2Fvmas%2Fazuredeploy.json" target="_blank">
-    <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
-    </a>
-
-8. Deploy the worker on 6-12 machines by clicking the "Deploy to Azure" button below, but set the following settings.  This creates a running workers.
-  * for `appEnvironmentVariables` use the one line environment variable string you created above
-  * specify `/bootstrap/bootstrap.worker.sh`.
-
-    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclient%2Fvmas%2Fazuredeploy.json" target="_blank">
-    <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
-    </a>
-
-9. Deploy the uploader on 1-4 machines by clicking the "Deploy to Azure" button below, but set the following settings.  This creates a running workers.
-  * for `appEnvironmentVariables` use the one line environment variable string you created above
-  * specify `/bootstrap/bootstrap.onpremjobuploader.sh`.
-
-    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclient%2Fvmas%2Fazuredeploy.json" target="_blank">
+    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fgo%2Fcmd%2Fedasim%2Fdeploymentartifacts%2Ftemplate%2Fazuredeploy.json" target="_blank">
     <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
     </a>
 
 ## To Run
 
-Log onto the job submitter machine, and adjust and use the `job_submitter.sh` script to submit batches of varying sizes.  After the batch is complete run the `stats_collector.sh` script to collect and summarize the stats.
+Use the portal to get the ip of job submitter machine and login.  In the user root adjust and use the `job_submitter.sh` script to submit batches of varying sizes.  After the batch is complete run the `stats_collector.sh` script to collect and summarize the stats.
 
 To look at logs on the orchestrator, worker, or edasim machines, tail the logs under /var/log/edasim/ directory.

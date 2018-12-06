@@ -84,7 +84,7 @@
       "defaultValue": "",
       "minLength": 0,
       "metadata": {
-        "description": "Optional environment variables set before calling the bootstrapt script.  Example: \"ENV1=foo ENV2=bar\""
+        "description": "Optional environment variables set before calling the bootstrap script.  Example: \"ENV1=foo ENV2=bar\""
       }
     }
   },

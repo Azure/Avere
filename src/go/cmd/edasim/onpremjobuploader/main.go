@@ -47,7 +47,7 @@ func verifyEnvVars() bool {
 func initializeApplicationVariables() (string, int, string, string, string, string, string, string) {
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
 	var uploaderQueueName = flag.String("uploaderQueueName", edasim.QueueUploader, "the uploader job queue name")
-	var threadCount = flag.Int("threadCount", 1, "the number of concurrent threads uploading jobs")
+	var threadCount = flag.Int("threadCount", 16, "the number of concurrent threads uploading jobs")
 
 	flag.Parse()
 

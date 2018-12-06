@@ -8,9 +8,6 @@
   "sshKeyData": {
     "value": "SSHKEY"
   },
-  "vmCount":{
-    "value": 2
-  },
   "virtualNetworkResourceGroup": {
     "value": "UNIQUE"
   },
@@ -28,8 +25,5 @@
   },
   "nfsMountBaseDir": {
     "value": "/nfs"
-  },
-  "bootstrapScriptPath": {
-    "value": "/bootstrap/bootstrap.sh"
   }
 }
