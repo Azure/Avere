@@ -4,7 +4,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/azure/avere/src/go/pkg/log"
+	"github.com/Azure/Avere/src/go/pkg/log"
 )
 
 // DirectoryManager ensures directories are created, and ensuring only a single create ever gets sent to filesystem

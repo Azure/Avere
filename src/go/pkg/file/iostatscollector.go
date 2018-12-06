@@ -7,7 +7,7 @@ import (
 	"path"
 	"sync"
 
-	"github.com/azure/avere/src/go/pkg/log"
+	"github.com/Azure/Avere/src/go/pkg/log"
 )
 
 // IOStatsCollector holds a collection of events

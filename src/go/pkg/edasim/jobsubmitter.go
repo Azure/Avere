@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/azure/avere/src/go/pkg/azure"
-	"github.com/azure/avere/src/go/pkg/file"
-	"github.com/azure/avere/src/go/pkg/log"
+	"github.com/Azure/Avere/src/go/pkg/azure"
+	"github.com/Azure/Avere/src/go/pkg/file"
+	"github.com/Azure/Avere/src/go/pkg/log"
 )
 
 // JobSubmitter defines the structure used for the job submitter process

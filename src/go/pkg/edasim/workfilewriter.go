@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/azure/avere/src/go/pkg/file"
-	"github.com/azure/avere/src/go/pkg/log"
-	"github.com/azure/avere/src/go/pkg/random"
+	"github.com/Azure/Avere/src/go/pkg/file"
+	"github.com/Azure/Avere/src/go/pkg/log"
+	"github.com/Azure/Avere/src/go/pkg/random"
 )
 
 // WorkFileWriter handles the work start file and complete file creation for a single job

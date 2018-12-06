@@ -8,10 +8,10 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/azure/avere/src/go/pkg/azure"
-	"github.com/azure/avere/src/go/pkg/cli"
-	"github.com/azure/avere/src/go/pkg/edasim"
-	"github.com/azure/avere/src/go/pkg/log"
+	"github.com/Azure/Avere/src/go/pkg/azure"
+	"github.com/Azure/Avere/src/go/pkg/cli"
+	"github.com/Azure/Avere/src/go/pkg/edasim"
+	"github.com/Azure/Avere/src/go/pkg/log"
 )
 
 func usage(errs ...error) {

@@ -40,7 +40,7 @@ git fetch anhowe
 git cherry-pick 88364b1a71e18053edd3af5c0c71b53bb8585feb
 # get the edasim
 cd $GOPATH
-go get -v github.com/azure/avere/src/go/...
+go get -v github.com/Azure/Avere/src/go/...
 ```
 
 ## Storage Preparation

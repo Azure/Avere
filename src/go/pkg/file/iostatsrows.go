@@ -6,8 +6,8 @@ import (
 	"os"
 	"sort"
 
-	"github.com/azure/avere/src/go/pkg/log"
-	"github.com/azure/avere/src/go/pkg/stats"
+	"github.com/Azure/Avere/src/go/pkg/log"
+	"github.com/Azure/Avere/src/go/pkg/stats"
 )
 
 const (

@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/azure/avere/src/go/pkg/log"
+	"github.com/Azure/Avere/src/go/pkg/log"
 )
 
 // ReaderWriter records the time statistics for reading and writing files to an event hub
