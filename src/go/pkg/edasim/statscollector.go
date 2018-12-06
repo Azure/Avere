@@ -21,6 +21,11 @@ func StatsCollector(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	// for statistics
+	lastJobsProcessedCount := 0
+	lastProcessFilesWritten := 0
+	lastCompletedJobsCount := 0
+	lastUploadCount := 0
+	lastErrorCount := 0
 	jobsProcessedCount := 0
 	processFilesWritten := 0
 	completedJobsCount := 0
@@ -52,19 +57,24 @@ func StatsCollector(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
 		if time.Since(start) > secondsBetweenStats || !keepRunning {
 			start = start.Add(secondsBetweenStats)
 			if jobsProcessedCount > 0 {
-				log.Info.Printf("jobsProcessedCount: %d", jobsProcessedCount)
+				log.Info.Printf("jobsProcessedCount: %d (delta %d)", jobsProcessedCount, (jobsProcessedCount - lastJobsProcessedCount))
+				lastJobsProcessedCount = jobsProcessedCount
 			}
 			if processFilesWritten > 0 {
-				log.Info.Printf("processFilesWritten: %d", processFilesWritten)
+				log.Info.Printf("processFilesWritten: %d (delta %d)", processFilesWritten, (processFilesWritten - lastProcessFilesWritten))
+				lastProcessFilesWritten = processFilesWritten
 			}
 			if completedJobsCount > 0 {
-				log.Info.Printf("completedJobsCount: %d", completedJobsCount)
+				log.Info.Printf("completedJobsCount: %d (delta %d)", completedJobsCount, (completedJobsCount - lastCompletedJobsCount))
+				lastCompletedJobsCount = completedJobsCount
 			}
 			if uploadCount > 0 {
-				log.Info.Printf("uploadCount: %d", uploadCount)
+				log.Info.Printf("uploadCount: %d (delta %d)", uploadCount, (uploadCount - lastUploadCount))
+				lastUploadCount = uploadCount
 			}
 			if errorCount > 0 {
-				log.Info.Printf("errorCount: %d", errorCount)
+				log.Info.Printf("errorCount: %d (delta %d)", errorCount, (errorCount - lastErrorCount))
+				lastErrorCount = errorCount
 			}
 		}
 	}
