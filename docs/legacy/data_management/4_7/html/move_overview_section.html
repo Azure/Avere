@@ -27,9 +27,9 @@
 
   </head><body>
 
-<a href="http://www.averesystems.com">
- <img style="margin: 20px;" src="http://www.averesystems.com/vendor/savvior/savvicms-avere/img/avere-logo.png">
-</a>
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
 
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -54,7 +54,7 @@
 <a class="reference internal image-reference" href="_images/flashmove_diagram.png"><img alt="Diagram showing the Avere cluster moving data from one back-end core filer to another (FlashMove)" src="_images/flashmove_diagram.png" style="width: 400pt;" /></a>
 <p class="caption"><span class="caption-text">FlashMove Diagram</span></p>
 </div>
-<p>This diagram shows an Avere cluster with the back-end file path <code class="docutils literal notranslate"><span class="pre">&lt;Vendor</span> <span class="pre">B&gt;/src</span></code> defined as <code class="docutils literal notranslate"><span class="pre">/src</span></code> in the client-facing namespace. (This is mapping is called a <em>namespace junction</em>  and is part of the Avere OS global namespace feature - read <a class="reference external" href="http://library.averesystems.com/ops_guide/4_7/gns_overview.html#gns-overview" title="(in Operations Guide v4.7)"><span>Using a Global Namespace</span></a> in the Avere OS Configuration Guide for details.)</p>
+<p>This diagram shows an Avere cluster with the back-end file path <code class="docutils literal notranslate"><span class="pre">&lt;Vendor</span> <span class="pre">B&gt;/src</span></code> defined as <code class="docutils literal notranslate"><span class="pre">/src</span></code> in the client-facing namespace. (This is mapping is called a <em>namespace junction</em>  and is part of the Avere OS global namespace feature - read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gns_overview.html#gns-overview" title="(in Cluster Configuration Guide v4.7)"><span>Using a Global Namespace</span></a> in the Avere OS Configuration Guide for details.)</p>
 <p>A FlashMove job is created that migrates the data from <code class="docutils literal notranslate"><span class="pre">&lt;Vendor</span> <span class="pre">B&gt;/src</span></code> to <code class="docutils literal notranslate"><span class="pre">&lt;Vendor</span> <span class="pre">C&gt;/src</span></code>. (The actual path names can be different, and do not need to be identical to the junction name.)</p>
 <p>During the move, the data is continuously available through the Avere cluster junction. Clients can view and change data, and Avere OS automatically keeps the data synchronized as part of the move.</p>
 <p>After the data is completely copied to the Vendor C core filer, the cluster modifies the junction so that it references the new location of the moved files. That is, when a client application writes data to <code class="docutils literal notranslate"><span class="pre">&lt;cluster&gt;/src</span></code>, that data is stored on the back end in <code class="docutils literal notranslate"><span class="pre">&lt;Vendor</span> <span class="pre">C&gt;/src</span></code>.</p>
@@ -120,16 +120,12 @@
 <div>&nbsp;</div>
 
 <div style="text-align: right;">
-			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
-				<li><strong><a href="http://library.averesystems.com/" target="_blank" style="color: #fff;">Documentation Home</a></strong>
-				</li>
-				<li><strong><a href="http://www.averesystems.com/" target="_blank" style="color: #fff;">Avere Systems Website</a></strong>
-				</li>
-				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
-				</li>
-				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
-				</li>
-			</ul>
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
 </div>
 
 

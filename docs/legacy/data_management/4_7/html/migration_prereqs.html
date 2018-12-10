@@ -29,9 +29,9 @@
 
   </head><body>
 
-<a href="http://www.averesystems.com">
- <img style="margin: 20px;" src="http://www.averesystems.com/vendor/savvior/savvicms-avere/img/avere-logo.png">
-</a>
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
 
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -64,7 +64,7 @@
 </div>
 <div class="section" id="core-filer-requirements">
 <span id="core-filer-reqs"></span><span id="index-1"></span><h2>Core Filer Requirements<a class="headerlink" href="#core-filer-requirements" title="Permalink to this headline">¶</a></h2>
-<p>Any storage system that you want to use in a FlashMove or FlashMirror job must be defined as a core filer in the Avere cluster. (To learn more about core filers, read <a class="reference external" href="http://library.averesystems.com/ops_guide/4_7/core_filer_overview.html#core-filer-overview" title="(in Operations Guide v4.7)"><span>Working With Core Filers</span></a> and <a class="reference external" href="http://library.averesystems.com/ops_guide/4_7/gui_manage_core_filers.html#manage-core-filers" title="(in Operations Guide v4.7)"><span>Core Filer &gt; Manage Core Filers</span></a> in the Avere OS <a class="reference external" href="http://library.averesystems.com/ops_guide/4_7/ops_conf_index.html#ops-config-guide" title="(in Operations Guide v4.7)"><span class="xref std std-ref">Configuration Guide</span></a>.)</p>
+<p>Any storage system that you want to use in a FlashMove or FlashMirror job must be defined as a core filer in the Avere cluster. (To learn more about core filers, read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/core_filer_overview.html#core-filer-overview" title="(in Cluster Configuration Guide v4.7)"><span>Working With Core Filers</span></a> and <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_manage_core_filers.html#manage-core-filers" title="(in Cluster Configuration Guide v4.7)"><span>Core Filer &gt; Manage Core Filers</span></a> in the Avere OS <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/ops_conf_index.html#ops-config-guide" title="(in Cluster Configuration Guide v4.7)"><span class="xref std std-ref">Configuration Guide</span></a>.)</p>
 <p>These requirements apply to the core filers involved in a data management job:</p>
 <ul>
 <li><p class="first"><strong>Export</strong> - Each core filer must have at least one available export (for example, <code class="docutils literal notranslate"><span class="pre">/</span></code> for cloud core filers)</p>
@@ -76,7 +76,7 @@
 <li>A writeback delay must be set</li>
 <li><span class="guilabel">Local Directories</span> must be enabled (Note that changing this setting requires all clients to remount the cluster.)</li>
 </ul>
-<p>Read <a class="reference external" href="http://library.averesystems.com/ops_guide/4_7/gui_manage_cache_policies.html#gui-manage-cache-policies" title="(in Operations Guide v4.7)"><span>Core Filer &gt; Manage Cache Policies</span></a> in the Avere OS <a class="reference external" href="http://library.averesystems.com/ops_guide/4_7/ops_conf_index.html#ops-config-guide" title="(in Operations Guide v4.7)"><span class="xref std std-ref">Configuration Guide</span></a> for details.</p>
+<p>Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_manage_cache_policies.html#gui-manage-cache-policies" title="(in Cluster Configuration Guide v4.7)"><span>Core Filer &gt; Manage Cache Policies</span></a> in the Avere OS <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/ops_conf_index.html#ops-config-guide" title="(in Cluster Configuration Guide v4.7)"><span class="xref std std-ref">Configuration Guide</span></a> for details.</p>
 </li>
 <li><p class="first"><strong>Global Namespace</strong> - The source core filer must be associated with a Global Namespace vserver.</p>
 <p>Global Namespace (GNS) is the default type when creating a new vserver. GNS vservers allow the administrator to create a virtual pseudofilesystem that clients see instead of the actual data structure on the core filer. (An option also exists to create a simple vserver, which is a legacy configuration that cannot be used with Avere OS’s data management features.)</p>
@@ -160,16 +160,12 @@ updated Jul 19, 2017</div>
 <div>&nbsp;</div>
 
 <div style="text-align: right;">
-			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
-				<li><strong><a href="http://library.averesystems.com/" target="_blank" style="color: #fff;">Documentation Home</a></strong>
-				</li>
-				<li><strong><a href="http://www.averesystems.com/" target="_blank" style="color: #fff;">Avere Systems Website</a></strong>
-				</li>
-				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
-				</li>
-				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
-				</li>
-			</ul>
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
 </div>
 
 
