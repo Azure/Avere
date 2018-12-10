@@ -1,0 +1,608 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Configuring SMB Access &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Selecting an Access Control Method for SMB" href="smb_access_control.html" />
+    <link rel="prev" title="Controlling Access to Core Filer Exports" href="export_rules_overview.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="smb_access_control.html" title="Selecting an Access Control Method for SMB"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="export_rules_overview.html" title="Controlling Access to Core Filer Exports"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="common_tasks.html" accesskey="U">Configuration Concepts</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="configuring-smb-access">
+<span id="smb-overview"></span><span id="index-0"></span><h1>Configuring SMB Access<a class="headerlink" href="#configuring-smb-access" title="Permalink to this headline">     </a></h1>
+<p>SMB (sometimes called CIFS) is a network sharing protocol that is used to allow Microsoft Windows computers to share files with other systems.</p>
+<p>Set up SMB in your Avere cluster if you have Microsoft Windows clients that need to access the cluster. If you only have clients with UNIX-style operating systems, SMB configuration is not necessary.</p>
+<p>Avere OS can support SMB access to any type of back-end storage, including those that do not provide native SMB support (like cloud storage), or those that have SMB support turned off. (Systems without support or with support disabled typically are limited to POSIX style security - that is, the <span class="guilabel">POSIX mode bits</span> setting - instead of ACL-based security with the <span class="guilabel">CIFS ACLs</span> setting.)</p>
+<p>Here are some important things to note about using SMB in an Avere cluster:</p>
+<ul>
+<li><p class="first">A Microsoft Active Directory server is required.</p>
+</li>
+<li><p class="first">A source for downloading user and group names (RFC 2307 attributes) is required.</p>
+<p>Downloading from an AD server is recommended, since an AD server can support multiple trusted domains and is typically easier to configure. Other options are to download from a different directory service, such as NIS or LDAP; or to provide a flat file user/group mapping.</p>
+</li>
+<li><p class="first">SMB is enabled or disabled at the vserver level.</p>
+<p>Your cluster can include both NFS-only vservers and NFS/SMB vservers.</p>
+</li>
+<li><p class="first">SMB shares must be created on the vserver. Creating these shares is a separate step after mapping the back-end storage export to a namespace junction.</p>
+<ul class="simple">
+<li>VServer SMB shares can use either ACLs (known as CIFS ACLs in Avere OS) or UNIX-style permissions (called POSIX mode bits) for security.</li>
+<li>To use ACL-based security with a NAS core filer, you must also have an SMB share on the back-end storage system.</li>
+<li>VServers can support SMB even for storage types that do not support SMB or that have SMB support turned off. (Only POSIX mode bit security is supported for hardware core filers without native SMB support.)</li>
+</ul>
+</li>
+<li><p class="first">SMB and Active Directory environments are sensitive to time skew. Make sure that the system clocks on all hosts involved with SMB (FXT nodes, Active Directory servers, Windows clients, LDAP servers, core filers) are within five minutes of each other. Using a common Network Time Protocol (NTP) source is highly recommended.</p>
+</li>
+<li><p class="first">Avere OS does not support simultaneous multi-protocol locking. That is, you cannot safely lock a file or share from an SMB client and from an NFS client at the same time. Most applications do not require this kind of control. Contact Avere Global Services to learn more.</p>
+</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">SMB configuration is a complicated process, especially if using ACL-based security. This document gives only an overview. Contact Avere Global Services for assistance if needed.</p>
+</div>
+<div class="section" id="smb-configuration-steps">
+<h2>SMB Configuration Steps<a class="headerlink" href="#smb-configuration-steps" title="Permalink to this headline">     </a></h2>
+<p>There are several tasks involved in setting up SMB for an Avere OS cluster. Changes typically are required on the core filers as well as on the cluster and on supporting systems like AD servers.</p>
+<p>This list is a basic overview of the process.</p>
+<p><strong>1. Establish an Active Directory Domain</strong></p>
+<blockquote>
+<div>Determine the Windows domain that cluster vservers will join.</div></blockquote>
+<p><strong>2. Adjust Back-End Filers</strong></p>
+<blockquote>
+<div><p>Configure back-end storage hardware to support Avere OS SMB and, if necessary, ACL-based security.</p>
+<p>Back-end configuration is required for most NAS systems that will interact with Windows clients through the Avere cluster.</p>
+<p>Backend configuration is <em>not</em> required for:</p>
+<ul class="simple">
+<li>Cloud storage</li>
+<li>NAS systems that do not support SMB</li>
+<li>NAS systems with SMB disabled</li>
+</ul>
+<p>If you use POSIX mode bit security instead of ACL-based security, parts of this configuration are unnecessary; consult the configuration guide for your system or contact Avere Global Services for details.</p>
+<p>Note that you must configure NFS communication with the Avere cluster even if you plan to access the core filer exclusively over SMB and the storage system uses NTFS (Windows style) security.</p>
+<p>Customization required for NAS core filers varies by system, but it typically includes the following items:</p>
+<ol class="upperalpha simple">
+<li>Ensure that the security style used on the core filer is compatible with Avere OS SMB.</li>
+<li>Create NFS exports and set appropriate permissions to allow the Avere cluster to access data and ACL objects on the back end.</li>
+<li>If using CIFS ACL security on a NAS storage system, create an SMB share on the back-end storage system that will interact with the SMB share in the Avere cluster.</li>
+<li>After defining the core filer in the Avere cluster, configure Kerberos constrained delegation for each core filer. This process is explained in <a class="reference internal" href="#smb-config-ad"><span class="std std-ref">Configuring Active Directory for SMB</span></a>.</li>
+</ol>
+</div></blockquote>
+<p>Read <a class="reference internal" href="#smb-nas-config"><span class="std std-ref">Configuring NAS Storage for SMB</span></a> for details about core filer configuration.</p>
+<p><strong>3. Define Core Filers in the Avere Cluster</strong></p>
+<blockquote>
+<div><p>Define the back-end storage systems as core filers in the Avere cluster. To enable SMB communication with the core filers, follow these guidelines:</p>
+<ul>
+<li><p class="first">When defining a NAS system as a core filer in the Avere cluster, use the fully qualified domain name in the <span class="guilabel">Core filer network name/IP</span> field. The literal FQDN is needed for Kerberos constrained delegation.</p>
+</li>
+<li><p class="first">Make sure to set the <span class="guilabel">Filer Class</span> value correctly for your storage system. Avere OS relies on this value to establish hardware-specific parameters for SMB-related communication. Read <a class="reference internal" href="new_core_filer_nas.html#create-core-filer-nas"><span class="std std-ref">Adding a New Core Filer - NAS Core Filer</span></a> for details.</p>
+</li>
+<li><p class="first">In some situations, it can be more efficient to add a storage system to the Avere cluster as two separate core filers: one for SMB access and one for NFS access. This optimization can benefit filesystems with the following characteristics:</p>
+<ul class="simple">
+<li>SMB ACLs are used for security</li>
+<li>Windows clients and UNIX/Linux clients do not access the same files or directories</li>
+</ul>
+<p>Maintaining ACL-based security with an Avere cluster involves an access cache, which consumes cache memory and increases network traffic. Even if ACLs are only used for a small percentage of the data controlled by the core filer, all requests to that core filer must involve the access cache.</p>
+<p>Moving NFS-only traffic to a separate core filer lets requests for data stored under POSIX security and accessed by UNIX/Linux clients to be processed without the extra overhead of ACL access cache processing.</p>
+<p>This configuration is appropriate <strong>only</strong> if Windows users and non-Windows users do not need to access the same directory. Data corruption can result if two different core filers access the same data. SMB clients should access the SMB-only core filer over a junction that serves only SMB clients. NFS clients should access the NFS-only core filer over a junction that serves only NFS clients.</p>
+<p>Contact Avere Global Services to learn more.</p>
+</li>
+</ul>
+</div></blockquote>
+<p><strong>4. Configure Active Directory</strong></p>
+<blockquote>
+<div>There are several steps involved in configuring AD settings for an Avere cluster. Read <a class="reference internal" href="#smb-config-ad"><span class="std std-ref">Configuring Active Directory for SMB</span></a> to learn the steps.</div></blockquote>
+<p><strong>5. Enable SMB on Cluster VServers.</strong></p>
+<blockquote>
+<div>Read <a class="reference internal" href="#smb-enable-overview"><span class="std std-ref">Enabling SMB on a VServer</span></a> for more information.</div></blockquote>
+<p><strong>6. Create Core Filer Junctions</strong></p>
+<blockquote>
+<div><p>When creating namespace paths that will be used for SMB access, be sure to specify the access control correctly. (If using a simple namespace vserver, you do not create a namespace path, but you still must specify access control.)</p>
+<p>Read <a class="reference internal" href="#smb-define-paths"><span class="std std-ref">Configuring Global Namespace Paths for SMB Shares</span></a> for details.</p>
+</div></blockquote>
+<p><strong>7. Define SMB Shares on a Cluster VServer</strong></p>
+<blockquote>
+<div>Read <a class="reference internal" href="#smb-define-shares"><span class="std std-ref">Configuring SMB Shares</span></a> to learn more.</div></blockquote>
+<p><strong>8. Customize ACLs on Cluster SMB Shares</strong></p>
+<blockquote>
+<div><p>SMB share ACLs define the maximum permissions available to Windows users who connect through a particular SMB share.</p>
+<p>You should define SMB share ACLs in the Avere cluster that match the share ACLs from the back-end core filer. Avere OS does not automatically read or replicate share ACLs from the back-end SMB share on the cluster SMB share; you must create them manually.</p>
+<p>Read <a class="reference internal" href="#smb-share-level-acl-overview"><span class="std std-ref">Configuring Share-Level ACLs</span></a> for more details.</p>
+</div></blockquote>
+<p><strong>9. Configure Kerberos Constrained Delegation in Active Directory (if necessary)</strong></p>
+<blockquote>
+<div>If using a NAS filer and CIFS ACLs security, you must configure your AD server to accept requests from the vserver’s SMB server machine account as a trusted delegate for the NAS SMB server. Read <a class="reference internal" href="native_identity_overview.html#native-identity-overview"><span class="std std-ref">Native Identity</span></a> to learn more.</div></blockquote>
+</div>
+<div class="section" id="configuring-active-directory-for-smb">
+<span id="smb-config-ad"></span><h2>Configuring Active Directory for SMB<a class="headerlink" href="#configuring-active-directory-for-smb" title="Permalink to this headline">     </a></h2>
+<p>Active Directory configuration for an Avere cluster involves several components of the system.</p>
+<p>First, determine the AD domain that your cluster’s SMB clients and vservers will use. You will need to specify the domain in many of the configuration steps.</p>
+<div class="section" id="setting-up-an-ad-server">
+<h3>Setting Up an AD Server<a class="headerlink" href="#setting-up-an-ad-server" title="Permalink to this headline">     </a></h3>
+<p>Detailed AD server setup instructions are included in <a class="reference internal" href="smb_ad_admin_guide.html#smb-ad-admin"><span class="std std-ref">Appendix F: Configuring Active Directory for Avere SMB</span></a>.</p>
+<p>The AD server must be configured as follows:</p>
+<ul class="simple">
+<li>The server software must be Windows Server 2003 or later, running in native mode.</li>
+<li>The standard microsoft DNS entries must be present.<ul>
+<li>Global and site-specific entries must be valid.</li>
+<li>AD site-to-subnet entries must be defined for the client-facing address range of each vserver client.</li>
+</ul>
+</li>
+<li>DNS name resolution must be in place for the core filer and vserver domain names.</li>
+<li>The vserver and core filer machine accounts must be in the same AD domain. (This is a requirement for Microsoft’s constrained delegation implementation.)</li>
+</ul>
+</div>
+<div class="section" id="adding-the-ad-server-to-the-cluster-cap">
+<span id="smb-define-ad"></span><h3>Adding the AD Server to the Avere Cluster<a class="headerlink" href="#adding-the-ad-server-to-the-cluster-cap" title="Permalink to this headline">     </a></h3>
+<p>Use the cluster’s <a class="reference internal" href="gui_directory_services.html#gui-directory-services"><span class="std std-ref">Cluster &gt; Directory Services</span></a> page to define the Active Directory server in the Avere cluster.</p>
+<p>A configuration wizard guides you through choosing the AD server and other directory services needed for SMB. Some advanced settings, like user overrides and manual polling, are not included in the wizard but can be set in the configuration details page.</p>
+<p>Make changes on the configuration details page if you need to do either of these things:</p>
+<ul class="simple">
+<li>Use an override file to manually map Windows usernames to their NFS equivalents</li>
+<li>Define static domain controllers for specific domains</li>
+</ul>
+<p>Read <a class="reference internal" href="gui_directory_services.html#ds-wiz"><span class="std std-ref">Using the Configuration Wizard</span></a> and <a class="reference internal" href="gui_directory_services.html#ds-config-details"><span class="std std-ref">The Directory Services Configuration Details Page</span></a> on the Directory Services settings page for complete information.</p>
+</div>
+<div class="section" id="core-filer-ad-configuration">
+<h3>Core Filer AD Configuration<a class="headerlink" href="#core-filer-ad-configuration" title="Permalink to this headline">     </a></h3>
+<p>These adjustments must be made on the core filers.</p>
+<ul>
+<li><p class="first">A method for mapping Windows users to core filer ACLs must be configured.</p>
+<p>Depending on the security style, username mapping can be handled in one of several ways:</p>
+<ul class="simple">
+<li>Enable native identity on the Avere cluster vservers and pass Windows-style identifiers to a back-end core filer that supports SMB.</li>
+<li>Store user and group ID information in AD or in a flat file on the Avere cluster.</li>
+</ul>
+</li>
+<li><p class="first">If you are using SMB ACLs on a NAS core filer, you must configure Kerberos constrained delegation between the vserver’s machine account and the SMB service on the core filer. Read <a class="reference internal" href="constrained_del_overview.html#constrained-delegation-overview"><span class="std std-ref">Kerberos Constrained Delegation</span></a> to learn more.</p>
+</li>
+<li><p class="first">If using ACLs to authorize share access, you must also create and configure <a class="reference internal" href="smb_ad_admin_guide.html#smb-set-spn"><span class="std std-ref">service principal names</span></a>.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="vserver-ad-configuration">
+<h3>VServer AD Configuration<a class="headerlink" href="#vserver-ad-configuration" title="Permalink to this headline">     </a></h3>
+<p>Create one or more Active Directory machine account objects for joining to the cluster vservers.</p>
+<ul class="simple">
+<li>A domain administrator must create the AD object.</li>
+<li>Create the object in the organizational unit where it will be used; you cannot move a machine account after the vserver has joined.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="configuring-nas-storage-for-smb">
+<span id="smb-nas-config"></span><h2>Configuring NAS Storage for SMB<a class="headerlink" href="#configuring-nas-storage-for-smb" title="Permalink to this headline">     </a></h2>
+<p>Most NAS systems need specific configuration settings to interoperate properly with an Avere cluster, especially when using SMB ACLs.</p>
+<div class="section" id="core-filer-security-style">
+<h3>Core Filer Security Style<a class="headerlink" href="#core-filer-security-style" title="Permalink to this headline">     </a></h3>
+<p>Make sure that your back-end NAS storage uses a supported security style (sometimes called security mode, or a similar term) for the volumes that will be accessed through the Avere cluster over SMB.</p>
+<p>Most NAS hardware allows the storage administrator to set the security protocol for individual volumes on the core filer. You can typically choose between NTFS (Windows style), NFS (UNIX style), or combinations of the two styles.</p>
+<p>Avere OS typically supports NTFS style security and NFS style security, but might not support the vendor-specific implementation of a mixed or unified security style. Read the customized Avere Systems configuration document for your storage system to learn more.</p>
+</div>
+<div class="section" id="core-filer-configuration-overview">
+<h3>Core Filer Configuration Overview<a class="headerlink" href="#core-filer-configuration-overview" title="Permalink to this headline">     </a></h3>
+<p>These are the basic tasks required to configure a core filer for SMB access through an Avere cluster:</p>
+<blockquote>
+<div><ul>
+<li><p class="first">Make sure that the core filer is a member of the same AD domain as the Avere cluster vserver. Configure Kerberos and constrained delegation if necessary.</p>
+</li>
+<li><p class="first">Prepare and export a storage volume for use with the Avere cluster.</p>
+<p>If necessary, create SMB shares on the exported volume (if using ACL security).</p>
+</li>
+<li><p class="first">On the back-end storage system, create an SMB share ACL object that will communicate with the SMB share on the Avere cluster.</p>
+<p>The best practice is to create a completely permissive SMB share ACL on the back-end volume. To do this, give the user <code class="docutils literal notranslate"><span class="pre">Everyone</span></code> <code class="docutils literal notranslate"><span class="pre">FULL</span></code> permission.</p>
+<p>If direct access to the core filer is a security concern, the concern can be mediated by giving the SMB share an obscure name and marking the share as <code class="docutils literal notranslate"><span class="pre">hidden</span></code> so that it does not show in a directory listing.</p>
+<p>At minimum, the core filer SMB share ACL must give the Avere cluster full control permission on the storage volume. The cluster also must have root permission so that it can copy and move ACLs during data migration.</p>
+</li>
+</ul>
+</div></blockquote>
+<p>The exact configuration steps are different on different storage systems.</p>
+<blockquote>
+<div><ul class="simple">
+<li>For NetApp Filers, read <a class="reference internal" href="smb_netapp_config-4-6.html#smb-netapp"><span class="std std-ref">Appendix G: Configuring NetApp Filers for Avere SMB ACLs</span></a>.</li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="configuring-global-namespace-paths-for-smb-shares">
+<span id="smb-define-paths"></span><h2>Configuring Global Namespace Paths for SMB Shares<a class="headerlink" href="#configuring-global-namespace-paths-for-smb-shares" title="Permalink to this headline">     </a></h2>
+<p>Before defining an SMB share on an Avere cluster vserver, make sure that the junction that will host the SMB share exists and has appropriate access control method settings.</p>
+<p>If using a back-end NAS filer (that is, a hardware storage system and not cloud storage) and ACLs, make sure that the back-end volume also has an SMB share. NAS ACL processing must be between two SMB shares, one on the core filer and one in the Avere cluster.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This section applies to global namespace vservers only. If configuring SMB on a vserver that uses a simple namespace (a legacy configuration), your SMB share will map to a single NFS export on a single NAS core filer.</p>
+</div>
+<p>To review the basics of configuring a global namespace, read <a class="reference internal" href="gns_overview.html#gns-overview"><span class="std std-ref">Using a Global Namespace</span></a>.</p>
+<p>To learn more about how export rules are inherited, read <a class="reference internal" href="export_rules_overview.html#export-rules-overview"><span class="std std-ref">Controlling Access to Core Filer Exports</span></a>.</p>
+<p>Read the <a class="reference internal" href="gui_namespace.html#gui-namespace"><span class="std std-ref">VServer &gt; Namespace</span></a> page documentation for a step-by-step look at creating and configuring access on GNS junctions.</p>
+<div class="section" id="designing-junctions-for-smb">
+<h3>Designing Junctions for SMB<a class="headerlink" href="#designing-junctions-for-smb" title="Permalink to this headline">     </a></h3>
+<p>When creating a junction that will host an SMB share, keep these principles in mind:</p>
+<ul class="simple">
+<li>The junction should allow access to the highest possible level on the NAS core filer. Linking to a lower level path can cause problems with data access or data migration tasks because the Avere cluster cannot access information stored in the parent directory of the export.</li>
+<li>The NFS export must access the exact same directory as the SMB share.</li>
+</ul>
+<p>For example, consider a system where clients will use SMB to access a directory named <code class="docutils literal notranslate"><span class="pre">abc</span></code> in the path <code class="docutils literal notranslate"><span class="pre">/vol/vol1/abc</span></code> on the core filer:</p>
+<ul class="simple">
+<li>Create a junction for <code class="docutils literal notranslate"><span class="pre">/vol/vol1</span></code></li>
+<li>Create an SMB share named <code class="docutils literal notranslate"><span class="pre">vol1</span></code> on the junction</li>
+<li>Clients access the subdirectory <code class="docutils literal notranslate"><span class="pre">abc</span></code> from a consistent path for the junction and the SMB share.</li>
+</ul>
+<p>This practice minimizes the number of core filer configuration steps that are necessary to use CIFS ACL security with an Avere cluster.</p>
+</div>
+<div class="section" id="configuring-smb-access-control-method-for-a-namespace-junction">
+<h3>Configuring SMB Access Control Method for a Namespace Junction<a class="headerlink" href="#configuring-smb-access-control-method-for-a-namespace-junction" title="Permalink to this headline">     </a></h3>
+<p>When creating a new junction that will be used for SMB access, you must set its access control method to correspond with the security style used on its core filer.</p>
+<p>(If using the legacy “simple namespace” configuration, access control methods are specified directly on the vserver’s SMB share.)</p>
+<p>For NAS core filers, choose the method that matches the security style in use on the back-end system. For cloud core filers, the security style on the junction determines the security style for the cloud object store, since object storage does not natively use either POSIX mode bits or SMB ACLs.</p>
+<p>SMB shares on the namespace junction inherit the access control method set on the junction.</p>
+<p>(SMB shares also have individual share-level ACLs, which specify the actions allowed when users are connected through the share. SMB share-level ACLs are unrelated to the access control methods set here; SMB shares that use POSIX-style security still have share-level ACLs.)</p>
+<p>The SMB settings are part of the junction configuration in the <span class="guilabel">Namespace</span> page. For more information, see  see <a class="reference internal" href="gui_namespace.html#junction-smb-access-nh"><span class="std std-ref">SMB Access Control</span></a>.</p>
+<p>(If using Avere OS version 4.6.2.5 or earlier, click the <span class="guilabel">Advanced</span> checkbox to show SMB settings.)</p>
+<p>Junction access control options include:</p>
+<ul>
+<li><p class="first"><span class="guilabel">POSIX mode bits</span> - Choose this option for the junction if your core filer uses UNIX-style security (owner, group, other).</p>
+</li>
+<li><p class="first"><span class="guilabel">CIFS ACLs</span> - Choose this option for the junction if your core filer uses NTFS-style security (SIDs and ACLs).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">When using the ACLs option with NAS storage, the back-end filer must have native SMB support and an SMB share defined.</p>
+</div>
+</li>
+</ul>
+<p>Cloud core filers do not have native SMB shares, but SMB shares can still use either access control option. Avere OS enables SMB shares that map to cloud storage buckets to use either the <span class="guilabel">POSIX mode bits</span> or <span class="guilabel">CIFS ACLs</span> security method.</p>
+<p>The <span class="guilabel">Permissions</span> field is used when the junction is associated with a cloud core filer.</p>
+<a class="reference internal image-reference" href="_images/smb_junction_permissions.png"><img alt="Permission inheritance for SMB junctions" src="_images/smb_junction_permissions.png" style="width: 450px;" /></a>
+<p>When adding a junction that maps to an uninitialized bucket on a cloud core filer, choose the <span class="guilabel">Force default</span> option that corresponds to the type of access control method being used for the junction.</p>
+</div>
+</div>
+<div class="section" id="enabling-smb-on-a-vserver">
+<span id="smb-enable-overview"></span><h2>Enabling SMB on a VServer<a class="headerlink" href="#enabling-smb-on-a-vserver" title="Permalink to this headline">     </a></h2>
+<p>SMB is enabled or disabled on individual vservers. When you configure and turn on SMB access for the first time, the vserver is joined to the active directory domain and an AD machine account is created. (This is referred to in the Avere Control Panel as creating an SMB server.) This machine account persists for the vserver even if SMB is disabled and re-enabled; you do not have to create it every time.</p>
+<p>You must enable SMB before you can create SMB shares.</p>
+<p>These settings are configured on the <a class="reference internal" href="gui_cifs.html#gui-cifs"><span class="std std-ref">VServer &gt; CIFS</span></a> settings page; read that page’s <a class="reference internal" href="gui_cifs.html#gui-cifs"><span class="std std-ref">documentation</span></a> to learn more about these options.</p>
+<p>To set up SMB on a vserver, you must specify the following items:</p>
+<ul>
+<li><p class="first">An existing AD administrator username and password to create the machine account on the AD server.</p>
+<p>If a machine account has been created ahead of time, a user with write permissions for the organizational unit can join the machine account to the OU; however, Avere recommends using a test object to verify permissions with the specific organizational unit before attempting to add the vserver.</p>
+</li>
+<li><p class="first">A NetBIOS name (used to create the AD machine account) - this will be the SMB server name.</p>
+<p>The best practice is to select a netBIOS name that can match the first component of the DNS fully qualified domain name.</p>
+</li>
+<li><p class="first">The AD organizational unit that the machine account will belong to. (This field is optional, but OU membership cannot be changed after creating the account.)</p>
+</li>
+</ul>
+<p>Additional SMB settings can be made on the <span class="guilabel">CIFS</span> page:</p>
+<ul class="simple">
+<li>SMB2 support - Check this box to allow SMB2 clients to use either SMB2 or SMB version 1;  SMB version 1 clients use version 1 regardless of whether or not this option is checked.</li>
+<li>Native Identity (uses Windows security IDs and ACLs on back-end NAS systems that support SMB; read <a class="reference internal" href="native_identity_overview.html#native-identity-overview"><span class="std std-ref">Native Identity</span></a> to learn more)</li>
+<li>Read-only optimization for SMB shares on this vserver</li>
+<li>Local groups (<span class="guilabel">Administrators</span> and <span class="guilabel">Run As Root</span>)</li>
+</ul>
+<p>These settings are described in more detail in the <a class="reference internal" href="gui_cifs.html#gui-cifs"><span class="std std-ref">VServer &gt; CIFS</span></a> page documentation.</p>
+<p>Click <span class="guilabel">Submit</span> after configuring the required information.</p>
+<p>After the first time SMB is activated on a vserver, the <a class="reference internal" href="gui_cifs.html#gui-cifs"><span class="std std-ref">VServer &gt; CIFS</span></a> settings page displays the SMB server name and AD machine account information, including the AD domain; join status; and distinguished name.</p>
+</div>
+<div class="section" id="configuring-smb-shares">
+<span id="smb-define-shares"></span><h2>Configuring SMB Shares<a class="headerlink" href="#configuring-smb-shares" title="Permalink to this headline">     </a></h2>
+<p>Avere OS SMB shares are mappings to namespace paths. Windows users access the back-end core filer through an SMB share.</p>
+<p>Regardless of whether the SMB share maps to a POSIX-style volume or a volume that uses SMB ACLs, a share-level ACL controls the access that any user has to this SMB share.</p>
+<p>Create SMB shares on the <a class="reference internal" href="gui_cifs_shares.html#gui-cifs-shares"><span class="std std-ref">VServer &gt; CIFS Shares</span></a> settings page. This section gives tips and background information for planning and creating SMB shares; be sure to also read the additional information that is included on the settings page.</p>
+<p>After creating an SMB share that maps to a NAS core filer with ACL-based security style, you must add the vserver’s SMB server machine account as a trusted delegate for the NAS SMB server in Active Directory. You must do this the first time you add an SMB share for a new NAS core filer with ACL-based security; subsequent shares for the same vserver and same core filer do not require additional configuration. Read <a class="reference internal" href="native_identity_overview.html#native-identity-overview"><span class="std std-ref">Native Identity</span></a> to learn more.</p>
+<div class="section" id="share-names">
+<h3>Share Names<a class="headerlink" href="#share-names" title="Permalink to this headline">     </a></h3>
+<ul class="simple">
+<li>Share names must be unique within the vserver. (That is, you cannot have two identically named shares in one vserver.)</li>
+<li>The <a class="reference internal" href="gui_cifs_shares.html#gui-cifs-shares"><span class="std std-ref">VServer &gt; CIFS Shares</span></a> documentation gives important syntax guidance, including prohibited characters and name length restrictions.</li>
+<li>If using a simple namespace vserver (a legacy configuration) with ACL-based security, the vserver’s SMB share name must be identical to the NAS filer’s SMB share name. (Shares with POSIX mode bits security can use any valid share name, because they don’t use an SMB share on the core filer.)</li>
+</ul>
+</div>
+<div class="section" id="nfs-export-and-subdirectory">
+<h3>NFS Export and Subdirectory<a class="headerlink" href="#nfs-export-and-subdirectory" title="Permalink to this headline">     </a></h3>
+<ul class="simple">
+<li>Depending on the version of Avere OS on your system, the <span class="guilabel">NFS Export</span> field might show only <code class="docutils literal notranslate"><span class="pre">/</span></code> (Avere OS versions earlier than 4.6.3) or a list of available junctions from the global namespace configuration.<ul>
+<li>If using a variable (%S or %U) to create user-specific directories, make sure the <span class="guilabel">Home Shares</span> option is selected in the <span class="guilabel">Share Type</span> field.</li>
+<li>If using a simple namespace vserver (a legacy feature), exports from the NAS system appear in the <span class="guilabel">NFS Export</span> field.</li>
+</ul>
+</li>
+<li>The export and subdirectory paths cannot be changed after the share is created.</li>
+</ul>
+</div>
+<div class="section" id="advanced-options">
+<h3>Advanced Options<a class="headerlink" href="#advanced-options" title="Permalink to this headline">     </a></h3>
+<ul class="simple">
+<li>Additional SMB-related security options can be configured for the share. Click the <span class="guilabel">Advanced</span> checkbox to show these options, among others:<ul>
+<li>Read-only access and optimization (can improve performance)</li>
+<li>Hide files the user cannot access (can slow performance)</li>
+<li>File locking options</li>
+<li>UNIX permissions masks for files or directories that are created or modified by Windows users</li>
+<li>UNIX permission settings for files or directories created by the Avere SMB server</li>
+<li>Default usernames and guest access</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="configuring-share-level-acls">
+<span id="smb-share-level-acl-overview"></span><h2>Configuring Share-Level ACLs<a class="headerlink" href="#configuring-share-level-acls" title="Permalink to this headline">     </a></h2>
+<p>Each SMB share has its own access share-level control list (ACL).</p>
+<p>Share-level ACLs are not the same as directory and file ACLs. Share-level ACLs are “gatekeepers” for connecting to SMB shares: they control which users and groups can connect to the share. By contrast, directory and file ACLs control what types of access users and groups have for directories and files within a share.</p>
+<p>Also, even SMB shares that map to POSIX-style security volumes use share-level ACLs.</p>
+<p>When you create a new SMB share, it has a default share-level ACL. The default ACL contains a single access control entry (ACE), which gives “Full” access to the user “Everyone” (SID: S-1-1-0).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You must create share-level ACLs for each SMB share on the Avere cluster, even if the corresponding back-end share has an existing ACL. Avere OS does not automatically transfer core filer share ACLs to the cluster share.</p>
+</div>
+<p>To view or change access, use the SMB share’s details page in the Avere Control Panel. Read the <a class="reference internal" href="gui_cifs_shares.html#gui-smb-share-acls"><span class="std std-ref">Share-Level Access Control Lists (ACLs)</span></a> section on the <a class="reference internal" href="gui_cifs_shares.html#gui-cifs-shares"><span class="std std-ref">VServer &gt; CIFS Shares</span></a> page to learn how to access the details page and update the ACL.</p>
+<p>Share ACLs also can be updated from the Avere OS XML-RPC command-line interface. Read <a class="reference internal" href="#smb-share-modify-xmlrpc"><span class="std std-ref">Changing Share ACLs from the Avere API</span></a> for more information. Modifying share ACLs is also possible from the Microsoft Management Console (MMC) on a Windows machine, but the process requires permission settings that are not routinely configured for a system administrator. (<a class="reference internal" href="#smb-share-modify-mmc"><span class="std std-ref">Viewing or Changing Share ACLs from Windows Systems</span></a> has more details.)</p>
+<div class="section" id="ace-permissions">
+<h3>ACE Permissions<a class="headerlink" href="#ace-permissions" title="Permalink to this headline">     </a></h3>
+<p>Each share has one share-level ACL, which can contain multiple ACEs.</p>
+<p>Each share-level ACE has two possible types - <em>allow</em> and <em>deny</em> - and three possible permissions: <em>read</em>, <em>change</em>, and <em>full</em>.</p>
+<p>Note that the effect of an <em>allow</em> ACE and a <em>deny</em> ACE are strictly parallel. An <em>allow</em> ACE gives permission for that operation as well as for other implied permissions. A <em>deny</em> ACE disallows the specified operation as well as any other operations it contains. For example, an ALLOW CHANGE ACE enables the specified user to change or read items on the share. A DENY CHANGE ACE prevents the specified user from changing or reading items on the share.</p>
+<p>In practice, all <em>deny</em> ACEs have the effect of disallowing all operations.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="10%" />
+<col width="20%" />
+<col width="59%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Access Type</th>
+<th class="head">Permission</th>
+<th class="head">Effective Permissions</th>
+<th class="head">Allowed Operations</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>ALLOW</td>
+<td>READ</td>
+<td>Read</td>
+<td>view, list, execute</td>
+</tr>
+<tr class="row-odd"><td>ALLOW</td>
+<td>CHANGE</td>
+<td>Change, Read</td>
+<td>view, list, execute,
+modify, add, delete</td>
+</tr>
+<tr class="row-even"><td>ALLOW</td>
+<td>FULL</td>
+<td>Change, Read</td>
+<td>view, list, execute, modify, add, delete, modify permissions</td>
+</tr>
+<tr class="row-odd"><td>DENY</td>
+<td>READ</td>
+<td>(no access)</td>
+<td>none</td>
+</tr>
+<tr class="row-even"><td>DENY</td>
+<td>CHANGE</td>
+<td>(no access)</td>
+<td>none</td>
+</tr>
+<tr class="row-odd"><td>DENY</td>
+<td>FULL</td>
+<td>(no access)</td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+<p>If an <em>allow</em> ACE and a <em>deny</em> ACE apply to the same user or group, the <em>deny</em> ACE overrides the <em>allow</em> ACE.</p>
+<p>This permission style corresponds to the Microsoft Management Console system for setting share ACLs.</p>
+<p>Use caution if tempted to use a DENY ACE statement in a share-level ACL. In general, best practices for file ACLs also can be applied to share ACLs.</p>
+</div>
+<div class="section" id="share-acl-examples">
+<h3>Share ACL Examples<a class="headerlink" href="#share-acl-examples" title="Permalink to this headline">     </a></h3>
+<p>As mentioned before, the ACL on the SMB share sets the maximum allowed permissions for Windows users connected through this share.</p>
+<p>Note that restricting access in a share ACL does not prohibit Windows users from mapping drives. After the share is mapped, the directory and file ACLs determine the access permitted on the specific directories and files.</p>
+<p>For example, a user might connect to an SMB share with a share-level ACL that allows read access but not writes or changes. Even if a file ACL allows write access for that user, the user will be unable to write to the file because of the share-level ACL.</p>
+</div>
+<div class="section" id="viewing-or-changing-share-acls-from-windows-systems">
+<span id="smb-share-modify-mmc"></span><h3>Viewing or Changing Share ACLs from Windows Systems<a class="headerlink" href="#viewing-or-changing-share-acls-from-windows-systems" title="Permalink to this headline">     </a></h3>
+<p>If you use a Windows system to view the <span class="guilabel">Properties</span> information on a directory from an SMB share, only directory and file-level security information is displayed; the permissions from the share-level ACL are not visible. This is true regardless of whether the share directory is used as a mapped drive or connected through a UNC path.</p>
+<p>To view the share-level ACL of a share, use the Avere Control Panel (go to the share details page by clicking the share name from the <a class="reference internal" href="gui_cifs_shares.html#gui-cifs-shares"><span class="std std-ref">CIFS Shares</span></a> settings page), or use the Microsoft Management Console (MMC) with the Shared Folders Extension from a Windows machine. Even users from Windows systems that are not in the AD domain can view share ACLs by using the MMC.</p>
+<p>Manipulating share-level ACLs from the MMC requires domain administrator privileges. Because storage administrators do not routinely have domain administration privileges, Avere Systems recommends using the Avere OS command-line API instead of using the Microsoft console.</p>
+</div>
+<div class="section" id="changing-share-acls-from-the-avere-api">
+<span id="smb-share-modify-xmlrpc"></span><h3>Changing Share ACLs from the Avere API<a class="headerlink" href="#changing-share-acls-from-the-avere-api" title="Permalink to this headline">     </a></h3>
+<p>The Avere OS command-line interface includes methods for updating share-level ACLs. Commands for SMB configuration start with the name <code class="docutils literal notranslate"><span class="pre">cifs</span></code> and are documented in the <a class="reference external" href="https://azure.github.io/Avere/legacy/pdf/AvereOS_v4.6_XMLRPC_API.pdf">Avere OS 4.6 FXT API Reference</a>.</p>
+<p>There are a few quirks to be aware of:</p>
+<ul class="simple">
+<li>When adding an ACE through the <code class="docutils literal notranslate"><span class="pre">cifs.addShareAce()</span></code> interface, the ACE being added overwrites any existing ACEs for that particular ID. ACEs for one ID will not be concatenated, even if the type (<em>allow</em> or <em>deny</em>) is different.</li>
+<li>In XML-RPC commands, <em>DOMAIN</em>\Administrator must be specified with an upper-case “A”, even though the output of related commands sometimes displays the phrase with a lowercase “a”. Also, domain users are sometimes displayed with “\” in command output.</li>
+</ul>
+<div class="last-update docutils container">
+updated 2017-11-15</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="export_rules_overview.html"
+                        title="previous chapter">Controlling Access to Core Filer Exports</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="smb_access_control.html"
+                        title="next chapter">Selecting an Access Control Method for SMB</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="smb_access_control.html" title="Selecting an Access Control Method for SMB"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="export_rules_overview.html" title="Controlling Access to Core Filer Exports"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="common_tasks.html" >Configuration Concepts</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

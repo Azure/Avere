@@ -1,0 +1,303 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Cluster &gt; VLAN &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Administration &gt; System Maintenance" href="gui_system_maintenance.html" />
+    <link rel="prev" title="Cluster &gt; KMIP Servers" href="gui_kmip_servers.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_system_maintenance.html" title="Administration &gt; System Maintenance"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_kmip_servers.html" title="Cluster &gt; KMIP Servers"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="cluster-vlan">
+<span id="gui-vlan"></span><h1>Cluster &gt; VLAN<a class="headerlink" href="#cluster-vlan" title="Permalink to this headline">     </a></h1>
+<img alt="VLAN settings page" src="_images/gui_vlan.png" />
+<p>The <span class="guilabel">VLAN</span> page lets you customize the network environment of your cluster by creating VLANs.</p>
+<p>This page also has a link to the page for creating static routes.</p>
+<p>(If advanced networking is disabled on your cluster, this settings page does not appear. Read <a class="reference internal" href="gui_admin_network.html#about-advanced-networking"><span class="std std-ref">About “Advanced Networking”</span></a> in <a class="reference internal" href="gui_admin_network.html#gui-admin-network"><span class="std std-ref">Cluster &gt; Administrative Network</span></a> for more information.)</p>
+<p>One VLAN, named <code class="docutils literal notranslate"><span class="pre">default</span></code>, is automatically created for your cluster. This VLAN cannot be removed or renamed, but some of its settings (including the router address) can be modified.</p>
+<div class="figure" id="id1">
+<img alt="Panel to modify the default VLAN" src="_images/modify_vlan_default.png" />
+<p class="caption"><span class="caption-text"><em>Editing the default VLAN</em></span></p>
+</div>
+</div>
+<div class="section" id="creating-or-changing-a-vlan">
+<h1>Creating or Changing a VLAN<a class="headerlink" href="#creating-or-changing-a-vlan" title="Permalink to this headline">     </a></h1>
+<p>Choose a VLAN to modify, or click the <span class="guilabel">Add New VLAN</span> button to configure a new VLAN.</p>
+<img alt="Adding a new VLAN" src="_images/add_vlan_safeIP.png" />
+<p>VLAN settings include the following.</p>
+<dl class="docutils">
+<dt><span class="guilabel">Name</span></dt>
+<dd>Enter a name in alphanumeric characters with no spaces. The underscore character (_) is valid, but not hyphens or other punctuation marks or symbols. The name must be shorter than 127 characters.</dd>
+<dt><span class="guilabel">VLAN tag</span></dt>
+<dd>Supply an integer tag to identify this VLAN. The tag number must be a unique integer between 1 and 4094.</dd>
+<dt><span class="guilabel">Default router</span></dt>
+<dd><p class="first">The default router that the VLAN should use.</p>
+<div class="last admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Avere OS assigns all VLANs that use the same router to use the same forwarding information base (FIB). If you want VLANs to use different forwarding tables, you must assign them to different routers.</p>
+</div>
+</dd>
+<dt><span class="guilabel">MTU (optional)</span></dt>
+<dd>The maxiumum transition unit setting for this VLAN, in bytes. This number must be an integer between 512 and 9000; typical values include 1500 and 9000, but make sure that your system can handle the value that you set. If you do not set a specific MTU the VLAN uses the setting from the default VLAN.</dd>
+<dt><span class="guilabel">Roles</span></dt>
+<dd><p class="first">Check the boxes for at least one role that you want the VLAN to fulfill. Roles can help you organize your network if you reserve certain IP address ranges for certain types of traffic; read <a class="reference internal" href="network_overview.html#vlan-roles"><span class="std std-ref">VLAN Roles</span></a> for more information. If you do not use designated IP ranges, consider assigning all of the roles to each VLAN. Options are:</p>
+<ul>
+<li><p class="first"><span class="guilabel">Client</span> - The VLAN is used to communicate between the FXT nodes in the cluster and the clients. VLANs with this role can be selected to serve individual IP address ranges defined in the the <a class="reference internal" href="gui_client_network.html#gui-client-facing-network"><span class="std std-ref">VServer &gt; Client Facing Network</span></a> page.</p>
+</li>
+<li><p class="first"><span class="guilabel">Cluster</span> - The VLAN is used to communicate between the FXT nodes in the cluster, and also between the cluster and core filers. Cluster VLANs must use the default gateway assigned to the cluster.</p>
+<p>VLANs with this role can be selected when specifying address ranges for cluster networks (on the <a class="reference internal" href="gui_cluster_networks.html#gui-cluster-networks"><span class="std std-ref">Cluster &gt; Cluster Networks</span></a> page).</p>
+</li>
+<li><p class="first"><span class="guilabel">Core Filer Access</span> - The VLAN is used to communicate between the FXT node cluster and the core filers</p>
+</li>
+<li><p class="first"><span class="guilabel">Management</span> - The VLAN is used to communicate between a management machine and the FXT nodes in the cluster. The IP addresses used by the VLAN are not locked to a single node.</p>
+</li>
+</ul>
+<div class="last admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">VLAN roles only determine whether or not the VLAN can be selected when configuring particular types of networks. Read <a class="reference internal" href="network_overview.html#vlan-roles"><span class="std std-ref">VLAN Roles</span></a> for more information about where each type appears.</p>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="configuring-static-routes">
+<h1>Configuring Static Routes<a class="headerlink" href="#configuring-static-routes" title="Permalink to this headline">     </a></h1>
+<p>You can configure static routes for a VLAN in order to direct how the vservers communicate with the cluster, and how the cluster communicates with the core filers. This is particularly necessary if your core filers are located on different VLANs, and the cluster needs a gateway other than the default to reach them.</p>
+<p>To configure static routes, you need the following information:</p>
+<ul class="simple">
+<li>What VLANs your clients are on</li>
+<li>What VLANs your core filers are on</li>
+<li>The client-facing and core filer-facing IP addresses</li>
+</ul>
+<div class="section" id="the-static-routes-page">
+<h2>The Static Routes Page<a class="headerlink" href="#the-static-routes-page" title="Permalink to this headline">     </a></h2>
+<p>Static routes are configured on a separate page that does not appear in the left menu of the <span class="guilabel">Settings</span> tab. Click the <span class="guilabel">Configure Static Routes</span> link at the bottom of the VLAN page to access the Static Routes page.</p>
+<p>The <span class="guilabel">Static Routes</span> page shows a list of VLANs by router, and the static routes (if any) that are defined for the VLAN.</p>
+<p>Click the <span class="guilabel">Add</span> button to create a new static route for that VLAN.</p>
+<a class="reference internal image-reference" href="_images/new_static_route-safeIP.png"><img alt="Form for creating a new static route" src="_images/new_static_route-safeIP.png" style="width: 450px;" /></a>
+</div>
+<div class="section" id="creating-static-routes">
+<h2>Creating Static Routes<a class="headerlink" href="#creating-static-routes" title="Permalink to this headline">     </a></h2>
+<p>To create a new static route, click the <span class="guilabel">Add</span> (or <span class="guilabel">Modify</span>) button in the row with the VLAN that needs the static route.</p>
+<p>Fill in the route parameters.</p>
+<dl class="docutils">
+<dt><span class="guilabel">Destination IP</span></dt>
+<dd>The IP address where traffic will be routed, in dot notation</dd>
+<dt><span class="guilabel">Netmask</span></dt>
+<dd>The mask to use with this static route. The netmask can be provided in in IPv4 dotted format or /<em>number_of_bits</em> format.</dd>
+<dt><span class="guilabel">Gateway</span></dt>
+<dd>The IP address to use when routing to the destination IP</dd>
+</dl>
+<p>Click the <span class="guilabel">Add Another Route</span> link to create more than one static route at a time. When finished, click the <span class="guilabel">Update Routes</span> button.</p>
+</div>
+<div class="section" id="modifying-or-deleting-static-routes">
+<h2>Modifying or Deleting Static Routes<a class="headerlink" href="#modifying-or-deleting-static-routes" title="Permalink to this headline">     </a></h2>
+<p>After static routes are defined, you can change or delete them.</p>
+<p>Changes and deletions apply to all static routes for that VLAN.</p>
+<p>Options in the <span class="guilabel">Actions</span> column typically include:</p>
+<ul>
+<li><p class="first"><span class="guilabel">Delete</span> - Remove all existing static routes from the VLAN.</p>
+<div class="admonition caution">
+<p class="first admonition-title">Caution</p>
+<p class="last">Avere OS does not give a warning if you choose this option.</p>
+</div>
+</li>
+<li><p class="first"><span class="guilabel">Modify</span> - Add or change routes on a VLAN that has existing routes. (You also can use this option to show the settings for the static route fields; use the browser back button or reload the page without making changes.)</p>
+</li>
+<li><p class="first"><span class="guilabel">Add</span> - Create a static route for a VLAN that does not have any.</p>
+</li>
+</ul>
+<div class="last-update docutils container">
+updated 2017-11-15</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_kmip_servers.html"
+                        title="previous chapter">Cluster &gt; KMIP Servers</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_system_maintenance.html"
+                        title="next chapter">Administration &gt; System Maintenance</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_system_maintenance.html" title="Administration &gt; System Maintenance"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_kmip_servers.html" title="Cluster &gt; KMIP Servers"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

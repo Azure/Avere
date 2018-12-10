@@ -1,0 +1,262 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Setting Up Kerberos Authentication &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuring KMIP for an Avere cluster" href="kmip_overview.html" />
+    <link rel="prev" title="Using Web Proxies with Avere OS" href="proxy_overview.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="kmip_overview.html" title="Configuring KMIP for an Avere cluster"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="proxy_overview.html" title="Using Web Proxies with Avere OS"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="common_tasks.html" accesskey="U">Configuration Concepts</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="setting-up-kerberos-authentication">
+<span id="kerberos-overview"></span><h1>Setting Up Kerberos Authentication<a class="headerlink" href="#setting-up-kerberos-authentication" title="Permalink to this headline">     </a></h1>
+<p>Configuring and enabling Kerberos authentication on an Avere OS cluster involves several different settings pages in the Avere Control Panel. There are two basic pathways where an administrator might want to enable Kerberos:</p>
+<ul class="simple">
+<li>For communication between clients and the cluster</li>
+<li>For communication between the cluster and core filers</li>
+</ul>
+<p>This document explains how the various settings are used to support Kerberos in either or both situations on an Avere cluster.</p>
+<p>Client-cluster Kerberos is configured by setting export rules on a junction or export. Read <a class="reference internal" href="export_rules_overview.html#export-rules-overview"><span class="std std-ref">Controlling Access to Core Filer Exports</span></a> for details.</p>
+<p>Kerberos authentication between the cluster and a core filer is configured on the <a class="reference internal" href="gui_kerberos.html#gui-kerberos"><span class="std std-ref">Cluster &gt; Kerberos</span></a> settings page, and it applies to all exports.</p>
+<div class="section" id="kerberos-elements">
+<h2>Kerberos Elements<a class="headerlink" href="#kerberos-elements" title="Permalink to this headline">     </a></h2>
+<p>Kerberos uses a remote server (the Key Distribution Center, or KDC) to authenticate users and grant tickets.</p>
+<p>Known key sets can be stored in keytab files to avoid requiring a password for each transaction. When Kerberos is enabled the Avere cluster stores a keytab file for communication with core filers, and clients can optionally store local keytab files for communication with the cluster’s vservers.</p>
+<p>Kerberos also uses the concept of a <em>realm</em>. The Avere cluster and its core filers must be in the same realm; client requests can come from different realms as long as they are trusted realms.</p>
+</div>
+<div class="section" id="common-configuration-elements">
+<span id="about-kdc"></span><h2>Common Configuration Elements<a class="headerlink" href="#common-configuration-elements" title="Permalink to this headline">     </a></h2>
+<p>The KDC and realm parameters are used by all Kerberos transactions in the cluster - both client-vserver operations and cluster-core filer operations use these settings.</p>
+<p>KDC and realm settings are made on the <a class="reference internal" href="gui_kerberos.html#gui-kerberos"><span class="std std-ref">Kerberos</span></a> settings page in the <span class="guilabel">Cluster</span> section of the settings tab.</p>
+<p>Optionally, DNS can be used to map a client DNS domain to a particular realm. Details are included in <a class="reference internal" href="gui_kerberos.html#gui-kerberos"><span class="std std-ref">Kerberos</span></a>.</p>
+</div>
+<div class="section" id="client-cluster-configuration-elements">
+<h2>Client-Cluster Configuration Elements<a class="headerlink" href="#client-cluster-configuration-elements" title="Permalink to this headline">     </a></h2>
+<p>To enable Kerberos authentication between clients and the cluster, you must configure Kerberos settings for the cluster’s vservers.</p>
+<p>If your cluster has multiple vservers, each one can have a different setting and a different keytab file.</p>
+<div class="section" id="enabling-kerberos-for-a-vserver">
+<h3>Enabling Kerberos for a VServer<a class="headerlink" href="#enabling-kerberos-for-a-vserver" title="Permalink to this headline">     </a></h3>
+<p>The settings to turn on Kerberos authentication for a particular vserver are made on the <a class="reference internal" href="gui_nfs.html#gui-nfs"><span class="std std-ref">VServer &gt; NFS</span></a> page. If your cluster has multiple vservers, select the vserver to configure by using the control at the top of the page.</p>
+<p>The <a class="reference internal" href="gui_nfs.html#gui-nfs"><span class="std std-ref">VServer &gt; NFS</span></a> page has the following Kerberos settings:</p>
+<dl class="docutils">
+<dt><span class="guilabel">Enable Kerberos</span> checkbox</dt>
+<dd>This checkbox is active only if you have already set the KDC and realm parameters on the <span class="guilabel">Kerberos</span> configuration page (as described above in <a class="reference internal" href="#about-kdc"><span class="std std-ref">Common Configuration Elements</span></a>). The checkbox turns on Kerberos for client communication to this vserver.</dd>
+<dt><strong>VServer Keytab File</strong></dt>
+<dd>You can upload a Kerberos keytab file to store keys used for communication between  clients and this vserver. (This is not the same file used for cluster-core filer communication.)</dd>
+</dl>
+</div>
+<div class="section" id="enabling-kerberos-for-a-core-filer-export">
+<h3>Enabling Kerberos for a Core Filer Export<a class="headerlink" href="#enabling-kerberos-for-a-core-filer-export" title="Permalink to this headline">     </a></h3>
+<p>VServers also manage core filer exports, which provide the client-facing view of content on a core filer. Kerberos can be enabled at the export level by customizing export rules.</p>
+<p>Use the <a class="reference internal" href="gui_export_rules.html#export-rules"><span class="std std-ref">VServer &gt; Export Rules</span></a> page to modify the default rule or create a new rule that allows Kerberos authentication. The <span class="guilabel">Rule Definition</span> panel includes a section labeled <span class="guilabel">Authentication Flavors</span>. Options are <span class="guilabel">UNIX/SYS</span> (enabled by default) and <span class="guilabel">Kerberos5</span> (not enabled by default). The Kerberos checkbox is not active if the KDC and realm parameters have not been configured (see <a class="reference internal" href="#about-kdc"><span class="std std-ref">Common Configuration Elements</span></a>, above).</p>
+<p>You can select one or both types of authentication.</p>
+<p>Export rules can be restricted with additional filters for scope. Rules make up an <em>export policy</em>, which are also created and modified on the <a class="reference internal" href="gui_export_rules.html#export-rules"><span class="std std-ref">Export Rules</span></a> settings page.</p>
+<p>Export policies are applied to individual core filer exports on the <a class="reference internal" href="gui_export_policies.html#export-policies-page"><span class="std std-ref">Export Policies page</span></a>.</p>
+</div>
+</div>
+<div class="section" id="cluster-core-filer-configuration-elements">
+<h2>Cluster-Core Filer Configuration Elements<a class="headerlink" href="#cluster-core-filer-configuration-elements" title="Permalink to this headline">     </a></h2>
+<p>To enable Kerberos authentication between the cluster and a core filer, there are two steps to take after setting up the KDC and realm parameters on the <span class="guilabel">Kerberos</span> configuration page (described above in <a class="reference internal" href="#about-kdc"><span class="std std-ref">Common Configuration Elements</span></a>).</p>
+<ul>
+<li><p class="first">Upload a cluster-level keytab file.</p>
+<p>Use the <a class="reference internal" href="gui_kerberos.html#gui-kerberos"><span class="std std-ref">Cluster &gt; Kerberos</span></a> settings page to upload a keytab file. This file is used for cluster to core filer communications, and is not the same as the vserver-level file that is defined on the VServer &gt; NFS page.</p>
+</li>
+<li><p class="first">Turn on Kerberos authentication for the particular core filer.</p>
+<p>Use the <a class="reference internal" href="gui_core_filer_details.html#gui-core-filer-details"><span class="std std-ref">Core Filer &gt; Core Filer Details</span></a> page to allow Kerberos authentication for the core filer that is selected in the page. A <span class="guilabel">Enable Kerberos</span> checkbox appears in the <span class="guilabel">Edit Filer</span> panel.</p>
+</li>
+</ul>
+<div class="last-update docutils container">
+updated 2017-11-15</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="proxy_overview.html"
+                        title="previous chapter">Using Web Proxies with Avere OS</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="kmip_overview.html"
+                        title="next chapter">Configuring KMIP for an Avere cluster</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="kmip_overview.html" title="Configuring KMIP for an Avere cluster"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="proxy_overview.html" title="Using Web Proxies with Avere OS"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="common_tasks.html" >Configuration Concepts</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

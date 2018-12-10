@@ -1,0 +1,369 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Adding a New Core Filer - Cloud Core Filer &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Using a Global Namespace" href="gns_overview.html" />
+    <link rel="prev" title="Adding a New Core Filer - NAS Core Filer" href="new_core_filer_nas.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gns_overview.html" title="Using a Global Namespace"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="new_core_filer_nas.html" title="Adding a New Core Filer - NAS Core Filer"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="common_tasks.html" accesskey="U">Configuration Concepts</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="adding-a-new-core-filer-cloud-core-filer">
+<span id="create-core-filer-cloud"></span><h1>Adding a New Core Filer - Cloud Core Filer<a class="headerlink" href="#adding-a-new-core-filer-cloud-core-filer" title="Permalink to this headline">     </a></h1>
+<p>This section walks through the process of adding a new core filer to your Avere cluster. This section is customized for core filers that use cloud storage on the back end; the process is different for a core filer that uses NAS storage. Read <a class="reference internal" href="new_core_filer_nas.html#create-core-filer-nas"><span class="std std-ref">Adding a New Core Filer - NAS Core Filer</span></a> for details.</p>
+<div class="section" id="prerequisites-for-adding-a-new-cloud-core-filer">
+<span id="new-core-filer-prereqs-cloud"></span><h2>Prerequisites for Adding a New Cloud Core Filer<a class="headerlink" href="#prerequisites-for-adding-a-new-cloud-core-filer" title="Permalink to this headline">     </a></h2>
+<p>Before starting to configure the cloud core filer on the cluster, make sure you have the following information.</p>
+<ul class="simple">
+<li>A valid and active license for FlashCloud on this cluster. Read <a class="reference internal" href="install_licenses.html#install-licenses"><span class="std std-ref">Appendix A: Adding or Removing Feature Licenses</span></a> for more information.</li>
+<li>An existing user credential for your cloud storage provider, or the access and private keys needed to add a cloud credential to the Avere cluster. Create this credential in your cloud system and copy the ID code and secret key. You can add the credential to the cluster in the <a class="reference internal" href="gui_cloud_credentials.html#gui-cloud-credentials"><span class="std std-ref">Cluster &gt; Cloud Credentials</span></a> page before adding the core filer, or from within the Add New Core Filer wizard when defining a cloud core filer.</li>
+<li>The name of an existing cloud storage container. Read <a class="reference internal" href="core_filer_overview.html#configure-cloud-core-filer"><span class="std std-ref">Using Cloud Storage As A Core Filer</span></a> to learn more about instantiating a cloud core filer.</li>
+<li>Encryption details - whether or not to encrypt the core filer, and the type of key storage used. If using KMIP, you should have a key server set up before creating the core filer; read <a class="reference internal" href="kmip_overview.html#kmip-overview"><span class="std std-ref">Configuring KMIP for an Avere cluster</span></a> to learn how.</li>
+<li>If adding a cloud core filer on a vFXT cluster that is hosted on Amazon Web Services, you might need to update an IAM policy to make sure that your vFXT nodes will be permitted to access the new storage. Read <a class="reference internal" href="aws_vfxt_policy.html#aws-vfxt-policy"><span class="std std-ref">Appendix H: Updating Cloud Storage Permissions for an AWS vFXT Cluster</span></a>.</li>
+</ul>
+<p>The <span class="guilabel">Add New Core Filer</span> wizard guides you through the steps to define a new storage entity for your cluster. Start the wizard by clicking the <span class="guilabel">Create</span> button from the <span class="guilabel">Manage Core Filers</span> page.</p>
+</div>
+<div class="section" id="new-core-filer-wizard">
+<h2>New Core Filer Wizard<a class="headerlink" href="#new-core-filer-wizard" title="Permalink to this headline">     </a></h2>
+<p>Start the New Core Filer wizard by clicking <span class="guilabel">Create</span> on the <a class="reference internal" href="gui_manage_core_filers.html#manage-core-filers"><span class="std std-ref">Core Filer &gt; Manage Core Filers</span></a> settings page.</p>
+<p>The options are different for each type of core filer - select <span class="guilabel">Cloud</span> to define a core filer that uses cloud storage.</p>
+<a class="reference internal image-reference" href="_images/new_core_filer_cloud1.png"><img alt="New Core Filer wizard with cloud option selected" src="_images/new_core_filer_cloud1.png" style="width: 576px;" /></a>
+<p>Fill in the required fields:</p>
+<ul class="simple">
+<li><span class="guilabel">Core filer name</span> - Set the name for this core filer. Use a name that cluster administrators will understand; this value does not need to match the name of the actual storage container on the cloud provider.</li>
+<li><span class="guilabel">Network</span> - If your cluster has more than one network, select the network that this core filer will use to communicate with the cluster.</li>
+</ul>
+<p>Click <span class="guilabel">Next</span> to continue.</p>
+<div class="section" id="caching-policy">
+<h3>Caching Policy<a class="headerlink" href="#caching-policy" title="Permalink to this headline">     </a></h3>
+<a class="reference internal image-reference" href="_images/new_core_filer_cloud2.png"><img alt="Selecting a cache policy in the new core filer wizard" src="_images/new_core_filer_cloud2.png" style="width: 576px;" /></a>
+<p>On the second page of the wizard, choose the caching policy for this core filer.</p>
+<p>Read <a class="reference internal" href="gui_manage_cache_policies.html#gui-manage-cache-policies"><span class="std std-ref">Manage Cache Policies</span></a> to learn more about customizing cache settings.</p>
+<p>Click <span class="guilabel">Next</span> to continue.</p>
+</div>
+<div class="section" id="cloud-service-and-protocol">
+<span id="cloud-filer-details"></span><h3>Cloud Service and Protocol<a class="headerlink" href="#cloud-service-and-protocol" title="Permalink to this headline">     </a></h3>
+<a class="reference internal image-reference" href="_images/new_core_filer_cloud3.png"><img alt="Cloud core filer information in the New Core Filer wizard" src="_images/new_core_filer_cloud3.png" style="width: 576px;" /></a>
+<p>On the third page, specify details about the cloud storage service.</p>
+<ul>
+<li><p class="first"><span class="guilabel">Service type</span> - Select one of the cloud service types. These types are predefined in the Avere system; contact Avere Global Services if the provider or service type that you want is not listed.</p>
+<p>Some options are preconfigured when you select a particular service. For example, selecting Cleversafe cloud storage automatically enables SSL (<span class="guilabel">Use HTTPS</span>) and specifies port 443.</p>
+</li>
+<li><p class="first"><span class="guilabel">Cloud Credential</span> - From the next drop-down list, select an existing credential, or choose <span class="guilabel">Create a new credential set</span> to define a new one.</p>
+<p>If you select the new credential option, additional fields appear so that you can specify the credential name, access key, and private key for the user account that the Avere cluster will use to access this core filer.</p>
+<a class="reference internal image-reference" href="_images/new_core_filer_cloud_credential_options.png"><img alt="Cloud credential options in the new core filer wizard" src="_images/new_core_filer_cloud_credential_options.png" style="width: 450px;" /></a>
+<p>To learn more about these options, read <a class="reference internal" href="gui_cloud_credentials.html#gui-cloud-credentials"><span class="std std-ref">Cluster &gt; Cloud Credentials</span></a>.</p>
+</li>
+<li><p class="first"><span class="guilabel">Bucket contents</span> - Specify whether the cloud storage container is currently populated with Avere-managed files (that is, it was previously used as an Avere core filer) or if it is empty. Note that to reuse a container with Avere-managed files, you must use the same encryption setting and the same key that was previously used with this container.</p>
+<p>You will enter more specific bucket information on the next page.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Each cloud filer can be associated with only one bucket, and each bucket can be associated with only one cloud core filer. This means that:</p>
+<ul class="last simple">
+<li>If you use an existing bucket, and choose Empty, you will no longer be able to access any information in that bucket. Core filer creation might fail if you choose an existing bucket that contains data.</li>
+<li>If you intend to create a new bucket, and choose Existing Avere data, you will later be asked for an encryption key to access the bucket. If you are trying to access a bucket that did not previously exist, you will not be able to access it (there will be no encryption key), and you will have to re-create the cloud filer.</li>
+</ul>
+</div>
+</li>
+<li><p class="first"><span class="guilabel">Use nearline bucket</span> (Google Cloud storage only) - This checkbox allows you to mark this cloud core filer as a Nearline Storage bucket. (Avere OS does not verify whether or not the cloud object is actually configured as a Nearline Storage bucket.)</p>
+<p>Nearline storage is designed for archive use, and writing data to this type of bucket can incur data transfer fees.</p>
+<p>Nearline storage is the only one of the three Google Cloud Storage classes (Standard, Durable Reduced Availability (DRA), and Nearline), that must be explicitly enabled. Be sure that you understand the cost implications of using a Nearline bucket as a core filer before you select this option.</p>
+</li>
+<li><p class="first"><span class="guilabel">Use HTTPS</span> - Check this box to use the secure web protocol in communications between the cloud and the cluster.</p>
+<p>Depending on the cloud service type, a <span class="guilabel">Port</span> field appears when HTTPS is selected. If your cloud provider does not use the standard SSL port, 443, enter the port or range of ports into the <span class="guilabel">Port</span> field. For some cloud services, the port is not configurable.</p>
+<p>Separate port numbers or ranges with spaces - for example, <code class="docutils literal notranslate"><span class="pre">7070</span> <span class="pre">7072-7074</span></code> defines four ports: 7070, 7072, 7073, and 7074.</p>
+</li>
+<li><p class="first"><span class="guilabel">Certificate verification</span> - Specify the method to use to authenticate the SSL certificate provided by the cloud storage system.</p>
+<ul class="simple">
+<li>Select <span class="guilabel">Disabled</span> to trust all certificates.</li>
+<li>Choose <span class="guilabel">OCSP</span> to use the Online Certificate Status Protocol.</li>
+<li>Choose <span class="guilabel">CRL</span> to use Certificate Revocation Lists.</li>
+<li>Select <span class="guilabel">OCSP_CRL</span> to use CRL as a fallback method if OCSP verification fails. (This is the default value.)</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p class="first"><span class="guilabel">Compression mode</span> - If you want to compress objects before they are written to the cloud core filer, select LZ4 compression.</p>
+<p>You can change compression options at any time; objects written to this core filer are either compressed or uncompressed according to the setting at the time they are written.</p>
+</li>
+<li><p class="first"><span class="guilabel">Snapshot policy</span> - Optionally, specify one of the existing cloud core filer snapshot policies. Create or modify snapshot policies on the <a class="reference internal" href="gui_cloud_snapshot_policies.html#cloud-snapshot-policies"><span class="std std-ref">Core Filer &gt; Cloud Snapshot Policies</span></a> page. You can add a snapshot policy later on the <a class="reference internal" href="gui_core_filer_details.html#gui-core-filer-details"><span class="std std-ref">Core Filer &gt; Core Filer Details</span></a> page.</p>
+</li>
+<li><p class="first"><span class="guilabel">Proxy configuration</span> - Optionally, select one of the cluster’s proxy server configurations to use when communicating with this core filer. Proxy server configurations are defined on the <a class="reference internal" href="gui_proxy_config.html#gui-proxy-config"><span class="std std-ref">Cluster &gt; Proxy Configuration</span></a> page; you can add a proxy server to the core filer later on the <a class="reference internal" href="gui_core_filer_details.html#gui-core-filer-details"><span class="std std-ref">Core Filer &gt; Core Filer Details</span></a> page.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="bucket-details">
+<h3>Bucket Details<a class="headerlink" href="#bucket-details" title="Permalink to this headline">     </a></h3>
+<p>The fourth page of the Add New Core Filer wizard for cloud storage has settings for the storage container.</p>
+<p>The options are different for populated storage and for empty storage, and different cloud services also show different options.</p>
+<div class="section" id="configuring-an-empty-bucket">
+<h4>Configuring an Empty Bucket<a class="headerlink" href="#configuring-an-empty-bucket" title="Permalink to this headline">     </a></h4>
+<a class="reference internal image-reference" href="_images/new_core_filer_cloud4.png"><img alt="Settings for an empty cloud storage bucket" src="_images/new_core_filer_cloud4.png" style="width: 576px;" /></a>
+<p>Set these options for a bucket that has not previously been used for Avere storage.</p>
+<ul>
+<li><p class="first"><span class="guilabel">Bucket name</span> - Enter the name of the bucket that has been or will be created on the cloud provider’s network.</p>
+<p>This name must match the actual bucket name on the cloud system.</p>
+</li>
+</ul>
+<ul>
+<li><p class="first"><span class="guilabel">Network hostname</span> (some cloud providers only) - Enter the hostname or IP address of the endpoint that will be used to access this bucket. Avere Systems strongly recommends using the fully qualified domain name for the region-specific endpoint in this field.</p>
+<p>Only certain cloud storage providers require this configuration. If this field does not appear, it is not required for the selected provider.</p>
+</li>
+<li><p class="first"><span class="guilabel">Encryption type</span> - Choose an encryption algorithm (AES-256 is currently the only option) or choose <span class="guilabel">None</span> to leave the storage volume unencrypted.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The encryption type cannot be changed later.</p>
+</div>
+</li>
+<li><p class="first"><span class="guilabel">Encryption key store</span> - Select the type of key storage used. You can choose a simple key file stored locally on the cluster, or select a KMIP server in the cluster. (KMIP servers are configured in the <span class="guilabel">Cluster</span> section; read <a class="reference internal" href="kmip_overview.html#kmip-overview"><span class="std std-ref">Configuring KMIP for an Avere cluster</span></a> to learn more.)</p>
+<p>If you choose local storage (<span class="guilabel">Simple Key</span>), you will be prompted to create and download an encryption key after the core filer is created. Read <a class="reference internal" href="#cloud-encryption-key"><span class="std std-ref">Encryption Recovery Key and Passphrase</span></a>, below, for details.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="configuring-a-populated-bucket">
+<h4>Configuring a Populated Bucket<a class="headerlink" href="#configuring-a-populated-bucket" title="Permalink to this headline">     </a></h4>
+<a class="reference internal image-reference" href="_images/new_core_filer_cloud_4a.png"><img alt="Settings for a populated cloud storage bucket" src="_images/new_core_filer_cloud_4a.png" style="width: 576px;" /></a>
+<p>If you selected <span class="guilabel">Existing Avere data</span> in the <span class="guilabel">Bucket contents</span> setting, this page asks you to fill in the storage information.</p>
+<ul>
+<li><p class="first"><span class="guilabel">Bucket name</span> - Enter the name of the bucket on the cloud provider’s network.</p>
+</li>
+<li><p class="first"><span class="guilabel">Network hostname</span> (some cloud providers only) - Enter the hostname or IP address of the endpoint that will be used to access this bucket. (For example: <em>cloud-server-round-robin-dns.mycompany.com</em>) Avere Systems strongly recommends using the fully qualified domain name for the region-specific endpoint in this field.</p>
+<p>Only certain cloud storage providers require the network hostname; others determine the endpoint automatically. If this field does not appear, it is not required for the selected provider.</p>
+</li>
+<li><p class="first"><span class="guilabel">Encryption type</span> - If the bucket contents were previously encrypted, you must select the same encryption type as before.</p>
+<p>If the bucket was unencrypted, you can choose an encryption algorithm (AES-256 is currently the only option) or choose <span class="guilabel">None</span> to leave the storage volume unencrypted.</p>
+</li>
+<li><p class="first"><span class="guilabel">Encryption key store</span> - Select the type of key storage used.</p>
+<p>If the bucket contents were encrypted the last time it was used with an Avere cluster, this section will prompt you to upload the old encryption key, then create a new encryption key that incorporates the old key. (Uploading the old key happens before step one in the process described below in <a class="reference internal" href="#cloud-encryption-key"><span class="std std-ref">Encryption Recovery Key and Passphrase</span></a>.)</p>
+<p>You can choose a simple key file stored locally on the cluster, or select a KMIP server in the cluster. (KMIP servers are configured in the <span class="guilabel">Cluster</span> section; read <a class="reference internal" href="kmip_overview.html#kmip-overview"><span class="std std-ref">Configuring KMIP for an Avere cluster</span></a> to learn more.)</p>
+<p>If you choose local storage (<span class="guilabel">Simple Key</span>), you will be prompted to create and download an encryption key after the core filer is created. Read <a class="reference internal" href="#cloud-encryption-key"><span class="std std-ref">Encryption Recovery Key and Passphrase</span></a>, below, for details.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="saving-settings">
+<h3>Saving Settings<a class="headerlink" href="#saving-settings" title="Permalink to this headline">     </a></h3>
+<p>When all of the settings are complete, click <span class="guilabel">Add Filer</span> to create the new cloud core filer. The Avere Control Panel dashboard might display warnings during the creation process, but the warnings should clear within a few minutes.</p>
+</div>
+<div class="section" id="encryption-recovery-key-and-passphrase">
+<span id="cloud-encryption-key"></span><h3>Encryption Recovery Key and Passphrase<a class="headerlink" href="#encryption-recovery-key-and-passphrase" title="Permalink to this headline">     </a></h3>
+<p>If you chose to encrypt your cloud core filer and store the encryption key locally, additional wizard screens appear after the core filer is created. The core filer cannot be used until an encryption key and passphrase are created for the data on the core filer.</p>
+<p>This passphrase and recovery key file are associated with encrypting your data on the cloud core filer. If you decommission this cluster and want to use the cloud bucket as a core filer for another Avere cluster, you will need these two items to allow the new cluster to decrypt the data stored there.</p>
+<p>There are three steps to create and store the encryption recovery key:</p>
+<ol class="arabic simple">
+<li>Generate the key on the Avere cluster by setting a passphrase.</li>
+<li>Download the key file to a local system.</li>
+<li>Upload the key file to the cluster.</li>
+</ol>
+<p>These settings also can be made or changed on the <a class="reference internal" href="gui_cloud_encryption_settings.html#cloud-encryption-settings"><span class="std std-ref">Core Filer &gt; Cloud Encryption Settings</span></a> page.</p>
+<div class="section" id="generate-and-download-the-key">
+<h4>Generate and Download the Key<a class="headerlink" href="#generate-and-download-the-key" title="Permalink to this headline">     </a></h4>
+<p>The first screen asks you to enter a passphrase. Avere OS will create an encryption key associated with the passphrase.</p>
+<a class="reference internal image-reference" href="_images/generate_cloud_filer_key.png"><img alt="Entering a passphrase for the encryption key" src="_images/generate_cloud_filer_key.png" style="width: 400pt;" /></a>
+<p>A passphrase is different from a password because it can contain spaces, symbols, and punctuation in addition to uppercase and lowercase letters. It must be fewer than 50 characters. Make sure that you can remember the passphrase for future use, or store it securely.</p>
+<p>When you click <span class="guilabel">Next</span>, Avere Control Panel attempts to download the recovery key to your local system. Note the location of the downloaded file, since you will need to upload it in the next step.</p>
+</div>
+<div class="section" id="upload-and-activate-the-key">
+<h4>Upload and Activate the Key<a class="headerlink" href="#upload-and-activate-the-key" title="Permalink to this headline">     </a></h4>
+<p>In the next screen, you must upload the key recovery file that you just downloaded. Click <span class="guilabel">Choose file</span> and browse to the recovery file where it is stored.</p>
+<p>The filename starts with the cluster name and has a file extension that is a long series of digits, typically starting with 1 and including more than ten zeroes.</p>
+<a class="reference internal image-reference" href="_images/upload_cloud_filer_recovery_key.png"><img alt="Uploading the downloaded key file" src="_images/upload_cloud_filer_recovery_key.png" style="width: 400pt;" /></a>
+<p>If the download failed, click the <span class="guilabel">Redownload</span> button to try again.</p>
+<p>After specifying the key file to upload, click <span class="guilabel">Next</span>. When the file uploads successfully, the encryption configuration is complete and the cloud core filer setup is finished.</p>
+<div class="last-update docutils container">
+updated 2018-02-05</div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="new_core_filer_nas.html"
+                        title="previous chapter">Adding a New Core Filer - NAS Core Filer</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gns_overview.html"
+                        title="next chapter">Using a Global Namespace</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gns_overview.html" title="Using a Global Namespace"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="new_core_filer_nas.html" title="Adding a New Core Filer - NAS Core Filer"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="common_tasks.html" >Configuration Concepts</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

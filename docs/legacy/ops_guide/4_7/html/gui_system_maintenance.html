@@ -1,0 +1,308 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Administration &gt; System Maintenance &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Administration &gt; Software Update" href="gui_software_update.html" />
+    <link rel="prev" title="Cluster &gt; VLAN" href="gui_vlan.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_software_update.html" title="Administration &gt; Software Update"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_vlan.html" title="Cluster &gt; VLAN"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="administration-system-maintenance">
+<span id="gui-system-maintenance"></span><h1>Administration &gt; System Maintenance<a class="headerlink" href="#administration-system-maintenance" title="Permalink to this headline">     </a></h1>
+<p>The <span class="guilabel">System Maintenance</span> page includes controls for restarting or shutting down elements of the cluster, and other maintenance and troubleshooting utilities.</p>
+<div class="admonition caution">
+<p class="first admonition-title">Caution</p>
+<p class="last">This page includes controls that can cause data loss, disrupt client access, and erase cluster configurations entirely. Be cautious when using these controls. Consult Avere Global Services to for guidance before using the tools provided on this page.</p>
+</div>
+<img alt="System Maintenance settings page" src="_images/gui_sys_maint.png" />
+<p>A message at the top of the page shows how many files in the cluster cache have not yet been written (flushed) to the core filer. To avoid potential data loss, do not perform any operations on the page until the message reads “All files flushed.”</p>
+<a class="reference internal image-reference" href="_images/gui_sys_maint_files_flushed.png"><img alt="Message above controls shows no files remaining in cache" src="_images/gui_sys_maint_files_flushed.png" style="width: 450px;" /></a>
+<div class="section" id="cluster-services-operations">
+<h2>Cluster Services Operations<a class="headerlink" href="#cluster-services-operations" title="Permalink to this headline">     </a></h2>
+<p>The checkbox at the top of the <span class="guilabel">Cluster Services</span> section lets you use the cluster’s high availability feature to avoid service disruption with the actions in this section. If checked, the system coordinates restarts to avoid putting a node and its HA partner out of service at the same time.</p>
+<p>If high availability is not enabled on your cluster, the option is unavailable.</p>
+<p>Options in this section have to do with rebooting or restarting facilities in the cluster.</p>
+<dl class="docutils">
+<dt><span class="guilabel">Restart cluster</span></dt>
+<dd><p class="first">Restarts services on every node in the cluster.</p>
+<p class="last">Restarting cluster services is generally a safe operation. It temporarily disrupts client access but does not affect client data.</p>
+</dd>
+<dt><span class="guilabel">Reboot cluster</span></dt>
+<dd><p class="first">Restart every node in the cluster.</p>
+<p class="last">Restarting the cluster is generally a safe operation. It temporarily disrupts client access but does not affect client data.</p>
+</dd>
+<dt><span class="guilabel">Reboot alternate</span></dt>
+<dd><p class="first">This option restarts the cluster nodes but switches the Avere OS software to the version in the alternate boot image. Read <a class="reference internal" href="gui_software_update.html#gui-software-update"><span class="std std-ref">Administration &gt; Software Update</span></a> to learn more about the alternate software image.</p>
+<p>During this process, the primary node restarts all of the other cluster nodes in parallel, then restarts itself. The primary node is listed at the bottom of this page with the phrase <span class="guilabel">Currently connected to</span>.</p>
+<p class="last">Restarting the cluster with the alternate image is generally a safe operation.</p>
+</dd>
+<dt><span class="guilabel">Power down cluster</span></dt>
+<dd><p class="first">Shuts down all nodes in the cluster. When a cluster is powered down, data in the cache is saved to storage media on the FXT nodes, but is not always written to the core filer.</p>
+<p class="last">Powering down the cluster is generally a safe operation.</p>
+</dd>
+<dt><span class="guilabel">Rebalance directory managers</span></dt>
+<dd><p class="first">Directory managers are cluster processes that track file metadata. Avere OS attempts to distribute the cluster’s directory managers evenly across the cluster nodes, but if nodes are added to the cluster a rebalance typically is needed.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">On some systems, rebalancing can take several minutes and can interrupt client traffic. If possible, start the rebalance during a low traffic time.</p>
+</div>
+<p class="last">This button is active only when the system detects that a node in the cluster has no directory managers.</p>
+</dd>
+<dt><span class="guilabel">Clear all conditions</span></dt>
+<dd>This control removes all <span class="guilabel">Conditions</span> notifications. This control does not dismiss <span class="guilabel">Alerts</span>.</dd>
+</dl>
+</div>
+<div class="section" id="client-access-operations">
+<h2>Client Access Operations<a class="headerlink" href="#client-access-operations" title="Permalink to this headline">     </a></h2>
+<dl class="docutils">
+<dt><span class="guilabel">Suspend access</span></dt>
+<dd><p class="first">This button causes the cluster’s vservers to stop accepting client requests. Requests to the cluster are ignored; no response is returned to the client.</p>
+<p class="last">Suspending access is necessary before invalidating a cache, destroying the Avere OS cluster, or erasing disks on the cluster nodes.</p>
+</dd>
+</dl>
+<dl class="docutils">
+<dt><span class="guilabel">Unsuspend access</span></dt>
+<dd>Re-enables client access to a suspended cluster.</dd>
+</dl>
+</div>
+<div class="section" id="data-operations">
+<h2>Data Operations<a class="headerlink" href="#data-operations" title="Permalink to this headline">     </a></h2>
+<div class="admonition caution">
+<p class="first admonition-title">Caution</p>
+<p>Most of the options in this section make significant, permanent changes to the cluster.</p>
+<p class="last"><strong>Do not use these controls without consulting</strong> Avere Global Services <strong>for advice and assistance.</strong></p>
+</div>
+<p>These operations can be performed only on a suspended cluster. The buttons in this section are inactive if the cluster is serving client requests. Use the <span class="guilabel">Suspend access</span> button in the client access section of this page to stop client access.</p>
+<dl class="docutils">
+<dt><span class="guilabel">Invalidate cache</span></dt>
+<dd><p class="first">Clicking this button immediately discards all cached data in the cluster.</p>
+<p class="last">For a cache that includes client writes, this operation is <strong>unsafe</strong> unless you are certain that all changed data has been written to the core filers. Invalidated data cannot be recovered from the cluster after this operation.</p>
+</dd>
+<dt><span class="guilabel">Reconfigure</span></dt>
+<dd><p class="first">The <span class="guilabel">Reconfigure with current</span> and <span class="guilabel">Reconfigure with modification</span> buttons destroy the cluster and immediately create a new cluster with the primary cluster node only. Secondary cluster nodes are reset to an unjoined state.</p>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p>Modifying the configuration with these controls has the following effects:</p>
+<ul class="simple">
+<li>All secondary nodes are removed from the cluster. Only the primary node (listed at the bottom of the <span class="guilabel">System Maintenance</span> page) remains after the restart.</li>
+<li>Nodes might be renamed.</li>
+<li>All cached data is discarded. Client writes will be lost if they have not already been flushed to the core filers before this operation.</li>
+<li>HA and SMB settings for the cluster are discarded, <em>even if</em> you use the <span class="guilabel">Reconfigure with current</span> option.</li>
+</ul>
+<p class="last">There is no way to retrieve the previous configuration or cache data after this operation.</p>
+</div>
+<p class="last">Contact Avere Global Services to learn more about using these controls.</p>
+</dd>
+<dt><span class="guilabel">Reboot cluster</span>/<span class="guilabel">Power down cluster</span></dt>
+<dd><p class="first">The reboot and power down buttons in the Data section destroy the cluster and reset the FXT nodes to factory condition.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">These options erase the cluster completely. All configuration information and cached data is permanently removed, and all FXT nodes are left in an unclustered state.</p>
+</div>
+<p>The bottom set of reboot and power down buttons also causes the system to overwrite all data on the FXT nodes’ data disks with zeroes to ensuring that no data can be retrieved from the disks.</p>
+<div class="last admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Zeroing an FXT node’s data disks takes several hours. Allow the operation to run until the Avere Control Panel becomes unavailable. There is no progress indicator for this operation.</p>
+</div>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Deleting a cluster does not destroy the cluster’s Active Directory machine trust account (used for SMB access). You can delete the account manually on the AD server.</p>
+</div>
+<div class="last-update docutils container">
+updated 2017-11-15</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_vlan.html"
+                        title="previous chapter">Cluster &gt; VLAN</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_software_update.html"
+                        title="next chapter">Administration &gt; Software Update</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_software_update.html" title="Administration &gt; Software Update"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_vlan.html" title="Cluster &gt; VLAN"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

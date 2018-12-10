@@ -1,0 +1,287 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Using Web Proxies with Avere OS &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Setting Up Kerberos Authentication" href="kerberos_overview.html" />
+    <link rel="prev" title="Configuring Network Services for an Avere Cluster" href="network_overview.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="kerberos_overview.html" title="Setting Up Kerberos Authentication"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="network_overview.html" title="Configuring Network Services for an Avere Cluster"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="common_tasks.html" accesskey="U">Configuration Concepts</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="using-web-proxies-with-os">
+<span id="proxy-overview"></span><h1>Using Web Proxies with Avere OS<a class="headerlink" href="#using-web-proxies-with-os" title="Permalink to this headline">     </a></h1>
+<p>This article gives basic information about using web proxies with an Avere Edge Filer.</p>
+<p>Many companies’s IT security policies require use of a proxy server to access cloud services. A proxy server can be used to avoid exposing infrastructure details about your system.</p>
+<div class="section" id="proxy-use-cases">
+<h2>Proxy Use Cases<a class="headerlink" href="#proxy-use-cases" title="Permalink to this headline">     </a></h2>
+<p>Here are some common scenarios in an Avere Edge Filer system that can be made more secure with a proxy server:</p>
+<dl class="docutils">
+<dt><strong>Support Uploads</strong></dt>
+<dd>The Avere cluster includes a Secure Proactive Support system that automatically sends system information, status reports, and crash data to Avere Global Services. This system can be enabled or disabled on the <a class="reference internal" href="gui_support.html#gui-support-settings"><span class="std std-ref">Cluster &gt; Support</span></a> page.</dd>
+<dt><strong>Software Update Downloads</strong></dt>
+<dd>You can download and install updated software packages from the Avere Control Panel on the <a class="reference internal" href="gui_software_update.html#gui-software-update"><span class="std std-ref">Administration &gt; Software Update</span></a> page.</dd>
+<dt><strong>Communication with Cloud Resources</strong></dt>
+<dd>If you use cloud core filers or cloud-hosted vFXTs, a proxy server can improve security when interacting with commercially available cloud computing services.</dd>
+<dt><strong>Cluster Administration and Monitoring</strong></dt>
+<dd>The main cluster administration tool, Avere Control Panel, is accessed over an internet connection to the cluster.</dd>
+</dl>
+</div>
+<div class="section" id="proxy-support">
+<h2>Proxy Support<a class="headerlink" href="#proxy-support" title="Permalink to this headline">     </a></h2>
+<p>Avere OS supports transparent or nontransparent proxies. HTTP and HTTPS proxies are supported; SOCKS proxies cannot be used.</p>
+<p>Note that authentication is unencrypted - proxy servers requiring encrypted transmissions are unsupported. Usernames and passwords are transmitted in plain text.</p>
+<p>Proxies are not supported for communication between the Avere cluster and NAS core filers.</p>
+</div>
+<div class="section" id="configuring-a-proxy-for-os">
+<h2>Configuring a Proxy for Avere OS<a class="headerlink" href="#configuring-a-proxy-for-os" title="Permalink to this headline">     </a></h2>
+<p>There are three steps to setting up a proxy server to use with your Avere cluster:</p>
+<ol class="arabic">
+<li><p class="first">Install and configure the proxy server.</p>
+<p>The exact steps depend on the type of proxy server you use and your network configuration. Include the <a class="reference internal" href="#t-proxy-whitelist"><span class="std std-ref">Whitelisted Domains</span></a> information listed below.</p>
+</li>
+<li><p class="first">Create a <span class="guilabel">Proxy Configuration</span> in the Avere Control Panel.</p>
+<p>Use the <a class="reference internal" href="gui_proxy_config.html#gui-proxy-config"><span class="std std-ref">Cluster &gt; Proxy Configuration</span></a> page to create a configuration that includes the proxy server URL and the username and password to use when connecting.</p>
+</li>
+<li><p class="first">Apply the proxy configuration to the cluster or to an individual cloud core filer.</p>
+<p>You can select a proxy configuration for the cluster on the <a class="reference internal" href="gui_cluster_general_setup.html#gui-cluster-general-setup"><span class="std std-ref">Cluster &gt; General Setup</span></a> page. This setting affects internet communication from cluster nodes - for example, uploading support data or downloading software updates.</p>
+<p>You can select a proxy server for a cloud core filer on the <a class="reference internal" href="gui_core_filer_details.html#gui-core-filer-details"><span class="std std-ref">Core Filer &gt; Core Filer Details</span></a> page. This proxy configuration handles traffic between the cluster and the cloud core filer.</p>
+<p>There also is a proxy for vFXTs that is selected from the Cluster Manager interface.</p>
+</li>
+</ol>
+<div class="section" id="whitelisted-domains">
+<span id="t-proxy-whitelist"></span><h3>Whitelisted Domains<a class="headerlink" href="#whitelisted-domains" title="Permalink to this headline">     </a></h3>
+<p>Avere Systems, Inc. recommends including the following domains in the permitted access list (whitelist) for your proxy server.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="38%" />
+<col width="32%" />
+<col width="31%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Domain Name</th>
+<th class="head">Description</th>
+<th class="head">Notes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>verisign.com
+ocsp.verisign.com
+SVRSecure-G3-crl.verisign.com</td>
+<td>&#160;</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td>sd.symcd.com</td>
+<td>&#160;</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>download.averesystems.com
+download.averesystems.net</td>
+<td>Avere software updates</td>
+<td>Allow the IP range
+65.123.167.224/29
+to pass through your
+firewall on port 443</td>
+</tr>
+<tr class="row-odd"><td>avere-billing.appspot.com
+averedist.blob.core.windows.net</td>
+<td>&#160;</td>
+<td>&#160;</td>
+</tr>
+</tbody>
+</table>
+<div class="last-update docutils container">
+updated 2017-11-15</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="network_overview.html"
+                        title="previous chapter">Configuring Network Services for an Avere Cluster</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="kerberos_overview.html"
+                        title="next chapter">Setting Up Kerberos Authentication</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="kerberos_overview.html" title="Setting Up Kerberos Authentication"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="network_overview.html" title="Configuring Network Services for an Avere Cluster"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="common_tasks.html" >Configuration Concepts</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

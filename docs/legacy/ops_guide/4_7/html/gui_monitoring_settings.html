@@ -1,0 +1,290 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Cluster &gt; Monitoring &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Cluster &gt; Schedules" href="gui_schedules.html" />
+    <link rel="prev" title="Cluster &gt; High Availability" href="gui_ha.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_schedules.html" title="Cluster &gt; Schedules"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_ha.html" title="Cluster &gt; High Availability"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="cluster-monitoring">
+<span id="gui-monitoring-settings"></span><h1>Cluster &gt; Monitoring<a class="headerlink" href="#cluster-monitoring" title="Permalink to this headline">     </a></h1>
+<img alt="Monitoring settings page" src="_images/gui_monitoring_settings.png" />
+<p>On the <span class="guilabel">Monitoring</span> settings page, you can configure methods to see cluster alerts without logging in to the Avere Control Panel.</p>
+<p>The system supports three methods for monitoring the cluster externally:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#email-monitoring"><span class="std std-ref">Email Monitoring</span></a> - Send important alerts by email.</li>
+<li><a class="reference internal" href="#external-syslogging"><span class="std std-ref">External Logging</span></a> - Send log messages to a remote syslog server.</li>
+<li><a class="reference internal" href="#snmp-monitoring"><span class="std std-ref">SNMP Monitoring</span></a> - Allow a remote monitor to query the cluster to gather statistics and other messages, including alerts. This option can be used to generate SNMP traps.</li>
+</ul>
+<p>After making any changes, remember to use the <span class="guilabel">Submit</span> button to save the new settings.</p>
+<div class="section" id="email-monitoring">
+<span id="id1"></span><h2>Email Monitoring<a class="headerlink" href="#email-monitoring" title="Permalink to this headline">     </a></h2>
+<p>Use the <span class="guilabel">Email Monitoring</span> section to set up email alerts about cluster state.</p>
+<p>Click the <span class="guilabel">Create</span> button to add a new alert.</p>
+<a class="reference internal image-reference" href="_images/gui_new_email_alert.png"><img alt="Dialog to create a new email alert" src="_images/gui_new_email_alert.png" style="width: 400pt;" /></a>
+<p>Enter the email recipients (one email address or a comma-separated list of addresses) in the <span class="guilabel">Email addresses</span> field. Use the checkboxes to select the type of alerts to send.</p>
+<p>Click <span class="guilabel">Add Recipient</span> to create the alert.</p>
+<p>Select an alert in the table’s <span class="guilabel">Actions</span> column to use the <span class="guilabel">Modify</span>, <span class="guilabel">Remove</span>, or <span class="guilabel">Test</span> buttons.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You cannot change the set of email addresses in an alert. Delete the old alert and create a new one if you want to include different recipients.</p>
+</div>
+<p>In the <span class="guilabel">Mail server</span> field, enter the SMTP server (and, optionally, the port) to use for sending mail.</p>
+<p>In the <span class="guilabel">Mail-from address</span> field, specify the return address to use.</p>
+<p>The <span class="guilabel">Include additional context</span> checkbox causes lower severity alerts to be included in the emails to help with analysis.</p>
+<p>Click <span class="guilabel">Submit</span> after making changes, or <span class="guilabel">Revert</span> to go back to the last saved configuration.</p>
+</div>
+<div class="section" id="external-logging">
+<span id="external-syslogging"></span><h2>External Logging<a class="headerlink" href="#external-logging" title="Permalink to this headline">     </a></h2>
+<p>The cluster can send event messages to an external syslog server. Use the <span class="guilabel">Logs</span> section of the monitoring page to specify the server and to set options for what is logged.</p>
+<a class="reference internal image-reference" href="_images/gui_syslog_options.png"><img alt="External log configuration settings" src="_images/gui_syslog_options.png" style="width: 450pt;" /></a>
+<p>In the <span class="guilabel">Syslog server</span> field, enter the domain name or IP address of the server that will collect the cluster log messages. You have the option to include a specific port.</p>
+<p>The syslog server must exist before you specify it here.</p>
+<p>Check the boxes to select the type of events to send to the external log. All of these options are enabled by default if you specify a remote syslog server; most administrators should consider disabling filesystem event logging to avoid excessive traffic.</p>
+<p>Log options include the following:</p>
+<ul class="simple">
+<li><span class="guilabel">FXT filesystem events</span> - Forwards FXT filesystem messages to the remote monitoring server. This option generates a high volume of log entries. Note that this option does not log all filesystem events (it does <em>not</em> log user filesystem access); it logs a subset of administrative and debugging traffic.</li>
+<li><span class="guilabel">OS login events</span> - Forwards all SSH and command-line login event messages to the remote monitoring server. (This option does not forward messages from Avere Control Panel sessions.)</li>
+<li><span class="guilabel">XML-RPC events</span> - Forwards detailed API call logs, including failures, to the remote monitoring server. XML-RPC events now include the username, remote IP address, method name and arguments (with sensitive values masked for security), and results. Some routine XML-RPC events (frequently invoked through the Avere Control Panel) are not logged.</li>
+</ul>
+<p>The table below gives the log facility and level for each configuration option for use in syslog filters.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="44%" />
+<col width="25%" />
+<col width="31%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Log option</th>
+<th class="head">Facility</th>
+<th class="head">Level</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>FXT Filesystem Events</td>
+<td>local7</td>
+<td>info</td>
+</tr>
+<tr class="row-odd"><td>OS Login Events</td>
+<td>auth</td>
+<td>info</td>
+</tr>
+<tr class="row-even"><td>XML-RPC Events</td>
+<td>local6</td>
+<td>notice</td>
+</tr>
+</tbody>
+</table>
+<p>The <span class="guilabel">Test message</span> button sends a short message to the remote syslog server so that you can verify that the server is receiving information from the cluster.</p>
+<p>Click <span class="guilabel">Submit</span> to save changes, or <span class="guilabel">Revert</span> to abandon the new settings.</p>
+</div>
+<div class="section" id="snmp-monitoring">
+<span id="id2"></span><h2>SNMP Monitoring<a class="headerlink" href="#snmp-monitoring" title="Permalink to this headline">     </a></h2>
+<p>Avere OS exposes a Simple Network Management Protocol (SNMP) management information base (MIB) that can be used to monitor the cluster.</p>
+<p>Download Avere’s SNMP MIBs from the <span class="guilabel">Downloads</span> section of the support portal (<a class="reference external" href="http://www.averesystems.com/about-us/avere-support">http://www.averesystems.com/about-us/avere-support</a>). Avere OS supports SNMPv1 and SNMPv2c.</p>
+<p>Click the <span class="guilabel">Enable SNMP</span> checkbox to turn this feature on. In the <span class="guilabel">SNMP Features</span> section, you can provide the following values to customize the information:</p>
+<ul class="simple">
+<li><span class="guilabel">SNMP contact</span> - A contact person for the cluster (typically a system administrator)</li>
+<li><span class="guilabel">SNMP location</span> - The physical location of the cluster; used to help identify the system</li>
+<li><span class="guilabel">SNMP read-only community</span> - The community string to use to authenticate read-only access (note that SNMP sends this string in cleartext during use)</li>
+<li><span class="guilabel">SNMP trap host</span> - The name or IP address of the manager that receives trap notifications</li>
+<li><span class="guilabel">SNMP trap port</span> - The port number used for receiving trap notifications</li>
+</ul>
+<p>Click <span class="guilabel">Submit</span> to save changes, or <span class="guilabel">Revert</span> to abandon the new settings.</p>
+<div class="last-update docutils container">
+updated 2017-11-15</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_ha.html"
+                        title="previous chapter">Cluster &gt; High Availability</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_schedules.html"
+                        title="next chapter">Cluster &gt; Schedules</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_schedules.html" title="Cluster &gt; Schedules"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_ha.html" title="Cluster &gt; High Availability"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

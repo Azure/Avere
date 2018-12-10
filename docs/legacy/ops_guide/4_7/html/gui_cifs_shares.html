@@ -1,0 +1,371 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>VServer &gt; CIFS Shares &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Core Filer &gt; Manage Core Filers" href="gui_manage_core_filers.html" />
+    <link rel="prev" title="VServer &gt; CIFS" href="gui_cifs.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_manage_core_filers.html" title="Core Filer &gt; Manage Core Filers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_cifs.html" title="VServer &gt; CIFS"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="vserver-cifs-shares">
+<span id="gui-cifs-shares"></span><span id="index-0"></span><h1>VServer &gt; CIFS Shares<a class="headerlink" href="#vserver-cifs-shares" title="Permalink to this headline">     </a></h1>
+<img alt="CIFS Shares settings page" src="_images/gui_cifs_shares.png" />
+<p>One of the final steps in configuring SMB access so that Windows clients can access data through the virtual server is to set up shares on the Avere cluster for communicating with core filers. These mappings are called SMB shares, or CIFS shares (for historical reasons - CIFS is an older version of SMB).</p>
+<p>Avere Systems has tested up to 2000 SMB shares on one cluster.</p>
+<div class="section" id="accessing-smb-shares">
+<span id="index-1"></span><h2>Accessing SMB Shares<a class="headerlink" href="#accessing-smb-shares" title="Permalink to this headline">     </a></h2>
+<p>SMB/CIFS shares can be accessed from a Windows client by using the syntax</p>
+<p><code class="docutils literal notranslate"><span class="pre">\\server_name.dns_domain\share_name</span></code></p>
+<p>where</p>
+<ul class="simple">
+<li><em>server_name</em> is the name of a server in the domain</li>
+<li><em>dns_domain</em> is the fully qualified DNS name</li>
+<li><em>share_name</em> is the name assigned to the SMB share</li>
+</ul>
+<p>Example: <code class="docutils literal notranslate"><span class="pre">\\maple.dev.example.com\NEWDATA</span></code></p>
+<p>If a fully qualified DNS domain name is not used, the DNS search suffix is used to try to find the name. A NetBIOS name can be used in this setting, but NetBIOS lookup might fail if the server is not in the same network broadcast domain.</p>
+</div>
+<div class="section" id="creating-smb-shares">
+<span id="cifs-shares-create"></span><span id="index-2"></span><h2>Creating SMB Shares<a class="headerlink" href="#creating-smb-shares" title="Permalink to this headline">     </a></h2>
+<p>Use the <span class="guilabel">CIFS Shares</span> page (in the <span class="guilabel">VServer</span> section) to define shares.</p>
+<ol class="arabic simple">
+<li>If you have more than one virtual server, choose an SMB-enabled vserver from the drop-down list in the side menu. (If you choose a vserver that is not configured for SMB, the <span class="guilabel">CIFS Shares</span> page will be empty.)</li>
+<li>Click the <span class="guilabel">Add New Share</span> button (it is above the list of existing shares). A panel labeled <span class="guilabel">Define a New Share</span> appears on the page.</li>
+</ol>
+<a class="reference internal image-reference" href="_images/new_cifs_share.png"><img alt="Creating a new SMB share" src="_images/new_cifs_share.png" style="width: 450pt;" /></a>
+<ol class="arabic" start="3">
+<li><p class="first">From the <span class="guilabel">Share Type</span> drop-down list, choose the type of share to create:</p>
+<ul>
+<li><p class="first"><span class="guilabel">Regular Share</span> (the default) – The path to the share is determined by the NFS export path and the subdirectory path, combined.</p>
+</li>
+<li><p class="first"><span class="guilabel">Home Share</span> – With a home share, the path includes a variable (%S or %U) that automatically maps subdirectories for each user. This feature allows administrators to create just one share but map home directories for each user or group on that share.</p>
+<p>Include the variable in the <span class="guilabel">Subdirectory</span> field. Using %S gives access by share, which allows individual users to access all home directories on their share (if filesystem ACLs allow access). The %U option restricts access by username and also maps unknown share names to the user’s home directory - research the possible uses of this option before choosing it.</p>
+<p>For example, with the settings in the image below, if a user with the name juser navigated to <code class="docutils literal notranslate"><span class="pre">\\&lt;domain&gt;\homes</span></code>, she would see the contents of the namespace path <code class="docutils literal notranslate"><span class="pre">/juser</span></code>.</p>
+<a class="reference internal image-reference" href="_images/new_home_share.png"><img alt="Default settings for a home share" src="_images/new_home_share.png" style="width: 450pt;" /></a>
+</li>
+</ul>
+</li>
+<li><p class="first">Enter a name for the new share in the <span class="guilabel">CIFS share name</span> field. Share names must have the following properties:</p>
+<ul>
+<li><p class="first">Share names must be unique. <strong>Note:</strong> Share names are <strong>not</strong> case-sensitive.</p>
+</li>
+<li><p class="first">Share names cannot contain control characters (0x00 - 0x1F)</p>
+</li>
+<li><p class="first">Share names cannot contain any of the following characters:
+<code class="docutils literal notranslate"><span class="pre">&quot;</span> <span class="pre">%</span> <span class="pre">*</span> <span class="pre">+</span> <span class="pre">,</span> <span class="pre">/</span> <span class="pre">:</span> <span class="pre">;</span> <span class="pre">&lt;</span> <span class="pre">=</span> <span class="pre">&gt;</span> <span class="pre">?[</span> <span class="pre">\</span> <span class="pre">]</span> <span class="pre">|</span></code></p>
+</li>
+<li><p class="first">Share names must be at least 1 character long but no more than 242 characters long.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The maximum length for a SMB share name is technically 255 characters, but in an Avere cluster the share name is combined with its server’s NetBIOS name (maximum 15 characters) for an internal reference. A share name longer than 239 characters is not recommended because such a name can possibly exceed 255 characters when combined with the server name.</p>
+</div>
+</li>
+</ul>
+</li>
+</ol>
+<ol class="arabic" start="5">
+<li><p class="first">In <span class="guilabel">Namespace path</span>, select the junction to be used for the share. Multiple SMB shares can use the same junction.</p>
+</li>
+<li><p class="first">If needed, enter a subdirectory for the export in the <span class="guilabel">Subdirectory</span> field. The subdirectory name can include additional directory path information.</p>
+<p>For example, if you have a share named <code class="docutils literal notranslate"><span class="pre">payroll</span></code> that should resolve to the directory <code class="docutils literal notranslate"><span class="pre">/mgmt/dept/finance/payroll</span></code> and the share’s NFS export is <code class="docutils literal notranslate"><span class="pre">/mgmt/dept</span></code>, specify the subdirectory as <code class="docutils literal notranslate"><span class="pre">/finance/payroll</span></code>.</p>
+<p>If you selected <span class="guilabel">Home Share</span> as the share type, the <span class="guilabel">Subdirectory</span> field is automatically populated with <code class="docutils literal notranslate"><span class="pre">%U</span></code>, which will be replaced with the username of a user on the SMB client. You also can use the <code class="docutils literal notranslate"><span class="pre">%S</span></code> option to create home shares.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The values above cannot be changed after you create the share.</p>
+</div>
+</li>
+<li><p class="first">Optionally, set advanced properties for the share by selecting the <span class="guilabel">Advanced</span> checkbox. These settings are described in detail in the next section under <a class="reference internal" href="#cifs-advanced-properties"><span class="std std-ref">Advanced Share Settings</span></a>.</p>
+</li>
+<li><p class="first">Click the <span class="guilabel">Submit</span> or <span class="guilabel">Set Home</span> button (the button text is different if the share type is <span class="guilabel">Home Share</span>).</p>
+</li>
+</ol>
+<p>The new share appears in the table of shares.</p>
+<div class="section" id="advanced-share-settings">
+<span id="cifs-advanced-properties"></span><h3>Advanced Share Settings<a class="headerlink" href="#advanced-share-settings" title="Permalink to this headline">     </a></h3>
+<p>These settings can be configured when you create a new share, or in the share details page.</p>
+<ul>
+<li><p class="first"><span class="guilabel">Browseable</span> – If the share is browsable, users can view it by browsing to the vserver.</p>
+</li>
+<li><p class="first"><span class="guilabel">Inherit Permissions</span> (POSIX mode bit junctions only) – Specifies whether new directories created under the share will automatically have the permissions of their parent directory. The default is <span class="guilabel">No</span>.</p>
+<p>Do not attempt to enable <span class="guilabel">Inherit Permissions</span> on a junction that uses <span class="guilabel">CIFS ACLs</span> for access control.</p>
+</li>
+<li><p class="first"><span class="guilabel">Read Only</span> – Use this setting to create a read-only share. The default (<span class="guilabel">No</span>) creates a read/write share.</p>
+</li>
+<li><p class="first"><span class="guilabel">Hide Unreadable</span> - Setting this to <span class="guilabel">Yes</span> causes the system to exclude files and directories from directory listings if the user does not have permission to access them. The default setting is no (disabled) because hiding files on a per-user basis requires additional access checks and can impact performance.</p>
+</li>
+<li><p class="first"><span class="guilabel">Strict Locking</span> – This feature causes the system to perform a byte-range lock check (a check on locks for a section of a file) each time data is read from or written to the SMB share. Leave it disabled (the default) to improve performance.</p>
+<p>Although server-side lock checks are part of the SMB specification, this can be safely disabled because clients make lock checks before sending read or write requests.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Avere OS does not support simultaneous multi-protocol locking. That is, you cannot lock a file or share from a SMB client and from an NFS client at the same time. Contact Avere Global Services to learn more.</p>
+</div>
+</li>
+<li><p class="first"><span class="guilabel">Oplocks</span> – Oplocks allow a client to locally cache multiple writes if no other client is using the file. This feature eliminates the overhead of writing repeatedly to the Avere cache during a period of intense activity from a single client. Select <span class="guilabel">Disabled</span> to disable all oplock support. Select <span class="guilabel">Enabled</span> (the default) to allow read/write oplocks.</p>
+<p>Enabling the <span class="guilabel">Oplocks</span> setting permits <em>level 1</em> and <em>batch</em> opportunistic locks, but does not enable <em>level 2</em> oplocks - these are a separate setting.</p>
+</li>
+<li><p class="first"><span class="guilabel">Level 2 Oplocks</span> – Select <span class="guilabel">Disabled</span> to prevent read-only oplocks. Select <span class="guilabel">Enabled</span> to perform lock checks on read-only oplocks (note that the main <span class="guilabel">Oplocks</span> setting also must be enabled).</p>
+</li>
+<li><p class="first"><span class="guilabel">Read-only Optimized</span> – Select <span class="guilabel">Yes</span> to enable performance-related options on read-only shares. The default value is <span class="guilabel">No</span>.</p>
+<p>There is also a vserver-level read-only optimization setting, which is configured on the <a class="reference internal" href="gui_cifs.html#gui-cifs"><span class="std std-ref">VServer &gt; CIFS</span></a> page. The vserver-level setting is useful only if all of the vserver’s SMB shares are read-only.</p>
+</li>
+<li><p class="first"><span class="guilabel">Guest OK</span> - Set this to <span class="guilabel">Yes</span> to allow users who are not listed in the authentication database to access this share. (This setting does not work reliably across all client types and is not recommended.)</p>
+</li>
+<li><p class="first"><span class="guilabel">Create Mask</span> (POSIX mode bit junctions only) – Enter an octal value representing the UNIX permissions to use for newly created files in this share. The default is 0744 (read/write/execute by owner; read/execute by group; read/execute by any user).</p>
+</li>
+<li><p class="first"><span class="guilabel">Security Mask</span> (POSIX mode bit junctions only) – Enter an octal value representing the UNIX permissions to set on a file whose permissions are changed by a Windows client from the native Windows security dialog box. The default is 0777 (read/write/execute for all users).</p>
+</li>
+<li><p class="first"><span class="guilabel">Directory Mask</span> (POSIX mode bit junctions only) – Enter an octal value representing the UNIX permissions to set on a directory that is created with DOS permissions. The default is 0755 (read/write/execute by owner; read/execute by group; read/execute by any user).</p>
+</li>
+<li><p class="first"><span class="guilabel">Directory Security Mask</span> (POSIX mode bit junctions only) – Enter an octal value representing the UNIX permissions to set on a directory whose permissions are changed by a Windows client from the native Windows security dialog box. The default is 0777 (read/write/execute for all users).</p>
+</li>
+<li><p class="first"><span class="guilabel">Force Create Mode</span> (POSIX mode bit junctions only) – Enter an octal value representing the minimum set of UNIX permissions for any file created by the Avere OS SMB/CIFS server. The default is 0000 (no permissions).</p>
+</li>
+<li><p class="first"><span class="guilabel">Force Security Mode</span> (POSIX mode bit junctions only) – Enter an octal value representing the minimum set of UNIX permissions for any file whose permissions are changed by a Windows client from the native Windows security dialog box. The default is 0700 (read/write/execute by owner; no permissions for others).</p>
+</li>
+<li><p class="first"><span class="guilabel">Force Directory Mode</span> (POSIX mode bit junctions only) – Enter an octal value representing the minimum set of UNIX permissions for any directory created by the Avere OS SMB/CIFS server. The default is 0000 (no permissions).</p>
+</li>
+<li><p class="first"><span class="guilabel">Force Directory Security Mode</span> (POSIX mode bit junctions only) – Enter an octal value representing the minimum set of UNIX permissions for a directory whose permissions are changed by a Windows client from the native Windows security dialog box. The default is 0000 (no permissions).</p>
+</li>
+<li><p class="first"><span class="guilabel">Force User</span> (POSIX mode bit junctions only) – Enter a UNIX username that is assigned as the default user for all users of the Avere OS SMB/CIFS server. This is useful for sharing files. Note that specifying an incorrect username or a username without adequate permissions can cause access problems. There is no default value.</p>
+</li>
+<li><p class="first"><span class="guilabel">Force Group</span> (POSIX mode bit junctions only) – Enter a UNIX group name that is assigned as the default group for all users of the Avere OS SMB server. This is useful for sharing files. Specifying an incorrect group name or the name of a group without adequate permissions can cause access problems. There is no default value.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="deleting-or-modifying-an-smb-share">
+<span id="cifs-share-modify"></span><span id="index-3"></span><h2>Deleting or Modifying an SMB Share<a class="headerlink" href="#deleting-or-modifying-an-smb-share" title="Permalink to this headline">     </a></h2>
+<p>To delete a share, click the <span class="guilabel">Delete</span> button in the share’s row in the table that lists the shares.</p>
+<p>To modify a share, click the share name in the list of shares on the <span class="guilabel">CIFS Shares</span> page to open the share details page.</p>
+<img alt="The CIFS Share details page" src="_images/cifs_share_detail.png" />
+<p>Some values, including the share name, access control type, export path, and subdirectory, can’t be modified after the share is created.</p>
+<p>Other values can be changed from this page. (These values also can be set when you create a share; click the <span class="guilabel">Advanced</span> checkbox on the <span class="guilabel">Define a New Share</span> panel to show these fields.)</p>
+</div>
+<div class="section" id="share-level-access-control-lists-acls">
+<span id="gui-smb-share-acls"></span><span id="index-4"></span><h2>Share-Level Access Control Lists (ACLs)<a class="headerlink" href="#share-level-access-control-lists-acls" title="Permalink to this headline">     </a></h2>
+<p>Each SMB share has its own share-level ACL. This ACL determines which users and groups are permitted to connect to this SMB share.</p>
+<p>Do not confuse share-level ACLs with the access control method selected on a <a class="reference internal" href="gui_namespace.html#junction-smb-access-nh"><span class="std std-ref">namespace junction</span></a> for SMB. Those selections set the junction’s security style (options are “POSIX mode bits” for NFS, or “CIFS ACLs” for NTFS), but do not specify which users may access the junction’s subdirectories.</p>
+<p>Also note that a restrictive share-level ACL can prevent client access to a file on the back end even if ACLs on the target file or directory allow access.</p>
+<p>A more detailed discussion of SMB share ACLs is included in <a class="reference internal" href="smb_overview.html#smb-share-level-acl-overview"><span class="std std-ref">Configuring Share-Level ACLs</span></a>.</p>
+<p>Avere OS does not read share-level ACL settings from core filers. If you have share-level ACLs set on back-end storage, you must replicate the share access control settings on the Avere cluster’s SMB shares.</p>
+<p>To see what permissions are set on an SMB share, go to the share details page in the Avere Control Panel by clicking the share name in the list on the <span class="guilabel">CIFS Shares</span> settings page.</p>
+<a class="reference internal image-reference" href="_images/cifs_share_permissions.png"><img alt="Share-level permissions listed at the bottom of a CIFS Share details page" src="_images/cifs_share_permissions.png" style="width: 450pt;" /></a>
+<p>Permissions are saved as access control entries (ACEs). You can delete or modify a permission by clicking the appropriate button in its <span class="guilabel">Actions</span> column.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">User and group names in an ACE cannot be changed; instead, delete the original entry and create a new one.</p>
+</div>
+<p>Click the <span class="guilabel">Add ACE</span> button to add a share-level permission setting for this SMB share.</p>
+<a class="reference internal image-reference" href="_images/gui_smb_share_acl_add.png"><img alt="Adding an ACE to an SMB share ACL" src="_images/gui_smb_share_acl_add.png" style="width: 450pt;" /></a>
+<p>Enter the following values:</p>
+<ul class="simple">
+<li><span class="guilabel">User/Group</span> - The Windows user or group that the ACE applies to, by name or security ID (SID) in decimal form. Names from a trusted domain must contain the domain prefix. For example, <code class="docutils literal notranslate"><span class="pre">DOMAIN\UserOrGroupName</span></code>.</li>
+<li><span class="guilabel">ACE Type</span> - Choose whether to allow or deny the specified permission to the specified user or group. Note: <span class="guilabel">Deny</span> settings override <span class="guilabel">Allow</span> settings if there are conflicts. (Read <a class="reference internal" href="smb_overview.html#smb-share-level-acl-overview"><span class="std std-ref">Configuring Share-Level ACLs</span></a> for more information.)</li>
+<li><dl class="first docutils">
+<dt><span class="guilabel">Permission</span> - Choose one of the following permission settings:</dt>
+<dd><ul class="first last">
+<li><span class="guilabel">Read</span> - view, list, execute</li>
+<li><span class="guilabel">Change</span> - all Read permissions, and also modify, add, and delete</li>
+<li><span class="guilabel">Full</span> - all Change permissions, and also the ability to modify permissions</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Click the <span class="guilabel">Submit</span> button to save the new ACE.</p>
+<div class="last-update docutils container">
+updated 2017-11-15</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_cifs.html"
+                        title="previous chapter">VServer &gt; CIFS</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_manage_core_filers.html"
+                        title="next chapter">Core Filer &gt; Manage Core Filers</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_manage_core_filers.html" title="Core Filer &gt; Manage Core Filers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_cifs.html" title="VServer &gt; CIFS"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

@@ -1,0 +1,381 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>VServer &gt; Namespace &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="VServer &gt; Export Policies" href="gui_export_policies.html" />
+    <link rel="prev" title="VServer &gt; Client Facing Network" href="gui_client_network.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_export_policies.html" title="VServer &gt; Export Policies"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_client_network.html" title="VServer &gt; Client Facing Network"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="vserver-namespace">
+<span id="gui-namespace"></span><h1>VServer &gt; Namespace<a class="headerlink" href="#vserver-namespace" title="Permalink to this headline">     </a></h1>
+<p>The <span class="guilabel">Namespace</span> settings page is used to configure <em>junctions</em>, which map the  client-visible namespace to the back-end storage filesystem.</p>
+<img alt="Namespace Settings Page" src="_images/gui_namespace.png" />
+<p>Junctions are part of creating a global namespace (GNS), sometimes called a pseudo-filesystem. Read <a class="reference internal" href="gns_overview.html#gns-overview"><span class="std std-ref">Using a Global Namespace</span></a> for information about designing your GNS and setting up the infrastructure necessary to support namespace mapping.</p>
+<p>If your cluster has more than one vserver, use the selector in the sidebar to choose which vserver to show.</p>
+<a class="reference internal image-reference" href="_images/gui_namespace_choose_vserver.png"><img alt="Choosing a vserver for the Namespace settings page" src="_images/gui_namespace_choose_vserver.png" style="width: 150pt;" /></a>
+<p>The table lists existing junctions for the selected vserver (1).</p>
+<a class="reference internal image-reference" href="_images/namespace_controls-annot.png"><img alt="Junction table controls" src="_images/namespace_controls-annot.png" style="width: 500pt;" /></a>
+<p>You can sort the table by any column heading. Click the triangular control in the left column to show or hide junction details (4).</p>
+<p>Us the <span class="guilabel">Actions</span> checkboxes (3) to select one or more junctions, then use the action buttons (2) to act on the selected junctions. (If you are creating a junction, it doesn’t matter if any of the boxes are checked.)</p>
+<p>The buttons allow you to do the following:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#create-junction"><span class="std std-ref">Create</span></a> a new junction</li>
+<li><a class="reference internal" href="#edit-junction"><span class="std std-ref">Edit a junction</span></a> (<span class="guilabel">Modify</span> button)</li>
+<li>Start a new FlashMove<sup>®</sup> or FlashMirror<sup>®</sup> <a class="reference internal" href="#junction-create-migration"><span class="std std-ref">data migration job</span></a> from the junction (<span class="guilabel">Move/Mirror</span> button, requires a data migration feature license)</li>
+<li><a class="reference internal" href="#suspend-junction"><span class="std std-ref">Suspend</span></a> a junction, or unsuspend a junction that was previously suspended.</li>
+<li><a class="reference internal" href="#delete-junction"><span class="std std-ref">Delete</span></a> a junction (<span class="guilabel">Remove</span> button)</li>
+</ul>
+<p>Click the links in the list above to skip to the sections below with details about each of these tasks.</p>
+<div class="section" id="using-junctions-with-cloud-storage">
+<span id="cloud-junction"></span><h2>Using Junctions with Cloud Storage<a class="headerlink" href="#using-junctions-with-cloud-storage" title="Permalink to this headline">     </a></h2>
+<p>Because cloud storage is structured differently from NAS storage, creating junctions for cloud core filers is somewhat different from creating junctions for conventional NFS network-attached storage systems.</p>
+<div class="section" id="differences-between-nas-and-cloud-storage-exports">
+<span id="nas-vs-cloud-storage"></span><h3>Differences between NAS and Cloud Storage Exports<a class="headerlink" href="#differences-between-nas-and-cloud-storage-exports" title="Permalink to this headline">     </a></h3>
+<p>Network-attached hardware storage and cloud storage are fundamentally different. NAS storage uses a hierarchical filesystem structure to store data in directories and files. Cloud storage uses an object storage approach that stores data in a flat filesystem and relies on object metadata to locate files.</p>
+<p>On a NAS core filer, an administrator defines externally visible exports by using the core filer’s operating system. The export paths correspond to actual NFS filesystem paths on the core filer. Avere OS reads the exports defined in the core filer’s operating system to provide options for creating junctions.</p>
+<p>On a cloud core filer, only one export (/) is available to the Avere system. This export  corresponds to the cloud bucket that contains all of the stored objects in a flat filesystem. However, with Avere OS you can use the global namespace feature to create virtual subdirectories, as described below.</p>
+</div>
+<div class="section" id="creating-virtual-subdirectories-for-cloud-storage">
+<h3>Creating Virtual Subdirectories for Cloud Storage<a class="headerlink" href="#creating-virtual-subdirectories-for-cloud-storage" title="Permalink to this headline">     </a></h3>
+<p>To provide more flexibility to clients accessing cloud storage through an Avere cluster, Avere OS allows administrators to create a hierarchical pseudofilesystem in the GNS. That is, you can create subdirectories in global namespace junctions that do not actually exist on the cloud core filer. When creating a junction to cloud storage, you can use both the <span class="guilabel">Namespace path</span> and the <span class="guilabel">Export subdirectory</span> fields to customize the virtual filesystem. The Avere cluster treats these paths as if they were actual paths on a hardware core filer.</p>
+<p>Avere OS also allows you to set different access permissions (<em>export policies</em>) on the virtual subdirectories, giving you the ability to protect sets of files on the cloud core filer from open access. This feature gives administrators the ability to expose subsets of files stored in a cloud object store without providing access to the entire exported container. Use the <a class="reference internal" href="#junction-export-policy"><span class="std std-ref">Junction Export Policy</span></a> setting to configure access to virtual subdirectories. (Read <a class="reference internal" href="export_rules_overview.html#export-rules-overview"><span class="std std-ref">Controlling Access to Core Filer Exports</span></a> to learn more about export policies.)</p>
+</div>
+</div>
+<div class="section" id="creating-a-junction">
+<span id="create-junction"></span><h2>Creating A Junction<a class="headerlink" href="#creating-a-junction" title="Permalink to this headline">     </a></h2>
+<p>Before creating a new junction, make sure that you know the two paths that you want to connect:</p>
+<ul class="simple">
+<li>The path to access on the back-end filesystem (if it is a NAS storage system)</li>
+<li>The user-facing path that you want to map to the back-end directory</li>
+</ul>
+<p>If SMB (CIFS) will be used for this junction, you also must know the name of the SMB share for the core filer export or subdirectory. Additional requirements are described in the <a class="reference internal" href="#junction-smb-access-nh"><span class="std std-ref">SMB access control</span></a> step.</p>
+<ol class="arabic">
+<li><p class="first">Make sure that the vserver where you want to create the junction is selected in the sidebar.</p>
+</li>
+<li><p class="first">Click the <span class="guilabel">Create</span> button.</p>
+<a class="reference internal image-reference" href="_images/junction_add.png"><img alt="Add New Junction window" src="_images/junction_add.png" style="width: 450pt;" /></a>
+</li>
+<li><p class="first">In the <span class="guilabel">Namespace Path</span> field, enter the GNS path for the new junction. This path defines the virtual filesystem that clients see when they access this vserver.</p>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p>The value entered in this field must be an absolute path; that is, it must start at root (<code class="docutils literal notranslate"><span class="pre">/</span></code>) of the global namespace (client-facing virtual filesystem) and work its way down.</p>
+<p class="last">For example, to create a GNS user directory named <code class="docutils literal notranslate"><span class="pre">seamus</span></code> within a top-level directory named <code class="docutils literal notranslate"><span class="pre">usr</span></code>, enter the path <code class="docutils literal notranslate"><span class="pre">/usr/seamus</span></code> in this field.</p>
+</div>
+</li>
+<li><p class="first">In the <span class="guilabel">Core Filer</span> list, choose the back-end storage system to use for this junction.</p>
+</li>
+<li><p class="first">From the <span class="guilabel">Core Filer Export</span> drop-down list, choose the export that clients will access at the virtual directory in the <span class="guilabel">Namespace Path</span> field. For a NAS core filer, you can select an existing NFS export, but for a cloud bucket you must select <code class="docutils literal notranslate"><span class="pre">/</span></code>.</p>
+<p>This setting works with the <a class="reference internal" href="#gns-subdirectory"><span class="std std-ref">Export Subdirectory</span></a> field to set the path exposed by the junction.</p>
+<p>Avere Systems recommends specifying the export closest to the root of the core filer, and using the <span class="guilabel">Export Subdirectory</span> field to define the path to the subdirectory that you want clients to access from this junction. Although the end result is the same for client access, some tasks related to data migration and SMB access are more straightforward when a higher level export is used.</p>
+<p>For example, imagine a core filer with the exports <code class="docutils literal notranslate"><span class="pre">/vol/dir1</span></code> and  <code class="docutils literal notranslate"><span class="pre">/vol/dir1/subdir1</span></code>.</p>
+<p>To create a junction that allows clients to access files in <code class="docutils literal notranslate"><span class="pre">/vol/dir1/subdir1/</span></code>, you should select <code class="docutils literal notranslate"><span class="pre">/vol/dir1/</span></code> in the <span class="guilabel">Core Filer Export</span> list and enter <code class="docutils literal notranslate"><span class="pre">subdir1</span></code> in the <span class="guilabel">Export Subdirectory</span> field. This configuration is preferred over selecting the export <code class="docutils literal notranslate"><span class="pre">/vol/dir1/subdir1</span></code> and leaving the export subdirectory field blank.</p>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p class="last">Ensure that the core filer storage export has appropriate access policies in place, and will correctly allow or deny access to various clients and users. Refer to <a class="reference internal" href="export_rules_overview.html#export-rules-overview"><span class="std std-ref">Controlling Access to Core Filer Exports</span></a> and the <a class="reference internal" href="gui_export_policies.html#export-policies-page"><span class="std std-ref">VServer &gt; Export Policies</span></a> and <a class="reference internal" href="gui_export_rules.html#export-rules"><span class="std std-ref">VServer &gt; Export Rules</span></a> sections to learn more about configuring access.</p>
+</div>
+</li>
+</ol>
+<ol class="arabic" id="gns-subdirectory" start="6">
+<li><p class="first">Optionally, in the <span class="guilabel">Export Subdirectory</span> field, enter the name of a
+subdirectory of the core filer export.</p>
+<p>If you enter a value in this field, the namespace path will point to this subdirectory instead of to the core filer export directory.  This value is relative to the core filer export path; do not enter a leading backslash (<code class="docutils literal notranslate"><span class="pre">/</span></code>).</p>
+<p>If the subdirectory does not exist, the Avere OS software can create it. Make sure the <span class="guilabel">Auto-create Subdirectory</span> box is checked.</p>
+<p>For a cloud core filer, this option creates a subdirectory in the global namespace filesystem only. No subdirectories are created in the cloud bucket.</p>
+</li>
+</ol>
+<ol class="arabic" id="junction-export-policy" start="7">
+<li><p class="first">Use the <span class="guilabel">Export Policy</span> menu if you want to customize the client access policy used for this junction. By default, a junction inherits the access policy that is set on its parent junction. Setting an explicit policy on the junction overrides the inherited access policy.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>This setting can be important for core filers that only provide one export, at the root of the filesystem (<code class="docutils literal notranslate"><span class="pre">/</span></code>). Cloud core filers and some hardware solutions export only the root directory. The junction-level export policy feature allows administrators to create a virtual subdirectory in the global namespace for user access. You can assign more restrictive access permissions to that subdirectory and avoid exposing the core filer root export.</p>
+<p class="last">If you do not customize the access policy for a virtual subdirectory, you must grant clients the access privileges they need on the root export so that the subdirectory can inherit the necessary privileges. This configuration gives clients access to every file stored on the core filer.</p>
+</div>
+</li>
+</ol>
+<ol class="arabic" id="junction-smb-access-nh" start="8">
+<li><p class="first">Configure SMB access control:</p>
+<p>If this junction will be used for SMB (sometimes called CIFS), configure the junction’s SMB access control method.</p>
+<p>(To enable SMB access for this vserver, use the <a class="reference internal" href="gui_cifs.html#gui-cifs"><span class="std std-ref">VServer &gt; CIFS</span></a> and <a class="reference internal" href="gui_cifs_shares.html#gui-cifs-shares"><span class="std std-ref">VServer &gt; CIFS Shares</span></a> pages.)</p>
+</li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>From the <span class="guilabel">CIFS access control</span> drop-down list, choose the access control method to use for SMB clients on the junction. You must choose the method that is used on the core filer.<ul>
+<li>Choose <span class="guilabel">POSIX Mode Bits</span> for UNIX-style filesystems.</li>
+<li>Choose <span class="guilabel">CIFS ACLs</span> for NTFS filesystems.</li>
+<li>For a cloud core filer, you can choose either POSIX or ACL security style. Make sure the options in the <span class="guilabel">Permissions</span> field are correctly set for the security style you choose.</li>
+</ul>
+</li>
+</ul>
+<p>(An NFSv4 ACL option appears in the menu, but selecting it is not recommended.)</p>
+<p>Refer to <a class="reference internal" href="smb_access_control.html#smb-select-access-control"><span class="std std-ref">Selecting an Access Control Method for SMB</span></a> for information about SMB access-control mechanisms.</p>
+<ul class="simple">
+<li>If you chose <span class="guilabel">CIFS ACLs</span> and your core filer is a NAS system, you must specify an existing SMB share on the back-end core filer. ACL communication takes place between the SMB share on the vserver and the SMB share on the core filer. Enter the name in the <span class="guilabel">Core Filer Share Name</span> field.</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The SMB share should reference the exact same directory that was selected in the <span class="guilabel">Core Filer Export</span> setting. If the SMB share is for a different directory (for example, a subdirectory of the export), creating a FlashMove or FlashMirror job can fail.</p>
+</div>
+<p>If you used an export subdirectory, enter the same value in the <span class="guilabel">Core Filer Share Subdir</span> field. Do not enter a leading backslash (<code class="docutils literal notranslate"><span class="pre">/</span></code>). The system combines the core filer share name and core filer subdirectory to create the SMB path for this junction.</p>
+<a class="reference internal image-reference" href="_images/junction_cifs_config.png"><img alt="SMB configuration options" src="_images/junction_cifs_config.png" style="width: 450pt;" /></a>
+</div></blockquote>
+<ol class="arabic simple" start="9">
+<li>Click the <span class="guilabel">Next</span> button to submit the changes.</li>
+</ol>
+<p>Repeat this procedure until all required exports on all core filers are available on the desired namespace paths.</p>
+</div>
+<div class="section" id="modifying-junctions">
+<span id="edit-junction"></span><h2>Modifying Junctions<a class="headerlink" href="#modifying-junctions" title="Permalink to this headline">     </a></h2>
+<p>To modify an existing junction:</p>
+<ol class="arabic">
+<li><p class="first">Select the vserver containing the junctions that you want to change.</p>
+</li>
+<li><p class="first">In the table of junctions at the top of the page, identify the junctions that you want to change. Click the checkbox in each junction’s row, then click the  <span class="guilabel">Modify</span> button at the top of the table. You can select one junction or multiple junctions.</p>
+<p>The <span class="guilabel">Modify Junction</span> dialog appears.</p>
+</li>
+<li><p class="first">Make changes in the junction settings in the same way as when adding a junction. Refer to <a class="reference internal" href="#create-junction"><span class="std std-ref">Creating A Junction</span></a>, above, for details.</p>
+</li>
+<li><p class="first">If you selected multiple junctions, use the <span class="guilabel">Next</span> button to save this configuration and move to the next one. Page numbers at the lower left of the dialog show how many junctions are open for changes.</p>
+<p>The <span class="guilabel">Skip</span> button moves to the next junction’s page without saving changes on the current page. There is no way to return to a previous page; after saving the last change, you can re-select and modify any junction.</p>
+<a class="reference internal image-reference" href="_images/junction_edit_3x.png"><img alt="Dialog to edit multiple junctions" src="_images/junction_edit_3x.png" style="width: 450pt;" /></a>
+</li>
+<li><p class="first">After making changes, click <span class="guilabel">Next</span> to save the settings and close the dialog.</p>
+</li>
+</ol>
+</div>
+<div class="section" id="suspending-a-junction">
+<span id="suspend-junction"></span><h2>Suspending a Junction<a class="headerlink" href="#suspending-a-junction" title="Permalink to this headline">     </a></h2>
+<p>The Suspend feature lets you disable a junction without permanently removing it. This feature allows you to prevent access to a directory or an export without causing failures in the cluster.</p>
+<p>Core filers and vservers also can be suspended.</p>
+<p>The <span class="guilabel">(Un)Suspend</span> button toggles the state of the junction between active (online) and suspended (offline). Select one or more junctions by clicking the box in the <span class="guilabel">Actions</span> column. If you select an online junction, clicking the <span class="guilabel">(Un)Suspend</span> button will disable it; if you select a suspended junction, clicking the <span class="guilabel">(Un)Suspend</span> button will make it active.</p>
+<p>You can change the state of active and suspended junctions at the same time.</p>
+<a class="reference internal image-reference" href="_images/junction_unsuspend.png"><img alt="Suspending a junction" src="_images/junction_unsuspend.png" style="width: 500pt;" /></a>
+</div>
+<div class="section" id="deleting-a-junction">
+<span id="delete-junction"></span><h2>Deleting a Junction<a class="headerlink" href="#deleting-a-junction" title="Permalink to this headline">     </a></h2>
+<p>Deleting a junction removes the user-space pointer to the core filer volume. It does not remove any directories or files on the core filer.</p>
+<p>Deleting a junction does not discard any changes stored in the Avere cluster cache. Any changes to the junction’s data are written to the core filer even if the junction is removed.</p>
+<p>To delete a junction, select it in the <span class="guilabel">Actions</span> column and click the <span class="guilabel">Remove</span> button.</p>
+<p>A pop-up window appears, asking if you are sure you want to delete the junction. Choose OK to permanently remove the junction.</p>
+<p>A message confirms that the junction has been deleted.</p>
+</div>
+<div class="section" id="creating-a-new-data-migration-job-from-a-junction">
+<span id="junction-create-migration"></span><h2>Creating a New Data Migration Job From a Junction<a class="headerlink" href="#creating-a-new-data-migration-job-from-a-junction" title="Permalink to this headline">     </a></h2>
+<p>If your system has licenses for FlashMove or FlashMirror, you can create a new data management job from a junction directly from the <span class="guilabel">Namespace</span> page.</p>
+<p>Read <a class="reference external" href="https://ekpgh.github.io/Avere-1/legacy/data_management/4_7/html/migration_overview.html#migration-overview" title="(in Migration Guide v4.7)"><span>Using the Avere Cluster To Move or Mirror Data</span></a> for complete information about the data management capabilities in Avere OS.</p>
+<ol class="arabic">
+<li><p class="first">Select the junction that will be the data source for your FlashMove or FlashMirror job by clicking its <span class="guilabel">Actions</span> checkbox.</p>
+<ul class="simple">
+<li>If you want to use a subdirectory of the junction as the data source, you must use a custom source definition instead of selecting a junction; you can change the setting in the New Data Management Job wizard.</li>
+<li>You can create only one data management job, from one junction, at a time.</li>
+</ul>
+</li>
+<li><p class="first">Click the <span class="guilabel">Move/Mirror</span> button above the junctions table.</p>
+<p>The Avere Control Panel opens the <span class="guilabel">Add New Data Management Job</span> wizard with the junction pre-selected as the data source. The system automatically switches to the <span class="guilabel">Data Management</span> page.</p>
+<a class="reference internal image-reference" href="_images/new_migration_w_junction.png"><img alt="First page of Add New Data Management Job wizard" src="_images/new_migration_w_junction.png" style="width: 450pt;" /></a>
+</li>
+<li><p class="first">Complete the settings in the wizard and click <span class="guilabel">Add Job</span> to create the FlashMove or FlashMirror job.</p>
+<p>Read <a class="reference external" href="https://ekpgh.github.io/Avere-1/legacy/data_management/4_7/html/gui_create_migration.html#create-migration" title="(in Migration Guide v4.7)"><span>Creating a New FlashMove or FlashMirror Job</span></a> for help specifying the details.</p>
+</li>
+</ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Data management features like FlashMove and FlashMirror are licensed separately from the main Avere OS software. If your system does not have a valid license installed, an error message appears when the <span class="guilabel">Move/Mirror</span> button is clicked. Contact your Avere Systems representative for more information.</p>
+</div>
+<div class="last-update docutils container">
+updated 2017-11-15</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_client_network.html"
+                        title="previous chapter">VServer &gt; Client Facing Network</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_export_policies.html"
+                        title="next chapter">VServer &gt; Export Policies</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_export_policies.html" title="VServer &gt; Export Policies"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_client_network.html" title="VServer &gt; Client Facing Network"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

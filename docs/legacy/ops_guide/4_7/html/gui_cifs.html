@@ -1,0 +1,325 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>VServer &gt; CIFS &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="VServer &gt; CIFS Shares" href="gui_cifs_shares.html" />
+    <link rel="prev" title="VServer &gt; NFS" href="gui_nfs.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_cifs_shares.html" title="VServer &gt; CIFS Shares"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_nfs.html" title="VServer &gt; NFS"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="vserver-cifs">
+<span id="gui-cifs"></span><h1>VServer &gt; CIFS<a class="headerlink" href="#vserver-cifs" title="Permalink to this headline">     </a></h1>
+<img alt="CIFS Settings Page" src="_images/gui_cifs.png" />
+<p>The CIFS page lets you turn on SMB access for a particular vserver. SMB (which is called CIFS in configuration settings for historical reasons) is required to allow Windows clients to access NFS-controlled storage volumes.</p>
+<p>Note that many other systems and utilities must be configured and turned on for your vserver before you can enable SMB from this page. Read <a class="reference internal" href="smb_overview.html#smb-overview"><span class="std std-ref">Configuring SMB Access</span></a> for more complete information about configuring and enabling SMB on your system.</p>
+<div class="section" id="enabling-smb">
+<span id="index-0"></span><h2>Enabling SMB<a class="headerlink" href="#enabling-smb" title="Permalink to this headline">     </a></h2>
+<p>If your cluster has more than one vserver, choose the vserver to modify from the drop-down list in the left menu.</p>
+<p>The <span class="guilabel">Enable CIFS</span> checkbox can be used to turn SMB access on if the required setup is in place. If you want to disable SMB, clear the checkbox.</p>
+<p>The first time you enable SMB on a particular vserver, you must supply the information in <a class="reference internal" href="#smb-new-server"><span class="std std-ref">Creating an SMB Server</span></a>. After the first time, you can use the <span class="guilabel">Enable CIFS</span> checkbox to disable or enable SMB for the vserver without changing the configuration.</p>
+<div class="section" id="smb2">
+<h3>SMB2<a class="headerlink" href="#smb2" title="Permalink to this headline">     </a></h3>
+<p>Check <span class="guilabel">Enable SMB2</span> to use SMB version 2 protocol. Avere OS supports both SMB version 1 and SMB version 2.</p>
+<p>When SMB2 is enabled, SMB (version 1) clients use SMB, and SMB2 clients can use either SMB2 or SMB.</p>
+<p>If you do not check this box, the vserver only uses the older SMB version 1 protocol, and SMB2 clients must use the older SMB protocol.</p>
+</div>
+<div class="section" id="creating-an-smb-server">
+<span id="smb-new-server"></span><h3>Creating an SMB Server<a class="headerlink" href="#creating-an-smb-server" title="Permalink to this headline">     </a></h3>
+<p>When you turn on SMB for the first time on a particular vserver, Avere OS creates a machine account for the vserver in the Active Directory domain. This machine account is also called an SMB server.</p>
+<p>Use the following fields in the <span class="guilabel">Configuration</span> panel to define the required settings for a new SMB server.</p>
+<ul>
+<li><p class="first"><strong>Server Name</strong> - Enter the name that clients will see in the <span class="guilabel">Name for the CIFS server (the NetBIOS name)</span> field. The default is the name of the cluster.</p>
+<p>The name must be between 1 and 15 characters in length and can include only the characters A-Z, a-z, 0-9, and - (hyphen).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Although older Active Directory servers (before Windows 2000) can include the period character (.) in server names, Avere recommends not using this character in the NetBIOS name to avoid possible compatibility issues. (Windows NT<sup>®</sup> AD servers allow periods but not as the first character in the name.)</p>
+</div>
+<p>If you want to use the NetBIOS name to access the vserver, add a DNS server Host (A) record on your DNS server for each IP address assigned to the vserver.</p>
+<p>Changing the NetBIOS name after it has been configured requires an AD administrator username and password.</p>
+</li>
+<li><p class="first"><strong>Administrative User Name</strong> - Enter the name of an existing AD administrator account  in the <span class="guilabel">Admin username</span> field.</p>
+<p>An administrator username and password is required the first time you set up SMB on this vserver, then only if you change certain properties like the NetBIOS or OU name.</p>
+</li>
+<li><p class="first"><strong>Administrative Password</strong> - Enter the password for the administrative user in the <span class="guilabel">Admin password</span> field. (Leave this blank if the AD administrator account in the previous field has no password.)</p>
+</li>
+<li><p class="first"><strong>Organizational Unit</strong> (optional) - If you want to use an Active Directory OU for the vserver’s machine account, enter the name in the <span class="guilabel">Organizational Unit</span> field.</p>
+<p>Note the format for specifying the OU in Avere OS; the OU name elements must be specified in reverse order from the distinguished name and canonical names. Example:</p>
+</li>
+</ul>
+<table border="1" class="docutils">
+<colgroup>
+<col width="47%" />
+<col width="53%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>CN</td>
+<td><code class="docutils literal notranslate"><span class="pre">ad.example.com/ou1/ou2/TEST</span></code></td>
+</tr>
+<tr class="row-even"><td>DN</td>
+<td><code class="docutils literal notranslate"><span class="pre">CN=Test,OU=ou2,OU=ou1,DC=ad,DC=example,DC=com</span></code></td>
+</tr>
+<tr class="row-odd"><td>Avere OS <span class="guilabel">Organizational Unit</span> setting</td>
+<td><code class="docutils literal notranslate"><span class="pre">ou2/ou1</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>Click <span class="guilabel">Submit</span> to save the changes and create the SMB server.</p>
+<p>After this vserver has joined the AD domain, the <span class="guilabel">Machine Account</span> panel will show the fully qualified domain name of the AD domain, the status <code class="docutils literal notranslate"><span class="pre">JOINED</span></code>, and a distinguished name based on the netBIOS name specified. Also, the active directory server will include a machine account with the netBIOS name given to the vserver’s SMB server.</p>
+</div>
+<div class="section" id="additional-smb-settings">
+<h3>Additional SMB Settings<a class="headerlink" href="#additional-smb-settings" title="Permalink to this headline">     </a></h3>
+<p>Additional SMB options can be configured on this page. These settings are not required when you first enable SMB on a vserver.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>To change the Native Identity or Read-Only Optimization settings, you must restart SMB. There are three steps:</p>
+<ol class="last arabic simple">
+<li>Change the setting and click <span class="guilabel">Submit</span> to save the change.</li>
+<li><em>Uncheck</em> the <span class="guilabel">Enable CIFS</span> box, and click <span class="guilabel">Submit</span> to disable SMB for the vserver.</li>
+<li>Check the <span class="guilabel">Enable CIFS</span> box, and click <span class="guilabel">Submit</span> to re-enable SMB.</li>
+</ol>
+</div>
+<ul class="simple">
+<li><strong>Native Identity</strong> (optional) - When using ACLs, the Native Identity feature allows an SMB-enabled vserver to read the identities of users and groups as defined natively by the NAS storage system, instead of requiring a user/group mapping on the Avere cluster.</li>
+</ul>
+<p>The method to use for user authentication is specified in the <span class="guilabel">Directory Services</span> configuration, which is part of the the <span class="guilabel">Cluster</span> settings section.</p>
+<p>You also must configure Kerberos constrained delegation when using native identity with NAS core filers - read <a class="reference internal" href="native_identity_overview.html#native-identity-overview"><span class="std std-ref">Native Identity</span></a> for details.</p>
+<p>You must restart SMB before the changed Native Identity setting takes effect.</p>
+<ul class="simple">
+<li><strong>Read-Only Optimization</strong> (optional) - Check this box to enable performance optimization on read-only SMB shares. This optimization is only effective for vservers where all of the SMB shares are read-only.</li>
+</ul>
+<p>You must restart SMB before the changed optimization setting takes effect.</p>
+<ul class="simple">
+<li><strong>Guest User</strong> (optional) - The <span class="guilabel">Guest account</span> field specifies the username to assign to users that do not appear in the password database. This option applies only to SMB shares that allow guest access. The default value is <code class="docutils literal notranslate"><span class="pre">nobody</span></code>.</li>
+</ul>
+</div>
+<div class="section" id="local-groups-configuration">
+<h3>Local Groups Configuration<a class="headerlink" href="#local-groups-configuration" title="Permalink to this headline">     </a></h3>
+<p>The <span class="guilabel">Local Groups</span> setting allows administrators to create or mirror core-filer-specific access groups in the Avere cluster.</p>
+<p>Using this feature is only sometimes necessary. If you do not need to grant special access to core filers, use Active Directory groups and leave this configuration empty.</p>
+<p>Two types of local groups are currently supported: <span class="guilabel">Administrators</span> and <span class="guilabel">Run as root</span>.</p>
+<div class="section" id="administrators">
+<h4>Administrators<a class="headerlink" href="#administrators" title="Permalink to this headline">     </a></h4>
+<p>Windows users in the <span class="guilabel">Administrators</span> group are recognized as administrators on the core filer.</p>
+<p>This local group allows core filer administrators to grant the same type of access that members of the AD Domain Administrators group have. For example, you can use this group to give a user administrator-level access to a particular core filer without adding that user to the AD Domain Administrators group (which affects all core filers).</p>
+<p>In the case of filesystem recovery or domain transition operations, this group can be used to quickly grant access to a new set of administrators. The Windows SID for this group is a well-known value across all domains, but the SID for the Active Directory Domain Administrators group is different for different domains. Adding the new administrators to this local administrators group allows them to access all of the core filers in the cluster without having to update each AD ACL in each domain.</p>
+</div>
+<div class="section" id="run-as-root">
+<h4>Run As Root<a class="headerlink" href="#run-as-root" title="Permalink to this headline">     </a></h4>
+<p><span class="guilabel">Run as root</span> gives Windows users in this group root privileges on the core filer.</p>
+<p>This option should be used if system access control lists (SACLs) must be modified, because some core filer vendors allow only members of this local group to modify SACLs. Without this setting, it is possible for a SACL modification cached in the cluster to be rejected by the core filer.</p>
+<p>If you do not need to modify SACLs, do not use this setting.</p>
+</div>
+<div class="section" id="best-practices">
+<h4>Best Practices<a class="headerlink" href="#best-practices" title="Permalink to this headline">     </a></h4>
+<p>In general, group solutions that use Active Directory exclusively are easier to maintain than configurations that mix AD groups and Local Groups. Changing group membership on the core filer does not automatically change the settings in the Avere cluster, so these settings must be kept in sync manually.</p>
+<p>When Local Groups must be used, the recommended practice is to set the same group membership for the Avere vserver’s Local Groups and all of the vserver’s core filers.  This practice avoids possible confusion or collisions caused by attempting to replicate individual core filer groups in one Local Groups setting.</p>
+</div>
+<div class="section" id="adding-users">
+<h4>Adding Users<a class="headerlink" href="#adding-users" title="Permalink to this headline">     </a></h4>
+<p>Click the <span class="guilabel">Modify</span> button to add users or user groups to the <code class="docutils literal notranslate"><span class="pre">Administrators</span></code> or <code class="docutils literal notranslate"><span class="pre">Run</span> <span class="pre">as</span> <span class="pre">root</span></code> group.</p>
+<p>Two formats can be used to specify group members:</p>
+<ul class="simple">
+<li>Windows usernames or group names, including the domain prefix (for example, <code class="docutils literal notranslate"><span class="pre">NY22\JoeB</span></code>)</li>
+<li>Security IDs (for example, <code class="docutils literal notranslate"><span class="pre">S-1-0-0</span></code>)</li>
+</ul>
+<p>Separate multiple entries with commas.</p>
+<p>The <span class="guilabel">Revert</span> button discards current changes in this group and returns to the last saved setting.</p>
+<p>Use the <span class="guilabel">Submit</span> button to save changes in both groups.</p>
+<div class="last-update docutils container">
+updated 2017-11-15</div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_nfs.html"
+                        title="previous chapter">VServer &gt; NFS</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_cifs_shares.html"
+                        title="next chapter">VServer &gt; CIFS Shares</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_cifs_shares.html" title="VServer &gt; CIFS Shares"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_nfs.html" title="VServer &gt; NFS"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

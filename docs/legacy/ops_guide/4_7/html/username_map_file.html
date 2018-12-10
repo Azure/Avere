@@ -1,0 +1,269 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Appendix E: SMB-UNIX Username Mapping &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Appendix F: Configuring Active Directory for Avere SMB" href="smb_ad_admin_guide.html" />
+    <link rel="prev" title="Appendix D: Port Configuration" href="required_ports.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="smb_ad_admin_guide.html" title="Appendix F: Configuring Active Directory for Avere SMB"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="required_ports.html" title="Appendix D: Port Configuration"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="appendixes.html" accesskey="U">Appendixes</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="appendix-e-smb-unix-username-mapping">
+<span id="username-map-file"></span><h1>Appendix E: SMB-UNIX Username Mapping<a class="headerlink" href="#appendix-e-smb-unix-username-mapping" title="Permalink to this headline">     </a></h1>
+<p>In some cases, you need to supply a mapping file that links Windows usernames to their NFS (UNIX-style) counterparts.</p>
+<p>A mapping file is only necessary if both of these conditions are true:</p>
+<ul class="simple">
+<li>You are using SMB to access a junction that uses POSIX mode bit security</li>
+<li>One or more users who will access the junction with SMB have different usernames on Windows-style systems and UNIX-style systems (for example, user Jane Smith’s Windows username is <code class="docutils literal notranslate"><span class="pre">Jane</span> <span class="pre">Smith</span></code> but her UNIX username is <code class="docutils literal notranslate"><span class="pre">smithj</span></code>)</li>
+</ul>
+<div class="section" id="about-username-mapping">
+<h2>About Username Mapping<a class="headerlink" href="#about-username-mapping" title="Permalink to this headline">     </a></h2>
+<p>When creating a mapping, be aware of the following tips about how the Avere cluster identifies users when using SMB to access a POSIX mode bit junction:</p>
+<ul class="simple">
+<li>The cluster vserver uses the Windows username when authenticating the user.</li>
+<li>The cluster vserver uses the NFS username when accessing data on the core filer.</li>
+</ul>
+<p>In other words, the user is <em>authenticated</em> with the Windows identity but <em>authorized</em> with the NFS identity. So file access is controlled with the NFS username.</p>
+<p>Mapping files are specified at the cluster level. Settings for all affected vservers should be included in one file.</p>
+</div>
+<div class="section" id="creating-a-username-map-file">
+<h2>Creating a Username Map File<a class="headerlink" href="#creating-a-username-map-file" title="Permalink to this headline">     </a></h2>
+<p>The username map file should be a plain text file. Store it in a location where your cluster vservers can access it through a URI.</p>
+<p>Format the username map as follows:</p>
+<ul>
+<li><p class="first">Each line maps one username in the format <em>UNIX_username</em>=<em>AD_DOMAIN</em>\<em>Windows_username</em> where:</p>
+<ul class="simple">
+<li><em>UNIX_username</em> is the user’s NFS username.</li>
+<li><em>AD_DOMAIN</em> is the cluster’s Active Directory domain.</li>
+<li><em>Windows_username</em> is the user’s Windows username. If the Windows username includes spaces, enclose it in double quotation marks.</li>
+</ul>
+<p>Example:  <code class="docutils literal notranslate"><span class="pre">smithj=HOME3\&quot;Jane</span> <span class="pre">Smith&quot;</span></code></p>
+</li>
+<li><p class="first">A line that begins with a pound symbol (#) is treated as a comment.</p>
+</li>
+</ul>
+<p>Refer to the <a class="reference internal" href="#mapping-file-example"><span class="std std-ref">example file</span></a> below.</p>
+</div>
+<div class="section" id="adding-the-map-file-to-the-cluster">
+<h2>Adding the Map File to the Avere cluster<a class="headerlink" href="#adding-the-map-file-to-the-cluster" title="Permalink to this headline">     </a></h2>
+<p>Specify the mapping file on the <a class="reference internal" href="gui_directory_services.html#gui-directory-services"><span class="std std-ref">Cluster &gt; Directory Services</span></a> settings page. The control for specifying the file does not appear in the setup wizard, only in the configuration details page - read <a class="reference internal" href="gui_directory_services.html#ds-config-details"><span class="std std-ref">The Directory Services Configuration Details Page</span></a> for more information.</p>
+</div>
+<div class="section" id="file-example">
+<span id="mapping-file-example"></span><h2>File Example<a class="headerlink" href="#file-example" title="Permalink to this headline">     </a></h2>
+<p>The following is an example of a username map file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># The next line maps the UNIX user timmy to the Windows user</span>
+<span class="c1"># &quot;Timothy Primate&quot; in the AD domain MYDOMAIN:</span>
+<span class="n">timmy</span><span class="o">=</span><span class="n">MYDOMAIN</span>\<span class="s2">&quot;Timothy Primate&quot;</span>
+<span class="c1">#</span>
+<span class="c1"># The next lines map more UNIX usernames to Windows usernames</span>
+<span class="c1"># in the same AD domain:</span>
+<span class="n">cgflynn</span><span class="o">=</span><span class="n">MYDOMAIN</span>\<span class="s2">&quot;C. Gertrude Flynn&quot;</span>
+<span class="n">fletch</span><span class="o">=</span><span class="n">MYDOMAIN</span>\<span class="s2">&quot;Lawrence Fletcher&quot;</span>
+<span class="n">jeremyj</span><span class="o">=</span><span class="n">MYDOMAIN</span>\<span class="s2">&quot;Jeremy Johnson&quot;</span>
+<span class="n">perry</span><span class="o">=</span><span class="n">MYDOMAIN</span>\<span class="s2">&quot;Perry Monotreme&quot;</span>
+<span class="n">vanessa</span><span class="o">=</span><span class="n">MYDOMAIN</span>\<span class="s2">&quot;Vanessa Doofenshmirtz&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="appendixes.html">Appendixes</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="install_licenses.html">Appendix A: Adding or Removing Feature Licenses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security_prereqs.html">Appendix B: Security Requirements for Administrative Systems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="url_polling.html">Appendix C: Implementing a URL Polling Agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="required_ports.html">Appendix D: Port Configuration</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Appendix E: SMB-UNIX Username Mapping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smb_ad_admin_guide.html">Appendix F: Configuring Active Directory for Avere SMB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smb_netapp_config-4-6.html">Appendix G: Configuring NetApp Filers for Avere SMB ACLs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aws_vfxt_policy.html">Appendix H: Updating Cloud Storage Permissions for an AWS vFXT Cluster</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="required_ports.html"
+                        title="previous chapter">Appendix D: Port Configuration</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="smb_ad_admin_guide.html"
+                        title="next chapter">Appendix F: Configuring Active Directory for Avere SMB</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="smb_ad_admin_guide.html" title="Appendix F: Configuring Active Directory for Avere SMB"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="required_ports.html" title="Appendix D: Port Configuration"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="appendixes.html" >Appendixes</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

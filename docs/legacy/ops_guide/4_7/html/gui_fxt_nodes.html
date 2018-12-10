@@ -1,0 +1,272 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Cluster &gt; FXT Nodes &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Node Details" href="gui_node_details.html" />
+    <link rel="prev" title="Cluster &gt; Proxy Configuration" href="gui_proxy_config.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_node_details.html" title="Node Details"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_proxy_config.html" title="Cluster &gt; Proxy Configuration"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="cluster-fxt-nodes">
+<span id="gui-fxt-nodes"></span><h1>Cluster &gt; FXT Nodes<a class="headerlink" href="#cluster-fxt-nodes" title="Permalink to this headline">     </a></h1>
+<a class="reference internal image-reference" href="_images/gui_fxt_nodes.png"><img alt="FXT Nodes page" src="_images/gui_fxt_nodes.png" style="width: 800px;" /></a>
+<p>The <span class="guilabel">FXT Nodes</span> page displays information about the nodes that are in the cluster, as well as a list of unconfigured FXT nodes that are visible to the cluster on the network.</p>
+<p>From this page, you can do the following:</p>
+<ul class="simple">
+<li>Load the <span class="guilabel">Node Details</span> page for a cluster node</li>
+<li><a class="reference internal" href="#add-node"><span class="std std-ref">Add nodes</span></a> to the cluster</li>
+<li>Restart or shut down a node</li>
+<li>Suspend a node</li>
+<li>Remove nodes from the cluster</li>
+</ul>
+<div class="admonition caution">
+<p class="first admonition-title">Caution</p>
+<p class="last">Any operations that affect the node’s connectivity to an active cluster, including removal, restart, and shutdown, can cause temporary service disruptions to clients.</p>
+</div>
+<div class="section" id="about-the-node-details-page">
+<h2>About the Node Details Page<a class="headerlink" href="#about-the-node-details-page" title="Permalink to this headline">     </a></h2>
+<p>Click the name of an FXT node in the list to load its <span class="guilabel">Node Details</span> page. This page gives node-specific information including configuration, performance statistics, hardware information, node storage, and core filer connections, for one specific node in the cluster.</p>
+<p>The <span class="guilabel">Node Details</span> page has some node-specific settings. You can customize the node name and IPMI configuration. It also has an interactive node diagram that highlights failed drives and lets you turn on the drive bay light for unit identification.</p>
+<p>The <span class="guilabel">Node Details</span> page does not appear in the sidebar list; you must access it by clicking a node name link on other settings pages.</p>
+<p>Read <a class="reference internal" href="gui_node_details.html#gui-node-details"><span class="std std-ref">Node Details</span></a> for complete information.</p>
+</div>
+<div class="section" id="adding-nodes-to-the-cluster">
+<span id="add-node"></span><h2>Adding Nodes to the Cluster<a class="headerlink" href="#adding-nodes-to-the-cluster" title="Permalink to this headline">     </a></h2>
+<p>You can add a node to the cluster by finding the node in the unjoined nodes list and clicking the <span class="guilabel">Allow To Join</span> button in its <span class="guilabel">Actions</span> column.</p>
+<p>Node names are automatically assigned as each node joins a cluster. You can customize the node naming scheme on the <a class="reference internal" href="gui_cluster_general_setup.html#gui-cluster-general-setup"><span class="std std-ref">Cluster &gt; General Setup</span></a> page.</p>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p class="last">When a new node is added to the cluster, all client and core filer interfaces are automatically rebalanced across all nodes, including the new node. This can result in a brief suspension of file services; however, data is not at risk of loss or corruption.</p>
+</div>
+<div class="section" id="updating-node-software">
+<h3>Updating Node Software<a class="headerlink" href="#updating-node-software" title="Permalink to this headline">     </a></h3>
+<p>If you attempt to add a node running on an older software version, Avere OS will attempt to upgrade the software to match the version on the existing cluster nodes. You can use the <span class="guilabel">Match OS Version</span> button to update software before adding the node.</p>
+<p>The <span class="guilabel">Match OS Version</span> button also can be used on unjoined nodes to keep reserve nodes updated to the same version of the software running on the cluster nodes.</p>
+</div>
+<div class="section" id="searching-for-a-node">
+<h3>Searching For a Node<a class="headerlink" href="#searching-for-a-node" title="Permalink to this headline">     </a></h3>
+<p>If a node does not appear in the unjoined nodes list, you can search for it. Click the <span class="guilabel">Manual Discovery</span> button and enter its IP address in the search box.</p>
+<a class="reference internal image-reference" href="_images/node_manual_discovery.png"><img alt="Searching for an FXT node" src="_images/node_manual_discovery.png" style="width: 450px;" /></a>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">After a node is removed from the cluster, it might not appear on the unjoined nodes list for several minutes. If the node does not appear within ten minutes and cannot be found by searching, contact Avere Global Services.</p>
+</div>
+</div>
+</div>
+<div class="section" id="node-actions">
+<span id="id1"></span><h2>Node Actions<a class="headerlink" href="#node-actions" title="Permalink to this headline">     </a></h2>
+<p>The <span class="guilabel">Actions</span> column in the Cluster Nodes table provides access to most node functions. Options include the following:</p>
+<dl class="docutils">
+<dt><span class="guilabel">Restart Services</span></dt>
+<dd>Restarts all Avere OS services on the node without rebooting the node.</dd>
+<dt><span class="guilabel">Reboot</span></dt>
+<dd>Restarts a node.</dd>
+<dt><span class="guilabel">Power Down</span></dt>
+<dd>Shuts down a node completely. Use this option when moving a node to another physical location.</dd>
+<dt><span class="guilabel">Remove</span></dt>
+<dd>Permanently removes a node from the cluster.</dd>
+<dt><span class="guilabel">Reformat</span></dt>
+<dd><p class="first">Reformats data drives on the node. This feature can be used to format replacement drives after a drive failure.</p>
+<p class="last">If the cluster detects a drive problem, it automatically reformats the affected drive and takes it out of service (the node runs on its remaining drives). A condition notice appears on the dashboard to indicate that the physical drive should be replaced. To incorporate the replacement drive in the system, administrators must manually click the <span class="guilabel">Reformat</span> button. Only one node can be reformatted at a time.</p>
+</dd>
+<dt><span class="guilabel">Offline</span></dt>
+<dd>Stops all node services but leaves the node powered on.</dd>
+<dt><span class="guilabel">Suspend</span></dt>
+<dd>Temporarily stops a node from answering client requests. This option can help you determine whether or not a node is causing a cluster problem.</dd>
+</dl>
+<div class="last-update docutils container">
+updated 2017-11-15</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_proxy_config.html"
+                        title="previous chapter">Cluster &gt; Proxy Configuration</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_node_details.html"
+                        title="next chapter">Node Details</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_node_details.html" title="Node Details"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_proxy_config.html" title="Cluster &gt; Proxy Configuration"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

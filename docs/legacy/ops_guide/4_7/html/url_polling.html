@@ -1,0 +1,273 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Appendix C: Implementing a URL Polling Agent &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Appendix D: Port Configuration" href="required_ports.html" />
+    <link rel="prev" title="Appendix B: Security Requirements for Administrative Systems" href="security_prereqs.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="required_ports.html" title="Appendix D: Port Configuration"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="security_prereqs.html" title="Appendix B: Security Requirements for Administrative Systems"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="appendixes.html" accesskey="U">Appendixes</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="appendix-c-implementing-a-url-polling-agent">
+<span id="url-polling"></span><h1>Appendix C: Implementing a URL Polling Agent<a class="headerlink" href="#appendix-c-implementing-a-url-polling-agent" title="Permalink to this headline">     </a></h1>
+<p>A polling agent is a CGI script external to the Avere cluster that can monitor and report on the progress of the core filer’s backup job. The agent can be written in any language that supports CGI, including scripting languages such as Perl and Python, and compiled languages such as C, C++, and Java. (See RFC 3875 for information about the components of a CGI script.)</p>
+<p>When URL polling is set, and all changed data has been written to the core filer, the Avere cluster checks the URL of the CGI script approximately every 10 seconds during the time period specified by the cluster schedule.</p>
+<p>The CGI script must accept the arguments <code class="docutils literal notranslate"><span class="pre">mass</span></code> (a legacy term for a core filer) and <code class="docutils literal notranslate"><span class="pre">targetTime</span></code>, where <em>mass</em> is the name of the core filer and <em>targetTime</em> is a UNIX timestamp representing the next scheduled write-through period.</p>
+<p>It must also return the string <code class="docutils literal notranslate"><span class="pre">RELEASE</span> <span class="pre">Core</span> <span class="pre">Filer</span> <span class="pre">SYNC</span></code> when the core filer’s backup process has completed.</p>
+<div class="section" id="cgi-script-example">
+<h2>CGI Script Example<a class="headerlink" href="#cgi-script-example" title="Permalink to this headline">     </a></h2>
+<p>A simple example CGI script written in Python follows.</p>
+<p>Note that this script does not include any logic for monitoring the status of the core filer. For that information, refer to your core filer’s documentation, particularly any API documentation.</p>
+<div class="admonition caution">
+<p class="first admonition-title">Caution</p>
+<p class="last">This simple example is not secure enough to be used in an internet-exposed system. To improve security, validate all inputs, and consider moving the state file out of /tmp and using a more secure filename pattern.</p>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#! /usr/bin/env python</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">cgi</span>
+<span class="n">cgiArgs</span> <span class="o">=</span> <span class="n">cgi</span><span class="o">.</span><span class="n">FieldStorage</span><span class="p">(</span><span class="n">keep_blank_values</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">corefiler</span> <span class="o">=</span> <span class="n">cgiArgs</span><span class="o">.</span><span class="n">getfirst</span><span class="p">(</span><span class="s1">&#39;mass&#39;</span><span class="p">)</span>
+<span class="n">targetTime</span> <span class="o">=</span> <span class="n">cgiArgs</span><span class="o">.</span><span class="n">getfirst</span><span class="p">(</span><span class="s1">&#39;targetTime&#39;</span><span class="p">)</span>
+<span class="n">response</span> <span class="o">=</span> <span class="s2">&quot;must supply corefiler and targetTime arguments&quot;</span>
+<span class="k">if</span> <span class="n">corefiler</span> <span class="ow">and</span> <span class="n">targetTime</span><span class="p">:</span>
+    <span class="n">statefile</span> <span class="o">=</span> <span class="s2">&quot;/tmp/STATE.</span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">corefiler</span><span class="p">,</span><span class="n">targetTime</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">statefile</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">O_CREAT</span><span class="o">|</span><span class="n">os</span><span class="o">.</span><span class="n">O_RDWR</span><span class="p">))</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">statefile</span><span class="p">,</span> <span class="s2">&quot;r+&quot;</span><span class="p">)</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">l</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="s2">&quot;starting backup operation&quot;</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;start</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">l</span> <span class="o">==</span> <span class="s2">&quot;start</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="s2">&quot;waiting for backup operation to complete (1)&quot;</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;wait1</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">l</span> <span class="o">==</span> <span class="s2">&quot;wait1</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="s2">&quot;waiting for backup operation to complete (2)&quot;</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;wait2</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">l</span> <span class="o">==</span> <span class="s2">&quot;wait2</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="s2">&quot;waiting for backup operation to complete (3)&quot;</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;wait3</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="s2">&quot;backup complete.</span><span class="se">\n</span><span class="s2">It&#39;s time to RELEASE Core Filer SYNC</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">statefile</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="nb">print</span> <span class="s2">&quot;Content-Type: text/plain&quot;</span>
+<span class="nb">print</span> <span class="s2">&quot;Pragma: no-cache&quot;</span>
+<span class="nb">print</span> <span class="s2">&quot;Cache-Control: no-cache, must-revalidate&quot;</span>
+<span class="nb">print</span> <span class="s2">&quot;Expires: Sat, 26 Jul 1997 05:00:00 GMT&quot;</span>
+<span class="nb">print</span>
+<span class="nb">print</span> <span class="n">response</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="last-update docutils container">
+updated 2017-11-15</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="appendixes.html">Appendixes</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="install_licenses.html">Appendix A: Adding or Removing Feature Licenses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="security_prereqs.html">Appendix B: Security Requirements for Administrative Systems</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Appendix C: Implementing a URL Polling Agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="required_ports.html">Appendix D: Port Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="username_map_file.html">Appendix E: SMB-UNIX Username Mapping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smb_ad_admin_guide.html">Appendix F: Configuring Active Directory for Avere SMB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smb_netapp_config-4-6.html">Appendix G: Configuring NetApp Filers for Avere SMB ACLs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aws_vfxt_policy.html">Appendix H: Updating Cloud Storage Permissions for an AWS vFXT Cluster</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="security_prereqs.html"
+                        title="previous chapter">Appendix B: Security Requirements for Administrative Systems</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="required_ports.html"
+                        title="next chapter">Appendix D: Port Configuration</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="required_ports.html" title="Appendix D: Port Configuration"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="security_prereqs.html" title="Appendix B: Security Requirements for Administrative Systems"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="appendixes.html" >Appendixes</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

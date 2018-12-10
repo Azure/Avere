@@ -1,0 +1,278 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Administration &gt; Login Services &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Administration &gt; Hidden Alerts" href="gui_hidden_alerts.html" />
+    <link rel="prev" title="Administration &gt; Users" href="gui_users.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_hidden_alerts.html" title="Administration &gt; Hidden Alerts"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_users.html" title="Administration &gt; Users"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="administration-login-services">
+<span id="gui-login-services"></span><h1>Administration &gt; Login Services<a class="headerlink" href="#administration-login-services" title="Permalink to this headline">     </a></h1>
+<img alt="Login Services settings page" src="_images/gui_login_services.png" />
+<p>On the <span class="guilabel">Login Services</span> page, you can configure an LDAP or Active Directory (AD) server to supply usernames and groups for authorizing access to the Avere Control Panel.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This page only configures directory services for the cluster login (Avere Control Panel). This system is not used to authenticate client requests (see the <a class="reference internal" href="gui_directory_services.html#gui-directory-services"><span class="std std-ref">Cluster &gt; Directory Services</span></a> settings page to configure client access).</p>
+</div>
+<p id="ldap-checklist">There are multiple steps to configuring LDAP/AD-based login services:</p>
+<ol class="arabic">
+<li><p class="first">Use the <span class="guilabel">LDAP</span> section on this page to specify one or more LDAP or AD servers</p>
+</li>
+<li><p class="first">Use the <span class="guilabel">Login</span> section to choose LDAP as the user source</p>
+</li>
+<li><p class="first">Create an <code class="docutils literal notranslate"><span class="pre">AvereAdmins</span></code> group in your directory services system, as described <a class="reference internal" href="#avere-admins"><span class="std std-ref">below</span></a>.</p>
+</li>
+<li><p class="first">To enable secure access, you must also do the following:</p>
+<ul>
+<li><p class="first">Click the <span class="guilabel">Secure access</span> checkbox on this page.</p>
+</li>
+<li><p class="first">Open ports 636 and 389 to the LDAP service.</p>
+<p>Port 636 is used for secure LDAP (over SSL, also known as LDAPS). Port 389 is used for STARTTLS access, which is used to authenticate the Avere cluster using the standard LDAP port in order to establish the LDAPS.</p>
+</li>
+</ul>
+</li>
+</ol>
+<div class="section" id="the-avere-admins-group">
+<span id="avere-admins"></span><span id="index-0"></span><h2>The Avere Admins Group<a class="headerlink" href="#the-avere-admins-group" title="Permalink to this headline">     </a></h2>
+<p>Avere OS recognizes users in a group named <code class="docutils literal notranslate"><span class="pre">AvereAdmins</span></code> as having configuration privileges for the cluster. Users in the AvereAdmins group automatically have <span class="guilabel">full access</span> privileges to the Avere Control Panel and command-line interface:</p>
+<ul class="simple">
+<li>AvereAdmins users have full access privileges on the Avere Control Panel - they can both monitor and configure the cluster from the web interface.</li>
+</ul>
+<ul class="simple">
+<li>Users in the AvereAdmins group can make XML-RPC calls to configure the cluster from a remote system.</li>
+</ul>
+<p>You can set up this group on your AD or LDAP server. Follow the standard procedure for creating user groups on your AD or LDAP system, but be careful to use the correct syntax to specify group members for your system, as explained in the note below.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Depending on which system you use, the syntax for specifying group members is different.</p>
+<ul class="last simple">
+<li>For an AD server, use the <code class="docutils literal notranslate"><span class="pre">member</span></code> attribute to specify group members.</li>
+<li>For a non-AD server with an RFC2307 schema, you must use the attribute <code class="docutils literal notranslate"><span class="pre">memberUid</span></code>.</li>
+</ul>
+</div>
+<p>If you use the incorrect schema to encode group members, the members might not be recognized by the Avere system.</p>
+</div>
+<div class="section" id="specifying-the-server">
+<h2>Specifying the Server<a class="headerlink" href="#specifying-the-server" title="Permalink to this headline">     </a></h2>
+<p>Use the LDAP section of the <span class="guilabel">Login Services</span> page to specify the servers to use for authenticating users logging in to the cluster. Fill in the directory service information as required.</p>
+<dl class="docutils">
+<dt><span class="guilabel">LDAP Server</span></dt>
+<dd>Enter the IP address or fully qualified domain names for up to three LDAP or AD servers. Separate multiple entries with spaces.</dd>
+<dt><span class="guilabel">LDAP base DN</span></dt>
+<dd>Enter the base name of the LDAP domain.</dd>
+<dt><span class="guilabel">Secure access</span></dt>
+<dd><p class="first">Check this box if you want the system to encrypt all LDAP connections.</p>
+<p>When you check the <span class="guilabel">Secure access</span> box, additional security options appear:</p>
+<ul class="simple">
+<li><span class="guilabel">Require valid certificate</span> checkbox - Uncheck this box if you use self-signed certificates.</li>
+<li><span class="guilabel">CA certificate URI</span> field - If using a certificate authority, you must specify the resource identifier for downloading a signed certificate in this field. Click <span class="guilabel">Download Now</span> to test the URI by retrieving the certificate. Otherwise, the system will attempt to download the certificate when you click <span class="guilabel">Submit</span>.</li>
+</ul>
+<p class="last">In addition to the information on this page, you must make sure that ports 636 and 389 are open to the LDAP service, as mentioned in the <a class="reference internal" href="#ldap-checklist"><span class="std std-ref">first section</span></a> of this document.</p>
+</dd>
+<dt><span class="guilabel">Bind DN</span> and <span class="guilabel">Bind password</span></dt>
+<dd>Name and password to transmit for secure LDAP connections</dd>
+</dl>
+</div>
+<div class="section" id="specifying-the-login-username-sources">
+<h2>Specifying the Login Username Sources<a class="headerlink" href="#specifying-the-login-username-sources" title="Permalink to this headline">     </a></h2>
+<p>Use the drop-down selector in the  <span class="guilabel">Login</span> section of the page to choose the source for login names.</p>
+<a class="reference internal image-reference" href="_images/gui_login_source.png"><img alt="Choosing the source of login names" src="_images/gui_login_source.png" style="width: 450px;" /></a>
+<p>Choose <span class="guilabel">Local</span> to use only the individual accounts set up on the <a class="reference internal" href="gui_users.html#gui-users"><span class="std std-ref">Administration &gt; Users</span></a> page, or <span class="guilabel">Local/LDAP</span> to use both the individual accounts and the LDAP or AD servers configured on this page.</p>
+<p>You cannot unselect the <span class="guilabel">Local</span> option (that is, you cannot manage logins exclusively from a directory server); the Avere Control Panel always must have a locally defined administrator account.</p>
+<div class="last-update docutils container">
+updated 2017-11-15</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_users.html"
+                        title="previous chapter">Administration &gt; Users</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_hidden_alerts.html"
+                        title="next chapter">Administration &gt; Hidden Alerts</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_hidden_alerts.html" title="Administration &gt; Hidden Alerts"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_users.html" title="Administration &gt; Users"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>
