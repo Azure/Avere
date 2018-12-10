@@ -1,0 +1,36 @@
+Prerequisites for Adding a New Core Filer
+
+Before starting to configure the core filer on the cluster, make sure
+you have the following information.
+
+For a NAS core filer:
+
+The fully qualified domain name of the core filer (for example,
+nas1.example.com).  Note that you must use the domain name instead of
+an IP address in order to access the core filer with SMB.
+
+For a cloud core filer:
+
+A valid and active license for FlashCloud on this cluster. Read
+Appendix A: Adding or Removing Feature Licenses for more information.
+
+An existing credential for your cloud storage provider, or the access
+and private keys to create a new one
+
+The name of an existing cloud storage container
+
+Encryption details - whether or not to encrypt the core filer, and the
+type of key storage used. If using KMIP, you should have a key server
+set up before creating the core filer; read Configuring KMIP for an
+Avere cluster to learn how.
+
+The Add New Core Filer wizard guides you through the steps to define a
+new storage volume. Start the wizard by clicking the Create label from
+the Manage Core Filer page.
+
+The steps are different for NAS core filers and for cloud storage.
+They are explained in detail in these two documents:
+
+Adding a New Core Filer - NAS Core Filer
+
+Adding a New Core Filer - Cloud Core Filer

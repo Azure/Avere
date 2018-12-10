@@ -1,0 +1,165 @@
+Setting Up Kerberos Authentication
+
+Configuring and enabling Kerberos authentication on an Avere OS
+cluster involves several different settings pages in the Avere Control
+Panel. There are two basic pathways where an administrator might want
+to enable Kerberos:
+
+For communication between clients and the cluster
+
+For communication between the cluster and core filers
+
+This document explains how the various settings are used to support
+Kerberos in either or both situations on an Avere cluster.
+
+Client-cluster Kerberos is configured by setting export rules on a
+junction or export. Read
+
+Controlling Access to Core Filer Exports
+
+ for details.
+
+Kerberos authentication between the cluster and a core filer is
+configured on the
+
+Cluster > Kerberos
+
+ settings page, and it applies to all exports.
+
+Kerberos Elements
+
+Kerberos uses a remote server (the Key Distribution Center, or KDC) to
+authenticate users and grant tickets.
+
+Known key sets can be stored in keytab files to avoid requiring a
+password for each transaction. When Kerberos is enabled the Avere
+cluster stores a keytab file for communication with core filers, and
+clients can optionally store local keytab files for communication with
+the cluster's vservers.
+
+Kerberos also uses the concept of a
+
+realm
+
+. The Avere cluster and its core filers must be in the same realm;
+client requests can come from different realms as long as they are
+trusted realms.
+
+Common Configuration Elements
+
+The KDC and realm parameters are used by all Kerberos transactions in
+the cluster - both client-vserver operations and cluster-core filer
+operations use these settings.
+
+KDC and realm settings are made on the
+
+Kerberos
+
+ settings page in the Cluster section of the settings tab.
+
+Optionally, DNS can be used to map a client DNS domain to a particular
+realm. Details are included in
+
+Kerberos
+
+.
+
+Client-Cluster Configuration Elements
+
+To enable Kerberos authentication between clients and the cluster, you
+must configure Kerberos settings for the cluster's vservers.
+
+If your cluster has multiple vservers, each one can have a different
+setting and a different keytab file.
+
+Enabling Kerberos for a VServer
+
+The settings to turn on Kerberos authentication for a particular
+vserver are made on the
+
+VServer > NFS
+
+ page. If your cluster has multiple vservers, select the vserver to
+configure by using the control at the top of the page.
+
+The
+
+VServer > NFS
+
+ page has the following Kerberos settings:
+
+Enable Kerberos checkbox
+   This checkbox is active only if you have already set the KDC and
+   realm parameters on the Kerberos configuration page (as described
+   above in
+
+   Common Configuration Elements
+
+   ). The checkbox turns on Kerberos for client communication to this
+   vserver.
+
+VServer Keytab File
+
+   You can upload a Kerberos keytab file to store keys used for
+   communication between  clients and this vserver. (This is not the
+   same file used for cluster-core filer communication.)
+
+Enabling Kerberos for a Core Filer Export
+
+VServers also manage core filer exports, which provide the client-
+facing view of content on a core filer. Kerberos can be enabled at the
+export level by customizing export rules.
+
+Use the
+
+VServer > Export Rules
+
+ page to modify the default rule or create a new rule that allows
+Kerberos authentication. The Rule Definition panel includes a section
+labeled Authentication Flavors. Options are UNIX/SYS (enabled by
+default) and Kerberos5 (not enabled by default). The Kerberos checkbox
+is not active if the KDC and realm parameters have not been configured
+(see
+
+Common Configuration Elements
+
+, above).
+
+You can select one or both types of authentication.
+
+Export rules can be restricted with additional filters for scope.
+Rules make up an
+
+export policy
+
+, which are also created and modified on the
+
+Export Rules
+
+ settings page.
+
+Export policies are applied to individual core filer exports on the
+
+Export Policies page
+
+.
+
+Cluster-Core Filer Configuration Elements
+
+To enable Kerberos authentication between the cluster and a core
+filer, there are two steps to take after setting up the KDC and realm
+parameters on the Kerberos configuration page (described above in
+
+Common Configuration Elements
+
+).
+
+Upload a cluster-level keytab file.  Use the Cluster > Kerberos
+settings page to upload a keytab file. This file is used for cluster
+to core filer communications, and is not the same as the vserver-level
+file that is defined on the VServer > NFS page.
+
+Turn on Kerberos authentication for the particular core filer.  Use
+the Core Filer > Core Filer Details page to allow Kerberos
+authentication for the core filer that is selected in the page. A
+Enable Kerberos checkbox appears in the Edit Filer panel.

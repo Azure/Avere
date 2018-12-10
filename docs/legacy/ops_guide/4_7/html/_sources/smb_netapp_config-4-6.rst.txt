@@ -1,0 +1,99 @@
+Appendix G: Configuring NetApp Filers for Avere SMB ACLs
+
+This document explains how to configure NetApp storage to support ACL-
+based security for SMB when used with an Avere cluster.
+
+SMB ACL Requirements for NetApp Clustered Mode Configuration
+
+The following constraints apply to SMB/CIFS ACL support for clustered
+ONTAP:
+
+ONTAP version 8.3.1 or higher is required.
+
+Only NetApp "NTFS" security style is supported (mixed mode is
+unsupported).
+
+Native Identity is required. (If username download is configured on
+the Avere cluster, you can use a separate vserver for ACL support.)
+
+Username download on the NetApp core filer is optional.
+
+All general NFS export requirements must be met (i.e. NAS core filer
+export rules must allow root access for cluster and client facing
+addresses). Remember that each Clustered Mode volume can have a
+diferent export policy, so you might need to update multiple policies
+and not just the policy associated with the root volume.
+
+Note that Avere SMB/CIFS ACL migration requirements require a core
+filer SMB share that provides access to the NFS export "/".
+
+Configuring NetApp Storage for SMB ACLs
+
+The following instructions will show the commands needed to ensure
+that a NetApp volume and share can be used by an Avere cluster for SMB
+ACLs.
+
+For clarity, these commands will use a volume called /vol/myvol, with
+an SMB share myshare.
+
+Ensure that SMB is enabled on the filer.
+
+Ensure that the volume is configured to enable read, write, and root
+access:
+
+   exportfs -q /vol/myvol
+   exportfs -p sec=sys,rw,anon=0,nosuid,root=10.0.0.0/8 /vol/myvol
+   exportfs -q /vol/myvol
+
+Ensure that the security style for the volume is NTFS:
+
+   qtree security /vol/myvol
+
+If necessary:
+
+   qtree security /vol/myvol ntfs
+
+Ensure that the volume security allows access to Everyone with "Full
+Control":
+
+   fsecurity show /vol/myvol
+
+Ensure that there is an SMB share for the volume:
+
+   cifs shares myshare
+
+If necessary:
+
+   cifs shares -add myshare /vol/myvol
+
+Avere SMB uses the NFSv3 protocol from the Avere cluster to filers for
+file and directory operations, and uses SMB (version 1) from the Avere
+cluster to the filers for ACL operations. Avere requires that the UNIX
+root user bypass ACL processing on the filer. Avere recommends that
+root access is isolated to all of the “cluster” IP addresses and
+“management” IP address (as opposed to the “client-facing” IP
+addresses) of the Avere cluster.
+
+   options cifs.nfs_root_ignore_acl on
+
+Ensure that the root user is mapped to a AD domain administrator
+account. This example uses a domain name of ACME:
+
+   rdfile /vol/vol0/etc/usermap.cfg
+
+If necessary:
+
+   wrfile -a /vol/vol0/etc/usermap.cfg “ACME\Administrator == root”
+
+Here are some commands to run on the filer to ensure that LDAP is
+working correctly:
+
+   priv set advanced
+   getXXbyYY getpwbyname_r ‘AvereUser’
+   getXXbyYY getpwbyuid_r <pw_uid value returned from previous command>
+   getXXbyYY getgrbygid <pw_gid value returned from previous command>
+   getXXbyYY getgrbyname ‘<group name returned from previous command>’
+   wcc -u ‘AvereUser’
+   wcc -s ‘AvereUser’
+   cifs lookup ‘AvereUser’
+   cifs lookup ‘<group name>’

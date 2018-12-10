@@ -1,0 +1,53 @@
+Appendix H: IAM Settings for an AWS Core Filer
+
+This article outlines the process for creating an AWS bucket with
+appropriate access permissions to use as a cloud core filer with an
+Avere cluster.
+
+Note: This process applies to a cluster that uses physical FXT
+  nodes; if your cluster is a vFXT cluster hosted on AWS, check the
+  information in
+
+  Appendix H: Updating Cloud Storage Permissions for an AWS vFXT
+  Cluster
+
+  .
+
+When you create an AWS bucket for use with an Avere cluster, you must
+specify an access management policy for the storage. Follow these
+basic steps.
+
+Create the bucket as administrator, and note its Amazon Resource Name
+(ARN).
+
+Go to the AWS Identity and Access (IAM) panel. Create a user for
+accessing the bucket.
+
+Set up access to the bucket.  If you are not concerned with strictly
+controlling access to the AWS bucket, you can use the S3 "full access"
+default policy:  arn:aws:s3:::* arn:aws:s3:::/  To create a more
+restrictive policy, use the IAM panel to add an inline custom policy
+to the bucket user.  Create a custom policy with settings like the
+following:  {     "Version": "2012-10-17",     "Statement": [
+{             "Effect": "Allow",             "Action": [
+"s3:GetLifecycleConfiguration",
+"s3:GetBucketLocation",                 "s3:ListBucket",
+"s3:ListBucketMultipartUploads",
+"s3:ListBucketVersions",
+"s3:PutLifecycleConfiguration"             ],             "Resource":
+[                 "arn:aws:s3:::<bucketARN>"             ]         },
+{             "Effect": "Allow",             "Action": [
+"s3:AbortMultipartUpload",                 "s3:DeleteObject",
+"s3:GetObject",                 "s3:ListMultipartUploadParts",
+"s3:PutObject"             ],             "Resource": [
+"arn:aws:s3:::<bucketARN>/*"             ]         }     ] }
+
+Use the Security Credentials page in the AWS Management Console to
+generate an access key for the cluster to use when accessing the
+bucket. This key must be provided to the Avere Control Panel when
+adding the cloud core filer so that the Avere cluster can access the
+bucket.  [ xxx wait, is this different from the encryption key we
+create for the bucket during cloud core filer definition? xxx  ] [ xxx
+should this be in Security Credentials (root user) or in IAM (other
+user)? see https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-
+types.html xxx ]

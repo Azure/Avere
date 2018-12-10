@@ -1,0 +1,84 @@
+Appendix C: Implementing a URL Polling Agent
+
+A polling agent is a CGI script external to the Avere cluster that can
+monitor and report on the progress of the core filer’s backup job. The
+agent can be written in any language that supports CGI, including
+scripting languages such as Perl and Python, and compiled languages
+such as C, C++, and Java. (See RFC 3875 for information about the
+components of a CGI script.)
+
+When URL polling is set, and all changed data has been written to the
+core filer, the Avere cluster checks the URL of the CGI script
+approximately every 10 seconds during the time period specified by the
+cluster schedule.
+
+The CGI script must accept the arguments "mass" (a legacy term for a
+core filer) and "targetTime", where
+
+mass
+
+ is the name of the core filer and
+
+targetTime
+
+ is a UNIX timestamp representing the next scheduled write-through
+period.
+
+It must also return the string "RELEASE Core Filer SYNC" when the core
+filer’s backup process has completed.
+
+CGI Script Example
+
+A simple example CGI script written in Python follows.
+
+Note that this script does not include any logic for monitoring the
+status of the core filer. For that information, refer to your core
+filer's documentation, particularly any API documentation.
+
+Caution: This simple example is not secure enough to be used in an
+  internet- exposed system. To improve security, validate all inputs,
+  and consider moving the state file out of /tmp and using a more
+  secure filename pattern.
+
+   #! /usr/bin/env python
+   import os
+   import sys
+   import cgi
+   cgiArgs = cgi.FieldStorage(keep_blank_values=True)
+   corefiler = cgiArgs.getfirst('mass')
+   targetTime = cgiArgs.getfirst('targetTime')
+   response = "must supply corefiler and targetTime arguments"
+   if corefiler and targetTime:
+       statefile = "/tmp/STATE.%s_%s"%(corefiler,targetTime)
+       os.close(os.open(statefile, os.O_CREAT|os.O_RDWR))
+       f = open(statefile, "r+")
+       l = f.readline()
+       if not l:
+           response = "starting backup operation"
+           f.write("start\n")
+       elif l == "start\n":
+           response = "waiting for backup operation to complete (1)"
+           f.truncate(0)
+           f.seek(0)
+           f.write("wait1\n")
+       elif l == "wait1\n":
+           response = "waiting for backup operation to complete (2)"
+           f.truncate(0)
+           f.seek(0)
+           f.write("wait2\n")
+       elif l == "wait2\n":
+           response = "waiting for backup operation to complete (3)"
+           f.truncate(0)
+           f.seek(0)
+           f.write("wait3\n")
+       else:
+           response = "backup complete.\nIt's time to RELEASE Core Filer SYNC\n"
+           os.unlink(statefile)
+       f.close()
+   print "Content-Type: text/plain"
+   print "Pragma: no-cache"
+   print "Cache-Control: no-cache, must-revalidate"
+   print "Expires: Sat, 26 Jul 1997 05:00:00 GMT"
+   print
+   print response
+   sys.exit(0)

@@ -1,0 +1,52 @@
+Appendix A: Adding or Removing Feature Licenses
+
+Several Avere OS options require a separate license. Additional
+licenses are required for these features:
+
+FlashCloud
+
+FlashMove
+
+FlashMirror
+
+After you purchase a license, you must send your license ID to Avere
+Global Services, and they will provide you with a license key.
+
+Note: vFXT nodes also require separate licenses, but Avere OS
+  includes an automatic installation utility for vFXT licenses. You
+  should not need to use the procedure described here on vFXT node
+  licenses unless the automatic system encounters problems.
+
+Adding a License
+
+To obtain and install a license:
+
+Navigate to the Settings > Cluster > Licenses page.
+
+
+Contact Avere Global Services, and provide the Licensing ID listed at
+the top of the Licenses page.
+
+Enter the license key provided by Avere Global Services in the License
+Key field.
+
+Click the Submit button.
+
+The new license and its associated features appear in the Licenses
+area.
+
+Removing a License
+
+You can also use the Avere Control Panel to remove a license.
+
+From the Settings > Cluster > Licenses page, select the Remove button
+in the row of the license you want to remove.
+
+A pop-up window appears asking if you are sure you want to remove the
+license. Click OK to continue.
+
+The license is removed from the list.
+
+After removing a FlashMove or FlashMirror license, you will no longer
+be able to create FlashMove or FlashMirror jobs. Previous jobs still
+can be viewed from the Data Management tab.

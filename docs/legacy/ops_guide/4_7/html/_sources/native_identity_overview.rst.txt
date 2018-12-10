@@ -1,0 +1,29 @@
+Native Identity
+
+Avere OS's native identity feature simplifies SMB configuration by
+passing Windows security identifiers (SIDs) from a Windows client to
+the core filer instead of translating the SID into a UNIX-style user
+or group ID (UID/GID). You can use native identity with NAS core
+filers or with cloud storage.
+
+Native identity can be used in the following configurations where a
+Windows client identifier doesn't have a mapping to a UNIX-style
+identity:
+
+For a NAS core filer:  The back-end core filer must have SMB enabled.
+(You cannot use native identity with NAS core filers that do not
+support SMB.)  The back-end filesystem security style must use SMB
+ACLs.
+
+For a cloud core filer:  The filesystem security style must be CIFS
+ACLs.
+
+The alternative to native identity is to provide mappings between SIDs
+and UID/GIDs. These user mappings can be stored in an AD or LDAP
+server.
+
+Native identity can be enabled or disabled from the
+
+VServer > CIFS
+
+ settings page.

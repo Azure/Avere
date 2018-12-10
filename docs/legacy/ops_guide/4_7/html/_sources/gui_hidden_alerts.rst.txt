@@ -1,0 +1,23 @@
+Administration > Hidden Alerts
+
+
+This page lets you view and manage system alerts and conditions that
+have been dismissed or hidden so that they don't appear in the
+Dashboard tab.
+
+The table lists the cluster alerts that have been dismissed and
+conditions that have been hidden.
+
+Use this page to unhide conditions and to cancel auto-dismiss for
+alerts.
+
+Use the checkboxes in the table to select the type of condition or
+alert, then click the Unhide/Stop Auto-Dismissing to cause these
+status messages to reappear in the dashboard.
+
+There is one row for each type of alert or condition; you cannot
+select individual occurrences within that type. (Occurrences are
+listed by timestamp in the right column of the table.)
+
+For more detailed information about system notifications, read
+*dashboard:conditions_alerts* in *dashboard:dashboard_toc*.

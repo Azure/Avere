@@ -1,0 +1,38 @@
+Appendix D: Port Configuration
+
+For full functionality, your cluster's FXT nodes should have access
+through your system's firewall to the following ports.
+
+NFS Ports
+
+Allow inbound and outbound traffic on these ports.
+
+      Protocol  Port  Service  TCP/UDP  111  RPCBIND  TCP/UDP  2049
+NFS  TCP/UDP  4045  NLOCKMGR  TCP/UDP  4046  MOUNTD  TCP/UDP  4047
+STATUS
+
+SMB/CIFS Ports
+
+For systems using SMB, open access to these ports.
+
+Inbound traffic:
+
+      Protocol  Port  Service  UDP  137  NETBIOS  UDP  138  NETBIOS
+TCP  139  SMB  TCP  445  SMB
+
+Outbound traffic:
+
+      Protocol  Port  Service  TCP/UDP  53  DNS  TCP/UDP  88  Kerberos
+UDP  123  NTP  UDP  137  NetBIOS  UDP  138  NetBIOS  TCP  139  SMB
+TCP  445  SMB  TCP  389  LDAP  UDP  389  CLDAP  TCP  686  LDAPS
+
+Additional Port Requirements
+
+Your core filers might require access on additional ports. This
+requirement varies depending on the type of storage used.
+
+You can use the rcpinfo command to learn which ports are used by a
+particular server. Issue this command from a client system that is not
+firewalled:
+
+   rpcinfo -p <server_IP_address>

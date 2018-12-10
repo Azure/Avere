@@ -1,0 +1,34 @@
+Selecting an Access Control Method for SMB
+
+SMB (sometimes called CIFS) uses access control lists (ACLs) to
+control access to files. The Avere cluster can communicate ACLs to SMB
+clients in one of three ways, depending on the types of filesystems
+used by the vserver's core filer:
+
+NFSv3 – If the core filer supports only NFSv3, the Avere cluster
+translates between POSIX mode bits and SMB/CIFS ACLs.  Core filers
+that support only NFSv3 and use POSIX mode bits do not require any
+special configuration.
+
+SMB ACLs – If the core filer supports SMB natively, the Avere cluster
+can pass SMB ACLs directly between the client and the core filer.  If
+you are using a simple namespace (a legacy configuration; most
+administrators use global namespace instead) the SMB share name on the
+cluster must match the name of the matching share on the core filer.
+
+Considerations for Selecting Access Control
+
+When selecting an access control mechanism for a particular SMB share,
+consider the following criteria:
+
+Does the core filer support SMB natively (for instance, a Data ONTAP
+qtree with the security style ntfs)?  If so, you must use SMB ACLs.
+
+Does the core filer support only NFSv3? If so, use POSIX mode bits.
+
+If you are using SMB ACLs, read
+
+Configuring NAS Storage for SMB
+
+ to learn more about configuring SMB-tested core filers for correct
+operation with the Avere cluster.
