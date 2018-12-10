@@ -1,0 +1,8 @@
+A cluster name must meet these criteria:
+
+Length of 1 to 16 characters
+
+Can include letters, numbers, and the dash (-) and underscore (_)
+characters
+
+Must not include other punctuation or special characters

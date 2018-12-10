@@ -1,0 +1,191 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Avere OS FXT Cluster Creation Guide &#8212; Avere FXT Cluster Creation Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Preparing To Create an Avere Cluster" href="prerequisites.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="prerequisites.html" title="Preparing To Create an Avere Cluster"
+             accesskey="N">next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Avere FXT Cluster Creation Guide</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="os-fxt-cluster-creation-guide">
+<h1>Avere OS FXT Cluster Creation Guide<a class="headerlink" href="#os-fxt-cluster-creation-guide" title="Permalink to this headline">¶</a></h1>
+<p>This guide walks through the steps required to create an Avere cluster from FXT Series hardware nodes. It also describes basic configuration steps that must be done before a cluster is ready to serve data.</p>
+<p>If you have not already installed and cabled your FXT Series nodes, follow the instructions in the <a class="reference external" href="http://azure.github.io/Avere/legacy/pdf/FXT_5000_Installation_Guide.pdf">FXT 5000 Series Installation Guide</a> before using this document.</p>
+<p>If you are creating a vFXT cluster from cloud-based VMs, read the vFXT installation guide customized for your cloud service, available in the <a class="reference external" href="http://azure.github.io/Avere/#vfxt">vFXT Installation Guides</a> section of the <a class="reference external" href="http://azure.github.io/Avere/">Avere Legacy Documentation Page</a>.</p>
+<div class="section" id="table-of-contents">
+<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="prerequisites.html">Preparing To Create an Avere Cluster</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prerequisites.html#required-information">Required Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prerequisites.html#ip-address-distribution">IP Address Distribution</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="create.html">Creating an Avere Cluster</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="create.html#boot-the-first-node">Boot the First Node</a></li>
+<li class="toctree-l2"><a class="reference internal" href="create.html#connect-to-the-first-node">Connect to the First Node</a></li>
+<li class="toctree-l2"><a class="reference internal" href="create.html#creating-the-cluster">Creating the Cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="create.html#initial-options">Initial Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="create.html#new-cluster-configuration-options">New Cluster Configuration Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="create.html#id1">Creating the Cluster</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="initial_config.html">Initial Cluster Configuration Steps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="initial_config.html#setup-tasks">Setup Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="initial_config.html#logging-in-to-the-gui">Logging In to the Avere Control Panel</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="add_node.html">Adding Nodes to the Cluster</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="add_node.html#enabling-high-availability">Enabling High Availability</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="config_node.html">Customizing Node Settings</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="config_node.html#node-name-configuration">Node Name Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_node.html#ipmi-configuration">IPMI Configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="config_network.html">Additional Network Settings</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="config_network.html#configuring-dns-for-the-cluster-cap">Configuring DNS for the Avere Cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_network.html#encryption-certificates">Encryption Certificates</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="config_core_filer.html">Adding Backend Storage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="config_core_filer.html#adding-a-core-filer">Adding a Core Filer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_core_filer.html#about-local-directories">About Local Directories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_core_filer.html#cloud-credentials">Cloud Credentials</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="config_vserver.html">Configuring VServers and Global Namespace</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="config_vserver.html#creating-a-vserver">Creating a VServer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_vserver.html#creating-a-junction">Creating a Junction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_vserver.html#configuring-export-rules">Configuring Export Rules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="config_support.html">Customizing Support and Monitoring Settings for the Avere Cluster</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="config_support.html#support-configuration">Support Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_support.html#remote-monitoring">Remote Monitoring</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="static_ip.html">Appendix A: Setting a Static IP Address on an FXT Node</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="static_ip.html#connecting-to-the-physical-node">Connecting to the Physical Node</a></li>
+<li class="toctree-l2"><a class="reference internal" href="static_ip.html#fxt-5000-series-port-locations">FXT 5000 Series Port Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="static_ip.html#logging-in-and-setting-the-ip-address">Logging In and Setting the IP Address</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="copyright_chapter.html">Copyright and Trademark Information</a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Avere OS FXT Cluster Creation Guide</a><ul>
+<li><a class="reference internal" href="#table-of-contents">Table of Contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="prerequisites.html"
+                        title="next chapter">Preparing To Create an Avere Cluster</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="prerequisites.html" title="Preparing To Create an Avere Cluster"
+             >next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Avere FXT Cluster Creation Guide</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

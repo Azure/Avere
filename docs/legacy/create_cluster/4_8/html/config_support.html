@@ -1,0 +1,190 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Customizing Support and Monitoring Settings for the Avere Cluster &#8212; Avere FXT Cluster Creation Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Appendix A: Setting a Static IP Address on an FXT Node" href="static_ip.html" />
+    <link rel="prev" title="Configuring VServers and Global Namespace" href="config_vserver.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="static_ip.html" title="Appendix A: Setting a Static IP Address on an FXT Node"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="config_vserver.html" title="Configuring VServers and Global Namespace"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="create_index.html">Avere FXT Cluster Creation Guide</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="customizing-support-and-monitoring-settings-for-the-cluster-cap">
+<span id="config-support"></span><span id="index-0"></span><h1>Customizing Support and Monitoring Settings for the Avere Cluster<a class="headerlink" href="#customizing-support-and-monitoring-settings-for-the-cluster-cap" title="Permalink to this headline">¶</a></h1>
+<p>As part of getting your Avere cluster up and running, you might want to make sure that debugging statistics are enabled and that other settings are configured to help Avere Global Services assist you if there is a problem.</p>
+<p>Customers also should consider enabling the system’s remote monitoring features, which are configured on the <span class="guilabel">Cluster</span> &gt; <span class="guilabel">Monitoring</span> settings page. You can configure email alerts, external logging, and SNMP monitoring. (Read <a class="reference internal" href="#config-monitoring"><span class="std std-ref">Remote Monitoring</span></a>, to learn more.)</p>
+<div class="section" id="support-configuration">
+<h2>Support Configuration<a class="headerlink" href="#support-configuration" title="Permalink to this headline">¶</a></h2>
+<p>These basic support settings should be configured for all clusters.</p>
+<p>These settings are made in the <span class="guilabel">Settings</span> tab on the <span class="guilabel">Cluster</span> &gt; <span class="guilabel">Support</span> page in the Avere Control Panel.</p>
+<p>(You might also use the <span class="guilabel">Support</span> tab in the Avere Control Panel to configure and kick off manual support uploads if requested by your Avere representative.)</p>
+<p>The <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a> explains the support options in more detail. Start by reading  <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/support_overview.html#support-tab" title="(in Cluster Configuration Guide v4.7)"><span>Using the Avere Control Panel Support Tab</span></a>.</p>
+<div class="section" id="support-settings-page-items">
+<h3>Support Settings Page Items<a class="headerlink" href="#support-settings-page-items" title="Permalink to this headline">¶</a></h3>
+<p>On the <span class="guilabel">Settings</span> &gt; <span class="guilabel">Cluster</span> &gt; <span class="guilabel">Support</span> page, address the following items.</p>
+<p>Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_support.html#gui-support-settings" title="(in Cluster Configuration Guide v4.7)"><span>Cluster &gt; Support</span></a> in the <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a> for more complete information on these features.</p>
+<ol class="arabic simple">
+<li>In the <span class="guilabel">Customer Info</span> section, take these actions:<ul>
+<li><span class="guilabel">Unique Cluster Name</span> - If needed, specify a name that identifies your company and also uniquely identifies the cluster if you have more than one. This string will be used to identify any system files uploaded to Avere Global Services. (The main cluster name also is used with diagnostic uploads, but this field supplements the cluster name if needed.)</li>
+<li><span class="guilabel">Statistics Monitoring</span> - Check the box to enable this feature.</li>
+<li><span class="guilabel">General Information Upload</span> - Check the box to enable this feature.</li>
+<li><span class="guilabel">Crash Information Upload</span> - Leave this setting enabled. In the event of a system restart, this setting automatically uploads any resulting memory core files to Avere Global Services for analysis.</li>
+</ul>
+</li>
+</ol>
+<p>Submit those changes, then click the <span class="guilabel">Revalidate upload information</span> button to initiate a data upload to Avere Systems as a test.</p>
+<ol class="arabic simple" start="2">
+<li>Optionally, configure these items in the <span class="guilabel">Secure Proactive Support</span> section. SPS is an optional feature that allows Avere Global Services staff to remotely troubleshoot your cluster. Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_support.html#gui-sup-sps" title="(in Cluster Configuration Guide v4.7)"><span>Secure Proactive Support (SPS)</span></a> in the <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a> for more information.<ul>
+<li><span class="guilabel">Enable SPS Link</span> - Check the box to turn on Secure Proactive Support.</li>
+<li><span class="guilabel">Remote Command Level</span> - Change the selection from <span class="guilabel">Disabled</span> to one of the other options. <span class="guilabel">Support</span> is the most conservative level.</li>
+<li><span class="guilabel">Shipping Information</span> - Optionally, fill in the contact name and shipping address to use in the event that any hardware needs to be replaced.</li>
+</ul>
+</li>
+</ol>
+<p>Click the <span class="guilabel">Submit</span> button in the SPS section to save those settings.</p>
+</div>
+<div class="section" id="support-tab-upload-test">
+<h3>Support Tab - Upload Test<a class="headerlink" href="#support-tab-upload-test" title="Permalink to this headline">¶</a></h3>
+<p>On the <span class="guilabel">Support</span> tab, you can test the <span class="guilabel">General Information Upload</span> system.</p>
+<p>Select either a particular node or the full cluster in the <span class="guilabel">Details</span> section at the top of the <span class="guilabel">Support</span> tab. Leave the <span class="guilabel">Choose gather mode</span> control set to <span class="guilabel">Support bundle</span> and click the <span class="guilabel">Upload information</span> button.</p>
+<p>The <span class="guilabel">Support Status</span> section of the <span class="guilabel">Support</span> tab will display messages for each affected node as data is collected and uploaded during the test. The messages progress from <code class="docutils literal notranslate"><span class="pre">Statistics</span> <span class="pre">gathering</span> <span class="pre">complete</span></code> to <code class="docutils literal notranslate"><span class="pre">Uploading</span> <span class="pre">&lt;filename&gt;</span></code> and finally return to <code class="docutils literal notranslate"><span class="pre">No</span> <span class="pre">support</span> <span class="pre">operations</span> <span class="pre">currently</span> <span class="pre">running</span></code>.</p>
+<p>The test can take five to ten minutes to complete. It is normal for the primary node to take longer to complete than other nodes if you are collecting cluster-wide statistics.</p>
+</div>
+</div>
+<div class="section" id="remote-monitoring">
+<span id="config-monitoring"></span><span id="index-1"></span><h2>Remote Monitoring<a class="headerlink" href="#remote-monitoring" title="Permalink to this headline">¶</a></h2>
+<p>You can use the <span class="guilabel">Cluster</span> &gt; <span class="guilabel">Monitoring</span> settings page to enable remote monitoring tools. Using any of these tools is optional.</p>
+<p>Options include:</p>
+<ul class="simple">
+<li><span class="guilabel">Email Monitoring</span> - Set up email notification for system alerts.</li>
+<li><span class="guilabel">Logs</span> - Specify a remote syslog server to receive log messages.</li>
+<li><span class="guilabel">SNMP</span> - Set up a simple network management protocol server to monitor your Avere cluster.</li>
+</ul>
+<p>Read more about these features and how to configure them in the <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a> in <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_monitoring_settings.html#gui-monitoring-settings" title="(in Cluster Configuration Guide v4.7)"><span>Cluster &gt; Monitoring</span></a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="create_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Customizing Support and Monitoring Settings for the Avere Cluster</a><ul>
+<li><a class="reference internal" href="#support-configuration">Support Configuration</a><ul>
+<li><a class="reference internal" href="#support-settings-page-items">Support Settings Page Items</a></li>
+<li><a class="reference internal" href="#support-tab-upload-test">Support Tab - Upload Test</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#remote-monitoring">Remote Monitoring</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="config_vserver.html"
+                        title="previous chapter">Configuring VServers and Global Namespace</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="static_ip.html"
+                        title="next chapter">Appendix A: Setting a Static IP Address on an FXT Node</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="static_ip.html" title="Appendix A: Setting a Static IP Address on an FXT Node"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="config_vserver.html" title="Configuring VServers and Global Namespace"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="create_index.html">Avere FXT Cluster Creation Guide</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

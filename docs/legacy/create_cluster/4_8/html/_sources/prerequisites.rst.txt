@@ -1,0 +1,72 @@
+Preparing To Create an Avere Cluster
+
+Before starting the cluster creation, make sure you have followed
+instructions in the
+
+FXT 5000 Series Installation Guide
+
+ to correctly rack and cable the FXT nodes in your datacenter. Make
+sure that at least one node is powered on.
+
+Required Information
+
+The Avere cluster requires the following information for its initial
+configuration.
+
+Name that you want to assign to the cluster
+
+Administrative password that you want to set for the cluster
+
+IP addresses:  A single IP address for cluster management, and the
+netmask and router to use for the management network  The first and
+last IP addresses in a contiguous range of IP addresses for cluster
+(internode) communication (see IP Address Distribution, below, for
+details)  (Client-facing IP addresses are set after cluster creation.)
+
+Optional but strongly recommended network infrastructure:  The IP
+address of a DNS server for the cluster  The name of the DNS domain
+for the cluster  The name or IP address for either one, or for three
+or more, NTP servers
+
+Whether you want to enable IEEE 802.1AX-2008 link aggregation on the
+cluster’s interfaces
+
+If you are enabling link aggregation, whether to use IEEE 802.3ad
+(LACP) dynamic aggregation
+
+IP Address Distribution
+
+An Avere cluster uses IP addresses in three categories:
+
+Management IP: A single IP address for cluster management  This
+address serves as the entry point to access the cluster configuration
+utilities (Avere Control Panel or the XML-RPC API). This address is
+automatically assigned to the primary node in the cluster, and it
+moves automatically if the primary node changes.  Other IP addresses
+can be used to access the control panel, but the management IP address
+is designed to provide access even if individual nodes fail over.
+
+Cluster Network: A range of IP addresses for cluster communication
+The cluster network is used for communication among cluster nodes and
+to retrieve files from the backend storage (core filers).  Best
+practice: Allocate one IP address per physical port used for cluster
+communication on each FXT Series node. The cluster automatically
+assigns the addresses in the specified range to individual nodes.
+
+Client-facing network: The range of IP addresses that clients use to
+request and write files  The client network addresses are used by
+clients to access the core filer data through the Avere cluster. For
+example, an NFS client might mount one of these addresses.  Best
+practice: Allocate one IP address per physical port used for client
+communication on each FXT Series node.  The cluster distributes
+client-facing IP addresses across its constituent nodes as evenly as
+possible.  For simplicity, many administrators configure a single DNS
+name with round-robin DNS (RRDNS) configuration to make it easier to
+distribute client requests across the address range. This setup also
+enables all clients to use the same mount command to access the Avere
+cluster. See Configuring DNS for the Avere Cluster for more
+information.
+
+The management IP address and a range of cluster network addresses
+must be specified to create a new cluster; client-facing addresses are
+specified after cluster creation.

@@ -1,0 +1,242 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Additional Network Settings &#8212; Avere FXT Cluster Creation Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Adding Backend Storage" href="config_core_filer.html" />
+    <link rel="prev" title="Customizing Node Settings" href="config_node.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="config_core_filer.html" title="Adding Backend Storage"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="config_node.html" title="Customizing Node Settings"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="create_index.html">Avere FXT Cluster Creation Guide</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="additional-network-settings">
+<span id="config-network"></span><h1>Additional Network Settings<a class="headerlink" href="#additional-network-settings" title="Permalink to this headline">¶</a></h1>
+<p>When setting up a new cluster, there are several network-related tasks that you might need to perform.</p>
+<ul>
+<li><p class="first">Configure round-robin DNS for the client-facing network</p>
+<p>Make sure that your client network’s DNS system is configured as described in <a class="reference internal" href="#dns-overview"><span class="std std-ref">Configuring DNS for the Avere Cluster</span></a>, below.</p>
+</li>
+</ul>
+<ul>
+<li><p class="first">Verify NTP settings</p>
+</li>
+<li><p class="first">Set up client-facing IP addresses</p>
+<p>Client access is controlled by the cluster’s virtual servers (vservers). VServer setup is described in detail in <a class="reference internal" href="config_vserver.html#config-vserver"><span class="std std-ref">Configuring VServers and Global Namespace</span></a>.</p>
+</li>
+<li><p class="first">Add cluster network addresses</p>
+<p>If you need to provide additional IP addresses for cluster nodes, use the <span class="guilabel">Cluster Networks</span> settings page. Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_cluster_networks.html#gui-cluster-networks" title="(in Cluster Configuration Guide v4.7)"><span>Cluster &gt; Cluster Networks</span></a> in the <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a> for details.</p>
+</li>
+</ul>
+<ul id="index-0">
+<li><p class="first">Configure Active Directory and username/group name downloads (if needed)</p>
+<p>If your network hosts use Active Directory or another kind of external directory service, you must modify the cluster’s directory services configuration to set up how the cluster downloads username and group information. Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_directory_services.html#gui-directory-services" title="(in Cluster Configuration Guide v4.7)"><span>Cluster &gt; Directory Services</span></a> in the Cluster Configuration Guide for details.</p>
+<p>Note that the Avere cluster requires an AD server to support SMB. Configure AD before starting to set up SMB.</p>
+</li>
+</ul>
+<ul id="index-1">
+<li><p class="first">Define VLANs (optional)</p>
+<p>You should configure any additional VLANs needed before defining your cluster’s vservers and global namespace. Read <a class="reference internal" href="config_vserver.html#config-vserver"><span class="std std-ref">Configuring VServers and Global Namespace</span></a> and <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/network_overview.html#vlan-overview" title="(in Cluster Configuration Guide v4.7)"><span>Working with VLANs</span></a> in the Cluster Configuration Guide to learn more.</p>
+</li>
+</ul>
+<ul id="index-2">
+<li><p class="first">Configure proxy servers (if needed)</p>
+<p>If your cluster is required to use a proxy server to access external addresses, define it in the <span class="guilabel">Proxy Configuration</span> settings page and apply it by using the <span class="guilabel">Cluster</span> &gt; <span class="guilabel">General Setup</span> page or the <span class="guilabel">Core Filer Details</span> page. Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_proxy_config.html#gui-proxy-config" title="(in Cluster Configuration Guide v4.7)"><span>Cluster &gt; Proxy Configuration</span></a> in the Cluster Configuration Guide for details.</p>
+</li>
+<li><p class="first">Upload encryption certificates (optional)</p>
+<p>Read <a class="reference internal" href="#config-certs"><span class="std std-ref">Encryption Certificates</span></a> for details about how to store security certificates for use by the cluster.</p>
+</li>
+</ul>
+<p>For additional information about network services used by the Avere cluster, read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/network_overview.html#network-overview" title="(in Cluster Configuration Guide v4.7)"><span>Configuring Network Services for an Avere Cluster</span></a> in the Cluster Configuration Guide.</p>
+<span class="target" id="index-3"></span><div class="section" id="configuring-dns-for-the-cluster-cap">
+<span id="dns-overview"></span><h2>Configuring DNS for the Avere Cluster<a class="headerlink" href="#configuring-dns-for-the-cluster-cap" title="Permalink to this headline">¶</a></h2>
+<p>This section explains the basics for setting up DNS for your Avere OS cluster.</p>
+<p>If your system is accessed by NFS clients only, using DNS is recommended but not required;  it is possible to specify all network addresses by using numeric IP addresses. If your system supports SMB (CIFS) access, DNS is required, because you must specify a DNS domain for the Active Directory server.</p>
+<p>DNS also is required if you want to use Kerberos authentication.</p>
+<div class="section" id="client-load-balancing">
+<span id="round-robin"></span><h3>Client Load Balancing<a class="headerlink" href="#client-load-balancing" title="Permalink to this headline">¶</a></h3>
+<p>To distribute the overall load, configure your DNS domain to use round-robin load distribution for client-facing IP addresses. (This is called round-robin DNS, or RRDNS.)</p>
+<p>When clients access the cluster, RRDNS automatically balances their requests among all available interfaces.</p>
+<div class="section" id="rrdns-configuration-details">
+<h4>RRDNS Configuration Details<a class="headerlink" href="#rrdns-configuration-details" title="Permalink to this headline">¶</a></h4>
+<p>For optimal performance, configure your DNS server to handle client-facing cluster addresses as shown in the following diagram.</p>
+<p>A cluster vserver is shown on the left, and IP addresses appear in the center and on the right. Configure each client access point with A records and pointers as illustrated.</p>
+<a class="reference internal image-reference" href="_images/rrdns_diagram.png"><img alt="Avere cluster DNS diagram" src="_images/rrdns_diagram.png" style="width: 350pt;" /></a>
+<p>Each client-facing IP address must have a unique name for internal use by the cluster. (In this diagram, the client IPs are named <code class="docutils literal notranslate"><span class="pre">vs1-client-IP-*</span></code> for clarity, but in production you should probably use something more concise, like <code class="docutils literal notranslate"><span class="pre">client*</span></code>.)</p>
+<p>Clients mount the cluster using the vserver name as the server argument.</p>
+<p>Modify your DNS server’s <code class="docutils literal notranslate"><span class="pre">named.conf</span></code> file to set cyclic order for queries to your vserver. This option ensures that all of the available values are cycled through. Add a statement like the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">options</span> <span class="p">{</span>
+    <span class="n">rrset</span><span class="o">-</span><span class="n">order</span> <span class="p">{</span>
+        <span class="k">class</span> <span class="nc">IN</span> <span class="n">A</span> <span class="n">name</span> <span class="s2">&quot;vserver1.example.com&quot;</span> <span class="n">order</span> <span class="n">cyclic</span><span class="p">;</span>
+    <span class="p">};</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>The following <code class="docutils literal notranslate"><span class="pre">nsupdate</span></code> commands provide an example of configuring DNS correctly:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">update</span> <span class="n">add</span> <span class="n">vserver1</span><span class="o">.</span><span class="n">example</span><span class="o">.</span><span class="n">com</span><span class="o">.</span> <span class="mi">86400</span> <span class="n">A</span> <span class="mf">10.0</span><span class="o">.</span><span class="mf">0.10</span>
+<span class="n">update</span> <span class="n">add</span> <span class="n">vserver1</span><span class="o">.</span><span class="n">example</span><span class="o">.</span><span class="n">com</span><span class="o">.</span> <span class="mi">86400</span> <span class="n">A</span> <span class="mf">10.0</span><span class="o">.</span><span class="mf">0.11</span>
+<span class="n">update</span> <span class="n">add</span> <span class="n">vserver1</span><span class="o">.</span><span class="n">example</span><span class="o">.</span><span class="n">com</span><span class="o">.</span> <span class="mi">86400</span> <span class="n">A</span> <span class="mf">10.0</span><span class="o">.</span><span class="mf">0.12</span>
+<span class="n">update</span> <span class="n">add</span> <span class="n">vs1</span><span class="o">-</span><span class="n">client</span><span class="o">-</span><span class="n">IP</span><span class="o">-</span><span class="mf">10.</span><span class="n">example</span><span class="o">.</span><span class="n">com</span><span class="o">.</span> <span class="mi">86400</span> <span class="n">A</span> <span class="mf">10.0</span><span class="o">.</span><span class="mf">0.10</span>
+<span class="n">update</span> <span class="n">add</span> <span class="n">vs1</span><span class="o">-</span><span class="n">client</span><span class="o">-</span><span class="n">IP</span><span class="o">-</span><span class="mf">11.</span><span class="n">example</span><span class="o">.</span><span class="n">com</span><span class="o">.</span> <span class="mi">86400</span> <span class="n">A</span> <span class="mf">10.0</span><span class="o">.</span><span class="mf">0.11</span>
+<span class="n">update</span> <span class="n">add</span> <span class="n">vs1</span><span class="o">-</span><span class="n">client</span><span class="o">-</span><span class="n">IP</span><span class="o">-</span><span class="mf">12.</span><span class="n">example</span><span class="o">.</span><span class="n">com</span><span class="o">.</span> <span class="mi">86400</span> <span class="n">A</span> <span class="mf">10.0</span><span class="o">.</span><span class="mf">0.12</span>
+<span class="n">update</span> <span class="n">add</span> <span class="mf">10.0</span><span class="o">.</span><span class="mf">0.10</span><span class="o">.</span><span class="ow">in</span><span class="o">-</span><span class="n">addr</span><span class="o">.</span><span class="n">arpa</span><span class="o">.</span> <span class="mi">86400</span> <span class="n">PTR</span> <span class="n">vs1</span><span class="o">-</span><span class="n">client</span><span class="o">-</span><span class="n">IP</span><span class="o">-</span><span class="mf">10.</span><span class="n">example</span><span class="o">.</span><span class="n">com</span>
+<span class="n">update</span> <span class="n">add</span> <span class="mf">11.0</span><span class="o">.</span><span class="mf">0.10</span><span class="o">.</span><span class="ow">in</span><span class="o">-</span><span class="n">addr</span><span class="o">.</span><span class="n">arpa</span><span class="o">.</span> <span class="mi">86400</span> <span class="n">PTR</span> <span class="n">vs1</span><span class="o">-</span><span class="n">client</span><span class="o">-</span><span class="n">IP</span><span class="o">-</span><span class="mf">11.</span><span class="n">example</span><span class="o">.</span><span class="n">com</span>
+<span class="n">update</span> <span class="n">add</span> <span class="mf">12.0</span><span class="o">.</span><span class="mf">0.10</span><span class="o">.</span><span class="ow">in</span><span class="o">-</span><span class="n">addr</span><span class="o">.</span><span class="n">arpa</span><span class="o">.</span> <span class="mi">86400</span> <span class="n">PTR</span> <span class="n">vs1</span><span class="o">-</span><span class="n">client</span><span class="o">-</span><span class="n">IP</span><span class="o">-</span><span class="mf">12.</span><span class="n">example</span><span class="o">.</span><span class="n">com</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="cluster-dns-settings">
+<h3>Cluster DNS Settings<a class="headerlink" href="#cluster-dns-settings" title="Permalink to this headline">¶</a></h3>
+<p>DNS parameters for the cluster are set in the <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_admin_network.html#gui-admin-network" title="(in Cluster Configuration Guide v4.7)"><span>Cluster &gt; Administrative Network</span></a> settings page. Settings on that page include:</p>
+<ul class="simple">
+<li>DNS server address</li>
+<li>DNS domain name</li>
+<li>DNS search domains</li>
+</ul>
+<p>Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_admin_network.html#gui-dns" title="(in Cluster Configuration Guide v4.7)"><span>DNS Settings</span></a> in the <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a> for more details about using this page.</p>
+</div>
+</div>
+<div class="section" id="encryption-certificates">
+<span id="config-certs"></span><span id="index-4"></span><h2>Encryption Certificates<a class="headerlink" href="#encryption-certificates" title="Permalink to this headline">¶</a></h2>
+<p>Avere OS uses X.509 certificates for these functions:</p>
+<ul class="simple">
+<li>To encrypt cluster administration traffic</li>
+<li>To authenticate on behalf of a client to third-party KMIP servers</li>
+<li>For verifying cloud providers’ server certificates</li>
+</ul>
+<p>If you need to upload certificates to the cluster, use the <span class="guilabel">Cluster</span> &gt; <span class="guilabel">Certificates</span> settings page. Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_certificates.html#gui-certificates" title="(in Cluster Configuration Guide v4.7)"><span>Cluster &gt; Certificates</span></a> in the Cluster Configuration Guide for details.</p>
+<p>To encrypt cluster management communication, use the <span class="guilabel">Cluster</span> &gt; <span class="guilabel">General Setup</span> settings page to select which certificate to use for administrative SSL.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Cloud service access keys are stored by using the <span class="guilabel">Cloud Credentials</span> configuration page. Read <a class="reference internal" href="config_core_filer.html#config-cloud-credentials"><span class="std std-ref">Cloud Credentials</span></a> for an overview of that process.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="create_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Additional Network Settings</a><ul>
+<li><a class="reference internal" href="#configuring-dns-for-the-cluster-cap">Configuring DNS for the Avere Cluster</a><ul>
+<li><a class="reference internal" href="#client-load-balancing">Client Load Balancing</a><ul>
+<li><a class="reference internal" href="#rrdns-configuration-details">RRDNS Configuration Details</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#cluster-dns-settings">Cluster DNS Settings</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#encryption-certificates">Encryption Certificates</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="config_node.html"
+                        title="previous chapter">Customizing Node Settings</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="config_core_filer.html"
+                        title="next chapter">Adding Backend Storage</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="config_core_filer.html" title="Adding Backend Storage"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="config_node.html" title="Customizing Node Settings"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="create_index.html">Avere FXT Cluster Creation Guide</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

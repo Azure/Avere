@@ -1,0 +1,238 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Customizing Node Settings &#8212; Avere FXT Cluster Creation Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Additional Network Settings" href="config_network.html" />
+    <link rel="prev" title="Adding Nodes to the Cluster" href="add_node.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="config_network.html" title="Additional Network Settings"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="add_node.html" title="Adding Nodes to the Cluster"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="create_index.html">Avere FXT Cluster Creation Guide</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="customizing-node-settings">
+<span id="config-node"></span><span id="index-0"></span><h1>Customizing Node Settings<a class="headerlink" href="#customizing-node-settings" title="Permalink to this headline">¶</a></h1>
+<p>There are some node-related settings that you should consider customizing as part of your initial Avere cluster setup:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#config-node-name"><span class="std std-ref">Node name</span></a> - The label that the cluster uses for the node</li>
+<li><a class="reference internal" href="#config-ipmi"><span class="std std-ref">IPMI port address</span></a> - How the node’s IPMI port gets its IP address</li>
+</ul>
+<p>Both of these settings can be made for individual nodes, or at the cluster level.</p>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p class="last">If you want to set either of these values at the cluster level, consider doing it before adding nodes to the cluster. Newly added nodes automatically pick up the cluster-level settings.</p>
+</div>
+<p>To set these items at the individual node level, use the <span class="guilabel">Node Details</span> settings page. This page does not appear in the Avere Control Panel’s navigation sidebar; load the page by clicking the node name in the list on the <span class="guilabel">FXT Nodes</span> page or on the <span class="guilabel">IPMI</span> settings page.</p>
+<p>(The <span class="guilabel">Node Details</span> page also shows configuration information and statistics for the selected node. For more information about the node details page, read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_node_details.html#gui-node-details" title="(in Cluster Configuration Guide v4.7)"><span>Node Details</span></a> in the <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a>.)</p>
+<p>To set node names at the cluster level, use the <span class="guilabel">Cluster</span> &gt; <span class="guilabel">General Setup</span> page.</p>
+<p>To set IPMI address method at the cluster level, use the <span class="guilabel">Cluster</span> &gt; <span class="guilabel">IPMI</span> settings page.</p>
+<div class="section" id="node-name-configuration">
+<span id="config-node-name"></span><span id="index-1"></span><h2>Node Name Configuration<a class="headerlink" href="#node-name-configuration" title="Permalink to this headline">¶</a></h2>
+<p>Set an individual node name on its <span class="guilabel">Node Details</span> page, or set a naming schema for the cluster on the <span class="guilabel">Cluster</span> &gt; <span class="guilabel">General Setup</span> page.</p>
+<div class="section" id="set-a-single-node-name">
+<span id="set-one-node-name"></span><h3>Set A Single Node Name<a class="headerlink" href="#set-a-single-node-name" title="Permalink to this headline">¶</a></h3>
+<p>You can change the name of a single node by editing the <span class="guilabel">Node name</span> field.</p>
+<p>Load the node details page by clicking on a node name in the list on the <span class="guilabel">FXT Nodes</span> settings page or on the <span class="guilabel">IPMI</span> settings page.</p>
+<a class="reference internal image-reference" href="_images/node_details_rename.png"><img alt="Node Details settings page, showing the node name field being edited" src="_images/node_details_rename.png" style="width: 400pt;" /></a>
+<p>After updating the node name, click <span class="guilabel">Submit</span> to save your changes.</p>
+</div>
+<div class="section" id="set-the-cluster-wide-node-naming-scheme">
+<span id="set-cluster-node-name"></span><h3>Set the Cluster-Wide Node Naming Scheme<a class="headerlink" href="#set-the-cluster-wide-node-naming-scheme" title="Permalink to this headline">¶</a></h3>
+<p>You can set a default name for all nodes that join the cluster in the future by using the <span class="guilabel">Cluster</span> &gt; <span class="guilabel">General Setup</span> page.</p>
+<a class="reference internal image-reference" href="_images/node_prefix.png"><img alt="Setting the Node Prefix field on the General Setup settings page" src="_images/node_prefix.png" style="width: 400pt;" /></a>
+<p>New nodes will be automatically named with the base name that you set and the next available number.</p>
+<p>This setting does not affect nodes that joined the cluster before the change.</p>
+<p>Use the <span class="guilabel">Node prefix</span> field to enter the base name for new nodes. Optionally, you can configure the number of digits in the node number by using the placeholder value # - for example, specifying ### in the <span class="guilabel">Node prefix</span> field will give a three-digit node number for each node that uses this naming scheme. The default value is two digits.</p>
+<p>You can set the starting node number for automatic assignment in the <span class="guilabel">First node number</span> field.</p>
+<p>For more detailed information about this setting, read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_cluster_general_setup.html#gui-cluster-general-setup" title="(in Cluster Configuration Guide v4.7)"><span>Cluster &gt; General Setup</span></a> in the <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a>.</p>
+</div>
+</div>
+<div class="section" id="ipmi-configuration">
+<span id="config-ipmi"></span><span id="index-2"></span><h2>IPMI Configuration<a class="headerlink" href="#ipmi-configuration" title="Permalink to this headline">¶</a></h2>
+<p>Each FXT node has an Intelligent Platform Management Interface (IPMI) port, which provides access to the FXT node hardware for emergency troubleshooting.</p>
+<p>As part of your cluster setup, you should configure how the nodes’ IPMI ports get their IP addresses. Choose from the following options:</p>
+<ul>
+<li><p class="first"><span class="guilabel">No configuration</span></p>
+</li>
+<li><p class="first"><span class="guilabel">Static</span> - Manually set the IP address</p>
+<p>Read <a class="reference internal" href="#config-ipmi-static"><span class="std std-ref">Setting a Static IPMI Port Address</span></a> for detailed information about this option.</p>
+</li>
+<li><p class="first"><span class="guilabel">DHCP</span> - Obtain an IP address from a DHCP server</p>
+</li>
+</ul>
+<p>By default, IPMI ports come configured to use DHCP. If you choose <span class="guilabel">No configuration</span>, each node will either obtain its IPMI address by using DHCP, or use whatever configuration was last set for this node’s port.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The IPMI port allows access to the FXT node’s hardware directly, bypassing the security built in to the Avere operating system. Protect this port from unauthorized use by connecting it to a secure network, ensuring that the IPMI administrator password is changed from the default value, and securing the DHCP environment if you use DHCP to assign IP addresses. Avere recommends using physically separated networks for IPMI ports and data ports.</p>
+</div>
+<p>Like node names, IPMI mode can be set at the cluster level or at the individual node level. Use the links below to jump to the options:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#config-ipmi-node"><span class="std std-ref">Configure IPMI for One Node</span></a></li>
+<li><a class="reference internal" href="#config-ipmi-cluster"><span class="std std-ref">Configure IPMI for the Avere cluster</span></a></li>
+</ul>
+<div class="section" id="setting-a-static-ipmi-port-address">
+<span id="config-ipmi-static"></span><h3>Setting a Static IPMI Port Address<a class="headerlink" href="#setting-a-static-ipmi-port-address" title="Permalink to this headline">¶</a></h3>
+<p>If using a static IP address for one or more nodes in the cluster, you must provide the IP address and other information.</p>
+<a class="reference internal image-reference" href="_images/ipmi_static.png"><img alt="Dialog for setting a static IP address for an individual node" src="_images/ipmi_static.png" style="width: 350pt;" /></a>
+<p>Provide the following information:</p>
+<ul>
+<li><p class="first"><span class="guilabel">IP address</span> - The address to set for the node’s IPMI port</p>
+<p>On the cluster IPMI configuration form, this section asks for the first and last IP address instead of a single address. Use these fields to provide a range of IP addresses for the cluster nodes’ IPMI ports.</p>
+</li>
+</ul>
+<ul class="simple">
+<li><span class="guilabel">Netmask</span> - The netmask for the IPMI addresses</li>
+<li><span class="guilabel">Router</span> - The router that the IPMI connections should use</li>
+</ul>
+<p>Enter the netmask and router for the network that serves your IPMI ports. For security, Avere Systems recommends using physically separated Ethernet networks for IPMI ports and for data services.</p>
+</div>
+<div class="section" id="configure-ipmi-for-one-node">
+<span id="config-ipmi-node"></span><h3>Configure IPMI for One Node<a class="headerlink" href="#configure-ipmi-for-one-node" title="Permalink to this headline">¶</a></h3>
+<p>Use the <span class="guilabel">Node Details</span> page to set how an individual FXT node’s IPMI port gets its IP address.</p>
+<p>(To open the node details page, click a node name in either the <span class="guilabel">FXT Nodes</span> or <span class="guilabel">IPMI</span> settings page.)</p>
+<a class="reference internal image-reference" href="_images/node_details_ipmi.png"><img alt="IPMI setting menu on the Node Details page" src="_images/node_details_ipmi.png" style="width: 350pt;" /></a>
+<p>The configuration options are described in more detail in <a class="reference internal" href="#config-ipmi"><span class="std std-ref">IPMI Configuration</span></a>, above.</p>
+</div>
+<div class="section" id="configure-ipmi-for-the-cluster">
+<span id="config-ipmi-cluster"></span><h3>Configure IPMI for the Avere cluster<a class="headerlink" href="#configure-ipmi-for-the-cluster" title="Permalink to this headline">¶</a></h3>
+<p>Configure how all of the cluster’s IPMI ports get their addresses by using the <span class="guilabel">Cluster</span> &gt; <span class="guilabel">IPMI</span> settings page.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Setting a cluster-wide configuration option overwrites any options that you have set for individual nodes. To customize individual nodes, set their IPMI addresses from the node details page <strong>after</strong> changing the cluster setting.</p>
+</div>
+<p>The IPMI page shows the addresses currently assigned to each node, and the <span class="guilabel">Configuration Type</span> column shows whether the node gets its address from the cluster-wide setting (<span class="guilabel">Cluster</span>) or from the individual setting (<span class="guilabel">Manual</span>).</p>
+<a class="reference internal image-reference" href="_images/ipmi_menu_cluster.png"><img alt="The IMPI menu to set the IPMI mode for all nodes" src="_images/ipmi_menu_cluster.png" style="width: 450pt;" /></a>
+<p>The configuration options are described in more detail in <a class="reference internal" href="#config-ipmi"><span class="std std-ref">IPMI Configuration</span></a>, above.</p>
+<p>Note that if you want to set static IP addresses at the cluster level, you will need to supply a contiguous range of IP addresses that is large enough to provide a unique address to each node.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="create_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Customizing Node Settings</a><ul>
+<li><a class="reference internal" href="#node-name-configuration">Node Name Configuration</a><ul>
+<li><a class="reference internal" href="#set-a-single-node-name">Set A Single Node Name</a></li>
+<li><a class="reference internal" href="#set-the-cluster-wide-node-naming-scheme">Set the Cluster-Wide Node Naming Scheme</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ipmi-configuration">IPMI Configuration</a><ul>
+<li><a class="reference internal" href="#setting-a-static-ipmi-port-address">Setting a Static IPMI Port Address</a></li>
+<li><a class="reference internal" href="#configure-ipmi-for-one-node">Configure IPMI for One Node</a></li>
+<li><a class="reference internal" href="#configure-ipmi-for-the-cluster">Configure IPMI for the Avere cluster</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="add_node.html"
+                        title="previous chapter">Adding Nodes to the Cluster</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="config_network.html"
+                        title="next chapter">Additional Network Settings</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="config_network.html" title="Additional Network Settings"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="add_node.html" title="Adding Nodes to the Cluster"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="create_index.html">Avere FXT Cluster Creation Guide</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

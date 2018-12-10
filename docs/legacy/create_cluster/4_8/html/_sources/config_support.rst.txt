@@ -1,0 +1,120 @@
+Customizing Support and Monitoring Settings for the Avere Cluster
+
+As part of getting your Avere cluster up and running, you might want
+to make sure that debugging statistics are enabled and that other
+settings are configured to help Avere Global Services assist you if
+there is a problem.
+
+Customers also should consider enabling the system's remote monitoring
+features, which are configured on the Cluster > Monitoring settings
+page. You can configure email alerts, external logging, and SNMP
+monitoring. (Read
+
+Remote Monitoring
+
+, to learn more.)
+
+Support Configuration
+
+These basic support settings should be configured for all clusters.
+
+These settings are made in the Settings tab on the Cluster > Support
+page in the Avere Control Panel.
+
+(You might also use the Support tab in the Avere Control Panel to
+configure and kick off manual support uploads if requested by your
+Avere representative.)
+
+The
+
+Cluster Configuration Guide
+
+ explains the support options in more detail. Start by reading
+
+Using the Avere Control Panel Support Tab
+
+.
+
+Support Settings Page Items
+
+On the Settings > Cluster > Support page, address the following items.
+
+Read
+
+Cluster > Support
+
+ in the
+
+Cluster Configuration Guide
+
+ for more complete information on these features.
+
+In the Customer Info section, take these actions:  Unique Cluster Name
+- If needed, specify a name that identifies your company and also
+uniquely identifies the cluster if you have more than one. This string
+will be used to identify any system files uploaded to Avere Global
+Services. (The main cluster name also is used with diagnostic uploads,
+but this field supplements the cluster name if needed.)  Statistics
+Monitoring - Check the box to enable this feature.  General
+Information Upload - Check the box to enable this feature.  Crash
+Information Upload - Leave this setting enabled. In the event of a
+system restart, this setting automatically uploads any resulting
+memory core files to Avere Global Services for analysis.
+
+Submit those changes, then click the Revalidate upload information
+button to initiate a data upload to Avere Systems as a test.
+
+Optionally, configure these items in the Secure Proactive Support
+section. SPS is an optional feature that allows Avere Global Services
+staff to remotely troubleshoot your cluster. Read Secure Proactive
+Support (SPS) in the Cluster Configuration Guide for more information.
+Enable SPS Link - Check the box to turn on Secure Proactive Support.
+Remote Command Level - Change the selection from Disabled to one of
+the other options. Support is the most conservative level.  Shipping
+Information - Optionally, fill in the contact name and shipping
+address to use in the event that any hardware needs to be replaced.
+
+Click the Submit button in the SPS section to save those settings.
+
+Support Tab - Upload Test
+
+On the Support tab, you can test the General Information Upload
+system.
+
+Select either a particular node or the full cluster in the Details
+section at the top of the Support tab. Leave the Choose gather mode
+control set to Support bundle and click the Upload information button.
+
+The Support Status section of the Support tab will display messages
+for each affected node as data is collected and uploaded during the
+test. The messages progress from "Statistics gathering complete" to
+"Uploading <filename>" and finally return to "No support operations
+currently running".
+
+The test can take five to ten minutes to complete. It is normal for
+the primary node to take longer to complete than other nodes if you
+are collecting cluster-wide statistics.
+
+Remote Monitoring
+
+You can use the Cluster > Monitoring settings page to enable remote
+monitoring tools. Using any of these tools is optional.
+
+Options include:
+
+Email Monitoring - Set up email notification for system alerts.
+
+Logs - Specify a remote syslog server to receive log messages.
+
+SNMP - Set up a simple network management protocol server to monitor
+your Avere cluster.
+
+Read more about these features and how to configure them in the
+
+Cluster Configuration Guide
+
+ in
+
+Cluster > Monitoring
+
+.

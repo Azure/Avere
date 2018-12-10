@@ -1,0 +1,165 @@
+Additional Network Settings
+
+When setting up a new cluster, there are several network-related tasks
+that you might need to perform.
+
+Configure round-robin DNS for the client-facing network  Make sure
+that your client network's DNS system is configured as described in
+Configuring DNS for the Avere Cluster, below.
+
+Verify NTP settings
+
+Set up client-facing IP addresses  Client access is controlled by the
+cluster's virtual servers (vservers). VServer setup is described in
+detail in Configuring VServers and Global Namespace.
+
+Add cluster network addresses  If you need to provide additional IP
+addresses for cluster nodes, use the Cluster Networks settings page.
+Read Cluster > Cluster Networks in the Cluster Configuration Guide for
+details.
+
+Configure Active Directory and username/group name downloads (if
+needed)  If your network hosts use Active Directory or another kind of
+external directory service, you must modify the cluster's directory
+services configuration to set up how the cluster downloads username
+and group information. Read Cluster > Directory Services in the
+Cluster Configuration Guide for details.  Note that the Avere cluster
+requires an AD server to support SMB. Configure AD before starting to
+set up SMB.
+
+Define VLANs (optional)  You should configure any additional VLANs
+needed before defining your cluster's vservers and global namespace.
+Read Configuring VServers and Global Namespace and Working with VLANs
+in the Cluster Configuration Guide to learn more.
+
+Configure proxy servers (if needed)  If your cluster is required to
+use a proxy server to access external addresses, define it in the
+Proxy Configuration settings page and apply it by using the Cluster >
+General Setup page or the Core Filer Details page. Read Cluster >
+Proxy Configuration in the Cluster Configuration Guide for details.
+
+Upload encryption certificates (optional)  Read Encryption
+Certificates for details about how to store security certificates for
+use by the cluster.
+
+For additional information about network services used by the Avere
+cluster, read
+
+Configuring Network Services for an Avere Cluster
+
+ in the Cluster Configuration Guide.
+
+Configuring DNS for the Avere Cluster
+
+This section explains the basics for setting up DNS for your Avere OS
+cluster.
+
+If your system is accessed by NFS clients only, using DNS is
+recommended but not required;  it is possible to specify all network
+addresses by using numeric IP addresses. If your system supports SMB
+(CIFS) access, DNS is required, because you must specify a DNS domain
+for the Active Directory server.
+
+DNS also is required if you want to use Kerberos authentication.
+
+Client Load Balancing
+
+To distribute the overall load, configure your DNS domain to use
+round-robin load distribution for client-facing IP addresses. (This is
+called round-robin DNS, or RRDNS.)
+
+When clients access the cluster, RRDNS automatically balances their
+requests among all available interfaces.
+
+RRDNS Configuration Details
+
+For optimal performance, configure your DNS server to handle client-
+facing cluster addresses as shown in the following diagram.
+
+A cluster vserver is shown on the left, and IP addresses appear in the
+center and on the right. Configure each client access point with A
+records and pointers as illustrated.
+
+
+Each client-facing IP address must have a unique name for internal use
+by the cluster. (In this diagram, the client IPs are named "vs1
+-client-IP-*" for clarity, but in production you should probably use
+something more concise, like "client*".)
+
+Clients mount the cluster using the vserver name as the server
+argument.
+
+Modify your DNS server's "named.conf" file to set cyclic order for
+queries to your vserver. This option ensures that all of the available
+values are cycled through. Add a statement like the following:
+
+   options {
+       rrset-order {
+           class IN A name "vserver1.example.com" order cyclic;
+       };
+   };
+
+The following "nsupdate" commands provide an example of configuring
+DNS correctly:
+
+   update add vserver1.example.com. 86400 A 10.0.0.10
+   update add vserver1.example.com. 86400 A 10.0.0.11
+   update add vserver1.example.com. 86400 A 10.0.0.12
+   update add vs1-client-IP-10.example.com. 86400 A 10.0.0.10
+   update add vs1-client-IP-11.example.com. 86400 A 10.0.0.11
+   update add vs1-client-IP-12.example.com. 86400 A 10.0.0.12
+   update add 10.0.0.10.in-addr.arpa. 86400 PTR vs1-client-IP-10.example.com
+   update add 11.0.0.10.in-addr.arpa. 86400 PTR vs1-client-IP-11.example.com
+   update add 12.0.0.10.in-addr.arpa. 86400 PTR vs1-client-IP-12.example.com
+
+Cluster DNS Settings
+
+DNS parameters for the cluster are set in the
+
+Cluster > Administrative Network
+
+ settings page. Settings on that page include:
+
+DNS server address
+
+DNS domain name
+
+DNS search domains
+
+Read
+
+DNS Settings
+
+ in the
+
+Cluster Configuration Guide
+
+ for more details about using this page.
+
+Encryption Certificates
+
+Avere OS uses X.509 certificates for these functions:
+
+To encrypt cluster administration traffic
+
+To authenticate on behalf of a client to third-party KMIP servers
+
+For verifying cloud providers' server certificates
+
+If you need to upload certificates to the cluster, use the Cluster >
+Certificates settings page. Read
+
+Cluster > Certificates
+
+ in the Cluster Configuration Guide for details.
+
+To encrypt cluster management communication, use the Cluster > General
+Setup settings page to select which certificate to use for
+administrative SSL.
+
+Note: Cloud service access keys are stored by using the Cloud
+  Credentials configuration page. Read
+
+  Cloud Credentials
+
+   for an overview of that process.
