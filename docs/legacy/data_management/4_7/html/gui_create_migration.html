@@ -1,0 +1,471 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Creating a New FlashMove or FlashMirror Job &#8212; Avere OS Data Management Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Monitoring Data Management Jobs" href="gui_migration_dashboard.html" />
+    <link rel="prev" title="Prerequisites for using FlashMove or FlashMirror" href="migration_prereqs.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/vendor/savvior/savvicms-avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_migration_dashboard.html" title="Monitoring Data Management Jobs"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="migration_prereqs.html" title="Prerequisites for using FlashMove or FlashMirror"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_mig_index.html">Avere OS Data Management Guide</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="creating-a-new-move-or-mirror-job">
+<span id="create-migration"></span><span id="index-0"></span><h1>Creating a New FlashMove or FlashMirror Job<a class="headerlink" href="#creating-a-new-move-or-mirror-job" title="Permalink to this headline">¶</a></h1>
+<p>A wizard walks you through creating a new FlashMove job or establishing a new FlashMirror.</p>
+<p>In the <span class="guilabel">Data Management</span> tab of the Avere Control Panel, click the <span class="guilabel">Create</span> button at the top of the page.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You also can open the data management job wizard from the <span class="guilabel">VServer</span> &gt; <span class="guilabel">Namespace</span> page on the <span class="guilabel">Settings</span> tab. Select the junction that will be the source for the move or mirror job, then click the <span class="guilabel">Move/Mirror</span> button on the <span class="guilabel">Namespace</span> page.</p>
+</div>
+<div class="figure" id="id2">
+<a class="reference internal image-reference" href="_images/gui_new_data_mgmt_wiz.png"><img alt="Add New Data Management Job wizard dialog" src="_images/gui_new_data_mgmt_wiz.png" style="width: 400pt;" /></a>
+<p class="caption"><span class="caption-text">First page of the Add New Data Management Job wizard</span></p>
+</div>
+<div class="section" id="migration-checklist">
+<h2>Migration Checklist<a class="headerlink" href="#migration-checklist" title="Permalink to this headline">¶</a></h2>
+<p>Before starting the wizard, make sure you know these details about the filesystems involved.</p>
+<ol class="arabic">
+<li><p class="first">Is the source directory mapped as a namespace junction on the Avere cluster?</p>
+<p>If the source path directly corresponds with a junction in the cluster namespace, you should select the junction as the source instead of specifying the directory explicitly. Using the junction helps prevent errors because paths and SMB information (if used) are filled in automatically.</p>
+<p>If the source is not mapped as a junction, you must use the custom source definition option and manually supply the path and SMB information.</p>
+</li>
+<li><p class="first">Does the source directory use SMB to allow access by Windows clients?</p>
+<p>If it does, make sure you have the following information:</p>
+</li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li>An administrative username for the SMB share on the source and destination directories</li>
+</ul>
+<ul>
+<li><p class="first">The name of the SMB share for the source and destination directories.</p>
+<p>Note that the SMB share must access exactly the same directory as the NFS export in order for the migration to succeed.</p>
+</li>
+</ul>
+</div></blockquote>
+<ol class="arabic" start="3">
+<li><p class="first">Is any other migration job running on the source junction?</p>
+<p>If so, that job must be aborted or completed before another job can be started.</p>
+</li>
+<li><p class="first">Do both the source and destination core filers use an appropriate cache policy? Make sure the systems <span class="guilabel">Full Caching</span> or an eligible custom policy as described in <a class="reference internal" href="migration_prereqs.html#core-filer-reqs"><span class="std std-ref">Core Filer Requirements</span></a>.</p>
+</li>
+<li><p class="first">Is the destination directory mapped as a namespace junction, or can it be reached through a junction? You cannot move or mirror data to another junction in the same Avere cluster, so you will need to remove the junction or choose a different path as the destination. This restriction applies even if moving data to a subdirectory of a junction. Read <a class="reference internal" href="#junction-warning"><span class="std std-ref">Junction Warning</span></a> to learn more.</p>
+</li>
+<li><p class="first">Does the source filesystem include any hard links to content outside of the source? These must be removed or changed before starting the job. (If possible, change the links to symbolic links or move the target files inside the path being migrated.)</p>
+</li>
+</ol>
+</div>
+<div class="section" id="job-definition">
+<span id="index-1"></span><h2>Job Definition<a class="headerlink" href="#job-definition" title="Permalink to this headline">¶</a></h2>
+<p>In the first section of the first wizard page, choose which data to use, and what to do with it.</p>
+<div class="section" id="source-selection">
+<h3>Source Selection<a class="headerlink" href="#source-selection" title="Permalink to this headline">¶</a></h3>
+<p>From the drop-down menu labeled <span class="guilabel">Namespace junction</span>, choose the source directory for the job.</p>
+<p>Existing junctions on the cluster are listed by vserver.</p>
+<a class="reference internal image-reference" href="_images/select_source.png"><img alt="Drop-down menu with junctions and other options" src="_images/select_source.png" style="width: 400pt;" /></a>
+<p>You must choose a junction that does not have an existing active FlashMove or FlashMirror job. Even a stopped job (that has not been completed or aborted) will block you from creating another data migration from that source.</p>
+<p>To migrate data that does not have a direct junction, choose <span class="guilabel">Custom source definition</span>. You will enter details about the source on page two of the wizard.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If migrating a custom source directory with SMB access, select the <span class="guilabel">Preserve CIFS ACLs</span> checkbox before proceeding to the second page. The wizard does not automatically detect SMB settings on custom directories.</p>
+</div>
+</div>
+<div class="section" id="job-type">
+<h3>Job Type<a class="headerlink" href="#job-type" title="Permalink to this headline">¶</a></h3>
+<p>Use the <span class="guilabel">Job type</span> field to select either <span class="guilabel">Move</span> or <span class="guilabel">Mirror</span>.</p>
+<p>Most of the options are the same for either type of data management job, but FlashMirror jobs include an extra <a class="reference internal" href="#mirror-sync-policy"><span class="std std-ref">mirror synchronization</span></a> setting that controls how the source and the mirror are kept synchronized.</p>
+</div>
+</div>
+<div class="section" id="job-options">
+<span id="index-2"></span><h2>Job Options<a class="headerlink" href="#job-options" title="Permalink to this headline">¶</a></h2>
+<p>The bottom panel of the first wizard page sets various options for the FlashMove or FlashMirror job.</p>
+<a class="reference internal image-reference" href="_images/gui_new_data_wiz_options.png"><img alt="Options panel of the New Data Management Job wizard" src="_images/gui_new_data_wiz_options.png" style="width: 400pt;" /></a>
+<p>Use these links to jump quickly to individual settings:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#op-initial-state"><span class="std std-ref">Initial State</span></a></li>
+<li><a class="reference internal" href="#op-overwrite-mode"><span class="std std-ref">Overwrite Mode</span></a></li>
+<li><a class="reference internal" href="#op-log"><span class="std std-ref">Enable file logging</span></a></li>
+<li><a class="reference internal" href="#mirror-sync-policy"><span class="std std-ref">Mirror synchronization policy</span></a></li>
+<li><a class="reference internal" href="#op-preserve-acls"><span class="std std-ref">Preserve CIFS ACLs</span></a></li>
+<li><a class="reference internal" href="#op-sparse-files"><span class="std std-ref">Sparse file checking</span></a></li>
+<li><a class="reference internal" href="#op-node-select"><span class="std std-ref">Primary node selection</span></a></li>
+<li><a class="reference internal" href="#op-notes"><span class="std std-ref">Notes</span></a></li>
+</ul>
+<dl class="docutils" id="op-initial-state">
+<dt><span class="guilabel">Initial state</span> -</dt>
+<dd>Choose <span class="guilabel">Stopped</span> if you want to start the job manually from the list, or <span class="guilabel">Start now</span> to begin the job automatically after creating it.</dd>
+</dl>
+<span id="index-3"></span><dl class="docutils" id="op-overwrite-mode">
+<dt><span class="guilabel">Overwrite mode</span> -</dt>
+<dd><p class="first">Select how to determine whether or not to copy files onto the destination core filer if files with the same name already exist. This setting can save time by not recopying files that already exist on the destination.</p>
+<p>Options are:</p>
+<ul class="last">
+<li><p class="first"><span class="guilabel">Always</span> - Files from the source will always be written to the destination, even if they already are present. This copies source files (and overwrites identically named destination files) in all cases.</p>
+<p>This option can lead to longer job times than the other options. Use this option if the destination core filer has not been previously populated with files from the source, or if you are not sure which option to use.</p>
+</li>
+<li><p class="first"><span class="guilabel">Filehandle, size, or modification time changed</span> - This option is designed for a new migration that replaces a previous job that did not complete or was aborted after synchronization (for example, because of a core filer outage or network problem).</p>
+<p>If a file has already been transferred between the source and destination, and the source and destination files have identical file handles, sizes, and modification times, the file is not recopied. This option allows you to migrate only the data that was not copied in the aborted job.</p>
+<p>This option includes comparing the file handles that the Avere cluster read during the previous migration attempt with the file handles currently on the core filer.</p>
+</li>
+<li><p class="first"><span class="guilabel">Size or modification time changed</span> - Use this option if your destination directory is already populated and you want to update it with any changed data from the source core filer.</p>
+<p>This option checks standard NFS file attributes to determine whether or not identically named files are identical.</p>
+<a class="reference internal image-reference" href="_images/gui_data_overwrite_mode.png"><img alt="Overwrite Mode options" src="_images/gui_data_overwrite_mode.png" style="width: 300pt;" /></a>
+</li>
+</ul>
+</dd>
+</dl>
+<p>For more details about how Avere OS compares and copies files, read <a class="reference internal" href="migration_troubleshooting.html#file-metadata"><span class="std std-ref">File Comparison and Preserving Metadata</span></a>.</p>
+<dl class="docutils" id="op-log">
+<dt><span class="guilabel">Enable file logging</span> -</dt>
+<dd><p class="first">Check this box to create a log that records each file transfer. You can specify a log file name after checking the box; the default name is <code class="docutils literal notranslate"><span class="pre">.avere_log_migration[&lt;job_number&gt;]</span></code>.</p>
+<p>The log file is created in the root path of the migration source and copied over to the destination as part of the job. Access the log file by using the namespace junction defined for the source. Make sure that the job source accepts writes and has sufficient storage available for the log file. (The size of the log file depends on the number of file transfers; if the log file reaches 1GB, logging stops.)</p>
+<a class="reference internal image-reference" href="_images/gui_migration_log_file_name.png"><img alt="Logging enabled and log file name text field showing" src="_images/gui_migration_log_file_name.png" style="width: 300pt;" /></a>
+<p class="last">(You can change the log file if a job is stopped; see <a class="reference internal" href="gui_migration_dashboard.html#actions-modify"><span class="std std-ref">Modifying a Stopped Job</span></a>.)</p>
+</dd>
+</dl>
+<span id="index-4"></span><dl class="docutils" id="mirror-sync-policy">
+<dt><span class="guilabel">Mirror synchronization policy</span> (FlashMirror jobs only) -</dt>
+<dd><p class="first">This option allows you to set a synchronization style for FlashMirror jobs. This policy determines how the cluster handles failures when updating changed files on the mirror.</p>
+<p>The synchronization policy does not affect the initial transfer between the mirror source and the destination, it only applies to updates, and only if the destination system returns errors or becomes inaccessible.</p>
+<div class="figure" id="id3">
+<a class="reference internal image-reference" href="_images/mirror_choose_sync_policy.png"><img alt="Mirror synchronization policy menu" src="_images/mirror_choose_sync_policy.png" style="width: 300pt;" /></a>
+<p class="caption"><span class="caption-text">Mirror synchronization policy options</span></p>
+</div>
+<p>There are two policy options: <span class="guilabel">Flexible</span> (the default), and <span class="guilabel">Strict</span>.</p>
+<ul>
+<li><p class="first">The <span class="guilabel">Flexible</span> policy retries a failed write to the destination core filer for up to 15 minutes. If the destination is still giving error messages after 15 minutes, the file is skipped, and put on a list of changes that need to be retried. The cluster dashboard shows an alert and the mirror status might change to <span class="guilabel">Out of sync</span>.</p>
+<p><span class="guilabel">Flexible</span> is the default policy.</p>
+</li>
+</ul>
+<ul class="simple">
+<li>With <span class="guilabel">Strict</span> synchronization, a failure writing a change to the destination core filer causes the system to retry the write indefinitely. Under this policy, no operation is considered complete until it has reached both the source and the destination core filer.</li>
+</ul>
+<p>Each policy has advantages and disadvantages.</p>
+<ul class="simple">
+<li>Strict synchronization limits the difference between the primary storage system and its mirror. However, if the mirror volume becomes unavailable, it is possible for the Avere cache to fill with retrying sync operations and become unresponsive for client operations.</li>
+</ul>
+<ul class="last">
+<li><p class="first">Flexible synchronization allows client operations to proceed unaffected by synchronization overhead, but can result in a larger discrepancy between the primary storage system and the mirror site if there are connectivity problems or other errors.</p>
+<p>The flexible option lets the primary system continue to be updated even if the primary system becomes unavailable.</p>
+</li>
+</ul>
+</dd>
+</dl>
+<span id="index-5"></span><dl class="docutils" id="op-preserve-acls">
+<dt><span class="guilabel">Preserve CIFS ACLs</span> -</dt>
+<dd><p class="first">If you are migrating an SMB share, check this box to copy the ACLs on the source share to the destination share. This box should be checked automatically if you chose an SMB-enabled junction as the source in the <span class="guilabel">Job Definition</span> section.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This option should always be enabled when migrating an SMB share controlled by ACLs.</p>
+</div>
+<p>Both shares must be on core filers configured for SMB access.</p>
+<a class="reference internal image-reference" href="_images/gui_migration_preserve_acls.png"><img alt="Options when Preserve CIFS ACLs box is checked" src="_images/gui_migration_preserve_acls.png" style="width: 300pt;" /></a>
+<p>Two additional values can be set when <span class="guilabel">Preserve CIFS ACLs</span> is checked:</p>
+<ul class="last">
+<li><p class="first"><span class="guilabel">Overwrite destination root ACL</span> - Check this box if you want to copy the source directory’s root ACL to the destination root. (This setting is typically recommended.)</p>
+</li>
+<li><p class="first"><span class="guilabel">CIFS vserver</span> - If you chose an SMB-enabled junction in the <span class="guilabel">Namespace junction</span> field, this field should be populated with the vserver that corresponds to that junction.</p>
+<p>If you chose <span class="guilabel">Custom source definition</span>, a pull-down menu with a list of cluster vservers appears. Choose the vserver that provides access to the directory you will migrate. If the vserver does not appear on the list, check that it meets these requirements:</p>
+<ul class="simple">
+<li>SMB/CIFS is enabled on the vserver</li>
+<li>Protocol Transition is enabled in Active Directory</li>
+<li>Constrained delegation is configured on the vserver for both the source and destination core filers of the migration job</li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+<dl class="docutils" id="op-sparse-files">
+<dt><span class="guilabel">Sparse file checking</span> -</dt>
+<dd>By default, the migration job scans for empty blocks in data files and avoids writing the empty blocks to save drive space on the destination. If you know that your dataset does not include many files with empty blocks, disabling this feature gives a small performance advantage.</dd>
+</dl>
+<dl class="docutils" id="op-node-select">
+<dt><span class="guilabel">Primary node selection</span> -</dt>
+<dd><p class="first">This field allows you to specify which cluster node handles the processing work for this move or mirror job. The default (<span class="guilabel">Auto</span>) selects the node with the fewest Data Management jobs running, or by using a round-robin system.</p>
+<p class="last">This setting specifies the preferred node. If the selected node fails and is removed from the cluster, another node will take over the migration job automatically.</p>
+</dd>
+</dl>
+<dl class="docutils" id="op-notes">
+<dt><span class="guilabel">Notes</span> -</dt>
+<dd>Optionally, use this field to enter administrative notes about the job. The text entered here is shown on the job details view.</dd>
+</dl>
+<p>Click the <span class="guilabel">Next</span> button to load the second page of the wizard.</p>
+<div class="figure" id="id4">
+<a class="reference internal image-reference" href="_images/gui_new_data_mgmt_wiz_p2.png"><img alt="Second Page of the Add New Data Management Job wizard dialog" src="_images/gui_new_data_mgmt_wiz_p2.png" style="width: 400pt;" /></a>
+<p class="caption"><span class="caption-text">Second page of the Add New Data Management Job wizard</span></p>
+</div>
+</div>
+<div class="section" id="data-source">
+<span id="index-6"></span><h2>Data Source<a class="headerlink" href="#data-source" title="Permalink to this headline">¶</a></h2>
+<p>The top of the second screen in the <span class="guilabel">Add New Data Management Job</span> wizard shows the data source information you specified in the first screen, plus some additional settings.</p>
+<a class="reference internal image-reference" href="_images/new_mig_data_source.png"><img alt="Data Source section on screen 2 of the migration wizard" src="_images/new_mig_data_source.png" style="width: 400pt;" /></a>
+<p>If you chose a junction in the first screen, the <span class="guilabel">Source export</span> and <span class="guilabel">Export subdirectory</span> fields are filled in from the junction.</p>
+<p>If SMB is enabled for the selected source, the <span class="guilabel">Source share name</span> field is filled in with the SMB share name (for a NAS hardware core filer) or with <code class="docutils literal notranslate"><span class="pre">[n/a]</span></code> (for a cloud core filer).</p>
+<p>If you chose <span class="guilabel">Custom source definition</span> on the first page, you must specify the migration source here. Read <a class="reference internal" href="#spec-custom-src"><span class="std std-ref">Defining a Custom Data Source</span></a>, below, for more information.</p>
+<div class="section" id="junction-source-information">
+<h3>Junction Source Information<a class="headerlink" href="#junction-source-information" title="Permalink to this headline">¶</a></h3>
+<p>If you chose a junction as your source directory, most of the source directory information is filled out on the second page.</p>
+<p>If your source has SMB access configured, you must supply the username for an SMB administrator that is able to read and write SMB ACLs on the source.</p>
+<p>Enter the SMB administrator username in the <span class="guilabel">Source admin username (CIFS)</span> field. Use the format <code class="docutils literal notranslate"><span class="pre">DOMAIN\username</span></code>.</p>
+</div>
+<div class="section" id="defining-a-custom-data-source">
+<span id="spec-custom-src"></span><span id="index-7"></span><h3>Defining a Custom Data Source<a class="headerlink" href="#defining-a-custom-data-source" title="Permalink to this headline">¶</a></h3>
+<a class="reference internal image-reference" href="_images/mig_p2_data_source_custom.png"><img alt="Empty fields in page two data source section" src="_images/mig_p2_data_source_custom.png" style="width: 300pt;" /></a>
+<p>If you chose <span class="guilabel">Custom source definition</span> in the source section of the first page, you must use this page to specify the data that you want to move or mirror.</p>
+<p>In <span class="guilabel">Source core filer</span>, use the drop-down menu to select one of the cluster’s core filers. This list shows all core filers defined for the cluster, but some core filers might be unselectable because their settings prevent data access for migration jobs.</p>
+<p>After you choose the core filer, a list of its exports appears in the <span class="guilabel">Source export</span> field. Choose the export. You can type part of the export name in the field to filter the list.</p>
+<p>If necessary, enter the rest of the path between the export and the source directory in the <span class="guilabel">Export subdirectory</span> field. (This path is not validated at creation time.)</p>
+<p>For an SMB source, you must also type in the share name and an SMB administrative username. As with other fields, these are not validated, so be careful to correctly specify the SMB share that corresponds with the subdirectory being migrated. This share must access the same directory on the source core filer as the <span class="guilabel">Source export</span> field that was selected above.</p>
+<div class="figure" id="id5">
+<a class="reference internal image-reference" href="_images/cust_src_smb_complete.png"><img alt="Custom source panel with all fields completed, including SMB fields" src="_images/cust_src_smb_complete.png" style="width: 350pt;" /></a>
+<p class="caption"><span class="caption-text">Completed custom source field, including SMB options</span></p>
+</div>
+<div class="section" id="showing-smb-options">
+<h4>Showing SMB Options<a class="headerlink" href="#showing-smb-options" title="Permalink to this headline">¶</a></h4>
+<p>When defining a custom source path instead of selecting a junction, SMB settings do not automatically appear on the second page of the <span class="guilabel">Add New Data Management Job</span> wizard. You must check <span class="guilabel">Preserve CIFS ACLs</span> on the first page to show SMB options on the second page.</p>
+<p>You also must select an SMB-enabled vserver from the list in the <span class="guilabel">CIFS vserver</span> box on the first page.</p>
+<div class="figure" id="id6">
+<a class="reference internal image-reference" href="_images/custom_check_acls.png"><img alt="Checking the CIFS ACLs box on page one to enable SMB options for a job with a custom source" src="_images/custom_check_acls.png" style="width: 350pt;" /></a>
+<p class="caption"><span class="caption-text">Enabling SMB options for a custom source Data Management job</span></p>
+</div>
+<div class="figure" id="id7">
+<a class="reference internal image-reference" href="_images/mig_custom_p2_smb.png"><img alt="Wizard page two with SMB options and nothing yet filled in" src="_images/mig_custom_p2_smb.png" style="width: 350pt;" /></a>
+<p class="caption"><span class="caption-text">Custom data source second page with SMB options</span></p>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="data-destination">
+<span id="wiz-data-destination"></span><span id="index-8"></span><h2>Data Destination<a class="headerlink" href="#data-destination" title="Permalink to this headline">¶</a></h2>
+<p>In the <span class="guilabel">Data destination</span> section, specify the target of the move or mirror job. This is the location where your data will be copied.</p>
+<p>For a FlashMove job, if the source you selected was a namespace junction, that junction is remapped to point to the destination directory after all data files have been transferred. For a FlashMirror job, the junction is remapped to the destination only if you use the <a class="reference internal" href="migration_explained.html#mirror-transition"><span class="std std-ref">Transition</span></a> or <a class="reference internal" href="migration_explained.html#mirror-reverse"><span class="std std-ref">Reverse</span></a> option.</p>
+<p>Note that you must not select a destination path that includes a cluster namespace junction. Read <a class="reference internal" href="#junction-warning"><span class="std std-ref">Junction Warning</span></a> for details.</p>
+<dl class="docutils">
+<dt><span class="guilabel">Destination core filer</span> -</dt>
+<dd>Select one of the cluster’s core filers.</dd>
+<dt><span class="guilabel">Destination export</span> -</dt>
+<dd><p class="first">Choose the target export path on the core filer.</p>
+<p>To filter the list of exports, type part of the export name in the field.</p>
+<a class="last reference internal image-reference" href="_images/mig_search_dest_export.png"><img alt="Searching for an export" src="_images/mig_search_dest_export.png" style="width: 300pt;" /></a>
+</dd>
+<dt><span class="guilabel">Export subdirectory</span> -</dt>
+<dd><p class="first">Optionally, specify a subdirectory where the data should be copied. If the directory does not exist, Avere OS will create it.</p>
+<p class="last">Do not include a / before the subdirectory name.</p>
+</dd>
+</dl>
+<dl class="docutils" id="transfer-policies-nh">
+<dt><span class="guilabel">Transfer source export policies to destination</span> -</dt>
+<dd><p class="first">If you mark this checkbox, the export policy associated with the data source will be transferred to the data destination as part of the FlashMove or FlashMirror job. That is, the files migrated will have the same access policies that they had in the source directory.</p>
+<p>In most cases, you should use this option.</p>
+<p class="last">Policies cannot be transferred if either the source or destination is a subdirectory of an export. Export policies can only be applied at the export level. This checkbox is disabled if a subdirectory is selected.</p>
+</dd>
+</dl>
+<div class="section" id="junction-warning">
+<span id="index-9"></span><span id="id1"></span><h3>Junction Warning<a class="headerlink" href="#junction-warning" title="Permalink to this headline">¶</a></h3>
+<p>You cannot move or mirror data to a namespace junction. If you select a core filer and export location that includes a junction somewhere in its path, the dialog shows a warning message and you cannot create the job.</p>
+<p>That is, there cannot be a junction to the destination directory itself, or to a parent of that directory, or to a child of that directory.</p>
+<div class="figure" id="id8">
+<a class="reference internal image-reference" href="_images/mig_dest_ineligible.png"><img alt="Destination section with warning note about subdirectories accessible by a junction" src="_images/mig_dest_ineligible.png" style="width: 300pt;" /></a>
+<p class="caption"><span class="caption-text">Warning message for an ineligible destination path</span></p>
+</div>
+<p>You can migrate data to a destination that is a sibling of a directory accessible by a junction.</p>
+<p>For example, consider a core filer with the following exports:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">/vol1/</span></code></td>
+<td>Not accessed by a junction</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">/vol2/dir1/</span></code></td>
+<td>Accessed by junction <code class="docutils literal notranslate"><span class="pre">v2dir1/</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">/vol2/dir2/</span></code></td>
+<td>Not accessed by a junction</td>
+</tr>
+</tbody>
+</table>
+<p>The parents or children of <code class="docutils literal notranslate"><span class="pre">/vol2/dir1/</span></code> - like <code class="docutils literal notranslate"><span class="pre">/vol2/</span></code> and <code class="docutils literal notranslate"><span class="pre">/vol2/dir1/subdir1/</span></code> -  <em>cannot</em> be used as the destination of a FlashMove or FlashMirror job.</p>
+<p>However, you <em>can</em> move data to <code class="docutils literal notranslate"><span class="pre">/vol2/dir2/</span></code> and to any subdirectory of <code class="docutils literal notranslate"><span class="pre">/vol1/</span></code> or of <code class="docutils literal notranslate"><span class="pre">/vol2/dir2/</span></code> since their paths do not overlap with a junction.</p>
+<p>The screenshot below removes the warning by specifying a more specific path - in this example, a subdirectory of the export <code class="docutils literal notranslate"><span class="pre">/vol/vol1/</span></code> is defined as a junction, but creating a new subdirectory that is a sibling to the junction allows the migration to take place.</p>
+<div class="figure" id="id9">
+<a class="reference internal image-reference" href="_images/mig_dest_eligible_subdir.png"><img alt="Destination section with a different subdirectory and no warning note" src="_images/mig_dest_eligible_subdir.png" style="width: 300pt;" /></a>
+<p class="caption"><span class="caption-text">Using a different directory creates an eligible destination</span></p>
+</div>
+</div>
+<div class="section" id="destination-smb-settings">
+<span id="index-10"></span><h3>Destination SMB Settings<a class="headerlink" href="#destination-smb-settings" title="Permalink to this headline">¶</a></h3>
+<p>If you are migrating data from an SMB-accessible source, additional SMB settings must be specified for the destination.</p>
+<div class="figure" id="id10">
+<a class="reference internal image-reference" href="_images/mig_dest_smb.png"><img alt="SMB settings for the data destination" src="_images/mig_dest_smb.png" style="width: 300pt;" /></a>
+<p class="caption"><span class="caption-text">SMB settings in the data destination</span></p>
+</div>
+<p>Supply the following information to transfer SMB-enabled data.</p>
+<dl class="docutils">
+<dt><span class="guilabel">Destination share name</span> -</dt>
+<dd>Enter the name of the SMB share on the destination core filer that accesses the same directory as the core filer export. This share must exist before you can create the data management job.</dd>
+<dt><span class="guilabel">Destination admin username (CIFS)</span> -</dt>
+<dd>Supply the username for an SMB administrator that is able to read and write SMB ACLs on the destination. Use the format <code class="docutils literal notranslate"><span class="pre">DOMAIN\username</span></code>.</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="submitting-the-new-data-management-job">
+<h2>Submitting the New Data Management Job<a class="headerlink" href="#submitting-the-new-data-management-job" title="Permalink to this headline">¶</a></h2>
+<p>When all of the settings are complete, click the <span class="guilabel">Add Job</span> button at the bottom of the second page to create the job.</p>
+<a class="reference internal image-reference" href="_images/move_wiz_complete.png"><img alt="The completed wizard screen with a cursor over the Add Job button" src="_images/move_wiz_complete.png" style="width: 350pt;" /></a>
+<p>The job is created and can be viewed in the main <span class="guilabel">Data Management</span> table.</p>
+<div class="figure" id="id11">
+<a class="reference internal image-reference" href="_images/new_job_in_table.png"><img alt="Data Management tab showing new job at top of list" src="_images/new_job_in_table.png" style="width: 400pt;" /></a>
+<p class="caption"><span class="caption-text">Data Management page, with the newly created job at the top of the table</span></p>
+</div>
+<div class="section" id="job-creation-errors-and-warnings">
+<span id="job-create-warnings"></span><h3>Job Creation Errors and Warnings<a class="headerlink" href="#job-creation-errors-and-warnings" title="Permalink to this headline">¶</a></h3>
+<p>If the Avere cluster encounters problems creating the job, it shows a pop-up window with an error message. (The specific message depends on which setting needs to be changed.)</p>
+<div class="figure" id="id12">
+<a class="reference internal image-reference" href="_images/job_create_error.png"><img alt="Job Creation Status pop-up with error message and back/abort buttons" src="_images/job_create_error.png" style="width: 300pt;" /></a>
+<p class="caption"><span class="caption-text">Job creation error message</span></p>
+</div>
+<p>You can use the <span class="guilabel">Back</span> button to return to the job creation wizard and make corrections, or use the <span class="guilabel">Cancel</span> button to stop creating the job, removing all settings.</p>
+<div class="section" id="suspending-snapshots">
+<span id="index-11"></span><h4>Suspending Snapshots<a class="headerlink" href="#suspending-snapshots" title="Permalink to this headline">¶</a></h4>
+<p>If migrating data to a cloud core filer, you might see a warning about suspending snapshots. This message appears if the Avere cluster is set to automatically store snapshots of the core filer content.</p>
+<p>The cluster will not create snapshots of the content on the affected cloud core filer while a FlashMove or FlashMirror job is active. You must acknowledge this limitation by typing <code class="docutils literal notranslate"><span class="pre">yes</span></code> in a pop-up dialog when starting the job.</p>
+<a class="reference internal image-reference" href="_images/mig_snapshot_warning.png"><img alt="Pop-up warning about suspending snapshots during migration" src="_images/mig_snapshot_warning.png" style="width: 200pt;" /></a>
+<p>If snapshots are an important part of your data management strategy, consider saving a manual snapshot before starting the migration. Read <a class="reference external" href="http://library.averesystems.com/ops_guide/4_7/gui_cloud_snapshot_policies.html#cloud-snapshot-policies" title="(in Operations Guide v4.7)"><span>Core Filer &gt; Cloud Snapshot Policies</span></a> in the Avere Control Panel Settings Guide to learn more.</p>
+<div class="last-update docutils container">
+updated Jul 19, 2017</div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="ops_mig_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Creating a New FlashMove or FlashMirror Job</a><ul>
+<li><a class="reference internal" href="#migration-checklist">Migration Checklist</a></li>
+<li><a class="reference internal" href="#job-definition">Job Definition</a></li>
+<li><a class="reference internal" href="#job-options">Job Options</a></li>
+<li><a class="reference internal" href="#data-source">Data Source</a></li>
+<li><a class="reference internal" href="#data-destination">Data Destination</a></li>
+<li><a class="reference internal" href="#submitting-the-new-data-management-job">Submitting the New Data Management Job</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="migration_prereqs.html"
+                        title="previous chapter">Prerequisites for using FlashMove or FlashMirror</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_migration_dashboard.html"
+                        title="next chapter">Monitoring Data Management Jobs</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_migration_dashboard.html" title="Monitoring Data Management Jobs"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="migration_prereqs.html" title="Prerequisites for using FlashMove or FlashMirror"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_mig_index.html">Avere OS Data Management Guide</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com/" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/" target="_blank" style="color: #fff;">Avere Systems Website</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

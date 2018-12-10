@@ -1,0 +1,240 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Tips and Troubleshooting Information for Data Management Jobs &#8212; Avere OS Data Management Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Appendix A: Adding or Removing Feature Licenses" href="license_link.html" />
+    <link rel="prev" title="Monitoring Data Management Jobs" href="gui_migration_dashboard.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/vendor/savvior/savvicms-avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="license_link.html" title="Appendix A: Adding or Removing Feature Licenses"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_migration_dashboard.html" title="Monitoring Data Management Jobs"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_mig_index.html">Avere OS Data Management Guide</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="tips-and-troubleshooting-information-for-data-management-jobs">
+<span id="migration-troubleshooting"></span><span id="index-0"></span><h1>Tips and Troubleshooting Information for Data Management Jobs<a class="headerlink" href="#tips-and-troubleshooting-information-for-data-management-jobs" title="Permalink to this headline">¶</a></h1>
+<p>This article includes tips for working with the Avere OS Data Management tools, and helps explain alerts and messages that you might see during and after a FlashMove or FlashMirror job.</p>
+<div class="section" id="removing-a-source-directory-after-a-move">
+<span id="remove-source"></span><h2>Removing a Source Directory After a Move<a class="headerlink" href="#removing-a-source-directory-after-a-move" title="Permalink to this headline">¶</a></h2>
+<p>A FlashMove operation does not delete data from the source directory when it finishes. The data remains on the core filer, but the Avere cluster no longer can access the original location because the junction that points to it was moved to reference the new core filer.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>If your source directory was an Avere-managed cloud object store, only an  Avere cluster can access this data.</p>
+<p>To reuse or remove the leftover data in the cloud, do one of the following:</p>
+<ul class="last simple">
+<li>Create a junction to a parent of the moved data path, and use that junction to navigate to the moved directory.</li>
+<li>Use a different Avere cluster to create a junction to the original source path.</li>
+<li>Delete the data by destroying the storage (if you are not otherwise using the cloud volume).</li>
+</ul>
+</div>
+<p>You can delete the data from the source by following these steps:</p>
+<ol class="arabic">
+<li><p class="first">If one does not already exist, create a junction in the Avere cluster that maps to the parent directory of the move source.</p>
+<p>For example, if you moved the directory <code class="docutils literal notranslate"><span class="pre">sales/2016/</span></code>, create a junction to <code class="docutils literal notranslate"><span class="pre">sales/</span></code></p>
+</li>
+<li><p class="first">Use a client machine to navigate to the <code class="docutils literal notranslate"><span class="pre">sales/</span></code> directory and use a system command to remove the subdirectory <code class="docutils literal notranslate"><span class="pre">2016/</span></code>. (For example, use a command like <code class="docutils literal notranslate"><span class="pre">rm</span> <span class="pre">-r</span> <span class="pre">2016/*</span></code> on a Linux system.)</p>
+</li>
+</ol>
+<p>For a non-cloud source volume, you also have the option to mount the source storage export directly and use another method to delete the data.</p>
+</div>
+<div class="section" id="post-migration-processing">
+<span id="index-1"></span><h2>Post-Migration Processing<a class="headerlink" href="#post-migration-processing" title="Permalink to this headline">¶</a></h2>
+<p>After a data management job finishes, the Avere cluster does some background work on the migrated files to ensure that they are updated with their new core filer’s caching policy.</p>
+<p>While this filesystem maintenance work is going on, you cannot start another data management job that uses these files. If you attempt to create a FlashMove or FlashMirror with one of the affected paths as the source or destination, the <span class="guilabel">Add New Data Management Job</span> wizard gives an error.</p>
+<p>The post-migration processing takes at least 15 minutes, but can take several hours depending on the amount of data moved. While it is going on, a status message appears in the <span class="guilabel">Cluster Activity</span> panel at the bottom of each page of the Avere Control Panel.</p>
+</div>
+<div class="section" id="data-management-job-conditions">
+<span id="index-2"></span><h2>Data Management Job Conditions<a class="headerlink" href="#data-management-job-conditions" title="Permalink to this headline">¶</a></h2>
+<p>This section describes some of the status messages that can appear on the Avere cluster Dashboard page.</p>
+<div class="section" id="temporary-files-alerts">
+<h3>Temporary Files Alerts<a class="headerlink" href="#temporary-files-alerts" title="Permalink to this headline">¶</a></h3>
+<p>These messages indicate that interim files on the destination core filer were not properly cleaned up. This can happen because a non-retryable error occurred, or because the background job to delete the temporary files was aborted.</p>
+<p>You can manually remove the files directly from the core filer, but removing them is typically unnecessary.</p>
+<p>Examples:</p>
+<p><code class="docutils literal notranslate"><span class="pre">Data</span> <span class="pre">Management</span> <span class="pre">job</span> <span class="pre">&lt;job_number&gt;</span> <span class="pre">has</span> <span class="pre">left</span> <span class="pre">temporary</span> <span class="pre">files</span> <span class="pre">on</span> <span class="pre">the</span> <span class="pre">core</span> <span class="pre">filer</span> <span class="pre">at:</span> <span class="pre">core_filer_name:path/._avere_pen_job_identifier.</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">Data</span> <span class="pre">Management</span> <span class="pre">job</span> <span class="pre">&lt;job_number&gt;</span> <span class="pre">failed</span> <span class="pre">to</span> <span class="pre">remove</span> <span class="pre">the</span> <span class="pre">temporary</span> <span class="pre">files</span> <span class="pre">directory</span> <span class="pre">on</span> <span class="pre">the</span> <span class="pre">destination</span> <span class="pre">core</span> <span class="pre">filer.</span> <span class="pre">You</span> <span class="pre">can</span> <span class="pre">manually</span> <span class="pre">remove</span> <span class="pre">the</span> <span class="pre">temporary</span> <span class="pre">files</span> <span class="pre">directory</span> <span class="pre">by</span> <span class="pre">directly</span> <span class="pre">mounting</span> <span class="pre">the</span> <span class="pre">core</span> <span class="pre">filer</span> <span class="pre">and</span> <span class="pre">deleting</span> <span class="pre">the</span> <span class="pre">temporary</span> <span class="pre">files</span> <span class="pre">directory</span> <span class="pre">and</span> <span class="pre">all</span> <span class="pre">of</span> <span class="pre">its</span> <span class="pre">contents.</span></code></p>
+</div>
+<div class="section" id="transition-error-alerts">
+<h3>Transition Error Alerts<a class="headerlink" href="#transition-error-alerts" title="Permalink to this headline">¶</a></h3>
+<p>As the last step in a FlashMove job, the Avere cluster changes its cached files to reference the destination path instead of the source path. This step is referred to as transition.</p>
+<p>A problem in this phase can cause inconsistencies between the core filer data and the data in the Avere cache. In some cases, intervention by Avere Global Services is needed to force the directories to repopulate correctly.</p>
+<p>Examples:</p>
+<p><code class="docutils literal notranslate"><span class="pre">Data</span> <span class="pre">Management</span> <span class="pre">job</span> <span class="pre">&lt;job_number&gt;</span> <span class="pre">encountered</span> <span class="pre">an</span> <span class="pre">issue</span> <span class="pre">during</span> <span class="pre">transition:</span> <span class="pre">transition</span> <span class="pre">did</span> <span class="pre">not</span> <span class="pre">complete.</span> <span class="pre">Status:</span> <span class="pre">Could</span> <span class="pre">not</span> <span class="pre">initiate</span> <span class="pre">transition</span> <span class="pre">due</span> <span class="pre">to</span> <span class="pre">destination</span> <span class="pre">export</span> <span class="pre">being</span> <span class="pre">inaccessible.</span> <span class="pre">Check</span> <span class="pre">destination</span> <span class="pre">core</span> <span class="pre">filer</span> <span class="pre">status</span> <span class="pre">and</span> <span class="pre">try</span> <span class="pre">the</span> <span class="pre">transition</span> <span class="pre">again.</span></code></p>
+<p>The alert above means that the content was not successfully moved to the destination.</p>
+<ul class="simple">
+<li>A FlashMove job will automatically retry the transition.</li>
+<li>A FlashMirror job will return to the mirroring state; you must retry the transition by selecting the job and choosing the <span class="guilabel">Transition</span> action.</li>
+</ul>
+</div>
+<div class="section" id="path-error-alerts">
+<h3>Path Error Alerts<a class="headerlink" href="#path-error-alerts" title="Permalink to this headline">¶</a></h3>
+<p>These alerts indicate errors in changing the cluster cache files to reference the correct directories.</p>
+<p>Examples:</p>
+<p><code class="docutils literal notranslate"><span class="pre">Data</span> <span class="pre">Management</span> <span class="pre">job</span> <span class="pre">&lt;job_number&gt;</span> <span class="pre">has</span> <span class="pre">completed,</span> <span class="pre">but</span> <span class="pre">the</span> <span class="pre">source</span> <span class="pre">path</span> <span class="pre">experienced</span> <span class="pre">problems</span> <span class="pre">during</span> <span class="pre">the</span> <span class="pre">operation.</span> <span class="pre">This</span> <span class="pre">may</span> <span class="pre">affect</span> <span class="pre">future</span> <span class="pre">attempts</span> <span class="pre">to</span> <span class="pre">create</span> <span class="pre">a</span> <span class="pre">junction</span> <span class="pre">directly</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">source</span> <span class="pre">path.</span> <span class="pre">Please</span> <span class="pre">contact</span> <span class="pre">Avere</span> <span class="pre">Global</span> <span class="pre">Services</span> <span class="pre">if</span> <span class="pre">you</span> <span class="pre">have</span> <span class="pre">any</span> <span class="pre">further</span> <span class="pre">issues.</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">Data</span> <span class="pre">Management</span> <span class="pre">job</span> <span class="pre">&lt;job_number&gt;</span> <span class="pre">has</span> <span class="pre">been</span> <span class="pre">manually</span> <span class="pre">aborted,</span> <span class="pre">but</span> <span class="pre">the</span> <span class="pre">destination</span> <span class="pre">path</span> <span class="pre">experienced</span> <span class="pre">problems</span> <span class="pre">during</span> <span class="pre">the</span> <span class="pre">operation.</span> <span class="pre">This</span> <span class="pre">may</span> <span class="pre">affect</span> <span class="pre">future</span> <span class="pre">attempts</span> <span class="pre">to</span> <span class="pre">create</span> <span class="pre">a</span> <span class="pre">junction</span> <span class="pre">directly</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">destination</span> <span class="pre">path.</span> <span class="pre">Please</span> <span class="pre">contact</span> <span class="pre">Avere</span> <span class="pre">Global</span> <span class="pre">Services</span> <span class="pre">if</span> <span class="pre">you</span> <span class="pre">have</span> <span class="pre">any</span> <span class="pre">further</span> <span class="pre">issues.</span></code></p>
+<p>If you plan to create a junction to the path listed in the alert after this failure, contact Avere Global Services for help to make sure that the metadata for this path is in a good state.</p>
+</div>
+</div>
+<div class="section" id="file-comparison-and-preserving-metadata">
+<span id="file-metadata"></span><span id="index-3"></span><h2>File Comparison and Preserving Metadata<a class="headerlink" href="#file-comparison-and-preserving-metadata" title="Permalink to this headline">¶</a></h2>
+<p>This section gives tips about how Avere OS determines whether or not two files are identical, and what to expect in metadata for moved or mirrored files.</p>
+<div class="section" id="comparing-files">
+<h3>Comparing Files<a class="headerlink" href="#comparing-files" title="Permalink to this headline">¶</a></h3>
+<p>You can configure how Avere OS decides when to overwrite files on the destination as part of a FlashMove or FlashMirror operation. (These options are described in detail in <a class="reference internal" href="gui_create_migration.html#op-overwrite-mode"><span class="std std-ref">Overwrite Mode</span></a> as part of creating a new data management job.)</p>
+<p>The <span class="guilabel">Always</span> overwrite mode does not compare files from the source with similar files on the destination, it simply overwrites all destination files with the source files.</p>
+<p>There are two comparison options:</p>
+<ul class="simple">
+<li><span class="guilabel">Filehandle, size, or modification time changed</span>, and</li>
+<li><span class="guilabel">Size or modification time changed</span></li>
+</ul>
+<p>The first option includes comparing file handles in addition to file size and modification time. File handles are unique identifiers assigned by the core filer that stay the same throughout a file’s lifetime. During a FlashMove or FlashMirror job, the Avere cluster creates a mapping between the file handle on the source and the file handle for the corresponding file on the destination. So if this cluster has previously moved a particular file, the cluster can consult its internal mapping to help determine whether or not a file is the same.</p>
+<p>The other comparison values are standard file attributes: file size and modification time (mtime).</p>
+<p>When copying files, Avere OS copies the modification time along with the file, as described in the next section.</p>
+<p>Because Avere OS uses an NFSv3-compatible approach for writing to cloud object storage, cloud core filers are treated the same way as hardware NAS systems.</p>
+</div>
+<div class="section" id="metadata-implications-for-migrated-files">
+<h3>Metadata Implications for Migrated Files<a class="headerlink" href="#metadata-implications-for-migrated-files" title="Permalink to this headline">¶</a></h3>
+<p>Administrators frequently want to know how FlashMove or FlashMirror affects timestamps for the copied files.</p>
+<p>In general, the Avere cluster preserves file attributes when moving the file from the cluster cache to back-end storage, and the same is true when files are copied as part of a data management job. In other words, a file stored on the source core filer and its counterpart in the destination core filer should have the same file attributes. These values also are kept synchronized if changes are made to the file in the cluster cache.</p>
+<p>Specifically, Avere OS preserves these file attributes:</p>
+<ul class="simple">
+<li>access mode bits (file permissions)</li>
+<li>atime (last access time)</li>
+<li>mtime (last content modification time)</li>
+<li>UID (user identifier)</li>
+<li>GID (group identifier)</li>
+<li>file length</li>
+<li>SMB ACLs (access control lists - preserved for SMB-enabled data if <a class="reference internal" href="gui_create_migration.html#op-preserve-acls"><span class="std std-ref">Preserve CIFS ACLs</span></a> is configured)</li>
+</ul>
+<p>Avere OS does not preserve ctime (change time) because NFSv3 does not support setting the ctime attribute, and it does not preserve capacity data, which varies by storage system.</p>
+<p>Note that if you do not need strict atime or mtime synchronization, some advanced options can be set to improve performance. Contact Avere Systems to learn more.</p>
+<div class="last-update docutils container">
+updated Jul 19, 2017</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="ops_mig_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Tips and Troubleshooting Information for Data Management Jobs</a><ul>
+<li><a class="reference internal" href="#removing-a-source-directory-after-a-move">Removing a Source Directory After a Move</a></li>
+<li><a class="reference internal" href="#post-migration-processing">Post-Migration Processing</a></li>
+<li><a class="reference internal" href="#data-management-job-conditions">Data Management Job Conditions</a></li>
+<li><a class="reference internal" href="#file-comparison-and-preserving-metadata">File Comparison and Preserving Metadata</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_migration_dashboard.html"
+                        title="previous chapter">Monitoring Data Management Jobs</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="license_link.html"
+                        title="next chapter">Appendix A: Adding or Removing Feature Licenses</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="license_link.html" title="Appendix A: Adding or Removing Feature Licenses"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_migration_dashboard.html" title="Monitoring Data Management Jobs"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_mig_index.html">Avere OS Data Management Guide</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com/" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/" target="_blank" style="color: #fff;">Avere Systems Website</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>
