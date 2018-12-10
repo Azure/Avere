@@ -1,0 +1,86 @@
+Appendix B: Security Requirements for Administrative Systems
+
+Make sure that systems used to administer the Avere cluster meet the
+security requirements described below. These requirements apply both
+to systems that use the Avere Control Panel to configure the cluster
+and also to systems used for command-line management with the XML-RPC
+API.
+
+These requirements do
+
+not
+
+ affect client systems that access the cluster or its cache, they only
+apply to workstations that are used to configure the cluster.
+
+SSH Ciphers
+
+As of Avere OS version 4.7.3.2, the cluster SSH server accepts only
+the following security algorithms:
+
+      Ciphers  chacha20-poly1305@openssh.com  aes256-gcm@openssh.com
+aes128-gcm@openssh.com*  aes256-ctr  aes192-ctr*  aes128-ctr*  MACs
+hmac-sha2-512-etm@openssh.com  hmac-sha2-256-etm@openssh.com
+umac-128-etm@openssh.com*  hmac-sha2-512  hmac-sha2-256
+umac-128@openssh.com*  hmac-sha1*  KEX Algorithms
+curve25519-sha256@libssh.org  ecdh-sha2-nistp521  ecdh-sha2-nistp384
+ecdh-sha2-nistp256  diffie-hellman-group-exchange-sha256  diffie-
+hellman-group14-sha1*
+
+^*
+
+Note:
+
+ SHA1 and AES128 are provided for backward-compatibility with outdated
+SSH clients only. These algorithms will be phased out in future
+releases. Please update all SSH clients to use more modern algorithms.
+
+HTTPS Configuration
+
+All HTTPS endpoints (used for web administration and XML-RPC API
+access, among others) explicitly reject connections that use insecure
+legacy protocols and cipher suites.
+
+This standard affects all systems on administrative workstations that
+use HTTPS, including web browsers, OpenSSL, and Python installations.
+
+Settings should correspond to the Modern TLS protocol described in
+these articles:
+
+https://wiki.mozilla.org/Security/Server_Side_TLS
+
+https://mozilla.github.io/server-side-tls/ssl-config-generator/
+
+The Mozilla wiki page includes a
+
+list of web browsers
+
+  that have the minimum support necessary for the Modern
+configuration.
+
+TLS Version 1.2
+
+Only
+
+ Transport Layer Security (TLS) protocol version 1.2 is accepted.
+Insecure legacy protocols, including SSL, TLS v1.0, and TLS v1.1 are
+rejected.
+
+TLS v1.2 support was introduced in Python v 2.7.9, Python v 3.4, and
+OpenSSL v 1.0.1; however, Avere Systems recommends upgrading
+administrative machines to the latest versions of Python and OpenSSL
+to include additional security updates and bug fixes.
+
+Apache Settings
+
+The Apache web server is configured to permit only the following
+security standards:
+
+Elliptic Curve Diffie-Hellman Exchange (ECDHE) key exchange
+
+ECDSA and RSA signature algorithms
+
+AES256, AES128 ciphers (including AES-GCM mode) with SHA256 or SHA384
+message authentication
+
+CHACHA20 cipher with POLY1305 message authentication

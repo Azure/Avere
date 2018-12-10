@@ -1,0 +1,124 @@
+Cluster > FXT Nodes
+
+
+The FXT Nodes page displays information about the nodes that are in
+the cluster, as well as a list of unconfigured FXT nodes that are
+visible to the cluster on the network.
+
+From this page, you can do the following:
+
+Load the Node Details page for a cluster node
+
+Add nodes to the cluster
+
+Restart or shut down a node
+
+Suspend a node
+
+Remove nodes from the cluster
+
+Caution: Any operations that affect the node’s connectivity to an
+  active cluster, including removal, restart, and shutdown, can cause
+  temporary service disruptions to clients.
+
+About the Node Details Page
+
+Click the name of an FXT node in the list to load its Node Details
+page. This page gives node-specific information including
+configuration, performance statistics, hardware information, node
+storage, and core filer connections, for one specific node in the
+cluster.
+
+The Node Details page has some node-specific settings. You can
+customize the node name and IPMI configuration. It also has an
+interactive node diagram that highlights failed drives and lets you
+turn on the drive bay light for unit identification.
+
+The Node Details page does not appear in the sidebar list; you must
+access it by clicking a node name link on other settings pages.
+
+Read
+
+Node Details
+
+ for complete information.
+
+Adding Nodes to the Cluster
+
+You can add a node to the cluster by finding the node in the unjoined
+nodes list and clicking the Allow To Join button in its Actions
+column.
+
+Node names are automatically assigned as each node joins a cluster.
+You can customize the node naming scheme on the
+
+Cluster > General Setup
+
+ page.
+
+Important: When a new node is added to the cluster, all client and
+  core filer interfaces are automatically rebalanced across all nodes,
+  including the new node. This can result in a brief suspension of
+  file services; however, data is not at risk of loss or corruption.
+
+Updating Node Software
+
+If you attempt to add a node running on an older software version,
+Avere OS will attempt to upgrade the software to match the version on
+the existing cluster nodes. You can use the Match OS Version button to
+update software before adding the node.
+
+The Match OS Version button also can be used on unjoined nodes to keep
+reserve nodes updated to the same version of the software running on
+the cluster nodes.
+
+Searching For a Node
+
+If a node does not appear in the unjoined nodes list, you can search
+for it. Click the Manual Discovery button and enter its IP address in
+the search box.
+
+
+Note: After a node is removed from the cluster, it might not appear
+  on the unjoined nodes list for several minutes. If the node does not
+  appear within ten minutes and cannot be found by searching, contact
+  Avere Global Services.
+
+Node Actions
+
+The Actions column in the Cluster Nodes table provides access to most
+node functions. Options include the following:
+
+Restart Services
+   Restarts all Avere OS services on the node without rebooting the
+   node.
+
+Reboot
+   Restarts a node.
+
+Power Down
+   Shuts down a node completely. Use this option when moving a node to
+   another physical location.
+
+Remove
+   Permanently removes a node from the cluster.
+
+Reformat
+   Reformats data drives on the node. This feature can be used to
+   format replacement drives after a drive failure.
+
+   If the cluster detects a drive problem, it automatically reformats
+   the affected drive and takes it out of service (the node runs on
+   its remaining drives). A condition notice appears on the dashboard
+   to indicate that the physical drive should be replaced. To
+   incorporate the replacement drive in the system, administrators
+   must manually click the Reformat button. Only one node can be
+   reformatted at a time.
+
+Offline
+   Stops all node services but leaves the node powered on.
+
+Suspend
+   Temporarily stops a node from answering client requests. This
+   option can help you determine whether or not a node is causing a
+   cluster problem.

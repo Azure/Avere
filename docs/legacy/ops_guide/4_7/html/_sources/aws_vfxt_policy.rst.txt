@@ -1,0 +1,59 @@
+Appendix H: Updating Cloud Storage Permissions for an AWS vFXT Cluster
+
+This article explains an extra step that might be required when adding
+or replacing a cloud core filer on a vFXT cluster that is hosted on
+Amazon Web Services (AWS).
+
+This step is required the first time you add or change storage buckets
+on an AWS-hosted Avere cluster.
+
+About Cloud Bucket Access with AWS vFXT Clusters
+
+When you create a vFXT cluster with a cloud core filer on AWS, Avere
+software automatically creates an IAM policy that allows the cluster
+nodes to access the bucket for the core filer. (This is true
+regardless of whether you created a new bucket or if you specified an
+existing bucket to use as the core filer at creation time.)
+
+The automatically created policy allows access
+
+only
+
+ to the specific storage bucket specified when creating the cluster.
+If you later want to add a different cloud core filer, you must edit
+the IAM policy to let the nodes access the new bucket.
+
+To allow access to a different bucket, change the resource statements
+in the IAM policy so that they allow access to any bucket, instead of
+restricting the cluster nodes to accessing one specific bucket.
+
+Optionally, you can add or substitute the new bucket name instead of
+opening access to all connected cloud buckets, but allowing access to
+all buckets is easier and more flexible. Refer to AWS documentation to
+learn how to add a second bucket resource.
+
+Updating the Cluster IAM Policy
+
+Follow these steps to revise the cluster policy to allow access to a
+different storage bucket.
+
+Open the AWS IAM console.
+
+Identify the role created for the cluster. The role name has the form
+policy_avere_cluster_role_##########_<cluster name>
+
+Select the role for your cluster, then click the Edit Policy link at
+the bottom of the page.
+
+Find the resource lines that specify the original cloud core filer.
+They will have the form  "Resource": [
+"arn:aws:s3:::<bucket name>"  There usually are two resource
+statements, one like the one above, and one that includes /* after the
+bucket name.
+
+Replace the bucket names in these statements with a wildcard character
+to allow access to all buckets.  Specifically:  Change
+arn:aws:s3:::<bucket name> to arn:aws:s3:::*  Change
+arn:aws:s3:::<bucket name>/* to arn:aws:s3:::*/*
+
+Click Apply Policy when done.

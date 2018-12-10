@@ -1,0 +1,56 @@
+Core Filer > Cloud Encryption Settings
+
+
+The Cloud Encryption Settings page allows you to change encryption key
+settings for a core filer that uses cloud storage.
+
+Note: You cannot enable or disable back-end data encryption on a
+  cloud core filer after creating it.
+
+Select a cloud core filer that has encryption enabled to show the page
+contents.
+
+Cloud Encryption Store
+
+The Cloud encryption store selector allows you to switch among key
+store types. Choose a simple key store, which is managed locally in
+the cluster, or choose a key store from a KMIP server.
+
+Read
+
+Configuring KMIP for an Avere cluster
+
+ to learn more about using KMIP.
+
+Local Key Store
+
+The Local Key Store panel shows information about the encryption key
+store that you used to configure the selected core filer.
+
+Use the Redownload Recovery File button to obtain a copy of the key
+recovery file that you used when encrypting the core filer. The
+recovery file is encrypted with the same passphrase that was used to
+create it.
+
+Generating a New Master Key
+
+You have the option to add a new simple encryption key for this core
+filer. If you create a new key, newly stored objects will be encrypted
+under this key. However, existing objects still are encrypted with the
+old key until they are fetched and re-stored.
+
+To create a new master key, enter a key recovery passphrase in the two
+text fields and press the Generate Key and Download File button. All
+existing key files will be included within the new file.
+
+Caution: Do not lose the downloaded key file; there is no way to
+  reset the encryption on the core filer storage without the keys. If
+  you lose the key file, data on the core filer will be permanently
+  inaccessible.
+
+To confirm and complete the master key change, upload the file that
+you just downloaded by choosing it in the Upload key recovery file
+field and clicking Activate Key.
+
+The system verifies the uploaded file and installs the new master key
+as the active encryption key for this core filer.

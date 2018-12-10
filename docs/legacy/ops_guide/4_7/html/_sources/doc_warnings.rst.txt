@@ -1,0 +1,10 @@
+The following highlights are used in this document:
+
+Caution: A caution indicates that failure to follow directions in
+  the statement can result in damage to equipment or loss of data.
+
+Important: An important statement presents clarifying information or
+  specific instructions.
+
+Note: A note presents commentary, sidelights, or interesting points
+  of information.
