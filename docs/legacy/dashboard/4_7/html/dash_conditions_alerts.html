@@ -1,0 +1,308 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Monitoring Conditions and Alerts &#8212;  Avere OS Dashboard Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Dashboard Status Tabs" href="dash_status_tabs.html" />
+    <link rel="prev" title="Viewing System Performance" href="dash_performance_graph.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="dash_status_tabs.html" title="Dashboard Status Tabs"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dash_performance_graph.html" title="Viewing System Performance"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_dashboard_index.html"> Avere OS Dashboard Guide</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="monitoring-conditions-and-alerts">
+<span id="conditions-alerts"></span><h1>Monitoring Conditions and Alerts<a class="headerlink" href="#monitoring-conditions-and-alerts" title="Permalink to this headline">¶</a></h1>
+<p>Conditions and alerts are displayed in the Avere Control Panel dashboard. These notifications give  information about unusual behavior in the cluster. They include a description of the situation, the severity of the issue (if applicable), and can include suggestions for how to resolve the situation.</p>
+<a class="reference internal image-reference" href="_images/dashboard_with_conditions.png"><img alt="Dashboard showing system errors" src="_images/dashboard_with_conditions.png" style="width: 80%;" /></a>
+<p>The status table at the bottom of the dashboard page includes a tab labeled <span class="guilabel">Conditions</span> and a tab labeled <span class="guilabel">Alerts</span>. The tab header also shows the number of active notifications of that type.</p>
+<p>Within each tab, the newest notification is displayed at the top, followed by any others in reverse chronological order.</p>
+<div class="section" id="conditions-versus-alerts">
+<h2>Conditions versus Alerts<a class="headerlink" href="#conditions-versus-alerts" title="Permalink to this headline">¶</a></h2>
+<p>There are two main types of notifications, <em>conditions</em> and <em>alerts</em>.</p>
+<ul>
+<li><p class="first">A <em>condition</em> is given for an ongoing situation – for example, interrupted connectivity to a core filer. Conditions frequently require intervention from the cluster administrator to be resolved.</p>
+<p>Conditions remain visible on the dashboard until the situation is resolved, and then they clear automatically. You can hide a condition from being displayed on the dashboard, but you cannot easily dismiss it while the underlying cause continues.</p>
+</li>
+<li><p class="first">An <em>alert</em> is given for a transient situation that has occurred. For example, changing the software image or aborting a FlashMirror<sup>®</sup> job generates an alert.</p>
+<p>Alerts remain visible until you dismiss them.</p>
+</li>
+</ul>
+<p>The <a class="reference internal" href="#conditions"><span class="std std-ref">Conditions</span></a> and <a class="reference internal" href="#alerts"><span class="std std-ref">Alerts</span></a> sections below include more information about each of these notification types and how to manage them.</p>
+</div>
+<div class="section" id="severity-color-coding">
+<span id="severity-colors"></span><h2>Severity Color Coding<a class="headerlink" href="#severity-color-coding" title="Permalink to this headline">¶</a></h2>
+<p>The Avere Control Panel uses color in dashboard notifications to indicate the seriousness of system issues.</p>
+<ul class="simple">
+<li>Red indicates a problem that can stop the cluster from serving client requests, interfere with data integrity, or affect other essential functions. These issues should be addressed urgently.</li>
+</ul>
+<ul class="simple">
+<li>Yellow indicates a situation that might become a problem if it continues. These issues should be evaluated and addressed to make sure they do not become serious.</li>
+</ul>
+<ul class="simple">
+<li>Colorless notifications are used for informational messages that do not indicate an imminent risk of disruption.</li>
+</ul>
+<p>Color coding affects the notification at the top of the Avere Control Panel page and is indicated in the status table on the dashboard.</p>
+<p>Conditions can be coded red or yellow. Alerts are usually yellow or uncolored.</p>
+<div class="figure" id="id3">
+<a class="reference internal image-reference" href="_images/error_red_top.png"><img alt="red system error notification" src="_images/error_red_top.png" style="width: 40%;" /></a>
+<p class="caption"><span class="caption-text">Red condition notification for a severe issue</span></p>
+</div>
+<div class="figure" id="id4">
+<a class="reference internal image-reference" href="_images/error_yellow_top.png"><img alt="yellow system error notification" src="_images/error_yellow_top.png" style="width: 40%;" /></a>
+<p class="caption"><span class="caption-text">Yellow condition notification for a significant issue</span></p>
+</div>
+<div class="figure" id="id5">
+<a class="reference internal image-reference" href="_images/alert_top.png"><img alt="yellow alert notification" src="_images/alert_top.png" style="width: 40%;" /></a>
+<p class="caption"><span class="caption-text">Alert notification</span></p>
+</div>
+</div>
+<div class="section" id="conditions">
+<span id="id1"></span><h2>Conditions<a class="headerlink" href="#conditions" title="Permalink to this headline">¶</a></h2>
+<p>When the Avere cluster has an active error condition, a message appears in the top margin of the Avere Control Panel. The error message can be seen on each page in the control panel.</p>
+<p>The screenshot below shows a page in the <span class="guilabel">Settings</span> section of the control panel with a visible system error message at the top.</p>
+<a class="reference internal image-reference" href="_images/condition_in_settings_page.png"><img alt="condition message appears at the top of a settings page" src="_images/condition_in_settings_page.png" style="width: 60%;" /></a>
+<p>On the <span class="guilabel">Dashboard</span> page, active conditions are listed individually in the dashboard <span class="guilabel">Conditions</span> tab of the status table.</p>
+<a class="reference internal image-reference" href="_images/conditions_in_table.png"><img alt="Status table with three items listed in the Conditions tab" src="_images/conditions_in_table.png" style="width: 70%;" /></a>
+<p>This screenshot from a test cluster shows system errors related to an inaccessible core filer.</p>
+<p>Conditions are listed in reverse chronological order (the newest notification is at the top). At the left of the notification’s timestamp, a colored box appears that represents the severity of the issue.</p>
+<p>The main body of the table includes a description of the issue. Depending on the situation, some condition notifications include links.</p>
+<ul class="simple">
+<li>A <span class="guilabel">More Details</span> link shows additional text without leaving the <span class="guilabel">Conditions</span> table.</li>
+<li>Some messages also include links to suggested actions that might resolve the situation; those links can have various actions (for example, opening a <span class="guilabel">Settings</span> page or aborting a snapshot).</li>
+</ul>
+<p>Be sure to read the message text carefully before clicking those links.</p>
+<p>If you need help understanding a message or resolving the issue, contact Avere Global Services.</p>
+<div class="section" id="evaluating-conditions">
+<h3>Evaluating Conditions<a class="headerlink" href="#evaluating-conditions" title="Permalink to this headline">¶</a></h3>
+<p>A condition notification does not necessarily mean that there’s something wrong with the Avere cluster. For example, when doing a software upgrade, it is normal to see multiple conditions as nodes are updated and rebooted. All of these conditions should clear on their own.</p>
+<p>Also, occasionally a condition might fail to clear on its own. If you suspect a condition on your dashboard is no longer valid, you can <a class="reference internal" href="#hide-condition"><span class="std std-ref">hide or clear it</span></a>.</p>
+<p>Short-duration errors do not raise conditions; only situations that persist for a minute or longer result in a condition notification.</p>
+</div>
+<div class="section" id="hiding-conditions">
+<span id="hide-condition"></span><span id="index-0"></span><h3>Hiding Conditions<a class="headerlink" href="#hiding-conditions" title="Permalink to this headline">¶</a></h3>
+<p>You cannot dismiss an individual condition (unlike alerts); they must resolve themselves or be resolved by an administrator before they clear from the list of active conditions. However, you can <em>hide</em> conditions so that they are not listed on the main tab.</p>
+<p>You might want to hide a condition if it’s related to a problem with a long-term solution. For example, if an FXT node has a failed disk and you are waiting for replacement hardware, you might want to hide the condition that notifies you that the node is operating without the failed drive.</p>
+<p>A hidden condition is not listed on the <span class="guilabel">Dashboard</span> table.</p>
+<p>If you hide all conditions, the <span class="guilabel">System Error</span> message in the top of the Avere Control Panel also disappears.</p>
+<p>To hide one or more conditions, do one of the following:</p>
+<ul class="simple">
+<li>To hide specific conditions, click the checkbox at the left of the timestamp for each condition that you want to hide. Then click the <span class="guilabel">Hide</span> button. The selected conditions are removed from the list in the <span class="guilabel">Conditions</span> tab.</li>
+</ul>
+<ul>
+<li><p class="first">To hide current and future instances of the visible conditions, select the checkbox at the left of the timestamp for each condition that you want to hide. Then click the button labeled <span class="guilabel">Hide All Occurrences</span>.</p>
+<p>Depending on the type of condition, a dialog might ask you to clarify the kind of future occurrences you want to hide.</p>
+<p>For example, the screenshot below shows the confirmation dialog that appears when hiding all occurrences of a notice about a suspended vserver.</p>
+<a class="reference internal image-reference" href="_images/hide_all_dialog.png"><img alt="Dialog after selecting a condition and clicking Hide All Occurrences" src="_images/hide_all_dialog.png" style="width: 85%;" /></a>
+<p>A menu lets you select which vserver’s conditions will be hidden, or to hide all such instances.</p>
+<a class="reference internal image-reference" href="_images/hide_all_dialog_menu.png"><img alt="Drop-down menu to select 'All' or 'vserver1' or 'vserver2'" src="_images/hide_all_dialog_menu.png" style="width: 45%;" /></a>
+</li>
+</ul>
+<div class="section" id="viewing-or-unhiding-conditions">
+<h4>Viewing or Unhiding Conditions<a class="headerlink" href="#viewing-or-unhiding-conditions" title="Permalink to this headline">¶</a></h4>
+<p>You can view hidden conditions by clicking the <span class="guilabel">Show Hidden</span> button on the <span class="guilabel">Conditions</span> tab. You can discontinue hiding conditions by using the  <span class="guilabel">Hidden Alerts</span> settings page. Read <a class="reference internal" href="#unhiding"><span class="std std-ref">Unhiding Conditions and Canceling Auto-Dismiss</span></a> for details.</p>
+</div>
+<div class="section" id="clearing-all-conditions">
+<span id="index-1"></span><h4>Clearing All Conditions<a class="headerlink" href="#clearing-all-conditions" title="Permalink to this headline">¶</a></h4>
+<p>If necessary, you can reset all condition warnings from the <span class="guilabel">System Maintenance</span> settings page.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Conditions provide valuable information about your cluster’s performance. Clearing unresolved conditions is recommended only in rare situations.</p>
+</div>
+<p>If you need to clear all conditions for your cluster, navigate to the <span class="guilabel">Settings</span> &gt; <span class="guilabel">Administration</span> &gt; <span class="guilabel">System Maintenance</span> page. Under the <span class="guilabel">Cluster Services</span> heading, there is a button labeled <span class="guilabel">Clear all conditions</span>. Click it to reset all active conditions.</p>
+<p>You cannot clear individual conditions.</p>
+</div>
+</div>
+</div>
+<div class="section" id="alerts">
+<span id="id2"></span><h2>Alerts<a class="headerlink" href="#alerts" title="Permalink to this headline">¶</a></h2>
+<p>The <span class="guilabel">Alerts</span> tab shows system notifications.</p>
+<p>The most recent alert is at the top of the list. Some alerts are highlighted with bold text – typically because they are new since the last page view or because of higher severity.</p>
+<a class="reference internal image-reference" href="_images/alerts_in_table.png"><img alt="Alerts Tab" src="_images/alerts_in_table.png" style="width: 80%;" /></a>
+<p>Unlike conditions, alerts do not automatically clear from the list. You must clear them manually, or use <span class="guilabel">Auto Dismiss</span> to configure the Avere Control Panel to automatically clear alerts from certain system elements. Read <a class="reference internal" href="#alert-auto-dismiss"><span class="std std-ref">Auto Dismiss</span></a> for instructions.</p>
+<div class="section" id="dismissing-alerts">
+<h3>Dismissing Alerts<a class="headerlink" href="#dismissing-alerts" title="Permalink to this headline">¶</a></h3>
+<p>To remove an alert from the list, select its checkbox and click the <span class="guilabel">Dismiss</span> button.</p>
+<p>The checkbox is replaced with the status message <code class="docutils literal notranslate"><span class="pre">dismissed</span></code> for a few seconds, then the display refreshes without the dismissed alert.</p>
+<p>Use the <span class="guilabel">Select all</span> button to act on all listed alerts. The  <span class="guilabel">Deselect all</span> button cancels the selection.</p>
+<p>You also can configure automatic dismissal for certain categories of alerts with the <a class="reference internal" href="#alert-auto-dismiss"><span class="std std-ref">Auto Dismiss</span></a> function.</p>
+<div class="section" id="auto-dismiss">
+<span id="alert-auto-dismiss"></span><h4>Auto Dismiss<a class="headerlink" href="#auto-dismiss" title="Permalink to this headline">¶</a></h4>
+<p>The Auto Dismiss function lets you automatically clear alerts. You can use this to help filter out alerts for known issues in your system or notifications that are not important to your workflow.</p>
+<p>Automatically dismissed alerts can be viewed in the Alert History page.</p>
+<p>To configure automatic dismissal:</p>
+<ol class="arabic">
+<li><p class="first">Select one or more alerts from the list.</p>
+<a class="reference internal image-reference" href="_images/auto_dismiss_select.png"><img alt="Selecting an alert for auto dismiss" src="_images/auto_dismiss_select.png" style="width: 90%;" /></a>
+</li>
+<li><p class="first">From the <span class="guilabel">Alerts</span> tab, choose <span class="guilabel">Auto Dismiss</span>.</p>
+<p>An “Auto Dismiss” window appears. Depending on the type of alert selected, additional options (like node selection) might be included in this dialog.</p>
+<blockquote>
+<div><a class="reference internal image-reference" href="_images/auto_dismiss_confirm.png"><img alt="Confirm dialog for auto dismiss" src="_images/auto_dismiss_confirm.png" style="width: 90%;" /></a>
+</div></blockquote>
+</li>
+<li><p class="first">Click <span class="guilabel">Auto Dismiss</span> to automatically dismiss similar alerts. Click <span class="guilabel">Cancel</span> if you do not want to take this action.</p>
+</li>
+</ol>
+<p>To remove alert types from auto-dismissal, choose <span class="guilabel">Manage Auto Dismiss</span>. You will be taken to the same page that allows you to unhide conditions, described in <a class="reference internal" href="#unhiding"><span class="std std-ref">Unhiding Conditions and Canceling Auto-Dismiss</span></a>.</p>
+</div>
+</div>
+<div class="section" id="unhiding-conditions-and-canceling-auto-dismiss">
+<span id="unhiding"></span><h3>Unhiding Conditions and Canceling Auto-Dismiss<a class="headerlink" href="#unhiding-conditions-and-canceling-auto-dismiss" title="Permalink to this headline">¶</a></h3>
+<p>To display hidden conditions, or to change auto dismiss settings for alerts, load the <span class="guilabel">Hidden Alerts</span> settings page.</p>
+<ol class="arabic">
+<li><p class="first">Do one of the following:</p>
+<ul class="simple">
+<li>From the <span class="guilabel">Conditions</span> tab, choose <span class="guilabel">Manage Hidden</span>.</li>
+<li>From the <span class="guilabel">Alerts</span> tab, choose <span class="guilabel">Manage Auto Dismiss</span>.</li>
+</ul>
+<p>This opens the <span class="guilabel">Hidden Alerts</span> page on the <span class="guilabel">Settings</span> tab,  where you can select individual conditions and alerts.</p>
+<a class="reference internal image-reference" href="_images/hidden_alerts.png"><img alt="The Hidden Alerts page in Settings &gt; Administration" src="_images/hidden_alerts.png" style="width: 90%;" /></a>
+</li>
+<li><p class="first">Click the checkboxes for any of the conditions or alerts you want to remove.</p>
+</li>
+<li><p class="first">Choose <span class="guilabel">Unhide/Stop Auto Dismissing</span>.</p>
+</li>
+</ol>
+<p>When the dashboard display refreshes, the selected conditions will appear on the <span class="guilabel">Conditions</span> tab, and selected alerts will no longer be automatically dismissed.</p>
+<p>Read more about the Hidden Alerts page in the Avere OS Configuration Guide:  <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_hidden_alerts.html#gui-hidden-alerts" title="(in Cluster Configuration Guide v4.7)"><span>Administration &gt; Hidden Alerts</span></a>.</p>
+</div>
+<div class="section" id="viewing-condition-and-alert-history">
+<h3>Viewing Condition and Alert History<a class="headerlink" href="#viewing-condition-and-alert-history" title="Permalink to this headline">¶</a></h3>
+<p>To view a list of resolved and dismissed conditions and alerts, choose <span class="guilabel">Alert History</span> from the <span class="guilabel">Alerts</span> tab.</p>
+<p>You are taken to the <span class="guilabel">Alert History</span> page.</p>
+<a class="reference internal image-reference" href="_images/alert_history.png"><img alt="List of past alerts and conditions" src="_images/alert_history.png" style="width: 80%;" /></a>
+<p>Resolved conditions and dismissed alerts are kept on the <span class="guilabel">Alert History</span> page until the history buffer is full, at which point the oldest notifications are purged to make room for new conditions and alerts.</p>
+<p>The number of conditions and alerts the history buffer can hold varies by notification type, length, and other factors.</p>
+<p>Click the <span class="guilabel">Dashboard</span> tab header or use your browser’s back button to return to the dashboard.</p>
+</div>
+</div>
+<div class="section" id="remote-monitoring">
+<h2>Remote Monitoring<a class="headerlink" href="#remote-monitoring" title="Permalink to this headline">¶</a></h2>
+<p>You can configure a subset of system alerts to be sent by email or to a remote syslog server. Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_monitoring_settings.html#gui-monitoring-settings" title="(in Cluster Configuration Guide v4.7)"><span>Cluster &gt; Monitoring</span></a> in the Avere OS Configuration Guide to learn how.</p>
+<div class="last-update docutils container">
+updated Nov 16, 2017</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="ops_dashboard_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Monitoring Conditions and Alerts</a><ul>
+<li><a class="reference internal" href="#conditions-versus-alerts">Conditions versus Alerts</a></li>
+<li><a class="reference internal" href="#severity-color-coding">Severity Color Coding</a></li>
+<li><a class="reference internal" href="#conditions">Conditions</a></li>
+<li><a class="reference internal" href="#alerts">Alerts</a></li>
+<li><a class="reference internal" href="#remote-monitoring">Remote Monitoring</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dash_performance_graph.html"
+                        title="previous chapter">Viewing System Performance</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dash_status_tabs.html"
+                        title="next chapter">Dashboard Status Tabs</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="dash_status_tabs.html" title="Dashboard Status Tabs"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dash_performance_graph.html" title="Viewing System Performance"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_dashboard_index.html"> Avere OS Dashboard Guide</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>
