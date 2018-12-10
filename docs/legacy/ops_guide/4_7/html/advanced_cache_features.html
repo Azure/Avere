@@ -1,0 +1,265 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Cache Writeback and Scheduled Write-Through Features &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Controlling Write Bandwidth" href="control_write_bandwidth.html" />
+    <link rel="prev" title="Configuring KMIP for an Avere cluster" href="kmip_overview.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="control_write_bandwidth.html" title="Controlling Write Bandwidth"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="kmip_overview.html" title="Configuring KMIP for an Avere cluster"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="common_tasks.html" accesskey="U">Configuration Concepts</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="cache-writeback-and-scheduled-write-through-features">
+<span id="cache-features-overview"></span><span id="index-0"></span><h1>Cache Writeback and Scheduled Write-Through Features<a class="headerlink" href="#cache-writeback-and-scheduled-write-through-features" title="Permalink to this headline">     </a></h1>
+<p>This page gives more details about two cache policy features: <a class="reference internal" href="#writeback-delay-overview"><span class="std std-ref">Writeback Delay</span></a>, and <a class="reference internal" href="#write-through-scheduling-overview"><span class="std std-ref">Scheduled Write-Through</span></a>.</p>
+<p>These options can be configured for cache policies that include write caching. The <a class="reference internal" href="gui_manage_cache_policies.html#gui-manage-cache-policies"><span class="std std-ref">Core Filer &gt; Manage Cache Policies</span></a> page shows where to configure these options in the Avere Control Panel.</p>
+<div class="section" id="determining-the-maximum-writeback-delay-value">
+<span id="writeback-delay-overview"></span><span id="index-1"></span><h2>Determining the Maximum Writeback Delay Value<a class="headerlink" href="#determining-the-maximum-writeback-delay-value" title="Permalink to this headline">     </a></h2>
+<p>The writeback delay value is used in read/write cache policies to specify how long a file or directory change can remain in the cache before it is written to the core filer.</p>
+<p>Avere OS allows you to set a writeback delay value between 0 seconds and one year.  This setting is part of a cache policy, which is configured in the <a class="reference internal" href="gui_manage_cache_policies.html#gui-manage-cache-policies"><span class="std std-ref">Core Filer &gt; Manage Cache Policies</span></a> settings page.</p>
+<p>When determining the value to set for the maximum writeback delay, consider the following:</p>
+<ul>
+<li><p class="first">The usage period of the average client.</p>
+<p>For example, if a standard client is a desk workstation that is used for eight hours per day, you might consider eight hours as a reasonable amount of time.</p>
+</li>
+<li><p class="first">The importance of the data being worked on by clients.</p>
+<p>For example, if clients are being used to input mission-critical data, you might consider 30 minutes, one hour, or two hours as the maximum writeback delay. However, if clients are generating scratch data, which will be changed and discarded frequently, a maximum writeback delay of one day or two weeks might be reasonable.</p>
+</li>
+<li><p class="first">The amount of data being generated by the client as compared to the capacity of the core filer.</p>
+<p>For example, if your core filer is notably slow but your clients are generating data rapidly, you might consider increasing the maximum writeback delay to ensure that the core filer is able to accept data at a steady rate that does not overload it. In this example, a maximum writeback delay value of one minute is far too low for realistic performance gains.</p>
+</li>
+</ul>
+<ul id="index-2">
+<li><p class="first">Whether or not you need to change the Local Directories setting for this core filer.</p>
+<p>Enabling or disabling local directories on a core filer can take a large amount of time (30 minutes or more). Because the time required is partly dependent on how much data is in the cache, reducing the writeback delay can reduce the time required to turn Local Directories on or off by reducing the amount of data in the cache. Also, if you need to change the Local Directories setting, you can reduce the writeback delay temporarily and wait for the data to be written to the core filer before enabling or disabling Local Directories.</p>
+</li>
+<li><p class="first">The size of the working set.</p>
+<p>A larger working set typically requires a longer maximum writeback delay value for optimal performance.</p>
+</li>
+<li><p class="first">The schedule on which your core filer performs backup operations.</p>
+<p>For example, if your core filer performs a full backup every 24 hours, the maximum writeback delay needs to be less than 24 hours to ensure that each day’s current or new data is backed up. (<a class="reference internal" href="#write-through-scheduling-overview"><span class="std std-ref">Scheduled write-through</span></a>, described below, is another approach to ensuring that data is backed up.)</p>
+</li>
+</ul>
+<p>Consult with your Avere Systems representative to estimate a good initial value for the maximum writeback delay. As you become more familiar with the Avere system and the workload patterns generated by your clients and application servers, you can adjust the maximum writeback delay until you find the optimal value for your environment.</p>
+</div>
+<div class="section" id="synchronizing-cached-data-with-scheduled-write-through-read-mode-periods">
+<span id="write-through-scheduling-overview"></span><span id="index-3"></span><h2>Synchronizing Cached Data with Scheduled Write-Through/Read Mode Periods<a class="headerlink" href="#synchronizing-cached-data-with-scheduled-write-through-read-mode-periods" title="Permalink to this headline">     </a></h2>
+<p>This section gives details about the Scheduled Write-Through feature, which can be configured as part of a cache policy. Read <a class="reference internal" href="gui_manage_cache_policies.html#write-through-scheduling-nh"><span class="std std-ref">Write-Through Scheduling</span></a> to learn how to set up a schedule on the <a class="reference internal" href="gui_manage_cache_policies.html#gui-manage-cache-policies"><span class="std std-ref">Core Filer &gt; Manage Cache Policies</span></a> settings page. (Write-through is configured in the <a class="reference internal" href="gui_manage_cache_policies.html#cache-policy-advanced"><span class="std std-ref">advanced</span></a> section.)</p>
+<p>The scheduled write-through feature cannot be used on cloud core filers.</p>
+<p>Most core filers use backup services such as snapshots, mirrors, and Network Data Management Protocol (NDMP) sessions to a tape or disk library, typically in combinations to guarantee data retention in the event of data loss on the core filer. If your cluster is using read/write mode to cache data used by clients, you can schedule “write-through” sessions for the cache to ensure that the modifications are synchronized to the core filer before a scheduled core filer backup.</p>
+<p>At the scheduled time, the Avere cluster stops caching write operations (it changes to read mode caching only) and copies all cached changes to the core filer. New write operations are passed through immediately to the core filer. This feature can be referred to as scheduling  “read-mode” or “write-through” periods, which are two different names for the same behavior.</p>
+<p>The length of the read-mode period can be a specified length of time (for example, five minutes) or can be controlled by a simple external URL polling mechanism. Read <a class="reference internal" href="url_polling.html#url-polling"><span class="std std-ref">Appendix C: Implementing a URL Polling Agent</span></a> to learn more about creating a polling script.</p>
+<p>When read-mode periods are scheduled, the cluster performs the following actions:</p>
+<ol class="arabic">
+<li><p class="first">Approximately every ten seconds, an internal cluster process compares the current time to the next scheduled read-mode period (also called the target time).</p>
+</li>
+<li><p class="first">If a read-only period is approaching, the cluster automatically and gradually lowers the value of the maximum writeback delay for read-write mode, causing the cluster to write changed data from clients back to the core filer more aggressively.</p>
+</li>
+<li><p class="first">The cluster continues to lower the value as necessary as the target time gets closer. As a result, the cluster has written all changed data to the core filer when the scheduled read-only period starts.</p>
+</li>
+<li><p class="first">When the read-only period starts, the cluster automatically switches all client access to read-only (write-through) mode. Any changes made by clients during this period are written directly to the core filer, with the Avere cluster retaining information about changed data and metadata. The Avere cluster continues to cache client read requests.</p>
+</li>
+<li><p class="first">The cluster remains in read-only mode until one of the following events occurs:</p>
+<ul class="simple">
+<li>The polling URL returns the string <code class="docutils literal notranslate"><span class="pre">RELEASE</span> <span class="pre">Core</span> <span class="pre">Filer</span> <span class="pre">SYNC</span></code> to the Avere cluster</li>
+<li>The specified waiting period expires</li>
+</ul>
+<p>Choose one of these when you configure the schedule in the Cache Policy. You also must specify the URL to poll or amount of time to wait.</p>
+</li>
+<li><p class="first">When the read-only period ends, the cluster switches back to read/write mode at the originally specified maximum writeback delay. It stays in that mode until the next scheduled read-only period approaches.</p>
+</li>
+</ol>
+<div class="last-update docutils container">
+updated 2017-11-15</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="kmip_overview.html"
+                        title="previous chapter">Configuring KMIP for an Avere cluster</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="control_write_bandwidth.html"
+                        title="next chapter">Controlling Write Bandwidth</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="control_write_bandwidth.html" title="Controlling Write Bandwidth"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="kmip_overview.html" title="Configuring KMIP for an Avere cluster"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="common_tasks.html" >Configuration Concepts</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

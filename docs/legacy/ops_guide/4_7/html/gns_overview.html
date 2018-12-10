@@ -1,0 +1,263 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Using a Global Namespace &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Controlling Access to Core Filer Exports" href="export_rules_overview.html" />
+    <link rel="prev" title="Adding a New Core Filer - Cloud Core Filer" href="new_core_filer_cloud.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="export_rules_overview.html" title="Controlling Access to Core Filer Exports"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="new_core_filer_cloud.html" title="Adding a New Core Filer - Cloud Core Filer"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="common_tasks.html" accesskey="U">Configuration Concepts</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="using-a-global-namespace">
+<span id="gns-overview"></span><h1>Using a Global Namespace<a class="headerlink" href="#using-a-global-namespace" title="Permalink to this headline">     </a></h1>
+<p>When designing your Avere cluster, you should consider how clients access files from back-end storage. The Global Namespace (GNS) feature in Avere OS gives you the ability to create a client-facing namespace with a different structure from the actual back-end filesystems.</p>
+<p>Avere’s edge filer architecture gives you the ability to set up a virtual filesystem so
+that clients see one seamless file structure, regardless of how files are actually stored
+on the back-end core filers.</p>
+<p>This Global Namespace feature (GNS) lets you specify a client-visible namespace that maps
+to the actual back-end filesystems. Because the client always uses the same virtual location to access a file, GNS makes it possible to nondisruptively move live data between back-end storage solutions, replace obsolete hardware, or dynamically scale to cloud storage with Avere’s FlashMirror, FlashMove, and FlashCloud features.</p>
+<p>A legacy option also exists in Avere OS, called a simple namespace. In a simple namespace, one vserver is required for each core filer, and clients use the same file structure that exists on the core filer.</p>
+<p>In a GNS configuration, one GNS vserver can handle requests for multiple core filers.</p>
+<p>When you create a vserver, you must choose whether it uses GNS or a simple namespace; you cannot switch settings after creating the vserver. However, you can add vservers to an Avere cluster at any time.</p>
+<div class="section" id="designing-a-global-namespace">
+<h2>Designing a Global Namespace<a class="headerlink" href="#designing-a-global-namespace" title="Permalink to this headline">     </a></h2>
+<p>Before implementing a global namespace, it is important to consider the file and directory layout you want to present to clients. (Although the namespace can be modified later,  changing the file structure after clients have started using it can cause confusion.)</p>
+<p>The figures below show physical and logical views of a sample global namespace. Although files are actually stored on multiple back-end systems, the clients see the simpler logical view created by junctions on the Avere cluster.</p>
+<div class="figure" id="id1">
+<a class="reference internal image-reference" href="_images/gns-phys.png"><img alt="Network diagram of a sample global namespace" src="_images/gns-phys.png" style="width: 650px;" /></a>
+<p class="caption"><span class="caption-text"><em>Physical view of a sample global namespace</em></span></p>
+</div>
+<div class="figure" id="id2">
+<a class="reference internal image-reference" href="_images/gns-log.png"><img alt="Sketch of a sample global namespace" src="_images/gns-log.png" style="width: 650px;" /></a>
+<p class="caption"><span class="caption-text"><em>Logical view of a sample global namespace</em></span></p>
+</div>
+<p>To reach a file in the <code class="docutils literal notranslate"><span class="pre">pipeline</span></code> directory on the remote Linux server, a client mounting the Avere cluster can simply change to the directory <code class="docutils literal notranslate"><span class="pre">/sales/pipeline</span></code></p>
+</div>
+<div class="section" id="elements-of-a-global-namespace">
+<h2>Elements of a Global Namespace<a class="headerlink" href="#elements-of-a-global-namespace" title="Permalink to this headline">     </a></h2>
+<p>An Avere global namespace is constructed from these components:</p>
+<ul class="simple">
+<li>A vserver, set to use GNS at creation time</li>
+<li>Core filers, with exports that store the information requested through the vserver</li>
+<li>Junctions, which are links that define a virtual directory in the global namespace and
+link it to an actual directory exported from the core filer</li>
+</ul>
+</div>
+<div class="section" id="planning-a-global-namespace">
+<h2>Planning A Global Namespace<a class="headerlink" href="#planning-a-global-namespace" title="Permalink to this headline">     </a></h2>
+<p>This section explains prerequisites and other considerations for designing a global namespace on an Avere cluster.</p>
+<p>Keep in mind the following constraints and advice when planning to implement a global namespace in Avere OS.</p>
+<div class="section" id="core-filer-compatibility">
+<h3>Core Filer Compatibility<a class="headerlink" href="#core-filer-compatibility" title="Permalink to this headline">     </a></h3>
+<p>Use one of the supported core filer types. Contact your Avere Systems representative for the current list.</p>
+</div>
+<div class="section" id="access-control-strategies">
+<span id="junction-access"></span><h3>Access Control Strategies<a class="headerlink" href="#access-control-strategies" title="Permalink to this headline">     </a></h3>
+<p>Consider how to control user access with export policies before creating junctions.</p>
+<ul class="simple">
+<li>User access can be controlled at the core filer export level or at the GNS junction level.</li>
+<li>Some types of core filers export only the filesystem root (/). If you allow unrestricted access to this export, users have unlimited access to all of the core filer’s content (including any subdirectories).</li>
+<li>If exporting the core filer root directory is optional, consider exporting only subdirectories, or applying the most restrictive user access setting available to the root export.</li>
+<li>Ensure that appropriate export policies exist before creating junctions.</li>
+</ul>
+<p>Read <a class="reference internal" href="export_rules_overview.html#export-rules-overview"><span class="std std-ref">Controlling Access to Core Filer Exports</span></a> to learn more.</p>
+</div>
+</div>
+<div class="section" id="creating-a-global-namespace">
+<h2>Creating a Global Namespace<a class="headerlink" href="#creating-a-global-namespace" title="Permalink to this headline">     </a></h2>
+<p>Configure your GNS in the VServer section of the Avere Control Panel Settings utility. Read the <a class="reference internal" href="gui_namespace.html#gui-namespace"><span class="std std-ref">VServer &gt; Namespace</span></a> page reference for step-by-step instructions on how to map back-end storage to the global namespace in your Avere cluster.</p>
+<div class="last-update docutils container">
+updated 2017-11-15</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="new_core_filer_cloud.html"
+                        title="previous chapter">Adding a New Core Filer - Cloud Core Filer</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="export_rules_overview.html"
+                        title="next chapter">Controlling Access to Core Filer Exports</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="export_rules_overview.html" title="Controlling Access to Core Filer Exports"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="new_core_filer_cloud.html" title="Adding a New Core Filer - Cloud Core Filer"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="common_tasks.html" >Configuration Concepts</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

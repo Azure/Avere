@@ -1,0 +1,346 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Avere Control Panel Settings &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="VServer &gt; Manage VServers" href="gui_vserver_manage.html" />
+    <link rel="prev" title="Controlling Write Bandwidth" href="control_write_bandwidth.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_vserver_manage.html" title="VServer &gt; Manage VServers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="control_write_bandwidth.html" title="Controlling Write Bandwidth"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="gui-settings">
+<span id="settings-overview"></span><h1>Avere Control Panel Settings<a class="headerlink" href="#gui-settings" title="Permalink to this headline">     </a></h1>
+<p>This page gives a brief overview of each section in the <span class="guilabel">Settings</span> tab on the Avere Control Panel.</p>
+<p>Click the links in the text below to see a detailed description for each settings page.</p>
+<p>Use these links to jump to a particular section in this overview:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#vserver-settings"><span class="std std-ref">Creating and Working with VServers</span></a></li>
+<li><a class="reference internal" href="#core-filer-settings"><span class="std std-ref">Managing Core Filers</span></a></li>
+<li><a class="reference internal" href="#cluster-settings"><span class="std std-ref">Cluster Settings Overview</span></a></li>
+<li><a class="reference internal" href="#administration-settings"><span class="std std-ref">Administration Settings Overview</span></a></li>
+</ul>
+<div class="section" id="creating-and-working-with-vservers">
+<span id="vserver-settings"></span><h2>Creating and Working with VServers<a class="headerlink" href="#creating-and-working-with-vservers" title="Permalink to this headline">     </a></h2>
+<p>The vserver is a virtual file server that receives and processes all client requests for your storage system.</p>
+<p>You can use one vserver for your entire cluster, or have more than one.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>In early versions of Avere OS it was mandatory to have one vserver per core filer. This is no longer true, and most administrators set up a <em>global namespace</em> configuration, in which one vserver can handle requests for multiple core filers.</p>
+<p>The global namespace configuration also allows vservers to show a client-side virtual filesystem that does not necessarily correspond exactly to back-end storage.</p>
+<p class="last">A legacy option called <em>simple namespace</em> also exists in the product.</p>
+</div>
+<p>The vserver is created by the nodes that make up your cluster. It does not reside in any one node.</p>
+<p>Before setting up your cluster, you should decide how many vservers to create, and whether they will use the Avere OS global namespace (GNS) feature, or be configured for simple namespace. You must choose the namespace type when creating a vserver.</p>
+<ul class="simple">
+<li>With a global namespace configuration:<ul>
+<li>One vserver can process requests for multiple, diverse core filers</li>
+<li>Clients see a virtual filesystem defined by the cluster administrator</li>
+</ul>
+</li>
+<li>In a simple namespace configuration:<ul>
+<li>One vserver is mapped to each core filer</li>
+<li>The vserver shows clients the exact same directory structure that exists on the core
+filer</li>
+</ul>
+</li>
+</ul>
+<p>Read <a class="reference internal" href="gns_overview.html#gns-overview"><span class="std std-ref">Using a Global Namespace</span></a> to learn more about GNS and how to set it up.</p>
+<p>The <span class="guilabel">VServer</span> section of the Avere Control Panel includes settings for configuring how your cluster handles requests. The pages in this section allow you to create or delete vservers, to configure namespace structure and IP addresses, to control client access to back-end storage volumes, and configure other tasks.</p>
+<div class="section" id="vserver-configuration-pages">
+<span id="vserver-pages"></span><h3>VServer Configuration Pages<a class="headerlink" href="#vserver-configuration-pages" title="Permalink to this headline">     </a></h3>
+<p>This section gives an overview of the settings available in each page of the <strong>VServer</strong> section. Click the link to see page screenshots and details about using the settings.</p>
+<p><a class="reference internal" href="gui_vserver_manage.html#gui-manage-vservers"><span class="std std-ref">Manage VServers</span></a> - Lists all vservers available to your cluster and allows you to create, suspend, or remove vservers</p>
+<p><a class="reference internal" href="gui_vserver_details.html#vserver-details"><span class="std std-ref">VServer Details</span></a> - Shows details for one vserver and allows you to edit the name, change hot client settings, and change client suspend type settings</p>
+<p><a class="reference internal" href="gui_client_network.html#gui-client-facing-network"><span class="std std-ref">Client Facing Network</span></a> - Lets you set the IP address range for your vserver and optionally configure home nodes if you want an IP address to be assigned to a particular cluster node.</p>
+<p><a class="reference internal" href="gui_namespace.html#gui-namespace"><span class="std std-ref">Namespace</span></a> - This page shows junctions, which map exports on the backend core filers to client-facing directories in the global namespace. This page includes controls for modifying, adding, suspending, and deleting namespace junctions.</p>
+<p><a class="reference internal" href="gui_export_policies.html#export-policies-page"><span class="std std-ref">Export Policies</span></a> - This page lets you assign access control policies to the exports on a selected core filer. Export policies control client access to core filer exports. For each export, you can select one of the policies that exists on your cluster. Define new policies in the Export Rules page (described below, and also linked from a button on this page). Read <a class="reference internal" href="export_rules_overview.html#export-rules-overview"><span class="std std-ref">Controlling Access to Core Filer Exports</span></a> for more information about how to create and apply export policies.</p>
+<p><a class="reference internal" href="gui_export_rules.html#export-rules"><span class="std std-ref">Export Rules</span></a> - This page allows you to create or modify export policies, which control client access to files on the core filer exports. Choose a policy to see the rules that it includes. Create a new policy, or add or modify rules in an existing policy. This page also allows you to test how a policy affects a particular client. Read <a class="reference internal" href="export_rules_overview.html#export-rules-overview"><span class="std std-ref">Controlling Access to Core Filer Exports</span></a> for more information about how to create and apply export policies.</p>
+<p><a class="reference internal" href="gui_nfs.html#gui-nfs"><span class="std std-ref">NFS</span></a> - This page lets you enable Kerberos and turn on extended groups for a vserver. You also can configure the Kerberos service key management file that the vserver uses when connecting with clients. Note that Kerberos must also be <em>configured</em> in the Cluster section (<a class="reference internal" href="gui_kerberos.html#gui-kerberos"><span class="std std-ref">Cluster &gt; Kerberos</span></a>) before you can turn it on.</p>
+<p><a class="reference internal" href="gui_cifs.html#gui-cifs"><span class="std std-ref">CIFS</span></a> - On this page you can configure CIFS and SMB2 for your vserver. This page shows the AD domain and current status and settings for your CIFS/SMB server, and lets you enable or disable Native Identity. Use the <span class="guilabel">CIFS</span> settings page in combination with the <span class="guilabel">CIFS Shares</span> page to set up the Avere cluster to allow Windows clients to access core filer resources. Additional configuration is necessary outside of the cluster Avere Control Panel; read <a class="reference internal" href="smb_overview.html#smb-overview"><span class="std std-ref">Configuring SMB Access</span></a> or contact Avere Global Services to learn more.</p>
+<p><a class="reference internal" href="gui_cifs_shares.html#gui-cifs-shares"><span class="std std-ref">CIFS Shares</span></a> - This page allows you to map core filer exports to NTFS directories so that they can be accessed by Windows clients.</p>
+<div class="toctree-wrapper compound" id="vserver-settings-toc">
+</div>
+</div>
+</div>
+<div class="section" id="managing-core-filers">
+<span id="core-filer-settings"></span><h2>Managing Core Filers<a class="headerlink" href="#managing-core-filers" title="Permalink to this headline">     </a></h2>
+<p>Core Filers are the back-end storage component of an Avere Edge Filer.</p>
+<p>Core filers typically are either a NAS storage appliance or a cloud object store, but they also can be a clustered filesystem or other arrangement that meets these requirements:</p>
+<ul class="simple">
+<li>Serves NFS client requests over NFSv3</li>
+<li>Exposes data over NFS exports</li>
+</ul>
+<p>An Avere cluster can serve as the front end for up to 50 core filers. (Some limitations exist involving the combined number of vservers, exports, and core filers; contact Avere Global Services for details.) Each core filer is treated as a single dataset by the Avere cluster.</p>
+<p>Each core filer in the system has an administrative name that is used for quick identification. This name does not have to be the same as its network name - for example, a core filer with the domain name filer1.example.com could be named filer1 in the system.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Earlier versions of Avere OS used the term <em>mass</em> instead of core filer to refer to back-end storage volumes. Some API commands and log messages still refer to core filers as <em>masses</em>.</p>
+</div>
+<p>You can monitor core filer status by using the <span class="guilabel">Core Filers</span> tab on the <a class="reference external" href="https://ekpgh.github.io/Avere-1/legacy/dashboard/4_7/html/dashboard_intro.html#dashboard-intro" title="(in Dashboard Guide v4.7)"><span class="xref std std-ref">dashboard</span></a>.</p>
+<p>Use the <span class="guilabel">Core Filer</span> section of the Avere Control Panel <span class="guilabel">Settings</span> tab to create and configure core filers for your cluster.</p>
+<div class="section" id="core-filer-configuration-settings">
+<span id="core-filer-pages"></span><h3>Core Filer Configuration Settings<a class="headerlink" href="#core-filer-configuration-settings" title="Permalink to this headline">     </a></h3>
+<p>Settings in the Core Filer section allow you to configure how your Avere cluster uses back-end storage.</p>
+<p><a class="reference internal" href="gui_manage_core_filers.html#manage-core-filers"><span class="std std-ref">Manage Core Filers</span></a> - This page lists all core filers configured for the cluster. From this page, you can add a new core filer, permanently delete a core filer, temporarily suspend a core filer, or invalidate cached data from a particular core filer.</p>
+<p><a class="reference internal" href="gui_core_filer_details.html#gui-core-filer-details"><span class="std std-ref">Core Filer Details</span></a> - This page lets you change the configuration of one selected core filer. You can switch the cache policy, edit the filer name, security and credentials settings, and some network settings.</p>
+<p><a class="reference internal" href="gui_cloud_encryption_settings.html#cloud-encryption-settings"><span class="std std-ref">Cloud Encryption Settings</span></a> - For a cloud core filer that uses data encryption, this page allows you to configure encryption settings and key files. You can change the encryption key storage method, download recovery files, and change the master encryption key for the cloud server. Note that encryption can only be enabled or disabled when the cloud core filer is added to the cluster; you cannot change the setting later.</p>
+<p><a class="reference internal" href="gui_cloud_snapshots.html#cloud-snapshots"><span class="std std-ref">Cloud Snapshots</span></a> - This page shows snapshots that the Avere cluster has created for cloud core filers. From this page, you can create a manual snapshot of a cloud core filer or work with existing snapshots. To set up a recurring snapshot, use the <span class="guilabel">Snapshot Policies</span> page described below.</p>
+<p><a class="reference internal" href="gui_cloud_snapshot_policies.html#cloud-snapshot-policies"><span class="std std-ref">Cloud Snapshot Policies</span></a> - This settings page is used to enable and manage snapshots, which are brief metadata backups that show file contents at a particular point in time. Snapshots can be used in combination with full backups for data recovery.</p>
+<p>Snapshots for NAS core filers are managed on those systems and are not part of Avere cluster configuration.</p>
+<p><a class="reference internal" href="gui_manage_cache_policies.html#gui-manage-cache-policies"><span class="std std-ref">Manage Cache Policies</span></a> - The <span class="guilabel">Manage Cache Policies</span> page lets you create custom caching policies for your cluster. Avere OS comes preconfigured with five basic cache policies that apply to common situations; you can use one of these as a starting point to create your own custom policy.</p>
+<p>Cache policies are applied to core filers in the <span class="guilabel">Core Filer Details</span> page.</p>
+<div class="toctree-wrapper compound" id="core-filers-settings-toc">
+</div>
+</div>
+</div>
+<div class="section" id="cluster-settings-overview">
+<span id="cluster-settings"></span><h2>Cluster Settings Overview<a class="headerlink" href="#cluster-settings-overview" title="Permalink to this headline">     </a></h2>
+<p>The <span class="guilabel">Cluster</span> section of the <span class="guilabel">Settings</span> tab includes tools for cluster configuration, node management, and configuring network and authorization infrastructure, among other features.</p>
+<div class="section" id="cluster-settings-pages">
+<span id="cluster-pages"></span><h3>Cluster Settings Pages<a class="headerlink" href="#cluster-settings-pages" title="Permalink to this headline">     </a></h3>
+<p>Read the linked documents for more information about the settings included on each page.</p>
+<p><a class="reference internal" href="gui_cluster_general_setup.html#gui-cluster-general-setup"><span class="std std-ref">General Setup</span></a> - The <span class="guilabel">General Setup</span> page in the cluster section includes controls for cluster-wide features. This page includes controls for the following actions:</p>
+<ul class="simple">
+<li>Change the cluster name</li>
+<li>Set the prefix and numbering used for node names</li>
+<li>Enable advanced networking (this feature is enabled by default on new systems)</li>
+<li>Set the VLAN that the cluster uses for Internet access</li>
+<li>Enable or disable FIPS Mode</li>
+<li>Choose a web proxy configuration</li>
+<li>Choose a link aggregation style or disable link aggregation</li>
+</ul>
+<p><a class="reference internal" href="gui_admin_network.html#gui-admin-network"><span class="std std-ref">Adminstrative Network</span></a> - The <span class="guilabel">Administrative Network</span> page is used to configure basic settings for the administrative (management) network. These settings include DNS configuration, NTP servers, and (optional) defining a reserved range of IP addresses to use for management traffic.</p>
+<p><a class="reference internal" href="gui_cluster_networks.html#gui-cluster-networks"><span class="std std-ref">Cluster Networks</span></a> - On the <span class="guilabel">Cluster Networks</span> page you can create and customize networks. This page allows you to set address ranges for cluster networks and designate VLANs to use for the traffic on those IP addresses.</p>
+<p><a class="reference internal" href="gui_proxy_config.html#gui-proxy-config"><span class="std std-ref">Proxy Configuration</span></a> - If you send traffic over a web proxy to external resources, use the <span class="guilabel">Proxy Configuration</span> page to set up the proxy configurations. (Proxy configurations can be applied cluster-wide on the <a class="reference internal" href="gui_cluster_general_setup.html#gui-cluster-general-setup"><span class="std std-ref">Cluster &gt; General Setup</span></a> page and to core filers from their <a class="reference internal" href="gui_core_filer_details.html#gui-core-filer-details"><span class="std std-ref">Core Filer &gt; Core Filer Details</span></a> pages.)</p>
+<p><a class="reference internal" href="gui_fxt_nodes.html#gui-fxt-nodes"><span class="std std-ref">FXT Nodes</span></a> - This page lists nodes in the cluster, as well as nodes that are in the network but not yet part of the cluster.  You can perform basic node management tasks like rebooting or removing nodes.  The <span class="guilabel">FXT Nodes</span> page also has a link to the <span class="guilabel">Node Details</span> page, which shows more information and configuration options related to one individual node.</p>
+<p><a class="reference internal" href="gui_node_details.html#gui-node-details"><span class="std std-ref">Node Details</span></a> - The <span class="guilabel">Node Details</span> page gives hardware information (if applicable), performance statistics, and other configuration details. A diagram is included for physical nodes, and you can interact with the diagram to identify and troubleshoot individual drives. This page also allows you to modify the node name and individual IPMI configuration.</p>
+<p>The <span class="guilabel">Node Details</span> page does not appear in the sidebar; access it from the links in the <span class="guilabel">FXT Nodes</span> or <span class="guilabel">IPMI</span> page.</p>
+<p><a class="reference internal" href="gui_ha.html#gui-high-availability"><span class="std std-ref">High Availability</span></a> - The <span class="guilabel">High Availability</span> page is used to turn on or off the HA feature, which mirrors cached data on additional cluster nodes.</p>
+<p><a class="reference internal" href="gui_monitoring_settings.html#gui-monitoring-settings"><span class="std std-ref">Monitoring</span></a> - Use the <span class="guilabel">Monitoring</span> page to configure external notifications about cluster alerts.</p>
+<p><a class="reference internal" href="gui_schedules.html#gui-schedules"><span class="std std-ref">Schedules</span></a> - The <span class="guilabel">Schedules</span> page lets you configure repeating schedules for use with the <span class="guilabel">Write-Through Scheduling</span> feature in core filer cache policies. The schedules defined here can be used in cache policies to guarantee that all content is synchronized to the back-end core filer at specific times (for example, before a core filer backup or snapshot).</p>
+<p><a class="reference internal" href="gui_directory_services.html#gui-directory-services"><span class="std std-ref">Directory Services</span></a> - On the <span class="guilabel">Directory Services</span> page, you can configure the source of user and group names (choices include LDAP/AD servers, NIS, or file options).</p>
+<p><a class="reference internal" href="gui_kerberos.html#gui-kerberos"><span class="std std-ref">Kerberos</span></a> - This page is used to set up Kerberos-based authentication for the cluster.</p>
+<p><a class="reference internal" href="gui_ipmi.html#gui-ipmi"><span class="std std-ref">IPMI</span></a> - The <span class="guilabel">IPMI</span> page allows you to set how IPMI cards in the cluster’s FXT nodes obtain IP addresses.</p>
+<p><a class="reference internal" href="gui_support.html#gui-support-settings"><span class="std std-ref">Support</span></a> settings page - Information on the <span class="guilabel">Support</span> settings page controls how Avere Global Services receives information about this cluster.</p>
+<p><a class="reference internal" href="gui_licenses.html#gui-licenses"><span class="std std-ref">Licenses</span></a> - This page shows installed feature licenses and includes tools for adding or removing them.</p>
+<p><a class="reference internal" href="gui_cloud_credentials.html#gui-cloud-credentials"><span class="std std-ref">Cloud Credentials</span></a> - The <span class="guilabel">Cloud Credentials</span> page stores access keys that the cluster uses when communicating with cloud core filers or vFXT nodes.</p>
+<p><a class="reference internal" href="gui_certificates.html#gui-certificates"><span class="std std-ref">Certificates</span></a> - This page is used to configure X.509 certificates for KMIP servers. KMIP allows administrators to use a separate key manager instead of using the key storage system built in to Avere OS for encrypting traffic to and from cloud core filers.</p>
+<p><a class="reference internal" href="gui_kmip_servers.html#gui-kmip-servers"><span class="std std-ref">KMIP Servers</span></a> - This page allows you to define KMIP servers, which manage encryption keys used for cloud core filers.</p>
+<p><a class="reference internal" href="gui_vlan.html#gui-vlan"><span class="std std-ref">VLAN</span></a> - Use the <span class="guilabel">VLAN</span> page to configure and define individual virtual networks for the cluster.</p>
+<p>The <span class="guilabel">VLAN</span> page also includes a section for creating <span class="guilabel">Static Routes</span>.</p>
+<div class="toctree-wrapper compound" id="cluster-settings-toc">
+</div>
+</div>
+</div>
+<div class="section" id="administration-settings-overview">
+<span id="administration-settings"></span><h2>Administration Settings Overview<a class="headerlink" href="#administration-settings-overview" title="Permalink to this headline">     </a></h2>
+<p>Pages in the <span class="guilabel">Administration</span> section can be used to reboot the cluster or individual nodes, update cluster software, manage administrative user accounts, and monitor hidden alerts from the dashboard. (Read <a class="reference external" href="https://ekpgh.github.io/Avere-1/legacy/dashboard/4_7/html/dashboard_intro.html#dashboard-intro" title="(in Dashboard Guide v4.7)"><span>Monitoring the Cluster with the Avere Control Panel Dashboard</span></a> to learn more about system alerts.)</p>
+<div class="section" id="administration-settings-pages">
+<span id="administration-pages"></span><h3>Administration Settings Pages<a class="headerlink" href="#administration-settings-pages" title="Permalink to this headline">     </a></h3>
+<p><a class="reference internal" href="gui_system_maintenance.html#gui-system-maintenance"><span class="std std-ref">System Maintenance</span></a> - The <span class="guilabel">System Maintenance</span> page has controls for rebooting the cluster or restarting node services; suspending client access, and controlling cached data.</p>
+<p><a class="reference internal" href="gui_software_update.html#gui-software-update"><span class="std std-ref">Software Update</span></a> - Use the <span class="guilabel">Software Update</span> page to download and install new Avere OS distributions or switch between software releases.</p>
+<p><a class="reference internal" href="gui_users.html#gui-users"><span class="std std-ref">Users</span></a> - The <span class="guilabel">Users</span> settings page allows you to create individual login credentials for Avere Control Panel users.</p>
+<p><a class="reference internal" href="gui_login_services.html#gui-login-services"><span class="std std-ref">Login Services</span></a> - Use the <span class="guilabel">Login Services</span> page to configure LDAP or file-based user information for logging in to the Avere Control Panel.</p>
+<p><a class="reference internal" href="gui_hidden_alerts.html#gui-hidden-alerts"><span class="std std-ref">Hidden Alerts</span></a> - The <span class="guilabel">Hidden Alerts</span> page shows hidden and auto-dismissed alerts and conditions from the <span class="guilabel">Dashboard</span> tab.</p>
+<div class="toctree-wrapper compound" id="admin-settings-toc">
+</div>
+<div class="last-update docutils container">
+updated 2017-11-15</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Avere Control Panel Settings</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#creating-and-working-with-vservers">Creating and Working with VServers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#managing-core-filers">Managing Core Filers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cluster-settings-overview">Cluster Settings Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#administration-settings-overview">Administration Settings Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="control_write_bandwidth.html"
+                        title="previous chapter">Controlling Write Bandwidth</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_vserver_manage.html"
+                        title="next chapter">VServer &gt; Manage VServers</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_vserver_manage.html" title="VServer &gt; Manage VServers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="control_write_bandwidth.html" title="Controlling Write Bandwidth"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

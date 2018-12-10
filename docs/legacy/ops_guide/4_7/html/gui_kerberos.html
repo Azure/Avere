@@ -1,0 +1,242 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Cluster &gt; Kerberos &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Cluster &gt; IPMI" href="gui_ipmi.html" />
+    <link rel="prev" title="Cluster &gt; Directory Services" href="gui_directory_services.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_ipmi.html" title="Cluster &gt; IPMI"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_directory_services.html" title="Cluster &gt; Directory Services"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="cluster-kerberos">
+<span id="gui-kerberos"></span><h1>Cluster &gt; Kerberos<a class="headerlink" href="#cluster-kerberos" title="Permalink to this headline">     </a></h1>
+<img alt="Kerberos page" src="_images/gui_kerberos.png" />
+<p>You can configure Kerberos network authentication for communication between the cluster and clients, for communication between the cluster and core filers, or for both.</p>
+<p>This settings page includes basic configuration for all Kerberos communication, and also allows you to upload a key file to use with cluster-core filer operations.</p>
+<p>Additional settings are needed to enable Kerberos for client-cluster or cluster-core filer operations. Read <a class="reference internal" href="kerberos_overview.html#kerberos-overview"><span class="std std-ref">Setting Up Kerberos Authentication</span></a> to learn more about how Kerberos is configured in Avere OS.</p>
+<div class="section" id="basic-kerberos-settings">
+<h2>Basic Kerberos Settings<a class="headerlink" href="#basic-kerberos-settings" title="Permalink to this headline">     </a></h2>
+<p>Use the <span class="guilabel">Kerberos</span> panel to specify infrastructure settings that are used by all Kerberos connections in the cluster.</p>
+<div class="section" id="realm">
+<h3>Realm<a class="headerlink" href="#realm" title="Permalink to this headline">     </a></h3>
+<p>In the <span class="guilabel">Realm</span> field, enter the Kerberos realm (domain) that contains the principal names in the Kerberos server database (for example, company.net). Note that Kerberos cannot service requests outside its realm, so make sure that the realm encompasses all vservers and core filers for which you want to use Kerberos.</p>
+<p>You can use DNS to specify additional members of this realm. This feature assigns clients that do not have explicit realms to a realm based on their domain name.</p>
+<p>There are two options for DNS realm mapping; you cannot use both:</p>
+<ul>
+<li><p class="first"><span class="guilabel">DNS Domain Discovery</span> uses DNS to automatically determine the realm of a host.</p>
+<p>Be cautious when using the domain discovery option, because it can lead to more security vulnerabilities than the explicit DNS domain mapping option.</p>
+</li>
+<li><p class="first">In the <span class="guilabel">DNS Domains</span> field, enter a space-separated list of domain or host names to add to the Kerberos realm. This option is more secure than the domain discovery option.</p>
+<p>Names must start with a period. Separate multiple values with spaces, for example:</p>
+<p><code class="docutils literal notranslate"><span class="pre">.kerberos_co.net</span> <span class="pre">.kerberos_co2.net</span> <span class="pre">.company.com</span></code></p>
+</li>
+</ul>
+</div>
+<div class="section" id="key-distribution-center-kdc">
+<h3>Key Distribution Center (KDC)<a class="headerlink" href="#key-distribution-center-kdc" title="Permalink to this headline">     </a></h3>
+<p>To specify the key distribution center, do <em>one</em> of the following:</p>
+<ul class="simple">
+<li>Select <span class="guilabel">KDC DNS Discovery</span> if you want Avere OS to search for the key distribution center.</li>
+<li>In the <span class="guilabel">KDC</span> field, enter IP addresses or DNS hostnames for the Kerberos KDC servers. (This option is available only if <span class="guilabel">KDC DNS Discovery</span> is not selected.) Separate multiple values with spaces.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="cluster-keytab-file">
+<h2>Cluster Keytab File<a class="headerlink" href="#cluster-keytab-file" title="Permalink to this headline">     </a></h2>
+<p>Use the <span class="guilabel">Kerberos Service Key Management</span> panel to upload a keytab file for authenticating communication between the cluster and core filers.</p>
+<p>This file is different from the Kerberos keytab file uploaded on the <a class="reference internal" href="gui_nfs.html#gui-nfs"><span class="std std-ref">VServer &gt; NFS</span></a> settings page. That file is used for client-vserver communication. Read <a class="reference internal" href="kerberos_overview.html#kerberos-overview"><span class="std std-ref">Setting Up Kerberos Authentication</span></a> to learn more about the different types of Kerberos configurations in Avere OS.</p>
+<div class="last-update docutils container">
+updated 2017-11-15</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_directory_services.html"
+                        title="previous chapter">Cluster &gt; Directory Services</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_ipmi.html"
+                        title="next chapter">Cluster &gt; IPMI</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_ipmi.html" title="Cluster &gt; IPMI"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_directory_services.html" title="Cluster &gt; Directory Services"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

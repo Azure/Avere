@@ -1,0 +1,379 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Cluster &gt; Administrative Network &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Cluster &gt; Cluster Networks" href="gui_cluster_networks.html" />
+    <link rel="prev" title="Cluster &gt; General Setup" href="gui_cluster_general_setup.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_cluster_networks.html" title="Cluster &gt; Cluster Networks"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_cluster_general_setup.html" title="Cluster &gt; General Setup"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="cluster-administrative-network">
+<span id="gui-admin-network"></span><h1>Cluster &gt; Administrative Network<a class="headerlink" href="#cluster-administrative-network" title="Permalink to this headline">     </a></h1>
+<img alt="Administrative Network page" src="_images/gui_admin_network_fakeIP.png" />
+<p>The second page in the <span class="guilabel">Cluster</span> section of the <span class="guilabel">Settings</span> tab has  configuration options for the cluster’s administrative network. The administrative network provides access for configuring the cluster - either through the Avere Control Panel or with the XML-RPC API.</p>
+<p>You must specify some of these settings when you create the cluster (read the <a class="reference external" href="http://azure.github.io/Avere/#fxt_cluster">FXT Cluster Creation Guide</a> for details), but they can be changed on this page.</p>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p class="last">Be cautious when making changes to network settings on a cluster that is being used. Consult Avere Global Services if you are unsure about the possible implications of network configuration changes.</p>
+</div>
+<p>Read <a class="reference internal" href="network_overview.html#network-overview"><span class="std std-ref">Configuring Network Services for an Avere Cluster</span></a> to learn more about this configuring networks for Avere OS clusters.</p>
+<div class="section" id="administrative-network-settings">
+<h2>Administrative Network Settings<a class="headerlink" href="#administrative-network-settings" title="Permalink to this headline">     </a></h2>
+<div class="section" id="management-ip">
+<h3>Management IP<a class="headerlink" href="#management-ip" title="Permalink to this headline">     </a></h3>
+<p>This is the preferred IP address to use when accessing the Avere Control Panel.</p>
+<p>(You also can access the Avere Control Panel by typing an individual node’s IP address; this can be helpful for troubleshooting.)</p>
+<p>After changing this setting, you should use exit the Avere Control Panel and use the new IP address to log back in.</p>
+</div>
+<div class="section" id="management-netmask">
+<h3>Management Netmask<a class="headerlink" href="#management-netmask" title="Permalink to this headline">     </a></h3>
+<p>Use this field to change the netmask for the cluster administration IP address.</p>
+</div>
+<div class="section" id="management-vlan">
+<h3>Management VLAN<a class="headerlink" href="#management-vlan" title="Permalink to this headline">     </a></h3>
+<p><strong>Note:</strong> This setting does not appear on clusters with <a class="reference internal" href="#about-advanced-networking"><span class="std std-ref">advanced networking</span></a> disabled.</p>
+<p>Choose one of the VLANs in the system to use for traffic between the management network and individual cluster nodes. To create additional VLANs, use the <span class="guilabel">Cluster &gt; VLAN</span> settings page.</p>
+<p>Only VLANs with the role <span class="guilabel">Management</span> appear in this list. Read <a class="reference internal" href="network_overview.html#vlan-roles"><span class="std std-ref">VLAN Roles</span></a> for more information.</p>
+</div>
+<div class="section" id="dns-settings">
+<span id="gui-dns"></span><h3>DNS Settings<a class="headerlink" href="#dns-settings" title="Permalink to this headline">     </a></h3>
+<p>The three DNS-related fields allow you to configure the cluster’s DNS parameters. Read <a class="reference internal" href="network_overview.html#dns-overview"><span class="std std-ref">Configuring DNS for the Avere cluster</span></a> for additional information about using DNS in an Avere OS cluster.</p>
+<p>A DNS name can include alphanumeric characters (A-Z and 0-9) and the hyphen character (-). It can include the period character (.) as a delimiter between segments of domain names.</p>
+<div class="section" id="dns-servers">
+<h4>DNS Servers<a class="headerlink" href="#dns-servers" title="Permalink to this headline">     </a></h4>
+<p>Use the <span class="guilabel">DNS Server(s)</span> field to specify the IP addresses of up to three DNS servers for the cluster. Separate multiple IP addresses with spaces.</p>
+</div>
+<div class="section" id="dns-domain">
+<h4>DNS Domain<a class="headerlink" href="#dns-domain" title="Permalink to this headline">     </a></h4>
+<p>The <span class="guilabel">DNS Domain</span> field contains the name of the network domain. Edit it to change the value. There can be only one.</p>
+</div>
+<div class="section" id="dns-search">
+<h4>DNS Search<a class="headerlink" href="#dns-search" title="Permalink to this headline">     </a></h4>
+<p>Optionally, use the <span class="guilabel">DNS Search</span> field to enter additional host names that the system should search to resolve DNS queries. You can add up to six domain names, separated by spaces.</p>
+</div>
+</div>
+<div class="section" id="time-parameters">
+<h3>Time Parameters<a class="headerlink" href="#time-parameters" title="Permalink to this headline">     </a></h3>
+<p>There are several time-related settings on this page.</p>
+<div class="section" id="time-zone">
+<h4>Time Zone<a class="headerlink" href="#time-zone" title="Permalink to this headline">     </a></h4>
+<p>The <span class="guilabel">Timezone</span> drop-down selector sets the time zone for the cluster. You might want to change this value if the cluster begins serving clients in a different location than it did when it was created.</p>
+</div>
+<div class="section" id="ntp-servers">
+<h4>NTP Servers<a class="headerlink" href="#ntp-servers" title="Permalink to this headline">     </a></h4>
+<p>The <span class="guilabel">NTP Server(s)</span> field lets you specify the cluster’s network time protocol servers.</p>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p class="last">Specify either one NTP server, or three NTP servers in this field. If two NTP servers are used, and they give different values, cluster operation can be impaired because the conflict is not easily resolved. Inconsistent timestamps can result in out-of-order file operations and other problems.</p>
+</div>
+<p>Then <span class="guilabel">NTP Server(s)</span> field accepts hostnames or IP addresses; separate values with spaces.</p>
+</div>
+<div class="section" id="ntp-multicast-servers">
+<h4>NTP Multicast Servers<a class="headerlink" href="#ntp-multicast-servers" title="Permalink to this headline">     </a></h4>
+<p>If your NTP servers are configured for multicasting, check the <span class="guilabel">Use NTP Multicast Servers</span>.</p>
+</div>
+</div>
+<div class="section" id="separate-management-network">
+<span id="mgmt-network"></span><h3>Separate Management Network<a class="headerlink" href="#separate-management-network" title="Permalink to this headline">     </a></h3>
+<p>Check the <span class="guilabel">Use 1Gb Management Network</span> box if you want to assign the 1GbE management ports on your FXT nodes to a separate network reserved for management traffic.</p>
+<p>In FXT 4000 Series hardware and earlier, the management network uses the two built-in ports (e0a and e0b) and leaves the 1GbE ports on the network adapter available for other traffic. FXT 5000 Series hardware has four built-in 1GbE ports (e0a, e0b, e0c, and e0d), and all four are included in the management network if this box is checked.</p>
+<p>If <span class="guilabel">Use 1Gb Management Network</span> is selected, management addresses and cluster management addresses are assigned only among the 1Gb management ports.</p>
+</div>
+</div>
+<div class="section" id="node-management-addresses">
+<span id="node-mgmt-addresses"></span><h2>Node Management Addresses<a class="headerlink" href="#node-management-addresses" title="Permalink to this headline">     </a></h2>
+<p><strong>Note:</strong> If <a class="reference internal" href="#about-advanced-networking"><span class="std std-ref">advanced networking</span></a> is disabled, only one address range can be defined.</p>
+<p>A table of IP address ranges reserved for node management traffic appears below the <span class="guilabel">Administrative Network</span> section of the page. Configuring a reserved address range is optional; otherwise, the system uses the same network interfaces for both data and management traffic.</p>
+<p>Reserved management addresses are distributed across the cluster nodes so that each node is guaranteed to have at least one management IP. (If using this feature, you must specify a range large enough to supply all of the nodes in the cluster. You can modify the range to add more IP addresses if your cluster grows beyond the supply.)</p>
+<p>If your range includes more IP addresses than there are nodes in the cluster, the extra addresses are retained until they are needed. For example, if you specify a range of twelve IP addresses in a three-node cluster, the cluster allocates one management address to each node in the cluster and holds the remaining nine addresses in reserve in case more nodes are added to the cluster. If nodes are added, the cluster assigns each new node a reserved IP address until the range is exhausted.</p>
+<p>The reserved management IP address assigned to each node is shown in the <span class="guilabel">Nodes</span> tab of the Avere Control Panel dashboard page. A column named <span class="guilabel">Node Mgmt IP</span> shows the address assigned to each cluster node. If you have not configured reserved management IP addresses, this column does not appear. The <a class="reference internal" href="gui_node_details.html#gui-node-details"><span class="std std-ref">Node Details</span></a> settings page also shows management IP addresses.</p>
+<p>Use the <span class="guilabel">Node Management Addresses</span> section to add or modify management address ranges.</p>
+<p>To delete an address range and free its IP addresses, select it in the table and click <span class="guilabel">Delete</span>.</p>
+<div class="section" id="adding-a-management-ip-address-range">
+<h3>Adding a Management IP Address Range<a class="headerlink" href="#adding-a-management-ip-address-range" title="Permalink to this headline">     </a></h3>
+<p>Click the <span class="guilabel">Add New Range</span> button to create a new range, or select an address range in the list and click <span class="guilabel">Modify</span> to update one.</p>
+<a class="reference internal image-reference" href="_images/node_mgmt_range_add.png"><img alt="Add New Node Management Address Range panel" src="_images/node_mgmt_range_add.png" style="width: 450px;" /></a>
+<p>Specify the addresses by entering the first and last address in the range. The number of addresses is automatically calculated.</p>
+<p>Enter the subnet mask in the field provided, and choose the VLAN that these addresses should use.</p>
+<p>If you do not choose a designated management VLAN, it is strongly recommended that you choose a VLAN that uses the same gateway as the management VLAN for your cluster. If the gateway of the management VLAN does not match the gateway of the (optional) node administration VLAN, the management interface might behave strangely.</p>
+</div>
+</div>
+<div class="section" id="about-advanced-networking">
+<span id="id1"></span><h2>About “Advanced Networking”<a class="headerlink" href="#about-advanced-networking" title="Permalink to this headline">     </a></h2>
+<p>A feature called <span class="guilabel">Advanced Networking</span>, which enables multiple VLANs and a few other network features, was optional in earlier versions of Avere OS. Clusters that were upgraded from before Avere OS 4.5 might still have this feature disabled.</p>
+<p>If a blank checkbox labeled <span class="guilabel">Enable advanced networking</span> appears on the <a class="reference internal" href="gui_cluster_general_setup.html#gui-cluster-general-setup"><span class="std std-ref">Cluster &gt; General Setup</span></a> page, then advanced networking has not been activated for this cluster.</p>
+<p>After you enable advanced networking, it cannot be deactivated.</p>
+<p>Most clusters have advanced networking features enabled by default, and the term “advanced networking” does not appear in the Avere Control Panel for such systems.</p>
+<p>Slightly different options appear on the Administrative Network configuration page if advanced networking is disabled:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="49%" />
+<col width="51%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Options with Advanced Networking</th>
+<th class="head">Options without Advanced Networking</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><ul class="first last simple">
+<li>Management VLAN</li>
+<li>Node Management Addresses table</li>
+</ul>
+</td>
+<td><ul class="first last simple">
+<li>Default MTU</li>
+<li>Default Router</li>
+<li>Static Routes</li>
+<li>Node Management Addresses range</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The settings for legacy clusters are described in <a class="reference internal" href="#no-an"><span class="std std-ref">Settings for Clusters that use Basic Networking</span></a>.</p>
+<p>For systems with advanced networking, MTU and router parameters are configured for individual VLANs on the <a class="reference internal" href="gui_vlan.html#gui-vlan"><span class="std std-ref">Cluster &gt; VLAN</span></a> settings page, and static routes can be created from that page as well.</p>
+<div class="section" id="settings-for-clusters-that-use-basic-networking">
+<span id="no-an"></span><h3>Settings for Clusters that use Basic Networking<a class="headerlink" href="#settings-for-clusters-that-use-basic-networking" title="Permalink to this headline">     </a></h3>
+<p>If advanced networking is <em>disabled</em>, additional network settings appear on this page.</p>
+<p>For typical clusters, which use advanced networking, these settings can be configured for individual VLANs from the <span class="guilabel">VLAN</span> page. Read <a class="reference internal" href="gui_vlan.html#gui-vlan"><span class="std std-ref">Cluster &gt; VLAN</span></a> for details about how to customize these features when using advanced networking.</p>
+<div class="figure" id="id2">
+<a class="reference internal image-reference" href="_images/gui_admin_network_noAN_safeIPs.png"><img alt="Administrative Network page in the Cluster section - Advanced Networking Off" src="_images/gui_admin_network_noAN_safeIPs.png" style="width: 650px;" /></a>
+<p class="caption"><span class="caption-text"><em>Administrative Network settings</em> <strong>without</strong> <em>Advanced Networking</em></span></p>
+</div>
+<div class="section" id="default-mtu">
+<h4>Default MTU<a class="headerlink" href="#default-mtu" title="Permalink to this headline">     </a></h4>
+<p><em>This setting appears only for systems without advanced networking.</em></p>
+<p>Use this field to set or change the maximum transmission unit (MTU) setting for the cluster. If not customized, the default value is 1500 bytes.</p>
+<p>The MTU setting is used on all cluster interfaces, including client-facing addresses, cluster addresses, and management addresses.</p>
+<p>Typical values for the MTU setting are 1500 (the default) and 9000. Custom values are also permitted. If you specify a value greater than 1500, jumbo frames (with more than 1500 bytes of payload) are automatically enabled for the cluster.</p>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p class="last">Before setting or changing the cluster’s MTU value, verify the proposed value with your
+network administrator, particularly if you are specifying a value that enables jumbo
+frames.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>If you specified the optional non-management MTU and non-management netmask while <span class="guilabel">Use 1Gb Management network</span> was active, those MTU settings continue to be used even after the checkbox is deselected.</p>
+<p>Make sure you remove the non-management MTU and non-management netmask settings before deselecting the management network feature.</p>
+<p class="last">When joining a node to a cluster with a physically separate management network, connect only the cluster ports on the joining node. After the node has joined, the management network ports may be connected.</p>
+</div>
+</div>
+<div class="section" id="default-router">
+<h4>Default Router<a class="headerlink" href="#default-router" title="Permalink to this headline">     </a></h4>
+<p><em>This setting appears only for systems without advanced networking.</em></p>
+<p>The default router is used by all of the cluster’s networking interfaces. To change the setting, enter a new value in the <span class="guilabel">Default Router</span> field and click <span class="guilabel">Submit</span>. The value must be in dot-decimal IPv4 notation.</p>
+</div>
+<div class="section" id="static-routes">
+<h4>Static Routes<a class="headerlink" href="#static-routes" title="Permalink to this headline">     </a></h4>
+<p><em>This setting appears only for systems without advanced networking.</em></p>
+<p>The <span class="guilabel">Static Routes</span> field allows you to add a manual entry to the default router’s routing table.</p>
+<p>To set a static route, enter the following three values as a space-separated list in the <span class="guilabel">Static Routes</span> field. All three values must be specified in dot-decimal IPv4 notation.</p>
+<ul class="simple">
+<li>Destination IP address</li>
+<li>Netmask (can be specified either in dot-decimal IPv4 notation or in /number_of_bits format)</li>
+<li>Gateway</li>
+</ul>
+<p>The following example specifies a static route with the destination IP address 203.0.113.0, the netmask 255.255.255.0, and the gateway 192.0.2.118:</p>
+<p><code class="docutils literal notranslate"><span class="pre">203.0.113.0</span> <span class="pre">255.255.255.0</span> <span class="pre">192.0.2.118</span></code></p>
+<p>To enter more than one static route, separate the space-separated route definitions with commas. The following example shows two entries (the first example, plus an additional static route):</p>
+<p><code class="docutils literal notranslate"><span class="pre">203.0.113.0</span> <span class="pre">255.255.255.0</span> <span class="pre">192.0.2.118,</span> <span class="pre">198.51.100.4</span> <span class="pre">255.255.255.0</span> <span class="pre">192.0.2.118</span></code></p>
+<div class="last-update docutils container">
+updated 2018-04-12</div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_cluster_general_setup.html"
+                        title="previous chapter">Cluster &gt; General Setup</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_cluster_networks.html"
+                        title="next chapter">Cluster &gt; Cluster Networks</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_cluster_networks.html" title="Cluster &gt; Cluster Networks"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_cluster_general_setup.html" title="Cluster &gt; General Setup"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

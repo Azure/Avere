@@ -1,0 +1,339 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Cluster &gt; Support &#8212; Avere OS Configuration Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Cluster &gt; Licenses" href="gui_licenses.html" />
+    <link rel="prev" title="Cluster &gt; IPMI" href="gui_ipmi.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_licenses.html" title="Cluster &gt; Licenses"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_ipmi.html" title="Cluster &gt; IPMI"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="cluster-support">
+<span id="gui-support-settings"></span><h1>Cluster &gt; Support<a class="headerlink" href="#cluster-support" title="Permalink to this headline">     </a></h1>
+<p>The settings on the <span class="guilabel">Support</span> page manage the type of information your cluster keeps and provides to Avere Global Services if the cluster has a problem.</p>
+<p>This page is used in conjunction with the <a class="reference internal" href="support_overview.html#support-tab"><span class="std std-ref">Support tab</span></a> to assist Avere Global Services in evaluating your system’s status.</p>
+<img alt="Support page" src="_images/gui_support_settings.png" />
+<p>Keeping the settings on this page current can expedite troubleshooting and recovery if you need to contact Avere Global Services for support.</p>
+<p>There are several sections on the page:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#gui-sup-ci"><span class="std std-ref">Customer Information</span></a></li>
+<li><a class="reference internal" href="#gui-sup-sps"><span class="std std-ref">Secure Proactive Support (SPS)</span></a></li>
+<li><a class="reference internal" href="#gui-sup-pkg"><span class="std std-ref">Support Package Update</span></a></li>
+<li><a class="reference internal" href="#gui-sup-custom"><span class="std std-ref">Custom Settings</span></a></li>
+</ul>
+<p>If a section is collapsed, click the triangular control next to the name to show the options.</p>
+<div class="section" id="customer-information">
+<span id="gui-sup-ci"></span><span id="index-0"></span><h2>Customer Information<a class="headerlink" href="#customer-information" title="Permalink to this headline">     </a></h2>
+<p>In the <span class="guilabel">Customer Info</span> panel, you can configure general monitoring settings and some automatic uploads to Avere Global Services that can help detect and troubleshoot possible issues.</p>
+<a class="reference internal image-reference" href="_images/gui_support_cust.png"><img alt="Customer info support panel" src="_images/gui_support_cust.png" style="width: 650px;" /></a>
+<dl class="docutils">
+<dt><span class="guilabel">Unique Cluster Name</span></dt>
+<dd>This field contains a cluster identifier that you or your Avere Systems representative entered when creating the cluster. This field identifies your cluster for Avere Global Services. If you have multiple clusters, make sure that each cluster has a unique ID.</dd>
+<dt><strong>Upload Validation</strong></dt>
+<dd><p class="first">The <span class="guilabel">Upload info validated</span> field indicates whether or not Avere Global Services has successfully received information from this cluster. If this value does not read <code class="docutils literal notranslate"><span class="pre">yes</span></code>, click the <span class="guilabel">Revalidate upload information</span> button.</p>
+<p>If recent uploads have failed, a <span class="guilabel">Download</span> link appears so that you can save the report and send it manually.</p>
+<p class="last">Contact Avere Global Services if your upload cannot be validated. Upload failures typically are caused by network security configuration issues or connectivity problems. (Some companies require a proxy server when sending information from a data center to an external internet address; read <a class="reference internal" href="proxy_overview.html#proxy-overview"><span class="std std-ref">Using Web Proxies with Avere OS</span></a> for more information about how to configure a proxy server for support uploads.)</p>
+</dd>
+<dt><strong>Monitoring Options</strong></dt>
+<dd><p class="first">A series of checkboxes allows you to configure various monitoring and file sharing options. You can discuss the appropriate settings with your Avere Systems representative during product installation, or with Avere Global Services when you are troubleshooting an issue.</p>
+<p>Some of the settings in this section turn on automatic uploads to Avere Global Services, and others only enable data collection for later manual upload.</p>
+<ul class="simple">
+<li>These options activate automatic system information uploads to Avere Global Services:<ul>
+<li><span class="guilabel">Statistics Monitoring</span> (nightly upload)</li>
+<li><span class="guilabel">General Information Upload</span> (nightly upload)</li>
+<li><span class="guilabel">Crash Information Upload</span> (upload if an unplanned restart occurs)</li>
+</ul>
+</li>
+<li>These options turn on extra data collection for manual uploads from the <span class="guilabel">Support</span> tab. (Read <a class="reference internal" href="support_overview.html#support-tab"><span class="std std-ref">Using the Avere Control Panel Support Tab</span></a> to learn more.)<ul>
+<li><span class="guilabel">Gather Rolling Trace Data</span></li>
+<li><span class="guilabel">Enable Memory Debugging</span></li>
+</ul>
+</li>
+</ul>
+<p>Each option is explained in more detail below.</p>
+<ul class="last">
+<li><p class="first"><span class="guilabel">Statistics Monitoring</span> - This option turns on a nightly upload of several detailed statistics about the cluster, which can allow Avere Global Services to detect potential problems before they become serious. Statistics are collected every ten minutes, then uploaded at 1:00 a.m. local time.</p>
+<p>Avere Global Services often recommends that this item be enabled by default.</p>
+</li>
+<li><p class="first"><span class="guilabel">General Information Upload</span> –
+This option enables the nightly upload of a cluster-wide system report, including log files, configuration information, and other historical cluster data. This upload occurs nightly at 1:00 a.m. local time.</p>
+<p>Avere Global Services often recommends that this item be enabled by default.</p>
+</li>
+<li><p class="first"><span class="guilabel">Crash Information Upload</span> -
+This option sends Avere Global Services notifications of process core files, with pertinent information surrounding the event.</p>
+<p>Avere Global Services recommends that this item be left enabled.</p>
+</li>
+<li><p class="first"><span class="guilabel">Gather Rolling Trace Data</span> – This option causes the cluster to gather various levels of timing trace information (based on the <span class="guilabel">Trace Level</span> setting, configured below).</p>
+<p>Avere Global Services typically recommends enabling this option only when troubleshooting an issue.</p>
+</li>
+<li><p class="first"><span class="guilabel">Enable Memory Debugging</span> - This option causes the cluster to save information about memory usage during cluster operation. This option provides a deeper level of memory debugging information than other monitoring options.</p>
+<p>Avere Global Services recommends enabling this option only when troubleshooting an issue.</p>
+</li>
+</ul>
+</dd>
+<dt><span class="guilabel">Trace Level</span></dt>
+<dd>Enter a value in this field only if instructed to do so by Avere Global Services. Your representative will provide an appropriate value if one is required. This field is generally used only when troubleshooting an issue.</dd>
+<dt><span class="guilabel">Core Save Policy</span></dt>
+<dd><p class="first">This setting determines how core files are retained. If a failure results in a core file, Avere Global Services can analyze the file as part of investigating the cause. Core files are stored in a system drive partition designated for support-related files; core files can use up to 40% of this partition’s space, in the default configuration.</p>
+<p>Possible values include the following:</p>
+<ul class="last simple">
+<li><span class="guilabel">Overwrite Oldest</span> - If the core file space is full, delete the oldest saved core file when a new core file is generated. This is the default value.</li>
+<li><span class="guilabel">Overwrite Newest</span> - If the core file space is full, delete the most recent  core file when a new core file is generated.</li>
+<li><span class="guilabel">Use Available Space</span> - Save core files until the entire support partition is full. If the partition fills, new core files will not be saved. This configuration is useful only in specific situations and generally is not recommended.</li>
+</ul>
+</dd>
+</dl>
+<p>Before choosing a non-default value, consult your Avere Systems representative.</p>
+</div>
+<div class="section" id="secure-proactive-support-sps">
+<span id="gui-sup-sps"></span><span id="index-1"></span><h2>Secure Proactive Support (SPS)<a class="headerlink" href="#secure-proactive-support-sps" title="Permalink to this headline">     </a></h2>
+<p>Secure Proactive Support is a feature that allows remote troubleshooting with minimal customer involvement. When you enable SPS, a message about the current state of the system is transmitted to Avere Systems using a secure link, at a time interval that you set.</p>
+<a class="reference internal image-reference" href="_images/gui_support_sps.png"><img alt="Customer info support panel" src="_images/gui_support_sps.png" style="width: 650px;" /></a>
+<p>SPS uses the same upload mechanism as the statistics configured in <span class="guilabel">Customer Info</span> section.</p>
+<p>SPS can send information like the following:</p>
+<ul class="simple">
+<li>Summary statistics (as seen on the Avere Control Panel Dashboard)</li>
+<li>Alerts or conditions</li>
+<li>The state and hardware configuration of cluster nodes</li>
+<li>Shipping information for hardware replacement if needed</li>
+</ul>
+<p>To enable Secure Proactive Support:</p>
+<ol class="arabic">
+<li><p class="first">Select the <span class="guilabel">Enable SPS Link</span> checkbox.</p>
+</li>
+<li><p class="first">Select the <span class="guilabel">SPS Upload Interval</span> from the drop-down list. Options range from thirty seconds to one day, or you can set a custom interval.</p>
+<p>The SPS agent running on the cluster attempts to send information to Avere Global Services on the specified interval. Most administrators should leave this setting at the default value of five minutes.</p>
+<p>If the message cannot be sent at a specific interval, the information is saved for the next interval.</p>
+</li>
+</ol>
+<div class="section" id="remote-commands">
+<h3>Remote Commands<a class="headerlink" href="#remote-commands" title="Permalink to this headline">     </a></h3>
+<p>Select <span class="guilabel">Enable Remote Commands</span> if you want Avere Global Services to be able to run a limited set of commands on your cluster. Remote commands are typically used only if the cluster software indicates that they are needed.</p>
+<p>A restricted set of XML-RPC commands can be sent remotely (only commands in the support module), and only authenticated Avere Global Services personnel have access to this interface.</p>
+<p>If a remote command is used, information is saved in a support log. The log includes:</p>
+<ul class="simple">
+<li>Who requested the action</li>
+<li>The command executed</li>
+<li>The result of the command</li>
+<li>The time of the command</li>
+<li>The reason for the command</li>
+</ul>
+<p>The log is stored as <code class="docutils literal notranslate"><span class="pre">remote_command.log</span></code> in the cluster’s <code class="docutils literal notranslate"><span class="pre">/var/log</span></code> directory.</p>
+</div>
+<div class="section" id="shipping-information">
+<span id="index-2"></span><h3>Shipping Information<a class="headerlink" href="#shipping-information" title="Permalink to this headline">     </a></h3>
+<p>The <span class="guilabel">Shipping Information</span> section lets Avere Systems know the shipping address and contact person in case this cluster has a hardware failure that requires replacement.</p>
+<p>Keeping this information updated with the current physical location of the cluster hardware, a contact person, and an accurate phone number can save time if replacement parts are needed.</p>
+</div>
+</div>
+<div class="section" id="support-package-update">
+<span id="gui-sup-pkg"></span><span id="index-3"></span><h2>Support Package Update<a class="headerlink" href="#support-package-update" title="Permalink to this headline">     </a></h2>
+<a class="reference internal image-reference" href="_images/gui_support_pkg.png"><img alt="New support package update panel" src="_images/gui_support_pkg.png" style="width: 650px;" /></a>
+<p>The <span class="guilabel">Support Package Update</span> section can be used to download a software package with updated support tools. Use this section if you are instructed to do so by Avere Global Services.</p>
+<p>Avere Global Services will provide a URL for the support package update. If you need to use a web proxy to reach external URLs, make sure that the proxy is configured on the cluster before attempting to download the software.</p>
+</div>
+<div class="section" id="custom-settings">
+<span id="gui-sup-custom"></span><h2>Custom Settings<a class="headerlink" href="#custom-settings" title="Permalink to this headline">     </a></h2>
+<a class="reference internal image-reference" href="_images/gui_support_custom.png"><img alt="Customer info support panel" src="_images/gui_support_custom.png" style="width: 400pt;" /></a>
+<p>In some cases, Avere Global Services staff might advise you to add or remove custom settings for your cluster.</p>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p class="last">All information for the fields in this area must be provided by Avere Global Services.</p>
+</div>
+<p>A custom setting can include a name, value, and checksum (<span class="guilabel">Check</span>). If Avere Global Services did not provide a string for the <span class="guilabel">Note</span> field, you can enter your own text there or leave it blank.</p>
+<p>Click the <span class="guilabel">Submit</span> button to save the custom setting, and verify that the values appear correctly in the table.</p>
+<div class="last-update docutils container">
+updated 2017-11-15</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_ipmi.html"
+                        title="previous chapter">Cluster &gt; IPMI</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_licenses.html"
+                        title="next chapter">Cluster &gt; Licenses</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_licenses.html" title="Cluster &gt; Licenses"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_ipmi.html" title="Cluster &gt; IPMI"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Avere OS Configuration Guide</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>
