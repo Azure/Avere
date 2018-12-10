@@ -1,0 +1,191 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Adding Backend Storage &#8212; Avere FXT Cluster Creation Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuring VServers and Global Namespace" href="config_vserver.html" />
+    <link rel="prev" title="Additional Network Settings" href="config_network.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="config_vserver.html" title="Configuring VServers and Global Namespace"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="config_network.html" title="Additional Network Settings"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="create_index.html">Avere FXT Cluster Creation Guide</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="adding-backend-storage">
+<span id="add-core-filer"></span><span id="index-0"></span><h1>Adding Backend Storage<a class="headerlink" href="#adding-backend-storage" title="Permalink to this headline">¶</a></h1>
+<p>A <em>core filer</em> is the entity that links a backend storage system (for example, a NAS hardware appliance or a cloud object store) to the Avere cluster.</p>
+<p>Use the Avere Control Panel to add a core filer to your system.</p>
+<p>(Note that a FlashCloud license is required to use cloud storage as a core filer in your Avere cluster. You cannot define a cloud core filer until after the license has been installed.)</p>
+<p>More complete information is included in the <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a>:</p>
+<ul class="simple">
+<li>For additional information about choosing and preparing to add a core filer, read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/core_filer_overview.html#core-filer-overview" title="(in Cluster Configuration Guide v4.7)"><span>Working With Core Filers</span></a>.</li>
+<li>For additional prerequisites and step-by-step instructions, read one or both of these:<ul>
+<li><a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/new_core_filer_nas.html#create-core-filer-nas" title="(in Cluster Configuration Guide v4.7)"><span>Adding a New Core Filer - NAS Core Filer</span></a></li>
+<li><a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/new_core_filer_cloud.html#create-core-filer-cloud" title="(in Cluster Configuration Guide v4.7)"><span>Adding a New Core Filer - Cloud Core Filer</span></a></li>
+</ul>
+</li>
+</ul>
+<p>After adding a core filer, you can view or modify its properties by using the <span class="guilabel">Core Filer Details</span> settings page.</p>
+<div class="section" id="adding-a-core-filer">
+<h2>Adding a Core Filer<a class="headerlink" href="#adding-a-core-filer" title="Permalink to this headline">¶</a></h2>
+<p>Define a core filer by clicking the <span class="guilabel">Create</span> button on the <span class="guilabel">Core Filer</span> &gt; <span class="guilabel">Manage Core Filers</span> settings page.</p>
+<a class="reference internal image-reference" href="_images/create_core_filer_button.png"><img alt="Clicking the create button above the list of core filers on the Manage Core Filers page" src="_images/create_core_filer_button.png" style="width: 450pt;" /></a>
+<p>The <span class="guilabel">Add New Core Filer</span> wizard walks you through the process of creating a core filer that links to your backend storage. The <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a> has very detailed descriptions of the process, which is different for NFS/NAS storage and for cloud storage.</p>
+<div class="section" id="license-based-restrictions">
+<h3>License-Based Restrictions<a class="headerlink" href="#license-based-restrictions" title="Permalink to this headline">¶</a></h3>
+<p>The options might be restricted based on what licenses you have installed. The screenshot below is from a cluster that does not have a FlashCloud license installed.</p>
+<a class="reference internal image-reference" href="_images/new_nas_1.png"><img alt="First page of the hardware NAS new core filer wizard. The option for &quot;cloud core filer&quot; is disabled and shows an error message about the missing license." src="_images/new_nas_1.png" style="width: 300pt;" /></a>
+</div>
+<div class="section" id="cache-policy-choices">
+<h3>Cache Policy Choices<a class="headerlink" href="#cache-policy-choices" title="Permalink to this headline">¶</a></h3>
+<p>On the second page of the wizard you must select a cache policy for the new core filer. These are described in detail in the <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a>.</p>
+<p>Policies that require additional licenses cannot be selected.</p>
+<a class="reference internal image-reference" href="_images/new_nas_choose_cache_policy.png"><img alt="Second page of a hardware NAS new core filer wizard; the Cache Policy drop-down menu is open, showing several disabled options in addition to three cache policy options (bypass, read caching, and read/write caching)." src="_images/new_nas_choose_cache_policy.png" style="width: 250pt;" /></a>
+</div>
+<div class="section" id="adding-the-core-filer">
+<h3>Adding the Core Filer<a class="headerlink" href="#adding-the-core-filer" title="Permalink to this headline">¶</a></h3>
+<p>After filling in all of the required settings in the Add New Core Filer wizard, click the <span class="guilabel">Add Filer</span> button to submit the change.</p>
+<p>(For a cloud core filer, there is an additional page for specifying the storage system and encryption details - read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/new_core_filer_cloud.html#create-core-filer-cloud" title="(in Cluster Configuration Guide v4.7)"><span>Adding a New Core Filer - Cloud Core Filer</span></a> in the <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a> for help with this configuration.)</p>
+<p>After a few moments, the storage system appears on the Dashboard’s core filers list and can be accessed through core filer settings pages.</p>
+<a class="reference internal image-reference" href="_images/core_filer_in_manage_page.png"><img alt="core filer &quot;Flurry-NAS&quot; in the Manage Core Filers settings page, with the filer details view expanded" src="_images/core_filer_in_manage_page.png" style="width: 400pt;" /></a>
+<p>Note that this screenshot shows a core filer with no vserver - its setup is not complete. You must associate the core filer with a vserver to allow clients to access the storage system. Read <a class="reference internal" href="config_vserver.html#config-vserver"><span class="std std-ref">Configuring VServers and Global Namespace</span></a> for help with the next step.</p>
+</div>
+</div>
+<div class="section" id="about-local-directories">
+<h2>About Local Directories<a class="headerlink" href="#about-local-directories" title="Permalink to this headline">¶</a></h2>
+<p>The Local Directories feature in Avere OS provides enhanced caching services, which can impact the cluster’s throughput in some scenarios. Avere Systems recommends that customers consult their Avere representatives before enabling this feature.</p>
+<p>Some caching scenarios require the Local Directories feature, so some cache policies are unavailable until after you have obtained and installed a Local Directories license file.  There is no additional charge for the license. Contact Avere Global Services if you have questions.</p>
+</div>
+<div class="section" id="cloud-credentials">
+<span id="config-cloud-credentials"></span><h2>Cloud Credentials<a class="headerlink" href="#cloud-credentials" title="Permalink to this headline">¶</a></h2>
+<p>If you add a cloud object store as a core filer, you must specify the cloud service and credentials for accessing the storage, among other parameters. You can add a cloud storage credential as part of creating the core filer.</p>
+<a class="reference internal image-reference" href="_images/new_core_filer_cloud3.png"><img alt="Cloud core filer information in the New Core Filer wizard" src="_images/new_core_filer_cloud3.png" style="width: 300pt;" /></a>
+<p>If you later want to add, change or remove a credential, use the <span class="guilabel">Cluster</span> &gt; <span class="guilabel">Cloud Credentials</span> settings page.</p>
+<p>For more details, read the <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_cloud_credentials.html#gui-cloud-credentials" title="(in Cluster Configuration Guide v4.7)"><span>Cluster &gt; Cloud Credentials</span></a> chapter in the <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a>, and the <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/new_core_filer_cloud.html#cloud-filer-details" title="(in Cluster Configuration Guide v4.7)"><span>Cloud Service and Protocol</span></a> section of the chapter that describes the cloud core filer wizard.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="create_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Adding Backend Storage</a><ul>
+<li><a class="reference internal" href="#adding-a-core-filer">Adding a Core Filer</a><ul>
+<li><a class="reference internal" href="#license-based-restrictions">License-Based Restrictions</a></li>
+<li><a class="reference internal" href="#cache-policy-choices">Cache Policy Choices</a></li>
+<li><a class="reference internal" href="#adding-the-core-filer">Adding the Core Filer</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#about-local-directories">About Local Directories</a></li>
+<li><a class="reference internal" href="#cloud-credentials">Cloud Credentials</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="config_network.html"
+                        title="previous chapter">Additional Network Settings</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="config_vserver.html"
+                        title="next chapter">Configuring VServers and Global Namespace</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="config_vserver.html" title="Configuring VServers and Global Namespace"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="config_network.html" title="Additional Network Settings"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="create_index.html">Avere FXT Cluster Creation Guide</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

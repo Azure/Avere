@@ -1,0 +1,301 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Creating an Avere Cluster &#8212; Avere FXT Cluster Creation Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Initial Cluster Configuration Steps" href="initial_config.html" />
+    <link rel="prev" title="Preparing To Create an Avere Cluster" href="prerequisites.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="initial_config.html" title="Initial Cluster Configuration Steps"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="prerequisites.html" title="Preparing To Create an Avere Cluster"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="create_index.html">Avere FXT Cluster Creation Guide</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="creating-an-cluster-cap">
+<span id="create-procedure"></span><h1>Creating an Avere Cluster<a class="headerlink" href="#creating-an-cluster-cap" title="Permalink to this headline">¶</a></h1>
+<p>This section walks step by step through the process of creating the Avere cluster.</p>
+<p>Before starting this procedure, make sure at least one of the FXT nodes is powered on and has network connectivity. Follow the procedures in the <a class="reference external" href="http://azure.github.io/Avere/#installation">FXT 5000 Series Installation Guide</a>.</p>
+<div class="section" id="boot-the-first-node">
+<h2>Boot the First Node<a class="headerlink" href="#boot-the-first-node" title="Permalink to this headline">¶</a></h2>
+<p>If you have not already done so, power on at least one of the FXT nodes for your cluster, and make sure it has a network connection and an IP address.</p>
+<p>To turn on the node, press the node’s power button. Make sure that no alarms are audible from the node (these can indicate a misinstalled or failed power supply).</p>
+<p>To check the network connection, make sure that the node’s network link LEDs are illuminated (and, if necessary, the indicators on the network switch to which it is attached). Indicator LEDs are described in the monitoring chapter of the <a class="reference external" href="http://azure.github.io/Avere/#installation">FXT 5000 Series Installation Guide</a>.</p>
+<p>When the node boots, it will request an IP address. If it is connected to a DHCP server, it accepts the IP address provided by DHCP. (This is a temporary IP address that you will change when you configure the cluster.)</p>
+<p>If it is not connected to a DHCP server or does not receive a response, the node will use Bonjour software to set a self-assigned IP address in the form 169.254.*.*. However, Avere Systems recommends that you set a temporary static IP address on one of the node’s network cards before using it to create a cluster. Read <a class="reference internal" href="static_ip.html#static-ip"><span class="std std-ref">Appendix A: Setting a Static IP Address on an FXT Node</span></a> for instructions.</p>
+</div>
+<div class="section" id="connect-to-the-first-node">
+<span id="connect-first"></span><h2>Connect to the First Node<a class="headerlink" href="#connect-to-the-first-node" title="Permalink to this headline">¶</a></h2>
+<p>You can connect to any of the installed FXT nodes and use its Avere OS software to set up the cluster.</p>
+<div class="section" id="find-an-ip-address">
+<h3>Find an IP Address<a class="headerlink" href="#find-an-ip-address" title="Permalink to this headline">¶</a></h3>
+<p>To determine the IP address of the node you want to use, connect to it by using a serial cable, direct connection, or through a KVM switch. For more information, read <a class="reference internal" href="static_ip.html#connect-to-node"><span class="std std-ref">Connecting to the Physical Node</span></a> in <a class="reference internal" href="static_ip.html#static-ip"><span class="std std-ref">Appendix A: Setting a Static IP Address on an FXT Node</span></a>.</p>
+<p>When connected, log in with the username <code class="docutils literal notranslate"><span class="pre">root</span></code> and the default password <code class="docutils literal notranslate"><span class="pre">tiered2010</span></code></p>
+<p>After logging in, you need to determine the node’s IP address.</p>
+<p>Use the command <code class="docutils literal notranslate"><span class="pre">ifconfig</span></code> to see the addresses assigned to this system.</p>
+<p>For example, the command <code class="docutils literal notranslate"><span class="pre">ifconfig</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">-B5</span> <span class="pre">inet</span></code> searches for ports with internet addresses and gives five lines of context to show the port identifier.</p>
+<p>Write down any IP address shown in the ifconfig report. Addresses listed with port names like e0a or e0b are good options. Do not use any IP addresses listed with e7* names, since those names are only used for IPMI ports, not regular network ports.</p>
+</div>
+<div class="section" id="load-the-configuration-wizard-in-a-web-browser">
+<span id="index-0"></span><h3>Load the Configuration Wizard in a Web Browser<a class="headerlink" href="#load-the-configuration-wizard-in-a-web-browser" title="Permalink to this headline">¶</a></h3>
+<p>Enter the IP address for the node in a web browser. If the browser gives a message about the site being untrusted, proceed to the site anyway. (Individual FXT nodes do not have CA-provided security certificates.)</p>
+<a class="reference internal image-reference" href="_images/unconfigured_node_gui.png"><img alt="Login dialog from an unconfigured node" src="_images/unconfigured_node_gui.png" style="width: 300pt;" /></a>
+<p>Leave the <span class="guilabel">Username</span> and <span class="guilabel">Password</span> fields blank. Click <span class="guilabel">Login</span> to load the cluster creation page.</p>
+<a class="reference internal image-reference" href="_images/setup_first_no_cursor.png"><img alt="Cluster creation - first screen" src="_images/setup_first_no_cursor.png" style="width: 450pt;" /></a>
+<p>The next sections in this document walk you through cluster configuration steps.</p>
+</div>
+</div>
+<div class="section" id="creating-the-cluster">
+<h2>Creating the Cluster<a class="headerlink" href="#creating-the-cluster" title="Permalink to this headline">¶</a></h2>
+<p>A set of configuration screens helps you specify all of the information needed to create  your Avere cluster.</p>
+<p>Be sure that you have the information ready before starting. Read <a class="reference internal" href="prerequisites.html#cluster-requirements"><span class="std std-ref">Preparing To Create an Avere Cluster</span></a> to learn what names and IP address ranges you will need.</p>
+</div>
+<div class="section" id="initial-options">
+<span id="index-1"></span><h2>Initial Options<a class="headerlink" href="#initial-options" title="Permalink to this headline">¶</a></h2>
+<p>The first screen gives three options. Most users can go directly to the “configure a new cluster manually” option.</p>
+<a class="reference internal image-reference" href="_images/setup_first_screen.png"><img alt="Initial options screen" src="_images/setup_first_screen.png" style="width: 400pt;" /></a>
+<p>Options are:</p>
+<ul>
+<li><p class="first">Update the system image</p>
+<p>Choose this option if you need to install new Avere OS software before creating the cluster. (The currently installed software version is listed at the top of the screen.)</p>
+<p>If you click this link, you are prompted to specify the package file to use. You can provide a URL and username/password, or upload a file from your computer.</p>
+</li>
+<li><p class="first">Configure the cluster manually</p>
+<p>Choose this option to create a new cluster.</p>
+</li>
+<li><p class="first">Use an Avere setup file</p>
+<p>Use this option only if directed to do so by Avere Global Services.</p>
+</li>
+</ul>
+<p>Click <span class="guilabel">I will configure the cluster manually</span> to load the new cluster configuration options screen.</p>
+</div>
+<div class="section" id="new-cluster-configuration-options">
+<h2>New Cluster Configuration Options<a class="headerlink" href="#new-cluster-configuration-options" title="Permalink to this headline">¶</a></h2>
+<p>The next screen prompts you to configure options for the new cluster.</p>
+<a class="reference internal image-reference" href="_images/all_options_blank.png"><img alt="New cluster options - main screen" src="_images/all_options_blank.png" style="width: 350pt;" /></a>
+<p>This page is divided into two main sections, <span class="guilabel">Basic Configuration</span> and <span class="guilabel">Networking Configuration</span>. The networking configuration section also has subsections for the <span class="guilabel">Management</span> network and the <span class="guilabel">Cluster</span> network.</p>
+<p>Click a link below if you want to jump directly to the description of that particular section:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#setup-basic"><span class="std std-ref">Basic Configuration</span></a></li>
+<li><a class="reference internal" href="#setup-networking"><span class="std std-ref">Networking Configuration</span></a></li>
+<li><a class="reference internal" href="#setup-management"><span class="std std-ref">Management Network Configuration</span></a></li>
+<li><a class="reference internal" href="#setup-cluster"><span class="std std-ref">Cluster Network Configuration</span></a></li>
+</ul>
+<div class="section" id="basic-configuration">
+<span id="setup-basic"></span><span id="index-2"></span><h3>Basic Configuration<a class="headerlink" href="#basic-configuration" title="Permalink to this headline">¶</a></h3>
+<p>In the top section, fill in basic information for the new cluster.</p>
+<a class="reference internal image-reference" href="_images/basic_configuration.png"><img alt="Basic configuration options (cluster name and admin password)" src="_images/basic_configuration.png" style="width: 350pt;" /></a>
+<p><span class="guilabel">Cluster Name</span> - Enter a unique name for the cluster.</p>
+<p>You can change this name later on the <span class="guilabel">Cluster</span> &gt; <span class="guilabel">General Setup</span> configuration page.</p>
+<p>A cluster name must meet these criteria:</p>
+<ul class="simple">
+<li>Length of 1 to 16 characters</li>
+<li>Can include letters, numbers, and the dash (-) and underscore (_) characters</li>
+<li>Must not include other punctuation or special characters</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Your cluster name will be used to identify your files if you need to upload system information to Avere Global Services for troubleshooting or monitoring, so it’s helpful to include your company name.</p>
+</div>
+<p><span class="guilabel">Admin password</span> - Set the password for the default administrative user, <code class="docutils literal notranslate"><span class="pre">admin</span></code>.</p>
+<p>Although you should specify individual administrative user accounts for each person who configures or administers the cluster, the user <code class="docutils literal notranslate"><span class="pre">admin</span></code> must exist for the cluster. Log in as <code class="docutils literal notranslate"><span class="pre">admin</span></code> if you need to create additional users.</p>
+<p>You can change the password for <code class="docutils literal notranslate"><span class="pre">admin</span></code> in the <span class="guilabel">Administration</span> &gt; <span class="guilabel">Users</span> settings page in the Avere Control Panel. Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_users.html#gui-users" title="(in Cluster Configuration Guide v4.7)"><span>Administration &gt; Users</span></a> in the <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a> for details.</p>
+</div>
+<div class="section" id="networking-configuration">
+<span id="setup-networking"></span><span id="index-3"></span><h3>Networking Configuration<a class="headerlink" href="#networking-configuration" title="Permalink to this headline">¶</a></h3>
+<p>The <span class="guilabel">Networking</span> section prompts you to specify the network infrastructure that the cluster will use.</p>
+<p>There are two separate networks to configure:</p>
+<ul class="simple">
+<li>The <em>management network</em> provides administrator access to the cluster for configuration and monitoring. The IP address specified here is used when connecting to the Avere Control Panel or for SSH access. Most clusters use only a single management IP address, but if you want to add interfaces you can do so after creating the cluster.</li>
+<li>The <em>cluster network</em> is used for communication among cluster nodes and between cluster nodes and backend storage (core filers).</li>
+</ul>
+<p>(The client-facing network is configured later, after the cluster has been created.)</p>
+<p>This section also includes configuration for DNS and NTP servers that are used by both networks.</p>
+<div class="section" id="management-network">
+<span id="setup-management"></span><span id="index-4"></span><h4>Management Network<a class="headerlink" href="#management-network" title="Permalink to this headline">¶</a></h4>
+<p>The settings in the <span class="guilabel">Management</span> section are for the network that provides administrative access to the cluster.</p>
+<a class="reference internal image-reference" href="_images/management_network_filled.png"><img alt="Management section of the Network panel, with values" src="_images/management_network_filled.png" style="width: 350pt;" /></a>
+<p><span class="guilabel">Management IP</span> - Specify the IP address that you will use to access the Avere Control Panel. This address will be claimed by the cluster’s primary node, but it automatically moves to a healthy node if the original primary node becomes unavailable.</p>
+<p>After the cluster has been created, you have the option to configure a range of management network IP addresses by using the <span class="guilabel">Cluster</span> &gt; <span class="guilabel">Administrative Network</span> settings page. However, most clusters use only one management IP address. Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_admin_network.html#gui-admin-network" title="(in Cluster Configuration Guide v4.7)"><span>Cluster &gt; Administrative Network</span></a> in the <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a> for details.</p>
+<p><span class="guilabel">Netmask</span> - Specify the netmask for the management network.</p>
+<p><span class="guilabel">Router</span> - Enter the default gateway address used by the management network.</p>
+<p><span class="guilabel">VLAN tag (optional)</span> - If your cluster uses VLAN tags, specify the tag for the management network.</p>
+<p>Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/network_overview.html#vlan-overview" title="(in Cluster Configuration Guide v4.7)"><span>Working with VLANs</span></a> in the <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a> to learn more.</p>
+<p>Additional VLAN settings are configured in the <span class="guilabel">Cluster</span> &gt; <span class="guilabel">VLAN</span> settings page - read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_vlan.html#gui-vlan" title="(in Cluster Configuration Guide v4.7)"><span>Cluster &gt; VLAN</span></a> in the <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a> for details.</p>
+<p><span class="guilabel">MTU</span> - If necessary, adjust the maximum transmission unit (MTU) for your cluster’s management network.</p>
+<p><span class="guilabel">Use 1Gb mgmt network</span> - Check this box if you want to assign the 1GbE network ports on your FXT nodes to the management network only.</p>
+<p>FXT 5000 Series hardware has four built-in 1GbE ports (e0a, e0b, e0c, and e0d), and all four are included in the management network if this box is checked.</p>
+</div>
+<div class="section" id="cluster-network">
+<span id="setup-cluster"></span><span id="index-5"></span><h4>Cluster Network<a class="headerlink" href="#cluster-network" title="Permalink to this headline">¶</a></h4>
+<p>The cluster network settings apply to traffic among cluster nodes, and between cluster nodes and core filers.</p>
+<a class="reference internal image-reference" href="_images/cluster_network_filled.png"><img alt="Cluster section of the Network panel, with values" src="_images/cluster_network_filled.png" style="width: 350pt;" /></a>
+<p><span class="guilabel">First IP</span> and <span class="guilabel">Last IP</span> - Enter the IP addresses that define the range of addresses to be used for internal cluster communication. The IP addresses used here must be contiguous and not assigned by DHCP.</p>
+<p>You can add more IP addresses after creating the cluster. (Use the <span class="guilabel">Cluster</span> &gt; <span class="guilabel">Cluster Networks</span> settings page, documented in the <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a> - read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_cluster_networks.html#gui-cluster-networks" title="(in Cluster Configuration Guide v4.7)"><span>Cluster &gt; Cluster Networks</span></a>.)</p>
+<p>The value in <span class="guilabel">Number of IPs in Range</span> is calculated and shown automatically.</p>
+<p><span class="guilabel">Non-mgmt netmask (optional)</span> - Specify the netmask for the cluster network. (The system automatically suggests the netmask value that you entered for the management network; change it if needed.)</p>
+<p><span class="guilabel">Cluster router (optional)</span> - Specify the default gateway address used by the cluster network. The system automatically suggests the same gateway address that you supplied for the management network.</p>
+<p><span class="guilabel">Cluster VLAN tag (optional)</span> - If your cluster uses VLAN tags, specify the tag for the cluster network.</p>
+<p>Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/network_overview.html#vlan-overview" title="(in Cluster Configuration Guide v4.7)"><span>Working with VLANs</span></a> in the <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a> to learn more.</p>
+<p><span class="guilabel">Non-mgmt MTU (optional)</span> - If necessary, adjust the maximum transmission unit (MTU) for your cluster network.</p>
+</div>
+<div class="section" id="dns-and-ntp-settings">
+<span id="index-6"></span><h4>DNS and NTP Settings<a class="headerlink" href="#dns-and-ntp-settings" title="Permalink to this headline">¶</a></h4>
+<p>Below the <span class="guilabel">Cluster</span> section there are fields for specifying DNS and NTP servers, and for enabling link aggregation. These settings apply to all networks that the cluster uses.</p>
+<a class="reference internal image-reference" href="_images/dns_ntp_filled.png"><img alt="Additional network settings at the bottom of the new cluster configuration page" src="_images/dns_ntp_filled.png" style="width: 350pt;" /></a>
+<p><span class="guilabel">DNS server(s)</span> - Enter the IP address of one or more domain name system (DNS) servers.</p>
+<p>DNS is recommended for all clusters, and required if you want to use SMB, AD, or Kerberos.
+For optimal performance, configure the cluster’s DNS server for round-robin load balancing as described in <a class="reference internal" href="config_network.html#dns-overview"><span class="std std-ref">Configuring DNS for the Avere Cluster</span></a>.</p>
+<p><span class="guilabel">DNS domain</span> - Enter the network domain name the cluster will use.</p>
+<p><span class="guilabel">DNS search</span> - Optionally, enter additional domain names that the system should search to resolve DNS queries. You can add up to six domain names, separated by spaces.</p>
+<p><span class="guilabel">NTP server(s)</span> - Specify either one or three network time protocol (NTP) servers in the fields provided. You can use hostnames or IP addresses.</p>
+<p><span class="guilabel">Link aggregation</span> - Link aggregation allows you to customize how the ethernet ports on the cluster FXT nodes handle various types of traffic. Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_cluster_general_setup.html#lacp" title="(in Cluster Configuration Guide v4.7)"><span>Link Aggregation</span></a> in the <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a> for more information.</p>
+</div>
+</div>
+</div>
+<div class="section" id="id1">
+<h2>Creating the Cluster<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>After supplying all the required elements in the form, click the <span class="guilabel">Create Cluster</span> button.</p>
+<a class="reference internal image-reference" href="_images/create_cluster.png"><img alt="Arrow cursor over the Create Cluster button at the bottom right of the page" src="_images/create_cluster.png" style="width: 350pt;" /></a>
+<p>The system displays a message while creating the cluster.</p>
+<a class="reference internal image-reference" href="_images/creating_message.png"><img alt="Text message in browser window about creating the cluster" src="_images/creating_message.png" style="width: 350pt;" /></a>
+<p>After a few moments, you can click the link in the message to go to the Avere Control Panel. This link takes you to the IP address that you specified in <span class="guilabel">Management IP</span>. The link will be active about 15 seconds to one minute after you click the <span class="guilabel">Create cluster</span> button; if the web interface does not load, wait several seconds and then retry the link.</p>
+<p>Cluster creation takes a minute or more, but you can log in to the Avere Control Panel while the process is going on. It is normal for the Dashboard to show warnings until the cluster creation process is finished.</p>
+<p>Read <a class="reference internal" href="initial_config.html#init-config"><span class="std std-ref">Initial Cluster Configuration Steps</span></a> for more information about logging in and to learn what steps you need to take to get your newly created cluster ready for users.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="create_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Creating an Avere Cluster</a><ul>
+<li><a class="reference internal" href="#boot-the-first-node">Boot the First Node</a></li>
+<li><a class="reference internal" href="#connect-to-the-first-node">Connect to the First Node</a><ul>
+<li><a class="reference internal" href="#find-an-ip-address">Find an IP Address</a></li>
+<li><a class="reference internal" href="#load-the-configuration-wizard-in-a-web-browser">Load the Configuration Wizard in a Web Browser</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#creating-the-cluster">Creating the Cluster</a></li>
+<li><a class="reference internal" href="#initial-options">Initial Options</a></li>
+<li><a class="reference internal" href="#new-cluster-configuration-options">New Cluster Configuration Options</a><ul>
+<li><a class="reference internal" href="#basic-configuration">Basic Configuration</a></li>
+<li><a class="reference internal" href="#networking-configuration">Networking Configuration</a><ul>
+<li><a class="reference internal" href="#management-network">Management Network</a></li>
+<li><a class="reference internal" href="#cluster-network">Cluster Network</a></li>
+<li><a class="reference internal" href="#dns-and-ntp-settings">DNS and NTP Settings</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id1">Creating the Cluster</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="prerequisites.html"
+                        title="previous chapter">Preparing To Create an Avere Cluster</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="initial_config.html"
+                        title="next chapter">Initial Cluster Configuration Steps</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="initial_config.html" title="Initial Cluster Configuration Steps"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="prerequisites.html" title="Preparing To Create an Avere Cluster"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="create_index.html">Avere FXT Cluster Creation Guide</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

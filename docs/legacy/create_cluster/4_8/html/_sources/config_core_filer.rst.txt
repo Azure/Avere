@@ -1,0 +1,130 @@
+Adding Backend Storage
+
+A
+
+core filer
+
+ is the entity that links a backend storage system (for example, a NAS
+hardware appliance or a cloud object store) to the Avere cluster.
+
+Use the Avere Control Panel to add a core filer to your system.
+
+(Note that a FlashCloud license is required to use cloud storage as a
+core filer in your Avere cluster. You cannot define a cloud core filer
+until after the license has been installed.)
+
+More complete information is included in the
+
+Cluster Configuration Guide
+
+:
+
+For additional information about choosing and preparing to add a core
+filer, read Working With Core Filers.
+
+For additional prerequisites and step-by-step instructions, read one
+or both of these:  Adding a New Core Filer - NAS Core Filer  Adding a
+New Core Filer - Cloud Core Filer
+
+After adding a core filer, you can view or modify its properties by
+using the Core Filer Details settings page.
+
+Adding a Core Filer
+
+Define a core filer by clicking the Create button on the Core Filer >
+Manage Core Filers settings page.
+
+
+The Add New Core Filer wizard walks you through the process of
+creating a core filer that links to your backend storage. The
+
+Cluster Configuration Guide
+
+ has very detailed descriptions of the process, which is different for
+NFS/NAS storage and for cloud storage.
+
+License-Based Restrictions
+
+The options might be restricted based on what licenses you have
+installed. The screenshot below is from a cluster that does not have a
+FlashCloud license installed.
+
+
+Cache Policy Choices
+
+On the second page of the wizard you must select a cache policy for
+the new core filer. These are described in detail in the
+
+Cluster Configuration Guide
+
+.
+
+Policies that require additional licenses cannot be selected.
+
+
+Adding the Core Filer
+
+After filling in all of the required settings in the Add New Core
+Filer wizard, click the Add Filer button to submit the change.
+
+(For a cloud core filer, there is an additional page for specifying
+the storage system and encryption details - read
+
+Adding a New Core Filer - Cloud Core Filer
+
+ in the
+
+Cluster Configuration Guide
+
+ for help with this configuration.)
+
+After a few moments, the storage system appears on the Dashboard's
+core filers list and can be accessed through core filer settings
+pages.
+
+
+Note that this screenshot shows a core filer with no vserver - its
+setup is not complete. You must associate the core filer with a
+vserver to allow clients to access the storage system. Read
+
+Configuring VServers and Global Namespace
+
+ for help with the next step.
+
+About Local Directories
+
+The Local Directories feature in Avere OS provides enhanced caching
+services, which can impact the cluster's throughput in some scenarios.
+Avere Systems recommends that customers consult their Avere
+representatives before enabling this feature.
+
+Some caching scenarios require the Local Directories feature, so some
+cache policies are unavailable until after you have obtained and
+installed a Local Directories license file.  There is no additional
+charge for the license. Contact Avere Global Services if you have
+questions.
+
+Cloud Credentials
+
+If you add a cloud object store as a core filer, you must specify the
+cloud service and credentials for accessing the storage, among other
+parameters. You can add a cloud storage credential as part of creating
+the core filer.
+
+
+If you later want to add, change or remove a credential, use the
+Cluster > Cloud Credentials settings page.
+
+For more details, read the
+
+Cluster > Cloud Credentials
+
+ chapter in the
+
+Cluster Configuration Guide
+
+, and the
+
+Cloud Service and Protocol
+
+ section of the chapter that describes the cloud core filer wizard.
