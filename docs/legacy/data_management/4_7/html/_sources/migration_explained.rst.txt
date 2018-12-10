@@ -1,0 +1,316 @@
+Understanding FlashMove and FlashMirror
+
+This article explains more about Avere OS's data management features,
+FlashMove and FlashMirror, and provides examples and details that can
+help you get started.
+
+FlashMove In Depth
+
+As mentioned in
+
+FlashMove Overview
+
+, FlashMove copies the contents of a specified file tree from one core
+filer to another. If the original location was accessed through the
+Avere cluster, FlashMove automatically changes settings so that the
+Avere cluster uses the new location instead of the old location.
+
+
+FlashMove Example
+
+This example details the steps involved in a typical FlashMove job.
+
+This example job will move data from a NAS core filer path called
+"nas1:/vol/acct" to a cloud storage system called "cloud1". As part of
+the move operation, a subdirectory "cloud1:/acct" will be created.
+(You can add a subdirectory by populating the Export Subdirectory
+field in
+
+Data Destination
+
+ when creating the job.)
+
+Clients access the data in "nas1:/vol/acct" through the global
+namespace path "vserver1:/accounting".
+
+Before the move, the Avere cluster junction "vserver1:/accounting" is
+mapped to the core filesystem export "nas1:/vol/acct".
+
+When the move job starts, Avere OS starts to physically copy
+"nas1:/vol/acct" to "cloud1:/acct".
+
+Avere OS automatically creates the subdirectory acct in the cloud
+filesystem cloud1:/.
+
+During the data transfer, clients can continue to read and write using
+the vserver1:/accounting area of the Avere cluster.
+
+At the end of the data transfer, Avere OS automatically changes the
+mapping of the vserver1:/accounting area of the cluster - it unmaps it
+from nas1:/vol/acct and maps it to cloud1:/acct.  This process is
+called transitioning.
+
+If SMB access was configured for the moved filesystem, the SMB share
+mapped to the junction is automatically updated so that it accesses
+the new destination.
+
+After the move, clients access the back-end storage "cloud1:/acct"
+through the global namespace path "vserver1:/accounting".
+
+Note that FlashMove does not delete data from the move source as part
+of the move. The data in "nas1:/vol/acct" still exists, but it is no
+longer accessible through the Avere cluster. You can delete it using
+back-end filesystem tools, or re-add it to the Avere cluster with a
+new junction or new vserver, if desired - read
+
+Removing a Source Directory After a Move
+
+ for instructions.
+
+Maintaining A Consistent Namespace
+
+An Avere OS FlashMove job does more than simply move files around. It
+also modifies the global namespace (GNS) junction to reference the new
+file location. Junctions define the file paths that clients use to
+access data from the back-end storage. Avere OS automatically updates
+the junction's settings so that the same user-visible path references
+different storage. Users never need to know that the data has moved
+behind the scenes.
+
+Source and Destination Restrictions
+
+To maintain a consistent namespace, the Data Management tools enforce
+the following restrictions:
+
+A particular junction can be the source for only one data management
+job at a time (either a FlashMove or FlashMirror job). This is true
+even if the source of the migration is a subdirectory of the junction
+and for paths specified with the Custom source option.
+
+The destination of a FlashMove or FlashMirror job cannot be accessible
+from a namespace junction in the Avere cluster. This rule is necessary
+to prevent data access conflicts and possible errors:  At the end of a
+FlashMove operation, the source junction is changed to map to the
+destination path. The cluster can have only one junction to a
+particular directory, so the destination path cannot also be a
+junction.  spacing (not working)  No other entities should be
+accessing the data at the destination of a FlashMove or FlashMirror
+job. There is a risk of write-around (where data is changed on the
+back-end storage without notifying the Avere OS cache) if clients can
+access the destination path from a junction with another name, if
+clients directly mount the destination path, or if another Avere
+cluster writes to the destination filesystem. Write-around can cause
+data loss as well as a variety of problems with the data management
+job.
+
+Read the
+
+Junction Warning
+
+ section of
+
+Creating a New FlashMove or FlashMirror Job
+
+ for more information, including examples of eligible and ineligible
+destination directories.
+
+Also note that a filesystem being migrated must not have hard links to
+files outside the path being migrated. Avere OS does not detect this
+problem when a Data Management job is created, but it can cause
+filesystem problems during or after the migration. Hard links to files
+
+inside
+
+ the source filesystem are safe, as are symbolic links to files inside
+or outside of the source.
+
+FlashMirror In Depth
+
+As mentioned in
+
+FlashMirror Overview
+
+, FlashMirror copies the contents of a filesystem from one core filer
+to another and then keeps the destination filesystem synchronized with
+the source filesystem as clients make changes to the source data.
+Clients continue to access their files in the original location, but
+changes are copied to an additional location.
+
+
+Tip: When describing a FlashMirror job, it can be helpful to think
+  of the two data locations as the
+
+  primary
+
+   and
+
+  secondary
+
+   locations instead of the source and the destination. The primary
+  volume (also called the source) is the location that clients access
+  through the Avere cluster cache. The secondary volume (also called
+  the destination) is the replica of the data, which is kept in
+  reserve but not accessed by clients through the cluster.
+
+The next section gives a detailed example that will help you
+understand the FlashMirror process and the steps involved in a typical
+FlashMirror job.
+
+FlashMirror Example
+
+This example creates a data mirror of a directory called
+"nas1:/vol/eng" on a hardware core filer. The FlashMirror job will
+replicate the data from the source directory to a cloud core filer
+called "cloud1". As part of the mirror operation, a new subdirectory
+called "cloud1:/eng" will be created to hold the mirrored data. (You
+can add a subdirectory by populating the Export Subdirectory field in
+
+Data Destination
+
+ when creating the job.)
+
+Clients access the data in "nas1:/vol/eng" through the global
+namespace junction path "vserver1:/engineering".
+
+When the FlashMirror job starts, Avere OS starts to physically copy
+the data in "nas1:/vol/eng" to "cloud1:/eng".
+
+Avere OS automatically creates the subdirectory eng in the cloud
+filesystem cloud1.
+
+Clients using the Avere cluster can continue to read and write to
+files in the vserver1:/engineering junction of their cluster
+namespace. These changes are transferred to the back-end storage
+nas1:/vol/eng as usual.
+
+The initial copy is called "synchronizing". After all data is
+replicated to the mirror location, the mirror stays in sync by copying
+new changes from the cluster cache to both the primary and secondary
+locations.  Clients still access the original namespace junction
+vserver1:/engineering, and their data is written to both the primary
+data location (nas1:/vol/eng) and to the secondary location
+(cloud1:/eng).  The secondary filesystem is available for disaster
+recovery, but must not be used for routine data access.  Avere OS
+prioritizes writing data to the primary volume over writing to the
+secondary volume. (You can configure how strictly to keep the two
+synchronized with the Mirror Synchronization Policy setting described
+below.)  spacing (doesn't work here)  The secondary filesystem cannot
+be defined as a namespace junction while the mirror exists.  You can
+change the secondary copy to the primary copy by using the mirror
+transition or reverse actions.  spacing? not working xxx  You can
+control how data changes are replicated to the mirror by setting the
+Mirror Synchronization Policy. There are two options:  Flexible (the
+default value) - If a new change cannot be written to the secondary
+data location, the system keeps a record of changes and retries the
+operation periodically to get the two directories back in sync.  This
+policy minimizes the overhead of mirror synchronization work but
+allows the two storage systems to diverge more than the strict policy
+does.  spacing fix  Strict - If a new change cannot be written to the
+secondary data location, the system retries immediately and
+indefinitely. No operation is considered complete until it has reached
+both the primary and secondary filesystems. This policy minimizes the
+difference between the two storage systems but can consume bandwidth
+and cache space on the Avere cluster.  Additional information about
+these options is included in the Creating a New FlashMove or
+FlashMirror Job article under the Mirror Synchronization Policy
+option.
+
+Mirror Actions
+
+After establishing the mirror, Avere OS continues to keep the two
+storage locations synchronized indefinitely by pushing client changes
+from the cluster cache out to both the primary and secondary storage
+locations.
+
+You can stop or change the mirror from the main Data Management page
+with the options on the Actions menu. Some of these options behave
+differently for FlashMirror jobs than they do for FlashMove jobs, and
+some can only be used on FlashMirror jobs.
+
+To use any of these controls, click the job in the table to select it,
+and then use the Actions drop-down to choose the appropriate action.
+
+Stopping a FlashMirror Job
+
+There are several options that discontinue a FlashMirror job: Abort,
+Stop, and Pause. It's important to understand the behavior of each
+option, and that some of them are different when used with FlashMirror
+than when used with FlashMove.
+
+Abort permanently destroys the mirror job. You cannot re-establish an
+aborted mirror. (This behavior is similar to aborting a FlashMove
+job.)
+
+Stop completely stops all mirroring activity. No files are added or
+updated in the secondary location.
+
+Stopping a job also discards the job's state. If you restart a stopped
+job, all files must be rescanned and checked to determine if they need
+to be copied.
+
+While a job is stopped, you can change some job parameters, including
+overwrite mode, synchronization policy, logging, and SMB administrator
+username. Read
+
+Modifying a Stopped Job
+
+ for details.
+
+Pause can only be used on a FlashMirror job before it is synchronized.
+Pause temporarily stops the mirror job from synchronizing
+
+new
+
+ files, but still allows the mirror to update data that has already
+been mirrored to the secondary location. For example:
+
+If a mirror job is paused and a client adds a file to the directory,
+that file is added to the primary directory but it is not copied to
+the secondary directory.
+
+If a mirror job is paused and a client changes a file that has already
+been synchronized between the primary and secondary directories, files
+in both locations are updated with the new changes.
+
+A paused mirror job also retains file synchronization state. When you
+restart a paused job, files do not need to be rescanned to determine
+whether or not they need to be recopied.
+
+Transitioning a FlashMirror Job
+
+The Transition action can be used only with FlashMirror jobs. This
+action finishes copying all file changes to the secondary directory,
+then stops mirroring data and remaps the junction that was associated
+with the primary directory to point to the secondary directory. (This
+is similar to the end of a FlashMove job.) The original source is
+unmapped from the Avere cluster namespace and data in the Avere
+cluster cache is permanently associated with the core filer that was
+previously the mirror volume.
+
+You can use the Transition option to recover from a core filer
+failure, to decommission the original source volume, or if you need to
+take the source out of service for an extended maintenance period.
+
+A Transition button appears in the Actions menu. Read
+
+Data Management Actions
+
+ to learn more.
+
+Reversing a FlashMirror Job
+
+The Reverse action is another mirror-specific option. This action
+immediately swaps the secondary data location and the primary location
+and remaps the namespace junction to point to the volume that was the
+mirror. After a mirror job is reversed, data is preferentially written
+to the volume that was originally specified as the destination, but
+also written to the volume that was originally specified as the
+source.
+
+If the source and destination volumes had different export policies,
+client access might change if the job is reversed. (You can copy
+export policies as part of a data migration by setting a checkbox in
+
+Data Destination
+
+ when creating a new job.)

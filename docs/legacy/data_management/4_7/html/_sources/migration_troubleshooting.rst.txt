@@ -1,0 +1,214 @@
+Tips and Troubleshooting Information for Data Management Jobs
+
+This article includes tips for working with the Avere OS Data
+Management tools, and helps explain alerts and messages that you might
+see during and after a FlashMove or FlashMirror job.
+
+Removing a Source Directory After a Move
+
+A FlashMove operation does not delete data from the source directory
+when it finishes. The data remains on the core filer, but the Avere
+cluster no longer can access the original location because the
+junction that points to it was moved to reference the new core filer.
+
+Note: If your source directory was an Avere-managed cloud object
+  store, only an  Avere cluster can access this data.To reuse or
+  remove the leftover data in the cloud, do one of the following:
+
+  Create a junction to a parent of the moved data path, and use that
+  junction to navigate to the moved directory.
+
+  Use a different Avere cluster to create a junction to the original
+  source path.
+
+  Delete the data by destroying the storage (if you are not otherwise
+  using the cloud volume).
+
+You can delete the data from the source by following these steps:
+
+If one does not already exist, create a junction in the Avere cluster
+that maps to the parent directory of the move source.  For example, if
+you moved the directory sales/2016/, create a junction to sales/
+
+Use a client machine to navigate to the sales/ directory and use a
+system command to remove the subdirectory 2016/. (For example, use a
+command like rm -r 2016/* on a Linux system.)
+
+For a non-cloud source volume, you also have the option to mount the
+source storage export directly and use another method to delete the
+data.
+
+Post-Migration Processing
+
+After a data management job finishes, the Avere cluster does some
+background work on the migrated files to ensure that they are updated
+with their new core filer's caching policy.
+
+While this filesystem maintenance work is going on, you cannot start
+another data management job that uses these files. If you attempt to
+create a FlashMove or FlashMirror with one of the affected paths as
+the source or destination, the Add New Data Management Job wizard
+gives an error.
+
+The post-migration processing takes at least 15 minutes, but can take
+several hours depending on the amount of data moved. While it is going
+on, a status message appears in the Cluster Activity panel at the
+bottom of each page of the Avere Control Panel.
+
+Data Management Job Conditions
+
+This section describes some of the status messages that can appear on
+the Avere cluster Dashboard page.
+
+Temporary Files Alerts
+
+These messages indicate that interim files on the destination core
+filer were not properly cleaned up. This can happen because a non-
+retryable error occurred, or because the background job to delete the
+temporary files was aborted.
+
+You can manually remove the files directly from the core filer, but
+removing them is typically unnecessary.
+
+Examples:
+
+"Data Management job <job_number> has left temporary files on the core
+filer at: core_filer_name:path/._avere_pen_job_identifier."
+
+"Data Management job <job_number> failed to remove the temporary files
+directory on the destination core filer. You can manually remove the
+temporary files directory by directly mounting the core filer and
+deleting the temporary files directory and all of its contents."
+
+Transition Error Alerts
+
+As the last step in a FlashMove job, the Avere cluster changes its
+cached files to reference the destination path instead of the source
+path. This step is referred to as transition.
+
+A problem in this phase can cause inconsistencies between the core
+filer data and the data in the Avere cache. In some cases,
+intervention by Avere Global Services is needed to force the
+directories to repopulate correctly.
+
+Examples:
+
+"Data Management job <job_number> encountered an issue during
+transition: transition did not complete. Status: Could not initiate
+transition due to destination export being inaccessible. Check
+destination core filer status and try the transition again."
+
+The alert above means that the content was not successfully moved to
+the destination.
+
+A FlashMove job will automatically retry the transition.
+
+A FlashMirror job will return to the mirroring state; you must retry
+the transition by selecting the job and choosing the Transition
+action.
+
+Path Error Alerts
+
+These alerts indicate errors in changing the cluster cache files to
+reference the correct directories.
+
+Examples:
+
+"Data Management job <job_number> has completed, but the source path
+experienced problems during the operation. This may affect future
+attempts to create a junction directly to the source path. Please
+contact Avere Global Services if you have any further issues."
+
+"Data Management job <job_number> has been manually aborted, but the
+destination path experienced problems during the operation. This may
+affect future attempts to create a junction directly to the
+destination path. Please contact Avere Global Services if you have any
+further issues."
+
+If you plan to create a junction to the path listed in the alert after
+this failure, contact Avere Global Services for help to make sure that
+the metadata for this path is in a good state.
+
+File Comparison and Preserving Metadata
+
+This section gives tips about how Avere OS determines whether or not
+two files are identical, and what to expect in metadata for moved or
+mirrored files.
+
+Comparing Files
+
+You can configure how Avere OS decides when to overwrite files on the
+destination as part of a FlashMove or FlashMirror operation. (These
+options are described in detail in
+
+Overwrite Mode
+
+ as part of creating a new data management job.)
+
+The Always overwrite mode does not compare files from the source with
+similar files on the destination, it simply overwrites all destination
+files with the source files.
+
+There are two comparison options:
+
+Filehandle, size, or modification time changed, and
+
+Size or modification time changed
+
+The first option includes comparing file handles in addition to file
+size and modification time. File handles are unique identifiers
+assigned by the core filer that stay the same throughout a file's
+lifetime. During a FlashMove or FlashMirror job, the Avere cluster
+creates a mapping between the file handle on the source and the file
+handle for the corresponding file on the destination. So if this
+cluster has previously moved a particular file, the cluster can
+consult its internal mapping to help determine whether or not a file
+is the same.
+
+The other comparison values are standard file attributes: file size
+and modification time (mtime).
+
+When copying files, Avere OS copies the modification time along with
+the file, as described in the next section.
+
+Because Avere OS uses an NFSv3-compatible approach for writing to
+cloud object storage, cloud core filers are treated the same way as
+hardware NAS systems.
+
+Metadata Implications for Migrated Files
+
+Administrators frequently want to know how FlashMove or FlashMirror
+affects timestamps for the copied files.
+
+In general, the Avere cluster preserves file attributes when moving
+the file from the cluster cache to back-end storage, and the same is
+true when files are copied as part of a data management job. In other
+words, a file stored on the source core filer and its counterpart in
+the destination core filer should have the same file attributes. These
+values also are kept synchronized if changes are made to the file in
+the cluster cache.
+
+Specifically, Avere OS preserves these file attributes:
+
+access mode bits (file permissions)
+
+atime (last access time)
+
+mtime (last content modification time)
+
+UID (user identifier)
+
+GID (group identifier)
+
+file length
+
+SMB ACLs (access control lists - preserved for SMB-enabled data if
+Preserve CIFS ACLs is configured)
+
+Avere OS does not preserve ctime (change time) because NFSv3 does not
+support setting the ctime attribute, and it does not preserve capacity
+data, which varies by storage system.
+
+Note that if you do not need strict atime or mtime synchronization,
+some advanced options can be set to improve performance. Contact Avere
+Systems to learn more.

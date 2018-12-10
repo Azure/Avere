@@ -1,0 +1,144 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>FlashMove Overview &#8212; Avere OS Data Management Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/vendor/savvior/savvicms-avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="ops_mig_index.html">Avere OS Data Management Guide</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="move-overview">
+<h1>FlashMove Overview<a class="headerlink" href="#move-overview" title="Permalink to this headline">¶</a></h1>
+<p>FlashMove copies the contents of a specified file tree from one core filer to another. If the original location was accessed through the Avere cluster, FlashMove automatically changes settings so that the Avere cluster uses the new storage location instead of the old location.</p>
+<p>Because clients access the data through the Avere cluster instead of on the storage volume itself, FlashMove can migrate data while it is in use, and with no need to modify client applications.</p>
+<div class="figure" id="id1">
+<a class="reference internal image-reference" href="_images/flashmove_diagram.png"><img alt="Diagram showing the Avere cluster moving data from one back-end core filer to another (FlashMove)" src="_images/flashmove_diagram.png" style="width: 400pt;" /></a>
+<p class="caption"><span class="caption-text">FlashMove Diagram</span></p>
+</div>
+<p>This diagram shows an Avere cluster with the back-end file path <code class="docutils literal notranslate"><span class="pre">&lt;Vendor</span> <span class="pre">B&gt;/src</span></code> defined as <code class="docutils literal notranslate"><span class="pre">/src</span></code> in the client-facing namespace. (This is mapping is called a <em>namespace junction</em>  and is part of the Avere OS global namespace feature - read <a class="reference external" href="http://library.averesystems.com/ops_guide/4_7/gns_overview.html#gns-overview" title="(in Operations Guide v4.7)"><span>Using a Global Namespace</span></a> in the Avere OS Configuration Guide for details.)</p>
+<p>A FlashMove job is created that migrates the data from <code class="docutils literal notranslate"><span class="pre">&lt;Vendor</span> <span class="pre">B&gt;/src</span></code> to <code class="docutils literal notranslate"><span class="pre">&lt;Vendor</span> <span class="pre">C&gt;/src</span></code>. (The actual path names can be different, and do not need to be identical to the junction name.)</p>
+<p>During the move, the data is continuously available through the Avere cluster junction. Clients can view and change data, and Avere OS automatically keeps the data synchronized as part of the move.</p>
+<p>After the data is completely copied to the Vendor C core filer, the cluster modifies the junction so that it references the new location of the moved files. That is, when a client application writes data to <code class="docutils literal notranslate"><span class="pre">&lt;cluster&gt;/src</span></code>, that data is stored on the back end in <code class="docutils literal notranslate"><span class="pre">&lt;Vendor</span> <span class="pre">C&gt;/src</span></code>.</p>
+<p>This process also can be used between multiple exports on one core filer, and between hardware storage and cloud object stores.</p>
+<div class="section" id="leveraging-move">
+<h2>Leveraging FlashMove<a class="headerlink" href="#leveraging-move" title="Permalink to this headline">¶</a></h2>
+<p>Because FlashMove can migrate data without affecting client access, it gives you the flexibility to use a variety of storage solutions to maximize effectiveness and cost savings.</p>
+<p>With FlashMove, you can:</p>
+<ul class="simple">
+<li>Retire or service a NAS storage system without user downtime</li>
+</ul>
+<ul class="simple">
+<li>Seamlessly move a segment of data to cloud storage (either private or public cloud), or from a cloud vendor back to another NAS solution</li>
+</ul>
+<ul class="simple">
+<li>Load-balance your storage by temporarily moving data for an active project to your fastest cloud or NAS storage system, then moving it back to slower, less expensive storage after the project is finished</li>
+</ul>
+<p>Read <a class="reference internal" href="migration_explained.html#move-detail"><span class="std std-ref">FlashMove In Depth</span></a> for a detailed discussion of the FlashMove process.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="ops_mig_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">FlashMove Overview</a><ul>
+<li><a class="reference internal" href="#leveraging-move">Leveraging FlashMove</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="ops_mig_index.html">Avere OS Data Management Guide</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com/" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/" target="_blank" style="color: #fff;">Avere Systems Website</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

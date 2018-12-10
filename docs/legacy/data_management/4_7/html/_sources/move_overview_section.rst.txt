@@ -1,0 +1,64 @@
+FlashMove Overview
+
+FlashMove copies the contents of a specified file tree from one core
+filer to another. If the original location was accessed through the
+Avere cluster, FlashMove automatically changes settings so that the
+Avere cluster uses the new storage location instead of the old
+location.
+
+Because clients access the data through the Avere cluster instead of
+on the storage volume itself, FlashMove can migrate data while it is
+in use, and with no need to modify client applications.
+
+
+This diagram shows an Avere cluster with the back-end file path
+"<Vendor B>/src" defined as "/src" in the client-facing namespace.
+(This is mapping is called a
+
+namespace junction
+
+  and is part of the Avere OS global namespace feature - read
+
+Using a Global Namespace
+
+ in the Avere OS Configuration Guide for details.)
+
+A FlashMove job is created that migrates the data from "<Vendor
+B>/src" to "<Vendor C>/src". (The actual path names can be different,
+and do not need to be identical to the junction name.)
+
+During the move, the data is continuously available through the Avere
+cluster junction. Clients can view and change data, and Avere OS
+automatically keeps the data synchronized as part of the move.
+
+After the data is completely copied to the Vendor C core filer, the
+cluster modifies the junction so that it references the new location
+of the moved files. That is, when a client application writes data to
+"<cluster>/src", that data is stored on the back end in "<Vendor
+C>/src".
+
+This process also can be used between multiple exports on one core
+filer, and between hardware storage and cloud object stores.
+
+Leveraging FlashMove
+
+Because FlashMove can migrate data without affecting client access, it
+gives you the flexibility to use a variety of storage solutions to
+maximize effectiveness and cost savings.
+
+With FlashMove, you can:
+
+Retire or service a NAS storage system without user downtime
+
+Seamlessly move a segment of data to cloud storage (either private or
+public cloud), or from a cloud vendor back to another NAS solution
+
+Load-balance your storage by temporarily moving data for an active
+project to your fastest cloud or NAS storage system, then moving it
+back to slower, less expensive storage after the project is finished
+
+Read
+
+FlashMove In Depth
+
+ for a detailed discussion of the FlashMove process.

@@ -1,0 +1,283 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Understanding FlashMove and FlashMirror &#8212; Avere OS Data Management Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Prerequisites for using FlashMove or FlashMirror" href="migration_prereqs.html" />
+    <link rel="prev" title="Using the Avere Cluster To Move or Mirror Data" href="migration_overview.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/vendor/savvior/savvicms-avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="migration_prereqs.html" title="Prerequisites for using FlashMove or FlashMirror"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="migration_overview.html" title="Using the Avere Cluster To Move or Mirror Data"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_mig_index.html">Avere OS Data Management Guide</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="understanding-move-and-mirror">
+<h1>Understanding FlashMove and FlashMirror<a class="headerlink" href="#understanding-move-and-mirror" title="Permalink to this headline">¶</a></h1>
+<p>This article explains more about Avere OS’s data management features, FlashMove and FlashMirror, and provides examples and details that can help you get started.</p>
+<div class="section" id="move-in-depth">
+<span id="move-detail"></span><span id="index-0"></span><h2>FlashMove In Depth<a class="headerlink" href="#move-in-depth" title="Permalink to this headline">¶</a></h2>
+<p>As mentioned in <a class="reference internal" href="migration_overview.html#move-overview"><span class="std std-ref">FlashMove Overview</span></a>, FlashMove copies the contents of a specified file tree from one core filer to another. If the original location was accessed through the Avere cluster, FlashMove automatically changes settings so that the Avere cluster uses the new location instead of the old location.</p>
+<div class="figure" id="id1">
+<a class="reference internal image-reference" href="_images/flashmove_diagram.png"><img alt="Diagram showing the Avere cluster moving data from one back-end core filer to another (FlashMove)" src="_images/flashmove_diagram.png" style="width: 300pt;" /></a>
+<p class="caption"><span class="caption-text">FlashMove Diagram</span></p>
+</div>
+<div class="section" id="move-example">
+<h3>FlashMove Example<a class="headerlink" href="#move-example" title="Permalink to this headline">¶</a></h3>
+<p>This example details the steps involved in a typical FlashMove job.</p>
+<p>This example job will move data from a NAS core filer path called <code class="docutils literal notranslate"><span class="pre">nas1:/vol/acct</span></code> to a cloud storage system called <code class="docutils literal notranslate"><span class="pre">cloud1</span></code>. As part of the move operation, a subdirectory <code class="docutils literal notranslate"><span class="pre">cloud1:/acct</span></code> will be created. (You can add a subdirectory by populating the <span class="guilabel">Export Subdirectory</span> field in <a class="reference internal" href="gui_create_migration.html#wiz-data-destination"><span class="std std-ref">Data Destination</span></a> when creating the job.)</p>
+<p>Clients access the data in <code class="docutils literal notranslate"><span class="pre">nas1:/vol/acct</span></code> through the global namespace path <code class="docutils literal notranslate"><span class="pre">vserver1:/accounting</span></code>.</p>
+<p>Before the move, the Avere cluster junction <code class="docutils literal notranslate"><span class="pre">vserver1:/accounting</span></code> is mapped to the core filesystem export <code class="docutils literal notranslate"><span class="pre">nas1:/vol/acct</span></code>.</p>
+<p>When the move job starts, Avere OS starts to physically copy <code class="docutils literal notranslate"><span class="pre">nas1:/vol/acct</span></code> to <code class="docutils literal notranslate"><span class="pre">cloud1:/acct</span></code>.</p>
+<ul>
+<li><p class="first">Avere OS automatically creates the subdirectory <code class="docutils literal notranslate"><span class="pre">acct</span></code> in the cloud filesystem <code class="docutils literal notranslate"><span class="pre">cloud1:/</span></code>.</p>
+</li>
+<li><p class="first">During the data transfer, clients can continue to read and write using the <code class="docutils literal notranslate"><span class="pre">vserver1:/accounting</span></code> area of the Avere cluster.</p>
+</li>
+<li><p class="first">At the end of the data transfer, Avere OS automatically changes the mapping of the <code class="docutils literal notranslate"><span class="pre">vserver1:/accounting</span></code> area of the cluster - it unmaps it from <code class="docutils literal notranslate"><span class="pre">nas1:/vol/acct</span></code> and maps it to <code class="docutils literal notranslate"><span class="pre">cloud1:/acct</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This process is called <strong>transitioning</strong>.</p>
+</div>
+</li>
+<li><p class="first">If SMB access was configured for the moved filesystem, the SMB share mapped to the junction is automatically updated so that it accesses the new destination.</p>
+</li>
+</ul>
+<p>After the move, clients access the back-end storage <code class="docutils literal notranslate"><span class="pre">cloud1:/acct</span></code> through the global namespace path <code class="docutils literal notranslate"><span class="pre">vserver1:/accounting</span></code>.</p>
+<p>Note that FlashMove does not delete data from the move source as part of the move. The data in <code class="docutils literal notranslate"><span class="pre">nas1:/vol/acct</span></code> still exists, but it is no longer accessible through the Avere cluster. You can delete it using back-end filesystem tools, or re-add it to the Avere cluster with a new junction or new vserver, if desired - read <a class="reference internal" href="migration_troubleshooting.html#remove-source"><span class="std std-ref">Removing a Source Directory After a Move</span></a> for instructions.</p>
+</div>
+</div>
+<div class="section" id="maintaining-a-consistent-namespace">
+<span id="namespace-restrictions"></span><span id="index-1"></span><h2>Maintaining A Consistent Namespace<a class="headerlink" href="#maintaining-a-consistent-namespace" title="Permalink to this headline">¶</a></h2>
+<p>An Avere OS FlashMove job does more than simply move files around. It also modifies the global namespace (GNS) junction to reference the new file location. Junctions define the file paths that clients use to access data from the back-end storage. Avere OS automatically updates the junction’s settings so that the same user-visible path references different storage. Users never need to know that the data has moved behind the scenes.</p>
+<div class="section" id="source-and-destination-restrictions">
+<h3>Source and Destination Restrictions<a class="headerlink" href="#source-and-destination-restrictions" title="Permalink to this headline">¶</a></h3>
+<p>To maintain a consistent namespace, the Data Management tools enforce the following restrictions:</p>
+<ul>
+<li><p class="first">A particular junction can be the source for only one data management job at a time (either a FlashMove or FlashMirror job). This is true even if the source of the migration is a subdirectory of the junction and for paths specified with the <span class="guilabel">Custom source</span> option.</p>
+</li>
+<li><p class="first">The destination of a FlashMove or FlashMirror job cannot be accessible from a namespace junction in the Avere cluster. This rule is necessary to prevent data access conflicts and possible errors:</p>
+<blockquote>
+<div><ul class="simple">
+<li>At the end of a FlashMove operation, the source junction is changed to map to the destination path. The cluster can have only one junction to a particular directory, so the destination path cannot also be a junction.</li>
+</ul>
+<ul class="simple">
+<li>No other entities should be accessing the data at the destination of a FlashMove or FlashMirror job. There is a risk of <em>write-around</em> (where data is changed on the back-end storage without notifying the Avere OS cache) if clients can access the destination path from a junction with another name, if clients directly mount the destination path, or if another Avere cluster writes to the destination filesystem. Write-around can cause data loss as well as a variety of problems with the data management job.</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p>Read the <a class="reference internal" href="gui_create_migration.html#junction-warning"><span class="std std-ref">Junction Warning</span></a> section of <a class="reference internal" href="gui_create_migration.html#create-migration"><span class="std std-ref">Creating a New FlashMove or FlashMirror Job</span></a> for more information, including examples of eligible and ineligible destination directories.</p>
+<p>Also note that a filesystem being migrated must not have hard links to files outside the path being migrated. Avere OS does not detect this problem when a Data Management job is created, but it can cause filesystem problems during or after the migration. Hard links to files <em>inside</em> the source filesystem are safe, as are symbolic links to files inside or outside of the source.</p>
+</div>
+</div>
+<div class="section" id="mirror-in-depth">
+<span id="mirror-detail"></span><span id="index-2"></span><h2>FlashMirror In Depth<a class="headerlink" href="#mirror-in-depth" title="Permalink to this headline">¶</a></h2>
+<p>As mentioned in <a class="reference internal" href="migration_overview.html#mirror-overview"><span class="std std-ref">FlashMirror Overview</span></a>, FlashMirror copies the contents of a filesystem from one core filer to another and then keeps the destination filesystem synchronized with the source filesystem as clients make changes to the source data. Clients continue to access their files in the original location, but changes are copied to an additional location.</p>
+<div class="figure" id="id2">
+<a class="reference internal image-reference" href="_images/flashmirror_diagram.png"><img alt="Diagram showing the Avere cluster moving data from one back-end core filer to another and maintaining synchronization between the two (FlashMirror)" src="_images/flashmirror_diagram.png" style="width: 300pt;" /></a>
+<p class="caption"><span class="caption-text">FlashMirror Diagram</span></p>
+</div>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p class="last">When describing a FlashMirror job, it can be helpful to think of the two data locations as the <em>primary</em> and <em>secondary</em> locations instead of the source and the destination. The primary volume (also called the source) is the location that clients access through the Avere cluster cache. The secondary volume (also called the destination) is the replica of the data, which is kept in reserve but not accessed by clients through the cluster.</p>
+</div>
+<p>The next section gives a detailed example that will help you understand the FlashMirror process and the steps involved in a typical FlashMirror job.</p>
+<div class="section" id="mirror-example">
+<h3>FlashMirror Example<a class="headerlink" href="#mirror-example" title="Permalink to this headline">¶</a></h3>
+<p>This example creates a data mirror of a directory called <code class="docutils literal notranslate"><span class="pre">nas1:/vol/eng</span></code> on a hardware core filer. The FlashMirror job will replicate the data from the source directory to a cloud core filer called <code class="docutils literal notranslate"><span class="pre">cloud1</span></code>. As part of the mirror operation, a new subdirectory called <code class="docutils literal notranslate"><span class="pre">cloud1:/eng</span></code> will be created to hold the mirrored data. (You can add a subdirectory by populating the <span class="guilabel">Export Subdirectory</span> field in <a class="reference internal" href="gui_create_migration.html#wiz-data-destination"><span class="std std-ref">Data Destination</span></a> when creating the job.)</p>
+<p>Clients access the data in <code class="docutils literal notranslate"><span class="pre">nas1:/vol/eng</span></code> through the global namespace junction path <code class="docutils literal notranslate"><span class="pre">vserver1:/engineering</span></code>.</p>
+<p>When the FlashMirror job starts, Avere OS starts to physically copy the data in <code class="docutils literal notranslate"><span class="pre">nas1:/vol/eng</span></code> to <code class="docutils literal notranslate"><span class="pre">cloud1:/eng</span></code>.</p>
+<ul>
+<li><p class="first">Avere OS automatically creates the subdirectory <code class="docutils literal notranslate"><span class="pre">eng</span></code> in the cloud filesystem <code class="docutils literal notranslate"><span class="pre">cloud1</span></code>.</p>
+</li>
+<li><p class="first">Clients using the Avere cluster can continue to read and write to files in the <code class="docutils literal notranslate"><span class="pre">vserver1:/engineering</span></code> junction of their cluster namespace. These changes are transferred to the back-end storage <code class="docutils literal notranslate"><span class="pre">nas1:/vol/eng</span></code> as usual.</p>
+</li>
+<li><p class="first">The initial copy is called “synchronizing”. After all data is replicated to the mirror location, the mirror stays in sync by copying new changes from the cluster cache to both the primary and secondary locations.</p>
+<ul>
+<li><p class="first">Clients still access the original namespace junction <code class="docutils literal notranslate"><span class="pre">vserver1:/engineering</span></code>, and their data is written to both the primary data location (<code class="docutils literal notranslate"><span class="pre">nas1:/vol/eng</span></code>) and to the secondary location (<code class="docutils literal notranslate"><span class="pre">cloud1:/eng</span></code>).</p>
+</li>
+<li><p class="first">The secondary filesystem is available for disaster recovery, but must not be used for routine data access.</p>
+<ul class="simple">
+<li>Avere OS prioritizes writing data to the primary volume over writing to the secondary volume. (You can configure how strictly to keep the two synchronized with the <span class="guilabel">Mirror Synchronization Policy</span> setting described below.)</li>
+</ul>
+<ul class="simple">
+<li>The secondary filesystem cannot be defined as a namespace junction while the mirror exists.</li>
+<li>You can change the secondary copy to the primary copy by using the mirror <a class="reference internal" href="#mirror-transition"><span class="std std-ref">transition</span></a> or <a class="reference internal" href="#mirror-reverse"><span class="std std-ref">reverse</span></a> actions.</li>
+</ul>
+</li>
+<li><p class="first">You can control how data changes are replicated to the mirror by setting the <span class="guilabel">Mirror Synchronization Policy</span>. There are two options:</p>
+<ul>
+<li><p class="first"><span class="guilabel">Flexible</span> (the default value) - If a new change cannot be written to the secondary data location, the system keeps a record of changes and retries the operation periodically to get the two directories back in sync.</p>
+<p>This policy minimizes the overhead of mirror synchronization work but allows the two storage systems to diverge more than the strict policy does.</p>
+</li>
+</ul>
+<ul class="simple">
+<li><span class="guilabel">Strict</span> - If a new change cannot be written to the secondary data location, the system retries immediately and indefinitely. No operation is considered complete until it has reached both the primary and secondary filesystems. This policy minimizes the difference between the two storage systems but can consume bandwidth and cache space on the Avere cluster.</li>
+</ul>
+<p>Additional information about these options is included in the <a class="reference internal" href="gui_create_migration.html#create-migration"><span class="std std-ref">Creating a New FlashMove or FlashMirror Job</span></a> article under the <a class="reference internal" href="gui_create_migration.html#mirror-sync-policy"><span class="std std-ref">Mirror Synchronization Policy</span></a> option.</p>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="mirror-actions">
+<span id="pause-mirror"></span><span id="index-3"></span><h3>Mirror Actions<a class="headerlink" href="#mirror-actions" title="Permalink to this headline">¶</a></h3>
+<p>After establishing the mirror, Avere OS continues to keep the two storage locations synchronized indefinitely by pushing client changes from the cluster cache out to both the primary and secondary storage locations.</p>
+<p>You can stop or change the mirror from the main Data Management page with the options on the <span class="guilabel">Actions</span> menu. Some of these options behave differently for FlashMirror jobs than they do for FlashMove jobs, and some can only be used on FlashMirror jobs.</p>
+<p>To use any of these controls, click the job in the table to select it, and then use the <span class="guilabel">Actions</span> drop-down to choose the appropriate action.</p>
+<div class="section" id="stopping-a-mirror-job">
+<h4>Stopping a FlashMirror Job<a class="headerlink" href="#stopping-a-mirror-job" title="Permalink to this headline">¶</a></h4>
+<p>There are several options that discontinue a FlashMirror job: Abort, Stop, and Pause. It’s important to understand the behavior of each option, and that some of them are different when used with FlashMirror than when used with FlashMove.</p>
+<p><span class="guilabel">Abort</span> permanently destroys the mirror job. You cannot re-establish an aborted mirror. (This behavior is similar to aborting a FlashMove job.)</p>
+<p><span class="guilabel">Stop</span> completely stops all mirroring activity. No files are added or updated in the secondary location.</p>
+<p>Stopping a job also discards the job’s state. If you restart a stopped job, all files must be rescanned and checked to determine if they need to be copied.</p>
+<p>While a job is stopped, you can change some job parameters, including overwrite mode, synchronization policy, logging, and SMB administrator username. Read <a class="reference internal" href="gui_migration_dashboard.html#actions-modify"><span class="std std-ref">Modifying a Stopped Job</span></a> for details.</p>
+<p><span class="guilabel">Pause</span> can only be used on a FlashMirror job before it is synchronized. Pause temporarily stops the mirror job from synchronizing <em>new</em> files, but still allows the mirror to update data that has already been mirrored to the secondary location. For example:</p>
+<ul class="simple">
+<li>If a mirror job is paused and a client adds a file to the directory, that file is added to the primary directory but it is not copied to the secondary directory.</li>
+</ul>
+<ul class="simple">
+<li>If a mirror job is paused and a client changes a file that has already been synchronized between the primary and secondary directories, files in both locations are updated with the new changes.</li>
+</ul>
+<p>A paused mirror job also retains file synchronization state. When you restart a paused job, files do not need to be rescanned to determine whether or not they need to be recopied.</p>
+</div>
+<div class="section" id="transitioning-a-mirror-job">
+<span id="mirror-transition"></span><h4>Transitioning a FlashMirror Job<a class="headerlink" href="#transitioning-a-mirror-job" title="Permalink to this headline">¶</a></h4>
+<p>The <span class="guilabel">Transition</span> action can be used only with FlashMirror jobs. This action finishes copying all file changes to the secondary directory, then stops mirroring data and remaps the junction that was associated with the primary directory to point to the secondary directory. (This is similar to the end of a FlashMove job.) The original source is unmapped from the Avere cluster namespace and data in the Avere cluster cache is permanently associated with the core filer that was previously the mirror volume.</p>
+<p>You can use the Transition option to recover from a core filer failure, to decommission the original source volume, or if you need to take the source out of service for an extended maintenance period.</p>
+<p>A <span class="guilabel">Transition</span> button appears in the <span class="guilabel">Actions</span> menu. Read <a class="reference internal" href="gui_migration_dashboard.html#migration-actions"><span class="std std-ref">Data Management Actions</span></a> to learn more.</p>
+</div>
+<div class="section" id="reversing-a-mirror-job">
+<span id="mirror-reverse"></span><h4>Reversing a FlashMirror Job<a class="headerlink" href="#reversing-a-mirror-job" title="Permalink to this headline">¶</a></h4>
+<p>The <span class="guilabel">Reverse</span> action is another mirror-specific option. This action immediately swaps the secondary data location and the primary location and remaps the namespace junction to point to the volume that was the mirror. After a mirror job is reversed, data is preferentially written to the volume that was originally specified as the destination, but also written to the volume that was originally specified as the source.</p>
+<p>If the source and destination volumes had different export policies, client access might change if the job is reversed. (You can copy export policies as part of a data migration by setting a checkbox in <a class="reference internal" href="gui_create_migration.html#transfer-policies-nh"><span class="std std-ref">Data Destination</span></a> when creating a new job.)</p>
+<div class="last-update docutils container">
+updated Jul 19, 2017</div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="ops_mig_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Understanding FlashMove and FlashMirror</a><ul>
+<li><a class="reference internal" href="#move-in-depth">FlashMove In Depth</a></li>
+<li><a class="reference internal" href="#maintaining-a-consistent-namespace">Maintaining A Consistent Namespace</a></li>
+<li><a class="reference internal" href="#mirror-in-depth">FlashMirror In Depth</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="migration_overview.html"
+                        title="previous chapter">Using the Avere Cluster To Move or Mirror Data</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="migration_prereqs.html"
+                        title="next chapter">Prerequisites for using FlashMove or FlashMirror</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="migration_prereqs.html" title="Prerequisites for using FlashMove or FlashMirror"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="migration_overview.html" title="Using the Avere Cluster To Move or Mirror Data"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_mig_index.html">Avere OS Data Management Guide</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com/" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/" target="_blank" style="color: #fff;">Avere Systems Website</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

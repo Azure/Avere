@@ -1,0 +1,135 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>FlashMirror Overview &#8212; Avere OS Data Management Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/vendor/savvior/savvicms-avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="ops_mig_index.html">Avere OS Data Management Guide</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="mirror-overview">
+<h1>FlashMirror Overview<a class="headerlink" href="#mirror-overview" title="Permalink to this headline">¶</a></h1>
+<p>Like FlashMove, FlashMirror also copies the contents of a filesystem from one core filer to another. However, after the initial copying is finished, FlashMirror keeps the primary and secondary filesystems synchronized with each other as clients make changes.</p>
+<p>Clients continue to access their files through the cluster, and any changes are written to both the original location and the mirror location.</p>
+<div class="figure" id="id1">
+<a class="reference internal image-reference" href="_images/flashmirror_diagram.png"><img alt="Diagram showing the Avere cluster moving data from one back-end core filer to another and maintaining synchronization between the two (FlashMirror)" src="_images/flashmirror_diagram.png" style="width: 400pt;" /></a>
+<p class="caption"><span class="caption-text">FlashMirror Diagram</span></p>
+</div>
+<p>This diagram shows an Avere cluster with the back-end file path <code class="docutils literal notranslate"><span class="pre">&lt;Vendor</span> <span class="pre">A&gt;/src</span></code> defined as the junction <code class="docutils literal notranslate"><span class="pre">/src</span></code> in the client-facing namespace. (Read <a class="reference external" href="http://library.averesystems.com/ops_guide/4_7/gns_overview.html#gns-overview" title="(in Operations Guide v4.7)"><span>Using a Global Namespace</span></a> in the Avere OS Configuration Guide for more information.)</p>
+<p>The cluster has an active FlashMirror job that copies the data stored in <code class="docutils literal notranslate"><span class="pre">&lt;Vendor</span> <span class="pre">A&gt;/src</span></code> to <code class="docutils literal notranslate"><span class="pre">&lt;Vendor</span> <span class="pre">C&gt;/src</span></code>. As clients change the data from the cluster, both locations are updated and kept synchronized.</p>
+<p>If the primary storage system becomes unavailable, you can <em>transition</em> the mirror, which changes the namespace junction to point to the secondary filesystem. This transition is seamless for clients. The mirror also can be reversed - for example, if you need to take the primary system out of service for maintenance, you can change the secondary system to be the primary system and allow the mirror to go out of sync until the other volume is back in service. When the other system comes back online, changes are automatically synchronized to that volume again, since it is now the secondary in the mirror system. You have the option to continue the mirror with the current primary/secondary setup, or reverse the mirror again if you prefer to have the original source volume be the primary.</p>
+<div class="section" id="leveraging-mirror">
+<h2>Leveraging FlashMirror<a class="headerlink" href="#leveraging-mirror" title="Permalink to this headline">¶</a></h2>
+<p>Like FlashMove, FlashMirror is invisible to the applications using the data. It can be useful for situations like these:</p>
+<ul class="simple">
+<li>Keeping a second copy of important data for disaster recovery</li>
+<li>Distributing data that is needed at multiple geographic sites</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="ops_mig_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">FlashMirror Overview</a><ul>
+<li><a class="reference internal" href="#leveraging-mirror">Leveraging FlashMirror</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="ops_mig_index.html">Avere OS Data Management Guide</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com/" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/" target="_blank" style="color: #fff;">Avere Systems Website</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

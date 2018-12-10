@@ -1,0 +1,91 @@
+Prerequisites for using FlashMove or FlashMirror
+
+To use the FlashMove or FlashMirror features, make sure your cluster
+meets the requirements outlined in this article.
+
+License Requirements
+
+Make sure you have a valid license for the feature you want to use,
+and that the license has been installed on your Avere cluster. The
+cluster needs a valid license for FlashMove, FlashMirror, or both.
+
+Read
+
+Appendix A: Adding or Removing Feature Licenses
+
+ to learn how to add a feature license to your system.
+
+Core Filer Requirements
+
+Any storage system that you want to use in a FlashMove or FlashMirror
+job must be defined as a core filer in the Avere cluster. (To learn
+more about core filers, read
+
+Working With Core Filers
+
+ and
+
+Core Filer > Manage Core Filers
+
+ in the Avere OS
+
+Configuration Guide
+
+.)
+
+These requirements apply to the core filers involved in a data
+management job:
+
+Export - Each core filer must have at least one available export (for
+example, / for cloud core filers)
+
+Cache Policy - Each core filer must use the cache policy Full Caching,
+or a custom policy with the following settings:  Core Filer
+Verification must be set to Never  Caching Mode must be set to
+Read/Write  A writeback delay must be set  Local Directories must be
+enabled (Note that changing this setting requires all clients to
+remount the cluster.)  Read Core Filer > Manage Cache Policies in the
+Avere OS Configuration Guide for details.
+
+Global Namespace - The source core filer must be associated with a
+Global Namespace vserver.  Global Namespace (GNS) is the default type
+when creating a new vserver. GNS vservers allow the administrator to
+create a virtual pseudofilesystem that clients see instead of the
+actual data structure on the core filer. (An option also exists to
+create a simple vserver, which is a legacy configuration that cannot
+be used with Avere OS's data management features.)  With a GNS
+vserver, you can create a junction in the client namespace that
+references the location of the source data. Clients access the same
+virtual path during and after the data migration. At the end of a
+FlashMove job, the namespace junction is automatically changed to
+reference the new location.  Note that the destination core filer must
+not be associated with a namespace junction. This restriction helps to
+prevent circular references in the client namespace. Read Maintaining
+A Consistent Namespace to learn more.  It is possible - but not
+recommended - to create a FlashMove job with a core filer that is
+defined in the cluster but not linked to any vserver. Without a
+vserver, the cluster cannot provide access to the core filer's data,
+so debugging options are limited, and SMB ACLs cannot be migrated
+using this technique. Avere Systems strongly recommends configuring
+vservers for each core filer used in a data management job.
+
+Cloud Snapshots - If you use a cloud core filer that has an automatic
+cloud snapshot policy set, snapshots will be disabled for the duration
+of the job. You must acknowledge and approve this condition when you
+create the job, but you do not need to change the core filer settings.
+See Job Creation Errors and Warnings for details.
+
+SMB ACL Requirements
+
+If you are migrating directories that are configured to use ACLs for
+SMB access, the following additional requirements apply:
+
+Both the source user and the destination user must be Active Directory
+administrators (at minimum).
+
+The source and destination core filers must be joined to the same
+Active Directory domain, or to a trusted domain.
+
+Both the source and destination core filers must have existing SMB
+shares that are configured to access the same core filer directory as
+the core filer export.

@@ -1,0 +1,207 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Data Management Guide - Avere OS version 4.7 &#8212; Avere OS Data Management Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Using the Avere Cluster To Move or Mirror Data" href="migration_overview.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/vendor/savvior/savvicms-avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="migration_overview.html" title="Using the Avere Cluster To Move or Mirror Data"
+             accesskey="N">next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Avere OS Data Management Guide</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="data-management-guide-os-version-version">
+<span id="ops-migration-guide"></span><span id="index-0"></span><h1>Data Management Guide - Avere OS version 4.7<a class="headerlink" href="#data-management-guide-os-version-version" title="Permalink to this headline">¶</a></h1>
+<p>Avere OS’s FlashMove<sup>®</sup> and FlashMirror<sup>®</sup> features help you move and copy data between two filesystems - for example, from one core filer to another, between NAS and cloud storage, or from one directory to another on the same system.</p>
+<ul class="simple">
+<li>FlashMove lets you migrate data from one storage system to another without interrupting client access or having to change any client settings.</li>
+</ul>
+<ul class="simple">
+<li>FlashMirror provides ongoing data replication between two storage systems for data protection.</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Additional licenses are required to enable the FlashMove and FlashMirror features. Read <a class="reference internal" href="license_link.html#install-licenses"><span class="std std-ref">Appendix A: Adding or Removing Feature Licenses</span></a> to learn how to purchase and install the licenses.</p>
+</div>
+<p>Create and monitor data migration jobs from the <span class="guilabel">Data Management</span> tab in the Avere Control Panel.</p>
+<a class="reference internal image-reference" href="_images/migration_tab_full-annot.png"><img alt="The Data Management tab on the Avere Control Panel" src="_images/migration_tab_full-annot.png" style="width: 500pt;" /></a>
+<p>The documents in this section explain the FlashMove and FlashMirror features in depth. They give step-by-step instructions for creating and monitoring Data Management jobs, and also include information about troubleshooting or debugging jobs.</p>
+<div class="section" id="table-of-contents">
+<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="migration_overview.html">Using the Avere Cluster To Move or Mirror Data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="migration_overview.html#move-overview">FlashMove Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migration_overview.html#mirror-overview">FlashMirror Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migration_overview.html#consistent-client-namespace">Consistent Client Namespace</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="migration_explained.html">Understanding FlashMove and FlashMirror</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="migration_explained.html#move-in-depth">FlashMove In Depth</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migration_explained.html#maintaining-a-consistent-namespace">Maintaining A Consistent Namespace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migration_explained.html#mirror-in-depth">FlashMirror In Depth</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="migration_prereqs.html">Prerequisites for using FlashMove or FlashMirror</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="migration_prereqs.html#license-requirements">License Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migration_prereqs.html#core-filer-requirements">Core Filer Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migration_prereqs.html#smb-acl-requirements">SMB ACL Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gui_create_migration.html">Creating a New FlashMove or FlashMirror Job</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gui_create_migration.html#migration-checklist">Migration Checklist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gui_create_migration.html#job-definition">Job Definition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gui_create_migration.html#job-options">Job Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gui_create_migration.html#data-source">Data Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gui_create_migration.html#data-destination">Data Destination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gui_create_migration.html#submitting-the-new-data-management-job">Submitting the New Data Management Job</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gui_migration_dashboard.html">Monitoring Data Management Jobs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gui_migration_dashboard.html#basic-table-navigation">Basic Table Navigation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gui_migration_dashboard.html#job-status-icons">Job Status Icons</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gui_migration_dashboard.html#data-management-actions">Data Management Actions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gui_migration_dashboard.html#modifying-a-stopped-job">Modifying a Stopped Job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gui_migration_dashboard.html#understanding-the-job-details-data">Understanding the Job Details Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gui_migration_dashboard.html#job-error-report">Job Error Report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gui_migration_dashboard.html#job-status-and-operational-state-messages">Job Status and Operational State Messages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="migration_troubleshooting.html">Tips and Troubleshooting Information for Data Management Jobs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="migration_troubleshooting.html#removing-a-source-directory-after-a-move">Removing a Source Directory After a Move</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migration_troubleshooting.html#post-migration-processing">Post-Migration Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migration_troubleshooting.html#data-management-job-conditions">Data Management Job Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migration_troubleshooting.html#file-comparison-and-preserving-metadata">File Comparison and Preserving Metadata</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="license_link.html">Appendix A: Adding or Removing Feature Licenses</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="license_link.html#adding-a-license">Adding a License</a></li>
+<li class="toctree-l2"><a class="reference internal" href="license_link.html#removing-a-license">Removing a License</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+</div>
+<p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p>
+<p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p>
+<div class="last-update docutils container">
+updated Jul 19, 2017</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Data Management Guide - Avere OS version 4.7</a><ul>
+<li><a class="reference internal" href="#table-of-contents">Table of Contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="migration_overview.html"
+                        title="next chapter">Using the Avere Cluster To Move or Mirror Data</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="migration_overview.html" title="Using the Avere Cluster To Move or Mirror Data"
+             >next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Avere OS Data Management Guide</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com/" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/" target="_blank" style="color: #fff;">Avere Systems Website</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

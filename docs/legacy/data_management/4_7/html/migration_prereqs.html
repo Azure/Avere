@@ -1,0 +1,184 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Prerequisites for using FlashMove or FlashMirror &#8212; Avere OS Data Management Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Creating a New FlashMove or FlashMirror Job" href="gui_create_migration.html" />
+    <link rel="prev" title="Understanding FlashMove and FlashMirror" href="migration_explained.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/vendor/savvior/savvicms-avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_create_migration.html" title="Creating a New FlashMove or FlashMirror Job"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="migration_explained.html" title="Understanding FlashMove and FlashMirror"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_mig_index.html">Avere OS Data Management Guide</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="prerequisites-for-using-move-or-mirror">
+<span id="migration-prerequisites"></span><span id="index-0"></span><h1>Prerequisites for using FlashMove or FlashMirror<a class="headerlink" href="#prerequisites-for-using-move-or-mirror" title="Permalink to this headline">¶</a></h1>
+<p>To use the FlashMove or FlashMirror features, make sure your cluster meets the requirements outlined in this article.</p>
+<div class="section" id="license-requirements">
+<h2>License Requirements<a class="headerlink" href="#license-requirements" title="Permalink to this headline">¶</a></h2>
+<p>Make sure you have a valid license for the feature you want to use, and that the license has been installed on your Avere cluster. The cluster needs a valid license for FlashMove, FlashMirror, or both.</p>
+<p>Read <a class="reference internal" href="license_link.html#install-licenses"><span class="std std-ref">Appendix A: Adding or Removing Feature Licenses</span></a> to learn how to add a feature license to your system.</p>
+</div>
+<div class="section" id="core-filer-requirements">
+<span id="core-filer-reqs"></span><span id="index-1"></span><h2>Core Filer Requirements<a class="headerlink" href="#core-filer-requirements" title="Permalink to this headline">¶</a></h2>
+<p>Any storage system that you want to use in a FlashMove or FlashMirror job must be defined as a core filer in the Avere cluster. (To learn more about core filers, read <a class="reference external" href="http://library.averesystems.com/ops_guide/4_7/core_filer_overview.html#core-filer-overview" title="(in Operations Guide v4.7)"><span>Working With Core Filers</span></a> and <a class="reference external" href="http://library.averesystems.com/ops_guide/4_7/gui_manage_core_filers.html#manage-core-filers" title="(in Operations Guide v4.7)"><span>Core Filer &gt; Manage Core Filers</span></a> in the Avere OS <a class="reference external" href="http://library.averesystems.com/ops_guide/4_7/ops_conf_index.html#ops-config-guide" title="(in Operations Guide v4.7)"><span class="xref std std-ref">Configuration Guide</span></a>.)</p>
+<p>These requirements apply to the core filers involved in a data management job:</p>
+<ul>
+<li><p class="first"><strong>Export</strong> - Each core filer must have at least one available export (for example, <code class="docutils literal notranslate"><span class="pre">/</span></code> for cloud core filers)</p>
+</li>
+<li><p class="first"><strong>Cache Policy</strong> - Each core filer must use the cache policy <span class="guilabel">Full Caching</span>, or a custom policy with the following settings:</p>
+<ul class="simple">
+<li><span class="guilabel">Core Filer Verification</span> must be set to <span class="guilabel">Never</span></li>
+<li><span class="guilabel">Caching Mode</span> must be set to <span class="guilabel">Read/Write</span></li>
+<li>A writeback delay must be set</li>
+<li><span class="guilabel">Local Directories</span> must be enabled (Note that changing this setting requires all clients to remount the cluster.)</li>
+</ul>
+<p>Read <a class="reference external" href="http://library.averesystems.com/ops_guide/4_7/gui_manage_cache_policies.html#gui-manage-cache-policies" title="(in Operations Guide v4.7)"><span>Core Filer &gt; Manage Cache Policies</span></a> in the Avere OS <a class="reference external" href="http://library.averesystems.com/ops_guide/4_7/ops_conf_index.html#ops-config-guide" title="(in Operations Guide v4.7)"><span class="xref std std-ref">Configuration Guide</span></a> for details.</p>
+</li>
+<li><p class="first"><strong>Global Namespace</strong> - The source core filer must be associated with a Global Namespace vserver.</p>
+<p>Global Namespace (GNS) is the default type when creating a new vserver. GNS vservers allow the administrator to create a virtual pseudofilesystem that clients see instead of the actual data structure on the core filer. (An option also exists to create a simple vserver, which is a legacy configuration that cannot be used with Avere OS’s data management features.)</p>
+<p>With a GNS vserver, you can create a junction in the client namespace that references the location of the source data. Clients access the same virtual path during and after the data migration. At the end of a FlashMove job, the namespace junction is automatically changed to reference the new location.</p>
+<p>Note that the <em>destination</em> core filer must <em>not</em> be associated with a namespace junction. This restriction helps to prevent circular references in the client namespace. Read <a class="reference internal" href="migration_explained.html#namespace-restrictions"><span class="std std-ref">Maintaining A Consistent Namespace</span></a> to learn more.</p>
+<p>It is possible - but not recommended - to create a FlashMove job with a core filer that is defined in the cluster but not linked to any vserver. Without a vserver, the cluster cannot provide access to the core filer’s data, so debugging options are limited, and SMB ACLs cannot be migrated using this technique. Avere Systems strongly recommends configuring vservers for each core filer used in a data management job.</p>
+</li>
+</ul>
+<ul class="simple" id="index-2">
+<li><strong>Cloud Snapshots</strong> - If you use a cloud core filer that has an automatic cloud snapshot policy set, snapshots will be disabled for the duration of the job. You must acknowledge and approve this condition when you create the job, but you do not need to change the core filer settings. See <a class="reference internal" href="gui_create_migration.html#job-create-warnings"><span class="std std-ref">Job Creation Errors and Warnings</span></a> for details.</li>
+</ul>
+</div>
+<div class="section" id="smb-acl-requirements">
+<span id="index-3"></span><h2>SMB ACL Requirements<a class="headerlink" href="#smb-acl-requirements" title="Permalink to this headline">¶</a></h2>
+<p>If you are migrating directories that are configured to use ACLs for SMB access, the following additional requirements apply:</p>
+<ul class="simple">
+<li>Both the source user and the destination user must be Active Directory administrators (at minimum).</li>
+<li>The source and destination core filers must be joined to the same Active Directory domain, or to a trusted domain.</li>
+<li>Both the source and destination core filers must have existing SMB shares that are configured to access the same core filer directory as the core filer export.</li>
+</ul>
+<div class="last-update docutils container">
+updated Jul 19, 2017</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="ops_mig_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Prerequisites for using FlashMove or FlashMirror</a><ul>
+<li><a class="reference internal" href="#license-requirements">License Requirements</a></li>
+<li><a class="reference internal" href="#core-filer-requirements">Core Filer Requirements</a></li>
+<li><a class="reference internal" href="#smb-acl-requirements">SMB ACL Requirements</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="migration_explained.html"
+                        title="previous chapter">Understanding FlashMove and FlashMirror</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_create_migration.html"
+                        title="next chapter">Creating a New FlashMove or FlashMirror Job</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_create_migration.html" title="Creating a New FlashMove or FlashMirror Job"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="migration_explained.html" title="Understanding FlashMove and FlashMirror"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_mig_index.html">Avere OS Data Management Guide</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com/" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/" target="_blank" style="color: #fff;">Avere Systems Website</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>
