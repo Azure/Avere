@@ -1,0 +1,325 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Viewing System Performance &#8212;  Avere OS Dashboard Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Monitoring Conditions and Alerts" href="dash_conditions_alerts.html" />
+    <link rel="prev" title="Monitoring the Cluster with the Avere Control Panel Dashboard" href="dashboard_intro.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="dash_conditions_alerts.html" title="Monitoring Conditions and Alerts"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dashboard_intro.html" title="Monitoring the Cluster with the Avere Control Panel Dashboard"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_dashboard_index.html"> Avere OS Dashboard Guide</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="viewing-system-performance">
+<span id="performance-graph"></span><h1>Viewing System Performance<a class="headerlink" href="#viewing-system-performance" title="Permalink to this headline">¶</a></h1>
+<p>The graph in the center of the Dashboard page gives a visual overview of the Avere cluster’s performance.</p>
+<a class="reference internal image-reference" href="_images/graph_default.png"><img alt="Performance graph with default settings" src="_images/graph_default.png" style="width: 85%;" /></a>
+<p>The screenshot above shows a performance graph with its default settings. You can change the settings to focus on what you want to see.</p>
+<p>Chart controls are hidden by default; click the triangular control at the left of the <span class="guilabel">Chart Controls</span> label to open this panel.</p>
+<p>The controls give you the following options for customizing the visualization:</p>
+<ul>
+<li><p class="first">The <span class="guilabel">Stats</span> menu sets the type of statistic (rate, throughput, or latency). Read <a class="reference internal" href="#graph-stats"><span class="std std-ref">Choosing the Statistics to Display</span></a> for details.</p>
+</li>
+<li><p class="first">The <span class="guilabel">Source</span> menu determines which part of the cluster to include – for example, a particular node or vserver, or the entire cluster. Read <a class="reference internal" href="#stats-source"><span class="std std-ref">Statistics Source Options</span></a> for details.</p>
+</li>
+<li><p class="first">The <span class="guilabel">Period</span> menu controls the time frame shown on the chart – values range from five minutes (the default) to the past week, or you can set a custom time period. Read <a class="reference internal" href="#graph-time-range"><span class="std std-ref">Setting the Time Range</span></a> for more.</p>
+</li>
+<li><p class="first">Checkboxes let you show or hide individual statistics in the chart. These items are different depending on which statistic you selected – for example, when displaying operations per second you can choose which types of operations to graph. Read below for details:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#ops-per-sec-options"><span class="std std-ref">Graphing Options for Ops/Second</span></a></li>
+<li><a class="reference internal" href="#throughput-options"><span class="std std-ref">Graphing Options for Throughput</span></a></li>
+<li><a class="reference internal" href="#latency-options"><span class="std std-ref">Graphing Options for Latency</span></a></li>
+</ul>
+<p>Two sets of checkboxes appear – the upper set controls the statistics display for the item selected in <span class="guilabel">Source</span> and the lower set displays the same statistics at the cluster level. This arrangement allows you to display the same statistic for the chosen component (for example, one node or one core filer) and also for the cluster as a whole. Read <a class="reference internal" href="#stats-comparison"><span class="std std-ref">Comparison Statistics</span></a> for an example.</p>
+</li>
+<li><p class="first">You can customize the <a class="reference internal" href="#change-colors"><span class="std std-ref">display colors</span></a> assigned to each item.</p>
+</li>
+<li><p class="first">You can turn <a class="reference internal" href="#auto-refresh"><span class="std std-ref">auto-refresh</span></a> off or on.</p>
+</li>
+</ul>
+<p>There also is a link to <a class="reference internal" href="#view-dataset"><span class="std std-ref">view a CSV version</span></a> of the data on the graph.</p>
+<div class="section" id="choosing-the-statistics-to-display">
+<span id="graph-stats"></span><h2>Choosing the Statistics to Display<a class="headerlink" href="#choosing-the-statistics-to-display" title="Permalink to this headline">¶</a></h2>
+<p>Use the <span class="guilabel">Stats</span> drop-down menu to select the statistic displayed on the chart.</p>
+<a class="reference internal image-reference" href="_images/choose_statistic.png"><img alt="'Stats' menu options" src="_images/choose_statistic.png" style="width: 85%;" /></a>
+<p>Choices include:</p>
+<ul>
+<li><p class="first"><span class="guilabel">Ops/Second</span> – Shows the number of operations the selected source (cluster, vserver, node, or core filer) is making each second.</p>
+<p>The options for this selection are described in <a class="reference internal" href="#ops-per-sec-options"><span class="std std-ref">Graphing Options for Ops/Second</span></a>.</p>
+</li>
+<li><p class="first"><span class="guilabel">Throughput</span> – Shows how much data is being successfully transferred for the selected source. Read <a class="reference internal" href="#throughput-options"><span class="std std-ref">Graphing Options for Throughput</span></a> to learn more.</p>
+</li>
+<li><p class="first"><span class="guilabel">Latency</span> – Shows delay in the system. See <a class="reference internal" href="#latency-options"><span class="std std-ref">Graphing Options for Latency</span></a> for more information.</p>
+</li>
+</ul>
+<div class="section" id="graphing-options-for-ops-second">
+<span id="ops-per-sec-options"></span><span id="index-0"></span><h3>Graphing Options for Ops/Second<a class="headerlink" href="#graphing-options-for-ops-second" title="Permalink to this headline">¶</a></h3>
+<p>When displaying operations per second, you can choose to show a variety of operations on the graph.</p>
+<a class="reference internal image-reference" href="_images/ops-rate_options.png"><img alt="Ops/Second Graphing Options" src="_images/ops-rate_options.png" style="width: 85%;" /></a>
+<p>Options include:</p>
+<ul>
+<li><p class="first"><span class="guilabel">Client Ops</span> – Total operations exchanged between clients and the
+Avere cluster.</p>
+</li>
+<li><p class="first"><span class="guilabel">Sync Core Filer Ops</span> – Synchronous operations from the cluster to
+the core filer.</p>
+</li>
+<li><p class="first"><span class="guilabel">Async Core Filer Ops</span> – Asynchronous operations from the cluster to
+the core filer.</p>
+</li>
+<li><p class="first"><span class="guilabel">Data Mgmt Move Ops</span> – During a FlashMove or FlashMirror job, this statistic tracks operations that are part of copying data from the source core filer to the destination core filer.</p>
+</li>
+<li><p class="first"><span class="guilabel">Data Mgmt Mirror Ops</span> – Operations done as part of a FlashMirror job to write client changes to both the primary and mirror destination.</p>
+</li>
+<li><p class="first"><span class="guilabel">Data Mgmt Flexible Mirror Ops</span> – Operations done as part of re-synchronizing  a FlashMirror job after data was not written to both the primary and mirror destination (for example, if one of the volumes became unreachable). These operations only appear for FlashMirror jobs that use a flexible synchronization policy; a strict synchronization policy does not allow the volumes to go out of sync.</p>
+<p>Additional information about FlashMirror and synchronization policies is included in the <a class="reference external" href="https://azure.github.io/Avere/legacy/data_management/4_7/html/migration_explained.html#mirror-detail" title="(in Migration Guide v4.7)"><span>FlashMirror In Depth</span></a> section of the Avere OS Data Management Guide.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="graphing-options-for-throughput">
+<span id="throughput-options"></span><span id="index-1"></span><h3>Graphing Options for Throughput<a class="headerlink" href="#graphing-options-for-throughput" title="Permalink to this headline">¶</a></h3>
+<p>Throughput shows the amount of data being successfully communicated over the cluster’s network connections.</p>
+<p>Throughput statistics tell you how well communication is flowing among the clients, the cluster, and the core filers.</p>
+<a class="reference internal image-reference" href="_images/throughput_chart.png"><img alt="Throughput chart" src="_images/throughput_chart.png" style="width: 85%;" /></a>
+<p>The chart displays how many bytes of data are being transferred. You can customize the settings to show data from specific types of operations.</p>
+<p>The <span class="guilabel">Throughput</span> chart can graph the amount of data transferred in any or all of these categories:</p>
+<ul>
+<li><p class="first"><span class="guilabel">Client Read</span> – Data involved in read operations from clients to the cluster.</p>
+</li>
+<li><p class="first"><span class="guilabel">Read-ahead</span> – Data from read-ahead operations. Read-ahead operations are reads from the cluster to its core filers in anticipation of client requests. If the system predicts that a client will request content that is not currently in the cache, it can fetch the content from the core filer before the client requests it. Requesting data ahead of time speeds up data access for client requests.</p>
+</li>
+<li><p class="first"><span class="guilabel">Fill from Core Filer</span> – Data transferred in read operations from the cluster to a core filer. These operations occur when clients request access to data that is not already cached on the cluster nodes.</p>
+</li>
+<li><p class="first"><span class="guilabel">Node-to-node Fill</span> – Data from read operations between cluster nodes. Avere OS  distributes data across the cluster to optimize performance and balance load.</p>
+</li>
+<li><p class="first"><span class="guilabel">Node-to-node Write</span> – Data transferred in write operations between cluster nodes. These operations are most frequently used to direct client-changed data to the appropriate node. This type of operation is most often seen on systems with the Always Forward feature enabled.</p>
+</li>
+<li><p class="first"><span class="guilabel">Client Write</span> – Data written from clients to the cluster.</p>
+</li>
+<li><p class="first"><span class="guilabel">Sync Write to Core Filer</span> – Data written synchronously from the cluster to a core filer. Synchronous write operations are used when a client changes data and the core filer does not have write caching enabled.</p>
+<p>When a core filer’s caching mode is set to <span class="guilabel">Read</span>, the cluster sends write operations from clients directly to the core filer. (Caching mode is part of a <span class="guilabel">Cache Policy</span> – read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_manage_cache_policies.html#gui-manage-cache-policies" title="(in Cluster Configuration Guide v4.7)"><span>Core Filer &gt; Manage Cache Policies</span></a> in the Avere OS Settings Guide for more information.)</p>
+</li>
+<li><p class="first"><span class="guilabel">Async Write to Core Filer</span> – Data transferred in asynchronous write operations from the cluster to a core filer. Asynchronous write operations are used with core filers that have read/write caching set in their cache policies. Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_manage_cache_policies.html#gui-manage-cache-policies" title="(in Cluster Configuration Guide v4.7)"><span>Core Filer &gt; Manage Cache Policies</span></a> in the Avere OS Settings Guide for more information.</p>
+</li>
+<li><p class="first"><span class="guilabel">Data Mgmt Move Read</span> – Data read from the source core filer when synchronizing the source and destination core filers in a FlashMove or FlashMirror job.</p>
+</li>
+<li><p class="first"><span class="guilabel">Data Mgmt Move Write</span> – Data written to the destination core filer when synchronizing the source and destination core filers in a FlashMove or FlashMirror job.</p>
+</li>
+<li><p class="first"><span class="guilabel">Data Mgmt Mirror Write</span> – Data from client write operations that was written to both the source and destination core filer in a FlashMove or FlashMirror job.</p>
+</li>
+<li><p class="first"><span class="guilabel">Data Mgmt Flexible Mirror Write</span> – Data written while resynchronizing a source and destination core filer (for example, after one volume became unreachable). This statistic appears only for FlashMirror jobs that use a flexible synchronization policy; the strict synchronization policy does not allow the volumes to go out of sync.</p>
+<p>Read the <a class="reference external" href="https://azure.github.io/Avere/legacy/data_management/4_7/html/migration_explained.html#mirror-detail" title="(in Migration Guide v4.7)"><span>FlashMirror In Depth</span></a> section of the Avere OS Data Management Guide for more information about FlashMirror and synchronization policies.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="graphing-options-for-latency">
+<span id="latency-options"></span><span id="index-2"></span><h3>Graphing Options for Latency<a class="headerlink" href="#graphing-options-for-latency" title="Permalink to this headline">¶</a></h3>
+<p>Latency represents the lag time between when an operation is requested and when it begins to be fulfilled. Latency can be caused by network communication time, hardware operational speed, and other factors.</p>
+<p>The chart shows latency in units of microseconds per operation.</p>
+<a class="reference internal image-reference" href="_images/latency_chart.png"><img alt="Latency chart, showing options" src="_images/latency_chart.png" style="width: 85%;" /></a>
+<p>Choose <span class="guilabel">Latency</span> to graph any of the following statistics:</p>
+<ul class="simple">
+<li><span class="guilabel">Client-facing Latency</span> – Latency for operations between clients and the cluster.</li>
+<li><span class="guilabel">NFS Filer Latency</span> – Latency for operations between the cluster and a hardware NAS core filer.</li>
+<li><span class="guilabel">Cloud Filer Latency</span> – Latency for operations between the cluster and a cloud object store.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="statistics-source-options">
+<span id="stats-source"></span><h2>Statistics Source Options<a class="headerlink" href="#statistics-source-options" title="Permalink to this headline">¶</a></h2>
+<p>Use the <span class="guilabel">Source</span> drop-down list to choose the element of the system to include on the graph.</p>
+<p>Options include:</p>
+<blockquote>
+<div><ul class="simple">
+<li><span class="guilabel">Cluster Wide</span> for combined statistics for all vservers, core
+filers, and nodes in the cluster.</li>
+<li><span class="guilabel">VServers &gt; [vserver_name]</span> for statistics from the selected
+virtual server.</li>
+<li><span class="guilabel">Core Filer &gt; [core_filer_name]</span> for statistics from the selected
+core filer.</li>
+<li><span class="guilabel">Nodes &gt; [node_name]</span> for statistics from the selected node.</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="comparison-statistics">
+<span id="stats-comparison"></span><h2>Comparison Statistics<a class="headerlink" href="#comparison-statistics" title="Permalink to this headline">¶</a></h2>
+<p>If you are viewing statistics for a component of the cluster – for example, you chose a particular node in the <span class="guilabel">Source</span> selector – you can also show the cluster’s statistics on the same chart.</p>
+<p>This feature allows you to compare performance between the cluster and the individual cluster element selected.</p>
+<p>A second set of checkboxes with the label <span class="guilabel">Cluster Wide Comparison Data</span> appears below the main options. Select the statistics that you want to show.</p>
+<a class="reference internal image-reference" href="_images/ops_comparison.png"><img alt="Graph comparing one node with cluster-wide operations per second" src="_images/ops_comparison.png" style="width: 75%;" /></a>
+<p>The screenshot above shows the client operations per second for a particular node in dark blue and the client operations per second for the cluster as a whole in light blue. The most drastic difference between the two curve shapes occurs just left of the center of the chart, where the cluster operations per second forms a tall peak, but the node’s curve is much flatter. This difference might indicate that a period of high demand on the cluster was handled by other nodes.</p>
+</div>
+<div class="section" id="disabling-auto-refresh">
+<span id="auto-refresh"></span><h2>Disabling Auto-Refresh<a class="headerlink" href="#disabling-auto-refresh" title="Permalink to this headline">¶</a></h2>
+<p>By default, the chart updates automatically. The visualization updates every 30 seconds for users with read-only access to the Avere Control Panel, and every 10 seconds for users with read/write access.</p>
+<p>To disable automatic updating, clear the <span class="guilabel">Auto-refresh chart</span> checkbox, which appears at the bottom right of the chart controls section.</p>
+<p>You can disable and re-enable it at any time.</p>
+</div>
+<div class="section" id="customizing-graph-colors">
+<span id="change-colors"></span><h2>Customizing Graph Colors<a class="headerlink" href="#customizing-graph-colors" title="Permalink to this headline">¶</a></h2>
+<p>You can change the color shown for a statistic by clicking the colored square next to the statistic’s name in the Chart Controls area. A color chooser pops up, and you can click on a new color to select it.</p>
+<a class="reference internal image-reference" href="_images/graph_choose_color.png"><img alt="Cursor over the colored square at the left of the item name and color selector open below" src="_images/graph_choose_color.png" style="width: 85%;" /></a>
+<p>If you want to close the color selector without changing the color, click a blank area in the Chart Controls panel.</p>
+</div>
+<div class="section" id="setting-the-time-range">
+<span id="graph-time-range"></span><h2>Setting the Time Range<a class="headerlink" href="#setting-the-time-range" title="Permalink to this headline">¶</a></h2>
+<p>The <span class="guilabel">Period</span> drop-down list lets you customize the time period over which to display statistics. Choices range from the last five minutes to the last seven days, or you can set a customized time range for specific dates and times.</p>
+<a class="reference internal image-reference" href="_images/date_range_selector.png"><img alt="Menu items on the Period menu" src="_images/date_range_selector.png" style="width: 35%;" /></a>
+<div class="section" id="setting-a-custom-time-range">
+<h3>Setting a Custom Time Range<a class="headerlink" href="#setting-a-custom-time-range" title="Permalink to this headline">¶</a></h3>
+<p>To set a custom time range:</p>
+<ol class="arabic">
+<li><p class="first">On the <span class="guilabel">Period</span> list, select <span class="guilabel">Date/Time</span>.</p>
+<p>A time range will appear below the selection menus.</p>
+</li>
+<li><p class="first">Click the start date on the time range and use the pop-up control to select the day and time at the beginning of the range you want. Click the <span class="guilabel">Submit</span> button.</p>
+<a class="reference internal image-reference" href="_images/custom_date_range.png"><img alt="Clicking the start date under the Stats control pops up a calendar day and date selector" src="_images/custom_date_range.png" style="width: 70%;" /></a>
+</li>
+<li><p class="first">Repeat the process to customize the end date and time.</p>
+</li>
+</ol>
+<p>After you click <span class="guilabel">Submit</span>, the graph updates with data from the selected range. Using a custom time range automatically disables the chart’s automatic refresh option.</p>
+<p>Note that data might not be available for the entire range you have selected. Avere OS keeps only seven full days of statistics; data beyond that range is purged from the system and cannot be displayed in the dashboard. (Consider a third-party solution if you want to examine statistics over a longer time period.) Also, a few statistics are automatically reset by a system restart, so if the date range includes a restart these values will only represent the period after the restart.</p>
+<span class="target" id="view-dataset"></span></div>
+</div>
+<div class="section" id="viewing-the-dataset">
+<span id="index-3"></span><h2>Viewing the Dataset<a class="headerlink" href="#viewing-the-dataset" title="Permalink to this headline">¶</a></h2>
+<p>You can view and save the currently displayed set of statistics in comma-separated value (CSV) format.</p>
+<p>Click the <span class="guilabel">View Dataset</span> link that appears at the bottom left of the <span class="guilabel">Chart Controls</span> area. A separate browser window or tab opens with the CSV-formatted statistics displayed in text. Use your browser’s “Save As” function to save the statistics to a file.</p>
+<div class="last-update docutils container">
+updated Nov 16, 2017</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="ops_dashboard_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Viewing System Performance</a><ul>
+<li><a class="reference internal" href="#choosing-the-statistics-to-display">Choosing the Statistics to Display</a><ul>
+<li><a class="reference internal" href="#graphing-options-for-ops-second">Graphing Options for Ops/Second</a></li>
+<li><a class="reference internal" href="#graphing-options-for-throughput">Graphing Options for Throughput</a></li>
+<li><a class="reference internal" href="#graphing-options-for-latency">Graphing Options for Latency</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#statistics-source-options">Statistics Source Options</a></li>
+<li><a class="reference internal" href="#comparison-statistics">Comparison Statistics</a></li>
+<li><a class="reference internal" href="#disabling-auto-refresh">Disabling Auto-Refresh</a></li>
+<li><a class="reference internal" href="#customizing-graph-colors">Customizing Graph Colors</a></li>
+<li><a class="reference internal" href="#setting-the-time-range">Setting the Time Range</a><ul>
+<li><a class="reference internal" href="#setting-a-custom-time-range">Setting a Custom Time Range</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#viewing-the-dataset">Viewing the Dataset</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dashboard_intro.html"
+                        title="previous chapter">Monitoring the Cluster with the Avere Control Panel Dashboard</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dash_conditions_alerts.html"
+                        title="next chapter">Monitoring Conditions and Alerts</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="dash_conditions_alerts.html" title="Monitoring Conditions and Alerts"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dashboard_intro.html" title="Monitoring the Cluster with the Avere Control Panel Dashboard"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_dashboard_index.html"> Avere OS Dashboard Guide</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

@@ -1,0 +1,9 @@
+Using the Avere Control Panel Dashboard
+
+This set of articles describes the features in the Dashboard tab of
+the Avere Control Panel and explains how to use the dashboard to
+monitor your cluster. The dashboard also is your first stop for
+troubleshooting any cluster issues that might come up.
+
+Table of Contents
+

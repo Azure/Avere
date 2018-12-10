@@ -1,0 +1,323 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Dashboard Status Tabs &#8212;  Avere OS Dashboard Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Clients Status Tab" href="clients_tab.html" />
+    <link rel="prev" title="Monitoring Conditions and Alerts" href="dash_conditions_alerts.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="clients_tab.html" title="Clients Status Tab"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dash_conditions_alerts.html" title="Monitoring Conditions and Alerts"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_dashboard_index.html"> Avere OS Dashboard Guide</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="dashboard-status-tabs">
+<span id="status-tabs"></span><h1>Dashboard Status Tabs<a class="headerlink" href="#dashboard-status-tabs" title="Permalink to this headline">¶</a></h1>
+<p>This section describes the status table that appears in the middle of the Avere Control Panel dashboard. The status table is tabbed; click a tab to view information in that section.</p>
+<p>The table includes the following pages:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#status-tab-condition-alerts-overview"><span class="std std-ref">Conditions</span></a></li>
+<li><a class="reference internal" href="#status-tab-condition-alerts-overview"><span class="std std-ref">Alerts</span></a></li>
+<li><a class="reference internal" href="#status-tab-vservers"><span class="std std-ref">VServers</span></a></li>
+<li><a class="reference internal" href="#status-tab-core-filers"><span class="std std-ref">Core Filers</span></a></li>
+<li><a class="reference internal" href="#status-tab-nodes"><span class="std std-ref">Nodes</span></a></li>
+<li><a class="reference internal" href="#status-tab-clients-overview"><span class="std std-ref">Clients</span></a></li>
+<li><a class="reference internal" href="#status-tab-hot-files"><span class="std std-ref">Hot Files</span></a></li>
+<li><a class="reference internal" href="#status-tab-cache"><span class="std std-ref">Cache</span></a></li>
+</ul>
+<div class="section" id="conditions-and-alerts">
+<span id="status-tab-condition-alerts-overview"></span><h2>Conditions and Alerts<a class="headerlink" href="#conditions-and-alerts" title="Permalink to this headline">¶</a></h2>
+<p>The <span class="guilabel">Conditions</span> tab and the <span class="guilabel">Alerts</span> tab show the status and error notifications for the cluster. Read <a class="reference internal" href="dash_conditions_alerts.html#conditions-alerts"><span class="std std-ref">Monitoring Conditions and Alerts</span></a> for complete details about the information on these status tabs.</p>
+</div>
+<div class="section" id="vservers">
+<span id="status-tab-vservers"></span><h2>VServers<a class="headerlink" href="#vservers" title="Permalink to this headline">¶</a></h2>
+<p>The VServers tab in the dashboard status bar gives basic information about each vserver in the cluster. (Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/settings_overview.html#vserver-settings" title="(in Cluster Configuration Guide v4.7)"><span>Creating and Working with VServers</span></a> in the in the Avere OS Configuration Guide for basic information about cluster vservers.)</p>
+<a class="reference internal image-reference" href="_images/vserver_tab.png"><img alt="VServer section of the status table" src="_images/vserver_tab.png" style="width: 90%;" /></a>
+<p>The VServers tab shows the following information:</p>
+<ul>
+<li><p class="first"><span class="guilabel">Name</span> – The name of each vserver.</p>
+<p>Click on the name to go to the vserver’s <span class="guilabel">VServer Details</span> page on the <span class="guilabel">Settings</span> tab. (This settings page is described in more detail in <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_vserver_details.html#vserver-details" title="(in Cluster Configuration Guide v4.7)"><span>VServer &gt; VServer Details</span></a> in the Avere OS Configuration Guide.)</p>
+</li>
+<li><p class="first"><span class="guilabel">Operation State</span> – Whether the vserver is up or down.</p>
+<p>Other statuses can be seen if the system is restarting or rebalancing after a node has failed. (Examples include “node is not responding”, “hardware fault”, “subprocess reset”, “core filer unreachable”, and “reduced performance”.) These messages typically include links to a related condition notification, and as the cluster works through resolving the interruption, the messages should progress until the state returns to “up”.</p>
+</li>
+<li><p class="first"><span class="guilabel">Admin State</span> – The administrative state shows the vserver’s cluster status:</p>
+<ul class="simple">
+<li><span class="guilabel">Online</span>: Normal operational status, available to the cluster</li>
+<li><span class="guilabel">Removing</span>: The vserver is in the process of being removed from the cluster</li>
+<li><span class="guilabel">Removed</span>: The vserver was previously recognized by the cluster, but has been removed from the cluster’s configuration</li>
+<li><span class="guilabel">Suspended</span>: The vserver is recognized by the cluster but unavailable</li>
+<li><span class="guilabel">Flushing</span>: The vserver is transferring data from the cache to a core filer</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p class="first"><span class="guilabel">Client Facing IPs</span> – The IP address range available to client machines from this vserver.</p>
+</li>
+<li><p class="first"><span class="guilabel">Namespace</span> – Displays the type of namespace the vserver uses: <span class="guilabel">Global</span> (the default) or <span class="guilabel">Simple</span> (a legacy configuration). Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gns_overview.html#gns-overview" title="(in Cluster Configuration Guide v4.7)"><span>Using a Global Namespace</span></a> in the Avere OS Configuration Guide to learn more.</p>
+</li>
+<li><p class="first"><span class="guilabel">Core Filers</span> – Lists the core filers associated with the vserver.</p>
+<p>Click the name of a core filer to go to its <span class="guilabel">Core Filer Details</span> page, described in <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_core_filer_details.html#gui-core-filer-details" title="(in Cluster Configuration Guide v4.7)"><span>Core Filer &gt; Core Filer Details</span></a> in the Avere OS Configuration Guide.</p>
+</li>
+<li><p class="first"><span class="guilabel">Hot Clients</span> – Displays <span class="guilabel">Yes</span> if this vserver is configured to record information about clients that are creating a greater than average load. You can view hot clients information in the <a class="reference internal" href="#status-tab-clients-overview"><span class="std std-ref">Clients</span></a> tab.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="core-filers">
+<span id="status-tab-core-filers"></span><h2>Core Filers<a class="headerlink" href="#core-filers" title="Permalink to this headline">¶</a></h2>
+<p>The cluster’s core filers are shown on the <span class="guilabel">Core Filers</span> status tab.</p>
+<a class="reference internal image-reference" href="_images/core_filers_tab.png"><img alt="Core Filers tab" src="_images/core_filers_tab.png" style="width: 85%;" /></a>
+<p>The tab shows the following information for each core filer:</p>
+<ul>
+<li><p class="first"><span class="guilabel">Name</span> – The name of this core filer.</p>
+<p>Click the name to go to the core filer’s <span class="guilabel">Core Filer Details</span> page on the Settings tab. (Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_core_filer_details.html#gui-core-filer-details" title="(in Cluster Configuration Guide v4.7)"><span>Core Filer &gt; Core Filer Details</span></a> in the Avere OS Configuration Guide to learn more.)</p>
+</li>
+<li><p class="first"><span class="guilabel">Admin State</span> – The administrative state of the core filer, any of the following values:</p>
+<ul class="simple">
+<li><span class="guilabel">Online</span>: The core filer is available to the cluster.</li>
+<li><span class="guilabel">Removing</span>: The core filer is in the process of being removed from the cluster.</li>
+<li><span class="guilabel">Removed</span>: The core filer was previously recognized by the cluster, but has been removed from the cluster configuration.</li>
+<li><span class="guilabel">Invalidating</span>: The core filer is removing all data from the cache.</li>
+<li><span class="guilabel">Suspended</span>: The core filer is not available to the cluster, but is still recognized by the cluster.</li>
+<li><span class="guilabel">Flushing</span>: The cluster is transferring information from the cache to the core filer.</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p class="first"><span class="guilabel">Cache Policy</span> – The cache policy associated with each core filer. You can click on the policy link to go to the core filer’s Cache Policy page, further described in <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_manage_cache_policies.html#gui-manage-cache-policies" title="(in Cluster Configuration Guide v4.7)"><span>Core Filer &gt; Manage Cache Policies</span></a> in the Avere OS Settings Guide.</p>
+</li>
+<li><p class="first"><span class="guilabel">Local Dirs</span> – Whether or not the cluster can create directories on the core filer. This is defined in the Cache Policy page on the Settings tab, further described in <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_manage_cache_policies.html#gui-manage-cache-policies" title="(in Cluster Configuration Guide v4.7)"><span>Core Filer &gt; Manage Cache Policies</span></a> in the Avere OS Settings Guide.</p>
+<p>Local Directories must be enabled for cloud core filers, and in order to use FlashMove or FlashMirror. Additional information is included in the Avere OS Settings Guide – read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_manage_cache_policies.html#cache-policy-basic" title="(in Cluster Configuration Guide v4.7)"><span>Cache Policy Settings - Basic Options</span></a>.</p>
+</li>
+<li><p class="first"><span class="guilabel">Network Name</span> – The host name or the IP address of the core filer.</p>
+</li>
+<li><p class="first"><span class="guilabel">Modified Data</span> – Number and age of files not yet written back to the core filer. (This is sometimes known as “dirty data”.) The cache can hold modified data only for core filers whose cache policy includes the Read/Write caching mode.</p>
+</li>
+<li><p class="first"><span class="guilabel">VServers</span> – Lists the vservers associated with this core filer.</p>
+<p>If no vservers are listed, then the core filer has been added to the cluster but not mapped to a junction or otherwise associated with a vserver.</p>
+<p>Click a vserver name to open the <span class="guilabel">VServer Details</span> page. (Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_vserver_details.html#vserver-details" title="(in Cluster Configuration Guide v4.7)"><span>VServer &gt; VServer Details</span></a> in the Avere OS Configuration Guide for more information.)</p>
+</li>
+</ul>
+</div>
+<div class="section" id="nodes">
+<span id="status-tab-nodes"></span><h2>Nodes<a class="headerlink" href="#nodes" title="Permalink to this headline">¶</a></h2>
+<p>The cluster’s FXT nodes are shown in the <span class="guilabel">Nodes</span> status tab.</p>
+<a class="reference internal image-reference" href="_images/nodes_tab.png"><img alt="Nodes status tab" src="_images/nodes_tab.png" style="width: 85%;" /></a>
+<p>The following information is shown:</p>
+<ul>
+<li><p class="first"><span class="guilabel">Name</span> – The node name.</p>
+<p>Click the name to go to this node’s <span class="guilabel">Node Details</span> page. (The Node Details page is part of the Settings tab but is not included in the side menus in that section.) Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_node_details.html#gui-node-details" title="(in Cluster Configuration Guide v4.7)"><span>Node Details</span></a> in the Avere OS Configuration Guide for more information.</p>
+</li>
+<li><p class="first"><span class="guilabel">Model</span> – The hardware type, or the VM instance type if the node is a vFXT.</p>
+</li>
+<li><p class="first"><span class="guilabel">State</span> – Whether the node is up, and how long it has been running.</p>
+</li>
+<li><p class="first"><span class="guilabel">Client IPs</span> – Client IP addresses currently located on the node. Addresses are grouped under the names of their vservers.</p>
+</li>
+<li><p class="first"><span class="guilabel">CPU</span> – Approximate CPU usage, displayed as a percentage of capacity.</p>
+</li>
+<li><p class="first"><span class="guilabel">Performance</span> – A summary of the node’s performance. Statistics are given for two time ranges: <span class="guilabel">Instant</span> is the node’s current performance, and <span class="guilabel">1 m avg</span> is its performance averaged over the previous minute.</p>
+<blockquote>
+<div><p>Statistics included are:</p>
+<ul class="simple">
+<li>Number of operations per second. These can be read, write, or metadata management operations.</li>
+<li>Hit rate: The percentage of client requests being serviced by the node’s cache, without needing to be forwarded to the core filer.</li>
+<li>Latency between a client and the node, measured in milliseconds.</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first"><span class="guilabel">Drive Performance</span> – Performance values for the disk drives in this node. This figure includes all of the node’s drives. Like node performance, the drive performance figures give performance information in operations per second for the current instant and averaged over the previous minute.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="clients">
+<span id="status-tab-clients-overview"></span><h2>Clients<a class="headerlink" href="#clients" title="Permalink to this headline">¶</a></h2>
+<p>The <span class="guilabel">Clients</span> tab shows information about clients currently active on the cluster.</p>
+<p>The options in the <span class="guilabel">Source</span> selector change what information is shown in the table. For example, if you choose a vserver in <span class="guilabel">Source</span>, only clients connected to that vserver appear in the table.</p>
+<a class="reference internal image-reference" href="_images/clients_vserver_overview.png"><img alt="Clients status tab with a vserver selected as source" src="_images/clients_vserver_overview.png" style="width: 85%;" /></a>
+<p>You can show clients filtered by vserver, by core filer, or by node.</p>
+<p>If you choose a vserver that has hot clients data collection enabled, you can view hot clients (clients that are making the most requests).</p>
+<p>Because the information on the Clients status tab is complicated, it is included in a separate chapter. Read <a class="reference internal" href="clients_tab.html#status-tab-clients-detail"><span class="std std-ref">Clients Status Tab</span></a> to learn more.</p>
+</div>
+<div class="section" id="hot-files">
+<span id="status-tab-hot-files"></span><h2>Hot Files<a class="headerlink" href="#hot-files" title="Permalink to this headline">¶</a></h2>
+<p>A hot file is a file associated with a high number of operations relative to other files. (Operations include file reads or writes and metadata updates.) The number of operations typically indicates that the file is in heavy use.</p>
+<p>The <span class="guilabel">Hot Files</span> status tab shows the files with the most operations.</p>
+<a class="reference internal image-reference" href="_images/hot_files_tab.png"><img alt="Hot Files tab" src="_images/hot_files_tab.png" style="width: 80%;" /></a>
+<p>Use the <span class="guilabel">Select By</span> drop-down list to select the attribute to use for selecting hot files.</p>
+<a class="reference internal image-reference" href="_images/hot_files_select_menu.png"><img alt="'Select By' menu" src="_images/hot_files_select_menu.png" style="width: 55%;" /></a>
+<p>Options include the following:</p>
+<ul class="simple">
+<li><span class="guilabel">Ops</span> – Total operations per second performed on each file.</li>
+</ul>
+<ul class="simple">
+<li><span class="guilabel">Bytes Read/Written</span> – The number of bytes processed per second on each file.
+When this option is selected, the number of bytes read and written are listed for each file, and you can sort the table by these values.</li>
+</ul>
+<ul class="simple">
+<li><span class="guilabel">Dir Updates</span> – The number of directory updates and other metadata operations per second performed on each file.</li>
+</ul>
+<p>Check the <span class="guilabel">Cluster-wide view</span> checkbox if you want to show hot files over the entire cluster instead of by node. Although hot files are determined by core filer (that is, they are the most active files on their core filer), the standard view lists them by the cluster node that served them. If the same file is served from multiple nodes, the standard view will show multiple rows for that one file; the cluster-wide view shows one row for that file and aggregates all the times it was served by all nodes.</p>
+<p>The <span class="guilabel">Auto-refresh</span> checkbox causes the display to update automatically when selected.</p>
+</div>
+<div class="section" id="cache">
+<span id="status-tab-cache"></span><h2>Cache<a class="headerlink" href="#cache" title="Permalink to this headline">¶</a></h2>
+<p>The <span class="guilabel">Cache</span> status tab gives details about the available space and current cache utilization on the cluster.</p>
+<a class="reference internal image-reference" href="_images/cache_tab.png"><img alt="Cache status tab (node view)" src="_images/cache_tab.png" style="width: 85%;" /></a>
+<p>The Avere cluster allocates cache space based on a number of factors, including the number of nodes in the cluster and the node’s obligations to store data for a High Availability (HA) partner.</p>
+<p>The storage space available in each node is divided into read caching space and write caching space. For a core filer without write caching, no space is allocated to writes. The cluster automatically sets the percentage of the storage that can be used for caching writes (sometimes called “dirty data”).</p>
+<p>Read/Write caching is controlled by core filer cache policies – read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_manage_cache_policies.html#gui-manage-cache-policies" title="(in Cluster Configuration Guide v4.7)"><span>Core Filer &gt; Manage Cache Policies</span></a> in the Avere OS Configuration Guide to learn more.</p>
+<p>When the node cache reaches its maximum used space value, the system removes least-used files from the cache to make room for new files. Data is written back to the core filer as needed. (This process is called <em>flushing</em> the cache.) Note that the maximum used space value might be less than the amount of free space shown because of HA mirroring and other technical requirements.</p>
+<p>The dashboard status table can show cache information organized by cluster node (as in the screenshot above) or by core filer. Click the <span class="guilabel">Per-Filer</span> or <span class="guilabel">Per-Node</span> sub-tabs to switch the view.</p>
+<p>Each view includes tools for searching and for switching the units shown.</p>
+<ul class="simple">
+<li>Click the drop-down menu labeled <span class="guilabel">Units</span> to choose the unit size shown in the table. Options range from 16K blocks to terabytes.</li>
+</ul>
+<ul class="simple">
+<li>Enter text in the <span class="guilabel">Search</span> field to show only table rows that include that text. Clear the search box to show all rows.</li>
+</ul>
+<div class="section" id="node-view">
+<h3>Node View<a class="headerlink" href="#node-view" title="Permalink to this headline">¶</a></h3>
+<p>Cache space in the Avere cluster is split among all of the cluster’s nodes. Typically, each node hosts an equal portion of the cache space designated for one core filer.</p>
+<p>The <span class="guilabel">Per-Node</span> view shows the cache space reserved for a particular core filer on a particular node. You can sort by the <span class="guilabel">Node</span> and <span class="guilabel">Core Filer</span> columns depending on whether you want to see one node’s cache space grouped together or one core filer’s cache space together.</p>
+<p>You also can use the <span class="guilabel">Search</span> field at the top of the table to filter by node or by core filer.</p>
+<a class="reference internal image-reference" href="_images/cache_tab_node_totals.png"><img alt="Per-Node cache tab sorted by node" src="_images/cache_tab_node_totals.png" style="width: 85%;" /></a>
+<p>When the table is sorted by node (as in the screenshot above), cache totals are displayed for each node. When sorted by core filer, the core filer totals are displayed.</p>
+<p>The <span class="guilabel">Allocated for Reads</span> and <span class="guilabel">Allocated for Writes</span> columns show the total space reserved for each type of caching on the specified node for the specified core filer. The other columns break down the space into <span class="guilabel">Used</span> and <span class="guilabel">Free</span> space.</p>
+<p>Clicking a core filer name loads its Core Filer Details settings page. Clicking a node name loads its Node Details settings page. These pages are described in detail in the Avere OS Configuration Guide – read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_core_filer_details.html#gui-core-filer-details" title="(in Cluster Configuration Guide v4.7)"><span>Core Filer &gt; Core Filer Details</span></a> and <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_node_details.html#gui-node-details" title="(in Cluster Configuration Guide v4.7)"><span>Node Details</span></a>.</p>
+</div>
+<div class="section" id="core-filer-view">
+<h3>Core Filer View<a class="headerlink" href="#core-filer-view" title="Permalink to this headline">¶</a></h3>
+<p>The <span class="guilabel">Per-Filer</span> table gives a cluster-wide view of cache space. The values shown for each core filer are the sum of space allocated on all of the cluster’s nodes to cache files from that core filer.</p>
+<a class="reference internal image-reference" href="_images/cache_per_filer.png"><img alt="Cache status tab – core filer view" src="_images/cache_per_filer.png" style="width: 85%;" /></a>
+<p>The <span class="guilabel">Available for Reads</span> and <span class="guilabel">Available for Writes</span> columns show the cluster’s total space reserved for each type of caching for the specified core filer. The other columns break down the space into <span class="guilabel">Used</span> and <span class="guilabel">Free</span> space.</p>
+<p>Clicking a core filer name loads its Core Filer Details settings page. This page is described in detail in <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_core_filer_details.html#gui-core-filer-details" title="(in Cluster Configuration Guide v4.7)"><span>Core Filer &gt; Core Filer Details</span></a> in the Avere OS Configuration Guide.</p>
+<div class="last-update docutils container">
+updated Nov 16, 2017</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="ops_dashboard_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Dashboard Status Tabs</a><ul>
+<li><a class="reference internal" href="#conditions-and-alerts">Conditions and Alerts</a></li>
+<li><a class="reference internal" href="#vservers">VServers</a></li>
+<li><a class="reference internal" href="#core-filers">Core Filers</a></li>
+<li><a class="reference internal" href="#nodes">Nodes</a></li>
+<li><a class="reference internal" href="#clients">Clients</a></li>
+<li><a class="reference internal" href="#hot-files">Hot Files</a></li>
+<li><a class="reference internal" href="#cache">Cache</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dash_conditions_alerts.html"
+                        title="previous chapter">Monitoring Conditions and Alerts</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="clients_tab.html"
+                        title="next chapter">Clients Status Tab</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="clients_tab.html" title="Clients Status Tab"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dash_conditions_alerts.html" title="Monitoring Conditions and Alerts"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_dashboard_index.html"> Avere OS Dashboard Guide</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

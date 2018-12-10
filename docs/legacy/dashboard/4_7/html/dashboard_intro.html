@@ -1,0 +1,203 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Monitoring the Cluster with the Avere Control Panel Dashboard &#8212;  Avere OS Dashboard Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Viewing System Performance" href="dash_performance_graph.html" />
+    <link rel="prev" title="Using the Avere Control Panel Dashboard" href="ops_dashboard_index.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="dash_performance_graph.html" title="Viewing System Performance"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ops_dashboard_index.html" title="Using the Avere Control Panel Dashboard"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_dashboard_index.html"> Avere OS Dashboard Guide</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="monitoring-the-cluster-with-the-gui-dashboard">
+<span id="dashboard-intro"></span><h1>Monitoring the Cluster with the Avere Control Panel Dashboard<a class="headerlink" href="#monitoring-the-cluster-with-the-gui-dashboard" title="Permalink to this headline">¶</a></h1>
+<p>Use the Dashboard tab in the Avere Control Panel to monitor how well a cluster is operating, and to detect any problems. Situations that might need attention are displayed as conditions or alerts.</p>
+<p>The dashboard also is your first stop for troubleshooting any cluster issues.</p>
+<p>Avere Systems recommends that you check the Dashboard tab at least daily and investigate any red system errors or yellow alerts. For more information read <a class="reference internal" href="dash_conditions_alerts.html#conditions-alerts"><span class="std std-ref">Monitoring Conditions and Alerts</span></a>.</p>
+<div class="section" id="overview-of-the-dashboard">
+<h2>Overview of the Dashboard<a class="headerlink" href="#overview-of-the-dashboard" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="_images/dashboard_tab.png"><img alt="The Avere Control Panel Dashboard" src="_images/dashboard_tab.png" style="width: 800px;" /></a>
+<p>The <span class="guilabel">Dashboard</span> tab is divided into the following sections:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#performance-chart-overview"><span class="std std-ref">Performance graph</span></a></li>
+<li><a class="reference internal" href="#status-tabs-overview"><span class="std std-ref">Status tabs</span></a></li>
+<li><a class="reference internal" href="#cluster-activity-panel"><span class="std std-ref">Cluster activity monitor</span></a></li>
+</ul>
+<div class="section" id="performance-graph">
+<span id="performance-chart-overview"></span><h3>Performance Graph<a class="headerlink" href="#performance-graph" title="Permalink to this headline">¶</a></h3>
+<p>In the center, a chart displays system performance. You can customize what is shown on the with the <span class="guilabel">Chart Controls</span> underneath the diagram. By default, the chart updates continuously to show current activity.</p>
+<p>For more information about configuring and interpreting the performance graph, read <a class="reference internal" href="dash_performance_graph.html#performance-graph"><span class="std std-ref">Viewing System Performance</span></a>.</p>
+<a class="reference internal image-reference" href="_images/chart_with_controls.png"><img alt="Graphic chart showing operations per second, with chart controls expanded below" src="_images/chart_with_controls.png" style="width: 80%;" /></a>
+</div>
+<div class="section" id="status-tabs">
+<span id="status-tabs-overview"></span><h3>Status Tabs<a class="headerlink" href="#status-tabs" title="Permalink to this headline">¶</a></h3>
+<p>Under the performance graph, the status bar provides easy access to information about the cluster.</p>
+<a class="reference internal image-reference" href="_images/status_tabs_overview.png"><img alt="Image of status tabs" src="_images/status_tabs_overview.png" style="width: 80%;" /></a>
+<p>It includes the following tabs, which are described in more detail in <a class="reference internal" href="dash_status_tabs.html#status-tabs"><span class="std std-ref">Dashboard Status Tabs</span></a>:</p>
+<ul>
+<li><p class="first"><span class="guilabel">Conditions</span> – Notifications about current operational status or system errors that are affecting the operation of the cluster. For example, an unreachable core filer creates a condition notification.</p>
+</li>
+<li><p class="first"><span class="guilabel">Alerts</span> – System warnings and notifications about one-time events that have happened but are not ongoing. For example, a node restart creates an alert notification.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Conditions and Alerts are described in <a class="reference internal" href="dash_conditions_alerts.html#conditions-alerts"><span class="std std-ref">Monitoring Conditions and Alerts</span></a>.</p>
+</div>
+</div></blockquote>
+</li>
+<li><p class="first"><span class="guilabel">VServers</span> – A list of the cluster’s virtual servers (vservers), including details like each vserver’s state, its client-facing IP addresses, and its associated core filers. Read <a class="reference internal" href="dash_status_tabs.html#status-tab-vservers"><span class="std std-ref">VServers</span></a> for details.</p>
+</li>
+<li><p class="first"><span class="guilabel">Core Filers</span> – A list of the cluster’s core filers, including details like each core filer’s state, cache policy, network name, associated vservers, and information about modified files in the cluster cache that are waiting to be written to the core filer. Read <a class="reference internal" href="dash_status_tabs.html#status-tab-core-filers"><span class="std std-ref">Core Filers</span></a> for details.</p>
+</li>
+<li><p class="first"><span class="guilabel">Nodes</span> – A list of all the nodes that make up the cluster, with details including each node’s model, state, client-facing IP addresses, current CPU usage, and performance information. Read <a class="reference internal" href="dash_status_tabs.html#status-tab-nodes"><span class="std std-ref">Nodes</span></a> for details.</p>
+</li>
+<li><p class="first"><span class="guilabel">Clients</span> – A configurable list of clients using the cluster. Filters control the list to show clients by source, connection type, activity level, and other qualities. Read <a class="reference internal" href="clients_tab.html#status-tab-clients-detail"><span class="std std-ref">Clients Status Tab</span></a> for details.</p>
+</li>
+<li><p class="first"><span class="guilabel">Hot Files</span> – Information about the most active files on the cluster, including name, file type, node, and throughput. Read <a class="reference internal" href="dash_status_tabs.html#status-tab-hot-files"><span class="std std-ref">Hot Files</span></a> for details.</p>
+</li>
+<li><p class="first"><span class="guilabel">Cache</span> – Data about cache space, including capacity and current utilization. Data can be viewed by node or for the whole cluster. Read <a class="reference internal" href="dash_status_tabs.html#status-tab-cache"><span class="std std-ref">Cache</span></a> for details.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="cluster-activity">
+<span id="cluster-activity-panel"></span><h3>Cluster Activity<a class="headerlink" href="#cluster-activity" title="Permalink to this headline">¶</a></h3>
+<p>The cluster activity panel appears at the bottom of each page in the Avere Control Panel. It shows current and recent cluster-level activities.</p>
+<p>Click the triangle at the left of the Cluster Activity label to show the activity table.</p>
+<a class="reference internal image-reference" href="_images/cluster_activity.png"><img alt="Expanded Cluster Activity panel showing activity" src="_images/cluster_activity.png" style="width: 80%;" /></a>
+<p>Depending on the activity, data can include this kind of information:</p>
+<ul class="simple">
+<li>Process name</li>
+<li>Start time</li>
+<li>Last update time</li>
+<li>Progress, if available</li>
+<li>Process status</li>
+<li>Action to take, if applicable</li>
+</ul>
+<p>The <span class="guilabel">Limit to category</span> drop-down control lets you filter the list. Choose <span class="guilabel">All</span> to show active and recently completed activities, or choose <span class="guilabel">In progress</span> to display only activities that are currently active. Other categories can appear on the list depending on the type of recent activities – for example, if software is being updated on the cluster, an <span class="guilabel">upgrade</span> filter might be shown.</p>
+<a class="reference internal image-reference" href="_images/cluster_activity_menu.png"><img alt="pull-down menu on &quot;Limit to category&quot; control" src="_images/cluster_activity_menu.png" style="width: 80%;" /></a>
+<p>Activities are cleared from the list after about ten minutes.</p>
+<div class="last-update docutils container">
+updated Nov 16, 2017</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="ops_dashboard_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Monitoring the Cluster with the Avere Control Panel Dashboard</a><ul>
+<li><a class="reference internal" href="#overview-of-the-dashboard">Overview of the Dashboard</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ops_dashboard_index.html"
+                        title="previous chapter">Using the Avere Control Panel Dashboard</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dash_performance_graph.html"
+                        title="next chapter">Viewing System Performance</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="dash_performance_graph.html" title="Viewing System Performance"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ops_dashboard_index.html" title="Using the Avere Control Panel Dashboard"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_dashboard_index.html"> Avere OS Dashboard Guide</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

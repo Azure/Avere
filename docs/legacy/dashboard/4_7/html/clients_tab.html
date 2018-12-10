@@ -1,0 +1,332 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Clients Status Tab &#8212;  Avere OS Dashboard Guide</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Copyright Information" href="frontmatter.html" />
+    <link rel="prev" title="Dashboard Status Tabs" href="dash_status_tabs.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="frontmatter.html" title="Copyright Information"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dash_status_tabs.html" title="Dashboard Status Tabs"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_dashboard_index.html"> Avere OS Dashboard Guide</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="clients-status-tab">
+<span id="status-tab-clients-detail"></span><h1>Clients Status Tab<a class="headerlink" href="#clients-status-tab" title="Permalink to this headline">¶</a></h1>
+<p>The <span class="guilabel">Clients</span> tab shows information about clients that have been using the cluster. A wide variety of statistics can be shown, filtered by the control choices in the top of the table view.</p>
+<a class="reference internal image-reference" href="_images/clients_tab_overview-crop.png"><img alt="picture of the Clients status tab with numbered annotations for the controls" src="_images/clients_tab_overview-crop.png" style="width: 90%;" /></a>
+<p>Leave the <span class="guilabel">Auto-refresh</span> option selected to continually update the data shown in the table.</p>
+<p>As with other tables, you can sort the data by column headings. (Note that there is sometimes a lag of about one second to apply the sort after a heading was clicked.)</p>
+<div class="section" id="filtering-the-client-list">
+<h2>Filtering the Client List<a class="headerlink" href="#filtering-the-client-list" title="Permalink to this headline">¶</a></h2>
+<p>Drop-down menu selectors at the top left of the clients tab control the data in the table. The <a class="reference internal" href="#source-options"><span class="std std-ref">Source</span></a> (1), <a class="reference internal" href="#show-options"><span class="std std-ref">Show</span></a> (2), and <a class="reference internal" href="#type-options"><span class="std std-ref">Type</span></a> (3) options determine which clients and what statistics are shown.</p>
+<div class="section" id="source-options">
+<span id="id1"></span><h3>“Source” Options<a class="headerlink" href="#source-options" title="Permalink to this headline">¶</a></h3>
+<p>The <span class="guilabel">Source</span> selector (labeled 1 in the screenshot above) determines the scope of the clients shown.</p>
+<p>You can select any of the cluster’s vservers, core filers, and nodes.</p>
+<ul class="simple">
+<li>If a vserver is selected, clients attached to that vserver are listed.</li>
+<li>If a core filer is selected, clients attached to that core filer through the Avere cluster are listed.</li>
+<li>If a node is selected, clients connecting through that node are listed.</li>
+</ul>
+</div>
+<div class="section" id="show-options">
+<span id="id2"></span><h3>“Show” Options<a class="headerlink" href="#show-options" title="Permalink to this headline">¶</a></h3>
+<p>After selecting the source, you can select which subset of clients to view by using the <span class="guilabel">Show</span> control (2).</p>
+<p>The options in the <span class="guilabel">Show</span> selector depend on what is selected in the <span class="guilabel">Source</span> setting.</p>
+<div class="section" id="options-for-a-vserver-source">
+<h4>Options for a VServer Source<a class="headerlink" href="#options-for-a-vserver-source" title="Permalink to this headline">¶</a></h4>
+<p>These options appear on the <span class="guilabel">Show</span> menu when a vserver is selected on the <span class="guilabel">Source</span> menu.</p>
+<ul>
+<li><p class="first"><span class="guilabel">Active Clients</span> – This filter shows only clients that are currently connected to the cluster through this vserver. (Clients with an established TCP connection are considered to be active.)</p>
+<p>Statistics shown in this view:</p>
+<ul>
+<li><p class="first"><span class="guilabel">Client Address</span> – The client’s IP address</p>
+</li>
+<li><p class="first"><span class="guilabel">FXT Node</span> – The FXT node through which the client accesses the cluster</p>
+</li>
+<li><p class="first"><span class="guilabel">Avere Address</span> – The address on the Avere cluster to which the client connects</p>
+</li>
+<li><p class="first">Number of connections (if the same client has more than one active connection to this vserver)</p>
+<a class="reference internal image-reference" href="_images/client_by_vserver.png"><img alt="Table of clients with a vserver source and &quot;active clients&quot; selected" src="_images/client_by_vserver.png" style="width: 75%;" /></a>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p class="first"><span class="guilabel">VServer Connection Information</span> – This filter shows active clients for the vserver, but also includes statistics about how the client is connected to the vserver.</p>
+<p>Statistics shown in this view:</p>
+<ul class="simple">
+<li><span class="guilabel">FXT Node</span> – The FXT node through which the client accesses the cluster</li>
+<li><span class="guilabel">Client Address</span> – The client’s IP address</li>
+<li><span class="guilabel">Avere Address</span> – The address on the Avere cluster to which the client connects</li>
+<li><span class="guilabel">Protocol</span> – The connection protocol (usually <code class="docutils literal notranslate"><span class="pre">tcp</span></code>)</li>
+<li><span class="guilabel">Connection Type</span> – The type of connection between the client and the vserver (usually <code class="docutils literal notranslate"><span class="pre">nfs_frontend</span></code> for a client-vserver connection)</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p class="first"><span class="guilabel">Hot Clients</span> – If the <span class="guilabel">Collect ‘Hot’ Information</span> checkbox is selected, this view shows data about the most active clients connected to the vserver.</p>
+<p>Read <a class="reference internal" href="#hot-clients"><span class="std std-ref">Hot Clients Reporting</span></a> for a more complete discussion of this feature.</p>
+<p>Statistics shown in this view:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#hot-clients-ip-nh"><span class="std std-ref">Client Address</span></a></li>
+<li><a class="reference internal" href="#hot-clients-type-nh"><span class="std std-ref">Type</span></a></li>
+<li><a class="reference internal" href="#hot-clients-clusterip-nh"><span class="std std-ref">Avere Address</span></a></li>
+<li><a class="reference internal" href="#hot-clients-node-nh"><span class="std std-ref">FXT Node</span></a></li>
+<li><a class="reference internal" href="#hot-clients-activity-nh"><span class="std std-ref">Activity</span></a></li>
+<li><a class="reference internal" href="#hot-clients-rate-nh"><span class="std std-ref">Rate</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="options-for-a-core-filer-source">
+<h4>Options for a Core Filer Source<a class="headerlink" href="#options-for-a-core-filer-source" title="Permalink to this headline">¶</a></h4>
+<p>One option appears on the <span class="guilabel">Show</span> menu when a core filer is selected on the <span class="guilabel">Source</span> menu:</p>
+<ul>
+<li><p class="first"><span class="guilabel">Core Filer Connection Information</span> – This filter shows active clients that are connected to the selected core filer through the Avere cluster.</p>
+<p>Statistics shown in this view:</p>
+<ul class="simple">
+<li><span class="guilabel">FXT Node</span> – The FXT node through which the client accesses the cluster</li>
+<li><span class="guilabel">Client Address</span> – The client’s IP address</li>
+<li><span class="guilabel">Avere Address</span> – The address on the Avere cluster to which the client connects</li>
+<li><span class="guilabel">Protocol</span> – The connection protocol (usually <code class="docutils literal notranslate"><span class="pre">tcp</span></code>)</li>
+<li><span class="guilabel">Connection Type</span> – The type of connection between the core filer and the client. The value varies, but common values for a hardware (NAS) core filer include <code class="docutils literal notranslate"><span class="pre">nfs_backend</span></code>, <code class="docutils literal notranslate"><span class="pre">nlm_backend</span></code>, or <code class="docutils literal notranslate"><span class="pre">mount_backend</span></code>. With a cloud core filer, the connection type is typically <code class="docutils literal notranslate"><span class="pre">s3_https_backend</span></code> or <code class="docutils literal notranslate"><span class="pre">s3_http_backend</span></code>.</li>
+</ul>
+<a class="reference internal image-reference" href="_images/core_filer_connection_info.png"><img alt="Table showing core filer connection information for clients" src="_images/core_filer_connection_info.png" style="width: 75%;" /></a>
+</li>
+</ul>
+</div>
+<div class="section" id="options-for-a-cluster-node-source">
+<h4>Options for a Cluster Node Source<a class="headerlink" href="#options-for-a-cluster-node-source" title="Permalink to this headline">¶</a></h4>
+<p>These options appear on the <span class="guilabel">Show</span> menu when a cluster node is selected on the <span class="guilabel">Source</span> menu:</p>
+<ul>
+<li><p class="first"><span class="guilabel">Active Clients</span> – Shows the clients actively using the cluster through this node. (Clients with an established TCP connection are considered to be active.)</p>
+<p>Statistics shown in this view:</p>
+<ul class="simple">
+<li><span class="guilabel">Client Address</span> – The client’s IP address</li>
+<li><span class="guilabel">VServer</span> – The vserver through which the client connects</li>
+<li><span class="guilabel">Avere Address</span> – The address on the Avere cluster to which the client connects</li>
+</ul>
+<a class="reference internal image-reference" href="_images/cluster_node_clients.png"><img alt="Table showing active clients attached to one cluster node" src="_images/cluster_node_clients.png" style="width: 75%;" /></a>
+</li>
+</ul>
+<ul>
+<li><p class="first"><span class="guilabel">VServer Connection Information</span> – Shows specifics about how the active clients are connected to the cluster.</p>
+<p>Statistics shown in this view:</p>
+<ul class="simple">
+<li><span class="guilabel">VServer</span> – The vserver through which the client connects</li>
+<li><span class="guilabel">Client Address</span> – The client’s IP address</li>
+<li><span class="guilabel">Avere Address</span> – The address on the Avere cluster to which the client connects</li>
+<li><span class="guilabel">Protocol</span> – The connection protocol (usually <code class="docutils literal notranslate"><span class="pre">tcp</span></code>)</li>
+<li><span class="guilabel">Connection Type</span> – The type of connection between the client and the vserver (usually <code class="docutils literal notranslate"><span class="pre">nfs_frontend</span></code>).</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p class="first"><span class="guilabel">Core Filer Connection Information</span> – Shows specifics about client connections to the core filers being used through this cluster node.</p>
+<p>Each client might have multiple connections to the core filer, so it is possible to have hundreds of connections in this table.</p>
+<p>Statistics shown in this view:</p>
+<ul class="simple">
+<li><span class="guilabel">Core Filer</span> – The core filer that the client is using</li>
+<li><span class="guilabel">Client Address</span> – The client’s IP address</li>
+<li><span class="guilabel">Avere Address</span> – The address on the Avere cluster to which the client connects</li>
+<li><span class="guilabel">Protocol</span> – The connection protocol (usually <code class="docutils literal notranslate"><span class="pre">tcp</span></code>)</li>
+<li><span class="guilabel">Connection Type</span> – The type of connection between the client and the core filer. For a hardware (NAS) core filer, typical values are <code class="docutils literal notranslate"><span class="pre">nfs_backend</span></code>, <code class="docutils literal notranslate"><span class="pre">nlm_backend</span></code>, or <code class="docutils literal notranslate"><span class="pre">mount_backend</span></code>; a cloud core filer frequently has the connection type <code class="docutils literal notranslate"><span class="pre">s3_https_backend</span></code> or <code class="docutils literal notranslate"><span class="pre">s3_http_backend</span></code>.</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="type-options">
+<span id="id3"></span><h3>“Type” Options<a class="headerlink" href="#type-options" title="Permalink to this headline">¶</a></h3>
+<p>The <span class="guilabel">Type</span> selector (3) allows you to filter clients by their connection protocol, SMB or NFS. Currently, this selector is active only for the vserver &gt; hot clients view, described below in <a class="reference internal" href="#hot-clients"><span class="std std-ref">Hot Clients Reporting</span></a>.</p>
+</div>
+</div>
+<div class="section" id="hot-clients-reporting">
+<span id="hot-clients"></span><h2>Hot Clients Reporting<a class="headerlink" href="#hot-clients-reporting" title="Permalink to this headline">¶</a></h2>
+<p>The <span class="guilabel">Hot Clients</span> view shows usage and activity rate statistics for client machines that are the heaviest users of the Avere cluster.</p>
+<p>When a vserver is selected as the <span class="guilabel">Source</span> on the clients tab, you can enable or disable hot client data collection and show information about the most active clients in the table.</p>
+<div class="section" id="enabling-data-collection">
+<h3>Enabling Data Collection<a class="headerlink" href="#enabling-data-collection" title="Permalink to this headline">¶</a></h3>
+<p>To show hot clients information, you must turn on data collection for client activity. You can click the checkbox next to <span class="guilabel">Collect ‘Hot’ Information</span> on the clients tab to enable collection with default values. (This box can only be changed if a vserver source is selected.)</p>
+<p>To change the data collection settings, click the <a class="reference internal" href="#hot-clients-details"><span class="std std-ref">Details link</span></a> to go to the VServer Details settings page, as described below.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Collecting hot client information uses CPU and memory resources on the cluster nodes. If you are not actively using this information, you can leave data collection disabled to improve cluster performance.</p>
+</div>
+<div class="section" id="details-link">
+<span id="hot-clients-details"></span><h4>Details Link<a class="headerlink" href="#details-link" title="Permalink to this headline">¶</a></h4>
+<p>Clicking the <span class="guilabel">Details</span> link loads the VServer Details settings page, where you can change settings for collecting hot client information. Options include:</p>
+<ul class="simple">
+<li>Enable or disable hot client data collection</li>
+<li>Set the maximum number of hot clients to track per cluster node</li>
+<li>Set the polling period for gathering client data</li>
+</ul>
+<p>Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_vserver_details.html#vserver-details" title="(in Cluster Configuration Guide v4.7)"><span>VServer &gt; VServer Details</span></a> in the Avere OS <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/ops_conf_index.html#ops-config-guide" title="(in Cluster Configuration Guide v4.7)"><span class="xref std std-ref">Configuration Guide</span></a> for more information.</p>
+</div>
+</div>
+<div class="section" id="showing-hot-clients">
+<h3>Showing Hot Clients<a class="headerlink" href="#showing-hot-clients" title="Permalink to this headline">¶</a></h3>
+<p>To see the most active clients, select a vserver from the <span class="guilabel">Source</span> menu and then select <span class="guilabel">Hot Clients</span> from the <span class="guilabel">Show</span> menu.</p>
+</div>
+<div class="section" id="hot-client-statistics">
+<h3>Hot Client Statistics<a class="headerlink" href="#hot-client-statistics" title="Permalink to this headline">¶</a></h3>
+<a class="reference internal image-reference" href="_images/hot_clients_table.png"><img alt="Hot Clients information displayed in a table" src="_images/hot_clients_table.png" style="width: 75%;" /></a>
+<p>The hot clients display shows standard client information (node, client address, and Avere cluster address), plus <span class="guilabel">Type</span>, <span class="guilabel">Activity</span>, and <span class="guilabel">Rate</span>.</p>
+<dl class="docutils" id="hot-clients-ip-nh">
+<dt><span class="guilabel">Client Address</span></dt>
+<dd>The client’s IP address</dd>
+</dl>
+<dl class="docutils" id="hot-clients-type-nh">
+<dt><span class="guilabel">Type</span></dt>
+<dd><p class="first">The client type, either SMB or NFS. You can filter by type in the hot clients view – use the <span class="guilabel">Type</span> selector above the table.</p>
+<p>The Type selector is active only when Hot Clients is selected in the <span class="guilabel">Show</span> control.</p>
+<a class="last reference internal image-reference" href="_images/client_type_menu.png"><img alt="the Type selector can be set to All, SMB, or NFS if Hot Clients is selected" src="_images/client_type_menu.png" style="width: 80%;" /></a>
+</dd>
+</dl>
+<dl class="docutils" id="hot-clients-node-nh">
+<dt><span class="guilabel">FXT Node</span></dt>
+<dd>The FXT node through which the client accesses the cluster</dd>
+</dl>
+<dl class="docutils" id="hot-clients-clusterip-nh">
+<dt><span class="guilabel">Avere Address</span></dt>
+<dd>The address on the Avere cluster to which the client connects</dd>
+</dl>
+<dl class="docutils" id="hot-clients-activity-nh">
+<dt><span class="guilabel">Activity</span></dt>
+<dd><p class="first">The total number of operations sent from the client since the cluster started.</p>
+<p>This number is re-read at the polling interval, and at that time a client might be removed from the hot clients list if it is not one of the most active clients. (The number of hot clients for each node is configurable and defaults to 10.)</p>
+<p class="last">The activity statistic is reset if the cluster restarts.</p>
+</dd>
+</dl>
+<dl class="docutils" id="hot-clients-rate-nh">
+<dt><span class="guilabel">Rate</span></dt>
+<dd>The current number of operations per second from this client. This value is continuously recalculated; it does not depend on the polling interval.</dd>
+</dl>
+<p>Although the polling interval does not affect the rate and activity statistics, it is used to determine the top <em>n</em> most active clients. When a new poll is done, a client might drop off the hot clients list or be added based on its <span class="guilabel">Activity</span> statistic.</p>
+<p>The polling interval and the number of hot clients to track are configured on the <span class="guilabel">VServer Details</span> settings page. (Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_vserver_details.html#vserver-details" title="(in Cluster Configuration Guide v4.7)"><span>VServer &gt; VServer Details</span></a> in the Avere OS <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/ops_conf_index.html#ops-config-guide" title="(in Cluster Configuration Guide v4.7)"><span class="xref std std-ref">Configuration Guide</span></a> for more information.)</p>
+<div class="last-update docutils container">
+updated Nov 16, 2017</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="ops_dashboard_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Clients Status Tab</a><ul>
+<li><a class="reference internal" href="#filtering-the-client-list">Filtering the Client List</a></li>
+<li><a class="reference internal" href="#hot-clients-reporting">Hot Clients Reporting</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dash_status_tabs.html"
+                        title="previous chapter">Dashboard Status Tabs</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="frontmatter.html"
+                        title="next chapter">Copyright Information</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="frontmatter.html" title="Copyright Information"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dash_status_tabs.html" title="Dashboard Status Tabs"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_dashboard_index.html"> Avere OS Dashboard Guide</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>
