@@ -5,14 +5,26 @@
     "parameters": {
       "basics": [
         {
+          "name": "prereqs",
+          "type": "Microsoft.Common.TextBlock",
+          "visible": true,
+          "options": {
+            "text": "Before creating a VM, you must create a new subscription for the Avere vFXT project, configure subscription ownership, create an AAD RBAC role, create service principals, check quotas and request an increase if needed, and accept terms for using the Avere vFXT software.",
+            "link": {
+              "label": "Read Prepare to create the Avere vFXT for detailed instructions",
+              "uri": "https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs"
+            }
+          }
+        },
+        {
           "name": "controllerName",
           "type": "Microsoft.Common.TextBox",
           "label": "Controller name",
           "toolTip": "The unique name used for resource names associated with the controller.",
           "constraints": {
             "required": true,
-            "regex": "^[a-z][a-z0-9]{0,19}$",
-            "validationMessage": "Only lowercase alphanumeric characters are allowed, and the value must be 1-20 characters long."
+            "regex": "^[a-z]([-a-z0-9]*[a-z0-9]){0,31}$",
+            "validationMessage": "Only lowercase alphanumeric characters are allowed, and the value must be 1-32 characters long."
           },
           "visible": true
         },
@@ -33,13 +45,18 @@
           "type": "Microsoft.Compute.CredentialsCombo",
           "label": {
             "authenticationType": "Authentication type",
-            "sshPublicKey": "Public SSH key"
+            "password": "Password",
+            "confirmPassword": "Confirm password",
+            "sshPublicKey": "SSH public key"
           },
           "constraints": {
-            "required": true
+            "required": true,
+            "customPasswordRegex": "^(?=.*[A-Za-z])(?=.*\\d).{12,}$",
+            "customValidationMessage": "The password must contain at least 12 characters, with at least 1 letter and 1 number."
           },
           "options": {
-            "hidePassword": true
+            "hideConfirmation": false,
+            "hidePassword": false
           },
           "osPlatform": "Linux"
         }
@@ -347,6 +364,8 @@
       "outputs": {
         "controllerName": "[basics('controllerName')]",
         "controllerAdminUsername": "[basics('controllerAdminUsername')]",
+        "controllerAuthenticationType": "[basics('controllerSSHKeyData').authenticationType]",
+        "controllerPassword": "[basics('controllerSSHKeyData').password]",
         "controllerSSHKeyData": "[basics('controllerSSHKeyData').sshPublicKey]",
         
         "servicePrincipalTenant": "[steps('ControllerAuth').servicePrincipalTenant]",

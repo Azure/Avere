@@ -99,10 +99,31 @@
         "description": "The controller admin username."
       }
     },
+    "controllerAuthenticationType": {
+      "type": "string",
+      "defaultValue": "sshPublicKey",
+      "allowedValues": [
+        "sshPublicKey",
+        "password"
+      ],
+      "metadata": {
+        "description": "The controller may be configured with a password or public SSH key."
+      }
+    },
+    "controllerPassword": {
+      "type": "securestring",
+      "defaultValue": "",
+      "minLength": 0,
+      "metadata": {
+        "description": "If controllerAuthenticationType is 'password', the admin password used for the controller."
+      }
+    },
     "controllerSSHKeyData": {
       "type": "string",
+      "defaultValue": "",
+      "minLength": 0,
       "metadata": {
-        "description": "The controller public SSH key."
+        "description": "If controllerAuthenticationType is 'sshPublicKey', the controller public SSH key."
       }
     },
     "adminPassword": {
@@ -163,6 +184,8 @@
     "servicePrincipalPassword": "[parameters('servicePrincipalPassword')]",
     "controllerName": "[parameters('controllerName')]",
     "controllerAdminUsername": "[parameters('controllerAdminUsername')]",
+    "controllerAuthenticationType": "[parameters('controllerAuthenticationType')]",
+    "controllerPassword": "[parameters('controllerPassword')]",
     "controllerSSHKeyData": "[parameters('controllerSSHKeyData')]",
     "adminPassword": "[parameters('adminPassword')]",
     "nicName": "[concat('vmnic-',variables('controllerName'))]",
@@ -178,7 +201,7 @@
     "avereClusterName": "[parameters('avereClusterName')]",
     "avereInstanceType": "[parameters('avereInstanceType')]",
     "avereCacheSizeGB": "[parameters('avereCacheSizeGB')]",
-    "additionalVFXTParameters": "[concat(' --nodes ', parameters('avereNodeCount'), ' ')]",
+    "additionalVFXTParameters": "[concat(' --nodes ', parameters('avereNodeCount'), ' --debug')]",
     "controllerVMSize": "Standard_A1_v2",
     "publicIPAddressName": "[concat('publicip-',variables('controllerName'))]",
     "networkSecurityGroupName": "[concat('nsg-',variables('controllerName'))]",
@@ -193,6 +216,37 @@
     "storageAccountKind": "StorageV2",
     "environmentVariables": "[concat(' AZURE_TENANT_ID=', variables('servicePrincipalTenant'),' AZURE_CLIENT_ID=', variables('servicePrincipalAppId'),' RESOURCE_GROUP=', resourceGroup().name,' LOCATION=', resourceGroup().location,' NETWORK_RESOURCE_GROUP=', variables('virtualNetworkResourceGroup'),' NETWORK=', variables('virtualNetworkName'),' SUBNET=', variables('virtualNetworkSubnetName'),' AVERE_CLUSTER_ROLE=\"', variables('avereClusterRole'),'\" CREATE_CLOUD_BACKED_CLUSTER=', variables('useAvereBackedStorageAccount'),' STORAGE_ACCOUNT=', variables('avereBackedStorageAccountName'),' CACHE_SIZE=', variables('avereCacheSizeGB'),' CLUSTER_NAME=', variables('avereClusterName'),' INSTANCE_TYPE=', variables('avereInstanceType'),' CONTROLLER_ADMIN_USER_NAME=',variables('controllerAdminUsername'),' DEBUG=\"',variables('additionalVFXTParameters'),'\"')]",
     "sshKeyPath": "[concat('/home/',variables('controllerAdminUsername'),'/.ssh/authorized_keys')]",
+    "controllerOSProfilePassword": {
+      "computerName": "[variables('vmName')]",
+      "adminUsername": "[variables('controllerAdminUsername')]",
+      "adminPassword": "[variables('controllerPassword')]",
+      "customData": "[base64('#cloud-config\n\nwrite_files:\n -  encoding: gzip\n    content: !!binary |\n        H4sIAAAAAAAC/41W3Y+bRhB/56+YYKS7U0K5vPQhFQ8E08SKDSfASZuqXXGwtlfFC+LD50vV/u2dXWMMmDvBC/sx85vZ2ZnfzuyN8ci48RiVO0WZQUHzrKggSlNIGaflO4h4AvTIKsg40KLICqWkFejH048qiuWvSOivHVMNi5qqyjdrEZLAsT13Hpg/398r1ve175DP3soh84VvGrtsTw0N90PfWy4dn1jz1cIl6wCHrrVylK+//haShRuE1nJJQmf1sLRCx9T6OMZhc6wYLyv0VbGX3npOPlr2F2d+0TDigkYV1eM0q5PHKP6bJjiuy4oWClpcrKzltfCecbaP0lZQ2dQ8rhie/iliFYl+1AUl4ggkYcXtHfyjAH5xVnOUNu/l7GnHUgp/wBvQExj4DX/+AkkmxcRXppTm8L6dn4G029tmCG/h/d1dK8A2CKyd9/QtBa0bcQFf7Shv5cVH410GKvpL4yornq9c4hle+SFiafSIfkcbgSxOy/h2gF7SOONJqfbhRXpcjrBhcphknCr/duKHCVPnGMA2aDMhc1NBucuehNMQp4zyShgpaCVFRJK9Pcph9APSbMs46HpJiwOLqZ4XjMcsj1LQ6/Oh7OXCcTF95qDngzU8hO+EqF9RHqGdZjd0XEtqtBYxu7uO45E3bCvuXeQcqeg+TzFV2nPIK1E1BMdEIr1ctJfrIHR8FUwTJc6lol7dUoy+jiYxaKPVIBVpWtIewjCpX1PGW2ouoc4TPI28ACaSimM8D1HBRDKUTUwS0BnclMZfvhN4a992yCffWz8Ys8F8e/OazQ7O0rOtcOG5xqwdTdZ1nfCb538xZufBZM1g/RF1jFnzn6xnfXVkGsnLJEhbjjEbWZvuR+j51ieHWLbtrV3h0GBhMpJt2Z8dEiy+o0ed8XT9xn9BvIjQnU2PjuTvBysI8DbmGJn+fDKO3Hcxl8LfH9CZ/nQSilp++E8+DD8hVXwYezHkxlaFl8B6dS9fBFn0F6K/InS5PAEtqfc5ofxAsLbKFu9EzfiK4auLm1JKvexot/lTcteRpEf5QA+4zhySnzqBYN/hk54+A/qX7fdiGXnsOashKigk9LHeItluG5yXjZ9I1RxjWvUlv1vGNYcUPKLSZxhT689HFM6EYmrn0YhQQx1kiD6+/jJAqzEicmIZUzv9x6JxRSEYkKu1EcVXnhrz1XdoxMk+86C3/YUx6y3PoLF2PCbYoRMU7cxGhHvlbmq96VjseiSDcevNuwob7OjKXae6ulW5jxgfFKPofED2eSD6PMC+6QQ30gA2b2jTYCG6NCMqHDZZcSmjph57HKB0CUD0RmhUPfcgslPqSrRNCAg+gqbzhXMzojZt6Gin0sO5kFqjc1noyjUGoqYDQiAqrGDsRMiU/wF+jA3mOAwAAA==\n    path: /opt/avere/installvfxt.sh\n    permissions: \"0744\"\n\n')]"
+    },
+    "controllerOSProfileSSHKey": {
+      "computername": "[variables('vmName')]",
+      "adminUsername": "[variables('controllerAdminUsername')]",
+      "customData": "[base64('#cloud-config\n\nwrite_files:\n -  encoding: gzip\n    content: !!binary |\n        H4sIAAAAAAAC/41W3Y+bRhB/56+YYKS7U0K5vPQhFQ8E08SKDSfASZuqXXGwtlfFC+LD50vV/u2dXWMMmDvBC/sx85vZ2ZnfzuyN8ci48RiVO0WZQUHzrKggSlNIGaflO4h4AvTIKsg40KLICqWkFejH048qiuWvSOivHVMNi5qqyjdrEZLAsT13Hpg/398r1ve175DP3soh84VvGrtsTw0N90PfWy4dn1jz1cIl6wCHrrVylK+//haShRuE1nJJQmf1sLRCx9T6OMZhc6wYLyv0VbGX3npOPlr2F2d+0TDigkYV1eM0q5PHKP6bJjiuy4oWClpcrKzltfCecbaP0lZQ2dQ8rhie/iliFYl+1AUl4ggkYcXtHfyjAH5xVnOUNu/l7GnHUgp/wBvQExj4DX/+AkkmxcRXppTm8L6dn4G029tmCG/h/d1dK8A2CKyd9/QtBa0bcQFf7Shv5cVH410GKvpL4yornq9c4hle+SFiafSIfkcbgSxOy/h2gF7SOONJqfbhRXpcjrBhcphknCr/duKHCVPnGMA2aDMhc1NBucuehNMQp4zyShgpaCVFRJK9Pcph9APSbMs46HpJiwOLqZ4XjMcsj1LQ6/Oh7OXCcTF95qDngzU8hO+EqF9RHqGdZjd0XEtqtBYxu7uO45E3bCvuXeQcqeg+TzFV2nPIK1E1BMdEIr1ctJfrIHR8FUwTJc6lol7dUoy+jiYxaKPVIBVpWtIewjCpX1PGW2ouoc4TPI28ACaSimM8D1HBRDKUTUwS0BnclMZfvhN4a992yCffWz8Ys8F8e/OazQ7O0rOtcOG5xqwdTdZ1nfCb538xZufBZM1g/RF1jFnzn6xnfXVkGsnLJEhbjjEbWZvuR+j51ieHWLbtrV3h0GBhMpJt2Z8dEiy+o0ed8XT9xn9BvIjQnU2PjuTvBysI8DbmGJn+fDKO3Hcxl8LfH9CZ/nQSilp++E8+DD8hVXwYezHkxlaFl8B6dS9fBFn0F6K/InS5PAEtqfc5ofxAsLbKFu9EzfiK4auLm1JKvexot/lTcteRpEf5QA+4zhySnzqBYN/hk54+A/qX7fdiGXnsOashKigk9LHeItluG5yXjZ9I1RxjWvUlv1vGNYcUPKLSZxhT689HFM6EYmrn0YhQQx1kiD6+/jJAqzEicmIZUzv9x6JxRSEYkKu1EcVXnhrz1XdoxMk+86C3/YUx6y3PoLF2PCbYoRMU7cxGhHvlbmq96VjseiSDcevNuwob7OjKXae6ulW5jxgfFKPofED2eSD6PMC+6QQ30gA2b2jTYCG6NCMqHDZZcSmjph57HKB0CUD0RmhUPfcgslPqSrRNCAg+gqbzhXMzojZt6Gin0sO5kFqjc1noyjUGoqYDQiAqrGDsRMiU/wF+jA3mOAwAAA==\n    path: /opt/avere/installvfxt.sh\n    permissions: \"0744\"\n\n')]",
+      "linuxConfiguration": {
+        "disablePasswordAuthentication": "true",
+        "ssh": {
+          "publicKeys": [
+            {
+              "path": "[variables('sshKeyPath')]",
+              "keyData": "[variables('controllerSSHKeyData')]"
+            }
+          ]
+        }
+      }
+    },
+    "controllerOSProfile": "[if(equals(variables('controllerAuthenticationType'),'password'),variables('controllerOSProfilePassword'),variables('controllerOSProfileSSHKey'))]",
+    "controllerStorageProfile": {
+      "imageReference": {
+        "publisher": "microsoft-avere",
+        "offer": "vfxt",
+        "sku": "avere-vfxt-controller",
+        "version": "latest"
+      }
+    },
     "vs": "Creating vserver vserver (",
     "ve": "/255.255.255.255",
     "ms": " management address: ",
@@ -314,30 +368,8 @@
         "hardwareProfile": {
           "vmSize": "[variables('controllerVMSize')]"
         },
-        "osProfile": {
-          "computername": "[variables('vmName')]",
-          "adminUsername": "[variables('controllerAdminUsername')]",
-          "customData": "[base64('#cloud-config\n\nwrite_files:\n -  encoding: gzip\n    content: !!binary |\n        H4sIAAAAAAAC/41W3Y+bRhB/56+YYKS7U0K5vPQhFQ8E08SKDSfASZuqXXGwtlfFC+LD50vV/u2dXWMMmDvBC/sx85vZ2ZnfzuyN8ci48RiVO0WZQUHzrKggSlNIGaflO4h4AvTIKsg40KLICqWkFejH048qiuWvSOivHVMNi5qqyjdrEZLAsT13Hpg/398r1ve175DP3soh84VvGrtsTw0N90PfWy4dn1jz1cIl6wCHrrVylK+//haShRuE1nJJQmf1sLRCx9T6OMZhc6wYLyv0VbGX3npOPlr2F2d+0TDigkYV1eM0q5PHKP6bJjiuy4oWClpcrKzltfCecbaP0lZQ2dQ8rhie/iliFYl+1AUl4ggkYcXtHfyjAH5xVnOUNu/l7GnHUgp/wBvQExj4DX/+AkkmxcRXppTm8L6dn4G029tmCG/h/d1dK8A2CKyd9/QtBa0bcQFf7Shv5cVH410GKvpL4yornq9c4hle+SFiafSIfkcbgSxOy/h2gF7SOONJqfbhRXpcjrBhcphknCr/duKHCVPnGMA2aDMhc1NBucuehNMQp4zyShgpaCVFRJK9Pcph9APSbMs46HpJiwOLqZ4XjMcsj1LQ6/Oh7OXCcTF95qDngzU8hO+EqF9RHqGdZjd0XEtqtBYxu7uO45E3bCvuXeQcqeg+TzFV2nPIK1E1BMdEIr1ctJfrIHR8FUwTJc6lol7dUoy+jiYxaKPVIBVpWtIewjCpX1PGW2ouoc4TPI28ACaSimM8D1HBRDKUTUwS0BnclMZfvhN4a992yCffWz8Ys8F8e/OazQ7O0rOtcOG5xqwdTdZ1nfCb538xZufBZM1g/RF1jFnzn6xnfXVkGsnLJEhbjjEbWZvuR+j51ieHWLbtrV3h0GBhMpJt2Z8dEiy+o0ed8XT9xn9BvIjQnU2PjuTvBysI8DbmGJn+fDKO3Hcxl8LfH9CZ/nQSilp++E8+DD8hVXwYezHkxlaFl8B6dS9fBFn0F6K/InS5PAEtqfc5ofxAsLbKFu9EzfiK4auLm1JKvexot/lTcteRpEf5QA+4zhySnzqBYN/hk54+A/qX7fdiGXnsOashKigk9LHeItluG5yXjZ9I1RxjWvUlv1vGNYcUPKLSZxhT689HFM6EYmrn0YhQQx1kiD6+/jJAqzEicmIZUzv9x6JxRSEYkKu1EcVXnhrz1XdoxMk+86C3/YUx6y3PoLF2PCbYoRMU7cxGhHvlbmq96VjseiSDcevNuwob7OjKXae6ulW5jxgfFKPofED2eSD6PMC+6QQ30gA2b2jTYCG6NCMqHDZZcSmjph57HKB0CUD0RmhUPfcgslPqSrRNCAg+gqbzhXMzojZt6Gin0sO5kFqjc1noyjUGoqYDQiAqrGDsRMiU/wF+jA3mOAwAAA==\n    path: /opt/avere/installvfxt.sh\n    permissions: \"0744\"\n\n')]",
-          "linuxConfiguration": {
-            "disablePasswordAuthentication": "true",
-            "ssh": {
-              "publicKeys": [
-                {
-                  "path": "[variables('sshKeyPath')]",
-                  "keyData": "[variables('controllerSSHKeyData')]"
-                }
-              ]
-            }
-          }
-        },
-        "storageProfile": {
-          "imageReference": {
-            "publisher": "microsoft-avere",
-            "offer": "vfxt",
-            "sku": "avere-vfxt-controller",
-            "version": "latest"
-          }
-        },
+        "osProfile": "[variables('controllerOSProfile')]",
+        "storageProfile": "[variables('controllerStorageProfile')]",
         "networkProfile": {
           "networkInterfaces": [
             {
