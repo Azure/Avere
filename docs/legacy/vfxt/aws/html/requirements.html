@@ -1,0 +1,292 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Product requirements &#8212; Avere vFXT for AWS</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Precautions" href="precautions.html" />
+    <link rel="prev" title="The vFXT platform" href="introduction.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="precautions.html" title="Precautions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="introduction.html" title="The vFXT platform"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="aws_index.html">Avere vFXT for AWS</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="product-requirements">
+<span id="prerequisites"></span><h1>Product requirements<a class="headerlink" href="#product-requirements" title="Permalink to this headline">¶</a></h1>
+<p>This section outlines the prerequisites for creating a vFXT cluster.</p>
+<ol class="arabic simple" id="index-0">
+<li>Choose the <a class="reference internal" href="#aws-locale"><span class="std std-ref">AWS region and availability zone (AZ)</span></a> for the vFXT cluster</li>
+<li>Establish an Amazon Web Services account and note the <a class="reference internal" href="#aws-account"><span class="std std-ref">account number</span></a></li>
+<li>Create a role that has the required <a class="reference internal" href="#aws-permissions"><span class="std std-ref">permissions</span></a> to create and administer the vFXT cluster</li>
+<li>Create an <a class="reference internal" href="#aws-vpc"><span class="std std-ref">AWS virtual private cloud (VPC)</span></a></li>
+<li>Create a <a class="reference internal" href="#aws-vpc-subnet"><span class="std std-ref">subnet</span></a> within the VPC</li>
+<li>Customize a <a class="reference internal" href="#aws-security-groups"><span class="std std-ref">security group</span></a> to use for your cluster instances</li>
+<li>Ensure that <a class="reference internal" href="#internet"><span class="std std-ref">internet access</span></a> is available for instances within the subnet</li>
+</ol>
+<div class="section" id="choosing-the-aws-region-and-availability-zone">
+<span id="aws-locale"></span><h2>Choosing the AWS region and availability zone<a class="headerlink" href="#choosing-the-aws-region-and-availability-zone" title="Permalink to this headline">¶</a></h2>
+<p>You must choose which AWS region will host your cluster, and then choose one or more availability zones (AZ) within that region. Regions are geographically based, and availability zones can be thought of as individual data centers within the same region.</p>
+<p>Latency is lowest for traffic within one AZ. Traffic between AZs in the same region also have low latency. Traffic between AZs in different regions can have high latency.</p>
+<div class="section" id="aws-full-regions">
+<span id="aws-region"></span><h3>Amazon Web Services regions<a class="headerlink" href="#aws-full-regions" title="Permalink to this headline">¶</a></h3>
+<p>You must choose which AWS region will host your virtual nodes.</p>
+<p>AWS provides resources in global regions - for example, US-West-1 is in northern California, US-East-1 in northern Virginia, and EU-West-1 in Ireland.</p>
+<p>Choose a region that is geographically close to the people who need to access your cluster, including data administrators and any client machines that exist outside of the AWS VPC.</p>
+</div>
+<div class="section" id="aws-availability-zones-az">
+<span id="aws-az"></span><h3>AWS availability zones (AZ)<a class="headerlink" href="#aws-availability-zones-az" title="Permalink to this headline">¶</a></h3>
+<p>Determine how to place your vFXT cluster (or clusters) in appropriate AWS availability zones.</p>
+<p>AWS availability zones are similar to different data centers within a region. For example, the availability zones us-west-1a, us-west-1b, and us-west-1c are all in separate physical buildings within the us-west-1 region.</p>
+<p>The recommended configuration is to place all nodes for a single vFXT cluster within a single AZ. Customers can have a cluster in one availability zone and one in another AZ.</p>
+<p>It also is possible to create a cluster with nodes in multiple AZs, which provides disaster recovery support and enhanced fault tolerance but increases latency for routine cluster transactions. Read <a class="reference internal" href="aws_appendix.html#multi-az"><span class="std std-ref">Multiple availability zone (Multi-AZ) support</span></a> in this document’s appendix to learn about the drawbacks, possible benefits, and additional configuration required to create a multi-AZ vFXT cluster.</p>
+</div>
+</div>
+<div class="section" id="aws-account">
+<span id="id1"></span><h2>AWS account<a class="headerlink" href="#aws-account" title="Permalink to this headline">¶</a></h2>
+<p>The vFXT AMI is a private AMI for customers who are evaluating or purchasing the vFXT series platform.</p>
+<p>To access the vFXT AMI and create vFXT nodes, you must provide a valid AWS account number to Avere Systems. Avere provisions access to the AMI based on account ID.</p>
+<p>Make sure that you provide an account number that is valid for the region (or regions) where you plan to run your vFXT instances. If you want to create a cluster in a non-public region, you must provide an account with privileges in that region.</p>
+</div>
+<div class="section" id="aws-permissions">
+<span id="id2"></span><h2>AWS permissions<a class="headerlink" href="#aws-permissions" title="Permalink to this headline">¶</a></h2>
+<p>AWS user permissions are controlled in the Identity and Access Management (IAM) section of the AWS console. Several specific permissions are needed to create a vFXT node.</p>
+<p>For a list of IAM permissions needed for vFXT cluster creation in Amazon EC2, please see <a class="reference internal" href="installing.html#create-iam"><span class="std std-ref">Creating the IAM role</span></a>.</p>
+</div>
+<div class="section" id="aws-virtual-private-cloud-vpc">
+<span id="aws-vpc"></span><span id="index-1"></span><h2>AWS virtual private cloud (VPC)<a class="headerlink" href="#aws-virtual-private-cloud-vpc" title="Permalink to this headline">¶</a></h2>
+<p>When creating a vFXT cluster, you must provide it a VPC identifier.</p>
+<p>An AWS VPC is a private network infrastructure that allows the segregation of network resources (like servers, routers, and clients) from other networks, both public and private.</p>
+<p>A VPC runs within a single AWS region.</p>
+<p>When creating a VPC, you provide a CIDR block of IP addresses for the VPC - for example,  10.99.0.0/16.</p>
+<p>Because the VPC isn’t exposed to the internet, a network administrator must configure how users connect to the cluster.</p>
+<p>Connection methods include:</p>
+<ul class="simple">
+<li>AWS Direct Connect with all traffic passing through the corporate firewall</li>
+<li>A persistent VPN established between an Availability Zone and the corporate network</li>
+<li>A NAT instance managing internet-based traffic into and out of a VPC and its subnets</li>
+</ul>
+<p>This document includes instructions for configuring a NAT instance, since that’s the most commonly used method.</p>
+<p>Each VPC has an identifier, or VPC ID, which is used to reference that unique VPC. The ID is a series of letters and numbers, like vpc-abcd5678. The VPC ID is required when configuring a vFXT cluster.</p>
+<p>For more information, refer to <a class="reference external" href="http://aws.amazon.com/documentation/vpc/">Amazon’s documentation on VPCs</a>.</p>
+</div>
+<div class="section" id="subnet">
+<span id="aws-vpc-subnet"></span><span id="index-2"></span><h2>Subnet<a class="headerlink" href="#subnet" title="Permalink to this headline">¶</a></h2>
+<p>Within the VPC, you need one or more IP subnets for the cluster.</p>
+<ul class="simple">
+<li>Each subnet must be contained in a single availability zone.</li>
+<li>If using NAT for VPC access, you must create one public subnet and one private subnet. The public subnet hosts the NAT instance that provides access to the internet gateway. The private subnet serves the vFXT cluster.</li>
+<li>Make sure that the subnet has sufficient IP addresses available to support the instances and services that use it. The vFXT cluster needs at least two IP addresses per node, a few IP addresses for cluster overhead, and a range of client-facing addresses to service requests. Any client instances that reside within the cluster’s subnet also will need IPs.</li>
+</ul>
+<p>For more information, refer to <a class="reference external" href="http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html#VPCSubnet">Amazon’s documentation on Subnets for VPCs</a>.</p>
+</div>
+<div class="section" id="security-groups">
+<span id="aws-security-groups"></span><span id="index-3"></span><h2>Security groups<a class="headerlink" href="#security-groups" title="Permalink to this headline">¶</a></h2>
+<p>You should create a customized security group for your cluster before starting the vFXT node and cluster creation process.</p>
+<p>An AWS security group is a firewall that is assigned to an instance. Security groups control incoming and outbound traffic for that instance based on port and on source and destination IP addresses.</p>
+<p>Security groups control traffic at the instance level, not at the subnet level.</p>
+<p>For example, a security group can include a rule that allows inbound port 22 TCP traffic from 192.168.0.0/16. When that security group is associated with one or more instances, those instances will accept inbound traffic from that IP address range on port 22.</p>
+<p>Default security group settings don’t allow all of the kinds of traffic that a vFXT cluster needs. During cluster creation, you must either select a preexisting security group or create a new one with the default configuration. If you create a default security group, you will have to reconfigure it before you can use the cluster.</p>
+<p>For more information, refer to <a class="reference external" href="http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_SecurityGroups.html">Amazon’s documentation on Security Groups for VPCs</a>.</p>
+<div class="section" id="security-group-settings">
+<span id="index-4"></span><span id="id3"></span><h3>Security group settings<a class="headerlink" href="#security-group-settings" title="Permalink to this headline">¶</a></h3>
+<p>When instantiating a vFXT cluster, you need to specify a security group. However, the inbound traffic settings on this security group must be customized to support the cluster. You can change the security group settings either before or after creating the cluster.</p>
+<p>By default, security groups only allow traffic that originates from within the security group.</p>
+<a class="reference internal image-reference" href="_images/inbound_rule_default.png"><img alt="" src="_images/inbound_rule_default.png" style="width: 450px;" /></a>
+<p>You must configure the security group to allow all traffic originating from that subnet.</p>
+<p>To change inbound traffic rules, click the <span class="guilabel">Edit</span> button and change the source setting from the security group name (sg-xxxxxxxx) to the subnet range (for example, 10.0.0.0/8).</p>
+<a class="reference internal image-reference" href="_images/edit_inbound_rules.png"><img alt="" src="_images/edit_inbound_rules.png" style="width: 450px;" /></a>
+<p>You also must make sure the port rules allow inbound traffic from ports 22, 80, and 443.</p>
+<p>Outbound rules also can be customized, but the vFXT cluster does not require any  specific configuration for outbound traffic.</p>
+</div>
+<div class="section" id="changing-security-groups">
+<h3>Changing security groups<a class="headerlink" href="#changing-security-groups" title="Permalink to this headline">¶</a></h3>
+<p>You can switch from one security group to another after the cluster is created and configured. To change the group, right-click on a vFXT instance and select <span class="guilabel">Change Security Groups</span>. This change can be done while the nodes are running, but be sure to repeat the change for all of the nodes in the cluster.</p>
+</div>
+</div>
+<div class="section" id="internet-access">
+<span id="internet"></span><span id="index-5"></span><h2>Internet access<a class="headerlink" href="#internet-access" title="Permalink to this headline">¶</a></h2>
+<p>vFXT nodes need internet access to communicate with AWS, but they must not be assigned public IP addresses. So the EC2 instance must be able to access the internet but not by using a public address.</p>
+<p>This is usually accomplished by providing access using one of these methods:</p>
+<ul class="simple">
+<li>AWS Direct Connect</li>
+<li>A VPN tunnel</li>
+<li>A NAT instance</li>
+</ul>
+<p>Review the <a class="reference internal" href="precautions.html#internet-exposure"><span class="std std-ref">Internet exposure</span></a> section of the <a class="reference internal" href="precautions.html#precautions"><span class="std std-ref">Precautions</span></a> chapter for warnings.</p>
+<p>The cluster requires internet access for several infrastructure tasks:</p>
+<ul class="simple">
+<li>During cluster setup, it needs to access the latest vFXT updates and to create an S3 bucket (if you are using one).</li>
+<li>During cluster operation, it needs access when IP addresses need to move from one node to another for load-balancing or failover reasons. This movement of IP addresses must be communicated back to AWS through APIs, requiring access to Amazon EC2 in that region.</li>
+<li>The cluster also requires name resolution (DNS) for amazonaws.com addresses. Name resolution for the amazonaws.com domain is typically handled by a private DNS server that is automatically assigned by Amazon at the time of the EC2 instance creation.</li>
+</ul>
+<div class="section" id="routing">
+<span id="index-6"></span><span id="id4"></span><h3>Routing<a class="headerlink" href="#routing" title="Permalink to this headline">¶</a></h3>
+<p>If using NAT for internet access, you will need to configure two route tables in the VPC - one for the public subnet used by the NAT instance, and one for the private subnet used by the cluster vFXT nodes.</p>
+<p>The public route table should point its default route (0.0.0.0/0) to the Internet Gateway (IGW). The private route table should point its default route to the NAT instance.</p>
+<p>After creating the route tables, they must be associated with their respective subnets.</p>
+</div>
+<div class="section" id="aws-nat-configuration">
+<span id="nat-configuration"></span><span id="index-7"></span><h3>AWS NAT configuration<a class="headerlink" href="#aws-nat-configuration" title="Permalink to this headline">¶</a></h3>
+<p>A popular solution to provide internet access to vFXT nodes is to use Network Address Translation (NAT) to provide internet access to machine instances within the VPC. Instances in the private subnet pass traffic to the NAT gateway. The NAT gateway passes traffic to the VPC’s internet gateway (IGW). External traffic will use the NAT gateway’s elastic IP (EIP) address, which is a public-facing IP address.</p>
+<p>NAT setup and configuration information can be found in the following links:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://aws.amazon.com/blogs/aws/new-managed-nat-network-address-translation-gateway-for-aws/">Managed NAT Gateway</a> (recommended)</li>
+<li><a class="reference external" href="http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_NAT_Instance.html">VPC NAT Instance</a></li>
+<li><a class="reference external" href="http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Scenario2.html">VPC with Public and Private Subnets (Scenario 2)</a></li>
+</ul>
+<p>If using either of the latter two options, you will need to disable the NAT source/destination check to allow communication to the internet. More information about disabling that check can be found <a class="reference external" href="http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_NAT_Instance.html#EIP_Disable_SrcDestCheck">here</a>.</p>
+</div>
+<div class="section" id="reference-diagram">
+<h3>Reference diagram<a class="headerlink" href="#reference-diagram" title="Permalink to this headline">¶</a></h3>
+<p>This diagram illustrates relationships in vFXT AWS infrastructure.</p>
+<a class="reference internal image-reference" href="_images/nat_diagram.png"><img alt="Diagram shows one NAT instance with a public subnet and multiple vFXT instances with a private subnet, all within a VPC which sits within an AWS AZ and AWS region. Callouts show the router and route table examples for using the internet gateway for access outside of the AWS region boundary." src="_images/nat_diagram.png" style="width: 450px;" /></a>
+<p>For more information, refer to <a class="reference external" href="http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_NAT_Instance.html">Amazon’s documentation on NAT instances for VPCs</a>.</p>
+<div class="last-update docutils container">
+updated Jun 20, 2018</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="aws_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Product requirements</a><ul>
+<li><a class="reference internal" href="#choosing-the-aws-region-and-availability-zone">Choosing the AWS region and availability zone</a><ul>
+<li><a class="reference internal" href="#aws-full-regions">Amazon Web Services regions</a></li>
+<li><a class="reference internal" href="#aws-availability-zones-az">AWS availability zones (AZ)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#aws-account">AWS account</a></li>
+<li><a class="reference internal" href="#aws-permissions">AWS permissions</a></li>
+<li><a class="reference internal" href="#aws-virtual-private-cloud-vpc">AWS virtual private cloud (VPC)</a></li>
+<li><a class="reference internal" href="#subnet">Subnet</a></li>
+<li><a class="reference internal" href="#security-groups">Security groups</a><ul>
+<li><a class="reference internal" href="#security-group-settings">Security group settings</a></li>
+<li><a class="reference internal" href="#changing-security-groups">Changing security groups</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#internet-access">Internet access</a><ul>
+<li><a class="reference internal" href="#routing">Routing</a></li>
+<li><a class="reference internal" href="#aws-nat-configuration">AWS NAT configuration</a></li>
+<li><a class="reference internal" href="#reference-diagram">Reference diagram</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="introduction.html"
+                        title="previous chapter">The vFXT platform</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="precautions.html"
+                        title="next chapter">Precautions</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/requirements.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="precautions.html" title="Precautions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="introduction.html" title="The vFXT platform"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="aws_index.html">Avere vFXT for AWS</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

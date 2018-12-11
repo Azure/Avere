@@ -1,0 +1,209 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Avere vFXT installation guide for Amazon Web Services &#8212; Avere vFXT for AWS</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="The vFXT platform" href="introduction.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="introduction.html" title="The vFXT platform"
+             accesskey="N">next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Avere vFXT for AWS</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="avere-vfxt-installation-guide-for-aws-full">
+<h1>Avere vFXT installation guide for Amazon Web Services<a class="headerlink" href="#avere-vfxt-installation-guide-for-aws-full" title="Permalink to this headline">¶</a></h1>
+<p id="vfxt-aws-intro">This document set describes how to create and manage an Avere OS vFXT cluster on the Amazon Web Services (AWS) cloud computing service.</p>
+<div class="section" id="additional-documentation">
+<h2>Additional documentation<a class="headerlink" href="#additional-documentation" title="Permalink to this headline">¶</a></h2>
+<p>Additional information about configuring and operating an Avere cluster is provided in the <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a>. Visit <a class="reference external" href="http://azure.github.io/Avere/">http://azure.github.io/Avere/</a> for release notes and other information.</p>
+</div>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">The vFXT platform</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#vfxt-instance-types">vFXT instance types</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="requirements.html">Product requirements</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="requirements.html#choosing-the-aws-region-and-availability-zone">Choosing the AWS region and availability zone</a></li>
+<li class="toctree-l2"><a class="reference internal" href="requirements.html#aws-account">AWS account</a></li>
+<li class="toctree-l2"><a class="reference internal" href="requirements.html#aws-permissions">AWS permissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="requirements.html#aws-virtual-private-cloud-vpc">AWS virtual private cloud (VPC)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="requirements.html#subnet">Subnet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="requirements.html#security-groups">Security groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="requirements.html#internet-access">Internet access</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="precautions.html">Precautions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="precautions.html#aws-resource-limits">AWS resource limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precautions.html#aws-account-charges">AWS account charges</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precautions.html#encryption-key-management">Encryption key management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precautions.html#internet-exposure">Internet exposure</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installing.html">Installing a vFXT series edge filer in Amazon EC2</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installing.html#the-vfxt-py-script">The vfxt.py script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing.html#network-infrastructure-checklist">Network infrastructure checklist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing.html#creating-the-iam-role">Creating the IAM role</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing.html#creating-a-mgr">Creating a cluster controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing.html#creating-a-vfxt-cluster">Creating a vFXT cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing.html#post-creation-configuration">Post-creation configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="manage_nodes.html">Managing vFXT nodes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="manage_nodes.html#accessing-vfxt-nodes-https-and-ssh">Accessing vFXT nodes (HTTPS and SSH)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manage_nodes.html#managing-instances">Managing instances</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aws_appendix.html">Appendix</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aws_appendix.html#required-ports">Required ports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aws_appendix.html#domain-whitelist">Domain whitelist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aws_appendix.html#creating-aws-s3-endpoints">Creating AWS S3 endpoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aws_appendix.html#multiple-availability-zone-multi-az-support">Multiple availability zone (Multi-AZ) support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aws_appendix.html#customizing-the-cluster-node-role">Customizing the cluster node role</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aws_appendix.html#sample-iam-policy">Sample IAM policy</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="copyright-information">
+<h2>Copyright Information<a class="headerlink" href="#copyright-information" title="Permalink to this headline">¶</a></h2>
+<p>Copyright © 2016-2018 Avere Systems, Inc. All rights reserved. Specifications subject to change without notice.</p>
+<p>No part of this document covered by copyright may be reproduced in any form or by any means – graphic, electronic, or mechanical, including photocopying, recording, taping, or storage in an electronic retrieval system – without prior written permission of the copyright owner.</p>
+<p>The product described in this manual may be protected by one or more U.S. patents, foreign patents, or pending applications.</p>
+</div>
+<div class="section" id="trademark-information">
+<h2>Trademark Information<a class="headerlink" href="#trademark-information" title="Permalink to this headline">¶</a></h2>
+<p>Avere, FlashCloud, FlashMove, and FlashMirror are registered trademarks or trademarks of Avere Systems, Inc. in the United States and/or other jurisdictions.</p>
+<p>Linux is the registered trademark of Linus Torvalds in the U.S. and other countries.</p>
+<p>Microsoft, Active Directory, Windows, Windows NT, and Internet Explorer are either registered trademarks or trademarks of Microsoft Corporation in the United States and/or other countries.</p>
+<p>NetApp and Data ONTAP are registered trademarks of NetApp, Inc., in the U.S. and other countries.</p>
+<p>Oracle and Java are registered trademarks of Oracle and/or its affiliates. Other names may be trademarks of their respective owners. VMware is a registered trademark or trademark of VMware, Inc. in the United States and/or other jurisdictions.</p>
+</div>
+<div class="section" id="revision-history">
+<h2>Revision History<a class="headerlink" href="#revision-history" title="Permalink to this headline">¶</a></h2>
+<p>Most recent document updates were made Jun 20, 2018</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Avere vFXT installation guide for Amazon Web Services</a><ul>
+<li><a class="reference internal" href="#additional-documentation">Additional documentation</a></li>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#copyright-information">Copyright Information</a></li>
+<li><a class="reference internal" href="#trademark-information">Trademark Information</a></li>
+<li><a class="reference internal" href="#revision-history">Revision History</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="introduction.html"
+                        title="next chapter">The vFXT platform</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/aws_index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="introduction.html" title="The vFXT platform"
+             >next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Avere vFXT for AWS</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

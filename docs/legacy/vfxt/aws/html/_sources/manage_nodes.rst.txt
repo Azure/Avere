@@ -1,0 +1,131 @@
+=====================================
+Managing |vfxt| nodes  
+=====================================
+
+This section explains how to connect to |vnodes| and stop or start instances that are part of the cluster. 
+
+For additional cluster configuration, log in to the cluster's web-based |gui|. Through this interface you can add backend storage (core filers), customize caching parameters, and change many other settings. The :ref:`vfxt_cluster_config` section of this document gives links for learning how to connect to the |gui| and about more configuration tasks for |vfxt| clusters. 
+
+.. index:: 
+   single: Avere Control Panel
+   single: SSL tunnel
+   single: VPN
+
+.. _node_ssl_tunnel:
+
+Accessing |vfxt| nodes (HTTPS and SSH)
+======================================
+
+Because a |vfxt| cluster is inside a VPC, you must connect through a VPN or gateway that will allow access from outside addresses. 
+
+* If you use a VPN to access |aws|, you can enter the management IP into your browser.
+* If your have |direct-connect| access, use that to access the cluster's management IP address. 
+* If you use NAT to provide internet access to the cluster VPC, you can use an SSH tunnel to access the |vnodes|. 
+
+
+SSH tunnel access
+-------------------
+
+For an SSH tunnel, you will need the management IP address of the cluster and the public IP address of another instance (for example, the |mgr| instance). 
+
+To create an SSH tunnel for |vfxt| access:
+
+1.	Open a terminal session on your local machine. 
+
+.. nothing
+
+2.	Enter the tunnel command, which has the following form:
+
+    ::  
+ 
+      ssh -L <localPort>:<managementIPaddress>:443 
+          <user>@<publicIPaddress> 
+          -i <pathToKeyFile>   
+
+    Example:: 
+
+     ssh -L 8443:10.10.2.4:443 admin@52.38.22.162 -i ~/Downloads/key.pem
+    
+3.	Open a new tab in your browser.
+
+.. nothing
+
+4.	Type ``https://127.0.0.1:<localPort>`` and press :guilabel:`Enter`. 
+
+    Example:: 
+    
+      https://127.0.0.1:8443
+
+5.	Click :guilabel:`Advanced` and click :guilabel:`Proceed` to bypass the warning and access the login page.
+
+.. nothing
+
+6.	Enter ``admin`` for the username and enter the password you chose when running the ``vfxt.py --create`` command.
+
+.. index:: 
+   single: instances; stopping
+   single: instances; terminating
+
+Managing instances
+=====================
+
+This section explains how to stop, restart, and destroy cloud instances that serve as |vfxt| cluster nodes.
+
+Stopping instances
+--------------------
+
+If you need to stop an instance (one node) or the entire cluster and intend to restart it later, |avere-sys| recommends using the |gui|. 
+
+The :guilabel:`FXT Nodes` settings page has controls for shutting down or rebooting individual nodes. (Note that IP addresses might move among cluster nodes when the number of active nodes changes.) Read :ref:`settings:gui_fxt_nodes` for more information. 
+
+To stop or reboot the entire cluster, use the :guilabel:`System Maintenance` settings page. Read :ref:`settings:gui_system_maintenance` for details. 
+
+If you need to stop an instance or the entire cluster but do not intend to restart it, you can terminate the instance by using tools within the Amazon EC2 console. See :ref:`terminate_instance` for more information.
+
+.. note:: Although |ec2| charges are not incurred while instances are stopped, storage charges will continue for any S3 buckets and EBS volumes associated with the |vfxt| node.
+
+Restarting instances
+---------------------
+
+If you need to restart a stopped instance, you must use the |aws| console. Navigate to :guilabel:`EC2` > :guilabel:`Instances` and right-click to select one or more instances that you want to restart. Under the :guilabel:`Actions` section near the bottom, choose :guilabel:`Start`.
+
+
+.. _terminate_instance:
+
+Terminating instances
+----------------------
+
+.. Caution:: Terminated instances cannot be restarted or retrieved. Instance termination is a permanent action and cannot be undone.
+
+Before terminating a |vfxt| instance, remove it from the cluster or shut down the cluster as described below in :ref:`node_terminate` and :ref:`cluster_terminate`. 
+
+To permanently destroy one or more instances used as |vfxt| node, use the AWS console. Navigate to :guilabel:`EC2` > :guilabel:`Instances` and right-click to select one or more instances that you want to destroy. Under the :guilabel:`Actions` section near the bottom, choose :guilabel:`Terminate`.
+
+
+
+.. _node_terminate: 
+
+Terminating one node
+'''''''''''''''''''''''
+
+If you want to terminate one node from the |vfxt| cluster but keep the remainder of the cluster, you must first remove the node from the cluster using the |gui|. 
+
+.. Caution:: If you terminate a node without first removing it from the |vfxt| cluster, data might be lost. 
+
+After removing the node, follow the instructions in :ref:`terminate_instance` above to destroy it. 
+
+.. _cluster_terminate:
+
+Terminating all nodes in the |vfxt| cluster
+''''''''''''''''''''''''''''''''''''''''''''''
+
+To if you are finished using the |vfxt| cluster and want to permanently delete it, you should shut down the cluster by using the |gui| first. A graceful shutdown allows any unsaved client changes to be written to permanent storage, ensuring data integrity. 
+
+Use the :ref:`settings:gui_system_maintenance` settings page to power down the cluster. After the cluster has stopped posting messages to the :guilabel:`Dashboard` tab, the |gui| session will stop responding and you will know that the cluster has been shut down. 
+
+After shutting down the cluster, use the |aws| console to destroy all of the node instances as described above in :ref:`terminate_instance`. 
+
+
+
+
+.. include:: last_update_code.rst

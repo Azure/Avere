@@ -1,0 +1,33 @@
+.. vFXT Installation Guide for AWS documentation master file, created by
+   sphinx-quickstart on Thu Apr 19 17:59:30 2018.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+===========================================================
+|avere| vFXT installation guide for |aws-full| 
+===========================================================
+
+.. only:: html
+
+   .. include:: vfxt_aws_intro.txt
+
+
+   Contents
+   ==================
+
+
+.. toctree::
+   :maxdepth: 2
+   
+   introduction
+   requirements
+   precautions
+   installing
+   manage_nodes
+   aws_appendix
+
+
+
+.. only:: html
+
+   .. include:: frontmatter.rst

@@ -1,0 +1,464 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Appendix &#8212; Avere vFXT for AWS</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Managing vFXT nodes" href="manage_nodes.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="manage_nodes.html" title="Managing vFXT nodes"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="aws_index.html">Avere vFXT for AWS</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="appendix">
+<span id="aws-appendix"></span><h1>Appendix<a class="headerlink" href="#appendix" title="Permalink to this headline">¶</a></h1>
+<p>This section has additional information that might be needed for vFXT cluster configurations.</p>
+<p>Click a link to jump to the following sections:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#ports"><span class="std std-ref">Required ports</span></a></li>
+<li><a class="reference internal" href="#whitelist"><span class="std std-ref">Domain whitelist</span></a></li>
+<li><a class="reference internal" href="#s3-endpoints"><span class="std std-ref">Creating AWS S3 endpoints</span></a></li>
+<li><a class="reference internal" href="#multi-az"><span class="std std-ref">Multiple availability zone (Multi-AZ) support</span></a></li>
+<li><a class="reference internal" href="#node-role"><span class="std std-ref">Customizing the cluster node role</span></a></li>
+<li><a class="reference internal" href="#iam-text"><span class="std std-ref">Sample IAM policy</span></a></li>
+</ul>
+<div class="section" id="required-ports">
+<span id="ports"></span><span id="index-0"></span><h2>Required ports<a class="headerlink" href="#required-ports" title="Permalink to this headline">¶</a></h2>
+<p>The ports listed in this section are used for vFXT inbound and outbound communication.</p>
+<p>Never expose the vFXT or the cluster controller instance directly to the public internet.</p>
+<div class="section" id="api">
+<span id="index-1"></span><h3>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="26%" />
+<col width="26%" />
+<col width="47%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head" colspan="3">Inbound:</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>TCP</td>
+<td>22</td>
+<td>SSH</td>
+</tr>
+<tr class="row-odd"><td>TCP</td>
+<td>443</td>
+<td>HTTPS</td>
+</tr>
+</tbody>
+</table>
+<table border="1" class="docutils">
+<colgroup>
+<col width="26%" />
+<col width="26%" />
+<col width="47%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head" colspan="3"><strong>Outbound</strong></th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>TCP</td>
+<td>80</td>
+<td>HTTP</td>
+</tr>
+<tr class="row-odd"><td>TCP</td>
+<td>443</td>
+<td>HTTPS</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="nfs">
+<h3>NFS<a class="headerlink" href="#nfs" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="36%" />
+<col width="24%" />
+<col width="40%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head" colspan="3">Inbound and Outbound</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>TCP/UDP</td>
+<td>111</td>
+<td>RPCBIND</td>
+</tr>
+<tr class="row-odd"><td>TCP/UDP</td>
+<td>2049</td>
+<td>NFS</td>
+</tr>
+<tr class="row-even"><td>TCP/UDP</td>
+<td>4045</td>
+<td>NLOCKMGR</td>
+</tr>
+<tr class="row-odd"><td>TCP/UDP</td>
+<td>4046</td>
+<td>MOUNTD</td>
+</tr>
+<tr class="row-even"><td>TCP/UDP</td>
+<td>4047</td>
+<td>STATUS</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="smb-cifs">
+<span id="index-2"></span><h3>SMB/CIFS<a class="headerlink" href="#smb-cifs" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="36%" />
+<col width="24%" />
+<col width="40%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head" colspan="3">Inbound</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>TCP</td>
+<td>445</td>
+<td>SMB</td>
+</tr>
+<tr class="row-odd"><td>TCP</td>
+<td>139</td>
+<td>SMB</td>
+</tr>
+<tr class="row-even"><td>UDP</td>
+<td>137</td>
+<td>NETBIOS</td>
+</tr>
+<tr class="row-odd"><td>UDP</td>
+<td>138</td>
+<td>NETBIOS</td>
+</tr>
+</tbody>
+</table>
+<table border="1" class="docutils">
+<colgroup>
+<col width="36%" />
+<col width="24%" />
+<col width="40%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head" colspan="3">Outbound</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>TCP/UDP</td>
+<td>53</td>
+<td>DNS</td>
+</tr>
+<tr class="row-odd"><td>TCP/UDP</td>
+<td>389</td>
+<td>LDAP</td>
+</tr>
+<tr class="row-even"><td>TCP</td>
+<td>686</td>
+<td>LDAPS</td>
+</tr>
+<tr class="row-odd"><td>TCP/UDP</td>
+<td>88</td>
+<td>Kerberos</td>
+</tr>
+<tr class="row-even"><td>UDP</td>
+<td>123</td>
+<td>NTP</td>
+</tr>
+<tr class="row-odd"><td>TCP</td>
+<td>445</td>
+<td>SMB</td>
+</tr>
+<tr class="row-even"><td>TCP</td>
+<td>139</td>
+<td>SMB</td>
+</tr>
+<tr class="row-odd"><td>UDP</td>
+<td>137</td>
+<td>NetBIOS</td>
+</tr>
+<tr class="row-even"><td>UDP</td>
+<td>138</td>
+<td>NetBIOS</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="domain-whitelist">
+<span id="whitelist"></span><span id="index-3"></span><h2>Domain whitelist<a class="headerlink" href="#domain-whitelist" title="Permalink to this headline">¶</a></h2>
+<p>Make sure that these web URLs are accessible from your cluster.</p>
+<p><a class="reference external" href="http://verisign.com/">verisign.com</a></p>
+<p><a class="reference external" href="http://ocsp.verisign.com/">ocsp.verisign.com</a></p>
+<p><a class="reference external" href="http://SVRSecure-G3-crl.verisign.com/">SVRSecure-G3-crl.verisign.com</a></p>
+<p><a class="reference external" href="http://s3.amazonaws.com/">s3.amazonaws.com</a></p>
+<p><a class="reference external" href="http://sd.symcd.com/">sd.symcd.com</a></p>
+<p><a class="reference external" href="http://download.averesystems.com/">download.averesystems.com</a></p>
+<p>You will also want to whitelist the AWS S3 and EC2 endpoints used by your instances. Refer to these documents for specifics:</p>
+<p><a class="reference external" href="https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region">https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region</a></p>
+<p><a class="reference external" href="https://docs.aws.amazon.com/general/latest/gr/rande.html#ec2_region">https://docs.aws.amazon.com/general/latest/gr/rande.html#ec2_region</a></p>
+</div>
+<div class="section" id="creating-aws-s3-endpoints">
+<span id="s3-endpoints"></span><span id="index-4"></span><h2>Creating AWS S3 endpoints<a class="headerlink" href="#creating-aws-s3-endpoints" title="Permalink to this headline">¶</a></h2>
+<p>If using AWS S3 for storage as a core filer, you should enable S3 endpoints, which allows S3 traffic to pass through a customized gateway instead of using the public gateway to your VPC. This access strategy optimizes throughput for S3 traffic, making your storage system more available.</p>
+<p>Use the AWS console to create an endpoint:</p>
+<ol class="arabic simple">
+<li>Navigate to the VPC service within AWS.</li>
+<li>Click <span class="guilabel">Endpoints</span> on the left.</li>
+<li>Click the blue <span class="guilabel">Create Endpoint</span> button at the top.</li>
+<li>Choose the VPC, service, and policy.</li>
+<li>Click the blue <span class="guilabel">Next Step</span> button in the lower right.</li>
+<li>Click the checkbox next to the private route table used by the vFXT cluster.</li>
+<li>Click the blue <span class="guilabel">Create Endpoint</span> button in the lower right.</li>
+</ol>
+<p>To verify that the endpoint was correctly created and applied to the route table:</p>
+<ol class="arabic simple">
+<li>Navigate to <span class="guilabel">Route Tables</span> within the VPC service console.</li>
+<li>Click the route table at the top.</li>
+<li>Click the <span class="guilabel">Routes</span> tab at the bottom.</li>
+<li>Verify that there is a route at the bottom that begins with “pl.”</li>
+</ol>
+<a class="reference internal image-reference" href="_images/route_tables.png"><img alt="Populated route table" src="_images/route_tables.png" style="width: 400pt;" /></a>
+</div>
+<div class="section" id="multiple-availability-zone-multi-az-support">
+<span id="multi-az"></span><span id="index-5"></span><h2>Multiple availability zone (Multi-AZ) support<a class="headerlink" href="#multiple-availability-zone-multi-az-support" title="Permalink to this headline">¶</a></h2>
+<p>The recommended Avere vFXT cluster configuration is to have all nodes running within a single AWS Availability Zone (AZ). This arrangement provides the best performance and lowest cost.</p>
+<p>For more information, see the <a class="reference external" href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html">AWS Availability Zones documentation</a>.</p>
+<p>For disaster recovery scenarios, the vFXT cluster can support nodes in multiple AZs. This configuration increases latency and costs as node data is transferred across AZs within the same region. It allows a node in one zone to take over serving requests from a node in a zone that has gone down. The operating vFXTs reprogram routes and allow clients to connect to the same IP address used on the failed vFXT.</p>
+<p>You can create a Multi-AZ cluster that has one node in each of three different availability zones. This is the only supported configuration.</p>
+<div class="section" id="multi-az-requirements-and-restrictions">
+<h3>Multi-AZ requirements and restrictions<a class="headerlink" href="#multi-az-requirements-and-restrictions" title="Permalink to this headline">¶</a></h3>
+<p>To use a Multi-AZ configuration, administrators must ensure that the cluster environment meets these requirements:</p>
+<ul class="simple">
+<li>Include sufficient permissions in the vFXT IAM role for managing instances in multiple zones. In addition to the cluster controller permissions, each node must have the failover permissions</li>
+<li>Have an available CIDR range outside of the VPC CIDR range for the management, cluster, and client-facing addresses</li>
+<li>Configure routes for directing traffic to and from that additional CIDR range</li>
+<li>Ensure that clients can route to the client-facing addresses (a typical method is to have the EC2 instances share the same route table with the vFXT nodes)</li>
+</ul>
+<p>The cluster itself is subject to the following limitations:</p>
+<ul class="simple">
+<li>The cluster can use a maximum of three Availability Zones.</li>
+<li>Each AZ can host only one vFXT node. (Using multiple zones limits the cluster to a size of three vFXT nodes.)</li>
+<li>Subnets must all be within the same VPC.</li>
+<li>All vFXT nodes should share the same route table.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="customizing-the-cluster-node-role">
+<span id="node-role"></span><h2>Customizing the cluster node role<a class="headerlink" href="#customizing-the-cluster-node-role" title="Permalink to this headline">¶</a></h2>
+<p>The vfxt.py script creates a role for the cluster nodes. You have the option to create your own role for cluster nodes and supply it to the vfxt.py script when you create the cluster.</p>
+<p>The policy below is the default role assigned to vFXT nodes. If you use a custom role, make sure that it includes this information:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;Version&quot;</span><span class="p">:</span> <span class="s2">&quot;2012-10-17&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Statement&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;Action&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">&quot;ec2:AssignPrivateIpAddresses&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;ec2:UnassignPrivateIpAddresses&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;ec2:DescribeInstance*&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;ec2:DescribeRouteTables&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;ec2:DescribeSubnets&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;ec2:ReplaceRoute&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;ec2:CreateRoute&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;ec2:DeleteRoute&quot;</span>
+            <span class="p">],</span>
+            <span class="s2">&quot;Resource&quot;</span><span class="p">:</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Effect&quot;</span><span class="p">:</span> <span class="s2">&quot;Allow&quot;</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="last-update docutils container">
+updated Jun 20, 2018</div>
+</div>
+<div class="section" id="sample-iam-policy">
+<span id="iam-text"></span><h2>Sample IAM policy<a class="headerlink" href="#sample-iam-policy" title="Permalink to this headline">¶</a></h2>
+<p>The following is the policy that should be cut and pasted to create the permissions for the cluster controller.</p>
+<p>Click this link to download it as a text file: <a class="reference download internal" href="_downloads/iam_policy.txt" download=""><code class="xref download docutils literal notranslate"><span class="pre">IAM</span> <span class="pre">policy</span></code></a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;Statement&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;Resource&quot;</span><span class="p">:</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Action&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;ec2:Describe*&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:RunInstances&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:TerminateInstances&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:RebootInstances&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:StartInstances&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:StopInstances&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:CreateTags&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DeleteTags&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:ModifyInstanceAttribute&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:CreateVolume&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DeleteVolume&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:AttachVolume&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DetachVolume&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:CreateSnapshot&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DeleteSnapshot&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:RegisterImage&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DeregisterImage&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:CreateImage&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DeleteRoute&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;s3:CreateBucket&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;s3:DeleteBucket&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;s3:SetTag&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;s3:ListBucket&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:AddRoleToInstanceProfile&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:CreateInstanceProfile&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:CreateRole&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:DeleteInstanceProfile&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:DeleteRole&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:DeleteRolePolicy&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:GetRolePolicy&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:ListRolePolicies&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:GetInstanceProfile&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:PutRolePolicy&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:RemoveRoleFromInstanceProfile&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:GetRole&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:PassRole&quot;</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;Effect&quot;</span><span class="p">:</span> <span class="s2">&quot;Allow&quot;</span>
+    <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="s2">&quot;Version&quot;</span><span class="p">:</span> <span class="s2">&quot;2012-04-18&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="last-update docutils container">
+updated Jun 20, 2018</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="aws_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Appendix</a><ul>
+<li><a class="reference internal" href="#required-ports">Required ports</a><ul>
+<li><a class="reference internal" href="#api">API</a></li>
+<li><a class="reference internal" href="#nfs">NFS</a></li>
+<li><a class="reference internal" href="#smb-cifs">SMB/CIFS</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#domain-whitelist">Domain whitelist</a></li>
+<li><a class="reference internal" href="#creating-aws-s3-endpoints">Creating AWS S3 endpoints</a></li>
+<li><a class="reference internal" href="#multiple-availability-zone-multi-az-support">Multiple availability zone (Multi-AZ) support</a><ul>
+<li><a class="reference internal" href="#multi-az-requirements-and-restrictions">Multi-AZ requirements and restrictions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#customizing-the-cluster-node-role">Customizing the cluster node role</a></li>
+<li><a class="reference internal" href="#sample-iam-policy">Sample IAM policy</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="manage_nodes.html"
+                        title="previous chapter">Managing vFXT nodes</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/aws_appendix.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="manage_nodes.html" title="Managing vFXT nodes"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="aws_index.html">Avere vFXT for AWS</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

@@ -1,0 +1,53 @@
+
+
+
+=========================
+The vFXT platform
+=========================
+
+The |avere| Virtual FXT Edge Filer (|vFXT|) leverages the scalability of cloud computing to make your data accessible when and where it's needed - even for data that's stored in your own hardware storage environment. 
+
+Each |vfxt| edge filer node is a virtual machine that runs |os| software. |vnodes| can
+use multiple types of storage media including RAM, SSD, and magnetic media. 
+
+Three or more nodes make up a |vfxt| cluster.
+
+In the |aws-first| environment, the |vnodes| are virtual machines created within the |ec2-first| using the |vfxt| |ami-first|. 
+
+.. index:: 
+   single: instance types
+   single: r3.2xlarge
+   single: r3.8xlarge
+
+					
+vFXT instance types
+====================
+
+An |ec2| *instance* is a virtual machine. |vnodes| are Amazon |EC2| virtual machines with the |Avere| |vFXT| |AMI|.
+
+|vnodes| in |aws| can be created from these supported instance types: 
+
+.. instance types updated 04/2018 - trac 25664/trac 23995
+
++----------------+--------+--------------+-------------+-------------------------+
+| Instance Size  | vCPUs  | Memory (GiB) | SSD Storage | Networking Performance  |
++================+========+==============+=============+=========================+ 
+| r4.2xlarge     | 8      | 61           | EBS only    | Up to 10 Gigabit        |
++----------------+--------+--------------+-------------+-------------------------+
+| r4.8xlarge     | 32     | 244          | EBS only    | 10 Gigabit              |
++----------------+--------+--------------+-------------+-------------------------+
+| r3.2xlarge     | 8      | 61           | 1 x 160 GB  | High                    |
++----------------+--------+--------------+-------------+-------------------------+
+| r3.8xlarge     | 32     | 244          | 2 x 320 GB  | 10 Gigabit              |
++----------------+--------+--------------+-------------+-------------------------+
+
+.. Note:: 
+   
+   * r3 instances are not available in all regions (examples include eu-west-2 and ca-central-1). Contact |support| if this limitation applies to you.
+   * Disk cache per node is configurable and can range from 1000GB to 8000GB.
+
+
+
+
+
+.. include:: last_update_code.rst

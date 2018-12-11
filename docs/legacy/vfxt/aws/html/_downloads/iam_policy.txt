@@ -1,0 +1,49 @@
+
+
+{
+    "Statement": [
+    {
+        "Resource": "*",
+        "Action": [
+            "ec2:Describe*",
+            "ec2:RunInstances",
+            "ec2:TerminateInstances",
+            "ec2:RebootInstances",
+            "ec2:StartInstances",
+            "ec2:StopInstances",
+            "ec2:CreateTags",
+            "ec2:DeleteTags",
+            "ec2:ModifyInstanceAttribute",
+            "ec2:CreateVolume",
+            "ec2:DeleteVolume",
+            "ec2:AttachVolume",
+            "ec2:DetachVolume",
+            "ec2:CreateSnapshot",
+            "ec2:DeleteSnapshot",
+            "ec2:RegisterImage",
+            "ec2:DeregisterImage",
+            "ec2:CreateImage",
+            "ec2:DeleteRoute",
+            "s3:CreateBucket",
+            "s3:DeleteBucket",
+            "s3:SetTag",
+            "s3:ListBucket",
+            "iam:AddRoleToInstanceProfile",
+            "iam:CreateInstanceProfile",
+            "iam:CreateRole",
+            "iam:DeleteInstanceProfile",
+            "iam:DeleteRole",
+            "iam:DeleteRolePolicy",
+            "iam:GetRolePolicy",
+            "iam:ListRolePolicies",
+            "iam:GetInstanceProfile",
+            "iam:PutRolePolicy",
+            "iam:RemoveRoleFromInstanceProfile",
+            "iam:GetRole",
+            "iam:PassRole"
+        ],
+        "Effect": "Allow"
+    }
+    ],
+    "Version": "2012-04-18"
+}
