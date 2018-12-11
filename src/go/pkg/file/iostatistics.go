@@ -3,7 +3,10 @@ package file
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
+
+	"github.com/Azure/Avere/src/go/pkg/log"
 )
 
 const (
@@ -11,11 +14,22 @@ const (
 	ReadOperation = "read"
 	// WriteOperation represents write file
 	WriteOperation = "write"
-	// NoBytesReadWritten means that no bytes were read or written
-	NoBytesReadWritten = -1
+	// NoIOBytes means that no bytes were read or written
+	NoIOBytes = -1
 	// NoDuration means that no duration was recorded
 	NoDuration = time.Duration(-1)
 )
+
+var hostname string
+
+func init() {
+	hostname = ""
+	if h, err := os.Hostname(); err != nil {
+		hostname = h
+	} else {
+		log.Error.Printf("error encountered getting hostname: %v", err)
+	}
+}
 
 // Operation represents the type of file io operation
 type Operation string
@@ -27,10 +41,10 @@ type IOStatistics struct {
 	Label           string
 	Operation       Operation
 	Path            string
-	CreateTimeNS    time.Duration
-	CloseTimeNS     time.Duration
-	ReadWriteTimeNS time.Duration
-	ReadWriteBytes  int
+	FileOpenTimeNS  time.Duration
+	FileCloseTimeNS time.Duration
+	IOTimeNS        time.Duration
+	IOBytes         int
 	IsSuccess       bool
 	FailureMessage  string
 }
@@ -42,10 +56,10 @@ func InitializeIOStatistics(
 	label string,
 	operation Operation,
 	path string,
-	createTimeNS time.Duration,
+	fileOpenTimeNS time.Duration,
 	closeTimeNS time.Duration,
-	readWriteTimeNS time.Duration,
-	readWriteBytes int,
+	ioTimeNS time.Duration,
+	ioBytes int,
 	err error) *IOStatistics {
 	failureMessage := ""
 	if err != nil {
@@ -57,10 +71,10 @@ func InitializeIOStatistics(
 		Label:           label,
 		Operation:       operation,
 		Path:            path,
-		CreateTimeNS:    createTimeNS,
-		CloseTimeNS:     closeTimeNS,
-		ReadWriteTimeNS: readWriteTimeNS,
-		ReadWriteBytes:  readWriteBytes,
+		FileOpenTimeNS:  fileOpenTimeNS,
+		FileCloseTimeNS: closeTimeNS,
+		IOTimeNS:        ioTimeNS,
+		IOBytes:         ioBytes,
 		IsSuccess:       err == nil,
 		FailureMessage:  failureMessage,
 	}
@@ -93,14 +107,15 @@ func (i *IOStatistics) GetCategoryKey() string {
 func (i *IOStatistics) CSVHeader() []string {
 	header := []string{}
 	header = append(header, "Date")
+	header = append(header, "Hostname")
 	header = append(header, "BatchName")
 	header = append(header, "Label")
 	header = append(header, "Operation")
 	header = append(header, "Path")
-	header = append(header, "CreateTimeNS")
-	header = append(header, "CloseTimeNS")
-	header = append(header, "ReadWriteTimeNS")
-	header = append(header, "ReadWriteBytes")
+	header = append(header, "FileOpenTimeNS")
+	header = append(header, "FileCloseTimeNS")
+	header = append(header, "IOTimeNS")
+	header = append(header, "IOBytes")
 	header = append(header, "IsSuccess")
 	header = append(header, "FailureMessage")
 	return header
@@ -111,14 +126,15 @@ func (i *IOStatistics) ToStringArray() []string {
 	row := []string{}
 	//row = append(row, i.StartTime.String())
 	row = append(row, i.StartTime.Format("2006-01-02 15:04:05.0000000"))
+	row = append(row, hostname)
 	row = append(row, i.BatchName)
 	row = append(row, i.Label)
 	row = append(row, string(i.Operation))
 	row = append(row, i.Path)
-	row = append(row, fmt.Sprintf("%d", i.CreateTimeNS))
-	row = append(row, fmt.Sprintf("%d", i.CloseTimeNS))
-	row = append(row, fmt.Sprintf("%d", i.ReadWriteTimeNS))
-	row = append(row, fmt.Sprintf("%d", i.ReadWriteBytes))
+	row = append(row, fmt.Sprintf("%d", i.FileOpenTimeNS))
+	row = append(row, fmt.Sprintf("%d", i.FileCloseTimeNS))
+	row = append(row, fmt.Sprintf("%d", i.IOTimeNS))
+	row = append(row, fmt.Sprintf("%d", i.IOBytes))
 	row = append(row, fmt.Sprintf("%v", i.IsSuccess))
 	row = append(row, i.FailureMessage)
 	return row

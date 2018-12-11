@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	createTimeNSFileOp    = "CreateTimeNS"
-	closeTimeNSFileOp     = "CloseTimeNS"
-	readWriteTimeNSFileOp = "ReadWriteTimeNS"
-	readWriteBytesFileOp  = "ReadWriteBytes"
+	fileOpenTimeNSFileOp  = "FileOpenTimeNS"
+	fileCloseTimeNSFileOp = "FileCloseTimeNS"
+	ioTimeNSFileOp        = "IOTimeNS"
+	ioBytesFileOp         = "IOBytes"
 )
 
 // IOStatsRows represents rows of statistics for the same category
@@ -116,14 +116,14 @@ func (i *IOStatsRows) WriteSummaryLines(writer *csv.Writer) {
 		stats.GetPercentileIndex(float64(99), sampleSize),
 	}
 
-	lessCreateTimeNS := func(x, y int) bool { return i.ioStatistics[x].CreateTimeNS < i.ioStatistics[y].CreateTimeNS }
-	i.WriteSummaryRow(writer, batchName, label, sampleSize, percentSuccess, percentileArray, createTimeNSFileOp, lessCreateTimeNS)
-	lessCloseTimeNS := func(x, y int) bool { return i.ioStatistics[x].CloseTimeNS < i.ioStatistics[y].CloseTimeNS }
-	i.WriteSummaryRow(writer, batchName, label, sampleSize, percentSuccess, percentileArray, closeTimeNSFileOp, lessCloseTimeNS)
-	lessReadWriteTimeNS := func(x, y int) bool { return i.ioStatistics[x].ReadWriteTimeNS < i.ioStatistics[y].ReadWriteTimeNS }
-	i.WriteSummaryRow(writer, batchName, label, sampleSize, percentSuccess, percentileArray, readWriteTimeNSFileOp, lessReadWriteTimeNS)
-	lessReadWriteBytes := func(x, y int) bool { return i.ioStatistics[x].ReadWriteBytes < i.ioStatistics[y].ReadWriteBytes }
-	i.WriteSummaryRow(writer, batchName, label, sampleSize, percentSuccess, percentileArray, readWriteBytesFileOp, lessReadWriteBytes)
+	lessFileOpenTimeNS := func(x, y int) bool { return i.ioStatistics[x].FileOpenTimeNS < i.ioStatistics[y].FileOpenTimeNS }
+	i.WriteSummaryRow(writer, batchName, label, sampleSize, percentSuccess, percentileArray, fileOpenTimeNSFileOp, lessFileOpenTimeNS)
+	lessFileCloseTimeNS := func(x, y int) bool { return i.ioStatistics[x].FileCloseTimeNS < i.ioStatistics[y].FileCloseTimeNS }
+	i.WriteSummaryRow(writer, batchName, label, sampleSize, percentSuccess, percentileArray, fileCloseTimeNSFileOp, lessFileCloseTimeNS)
+	lessIOTimeNS := func(x, y int) bool { return i.ioStatistics[x].IOTimeNS < i.ioStatistics[y].IOTimeNS }
+	i.WriteSummaryRow(writer, batchName, label, sampleSize, percentSuccess, percentileArray, ioTimeNSFileOp, lessIOTimeNS)
+	lessIOBytes := func(x, y int) bool { return i.ioStatistics[x].IOBytes < i.ioStatistics[y].IOBytes }
+	i.WriteSummaryRow(writer, batchName, label, sampleSize, percentSuccess, percentileArray, ioBytesFileOp, lessIOBytes)
 }
 
 // WriteSummaryRow writes a percentile summary row
@@ -155,14 +155,14 @@ func (i *IOStatsRows) WriteSummaryRow(
 
 func (i *IOStatsRows) getPercentileValue(p int, fileop string) string {
 	switch fileop {
-	case createTimeNSFileOp:
-		return fmt.Sprintf("%d", i.ioStatistics[p].CreateTimeNS/(1000*1000))
-	case closeTimeNSFileOp:
-		return fmt.Sprintf("%d", i.ioStatistics[p].CloseTimeNS/(1000*1000))
-	case readWriteTimeNSFileOp:
-		return fmt.Sprintf("%d", i.ioStatistics[p].ReadWriteTimeNS/(1000*1000))
-	case readWriteBytesFileOp:
-		return fmt.Sprintf("%d", i.ioStatistics[p].ReadWriteBytes)
+	case fileOpenTimeNSFileOp:
+		return fmt.Sprintf("%d", i.ioStatistics[p].FileOpenTimeNS/(1000*1000))
+	case fileCloseTimeNSFileOp:
+		return fmt.Sprintf("%d", i.ioStatistics[p].FileCloseTimeNS/(1000*1000))
+	case ioTimeNSFileOp:
+		return fmt.Sprintf("%d", i.ioStatistics[p].IOTimeNS/(1000*1000))
+	case ioBytesFileOp:
+		return fmt.Sprintf("%d", i.ioStatistics[p].IOBytes)
 	default:
 		log.Error.Printf("getPercentileValue: Should never arrive here, panic!")
 		panic("getPercentileValue: Should never arrive here")
