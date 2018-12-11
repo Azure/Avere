@@ -37,6 +37,7 @@ type Operation string
 // IOStatistics provides statistics on the file
 type IOStatistics struct {
 	StartTime       time.Time
+	Hostname string
 	BatchName       string
 	Label           string
 	Operation       Operation
@@ -67,6 +68,7 @@ func InitializeIOStatistics(
 	}
 	return &IOStatistics{
 		StartTime:       startTime,
+		Hostname: hostname,
 		BatchName:       batchName,
 		Label:           label,
 		Operation:       operation,
@@ -126,7 +128,7 @@ func (i *IOStatistics) ToStringArray() []string {
 	row := []string{}
 	//row = append(row, i.StartTime.String())
 	row = append(row, i.StartTime.Format("2006-01-02 15:04:05.0000000"))
-	row = append(row, hostname)
+	row = append(row, i.Hostname)
 	row = append(row, i.BatchName)
 	row = append(row, i.Label)
 	row = append(row, string(i.Operation))
