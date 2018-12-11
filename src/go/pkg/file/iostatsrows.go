@@ -83,6 +83,7 @@ func (i *IOStatsRows) WriteCSVFile(filename string) {
 func GetSummaryHeader() []string {
 	header := []string{}
 	header = append(header, "BatchName")
+	header = append(header, "Duration")
 	header = append(header, "Label")
 	header = append(header, "SampleSize")
 	header = append(header, "%success")
@@ -137,9 +138,17 @@ func (i *IOStatsRows) WriteSummaryRow(
 	fileOp string,
 	less func(i, j int) bool) {
 
+	// get the start / finish time
+	lessStartTime := func(x, y int) bool { return i.ioStatistics[y].StartTime.After(i.ioStatistics[x].StartTime) }
+	sort.Slice(i.ioStatistics, lessStartTime)
+	firstRecordTime := i.ioStatistics[0].StartTime
+	lastRecordTime := i.ioStatistics[len(i.ioStatistics)-1].StartTime
+	diffTime := lastRecordTime.Sub(firstRecordTime)
+
 	sort.Slice(i.ioStatistics, less)
 	row := []string{}
 	row = append(row, batchName)
+	row = append(row, fmt.Sprintf("%v", diffTime))
 	row = append(row, label)
 	row = append(row, fmt.Sprintf("%d", sampleSize))
 	row = append(row, fmt.Sprintf("%f", percentSuccess))
