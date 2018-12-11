@@ -99,10 +99,31 @@
         "description": "The controller admin username."
       }
     },
+    "controllerAuthenticationType": {
+      "type": "string",
+      "defaultValue": "sshPublicKey",
+      "allowedValues": [
+        "sshPublicKey",
+        "password"
+      ],
+      "metadata": {
+        "description": "The controller may be configured with a password or public SSH key."
+      }
+    },
+    "controllerPassword": {
+      "type": "securestring",
+      "defaultValue": "",
+      "minLength": 0,
+      "metadata": {
+        "description": "If controllerAuthenticationType is 'password', the admin password used for the controller."
+      }
+    },
     "controllerSSHKeyData": {
       "type": "string",
+      "defaultValue": "",
+      "minLength": 0,
       "metadata": {
-        "description": "The controller public SSH key."
+        "description": "If controllerAuthenticationType is 'sshPublicKey', the controller public SSH key."
       }
     },
     "adminPassword": {
@@ -163,6 +184,8 @@
     "servicePrincipalPassword": "[parameters('servicePrincipalPassword')]",
     "controllerName": "[parameters('controllerName')]",
     "controllerAdminUsername": "[parameters('controllerAdminUsername')]",
+    "controllerAuthenticationType": "[parameters('controllerAuthenticationType')]",
+    "controllerPassword": "[parameters('controllerPassword')]",
     "controllerSSHKeyData": "[parameters('controllerSSHKeyData')]",
     "adminPassword": "[parameters('adminPassword')]",
     "nicName": "[concat('vmnic-',variables('controllerName'))]",
@@ -178,7 +201,7 @@
     "avereClusterName": "[parameters('avereClusterName')]",
     "avereInstanceType": "[parameters('avereInstanceType')]",
     "avereCacheSizeGB": "[parameters('avereCacheSizeGB')]",
-    "additionalVFXTParameters": "[concat(' --nodes ', parameters('avereNodeCount'), ' ')]",
+    "additionalVFXTParameters": "[concat(' --nodes ', parameters('avereNodeCount'), ' --debug')]",
     "controllerVMSize": "Standard_A1_v2",
     "publicIPAddressName": "[concat('publicip-',variables('controllerName'))]",
     "networkSecurityGroupName": "[concat('nsg-',variables('controllerName'))]",
@@ -193,6 +216,37 @@
     "storageAccountKind": "StorageV2",
     "environmentVariables": "[concat(' AZURE_TENANT_ID=', variables('servicePrincipalTenant'),' AZURE_CLIENT_ID=', variables('servicePrincipalAppId'),' RESOURCE_GROUP=', resourceGroup().name,' LOCATION=', resourceGroup().location,' NETWORK_RESOURCE_GROUP=', variables('virtualNetworkResourceGroup'),' NETWORK=', variables('virtualNetworkName'),' SUBNET=', variables('virtualNetworkSubnetName'),' AVERE_CLUSTER_ROLE=\"', variables('avereClusterRole'),'\" CREATE_CLOUD_BACKED_CLUSTER=', variables('useAvereBackedStorageAccount'),' STORAGE_ACCOUNT=', variables('avereBackedStorageAccountName'),' CACHE_SIZE=', variables('avereCacheSizeGB'),' CLUSTER_NAME=', variables('avereClusterName'),' INSTANCE_TYPE=', variables('avereInstanceType'),' CONTROLLER_ADMIN_USER_NAME=',variables('controllerAdminUsername'),' DEBUG=\"',variables('additionalVFXTParameters'),'\"')]",
     "sshKeyPath": "[concat('/home/',variables('controllerAdminUsername'),'/.ssh/authorized_keys')]",
+    "controllerOSProfilePassword": {
+      "computerName": "[variables('vmName')]",
+      "adminUsername": "[variables('controllerAdminUsername')]",
+      "adminPassword": "[variables('controllerPassword')]",
+      "customData": "[base64('#clusterCustomDataInstallYaml')]"
+    },
+    "controllerOSProfileSSHKey": {
+      "computername": "[variables('vmName')]",
+      "adminUsername": "[variables('controllerAdminUsername')]",
+      "customData": "[base64('#clusterCustomDataInstallYaml')]",
+      "linuxConfiguration": {
+        "disablePasswordAuthentication": "true",
+        "ssh": {
+          "publicKeys": [
+            {
+              "path": "[variables('sshKeyPath')]",
+              "keyData": "[variables('controllerSSHKeyData')]"
+            }
+          ]
+        }
+      }
+    },
+    "controllerOSProfile": "[if(equals(variables('controllerAuthenticationType'),'password'),variables('controllerOSProfilePassword'),variables('controllerOSProfileSSHKey'))]",
+    "controllerStorageProfile": {
+      "imageReference": {
+        "publisher": "microsoft-avere",
+        "offer": "vfxt",
+        "sku": "avere-vfxt-controller",
+        "version": "latest"
+      }
+    },
     "vs": "Creating vserver vserver (",
     "ve": "/255.255.255.255",
     "ms": " management address: ",
@@ -314,30 +368,8 @@
         "hardwareProfile": {
           "vmSize": "[variables('controllerVMSize')]"
         },
-        "osProfile": {
-          "computername": "[variables('vmName')]",
-          "adminUsername": "[variables('controllerAdminUsername')]",
-          "customData": "[base64('#clusterCustomDataInstallYaml')]",
-          "linuxConfiguration": {
-            "disablePasswordAuthentication": "true",
-            "ssh": {
-              "publicKeys": [
-                {
-                  "path": "[variables('sshKeyPath')]",
-                  "keyData": "[variables('controllerSSHKeyData')]"
-                }
-              ]
-            }
-          }
-        },
-        "storageProfile": {
-          "imageReference": {
-            "publisher": "microsoft-avere",
-            "offer": "vfxt",
-            "sku": "avere-vfxt-controller",
-            "version": "latest"
-          }
-        },
+        "osProfile": "[variables('controllerOSProfile')]",
+        "storageProfile": "[variables('controllerStorageProfile')]",
         "networkProfile": {
           "networkInterfaces": [
             {
