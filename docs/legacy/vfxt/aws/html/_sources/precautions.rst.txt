@@ -1,0 +1,115 @@
+.. _precautions: 
+
+=============
+Precautions
+=============
+
+This section highlights some topics to consider when planning your |vfxt| cluster. 
+
+.. index:: 
+   single: resource limits
+   single: storage limits
+   single: limits
+   single: limits; storage
+
+
+|aws| resource limits
+======================
+
+To make sure your |vfxt| cluster has access to sufficient computing power, plan your installation to avoid exceeding any resource limits. 
+
+Consider existing |aws| |ec2| instances and |ebs| storage currently in use in your account before attempting to create a |vfxt| cluster.
+
+Limits are imposed per account on a variety of resources, including :ref:`storage <storage_limits>`, :ref:`instances <instance_limits>`, and :ref:`buckets <bucket_limits>`. 
+
+.. _storage_limits: 
+
+Storage limits
+---------------
+
+Storage on |ec2| instances uses `Elastic Block Store <http://aws.amazon.com/ebs/>`__ (|ebs|) volumes. The |vfxt| uses |ebs| general purpose (gp2) SSD volumes. |aws| imposes `EBS volume limits <http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ebs>`__ per account, including 5,000 |ebs| volumes and 20 TiB. 
+
+Limits can be increased by `requesting a service limit increase <https://console.aws.amazon.com/support/home#/case/create?issueType=service-limit-increase&limitType=service-code-ebs>`__. 
+
+Each |vnode| requires a minimum amount of |ebs| storage during node creation. The amount of |ebs| storage needed depends on the selections made when creating the cluster. For example, if you try to create a three-node cluster with 7000 GB of storage per node, your cluster would require 21 TiB, which is over the 20 TiB limit. 
+
+Note that these limits are *per account*. If there are other instances in the account using gp2 volumes, those volumes also count toward the 20 TiB limit even before the first |vfxt| instance is created.
+
+.. index:: 
+   single: instance limits
+   single: limits; instances
+
+.. _instance_limits:
+
+Instance limits
+-------------------
+
+There also are limits on the number of instances that can be created within an account. For |vfxt| instance types, the limits are 20 r4.2xlarge or r3.2xlarge instances; and 5 r4.8xlarge or r3.8xlarge instances. (These limits are for on-demand instances; reserved instance limits are 20 for both types.) 
+
+For instance, you cannot create two three-node clusters with r4.8xlarge nodes within the same account unless you have received a service limit increase. 
+
+
+.. index:: 
+   single: bucket limits
+   single: limits; buckets
+
+.. _bucket_limits: 
+
+Bucket limits
+----------------
+
+If your cluster uses S3 buckets as core filers, also note that there is a limit of 50 buckets per |aws| account.
+
+.. index:: 
+   single: cost
+   single: account charges
+   single: billing
+
+|aws| account charges
+======================
+
+|aws-full| charges are incurred for (but are not limited to) the following types of use: 
+
+* Running |ec2| instances
+* |ebs| volumes (|ec2| storage), even when the machine is not running
+* S3 storage 
+* Data transfer into and out of |aws|
+* Data transfer between availability zones if using a multi-AZ configuration
+
+|avere-sys| recommends that administrators monitor all |aws| charges and set up billing alerts. 
+
+For more information, refer to `Amazon’s pricing page <http://aws.amazon.com/pricing/>`__ as well as `Amazon’s documentation on monitoring estimated charges <http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/monitor_estimated_charges_with_cloudwatch.html>`__.
+
+.. index:: 
+   single: encryption
+   single: key management
+
+Encryption key management
+============================
+
+After the |vfxt| cluster has been created, it is strongly recommended that you create a new cloud encryption key and save the key file before using your new cluster. 
+
+Instructions for creating a new cloud encryption key can be found in the :ref:`settings:cloud_encryption_settings` section of the |ops|. 
+
+
+
+.. index:: 
+   single: internet; exposure   
+
+.. _internet_exposure:
+
+Internet exposure
+===================
+
+|vnodes| require internet access, but they should not be directly exposed to the internet.  
+
+.. caution:: |avere| |vnodes| are not hardened for direct internet access.
+
+The nodes must sit behind a firewall to protect them against attacks. This requirement also applies to any clients or servers within your network. 
+
+Most |avere| customers use an |ec2|-based NAT instance to allow designated traffic to traverse public and private subnets within a VPC. Other customers extend their corporate network infrastructure to |aws| by using a VPN or |direct-connect|. Read :ref:`internet` for details about configuring NAT for your cluster VPC. 
+
+
+
+
+.. include:: last_update_code.rst

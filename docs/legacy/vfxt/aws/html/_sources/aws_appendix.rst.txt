@@ -1,0 +1,35 @@
+.. _aws_appendix: 
+
+=============
+Appendix
+=============
+
+This section has additional information that might be needed for |vfxt| cluster configurations. 
+
+Click a link to jump to the following sections: 
+
+* :ref:`ports`
+* :ref:`whitelist`
+* :ref:`s3_endpoints`
+* :ref:`multi_az`
+* :ref:`node_role`
+* :ref:`iam_text`
+
+
+
+.. include:: required_ports.txt
+
+.. include:: domain_whitelist.txt
+
+.. include:: s3_endpoints.txt
+
+.. include:: multi_az.txt
+
+.. include:: node_role.txt
+
+.. include:: iam_policy_app.txt
+
+
+
+
+.. include:: last_update_code.rst

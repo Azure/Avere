@@ -1,0 +1,250 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Managing vFXT nodes &#8212; Avere vFXT for AWS</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Appendix" href="aws_appendix.html" />
+    <link rel="prev" title="Installing a vFXT series edge filer in Amazon EC2" href="installing.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="aws_appendix.html" title="Appendix"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="installing.html" title="Installing a vFXT series edge filer in Amazon EC2"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="aws_index.html">Avere vFXT for AWS</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="managing-vfxt-nodes">
+<h1>Managing vFXT nodes<a class="headerlink" href="#managing-vfxt-nodes" title="Permalink to this headline">¶</a></h1>
+<p>This section explains how to connect to vFXT nodes and stop or start instances that are part of the cluster.</p>
+<p>For additional cluster configuration, log in to the cluster’s web-based Avere Control Panel. Through this interface you can add backend storage (core filers), customize caching parameters, and change many other settings. The <a class="reference internal" href="installing.html#vfxt-cluster-config"><span class="std std-ref">Post-creation configuration</span></a> section of this document gives links for learning how to connect to the Avere Control Panel and about more configuration tasks for vFXT clusters.</p>
+<div class="section" id="accessing-vfxt-nodes-https-and-ssh">
+<span id="node-ssl-tunnel"></span><span id="index-0"></span><h2>Accessing vFXT nodes (HTTPS and SSH)<a class="headerlink" href="#accessing-vfxt-nodes-https-and-ssh" title="Permalink to this headline">¶</a></h2>
+<p>Because a vFXT cluster is inside a VPC, you must connect through a VPN or gateway that will allow access from outside addresses.</p>
+<ul class="simple">
+<li>If you use a VPN to access AWS, you can enter the management IP into your browser.</li>
+<li>If your have AWS Direct Connect access, use that to access the cluster’s management IP address.</li>
+<li>If you use NAT to provide internet access to the cluster VPC, you can use an SSH tunnel to access the vFXT nodes.</li>
+</ul>
+<div class="section" id="ssh-tunnel-access">
+<h3>SSH tunnel access<a class="headerlink" href="#ssh-tunnel-access" title="Permalink to this headline">¶</a></h3>
+<p>For an SSH tunnel, you will need the management IP address of the cluster and the public IP address of another instance (for example, the cluster controller instance).</p>
+<p>To create an SSH tunnel for vFXT access:</p>
+<ol class="arabic simple">
+<li>Open a terminal session on your local machine.</li>
+</ol>
+<ol class="arabic simple" start="2">
+<li>Enter the tunnel command, which has the following form:</li>
+</ol>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ssh</span> <span class="o">-</span><span class="n">L</span> <span class="o">&lt;</span><span class="n">localPort</span><span class="o">&gt;</span><span class="p">:</span><span class="o">&lt;</span><span class="n">managementIPaddress</span><span class="o">&gt;</span><span class="p">:</span><span class="mi">443</span>
+    <span class="o">&lt;</span><span class="n">user</span><span class="o">&gt;@&lt;</span><span class="n">publicIPaddress</span><span class="o">&gt;</span>
+    <span class="o">-</span><span class="n">i</span> <span class="o">&lt;</span><span class="n">pathToKeyFile</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ssh</span> <span class="o">-</span><span class="n">L</span> <span class="mi">8443</span><span class="p">:</span><span class="mf">10.10</span><span class="o">.</span><span class="mf">2.4</span><span class="p">:</span><span class="mi">443</span> <span class="n">admin</span><span class="nd">@52</span><span class="o">.</span><span class="mf">38.22</span><span class="o">.</span><span class="mi">162</span> <span class="o">-</span><span class="n">i</span> <span class="o">~/</span><span class="n">Downloads</span><span class="o">/</span><span class="n">key</span><span class="o">.</span><span class="n">pem</span>
+</pre></div>
+</div>
+</div></blockquote>
+<ol class="arabic simple" start="3">
+<li>Open a new tab in your browser.</li>
+</ol>
+<ol class="arabic simple" start="4">
+<li>Type <code class="docutils literal notranslate"><span class="pre">https://127.0.0.1:&lt;localPort&gt;</span></code> and press <span class="guilabel">Enter</span>.</li>
+</ol>
+<blockquote>
+<div><p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="p">:</span><span class="mi">8443</span>
+</pre></div>
+</div>
+</div></blockquote>
+<ol class="arabic simple" start="5">
+<li>Click <span class="guilabel">Advanced</span> and click <span class="guilabel">Proceed</span> to bypass the warning and access the login page.</li>
+</ol>
+<ol class="arabic simple" start="6">
+<li>Enter <code class="docutils literal notranslate"><span class="pre">admin</span></code> for the username and enter the password you chose when running the <code class="docutils literal notranslate"><span class="pre">vfxt.py</span> <span class="pre">--create</span></code> command.</li>
+</ol>
+</div>
+</div>
+<div class="section" id="managing-instances">
+<span id="index-1"></span><h2>Managing instances<a class="headerlink" href="#managing-instances" title="Permalink to this headline">¶</a></h2>
+<p>This section explains how to stop, restart, and destroy cloud instances that serve as vFXT cluster nodes.</p>
+<div class="section" id="stopping-instances">
+<h3>Stopping instances<a class="headerlink" href="#stopping-instances" title="Permalink to this headline">¶</a></h3>
+<p>If you need to stop an instance (one node) or the entire cluster and intend to restart it later, Avere Systems recommends using the Avere Control Panel.</p>
+<p>The <span class="guilabel">FXT Nodes</span> settings page has controls for shutting down or rebooting individual nodes. (Note that IP addresses might move among cluster nodes when the number of active nodes changes.) Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_fxt_nodes.html#gui-fxt-nodes" title="(in Cluster Configuration Guide v4.7)"><span>Cluster &gt; FXT Nodes</span></a> for more information.</p>
+<p>To stop or reboot the entire cluster, use the <span class="guilabel">System Maintenance</span> settings page. Read <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_system_maintenance.html#gui-system-maintenance" title="(in Cluster Configuration Guide v4.7)"><span>Administration &gt; System Maintenance</span></a> for details.</p>
+<p>If you need to stop an instance or the entire cluster but do not intend to restart it, you can terminate the instance by using tools within the Amazon EC2 console. See <a class="reference internal" href="#terminate-instance"><span class="std std-ref">Terminating instances</span></a> for more information.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Although EC2 charges are not incurred while instances are stopped, storage charges will continue for any S3 buckets and EBS volumes associated with the vFXT node.</p>
+</div>
+</div>
+<div class="section" id="restarting-instances">
+<h3>Restarting instances<a class="headerlink" href="#restarting-instances" title="Permalink to this headline">¶</a></h3>
+<p>If you need to restart a stopped instance, you must use the AWS console. Navigate to <span class="guilabel">EC2</span> &gt; <span class="guilabel">Instances</span> and right-click to select one or more instances that you want to restart. Under the <span class="guilabel">Actions</span> section near the bottom, choose <span class="guilabel">Start</span>.</p>
+</div>
+<div class="section" id="terminating-instances">
+<span id="terminate-instance"></span><h3>Terminating instances<a class="headerlink" href="#terminating-instances" title="Permalink to this headline">¶</a></h3>
+<div class="admonition caution">
+<p class="first admonition-title">Caution</p>
+<p class="last">Terminated instances cannot be restarted or retrieved. Instance termination is a permanent action and cannot be undone.</p>
+</div>
+<p>Before terminating a vFXT instance, remove it from the cluster or shut down the cluster as described below in <a class="reference internal" href="#node-terminate"><span class="std std-ref">Terminating one node</span></a> and <a class="reference internal" href="#cluster-terminate"><span class="std std-ref">Terminating all nodes in the vFXT cluster</span></a>.</p>
+<p>To permanently destroy one or more instances used as vFXT node, use the AWS console. Navigate to <span class="guilabel">EC2</span> &gt; <span class="guilabel">Instances</span> and right-click to select one or more instances that you want to destroy. Under the <span class="guilabel">Actions</span> section near the bottom, choose <span class="guilabel">Terminate</span>.</p>
+<div class="section" id="terminating-one-node">
+<span id="node-terminate"></span><h4>Terminating one node<a class="headerlink" href="#terminating-one-node" title="Permalink to this headline">¶</a></h4>
+<p>If you want to terminate one node from the vFXT cluster but keep the remainder of the cluster, you must first remove the node from the cluster using the Avere Control Panel.</p>
+<div class="admonition caution">
+<p class="first admonition-title">Caution</p>
+<p class="last">If you terminate a node without first removing it from the vFXT cluster, data might be lost.</p>
+</div>
+<p>After removing the node, follow the instructions in <a class="reference internal" href="#terminate-instance"><span class="std std-ref">Terminating instances</span></a> above to destroy it.</p>
+</div>
+<div class="section" id="terminating-all-nodes-in-the-vfxt-cluster">
+<span id="cluster-terminate"></span><h4>Terminating all nodes in the vFXT cluster<a class="headerlink" href="#terminating-all-nodes-in-the-vfxt-cluster" title="Permalink to this headline">¶</a></h4>
+<p>To if you are finished using the vFXT cluster and want to permanently delete it, you should shut down the cluster by using the Avere Control Panel first. A graceful shutdown allows any unsaved client changes to be written to permanent storage, ensuring data integrity.</p>
+<p>Use the <a class="reference external" href="https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_system_maintenance.html#gui-system-maintenance" title="(in Cluster Configuration Guide v4.7)"><span>Administration &gt; System Maintenance</span></a> settings page to power down the cluster. After the cluster has stopped posting messages to the <span class="guilabel">Dashboard</span> tab, the Avere Control Panel session will stop responding and you will know that the cluster has been shut down.</p>
+<p>After shutting down the cluster, use the AWS console to destroy all of the node instances as described above in <a class="reference internal" href="#terminate-instance"><span class="std std-ref">Terminating instances</span></a>.</p>
+<div class="last-update docutils container">
+updated Jun 20, 2018</div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="aws_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Managing vFXT nodes</a><ul>
+<li><a class="reference internal" href="#accessing-vfxt-nodes-https-and-ssh">Accessing vFXT nodes (HTTPS and SSH)</a><ul>
+<li><a class="reference internal" href="#ssh-tunnel-access">SSH tunnel access</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#managing-instances">Managing instances</a><ul>
+<li><a class="reference internal" href="#stopping-instances">Stopping instances</a></li>
+<li><a class="reference internal" href="#restarting-instances">Restarting instances</a></li>
+<li><a class="reference internal" href="#terminating-instances">Terminating instances</a><ul>
+<li><a class="reference internal" href="#terminating-one-node">Terminating one node</a></li>
+<li><a class="reference internal" href="#terminating-all-nodes-in-the-vfxt-cluster">Terminating all nodes in the vFXT cluster</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="installing.html"
+                        title="previous chapter">Installing a vFXT series edge filer in Amazon EC2</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="aws_appendix.html"
+                        title="next chapter">Appendix</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/manage_nodes.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="aws_appendix.html" title="Appendix"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="installing.html" title="Installing a vFXT series edge filer in Amazon EC2"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="aws_index.html">Avere vFXT for AWS</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

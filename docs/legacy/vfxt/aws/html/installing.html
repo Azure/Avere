@@ -1,0 +1,379 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Installing a vFXT series edge filer in Amazon EC2 &#8212; Avere vFXT for AWS</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Managing vFXT nodes" href="manage_nodes.html" />
+    <link rel="prev" title="Precautions" href="precautions.html" /> 
+
+   <!-- use for draft review builds only - enables web page annotation internally -->
+<!--
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script src="_static/annotator-full.min.js"></script>
+    <script src="_static/annotate_init.js"></script>
+    <link rel="stylesheet" href="_static/annotator.min.css">
+-->
+
+  </head><body>
+
+<a href="https://azure.github.io/Avere/">
+	<img style="margin: 20px; width: 40%;" src="_static/avere-microsoft-logo-full.png">
+  </a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="manage_nodes.html" title="Managing vFXT nodes"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="precautions.html" title="Precautions"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="aws_index.html">Avere vFXT for AWS</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="installing-a-vfxt-series-edge-filer-in-amazon-ec2">
+<h1>Installing a vFXT series edge filer in Amazon EC2<a class="headerlink" href="#installing-a-vfxt-series-edge-filer-in-amazon-ec2" title="Permalink to this headline">¶</a></h1>
+<p>To create the vFXT cluster, follow these basic steps:</p>
+<ol class="arabic simple">
+<li>Create and configure network infrastructure (itemized below in <a class="reference internal" href="#network-list"><span class="std std-ref">Network infrastructure checklist</span></a> and described in more detail in the <a class="reference internal" href="requirements.html#prerequisites"><span class="std std-ref">Product requirements</span></a> section)</li>
+<li>Create the IAM role for the cluster controller (details in <a class="reference internal" href="#create-iam"><span class="std std-ref">Creating the IAM role</span></a>)</li>
+<li>Create the cluster controller instance and configure it with the required software (described in <a class="reference internal" href="#create-command-instance"><span class="std std-ref">Creating a cluster controller</span></a>)</li>
+<li>From the cluster controller instance, run the vfxt.py script and create the cluster (details in <a class="reference internal" href="#run-vfxt-py"><span class="std std-ref">Creating a vFXT cluster</span></a>)</li>
+</ol>
+<div class="section" id="the-vfxt-py-script">
+<span id="index-0"></span><h2>The vfxt.py script<a class="headerlink" href="#the-vfxt-py-script" title="Permalink to this headline">¶</a></h2>
+<p>Avere Systems has created a script that automates vFXT cluster creation. The vfxt.py script can be run from a machine within the cloud (recommended) or from a local machine. Complete details for using the script can be found in the <a class="reference external" href="http://azure.github.io/Avere/#vfxt">vfxt.py Usage Guide</a>.</p>
+</div>
+<div class="section" id="network-infrastructure-checklist">
+<span id="network-list"></span><h2>Network infrastructure checklist<a class="headerlink" href="#network-infrastructure-checklist" title="Permalink to this headline">¶</a></h2>
+<p>As the first step in creating a vFXT cluster, create and configure the following network infrastructure in your AWS project.</p>
+<ul class="simple">
+<li>VPC - read <a class="reference internal" href="requirements.html#aws-vpc"><span class="std std-ref">AWS virtual private cloud (VPC)</span></a></li>
+<li>Public and private subnets - read <a class="reference internal" href="requirements.html#aws-vpc-subnet"><span class="std std-ref">Subnet</span></a></li>
+<li>Public and private route tables associated with the corresponding subnets - read <a class="reference internal" href="requirements.html#routing"><span class="std std-ref">Routing</span></a></li>
+<li>Security group that allows access to the VPC’s IP address range and ports 22, 80, and 443 - read <a class="reference internal" href="requirements.html#aws-security-groups"><span class="std std-ref">Security groups</span></a></li>
+<li>Internet access through an internet gateway (IGW), NAT, or VPN - read <a class="reference internal" href="requirements.html#internet"><span class="std std-ref">Internet access</span></a></li>
+</ul>
+</div>
+<div class="section" id="creating-the-iam-role">
+<span id="create-iam"></span><span id="index-1"></span><h2>Creating the IAM role<a class="headerlink" href="#creating-the-iam-role" title="Permalink to this headline">¶</a></h2>
+<p>A cluster controller instance is used to perform several types of operations within the AWS cloud in order to create the cluster. The cluster controller requires permission to create and modify AWS entities. To assign it these permissions, you must create a role that includes the needed permissions, and then use a profile to attach the role to the instance.</p>
+<p>Avere Systems recommends creating an IAM role specifically for the cluster controller instance.</p>
+<p>There are two parts to creating the IAM role. First, define the policy with the permissions for cluster creation. Second, add the policy to a role so that it can be connected to the cluster controller instance.</p>
+<p>Take these steps in the AWS <span class="guilabel">Identity &amp; Access Management</span> console.</p>
+<div class="section" id="creating-the-policy">
+<h3>Creating the policy<a class="headerlink" href="#creating-the-policy" title="Permalink to this headline">¶</a></h3>
+<p>Follow these steps to create the permissions policy for the cluster controller role.</p>
+<ol class="arabic simple">
+<li>Navigate to the <span class="guilabel">Identity &amp; Access Management</span> service within AWS.</li>
+<li>Click <span class="guilabel">Policies</span> on the left.</li>
+<li>Click the blue <span class="guilabel">Create Policy</span> button.</li>
+<li>Choose <span class="guilabel">Select</span> next to <span class="guilabel">Create Your Own Policy</span>.</li>
+<li>Provide a policy name - for example, <code class="docutils literal notranslate"><span class="pre">vfxt-policy</span></code></li>
+<li>Copy and paste the following policy:</li>
+</ol>
+<blockquote>
+<div><p>(A downloadable text file appears in the <a class="reference internal" href="aws_appendix.html#iam-text"><span class="std std-ref">appendix</span></a>.)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;Statement&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;Resource&quot;</span><span class="p">:</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Action&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;ec2:Describe*&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:RunInstances&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:TerminateInstances&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:RebootInstances&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:StartInstances&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:StopInstances&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:CreateTags&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DeleteTags&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:ModifyInstanceAttribute&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:CreateVolume&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DeleteVolume&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:AttachVolume&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DetachVolume&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:CreateSnapshot&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DeleteSnapshot&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:RegisterImage&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DeregisterImage&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:CreateImage&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ec2:DeleteRoute&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;s3:CreateBucket&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;s3:DeleteBucket&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;s3:SetTag&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;s3:ListBucket&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:AddRoleToInstanceProfile&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:CreateInstanceProfile&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:CreateRole&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:DeleteInstanceProfile&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:DeleteRole&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:DeleteRolePolicy&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:GetRolePolicy&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:ListRolePolicies&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:GetInstanceProfile&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:PutRolePolicy&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:RemoveRoleFromInstanceProfile&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:GetRole&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;iam:PassRole&quot;</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;Effect&quot;</span><span class="p">:</span> <span class="s2">&quot;Allow&quot;</span>
+    <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="s2">&quot;Version&quot;</span><span class="p">:</span> <span class="s2">&quot;2012-04-18&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<ol class="arabic simple" start="7">
+<li>Click the <span class="guilabel">Validate Policy</span> button.</li>
+<li>Click the blue <span class="guilabel">Create Policy</span> button.</li>
+</ol>
+</div>
+<div class="section" id="creating-the-mgr-role">
+<h3>Creating the cluster controller role<a class="headerlink" href="#creating-the-mgr-role" title="Permalink to this headline">¶</a></h3>
+<p>After the cluster creation policy has been created, you must create a new role that uses the policy.</p>
+<ol class="arabic simple">
+<li>Navigate to the <span class="guilabel">Identity &amp; Access Management</span> service within AWS.</li>
+<li>Click <span class="guilabel">Roles</span> on the left.</li>
+<li>Click <span class="guilabel">Create New Role</span>.</li>
+<li>Enter a name for the role - for example, <code class="docutils literal notranslate"><span class="pre">vfxt-role</span></code></li>
+<li>Click <span class="guilabel">Next Step</span>.</li>
+<li>Choose <span class="guilabel">Select</span> next to <span class="guilabel">Amazon EC2</span>.</li>
+<li>Click the checkbox next to the cluster controller policy.</li>
+<li>Click <span class="guilabel">Next Step</span>.</li>
+<li>Click <span class="guilabel">Create role</span>.</li>
+</ol>
+<p>When you create the cluster controller instance, you will assign it the role that you created in this step.</p>
+</div>
+</div>
+<div class="section" id="creating-a-mgr">
+<span id="create-command-instance"></span><span id="index-2"></span><h2>Creating a cluster controller<a class="headerlink" href="#creating-a-mgr" title="Permalink to this headline">¶</a></h2>
+<p>Avere Systems recommends installing and running the vfxt.py script on a Linux-based instance in the cloud. This instance, called a cluster controller instance, can be a pre-existing instance, or you can create a new one. In either case, you must assign it the cluster controller role that you defined in the previous step.</p>
+<p>After you create the cluster controller instance, you will download the required software for creating the vFXT cluster.</p>
+<p>To create a new cluster controller instance:</p>
+<ol class="arabic simple">
+<li>Navigate to the EC2 service within AWS.</li>
+<li>Click <span class="guilabel">Instances</span> on the left.</li>
+<li>Click <span class="guilabel">Launch Instance</span>.</li>
+<li>Click <span class="guilabel">Community AMIs</span> on the left.</li>
+<li>You must find and install a current, stable Debian release.</li>
+</ol>
+<blockquote>
+<div><p>At the time this document was prepared, the stable distribution was Debian 9 and nicknamed “Stretch”.</p>
+<p>In the search field, type <code class="docutils literal notranslate"><span class="pre">stretch</span> <span class="pre">2018</span></code> and press <span class="guilabel">Enter</span>. Click <span class="guilabel">Select</span> next to an appropriate image. (Usually, the first search result is appropriate.)</p>
+</div></blockquote>
+<ol class="arabic simple" start="6">
+<li>Leave the instance type at <code class="docutils literal notranslate"><span class="pre">t2.micro</span></code>.</li>
+<li>Click <span class="guilabel">Next: Configure Instance Details</span>.</li>
+<li>Choose the network and private subnet for the cluster controller instance.</li>
+</ol>
+<a class="reference internal image-reference" href="_images/instance_details.png"><img alt="Network, Subnet, and Role fields in the Instance Details screen" src="_images/instance_details.png" style="width: 400pt;" /></a>
+<ol class="arabic simple" start="10">
+<li>Choose a public IP address (<span class="guilabel">Enable</span>).</li>
+</ol>
+<ol class="arabic simple" start="11">
+<li>Choose the <span class="guilabel">IAM role</span> that was created for the cluster controller (for example, <code class="docutils literal notranslate"><span class="pre">vfxt-role</span></code>).</li>
+<li>Click <span class="guilabel">Next: Add Storage</span>.</li>
+<li>Click <span class="guilabel">Next: Tag Instance</span>.</li>
+<li>Enter <span class="guilabel">Name</span> for a tag and provide a name for the cluster controller instance.</li>
+<li>Click <span class="guilabel">Next: Configure Security Group</span>.</li>
+<li>Choose <span class="guilabel">Select an existing security group</span>.</li>
+<li>Click the box next to the security group that you customized for the cluster (see <a class="reference internal" href="requirements.html#aws-security-groups"><span class="std std-ref">Security groups</span></a>).</li>
+<li>Click <span class="guilabel">Review and Launch</span>.</li>
+<li>Review the information on the page and click <span class="guilabel">Launch</span>.</li>
+<li>Choose an existing key pair or create a new key pair.</li>
+<li>Click <span class="guilabel">Launch Instances</span>.</li>
+</ol>
+<div class="section" id="accessing-the-mgr-instance">
+<span id="access-command-instance"></span><h3>Accessing the cluster controller instance<a class="headerlink" href="#accessing-the-mgr-instance" title="Permalink to this headline">¶</a></h3>
+<p>Use SSH to connect to the cluster controller.</p>
+<p>You will need the cluster controller’s IP address and key file in order to access it with SSH. Click on the instance in EC2 and make note of its IP address (at the bottom). Download its key file to a convenient location.</p>
+<p>SSH example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ssh</span> <span class="o">-</span><span class="n">i</span> <span class="o">~/</span><span class="n">Downloads</span><span class="o">/</span><span class="n">key</span><span class="o">.</span><span class="n">pem</span> <span class="n">admin</span><span class="nd">@54</span><span class="o">.</span><span class="mf">186.72</span><span class="o">.</span><span class="mi">16</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="configuring-the-mgr">
+<span id="index-3"></span><h3>Configuring the cluster controller<a class="headerlink" href="#configuring-the-mgr" title="Permalink to this headline">¶</a></h3>
+<p>After logging in, download the necessary files needed to run the vfxt.py script. Refer to the <a class="reference external" href="http://azure.github.io/Avere/#vfxt">vfxt.py Usage Guide</a> for details.</p>
+<p>For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">update</span>
+<span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">python</span><span class="o">-</span><span class="n">pip</span>
+<span class="n">sudo</span> <span class="n">easy_install</span> <span class="n">pip</span>
+<span class="n">sudo</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">--</span><span class="n">upgrade</span> <span class="n">boto</span> <span class="n">requests</span> <span class="n">google</span><span class="o">-</span><span class="n">api</span><span class="o">-</span><span class="n">python</span><span class="o">-</span><span class="n">client</span> <span class="n">awscli</span> <span class="n">vFXT</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="creating-a-vfxt-cluster">
+<span id="run-vfxt-py"></span><span id="index-4"></span><h2>Creating a vFXT cluster<a class="headerlink" href="#creating-a-vfxt-cluster" title="Permalink to this headline">¶</a></h2>
+<p>After creating and configuring the cluster controller instance, use it to run the vfxt.py script to create the vFXT cluster. Complete instructions are included in the <a class="reference external" href="http://azure.github.io/Avere/#vfxt">vfxt.py Usage Guide</a>.</p>
+<p>You will need to supply the following information for the command:</p>
+<ul class="simple">
+<li>AWS region - for example, <code class="docutils literal notranslate"><span class="pre">us-west-2a</span></code></li>
+<li>private subnet ID - for example, <code class="docutils literal notranslate"><span class="pre">subnet-6e82b427</span></code></li>
+<li>security group ID - for example, <code class="docutils literal notranslate"><span class="pre">sg-3d75aa47</span></code></li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If using AWS S3 as a core filer (your cluster’s backend storage), you will want to enable S3 endpoints, which optimize throughput and availability for S3 traffic into and out of the VPC. See <a class="reference internal" href="aws_appendix.html#s3-endpoints"><span class="std std-ref">Creating AWS S3 endpoints</span></a> in the appendix of this document.</p>
+</div>
+<p>Refer to the <a class="reference external" href="http://azure.github.io/Avere/#vfxt">vfxt.py Usage Guide</a> for additional information on how to use the cluster controller to create a vFXT cluster.</p>
+<p>(The sample vfxt.py command below includes line breaks for readability; enter the command on one line or with escape characters before line breaks in actual usage.)</p>
+<p>Sample vfxt.py command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>vfxt.py --create --cloud-type aws --on-instance --region us-west-2a
+        --subnet subnet-6e82b427 --instance-type r3.2xlarge
+        --cluster-name vfxt-demo-cluster --admin-password P@$$w0rd
+        --node-cache-size 1000 --nodes 3 --debug
+        --security-group sg-3d75aa47
+</pre></div>
+</div>
+<p>Make note of the <em>management IP address</em> printed at the end of the script. You will use this IP address and the administrative password you set in <code class="docutils literal notranslate"><span class="pre">admin-password</span></code> to access the cluster.</p>
+<p>This sample message shows how the management IP address is reported from a newly created vFXT cluster:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">2017</span><span class="o">-</span><span class="mi">07</span><span class="o">-</span><span class="mi">12</span><span class="n">T15</span><span class="p">:</span><span class="mi">46</span><span class="p">:</span><span class="mi">49</span><span class="o">+</span><span class="mi">0000</span> <span class="o">-</span> <span class="n">vfxt</span><span class="p">:</span><span class="n">INFO</span> <span class="o">-</span> <span class="n">vfxt</span><span class="o">-</span><span class="n">cluster</span> <span class="n">management</span> <span class="n">address</span><span class="p">:</span> <span class="mf">10.10</span><span class="o">.</span><span class="mf">1.4</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="post-creation-configuration">
+<span id="vfxt-cluster-config"></span><h2>Post-creation configuration<a class="headerlink" href="#post-creation-configuration" title="Permalink to this headline">¶</a></h2>
+<p>The vfxt.py script creates and configures the vFXT cluster. To administer the finished cluster, use the Avere Control Panel. Although many settings are set appropriately for your cloud service by the creation script, there are others that you might want to customize.</p>
+<p>The <a class="reference external" href="http://azure.github.io/Avere/#fxt_cluster">FXT Cluster Creation Guide</a> is designed for clusters of physical hardware nodes, but some information in the document is relevant for vFXT clusters as well. In particular, these sections can be useful for vFXT cluster administrators:</p>
+<ul>
+<li><p class="first"><a class="reference external" href="https://azure.github.io/Avere/legacy/create_cluster/4_8/html/initial_config.html#gui-login" title="(in FXT Cluster Creation Guide)"><span>Logging In to the Avere Control Panel</span></a> explains how to connect to the Avere Control Panel and log in. However, note that you must use a VPN or SSH tunnel to access the cluster nodes inside the AWS VPC. Read <a class="reference internal" href="manage_nodes.html#node-ssl-tunnel"><span class="std std-ref">Accessing vFXT nodes (HTTPS and SSH)</span></a> for details.</p>
+</li>
+<li><p class="first"><a class="reference external" href="https://azure.github.io/Avere/legacy/create_cluster/4_8/html/config_vserver.html#config-vserver" title="(in FXT Cluster Creation Guide)"><span>Configuring VServers and Global Namespace</span></a> has information about creating a client-facing namespace.</p>
+</li>
+<li><p class="first"><a class="reference external" href="https://azure.github.io/Avere/legacy/create_cluster/4_8/html/config_core_filer.html#add-core-filer" title="(in FXT Cluster Creation Guide)"><span>Adding Backend Storage</span></a> documents how to add storage.</p>
+<p>(Note: You might need to update the cluster IAM policy to add a second cloud core filer to your AWS cluster - read the cloud core filers tip in the <em>AWS Cluster Settings</em> section of the <a class="reference external" href="http://azure.github.io/Avere/#vfxt">vfxt.py Usage Guide</a>.)</p>
+</li>
+<li><p class="first"><a class="reference external" href="https://azure.github.io/Avere/legacy/create_cluster/4_8/html/config_support.html#config-support" title="(in FXT Cluster Creation Guide)"><span>Customizing Support and Monitoring Settings for the Avere Cluster</span></a> explains how to customize support settings and remote monitoring.</p>
+</li>
+</ul>
+<p>These additional documents also might be helpful:</p>
+<ul class="simple">
+<li>The <a class="reference external" href="http://azure.github.io/Avere/#operations">Cluster Configuration Guide</a> is a complete reference of settings and options for an Avere cluster. A vFXT cluster uses a subset of these options, but many of the same configuration pages apply.</li>
+<li>The <a class="reference external" href="http://azure.github.io/Avere/#operations">Dashboard Guide</a> explains how to use the cluster monitoring features of the Avere Control Panel.</li>
+</ul>
+<p>Current documents can always be found on the documentation website at <a class="reference external" href="http://azure.github.io/Avere/">http://azure.github.io/Avere/</a>.</p>
+<div class="last-update docutils container">
+updated Jun 20, 2018</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="aws_index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installing a vFXT series edge filer in Amazon EC2</a><ul>
+<li><a class="reference internal" href="#the-vfxt-py-script">The vfxt.py script</a></li>
+<li><a class="reference internal" href="#network-infrastructure-checklist">Network infrastructure checklist</a></li>
+<li><a class="reference internal" href="#creating-the-iam-role">Creating the IAM role</a><ul>
+<li><a class="reference internal" href="#creating-the-policy">Creating the policy</a></li>
+<li><a class="reference internal" href="#creating-the-mgr-role">Creating the cluster controller role</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#creating-a-mgr">Creating a cluster controller</a><ul>
+<li><a class="reference internal" href="#accessing-the-mgr-instance">Accessing the cluster controller instance</a></li>
+<li><a class="reference internal" href="#configuring-the-mgr">Configuring the cluster controller</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#creating-a-vfxt-cluster">Creating a vFXT cluster</a></li>
+<li><a class="reference internal" href="#post-creation-configuration">Post-creation configuration</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="precautions.html"
+                        title="previous chapter">Precautions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="manage_nodes.html"
+                        title="next chapter">Managing vFXT nodes</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/installing.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="manage_nodes.html" title="Managing vFXT nodes"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="precautions.html" title="Precautions"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="aws_index.html">Avere vFXT for AWS</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">
+	<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+		<li><strong><a href="https://azure.github.io/Avere/" target="_blank" style="color: #fff;">Legacy Documentation Home Page</a></strong>
+		</li>
+		<li><strong><a href="https://azure.microsoft.com/services/storage/avere-vfxt/" target="_blank" style="color: #fff;">Avere Microsoft Website</a></strong>
+		</li>
+	</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">© 2018 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

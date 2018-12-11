@@ -1,0 +1,253 @@
+
+========================================================
+Installing a |vfxt| series edge filer in Amazon |ec2| 
+========================================================
+
+To create the |vfxt| cluster, follow these basic steps: 
+
+#. Create and configure network infrastructure (itemized below in :ref:`network_list` and described in more detail in the :ref:`prerequisites` section)
+#. Create the IAM role for the |mgr| (details in :ref:`create_iam`)
+#. Create the |mgr| instance and configure it with the required software (described in :ref:`create_command_instance`) 
+#. From the |mgr| instance, run the vfxt.py script and create the cluster (details in :ref:`run_vfxt.py`)
+
+.. index::
+   single: vfxt.py
+   single: cluster creation script (vfxt.py)
+
+
+The vfxt.py script
+===================
+
+|avere-sys| has created a script that automates |vfxt| cluster creation. The vfxt.py script can be run from a machine within the cloud (recommended) or from a local machine. Complete details for using the script can be found in the |vfxt.py-link|.
+
+.. _network_list: 
+
+Network infrastructure checklist
+==================================
+
+As the first step in creating a |vfxt| cluster, create and configure the following network infrastructure in your AWS project.  
+
+* VPC - read :ref:`aws_vpc`
+* Public and private subnets - read :ref:`aws_vpc_subnet`
+* Public and private route tables associated with the corresponding subnets - read :ref:`routing`
+* Security group that allows access to the VPC’s IP address range and ports 22, 80, and 443 - read :ref:`aws_security_groups`
+* Internet access through an internet gateway (IGW), NAT, or VPN - read :ref:`internet`
+
+
+.. index::
+   single: IAM; role
+   single: IAM; policy
+   single: IAM
+   single: role
+   single: IAM role
+   single: IAM policy 
+
+.. _create_iam: 
+
+Creating the IAM role
+======================
+
+A |mgr| instance is used to perform several types of operations within the |aws| cloud in order to create the cluster. The |mgr| requires permission to create and modify AWS entities. To assign it these permissions, you must create a role that includes the needed permissions, and then use a profile to attach the role to the instance. 
+
+|avere-sys| recommends creating an IAM role specifically for the |mgr| instance.
+
+There are two parts to creating the IAM role. First, define the policy with the permissions for cluster creation. Second, add the policy to a role so that it can be connected to the |mgr| instance.  
+
+Take these steps in the |aws| :guilabel:`Identity & Access Management` console.
+
+Creating the policy 
+------------------------
+
+.. xxx do not allow the policy to wrap pages in pdf - needs to be easy to cut/paste 
+
+Follow these steps to create the permissions policy for the |mgr| role. 
+
+1.	Navigate to the :guilabel:`Identity & Access Management` service within |aws|.
+2.	Click :guilabel:`Policies` on the left.
+3.	Click the blue :guilabel:`Create Policy` button.
+4.	Choose :guilabel:`Select` next to :guilabel:`Create Your Own Policy`.
+5.	Provide a policy name - for example, ``vfxt-policy``
+6.	Copy and paste the following policy:
+
+    .. only:: latex
+    
+       (This text also appears in the :ref:`appendix <iam_text>` without page breaks.)
+       
+    .. only:: html
+     
+       (A downloadable text file appears in the :ref:`appendix <iam_text>`.)
+
+    .. include:: iam_policy_markup.txt
+    
+
+
+7.  Click the :guilabel:`Validate Policy` button.
+8.	Click the blue :guilabel:`Create Policy` button.
+
+
+Creating the |mgr| role
+-------------------------
+
+After the cluster creation policy has been created, you must create a new role that uses the policy.
+
+#.	Navigate to the :guilabel:`Identity & Access Management` service within |aws|.
+#.	Click :guilabel:`Roles` on the left.
+#.	Click :guilabel:`Create New Role`.
+#.	Enter a name for the role - for example, ``vfxt-role``
+#.	Click :guilabel:`Next Step`.
+#.	Choose :guilabel:`Select` next to :guilabel:`Amazon EC2`.
+#.	Click the checkbox next to the |mgr| policy.
+#.	Click :guilabel:`Next Step`.
+#.	Click :guilabel:`Create role`.
+
+When you create the |mgr| instance, you will assign it the role that you created in this step. 
+
+.. index:: 
+   single: command instance
+   single: cluster controller 
+
+.. _create_command_instance: 
+
+Creating a |mgr|
+=============================
+
+|Avere-sys| recommends installing and running the vfxt.py script on a Linux-based instance in the cloud. This instance, called a |mgr| instance, can be a pre-existing instance, or you can create a new one. In either case, you must assign it the |mgr| role that you defined in the previous step.  
+
+After you create the |mgr| instance, you will download the required software for creating the |vfxt| cluster. 
+
+To create a new |mgr| instance:
+
+1.	Navigate to the EC2 service within AWS.
+2.	Click :guilabel:`Instances` on the left.
+3.	Click :guilabel:`Launch Instance`.
+4.	Click :guilabel:`Community AMIs` on the left.
+5.	You must find and install a current, stable Debian release. 
+
+    At the time this document was prepared, the stable distribution was Debian 9 and nicknamed "Stretch". 
+
+    In the search field, type ``stretch 2018`` and press :guilabel:`Enter`. Click :guilabel:`Select` next to an appropriate image. (Usually, the first search result is appropriate.)
+    
+6.	Leave the instance type at ``t2.micro``.  
+7.	Click :guilabel:`Next: Configure Instance Details`.
+8.	Choose the network and private subnet for the |mgr| instance.
+
+.. image:: images/instance_details.png
+   :alt: Network, Subnet, and Role fields in the Instance Details screen
+   :width: 400 pt
+
+.. to do: [ xxx to do: update screenshot to change name of |mgr| instance to something without "shepherd" xxx ]
+   
+10.	Choose a public IP address (:guilabel:`Enable`).
+
+.. you can't use a NAT for this, see Ron's email from 05/06/2018
+
+.. ("something something disable" is the choice you don't want)
+
+11.	Choose the :guilabel:`IAM role` that was created for the |mgr| (for example, ``vfxt-role``). 
+12.	Click :guilabel:`Next: Add Storage`.
+13.	Click :guilabel:`Next: Tag Instance`.
+14.	Enter :guilabel:`Name` for a tag and provide a name for the |mgr| instance.
+15.	Click :guilabel:`Next: Configure Security Group`.
+16.	Choose :guilabel:`Select an existing security group`.
+17.	Click the box next to the security group that you customized for the cluster (see :ref:`aws_security_groups`).
+18.	Click :guilabel:`Review and Launch`.
+19.	Review the information on the page and click :guilabel:`Launch`.
+20.	Choose an existing key pair or create a new key pair.
+21.	Click :guilabel:`Launch Instances`.
+
+.. _access_command_instance: 
+
+Accessing the |mgr| instance
+---------------------------------
+
+Use SSH to connect to the |mgr|. 
+
+You will need the |mgr|\ ’s IP address and key file in order to access it with SSH. Click on the instance in |ec2| and make note of its IP address (at the bottom). Download its key file to a convenient location. 
+
+SSH example::  
+
+    ssh -i ~/Downloads/key.pem admin@54.186.72.16
+
+
+.. index:: 
+   single: vfxt.py 
+   single: vfxt.py; prerequisites 
+
+Configuring the |mgr|
+---------------------------------
+
+After logging in, download the necessary files needed to run the vfxt.py script. Refer to the |vfxt.py-link| for details. 
+
+For example::
+
+    sudo apt-get update
+    sudo apt-get install python-pip
+    sudo easy_install pip
+    sudo pip install --upgrade boto requests google-api-python-client awscli vFXT
+    
+.. index:: 
+   single: vfxt.py; executing
+   single: creating a cluster
+
+.. _run_vfxt.py: 
+
+Creating a |vfxt| cluster
+==========================
+
+After creating and configuring the |mgr| instance, use it to run the vfxt.py script to create the |vfxt| cluster. Complete instructions are included in the |vfxt.py-link|. 
+
+You will need to supply the following information for the command:
+
+* |aws| region - for example, ``us-west-2a``
+* private subnet ID - for example, ``subnet-6e82b427``
+* security group ID - for example, ``sg-3d75aa47`` 
+
+.. note:: If using |aws| S3 as a core filer (your cluster's backend storage), you will want to enable S3 endpoints, which optimize throughput and availability for S3 traffic into and out of the VPC. See :ref:`s3_endpoints` in the appendix of this document. 
+
+Refer to the |vfxt.py-link| for additional information on how to use the |mgr| to create a |vfxt| cluster. 
+
+(The sample vfxt.py command below includes line breaks for readability; enter the command on one line or with escape characters before line breaks in actual usage.)
+
+Sample vfxt.py command::
+
+    vfxt.py --create --cloud-type aws --on-instance --region us-west-2a 
+            --subnet subnet-6e82b427 --instance-type r3.2xlarge 
+            --cluster-name vfxt-demo-cluster --admin-password P@$$w0rd 
+            --node-cache-size 1000 --nodes 3 --debug 
+            --security-group sg-3d75aa47
+
+Make note of the *management IP address* printed at the end of the script. You will use this IP address and the administrative password you set in ``admin-password`` to access the cluster. 
+
+This sample message shows how the management IP address is reported from a newly created |vfxt| cluster:: 
+
+    2017-07-12T15:46:49+0000 - vfxt:INFO - vfxt-cluster management address: 10.10.1.4
+
+.. _vfxt_cluster_config: 
+
+Post-creation configuration  
+==============================
+
+The vfxt.py script creates and configures the |vfxt| cluster. To administer the finished cluster, use the |gui|. Although many settings are set appropriately for your cloud service by the creation script, there are others that you might want to customize. 
+
+The |fxt-cluster-link| is designed for clusters of physical hardware nodes, but some information in the document is relevant for |vfxt| clusters as well. In particular, these sections can be useful for |vfxt| cluster administrators: 
+
+* :ref:`fxtcluster:gui_login` explains how to connect to the |gui| and log in. However, note that you must use a VPN or SSH tunnel to access the cluster nodes inside the |aws| VPC. Read :ref:`node_ssl_tunnel` for details. 
+* :ref:`fxtcluster:config_vserver` has information about creating a client-facing namespace. 
+* :ref:`fxtcluster:add_core_filer` documents how to add storage. 
+
+  (Note: You might need to update the cluster IAM policy to add a second cloud core filer to your |aws| cluster - read the cloud core filers tip in the *AWS Cluster Settings* section of the |vfxt.py-link|.)
+  
+* :ref:`fxtcluster:config_support` explains how to customize support settings and remote monitoring. 
+
+These additional documents also might be helpful: 
+
+* The |ops-link| is a complete reference of settings and options for an |cluster|. A |vfxt| cluster uses a subset of these options, but many of the same configuration pages apply. 
+
+* The |dash-link| explains how to use the cluster monitoring features of the |gui|. 
+
+Current documents can always be found on the documentation website at |doc-url|.  
+
+
+
+
+.. include:: last_update_code.rst
