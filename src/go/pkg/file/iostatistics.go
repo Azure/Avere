@@ -24,7 +24,7 @@ var hostname string
 
 func init() {
 	hostname = ""
-	if h, err := os.Hostname(); err != nil {
+	if h, err := os.Hostname(); err == nil {
 		hostname = h
 	} else {
 		log.Error.Printf("error encountered getting hostname: %v", err)
