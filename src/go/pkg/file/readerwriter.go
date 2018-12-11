@@ -32,7 +32,7 @@ func (r *ReaderWriter) ReadFile(filename string, batchName string) ([]byte, erro
 
 	f, err := os.Open(filename)
 	if err != nil {
-		r.submitIOStatistics(batchName, start, ReadOperation, filename, startReadBytes, startCloseFile, finish, NoBytesReadWritten, err)
+		r.submitIOStatistics(batchName, start, ReadOperation, filename, startReadBytes, startCloseFile, finish, NoIOBytes, err)
 		return nil, err
 	}
 
@@ -40,7 +40,7 @@ func (r *ReaderWriter) ReadFile(filename string, batchName string) ([]byte, erro
 	byteValue, err := ioutil.ReadAll(f)
 	if err != nil {
 		f.Close()
-		r.submitIOStatistics(batchName, start, ReadOperation, filename, startReadBytes, startCloseFile, finish, NoBytesReadWritten, err)
+		r.submitIOStatistics(batchName, start, ReadOperation, filename, startReadBytes, startCloseFile, finish, len(byteValue), err)
 		return nil, err
 	}
 
@@ -61,7 +61,7 @@ func (r *ReaderWriter) WriteFile(filename string, data []byte, batchName string)
 
 	f, err := os.Create(filename)
 	if err != nil {
-		r.submitIOStatistics(batchName, start, WriteOperation, filename, startWriteBytes, startCloseFile, finish, NoBytesReadWritten, err)
+		r.submitIOStatistics(batchName, start, WriteOperation, filename, startWriteBytes, startCloseFile, finish, NoIOBytes, err)
 		return err
 	}
 
@@ -69,7 +69,7 @@ func (r *ReaderWriter) WriteFile(filename string, data []byte, batchName string)
 	bytesWritten, err := f.Write(data)
 	if err != nil {
 		f.Close()
-		r.submitIOStatistics(batchName, start, WriteOperation, filename, startWriteBytes, startCloseFile, finish, NoBytesReadWritten, err)
+		r.submitIOStatistics(batchName, start, WriteOperation, filename, startWriteBytes, startCloseFile, finish, bytesWritten, err)
 		return err
 	}
 
@@ -89,17 +89,21 @@ func (r *ReaderWriter) submitIOStatistics(
 	startReadBytesTime time.Time,
 	startCloseFileTime time.Time,
 	finish time.Time,
-	readWriteBytes int,
+	ioBytes int,
 	err error) {
 
-	createTimeNS := NoDuration
-	if !startReadBytesTime.Before(start) {
-		createTimeNS = startReadBytesTime.Sub(start)
+	if err != nil {
+		log.Error.Printf("%s io error '%s' (iobytes: %d): %v", op, path, ioBytes, err)
 	}
 
-	readWriteTimeNS := NoDuration
+	fileOpenTimeNS := NoDuration
+	if !startReadBytesTime.Before(start) {
+		fileOpenTimeNS = startReadBytesTime.Sub(start)
+	}
+
+	ioTimeNS := NoDuration
 	if !startCloseFileTime.Before(startReadBytesTime) {
-		readWriteTimeNS = startCloseFileTime.Sub(startReadBytesTime)
+		ioTimeNS = startCloseFileTime.Sub(startReadBytesTime)
 	}
 
 	closeTimeNS := NoDuration
@@ -113,15 +117,16 @@ func (r *ReaderWriter) submitIOStatistics(
 		r.label,
 		op,
 		path,
-		createTimeNS,
+		fileOpenTimeNS,
 		closeTimeNS,
-		readWriteTimeNS,
-		readWriteBytes,
+		ioTimeNS,
+		ioBytes,
 		err)
 
 	jsonBytes, err := ioStats.GetJSON()
 	if err != nil {
 		log.Error.Printf("error encountered submitting statistics: %v", err)
+		return
 	}
 	log.Debug.Printf(string(jsonBytes))
 	r.profiler.RecordTiming(jsonBytes)
