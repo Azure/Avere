@@ -282,7 +282,7 @@ page.
 Dashboard – This is the Avere Control Panel's default tab. It displays
 performance graphs and statistics, system alerts, and information
 about virtual servers (vservers), FXT nodes, clients, and hot files.
-Refer to dashboard:dashboard_toc for more information.
+Refer to Using the Avere Control Panel Dashboard for more information.
 
 Settings – This tab gives you access to the system configuration. For
 an overview of the available settings and links to detailed

@@ -449,7 +449,10 @@ Dashboard Conditions
 
 Check the Enable dashboard conditions box to report inconsistencies in
 the user/group database as alerts on the Avere Control Panel
-*dashboard*.
+
+dashboard
+
+.
 
 Manual Polling
 

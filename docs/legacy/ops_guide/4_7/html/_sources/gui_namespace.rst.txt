@@ -301,8 +301,12 @@ If your system has licenses for FlashMove or FlashMirror, you can
 create a new data management job from a junction directly from the
 Namespace page.
 
-Read *migration:migration_overview* for complete information about the
-data management capabilities in Avere OS.
+Read
+
+Using the Avere Cluster To Move or Mirror Data
+
+ for complete information about the data management capabilities in
+Avere OS.
 
 Select the junction that will be the data source for your FlashMove or
 FlashMirror job by clicking its Actions checkbox.  If you want to use
@@ -319,8 +323,8 @@ switches to the Data Management page.  First page of Add New Data
 Management Job wizard
 
 Complete the settings in the wizard and click Add Job to create the
-FlashMove or FlashMirror job.  Read migration:create_migration for
-help specifying the details.
+FlashMove or FlashMirror job.  Read Creating a New FlashMove or
+FlashMirror Job for help specifying the details.
 
 Note: Data management features like FlashMove and FlashMirror are
   licensed separately from the main Avere OS software. If your system
