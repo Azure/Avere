@@ -1,0 +1,241 @@
+Appendix E: Configuring Active Directory for Avere SMB
+
+Deploying an Avere Edge Filer that uses SMB requires a small amount of
+Active Directory configuration. This configuration ensures continuous
+secure operation as the highly available Avere cluster is inserted
+into your environment.
+
+Note: These instructions assume the customer is using NTFS security
+  on their shares.  If only POSIX mode bits are used, then much of
+  this setup may be bypassed.
+
+
+In the pre-Avere environment, clients access shares directly on core
+filers. All authentication is between clients and/or core filers
+within the Active Directory environment.
+
+
+After adding the Avere Edge Filer, each SMB-enabled vserver in the
+Avere cluster must make ACL requests to the core filer on behalf of
+authenticated clients’ identities, and is enabled to do so via
+Kerberos configuration. This is known as delegation, and should be
+configured against only necessary services (SMB) on the core filer,
+which is known as
+
+constrained delegation
+
+.
+
+Constrained delegation gives administrators the ability to specify and
+enforce application trust boundaries by limiting the scope where
+application services on the cluster vserver can act on a user’s
+behalf. This flexibility to constrain a service’s authorization rights
+helps improve application security by reducing the opportunities for
+compromise by untrusted services.
+
+These are mandatory configuration items for NTFS Security Style
+Shares.
+
+Active Directory Setup Checklist
+
+Windows Server Requirements  Must be running Windows Server 2003 or
+later in Native Mode.
+
+Machine Accounts for each VServer  Each vserver will require a machine
+account.  An AD administrator with rights to add machine accounts, or
+an AD user account with sufficient permissions to add computers to the
+domain, is required.  The machine account is placed in the Computers
+OU by default. Ensure this step is done during the addition of the
+machine accounts rather than trying to move them after creation.  To
+use a nondefault OU, access the VServer > CIFS page for the vserver
+and set the Organizational Unit field.
+
+Client Access  VServer IP Addresses must be added as round-robin DNS
+(RRDNS) entries.  Each vserver has a range of IP addresses associated
+with it. These addresses are used for name resolution and SMB/CIFS
+share access. Each IP address must be added to the vserver hostname in
+DNS. This ensures round-robin resolution across all client-facing
+addresses.  Refer to Configuring DNS for the Avere Cluster for more
+information about using RRDNS.
+
+Name Resolution  Core Filer/Client DNS fully qualified domain names
+(FQDN)  The Avere cluster must be able to resolve the core filer DNS
+fully qualified domain name (FQDN). Clients must be able to resolve
+the vserver FQDN consistently as well.  If you are operating more than
+one DNS environment, both environments must resolve the names.  Core
+Filer Machine Account Service Principal Name (SPN)  The vserver
+machine account must be able to request and obtain kerberos tickets
+for the SMB service using the core filer FQDN server name (as
+configured in the FXT UI) as the kerberos principal. Therefore, the
+core filer machine account SPN name must match the fully qualified
+domain name.
+
+Domains  The vserver machine and core filer machine accounts must be
+in the same Active Directory domain.
+
+AD User/Group Attributes  The Avere cluster uses additional user and
+group attributes to process client requests.  These are the UID and
+GID information.  The attributes may be mapped to AD Users and Groups
+in two ways.  In Active Directory (recommended)  You may configure
+each user/group who require access. Use ADSI Edit to modify.  In a
+Flat File  You may enter mappings of Windows users to UIDs and GIDs,
+and store that file on the FXT Cluster.
+
+Setup Steps
+
+These are the basic steps for setting up Active Directory to work with
+your Avere cluster.
+
+1. Set SPN (Service Principal Name)
+
+The Service Principal Name (SPN) allows Kerberos tickets to be
+obtained for the SMB service on the core filer. A Service Principal
+Name must be configured for the core filer’s SMB Machine Account. This
+SPN is required for Kerberos constrained delegation.
+
+To check if an SPN exists for SMB, open a command prompt on the AD
+server and run "setspn –l <NetBIOS>" (example:  "setspn –l netappsvr")
+to list the service principals.:
+
+   C:\Users\Administrator> setspn -l grape
+   Registered ServicePrincipalNames for CN=GRAPE,CN=Comp
+           cifs/grape.dev.cc.arr.com
+           nfs/grape.dev.cc.arr.com
+           HOST/grape.dev.cc.arr.com
+
+If the SPN does not exist for SMB and the FQDN, it must be added.
+
+To add an SMB SPN, run: "setspn –A cifs/<core filer FQDN> <core filer
+NetBIOS>"
+
+Example: "setspn –A cifs/netappsvr.ar.com netappsvr"
+
+2.  Configure Kerberos Constrained Delegation
+
+These steps must be performed on the Active Directory server by a user
+with administrative privileges.
+
+From the Start menu, open Active Directory Users and Computers. (This
+option appears under the Administrative Tools section.)
+
+In the left-hand pane, expand Network and find the vserver machine
+account in the OU that it was joined to (usually “Computers”).
+
+In the right-hand pane, right click on the vserver’s machine account
+object and select Properties.
+
+
+Select the Delegation tab.
+
+Select Trust this computer for delegation to specified services only.
+
+Select Use any authentication protocol.
+
+Select Add.
+
+
+In the Add Services dialog, click the Users or Computers button.
+
+
+Type the core filer’s machine account name and click the Check Names
+button.
+
+Select the name of the core filer from the list and click OK.
+
+
+The Add Services dialog appears again.
+
+Select the "CIFS" service type for the core filer’s machine account.
+
+
+Click OK.
+
+3. Assign User and Group Attributes with ADSI Edit
+
+The Avere cluster uses specific user attributes for NFS operations.
+
+If your organization is using AD for LDAP:
+
+The easiest way to set the gidNumber and uidNumber attributes is to
+use ADSI Edit on the Active Directory server running adsiedit.msc.
+
+Set the user’s gidNumber attribute to match the “Domain Users”
+gidNumber.  In ADSI Edit, right click CN=Domain Users & choose
+Properties.  Find the attribute “gidNumber”.  If the value is “<not
+set>,” we recommend setting it to a unique number between 10000 and
+65000 by clicking Edit, clicking in the Value field, typing the
+number, and clicking OK. If the value is set, copy it.  Click OK and
+close the Domain Users Properties dialog box.  Domain Users Properties
+dialog  Right click the entry for the desired user and choose
+Properties.  Click the gidNumber attribute.  Click the Edit button.
+edit dialog  For the value, paste or type the gidNumber as taken from
+the gidNumber of “Domain Users” and then click OK.  editing the GID
+number
+
+Set the uidNumber attribute.  Avere recommends a number between 10000
+and 65000.  While in the ADSI Edit user properties, find and click the
+uidNumber attribute.  Click the Edit button.  Click in the Value
+field.  Enter a unique number between 10000 and 65000.  Click OK on
+the right.  Click OK on the bottom to commit attribute changes
+(gidNumber and uidNumber).
+
+
+For SMB client access, users are authenticated by their Windows
+credentials but authorized based on their UNIX credentials. This is
+required because the Avere cluster uses NFSv3 for the datapath to the
+core filer. For this reason, we require that users and groups have
+rfc2307 attributes in order to facilitate this.
+
+A summary of required attributes are as follows:
+
+User Attributes:
+
+      User Attribute  Description  Avere Cluster Use  sAMAccountName
+SMB username  Required. Automatically maintained by AD  uid  NFS
+username  If left blank (recommended), defaults to sAMAaccountName
+uidNumber  NFS userid  Required. Unique value must be assigned by
+admin  gidNumber  NFS primary groupid  Required. Value must be
+assigned by admin. Typically set to Domain Users gidNumber
+
+Group Attributes:
+
+      Group Attribute  Description  Avere Cluster Use  cn  used as NFS
+groupname  Required.  Automatically maintained by AD  gidNumber  NFS
+groupid  Required.  Unique value must be assigned by admin  memberUid
+member NFS usernames  optional for AD groups required for NFS groups
+when the core filer security style is posix mode bits and ad users are
+members of nfs groups
+
+In order to successfully evaluate the entries on a core filer Access
+Control List (ACL), we need to be able to map a user and group
+Security ID (SID) to the corresponding UNIX credential.
+
+To accomplish this, in addition to Active Directory for user
+authentication and SID-to-username translation, we also require a
+Directory Service as a source of these attributes. This can be NIS,
+LDAP, or a flat file, whichever is the authoritative source of these
+attributes in your environment. If there are multiple sources, we
+should use the same source that the core filer is using as it will
+also need to reverse translate from UNIX credential to Windows SID.
+
+If there is not an authoritative source of these attributes, a flat
+file can be generated to provide these values. Alternatively, these
+can be populated in Active Directory via ADSIEdit. Active Directory
+can then be configured as the Directory Service via LDAP.
+
+The LDAP Server can be in a comma-separated list of servers. The BASE
+DN will match the LDAP DN of the domain.
+
+Flat File Format
+
+User (/etc/passwd format)
+
+Format: "<uid>:*:<uidNumber>:<gidNumber>:::"
+
+Example: "avereuser:*:11111:10000:::"
+
+Group (/etc/group format)
+
+Format: "<cn>:*:<gidNumber>:<memberUid>,<memberUid>"
+
+Example: "Domain Users:*:10000:avereuser,devuser1"

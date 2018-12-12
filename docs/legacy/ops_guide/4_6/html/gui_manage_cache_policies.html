@@ -1,0 +1,456 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Core Filer &gt; Manage Cache Policies &#8212; Operations Guide 4.6 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '4.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Operations Guide 4.6 documentation" href="ops_conf_index.html" />
+    <link rel="up" title="Avere Control Panel Settings" href="settings_overview.html" />
+    <link rel="next" title="Cluster &gt; General Setup" href="gui_cluster_general_setup.html" />
+    <link rel="prev" title="Core Filer &gt; Cloud Snapshot Policies" href="gui_cloud_snapshot_policies.html" /> 
+
+<!--    use for draft review builds only - enables web page annotation internally -->
+   
+<!--   <script type="text/javascript" src="_static/jquery.js"></script>  
+   <script src="_static/annotator-full.min.js"></script>  
+   <script src="_static/annotate_init.js"></script> 
+   <link rel="stylesheet" href="_static/annotator.min.css">  
+-->
+    
+
+  </head>
+  <body role="document">
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/clientSpecific/avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_cluster_general_setup.html" title="Cluster &gt; General Setup"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_cloud_snapshot_policies.html" title="Core Filer &gt; Cloud Snapshot Policies"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="core-filer-manage-cache-policies">
+<span id="gui-manage-cache-policies"></span><h1>Core Filer &gt; Manage Cache Policies<a class="headerlink" href="#core-filer-manage-cache-policies" title="Permalink to this headline">     </a></h1>
+<a class="reference internal image-reference" href="_images/gui_manage_cache_policies.png"><img alt="Manage Cache Policies page" src="_images/gui_manage_cache_policies.png" style="width: 800px;" /></a>
+<p>The <span class="guilabel">Manage Cache Policies</span> settings page allows you to see details for the preconfigured cache policies in the system and to create your own customized policies.</p>
+<p>(Use the <span class="guilabel">Core Filer Details</span> settings page to apply a policy to a core filer.)</p>
+<p>Cache policies are groups of settings that control how the Avere cluster retains data that has passed between a client and a core filer. Depending on the type of back-end storage and the needs of the system, you can set it to cache files that clients read; files that clients read and files that clients write; or neither. You can configure how frequently to check the cached file against the back-end version, and customize additional details.</p>
+<div class="section" id="predefined-cache-policies">
+<h2>Predefined Cache Policies<a class="headerlink" href="#predefined-cache-policies" title="Permalink to this headline">     </a></h2>
+<p>The system comes with several cache policies already configured - most administrators can find one that is appropriate to their system&#8217;s needs.</p>
+<p>The table below describes the five default cache policies and their settings; more detailed descriptions follow.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="32%" />
+<col width="15%" />
+<col width="15%" />
+<col width="20%" />
+<col width="19%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Cache Policy</th>
+<th class="head">Caching Mode</th>
+<th class="head">Core Filer
+Verification</th>
+<th class="head">Local Directories</th>
+<th class="head">Write Back Delay</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Clients Bypassing the Cluster</td>
+<td>Read</td>
+<td>30 seconds</td>
+<td>Disabled</td>
+<td>None</td>
+</tr>
+<tr class="row-odd"><td>Read Caching</td>
+<td>Read</td>
+<td>Never</td>
+<td>Disabled</td>
+<td>None</td>
+</tr>
+<tr class="row-even"><td>Read and Write Caching</td>
+<td>Read/Write</td>
+<td>Never</td>
+<td>Disabled</td>
+<td>1 hour</td>
+</tr>
+<tr class="row-odd"><td>Full Caching</td>
+<td>Read/Write</td>
+<td>Never</td>
+<td>Enabled</td>
+<td>10 minutes</td>
+</tr>
+<tr class="row-even"><td>Transitioning Clients Before
+or After a Migration</td>
+<td>Read</td>
+<td>30 seconds</td>
+<td>Enabled</td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="clients-bypassing-the-cluster">
+<h3>Clients Bypassing the Cluster<a class="headerlink" href="#clients-bypassing-the-cluster" title="Permalink to this headline">     </a></h3>
+<p>The policy named <span class="guilabel">Clients Bypassing the Cluster</span> is designed for the use case where some clients mount the Avere cluster but other clients mount the core filer directly.</p>
+<p>This policy caches read files only; writes are sent immediately back to the cluster. Client read requests are served from the cache as frequently as possible. A relatively short verification interval is used so that the cached files can be frequently updated from the back-end storage.</p>
+</div>
+<div class="section" id="read-caching">
+<h3>Read Caching<a class="headerlink" href="#read-caching" title="Permalink to this headline">     </a></h3>
+<p>The <span class="guilabel">Read Caching</span> policy is designed to optimize client read performance.</p>
+<p>Read files are cached, but writes pass directly to the core filer. Files in the cache are never compared against the back-end storage.</p>
+<p>This policy can be useful if clients reference the same static data repeatedly.</p>
+<p>In this system, clients can write through the cluster or mount the storage system directly to write data. However, because the Core Filer Verification setting in this policy is <span class="guilabel">Never</span>, clients must not modify files directly on the back-end core filer that are also stored in the cache - this scenario can cause data inconsistency.</p>
+</div>
+<div class="section" id="read-and-write-caching">
+<h3>Read and Write Caching<a class="headerlink" href="#read-and-write-caching" title="Permalink to this headline">     </a></h3>
+<p>The <span class="guilabel">Read and Write Caching</span> policy balances read and write performance; it can be used when all clients mount only the Avere cluster and no clients read or write directly on the core filer.</p>
+<p>Files in the cache are not validated against the core filer because the cached version is assumed to be more current than the back-end version.</p>
+<p>Files are written back to the core filer after one hour.</p>
+</div>
+<div class="section" id="full-caching">
+<h3>Full Caching<a class="headerlink" href="#full-caching" title="Permalink to this headline">     </a></h3>
+<p>The <span class="guilabel">Full Caching</span> policy is designed for use with cloud core filers and to be used during FlashMove and FlashMirror data management jobs.</p>
+<p>This policy requires clients to mount only the Avere cluster, and not use the core filer directly. Reads and writes are both stored in the cluster, and written back to the core filer after ten minutes.</p>
+<p>This policy stores frequently accessed files in the cache to avoid the latency that can be associated with accessing cloud storage, but frequently writes files to more permanent storage on the back end.</p>
+</div>
+<div class="section" id="transitioning-clients-before-or-after-a-migration">
+<h3>Transitioning Clients Before or After a Migration<a class="headerlink" href="#transitioning-clients-before-or-after-a-migration" title="Permalink to this headline">     </a></h3>
+<p>The client transition caching policy can be used before or after a data migration (FlashMove or FlashMirror) in a system where some clients mount the Avere cluster and other clients mount the core filer directly. Select this policy when moving clients to the Avere cluster before a migration, or moving clients off the cluster after a migration. (You cannot safely migrate files with the Avere cluster if clients are directly connected to the core filer.)</p>
+<p>File and directory reads are cached but are checked against the core filer storage every 30 seconds to ensure consistency. Writes are not cached.</p>
+</div>
+</div>
+<div class="section" id="customizing-cache-policies">
+<h2>Customizing Cache Policies<a class="headerlink" href="#customizing-cache-policies" title="Permalink to this headline">     </a></h2>
+<p>In addition to the system default cache policies that are predefined, you can create your own custom cache policies.</p>
+<p>You cannot edit a system cache policy, but you can use a system policy as the starting point for a custom policy. Make changes, and then click the <span class="guilabel">Create</span> button to save the modified policy with a new name.</p>
+<p>You also can use this screen to modify a custom cache policy that you created previously.</p>
+<p>After you modify settings, be sure to click the appropriate button. Use the <span class="guilabel">Create</span> button to enter a new, unique name for the policy and save it as a new custom policy. Use the <span class="guilabel">Modify</span> button if you started with a custom cache policy and you want to make changes to that policy. (You cannot modify system policies.)</p>
+<p>If you change your mind about making changes, click the <span class="guilabel">Revert</span> button to reload the saved policy that you started with.</p>
+<p>To create a new cache policy:</p>
+<ol class="arabic">
+<li><p class="first">Select a cache policy to use as a starting point.</p>
+<p>Use the <span class="guilabel">Choose a cache policy to manage</span> selector to choose a policy.</p>
+<p>If you choose a custom policy that is being used by a core filer, a warning message appears telling you that changes will take effect immediately if you click the <span class="guilabel">Modify</span> button after making changes. Clicking the <span class="guilabel">Create</span> button instead allows you to save your changes with a different name to create a new cache policy.</p>
+<a class="reference internal image-reference" href="_images/cache_policy_in_use_warning.png"><img alt="Warning message about modifying an active cache policy" src="_images/cache_policy_in_use_warning.png" style="width: 650px;" /></a>
+</li>
+<li><p class="first">Customize the settings in the <span class="guilabel">Basic Options</span> and <span class="guilabel">Advanced Options</span> panels.</p>
+</li>
+<li><p class="first">Save your changes as a new policy by clicking the <span class="guilabel">Create</span> button and entering a new name for the policy.</p>
+</li>
+</ol>
+<p>To modify a custom cache policy, the steps are similar:</p>
+<ol class="arabic">
+<li><p class="first">Select the custom cache policy in the <span class="guilabel">Choose a cache policy to manage</span> selector.</p>
+<p>If a core filer is using the selected policy, a warning message appears.</p>
+</li>
+<li><p class="first">Customize the settings in the <span class="guilabel">Basic Options</span> and <span class="guilabel">Advanced Options</span> panels.</p>
+</li>
+<li><p class="first">Click the <span class="guilabel">Modify</span> button to save the updates to your custom cache policy. The changes immediately affect any core filers that use this policy.</p>
+</li>
+</ol>
+<div class="section" id="requirements-for-cloud-core-filers">
+<h3>Requirements for Cloud Core Filers<a class="headerlink" href="#requirements-for-cloud-core-filers" title="Permalink to this headline">     </a></h3>
+<p>When creating a custom cache policy that will be used on a cloud object store, you must include the following settings:</p>
+<ul class="simple">
+<li>The caching mode must be Read/Write.</li>
+<li>Local Directories must be enabled.</li>
+<li>Core Filer Verification must be set to <span class="guilabel">Never</span>.</li>
+<li>Write-through scheduling must be disabled (that is, do not create a schedule).</li>
+</ul>
+<p>Cache policies that do not meet these requirements cannot be selected for cloud core filers.</p>
+</div>
+</div>
+<div class="section" id="cache-policy-settings-basic-options">
+<span id="cache-policy-basic"></span><h2>Cache Policy Settings - Basic Options<a class="headerlink" href="#cache-policy-settings-basic-options" title="Permalink to this headline">     </a></h2>
+<p>The most frequently used cache policy options can be changed in the <span class="guilabel">Basic Options</span> panel.</p>
+<a class="reference internal image-reference" href="_images/cache_policy_basic_options.png"><img alt="Basic settings for cache policies" src="_images/cache_policy_basic_options.png" style="width: 650px;" /></a>
+<dl class="docutils">
+<dt><span class="guilabel">Caching Mode</span></dt>
+<dd><p class="first">Choose <span class="guilabel">Read</span> to cache files (or directory structures) that the clients request from the core filer, or <span class="guilabel">Read/Write</span> to cache both requested files and any changes that the client makes to  files or directories.</p>
+<p>The caching mode must be <span class="guilabel">Read/Write</span> if you want to use this policy with cloud core filers.</p>
+<div class="admonition caution">
+<p class="first admonition-title">Caution</p>
+<p class="last">If you are using read/write mode, all clients that access a given dataset must mount the Avere cluster to access the core filer. If some clients use the cluster and others access the core filer directly, data inconsistency can lead to corruption of the data.</p>
+</div>
+<p>The <span class="guilabel">Core Filer Verification</span> setting determines how much time can pass before the cached file&#8217;s attributes are checked against the back-end storage. If write caching is enabled, the verification period is not configurable.</p>
+<p class="last">The amount of time a written change can be stored in the Avere cluster&#8217;s cache is determined by the <span class="guilabel">Maximum Writeback Delay</span> setting.</p>
+</dd>
+<dt><span class="guilabel">Core Filer Verification</span></dt>
+<dd><p class="first">The verification setting determines how long a read file can be stored in the cache before it is compared to the core filer version.</p>
+<p>This setting is active only if clients can write directly to the core filer. If the caching mode is set to <span class="guilabel">Read/Write</span>, then client writes can be cached and this setting is disabled. (An advanced option allows you to override this setting; read the warnings below in <a class="reference internal" href="#advanced-verification-nh"><span class="std std-ref">Advanced Core Filer Verification</span></a> before taking this action.)</p>
+<p>You can select a value from the drop-down menu, or select <span class="guilabel">Custom</span> and enter a value in the field provided. If some clients access the core filer directly and others access the Avere cluster cache, a value greater than 30 seconds can cause consistency problems between cached data and the core filer.</p>
+<a class="last reference internal image-reference" href="_images/cache_verification_setting.png"><img alt="Options for the Core Filer Verification setting" src="_images/cache_verification_setting.png" style="width: 650px;" /></a>
+</dd>
+<dt><span class="guilabel">Maximum Writeback Delay</span></dt>
+<dd><p class="first">The writeback delay value sets the maximum amount of time a changed file can be cached before it is written to the back-end core filer.</p>
+<p>This setting is active only for policies with write caching.</p>
+<p>Select a value from the drop-down menu, or select <span class="guilabel">Custom</span> and enter a value in the field provided. For systems that use <span class="guilabel">Local Directories</span>, a value of ten minutes or less is recommended; without <span class="guilabel">Local Directories</span>, the maximum recommended value is one hour.</p>
+<p>Read <a class="reference internal" href="advanced_cache_features.html#writeback-delay-overview"><span class="std std-ref">Determining the Maximum Writeback Delay Value</span></a> to learn more about setting an appropriate writeback delay value.</p>
+<a class="last reference internal image-reference" href="_images/cache_writeback_setting.png"><img alt="Options for the Writeback Delay setting" src="_images/cache_writeback_setting.png" style="width: 650px;" /></a>
+</dd>
+<dt><span class="guilabel">Local Directories</span></dt>
+<dd><p class="first">The <span class="guilabel">Local Directories</span> feature synchronizes the directory structure on the Avere cluster cache with the core filer. This setting allows directory structure changes to be written to the cluster cache and transferred to the core filer at specific intervals. This capability can significantly boost performance for certain types of workloads that include a high number of creation operations.</p>
+<p>This option can be enabled only for cache policies that include write caching.</p>
+<p>This option must be enabled if you want to use the policy with cloud core filers.</p>
+<p>This option must be enabled if you want to use FlashMove or FlashMirror.</p>
+<p>Note that this option is set independently for each core filer. It cannot be configured for an entire vserver or per export.</p>
+<div class="last admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Enabling and disabling local directories on a core filer can take a large amount of time. You can reduce this time by reducing the writeback delay and waiting for all of the cached data to be written to the core filer before enabling or disabling the <span class="guilabel">Local Directories</span> setting.</p>
+</div>
+</dd>
+<dt><span class="guilabel">Cache Policy Notes</span></dt>
+<dd>Use this field to store a description or other administrative notes about the cache policy. This text will be visible when the cache policy is selected. Entering notes is optional.</dd>
+</dl>
+</div>
+<div class="section" id="cache-policy-settings-advanced-options">
+<span id="cache-policy-advanced"></span><h2>Cache Policy Settings - Advanced Options<a class="headerlink" href="#cache-policy-settings-advanced-options" title="Permalink to this headline">     </a></h2>
+<p>Click the triangular control under <span class="guilabel">Advanced Options</span> to show additional settings for your custom cache policy.</p>
+<a class="reference internal image-reference" href="_images/cache_policy_advanced_options.png"><img alt="Advanced Options panel in the Manage Cache Policies page" src="_images/cache_policy_advanced_options.png" style="width: 650px;" /></a>
+<p>All of the options in the advanced panel apply to Read/Write cache policies only. If the <span class="guilabel">Caching Mode</span> setting of the policy being modified is not <span class="guilabel">Read/Write</span>, these settings are inactive.</p>
+<dl class="docutils" id="advanced-verification-nh">
+<dt><span class="guilabel">Advanced Core Filer Verification</span></dt>
+<dd><p class="first">This setting allows you to override the default behavior and turn on core filer verification for clusters that cache write operations. Note that it is possible to lose client changes stored in the cache if you allow the system to invalidate cached files based on the core filer.</p>
+<div class="admonition caution">
+<p class="first admonition-title">Caution</p>
+<p class="last">This setting can lead to data inconsistencies between the cache and the core filer, and possible data loss or corruption. Consult Avere Global Services before using this setting.</p>
+</div>
+<p>To turn on core filer verification for a read/write cache policy, check the <span class="guilabel">Allow core filer verification when read/write caching</span> box and specify a time interval (in seconds) in the field below.</p>
+<p class="last">Cloud core filers cannot use cache policies that have core filer verification enabled.</p>
+</dd>
+</dl>
+<dl class="docutils" id="cache-utilization-nh">
+<dt><span class="guilabel">Cache Utilization Control</span></dt>
+<dd><p class="first">Cache utilization controls are designed to limit the amount of modified data cached on the Avere cluster for a particular core filer, user, export, or other entity.  If the &#8220;dirty&#8221; data in the cluster cache reaches a preset percentage for this entity, Avere OS begins writing data more aggressively to the back-end storage system. (&#8220;Dirty&#8221; data in this case are file changes that have not been written to the back-end core filer.)</p>
+<p>If the controlled data in the cache reaches 100% of the limit, any further write operations to the cache from the selected entity will be rejected with <code class="docutils literal"><span class="pre">DQUOT</span></code> or <code class="docutils literal"><span class="pre">EJUKEBOX</span></code> errors. If this problem persists, you can clear the space by changing the maximum writeback delay value for the core filer to 0 seconds (use the <a class="reference internal" href="gui_core_filer_details.html#gui-core-filer-details"><span class="std std-ref">Core Filer Details</span></a> page to change to a cache policy with this setting.) After the system returns to normal, consider redistributing workload among your clients to avoid another occurrence.</p>
+<p>Use the drop-down tool to select what type of limit to set. Options include <span class="guilabel">Core Filer</span>, <span class="guilabel">User</span>, <span class="guilabel">Export</span>, <span class="guilabel">FSID</span>, <span class="guilabel">Qtree</span>, and combinations of those.</p>
+<p class="last">(Qtrees are configured on the <a class="reference internal" href="gui_export_policies.html#export-policies-page"><span class="std std-ref">VServer &gt; Export Policies</span></a> page.)</p>
+</dd>
+</dl>
+<dl class="docutils" id="write-through-scheduling-nh">
+<dt><span class="guilabel">Write-Through Scheduling</span></dt>
+<dd><p class="first">This scheduling setting lets you ensure that all cached changes are written to the back-end core filer before a scheduled core filer backup, snapshot, or other data operation. At a scheduled time, the Avere cluster stops caching write operations (it changes to read mode caching) and copies all cached changes to the core filer. New write operations are passed through immediately to the core filer. (This feature can be referred to as scheduling  &#8220;read-mode&#8221; or &#8220;write-through&#8221; periods, which are two different names for the same behavior.)</p>
+<p>Read <a class="reference internal" href="advanced_cache_features.html#write-through-scheduling-overview"><span class="std std-ref">Synchronizing Cached Data with Scheduled Write-Through/Read Mode Periods</span></a> to learn more about this feature.</p>
+<p>Cloud core filers cannot use policies that include write-through scheduling.</p>
+<p>To configure scheduled write-through periods, make the following changes:</p>
+<ol class="last arabic">
+<li><p class="first">In the <span class="guilabel">Write-through Schedule</span> selector, choose one of the schedules that you have previously created in the system. If none exist, click the link to create a new schedule.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Schedules can be viewed and edited on the <span class="guilabel">Schedules</span> page in the <span class="guilabel">Cluster</span> settings section.</p>
+</div>
+</li>
+<li><p class="first">Use the <span class="guilabel">On-Sync Action</span> selector to specify how to end the write-back period. Options are:</p>
+<ul class="simple">
+<li><span class="guilabel">URL Polling</span> - Contact a web address (specified in the next field) for a message that the sync is complete.</li>
+<li><span class="guilabel">Wait Period</span> - Stay in read mode for a set amount of time, then return to normal operation.</li>
+</ul>
+</li>
+<li><p class="first">The third setting has a different form depending on the setting chosen in <span class="guilabel">On-Sync Action</span>:</p>
+<ul class="simple">
+<li>If <span class="guilabel">URL Polling</span> is selected, there is a <span class="guilabel">Poll URL</span> text field. Specify the URL to monitor for a message to return to write caching.</li>
+<li>If <span class="guilabel">Wait Period</span> is selected, there is a drop-down selector labeled <span class="guilabel">Wait Period</span>. Choose one of the available values, which range from five minutes to six hours.</li>
+</ul>
+</li>
+</ol>
+</dd>
+</dl>
+</div>
+<div class="section" id="saving-cache-policies">
+<h2>Saving Cache Policies<a class="headerlink" href="#saving-cache-policies" title="Permalink to this headline">     </a></h2>
+<p>A row of buttons to save or abandon changes appears at the top and bottom of the cache policy settings page.</p>
+<p>After you modify settings, be sure to click the appropriate button. Use the <span class="guilabel">Create</span> button to enter a new, unique name for the policy and save it as a new custom policy. Use the <span class="guilabel">Modify</span> button if you started with a custom cache policy and you want to make changes to that policy. (You cannot modify system policies.)</p>
+<p>If you change your mind about making changes, click the <span class="guilabel">Revert</span> button to reload the saved policy that you started with.</p>
+</div>
+<div class="section" id="deleting-a-cache-policy">
+<h2>Deleting a Cache Policy<a class="headerlink" href="#deleting-a-cache-policy" title="Permalink to this headline">     </a></h2>
+<p>The <span class="guilabel">Delete</span> button permanently removes the selected custom cache policy from the system.</p>
+<p>System cache policies cannot be deleted.</p>
+<div class="last-update container">
+updated 2017-02-15</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_cloud_snapshot_policies.html"
+                        title="previous chapter">Core Filer &gt; Cloud Snapshot Policies</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_cluster_general_setup.html"
+                        title="next chapter">Cluster &gt; General Setup</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_cluster_general_setup.html" title="Cluster &gt; General Setup"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_cloud_snapshot_policies.html" title="Core Filer &gt; Cloud Snapshot Policies"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">2017 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

@@ -1,0 +1,310 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Core Filer &gt; Core Filer Details &#8212; Operations Guide 4.6 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '4.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Operations Guide 4.6 documentation" href="ops_conf_index.html" />
+    <link rel="up" title="Avere Control Panel Settings" href="settings_overview.html" />
+    <link rel="next" title="Core Filer &gt; Cloud Encryption Settings" href="gui_cloud_encryption_settings.html" />
+    <link rel="prev" title="Core Filer &gt; Manage Core Filers" href="gui_manage_core_filers.html" /> 
+
+<!--    use for draft review builds only - enables web page annotation internally -->
+   
+<!--   <script type="text/javascript" src="_static/jquery.js"></script>  
+   <script src="_static/annotator-full.min.js"></script>  
+   <script src="_static/annotate_init.js"></script> 
+   <link rel="stylesheet" href="_static/annotator.min.css">  
+-->
+    
+
+  </head>
+  <body role="document">
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/clientSpecific/avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_cloud_encryption_settings.html" title="Core Filer &gt; Cloud Encryption Settings"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_manage_core_filers.html" title="Core Filer &gt; Manage Core Filers"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="core-filer-core-filer-details">
+<span id="gui-core-filer-details"></span><h1>Core Filer &gt; Core Filer Details<a class="headerlink" href="#core-filer-core-filer-details" title="Permalink to this headline">     </a></h1>
+<a class="reference internal image-reference" href="_images/gui_core_filer_details.png"><img alt="Core Filer Details page" src="_images/gui_core_filer_details.png" style="width: 600pt;" /></a>
+<p>The <span class="guilabel">Core Filer Details</span> page shows information about one core filer and gives you options to change settings, including cache policy, core filer name, security settings, and other attributes.</p>
+<p>To use these settings, first select the core filer to see by using the drop-down selector at the top of the page or in the menu sidebar. You also can load this page by clicking a core filer name in the <span class="guilabel">Manage Core Filers</span> page. (The <span class="guilabel">Core Filer List</span> link at the top of the page is a quick link back to the <span class="guilabel">Manage Core Filers</span> page.)</p>
+<p>The page is customized for the core filer being displayed; different edit options are available for hardware core filers (NAS) and for cloud core filers.</p>
+<div class="section" id="cache-policy-settings">
+<span id="set-cache-policy"></span><h2>Cache Policy Settings<a class="headerlink" href="#cache-policy-settings" title="Permalink to this headline">     </a></h2>
+<a class="reference internal image-reference" href="_images/core_filer_cache_policy-annot.png"><img alt="Cache policy selection" src="_images/core_filer_cache_policy-annot.png" style="width: 450pt;" /></a>
+<p>The <span class="guilabel">Cache Policy</span> panel shows details about the core filer&#8217;s caching configuration and allows you to change to a different policy.</p>
+<p>The system comes with several predefined cache policies. You can create customized cache policies as well - read <a class="reference internal" href="gui_manage_cache_policies.html#gui-manage-cache-policies"><span class="std std-ref">Manage Cache Policies</span></a> to learn more about customizing cache settings.</p>
+<p>If the selected core filer uses a predefined cache policy, this panel includes a detailed description of the policy and when and how to use it. For custom policies, the display shows the settings included and displays any text stored in the <span class="guilabel">Cache Policy Notes</span> field.</p>
+<p>The drop-down selector (1) lets you change the cache policy setting for this core filer.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For cloud filers, only <span class="guilabel">Full Caching</span> or a custom policy can be selected. Custom cache policies must include Local Directories support and cache both reads and writes in order to be applicable to cloud core filers.</p>
+</div>
+<p>A link to the <span class="guilabel">Manage Cache Policies</span> page is given at the bottom of the panel (2) for quick access to customize or create a policy.</p>
+<p>If you change the cache policy, click the <span class="guilabel">Submit</span> button (3) to save your changes, or <span class="guilabel">Revert</span> to abandon the modifications. When changing among system cache policies, you might see a warning about other steps that must be taken, or about possible service interruptions that will be caused by changing the policy. For example, changing a policy could cause cluster unavailability while data is moved. All NFS clients that access the cluster might need to remount, and SMB clients might need to remap the cluster volume.</p>
+</div>
+<div class="section" id="edit-filer-settings">
+<h2>Edit Filer Settings<a class="headerlink" href="#edit-filer-settings" title="Permalink to this headline">     </a></h2>
+<p>The <span class="guilabel">Edit Filer</span> panel lets you change settings on the core filer.</p>
+<p>The settings displayed here depend on the kind of core filer selected, since cloud core filers have different options than NAS core filers.</p>
+<div class="section" id="common-settings">
+<h3>Common Settings<a class="headerlink" href="#common-settings" title="Permalink to this headline">     </a></h3>
+<p>A few configurable settings are common to both types of core filers:</p>
+<p><span class="guilabel">Core Filer Name</span> - The visible name for the core filer.</p>
+<p><span class="guilabel">Network</span> - The network that the Avere cluster uses to communicate with the core filer. (If your cluster includes multiple networks, you can choose which network to use.)</p>
+<p id="index-0"><span class="guilabel">Enable Bandwidth Control</span> - Check this box to show additional settings for bandwidth management. These settings allow you to prevent the cluster from using all available bandwidth when writing data to back-end storage, and to force cached files to be written to the core filer earlier than necessary for load balancing. Read <a class="reference internal" href="control_write_bandwidth.html#write-bandwidth"><span class="std std-ref">Controlling Write Bandwidth</span></a> to learn more about customizing this behavior.</p>
+<ul class="simple" id="index-1">
+<li><span class="guilabel">Maximum Bandwidth</span> - Choose the amount of bandwidth that can be used for writebacks to this core filer. You can specify a custom value in MB/sec - integer values between 1 and 800 are accepted.</li>
+</ul>
+<ul class="simple" id="index-2">
+<li><span class="guilabel">Early Writeback</span> - Check this box to prompt more frequent writes to this core filer. <strong>Note:</strong> You must set a maximum bandwidth if you enable early writeback.</li>
+</ul>
+</div>
+<div class="section" id="nas-storage-settings">
+<span id="nas-core-filer-edit"></span><h3>NAS Storage Settings<a class="headerlink" href="#nas-storage-settings" title="Permalink to this headline">     </a></h3>
+<a class="reference internal image-reference" href="_images/edit_core_filer_nas.png"><img alt="Edit Filer settings for a hardware core filer" src="_images/edit_core_filer_nas.png" style="width: 450pt;" /></a>
+<p>In addition to the common settings described above, the <span class="guilabel">Edit Filer</span> panel includes these settings for NAS core filers.</p>
+<p><span class="guilabel">Core filer network name/IP</span> – You can change the information about the network name or IP address, if, for example, you have moved the core filer to a different network. As when you defined the core filer, use dot notation or a fully qualified domain name and separate multiple values with spaces. (A fully qualified domain name is necessary to support SMB ACLs and recommended for most other situations.)</p>
+<p id="index-3"><span class="guilabel">Snapshot directory</span> – Many NAS core filers provide a <em>snapshot</em> feature that creates periodic, read-only copies of the data stored. If this core filer supports snapshots, specify the name of the snapshot directory that it uses. This setting allows clients to access snapshot files through the Avere cluster. The default is <code class="docutils literal"><span class="pre">.snapshot</span></code>.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Avere OS always treats snapshot directories as read-only, regardless of the core filer&#8217;s cache policy. Although the data represented in the snapshot might be cached on the Avere cluster, snapshot attributes are always read from back-end storage, which makes queries on snapshot directories slower than for typical directories.</p>
+</div>
+</div></blockquote>
+<p id="index-4"><span class="guilabel">Filer class</span> - Choose the type of hardware that corresponds to the back-end storage system, or choose <span class="guilabel">Other</span> if the hardware type is not listed.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Make sure that the Filer Class value is set correctly before enabling SMB access for this core filer.</p>
+</div>
+</div></blockquote>
+<p><span class="guilabel">Enable WAN Optimization</span> – If the core filer is in a wide-area network (WAN) environment, select this option to optimize communication. <strong>Caution:</strong> This setting might degrade performance in a local-area network (LAN) environment.</p>
+<p id="index-5"><span class="guilabel">Enable Kerberos</span> – Select this option to enable Kerberos authentication. If you have not yet installed a keytab file, you can select this option, but you will need to access the <a class="reference internal" href="gui_kerberos.html#gui-kerberos"><span class="std std-ref">Cluster &gt; Kerberos</span></a> settings page to install a keytab file.</p>
+<p>Read <a class="reference internal" href="kerberos_overview.html#kerberos-overview"><span class="std std-ref">Setting Up Kerberos Authentication</span></a> to learn more about the settings necessary to configure Kerberos for cluster-core filer communication.</p>
+<p><span class="guilabel">Hardware Details (Optional)</span> – Information about the core filer’s hardware, if it has been entered. You can add hardware and configuration details about this core filer here.</p>
+</div>
+<div class="section" id="cloud-storage-settings">
+<h3>Cloud Storage Settings<a class="headerlink" href="#cloud-storage-settings" title="Permalink to this headline">     </a></h3>
+<a class="reference internal image-reference" href="_images/edit_core_filer_cloud.png"><img alt="Edit Filer settings for a cloud core filer" src="_images/edit_core_filer_cloud.png" style="width: 450pt;" /></a>
+<p>In addition to the common settings described above, the <span class="guilabel">Edit Filer</span> panel includes these settings for cloud core filers.</p>
+<p><span class="guilabel">Cloud credential</span> – Specifies which cloud credential the core filer is using. Use the drop-down list to choose from any other existing credentials. Cloud credentials are defined in <a class="reference internal" href="gui_cloud_credentials.html#gui-cloud-credentials"><span class="std std-ref">Cluster &gt; Cloud Credentials</span></a>.</p>
+<p id="index-6"><span class="guilabel">Compression mode</span> – Optionally, choose a mode to enable file compression before storing data on the cloud core filer. Compression options are LZW, LZW4, or None.</p>
+<p>Using compression allows you to save storage space on the cloud core filer, but it increases overhead when reading and writing files to the cloud. Encrypting and decrypting files requires processing time, which could slow write and read times when accessing the core filer.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you change compression modes, files are not reprocessed until the next time they are stored. That is, individual files will be compressed with the method that was in effect the last time they were written.</p>
+</div>
+</div></blockquote>
+<p><span class="guilabel">Enable HTTPS</span> – Select this option if you want to use the HTTP over SSL web protocol to communicate with your cloud provider.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If your cloud provider does not use the standard https port, 443, this option is disabled.</p>
+</div>
+</div></blockquote>
+<p><span class="guilabel">Certificate verification</span> - Select how to validate the SSL certificates sent by this core filer. Options include:</p>
+<ul class="simple">
+<li><span class="guilabel">OCSP</span> - Use the online certificate status protocol to validate certificates</li>
+<li><span class="guilabel">CRL</span> - Use a certificate revocation list to validate certificates</li>
+<li><span class="guilabel">OCSP_CRL</span> - Use OCRP first, and if it fails, use CRL</li>
+<li><span class="guilabel">DISABLED</span> - Do not validate certificates. This option is useful for self-signed certificates or the case where you use a certificate type that cannot be validated through one of the available protocols.</li>
+</ul>
+<p><span class="guilabel">Proxy</span> - If the Avere cluster contacts this core filer through a proxy server, select its configuration here. Proxy configurations are defined on the <a class="reference internal" href="gui_proxy_config.html#gui-proxy-config"><span class="std std-ref">Cluster &gt; Proxy Configuration</span></a> settings page.</p>
+<p id="core-filer-assign-snapshot-policy"><span class="guilabel">Snapshot Policy</span> - This drop-down menu allows you to choose a snapshot policy for a cloud core filer. Cloud snapshot policies are configured in the <span class="guilabel">Cloud Snapshot Policies</span> page (<a class="reference internal" href="gui_cloud_snapshot_policies.html#cloud-snapshot-policies"><span class="std std-ref">Core Filer &gt; Cloud Snapshot Policies</span></a>) before they can be selected on this page.</p>
+<p>Hover your mouse pointer over the question mark help icon next to the drop-down selector to see details about the selected policy.</p>
+<div class="last-update container">
+updated 2017-02-15</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_manage_core_filers.html"
+                        title="previous chapter">Core Filer &gt; Manage Core Filers</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_cloud_encryption_settings.html"
+                        title="next chapter">Core Filer &gt; Cloud Encryption Settings</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_cloud_encryption_settings.html" title="Core Filer &gt; Cloud Encryption Settings"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_manage_core_filers.html" title="Core Filer &gt; Manage Core Filers"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">2017 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

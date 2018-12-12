@@ -1,0 +1,526 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Cluster &gt; Directory Services &#8212; Operations Guide 4.6 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '4.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Operations Guide 4.6 documentation" href="ops_conf_index.html" />
+    <link rel="up" title="Avere Control Panel Settings" href="settings_overview.html" />
+    <link rel="next" title="Cluster &gt; Kerberos" href="gui_kerberos.html" />
+    <link rel="prev" title="Cluster &gt; Schedules" href="gui_schedules.html" /> 
+
+<!--    use for draft review builds only - enables web page annotation internally -->
+   
+<!--   <script type="text/javascript" src="_static/jquery.js"></script>  
+   <script src="_static/annotator-full.min.js"></script>  
+   <script src="_static/annotate_init.js"></script> 
+   <link rel="stylesheet" href="_static/annotator.min.css">  
+-->
+    
+
+  </head>
+  <body role="document">
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/clientSpecific/avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_kerberos.html" title="Cluster &gt; Kerberos"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_schedules.html" title="Cluster &gt; Schedules"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="cluster-directory-services">
+<span id="gui-directory-services"></span><h1>Cluster &gt; Directory Services<a class="headerlink" href="#cluster-directory-services" title="Permalink to this headline">     </a></h1>
+<a class="reference internal image-reference" href="_images/gui_directory_svcs.png"><img alt="Directory Services page" src="_images/gui_directory_svcs.png" style="width: 800pt;" /></a>
+<p>Use the <span class="guilabel">Directory Services</span> settings page to specify where to read user and group information. These services are used to populate user and group information tables in the Avere OS system that are used to authenticate users for access control.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The settings on this page are used for client requests to the cluster and back-end core filers. Do not confuse this cluster directory services configuration with the cluster administrative login settings, which also can be managed by an LDAP or AD server. Read <a class="reference internal" href="intro.html#gui-overview"><span class="std std-ref">Using the Avere Control Panel</span></a> and the <a class="reference internal" href="gui_users.html#gui-users"><span class="std std-ref">Administration &gt; Users</span></a> and <a class="reference internal" href="gui_login_services.html#gui-login-services"><span class="std std-ref">Administration &gt; Login Services</span></a> page documentation to learn more.</p>
+</div>
+<p>The cluster comes with one configuration, named <span class="guilabel">default</span>. You cannot rename the default configuration, but you can customize it with your directory services settings.</p>
+<p>There are two methods for editing the default configuration:</p>
+<ul>
+<li><p class="first">Configuration Wizard (<span class="guilabel">Modify</span> button) - A step-by-step process guides you through setting up directory services for SMB users, NFS users, or both. The configuration wizard can be especially helpful when you need to create the initial configuration for a new cluster.
+Open the configuration wizard by checking the box in the <span class="guilabel">Actions</span> column and clicking <span class="guilabel">Modify</span>.</p>
+</li>
+<li><p class="first">Configuration details page (link from configuration name) - The details page shows all settings in the current configuration, and allows you to change them. It also gives information about the most recent poll.</p>
+<p>Open the configuration details page by clicking the configuration name (<span class="guilabel">default</span>).</p>
+</li>
+</ul>
+<div class="section" id="choosing-a-download-source">
+<h2>Choosing a Download Source<a class="headerlink" href="#choosing-a-download-source" title="Permalink to this headline">     </a></h2>
+<p>If your user and group information (RFC 2307 attributes) are stored in an Active Directory server, you should choose AD as your cluster&#8217;s download source. AD integrates well with Kerberos and provides smoother access to trusted domains. It also avoids using the LDAP-style <code class="docutils literal"><span class="pre">uid</span></code> attribute, and automatically differentiates identical usernames from different domains.</p>
+<p>Using LDAP to download RFC 2307 attributes is most useful in cases where user and group IDs are shared across domains. That is, a particular username represents the same entity in all domains that access the cluster.</p>
+</div>
+<div class="section" id="using-the-configuration-wizard">
+<span id="ds-wiz"></span><h2>Using the Configuration Wizard<a class="headerlink" href="#using-the-configuration-wizard" title="Permalink to this headline">     </a></h2>
+<p>Check the <span class="guilabel">Actions</span> column checkbox and click the <span class="guilabel">Modify</span> button to open the configuration wizard.</p>
+<a class="reference internal image-reference" href="_images/gui_dswiz_1.png"><img alt="First page of the directory services wizard" src="_images/gui_dswiz_1.png" style="width: 450pt;" /></a>
+<p>In the first page, select which types of users will access the system.</p>
+<ul class="simple">
+<li>The <span class="guilabel">CIFS</span> option lets you configure SMB, which allows users from Microsoft Windows clients to access the cluster.</li>
+<li>The <span class="guilabel">NFS</span> option lets you configure settings to allow access from clients on Unix-style filesystems.</li>
+</ul>
+<p>Select both options to configure access for all supported types of clients.</p>
+<p>If you choose both SMB and NFS, the wizard shows settings for each type of access on subsequent pages. The settings appear in individual panels, with SMB at the top of the page and NFS at the bottom of the page.</p>
+<div class="figure" id="id2">
+<a class="reference internal image-reference" href="_images/gui_dswiz_2both.png"><img alt="Page 2 of the configuration wizard, with both CIFS/SMB options and NFS options" src="_images/gui_dswiz_2both.png" style="width: 450pt;" /></a>
+<p class="caption"><span class="caption-text"><em>Configuration wizard page two for both SMB and NFS clients</em></span></p>
+</div>
+<p>Configuration settings for SMB and for NFS are described separately in the next two sections of this document.</p>
+<ul class="simple">
+<li><a class="reference internal" href="#dswiz-smb"><span class="std std-ref">SMB Configuration Settings</span></a></li>
+<li><a class="reference internal" href="#dswiz-nfs"><span class="std std-ref">NFS Configuration Settings</span></a></li>
+</ul>
+<div class="section" id="configuration-wizard-settings-smb">
+<span id="dswiz-smb"></span><h3>Configuration Wizard Settings - SMB<a class="headerlink" href="#configuration-wizard-settings-smb" title="Permalink to this headline">     </a></h3>
+<p>If SMB is selected the first page, the directory services configuration wizard includes these options in pages two and three.</p>
+<p>Note that additional SMB-related settings are defined in the VServer settings pages, specifically in the <span class="guilabel">CIFS</span> and <span class="guilabel">CIFS Shares</span> pages. (The <span class="guilabel">CIFS</span> page includes the control that enables SMB for the cluster.) Read <a class="reference internal" href="smb_overview.html#smb-overview"><span class="std std-ref">Configuring SMB Access</span></a> to learn more.</p>
+<p>Also, if you need to map Windows usernames to NFS usernames, you must add the username mapping information on the <a class="reference internal" href="#ds-config-details"><span class="std std-ref">The Directory Services Configuration Details Page</span></a> page after completing the steps in the wizard. The <a class="reference internal" href="#ds-username-mapping"><span class="std std-ref">SMB/NFS Username Mapping</span></a> setting does not appear in the wizard.</p>
+<div class="section" id="username-source-for-smb">
+<span id="smb-usernames"></span><h4>Username Source for SMB<a class="headerlink" href="#username-source-for-smb" title="Permalink to this headline">     </a></h4>
+<p>The second page of the directory services wizard asks you to choose the type of service. This setting determines how the system gets username and group names for SMB clients.</p>
+<p>Note that an Active Directory (AD) server is required for SMB access. Even if you use a different source for the username and group name information, you must configure an AD server in the next page of the wizard.</p>
+<a class="reference internal image-reference" href="_images/gui_dswiz_2smb.png"><img alt="User and group attribute sources for SMB configuration" src="_images/gui_dswiz_2smb.png" style="width: 450pt;" /></a>
+<p>Choose one of the listed options to set the source for SMB user and group names.</p>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p class="last">Choose the source that has the most complete set of user and group names on your system. If your cluster accepts client requests from both Windows and Unix style clients, you might need to manually import Windows usernames from the AD server into an LDAP server, or import the set of Unix usernames into the AD server&#8217;s records. Typically, an AD server includes Windows client information only.</p>
+</div>
+<ul class="simple">
+<li><strong>Active Directory</strong> - If <span class="guilabel">Active Directory</span> is selected, the system will use the AD server to look up usernames and groups. AD server information is entered in the next page of the wizard.</li>
+<li><strong>LDAP Server</strong> - Select <span class="guilabel">A separate LDAP server from the AD server</span> to import user and group information from an LDAP server that is not used as the cluster&#8217;s active directory server. LDAP server information is configured in the next page of the wizard.</li>
+<li><strong>NIS</strong> - Select <span class="guilabel">NIS</span> to use a Network Information Service protocol server to get user and group names. NIS server information is entered in the next page of the wizard.</li>
+<li><strong>File</strong> - Choose <span class="guilabel">File</span> to define usernames and group names in an external file. The file location is specified on the next page of the wizard.</li>
+<li><strong>None</strong> - Select <span class="guilabel">I don&#8217;t have any</span> if your system does not use usernames or groups. You still must set up an AD server for general SMB access; click <span class="guilabel">Next</span> to proceed to page three.</li>
+</ul>
+</div>
+<div class="section" id="active-directory-configuration-for-smb">
+<span id="smb-ad"></span><h4>Active Directory Configuration for SMB<a class="headerlink" href="#active-directory-configuration-for-smb" title="Permalink to this headline">     </a></h4>
+<div class="figure" id="id3">
+<a class="reference internal image-reference" href="_images/gui_dswiz_3smb_ad.png"><img alt="Page 3 of the wizard when AD is selected for SMB" src="_images/gui_dswiz_3smb_ad.png" style="width: 450pt;" /></a>
+<p class="caption"><span class="caption-text"><em>Configuration wizard page three for SMB where the main AD server provides username and group information.</em></span></p>
+<div class="legend">
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Depending on the selection in page two, page three also might include an LDAP section, an NIS section, or a file section, in addition to the NFS domain and polling period fields that appear in this screenshot. Each of these sections is described separately.</p>
+</div>
+</div>
+</div>
+<p>The third page of the wizard includes AD server configuration information.</p>
+<p>Even if you do not use Active Directory for user authentication, some SMB features in the Avere OS cluster require an AD connection to populate user and group lists.</p>
+<dl class="docutils">
+<dt><span class="guilabel">AD Domain</span></dt>
+<dd><p class="first">Enter the fully qualified domain name of the active directory domain for the cluster, and click the <span class="guilabel">Lookup</span> button to populate these settings:</p>
+<ul class="simple">
+<li>AD domain (NetBIOS)</li>
+<li>Domain controller</li>
+<li>DC site</li>
+<li>FXT site</li>
+</ul>
+<p class="last">(Note that these settings are not saved until you click the <span class="guilabel">Submit</span> button.)</p>
+</dd>
+<dt><span class="guilabel">Trusted Active Directory Domains</span></dt>
+<dd><p class="first">Use the <span class="guilabel">Trusted Active Directory Domains</span> field to specify the names of active directory domains that the system can use to download user and group information.  Separate multiple domains with spaces.</p>
+<ul class="last simple">
+<li>Leave this field blank if you want the system only to download user and group information from the AD server&#8217;s domain.</li>
+<li>Enter an asterisk (<code class="docutils literal"><span class="pre">*</span></code>) in this field to allow the cluster to download user and group information from any trusted domain.</li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="ldap-server-configuration-for-smb">
+<span id="smb-ldap"></span><h4>LDAP Server Configuration for SMB<a class="headerlink" href="#ldap-server-configuration-for-smb" title="Permalink to this headline">     </a></h4>
+<p>If you choose to read username and group information from a separate LDAP server, configure the server&#8217;s settings on page three of the configuration wizard.</p>
+<a class="reference internal image-reference" href="_images/ldap_config.png"><img alt="LDAP user/group server parameters" src="_images/ldap_config.png" style="width: 450pt;" /></a>
+<dl class="docutils">
+<dt><span class="guilabel">LDAP Server</span></dt>
+<dd>Enter the fully qualified domain name or IP address for the LDAP server to use. You can enter up to three LDAP servers, separated by spaces.</dd>
+<dt><span class="guilabel">LDAP Base DN</span></dt>
+<dd><p class="first">Specify the base distinguished name for the LDAP domain. LDAP queries are performed on the base DN, the DN of the entry, and all entries below it in the directory tree.
+Ask your LDAP administrator if you don’t know your base DN.</p>
+<p class="last">Base and bind DN entries use a similar format. So, for example, if the domain name is “ourdomain.server.company.com”, the DN entry is in the form  <code class="docutils literal"><span class="pre">ou=ourdomain,dc=server,dc=company,dc=com</span></code></p>
+</dd>
+<dt><span class="guilabel">Secure Access</span></dt>
+<dd><p class="first">Check this box to encrypt LDAP connections with TLS/SSL. After checking this box, two additional options appear:</p>
+<ul class="last">
+<li><p class="first"><span class="guilabel">Require valid certificate</span> - Check this box to accept only externally validated certificates. This option is enabled by default.</p>
+</li>
+<li><p class="first"><span class="guilabel">CA Certificate URI</span> - This field appears when the <span class="guilabel">Require valid certificate</span> box is checked. Enter the certificate authority information.
+Check the <span class="guilabel">Auto-download</span> box to attempt to download a certificate as soon as you submit this configuration.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you are using a self-signed certificate, leave the URI field blank and check the auto-download box.</p>
+</div>
+</li>
+</ul>
+</dd>
+<dt><span class="guilabel">Credentials</span></dt>
+<dd>To use static credentials for secure LDAP, check this box and specify a <span class="guilabel">Bind DN</span> identity and <span class="guilabel">Bind password</span> in the fields that appear.</dd>
+</dl>
+<div class="figure" id="id4">
+<a class="reference internal image-reference" href="_images/ldap_secure.png"><img alt="Secure LDAP settings enabled" src="_images/ldap_secure.png" style="width: 450pt;" /></a>
+<p class="caption"><span class="caption-text"><em>LDAP configuration with security settings enabled</em></span></p>
+</div>
+<dl class="docutils">
+<dt><span class="guilabel">User base DN</span></dt>
+<dd>Optionally, specify the base distinguished name for downloading user information. If not specified, <code class="docutils literal"><span class="pre">DN</span></code> is the default value.</dd>
+<dt><span class="guilabel">Group base DN</span></dt>
+<dd>Optionally, specify the base distinguished name for downloading group information. If not specified, <code class="docutils literal"><span class="pre">DN</span></code> is the default value.</dd>
+</dl>
+</div>
+<div class="section" id="nis-configuration-for-smb">
+<span id="smb-nis"></span><h4>NIS Configuration for SMB<a class="headerlink" href="#nis-configuration-for-smb" title="Permalink to this headline">     </a></h4>
+<p>If you choose to read username and group information from a NIS server, configure the following NIS server settings on page three of the wizard.</p>
+<p>You can specify up to three servers. Configuring more than one server is recommended to avoid risk if one server fails.</p>
+<a class="reference internal image-reference" href="_images/gui_dswiz_3smb_nis.png"><img alt="NIS user/group server parameters" src="_images/gui_dswiz_3smb_nis.png" style="width: 450pt;" /></a>
+<dl class="docutils">
+<dt><span class="guilabel">NIS Server</span></dt>
+<dd>Specify the fully qualified domain names or IP addresses of up to three NIS servers. Separate names with a space.</dd>
+<dt><span class="guilabel">NIS Domain</span></dt>
+<dd>Enter the name of your NIS domain. This is the single domain to which the NIS is bound.</dd>
+</dl>
+</div>
+<div class="section" id="user-group-file-parameters-for-smb">
+<span id="smb-file"></span><h4>User/Group File Parameters for SMB<a class="headerlink" href="#user-group-file-parameters-for-smb" title="Permalink to this headline">     </a></h4>
+<p>If you choose to read username and group information from a file, specify the file information on page three of the wizard.</p>
+<a class="reference internal image-reference" href="_images/gui_ds_smb_file.png"><img alt="Configuring group and password file parameters" src="_images/gui_ds_smb_file.png" style="width: 450pt;" /></a>
+<dl class="docutils">
+<dt><span class="guilabel">Group file URI</span></dt>
+<dd>Enter the filename and unique path for your system&#8217;s etc/group file.</dd>
+<dt><span class="guilabel">Password file URI</span></dt>
+<dd>Enter the filename and unique path for your system&#8217;s etc/passwd file.</dd>
+</dl>
+</div>
+<div class="section" id="nfs-domain-and-polling-interval-for-smb">
+<h4>NFS Domain and Polling Interval for SMB<a class="headerlink" href="#nfs-domain-and-polling-interval-for-smb" title="Permalink to this headline">     </a></h4>
+<p>Settings for an optional NFS v4 ACL domain and username/group name polling interval always appear on the third page of the directory services configuration wizard when SMB is selected.</p>
+<a class="reference internal image-reference" href="_images/gui_ds_smb_nfs-poll.png"><img alt="Polling interval and NFS domain settings section of directory services wizard page three" src="_images/gui_ds_smb_nfs-poll.png" style="width: 450pt;" /></a>
+<dl class="docutils">
+<dt><span class="guilabel">NFS Domain</span></dt>
+<dd>Optionally, specify an NFS-style domain to use for NFSv4 ACL operations.</dd>
+<dt><strong>Polling interval</strong></dt>
+<dd><p class="first">Use the control labeled <span class="guilabel">How often should the cluster re-read the user and group name information?</span> to select a polling period. Choose one of the preset values, or <span class="guilabel">Custom</span>.</p>
+<p>After selecting <span class="guilabel">Custom</span>, a field appears so that you can enter the number of seconds to use as the polling period. Entering 0 means that the information will never be re-read (however, you can explicitly set manual polling from the configuration details page).</p>
+<p class="last">Manual polling settings appear on the configuration details page - read <a class="reference internal" href="#manual-polling"><span class="std std-ref">Manual Polling</span></a> to learn more.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="configuration-wizard-settings-nfs">
+<span id="dswiz-nfs"></span><h3>Configuration Wizard Settings - NFS<a class="headerlink" href="#configuration-wizard-settings-nfs" title="Permalink to this headline">     </a></h3>
+<p>If NFS is selected the first page, the directory services configuration wizard includes these options in pages two and three.</p>
+<div class="section" id="username-group-name-source-for-nfs">
+<h4>Username/Group Name Source for NFS<a class="headerlink" href="#username-group-name-source-for-nfs" title="Permalink to this headline">     </a></h4>
+<a class="reference internal image-reference" href="_images/gui_dswiz_2nfs.png"><img alt="Name sources for NFS clients in the directory services wizard (page 2)" src="_images/gui_dswiz_2nfs.png" style="width: 450pt;" /></a>
+<p>Choose one of the options to set the source for user and group names.</p>
+<ul>
+<li><p class="first"><strong>LDAP Server</strong> - Select <span class="guilabel">LDAP</span> to import user and group information from an LDAP server. Configure the server information in the third page of the wizard.</p>
+</li>
+<li><p class="first"><strong>NIS</strong> - Select <span class="guilabel">NIS</span> to use a Network Information Service protocol server to get user and group names. Configure the server in the third page of the wizard.</p>
+</li>
+<li><p class="first"><strong>File</strong> - Choose <span class="guilabel">File</span> to define usernames and group names in an external file. Specify the file in the third page of the wizard.</p>
+</li>
+<li><p class="first"><strong>None</strong> - Select <span class="guilabel">I&#8217;ll decide later / I am not using netgroups</span> if your system does not use usernames or groups.</p>
+<p>If you choose this option, no further configuration is necessary and the <span class="guilabel">Next</span> button changes to <span class="guilabel">Add Config</span>. (There is no third page.)</p>
+</li>
+</ul>
+</div>
+<div class="section" id="ldap-server-configuration-for-nfs">
+<span id="nfs-ldap"></span><h4>LDAP Server Configuration for NFS<a class="headerlink" href="#ldap-server-configuration-for-nfs" title="Permalink to this headline">     </a></h4>
+<p>If you choose to read username and group information from an LDAP server, configure the following settings for the server.</p>
+<a class="reference internal image-reference" href="_images/gui_dswiz_3nfs_ldap.png"><img alt="LDAP user/group server parameters for NFS - page 3 of the wizard" src="_images/gui_dswiz_3nfs_ldap.png" style="width: 450pt;" /></a>
+<dl class="docutils">
+<dt><span class="guilabel">LDAP Server</span></dt>
+<dd>Enter the fully qualified domain name or IP address for the LDAP server to use. You can enter up to three LDAP servers, separated by spaces.</dd>
+<dt><span class="guilabel">Secure Access</span></dt>
+<dd><p class="first">Check this box to encrypt LDAP connections with TLS/SSL. After checking this box,  additional options appear:</p>
+<ul class="last">
+<li><p class="first"><span class="guilabel">Require valid certificate</span> - Check this box to accept only externally validated certificates. This option is enabled by default.</p>
+</li>
+<li><p class="first"><span class="guilabel">CA Certificate URI</span> - This field appears when the <span class="guilabel">Require valid certificate</span> box is checked. Enter the certificate authority information.
+Check the <span class="guilabel">Auto-download</span> box to attempt to download a certificate as soon as you submit this configuration.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you are using a self-signed certificate, leave the URI field blank and check the auto-download box.</p>
+</div>
+</li>
+<li><p class="first"><span class="guilabel">Credentials</span> - To use static credentials for secure LDAP, check this box and specify a <span class="guilabel">Bind DN</span> identity and <span class="guilabel">Bind password</span> in the fields that appear. (A screenshot with these extra fields appears in <a class="reference internal" href="#smb-ldap"><span class="std std-ref">LDAP Server Configuration for SMB</span></a>.)</p>
+</li>
+</ul>
+</dd>
+<dt><span class="guilabel">LDAP Base DN</span></dt>
+<dd><p class="first">Specify the base distinguished name for the LDAP domain. LDAP queries are performed on the base DN, the DN of the entry, and all entries below it in the directory tree.
+Ask your LDAP administrator if you don’t know your base DN.</p>
+<p class="last">Base and bind DN entries use a similar format. So, for example, if the domain name is “ourdomain.server.company.com”, the DN entry is in the form  <code class="docutils literal"><span class="pre">ou=ourdomain,dc=server,dc=company,dc=com</span></code></p>
+</dd>
+</dl>
+</div>
+<div class="section" id="nis-parameters-for-nfs">
+<span id="nfs-nis"></span><h4>NIS Parameters for NFS<a class="headerlink" href="#nis-parameters-for-nfs" title="Permalink to this headline">     </a></h4>
+<p>If you choose to read username and group information from a NIS server, configure the following settings for the server. You can configure one server that will be used for both username and group information.</p>
+<a class="reference internal image-reference" href="_images/gui_dswiz_3nfs_nis.png"><img alt="Configuring NIS user/group server parameters in page three of the wizard" src="_images/gui_dswiz_3nfs_nis.png" style="width: 450pt;" /></a>
+<dl class="docutils">
+<dt><span class="guilabel">NIS Server</span></dt>
+<dd>Specify the fully qualified domain names or IP addresses of up to three NIS servers.  Separate names with a space.</dd>
+<dt><span class="guilabel">NIS Domain</span></dt>
+<dd>Enter the name of your NIS domain. This is the single domain to which the NIS is bound.</dd>
+</dl>
+</div>
+<div class="section" id="user-group-file-parameters-for-nfs">
+<span id="nfs-file"></span><h4>User/Group File Parameters for NFS<a class="headerlink" href="#user-group-file-parameters-for-nfs" title="Permalink to this headline">     </a></h4>
+<p>If you choose to read username and group information from a file, configure the following settings.</p>
+<a class="reference internal image-reference" href="_images/gui_dswiz_3nfs_file.png"><img alt="Configuring group and password file parameters in page three of the wizard" src="_images/gui_dswiz_3nfs_file.png" style="width: 450pt;" /></a>
+<dl class="docutils">
+<dt><span class="guilabel">Group file URI</span></dt>
+<dd>Enter the filename and unique path for your system&#8217;s etc/group file.</dd>
+</dl>
+</div>
+<div class="section" id="polling-interval-for-nfs">
+<h4>Polling Interval for NFS<a class="headerlink" href="#polling-interval-for-nfs" title="Permalink to this headline">     </a></h4>
+<p>Use the control labeled <span class="guilabel">How often should the cluster re-read the user and group name information?</span> to select a polling period. Choose one of the preset values, or <span class="guilabel">Custom</span>.</p>
+<blockquote>
+<div><p>After selecting <span class="guilabel">Custom</span>, a field appears so that you can enter the number of seconds to use as the polling period. Entering 0 means that it will never poll automatically; you can explicitly set manual polling on the configuration details page.</p>
+<p>Read <a class="reference internal" href="#manual-polling"><span class="std std-ref">Manual Polling</span></a> to learn more about refreshing the username and group information on demand.</p>
+</div></blockquote>
+</div>
+</div>
+</div>
+<div class="section" id="the-directory-services-configuration-details-page">
+<span id="ds-config-details"></span><h2>The Directory Services Configuration Details Page<a class="headerlink" href="#the-directory-services-configuration-details-page" title="Permalink to this headline">     </a></h2>
+<p>The configuration details page shows recent username and group poll times, and an editable version of the current configuration.</p>
+<p>Open the configuration details page by clicking the hyperlinked configuration name (<span class="guilabel">default</span>).</p>
+<p>Click the <span class="guilabel">Directory Services</span> link at the top of the page to return to the main directory services settings page. (The directory services configuration details page does not appear in the left navigation menu.)</p>
+<a class="reference internal image-reference" href="_images/directory_svcs_full.png"><img alt="A Directory Services configuration details page" src="_images/directory_svcs_full.png" style="width: 500pt;" /></a>
+<p>The page has two main configuration panels: one labeled <span class="guilabel">CIFS</span> that shows settings for SMB access (by Microsoft Windows clients), and one labeled <span class="guilabel">NFS</span> that shows settings for Unix-style filesystem access.</p>
+<p>Different items are shown on this page based on the configuration options that are already selected. Options can change if you change the settings. For example, switching from AD to NIS as the SMB source causes configuration options for the NIS server to appear in the <span class="guilabel">CIFS</span> <span class="guilabel">User/Group Name</span> panel.</p>
+<p>A few directory services settings appear only on this page; you cannot configure them in the wizard. Settings that are accessed from the configuration details page include:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#dashboard-username"><span class="std std-ref">Dashboard Conditions</span></a></li>
+<li><a class="reference internal" href="#manual-polling"><span class="std std-ref">Manual Polling</span></a></li>
+<li><a class="reference internal" href="#ds-username-mapping"><span class="std std-ref">CIFS to NFS User Overrides</span></a> (SMB only)</li>
+<li><a class="reference internal" href="#domain-controller-overrides"><span class="std std-ref">Domain Controller Access Overrides</span></a> (SMB only)</li>
+</ul>
+<div class="section" id="dashboard-conditions">
+<span id="dashboard-username"></span><h3>Dashboard Conditions<a class="headerlink" href="#dashboard-conditions" title="Permalink to this headline">     </a></h3>
+<a class="reference internal image-reference" href="_images/ds_details_enable_dashboard.png"><img alt="SMB configuration on the details page, including the dashboard conditions checkbox" src="_images/ds_details_enable_dashboard.png" style="width: 450pt;" /></a>
+<p>Check the <span class="guilabel">Enable dashboard conditions</span> box to report inconsistencies in the user/group database as alerts on the Avere Control Panel dashboard.</p>
+</div>
+<div class="section" id="manual-polling">
+<span id="id1"></span><h3>Manual Polling<a class="headerlink" href="#manual-polling" title="Permalink to this headline">     </a></h3>
+<p>The <span class="guilabel">Polling Period</span> control lets you select the interval at which to re-read the username and groups information.</p>
+<p>In the configuration wizard you can only choose a value; on the configuration details page, there&#8217;s another option for <span class="guilabel">Manual</span>.</p>
+<p>If you select <span class="guilabel">Manual</span>, the system never re-reads the username and group file.</p>
+<p>You can use the <span class="guilabel">Poll Now</span> button to manually refresh the user and group information at any time.</p>
+</div>
+<div class="section" id="smb-nfs-username-mapping">
+<span id="ds-username-mapping"></span><h3>SMB/NFS Username Mapping<a class="headerlink" href="#smb-nfs-username-mapping" title="Permalink to this headline">     </a></h3>
+<p>In some cases, the same user can have different usernames on a Windows domain and on an NFS domain. The section labeled <span class="guilabel">CIFS User to NFS User Overrides</span> allows you to specify a flat file that maps Windows usernames and group names to their NFS equivalents.</p>
+<a class="reference internal image-reference" href="_images/ad_user_map_config.png"><img alt="Specifying a Unix-Windows username map file" src="_images/ad_user_map_config.png" style="width: 450pt;" /></a>
+<p>Read <a class="reference internal" href="username_map_file.html#username-map-file"><span class="std std-ref">SMB-UNIX Username Mapping</span></a> to learn more about the file format.</p>
+<p>This section also has polling controls to set how frequently the override file is read.</p>
+</div>
+<div class="section" id="static-domain-controller-mapping">
+<span id="domain-controller-overrides"></span><h3>Static Domain Controller Mapping<a class="headerlink" href="#static-domain-controller-mapping" title="Permalink to this headline">     </a></h3>
+<p>In the <span class="guilabel">Domain Controller Address Overrides</span> section, you can assign particular domain controllers for specific domain names in the cluster.</p>
+<p>The system does not attempt to automatically detect domain controllers for the domain names with static mappings.</p>
+<p>This feature can be used to skip an unnecessary step if your system uses a known set of domain controllers, and that set will not change. It also allows you to work around network problems or other quirks that might cause the system to choose inappropriate domain controllers for your cluster.</p>
+<a class="reference internal image-reference" href="_images/dc_override.png"><img alt="Static domain controller configuration" src="_images/dc_override.png" style="width: 450pt;" /></a>
+<p>Set the following parameters:</p>
+<dl class="docutils">
+<dt><strong>Domain (FQDN)</strong></dt>
+<dd>Enter the fully qualified domain name for the domain that will be statically mapped to domain controllers.</dd>
+<dt><strong>Domain (Netbios)</strong></dt>
+<dd>Enter the AD netBIOS name associated with the override.</dd>
+<dt><strong>DC Addresses</strong></dt>
+<dd>Enter IP addresses for domain controllers that the domain should use. Avere Systems recommends specifying at least two domain controllers so that the cluster remains available if one of the domain controllers goes down.</dd>
+</dl>
+<p>Click <span class="guilabel">Add Override</span> to save the settings when finished.</p>
+<div class="last-update container">
+updated 2017-02-22</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_schedules.html"
+                        title="previous chapter">Cluster &gt; Schedules</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_kerberos.html"
+                        title="next chapter">Cluster &gt; Kerberos</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_kerberos.html" title="Cluster &gt; Kerberos"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_schedules.html" title="Cluster &gt; Schedules"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">2017 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

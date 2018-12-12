@@ -1,0 +1,280 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Cluster &gt; Cluster Networks &#8212; Operations Guide 4.6 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '4.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Operations Guide 4.6 documentation" href="ops_conf_index.html" />
+    <link rel="up" title="Avere Control Panel Settings" href="settings_overview.html" />
+    <link rel="next" title="Cluster &gt; Proxy Configuration" href="gui_proxy_config.html" />
+    <link rel="prev" title="Cluster &gt; Administrative Network" href="gui_admin_network.html" /> 
+
+<!--    use for draft review builds only - enables web page annotation internally -->
+   
+<!--   <script type="text/javascript" src="_static/jquery.js"></script>  
+   <script src="_static/annotator-full.min.js"></script>  
+   <script src="_static/annotate_init.js"></script> 
+   <link rel="stylesheet" href="_static/annotator.min.css">  
+-->
+    
+
+  </head>
+  <body role="document">
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/clientSpecific/avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_proxy_config.html" title="Cluster &gt; Proxy Configuration"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_admin_network.html" title="Cluster &gt; Administrative Network"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="cluster-cluster-networks">
+<span id="gui-cluster-networks"></span><h1>Cluster &gt; Cluster Networks<a class="headerlink" href="#cluster-cluster-networks" title="Permalink to this headline">     </a></h1>
+<a class="reference internal image-reference" href="_images/gui_cluster_networks.png"><img alt="Cluster Networks page" src="_images/gui_cluster_networks.png" style="width: 800px;" /></a>
+<p>Use the <span class="guilabel">Cluster Networks</span> page to configure the IP addresses for the nodes in the cluster.</p>
+<p>The operation of the cluster depends on having reliable network links among the cluster&#8217;s nodes. It is important to configure and test the cluster networks <em>before</em> putting a cluster into production use. Changing IP address ranges or other network settings on a working cluster is risky, and could cause nodes to lose communication with the rest of the cluster temporarily or permanently if errors are made.</p>
+<p>The cluster network is used for node-to-node communication. It is also the default network used to communicate with core filers. You can select a different network for a particular core filer on its <a class="reference internal" href="gui_core_filer_details.html#gui-core-filer-details"><span class="std std-ref">Core Filer &gt; Core Filer Details</span></a> page.</p>
+<p>Cluster IP addresses must be manually assigned (that is, not assigned by DHCP) and should be in a contiguous range. Use the <span class="guilabel">Cluster Networks</span> page to configure and assign these addresses.</p>
+<p>After an IP address has been assigned to a node, the address does not move to another node unless the configuration is changed (for example, the node is permanently removed from the cluster, or the address range or number of IPs per node changes).</p>
+<p>One cluster can use multiple cluster networks. All cluster networks that are defined on this page will be used by the cluster as soon as they are created and populated with IP address ranges.</p>
+<div class="section" id="about-cluster-networks-and-address-ranges">
+<h2>About Cluster Networks and Address Ranges<a class="headerlink" href="#about-cluster-networks-and-address-ranges" title="Permalink to this headline">     </a></h2>
+<p>Each cluster network includes one or more network address ranges. After you create a network and assign the number of IPs per node, you can create one or more address ranges from the <span class="guilabel">Address Ranges</span> panel to assign to the network.</p>
+<p>The <span class="guilabel">Cluster Networks</span> page shows two sortable lists. They show similar information, but it is important to understand the difference between the two types of items.</p>
+<ul class="simple">
+<li>A <span class="guilabel">Cluster Network</span> is the parent configuration element. It requires a name and a setting for how many IP addresses each node will have.</li>
+<li><span class="guilabel">Address Ranges</span> specify a range of IP addresses that can be used by one of the cluster networks, along with additional routing information.</li>
+</ul>
+<p>When a new address range is created, it must be associated with an existing cluster network.</p>
+<p>One cluster network can have multiple address ranges.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If advanced networking is disabled on your cluster, you can have only one cluster network and one address range for that network. The <span class="guilabel">Add</span> and <span class="guilabel">Remove</span> action buttons do not appear for clusters that use basic networking.</p>
+</div>
+<div class="section" id="using-non-contiguous-ip-addresses-with-multiple-address-ranges">
+<h3>Using Non-Contiguous IP Addresses With Multiple Address Ranges<a class="headerlink" href="#using-non-contiguous-ip-addresses-with-multiple-address-ranges" title="Permalink to this headline">     </a></h3>
+<p>Using multiple address ranges allows you to specify a non-contiguous set of IP addresses in one cluster network. To do this, define one address range for each contiguous subset of IP addresses, and assign all of the ranges to the same cluster network. An address range can be as small as one IP address.</p>
+<p>For example, imagine that you want to use 30 IP addresses for cluster nodes, but you do not have 30 contiguous IP addresses available. Instead, you have these IP addresses: 203.0.113.27-36; 203.0.113.40-55; 192.0.2.138-140; 192.0.2.142</p>
+<p>You can define four address ranges, one for each uninterrupted range of IP addresses (one of the ranges will hold the single address 192.0.2.142).</p>
+<p>Assign each of the four address ranges to the same cluster network as they are created.</p>
+</div>
+</div>
+<div class="section" id="creating-cluster-networks">
+<h2>Creating Cluster Networks<a class="headerlink" href="#creating-cluster-networks" title="Permalink to this headline">     </a></h2>
+<div class="admonition caution">
+<p class="first admonition-title">Caution</p>
+<p class="last">Changing cluster network settings is a complicated task, and configuration errors can  put the cluster into an unresponsive state that is difficult to recover from. Consult Avere Global Services for assistance before making changes.</p>
+</div>
+<p>To create a cluster network, you must first define the network, and then create IP address ranges that the network uses.</p>
+<div class="section" id="creating-or-changing-a-cluster-network">
+<h3>Creating or Changing a Cluster Network<a class="headerlink" href="#creating-or-changing-a-cluster-network" title="Permalink to this headline">     </a></h3>
+<p>To create a new network, click the <span class="guilabel">Add</span> button next to the cluster network list. You can modify an existing network by selecting it in the list and clicking <span class="guilabel">Modify</span>.</p>
+<a class="reference internal image-reference" href="_images/add_network.png"><img alt="Creating a new cluster network" src="_images/add_network.png" style="width: 450px;" /></a>
+<p>Note that modifying an existing network can disrupt cluster operation. A warning pops up to remind you that clients might experience disruptions; click <span class="guilabel">OK</span> to continue.</p>
+<ol class="arabic simple">
+<li>In the <span class="guilabel">Name</span> field, give the network a unique name.</li>
+<li>In the <span class="guilabel">Number of IPs per node</span> field, specify how many IP addresses the network will allocate to each FXT node.</li>
+<li>Click <span class="guilabel">Add Network</span> when finished, or click <span class="guilabel">Cancel</span> to quit without saving the new network.</li>
+</ol>
+</div>
+<div class="section" id="creating-or-changing-an-ip-address-range">
+<h3>Creating or Changing An IP Address Range<a class="headerlink" href="#creating-or-changing-an-ip-address-range" title="Permalink to this headline">     </a></h3>
+<p>To create a new address range, click the <span class="guilabel">Add</span> button next to the <span class="guilabel">Address Ranges</span> list. You can modify an existing range by selecting it in the list and clicking <span class="guilabel">Modify</span>.</p>
+<a class="reference internal image-reference" href="_images/add_address_range.png"><img alt="Defining an IP address range for a cluster network" src="_images/add_address_range.png" style="width: 450px;" /></a>
+<p>Note that modifying an existing address range can disrupt cluster operation. A warning pops up to remind you that clients might experience disruptions; click <span class="guilabel">OK</span> to continue.</p>
+<ol class="arabic simple">
+<li>Use the <span class="guilabel">Network name</span> selector to choose which cluster network will use this address range. This assignment is permanent; the network cannot be changed after the address range is defined. Also, you cannot specify an address range that is not associated with a network.</li>
+<li>Enter the first and last IP addresses in the range by using the fields provided. The number of addresses is automatically calculated.</li>
+<li>In <span class="guilabel">Subnet mask</span>, type the mask to use.</li>
+<li>Use the <span class="guilabel">VLAN</span> field to select which VLAN to use with the addresses in this range.</li>
+<li>Click <span class="guilabel">Add Address Range</span> to save changes or <span class="guilabel">Cancel</span> to quit without saving the address range.</li>
+</ol>
+<div class="last-update container">
+updated 2017-02-15</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_admin_network.html"
+                        title="previous chapter">Cluster &gt; Administrative Network</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_proxy_config.html"
+                        title="next chapter">Cluster &gt; Proxy Configuration</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_proxy_config.html" title="Cluster &gt; Proxy Configuration"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_admin_network.html" title="Cluster &gt; Administrative Network"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">2017 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

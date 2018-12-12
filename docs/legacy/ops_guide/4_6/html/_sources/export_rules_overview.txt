@@ -1,0 +1,61 @@
+Controlling Access to Core Filer Exports
+
+Core filers expose
+
+exports
+
+ that determine how clients access data from that storage system. The
+clusters' vservers use the core filer exports and the filesystem
+junctions defined in the global namespace (if enabled) to manage how
+files from back-end storage are presented to clients.
+
+Avere OS uses
+
+export policies
+
+ to provide access control for data on the core filers. An export
+policy is a set of rules determining how clients are permitted to
+access data from that export.
+
+For example, an export policy could contain rules that allow clients
+from a specific netgroup to have read-only access to the export's
+files, and disable root squash, while clients from another group have
+read/write access and all client requests are considered to come from
+the user "nobody."
+
+Export rules also can include using Kerberos authentication instead of
+or in addition to the default UNIX/SYS authentication.
+
+Tips for Configuring Access
+
+Client access rules can be set at two levels:
+
+On the core filer export
+
+On a global namespace junction
+
+If you do not assign an export policy to a junction, that junction
+uses the export policy assigned to its core filer export.
+
+When setting access policies, remember to use more restrictive
+policies closer to the root of the export. That is, there is no point
+in restricting access to "/dir1/dir2/" if you have granted access to
+"/dir1" or to "/"
+
+Creating and Using Export Policies
+
+The procedure for defining rules and customizing export policies
+involves both the Export Rules page, where you can define rules, and
+the pages where they can be applied to exports or junctions.  and the
+Export Policies page in the VServer section of the Avere Control
+Panel.
+
+The VServer > Export Rules page allows you to create or modify rules
+and policies.
+
+The VServer > Export Policies  page allows you to choose which policy
+to use for each export.
+
+The VServer > Namespace page allows you to choose an explicit policy
+for a junction instead of inheriting the policy that was applied to
+the junction's export.

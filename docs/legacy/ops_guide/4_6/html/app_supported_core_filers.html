@@ -1,0 +1,335 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Appendix C: Supported Core Filer Types &#8212; Operations Guide 4.6 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '4.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Operations Guide 4.6 documentation" href="ops_conf_index.html" />
+    <link rel="up" title="Appendixes" href="appendixes.html" />
+    <link rel="next" title="Appendix D: Configuring NetApp Filers for Avere SMB ACLs" href="smb_netapp_config.html" />
+    <link rel="prev" title="Appendix B: Implementing a URL Polling Agent" href="url_polling.html" /> 
+
+<!--    use for draft review builds only - enables web page annotation internally -->
+   
+<!--   <script type="text/javascript" src="_static/jquery.js"></script>  
+   <script src="_static/annotator-full.min.js"></script>  
+   <script src="_static/annotate_init.js"></script> 
+   <link rel="stylesheet" href="_static/annotator.min.css">  
+-->
+    
+
+  </head>
+  <body role="document">
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/clientSpecific/avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="smb_netapp_config.html" title="Appendix D: Configuring NetApp Filers for Avere SMB ACLs"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="url_polling.html" title="Appendix B: Implementing a URL Polling Agent"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="appendixes.html" accesskey="U">Appendixes</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="appendix-c-supported-core-filer-types">
+<span id="app-supported-core-filers"></span><h1>Appendix C: Supported Core Filer Types<a class="headerlink" href="#appendix-c-supported-core-filer-types" title="Permalink to this headline">     </a></h1>
+<p>Avere Systems, Inc. has verified these storage systems for use as back-end core filers with Avere OS.</p>
+<p>This list will change over time. For information about products not on this list, consult your Avere Systems sales representative or Avere Global Services.</p>
+<table border="1" class="docutils" id="supported-core-filers">
+<colgroup>
+<col width="25%" />
+<col width="25%" />
+<col width="25%" />
+<col width="26%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Vendor</th>
+<th class="head">Software versions</th>
+<th class="head">SMB/CIFS ACL support</th>
+<th class="head">Notes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Amazon S3</td>
+<td>n/a</td>
+<td>Yes</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>Amplidata</td>
+<td>3.4.3.0</td>
+<td>Yes</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>CentOS (with XFS or EXT4)</td>
+<td>5.8</td>
+<td>No (POSIX security only)</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>Cleversafe</td>
+<td>3.2.2.0, 3.4.4.0</td>
+<td>Yes</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>EMC Isilon</td>
+<td>OneFS 5.5, 6.0, 6.5</td>
+<td>Yes</td>
+<td>Consider defining separate
+core filers for SMB and
+NFS access</td>
+</tr>
+<tr class="row-odd"><td>EMC VNXe</td>
+<td>2.4</td>
+<td>No (POSIX security only)</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>Google Cloud Storage</td>
+<td>n/a</td>
+<td>Yes</td>
+<td>Requires Avere OS 4.6 or later</td>
+</tr>
+<tr class="row-odd"><td>Hitachi NAS</td>
+<td>11.3</td>
+<td><p class="first">Yes; configuration
+requirements:</p>
+<ul class="last simple">
+<li>Use HNAS mixed mode
+security style</li>
+<li>Requires Native Identity</li>
+<li>Username download on
+backend storage is
+optional</li>
+<li>Junction must be used
+by SMB clients only, no
+multiprotocol access</li>
+</ul>
+</td>
+<td>Consider defining separate
+core filers for SMB and
+NFS access</td>
+</tr>
+<tr class="row-even"><td>NetApp</td>
+<td>Data ONTAP 7.*, 8.0, 8.1,
+8.2, 8.3 (both clustered
+and 7-mode)</td>
+<td><div class="first last line-block">
+<div class="line">Clustered - Yes;
+read <a class="reference internal" href="smb_netapp_config.html#smb-cmode-constraints"><span class="std std-ref">requirements</span></a></div>
+<div class="line">7-mode - Yes</div>
+</div>
+</td>
+<td><p class="first">Consider defining separate
+core filers for SMB and
+NFS access</p>
+<p class="last">Read <a class="reference internal" href="smb_netapp_config.html#smb-netapp"><span class="std std-ref">Appendix D: Configuring NetApp Filers for Avere SMB ACLs</span></a></p>
+</td>
+</tr>
+<tr class="row-odd"><td>Nexenta</td>
+<td>NexentaStor 3.0, 3.1</td>
+<td>No (POSIX security only)</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>Oracle</td>
+<td>OpenSolaris 11</td>
+<td>No (POSIX security only)</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>Swiftstack</td>
+<td>2.5</td>
+<td>Yes</td>
+<td>Requires Avere OS 4.6.1.4
+or later</td>
+</tr>
+</tbody>
+</table>
+<div class="last-update container">
+updated 2017-02-15</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="appendixes.html">Appendixes</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="install_licenses.html">Appendix A: Adding or Removing Feature Licenses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="url_polling.html">Appendix B: Implementing a URL Polling Agent</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Appendix C: Supported Core Filer Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smb_netapp_config.html">Appendix D: Configuring NetApp Filers for Avere SMB ACLs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smb_ad_admin_guide.html">Appendix E: Configuring Active Directory for Avere SMB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="username_map_file.html">SMB-UNIX Username Mapping</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="url_polling.html"
+                        title="previous chapter">Appendix B: Implementing a URL Polling Agent</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="smb_netapp_config.html"
+                        title="next chapter">Appendix D: Configuring NetApp Filers for Avere SMB ACLs</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="smb_netapp_config.html" title="Appendix D: Configuring NetApp Filers for Avere SMB ACLs"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="url_polling.html" title="Appendix B: Implementing a URL Polling Agent"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="appendixes.html" >Appendixes</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">2017 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

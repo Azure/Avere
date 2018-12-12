@@ -1,0 +1,63 @@
+VServer > NFS
+
+
+The NFS Settings page lets you enable or disable Kerberos
+authentication for a particular vserver, and enable extended groups.
+
+You must set up Kerberos for the cluster before you can enable it from
+this page. Use the
+
+Cluster > Kerberos
+
+ page to configure Kerberos. (If Kerberos is not set up, there is a
+link to the Kerberos configuration page in the Enable Kerberos panel.)
+Read
+
+Setting Up Kerberos Authentication
+
+ to understand the settings required to configure Kerberos for various
+types of cluster communication.
+
+If your cluster includes more than one vserver, first choose which
+vserver to configure by using the drop-down list at the top of the
+page or in the side menu.
+
+Kerberos
+
+Check the box in the Enable Kerberos section to turn on Kerberos-based
+authentication for the exports controlled by this vserver.
+
+You also can enable Kerberos at the export level through a customized
+export rule; read
+
+Setting Up Kerberos Authentication
+
+ to learn more.
+
+Kerberos Service Key Management
+
+The Kerberos Service Key Management panel allows you to upload a
+keytab file for Kerberos authentication between this vserver and
+clients.
+
+This file is not the same as the keytab file for Kerberos
+authentication between the cluster and core filers; that file is
+uploaded on the
+
+Cluster > Kerberos
+
+ page. Read
+
+Setting Up Kerberos Authentication
+
+ to understand the different files and their purposes.
+
+Extended Groups
+
+Check the box in the Extended Groups section to enable extended group
+support on this vserver. Extended Groups support allows users to be
+members of more than 16 groups. (Standard NFS protocols limit the
+number of groups per user to 16.)
+
+Username download increases system overhead, so it is best to enable
+this feature only if needed.

@@ -1,0 +1,35 @@
+Erase and Reconfigure Page
+
+The Erase and Reconfigure page appears if you click the Reconfigure
+with modifications button from the
+
+Administration > System Maintenance
+
+ page.
+
+Caution: Do not use the reconfigure controls without help from Avere
+  Global Services. This  operation makes significant, irreversible
+  changes to the cluster.
+
+
+Caution: Modifying the configuration with these controls has the
+  following effects:
+
+  All secondary nodes are removed from the cluster. Only the primary
+  node (listed at the bottom of the System Maintenance page) remains
+  after the restart.
+
+  Nodes might be renamed.
+
+  All cached data is discarded. Client writes will be lost if they
+  have not already been flushed to the core filers before this
+  operation.
+
+  HA and SMB settings for the cluster are discarded, even if you use
+  the Reconfigure with current option.
+
+  There is no way to retrieve the previous configuration or cache data
+  after this operation.
+
+Contact Avere Global Services to learn more about using these
+controls.

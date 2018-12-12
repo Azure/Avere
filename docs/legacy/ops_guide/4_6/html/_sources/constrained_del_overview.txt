@@ -1,0 +1,34 @@
+Kerberos Constrained Delegation
+
+Constrained delegation is a security feature that limits the Avere
+cluster's access to core filer resources. It restricts operations that
+come from the cluster's domain to particular services on the back-end
+core filer.
+
+Avere Systems recommends allowing the cluster to access the SMB/CIFS
+service only, since the cluster should only send file and directory
+operations to the core filer as SMB operations when CIFS ACLs are in
+use. This means that no NFS file or directory operations from the
+cluster's domain are permitted against the core filer.
+
+Constrained delegation is necessary when using SMB ACLs for NAS core
+filer access.
+
+Constrained delegation is configured on the Active Directory server.
+You must specifically authorize each cluster vserver to access the
+core filer's SMB protocol. Details are in the AD Administrator's
+Guide, which is also available as
+
+Appendix E: Configuring Active Directory for Avere SMB
+
+. Read the section titled
+
+2.  Configure Kerberos Constrained Delegation
+
+ for a step-by-step procedure.
+
+Kerberos constrained delegation should be used for any NAS core filer
+that uses CIFS ACL security and is accessed by a vserver that has a
+CIFS ACL junction defined to that filesystem.  Constrained delegation
+is unnecessary for SMB access to cloud core filers or for NAS core
+filers that use POSIX style security.

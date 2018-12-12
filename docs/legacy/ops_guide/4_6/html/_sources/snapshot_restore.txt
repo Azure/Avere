@@ -1,0 +1,25 @@
+Restoring Files from Snapshots
+
+You can use a snapshot to restore changed or lost files. You must use
+the command-line interface to restore files from a snapshot.
+
+All snapshot files are read only.
+
+To restore files from a snapshot:
+
+Mount the vserver that is associated with the cloud core filer. For
+example:  mount 203.0.113.123:/cloud/ /tmp/source/
+
+Navigate to the mount point destination.  cd /tmp/source
+
+Change to the .snapshot directory.  cd .snapshot
+
+List the folders in the .snapshot directory and change to the
+directory that corresponds to the snapshot that you want to use.
+Manual snapshots are stored in a directory labeled with the snapshot
+name; automatic snapshot directories are named with a combination of
+the snapshot name and the date and time.
+
+Locate the file or files that you want to restore and copy them from
+the snapshot directory to a convenient location on the local machine.
+cp myfile.txt /tmp/restored/myfile.txt

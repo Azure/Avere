@@ -1,0 +1,260 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Adding a New Core Filer - NAS Core Filer &#8212; Operations Guide 4.6 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '4.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Operations Guide 4.6 documentation" href="ops_conf_index.html" />
+    <link rel="up" title="Configuration Concepts" href="common_tasks.html" />
+    <link rel="next" title="Adding a New Core Filer - Cloud Core Filer" href="new_core_filer_cloud.html" />
+    <link rel="prev" title="Prerequisites for Adding a New Core Filer" href="new_core_filer_prereqs.html" /> 
+
+<!--    use for draft review builds only - enables web page annotation internally -->
+   
+<!--   <script type="text/javascript" src="_static/jquery.js"></script>  
+   <script src="_static/annotator-full.min.js"></script>  
+   <script src="_static/annotate_init.js"></script> 
+   <link rel="stylesheet" href="_static/annotator.min.css">  
+-->
+    
+
+  </head>
+  <body role="document">
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/clientSpecific/avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="new_core_filer_cloud.html" title="Adding a New Core Filer - Cloud Core Filer"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="new_core_filer_prereqs.html" title="Prerequisites for Adding a New Core Filer"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="common_tasks.html" accesskey="U">Configuration Concepts</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="adding-a-new-core-filer-nas-core-filer">
+<span id="create-core-filer-nas"></span><h1>Adding a New Core Filer - NAS Core Filer<a class="headerlink" href="#adding-a-new-core-filer-nas-core-filer" title="Permalink to this headline">     </a></h1>
+<p>This section walks through the process of adding a new core filer to your vserver. This section is customized for core filers that use NFS NAS devices as back-end storage; the process is different for a core filer that uses cloud storage. Read <a class="reference internal" href="new_core_filer_cloud.html#create-core-filer-cloud"><span class="std std-ref">Adding a New Core Filer - Cloud Core Filer</span></a> for details.</p>
+<div class="section" id="prerequisites-for-adding-a-new-nas-core-filer">
+<span id="new-core-filer-prereqs-nas"></span><h2>Prerequisites for Adding a New NAS Core Filer<a class="headerlink" href="#prerequisites-for-adding-a-new-nas-core-filer" title="Permalink to this headline">     </a></h2>
+<p>Before starting to configure the core filer on the cluster, make sure you have the following information.</p>
+<ul>
+<li><p class="first">The fully qualified domain name of the core filer (for example, nas1.example.com).</p>
+<p>Note that you must use the domain name instead of an IP address in order to access the core filer with SMB.</p>
+</li>
+</ul>
+<p>The <span class="guilabel">Add New Core Filer</span> wizard guides you through the steps to define a new storage volume. Start the wizard by clicking the <span class="guilabel">Create</span> label from the <span class="guilabel">Manage Core Filer</span> page.</p>
+</div>
+<div class="section" id="new-core-filer-wizard">
+<h2>New Core Filer Wizard<a class="headerlink" href="#new-core-filer-wizard" title="Permalink to this headline">     </a></h2>
+<p>Start the New Core Filer wizard from the <a class="reference internal" href="gui_manage_core_filers.html#manage-core-filers"><span class="std std-ref">Core Filer &gt; Manage Core Filers</span></a> settings page.</p>
+<p>The options are different for each type of core filer - select <span class="guilabel">NAS</span> to define an NFS-based hardware storage system.</p>
+<a class="reference internal image-reference" href="_images/new_core_filer_nas1.png"><img alt="New Core Filer wizard with NAS option selected" src="_images/new_core_filer_nas1.png" style="width: 576px;" /></a>
+<p>Fill in the required fields:</p>
+<ul>
+<li><p class="first"><span class="guilabel">Core filer name</span> - Set the user-visible name for this core filer.</p>
+</li>
+<li><p class="first"><span class="guilabel">Core filer network name/IP</span> - Enter the IP address, network name, or the fully qualified domain name of the core filer.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Use the fully qualified domain name if this core filer will be accessed by Windows clients over SMB.</p>
+</div>
+</li>
+<li><p class="first"><span class="guilabel">Filer class</span> - Select the hardware type that corresponds to the back-end storage system, or choose <span class="guilabel">Other</span> if the type is not listed.</p>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p class="last">The initial value in the Filer Class selector might not be the correct value for your NAS core filer. Be certain to check the value and set it appropriately. An incorrect filer class setting can cause problems with SMB access to the core filer.</p>
+</div>
+</li>
+<li><p class="first"><span class="guilabel">Network</span> - If your cluster has more than one network, select the network that this core filer will use to communicate with the cluster.</p>
+</li>
+</ul>
+<p>Click <span class="guilabel">Add Filer</span> to continue.</p>
+<a class="reference internal image-reference" href="_images/new_core_filer_nas2.png"><img alt="Second page of the NAS New Core Filer wizard" src="_images/new_core_filer_nas2.png" style="width: 576px;" /></a>
+<p>On the second page of the wizard, choose the caching policy for this core filer.</p>
+<p>Read <a class="reference internal" href="gui_manage_cache_policies.html#gui-manage-cache-policies"><span class="std std-ref">Manage Cache Policies</span></a> to learn more about customizing cache settings.</p>
+<p>Click <span class="guilabel">Add Filer</span> again to create the new NAS core filer. The Avere Control Panel dashboard might display warnings during the creation process.</p>
+<div class="last-update container">
+updated 2017-02-15</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="new_core_filer_prereqs.html"
+                        title="previous chapter">Prerequisites for Adding a New Core Filer</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="new_core_filer_cloud.html"
+                        title="next chapter">Adding a New Core Filer - Cloud Core Filer</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="new_core_filer_cloud.html" title="Adding a New Core Filer - Cloud Core Filer"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="new_core_filer_prereqs.html" title="Prerequisites for Adding a New Core Filer"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="common_tasks.html" >Configuration Concepts</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">2017 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

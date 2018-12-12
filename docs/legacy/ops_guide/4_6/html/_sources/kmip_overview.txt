@@ -1,0 +1,26 @@
+Configuring KMIP for an Avere Cluster
+
+Avere OS gives you the option to use server-based key management for
+encrypting traffic to and from cloud core filers using the Key
+Management Interoperability Protocol (KMIP).
+
+KMIP allows you to use a separate server to store and transmit
+encryption credentials. (Choosing and setting up a KMIP server is
+beyond the scope of this document.)
+
+These are the basic steps in enabling KMIP for a cluster:
+
+Create or import X.509 certificates to support authentication between
+the cluster and the KMIP server.  Use the Cluster > Certificates
+settings page.
+
+Define a KMIP server.  Use the Cluster > KMIP Servers page.
+
+Specify the KMIP server as the encryption key store for a cloud core
+filer.  When creating a cloud core filer, you can specify the server
+at the end of the process; read Adding a New Core Filer - Cloud Core
+Filer to see how.  For an existing cloud core filer, use the Core
+Filer > Cloud Encryption Settings page.
+
+Read the linked pages to learn more about the required settings for
+KMIP.

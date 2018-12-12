@@ -1,0 +1,91 @@
+SMB-UNIX Username Mapping
+
+In some cases, you need to supply a mapping file that links Windows
+usernames to their NFS (UNIX-style) counterparts.
+
+A mapping file is only necessary if both of these conditions are true:
+
+You are using SMB to access a junction that uses POSIX mode bit
+security
+
+One or more users who will access the junction with SMB have different
+usernames on Windows-style systems and UNIX-style systems (for
+example, user Jane Smith's Windows username is Jane Smith but her UNIX
+username is smithj)
+
+About Username Mapping
+
+When creating a mapping, be aware of the following tips about how the
+Avere cluster identifies users when using SMB to access a POSIX mode
+bit junction:
+
+The cluster vserver uses the Windows username when authenticating the
+user.
+
+The cluster vserver uses the NFS username when accessing data on the
+core filer.
+
+In other words, the user is
+
+authenticated
+
+ with the Windows identity but
+
+authorized
+
+ with the NFS identity. So file access is controlled with the NFS
+username.
+
+Mapping files are specified at the cluster level. Settings for all
+affected vservers should be included in one file.
+
+Creating a Username Map File
+
+The username map file should be a plain text file. Store it in a
+location where your cluster vservers can access it through a URI.
+
+Format the username map as follows:
+
+Each line maps one username in the format
+UNIX_username=AD_DOMAIN\Windows_username where:  UNIX_username is the
+user's NFS username.  AD_DOMAIN is the cluster's Active Directory
+domain.  Windows_username is the user’s Windows username. If the
+Windows username includes spaces, enclose it in double quotation
+marks.  Example:  smithj=HOME3\"Jane Smith"
+
+A line that begins with a pound symbol (#) is treated as a comment.
+
+Refer to the
+
+example file
+
+ below.
+
+Adding the Map File to the Avere cluster
+
+Specify the mapping file on the
+
+Cluster > Directory Services
+
+ settings page. The control for specifying the file does not appear in
+the setup wizard, only in the configuration details page - read
+
+The Directory Services Configuration Details Page
+
+ for more information.
+
+File Example
+
+The following is an example of a username map file:
+
+   # The next line maps the UNIX user timmy to the Windows user
+   # "Timothy Primate" in the AD domain MYDOMAIN:
+   timmy=MYDOMAIN\"Timothy Primate"
+   #
+   # The next lines map more UNIX usernames to Windows usernames
+   # in the same AD domain:
+   cgflynn=MYDOMAIN\"C. Gertrude Flynn"
+   fletch=MYDOMAIN\"Lawrence Fletcher"
+   jeremyj=MYDOMAIN\"Jeremy Johnson"
+   perry=MYDOMAIN\"Perry Monotreme"
+   vanessa=MYDOMAIN\"Vanessa Doofenshmirtz"

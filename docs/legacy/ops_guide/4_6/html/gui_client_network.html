@@ -1,0 +1,279 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>VServer &gt; Client Facing Network &#8212; Operations Guide 4.6 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '4.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Operations Guide 4.6 documentation" href="ops_conf_index.html" />
+    <link rel="up" title="Avere Control Panel Settings" href="settings_overview.html" />
+    <link rel="next" title="VServer &gt; Namespace" href="gui_namespace.html" />
+    <link rel="prev" title="VServer &gt; VServer Details" href="gui_vserver_details.html" /> 
+
+<!--    use for draft review builds only - enables web page annotation internally -->
+   
+<!--   <script type="text/javascript" src="_static/jquery.js"></script>  
+   <script src="_static/annotator-full.min.js"></script>  
+   <script src="_static/annotate_init.js"></script> 
+   <link rel="stylesheet" href="_static/annotator.min.css">  
+-->
+    
+
+  </head>
+  <body role="document">
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/clientSpecific/avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_namespace.html" title="VServer &gt; Namespace"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_vserver_details.html" title="VServer &gt; VServer Details"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="vserver-client-facing-network">
+<span id="gui-client-facing-network"></span><h1>VServer &gt; Client Facing Network<a class="headerlink" href="#vserver-client-facing-network" title="Permalink to this headline">     </a></h1>
+<p>The <span class="guilabel">Client-Facing Network</span> page has controls for configuring vserver IP address ranges and for assigning specific addresses to particular nodes.</p>
+<a class="reference internal image-reference" href="_images/gui_client_network-annot.png"><img alt="Client Facing Network settings page" src="_images/gui_client_network-annot.png" style="width: 800px;" /></a>
+<p>If you have more than one vserver, select the vserver that you want to configure by using the drop-down menu at the top of the page or in the sidebar (1).</p>
+<p>The table at the top lists all IP address ranges assigned to the selected vserver.</p>
+<div class="section" id="removing-an-ip-address-range">
+<h2>Removing an IP Address Range<a class="headerlink" href="#removing-an-ip-address-range" title="Permalink to this headline">     </a></h2>
+<p>From the table of IP addresses, click the <span class="guilabel">Remove</span> button in the right column (3) to remove the address range from the vserver.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <span class="guilabel">Remove</span> button is active only if the vserver has multiple IP address ranges. You cannot remove the last IP address range from a vserver.</p>
+</div>
+</div>
+<div class="section" id="editing-an-ip-address-range">
+<h2>Editing an IP Address Range<a class="headerlink" href="#editing-an-ip-address-range" title="Permalink to this headline">     </a></h2>
+<p>Click the <span class="guilabel">Modify</span> button (3) in the table of IP addresses to edit an existing IP address range for this vserver.  The IP range details section opens; you can change the first and last IP addresses, subnet mask, and VLAN settings.</p>
+<p>Remember to click <span class="guilabel">Submit</span> to save your changes.</p>
+</div>
+<div class="section" id="adding-an-ip-address-range">
+<h2>Adding an IP Address Range<a class="headerlink" href="#adding-an-ip-address-range" title="Permalink to this headline">     </a></h2>
+<p>To add an IP address range for this vserver, click the <span class="guilabel">Add New Range</span> button (2). (If your system has disabled <a class="reference internal" href="gui_admin_network.html#about-advanced-networking"><span class="std std-ref">Advanced Networking</span></a>, this option is unavailable; only one address range can be defined. Consider editing the existing range, or enabling Advanced Networking.)</p>
+<p>The IP range details section opens.</p>
+<ol class="arabic">
+<li><p class="first">Specify the first and last values for the IP address range that this vserver will use to accept client requests.</p>
+<p>The IP range must be contiguous and manually assigned (not assigned by DHCP).</p>
+</li>
+<li><p class="first">Enter the subnet mask associated with this VLAN. (You can choose which VLAN to use in the next field.)</p>
+</li>
+<li><p class="first">Optionally, select a VLAN from the drop-down <span class="guilabel">VLAN</span> list. The IP addresses in this range will be associated with the VLAN that you select.</p>
+</li>
+</ol>
+</div>
+<div class="section" id="setting-home-nodes">
+<h2>Setting Home Nodes<a class="headerlink" href="#setting-home-nodes" title="Permalink to this headline">     </a></h2>
+<p>In normal operation, client-facing IP addresses can move from node to node in the cluster as a result of node failover or network conditions. A home node setting ensures that a particular IP address is reassigned to a specific cluster node after a failure or outage.</p>
+<p>This feature allows you to customize the load distribution across cluster nodes. For example, you could assign more IP addresses to nodes with better connectivity, or isolate traffic so that some clients always access certain nodes. It also allows you to consolidate traffic to VMs to prevent them from becoming cold.</p>
+<p>If home nodes are not configured, the cluster automatically balances the client-facing IP addresses across all healthy nodes.</p>
+<p>The cluster does not assign home nodes to client-facing IP addresses by default; you must manually specify the home node for each client-facing IP address that you want to use this feature.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Because the system automatically averages the available IP addresses among the cluster nodes, assigning some IP addresses to one home node will not necessarily increase traffic to that node if other IP addresses are assigned automatically.</p>
+<p>For example, in a three-node cluster using nine client-facing IP addresses, each node would be assigned three IP addresses automatically. If you set two IP addresses to one home node but let the cluster automatically assign the other IP addresses, they system will give only one additional IP address to the node that already has two.</p>
+<p class="last">If you want the client-facing IP addresses to be assigned unequally, set home nodes for all of the IP addresses in the range.</p>
+</div>
+<p>Assign home nodes in the <span class="guilabel">IP Address Home Nodes</span> table (4). This table lists each client-facing IP address, the node to which it is currently assigned, and its home node, if one exists.</p>
+<ul>
+<li><p class="first">To assign home nodes individually, use the drop-down selector in the <span class="guilabel">Home Node</span> column to select the node for each IP address. You can select any node in the cluster, or <span class="guilabel">None</span>.</p>
+<div class="figure" id="id1">
+<a class="reference internal image-reference" href="_images/home_node_options.png"><img alt="Choosing a home node" src="_images/home_node_options.png" style="width: 450px;" /></a>
+<p class="caption"><span class="caption-text"><em>Home Node options</em></span></p>
+</div>
+</li>
+<li><p class="first">To make each IP address’s current node its home node, click the <span class="guilabel">Make Current Home</span> button (5).</p>
+</li>
+<li><p class="first">To reset all IP addresses to have no home node, click the <span class="guilabel">Unhome All</span> button (5).</p>
+</li>
+<li><p class="first">After you have made the appropriate home-node assignments for all IP addresses, click <span class="guilabel">Submit</span> (5).</p>
+<p>The system pops up a warning indicating that changing home-node assignments for client-facing IP addresses can affect service as the changes are made. Click <span class="guilabel">OK</span> to proceed.</p>
+</li>
+</ul>
+<div class="last-update container">
+updated 2017-02-15</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_vserver_details.html"
+                        title="previous chapter">VServer &gt; VServer Details</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_namespace.html"
+                        title="next chapter">VServer &gt; Namespace</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_namespace.html" title="VServer &gt; Namespace"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_vserver_details.html" title="VServer &gt; VServer Details"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">2017 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

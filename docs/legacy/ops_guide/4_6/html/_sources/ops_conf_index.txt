@@ -1,0 +1,27 @@
+Configuration Guide -  Avere OS version 4.6
+
+This set of documents gives detailed descriptions of the pages in the
+Settings tab of the Avere Control Panel. The settings pages let you
+configure your Avere OS cluster from a graphical user interface that
+runs on the cluster itself.
+
+For an overview of the elements of an Avere OS cluster, read
+
+About Avere OS
+
+.
+
+To learn more about individual configuration tasks, read
+
+Configuration Concepts
+
+.
+
+Avere Control Panel Settings
+
+ gives a brief description of every settings page and its
+functionality, then links to a detailed description of how to use the
+controls on that page.
+
+
+www.averesystems.com

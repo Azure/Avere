@@ -1,0 +1,92 @@
+Using Web Proxies with Avere OS
+
+This article gives basic information about using web proxies with an
+Avere Edge Filer.
+
+Many companies's IT security policies require use of a proxy server to
+access cloud services. A proxy server can be used to avoid exposing
+infrastructure details about your system.
+
+Proxy Use Cases
+
+Here are some common scenarios in an Avere Edge Filer system that can
+be made more secure with a proxy server:
+
+Support Uploads
+
+   The Avere cluster includes a Secure Proactive Support system that
+   automatically sends system information, status reports, and crash
+   data to Avere Global Services. This system can be enabled or
+   disabled on the
+
+   Cluster > Support
+
+    page.
+
+Software Update Downloads
+
+   You can download and install updated software packages from the
+   Avere Control Panel on the
+
+   Administration > Software Update
+
+    page.
+
+Communication with Cloud Resources
+
+   If you use cloud core filers or cloud-hosted vFXTs, a proxy server
+   can improve security when interacting with commercially available
+   cloud computing services.
+
+Cluster Administration and Monitoring
+
+   The main cluster administration tool, Avere Control Panel, is
+   accessed over an internet connection to the cluster.
+
+Proxy Support
+
+Avere OS supports transparent or nontransparent proxies. HTTP and
+HTTPS proxies are supported; SOCKS proxies cannot be used.
+
+Note that authentication is unencrypted - proxy servers requiring
+encrypted transmissions are unsupported. Usernames and passwords are
+transmitted in plain text.
+
+Proxies are not supported for communication between the Avere cluster
+and NAS core filers.
+
+Configuring a Proxy for Avere OS
+
+There are three steps to setting up a proxy server to use with your
+Avere cluster:
+
+Install and configure the proxy server.  The exact steps depend on the
+type of proxy server you use and your network configuration. Include
+the Whitelisted Domains information listed below.
+
+Create a Proxy Configuration in the Avere Control Panel.  Use the
+Cluster > Proxy Configuration page to create a configuration that
+includes the proxy server URL and the username and password to use
+when connecting.
+
+Apply the proxy configuration to the cluster or to an individual cloud
+core filer.  You can select a proxy configuration for the cluster on
+the Cluster > General Setup page. This setting affects internet
+communication from cluster nodes - for example, uploading support data
+or downloading software updates.  You can select a proxy server for a
+cloud core filer on the Core Filer > Core Filer Details page. This
+proxy configuration handles traffic between the cluster and the cloud
+core filer.  There also is a proxy for vFXTs that is selected from the
+Cluster Manager interface.
+
+Whitelisted Domains
+
+Avere Systems, Inc. recommends including the following domains in the
+permitted access list (whitelist) for your proxy server.
+
+      Domain Name  Description  Notes  verisign.com ocsp.verisign.com
+SVRSecure-G3-crl.verisign.com      sd.symcd.com
+download.averesystems.com download.averesystems.net  Avere software
+updates  Allow the IP range 65.123.167.224/29 to pass through your
+firewall on port 443  avere-billing.appspot.com
+averedist.blob.core.windows.net

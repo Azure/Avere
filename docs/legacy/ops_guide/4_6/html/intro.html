@@ -1,0 +1,433 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>About Avere OS &#8212; Operations Guide 4.6 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '4.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Operations Guide 4.6 documentation" href="ops_conf_index.html" />
+    <link rel="next" title="Configuration Concepts" href="common_tasks.html" />
+    <link rel="prev" title="Configuration Guide - Avere OS version 4.6" href="ops_conf_index.html" /> 
+
+<!--    use for draft review builds only - enables web page annotation internally -->
+   
+<!--   <script type="text/javascript" src="_static/jquery.js"></script>  
+   <script src="_static/annotator-full.min.js"></script>  
+   <script src="_static/annotate_init.js"></script> 
+   <link rel="stylesheet" href="_static/annotator.min.css">  
+-->
+    
+
+  </head>
+  <body role="document">
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/clientSpecific/avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="common_tasks.html" title="Configuration Concepts"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ops_conf_index.html" title="Configuration Guide - Avere OS version 4.6"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="about-avere-os">
+<span id="id1"></span><h1>About Avere OS<a class="headerlink" href="#about-avere-os" title="Permalink to this headline">     </a></h1>
+<p>This page gives a basic overview of an Avere cluster, and describes how to get started configuring a cluster by using the Avere Control Panel.</p>
+<div class="section" id="avere-storage-optimization-solutions">
+<h2>Avere Storage Optimization Solutions<a class="headerlink" href="#avere-storage-optimization-solutions" title="Permalink to this headline">     </a></h2>
+<p>Avere clusters and software provide a high-performance interface that accelerates client
+access to one or more back-end storage systems (<em>core filers</em>). Storage systems can be cloud object stores, network-attached storage (NAS) appliances, or a mixture of types.</p>
+<p>Avere storage optimization consists of the Avere OS software running on one or more FXT Series
+<em>nodes</em>. FXT nodes can be physical appliances or virtual servers (a virtual FXT node is also called a vFXT). Nodes work together as an Avere <em>cluster</em>. The cluster&#8217;s performance scales nearly linearly with each node added to the cluster.</p>
+<p>When a file is being actively accessed, Avere OS caches its content and metadata on high-performance nodes in the cluster, circumventing the overhead of sending each read and write request to back-end storage. When file usage becomes less frequent, the cluster transfers that file to the core filer and removes it from the working set, freeing up resources for files that are in higher demand.</p>
+<p>Avere OS regularly writes modified files from the cluster back to the core filers to ensure data integrity. The timing of these writes can be influenced by various factors:</p>
+<ul class="simple">
+<li>Time since last written - You can set a maximum time delay before changes are synchronized from the cache to the core filer</li>
+<li>Space available in the cache - The cache needs to free space for other files that are being accessed more frequently</li>
+<li>Amount of unwritten files - Avere OS automatically writes files to the back end storage when  modified files reach a set percentage of data in the cache</li>
+<li>Set schedule - You can configure the cluster to flush data to the back-end core filers at specific times - for example, to ensure that back-end storage is in sync before its regular backup</li>
+</ul>
+<p>The optional <em>High Availability</em> (HA) feature, which stores copies of one node&#8217;s cached files on another cluster node, can provide additional protection in the event of a system outage.</p>
+<div class="section" id="avere-system-overview">
+<h3>Avere System Overview<a class="headerlink" href="#avere-system-overview" title="Permalink to this headline">     </a></h3>
+<a class="reference internal image-reference" href="_images/cluster_overview_picture.png"><img alt="Overview diagram of an Avere cluster" src="_images/cluster_overview_picture.png" style="width: 700px;" /></a>
+<table border="1" class="docutils">
+<colgroup>
+<col width="53%" />
+<col width="47%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><strong>Avere Edge Filer</strong></td>
+<td><strong>Core Filer</strong></td>
+</tr>
+<tr class="row-even"><td><ul class="first last simple">
+<li>Performance optimized</li>
+<li>Accelerates read, write, and metadata operations</li>
+<li>Transfers data to core filers (write, move, mirror)</li>
+</ul>
+</td>
+<td><ul class="first last simple">
+<li>Capacity optimized</li>
+<li>FlashCloud support for public and
+private object stores</li>
+<li>Supports FlashCloud object core filers
+and NAS core filers from different vendors
+in the same cluster (for example, NetApp,
+EMC/Isilon, Oracle, BlueArc, Nexenta)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Clients connected to an Avere OS FXT cluster can access and modify files regardless of whether or not they are cached in the working set. Avere OS provides several preconfigured cache policies to set how the cluster cache processes read and write operations from clients, and administrators can create custom cache policy settings as well. Refer to <a class="reference internal" href="gui_manage_cache_policies.html#gui-manage-cache-policies"><span class="std std-ref">Cache Policies</span></a> for more information.</p>
+<p>The Avere solution can be deployed without significant disruption to your current storage
+or network infrastructure. Because the cluster is placed between your clients and your
+core filer, you can enable or disable it as needed.</p>
+</div>
+</div>
+<div class="section" id="about-this-document">
+<h2>About This Document<a class="headerlink" href="#about-this-document" title="Permalink to this headline">     </a></h2>
+<p>This guide is written for system administrators who need to manage an Avere cluster.
+It assumes that you have a basic knowledge of networked storage, including network
+access protocols such as the Network File System (NFS) and the Common Internet File
+System (CIFS).</p>
+<p>It also assumes that you have an Avere cluster installed and configured as described
+in the <a class="reference external" href="https://download.averesystems.com/software/FXT_Quick_Start_Guide.pdf">Avere Quick Start Guide</a>.</p>
+<p>The following highlights are used in this document:</p>
+<div class="admonition caution">
+<p class="first admonition-title">Caution</p>
+<p class="last">A caution indicates that failure to follow directions in the statement can result in
+damage to equipment or loss of data.</p>
+</div>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p class="last">An important statement presents clarifying information or specific instructions.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">A note presents commentary, sidelights, or interesting points of information.</p>
+</div>
+</div>
+<div class="section" id="prerequisites-for-administering-an-avere-cluster">
+<h2>Prerequisites for Administering an Avere Cluster<a class="headerlink" href="#prerequisites-for-administering-an-avere-cluster" title="Permalink to this headline">     </a></h2>
+<p>Avere OS supports core filer access using NFS version 3, SMB (CIFS), and SMB2.0 protocols.</p>
+<p>The cluster is managed by using the Avere Control Panel, which is a browser-based graphical interface to the Avere cluster. (A command-line interface also exists; contact Avere Global Services to learn more.)</p>
+<p>This guide assumes that you have a cluster with at least one node and one virtual server
+(vserver) currently set up and running. Refer to the following for more information:</p>
+<ul class="simple">
+<li>The <a class="reference external" href="https://download.averesystems.com/software/FXT_5000_Installation_Guide.pdf">FXT 5000 Series Installation Guide</a></li>
+<li>The <a class="reference external" href="https://download.averesystems.com/software/FXT_Quick_Start_Guide.pdf">Avere Quick Start Guide</a></li>
+</ul>
+<p>In addition, you will need to plan for the following:</p>
+<ul class="simple">
+<li>Setting up <em>exports</em> on your particular core filer, as described in <a class="reference internal" href="export_rules_overview.html#export-rules-overview"><span class="std std-ref">Controlling Access to Core Filer Exports</span></a>.</li>
+<li>Deciding on an authentication method.</li>
+</ul>
+<ul class="simple">
+<li>Deciding how to set up network access to your cluster, described in <a class="reference internal" href="network_overview.html#network-overview"><span class="std std-ref">Configuring Network Services for an Avere Cluster</span></a>.</li>
+<li>Planning how to set the <em>cache policy</em> for each core filer. The cache settings will generally depend on whether you are primarily using the core filer for a high rate of data exchange, or to store data long-term, as described in <a class="reference internal" href="gui_manage_cache_policies.html#gui-manage-cache-policies"><span class="std std-ref">Cache Policies</span></a> As you add core filers to the cluster, you will need to set the cache policy on each one.</li>
+</ul>
+</div>
+<div class="section" id="installing-a-feature-license">
+<h2>Installing a Feature License<a class="headerlink" href="#installing-a-feature-license" title="Permalink to this headline">     </a></h2>
+<p>Several Avere OS options, particularly FlashCloud<sup>TM</sup>, FlashMove<sup>®</sup>, and FlashMirror<sup>®</sup>, require a separate license. After you purchase a license, you must send your license ID to Avere Global Services, and they will provide you with a license key.</p>
+<p>The process is described in detail in <a class="reference internal" href="install_licenses.html#install-licenses"><span class="std std-ref">Appendix A: Adding or Removing Feature Licenses</span></a>.</p>
+</div>
+<div class="section" id="using-the-gui">
+<span id="gui-overview"></span><span id="index-0"></span><h2>Using the Avere Control Panel<a class="headerlink" href="#using-the-gui" title="Permalink to this headline">     </a></h2>
+<p>The cluster is managed by using the Avere Control Panel, a secure, browser-based application.</p>
+<p>The Avere Control Panel presents a single system image of the cluster and all of its constituent nodes; you can manage the entire cluster or any individual node from the Avere Control Panel.</p>
+<p>Browser requirements include the following:</p>
+<ul class="simple">
+<li>A standards-compliant browser that can access the management IP address on the
+cluster’s network. Avere Systems supports the three most recent major releases of Mozilla Firefox<sup>®</sup>
+Google<sup>©</sup> Chrome, Apple Safari<sup>®</sup>, and Microsoft Internet Explorer<sup>®</sup>. The browser must have JavaScript enabled.</li>
+<li>If your browser supports the DNS Service Discovery (DNS-SD or Bonjour<sup>®</sup>)
+protocol, either through a plug-in, or natively (as in the case of Apple Safari), you
+can use it to discover Avere clusters without needing to know machine names or IP
+addresses. The browser’s workstation must run on the same subnet as the cluster’s
+management interface.</li>
+</ul>
+<div class="section" id="gui-access">
+<h3>Avere Control Panel Access<a class="headerlink" href="#gui-access" title="Permalink to this headline">     </a></h3>
+<p>Two types of access are available for the Avere Control Panel:</p>
+<ul class="simple">
+<li><span class="guilabel">Full Access</span> allows administrators to configure cluster settings as well as to monitor the cluster.</li>
+<li><span class="guilabel">Read-Only</span> access allows regular users to monitor the cluster, but not to update the cluster configuration.</li>
+</ul>
+<p>Configure user access to the cluster control panel by using the <span class="guilabel">Users</span> settings page, or the <span class="guilabel">Login Services</span> settings page, or both.</p>
+<div class="section" id="users-page">
+<h4>Users Page<a class="headerlink" href="#users-page" title="Permalink to this headline">     </a></h4>
+<p>On the <span class="guilabel">Users</span> settings page, you can configure individual usernames and passwords for logging in to the cluster control panel.</p>
+<p>Individual user accounts can be set for read-only access or administrative access.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You cannot create read-only user accounts from the Login Services page. To create accounts that can monitor the cluster but that cannot change settings, use the Users page or the command-line interface.</p>
+</div>
+</div>
+<div class="section" id="login-services-page">
+<h4>Login Services Page<a class="headerlink" href="#login-services-page" title="Permalink to this headline">     </a></h4>
+<p>On the <span class="guilabel">Login Services</span> settings page, you can configure an Active Directory or LDAP server to read a group containing administrator usernames. This system can be easier to maintain than locally defined users.</p>
+<ul class="simple">
+<li>With an AD server, you can create a group named <code class="docutils literal"><span class="pre">AvereAdmins</span></code> to automatically give administrative privileges to certain users. Any user in AvereAdmins is assumed to have full access privileges. You must create this group in your AD server manually.</li>
+<li>You can use both an AD/LDAP server and local login accounts at the same time.</li>
+</ul>
+<p>Read <a class="reference internal" href="gui_users.html#gui-users"><span class="std std-ref">Administration &gt; Users</span></a> and <a class="reference internal" href="gui_login_services.html#gui-login-services"><span class="std std-ref">Administration &gt; Login Services</span></a> for more details.</p>
+</div>
+</div>
+<div class="section" id="logging-in-to-the-gui">
+<h3>Logging In to the Avere Control Panel<a class="headerlink" href="#logging-in-to-the-gui" title="Permalink to this headline">     </a></h3>
+<p>To log in to the cluster for management and monitoring tasks:</p>
+<ol class="arabic">
+<li><p class="first">Use a web browser to go to https://<em>management_IP_address</em>/fxt,
+where <em>management_IP_address</em> is the cluster’s management IP
+address.</p>
+<p>Alternatively, if you are using a browser that supports the DNS-SD
+protocol, you can navigate to the bookmark labeled
+<code class="docutils literal"><span class="pre">Avere</span> <span class="pre">Cluster</span> <span class="pre">Management:</span> <span class="pre">cluster_name</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If your browser first prompts you to accept an SSL certificate from the Avere
+system, accept the certificate.</p>
+</div>
+<p>The Avere Control Panel Login page is displayed.</p>
+<a class="reference internal image-reference" href="_images/gui_login_fakeIP.png"><img alt="Logging in to the |gui|" src="_images/gui_login_fakeIP.png" style="width: 700px;" /></a>
+</li>
+<li><p class="first">In the <span class="guilabel">Username</span> field, enter a user name.</p>
+</li>
+<li><p class="first">In the <span class="guilabel">Password</span> field, enter the corresponding password.</p>
+</li>
+</ol>
+<p>The Avere Control Panel loads and displays the <span class="guilabel">Dashboard</span> tab.</p>
+</div>
+<div class="section" id="control-panel-tabs">
+<h3>Control Panel Tabs<a class="headerlink" href="#control-panel-tabs" title="Permalink to this headline">     </a></h3>
+<a class="reference internal image-reference" href="_images/dashboard_tab.png"><img alt="The |gui| Dashboard" src="_images/dashboard_tab.png" style="width: 700px;" /></a>
+<p>The Avere Control Panel is divided into the following tabbed pages. (The release number of the currently installed Avere OS release is listed to the right of the tabs.) Click any tab to show the associated page.</p>
+<ul>
+<li><p class="first"><span class="guilabel">Dashboard</span> – This is the Avere Control Panel’s default tab. It displays performance graphs and statistics, system alerts, and information about virtual servers (vservers), FXT  nodes, clients, and hot files.</p>
+<p><em>Detailed documentation about the Dashboard section is being developed.</em></p>
+</li>
+</ul>
+<ul>
+<li><p class="first"><span class="guilabel">Settings</span> – This tab gives you access to the system configuration. For an overview of the available settings and links to detailed instructions about using each settings page, read <a class="reference internal" href="settings_overview.html#settings-overview"><span class="std std-ref">Avere Control Panel Settings</span></a>.</p>
+</li>
+<li><p class="first"><span class="guilabel">Analytics</span> – This tab enables you to obtain detailed, in-depth
+information about activity on your cluster and storage network.</p>
+<p><em>Detailed documentation about the Analytics section is being developed.</em></p>
+</li>
+</ul>
+<ul>
+<li><p class="first"><span class="guilabel">Data Management</span> – This tab enables you to move and mirror data on NAS
+servers and cloud object stores that are defined as core filers to the cluster. Data management operations can run concurrently with client access to data, and do not interrupt client access.</p>
+<p><em>Detailed documentation about the Data Management section is being developed.</em></p>
+</li>
+</ul>
+<ul>
+<li><p class="first"><span class="guilabel">Support</span> – This tab has system details and tools for working collaboratively with Avere Global Services if problems occur.</p>
+<p>Refer to <a class="reference internal" href="support_overview.html#support-tab"><span class="std std-ref">Using the Avere Control Panel Support Tab</span></a> for more information.</p>
+</li>
+</ul>
+<p>If a condition occurs that affect the operation of the cluster, the Avere Control Panel displays a
+system error (red) or alert (yellow) at its upper left-hand corner. Clicking on the
+notification takes you to the dashboard, where you can view problem details and
+troubleshooting information.</p>
+<p>You can view pop-up help text for items on the Avere Control Panel screen by moving your cursor to the left of the item’s label. A question mark icon appears; hold your cursor over the question mark to show help text for that item.</p>
+<a class="reference internal image-reference" href="_images/with_help.png"><img alt="Hover your cursor over the question mark icon to show tips" src="_images/with_help.png" style="width: 600px;" /></a>
+</div>
+<div class="section" id="logging-out-of-the-gui">
+<h3>Logging Out of the Avere Control Panel<a class="headerlink" href="#logging-out-of-the-gui" title="Permalink to this headline">     </a></h3>
+<p>To log out of the Avere Control Panel:</p>
+<ol class="arabic simple">
+<li>Click the <span class="guilabel">Logout</span> button near the upper right-hand corner of the browser window. Your session ends and the browser displays the Avere Control Panel’s Login page.</li>
+<li>To ensure a complete logout, exit the browser.</li>
+</ol>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">About Avere OS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#avere-storage-optimization-solutions">Avere Storage Optimization Solutions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#about-this-document">About This Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#prerequisites-for-administering-an-avere-cluster">Prerequisites for Administering an Avere Cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installing-a-feature-license">Installing a Feature License</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-the-gui">Using the Avere Control Panel</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ops_conf_index.html"
+                        title="previous chapter">Configuration Guide -  Avere OS version 4.6</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="common_tasks.html"
+                        title="next chapter">Configuration Concepts</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="common_tasks.html" title="Configuration Concepts"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ops_conf_index.html" title="Configuration Guide - Avere OS version 4.6"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">2017 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

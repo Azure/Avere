@@ -1,0 +1,318 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Core Filer &gt; Cloud Snapshot Policies &#8212; Operations Guide 4.6 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '4.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Operations Guide 4.6 documentation" href="ops_conf_index.html" />
+    <link rel="up" title="Avere Control Panel Settings" href="settings_overview.html" />
+    <link rel="next" title="Core Filer &gt; Manage Cache Policies" href="gui_manage_cache_policies.html" />
+    <link rel="prev" title="Core Filer &gt; Cloud Snapshots" href="gui_cloud_snapshots.html" /> 
+
+<!--    use for draft review builds only - enables web page annotation internally -->
+   
+<!--   <script type="text/javascript" src="_static/jquery.js"></script>  
+   <script src="_static/annotator-full.min.js"></script>  
+   <script src="_static/annotate_init.js"></script> 
+   <link rel="stylesheet" href="_static/annotator.min.css">  
+-->
+    
+
+  </head>
+  <body role="document">
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/clientSpecific/avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_manage_cache_policies.html" title="Core Filer &gt; Manage Cache Policies"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_cloud_snapshots.html" title="Core Filer &gt; Cloud Snapshots"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="core-filer-cloud-snapshot-policies">
+<span id="cloud-snapshot-policies"></span><h1>Core Filer &gt; Cloud Snapshot Policies<a class="headerlink" href="#core-filer-cloud-snapshot-policies" title="Permalink to this headline">     </a></h1>
+<a class="reference internal image-reference" href="_images/gui_cloud_snapshot_policies.png"><img alt="Cloud Snapshot Policies page" src="_images/gui_cloud_snapshot_policies.png" style="width: 800px;" /></a>
+<p>The <span class="guilabel">Cloud Snapshot Policies</span> settings page lets you create automated snapshot schedules and assign them to cloud core filers. (Snapshot policies also can be assigned to core filers from the <span class="guilabel">Core Filer Details</span> page - read <a class="reference internal" href="gui_core_filer_details.html#core-filer-assign-snapshot-policy"><span class="std std-ref">Snapshot Policy</span></a> to learn more.)</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In addition to the automated snapshot policies configured on this page, you can perform manual snapshots, which occur immediately and do not repeat on a schedule. Manual snapshots are created from the <span class="guilabel">Cloud Snapshots</span> page.</p>
+</div>
+<div class="admonition caution">
+<p class="first admonition-title">Caution</p>
+<p class="last">While creating a snapshot, Avere OS does not cache client writes. During this time, file changes are written synchronously to the cloud core filer, which is typically much slower than writing to the cache. To avoid disrupting client work, keep this limitation in mind when deciding how to schedule cloud snapshots.</p>
+</div>
+<div class="section" id="about-snapshots">
+<h2>About Snapshots<a class="headerlink" href="#about-snapshots" title="Permalink to this headline">     </a></h2>
+<p>Snapshots record the differences in files since the previous snapshot.</p>
+<p>Snapshots are not a replacement for regular backups. Because Avere OS cloud snapshots are stored in the Avere cluster, it&#8217;s possible to lose snapshot records along with the stored data if a significant failure occurs. Avere recommends backing up important data regularly to a separate storage system.</p>
+<p>The Avere OS snapshot feature is provided for cloud storage only. Many NAS storage products have their own snapshot functions, which are configured directly in those products&#8217; operating systems, but cloud storage systems do not provide a built-in snapshot function. Avere OS includes this basic cloud snapshot system to help cloud storage more closely mirror the function of traditional hardware storage.</p>
+<p>Note that a default snapshot policy is automatically created, but it is not automatically applied to any core filer. You must enable snapshots explicitly.</p>
+</div>
+<div class="section" id="working-with-the-policy-list">
+<h2>Working with the Policy List<a class="headerlink" href="#working-with-the-policy-list" title="Permalink to this headline">     </a></h2>
+<p>All of the cloud snapshot policies in the cluster are listed in a table.</p>
+<p>You can sort the list by a column value, or filter the list by using the search box. (Clear the search box to see all policies.)</p>
+<p>Click the triangle at the left of a policy name to see details.</p>
+<p>To customize or delete a policy, select it in the <span class="guilabel">Actions</span> column and click the <span class="guilabel">Modify</span> or <span class="guilabel">Delete</span> button. Buttons appear at the top and bottom of the table that lists the policies.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You cannot delete the default policy, but you can change it.</p>
+</div>
+</div>
+<div class="section" id="applying-a-snapshot-policy-to-a-core-filer">
+<h2>Applying a Snapshot Policy to a Core Filer<a class="headerlink" href="#applying-a-snapshot-policy-to-a-core-filer" title="Permalink to this headline">     </a></h2>
+<p>There are two ways to apply a snapshot policy to a core filer:</p>
+<ul>
+<li><p class="first">From the <span class="guilabel">Edit Filer</span> panel in the <span class="guilabel">Core Filer Details</span> page:</p>
+<p>Read <a class="reference internal" href="gui_core_filer_details.html#core-filer-assign-snapshot-policy"><span class="std std-ref">Snapshot Policy</span></a> to learn more.</p>
+</li>
+<li><p class="first">From the <span class="guilabel">Cloud Snapshot Policies</span> page (this page) while editing or creating a snapshot policy:</p>
+<p>While editing the snapshot policy, list the core filer or filers in the policy field labeled <span class="guilabel">Add Cloud Core Filers</span>.</p>
+</li>
+</ul>
+<p>Using snapshots on core filers is optional.</p>
+<p>A snapshot policy can be applied to multiple core filers at once, but each core filer can be assigned at most one cloud snapshot policy.</p>
+<p>If you change a core filer&#8217;s snapshot policy, old snapshots from the previous policy are not automatically deleted. You can delete them manually from the <span class="guilabel">Cloud Snapshots</span> page.</p>
+</div>
+<div class="section" id="creating-a-snapshot-policy">
+<h2>Creating a Snapshot Policy<a class="headerlink" href="#creating-a-snapshot-policy" title="Permalink to this headline">     </a></h2>
+<p>Click the <span class="guilabel">Create</span> button to make a new policy.</p>
+<p>The process is similar for modifying an existing policy - select the policy in the <span class="guilabel">Actions</span> column and then click the <span class="guilabel">Modify</span> button.</p>
+<div class="figure" id="id1">
+<a class="reference internal image-reference" href="_images/create_snapshot_policy.png"><img alt="Creating a cloud snapshot policy" src="_images/create_snapshot_policy.png" style="width: 576px;" /></a>
+<p class="caption"><span class="caption-text"><em>The Create Snapshot Policy window</em></span></p>
+</div>
+<div class="section" id="policy-name">
+<h3>Policy Name<a class="headerlink" href="#policy-name" title="Permalink to this headline">     </a></h3>
+<p>Use the <span class="guilabel">Name</span> field to give the policy a distinct name.</p>
+</div>
+<div class="section" id="schedule-options">
+<h3>Schedule Options<a class="headerlink" href="#schedule-options" title="Permalink to this headline">     </a></h3>
+<p>Select the type of schedules to use for this policy. You can select one or more of the time options.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Each cloud core filer can use only one snapshot policy at a time. If you want to keep daily and weekly snapshots, you must configure them in the same policy.</p>
+</div>
+<p>Specify the schedule time in 24-hour format. Snapshot times are based on the Avere cluster&#8216;s time setting.</p>
+<p>Schedule types include:</p>
+<ul>
+<li><p class="first"><span class="guilabel">Hourly</span> - Takes several snapshots each day. Choose from one of the preset time schedules, or choose <span class="guilabel">Custom</span> and enter the times to save snapshots in the text field. (The <span class="guilabel">Default Snapshot Time</span> setting does not apply to hourly snapshot schedules.)</p>
+<div class="admonition caution">
+<p class="first admonition-title">Caution</p>
+<p class="last">Hourly snapshots are not recommended because they can cause performance issues when the data is frequently modified. The overhead required to synchronize snapshots to cloud storage is more significant than the overhead for NAS snapshots, so creating multiple snapshots per day should be avoided - especially for filers that store a large number of temporary files that will be created and discarded within a day.</p>
+</div>
+</li>
+<li><p class="first"><span class="guilabel">Daily</span> - Takes one snapshot a day. Set the time by using the <span class="guilabel">Default Snapshot Time</span> setting near the top of the panel.</p>
+</li>
+<li><p class="first"><span class="guilabel">Weekly</span> - Takes one snapshot a week, on the first day of the week (typically Sunday). Set the snapshot time by using the <span class="guilabel">Default Snapshot Time</span> setting near the top of the panel.</p>
+</li>
+<li><p class="first"><span class="guilabel">Monthly</span> - Takes one snapshot a month, on the first day of the month. Set the snapshot time by using the <span class="guilabel">Default Snapshot Time</span> setting near the top of the panel.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="maximum-snapshot-count">
+<h3>Maximum Snapshot Count<a class="headerlink" href="#maximum-snapshot-count" title="Permalink to this headline">     </a></h3>
+<p>The <span class="guilabel">Maximum Snapshot Count</span> value is the number of snapshots to keep. After this number is reached, the oldest snapshots from that schedule category (in this policy) are deleted.</p>
+</div>
+<div class="section" id="add-cloud-core-filers">
+<span id="set-cloud-snapshot-policy"></span><h3>Add Cloud Core Filers<a class="headerlink" href="#add-cloud-core-filers" title="Permalink to this headline">     </a></h3>
+<p>Optionally, you can apply this policy to one or more core filers immediately by specifying them in the <span class="guilabel">Add Cloud Core Filers</span> field.</p>
+<p>If you specify a core filer that already has a snapshot policy, a pop-up window will ask you to confirm the policy change. Click <span class="guilabel">OK</span> to change the policy, or click <span class="guilabel">Cancel</span> to keep the previously assigned snapshot policy. Changes to the content of the policy are saved even if you cancel assigning it to a core filer.</p>
+<p>Note that snapshots from a previously used policy are not automatically deleted.</p>
+</div>
+<div class="section" id="policy-note">
+<h3>Policy Note<a class="headerlink" href="#policy-note" title="Permalink to this headline">     </a></h3>
+<p>The <span class="guilabel">Note</span> field lets you store additional information about this policy. Creating a note is optional.</p>
+</div>
+<div class="section" id="saving-the-policy">
+<h3>Saving the Policy<a class="headerlink" href="#saving-the-policy" title="Permalink to this headline">     </a></h3>
+<p>After configuring the settings that you want, click the <span class="guilabel">Create Policy</span> button at the bottom of the panel to save your configuration. (If you are modifying an existing policy, the button is labeled <span class="guilabel">Modify Policy</span>.)</p>
+<p>If you change your mind, click <span class="guilabel">Cancel</span> to abandon the settings and return to the last saved state.</p>
+<div class="last-update container">
+updated 2017-02-15</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_cloud_snapshots.html"
+                        title="previous chapter">Core Filer &gt; Cloud Snapshots</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_manage_cache_policies.html"
+                        title="next chapter">Core Filer &gt; Manage Cache Policies</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_manage_cache_policies.html" title="Core Filer &gt; Manage Cache Policies"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_cloud_snapshots.html" title="Core Filer &gt; Cloud Snapshots"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">2017 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>
