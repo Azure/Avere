@@ -61,8 +61,18 @@ Note: You also can enable hot file collection from the Dashboard
   Clients tab of the status bar at the bottom of the page.
 
 Detailed information about hot client statistics is included in
-*dashboard:dashboard_toc*, specifically in the *dashboard:hot_clients*
-section of the *dashboard:status_tab_clients_detail* article.
+
+Using the Avere Control Panel Dashboard
+
+, specifically in the
+
+Hot Clients Reporting
+
+ section of the
+
+Clients Status Tab
+
+ article.
 
 Client Settings
 

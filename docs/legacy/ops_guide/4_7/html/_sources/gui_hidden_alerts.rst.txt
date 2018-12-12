@@ -20,4 +20,11 @@ select individual occurrences within that type. (Occurrences are
 listed by timestamp in the right column of the table.)
 
 For more detailed information about system notifications, read
-*dashboard:conditions_alerts* in *dashboard:dashboard_toc*.
+
+Monitoring Conditions and Alerts
+
+ in
+
+Using the Avere Control Panel Dashboard
+
+.

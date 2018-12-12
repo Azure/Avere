@@ -195,7 +195,10 @@ Note: Earlier versions of Avere OS used the term
   .
 
 You can monitor core filer status by using the Core Filers tab on the
-*dashboard*.
+
+dashboard
+
+.
 
 Use the Core Filer section of the Avere Control Panel Settings tab to
 create and configure core filers for your cluster.
@@ -408,7 +411,10 @@ Administration Settings Overview
 Pages in the Administration section can be used to reboot the cluster
 or individual nodes, update cluster software, manage administrative
 user accounts, and monitor hidden alerts from the dashboard. (Read
-*dashboard:dashboard_intro* to learn more about system alerts.)
+
+Monitoring the Cluster with the Avere Control Panel Dashboard
+
+ to learn more about system alerts.)
 
 Administration Settings Pages
 
