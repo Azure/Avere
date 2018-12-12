@@ -1,0 +1,343 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Cluster &gt; General Setup &#8212; Operations Guide 4.6 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '4.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Operations Guide 4.6 documentation" href="ops_conf_index.html" />
+    <link rel="up" title="Avere Control Panel Settings" href="settings_overview.html" />
+    <link rel="next" title="Cluster &gt; Administrative Network" href="gui_admin_network.html" />
+    <link rel="prev" title="Core Filer &gt; Manage Cache Policies" href="gui_manage_cache_policies.html" /> 
+
+<!--    use for draft review builds only - enables web page annotation internally -->
+   
+<!--   <script type="text/javascript" src="_static/jquery.js"></script>  
+   <script src="_static/annotator-full.min.js"></script>  
+   <script src="_static/annotate_init.js"></script> 
+   <link rel="stylesheet" href="_static/annotator.min.css">  
+-->
+    
+
+  </head>
+  <body role="document">
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/clientSpecific/avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_admin_network.html" title="Cluster &gt; Administrative Network"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_manage_cache_policies.html" title="Core Filer &gt; Manage Cache Policies"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="cluster-general-setup">
+<span id="gui-cluster-general-setup"></span><h1>Cluster &gt; General Setup<a class="headerlink" href="#cluster-general-setup" title="Permalink to this headline">     </a></h1>
+<p>The first page in the Cluster section has basic options that affect the entire cluster.</p>
+<a class="reference internal image-reference" href="_images/gui_cluster_general_setup.png"><img alt="General Setup page in the Cluster section" src="_images/gui_cluster_general_setup.png" style="width: 800px;" /></a>
+<div class="section" id="cluster-name">
+<span id="index-0"></span><h2>Cluster Name<a class="headerlink" href="#cluster-name" title="Permalink to this headline">     </a></h2>
+<p>Use this setting to change the name for the cluster.</p>
+<p>A cluster name must meet these criteria:</p>
+<ul class="simple">
+<li>Length of 1 to 16 characters</li>
+<li>Can include letters, numbers, and the dash (-) and underscore (_) characters</li>
+<li>Must not include other punctuation or special characters</li>
+</ul>
+<p>To change the cluster&#8217;s name, enter a new value in the field and click <span class="guilabel">Submit</span>.
+Note that you cannot revert the name change after submitting it; however, you can immediately change the name again to its previous value.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you have configured SMB access and are using the cluster (NetBIOS) name as the name of the SMB server, changing the cluster name does not change the SMB server name. The Avere SMB service continues to use the server name listed on the <span class="guilabel">CIFS</span> configuration page.</p>
+</div>
+</div>
+<div class="section" id="allowing-nodes-to-join-the-cluster-automatically-legacy-systems-only">
+<h2>Allowing Nodes to Join the Cluster Automatically (legacy systems only)<a class="headerlink" href="#allowing-nodes-to-join-the-cluster-automatically-legacy-systems-only" title="Permalink to this headline">     </a></h2>
+<p>In some configurations, an option labeled <span class="guilabel">Allow unconfigured FXT nodes to join this cluster</span> appears underneath the cluster name setting.</p>
+<p>This feature is no longer available in Avere OS, but the setting still appears on clusters that had the feature enabled before upgrading the software.</p>
+<div class="admonition caution">
+<p class="first admonition-title">Caution</p>
+<p class="last">If you unselect this checkbox, you will not be able to re-enable the feature.</p>
+</div>
+<p>This feature was designed to simplify cluster creation by allowing new nodes to join a cluster automatically. If using this feature, be careful to avoid exposing the cluster to nodes that should not join the cluster.</p>
+<span class="target" id="advanced-networking-enable"></span></div>
+<div class="section" id="enabling-advanced-networking-legacy-systems-only">
+<span id="index-1"></span><h2>Enabling Advanced Networking (legacy systems only)<a class="headerlink" href="#enabling-advanced-networking-legacy-systems-only" title="Permalink to this headline">     </a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The Advanced Networking feature is enabled by default on new clusters created in Avere OS 4.5 or later. You cannot disable advanced networking after it has been turned on for a cluster.</p>
+</div>
+<p>The Avere OS Advanced Networking feature activates additional network customization options, including the following features:</p>
+<ul class="simple">
+<li>Cluster components are connected with virtual local area networks (VLANs). You can create multiple VLANs to handle different types of traffic, and designate which vlan handles specific IP address ranges.</li>
+<li>Forwarding Information Base (FIB) tables can be used to route traffic dynamically.</li>
+<li>Link aggregation and port groups can be used to customize how ethernet ports handle various types of traffic.</li>
+<li>Administrators can configure multiple IP address ranges for the management, cluster, and vserver networks, instead of only one. This feature enables the use of discontinuous IP addresses in one network group.</li>
+</ul>
+<p>To enable advanced networking:</p>
+<ol class="arabic simple">
+<li>Check the <span class="guilabel">Enable Advanced Networking</span> box.
+A pop-up dialog appears reminding you that you cannot disable this setting, and that client access might be interrupted while changes are made.</li>
+<li>Click <span class="guilabel">OK</span> to proceed.</li>
+</ol>
+<p>Clusters with advanced networking turned on have a <span class="guilabel">VLAN</span> settings page in the <span class="guilabel">Cluster</span> category. You might need to refresh your browser page before the new page appears in the Avere Control Panel.</p>
+<p>Learn more about advanced networking features in these documents:</p>
+<ul class="simple">
+<li><a class="reference internal" href="network_overview.html#network-overview"><span class="std std-ref">Configuring Network Services for an Avere Cluster</span></a></li>
+<li><a class="reference internal" href="gui_admin_network.html#gui-admin-network"><span class="std std-ref">Cluster &gt; Administrative Network</span></a></li>
+<li><a class="reference internal" href="gui_vlan.html#gui-vlan"><span class="std std-ref">Cluster &gt; VLAN</span></a></li>
+</ul>
+</div>
+<div class="section" id="enabling-fips-compliant-encryption-mode">
+<span id="fips"></span><span id="index-2"></span><h2>Enabling FIPS-Compliant Encryption Mode<a class="headerlink" href="#enabling-fips-compliant-encryption-mode" title="Permalink to this headline">     </a></h2>
+<p>The <span class="guilabel">FIPS Mode</span> setting allows you to restrict the type of encryption used in the cluster to only NIST-validated cryptographic algorithms. (FIPS stands for Federal Information Processing Standard, which defines validation procedures.) This setting is disabled by default.</p>
+<p>The FIPS mode setting affects the entire cluster.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">FIPS mode is not active until after the cluster is restarted with this setting turned on. Changing this setting requires a cluster-wide restart.</p>
+</div>
+<p>The Avere FXT core cryptographic module has been validated for FIPS 140-2 Level 1 standard. Cluster communication uses OpenSSL certificate #1747 for encrypting objects and creating TLS/SSL connections to core filers.</p>
+<p>When FIPS mode is active, weaker cryptographic algorithms (like RC4) may not be used. To minimize the impact on hardware CPUs, the AES-NI systems built in to modern processors are used to provide encryption and decryption.</p>
+<div class="admonition important">
+<p class="first admonition-title">Important</p>
+<p>Some cloud storage services do not use FIPS-compliant cryptographic algorithms by default. A cluster that uses FIPS mode cannot communicate with these cloud core filers.</p>
+<p class="last">Make sure that all of your core filers have been added to the cluster and are configured with appropriate cryptographic settings before turning on FIPS for the cluster.</p>
+</div>
+<div class="section" id="changing-the-fips-mode-setting">
+<h3>Changing the FIPS Mode Setting<a class="headerlink" href="#changing-the-fips-mode-setting" title="Permalink to this headline">     </a></h3>
+<p>To enable or disable FIPS mode, click the <span class="guilabel">Enable FIPS Mode</span> checkbox to select or clear it, and then click the <span class="guilabel">Submit</span> button at the bottom of the page.</p>
+<p>FIPS mode is applied cluster wide, and changing the setting requires a cluster-wide restart. When you submit a setting change, the confirmation dialog gives you the option to restart the cluster immediately.</p>
+<p>If you prefer to reboot the cluster manually, use the <a class="reference internal" href="gui_system_maintenance.html#gui-system-maintenance"><span class="std std-ref">System Maintenance</span></a> page in the <span class="guilabel">Administration</span> section.</p>
+</div>
+</div>
+<div class="section" id="internet-vlan">
+<span id="index-3"></span><h2>Internet VLAN<a class="headerlink" href="#internet-vlan" title="Permalink to this headline">     </a></h2>
+<p>The <span class="guilabel">Internet VLAN</span> selector lets you select which local network the cluster uses to communicate with the external internet.</p>
+<p>To add a cluster VLAN, use the <a class="reference internal" href="gui_vlan.html#gui-vlan"><span class="std std-ref">VLAN</span></a> settings page.</p>
+<p>This setting is not available if Advanced Networking is disabled.</p>
+</div>
+<div class="section" id="setting-a-web-proxy">
+<span id="set-proxy"></span><span id="index-4"></span><h2>Setting a Web Proxy<a class="headerlink" href="#setting-a-web-proxy" title="Permalink to this headline">     </a></h2>
+<p>Use the <span class="guilabel">Web Proxy</span> menu to choose among the proxy servers configured in your cluster network, or choose none.</p>
+<p>This control only allows you to switch configurations; to set up web proxy servers, use the <a class="reference internal" href="gui_proxy_config.html#gui-proxy-config"><span class="std std-ref">Proxy Configuration</span></a> page.</p>
+<span class="target" id="index-5"></span></div>
+<div class="section" id="link-aggregation">
+<span id="lacp"></span><span id="index-6"></span><h2>Link Aggregation<a class="headerlink" href="#link-aggregation" title="Permalink to this headline">     </a></h2>
+<p>This control lets you turn on link aggregation, and choose either Link Aggregation Control Protocol (LACP) or static aggregates. Link aggregation is disabled by default.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In most cases, enabling link aggregation for a cluster requires configuration setting changes on your network switch.  Consult the documentation for your switch, or contact Avere Global Services for more information.</p>
+</div>
+<p>To turn on link aggregation for the cluster, use the drop-down <span class="guilabel">Link Aggregation</span> menu to select <span class="guilabel">LACP</span> or <span class="guilabel">Static</span>.</p>
+<p>The type of link aggregation depends on your network&#8217;s configuration. Choose <span class="guilabel">LACP</span> if your network uses dynamic link aggregation as specified by IEEE 802.1AX-2008 (formerly 802.3ad); choose <span class="guilabel">Static</span> if your network is configured for static aggregation.</p>
+<div class="section" id="link-aggregation-configurations">
+<h3>Link Aggregation Configurations<a class="headerlink" href="#link-aggregation-configurations" title="Permalink to this headline">     </a></h3>
+<p>Depending on the specific hardware, an FXT node typically includes two or four 10GB ports, two or four 1GB ports, and two 1GB management ports (e0a and e0b). Avere OS uses the 10Gb ports preferentially for all traffic, with the 1Gb ports in reserve.</p>
+<p>How ports are aggregated depends on whether or not the <span class="guilabel">Use 1 Gb management network</span> option is selected on the <span class="guilabel">Administrative Network</span> page. When the management network setting is enabled, the two 1Gb management ports are allocated to a separate aggregate reserved for management traffic. The 10Gb ports are collected in a single aggregate that handles client/cluster traffic (a common practice is to split the 10Gb ports among multiple network switches to provide failover if one switch goes down). The remaining 1Gb ports form an aggregate used if all of the 10Gb ports fail.</p>
+<p>When the management network setting is disabled, the 10Gb aggregate handles management traffic as well as client/cluster traffic, and all of the 1Gb ports are allocated to a single aggregate that is used for failover.</p>
+</div>
+<div class="section" id="customizing-node-names">
+<span id="index-7"></span><h3>Customizing Node Names<a class="headerlink" href="#customizing-node-names" title="Permalink to this headline">     </a></h3>
+<p>Node names are automatically assigned as each node joins a cluster. The names are constructed by combining the node prefix with a node ID number.</p>
+<p>Use the <span class="guilabel">Node Name Settings</span> section of the General Cluster Setup page to configure the node names. Customizing these settings is optional.</p>
+<p>When you submit changes to the naming scheme, nodes that are already in the cluster are renamed to match the scheme. Any new node added will also be automatically named with the next available node name and number.</p>
+<p>You can change an individual node name from its <a class="reference internal" href="gui_node_details.html#gui-node-details"><span class="std std-ref">Node Details</span></a> page.</p>
+<div class="section" id="node-name-prefix-and-number-format">
+<h4>Node Name Prefix and Number Format<a class="headerlink" href="#node-name-prefix-and-number-format" title="Permalink to this headline">     </a></h4>
+<p>Use the <span class="guilabel">Node Prefix</span> field to enter the prefix name and, optionally, set the number of digits in the node ID number.</p>
+<p>The prefix text is the first part of each node name.</p>
+<p>Optionally, use the pound sign character (#) at the end of the prefix text to set the number of digits used in the node ID number. If you do not set the number of digits, ID numbers are assigned sequentially without leading zeroes.</p>
+<p>For example, if you want all of the FXT nodes to be named tiered-<em>ID_number</em>, with three digits in the number, enter <code class="docutils literal"><span class="pre">tiered-###</span></code> in the <span class="guilabel">Node Prefix</span> field.</p>
+<p>Nodes in this cluster would be named tiered-001 or tiered-020, instead of tiered-1 or tiered-20.</p>
+</div>
+<div class="section" id="first-node-number">
+<h4>First Node Number<a class="headerlink" href="#first-node-number" title="Permalink to this headline">     </a></h4>
+<p>Use the  <span class="guilabel">First Node Number</span> field to specify the number for the first node in the cluster. This setting is optional. Additional nodes in the cluster are numbered sequentially from the specified number.</p>
+<p>For example, if you specify 10 as the first node number with the prefix tiered-, nodes are named tiered-10, tiered-11, and so on.</p>
+<div class="last-update container">
+updated 2017-02-22</div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_manage_cache_policies.html"
+                        title="previous chapter">Core Filer &gt; Manage Cache Policies</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_admin_network.html"
+                        title="next chapter">Cluster &gt; Administrative Network</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_admin_network.html" title="Cluster &gt; Administrative Network"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_manage_cache_policies.html" title="Core Filer &gt; Manage Cache Policies"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">2017 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

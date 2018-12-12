@@ -1,0 +1,76 @@
+Configuration Concepts
+
+This section presents conceptual information to help you with Avere OS
+cluster configuration tasks.
+
+If you don't want to read the background information, skip to
+
+Avere Control Panel Settings
+
+ to learn which configuration pages have the settings you want to
+adjust.
+
+Integrating Back-End Storage
+
+To learn more about adding storage systems to an Avere cluster, read
+these sections.
+
+Working With Core Filers  Includes information about configuring a
+core filer before defining it to the cluster
+
+Adding a New Core Filer - NAS Core Filer
+
+Adding a New Core Filer - Cloud Core Filer
+
+Managing Client Access
+
+These sections explain how to define a virtual filesystem for clients
+and how to manage export access.
+
+Using a Global Namespace (GNS)  Designing a Global Namespace  GNS
+Elements  Creating a Global Namespace
+
+Controlling Access to Core Filer Exports  Tips for Configuring Access
+Creating and Using Export Policies
+
+SMB/CIFS Access
+
+The information in thes sections gives a partial explanation of how to
+set up SMB access for an Avere cluster. Additional documentation is
+being developed; contact Avere Global Services for assistance if
+needed.
+
+Configuring SMB Access
+
+Native Identity
+
+Kerberos Constrained Delegation
+
+Selecting an Access Control Method for SMB
+
+Networking
+
+These sections give basic information about configuring networks for
+an Avere cluster.
+
+Configuring Network Services for an Avere Cluster
+
+Using Web Proxies with Avere OS
+
+Authentication Services
+
+Read these sections to learn more about client authentication in the
+Avere cluster.
+
+Setting Up Kerberos Authentication
+
+Configuring KMIP for an Avere Cluster
+
+Cache Management
+
+These sections give information about caching features.
+
+Cache Writeback and Scheduled Write-Through Features
+
+Controlling Write Bandwidth
+

@@ -1,0 +1,316 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Cluster &gt; Certificates &#8212; Operations Guide 4.6 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '4.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Operations Guide 4.6 documentation" href="ops_conf_index.html" />
+    <link rel="up" title="Avere Control Panel Settings" href="settings_overview.html" />
+    <link rel="next" title="Cluster &gt; KMIP Servers" href="gui_kmip_servers.html" />
+    <link rel="prev" title="Cluster &gt; Cloud Credentials" href="gui_cloud_credentials.html" /> 
+
+<!--    use for draft review builds only - enables web page annotation internally -->
+   
+<!--   <script type="text/javascript" src="_static/jquery.js"></script>  
+   <script src="_static/annotator-full.min.js"></script>  
+   <script src="_static/annotate_init.js"></script> 
+   <link rel="stylesheet" href="_static/annotator.min.css">  
+-->
+    
+
+  </head>
+  <body role="document">
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/clientSpecific/avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_kmip_servers.html" title="Cluster &gt; KMIP Servers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_cloud_credentials.html" title="Cluster &gt; Cloud Credentials"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="cluster-certificates">
+<span id="gui-certificates"></span><h1>Cluster &gt; Certificates<a class="headerlink" href="#cluster-certificates" title="Permalink to this headline">     </a></h1>
+<a class="reference internal image-reference" href="_images/gui_certificates.png"><img alt="Certificates page" src="_images/gui_certificates.png" style="width: 800px;" /></a>
+<p>The <span class="guilabel">Certificates</span> page shows X.509 certificates that are stored in the cluster. These certificates can be used in Key Management Interoperability Protocol (KMIP) operations or to encrypt communication between the cluster and the administrator (that is, for the Avere Control Panel or command-line API).</p>
+<p>Currently, Avere OS supports KMIP only for cloud core filer encryption.</p>
+<p>These are the basic steps in enabling KMIP for a cluster:</p>
+<ol class="arabic">
+<li><p class="first">Create an X.509 certificate, or import an external certificate (on this page)</p>
+<p>To create a certificate:</p>
+<ol class="loweralpha simple">
+<li>Generate a Certificate Signing Request (CSR)</li>
+<li>Email the CSR to a certificate authority (CA) for signing</li>
+<li>Upload the signed response to store the certificate in the cluster</li>
+</ol>
+<p>To import a certificate, you need a PEM-encoded version of the private key and signed certificate.</p>
+</li>
+<li><p class="first">Create a KMIP server (on the <a class="reference internal" href="gui_kmip_servers.html#gui-kmip-servers"><span class="std std-ref">Cluster &gt; KMIP Servers</span></a> page)</p>
+</li>
+<li><p class="first">Specify the KMIP server as the encryption key store for a cloud core filer. You can specify the KMIP server when you create the cloud core filer (<a class="reference internal" href="new_core_filer_cloud.html#create-core-filer-cloud"><span class="std std-ref">Adding a New Core Filer - Cloud Core Filer</span></a>) or on the <a class="reference internal" href="gui_cloud_credentials.html#gui-cloud-credentials"><span class="std std-ref">Cluster &gt; Cloud Credentials</span></a> settings page.</p>
+</li>
+</ol>
+<p>The <span class="guilabel">Certificates</span> settings page has several controls to help you manage X.509 certificates and create new ones.</p>
+<a class="reference internal image-reference" href="_images/certificates_list-annot.png"><img alt="Controls on the KMIP certificates list" src="_images/certificates_list-annot.png" style="width: 650px;" /></a>
+<div class="section" id="working-with-the-certificates-list">
+<h2>Working With the Certificates List<a class="headerlink" href="#working-with-the-certificates-list" title="Permalink to this headline">     </a></h2>
+<p>The table that lists the certificates includes features to help you focus on the information that interests you.</p>
+<div class="section" id="filtering">
+<h3>Filtering<a class="headerlink" href="#filtering" title="Permalink to this headline">     </a></h3>
+<p>Use the filter selector at the top left (1) to restrict the type of certificate shown in the list.</p>
+<a class="reference internal image-reference" href="_images/certificates_filter.png"><img alt="Certificate filter control options" src="_images/certificates_filter.png" style="width: 250pt;" /></a>
+<p>Choose <span class="guilabel">All</span> to return to the unfiltered list.</p>
+</div>
+<div class="section" id="sorting">
+<h3>Sorting<a class="headerlink" href="#sorting" title="Permalink to this headline">     </a></h3>
+<p>Click a column header to sort the list by that value.</p>
+</div>
+<div class="section" id="searching">
+<h3>Searching<a class="headerlink" href="#searching" title="Permalink to this headline">     </a></h3>
+<p>Enter a string in the <span class="guilabel">Search</span> field above the list to display only certificates with attributes that match that text.</p>
+</div>
+<div class="section" id="detail-views">
+<h3>Detail Views<a class="headerlink" href="#detail-views" title="Permalink to this headline">     </a></h3>
+<p>Click the triangular control next to a certificate name (4) to expand the list entry and show more information about the certificate.</p>
+<p>At the bottom of the expanded information panel is a <span class="guilabel">details</span> link (5). Click the link to show the certificate&#8217;s attributes (version, serial number, signature algorithm, issuer, valid dates, public key information and algorithm, extensions, signature algorithm, and other attributes).</p>
+</div>
+</div>
+<div class="section" id="creating-a-new-signed-certificate">
+<h2>Creating a New Signed Certificate<a class="headerlink" href="#creating-a-new-signed-certificate" title="Permalink to this headline">     </a></h2>
+<p>As mentioned above, you can use the controls on this page to generate a signing request and to upload the completed request for use by the cluster.</p>
+<p>If you want to use a certificate that is not signed by a CA, or to import a previously created certificate, you can skip the CSR step and use the <span class="guilabel">Add</span> or <span class="guilabel">Import</span> controls.</p>
+<div class="section" id="generating-a-certificate-signing-request">
+<span id="generate-csr"></span><h3>Generating a Certificate Signing Request<a class="headerlink" href="#generating-a-certificate-signing-request" title="Permalink to this headline">     </a></h3>
+<p>The first step in generating an externally validated X.509 certificate is to create a Certificate Signing Request (CSR) to send to a certificate authority (CA). The system&#8217;s SSL software uses the cluster&#8217;s private key to create a public key and combines that with the information supplied here to generate an encoded request.</p>
+<p>Click the <span class="guilabel">Generate CSR</span> button at the top of the list (2).</p>
+<a class="reference internal image-reference" href="_images/certificates_generate_csr.png"><img alt="Dialog for creating a CSR" src="_images/certificates_generate_csr.png" style="width: 450px;" /></a>
+<p>Enter the requested information. You must supply a value for each attribute.</p>
+<dl class="docutils">
+<dt><span class="guilabel">Common Name</span></dt>
+<dd>For server certificates, enter the fully qualified domain name or hostname of your server. For client certificates, enter any unique value.</dd>
+<dt><span class="guilabel">Organization</span></dt>
+<dd>The legal name of the organization</dd>
+<dt><span class="guilabel">Unit</span></dt>
+<dd>The division or unit of the organization that handles the certificate</dd>
+<dt><span class="guilabel">City/Location</span></dt>
+<dd>Location of the organization</dd>
+<dt><span class="guilabel">State/Province</span></dt>
+<dd>The country region where the organization is located</dd>
+<dt><span class="guilabel">Country</span></dt>
+<dd>Enter the two-character ISO code for the country where the organization is located.</dd>
+<dt><span class="guilabel">Certificate Type</span></dt>
+<dd>You can create a <span class="guilabel">Client</span> or <span class="guilabel">Server</span> certificate. A client certificate is needed to authenticate the Avere OS cluster to the KMIP server.</dd>
+</dl>
+<p>After configuring the requested information, click <span class="guilabel">Generate CSR</span>. The system shows a pop-up window with the request text to send to the certificate authority.</p>
+</div>
+<div class="section" id="obtaining-a-ca-signature">
+<h3>Obtaining a CA Signature<a class="headerlink" href="#obtaining-a-ca-signature" title="Permalink to this headline">     </a></h3>
+<p>To get the request signed by an authority, copy the text from the certificate request and email it to your certificate authority. Request that the authority sign the certificate request.</p>
+<p>The CA will send you a signed version of the certificate in response. Copy the response, and use the <span class="guilabel">Add</span> button to upload it to the cluster.</p>
+</div>
+<div class="section" id="adding-the-signed-certificate">
+<h3>Adding the Signed Certificate<a class="headerlink" href="#adding-the-signed-certificate" title="Permalink to this headline">     </a></h3>
+<p>To add the signed certificate to the cluster, use the <span class="guilabel">Add</span> button. A window pops up with a large text field labeled <span class="guilabel">Add PEM encoded certificate</span>. Copy the text that the CA returned in response to your CSR, and paste it into the field. Click the <span class="guilabel">Add Certificate</span> button at the bottom of the pop-up window to save the signed certificate.</p>
+<a class="reference internal image-reference" href="_images/cert_add.png"><img alt="Form for pasting the signed certificate" src="_images/cert_add.png" style="width: 450px;" /></a>
+<p>Note the difference between the <span class="guilabel">Add</span> and <span class="guilabel">Import</span> options. The <span class="guilabel">Add</span> button is for adding the certificate returned from a CSR created in the Avere Control Panel, so the <span class="guilabel">Upload Certificate</span> panel has only one text field, for the certificate. Avere OS automatically associates the private key from the CSR with the certificate added in this panel.</p>
+<p>When importing a certificate, you must provide both the private key and the certificate, so the <span class="guilabel">Import Certificate</span> panel has two text fields. Click the <span class="guilabel">Import</span> button to upload an external certificate.</p>
+</div>
+</div>
+<div class="section" id="importing-a-certificate">
+<h2>Importing a Certificate<a class="headerlink" href="#importing-a-certificate" title="Permalink to this headline">     </a></h2>
+<p>You can import a certificate that was created elsewhere. To add an existing certificate to the Avere OS cluster, you must provide the certificate text and the private key that was used to create it. Both of these values should be in PEM format.</p>
+<p>To import a certificate, click the <span class="guilabel">Import</span> button.</p>
+<a class="reference internal image-reference" href="_images/cert_import.png"><img alt="Form for importing a complete certificate" src="_images/cert_import.png" style="width: 450px;" /></a>
+<p>Paste the private key in the upper box and the certificate in the lower box. Include headers and footers - that is, the private key text should begin with <code class="docutils literal"><span class="pre">-----BEGIN</span> <span class="pre">PRIVATE</span> <span class="pre">KEY-----</span></code> and end with the corresponding footer.</p>
+<p>Click the <span class="guilabel">Add Certificate</span> button at the bottom of the pop-up window to save the certificate.</p>
+</div>
+<div class="section" id="deleting-a-certificate">
+<h2>Deleting a Certificate<a class="headerlink" href="#deleting-a-certificate" title="Permalink to this headline">     </a></h2>
+<p>To remove a certificate, click the <span class="guilabel">Actions</span> checkbox (3) in the table row of the certificate that you want to remove, then click the <span class="guilabel">Remove</span> button at the top of the list (2). This completely removes the certificate from the Avere cluster.</p>
+<div class="last-update container">
+updated 2017-02-15</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_cloud_credentials.html"
+                        title="previous chapter">Cluster &gt; Cloud Credentials</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_kmip_servers.html"
+                        title="next chapter">Cluster &gt; KMIP Servers</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_kmip_servers.html" title="Cluster &gt; KMIP Servers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_cloud_credentials.html" title="Cluster &gt; Cloud Credentials"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">2017 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

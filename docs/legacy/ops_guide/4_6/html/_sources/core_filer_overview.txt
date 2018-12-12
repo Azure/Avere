@@ -1,0 +1,134 @@
+Working With Core Filers
+
+Core Filers are the back-end storage component of an Avere Edge Filer.
+
+Core filers typically are either a NAS storage appliance or a cloud
+object store, but they also can be a clustered filesystem or other
+arrangement.
+
+An NFS-based system must meet these requirements:
+
+   Serves NFS client requests over NFSv3
+
+   Exposes data over NFS exports
+
+A non-NFS system (like a cloud object store) must use the S3 protocol.
+
+An Avere cluster can serve as the front end for up to 50 core filers.
+(Some limitations apply; contact your Avere sales team for specific
+information about supporting large numbers of core filers.) Each core
+filer is treated as a single dataset by the Avere cluster.
+
+Each core filer in the system has an administrative name that is used
+for quick identification. This name does not have to be the same as
+its network name - for example, a core filer with the domain name
+filer1.example.com could be named filer1 in the system.
+
+Note: Earlier versions of Avere OS used the term
+
+  mass
+
+   instead of core filer to refer to back-end storage volumes. Some
+  API commands and log messages still refer to core filers as
+
+  masses
+
+  .
+
+You can monitor core filer status by using the Core Filers tab on the
+dashboard.
+
+Use the Core Filer section of the Avere Control Panel Settings tab to
+create and configure core filers for your cluster.
+
+Before Defining a Core Filer
+
+Before adding a core filer to the Avere OS cluster, make sure that it
+is compatible with the system and configured appropriately.
+
+The list of supported core filers is included in
+
+Appendix C: Supported Core Filer Types
+
+;  contact Avere Global Services if you have questions.
+
+Read the information below to learn about creating a cloud core filer,
+and about configuration for core filers that will be accessed over
+SMB.
+
+Configuring A Cloud Container As A Core Filer
+
+Before starting the New Cloud Core Filer wizard, you must create an
+instance of cloud or local object storage (that is, create a bucket or
+container on your object store) to use as a core filer. Then use the
+wizard to define the core filer in the cluster.
+
+Configuring Storage for SMB Access
+
+You might need to customize some settings on your storage systems
+before adding it to your  Avere OS cluster. For example, to support
+SMB access (from Microsoft Windows clients), some changes to the
+storage system can be necessary.
+
+Note that some storage systems (listed in
+
+Appendix C: Supported Core Filer Types
+
+ ) must be added  as two separate core filers, one for SMB access and
+one for NFS access. SMB clients should access the SMB version of the
+core filer over a junction that serves only SMB clients. NFS clients
+should access the NFS version of the core filer over a junction that
+serves only NFS clients.
+
+This kind of configuration is optional for some types of storage. For
+some types of core filers, you can optionally set up a separate core
+filer definition to handle only NFS traffic, which avoids exposing NFS
+requests to the overhead of access cache processing. Contact Avere
+Global Services for more information.
+
+The table in
+
+Appendix C: Supported Core Filer Types
+
+ lists which storage systems require or permit this kind of
+configuration.
+
+Adding a New Core Filer
+
+Before starting to configure the core filer on the cluster, make sure
+you have the following information.
+
+For a NAS core filer:
+
+The fully qualified domain name of the core filer (for example,
+nas1.example.com).  Note that you must use the domain name instead of
+an IP address in order to access the core filer with SMB.
+
+For a cloud core filer:
+
+A valid and active license for FlashCloud on this cluster. Read
+Appendix A: Adding or Removing Feature Licenses for more information.
+
+An existing credential for your cloud storage provider, or the access
+and private keys to create a new one.
+
+The name of an existing cloud storage container that will be used as a
+core filer. The container can be empty, or it can contain Avere-
+managed data that you still are able to decrypt. (You cannot use a
+cloud bucket to import non-Avere data.)
+
+Encryption details - whether or not to encrypt the core filer, and the
+type of key storage used. If using KMIP, you should have a key server
+set up before creating the core filer; read Configuring KMIP for an
+Avere Cluster to learn how.
+
+The Add New Core Filer wizard guides you through the steps to define a
+new storage volume. Start the wizard by clicking the Create label from
+the Manage Core Filer page.
+
+The steps are different for NAS core filers and for cloud storage.
+They are explained in detail in these two documents:
+
+Adding a New Core Filer - NAS Core Filer
+
+Adding a New Core Filer - Cloud Core Filer

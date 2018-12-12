@@ -1,0 +1,158 @@
+Cluster > VLAN
+
+
+The VLAN page lets you customize the network environment of your
+cluster by creating VLANs.
+
+This page also has a link to the page for creating static routes.
+
+(If advanced networking is disabled on your cluster, this settings
+page does not appear. Read
+
+Cluster > Administrative Network
+
+ for more information.)
+
+One VLAN, named "default", is automatically created for your cluster.
+This VLAN cannot be removed or renamed, but some of its settings
+(including the router address) can be modified.
+
+
+Creating or Changing a VLAN
+
+Choose a VLAN to modify, or click the Add New VLAN button to configure
+a new VLAN.
+
+
+VLAN settings include the following.
+
+Name
+   Enter a name in alphanumeric characters with no spaces. The
+   underscore character (_) is valid, but not hyphens or other
+   punctuation marks or symbols. The name must be shorter than 127
+   characters.
+
+VLAN tag
+   Supply an integer tag to identify this VLAN. The tag number must be
+   a unique integer between 1 and 4094.
+
+Default router
+   The default router that the VLAN should use.
+
+   Note: Avere OS assigns all VLANs that use the same router to use
+     the same forwarding information base (FIB). If you want VLANs to
+     use different forwarding tables, you must assign them to
+     different routers.
+
+MTU (optional)
+   The maxiumum transition unit setting for this VLAN, in bytes. This
+   number must be an integer between 512 and 9000; typical values
+   include 1500 and 9000, but make sure that your system can handle
+   the value that you set. If you do not set a specific MTU the VLAN
+   uses the setting from the default VLAN.
+
+Roles
+   Check the boxes for at least one role that you want the VLAN to
+   fulfill. Roles can help you organize your network if you reserve
+   certain IP address ranges for certain types of traffic; read
+
+   VLAN Roles
+
+    for more information. If you do not use designated IP ranges,
+   consider assigning all of the roles to each VLAN. Options are:
+
+   Client - The VLAN is used to communicate between the FXT nodes in
+   the cluster and the clients. VLANs with this role can be selected
+   to serve individual IP address ranges defined in the the VServer >
+   Client Facing Network page.
+
+   Cluster - The VLAN is used to communicate between the FXT nodes in
+   the cluster, and also between the cluster and core filers. Cluster
+   VLANs must use the default gateway assigned to the cluster.  VLANs
+   with this role can be selected when specifying address ranges for
+   cluster networks (on the Cluster > Cluster Networks page).
+
+   Core Filer Access - The VLAN is used to communicate between the FXT
+   node cluster and the core filers
+
+   Management - The VLAN is used to communicate between a management
+   machine and the FXT nodes in the cluster. The IP addresses used by
+   the VLAN are not locked to a single node.
+
+   Note: VLAN roles only determine whether or not the VLAN can be
+     selected when configuring particular types of networks. Read
+
+     VLAN Roles
+
+      for more information about where each type appears.
+
+Configuring Static Routes
+
+You can configure static routes for a VLAN in order to direct how the
+vservers communicate with the cluster, and how the cluster
+communicates with the core filers. This is particularly necessary if
+your core filers are located on different VLANs, and the cluster needs
+a gateway other than the default to reach them.
+
+To configure static routes, you need the following information:
+
+What VLANs your clients are on
+
+What VLANs your core filers are on
+
+The client-facing and core filer-facing IP addresses
+
+The Static Routes Page
+
+Static routes are configured on a separate page that does not appear
+in the left menu of the Settings tab. Click the Configure Static
+Routes link at the bottom of the VLAN page to access the Static Routes
+page.
+
+The Static Routes page shows a list of VLANs by router, and the static
+routes (if any) that are defined for the VLAN.
+
+Click the Add button to create a new static route for that VLAN.
+
+
+Creating Static Routes
+
+To create a new static route, click the Add (or Modify) button in the
+row with the VLAN that needs the static route.
+
+Fill in the route parameters.
+
+Destination IP
+   The IP address where traffic will be routed, in dot notation
+
+Netmask
+   The mask to use with this static route. The netmask can be provided
+   in in IPv4 dotted format or /
+
+   number_of_bits
+
+    format.
+
+Gateway
+   The IP address to use when routing to the destination IP
+
+Click the Add Another Route link to create more than one static route
+at a time. When finished, click the Update Routes button.
+
+Modifying or Deleting Static Routes
+
+After static routes are defined, you can change or delete them.
+
+Changes and deletions apply to all static routes for that VLAN.
+
+Options in the Actions column typically include:
+
+Delete - Remove all existing static routes from the VLAN.  Avere OS
+does not give a warning if you choose this option.
+
+Modify - Add or change routes on a VLAN that has existing routes. (You
+also can use this option to show the settings for the static route
+fields; use the browser back button or reload the page without making
+changes.)
+
+Add - Create a static route for a VLAN that does not have any.

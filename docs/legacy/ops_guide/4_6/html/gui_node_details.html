@@ -1,0 +1,326 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Node Details &#8212; Operations Guide 4.6 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '4.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Operations Guide 4.6 documentation" href="ops_conf_index.html" />
+    <link rel="up" title="Avere Control Panel Settings" href="settings_overview.html" />
+    <link rel="next" title="Cluster &gt; High Availability" href="gui_ha.html" />
+    <link rel="prev" title="Cluster &gt; FXT Nodes" href="gui_fxt_nodes.html" /> 
+
+<!--    use for draft review builds only - enables web page annotation internally -->
+   
+<!--   <script type="text/javascript" src="_static/jquery.js"></script>  
+   <script src="_static/annotator-full.min.js"></script>  
+   <script src="_static/annotate_init.js"></script> 
+   <link rel="stylesheet" href="_static/annotator.min.css">  
+-->
+    
+
+  </head>
+  <body role="document">
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/clientSpecific/avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_ha.html" title="Cluster &gt; High Availability"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_fxt_nodes.html" title="Cluster &gt; FXT Nodes"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="node-details">
+<span id="gui-node-details"></span><h1>Node Details<a class="headerlink" href="#node-details" title="Permalink to this headline">     </a></h1>
+<p>The <span class="guilabel">Node Details</span> page shows individual information for an individual FXT node and allows you to customize some settings for the selected node.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>The <span class="guilabel">Node Details</span> page does not appear in the sidebar list. You can access it from certain other settings pages by clicking the node name link. It also is linked from the node table on the main dashboard.</p>
+<p>Settings pages that have links to the <span class="guilabel">Node Details</span> page:</p>
+<ul class="last simple">
+<li><a class="reference internal" href="gui_fxt_nodes.html#gui-fxt-nodes"><span class="std std-ref">Cluster &gt; FXT Nodes</span></a></li>
+<li><a class="reference internal" href="gui_ipmi.html#gui-ipmi"><span class="std std-ref">Cluster &gt; IPMI</span></a></li>
+</ul>
+</div>
+<a class="reference internal image-reference" href="_images/node_details-annot.png"><img alt="The Node Details page" src="_images/node_details-annot.png" style="width: 800px;" /></a>
+<p>Use the node selector (2) to choose a different node to display. The <span class="guilabel">Node List</span> link (1) returns you to the <span class="guilabel">FXT Nodes</span> page.</p>
+<div class="section" id="editing-node-settings">
+<h2>Editing Node Settings<a class="headerlink" href="#editing-node-settings" title="Permalink to this headline">     </a></h2>
+<p>A few node-specific settings can be made on the <span class="guilabel">Node Details</span> page. They appear at the top of the page in the <span class="guilabel">Edit Node</span> section.</p>
+<p>If you change a setting in this section, use the <span class="guilabel">Submit</span> button to save changes, or the <span class="guilabel">Revert</span> button to abandon unsaved changes.</p>
+<div class="section" id="customizing-the-node-name">
+<span id="custom-node-name"></span><h3>Customizing the Node Name<a class="headerlink" href="#customizing-the-node-name" title="Permalink to this headline">     </a></h3>
+<p>Edit the <span class="guilabel">Node Name</span> field to manually change the node&#8217;s name.</p>
+<p>If automatic node naming is turned on in the <span class="guilabel">Cluster Setup</span> page, the most recent name change is kept. That is, if you change the name on the Node Details page and then turn on automatic naming, the node will be automatically renamed; however, if automatic naming is already turned on and you update a node name on the node details page, the custom name is saved.</p>
+<p>Node names can contain alphanumeric characters, underscores (_), and dashes (-); they cannot contain spaces or other special characters. Names must be at least three characters long.</p>
+</div>
+<div class="section" id="custom-ipmi-configuration">
+<span id="node-ipmi-config"></span><h3>Custom IPMI Configuration<a class="headerlink" href="#custom-ipmi-configuration" title="Permalink to this headline">     </a></h3>
+<p>The <span class="guilabel">IPMI Mode</span> control allows you to set up the node&#8217;s Intelligent Platform Management Interface card, which can be used for remote access. Avere recommends configuring IPMI on all cluster nodes.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Instead of configuring individual IPMI cards, you can use the <a class="reference internal" href="gui_ipmi.html#gui-ipmi"><span class="std std-ref">IPMI</span></a> settings page to configure IPMI cards at the cluster level. Cluster IPMI card settings are applied automatically to new nodes that join the cluster.</p>
+</div>
+<p>If you use a cluster-level IPMI setting as explained in the note above, a custom setting made here on the Node Details page overrides the cluster-level setting for this individual node. However, if you update the cluster-level setting later, individual node settings are overwritten.</p>
+<p>Choose from the following options:</p>
+<ul class="simple">
+<li><span class="guilabel">No IPMI Configuration</span> - Does not change the IPMI setting. IPMI cards typically are configured to use DHCP when shipped from Avere. If choosing this setting, make sure that the card still has a valid configuration - if an IPMI card does not have an IP address it cannot be used for system recovery.</li>
+<li><span class="guilabel">Static</span> - Assign a static address to the IPMI card. When choosing this option, you must provide the IP address, netmask, and router address in dot notation.</li>
+<li><span class="guilabel">DHCP</span> - Use DHCP to assign the IPMI card&#8217;s address.</li>
+</ul>
+<p>Read <a class="reference internal" href="gui_ipmi.html#gui-ipmi"><span class="std std-ref">IPMI</span></a> for more information.</p>
+</div>
+</div>
+<div class="section" id="chassis-view">
+<h2>Chassis View<a class="headerlink" href="#chassis-view" title="Permalink to this headline">     </a></h2>
+<p>An interactive graphic view (4) appears between the <span class="guilabel">Edit Node</span> panel and the <span class="guilabel">Details</span> panel. The graphic shows the node chassis from the front.</p>
+<a class="reference internal image-reference" href="_images/node_chassis_view.png"><img alt="Node diagram" src="_images/node_chassis_view.png" style="width: 650px;" /></a>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The chassis view is unavailable for virtual (vFXT) nodes and for 2x00 series models. Some 2x50 models show the image but do not support all of the functions described here.</p>
+</div>
+<p>The chassis view provides drive information, including the following:</p>
+<ul class="simple">
+<li>Failed Drive - Failed drives are outlined in red on the diagram.</li>
+</ul>
+<ul class="simple">
+<li>Drive Number Identification - Move your mouse pointer over a drive bay on the image to show its drive number. The image above shows drive number 6.</li>
+</ul>
+<ul class="simple">
+<li>Physical Drive Locator - Click a drive bay on the chassis diagram to activate a blinking LED on the physical drive bay in the rack. Click the diagram again to turn the light off. This feature can help you identify a node or a specific drive in the rack.</li>
+</ul>
+</div>
+<div class="section" id="node-specifications-configuration-and-statistics">
+<h2>Node Specifications, Configuration, and Statistics<a class="headerlink" href="#node-specifications-configuration-and-statistics" title="Permalink to this headline">     </a></h2>
+<p>The rest of the <span class="guilabel">Node Details</span> page shows non-editable information about the node.</p>
+<div class="section" id="network-details">
+<h3>Network Details<a class="headerlink" href="#network-details" title="Permalink to this headline">     </a></h3>
+<p>The first section lists IP addresses assigned to the node, including:</p>
+<ul class="simple">
+<li>Cluster network IPs - These addresses are always used by this node, unless the cluster network configuration changes.</li>
+<li>Client-facing IPs  - These addresses are managed by the cluster&#8217;s vservers but currently in use by this node. VServer-assigned IP addresses can move from node to node, even when a home node is set. Read <a class="reference internal" href="gui_client_network.html#gui-client-facing-network"><span class="std std-ref">Client Facing Network Settings</span></a> for more details.</li>
+<li>Node Management IPs - If the node currently is assigned any reserved management IP addresses, they are listed here. Read <a class="reference internal" href="gui_admin_network.html#node-mgmt-addresses"><span class="std std-ref">Node Management Addresses</span></a> to learn how these addresses are designated and allocated.</li>
+</ul>
+</div>
+<div class="section" id="software-information">
+<h3>Software Information<a class="headerlink" href="#software-information" title="Permalink to this headline">     </a></h3>
+<p>The <span class="guilabel">Details</span> section includes information about the Avere OS version installed on the node.</p>
+<ul class="simple">
+<li>Active Image - The software image that the node is using</li>
+<li>Alternate Image - The software image loaded on the node&#8217;s alternate partition. Read the <a class="reference internal" href="gui_software_update.html#gui-software-update"><span class="std std-ref">Software Update</span></a> page to learn more.</li>
+</ul>
+</div>
+<div class="section" id="node-performance-statistics">
+<h3>Node Performance Statistics<a class="headerlink" href="#node-performance-statistics" title="Permalink to this headline">     </a></h3>
+<p>The <span class="guilabel">Performance</span> section shows the node&#8217;s average performance currently and over the previous minute. It also shows per-disk performance metrics over the past minute.</p>
+<p>Node performance statistics include:</p>
+<ul class="simple">
+<li>Number of operations per second</li>
+<li>Cache hit rate percentage</li>
+<li>Latency in milliseconds</li>
+</ul>
+<p>Disk performance statistics include:</p>
+<ul class="simple">
+<li>Read and write speed in KB per second</li>
+<li>Read and write speed in operations per second</li>
+<li>Read and write latency in microseconds</li>
+<li>Queue length</li>
+<li>Disk utilization percentage</li>
+</ul>
+</div>
+<div class="section" id="hardware-summary-and-sensor-readings">
+<h3>Hardware Summary and Sensor Readings<a class="headerlink" href="#hardware-summary-and-sensor-readings" title="Permalink to this headline">     </a></h3>
+<p>This section gives information about the physical FXT unit. For vFXT nodes, a subset of this information is provided.</p>
+<p>Hardware details include drive information, connection status, serial and model numbers, and other information. The sensor readings table gives the state of all monitored sensors on the chassis.</p>
+<a class="reference internal image-reference" href="_images/node_details_hw.png"><img alt="Hardware summary from a node details page" src="_images/node_details_hw.png" style="width: 650px;" /></a>
+</div>
+<div class="section" id="core-filer-connections">
+<h3>Core Filer Connections<a class="headerlink" href="#core-filer-connections" title="Permalink to this headline">     </a></h3>
+<p>This node&#8217;s connections to back-end storage volumes are listed by core filer name. For each core filer, this panel lists the IP addresses that this node uses for communication, and the number of connections from this node on each IP address.</p>
+<div class="last-update container">
+updated 2017-02-15</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_fxt_nodes.html"
+                        title="previous chapter">Cluster &gt; FXT Nodes</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_ha.html"
+                        title="next chapter">Cluster &gt; High Availability</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_ha.html" title="Cluster &gt; High Availability"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_fxt_nodes.html" title="Cluster &gt; FXT Nodes"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">2017 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

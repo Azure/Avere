@@ -1,0 +1,274 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Cluster &gt; KMIP Servers &#8212; Operations Guide 4.6 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '4.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Operations Guide 4.6 documentation" href="ops_conf_index.html" />
+    <link rel="up" title="Avere Control Panel Settings" href="settings_overview.html" />
+    <link rel="next" title="Cluster &gt; VLAN" href="gui_vlan.html" />
+    <link rel="prev" title="Cluster &gt; Certificates" href="gui_certificates.html" /> 
+
+<!--    use for draft review builds only - enables web page annotation internally -->
+   
+<!--   <script type="text/javascript" src="_static/jquery.js"></script>  
+   <script src="_static/annotator-full.min.js"></script>  
+   <script src="_static/annotate_init.js"></script> 
+   <link rel="stylesheet" href="_static/annotator.min.css">  
+-->
+    
+
+  </head>
+  <body role="document">
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/clientSpecific/avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_vlan.html" title="Cluster &gt; VLAN"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_certificates.html" title="Cluster &gt; Certificates"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="cluster-kmip-servers">
+<span id="gui-kmip-servers"></span><h1>Cluster &gt; KMIP Servers<a class="headerlink" href="#cluster-kmip-servers" title="Permalink to this headline">     </a></h1>
+<a class="reference internal image-reference" href="_images/gui_kmip_servers.png"><img alt="KMIP Servers page" src="_images/gui_kmip_servers.png" style="width: 800px;" /></a>
+<p>This page lists any KMIP servers already known to the cluster, and has controls to add, modify, or remove servers.</p>
+<p>Before attempting to add a KMIP server, make sure that you have added the necessary X.509 certificates to the system by using the <a class="reference internal" href="gui_certificates.html#gui-certificates"><span class="std std-ref">Cluster &gt; Certificates</span></a> page. Two certificates are required to define a new KMIP server:</p>
+<ul class="simple">
+<li>A root CA certificate, which is shared between the remote KMIP server and the Avere cluster</li>
+<li>A client certificate to authenticate the cluster when it connects to the server</li>
+</ul>
+<p>Check the documentation for your KMIP server to learn what it requires for client authentication.</p>
+<p>Read <a class="reference internal" href="kmip_overview.html#kmip-overview"><span class="std std-ref">Configuring KMIP for an Avere Cluster</span></a> to learn all of the pieces necessary to enable server-based key management on your cluster.</p>
+<div class="section" id="defining-a-kmip-server">
+<h2>Defining a KMIP Server<a class="headerlink" href="#defining-a-kmip-server" title="Permalink to this headline">     </a></h2>
+<p>To add a KMIP server to the cluster, click <span class="guilabel">Create</span>.</p>
+<a class="reference internal image-reference" href="_images/kmip_server_define.png"><img alt="Create a KMIP Server dialog" src="_images/kmip_server_define.png" style="width: 650px;" /></a>
+<p>Enter the following information.</p>
+<dl class="docutils">
+<dt><span class="guilabel">Name</span></dt>
+<dd>A text name that will identify the server in the Avere Control Panel</dd>
+<dt><span class="guilabel">Hostname</span></dt>
+<dd>Enter the fully qualified domain name or the IP address of the server.</dd>
+<dt><span class="guilabel">Port</span></dt>
+<dd>The server port to use for KMIP traffic</dd>
+<dt><span class="guilabel">Username</span></dt>
+<dd>(Optional) A login name for the cluster to use when connecting to the KMIP server. Consult your KMIP server&#8217;s administration guide to learn whether or not to provide a value in this field.</dd>
+<dt><span class="guilabel">Password</span></dt>
+<dd><p class="first">(Optional) A password to use with the username above. Consult your KMIP server&#8217;s administration guide to learn whether or not to provide a value in this field.</p>
+<div class="last admonition important">
+<p class="first admonition-title">Important</p>
+<p class="last">Different KMIP servers require different attributes for authenticating connections. You must configure the correct set of attributes according to the KMIP server software that you use. For example, some KMIP servers require both a client certificate and a username and password, but other servers require a client certificate and require that the username and password fields be blank. The Avere Control Panel does not validate that the information entered in this page is correct for the type of KMIP server being used.</p>
+</div>
+</dd>
+<dt><span class="guilabel">Root CA Certificate</span></dt>
+<dd>Select the certificate that defines the trusted CA for KMIP authentication. This certificate must exist in the system already; add certificates by using the <a class="reference internal" href="gui_certificates.html#gui-certificates"><span class="std std-ref">Cluster &gt; Certificates</span></a> page.</dd>
+<dt><span class="guilabel">Client Certificate</span></dt>
+<dd><p class="first">Select the certificate used to authenticate the cluster to the KMIP server. This certificate must exist in the system already; add certificates by using the <a class="reference internal" href="gui_certificates.html#gui-certificates"><span class="std std-ref">Cluster &gt; Certificates</span></a> page.</p>
+<p class="last">The Avere Control Panel requires a client certificate when defining a KMIP server because most KMIP server implementations require a certificate for client authorization. If this restriction causes a problem in your system, contact Avere Global Services for assistance.</p>
+</dd>
+<dt><span class="guilabel">Note</span></dt>
+<dd>Optionally, enter a text note about the server to help with administration.</dd>
+</dl>
+<p>After setting the values, click the <span class="guilabel">Create</span> button to save the configuration.</p>
+</div>
+<div class="section" id="modifying-or-deleting-a-kmip-server">
+<h2>Modifying or Deleting a KMIP Server<a class="headerlink" href="#modifying-or-deleting-a-kmip-server" title="Permalink to this headline">     </a></h2>
+<p>To change parameters or remove a KMIP server definition from the cluster, locate the server entry in the list and check its <span class="guilabel">Actions</span> box. Click the <span class="guilabel">Modify</span> button to update parameters in the selected server, or click the <span class="guilabel">Delete</span> button to permanently remove it from the system.</p>
+<p>The screen for modifying a KMIP server definition is similar to the screen used to create one; change the values and click the <span class="guilabel">Modify</span> button to save the changes.</p>
+<a class="reference internal image-reference" href="_images/kmip_server_modify.png"><img alt="Dialog for changing a KMIP server" src="_images/kmip_server_modify.png" style="width: 650px;" /></a>
+<p>When modifying a server definition, the existing password is not shown. The blank <span class="guilabel">Password</span> field does not indicate that there is no password stored.</p>
+</div>
+<div class="section" id="using-a-kmip-server">
+<h2>Using a KMIP Server<a class="headerlink" href="#using-a-kmip-server" title="Permalink to this headline">     </a></h2>
+<p>KMIP key management can be selected when creating a new cloud core filer, or on the <span class="guilabel">Cloud Encryption Settings</span> page in the <span class="guilabel">Core Filer</span> settings section of the Avere Control Panel.</p>
+<p>An <span class="guilabel">Encryption Key Store</span> selector appears in the third page of the cloud core filer wizard, and at the top of the <span class="guilabel">Cloud Encryption Settings</span> page. The KMIP servers defined on this page are options.</p>
+<p>The alternative to KMIP is a simple key store, which is managed locally.</p>
+<p>Read <a class="reference internal" href="kmip_overview.html#kmip-overview"><span class="std std-ref">Configuring KMIP for an Avere Cluster</span></a> for an overview of all the steps required to enable KMIP on your Avere OS cluster.</p>
+<div class="last-update container">
+updated 2017-02-15</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_certificates.html"
+                        title="previous chapter">Cluster &gt; Certificates</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_vlan.html"
+                        title="next chapter">Cluster &gt; VLAN</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_vlan.html" title="Cluster &gt; VLAN"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_certificates.html" title="Cluster &gt; Certificates"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">2017 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

@@ -1,0 +1,91 @@
+VServer > VServer Details
+
+
+The VServer Details page lets you configure advanced settings for one
+vserver.
+
+You must select a single vserver to configure in this page. Use the
+drop-down Choose VServer menu or use the drop-down selector in the
+sidebar. (Both of these controls are labeled (1) in the screenshot
+below.)
+
+Note: The drop-down chooser in the sidebar affects all pages in that
+  section. That is, if you use the bar underneath Manage VServers to
+  select a vserver called GNS-123, and then load any of the pages that
+  require a vserver selection (Vserver Details, Client Facing Network,
+  Namespace, NFS, CIFS, or CIFS Shares), these pages will load with
+  GNS-123 automatically selected.
+
+
+The Details section (4) at the bottom of the page shows current
+information about the vserver.
+
+You can use the VServer List link (2) to return to the Manage VServers
+page.
+
+Editable information is in the main section (3). Each option is
+explained in detail below.
+
+VServer Name
+
+You can rename the vserver by editing the VServer Name field.
+
+Hot Client Settings
+
+A
+
+hot client
+
+ is a client that generates a disproportionately high amount of demand
+on the cluster relative to other clients.
+
+Collecting statistics on hot clients puts an extra burden on the
+cluster nodes, so if you do not plan to use this information, leave
+this setting disabled.
+
+To enable hot client collection, check the Collect hot client
+information box. Optionally, you can customize the other settings in
+this section.
+
+The Hot Client Limit is the maximum number of clients from this
+vserver to use for hot client statistics. The default is 10, which
+means that information will be collected for the top ten most active
+clients on the vserver.
+
+Hot Client Period is the polling period (in seconds) for collecting
+information. The default is 60 seconds (1 minute). The system will
+collect hot client information once during this interval.
+
+Note: You also can enable hot file collection from the Dashboard
+  section of the Avere Control Panel by clicking the box in the
+  Clients tab of the status bar at the bottom of the page.
+
+Client Settings
+
+This section allows you to customize the type of error messages sent
+back to clients that access suspended junctions or core filers.
+
+Options are:
+
+Jukebox
+
+For NFS clients - An immediate reply status of EJUKEBOX
+
+For SMB clients, responses depend on the operation:  Idempotent
+operations receive MORE_PROCESSING_REQUIRED after a 55-second delay
+Non-idempotent and modifying operations receive IO_DEVICE_ERROR after
+a 55-second delay
+
+Suspend
+
+For NFS clients - An immediate TCP disconnect
+
+For SMB clients:  Idempotent operations receive
+MORE_PROCESSING_REQUIRED after a 55-second delay  Non-idempotent and
+modifying operations receive IO_DEVICE_ERROR after a 55-second delay
+
+IO
+
+For NFS clients - An immediate reply status of EIO
+
+For SMB clients - An immediate reply status of IO_DEVICE_ERROR

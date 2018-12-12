@@ -1,0 +1,439 @@
+Avere Control Panel Settings
+
+This page gives a brief overview of each section in the Settings tab
+on the Avere Control Panel.
+
+Click the links in the text below to see a detailed description for
+each settings page.
+
+Use these links to jump to a particular section in this overview:
+
+Creating and Working with VServers
+
+Managing Core Filers
+
+Cluster Settings Overview
+
+Administration Settings Overview
+
+Creating and Working with VServers
+
+The vserver is a virtual file server that receives and processes all
+client requests for your storage system.
+
+You can use one vserver for your entire cluster, or have more than
+one.
+
+Note: In early versions of Avere OS it was mandatory to have one
+  vserver per core filer. This is no longer true, and most
+  administrators set up a
+
+  global namespace
+
+   configuration, in which one vserver can handle requests for
+  multiple core filers.The global namespace configuration also allows
+  vservers to show a client-side virtual filesystem that does not
+  necessarily correspond exactly to back-end storage.A legacy option
+  called
+
+  simple namespace
+
+   also exists in the product.
+
+The vserver is created by the nodes that make up your cluster. It does
+not reside in any one node.
+
+Before setting up your cluster, you should decide how many vservers to
+create, and whether they will use the Avere OS global namespace (GNS)
+feature, or be configured for simple namespace. You must choose the
+namespace type when creating a vserver.
+
+With a global namespace configuration:  One vserver can process
+requests for multiple, diverse core filers  Clients see a virtual
+filesystem defined by the cluster administrator
+
+In a simple namespace configuration:  One vserver is mapped to each
+core filer  The vserver shows clients the exact same directory
+structure that exists on the core filer
+
+Read
+
+Using a Global Namespace
+
+ to learn more about GNS and how to set it up.
+
+The VServer section of the Avere Control Panel includes settings for
+configuring how your cluster handles requests. The pages in this
+section allow you to create or delete vservers, to configure namespace
+structure and IP addresses, to control client access to back-end
+storage volumes, and configure other tasks.
+
+VServer Configuration Pages
+
+This section gives an overview of the settings available in each page
+of the
+
+VServer
+
+ section. Click the link to see page screenshots and details about
+using the settings.
+
+Manage VServers
+
+ - Lists all vservers available to your cluster and allows you to
+create, suspend, or remove vservers
+
+VServer Details
+
+ - Shows details for one vserver and allows you to edit the name,
+change hot client settings, and change client suspend type settings
+
+Client Facing Network
+
+ - Lets you set the IP address range for your vserver and optionally
+configure home nodes if you want an IP address to be assigned to a
+particular cluster node.
+
+Namespace
+
+ - This page shows junctions, which map exports on the backend core
+filers to client-facing directories in the global namespace. This page
+includes controls for modifying, adding, suspending, and deleting
+namespace junctions.
+
+Export Policies
+
+ - This page lets you assign access control policies to the exports on
+a selected core filer. Export policies control client access to core
+filer exports. For each export, you can select one of the policies
+that exists on your cluster. Define new policies in the Export Rules
+page (described below, and also linked from a button on this page).
+Read
+
+Controlling Access to Core Filer Exports
+
+ for more information about how to create and apply export policies.
+
+Export Rules
+
+ - This page allows you to create or modify export policies, which
+control client access to files on the core filer exports. Choose a
+policy to see the rules that it includes. Create a new policy, or add
+or modify rules in an existing policy. This page also allows you to
+test how a policy affects a particular client. Read
+
+Controlling Access to Core Filer Exports
+
+ for more information about how to create and apply export policies.
+
+NFS
+
+ - This page lets you enable Kerberos and turn on extended groups for
+a vserver. You also can configure the Kerberos service key management
+file that the vserver uses when connecting with clients. Note that
+Kerberos must also be
+
+configured
+
+ in the Cluster section (
+
+Cluster > Kerberos
+
+) before you can turn it on.
+
+CIFS
+
+ - On this page you can configure CIFS and SMB2 for your vserver. This
+page shows the AD domain and current status and settings for your
+CIFS/SMB server, and lets you enable or disable Native Identity. Use
+the CIFS settings page in combination with the CIFS Shares page to set
+up the Avere cluster to allow Windows clients to access core filer
+resources. Additional configuration is necessary outside of the
+cluster Avere Control Panel; read
+
+Configuring SMB Access
+
+ or contact Avere Global Services to learn more.
+
+CIFS Shares
+
+ - This page allows you to map core filer exports to NTFS directories
+so that they can be accessed by Windows clients.
+
+
+Managing Core Filers
+
+Core Filers are the back-end storage component of an Avere edge filer.
+
+Core filers typically are either a NAS storage appliance or a cloud
+object store, but they also can be a clustered filesystem or other
+arrangement that meets these requirements:
+
+Serves NFS client requests over NFSv3
+
+Exposes data over NFS exports
+
+An Avere cluster can serve as the front end for up to 50 core filers.
+(Some limitations exist involving the combined number of vservers,
+exports, and core filers; contact Avere Global Services for details.)
+Each core filer is treated as a single dataset by the Avere cluster.
+
+Each core filer in the system has an administrative name that is used
+for quick identification. This name does not have to be the same as
+its network name - for example, a core filer with the domain name
+filer1.example.com could be named filer1 in the system.
+
+Note: Earlier versions of Avere OS used the term
+
+  mass
+
+   instead of core filer to refer to back-end storage volumes. Some
+  API commands and log messages still refer to core filers as
+
+  masses
+
+  .
+
+You can monitor core filer status by using the Core Filers tab on the
+dashboard.
+
+Use the Core Filer section of the Avere Control Panel Settings tab to
+create and configure core filers for your cluster.
+
+Core Filer Configuration Settings
+
+Settings in the Core Filer section allow you to configure how your
+Avere cluster uses back-end storage.
+
+Manage Core Filers
+
+ - This page lists all core filers configured for the cluster. From
+this page, you can add a new core filer, permanently delete a core
+filer, temporarily suspend a core filer, or invalidate cached data
+from a particular core filer.
+
+Core Filer Details
+
+ - This page lets you change the configuration of one selected core
+filer. You can switch the cache policy, edit the filer name, security
+and credentials settings, and some network settings.
+
+Cloud Encryption Settings
+
+ - For a cloud core filer that uses data encryption, this page allows
+you to configure encryption settings and key files. You can change the
+encryption key storage method, download recovery files, and change the
+master encryption key for the cloud server. Note that encryption can
+only be enabled or disabled when the cloud core filer is added to the
+cluster; you cannot change the setting later.
+
+Cloud Snapshots
+
+ - This page shows snapshots that the Avere cluster has created for
+cloud core filers. From this page, you can create a manual snapshot of
+a cloud core filer or work with existing snapshots. To set up a
+recurring snapshot, use the Snapshot Policies page described below.
+
+Cloud Snapshot Policies
+
+ - This settings page is used to enable and manage snapshots, which
+are brief metadata backups that show file contents at a particular
+point in time. Snapshots can be used in combination with full backups
+for data recovery.
+
+Snapshots for NAS core filers are managed on those systems and are not
+part of Avere cluster configuration.
+
+Manage Cache Policies
+
+ - The Manage Cache Policies page lets you create custom caching
+policies for your cluster. Avere OS comes preconfigured with five
+basic cache policies that apply to common situations; you can use one
+of these as a starting point to create your own custom policy.
+
+Cache policies are applied to core filers in the Core Filer Details
+page.
+
+
+Cluster Settings Overview
+
+The Cluster section of the Settings tab includes tools for cluster
+configuration, node management, and configuring network and
+authorization infrastructure, among other features.
+
+Cluster Settings Pages
+
+Read the linked documents for more information about the settings
+included on each page.
+
+General Setup
+
+ - The General Setup page in the cluster section includes controls for
+cluster-wide features. This page includes controls for the following
+actions:
+
+Change the cluster name
+
+Set the prefix and numbering used for node names
+
+Enable advanced networking (this feature is enabled by default on new
+systems)
+
+Set the VLAN that the cluster uses for Internet access
+
+Enable or disable FIPS Mode
+
+Choose a web proxy configuration
+
+Choose a link aggregation style or disable link aggregation
+
+Adminstrative Network
+
+ - The Administrative Network page is used to configure basic settings
+for the administrative (management) network. These settings include
+DNS configuration, NTP servers, and (optional) defining a reserved
+range of IP addresses to use for management traffic.
+
+Cluster Networks
+
+ - On the Cluster Networks page you can create and customize networks.
+This page allows you to set address ranges for cluster networks and
+designate VLANs to use for the traffic on those IP addresses.
+
+Proxy Configuration
+
+ - If you send traffic over a web proxy to external resources, use the
+Proxy Configuration page to set up the proxy configurations. (Proxy
+configurations can be applied cluster-wide on the
+
+Cluster > General Setup
+
+ page and to core filers from their
+
+Core Filer > Core Filer Details
+
+ pages.)
+
+FXT Nodes
+
+ - This page lists nodes in the cluster, as well as nodes that are in
+the network but not yet part of the cluster.  You can perform basic
+node management tasks like rebooting or removing nodes.  The FXT Nodes
+page also has a link to the Node Details page, which shows more
+information and configuration options related to one individual node.
+
+Node Details
+
+ - The Node Details page gives hardware information (if applicable),
+performance statistics, and other configuration details. A diagram is
+included for physical nodes, and you can interact with the diagram to
+identify and troubleshoot individual drives. This page also allows you
+to modify the node name and individual IPMI configuration.
+
+The Node Details page does not appear in the sidebar; access it from
+the links in the FXT Nodes or IPMI page.
+
+High Availability
+
+ - The High Availability page is used to turn on or off the HA
+feature, which mirrors cached data on additional cluster nodes.
+
+Monitoring
+
+ - Use the Monitoring page to configure external notifications about
+cluster alerts.
+
+Schedules
+
+ - The Schedules page lets you configure repeating schedules for use
+with the Write-Through Scheduling feature in core filer cache
+policies. The schedules defined here can be used in cache policies to
+guarantee that all content is synchronized to the back-end core filer
+at specific times (for example, before a core filer backup or
+snapshot).
+
+Directory Services
+
+ - On the Directory Services page, you can configure the source of
+user and group names (choices include LDAP/AD servers, NIS, or file
+options).
+
+Kerberos
+
+ - This page is used to set up Kerberos-based authentication for the
+cluster.
+
+IPMI
+
+ - The IPMI page allows you to set how IPMI cards in the cluster's FXT
+nodes obtain IP addresses.
+
+Support
+
+ settings page - Information on the Support settings page controls how
+Avere Global Services receives information about this cluster.
+
+Licenses
+
+ - This page shows installed feature licenses and includes tools for
+adding or removing them.
+
+Cloud Credentials
+
+ - The Cloud Credentials page stores access keys that the cluster uses
+when communicating with cloud core filers or vFXT nodes.
+
+Certificates
+
+ - This page is used to configure X.509 certificates for KMIP servers.
+KMIP allows administrators to use a separate key manager instead of
+using the key storage system built in to Avere OS for encrypting
+traffic to and from cloud core filers.
+
+KMIP Servers
+
+ - This page allows you to define KMIP servers, which manage
+encryption keys used for cloud core filers.
+
+VLAN
+
+ - Use the VLAN page to configure and define individual virtual
+networks for the cluster.
+
+The VLAN page also includes a section for creating Static Routes.
+
+
+Administration Settings Overview
+
+Pages in the Administration section can be used to reboot the cluster
+or individual nodes, update cluster software, manage administrative
+user accounts, and monitor hidden alerts from the dashboard.
+
+Administration Settings Pages
+
+System Maintenance
+
+ - The System Maintenance page has controls for rebooting the cluster
+or restarting node services; suspending client access, and controlling
+cached data.
+
+Software Update
+
+ - Use the Software Update page to download and install new Avere OS
+distributions or switch between software releases.
+
+Users
+
+ - The Users settings page allows you to create individual login
+credentials for Avere Control Panel users.
+
+Login Services
+
+ - Use the Login Services page to configure LDAP or file-based user
+information for logging in to the Avere Control Panel.
+
+Hidden Alerts
+
+ - The Hidden Alerts page shows hidden and auto-dismissed alerts and
+conditions from the Dashboard tab.
+

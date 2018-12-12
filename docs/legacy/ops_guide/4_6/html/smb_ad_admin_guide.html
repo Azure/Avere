@@ -1,0 +1,463 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Appendix E: Configuring Active Directory for Avere SMB &#8212; Operations Guide 4.6 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '4.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Operations Guide 4.6 documentation" href="ops_conf_index.html" />
+    <link rel="up" title="Appendixes" href="appendixes.html" />
+    <link rel="next" title="SMB-UNIX Username Mapping" href="username_map_file.html" />
+    <link rel="prev" title="Appendix D: Configuring NetApp Filers for Avere SMB ACLs" href="smb_netapp_config.html" /> 
+
+<!--    use for draft review builds only - enables web page annotation internally -->
+   
+<!--   <script type="text/javascript" src="_static/jquery.js"></script>  
+   <script src="_static/annotator-full.min.js"></script>  
+   <script src="_static/annotate_init.js"></script> 
+   <link rel="stylesheet" href="_static/annotator.min.css">  
+-->
+    
+
+  </head>
+  <body role="document">
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/clientSpecific/avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="username_map_file.html" title="SMB-UNIX Username Mapping"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="smb_netapp_config.html" title="Appendix D: Configuring NetApp Filers for Avere SMB ACLs"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="appendixes.html" accesskey="U">Appendixes</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="appendix-e-configuring-active-directory-for-avere-smb">
+<span id="smb-ad-admin"></span><h1>Appendix E: Configuring Active Directory for Avere SMB<a class="headerlink" href="#appendix-e-configuring-active-directory-for-avere-smb" title="Permalink to this headline">     </a></h1>
+<p>Deploying an Avere Edge Filer that uses SMB requires a small amount of Active Directory configuration. This configuration ensures continuous secure operation as the highly available Avere cluster is inserted into your environment.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">These instructions assume the customer is using NTFS security on their shares.  If only POSIX mode bits are used, then much of this setup may be bypassed.</p>
+</div>
+<div class="figure" id="id1">
+<a class="reference internal image-reference" href="_images/ad_pre_avere.png"><img alt="network diagram with AD without Avere Edge Filer" src="_images/ad_pre_avere.png" style="width: 650px;" /></a>
+<p class="caption"><span class="caption-text"><em>System with AD before adding an Avere Edge Filer (NTFS Security Style)</em></span></p>
+<div class="legend">
+</div>
+</div>
+<p>In the pre-Avere environment, clients access shares directly on core filers. All authentication is between clients and/or core filers within the Active Directory environment.</p>
+<div class="figure" id="id2">
+<a class="reference internal image-reference" href="_images/ad_with_avere.png"><img alt="network diagram with AD and Avere Edge Filer" src="_images/ad_with_avere.png" style="width: 650px;" /></a>
+<p class="caption"><span class="caption-text"><em>System with AD and an Avere Edge Filer (NTFS Security Style)</em></span></p>
+</div>
+<p>After adding the Avere Edge Filer, each SMB-enabled vserver in the Avere cluster must make ACL requests to the core filer on behalf of authenticated clients’ identities, and is enabled to do so via Kerberos configuration. This is known as delegation, and should be configured against only necessary services (SMB) on the core filer, which is known as <em>constrained delegation</em>.</p>
+<p>Constrained delegation gives administrators the ability to specify and enforce application trust boundaries by limiting the scope where application services on the cluster vserver can act on a user’s behalf. This flexibility to constrain a service’s authorization rights helps improve application security by reducing the opportunities for compromise by untrusted services.</p>
+<p>These are mandatory configuration items for NTFS Security Style Shares.</p>
+<div class="section" id="active-directory-setup-checklist">
+<h2>Active Directory Setup Checklist<a class="headerlink" href="#active-directory-setup-checklist" title="Permalink to this headline">     </a></h2>
+<ol class="arabic">
+<li><p class="first">Windows Server Requirements</p>
+<p>Must be running Windows Server 2003 or later in Native Mode.</p>
+</li>
+<li><p class="first">Machine Accounts for each VServer</p>
+<p>Each vserver will require a machine account.  An AD administrator with rights to add machine accounts, or an AD user account with sufficient permissions to add computers to the domain, is required.</p>
+<p>The machine account is placed in the <strong>Computers</strong> OU by default. Ensure this step is done during the addition of the machine accounts rather than trying to move them after creation.</p>
+<p>To use a nondefault OU, access the <a class="reference internal" href="gui_cifs.html#gui-cifs"><span class="std std-ref">VServer &gt; CIFS</span></a> page for the vserver and set the <span class="guilabel">Organizational Unit</span> field.</p>
+</li>
+<li><p class="first">Client Access</p>
+<p>VServer IP Addresses must be added as round-robin DNS (RRDNS) entries.</p>
+<p>Each vserver has a range of IP addresses associated with it. These addresses are used for name resolution and SMB/CIFS share access. Each IP address must be added to the vserver hostname in DNS. This ensures round-robin resolution across all client-facing addresses.  Refer to <a class="reference internal" href="network_overview.html#round-robin"><span class="std std-ref">Configuring DNS for the Avere Cluster</span></a> for more information about using RRDNS.</p>
+</li>
+<li><p class="first">Name Resolution</p>
+<ul>
+<li><p class="first">Core Filer/Client DNS fully qualified domain names (FQDN)</p>
+<p>The Avere cluster must be able to resolve the core filer DNS fully qualified domain name (FQDN). Clients must be able to resolve the vserver FQDN consistently as well.  If you are operating more than one DNS environment, both environments must resolve the names.</p>
+</li>
+<li><p class="first">Core Filer Machine Account Service Principal Name (SPN)</p>
+<p>The vserver machine account must be able to request and obtain kerberos tickets for the SMB service using the core filer FQDN server name (as configured in the FXT UI) as the kerberos principal. Therefore, the core filer machine account SPN name must match the fully qualified domain name.</p>
+</li>
+</ul>
+</li>
+<li><p class="first">Domains</p>
+<p>The vserver machine and core filer machine accounts must be in the same Active Directory domain.</p>
+</li>
+<li><p class="first">AD User/Group Attributes</p>
+<p>The Avere cluster uses additional user and group attributes to process client requests.  These are the UID and GID information.  The attributes may be mapped to AD Users and Groups in two ways.</p>
+<ul>
+<li><p class="first">In Active Directory (recommended)</p>
+<p>You may configure each user/group who require access. Use ADSI Edit to modify.</p>
+</li>
+<li><p class="first">In a Flat File</p>
+<p>You may enter mappings of Windows users to UIDs and GIDs, and store that file on the FXT Cluster.</p>
+</li>
+</ul>
+</li>
+</ol>
+</div>
+<div class="section" id="setup-steps">
+<h2>Setup Steps<a class="headerlink" href="#setup-steps" title="Permalink to this headline">     </a></h2>
+<p>These are the basic steps for setting up Active Directory to work with your Avere cluster.</p>
+<div class="section" id="set-spn-service-principal-name">
+<span id="smb-set-spn"></span><h3>1. Set SPN (Service Principal Name)<a class="headerlink" href="#set-spn-service-principal-name" title="Permalink to this headline">     </a></h3>
+<p>The Service Principal Name (SPN) allows Kerberos tickets to be obtained for the SMB service on the core filer. A Service Principal Name must be configured for the core filer’s SMB Machine Account. This SPN is required for Kerberos constrained delegation.</p>
+<p>To check if an SPN exists for SMB, open a command prompt on the AD server and run <code class="docutils literal"><span class="pre">setspn</span> <span class="pre">–l</span> <span class="pre">&lt;NetBIOS&gt;</span></code> (example:  <code class="docutils literal"><span class="pre">setspn</span> <span class="pre">–l</span> <span class="pre">netappsvr</span></code>) to list the service principals.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">C</span><span class="p">:</span>\<span class="n">Users</span>\<span class="n">Administrator</span><span class="o">&gt;</span> <span class="n">setspn</span> <span class="o">-</span><span class="n">l</span> <span class="n">grape</span>
+<span class="n">Registered</span> <span class="n">ServicePrincipalNames</span> <span class="k">for</span> <span class="n">CN</span><span class="o">=</span><span class="n">GRAPE</span><span class="p">,</span><span class="n">CN</span><span class="o">=</span><span class="n">Comp</span>
+        <span class="n">cifs</span><span class="o">/</span><span class="n">grape</span><span class="o">.</span><span class="n">dev</span><span class="o">.</span><span class="n">cc</span><span class="o">.</span><span class="n">arr</span><span class="o">.</span><span class="n">com</span>
+        <span class="n">nfs</span><span class="o">/</span><span class="n">grape</span><span class="o">.</span><span class="n">dev</span><span class="o">.</span><span class="n">cc</span><span class="o">.</span><span class="n">arr</span><span class="o">.</span><span class="n">com</span>
+        <span class="n">HOST</span><span class="o">/</span><span class="n">grape</span><span class="o">.</span><span class="n">dev</span><span class="o">.</span><span class="n">cc</span><span class="o">.</span><span class="n">arr</span><span class="o">.</span><span class="n">com</span>
+</pre></div>
+</div>
+<p>If the SPN does not exist for SMB and the FQDN, it must be added.</p>
+<p>To add an SMB SPN, run: <code class="docutils literal"><span class="pre">setspn</span> <span class="pre">–A</span> <span class="pre">cifs/&lt;core</span> <span class="pre">filer</span> <span class="pre">FQDN&gt;</span> <span class="pre">&lt;core</span> <span class="pre">filer</span> <span class="pre">NetBIOS&gt;</span></code></p>
+<p>Example: <code class="docutils literal"><span class="pre">setspn</span> <span class="pre">–A</span> <span class="pre">cifs/netappsvr.ar.com</span> <span class="pre">netappsvr</span></code></p>
+</div>
+<div class="section" id="configure-kerberos-constrained-delegation">
+<span id="smb-config-constrained-delegation"></span><h3>2.  Configure Kerberos Constrained Delegation<a class="headerlink" href="#configure-kerberos-constrained-delegation" title="Permalink to this headline">     </a></h3>
+<p>These steps must be performed on the Active Directory server by a user with administrative privileges.</p>
+<ol class="arabic simple">
+<li>From the Start menu, open <span class="guilabel">Active Directory Users and Computers</span>. (This option appears under the <span class="guilabel">Administrative Tools</span> section.)</li>
+<li>In the left-hand pane, expand <span class="guilabel">Network</span> and find the vserver machine account in the OU that it was joined to (usually “Computers”).</li>
+<li>In the right-hand pane, right click on the vserver’s machine account object and select <span class="guilabel">Properties</span>.</li>
+</ol>
+<a class="reference internal image-reference" href="_images/ad_gui1.png"><img alt="opening the Properties dialog" src="_images/ad_gui1.png" style="width: 400pt;" /></a>
+<ol class="arabic simple" start="4">
+<li>Select the <span class="guilabel">Delegation</span> tab.</li>
+<li>Select <span class="guilabel">Trust this computer for delegation to specified services only</span>.</li>
+<li>Select <span class="guilabel">Use any authentication protocol</span>.</li>
+<li>Select <span class="guilabel">Add</span>.</li>
+</ol>
+<a class="reference internal image-reference" href="_images/ad_gui2.png"><img alt="delegation tab" src="_images/ad_gui2.png" style="width: 250pt;" /></a>
+<ol class="arabic simple" start="8">
+<li>In the <span class="guilabel">Add Services</span> dialog, click the <span class="guilabel">Users or Computers</span> button.</li>
+</ol>
+<a class="reference internal image-reference" href="_images/ad_gui3.png"><img alt="Add Services dialog" src="_images/ad_gui3.png" style="width: 200pt;" /></a>
+<ol class="arabic simple" start="9">
+<li>Type the core filer’s machine account name and click the <span class="guilabel">Check Names</span> button.</li>
+<li>Select the name of the core filer from the list and click <span class="guilabel">OK</span>.</li>
+</ol>
+<a class="reference internal image-reference" href="_images/ad_gui4.png"><img alt="machine account names dialog" src="_images/ad_gui4.png" style="width: 300pt;" /></a>
+<p>The <span class="guilabel">Add Services</span> dialog appears again.</p>
+<ol class="arabic simple" start="11">
+<li>Select the &#8220;CIFS&#8221; service type for the core filer’s machine account.</li>
+</ol>
+<a class="reference internal image-reference" href="_images/ad_gui5.png"><img alt="select services" src="_images/ad_gui5.png" style="width: 300pt;" /></a>
+<ol class="arabic simple" start="12">
+<li>Click <span class="guilabel">OK</span>.</li>
+</ol>
+</div>
+<div class="section" id="assign-user-and-group-attributes-with-adsi-edit">
+<h3>3. Assign User and Group Attributes with ADSI Edit<a class="headerlink" href="#assign-user-and-group-attributes-with-adsi-edit" title="Permalink to this headline">     </a></h3>
+<p>The Avere cluster uses specific user attributes for NFS operations.</p>
+<div class="section" id="if-your-organization-is-using-ad-for-ldap">
+<h4>If your organization is using AD for LDAP:<a class="headerlink" href="#if-your-organization-is-using-ad-for-ldap" title="Permalink to this headline">     </a></h4>
+<p>The easiest way to set the gidNumber and uidNumber attributes is to use ADSI Edit on the Active Directory server running adsiedit.msc.</p>
+<ol class="upperalpha">
+<li><p class="first"><em>Set the user’s gidNumber attribute to match the “Domain Users” gidNumber.</em></p>
+<ol class="arabic">
+<li><p class="first">In ADSI Edit, right click CN=Domain Users &amp; choose <span class="guilabel">Properties</span>.</p>
+</li>
+<li><p class="first">Find the attribute “gidNumber”.</p>
+<p>If the value is “&lt;not set&gt;,” we recommend setting it to a unique number between 10000 and 65000 by clicking Edit, clicking in the Value field, typing the number, and clicking OK. If the value is set, copy it.</p>
+</li>
+<li><p class="first">Click OK and close the <span class="guilabel">Domain Users Properties</span> dialog box.</p>
+</li>
+</ol>
+<a class="reference internal image-reference" href="_images/ad_gui6.png"><img alt="Domain Users Properties dialog" src="_images/ad_gui6.png" style="width: 300pt;" /></a>
+<ol class="arabic simple" start="4">
+<li>Right click the entry for the desired user and choose <span class="guilabel">Properties</span>.</li>
+<li>Click the gidNumber attribute.</li>
+<li>Click the <span class="guilabel">Edit</span> button.</li>
+</ol>
+<a class="reference internal image-reference" href="_images/ad_gui7.png"><img alt="edit dialog" src="_images/ad_gui7.png" style="width: 300pt;" /></a>
+<ol class="arabic simple" start="7">
+<li>For the value, paste or type the gidNumber as taken from the gidNumber of “Domain Users” and then click OK.</li>
+</ol>
+<a class="reference internal image-reference" href="_images/ad_gui8.png"><img alt="editing the GID number" src="_images/ad_gui8.png" style="width: 300pt;" /></a>
+</li>
+<li><p class="first"><em>Set the uidNumber attribute.</em></p>
+<p>Avere recommends a number between 10000 and 65000.</p>
+<ol class="arabic simple">
+<li>While in the ADSI Edit user properties, find and click the uidNumber attribute.</li>
+<li>Click the Edit button.</li>
+<li>Click in the Value field.</li>
+<li>Enter a unique number between 10000 and 65000.</li>
+<li>Click OK on the right.</li>
+<li>Click OK on the bottom to commit attribute changes (gidNumber and uidNumber).</li>
+</ol>
+</li>
+</ol>
+<a class="reference internal image-reference" href="_images/ad_gui9.png"><img alt="editing the UID and GID numbers" src="_images/ad_gui9.png" style="width: 300pt;" /></a>
+<p>For SMB client access, users are authenticated by their Windows credentials but authorized based on their UNIX credentials. This is required because the Avere cluster uses NFSv3 for the datapath to the core filer. For this reason, we require that users and groups have rfc2307 attributes in order to facilitate this.</p>
+<p>A summary of required attributes are as follows:</p>
+<p><strong>User Attributes:</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="17%" />
+<col width="22%" />
+<col width="61%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">User Attribute</th>
+<th class="head">Description</th>
+<th class="head">Avere Cluster Use</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>sAMAccountName</td>
+<td>SMB username</td>
+<td>Required. Automatically maintained by AD</td>
+</tr>
+<tr class="row-odd"><td>uid</td>
+<td>NFS username</td>
+<td>If left blank (recommended), defaults to sAMAaccountName</td>
+</tr>
+<tr class="row-even"><td>uidNumber</td>
+<td>NFS userid</td>
+<td>Required. Unique value must be assigned by admin</td>
+</tr>
+<tr class="row-odd"><td>gidNumber</td>
+<td>NFS primary groupid</td>
+<td>Required. Value must be assigned by admin.
+Typically set to Domain Users gidNumber</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Group Attributes:</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="17%" />
+<col width="23%" />
+<col width="59%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Group Attribute</th>
+<th class="head">Description</th>
+<th class="head">Avere Cluster Use</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>cn</td>
+<td>used as NFS groupname</td>
+<td>Required.  Automatically maintained by AD</td>
+</tr>
+<tr class="row-odd"><td>gidNumber</td>
+<td>NFS groupid</td>
+<td>Required.  Unique value must be assigned by admin</td>
+</tr>
+<tr class="row-even"><td>memberUid</td>
+<td>member NFS usernames</td>
+<td>optional for AD groups
+required for NFS groups when the core filer
+security style is posix mode bits and ad users are
+members of nfs groups</td>
+</tr>
+</tbody>
+</table>
+<p>In order to successfully evaluate the entries on a core filer Access Control List (ACL), we need to be able to map a user and group Security ID (SID) to the corresponding UNIX credential.</p>
+<p>To accomplish this, in addition to Active Directory for user authentication and SID-to-username translation, we also require a Directory Service as a source of these attributes. This can be NIS, LDAP, or a flat file, whichever is the authoritative source of these attributes in your environment. If there are multiple sources, we should use the same source that the core filer is using as it will also need to reverse translate from UNIX credential to Windows SID.</p>
+<p>If there is not an authoritative source of these attributes, a flat file can be generated to provide these values. Alternatively, these can be populated in Active Directory via ADSIEdit. Active Directory can then be configured as the Directory Service via LDAP.</p>
+<p>The LDAP Server can be in a comma-separated list of servers. The BASE DN will match the LDAP DN of the domain.</p>
+</div>
+<div class="section" id="flat-file-format">
+<h4>Flat File Format<a class="headerlink" href="#flat-file-format" title="Permalink to this headline">     </a></h4>
+<p>User (/etc/passwd format)</p>
+<p>Format: <code class="docutils literal"><span class="pre">&lt;uid&gt;:*:&lt;uidNumber&gt;:&lt;gidNumber&gt;:::</span></code></p>
+<p>Example: <code class="docutils literal"><span class="pre">avereuser:*:11111:10000:::</span></code></p>
+<p>Group (/etc/group format)</p>
+<p>Format: <code class="docutils literal"><span class="pre">&lt;cn&gt;:*:&lt;gidNumber&gt;:&lt;memberUid&gt;,&lt;memberUid&gt;</span></code></p>
+<p>Example: <code class="docutils literal"><span class="pre">Domain</span> <span class="pre">Users:*:10000:avereuser,devuser1</span></code></p>
+<div class="last-update container">
+updated 2017-02-15</div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="appendixes.html">Appendixes</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="install_licenses.html">Appendix A: Adding or Removing Feature Licenses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="url_polling.html">Appendix B: Implementing a URL Polling Agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app_supported_core_filers.html">Appendix C: Supported Core Filer Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="smb_netapp_config.html">Appendix D: Configuring NetApp Filers for Avere SMB ACLs</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Appendix E: Configuring Active Directory for Avere SMB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="username_map_file.html">SMB-UNIX Username Mapping</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="smb_netapp_config.html"
+                        title="previous chapter">Appendix D: Configuring NetApp Filers for Avere SMB ACLs</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="username_map_file.html"
+                        title="next chapter">SMB-UNIX Username Mapping</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="username_map_file.html" title="SMB-UNIX Username Mapping"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="smb_netapp_config.html" title="Appendix D: Configuring NetApp Filers for Avere SMB ACLs"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="appendixes.html" >Appendixes</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">2017 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

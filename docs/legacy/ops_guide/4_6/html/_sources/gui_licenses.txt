@@ -1,0 +1,14 @@
+Cluster > Licenses
+
+
+The Licenses settings page shows licenses that are installed on your
+system and gives options for adding or removing licenses.
+
+Some Avere OS features, including FlashCloud, FlashMove, and
+FlashMirror, require separate feature licenses. After purchasing a
+license, send the license ID to Avere Global Services to receive the
+license key that you will install on this screen.
+
+The procedure is described in detail in
+
+Appendix A: Adding or Removing Feature Licenses

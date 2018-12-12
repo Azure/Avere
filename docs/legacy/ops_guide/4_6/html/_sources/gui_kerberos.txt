@@ -1,0 +1,79 @@
+Cluster > Kerberos
+
+
+You can configure Kerberos network authentication for communication
+between the cluster and clients, for communication between the cluster
+and core filers, or for both.
+
+This settings page includes basic configuration for all Kerberos
+communication, and also allows you to upload a key file to use with
+cluster-core filer operations.
+
+Additional settings are needed to enable Kerberos for client-cluster
+or cluster-core filer operations. Read
+
+Setting Up Kerberos Authentication
+
+ to learn more about how Kerberos is configured in Avere OS.
+
+Basic Kerberos Settings
+
+Use the Kerberos panel to specify infrastructure settings that are
+used by all Kerberos connections in the cluster.
+
+Realm
+
+In the Realm field, enter the Kerberos realm (domain) that contains
+the principal names in the Kerberos server database (for example,
+company.net). Note that Kerberos cannot service requests outside its
+realm, so make sure that the realm encompasses all vservers and core
+filers for which you want to use Kerberos.
+
+You can use DNS to specify additional members of this realm. This
+feature assigns clients that do not have explicit realms to a realm
+based on their domain name.
+
+There are two options for DNS realm mapping; you cannot use both:
+
+DNS Domain Discovery uses DNS to automatically determine the realm of
+a host.  Be cautious when using the domain discovery option, because
+it can lead to more security vulnerabilities than the explicit DNS
+domain mapping option.
+
+In the DNS Domains field, enter a space-separated list of domain or
+host names to add to the Kerberos realm. This option is more secure
+than the domain discovery option.  Names must start with a period.
+Separate multiple values with spaces, for example:  .kerberos_co.net
+.kerberos_co2.net .company.com
+
+Key Distribution Center (KDC)
+
+To specify the key distribution center, do
+
+one
+
+ of the following:
+
+Select KDC DNS Discovery if you want Avere OS to search for the key
+distribution center.
+
+In the KDC field, enter IP addresses or DNS hostnames for the Kerberos
+KDC servers. (This option is available only if KDC DNS Discovery is
+not selected.) Separate multiple values with spaces.
+
+Cluster Keytab File
+
+Use the Kerberos Service Key Management panel to upload a keytab file
+for authenticating communication between the cluster and core filers.
+
+This file is different from the Kerberos keytab file uploaded on the
+
+VServer > NFS
+
+ settings page. That file is used for client-vserver communication.
+Read
+
+Setting Up Kerberos Authentication
+
+ to learn more about the different types of Kerberos configurations in
+Avere OS.

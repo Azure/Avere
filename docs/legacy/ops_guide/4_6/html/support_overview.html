@@ -1,0 +1,378 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Using the Avere Control Panel Support Tab &#8212; Operations Guide 4.6 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '4.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Operations Guide 4.6 documentation" href="ops_conf_index.html" />
+    <link rel="next" title="Appendixes" href="appendixes.html" />
+    <link rel="prev" title="Administration &gt; Hidden Alerts" href="gui_hidden_alerts.html" /> 
+
+<!--    use for draft review builds only - enables web page annotation internally -->
+   
+<!--   <script type="text/javascript" src="_static/jquery.js"></script>  
+   <script src="_static/annotator-full.min.js"></script>  
+   <script src="_static/annotate_init.js"></script> 
+   <link rel="stylesheet" href="_static/annotator.min.css">  
+-->
+    
+
+  </head>
+  <body role="document">
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/clientSpecific/avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="appendixes.html" title="Appendixes"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gui_hidden_alerts.html" title="Administration &gt; Hidden Alerts"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="using-the-gui-support-tab">
+<span id="support-tab"></span><span id="index-0"></span><h1>Using the Avere Control Panel Support Tab<a class="headerlink" href="#using-the-gui-support-tab" title="Permalink to this headline">     </a></h1>
+<p>The Avere Control Panel’s <span class="guilabel">Support</span> tab contains tools to help you work with Avere Global Services to investigate and fix problems that might occur with your Avere cluster.</p>
+<p>In addition to providing Avere Global Services contact information and documentation links, the Support tab provides interfaces for uploading system information to Avere&#8216;s technical support department to help Avere&#8216;s support engineers assess your situation.</p>
+<a class="reference internal image-reference" href="_images/support_tab.png"><img alt="Support tab" src="_images/support_tab.png" style="width: 700pt;" /></a>
+<p>To read product documentation, or to contact Avere Global Services for software support, use the <a class="reference internal" href="#support-sidebar"><span class="std std-ref">contact information</span></a> listed on the left side of the page.</p>
+<p>The Support tab has controls for uploading cluster information to Avere Systems for use in identifying a possible problem. The tools and options are described in more detail in the sections below:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#support-details"><span class="std std-ref">Details</span></a></li>
+<li><a class="reference internal" href="#support-status"><span class="std std-ref">Support Status</span></a></li>
+<li><a class="reference internal" href="#support-general-upload"><span class="std std-ref">General Information Upload</span></a></li>
+<li><a class="reference internal" href="#support-advanced"><span class="std std-ref">Advanced Information Gathering</span></a></li>
+<li><a class="reference internal" href="#support-core"><span class="std std-ref">Core Dump Management</span></a></li>
+</ul>
+<p>The behavior of the Support tab also relies on the configuration settings in the <a class="reference internal" href="gui_support.html#gui-support-settings"><span class="std std-ref">Cluster &gt; Support</span></a> page (under the Settings tab of the Avere Control Panel). Use the settings page to turn on monitoring options that gather the information that can be uploaded from this page.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The controls on this page should be used in conjunction with Avere Global Services. Follow their directions when using any of these features.</p>
+</div>
+<div class="section" id="details">
+<span id="support-details"></span><h2>Details<a class="headerlink" href="#details" title="Permalink to this headline">     </a></h2>
+<p>The first section on the <span class="guilabel">Support</span> tab gives basic information about the cluster and allows you to change the scope of the information gathered and uploaded to Avere Systems for support purposes.</p>
+<p>In the <span class="guilabel">Choose Node</span> selector, you can select a single node to examine, or <span class="guilabel">Cluster Wide</span> to investigate all nodes in the cluster. This selection affects the nodes that are shown in the <span class="guilabel">Support Status</span> table and also the scope of the information uploaded to Avere Systems.</p>
+<ul class="simple">
+<li>If you select a single node, only that node uploads troubleshooting information to Avere Global Services.</li>
+<li>If you select <span class="guilabel">Cluster Wide</span>, every node in the cluster uploads the information.</li>
+</ul>
+<p>Note that you must select a node in order to upload core files. The <span class="guilabel">Core dump management</span> panel (described <a class="reference internal" href="#support-core"><span class="std std-ref">below</span></a>) does not appear if <span class="guilabel">Cluster Wide</span> is selected.</p>
+<p>The <span class="guilabel">Upload information validated</span> status message shows whether or not Avere Global Services has successfully received information from the cluster. If it reads &#8220;no&#8221;, check the  <a class="reference internal" href="gui_support.html#gui-sup-ci"><span class="std std-ref">Customer Information</span></a> section of the <a class="reference internal" href="gui_support.html#gui-support-settings"><span class="std std-ref">Cluster &gt; Support</span></a> settings page to retry the upload or work around failures.</p>
+</div>
+<div class="section" id="support-status">
+<span id="id1"></span><h2>Support Status<a class="headerlink" href="#support-status" title="Permalink to this headline">     </a></h2>
+<p>The <span class="guilabel">Support Status</span> table shows the status of support information uploads for the selected node, or for all nodes in the cluster (if <span class="guilabel">Cluster Wide</span> is selected in <span class="guilabel">Choose Node</span>).</p>
+</div>
+<div class="section" id="general-information-upload">
+<span id="support-general-upload"></span><span id="index-1"></span><h2>General Information Upload<a class="headerlink" href="#general-information-upload" title="Permalink to this headline">     </a></h2>
+<p>Use the <span class="guilabel">General Information Upload</span> section to send system information about the node or cluster to Avere Global Services.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>The manual uploads available from this page supplement the automatic nightly uploads that you can configure on the  <a class="reference internal" href="gui_support.html#gui-support-settings"><span class="std std-ref">Cluster &gt; Support</span></a> settings page.</p>
+<p class="last">If you select the <span class="guilabel">Statistics Monitoring</span> or <span class="guilabel">General Information Upload</span> checkboxes in the <span class="guilabel">Customer Info</span> section of the <a class="reference internal" href="gui_support.html#gui-support-settings"><span class="std std-ref">Cluster &gt; Support</span></a> settings page, Avere OS automatically uploads the selected data to Avere Global Services each night at approximately 1:00 a.m. local time.</p>
+</div>
+<p>To use the manual upload feature on the <span class="guilabel">Support</span> tab, follow these steps:</p>
+<ol class="arabic simple">
+<li>Choose the type of information to upload with the <span class="guilabel">Choose gather mode</span> selector. Options are described in detail <a class="reference internal" href="#support-gather-mode"><span class="std std-ref">below</span></a>.</li>
+<li>Optional: Type a note for the upload in the <span class="guilabel">Comment</span> text field.</li>
+<li>Click the <span class="guilabel">Upload information</span> button.</li>
+</ol>
+<div class="section" id="selecting-the-information-to-upload">
+<span id="support-gather-mode"></span><h3>Selecting the Information To Upload<a class="headerlink" href="#selecting-the-information-to-upload" title="Permalink to this headline">     </a></h3>
+<p>The &#8220;gather mode&#8221; setting lets you choose what information will be uploaded.</p>
+<p>Note that <em>collecting</em> the information for these uploads is enabled or disabled on the <a class="reference internal" href="gui_support.html#gui-support-settings"><span class="std std-ref">Cluster &gt; Support</span></a> settings page. If you select statistics upload on the Support tab but you have not configured statistics monitoring on the Cluster &gt; Support settings page, your upload will contain an empty statistics report. Use the <a class="reference internal" href="gui_support.html#gui-sup-ci"><span class="std std-ref">Customer Information</span></a> section of the <a class="reference internal" href="gui_support.html#gui-support-settings"><span class="std std-ref">Cluster &gt; Support</span></a> settings page to turn on information collection for the items you want to upload.</p>
+<p>Gather mode options include the following:</p>
+<ul>
+<li><p class="first"><span class="guilabel">Support bundle</span> (default value) -</p>
+<p>This option uploads the <span class="guilabel">Normal support information</span> package, plus the <span class="guilabel">Current statistic information</span> package.</p>
+</li>
+<li><p class="first"><span class="guilabel">Normal support information</span> -</p>
+<p>This option does an immediate manual upload of the <span class="guilabel">General Information Upload</span> data that can be set for nightly upload from the <a class="reference internal" href="gui_support.html#gui-support-settings"><span class="std std-ref">Cluster &gt; Support</span></a> settings page. Up to four days&#8217; data is included in this upload.</p>
+</li>
+<li><p class="first"><span class="guilabel">Maximum support information</span> -</p>
+<p>This option uploads the same information in the <span class="guilabel">Normal support information</span> package, but does not restrict the uploaded data to the most recent four days.</p>
+</li>
+<li><p class="first"><span class="guilabel">Current statistic information</span> -</p>
+<p>Uploads statistics information collected since 1:00 a.m. (that is, since the regular nightly upload). Note that you must turn on statistics collection and nightly upload on the <a class="reference internal" href="gui_support.html#gui-support-settings"><span class="std std-ref">Cluster &gt; Support</span></a> settings page to populate this report.</p>
+</li>
+<li><p class="first"><span class="guilabel">Rolling trace information</span> -</p>
+<p>Uploads rolling trace information for a configurable time period. The default time value is ten minutes before and two minutes after the current date and time.</p>
+</li>
+<li><p class="first"><span class="guilabel">Rolling management trace information</span> -</p>
+<p>Uploads management trace information. You can configure the time period; the default value is ten minutes before and two minutes after the current date and time.</p>
+</li>
+</ul>
+<p>The following options should be used only when Avere Global Services advises you to do so:</p>
+<ul class="simple">
+<li><span class="guilabel">Historical statistic information</span></li>
+<li><span class="guilabel">Local directory information</span></li>
+<li><span class="guilabel">Data dump information</span></li>
+<li><span class="guilabel">Current trace information</span></li>
+<li><span class="guilabel">Retry active failed uploads</span></li>
+<li><span class="guilabel">Retry all failed uploads</span></li>
+<li><span class="guilabel">Remove failed uploads</span></li>
+</ul>
+</div>
+</div>
+<div class="section" id="advanced-information-gathering">
+<span id="support-advanced"></span><h2>Advanced Information Gathering<a class="headerlink" href="#advanced-information-gathering" title="Permalink to this headline">     </a></h2>
+<p>The <span class="guilabel">Advanced information gathering</span> panel can be used to collect additional information for uploading. In general, you should use this only when directed to do so by Avere Global Services, and with the settings they recommend.</p>
+<a class="reference internal image-reference" href="_images/support_advanced_info.png"><img alt="Controls for advanced information gathering" src="_images/support_advanced_info.png" style="width: 400pt;" /></a>
+<p>This panel lets you to gather more specific data for a set period of time (or indefinitely, until stopped).</p>
+<p>Types of information gathering available from this panel include:</p>
+<ul>
+<li><p class="first"><span class="guilabel">Full packet capture</span> -</p>
+<p>Gathers a packet capture on all interfaces for the selected node, or cluster-wide</p>
+</li>
+<li><p class="first"><span class="guilabel">Full packet capture (10GB Ring buffer)</span> -</p>
+<p>Gathers a packet capture on all node or cluster interfaces as above, but without exceeding 10GB size</p>
+</li>
+<li><p class="first"><span class="guilabel">Performance information</span> -</p>
+<p>Provides detailed output on the performance of key system components</p>
+</li>
+<li><p class="first"><span class="guilabel">Memory Debugging</span> -</p>
+<p>Gives detailed information about memory usage</p>
+</li>
+<li><p class="first"><span class="guilabel">Stats gathering</span> -</p>
+<p>Collects cluster-wide or per-node statistics in 30-second iterations</p>
+</li>
+<li><p class="first"><span class="guilabel">Trace</span> options -</p>
+<ul class="simple">
+<li><span class="guilabel">Trace</span></li>
+<li><span class="guilabel">Trace/partial packet</span></li>
+<li><span class="guilabel">Directory Trace</span></li>
+<li><span class="guilabel">Local Directory Trace</span></li>
+<li><span class="guilabel">Read/Write Trace</span></li>
+<li><span class="guilabel">Timing Trace</span></li>
+<li><span class="guilabel">Writeback Trace</span></li>
+</ul>
+<p>Each of these options gathers program execution data according to the option selected.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The trace options on this menu are <em>disabled</em> if <span class="guilabel">Gather rolling trace data</span> is enabled on the <a class="reference internal" href="gui_support.html#gui-support-settings"><span class="std std-ref">Cluster &gt; Support</span></a> settings page. That is, you can either capture rolling trace data for the cluster or capture the specific data in these options, but not both at the same time.</p>
+</div>
+</li>
+</ul>
+<p>After choosing a gather mode, configure the time period for the data collection by selecting an option from the <span class="guilabel">Gather Duration</span> drop-down list:</p>
+<ul class="simple">
+<li><span class="guilabel">Until manually stopped</span> - Data collection continues until you click the <span class="guilabel">Stop collecting</span> button.</li>
+<li>A number of minutes, ranging from <span class="guilabel">1 minute</span> to <span class="guilabel">30 minutes</span></li>
+</ul>
+<p>Most gather mode options have a default time of ten minutes.</p>
+<p>Click the <span class="guilabel">Start collecting</span> button to begin data collection.</p>
+<p>You can use the <span class="guilabel">Stop collecting</span> button to quit collecting data at any time.</p>
+</div>
+<div class="section" id="core-dump-management">
+<span id="support-core"></span><span id="index-2"></span><h2>Core Dump Management<a class="headerlink" href="#core-dump-management" title="Permalink to this headline">     </a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <span class="guilabel">Core Dump Management</span> panel appears only if a single node is selected in the <a class="reference internal" href="#support-details"><span class="std std-ref">Details</span></a> section.</p>
+</div>
+<a class="reference internal image-reference" href="_images/support_core_dump_upload.png"><img alt="Panel to select and delete or upload a core dump from the selected node" src="_images/support_core_dump_upload.png" style="width: 400pt;" /></a>
+<p>Use the <span class="guilabel">Core dump management</span> panel if you need to upload a core file after a failure. You can also use this section to delete core files.</p>
+<p>The <span class="guilabel">Select core</span> field automatically loads a list of core files on the node, if any exist. Use the drop-down selector to choose the file to upload or delete.</p>
+<p>Optionally, you can add a text note for the upload in the <span class="guilabel">Comment</span> field.</p>
+<p>To upload the core file to Avere Systems, click the <span class="guilabel">Upload core</span> button.</p>
+<p>To delete the core file from the node, click the <span class="guilabel">Remove core</span> button.</p>
+</div>
+<div class="section" id="getting-help-and-finding-documentation">
+<span id="support-sidebar"></span><h2>Getting Help and Finding Documentation<a class="headerlink" href="#getting-help-and-finding-documentation" title="Permalink to this headline">     </a></h2>
+<p>The information in the left margin of the support page explains how to contact Avere Global Services by phone, web, or email.</p>
+<p>It also includes links to documentation, such as the Release Notes for this version of the software, and the online Operations Guide. Additional documentation can be found at <a class="reference external" href="http://library.averesystems.com">http://library.averesystems.com</a>.</p>
+<p>The Multi-Cluster Dashboard link opens a system viewer that allows you to monitor the health of multiple clusters on one page. Detailed documentation for this cluster manager is being developed.</p>
+<div class="figure" id="id2">
+<a class="reference internal image-reference" href="_images/support_contact_info.png"><img alt="Contact information and documentation links" src="_images/support_contact_info.png" style="width: 300pt;" /></a>
+<p class="caption"><span class="caption-text"><em>Support contact information on the Avere Control Panel Support tab</em></span></p>
+</div>
+<div class="last-update container">
+updated 2017-02-15</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Using the Avere Control Panel Support Tab</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#details">Details</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#support-status">Support Status</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#general-information-upload">General Information Upload</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-information-gathering">Advanced Information Gathering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#core-dump-management">Core Dump Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-help-and-finding-documentation">Getting Help and Finding Documentation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gui_hidden_alerts.html"
+                        title="previous chapter">Administration &gt; Hidden Alerts</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="appendixes.html"
+                        title="next chapter">Appendixes</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="appendixes.html" title="Appendixes"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gui_hidden_alerts.html" title="Administration &gt; Hidden Alerts"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">2017 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>

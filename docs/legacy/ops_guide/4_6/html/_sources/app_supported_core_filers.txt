@@ -1,0 +1,26 @@
+Appendix C: Supported Core Filer Types
+
+Avere Systems, Inc. has verified these storage systems for use as
+back-end core filers with Avere OS.
+
+This list will change over time. For information about products not on
+this list, consult your Avere Systems sales representative or Avere
+Global Services.
+
+        Vendor  Software versions  SMB/CIFS ACL support  Notes  Amazon
+S3  n/a  Yes    Amplidata  3.4.3.0  Yes    CentOS (with XFS or EXT4)
+5.8  No (POSIX security only)    Cleversafe  3.2.2.0, 3.4.4.0  Yes
+EMC Isilon  OneFS 5.5, 6.0, 6.5  Yes  Consider defining separate core
+filers for SMB and NFS access  EMC VNXe  2.4  No (POSIX security only)
+Google Cloud Storage  n/a  Yes  Requires Avere OS 4.6 or later
+Hitachi NAS  11.3  Yes; configuration requirements:  Use HNAS mixed
+mode security style  Requires Native Identity  Username download on
+backend storage is optional  Junction must be used by SMB clients
+only, no multiprotocol access  Consider defining separate core filers
+for SMB and NFS access  NetApp  Data ONTAP 7.*, 8.0, 8.1, 8.2, 8.3
+(both clustered and 7-mode)  Clustered - Yes; read requirements
+7-mode - Yes  Consider defining separate core filers for SMB and NFS
+access  Read Appendix D: Configuring NetApp Filers for Avere SMB ACLs
+Nexenta  NexentaStor 3.0, 3.1  No (POSIX security only)    Oracle
+OpenSolaris 11  No (POSIX security only)    Swiftstack  2.5  Yes
+Requires Avere OS 4.6.1.4 or later

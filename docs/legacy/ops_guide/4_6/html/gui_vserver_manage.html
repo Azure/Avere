@@ -1,0 +1,300 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>VServer &gt; Manage VServers &#8212; Operations Guide 4.6 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '4.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Operations Guide 4.6 documentation" href="ops_conf_index.html" />
+    <link rel="up" title="Avere Control Panel Settings" href="settings_overview.html" />
+    <link rel="next" title="VServer &gt; VServer Details" href="gui_vserver_details.html" />
+    <link rel="prev" title="Avere Control Panel Settings" href="settings_overview.html" /> 
+
+<!--    use for draft review builds only - enables web page annotation internally -->
+   
+<!--   <script type="text/javascript" src="_static/jquery.js"></script>  
+   <script src="_static/annotator-full.min.js"></script>  
+   <script src="_static/annotate_init.js"></script> 
+   <link rel="stylesheet" href="_static/annotator.min.css">  
+-->
+    
+
+  </head>
+  <body role="document">
+
+<a href="http://www.averesystems.com">
+ <img style="margin: 20px;" src="http://www.averesystems.com/clientSpecific/avere/img/avere-logo.png">
+</a>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gui_vserver_details.html" title="VServer &gt; VServer Details"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="settings_overview.html" title="Avere Control Panel Settings"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" accesskey="U">Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="vserver-manage-vservers">
+<h1>VServer &gt; Manage VServers<a class="headerlink" href="#vserver-manage-vservers" title="Permalink to this headline">     </a></h1>
+<div class="section" id="manage-vservers">
+<span id="gui-manage-vservers"></span><h2>Manage VServers<a class="headerlink" href="#manage-vservers" title="Permalink to this headline">     </a></h2>
+<a class="reference internal image-reference" href="_images/gui_manage_vservers_full.png"><img alt="Manage VServers page" src="_images/gui_manage_vservers_full.png" style="width: 800px;" /></a>
+<p>The <span class="guilabel">Manage VServers</span> settings page gives a list of the cluster&#8217;s vservers.</p>
+<p>You can filter the list to show only vservers whose attributes match the string typed in the search box (2).</p>
+<a class="reference internal image-reference" href="_images/gui_manage_vservers-annot.png"><img alt="Controls on the Manage VServers page" src="_images/gui_manage_vservers-annot.png" style="width: 576px;" /></a>
+<p>The buttons (1) above and below the list let you create a new vserver, suspend a vserver, or remove a vserver from the system. To use the buttons, first select one or more vservers by checking the <span class="guilabel">Actions</span> box (5) in the right column of the vserver&#8217;s table entry, then click the button for the action that you want to perform.</p>
+<p>Identical sets of buttons appear at the top and bottom of the list for easier access when the list of vservers is long.</p>
+<p>Click a column header (3) to sort the list by that column&#8217;s attribute.</p>
+<p>Use the triangular control (4) in the left column to show or hide detailed information about that vserver.</p>
+<div class="section" id="creating-a-vserver">
+<h3>Creating a VServer<a class="headerlink" href="#creating-a-vserver" title="Permalink to this headline">     </a></h3>
+<p>Creating a vserver is the first step in configuring client access through the Avere cluster. (To learn more about vservers and their role in a cluster, read <a class="reference internal" href="settings_overview.html#vserver-settings"><span class="std std-ref">Creating and Working with VServers</span></a>.)</p>
+<p>You will need the following information:</p>
+<ul class="simple">
+<li>The name that you want to use for the vserver</li>
+<li>The range of client-facing IP addresses that the vserver will handle</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The set of client-facing IP addresses used for a virtual server must be manually
+assigned static IP addresses (not assigned by DHCP) and they must be in a contiguous
+range.</p>
+</div>
+<ul class="simple">
+<li>For a simple namespace vserver: the name of the core filer that you will use with this vserver. The core filer must be defined before you create the vserver; read <a class="reference internal" href="core_filer_overview.html#core-filer-add-overview"><span class="std std-ref">Adding a New Core Filer</span></a> to learn how to add a core filer to the system. (For a GNS vserver, you can add core filers after creating the vserver.)</li>
+<li>If you use multiple VLANs, decide which VLAN you want this vserver to use.</li>
+</ul>
+<p>These are the steps to create a new vserver:</p>
+<ol class="arabic">
+<li><p class="first">From the <span class="guilabel">Manage VServers</span> page, choose <span class="guilabel">create</span>.
+The <span class="guilabel">Add New VServer</span> dialog box appears.</p>
+<a class="reference internal image-reference" href="_images/new_vserver_dialog.png"><img alt="**Add New VServer** pop-up" src="_images/new_vserver_dialog.png" style="width: 576px;" /></a>
+</li>
+<li><p class="first">In the <strong>Type</strong> section, choose either a simple namespace (this vserver handles requests for one core filer&#8217;s directories only) or global namespace (this vserver handles requests in a client-side virtual namespace that is mapped to one or many core filers).</p>
+</li>
+<li><p class="first">Enter the new virtual server&#8217;s name in the <span class="guilabel">VServer Name</span> field.</p>
+<ul>
+<li><p class="first">The name can include letters, numbers, and punctuation, but <strong>not</strong> the following
+characters:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">+</span> <span class="s1">&#39; &amp; + &lt; ; \ &gt;</span>
+</pre></div>
+</div>
+<p>The maximum length is 255 characters.</p>
+</li>
+<li><p class="first">For a simple namespace, the vserver name is typically an abbreviation of the core filer name (for example, <code class="docutils literal"><span class="pre">nas107</span></code>).</p>
+</li>
+<li><p class="first">For a global namespace, it can be helpful to include a string indicating that the vserver exports a global namepsace (for example, <code class="docutils literal"><span class="pre">GNS</span></code> or <code class="docutils literal"><span class="pre">netfiles</span></code>).</p>
+</li>
+</ul>
+</li>
+<li><p class="first">If you selected the <strong>Simple Namespace</strong> option, you must specify the core filer.</p>
+<a class="reference internal image-reference" href="_images/new_vserver_simple_options.png"><img alt="Choosing a core filer for a new simple namespace vserver" src="_images/new_vserver_simple_options.png" style="width: 450px;" /></a>
+<p>Select a core filer from the drop-down list. You can type a name to search for, but the core filer must be already defined in the system.</p>
+</li>
+</ol>
+<ol class="arabic" start="5">
+<li><p class="first">Set the IP address range:</p>
+<ol class="loweralpha">
+<li><p class="first">Specify the first and last values for the IP address range that this vserver will use to accept client requests.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You can set additional address ranges for this vserver after creating it. Use the <span class="guilabel">Client Facing Network</span> page to add IP addresses. This option is available only on systems that use Advanced Networking (which is enabled by default).</p>
+</div>
+<p>As mentioned in the prerequisites section, the IP range must be contiguous and manually assigned (not assigned by DHCP).</p>
+</li>
+<li><p class="first">Enter the subnet mask associated with this VLAN. (You can choose which VLAN to use in the next field.)</p>
+</li>
+<li><p class="first">Optionally, select a VLAN from the drop-down <span class="guilabel">VLAN</span> list. (Advanced Networking must be enabled to create and select VLANs.)</p>
+</li>
+</ol>
+<p>The default VLAN is listed, along with any client-role VLANs that you created in the Cluster &gt; VLAN page. The IP addresses in this range will be associated with the VLAN that you select.</p>
+<p>If your system does not use Advanced Networking, ignore this setting.</p>
+</li>
+<li><p class="first">Click Add VServer to create the new server.</p>
+</li>
+</ol>
+<p>A message confirms that the vserver has been created. The Avere Control Panel might display alerts as the new vserver is added to the cluster.</p>
+<p>Depending on the options that you selected, the <span class="guilabel">Add New VServer</span> utility might prompt you to customize more settings. The remaining settings also can be made from other Avere Control Panel pages.</p>
+<div class="last-update container">
+updated 2017-02-15</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="ops_conf_index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">About Avere OS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_tasks.html">Configuration Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_overview.html">Avere Control Panel Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="support_overview.html">Using the Avere Control Panel Support Tab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendixes.html">Appendixes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html">Copyright Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#trademark-information">Trademark Information</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frontmatter.html#revision-history">Revision History</a></li>
+</ul>
+
+<h4><a href="settings_overview.html">Settings Pages</a></h4>
+<ul> 
+ <li><a href="settings_overview.html#creating-and-working-with-vservers">VServer section</a>
+   <ul>
+     <li><a href="gui_vserver_manage.html">Manage VServers</a></li>
+     <li><a href="gui_vserver_details.html">VServer Details</a></li>
+     <li><a href="gui_client_network.html">Client Facing Network</a></li>
+     <li><a href="gui_namespace.html">Namespace</a></li>
+     <li><a href="gui_export_policies.html">Export Policies</a></li>
+     <li><a href="gui_export_rules.html">Export Rules</a></li>
+     <li><a href="gui_nfs.html">NFS</a></li>
+     <li><a href="gui_cifs.html">CIFS</a></li>
+     <li><a href="gui_cifs_shares.html">CIFS Shares</a></li>
+    </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#managing-core-filers">Core Filer section</a>
+  <ul>
+   <li><a href="gui_manage_core_filers.html">Manage Core Filers</a></li>
+   <li><a href="gui_core_filer_details.html">Core Filer Details</a></li>
+   <li><a href="gui_cloud_encryption_settings.html">Cloud Encryption Settings</a></li>
+   <li><a href="gui_cloud_snapshots.html">Cloud Snapshots</a></li>
+   <li><a href="gui_cloud_snapshot_policies.html">Cloud Snapshot Policies</a></li>
+   <li><a href="gui_manage_cache_policies.html">Manage Cache Policies</a></li>
+  </ul>
+ </li>
+ 
+ <li><a href="settings_overview.html#cluster-settings-overview">Cluster section</a>
+  <ul>
+    <li><a href="gui_cluster_general_setup.html">General Setup</a></li>
+    <li><a href="gui_admin_network.html">Administrative Network</a></li>
+    <li><a href="gui_cluster_networks.html">Cluster Networks</a></li>
+    <li><a href="gui_proxy_config.html">Proxy Configuration</a></li>
+    <li><a href="gui_fxt_nodes.html">FXT Nodes</a></li>
+    <li><a href="gui_node_details.html">Node Details</a></li>
+    <li><a href="gui_ha.html">High Availability</a></li>
+    <li><a href="gui_monitoring_settings.html">Monitoring</a></li>
+    <li><a href="gui_schedules.html">Schedules</a></li>
+    <li><a href="gui_directory_services.html">Directory Services</a></li>
+    <li><a href="gui_kerberos.html">Kerberos</a></li>
+    <li><a href="gui_ipmi.html">IPMI</a></li>
+    <li><a href="gui_support.html">Support</a></li>
+    <li><a href="gui_licenses.html">Licenses</a></li>
+    <li><a href="gui_cloud_credentials.html">Cloud Credentials</a></li>
+    <li><a href="gui_certificates.html">Certificates</a></li>
+    <li><a href="gui_kmip_servers.html">KMIP Servers</a></li>
+    <li><a href="gui_vlan.html">VLAN</a></li>
+  </ul>
+ </li>
+
+ <li><a href="settings_overview.html#administration-settings-overview">Administration section</a>
+  <ul>
+   <li><a href="gui_system_maintenance.html">System Maintenance</a></li>
+   <li><a href="gui_software_update.html">Software Update</a></li>
+   <li><a href="gui_users.html">Users</a></li>
+   <li><a href="gui_login_services.html">Login Services</a></li>
+   <li><a href="gui_hidden_alerts.html">Hidden Alerts</a></li>
+  </ul>
+ </li>
+ 
+</ul>
+
+
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="settings_overview.html"
+                        title="previous chapter">Avere Control Panel Settings</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gui_vserver_details.html"
+                        title="next chapter">VServer &gt; VServer Details</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gui_vserver_details.html" title="VServer &gt; VServer Details"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="settings_overview.html" title="Avere Control Panel Settings"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="ops_conf_index.html">Operations Guide 4.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="settings_overview.html" >Avere Control Panel Settings</a> &#187;</li> 
+      </ul>
+    </div>
+<div style="background-color: #000;">
+
+<div>&nbsp;</div>
+
+<div style="text-align: right;">			<ul style="list-style-type:none; color:#fff; padding-right: 50px; line-height:1.5em; font-size: 16px;">
+				<li><strong><a href="http://library.averesystems.com" target="_blank" style="color: #fff;">Documentation Home</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/avere-support" target="_blank" style="color: #fff;">Contact Support</a></strong>
+				</li>
+				<li><strong><a href="http://www.averesystems.com/about-us/contact-us" target="_blank" style="color: #fff;">Contact Sales</a></strong>
+				</li>
+			</ul>
+</div>
+
+
+
+<div style="color:#fff; padding-bottom:8px; padding-left:10px;">2017 Avere. All Rights Reserved. | <a href="http://www.averesystems.com/privacy-policy" style="color:#fff;">Privacy Policy</a> | <a href="http://www.averesystems.com/terms-of-use" style="color:#fff;">Terms of Use</a> 
+</div>
+</div>
+</div>
+
+
+  </body>
+</html>
