@@ -149,7 +149,8 @@ func InitializeBlobContainer(ctx context.Context, storageAccount string, storage
 		return nil, err
 	}
 
-	p := azblob.NewSuperPipeline(credential, azblob.PipelineOptions{}, AnthonyBernieDefaultHTTPClientFactory())
+	//p := azblob.NewSuperPipeline(credential, azblob.PipelineOptions{}, AnthonyBernieDefaultHTTPClientFactory())
+	p := azblob.NewPipeline(credential, azblob.PipelineOptions{})
 
 	u, _ := url.Parse(fmt.Sprintf(productionBlobURLTemplate, storageAccount))
 
