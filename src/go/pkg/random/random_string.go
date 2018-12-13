@@ -3,8 +3,6 @@ package random
 import (
 	"math/rand"
 	"time"
-
-	"github.com/Azure/Avere/src/go/pkg/log"
 )
 
 func init() {
@@ -21,10 +19,6 @@ const (
 // RandStringRunes returns a random string of size byteCount
 // implementation derived from https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-go
 func RandStringRunes(byteCount int) string {
-	start := time.Now()
-	defer func() {
-		log.Info.Printf("RandStringRunes took %v", time.Now().Sub(start))
-	}()
 	b := make([]byte, byteCount)
 	// A rand.Int63() generates 63 random bits, enough for letterIdxMax letters!
 	for i, cache, remain := byteCount-1, rand.Int63(), letterIdxMax; i >= 0; {
