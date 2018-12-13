@@ -83,7 +83,7 @@ func (b *BlobUploader) Run(syncWaitGroup *sync.WaitGroup) {
 			return
 		case b.uploadBytesChannel <- b.BlobSizeBytes:
 			dispatchedCount++
-		case msg := <-b.uploadBytesChannel:
+		case msg := <-b.successChannel:
 			b.BlobsUploaded++
 			b.BytesUploaded += msg
 		case <-b.failureChannel:
@@ -94,7 +94,7 @@ func (b *BlobUploader) Run(syncWaitGroup *sync.WaitGroup) {
 	// wait for completion
 	for {
 		select {
-		case msg := <-b.uploadBytesChannel:
+		case msg := <-b.successChannel:
 			b.BlobsUploaded++
 			b.BytesUploaded += msg
 		case <-b.failureChannel:
@@ -109,9 +109,10 @@ func (b *BlobUploader) Run(syncWaitGroup *sync.WaitGroup) {
 
 // StartBlobUploader starts the blob uploader
 func (b *BlobUploader) StartBlobUploader(syncWaitGroup *sync.WaitGroup) {
+	start := time.Now()
 	defer syncWaitGroup.Done()
 	log.Info.Printf("[StartBlobUploader")
-	defer log.Info.Printf("completed StartBlobUploader]")
+	defer log.Info.Printf("completed StartBlobUploader (delta %v)]", time.Now().Sub(start))
 
 	for {
 		// handle the messages
@@ -167,7 +168,7 @@ func (b *BlobUploader) uploadBlob(bytes int64) {
 		select {
 		case <-b.Context.Done():
 			return
-		case b.uploadBytesChannel <- bytes:
+		case b.successChannel <- bytes:
 		}
 	}
 }
