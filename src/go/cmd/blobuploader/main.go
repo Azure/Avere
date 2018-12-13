@@ -112,7 +112,9 @@ func (b *BlobUploader) StartBlobUploader(syncWaitGroup *sync.WaitGroup) {
 	start := time.Now()
 	defer syncWaitGroup.Done()
 	log.Info.Printf("[StartBlobUploader")
-	defer log.Info.Printf("completed StartBlobUploader (delta %v)]", time.Now().Sub(start))
+	defer func() {
+		log.Info.Printf("completed StartBlobUploader (delta %v)]", time.Now().Sub(start))
+	}()
 
 	for {
 		// handle the messages
