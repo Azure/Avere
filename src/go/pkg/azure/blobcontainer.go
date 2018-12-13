@@ -177,8 +177,10 @@ func InitializeBlobContainer(ctx context.Context, storageAccount string, storage
 
 // UploadBlob uploads the blob to the container
 func (b *BlobContainer) UploadBlob(blobname string, data []byte) error {
+	start := time.Now()
 	log.Info.Printf("[Upload Bob %s", blobname)
-	defer log.Info.Printf("Upload Bob %s]", blobname)
+	defer log.Info.Printf("Upload Bob %s (delta %v)]", blobname, time.Now().Sub(start))
+
 	blobURL := b.ContainerURL.NewBlockBlobURL(blobname)
 	if _, err := azblob.UploadBufferToBlockBlob(b.Context, data, blobURL, azblob.UploadToBlockBlobOptions{}); err != nil {
 		log.Error.Printf("encountered error uploading blob '%s': '%v'", blobname, err)
