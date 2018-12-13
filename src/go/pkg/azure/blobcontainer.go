@@ -179,7 +179,6 @@ func InitializeBlobContainer(ctx context.Context, storageAccount string, storage
 // UploadBlob uploads the blob to the container
 func (b *BlobContainer) UploadBlob(blobname string, data []byte) error {
 	start := time.Now()
-	log.Info.Printf("[Upload Bob %s", blobname)
 	defer func() {
 		log.Info.Printf("Upload Bob %s (delta %v)]", blobname, time.Now().Sub(start))
 	}()
