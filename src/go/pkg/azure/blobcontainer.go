@@ -3,11 +3,15 @@ package azure
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"regexp"
+	"time"
 
 	"github.com/Azure/Avere/src/go/pkg/log"
+	"github.com/Azure/azure-pipeline-go/pipeline"
 	"github.com/Azure/azure-storage-blob-go/azblob"
 )
 
@@ -49,6 +53,93 @@ func ValidateContainerName(containerName string) (bool, string) {
 	return true, ""
 }
 
+func getCustomHTTPClient() *http.Client {
+	/*proxyURL, err := url.Parse("http://127.0.0.1:8888")
+	if err != nil {
+		log.Fatal(err)
+	}*/
+
+	AnthonyBernieDialer := func(network, addr string) (net.Conn, error) {
+		log.Info.Printf("[AnthonyBernieDialier %s, %s", network, addr)
+		defer log.Info.Printf("AnthonyBernieDialier]")
+		/*ipAddr, err := net.ResolveIPAddr(network, addr)
+		if err != nil {
+			return nil, err
+		}
+		ipconn, err := net.DialIP(network, nil, ipAddr)
+		if err != nil {
+			return nil, err
+		}
+		if err := ipconn.SetWriteBuffer(8454144); err != nil {
+			return nil, err
+		}
+		return ipconn, nil*/
+		tcpAddr, err := net.ResolveTCPAddr(network, addr)
+		if err != nil {
+			return nil, err
+		}
+		tcpconn, err := net.DialTCP(network, nil, tcpAddr)
+		if err != nil {
+			return nil, err
+		}
+		if err := tcpconn.SetWriteBuffer(8454144); err != nil {
+			return nil, err
+		}
+		return tcpconn, nil
+
+		/*conn, err := (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).Dial(network, addr)
+
+		if err != nil {
+			return conn, err
+		}
+
+		ipconn := conn.(net.IPConn)*/
+		/*ipconn := &net.IPConn{
+			conn: conn,
+		}*/
+
+	}
+	log.Info.Printf("using the AnthonyBernieDialier")
+	// We want the Transport to have a large connection pool
+	return &http.Client{
+		Transport: &http.Transport{
+			//Proxy: http.ProxyURL(proxyURL),
+			// We use Dial instead of DialContext as DialContext has been reported to cause slower performance.
+			Dial /*Context*/ :      AnthonyBernieDialer, /*Context*/
+			MaxIdleConns:           0,                   // No limit
+			MaxIdleConnsPerHost:    100,
+			IdleConnTimeout:        90 * time.Second,
+			TLSHandshakeTimeout:    10 * time.Second,
+			ExpectContinueTimeout:  1 * time.Second,
+			DisableKeepAlives:      false,
+			DisableCompression:     false,
+			MaxResponseHeaderBytes: 0,
+			//ResponseHeaderTimeout:  time.Duration{},
+			//ExpectContinueTimeout:  time.Duration{},
+		},
+	}
+}
+
+var pipelineHTTPClient = getCustomHTTPClient()
+
+// AnthonyBernieDefaultHTTPClientFactory creates a DefaultHTTPClientPolicyFactory object that sends HTTP requests to a Go's default http.Client.
+func AnthonyBernieDefaultHTTPClientFactory() pipeline.Factory {
+	return pipeline.FactoryFunc(func(next pipeline.Policy, po *pipeline.PolicyOptions) pipeline.PolicyFunc {
+		return func(ctx context.Context, request pipeline.Request) (pipeline.Response, error) {
+			//r, err := newDefaultHTTPClient().Do(request.WithContext(ctx))
+			r, err := pipelineHTTPClient.Do(request.WithContext(ctx))
+			if err != nil {
+				err = pipeline.NewError(err, "HTTP request failed")
+			}
+			return pipeline.NewHTTPResponse(r), err
+		}
+	})
+}
+
 // InitializeBlob creates a Blob to represent the Azure Storage Queue
 func InitializeBlobContainer(ctx context.Context, storageAccount string, storageAccountKey string, containerName string) (*BlobContainer, error) {
 
@@ -58,7 +149,7 @@ func InitializeBlobContainer(ctx context.Context, storageAccount string, storage
 		return nil, err
 	}
 
-	p := azblob.NewPipeline(credential, azblob.PipelineOptions{})
+	p := azblob.NewSuperPipeline(credential, azblob.PipelineOptions{}, AnthonyBernieDefaultHTTPClientFactory())
 
 	u, _ := url.Parse(fmt.Sprintf(productionBlobURLTemplate, storageAccount))
 
@@ -68,6 +159,7 @@ func InitializeBlobContainer(ctx context.Context, storageAccount string, storage
 	containerURL := serviceURL.NewContainerURL(containerName)
 
 	// create the container if it does not already exist
+	log.Info.Printf("trying to create blob container '%s'", containerName)
 	if containerCreateResponse, err := containerURL.Create(ctx, azblob.Metadata{}, azblob.PublicAccessNone); err != nil {
 		if serr, ok := err.(azblob.StorageError); !ok || serr.ServiceCode() != azblob.ServiceCodeContainerAlreadyExists {
 			log.Error.Printf("error encountered: %v", serr.ServiceCode())
@@ -85,6 +177,8 @@ func InitializeBlobContainer(ctx context.Context, storageAccount string, storage
 
 // UploadBlob uploads the blob to the container
 func (b *BlobContainer) UploadBlob(blobname string, data []byte) error {
+	log.Info.Printf("[Upload Bob %s", blobname)
+	defer log.Info.Printf("Upload Bob %s]", blobname)
 	blobURL := b.ContainerURL.NewBlockBlobURL(blobname)
 	if _, err := azblob.UploadBufferToBlockBlob(b.Context, data, blobURL, azblob.UploadToBlockBlobOptions{}); err != nil {
 		log.Error.Printf("encountered error uploading blob '%s': '%v'", blobname, err)
