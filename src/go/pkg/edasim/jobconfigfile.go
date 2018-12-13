@@ -71,7 +71,7 @@ func (j *JobConfigFile) WriteJobConfigFile(writer *file.ReaderWriter, filepath s
 	}
 
 	// pad and re-martial to match the bytes
-	padLength := (KB * 384) - len(data)
+	padLength := (KB * fileSize) - len(data)
 	if padLength > 0 {
 		j.PaddedString = random.RandStringRunes(padLength)
 		data, err = json.Marshal(j)
