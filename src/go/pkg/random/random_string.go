@@ -1,8 +1,11 @@
 package random
 
 import (
+	crand "crypto/rand"
 	"math/rand"
 	"time"
+
+	"github.com/Azure/Avere/src/go/pkg/log"
 )
 
 func init() {
@@ -16,9 +19,9 @@ const (
 	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
 )
 
-// RandStringRunes returns a random string of size byteCount
+// RandStringRunesSlow returns a random string of size byteCount
 // implementation derived from https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-go
-func RandStringRunes(byteCount int) string {
+func RandStringRunesSlow(byteCount int) string {
 	b := make([]byte, byteCount)
 	// A rand.Int63() generates 63 random bits, enough for letterIdxMax letters!
 	for i, cache, remain := byteCount-1, rand.Int63(), letterIdxMax; i >= 0; {
@@ -33,5 +36,15 @@ func RandStringRunes(byteCount int) string {
 		remain--
 	}
 
+	return string(b)
+}
+
+// RandStringRunesFast returns a random string of size byteCount
+func RandStringRunesFast(byteCount int) string {
+	b := make([]byte, byteCount)
+	if _, err := crand.Read(b); err != nil {
+		log.Error.Printf("RandStringRunesFast failed with error %v", err)
+		return RandStringRunesSlow(byteCount)
+	}
 	return string(b)
 }
