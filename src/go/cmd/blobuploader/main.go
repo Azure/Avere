@@ -155,7 +155,7 @@ func (b *BlobUploader) uploadBlob(bytes int64) {
 	// pad and re-martial to match the bytes
 	padLength := bytes - int64(len(data))
 	if padLength > 0 {
-		blobContents.PaddedString = random.RandStringRunes(int(padLength))
+		blobContents.PaddedString = random.RandStringRunesFast(int(padLength))
 		data, err = json.Marshal(blobContents)
 		if err != nil {
 			log.Error.Printf("error encountered marshalling blob %v", err)

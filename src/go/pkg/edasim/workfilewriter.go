@@ -74,7 +74,7 @@ func (w *WorkFileWriter) WriteStartFiles(writer *file.ReaderWriter, filepath str
 	// pad and re-martial to match the bytes
 	padLength := (KB * fileSize) - len(data)
 	if padLength > 0 {
-		w.PaddedString = random.RandStringRunes(padLength)
+		w.PaddedString = random.RandStringRunesFast(padLength)
 		data, err = json.Marshal(w)
 		if err != nil {
 			return err
