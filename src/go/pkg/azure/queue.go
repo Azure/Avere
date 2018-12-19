@@ -53,7 +53,12 @@ func ValidateQueueName(queueName string) (bool, string) {
 // InitializeQueue creates a Queue to represent the Azure Storage Queue
 func InitializeQueue(ctx context.Context, storageAccount string, storageAccountKey string, queueName string) *Queue {
 
-	credential := azqueue.NewSharedKeyCredential(storageAccount, storageAccountKey)
+	credential, err := azqueue.NewSharedKeyCredential(storageAccount, storageAccountKey)
+
+	if err != nil {
+		log.Error.Printf("unable to get the credentials: %v", err)
+		panic(err)
+	}
 
 	p := azqueue.NewPipeline(credential, azqueue.PipelineOptions{})
 
