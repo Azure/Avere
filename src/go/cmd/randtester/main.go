@@ -23,7 +23,7 @@ func main() {
 			defer syncWaitGroup.Done()
 			for j := 0; j < numberOfRand; j++ {
 				//_ = random.RandStringRunesSlow(8192 * 1024)
-				_ = random.RandStringRunesFast(8192 * 1024)
+				_ = random.RandStringRunesUltraFast(8192)
 			}
 		}()
 	}
@@ -31,7 +31,7 @@ func main() {
 	log.Info.Printf("Waiting for all processes to finish")
 	syncWaitGroup.Wait()
 
-	log.Info.Printf("%s", random.RandStringRunesFast(1024))
+	log.Info.Printf("%s", random.RandStringRunesUltraFast(1))
 
 	log.Info.Printf("finished")
 }
