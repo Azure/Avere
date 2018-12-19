@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Azure/Avere/src/go/pkg/log"
-	"github.com/Azure/azure-storage-queue-go/2017-07-29/azqueue"
+	"github.com/Azure/azure-storage-queue-go/azqueue"
 )
 
 const (
@@ -19,7 +19,7 @@ const (
 )
 
 // Queue represents a single azure storage queue
-// The implementation has been influenced by https://github.com/Azure/azure-storage-queue-go/blob/master/2017-07-29/azqueue/zt_examples_test.go
+// The implementation has been influenced by https://github.com/Azure/azure-storage-queue-go/blob/master/azqueue/zt_examples_test.go
 type Queue struct {
 	MessagesURL azqueue.MessagesURL
 	Context     context.Context

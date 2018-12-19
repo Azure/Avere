@@ -6,10 +6,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Azure/azure-storage-queue-go/2017-07-29/azqueue"
 	"github.com/Azure/Avere/src/go/pkg/azure"
 	"github.com/Azure/Avere/src/go/pkg/file"
 	"github.com/Azure/Avere/src/go/pkg/log"
+	"github.com/Azure/azure-storage-queue-go/azqueue"
 )
 
 const (
@@ -88,7 +88,7 @@ func (o *Orchestrator) Run(syncWaitGroup *sync.WaitGroup) {
 	go StatsCollector(o.Context, syncWaitGroup)
 
 	// start the ready queue listener and its workers
-	// this uses the example from here: https://github.com/Azure/azure-storage-queue-go/blob/master/2017-07-29/azqueue/zt_examples_test.go
+	// this uses the example from here: https://github.com/Azure/azure-storage-queue-go/blob/master/azqueue/zt_examples_test.go
 	for i := 0; i < o.OrchestratorThreads; i++ {
 		syncWaitGroup.Add(1)
 		go o.StartJobWorker(syncWaitGroup)

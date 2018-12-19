@@ -33,13 +33,6 @@ rm go1.11.2.linux-amd64.tar.gz
 ```bash
 # apply fix for storage queue, remove following lines once fix #9 is committed
 cd $GOPATH
-go get -v github.com/Azure/azure-storage-queue-go/...
-cd $GOPATH/src/github.com/Azure/azure-storage-queue-go
-git remote add anhowe https://github.com/anhowe/azure-storage-queue-go.git
-git fetch anhowe
-git cherry-pick 88364b1a71e18053edd3af5c0c71b53bb8585feb
-# get the edasim
-cd $GOPATH
 go get -v github.com/Azure/Avere/src/go/...
 ```
 
