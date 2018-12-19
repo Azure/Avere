@@ -69,7 +69,7 @@ func (b *BlobUploader) Run(syncWaitGroup *sync.WaitGroup) {
 	b.Context, cancel = context.WithCancel(b.Context)
 
 	// start the ready queue listener and its workers
-	// this uses the example from here: https://github.com/Azure/azure-storage-queue-go/blob/master/2017-07-29/azqueue/zt_examples_test.go
+	// this uses the example from here: https://github.com/Azure/azure-storage-queue-go/blob/master/azqueue/zt_examples_test.go
 	for i := 0; i < b.ThreadCount; i++ {
 		syncWaitGroup.Add(1)
 		go b.StartBlobUploader(syncWaitGroup)
