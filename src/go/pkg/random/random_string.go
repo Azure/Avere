@@ -1,8 +1,11 @@
 package random
 
 import (
+	crand "crypto/rand"
 	"math/rand"
 	"time"
+
+	"github.com/Azure/Avere/src/go/pkg/log"
 )
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -51,5 +54,15 @@ func RandStringRunesSlow(byteCount int) string {
 		remain--
 	}
 
+	return string(b)
+}
+
+// RandStringRunesFast returns a random string of size byteCount
+func RandStringRunesFast(byteCount int) string {
+	b := make([]byte, byteCount)
+	if _, err := crand.Read(b); err != nil {
+		log.Error.Printf("RandStringRunesFast failed with error %v", err)
+		return RandStringRunesSlow(byteCount)
+	}
 	return string(b)
 }
