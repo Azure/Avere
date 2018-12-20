@@ -15,6 +15,9 @@ steps:
     echo See https://aka.ms/yaml
     echo "try 1: $(azurepipelinesserviceprincipaltenantid)"
     echo "try 2: $MY_MAPPED_ENV_VAR"
+    echo "try 3: $(azurepipelinesserviceprincipaltenantidfoobar)"
+    echo "try 4: $MY_MAPPED_ENV_VAR_FOO"
   displayName: 'Run a multi-line script'
   env:
     MY_MAPPED_ENV_VAR: $(azurepipelinesserviceprincipaltenantid)
+    MY_MAPPED_ENV_VAR_FOO: $(azurepipelinesserviceprincipaltenantidfoobar)
