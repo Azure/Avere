@@ -16,6 +16,7 @@ steps:
   displayName: 'Run a multi-line script'
 
 - script: |
+    az account show || az login --service-principal -u $servicePrincipalAppId -p $servicePrincipalPassword --tenant $servicePrincipalTenant
     python --version
     python3 --version
     python3 src/template-testing/avere_template_deploy.py
