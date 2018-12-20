@@ -11,7 +11,7 @@ from string import ascii_lowercase, digits
 # GLOBAL VARIABLES ############################################################
 
 DEBUG = 0
-ECHO_AZ_CMDS = True
+ECHO_AZ_CMDS = False
 
 ORIG_DIR = os.getcwd()
 
@@ -38,7 +38,7 @@ def create_resource_group(loc=LOCATION):
 
 def deploy_template():
     print("> Deploying template")
-    cmd = """az group deployment create --debug
+    cmd = """az group deployment create
     --resource-group {0}
     --template-file {1}/azuredeploy-auto.json
     --parameters
