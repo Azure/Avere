@@ -16,7 +16,9 @@ steps:
   displayName: 'Run a multi-line script'
 
 - script: |
-    python src/template-testing/avere_template_deploy.py
+    python --version
+    python3 --version
+    python3 src/template-testing/avere_template_deploy.py
   displayName: 'Run a python script'
   env:
     servicePrincipalTenant: $(azurepipelinesserviceprincipaltenantid)
