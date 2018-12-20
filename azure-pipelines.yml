@@ -16,7 +16,7 @@ steps:
   displayName: 'Run a multi-line script'
 
 - script: |
-    az account show || az login --service-principal -u $SP_APPID -p $SP_PW --tenant $SP_TENANTID
+    az login --service-principal -u $SP_APPID -p $SP_PW --tenant $SP_TENANTID
     python3 --version
     python3 src/template-testing/avere_template_deploy.py
   displayName: 'Run a python script'
