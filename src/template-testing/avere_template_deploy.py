@@ -11,7 +11,7 @@ from string import ascii_lowercase, digits
 # GLOBAL VARIABLES ############################################################
 
 DEBUG = 0
-ECHO_AZ_CMDS = False
+ECHO_AZ_CMDS = True
 
 ORIG_DIR = os.getcwd()
 
@@ -32,8 +32,7 @@ def download_template():
 def create_resource_group(loc=LOCATION):
     global RG_CREATED
     print("> Creating resource group: " + RG_NAME)
-    _run_az_cmd("az group create --name {} --location {}".format(RG_NAME, loc),
-        logfile="{}/az_cmds.create_rg.log".format(ORIG_DIR))
+    _run_az_cmd("az group create --name {} --location {}".format(RG_NAME, loc))
     RG_CREATED = True
 
 def deploy_template():
@@ -63,13 +62,12 @@ def deploy_template():
                 os.environ["servicePrincipalAppId"],
                 os.environ["servicePrincipalPassword"])
 
-    _run_az_cmd(cmd, logfile="{}/az_cmds.deploy_template.log".format(ORIG_DIR))
+    _run_az_cmd(cmd)
 
 def cleanup():
     if RG_CREATED:
         print("> Deleting resource group: " + RG_NAME)
-        _run_az_cmd("az group delete --yes --name %s" % RG_NAME,
-            logfile="{}/az_cmds.delete_rg.log".format(ORIG_DIR))
+        _run_az_cmd("az group delete --yes --name %s" % RG_NAME)
 
     print("> Removing temp directory")
     os.chdir(ORIG_DIR)
@@ -77,20 +75,14 @@ def cleanup():
 
 # HELPER FUNCTIONS ############################################################
 
-def _run_az_cmd(_cmd, logfile="{}/az_cmds.log".format(ORIG_DIR)):
+def _run_az_cmd(_cmd):
     if ECHO_AZ_CMDS:
         cmd = ["echo", "'" + _cmd + "'"]
     else:
         cmd = _cmd.split()
 
-    _debug("cmd = {}".format(cmd))
     sys.stdout.flush()
-    with subprocess.Popen(cmd, bufsize=1,
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as proc, \
-        open(logfile, "ab") as file:
-        for line in proc.stdout:
-            sys.stdout.buffer.write(line)
-            file.write(line)
+    subprocess.check_call(cmd, stderr=subprocess.STDOUT)
 
 def _debug(s):
     if DEBUG:
