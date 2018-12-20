@@ -22,5 +22,8 @@ steps:
     pwd
   displayName: 'Run a multi-line script'
   env:
-    MY_MAPPED_ENV_VAR: $(azurepipelinesserviceprincipaltenantid)
-    MY_MAPPED_ENV_VAR_FOO: $(azurepipelinesserviceprincipaltenantidfoobar)
+    servicePrincipalTenant: $(azurepipelinesserviceprincipaltenantid)
+    servicePrincipalAppId: $(azurepipelinesserviceprincipalappid)
+    servicePrincipalPassword: $(azurepipelinesserviceprincipalsecret)
+    adminPassword: $(controllerpassword)
+    controllerPassword: $(controllerpassword)
