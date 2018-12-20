@@ -18,6 +18,8 @@ steps:
     echo "try 3: $(azurepipelinesserviceprincipaltenantidfoobar)"
     echo "try 4: $MY_MAPPED_ENV_VAR_FOO"
     echo "script: python src/template-testing/avere_template_deploy.py" 
+    ls
+    pwd
   displayName: 'Run a multi-line script'
   env:
     MY_MAPPED_ENV_VAR: $(azurepipelinesserviceprincipaltenantid)
