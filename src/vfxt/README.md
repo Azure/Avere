@@ -72,9 +72,9 @@ az ad sp create-for-rbac --role="Avere Cluster Create" --scopes="/subscriptions/
 
 If you already have a service principal to be used with password credential or missed the output with necessary information created in this step, please use the steps outlined [here](./recover_sp_information.md) to recover the information and add a new password.
 
-7. Deploy the script using the following "deploy to Azure" button:
+7. Deploy the script using the following "deploy to Azure" button (if the link doesn't work you need to be whitelisted, deploy azuredeploy-auto.json):
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fvfxt%2Fazuredeploy-auto.json" target="_blank">
+<a href="https://portal.azure.com/?pub_source=email&pub_status=success#create/microsoft-avere.vfxt-template-previewavere-vfxt-arm" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 
