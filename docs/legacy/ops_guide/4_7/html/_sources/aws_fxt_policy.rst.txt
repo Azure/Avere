@@ -46,8 +46,4 @@ Use the Security Credentials page in the AWS Management Console to
 generate an access key for the cluster to use when accessing the
 bucket. This key must be provided to the Avere Control Panel when
 adding the cloud core filer so that the Avere cluster can access the
-bucket.  [ xxx wait, is this different from the encryption key we
-create for the bucket during cloud core filer definition? xxx  ] [ xxx
-should this be in Security Credentials (root user) or in IAM (other
-user)? see https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-
-types.html xxx ]
+bucket. 
