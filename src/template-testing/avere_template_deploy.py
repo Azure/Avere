@@ -48,16 +48,21 @@ def deploy_template():
         avereBackedStorageAccountName={2}sa
         controllerName={2}-con
         controllerAuthenticationType=password
-        controllerPassword={3}
-        adminPassword={3}
-        servicePrincipalTenant={4}
-        servicePrincipalAppId={5}
-        servicePrincipalPassword={6}
-    """.format(RG_NAME, TMP_DIR, RANDOM_ID,
-            os.environ["adminPassword"],
-            os.environ["servicePrincipalTenant"],
-            os.environ["servicePrincipalAppId"],
-            os.environ["servicePrincipalPassword"])
+    """.format(RG_NAME, TMP_DIR, RANDOM_ID)
+
+    if not ECHO_AZ_CMDS:
+        cmd += """
+            controllerPassword={0}
+            adminPassword={1}
+            servicePrincipalTenant={2}
+            servicePrincipalAppId={3}
+            servicePrincipalPassword={4}
+        """.format(os.environ["controllerPassword"],
+                os.environ["adminPassword"],
+                os.environ["servicePrincipalTenant"],
+                os.environ["servicePrincipalAppId"],
+                os.environ["servicePrincipalPassword"])
+
     _run_az_cmd(cmd, logfile="{}/az_cmds.deploy_template.log".format(ORIG_DIR))
 
 def cleanup():
