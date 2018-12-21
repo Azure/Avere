@@ -28,6 +28,10 @@ steps:
 - bash: conda create --yes --quiet --name myEnvironment python=3.5 
   displayName: Create Anaconda environment
 
+- bash: |
+    source activate myEnvironment
+  displayName: 'activate env'  
+
 - script: python pip install --upgrade pip setuptools wheel
   displayName: 'Install tools'
 
@@ -44,7 +48,7 @@ steps:
     source activate myEnvironment
     pytest -m unit --junitxml=junit/unit-test.xml
   displayName: 'Unit tests'
-  
+
 - task: PublishTestResults@2
   condition: succeededOrFailed()
   inputs:
