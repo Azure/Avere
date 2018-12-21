@@ -22,12 +22,12 @@ steps:
     SP_APPID: $(SPAPPID)
     SP_PW: $(SPPW)
 
-- script: python3 -m pip install --upgrade pip setuptools wheel
+- script: python pip install --upgrade pip setuptools wheel
   displayName: 'Install tools'
 
 - script: |
-    python3 -m pip install pytest
-    python3 -m pip install pytest-cov
+    pip install pytest
+    pip install pytest-cov
     pytest test/test-sample.py --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
   displayName: 'Test with pytest'
 
