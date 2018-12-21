@@ -59,7 +59,12 @@ def deploy_template():
             os.environ['servicePrincipalAppId'],
             os.environ['servicePrincipalPassword'])
 
-    _run_az_cmd(cmd, sens_info)
+    # If this command fails, sensitive info could be in the traceback. So catch
+    # any exceptions and re-raise a generic exception instead.
+    try:
+        _run_az_cmd(cmd, sens_info)
+    except:
+        raise Exception('Deployment failed. See command output for details.') from None
 
 def cleanup(starting_dir):
     print('> Cleaning up')
