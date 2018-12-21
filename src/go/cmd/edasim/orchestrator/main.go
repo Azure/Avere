@@ -48,7 +48,7 @@ func initializeApplicationVariables(ctx context.Context) (*azure.EventHubSender,
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
 	var uniqueName = flag.String("uniqueName", "", "the unique name to avoid queue collisions")
 	var mountPathsCSV = flag.String("mountPathsCSV", "", "one mount paths separated by commas")
-	var orchestratorThreads = flag.Int("orchestratorThreads", edasim.DefaultOrchestratorThreads, "the number of concurrent orechestratorthreads")
+	var threadCount = flag.Int("threadCount", edasim.DefaultOrchestratorThreads, "the number of concurrent orchestratorthreads")
 
 	flag.Parse()
 
@@ -95,7 +95,7 @@ func initializeApplicationVariables(ctx context.Context) (*azure.EventHubSender,
 
 	azure.FatalValidateQueueName(*uniqueName)
 
-	if *orchestratorThreads < 0 {
+	if *threadCount < 0 {
 		fmt.Fprintf(os.Stderr, "ERROR: there must be at least 1 thread to orchestrate work")
 		usage()
 		os.Exit(1)
@@ -114,7 +114,7 @@ func initializeApplicationVariables(ctx context.Context) (*azure.EventHubSender,
 		storageKey,
 		*uniqueName,
 		mountPaths,
-		*orchestratorThreads)
+		*threadCount)
 }
 
 func main() {
