@@ -30,3 +30,14 @@ steps:
     SP_APPID: $(SPAPPID)
     SP_PW: $(SPPW)
 
+- script: |
+    pip install pytest
+    pip install pytest-cov
+    pytest test/test-sample.py --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
+  displayName: 'Test with pytest'
+
+- task: PublishTestResults
+  condition: succeededOrFailed()
+  inputs:
+    testResultsFiles: 'junit/test-results.xml'
+    testRunTitle: 'Publish test results for Python $(python.version)'
