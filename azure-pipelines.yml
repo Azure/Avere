@@ -18,7 +18,7 @@ steps:
 - script: |
     az login --service-principal -u $SP_APPID -p $SP_PW --tenant $SP_TENANTID
     python3 --version
-    python3 test/avere_template_deploy.py
+    python3 test/avere_template_deploy.py -p
   displayName: 'Run a python script'
   env:
     servicePrincipalTenant: $(azurepipelinesserviceprincipaltenantid)
