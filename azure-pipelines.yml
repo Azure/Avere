@@ -22,8 +22,17 @@ steps:
     SP_APPID: $(SPAPPID)
     SP_PW: $(SPPW)
 
+- bash: echo "##vso[task.prependpath]/usr/share/miniconda/bin"
+  displayName: Add conda to PATH
+
+- bash: conda create --yes --quiet --name myEnvironment python=3.5 
+  displayName: Create Anaconda environment
+
 - script: python pip install --upgrade pip setuptools wheel
   displayName: 'Install tools'
+
+- script: conda install -n myEnvironment scipy
+  displayName: 'Install conda libraries'
 
 - script: |
     pip install pytest
@@ -31,6 +40,11 @@ steps:
     pytest test/test-sample.py --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
   displayName: 'Test with pytest'
 
+- bash: |
+    source activate myEnvironment
+    pytest -m unit --junitxml=junit/unit-test.xml
+  displayName: 'Unit tests'
+  
 - task: PublishTestResults@2
   condition: succeededOrFailed()
   inputs:
