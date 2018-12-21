@@ -25,14 +25,9 @@ steps:
 - bash: echo "##vso[task.prependpath]/usr/share/miniconda/bin"
   displayName: Add conda to PATH
 
-- bash: conda create --yes --quiet --name myEnvironment python=3.5 
-  displayName: Create Anaconda environment
-
 - bash: |
-    source activate myEnvironment
-    python pip install --upgrade pip setuptools wheel
-    conda install -n myEnvironment scipy
-  displayName: 'activate env, install tools, install conda libraries'  
+    conda create --yes --quiet --name myEnvironment python=3.5 
+  displayName: Create Anaconda environment 
 
 - script: |
     source activate myEnvironment
