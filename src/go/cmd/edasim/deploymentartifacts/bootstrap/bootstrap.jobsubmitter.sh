@@ -155,10 +155,10 @@ function configure_user() {
     JOBRUN_SCRIPT="${AZURE_HOME_DIR}/jobrun.sh"
     /bin/cat <<EOM >$JOBRUN_SCRIPT
 #!/bin/bash
-if [ "$#" -ne 1 ]; then
+if [ "\$#" -ne 1 ]; then
     echo "ERROR missing a job run name, use a different job run for each run"
     echo ""
-    echo "usage: $0 JOB_RUN_NAME"
+    echo "usage: \$0 JOB_RUN_NAME"
     exit 1
 fi
 jobrun -uniqueName=\$UNIQUE_NAME \\
