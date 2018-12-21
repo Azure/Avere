@@ -56,7 +56,6 @@ The eda simulator will automatically create the necessary queues.
 ## Event Hub Preparation
 
  1. use the portal or cloud shell to create an "Event Hubs Namespace" Resource with Pricing Tier "Standard" resource in the same region as the vFXT.  For this example, we created `edasimeventhub`
- 1. once created, browse to the "Event Hubs Namespace" in the portal and click "+Event Hub" to add an event hub keeping the defaults of 2 partition counts and 1 day message retention.  For this example, we created event hub `edasim`
  1. once created, browse to "Shared Access Policies", click on "RootManageSharedAccessKey" and copy the primary key
  1. next you will need to set your environment variables with everything you just created:
 
@@ -64,7 +63,6 @@ The eda simulator will automatically create the necessary queues.
 export AZURE_EVENTHUB_SENDERKEYNAME="RootManageSharedAccessKey"
 export AZURE_EVENTHUB_SENDERKEY="PASTE_SENDER_KEY_HERE"
 export AZURE_EVENTHUB_NAMESPACENAME="edasimeventhub"
-export AZURE_EVENTHUB_HUBNAME="edasim"
 ```
 
 ## Build Environment String
@@ -72,7 +70,7 @@ export AZURE_EVENTHUB_HUBNAME="edasim"
 Using the storage and event hub values above, build a one line string to be used later in deployment:
 
 ```bash
-AZURE_STORAGE_ACCOUNT=YOUR_STORAGE_ACCOUNT AZURE_STORAGE_ACCOUNT_KEY="YOUR_STORAGE_ACCOUNT_KEY" AZURE_EVENTHUB_SENDERKEYNAME="RootManageSharedAccessKey" AZURE_EVENTHUB_SENDERKEY="PASTE_SENDER_KEY_HERE" AZURE_EVENTHUB_NAMESPACENAME="edasimeventhub" AZURE_EVENTHUB_HUBNAME="edasim"
+AZURE_STORAGE_ACCOUNT=YOUR_STORAGE_ACCOUNT AZURE_STORAGE_ACCOUNT_KEY="YOUR_STORAGE_ACCOUNT_KEY" AZURE_EVENTHUB_SENDERKEYNAME="RootManageSharedAccessKey" AZURE_EVENTHUB_SENDERKEY="PASTE_SENDER_KEY_HERE" AZURE_EVENTHUB_NAMESPACENAME="edasimeventhub"
 ```
 
 ## Deployment of Avere vFXT
@@ -122,7 +120,7 @@ These deployment instructions describe the installation of all components requir
     # download the rsyslog scripts
     mkdir /nfs/node0/bootstrap/rsyslog
     cd /nfs/node0/bootstrap/rsyslog
-    curl --retry 5 --retry-delay 5 -o 33-jobsubmitter.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/33-jobsubmitter.conf.conf    
+    curl --retry 5 --retry-delay 5 -o 33-jobsubmitter.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/33-jobsubmitter.conf
     curl --retry 5 --retry-delay 5 -o 30-orchestrator.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/30-orchestrator.conf
     curl --retry 5 --retry-delay 5 -o 31-worker.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/31-worker.conf
     curl --retry 5 --retry-delay 5 -o 32-onpremjobuploader.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/32-onpremjobuploader.conf

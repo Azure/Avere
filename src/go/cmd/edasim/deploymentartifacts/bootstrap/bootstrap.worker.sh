@@ -45,7 +45,7 @@ function mount_avere() {
         echo "Mounting to ${VFXT}:${NFS_PATH} to ${MOUNT_POINT}"
         mkdir -p $MOUNT_POINT
         # no need to write again if it is already there
-        if grep -F --quiet "$VFXT" /etc/fstab; then
+        if grep -F --quiet "${VFXT}:${NFS_PATH}    ${MOUNT_POINT}" /etc/fstab; then
             echo "not updating file, already there"
         else
             echo "${VFXT}:${NFS_PATH}    ${MOUNT_POINT}    nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0" >> /etc/fstab
@@ -91,7 +91,6 @@ AZURE_STORAGE_ACCOUNT_KEY="$(remove_quotes $AZURE_STORAGE_ACCOUNT_KEY)"
 AZURE_EVENTHUB_SENDERKEYNAME=$AZURE_EVENTHUB_SENDERKEYNAME
 AZURE_EVENTHUB_SENDERKEY="$(remove_quotes $AZURE_EVENTHUB_SENDERKEY)"
 AZURE_EVENTHUB_NAMESPACENAME=$AZURE_EVENTHUB_NAMESPACENAME
-AZURE_EVENTHUB_HUBNAME=$AZURE_EVENTHUB_HUBNAME
 EOM
     chmod 600 $ENVFILE
 

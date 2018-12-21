@@ -51,7 +51,7 @@ function mount_avere() {
         echo "Mounting to ${VFXT}:${NFS_PATH} to ${MOUNT_POINT}"
         mkdir -p $MOUNT_POINT
         # no need to write again if it is already there
-        if grep -F --quiet "$VFXT" /etc/fstab; then
+        if grep -F --quiet "${VFXT}:${NFS_PATH}    ${MOUNT_POINT}" /etc/fstab; then
             echo "not updating file, already there"
         else
             echo "${VFXT}:${NFS_PATH}    ${MOUNT_POINT}    nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0" >> /etc/fstab
@@ -159,22 +159,21 @@ if [ "$#" -ne 1 ]; then
     echo "ERROR missing a job run name, use a different job run for each run"
     echo ""
     echo "usage: $0 JOB_RUN_NAME"
+    exit 1
 fi
-jobrun -uniqueName=\$UNIQUE_NAME \
-    -jobRunName=$1 \
-    -batchCount=4 \
-    -deleteFiles=true \
-    -jobCount=3000 \
-    -workStartFileCount=3 \
-    -mountParity=true \
-    -jobFileConfigSizeKB=384 \
-    -workStartFileConfigSizeKB=384 \
-    -workStartFileCount=3 \
-    -workCompleteFileSizeKB=384 \
-    -workCompleteFailedFileSizeKB=1024 \
-    -workFailedProbability=0.01 \
-    -workCompleteFileCount=12 \
-    -deleteFiles= true
+jobrun -uniqueName=\$UNIQUE_NAME \\
+    -jobRunName=\$1 \\
+    -batchCount=4 \\
+    -deleteFiles=true \\
+    -jobCount=3000 \\
+    -mountParity=true \\
+    -jobFileConfigSizeKB=384 \\
+    -workStartFileConfigSizeKB=384 \\
+    -workStartFileCount=3 \\
+    -workCompleteFileSizeKB=384 \\
+    -workCompleteFailedFileSizeKB=1024 \\
+    -workFailedProbability=0.01 \\
+    -workCompleteFileCount=12
 EOM
     chown $LINUX_USER:$LINUX_USER $JOBRUN_SCRIPT
     chmod 755 $JOBRUN_SCRIPT

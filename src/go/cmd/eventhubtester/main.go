@@ -21,6 +21,7 @@ const (
 	millisecondsSleep        = 10
 	quitAfterInactiveSeconds = time.Duration(1) * time.Second
 	statsPrintRate           = time.Duration(5) * time.Second
+	AZURE_EVENTHUB_HUBNAME   = "AZURE_EVENTHUB_HUBNAME"
 )
 
 func usage(errs ...error) {
@@ -34,7 +35,7 @@ func usage(errs ...error) {
 	fmt.Fprintf(os.Stderr, "\t%s - azure event hub sender name\n", azure.AZURE_EVENTHUB_SENDERKEYNAME)
 	fmt.Fprintf(os.Stderr, "\t%s - azure event hub sender key\n", azure.AZURE_EVENTHUB_SENDERKEY)
 	fmt.Fprintf(os.Stderr, "\t%s - azure event hub namespace name\n", azure.AZURE_EVENTHUB_NAMESPACENAME)
-	fmt.Fprintf(os.Stderr, "\t%s - azure event hub name\n", azure.AZURE_EVENTHUB_HUBNAME)
+	fmt.Fprintf(os.Stderr, "\t%s - azure event hub name\n", AZURE_EVENTHUB_HUBNAME)
 	fmt.Fprintf(os.Stderr, "\n")
 	fmt.Fprintf(os.Stderr, "options:\n")
 	flag.PrintDefaults()
@@ -45,7 +46,7 @@ func verifyEnvVars() bool {
 	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_SENDERKEYNAME)
 	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_SENDERKEY)
 	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_NAMESPACENAME)
-	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_HUBNAME)
+	available = available && cli.VerifyEnvVar(AZURE_EVENTHUB_HUBNAME)
 	return available
 }
 
@@ -66,7 +67,7 @@ func testEventHub() {
 	eventHubSenderName := cli.GetEnv(azure.AZURE_EVENTHUB_SENDERKEYNAME)
 	eventHubSenderKey := cli.GetEnv(azure.AZURE_EVENTHUB_SENDERKEY)
 	eventHubNamespaceName := cli.GetEnv(azure.AZURE_EVENTHUB_NAMESPACENAME)
-	eventHubHubName := cli.GetEnv(azure.AZURE_EVENTHUB_HUBNAME)
+	eventHubHubName := cli.GetEnv(AZURE_EVENTHUB_HUBNAME)
 
 	// create the new event Hub name
 	log.Info.Printf("new event hub manager")
