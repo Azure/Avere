@@ -30,24 +30,16 @@ steps:
 
 - bash: |
     source activate myEnvironment
-  displayName: 'activate env'  
-
-- script: python pip install --upgrade pip setuptools wheel
-  displayName: 'Install tools'
-
-- script: conda install -n myEnvironment scipy
-  displayName: 'Install conda libraries'
+    python pip install --upgrade pip setuptools wheel
+    conda install -n myEnvironment scipy
+  displayName: 'activate env, install tools, install conda libraries'  
 
 - script: |
+    source activate myEnvironment
     pip install pytest
     pip install pytest-cov
     pytest test/test-sample.py --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
   displayName: 'Test with pytest'
-
-- bash: |
-    source activate myEnvironment
-    pytest -m unit --junitxml=junit/unit-test.xml
-  displayName: 'Unit tests'
 
 - task: PublishTestResults@2
   condition: succeededOrFailed()
