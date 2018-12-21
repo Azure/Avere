@@ -4,13 +4,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	l "log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/Azure/Avere/src/go/pkg/azure"
 	"github.com/Azure/Avere/src/go/pkg/cli"
-	"github.com/Azure/Avere/src/go/pkg/edasim"
-	"github.com/Azure/Avere/src/go/pkg/file"
 	"github.com/Azure/Avere/src/go/pkg/log"
 	"github.com/Azure/azure-amqp-common-go/persist"
 	"github.com/Azure/azure-amqp-common-go/sas"
@@ -19,7 +19,7 @@ import (
 
 const (
 	millisecondsSleep        = 10
-	quitAfterInactiveSeconds = time.Duration(5) * time.Second
+	quitAfterInactiveSeconds = time.Duration(1) * time.Second
 	statsPrintRate           = time.Duration(5) * time.Second
 )
 
@@ -28,14 +28,13 @@ func usage(errs ...error) {
 		fmt.Fprintf(os.Stderr, "error: %s\n\n", err.Error())
 	}
 	fmt.Fprintf(os.Stderr, "usage: %s [OPTIONS]\n", os.Args[0])
-	fmt.Fprintf(os.Stderr, "usage: %s\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "       write the job config file and posts to the queue\n")
 	fmt.Fprintf(os.Stderr, "\n")
 	fmt.Fprintf(os.Stderr, "required env vars:\n")
 	fmt.Fprintf(os.Stderr, "\t%s - azure event hub sender name\n", azure.AZURE_EVENTHUB_SENDERKEYNAME)
 	fmt.Fprintf(os.Stderr, "\t%s - azure event hub sender key\n", azure.AZURE_EVENTHUB_SENDERKEY)
 	fmt.Fprintf(os.Stderr, "\t%s - azure event hub namespace name\n", azure.AZURE_EVENTHUB_NAMESPACENAME)
-	fmt.Fprintf(os.Stderr, "\t%s - azure event hub hub name\n", azure.AZURE_EVENTHUB_HUBNAME)
+	fmt.Fprintf(os.Stderr, "\t%s - azure event hub name\n", azure.AZURE_EVENTHUB_HUBNAME)
 	fmt.Fprintf(os.Stderr, "\n")
 	fmt.Fprintf(os.Stderr, "options:\n")
 	flag.PrintDefaults()
@@ -46,13 +45,12 @@ func verifyEnvVars() bool {
 	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_SENDERKEYNAME)
 	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_SENDERKEY)
 	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_NAMESPACENAME)
+	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_HUBNAME)
 	return available
 }
 
-func initializeApplicationVariables() (string, string, string, string, string, string) {
+func testEventHub() {
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
-	var uniqueName = flag.String("uniqueName", "", "the unique name to avoid queue collisions")
-	var statsFilePath = flag.String("statsFilePath", "", "the stats file path")
 
 	flag.Parse()
 
@@ -68,112 +66,98 @@ func initializeApplicationVariables() (string, string, string, string, string, s
 	eventHubSenderName := cli.GetEnv(azure.AZURE_EVENTHUB_SENDERKEYNAME)
 	eventHubSenderKey := cli.GetEnv(azure.AZURE_EVENTHUB_SENDERKEY)
 	eventHubNamespaceName := cli.GetEnv(azure.AZURE_EVENTHUB_NAMESPACENAME)
+	eventHubHubName := cli.GetEnv(azure.AZURE_EVENTHUB_HUBNAME)
 
-	if len(*uniqueName) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: uniqueName is not specified\n")
-		usage()
-		os.Exit(1)
+	// create the new event Hub name
+	log.Info.Printf("new event hub manager")
+	connectionString := createHubConnectionString(eventHubSenderName, eventHubSenderKey, eventHubNamespaceName)
+	hubmanager, err := eventhubs.NewHubManagerFromConnectionString(connectionString)
+	if err != nil {
+		panic(err)
 	}
 
-	azure.FatalValidateQueueName(*uniqueName)
-
-	if len(*statsFilePath) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: statsFilePath is not specified\n")
-		usage()
-		os.Exit(1)
+	log.Info.Printf("new event hub %s", eventHubHubName)
+	if _, err = hubmanager.Put(context.Background(), eventHubHubName); err == nil {
+		log.Info.Printf("created event hub %s", eventHubHubName)
+	} else {
+		if strings.Contains(err.Error(), "409") {
+			log.Info.Printf("the event hub %s already exists", eventHubHubName)
+		} else {
+			panic(err)
+		}
 	}
 
-	if _, err := os.Stat(*statsFilePath); os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "ERROR: statsFilePath '%s' does not exist\n", *statsFilePath)
-		usage()
-		os.Exit(1)
-	} else if err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: error encountered with path '%s': %v\n", *statsFilePath, err)
-		usage()
-		os.Exit(1)
-	}
-
-	return *statsFilePath, eventHubSenderName, eventHubSenderKey, eventHubNamespaceName, edasim.GetEventHubName(*uniqueName), *uniqueName
-}
-
-func main() {
-	statsFilePath,
-		eventHubSenderName,
-		eventHubSenderKey,
-		eventHubNamespaceName,
-		eventHubHubName,
-		uniqueName := initializeApplicationVariables()
-
-	ioStatsCollector := file.InitializeIOStatsCollector(uniqueName)
-
+	log.Info.Printf("new token provider")
 	provider, err := sas.NewTokenProvider(sas.TokenProviderWithKey(eventHubSenderName, eventHubSenderKey))
 	if err != nil {
-		log.Error.Fatalf("failed to get token provider: %s\n", err)
+		panic(err)
 	}
 
-	// get an existing hub
+	log.Info.Printf("new hub %s, %s", eventHubNamespaceName, eventHubHubName)
 	hub, err := eventhubs.NewHub(eventHubNamespaceName, eventHubHubName, provider)
-	ctx := context.Background()
-	defer hub.Close(ctx)
 	if err != nil {
-		log.Error.Fatalf("failed to get hub: %s\n", err)
+		panic(err)
 	}
 
-	// get info about partitions in hub
-	info, err := hub.GetRuntimeInformation(ctx)
-	if err != nil {
-		log.Error.Fatalf("failed to get runtime info: %s\n", err)
+	log.Info.Printf("put a new event")
+	event := eventhubs.NewEvent([]byte(fmt.Sprintf("hello world %v", time.Now())))
+	if err := hub.Send(context.Background(), event); err != nil {
+		panic(err)
 	}
-	log.Info.Printf("partition IDs: %s\n", info.PartitionIDs)
 
 	// set up wait group to wait for expected message
 	eventReceived := make(chan struct{})
 
 	// declare handler for incoming events
 	handler := func(ctx context.Context, event *eventhubs.Event) error {
-		ioStatsCollector.RecordEvent(string(event.Data))
+		log.Info.Printf("received: %s\n", string(event.Data))
+		// notify channel that event was received
 		eventReceived <- struct{}{}
 		return nil
 	}
 
-	receiveOption := eventhubs.ReceiveWithStartingOffset(persist.StartOfStream)
+	info, err := hub.GetRuntimeInformation(context.Background())
+	if err != nil {
+		panic(err)
+	}
+
+	var receiveOption eventhubs.ReceiveOption
+	receiveOption = eventhubs.ReceiveWithStartingOffset(persist.StartOfStream)
 
 	for _, partitionID := range info.PartitionIDs {
 		_, err := hub.Receive(
-			ctx,
+			context.Background(),
 			partitionID,
 			handler,
 			receiveOption,
 		)
 		if err != nil {
-			log.Error.Fatalf("failed to receive for partition ID %s: %s\n", partitionID, err)
+			l.Fatalf("failed to receive for partition ID %s: %s\n", partitionID, err)
 		}
 	}
 
-	lastStatsOutput := time.Now()
 	lastEventReceived := time.Now()
-	ticker := time.NewTicker(time.Duration(millisecondsSleep) * time.Millisecond)
+	lastStatsOutput := time.Now()
+	ticker := time.NewTicker(time.Duration(10) * time.Millisecond)
 	defer ticker.Stop()
-	messagesProcessed := 0
 	for time.Since(lastEventReceived) <= quitAfterInactiveSeconds {
 		select {
 		case <-eventReceived:
 			lastEventReceived = time.Now()
-			messagesProcessed++
 		case <-ticker.C:
 			if time.Since(lastStatsOutput) > statsPrintRate {
 				lastStatsOutput = time.Now()
-				log.Info.Printf("event messages processed %d", messagesProcessed)
+				log.Info.Printf("still receiving events")
 			}
 		}
 	}
+}
 
-	log.Info.Printf("writing the files")
-	ioStatsCollector.WriteRAWFiles(statsFilePath, uniqueName)
+func createHubConnectionString(eventHubSenderName, eventHubSenderKey, eventHubNamespaceName string) string {
+	return fmt.Sprintf("Endpoint=sb://%s.servicebus.windows.net/;SharedAccessKeyName=%s;SharedAccessKey=%s", eventHubNamespaceName, eventHubSenderName, eventHubSenderKey)
+}
 
-	log.Info.Printf("writing the summary file")
-	ioStatsCollector.WriteBatchSummaryFiles(statsFilePath, uniqueName)
+func main() {
 
-	log.Info.Printf("writing the io summary files")
-	ioStatsCollector.WriteIOSummaryFiles(statsFilePath, uniqueName)
+	testEventHub()
 }

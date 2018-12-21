@@ -23,7 +23,7 @@ func InitializeReaderWriter(label string, profiler log.Profiler) *ReaderWriter {
 }
 
 // ReadFile reads the file bytes from the file name
-func (r *ReaderWriter) ReadFile(filename string, batchName string) ([]byte, error) {
+func (r *ReaderWriter) ReadFile(filename string, uniqueName string, runName string) ([]byte, error) {
 	start := time.Now()
 	startReadBytes := time.Time{}
 	startCloseFile := time.Time{}
@@ -32,7 +32,7 @@ func (r *ReaderWriter) ReadFile(filename string, batchName string) ([]byte, erro
 
 	f, err := os.Open(filename)
 	if err != nil {
-		r.submitIOStatistics(batchName, start, ReadOperation, filename, startReadBytes, startCloseFile, finish, NoIOBytes, err)
+		r.submitIOStatistics(uniqueName, runName, start, ReadOperation, filename, startReadBytes, startCloseFile, finish, NoIOBytes, err)
 		return nil, err
 	}
 
@@ -40,20 +40,20 @@ func (r *ReaderWriter) ReadFile(filename string, batchName string) ([]byte, erro
 	byteValue, err := ioutil.ReadAll(f)
 	if err != nil {
 		f.Close()
-		r.submitIOStatistics(batchName, start, ReadOperation, filename, startReadBytes, startCloseFile, finish, len(byteValue), err)
+		r.submitIOStatistics(uniqueName, runName, start, ReadOperation, filename, startReadBytes, startCloseFile, finish, len(byteValue), err)
 		return nil, err
 	}
 
 	startCloseFile = time.Now()
 	err = f.Close()
 	finish = time.Now()
-	r.submitIOStatistics(batchName, start, ReadOperation, filename, startReadBytes, startCloseFile, finish, len(byteValue), err)
+	r.submitIOStatistics(uniqueName, runName, start, ReadOperation, filename, startReadBytes, startCloseFile, finish, len(byteValue), err)
 
 	return byteValue, err
 }
 
 // WriteFile writes file bytes to the file
-func (r *ReaderWriter) WriteFile(filename string, data []byte, batchName string) error {
+func (r *ReaderWriter) WriteFile(filename string, data []byte, uniqueName string, runName string) error {
 	start := time.Now()
 	startWriteBytes := time.Time{}
 	startCloseFile := time.Time{}
@@ -61,7 +61,7 @@ func (r *ReaderWriter) WriteFile(filename string, data []byte, batchName string)
 
 	f, err := os.Create(filename)
 	if err != nil {
-		r.submitIOStatistics(batchName, start, WriteOperation, filename, startWriteBytes, startCloseFile, finish, NoIOBytes, err)
+		r.submitIOStatistics(uniqueName, runName, start, WriteOperation, filename, startWriteBytes, startCloseFile, finish, NoIOBytes, err)
 		return err
 	}
 
@@ -69,20 +69,21 @@ func (r *ReaderWriter) WriteFile(filename string, data []byte, batchName string)
 	bytesWritten, err := f.Write(data)
 	if err != nil {
 		f.Close()
-		r.submitIOStatistics(batchName, start, WriteOperation, filename, startWriteBytes, startCloseFile, finish, bytesWritten, err)
+		r.submitIOStatistics(uniqueName, runName, start, WriteOperation, filename, startWriteBytes, startCloseFile, finish, bytesWritten, err)
 		return err
 	}
 
 	startCloseFile = time.Now()
 	err = f.Close()
 	finish = time.Now()
-	r.submitIOStatistics(batchName, start, WriteOperation, filename, startWriteBytes, startCloseFile, finish, bytesWritten, err)
+	r.submitIOStatistics(uniqueName, runName, start, WriteOperation, filename, startWriteBytes, startCloseFile, finish, bytesWritten, err)
 
 	return err
 }
 
 func (r *ReaderWriter) submitIOStatistics(
-	batchName string,
+	uniqueName string,
+	runName string,
 	start time.Time,
 	op Operation,
 	path string,
@@ -113,7 +114,8 @@ func (r *ReaderWriter) submitIOStatistics(
 
 	ioStats := InitializeIOStatistics(
 		start,
-		batchName,
+		uniqueName,
+		runName,
 		r.label,
 		op,
 		path,

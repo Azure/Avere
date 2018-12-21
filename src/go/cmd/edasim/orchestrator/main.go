@@ -29,7 +29,6 @@ func usage(errs ...error) {
 	fmt.Fprintf(os.Stderr, "\t%s - azure event hub sender name\n", azure.AZURE_EVENTHUB_SENDERKEYNAME)
 	fmt.Fprintf(os.Stderr, "\t%s - azure event hub sender key\n", azure.AZURE_EVENTHUB_SENDERKEY)
 	fmt.Fprintf(os.Stderr, "\t%s - azure event hub namespace name\n", azure.AZURE_EVENTHUB_NAMESPACENAME)
-	fmt.Fprintf(os.Stderr, "\t%s - azure event hub hub name\n", azure.AZURE_EVENTHUB_HUBNAME)
 	fmt.Fprintf(os.Stderr, "\n")
 	fmt.Fprintf(os.Stderr, "options:\n")
 	flag.PrintDefaults()
@@ -42,25 +41,13 @@ func verifyEnvVars() bool {
 	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_SENDERKEYNAME)
 	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_SENDERKEY)
 	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_NAMESPACENAME)
-	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_HUBNAME)
 	return available
 }
 
 func initializeApplicationVariables(ctx context.Context) (*azure.EventHubSender, *edasim.Orchestrator) {
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
-	var jobReadyQueueName = flag.String("jobReadyQueueName", edasim.QueueJobReady, "the job read queue name")
-	var jobProcessQueueName = flag.String("jobProcessQueueName", edasim.QueueJobProcess, "the job process queue name")
-	var jobCompleteQueueName = flag.String("jobCompleteQueueName", edasim.QueueJobComplete, "the job completion queue name")
-	var uploaderQueueName = flag.String("uploaderQueueName", edasim.QueueUploader, "the uploader job queue name")
-
-	var jobStartFileConfigSizeKB = flag.Int("jobStartFileConfigSizeKB", edasim.DefaultFileSizeKB, "the job start file size in KB to write at start of job")
-	var jobStartFileCount = flag.Int("jobStartFileCount", edasim.DefaultJobStartFiles, "the count of start job files")
-	var jobStartFileBasePathCSV = flag.String("jobStartFileBasePathCSV", "", "one or more job file paths separated by commas, this is where the work files are written")
-	var jobCompleteFileSizeKB = flag.Int("jobCompleteFileSizeKB", 384, "the job complete file size in KB to write after job completed")
-	var jobCompleteFailedFileSizeKB = flag.Int("jobCompleteFailedFileSizeKB", 1024, "the job start file size in KB to write at start of job")
-	var jobFailedProbability = flag.Float64("jobFailedProbability", 0.01, "the probability of a job failure")
-	var jobCompleteFileCount = flag.Int("jobCompleteFileCount", 12, "the count of completed job files")
-
+	var uniqueName = flag.String("uniqueName", "", "the unique name to avoid queue collisions")
+	var mountPathsCSV = flag.String("mountPathsCSV", "", "one mount paths separated by commas")
 	var orchestratorThreads = flag.Int("orchestratorThreads", edasim.DefaultOrchestratorThreads, "the number of concurrent orechestratorthreads")
 
 	flag.Parse()
@@ -79,50 +66,54 @@ func initializeApplicationVariables(ctx context.Context) (*azure.EventHubSender,
 	eventHubSenderName := cli.GetEnv(azure.AZURE_EVENTHUB_SENDERKEYNAME)
 	eventHubSenderKey := cli.GetEnv(azure.AZURE_EVENTHUB_SENDERKEY)
 	eventHubNamespaceName := cli.GetEnv(azure.AZURE_EVENTHUB_NAMESPACENAME)
-	eventHubHubName := cli.GetEnv(azure.AZURE_EVENTHUB_HUBNAME)
 
-	if len(*jobStartFileBasePathCSV) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: jobStartFileBasePathCSV is not specified\n")
+	if len(*uniqueName) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: uniqueName is not specified\n")
 		usage()
 		os.Exit(1)
 	}
 
-	jobStartFilePaths := strings.Split(*jobStartFileBasePathCSV, ",")
-	for _, path := range jobStartFilePaths {
+	if len(*mountPathsCSV) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: mountPathsCSV is not specified\n")
+		usage()
+		os.Exit(1)
+	}
+
+	mountPaths := strings.Split(*mountPathsCSV, ",")
+
+	for _, path := range mountPaths {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
-			fmt.Fprintf(os.Stderr, "ERROR: jobStartFilePath '%s' does not exist\n", path)
+			fmt.Fprintf(os.Stderr, "ERROR: mountPath '%s' does not exist\n", path)
+			usage()
+			os.Exit(1)
+		} else if err != nil {
+			fmt.Fprintf(os.Stderr, "ERROR: error encountered with path '%s': %v\n", path, err)
 			usage()
 			os.Exit(1)
 		}
 	}
 
-	azure.FatalValidateQueueName(*jobReadyQueueName)
-	azure.FatalValidateQueueName(*jobProcessQueueName)
-	azure.FatalValidateQueueName(*jobCompleteQueueName)
-	azure.FatalValidateQueueName(*uploaderQueueName)
+	azure.FatalValidateQueueName(*uniqueName)
+
+	if *orchestratorThreads < 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: there must be at least 1 thread to orchestrate work")
+		usage()
+		os.Exit(1)
+	}
 
 	eventHub := edasim.InitializeReaderWriters(
 		ctx,
 		eventHubSenderName,
 		eventHubSenderKey,
 		eventHubNamespaceName,
-		eventHubHubName)
+		edasim.GetEventHubName(*uniqueName))
 
 	return eventHub, edasim.InitializeOrchestrator(
 		ctx,
 		storageAccount,
 		storageKey,
-		*jobReadyQueueName,
-		*jobProcessQueueName,
-		*jobCompleteQueueName,
-		*uploaderQueueName,
-		*jobStartFileConfigSizeKB,
-		*jobStartFileCount,
-		jobStartFilePaths,
-		*jobCompleteFileSizeKB,
-		*jobCompleteFailedFileSizeKB,
-		*jobFailedProbability,
-		*jobCompleteFileCount,
+		*uniqueName,
+		mountPaths,
 		*orchestratorThreads)
 }
 

@@ -14,23 +14,25 @@ import (
 type JobConfigFile struct {
 	Name           string
 	IsCompleteFile bool
+	JobRun         JobRun
 	PaddedString   string
 }
 
 // InitializeJobConfigFile sets the unique name of the job configuration and the batch name
-func InitializeJobConfigFile(name string) *JobConfigFile {
-	return initializeJobFile(name, false)
+func InitializeJobConfigFile(name string, jobRun *JobRun) *JobConfigFile {
+	return initializeJobFile(name, false, jobRun)
 }
 
 // InitializeJobCompleteFile sets the unique name of the job configuration and the batch name and is used to signify job completion
-func InitializeJobCompleteFile(name string) *JobConfigFile {
-	return initializeJobFile(name, true)
+func InitializeJobCompleteFile(name string, jobRun *JobRun) *JobConfigFile {
+	return initializeJobFile(name, true, jobRun)
 }
 
-func initializeJobFile(name string, isCompleteFile bool) *JobConfigFile {
+func initializeJobFile(name string, isCompleteFile bool, jobRun *JobRun) *JobConfigFile {
 	return &JobConfigFile{
 		Name:           name,
 		IsCompleteFile: isCompleteFile,
+		JobRun:         *jobRun,
 	}
 }
 
@@ -38,7 +40,8 @@ func initializeJobFile(name string, isCompleteFile bool) *JobConfigFile {
 func ReadJobConfigFile(reader *file.ReaderWriter, filename string) (*JobConfigFile, error) {
 	log.Debug.Printf("[ReadJobConfigFile %s", filename)
 	defer log.Debug.Printf("ReadJobConfigFile %s]", filename)
-	byteValue, err := reader.ReadFile(filename, GetBatchName(filename))
+	uniqueName, runName := GetBatchNamePartsFromJobRun(filename)
+	byteValue, err := reader.ReadFile(filename, uniqueName, runName)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +83,8 @@ func (j *JobConfigFile) WriteJobConfigFile(writer *file.ReaderWriter, filepath s
 		}
 	}
 
-	if err := writer.WriteFile(filename, []byte(data), GetBatchName(filename)); err != nil {
+	uniqueName, runName := GetBatchNamePartsFromJobRun(filename)
+	if err := writer.WriteFile(filename, []byte(data), uniqueName, runName); err != nil {
 		return "", err
 	}
 
