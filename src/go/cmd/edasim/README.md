@@ -1,11 +1,12 @@
 # EDA Simulator to test Filer Performance
 
-This EDA Simulator helps test filer performance.  The simulator has 5 components:
+This EDA Simulator helps test filer performance.  The simulator has 6 components:
  1. **jobsubmitter** - the task that submits job config files for processing
  1. **orchestrator** - the task the reads the job config files and writes workstart files, and submits work to workers for processing.  This also receives completed jobs from workers, writes a job complete file, and submits a job for upload.
  1. **worker** - the task that takes a workitem, reads the start files, and writes the complete files and or error file depending on error probability. 
  1. **uploader** - this task receives upload tasks for each completed job, and reads all job config files and job work files.
- 1. **statscollector** - this process collects all the file statistics for each batch run and prints the raw results, and summary to the statistics output directory.
+1. **jobrun** - the task that submits job runs with the full details to be picked up by the jobsubmitters 
+1. **statscollector** - this process collects all the file statistics for each batch run and prints the raw results, and summary to the statistics output directory.
  
 The job uses Azure Storage Queue for work management, and uses event hub for measuring file statistics.  The goal of the EDA simulator is to test with various filers to understand the filer performance characteristics.
 
@@ -145,6 +146,6 @@ These deployment instructions describe the installation of all components requir
 
 ## To Run
 
-Use the portal to get the ip of job submitter machine and login.  In the user root adjust and use the `job_submitter.sh` script to submit batches of varying sizes.  After the batch is complete run the `stats_collector.sh` script to collect and summarize the stats.
+Use the portal to get the ip of job submitter machine and login.  In the user root adjust and use the `jobrun.sh` script to submit job runs of varying sizes.  If you have 4 jobsubmitter nodes, you will want to specify a batch size of 4.  After the batch is complete run the `stats_collector.sh` script to collect and summarize the stats.
 
-To look at logs on the orchestrator, worker, or edasim machines, tail the logs under /var/log/edasim/ directory.
+To look at logs on the jobsubmitter, orchestrator, worker, or edasim machines, tail the logs under /var/log/edasim/ directory.

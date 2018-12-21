@@ -47,7 +47,7 @@ func initializeApplicationVariables(ctx context.Context) (*azure.EventHubSender,
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
 	var uniqueName = flag.String("uniqueName", "", "the unique name to avoid queue collisions")
 	var mountPathsCSV = flag.String("mountPathsCSV", "", "one mount paths separated by commas")
-	var workerThreadCount = flag.Int("workerThreadCount", 16, "the count of worker threads")
+	var threadCount = flag.Int("threadCount", 16, "the count of worker threads")
 
 	flag.Parse()
 
@@ -94,7 +94,7 @@ func initializeApplicationVariables(ctx context.Context) (*azure.EventHubSender,
 
 	azure.FatalValidateQueueName(*uniqueName)
 
-	if *workerThreadCount < 0 {
+	if *threadCount < 0 {
 		fmt.Fprintf(os.Stderr, "ERROR: there must be at least 1 thread to submit jobs")
 		usage()
 		os.Exit(1)
@@ -112,7 +112,7 @@ func initializeApplicationVariables(ctx context.Context) (*azure.EventHubSender,
 		storageKey,
 		*uniqueName,
 		mountPaths,
-		*workerThreadCount
+		*threadCount
 }
 
 func main() {

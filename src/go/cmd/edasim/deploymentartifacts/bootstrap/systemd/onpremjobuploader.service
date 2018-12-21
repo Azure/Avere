@@ -13,7 +13,7 @@ Restart=always
 RestartSec=2
 
 EnvironmentFile=/etc/default/edasim
-ExecStart=/usr/local/bin/onpremjobuploader
+ExecStart=/usr/local/bin/onpremjobuploader -uniqueName=UNIQUENAMEREPLACE -mountPathsCSV=WORKDIRSCSVREPLACE
 
 # make sure log directory exists and owned by syslog
 PermissionsStartOnly=true

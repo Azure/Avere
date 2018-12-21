@@ -61,6 +61,24 @@ function copy_edasim_binaries() {
     cp $EDASIM_BIN/* /usr/local/bin/.
 }
 
+function get_mount_csv_string() {
+    WORKING_DIR=$1; shift
+    COUNTER=0
+    RETURN_STR=""
+    for VFXT in $(echo $NFS_IP_CSV | sed "s/,/ /g")
+    do
+        if [ "$COUNTER" -ne "0" ]; then
+            RETURN_STR="${RETURN_STR},"
+        fi
+        # get the mount point and record it
+        MOUNT_POINT=${BASE_DIR}${NODE_MOUNT_PREFIX}${COUNTER}
+        RETURN_STR="${RETURN_STR}${MOUNT_POINT}"
+
+        COUNTER=$(($COUNTER + 1))
+    done
+    echo $RETURN_STR
+}
+
 function write_system_files() {
     # configuration inspired by https://fabianlee.org/2017/05/21/golang-running-a-go-binary-as-a-systemd-service-on-ubuntu-16-04/
     BOOTSTRAP_PATH="$(dirname ${BASE_DIR}${NODE_MOUNT_PREFIX}0${BOOTSTRAP_SCRIPT_PATH})"
@@ -85,6 +103,9 @@ EOM
     
     sed -i "s/USERREPLACE/$LINUX_USER/g" $DST_FILE
     sed -i "s/GROUPREPLACE/$LINUX_USER/g" $DST_FILE
+    sed -i "s/UNIQUENAMEREPLACE/$UNIQUE_NAME/g" $DST_FILE
+    WORKDIRCSV=$(get_mount_csv_string)
+    sed -i "s:WORKDIRSCSVREPLACE:$WORKDIRCSV:g" $DST_FILE
     
     # copy the rsyslog file
     cp $BOOTSTRAP_PATH/rsyslog/$RSYSLOG_FILE /etc/rsyslog.d/.

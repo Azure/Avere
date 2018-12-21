@@ -13,7 +13,7 @@ Restart=always
 RestartSec=2
 
 EnvironmentFile=/etc/default/edasim
-ExecStart=/usr/local/bin/orchestrator -jobStartFileBasePathCSV=WORKDIRSCSVREPLACE
+ExecStart=/usr/local/bin/orchestrator -uniqueName=UNIQUENAMEREPLACE -mountPathsCSV=WORKDIRSCSVREPLACE -threadCount=THREADCOUNTREPLACE
 
 # make sure log directory exists and owned by syslog
 PermissionsStartOnly=true
