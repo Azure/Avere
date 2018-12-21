@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import argparse
 import os
 import random
 import shutil
@@ -10,107 +11,123 @@ from string import ascii_lowercase, digits
 
 # GLOBAL VARIABLES ############################################################
 
-DEBUG = 0
-ECHO_AZ_CMDS = True
+ARGS = None
 
-ORIG_DIR = os.getcwd()
-
-RANDOM_ID = "av" + "".join(random.choice(ascii_lowercase + digits) for _ in range(6))
-TMP_DIR = "/tmp/tmp." + RANDOM_ID
-RG_NAME = "aapipe-" + RANDOM_ID + "-rg"
+RANDOM_ID = 'av' + ''.join(random.choice(ascii_lowercase + digits) for _ in range(6))
+TMP_DIR = '/tmp/tmp.' + RANDOM_ID
+RG_NAME = 'aapipe-' + RANDOM_ID + '-rg'
 RG_CREATED = False
 
-LOCATION = "eastus2"
-TEMPLATE_URL = "https://raw.githubusercontent.com/Azure/Avere/master/src/vfxt/azuredeploy-auto.json"
+TEMPLATE_URL = 'https://raw.githubusercontent.com/Azure/Avere/master/src/vfxt/azuredeploy-auto.json'
 
 # FUNCTIONS ###################################################################
 
 def download_template():
-    print("> Downloading template")
-    urlretrieve(TEMPLATE_URL, filename=TMP_DIR + "/azuredeploy-auto.json")
+    print('> Downloading template: ' + TEMPLATE_URL)
+    urlretrieve(TEMPLATE_URL, filename=TMP_DIR + '/azuredeploy-auto.json')
 
-def create_resource_group(loc=LOCATION):
+def create_resource_group():
     global RG_CREATED
-    print("> Creating resource group: " + RG_NAME)
-    _run_az_cmd("az group create --name {} --location {}".format(RG_NAME, loc))
+    print('> Creating resource group: ' + RG_NAME)
+    _run_az_cmd('az group create --name {0} --location {1} {2}'.format(
+            RG_NAME, ARGS.location, '--debug' if ARGS.az_debug else ''))
     RG_CREATED = True
 
 def deploy_template():
-    print("> Deploying template")
-    cmd = """az group deployment create
-    --resource-group {0}
-    --template-file {1}/azuredeploy-auto.json
+    print('> Deploying template')
+    cmd = """az group deployment create {0}
+    --resource-group {1}
+    --template-file {2}/azuredeploy-auto.json
     --parameters
-        virtualNetworkResourceGroup={0}
-        virtualNetworkName={2}-vnet
-        virtualNetworkSubnetName={2}-subnet
-        avereBackedStorageAccountName={2}sa
-        controllerName={2}-con
+        virtualNetworkResourceGroup={1}
+        virtualNetworkName={3}-vnet
+        virtualNetworkSubnetName={3}-subnet
+        avereBackedStorageAccountName={3}sa
+        controllerName={3}-con
         controllerAuthenticationType=password
-    """.format(RG_NAME, TMP_DIR, RANDOM_ID)
+    """.format('--debug' if ARGS.az_debug else '', RG_NAME, TMP_DIR, RANDOM_ID)
 
-    if not ECHO_AZ_CMDS:
-        cmd += """
-            controllerPassword={0}
-            adminPassword={1}
-            servicePrincipalTenant={2}
-            servicePrincipalAppId={3}
-            servicePrincipalPassword={4}
-        """.format(os.environ["controllerPassword"],
-                os.environ["adminPassword"],
-                os.environ["servicePrincipalTenant"],
-                os.environ["servicePrincipalAppId"],
-                os.environ["servicePrincipalPassword"])
+    sens_info = """
+        controllerPassword={0}
+        adminPassword={1}
+        servicePrincipalTenant={2}
+        servicePrincipalAppId={3}
+        servicePrincipalPassword={4}
+    """.format(os.environ['controllerPassword'],
+            os.environ['adminPassword'],
+            os.environ['servicePrincipalTenant'],
+            os.environ['servicePrincipalAppId'],
+            os.environ['servicePrincipalPassword'])
 
-    _run_az_cmd(cmd)
+    _run_az_cmd(cmd, sens_info)
 
-def cleanup():
+def cleanup(starting_dir):
+    print('> Cleaning up')
     if RG_CREATED:
-        print("> Deleting resource group: " + RG_NAME)
-        _run_az_cmd("az group delete --yes --name %s" % RG_NAME)
+        print('> Deleting resource group: ' + RG_NAME)
+        _run_az_cmd('az group delete --yes --name {0} {1}'.format(
+            RG_NAME, '--debug' if ARGS.az_debug else ''))
 
-    print("> Removing temp directory")
-    os.chdir(ORIG_DIR)
+    _debug('Removing temp directory: ' + TMP_DIR)
+    os.chdir(starting_dir)
     shutil.rmtree(TMP_DIR)
 
 # HELPER FUNCTIONS ############################################################
 
-def _run_az_cmd(_cmd):
-    if ECHO_AZ_CMDS:
-        cmd = ["echo", "'" + _cmd + "'"]
-    else:
-        cmd = _cmd.split()
+def _run_az_cmd(_cmd, _sens_info=''):
+    cmd = _cmd.strip()
+    _debug('az command: "' + cmd + '"')
 
-    sys.stdout.flush()
-    subprocess.check_call(cmd, stderr=subprocess.STDOUT)
+    if ARGS.print_az_cmds:
+        print('az command: "' + cmd + '"')
+    else:
+        cmd += " " + _sens_info.strip()
+        cmd = cmd.split()
+        sys.stdout.flush()
+        subprocess.check_call(cmd, stderr=subprocess.STDOUT)
 
 def _debug(s):
-    if DEBUG:
-        print("[DEBUG]: {}".format(s))
+    if ARGS.debug:
+        print('[DEBUG]: {}'.format(s))
 
 # MAIN #########################################################################
 
-def main(*args, **kwds):
+def main():
+    starting_dir = os.getcwd()
     os.mkdir(TMP_DIR)
     os.chdir(TMP_DIR)
+    _debug('Starting directory: ' + starting_dir)
+    _debug('Temp directory created, now CWD: ' + TMP_DIR)
 
-    retcode = 0  # SUCCESS
+    retcode = 0  # PASS
 
     try:
         download_template()
         create_resource_group()
         deploy_template()
     except:
-        print("><" * 40)
-        print("> ERROR: test failed")
-        print("><" * 40)
+        print('><' * 40)
+        print('> ERROR: test failed')
+        print('><' * 40)
         retcode = 1  # FAIL
         raise
     finally:
-        cleanup()
+        cleanup(starting_dir)
 
-    print("> RESULT: %s" % ("FAILURE" if retcode else "SUCCESS"))
+    print('> TEST COMPLETE. Resource Group: {} (region: {})'.format(RG_NAME, ARGS.location))
+    print('> RESULT: ' + ('FAIL' if retcode else 'PASS'))
     sys.exit(retcode)
 
-if __name__ == "__main__":
-    main(*sys.argv[1:])
+if __name__ == '__main__':
+    arg_parser = argparse.ArgumentParser(description='Test Avere vFXT Azure deployment.')
+    arg_parser.add_argument('-l', '--location', default='eastus2',
+        help='Azure location (region short name) to use for deployment. Default: eastus2')
+    arg_parser.add_argument('-p', '--print-az-cmds', action='store_true',
+        help='Print "az" commands to STDOUT instead of running them.')
+    arg_parser.add_argument('-azd', '--az-debug', action='store_true',
+        help='Turn on "az" command debugging.')
+    arg_parser.add_argument('-d', '--debug', action='store_true',
+        help='Turn on script debugging.')
+    ARGS = arg_parser.parse_args()
+
+    main()
