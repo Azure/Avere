@@ -37,8 +37,9 @@ type Operation string
 // IOStatistics provides statistics on the file
 type IOStatistics struct {
 	StartTime       time.Time
-	Hostname string
-	BatchName       string
+	Hostname        string
+	UniqueName      string
+	RunName         string
 	Label           string
 	Operation       Operation
 	Path            string
@@ -53,7 +54,8 @@ type IOStatistics struct {
 // InitializeIOStatistics initializes the IO Statistics
 func InitializeIOStatistics(
 	startTime time.Time,
-	batchName string,
+	uniqueName string,
+	runName string,
 	label string,
 	operation Operation,
 	path string,
@@ -68,8 +70,9 @@ func InitializeIOStatistics(
 	}
 	return &IOStatistics{
 		StartTime:       startTime,
-		Hostname: hostname,
-		BatchName:       batchName,
+		Hostname:        hostname,
+		UniqueName:      uniqueName,
+		RunName:         runName,
 		Label:           label,
 		Operation:       operation,
 		Path:            path,
@@ -110,7 +113,7 @@ func (i *IOStatistics) CSVHeader() []string {
 	header := []string{}
 	header = append(header, "Date")
 	header = append(header, "Hostname")
-	header = append(header, "BatchName")
+	header = append(header, "RunName")
 	header = append(header, "Label")
 	header = append(header, "Operation")
 	header = append(header, "Path")
@@ -129,7 +132,7 @@ func (i *IOStatistics) ToStringArray() []string {
 	//row = append(row, i.StartTime.String())
 	row = append(row, i.StartTime.Format("2006-01-02 15:04:05.0000000"))
 	row = append(row, i.Hostname)
-	row = append(row, i.BatchName)
+	row = append(row, i.RunName)
 	row = append(row, i.Label)
 	row = append(row, string(i.Operation))
 	row = append(row, i.Path)

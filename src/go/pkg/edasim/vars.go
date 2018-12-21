@@ -2,6 +2,7 @@ package edasim
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/Azure/Avere/src/go/pkg/azure"
@@ -39,6 +40,7 @@ func InitializeReaderWriters(
 	eventHubNamespaceName string,
 	eventHubHubName string) *azure.EventHubSender {
 
+	log.Info.Printf("InitializeReaderWriters %s, %s", eventHubNamespaceName, eventHubHubName)
 	eventHub, e := azure.InitializeEventHubSender(
 		ctx,
 		eventHubSenderName,
@@ -68,4 +70,34 @@ func initializeReaderWriters(eventHub *azure.EventHubSender) {
 
 	JobCompleteWriter = file.InitializeReaderWriter(JobCompleteWriterLabel, eventHub)
 	JobCompleteReader = file.InitializeReaderWriter(JobCompleteReaderLabel, eventHub)
+}
+
+// GetEventHubName returns the event hub name
+func GetEventHubName(uniqueName string) string {
+	return fmt.Sprintf("%s-edasim", uniqueName)
+}
+
+// GetJobRunQueueName returns the job run queue name
+func GetJobRunQueueName(uniqueName string) string {
+	return fmt.Sprintf("%s-jobrun", uniqueName)
+}
+
+// GetJobStartQueueName returns the job run queue name
+func GetJobStartQueueName(uniqueName string) string {
+	return fmt.Sprintf("%s-jobstart", uniqueName)
+}
+
+// GetWorkStartQueueName returns the work start queue name
+func GetWorkStartQueueName(uniqueName string) string {
+	return fmt.Sprintf("%s-workstart", uniqueName)
+}
+
+// GetWorkCompleteQueueName returns the work complete queue name
+func GetWorkCompleteQueueName(uniqueName string) string {
+	return fmt.Sprintf("%s-workcomplete", uniqueName)
+}
+
+// GetJobCompleteQueueName returns the job complete queue name
+func GetJobCompleteQueueName(uniqueName string) string {
+	return fmt.Sprintf("%s-jobcomplete", uniqueName)
 }

@@ -34,6 +34,11 @@ func (i *IOStatsRows) AddIOStats(ios *IOStatistics) {
 	i.ioStatistics = append(i.ioStatistics, ios)
 }
 
+// GetRows returns the rows
+func (i *IOStatsRows) GetRows() []*IOStatistics {
+	return i.ioStatistics
+}
+
 // GetRowCount returns the number of rows
 func (i *IOStatsRows) GetRowCount() int {
 	return len(i.ioStatistics)
@@ -103,7 +108,7 @@ func (i *IOStatsRows) WriteSummaryLines(writer *csv.Writer) {
 	if i.GetRowCount() == 0 {
 		return
 	}
-	batchName := i.ioStatistics[0].BatchName
+	batchName := i.ioStatistics[0].RunName
 	label := i.ioStatistics[0].Label
 	sampleSize := len(i.ioStatistics)
 	percentSuccess := float64(i.GetSuccessCount()) / float64(sampleSize)

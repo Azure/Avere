@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/Azure/Avere/src/go/pkg/azure"
@@ -27,7 +28,6 @@ func usage(errs ...error) {
 	fmt.Fprintf(os.Stderr, "\t%s - azure event hub sender name\n", azure.AZURE_EVENTHUB_SENDERKEYNAME)
 	fmt.Fprintf(os.Stderr, "\t%s - azure event hub sender key\n", azure.AZURE_EVENTHUB_SENDERKEY)
 	fmt.Fprintf(os.Stderr, "\t%s - azure event hub namespace name\n", azure.AZURE_EVENTHUB_NAMESPACENAME)
-	fmt.Fprintf(os.Stderr, "\t%s - azure event hub hub name\n", azure.AZURE_EVENTHUB_HUBNAME)
 	fmt.Fprintf(os.Stderr, "\n")
 	fmt.Fprintf(os.Stderr, "options:\n")
 	flag.PrintDefaults()
@@ -40,13 +40,13 @@ func verifyEnvVars() bool {
 	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_SENDERKEYNAME)
 	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_SENDERKEY)
 	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_NAMESPACENAME)
-	available = available && cli.VerifyEnvVar(azure.AZURE_EVENTHUB_HUBNAME)
 	return available
 }
 
-func initializeApplicationVariables() (string, int, string, string, string, string, string, string) {
+func initializeApplicationVariables(ctx context.Context) (*azure.EventHubSender, string, string, string, []string, int) {
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
-	var uploaderQueueName = flag.String("uploaderQueueName", edasim.QueueUploader, "the uploader job queue name")
+	var uniqueName = flag.String("uniqueName", "", "the unique name to avoid queue collisions")
+	var mountPathsCSV = flag.String("mountPathsCSV", "", "one mount paths separated by commas")
 	var threadCount = flag.Int("threadCount", 16, "the number of concurrent threads uploading jobs")
 
 	flag.Parse()
@@ -65,38 +65,71 @@ func initializeApplicationVariables() (string, int, string, string, string, stri
 	eventHubSenderName := cli.GetEnv(azure.AZURE_EVENTHUB_SENDERKEYNAME)
 	eventHubSenderKey := cli.GetEnv(azure.AZURE_EVENTHUB_SENDERKEY)
 	eventHubNamespaceName := cli.GetEnv(azure.AZURE_EVENTHUB_NAMESPACENAME)
-	eventHubHubName := cli.GetEnv(azure.AZURE_EVENTHUB_HUBNAME)
 
-	azure.FatalValidateQueueName(*uploaderQueueName)
+	if len(*uniqueName) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: uniqueName is not specified\n")
+		usage()
+		os.Exit(1)
+	}
 
-	return *uploaderQueueName,
-		*threadCount,
-		storageAccount,
-		storageKey,
+	if len(*mountPathsCSV) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: mountPathsCSV is not specified\n")
+		usage()
+		os.Exit(1)
+	}
+
+	mountPaths := strings.Split(*mountPathsCSV, ",")
+
+	for _, path := range mountPaths {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			fmt.Fprintf(os.Stderr, "ERROR: mountPath '%s' does not exist\n", path)
+			usage()
+			os.Exit(1)
+		} else if err != nil {
+			fmt.Fprintf(os.Stderr, "ERROR: error encountered with path '%s': %v\n", path, err)
+			usage()
+			os.Exit(1)
+		}
+	}
+
+	azure.FatalValidateQueueName(*uniqueName)
+
+	if *threadCount < 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: there must be at least 1 thread to submit jobs")
+		usage()
+		os.Exit(1)
+	}
+
+	eventHub := edasim.InitializeReaderWriters(
+		ctx,
 		eventHubSenderName,
 		eventHubSenderKey,
 		eventHubNamespaceName,
-		eventHubHubName
+		edasim.GetEventHubName(*uniqueName))
+
+	return eventHub,
+		storageAccount,
+		storageKey,
+		*uniqueName,
+		mountPaths,
+		*threadCount
 }
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	uploaderQueueName,
-		threadCount,
+	eventHub,
 		storageAccount,
 		storageKey,
-		eventHubSenderName,
-		eventHubSenderKey,
-		eventHubNamespaceName,
-		eventHubHubName := initializeApplicationVariables()
-
-	eventHub := edasim.InitializeReaderWriters(ctx, eventHubSenderName, eventHubSenderKey, eventHubNamespaceName, eventHubHubName)
+		uniqueName,
+		mountPaths,
+		threadCount := initializeApplicationVariables(ctx)
 
 	log.Info.Printf("Starting job uploading\n")
 	log.Info.Printf("storage account: %s\n", storageAccount)
 	log.Info.Printf("length of storage account key: %d\n", len(storageKey))
-	log.Info.Printf("uploader queue name: %s\n", uploaderQueueName)
+	log.Info.Printf("unique name: %s\n", uniqueName)
+	log.Info.Printf("length of mount paths: %d\n", len(mountPaths))
 	log.Info.Printf("threadCount: %d\n", threadCount)
 
 	// TODO - implement uploader

@@ -16,64 +16,43 @@ const (
 	sleepTimeNoWorkers           = time.Duration(10) * time.Millisecond // 10ms
 	sleepTimeNoQueueMessages     = time.Duration(10) * time.Second      // 1 second between checking queue
 	sleepTimeNoQueueMessagesTick = time.Duration(10) * time.Millisecond // 10 ms between ticks
-	visibilityTimeout            = time.Duration(300) * time.Second     // 5 minute visibility timeout
 )
 
 // Orchestrator defines the orchestrator structure
 type Orchestrator struct {
-	Context                     context.Context
-	ReadyQueue                  *azure.Queue
-	ProcessQueue                *azure.Queue
-	CompleteQueue               *azure.Queue
-	UploaderQueue               *azure.Queue
-	JobFileSizeKB               int
-	JobStartFileCount           int
-	PathManager                 *file.RoundRobinPathManager
-	JobCompleteFileSizeKB       int
-	JobCompleteFailedFileSizeKB int
-	JobFailedProbability        float64
-	JobCompleteFileCount        int
-	OrchestratorThreads         int
-	ReadyCh                     chan struct{}
-	MsgCh                       chan *azqueue.DequeuedMessage
-	DirManager                  *file.DirectoryManager
+	Context             context.Context
+	UniqueName          string
+	JobStartQueue       *azure.Queue
+	WorkStartQueue      *azure.Queue
+	WorkComplete        *azure.Queue
+	JobComplete         *azure.Queue
+	PathManager         *file.RoundRobinPathManager
+	DirManager          *file.DirectoryManager
+	OrchestratorThreads int
+	ReadyCh             chan struct{}
+	MsgCh               chan *azqueue.DequeuedMessage
 }
 
 // InitializeOrchestrator initializes the Orchestrator
 func InitializeOrchestrator(
 	ctx context.Context,
 	storageAccount string,
-	storageAccountKey string,
-	readyQueueName string,
-	processQueueName string,
-	completedQueueName string,
-	uploaderQueueName string,
-	jobFileSizeKB int,
-	jobStartFileCount int,
-	jobProcessFilesPaths []string,
-	jobCompleteFileSizeKB int,
-	jobCompleteFailedFileSizeKB int,
-	jobFailedProbability float64,
-	jobCompleteFileCount int,
+	storageKey string,
+	uniqueName string,
+	mountPaths []string,
 	orchestratorThreads int) *Orchestrator {
 
 	return &Orchestrator{
-		Context:                     ctx,
-		ReadyQueue:                  azure.InitializeQueue(ctx, storageAccount, storageAccountKey, readyQueueName),
-		ProcessQueue:                azure.InitializeQueue(ctx, storageAccount, storageAccountKey, processQueueName),
-		CompleteQueue:               azure.InitializeQueue(ctx, storageAccount, storageAccountKey, completedQueueName),
-		UploaderQueue:               azure.InitializeQueue(ctx, storageAccount, storageAccountKey, uploaderQueueName),
-		JobFileSizeKB:               jobFileSizeKB,
-		JobStartFileCount:           jobStartFileCount,
-		PathManager:                 file.InitializeRoundRobinPathManager(jobProcessFilesPaths),
-		JobCompleteFileSizeKB:       jobCompleteFileSizeKB,
-		JobCompleteFailedFileSizeKB: jobCompleteFailedFileSizeKB,
-		JobFailedProbability:        jobFailedProbability,
-		JobCompleteFileCount:        jobCompleteFileCount,
-		OrchestratorThreads:         orchestratorThreads,
-		ReadyCh:                     make(chan struct{}),
-		MsgCh:                       make(chan *azqueue.DequeuedMessage, orchestratorThreads),
-		DirManager:                  file.InitializeDirectoryManager(),
+		Context:             ctx,
+		JobStartQueue:       azure.InitializeQueue(ctx, storageAccount, storageKey, GetJobStartQueueName(uniqueName)),
+		WorkStartQueue:      azure.InitializeQueue(ctx, storageAccount, storageKey, GetWorkStartQueueName(uniqueName)),
+		WorkComplete:        azure.InitializeQueue(ctx, storageAccount, storageKey, GetWorkCompleteQueueName(uniqueName)),
+		JobComplete:         azure.InitializeQueue(ctx, storageAccount, storageKey, GetJobCompleteQueueName(uniqueName)),
+		PathManager:         file.InitializeRoundRobinPathManager(mountPaths),
+		DirManager:          file.InitializeDirectoryManager(),
+		OrchestratorThreads: orchestratorThreads,
+		ReadyCh:             make(chan struct{}),
+		MsgCh:               make(chan *azqueue.DequeuedMessage, orchestratorThreads),
 	}
 }
 
@@ -89,6 +68,7 @@ func (o *Orchestrator) Run(syncWaitGroup *sync.WaitGroup) {
 
 	// start the ready queue listener and its workers
 	// this uses the example from here: https://github.com/Azure/azure-storage-queue-go/blob/master/azqueue/zt_examples_test.go
+	log.Info.Printf("started %d orchestrator threads", o.OrchestratorThreads)
 	for i := 0; i < o.OrchestratorThreads; i++ {
 		syncWaitGroup.Add(1)
 		go o.StartJobWorker(syncWaitGroup)
@@ -141,9 +121,9 @@ func (o *Orchestrator) StartJobWorker(syncWaitGroup *sync.WaitGroup) {
 
 // JobDispatcher dispatches jobs to workers based on input from the ready queue
 func (o *Orchestrator) JobDispatcher(syncWaitGroup *sync.WaitGroup) {
-	log.Info.Printf("[JobDispatcher\n")
+	log.Debug.Printf("[JobDispatcher\n")
 	defer syncWaitGroup.Done()
-	defer log.Info.Printf("JobDispatcher]")
+	defer log.Debug.Printf("JobDispatcher]")
 
 	readyWorkerCount := int32(0)
 
@@ -168,7 +148,7 @@ func (o *Orchestrator) JobDispatcher(syncWaitGroup *sync.WaitGroup) {
 		}
 
 		// dequeue the messages, with no more than ready workers
-		dequeue, err := o.ReadyQueue.Dequeue(readyWorkerCount, visibilityTimeout)
+		dequeue, err := o.JobStartQueue.Dequeue(readyWorkerCount, visibilityTimeout)
 		if err != nil {
 			log.Error.Printf("error dequeuing %d messages from ready queue: %v", readyWorkerCount, err)
 			statsChannel.Error()
@@ -206,10 +186,15 @@ func (o *Orchestrator) JobDispatcher(syncWaitGroup *sync.WaitGroup) {
 }
 
 func (o *Orchestrator) handleMessage(msg *azqueue.DequeuedMessage) error {
-	log.Debug.Printf("[handleMessage(%s)", msg.Text)
-	defer log.Debug.Printf("handleMessage(%s)]", msg.Text)
-	configFilename := msg.Text
-	batchName := GetBatchName(msg.Text)
+	edasimFile, err := InitializeEdasimFileFromString(msg.Text)
+	if err != nil {
+		log.Error.Printf("error reading edasim file from '%s': %v", msg.Text, err)
+		return err
+	}
+	log.Debug.Printf("[handleMessage(%s)", edasimFile.FullPath)
+	defer log.Debug.Printf("handleMessage(%s)]", edasimFile.FullPath)
+
+	configFilename := o.getConfigFilename(edasimFile)
 
 	jobConfig, err := ReadJobConfigFile(JobReader, configFilename)
 	if err != nil {
@@ -217,34 +202,53 @@ func (o *Orchestrator) handleMessage(msg *azqueue.DequeuedMessage) error {
 		return err
 	}
 
-	fullPath := o.getDirectory(batchName)
+	batchName := GetBatchName(configFilename)
+	mountPath, fullPath := o.getWorkPaths(batchName)
 
 	workerFileWriter := InitializeWorkerFileWriter(
 		jobConfig.Name,
-		o.JobFileSizeKB,
-		o.JobStartFileCount,
-		o.JobCompleteFileSizeKB,
-		o.JobCompleteFileCount,
-		o.JobCompleteFailedFileSizeKB,
-		o.JobFailedProbability)
-	if err := workerFileWriter.WriteStartFiles(WorkStartFileWriter, fullPath, o.JobFileSizeKB); err != nil {
+		&jobConfig.JobRun)
+	if err := workerFileWriter.WriteStartFiles(WorkStartFileWriter, fullPath, jobConfig.JobRun.WorkStartFileSizeKB, jobConfig.JobRun.WorkStartFileCount); err != nil {
 		log.Error.Printf("error writing start files for job '%s': %v", configFilename, err)
 		return err
 	}
 
-	if err := o.ProcessQueue.Enqueue(workerFileWriter.FirstStartFile(fullPath)); err != nil {
+	edaSimFile := &EdasimFile{
+		MountPath:   mountPath,
+		FullPath:    fullPath,
+		MountParity: jobConfig.JobRun.MountParity,
+	}
+
+	edaSimFileStr, err := edaSimFile.GetEdasimFileString()
+	if err != nil {
+		log.Error.Printf("error getting the edasimfilestring: %v", err)
+		return err
+	}
+
+	if err := o.WorkStartQueue.Enqueue(edaSimFileStr); err != nil {
 		log.Error.Printf("error enqueuing files path '%s': %v", workerFileWriter.FirstStartFile(fullPath), err)
 		return err
 	}
-	if _, err := o.ReadyQueue.DeleteMessage(msg.ID, msg.PopReceipt); err != nil {
+	if _, err := o.JobStartQueue.DeleteMessage(msg.ID, msg.PopReceipt); err != nil {
 		log.Error.Printf("error deleting queue message from ready queue '%s': %v", msg.ID, err)
 		return err
 	}
 	return nil
 }
 
-func (o *Orchestrator) getDirectory(batchName string) string {
-	fullPath := path.Join(o.PathManager.GetNextPath(), batchName)
+func (o *Orchestrator) getConfigFilename(edasimFile *EdasimFile) string {
+	if edasimFile.MountParity == true {
+		return edasimFile.FullPath
+	} else {
+		filePath := edasimFile.FullPath[len(edasimFile.MountPath):]
+		return path.Join(o.PathManager.GetNextPath(), filePath)
+	}
+}
+
+func (o *Orchestrator) getWorkPaths(batchName string) (string, string) {
+	nextMountPoint := o.PathManager.GetNextPath()
+	batchPath := path.Join(WorkDir, batchName)
+	fullPath := path.Join(nextMountPoint, batchPath)
 	o.DirManager.EnsureDirectory(fullPath)
-	return fullPath
+	return nextMountPoint, fullPath
 }

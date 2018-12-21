@@ -12,33 +12,18 @@ import (
 
 // WorkFileWriter handles the work start file and complete file creation for a single job
 type WorkFileWriter struct {
-	JobConfigName            string
-	StartFileSizeKB          int
-	StartFileCount           int
-	CompleteFileSizeKB       int
-	CompleteFileCount        int
-	CompleteFailedFileSizeKB int
-	FailedProbability        float64
-	PaddedString             string
+	JobConfigName string
+	JobRun        JobRun
+	PaddedString  string
 }
 
 // InitializeWorkerFileWriter creates a work file writer for a single job
 func InitializeWorkerFileWriter(
 	jobConfigName string,
-	startFileSizeKB int,
-	startFileCount int,
-	completeFileSizeKB int,
-	completeFileCount int,
-	completeFailedFileSizeKB int,
-	failedProbability float64) *WorkFileWriter {
+	jobRun *JobRun) *WorkFileWriter {
 	return &WorkFileWriter{
-		JobConfigName:            jobConfigName,
-		StartFileSizeKB:          startFileSizeKB,
-		StartFileCount:           startFileCount,
-		CompleteFileSizeKB:       completeFileSizeKB,
-		CompleteFileCount:        completeFileCount,
-		CompleteFailedFileSizeKB: completeFailedFileSizeKB,
-		FailedProbability:        failedProbability,
+		JobConfigName: jobConfigName,
+		JobRun:        *jobRun,
 	}
 }
 
@@ -46,7 +31,8 @@ func InitializeWorkerFileWriter(
 func ReadWorkFile(reader *file.ReaderWriter, filename string) (*WorkFileWriter, error) {
 	log.Debug.Printf("[ReadWorkFile(%s)", filename)
 	defer log.Debug.Printf("ReadWorkFile(%s)]", filename)
-	byteValue, err := reader.ReadFile(filename, GetBatchName(filename))
+	uniqueName, runName := GetBatchNamePartsFromJobRun(filename)
+	byteValue, err := reader.ReadFile(filename, uniqueName, runName)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +48,7 @@ func ReadWorkFile(reader *file.ReaderWriter, filename string) (*WorkFileWriter, 
 }
 
 // WriteStartFiles writes the required number of start files
-func (w *WorkFileWriter) WriteStartFiles(writer *file.ReaderWriter, filepath string, fileSize int) error {
+func (w *WorkFileWriter) WriteStartFiles(writer *file.ReaderWriter, filepath string, fileSize int, fileCount int) error {
 	log.Debug.Printf("[WriteStartFiles(%s)", filepath)
 	defer log.Debug.Printf("WriteStartFiles(%s)]", filepath)
 	// read once
@@ -82,9 +68,10 @@ func (w *WorkFileWriter) WriteStartFiles(writer *file.ReaderWriter, filepath str
 	}
 
 	// write the files
-	for i := 0; i < w.StartFileCount; i++ {
+	for i := 0; i < fileCount; i++ {
 		filename := w.getStartFileName(filepath, i)
-		err := writer.WriteFile(filename, []byte(data), GetBatchName(filename))
+		uniqueName, runName := GetBatchNamePartsFromJobRun(filename)
+		err := writer.WriteFile(filename, []byte(data), uniqueName, runName)
 		if err != nil {
 			return err
 		}

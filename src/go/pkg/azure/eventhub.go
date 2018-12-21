@@ -3,6 +3,8 @@ package azure
 import (
 	"container/list"
 	"context"
+	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -12,8 +14,9 @@ import (
 )
 
 const (
-	sleepTimeNoEvents = time.Duration(10) * time.Millisecond // 10ms
-	maxBatchBytes     = 128 * 1024                           // to allow for overhead, we will go half the 256 KB limit https://docs.microsoft.com/en-us/Azure/event-hubs/event-hubs-programming-guide
+	sleepTimeNoEvents        = time.Duration(10) * time.Millisecond // 10ms
+	maxBatchBytes            = 128 * 1024                           // to allow for overhead, we will go half the 256 KB limit https://docs.microsoft.com/en-us/Azure/event-hubs/event-hubs-programming-guide
+	connectionStringTemplate = "Endpoint=sb://%s.servicebus.windows.net/;SharedAccessKeyName=%s;SharedAccessKey=%s"
 )
 
 // EventHubSender sends messages to Azure Event Hub
@@ -33,13 +36,20 @@ func InitializeEventHubSender(
 	eventHubNamespaceName string,
 	eventHubName string) (*EventHubSender, error) {
 
+	if err := createHubIfNotExists(ctx, senderKeyName, senderKey, eventHubNamespaceName, eventHubName); err != nil {
+		log.Debug.Printf("createHubIfNotExists error: %v", err)
+		return nil, err
+	}
+
 	provider, err := sas.NewTokenProvider(sas.TokenProviderWithKey(senderKeyName, senderKey))
 	if err != nil {
+		log.Debug.Printf("NewTokenProvider error: %v", err)
 		return nil, err
 	}
 
 	hub, err := eventhubs.NewHub(eventHubNamespaceName, eventHubName, provider)
 	if err != nil {
+		log.Debug.Printf("NewHub error: %v", err)
 		return nil, err
 	}
 
@@ -118,4 +128,31 @@ func (e *EventHubSender) sender() {
 			time.Sleep(sleepTimeNoEvents)
 		}
 	}
+}
+
+func createHubIfNotExists(ctx context.Context, eventHubSenderName, eventHubSenderKey, eventHubNamespaceName, eventHubName string) error {
+	log.Info.Printf("[createHubIfNotExists(%s, %s),", eventHubNamespaceName, eventHubName)
+	defer log.Info.Printf("createHubIfNotExists]")
+	connectionString := createHubConnectionString(eventHubSenderName, eventHubSenderKey, eventHubNamespaceName)
+	hubmanager, err := eventhubs.NewHubManagerFromConnectionString(connectionString)
+	if err != nil {
+		log.Debug.Printf("NewHubManagerFromConnectionString error: %v", hubmanager)
+		return err
+	}
+
+	if _, err = hubmanager.Put(ctx, eventHubName); err == nil {
+		log.Info.Printf("created event hub %s", eventHubName)
+	} else {
+		if strings.Contains(err.Error(), "409") {
+			log.Debug.Printf("the event hub %s already exists", eventHubName)
+		} else {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func createHubConnectionString(eventHubSenderName, eventHubSenderKey, eventHubNamespaceName string) string {
+	return fmt.Sprintf(connectionStringTemplate, eventHubNamespaceName, eventHubSenderName, eventHubSenderKey)
 }
