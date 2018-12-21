@@ -74,6 +74,10 @@ def deploy_template():
     _run_az_cmd(cmd)
 
 def cleanup(starting_dir):
+    os.chdir(starting_dir)
+    if ARGS.skip_cleanup:
+        print('> Skipping clean up')
+        return
     print('> Cleaning up')
     if RG_CREATED:
         print('> Deleting resource group: ' + RG_NAME)
@@ -81,7 +85,6 @@ def cleanup(starting_dir):
             RG_NAME, '--debug' if ARGS.az_debug else ''))
 
     _debug('Removing temp directory: ' + TMP_DIR)
-    os.chdir(starting_dir)
     shutil.rmtree(TMP_DIR)
 
 # HELPER FUNCTIONS ############################################################
@@ -135,7 +138,9 @@ if __name__ == '__main__':
         help='Azure location (region short name) to use for deployment. Default: eastus2')
     arg_parser.add_argument('-p', '--print-az-cmds', action='store_true',
         help='Print "az" commands to STDOUT instead of running them.')
-    arg_parser.add_argument('-azd', '--az-debug', action='store_true',
+    arg_parser.add_argument('-sc', '--skip-cleanup', action='store_true',
+        help='Skip the cleanup step (i.e., do not delete the script-created resource group).')
+    arg_parser.add_argument('-ad', '--az-debug', action='store_true',
         help='Turn on "az" command debugging.')
     arg_parser.add_argument('-d', '--debug', action='store_true',
         help='Turn on script debugging.')
