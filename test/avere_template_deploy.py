@@ -6,7 +6,7 @@ Test template-based Avere vFXT deployment.
 Assumptions:
     1. The caller has authenticated via "az login" before invoking this script.
     2. The caller/script is able to write to the current working directory.
-    2. Azure secrets are stored in the following environment variables:
+    3. Azure secrets are stored in the following environment variables:
         * controllerPassword
         * adminPassword
         * servicePrincipalTenant
@@ -110,8 +110,8 @@ def create_resource_group():
     global RESOURCE_GROUP_CREATED
     print('> Creating resource group: ' + AZ_PARAMS['resource-group'])
     _run_az_cmd('az group create --name {0} --location {1} {2}'.format(
-            AZ_PARAMS['resource-group'], SCRIPT_ARGS.location,
-            '--debug' if SCRIPT_ARGS.az_debug else ''))
+                AZ_PARAMS['resource-group'], SCRIPT_ARGS.location,
+                '--debug' if SCRIPT_ARGS.az_debug else ''))
     RESOURCE_GROUP_CREATED = True
 
 def deploy_template():
@@ -131,27 +131,28 @@ def deploy_template():
 
     _run_az_cmd(cmd)
 
+def delete_resource_group():
+    print('> Deleting resource group: ' + AZ_PARAMS['resource-group'])
+    _run_az_cmd('az group delete --yes --name {0} {1}'.format(
+                AZ_PARAMS['resource-group'],
+                '--debug' if SCRIPT_ARGS.az_debug else ''))
+
 def cleanup():
     """
     Performs multiple cleanup activities.
-        1. Deletes the generated secrets file. Not skippable.
-        2. Deletes the downloaded template file. Skippable.
-        3. Deletes the created resource group. Skippable.
+        1. Deletes the generated secrets file.
+        2. Deletes the downloaded template file.
+        3. Deletes the resource group.
     """
+    print('> Cleaning up')
     if os.path.isfile(SECRETS_FILE):
         os.remove(SECRETS_FILE)
 
-    if SCRIPT_ARGS.skip_cleanup:
-        print('> Skipping clean up')
-        return
+    if os.path.isfile(TEMPLATE_LOCAL_FILE):
+        os.remove(TEMPLATE_LOCAL_FILE)
 
-    print('> Cleaning up')
-    os.remove(TEMPLATE_LOCAL_FILE)
-    if RESOURCE_GROUP_CREATED:
-        print('> Deleting resource group: ' + AZ_PARAMS['resource-group'])
-        _run_az_cmd('az group delete --yes --name {0} {1}'.format(
-            AZ_PARAMS['resource-group'],
-            '--debug' if SCRIPT_ARGS.az_debug else ''))
+    if not SCRIPT_ARGS.skip_rg_cleanup and RESOURCE_GROUP_CREATED:
+        delete_resource_group()
 
 # HELPER FUNCTIONS ############################################################
 
@@ -192,17 +193,17 @@ def main():
     finally:
         cleanup()
 
-    print('> TEST COMPLETE. Resource Group: {} (region: {})'.format(
-        AZ_PARAMS['resource-group'], SCRIPT_ARGS.location))
+    print('> SCRIPT COMPLETE. Resource Group: {} (region: {})'.format(
+          AZ_PARAMS['resource-group'], SCRIPT_ARGS.location))
     print('> RESULT: ' + ('FAIL' if retcode else 'PASS'))
     sys.exit(retcode)
 
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(
-        description='Test Avere vFXT Azure template deployment.')
+        description='Test template-based Avere vFXT deployment.')
 
-    arg_parser.add_argument('-pf', '--param_file', default=None,
+    arg_parser.add_argument('-pf', '--param-file', default=None,
         help='Full path to JSON params file. ' +
              'Default: None (generate new params)')
     arg_parser.add_argument('-l', '--location', default=None,
@@ -210,11 +211,10 @@ if __name__ == '__main__':
              'Default: ' + DEFAULT_LOCATION)
     arg_parser.add_argument('-p', '--print-az-cmds', action='store_true',
         help='Print "az" commands to STDOUT instead of running them.')
-    arg_parser.add_argument('-sc', '--skip-cleanup', action='store_true',
-        help='Skip the cleanup step (i.e., do not delete the script-created ' +
-             'resource group).')
+    arg_parser.add_argument('-sc', '--skip-rg-cleanup', action='store_true',
+        help='Do not delete the resource group.')
     arg_parser.add_argument('-ad', '--az-debug', action='store_true',
-        help='Turn on "az" command debugging.')
+        help='Turn on Azure (az) command debugging.')
     arg_parser.add_argument('-d', '--debug', action='store_true',
         help='Turn on script debugging.')
     SCRIPT_ARGS = arg_parser.parse_args()
