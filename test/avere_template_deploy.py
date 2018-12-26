@@ -18,7 +18,6 @@ import argparse
 import json
 import os
 import random
-import shutil
 import subprocess
 import sys
 from urllib.request import urlretrieve
@@ -55,7 +54,7 @@ def load_params():
         rg_name = 'aapipe-' + random_id + '-rg'
         AZ_PARAMS = {
             'resource-group': rg_name,
-            'parameters' : {
+            'parameters': {
                 'virtualNetworkResourceGroup': rg_name,
                 'virtualNetworkName': random_id + '-vnet',
                 'virtualNetworkSubnetName': random_id + '-subnet',
@@ -84,13 +83,13 @@ def load_secrets():
         'servicePrincipalAppId',
         'servicePrincipalPassword'
     ]
-    data = { 'parameters': {} }
+    data = {'parameters': {}}
     try:
         for ev in exp_envars:
-            data['parameters'][ev] = { 'value': os.environ[ev] }
+            data['parameters'][ev] = {'value': os.environ[ev]}
     except KeyError:
         raise Exception('The following envars must be defined: ' +
-            ', '.join(exp_envars))
+                        ', '.join(exp_envars))
 
     global SECRETS_FILE
     SECRETS_FILE = AZ_PARAMS['resource-group'] + '.secrets.json'
@@ -122,7 +121,8 @@ def deploy_template():
     --resource-group {1}
     --template-file {2}
     --parameters @{3}""".format('--debug' if SCRIPT_ARGS.az_debug else '',
-        AZ_PARAMS['resource-group'], TEMPLATE_LOCAL_FILE, SECRETS_FILE)
+                                AZ_PARAMS['resource-group'],
+                                TEMPLATE_LOCAL_FILE, SECRETS_FILE)
 
     if AZ_PARAMS['parameters']:  # There are more parameters.
         cmd += "\n\t--parameters"
@@ -196,6 +196,7 @@ def main():
         AZ_PARAMS['resource-group'], SCRIPT_ARGS.location))
     print('> RESULT: ' + ('FAIL' if retcode else 'PASS'))
     sys.exit(retcode)
+
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(
