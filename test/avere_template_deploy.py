@@ -13,6 +13,8 @@ from string import ascii_lowercase, digits
 # GLOBAL VARIABLES ############################################################
 
 ARGS = None
+# AZ_PARAMS = {}
+DEFAULT_LOCATION = 'eastus2'
 
 RANDOM_ID = 'av' + ''.join(random.choice(ascii_lowercase + digits) for _ in range(6))
 TMP_DIR = '/tmp/tmp.' + RANDOM_ID
@@ -89,6 +91,14 @@ def cleanup(starting_dir):
 
 # HELPER FUNCTIONS ############################################################
 
+# def _load_or_generate_params():
+#     global AZ_PARAMS
+#     if ARGS.config:
+#         pass
+
+#     if ARGS.location:
+#         AZ_PARAMS['location'] = ARGS.location
+
 def _run_az_cmd(_cmd):
     cmd = _cmd.strip()
     _debug('az command: "' + cmd + '"')
@@ -107,6 +117,9 @@ def _debug(s):
 # MAIN ########################################################################
 
 def main():
+    global ARGS
+    if not ARGS.location:
+        ARGS.location = DEFAULT_LOCATION
     starting_dir = os.getcwd()
     os.mkdir(TMP_DIR)
     os.chdir(TMP_DIR)
@@ -134,8 +147,11 @@ def main():
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(description='Test Avere vFXT Azure template deployment.')
-    arg_parser.add_argument('-l', '--location', default='eastus2',
-        help='Azure location (region short name) to use for deployment. Default: eastus2')
+    # arg_parser.add_argument('-c', '--config', default=None,
+    #     help='Full path to JSON config file. Default: None (generate new config)')
+    arg_parser.add_argument('-l', '--location', default=None,
+        help='Azure location (region short name) to use for deployment. ' +
+             'Default: ' + DEFAULT_LOCATION)
     arg_parser.add_argument('-p', '--print-az-cmds', action='store_true',
         help='Print "az" commands to STDOUT instead of running them.')
     arg_parser.add_argument('-sc', '--skip-cleanup', action='store_true',
