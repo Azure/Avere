@@ -7,13 +7,25 @@ pool:
   vmImage: 'Ubuntu 16.04'
 
 steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.7'
+    architecture: 'x64'
 - script: |
     az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+  displayName: 'Authenticate Service Principal'
+  env:
+    AZURE_TENANT_ID: $(SPTENANTID)
+    AZURE_CLIENT_ID: $(SPAPPID)
+    AZURE_CLIENT_SECRET: $(SPPW)
+- script: |
     python3 --version
-    python3 -m pip install --upgrade pip setuptools wheel
-    python3 -m pip install azure.mgmt.resource
+    pip install --upgrade pip setuptools wheel
+    pip install -r requirements.txt
+  displayName: 'Install Python Dependencies'
+- script: |
     python3 test/avere_template_deploy.py --skip-az-ops
-  displayName: 'Test Avere template deployment'
+  displayName: 'Test Avere vFXT template-based deployment'
   env:
     AVERE_ADMIN_PW: $(controllerpassword)
     AVERE_CONTROLLER_PW: $(controllerpassword)
