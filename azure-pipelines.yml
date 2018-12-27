@@ -10,6 +10,7 @@ steps:
 - script: |
     az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
     python3 --version
+    python3 -m pip install --upgrade pip setuptools wheel
     python3 -m pip install azure.mgmt.resource
     python3 test/avere_template_deploy.py --skip-az-ops
   displayName: 'Test Avere template deployment'
