@@ -97,14 +97,6 @@ def load_params():
     }
     DEPLOY_PARAMS['parameters'] = { **DEPLOY_PARAMS['parameters'], **secrets }
 
-def load_template():
-    """Downloads the Avere vFXT deployment template."""
-    print('> Downloading template: ' + TEMPLATE_URL)
-    urlretrieve(TEMPLATE_URL, filename=TEMPLATE_LOCAL_FILE)
-    with open(TEMPLATE_LOCAL_FILE, 'r') as template_file_fd:
-        template = json.load(template_file_fd)
-    return template
-
 def create_resource_group(rm_client):
     """
     Creates an Azure resource group.
@@ -134,7 +126,7 @@ def deploy_template(rm_client):
             deployment_name='avere-template-deploy-test',
             properties={
                 'mode': DeploymentMode.incremental,
-                'template': load_template(),
+                'template': _load_template(),
                 'parameters': parameters
             }
         )
@@ -161,6 +153,14 @@ def cleanup(rm_client):
         delete_resource_group(rm_client)
 
 # HELPER FUNCTIONS ############################################################
+
+def _load_template():
+    """Downloads the Avere vFXT deployment template."""
+    _debug('Downloading template: ' + TEMPLATE_URL)
+    urlretrieve(TEMPLATE_URL, filename=TEMPLATE_LOCAL_FILE)
+    with open(TEMPLATE_LOCAL_FILE, 'r') as template_file_fd:
+        template = json.load(template_file_fd)
+    return template
 
 def _wait_for_op(op, timeout_sec=60):
     """
@@ -199,12 +199,15 @@ def main():
         print(('><' * 40) + '\n')
         retcode = 1  # FAIL
         raise
+    except:
+        retcode = 2  # FAIL
+        raise
     finally:
         cleanup(rm_client)
+        print('> SCRIPT COMPLETE. Resource Group: {} (region: {})'.format(
+            DEPLOY_PARAMS['resource-group'], SCRIPT_ARGS.location))
+        print('> RESULT: ' + ('FAIL' if retcode else 'PASS'))
 
-    print('> SCRIPT COMPLETE. Resource Group: {} (region: {})'.format(
-          DEPLOY_PARAMS['resource-group'], SCRIPT_ARGS.location))
-    print('> RESULT: ' + ('FAIL' if retcode else 'PASS'))
     sys.exit(retcode)
 
 
