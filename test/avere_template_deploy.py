@@ -54,10 +54,10 @@ def load_params():
     """
     Loads the parameters needed in this script (e.g., resource group name).
 
-    If the user specified a parameters file, load those values into DEPLOY_PARAMS.
-    Otherwise, generate the parameter values and store those values for re-use.
-    The generated parameter values are stored in the current working directory
-    as <resource-group-name>.params.json.
+    If the user specified a parameters file, load those values into
+    DEPLOY_PARAMS. Otherwise, generate the parameter values and store those
+    values for re-use. The generated parameter values are stored in the current
+    working directory as <resource-group-name>.params.json.
     """
     global DEPLOY_PARAMS
     if SCRIPT_ARGS.param_file:  # Open user-specified params file.
