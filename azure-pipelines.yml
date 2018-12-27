@@ -8,17 +8,14 @@ pool:
 
 steps:
 - script: |
-    az login --service-principal -u $SP_APPID -p $SP_PW --tenant $SP_TENANTID
+    az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
     python3 --version
-    python3 test/avere_template_deploy.py -p
-  displayName: 'Run a python script'
+    python3 -m pip install azure.mgmt.resource
+    python3 test/avere_template_deploy.py --skip-az-ops
+  displayName: 'Test Avere template deployment'
   env:
-    servicePrincipalTenant: $(azurepipelinesserviceprincipaltenantid)
-    servicePrincipalAppId: $(azurepipelinesserviceprincipalappid)
-    servicePrincipalPassword: $(azurepipelinesserviceprincipalsecret)
-    adminPassword: $(controllerpassword)
-    controllerPassword: $(controllerpassword)
-    SP_TENANTID: $(SPTENANTID)
-    SP_APPID: $(SPAPPID)
-    SP_PW: $(SPPW)
-
+    AVERE_ADMIN_PW: $(controllerpassword)
+    AVERE_CONTROLLER_PW: $(controllerpassword)
+    AZURE_TENANT_ID: $(SPTENANTID)
+    AZURE_CLIENT_ID: $(SPAPPID)
+    AZURE_CLIENT_SECRET: $(SPPW)
