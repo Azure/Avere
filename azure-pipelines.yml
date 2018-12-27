@@ -21,7 +21,7 @@ steps:
 - script: |
     python3 --version
     pip install --upgrade pip setuptools wheel
-    pip install -r requirements.txt
+    pip install -r test/requirements.txt
   displayName: 'Install Python Dependencies'
 - script: |
     python3 test/avere_template_deploy.py --skip-az-ops
