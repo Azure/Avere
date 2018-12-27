@@ -4,14 +4,14 @@
 Test template-based Avere vFXT deployment.
 
 Assumptions:
-    1. The caller has authenticated via "az login" before invoking this script.
-    2. The caller/script is able to write to the current working directory.
-    3. Azure secrets are stored in the following environment variables:
-        * controllerPassword
-        * adminPassword
-        * servicePrincipalTenant
-        * servicePrincipalAppId
-        * servicePrincipalPassword
+    1. The caller/script is able to write to the current working directory.
+    2. Azure secrets are stored in the following environment variables:
+        * AVERE_ADMIN_PW
+        * AVERE_CONTROLLER_PW
+        * AZURE_CLIENT_ID
+        * AZURE_CLIENT_SECRET
+        * AZURE_TENANT_ID
+        * AZURE_SUBSCRIPTION_ID
 """
 
 import argparse
@@ -207,7 +207,6 @@ def main():
         print('> SCRIPT COMPLETE. Resource Group: {} (region: {})'.format(
             DEPLOY_PARAMS['resource-group'], SCRIPT_ARGS.location))
         print('> RESULT: ' + ('FAIL' if retcode else 'PASS'))
-
     sys.exit(retcode)
 
 
