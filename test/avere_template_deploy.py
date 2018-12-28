@@ -21,8 +21,9 @@ import random
 import subprocess
 import sys
 import time
-from urllib.request import urlretrieve
 from string import ascii_lowercase, digits
+from urllib.request import urlretrieve
+
 from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.resource.resources.models import DeploymentMode
@@ -220,10 +221,10 @@ if __name__ == '__main__':
     arg_parser.add_argument('-l', '--location', default=None,
         help='Azure location (region short name) to use for deployment. ' +
              'Default: ' + DEFAULT_LOCATION)
-    arg_parser.add_argument('-xo', '--skip-az-ops', action='store_true',
-        help='Do NOT actually run any of the Azure operations.')
     arg_parser.add_argument('-xc', '--skip-rg-cleanup', action='store_true',
         help='Do NOT delete the resource group during cleanup.')
+    arg_parser.add_argument('-xo', '--skip-az-ops', action='store_true',
+        help='Do NOT actually run any of the Azure operations.')
     arg_parser.add_argument('-d', '--debug', action='store_true',
         help='Turn on script debugging.')
     SCRIPT_ARGS = arg_parser.parse_args()
