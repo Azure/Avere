@@ -18,7 +18,6 @@ import argparse
 import json
 import os
 import random
-import subprocess
 import sys
 import time
 from string import ascii_lowercase, digits
@@ -86,7 +85,8 @@ def load_params():
     if not SCRIPT_ARGS.location:
         SCRIPT_ARGS.location = DEPLOY_PARAMS.pop('location', DEFAULT_LOCATION)
     _debug('SCRIPT_ARGS.location = {}'.format(SCRIPT_ARGS.location))
-    _debug('DEPLOY_PARAMS (before secrets): {}'.format(DEPLOY_PARAMS))
+    _debug('DEPLOY_PARAMS (before secrets): \n{}'.format(
+           json.dumps(DEPLOY_PARAMS, indent=4)))
 
     # Add secrets to the parameters for template deployment.
     secrets = {
@@ -96,20 +96,16 @@ def load_params():
         'servicePrincipalPassword': os.environ['AZURE_CLIENT_SECRET'],
         'servicePrincipalTenant': os.environ['AZURE_TENANT_ID']
     }
-    DEPLOY_PARAMS['parameters'] = { **DEPLOY_PARAMS['parameters'], **secrets }
+    DEPLOY_PARAMS['parameters'] = {**DEPLOY_PARAMS['parameters'], **secrets}
 
 def create_resource_group(rm_client):
-    """
-    Creates an Azure resource group.
-
-    Assumes that the invoker has already used "az login" to authenticate.
-    """
+    """Creates an Azure resource group."""
     global RESOURCE_GROUP_CREATED
     print('> Creating resource group: ' + DEPLOY_PARAMS['resource-group'])
     if not SCRIPT_ARGS.skip_az_ops:
         rg = rm_client.resource_groups.create_or_update(
             DEPLOY_PARAMS['resource-group'],
-            { 'location': SCRIPT_ARGS.location }
+            {'location': SCRIPT_ARGS.location}
         )
         _debug('Resource Group = {}'.format(rg))
     RESOURCE_GROUP_CREATED = True
@@ -124,7 +120,7 @@ def deploy_template(rm_client):
     if not SCRIPT_ARGS.skip_az_ops:
         op = rm_client.deployments.create_or_update(
             resource_group_name=DEPLOY_PARAMS['resource-group'],
-            deployment_name='avere-template-deploy-test',
+            deployment_name='azuredeploy-auto',
             properties={
                 'mode': DeploymentMode.incremental,
                 'template': _load_template(),
@@ -134,7 +130,7 @@ def deploy_template(rm_client):
         _wait_for_op(op)
 
 def delete_resource_group(rm_client):
-    """Deletes the resource group"""
+    """Deletes the resource group."""
     print('> Deleting resource group: ' + DEPLOY_PARAMS['resource-group'])
     if not SCRIPT_ARGS.skip_az_ops:
         op = rm_client.resource_groups.delete(DEPLOY_PARAMS['resource-group'])
@@ -173,7 +169,7 @@ def _wait_for_op(op, timeout_sec=60):
     while not op.done():
         op.wait(timeout=timeout_sec)
         print('>> operation status: {0} ({1} sec)'.format(
-                op.status(), int(time.time() - time_start)))
+              op.status(), int(time.time() - time_start)))
     result = op.result()
     if result:
         print('>> operation result: {}'.format(result))
@@ -206,7 +202,7 @@ def main():
     finally:
         cleanup(rm_client)
         print('> SCRIPT COMPLETE. Resource Group: {} (region: {})'.format(
-            DEPLOY_PARAMS['resource-group'], SCRIPT_ARGS.location))
+              DEPLOY_PARAMS['resource-group'], SCRIPT_ARGS.location))
         print('> RESULT: ' + ('FAIL' if retcode else 'PASS'))
     sys.exit(retcode)
 
