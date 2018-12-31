@@ -17,8 +17,10 @@ class TestDeployment:
     atd = AvereTemplateDeploy()
 
     def test_create_resource_group(self):
-        rg = TestDeployment.atd.create_resource_group()
-        print('> Created Resource Group: {}'.format(rg))
+        # 2018-1231: TURNED OFF FOR NOW
+        # rg = TestDeployment.atd.create_resource_group()
+        # print('> Created Resource Group: {}'.format(rg))
+        pass
 
     def test_deploy_template(self):
         # 2018-1231: TURNED OFF FOR NOW
@@ -26,7 +28,9 @@ class TestDeployment:
         pass
 
     def test_delete_resource_group(self):
-        wait_for_op(TestDeployment.atd.delete_resource_group())
+        # 2018-1231: TURNED OFF FOR NOW
+        # wait_for_op(TestDeployment.atd.delete_resource_group())
+        pass
 
 
 # HELPER FUNCTIONS ############################################################
