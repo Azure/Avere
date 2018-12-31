@@ -12,6 +12,23 @@ import time
 from avere_template_deploy import AvereTemplateDeploy
 
 
+# TEST CASES ##################################################################
+class TestDeployment:
+    atd = AvereTemplateDeploy()
+
+    def test_create_resource_group(self):
+        rg = TestDeployment.atd.create_resource_group()
+        print('> Created Resource Group: {}'.format(rg))
+
+    def test_deploy_template(self):
+        # 2018-1231: TURNED OFF FOR NOW
+        # wait_for_op(TestDeployment.atd.deploy())
+        pass
+
+    def test_delete_resource_group(self):
+        wait_for_op(TestDeployment.atd.delete_resource_group())
+
+
 # HELPER FUNCTIONS ############################################################
 
 def wait_for_op(op, timeout_sec=60):

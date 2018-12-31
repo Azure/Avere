@@ -26,7 +26,7 @@ from azure.mgmt.resource.resources.models import DeploymentMode
 
 class AvereTemplateDeploy:
     def __init__(self, deploy_params={}, resource_group=None,
-                 location='eastus2', debug=True):
+                 location='eastus2', debug=False):
         """Initialize, authenticate to Azure, generate deploy params."""
         self._template_url = 'https://raw.githubusercontent.com/Azure/Avere/master/src/vfxt/azuredeploy-auto.json'
         self.debug = debug
