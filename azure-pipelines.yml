@@ -24,7 +24,7 @@ steps:
     AZURE_CLIENT_ID: $(SPAPPID)
     AZURE_CLIENT_SECRET: $(SPPW)
 - script: |
-    python3 test/avere_template_deploy.py --skip-az-ops
+    python3 test/test_avere_template_deploy.py --skip-az-ops
   displayName: 'Test Avere vFXT template-based deployment'
   env:
     AVERE_ADMIN_PW: $(controllerpassword)
