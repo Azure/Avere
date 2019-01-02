@@ -29,17 +29,6 @@ steps:
     AZURE_CLIENT_SECRET: $(SPPW)
 
 - script: |
-    python3 test/test_avere_template_deploy.py --skip-az-ops
-  displayName: 'Test Avere vFXT template-based deployment'
-  env:
-    AVERE_ADMIN_PW: $(controllerpassword)
-    AVERE_CONTROLLER_PW: $(controllerpassword)
-    AZURE_TENANT_ID: $(SPTENANTID)
-    AZURE_CLIENT_ID: $(SPAPPID)
-    AZURE_CLIENT_SECRET: $(SPPW)
-    AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-
-- script: |
     pytest test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
   displayName: '(pytest) Test Avere vFXT template-based deployment'
   env:
