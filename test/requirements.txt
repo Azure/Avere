@@ -1,2 +1,4 @@
 azure.mgmt.resource
 requests
+pytest
+pytest-cov

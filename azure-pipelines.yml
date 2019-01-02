@@ -21,16 +21,8 @@ steps:
   displayName: 'Install Python Dependencies'
 
 - script: |
-    az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-  displayName: 'Authenticate Service Principal'
-  env:
-    AZURE_TENANT_ID: $(SPTENANTID)
-    AZURE_CLIENT_ID: $(SPAPPID)
-    AZURE_CLIENT_SECRET: $(SPPW)
-
-- script: |
     pytest test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
-  displayName: '(pytest) Test Avere vFXT template-based deployment'
+  displayName: 'Test Avere vFXT template-based deployment'
   env:
     AVERE_ADMIN_PW: $(controllerpassword)
     AVERE_CONTROLLER_PW: $(controllerpassword)
