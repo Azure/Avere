@@ -1,11 +1,12 @@
 # EDA Simulator to test Filer Performance
 
-This EDA Simulator helps test filer performance.  The simulator has 5 components:
+This EDA Simulator helps test filer performance.  The simulator has 6 components:
  1. **jobsubmitter** - the task that submits job config files for processing
  1. **orchestrator** - the task the reads the job config files and writes workstart files, and submits work to workers for processing.  This also receives completed jobs from workers, writes a job complete file, and submits a job for upload.
  1. **worker** - the task that takes a workitem, reads the start files, and writes the complete files and or error file depending on error probability. 
  1. **uploader** - this task receives upload tasks for each completed job, and reads all job config files and job work files.
- 1. **statscollector** - this process collects all the file statistics for each batch run and prints the raw results, and summary to the statistics output directory.
+1. **jobrun** - the task that submits job runs with the full details to be picked up by the jobsubmitters 
+1. **statscollector** - this process collects all the file statistics for each batch run and prints the raw results, and summary to the statistics output directory.
  
 The job uses Azure Storage Queue for work management, and uses event hub for measuring file statistics.  The goal of the EDA simulator is to test with various filers to understand the filer performance characteristics.
 
@@ -55,7 +56,6 @@ The eda simulator will automatically create the necessary queues.
 ## Event Hub Preparation
 
  1. use the portal or cloud shell to create an "Event Hubs Namespace" Resource with Pricing Tier "Standard" resource in the same region as the vFXT.  For this example, we created `edasimeventhub`
- 1. once created, browse to the "Event Hubs Namespace" in the portal and click "+Event Hub" to add an event hub keeping the defaults of 2 partition counts and 1 day message retention.  For this example, we created event hub `edasim`
  1. once created, browse to "Shared Access Policies", click on "RootManageSharedAccessKey" and copy the primary key
  1. next you will need to set your environment variables with everything you just created:
 
@@ -63,7 +63,6 @@ The eda simulator will automatically create the necessary queues.
 export AZURE_EVENTHUB_SENDERKEYNAME="RootManageSharedAccessKey"
 export AZURE_EVENTHUB_SENDERKEY="PASTE_SENDER_KEY_HERE"
 export AZURE_EVENTHUB_NAMESPACENAME="edasimeventhub"
-export AZURE_EVENTHUB_HUBNAME="edasim"
 ```
 
 ## Build Environment String
@@ -71,7 +70,7 @@ export AZURE_EVENTHUB_HUBNAME="edasim"
 Using the storage and event hub values above, build a one line string to be used later in deployment:
 
 ```bash
-AZURE_STORAGE_ACCOUNT=YOUR_STORAGE_ACCOUNT AZURE_STORAGE_ACCOUNT_KEY="YOUR_STORAGE_ACCOUNT_KEY" AZURE_EVENTHUB_SENDERKEYNAME="RootManageSharedAccessKey" AZURE_EVENTHUB_SENDERKEY="PASTE_SENDER_KEY_HERE" AZURE_EVENTHUB_NAMESPACENAME="edasimeventhub" AZURE_EVENTHUB_HUBNAME="edasim"
+AZURE_STORAGE_ACCOUNT=YOUR_STORAGE_ACCOUNT AZURE_STORAGE_ACCOUNT_KEY="YOUR_STORAGE_ACCOUNT_KEY" AZURE_EVENTHUB_SENDERKEYNAME="RootManageSharedAccessKey" AZURE_EVENTHUB_SENDERKEY="PASTE_SENDER_KEY_HERE" AZURE_EVENTHUB_NAMESPACENAME="edasimeventhub"
 ```
 
 ## Deployment of Avere vFXT
@@ -121,13 +120,16 @@ These deployment instructions describe the installation of all components requir
     # download the rsyslog scripts
     mkdir /nfs/node0/bootstrap/rsyslog
     cd /nfs/node0/bootstrap/rsyslog
+    curl --retry 5 --retry-delay 5 -o 33-jobsubmitter.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/33-jobsubmitter.conf
     curl --retry 5 --retry-delay 5 -o 30-orchestrator.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/30-orchestrator.conf
     curl --retry 5 --retry-delay 5 -o 31-worker.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/31-worker.conf
     curl --retry 5 --retry-delay 5 -o 32-onpremjobuploader.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/32-onpremjobuploader.conf
+    
 
     # download the service scripts
     mkdir /nfs/node0/bootstrap/systemd
     cd /nfs/node0/bootstrap/systemd
+    curl --retry 5 --retry-delay 5 -o jobsubmitter.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/jobsubmitter.service
     curl --retry 5 --retry-delay 5 -o onpremjobuploader.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/onpremjobuploader.service
     curl --retry 5 --retry-delay 5 -o orchestrator.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/orchestrator.service
     curl --retry 5 --retry-delay 5 -o worker.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/worker.service
@@ -145,6 +147,6 @@ These deployment instructions describe the installation of all components requir
 
 ## To Run
 
-Use the portal to get the ip of job submitter machine and login.  In the user root adjust and use the `job_submitter.sh` script to submit batches of varying sizes.  After the batch is complete run the `stats_collector.sh` script to collect and summarize the stats.
+Use the portal to get the ip of job submitter machine and login.  In the user root adjust and use the `jobrun.sh` script to submit job runs of varying sizes.  If you have 4 jobsubmitter nodes, you will want to specify a batch size of 4.  After the batch is complete run the `stats_collector.sh` script to collect and summarize the stats.
 
-To look at logs on the orchestrator, worker, or edasim machines, tail the logs under /var/log/edasim/ directory.
+To look at logs on the jobsubmitter, orchestrator, worker, or edasim machines, tail the logs under /var/log/edasim/ directory.

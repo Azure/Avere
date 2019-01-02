@@ -123,6 +123,20 @@
       "metadata": {
         "description": "Optional environment variables set before calling the bootstrap script.  Example: \"ENV1=foo ENV2=bar\""
       }
+    },
+    "jobSubmitterThreadCount": {
+      "type": "int",
+      "defaultValue": 8,
+      "metadata": {
+        "description": "The number of threads for the jobSubmitter."
+      }
+    },
+    "orchestratorThreadCount": {
+      "type": "int",
+      "defaultValue": 8,
+      "metadata": {
+        "description": "The number of threads for the orchestrator."
+      }
     }
   },
   "variables": {
@@ -146,21 +160,23 @@
         "sku": "18.04-LTS",
         "version": "latest"
     },
-    "environmentVariables": "[concat(' ',parameters('secureAppEnvironmentVariables'),' LINUX_USER=',variables('adminUsername'),' BASE_DIR=',variables('nfsMountBaseDir'),' BOOTSTRAP_NFS_IP=',variables('bootstrapNFSIP'),' NFS_IP_CSV=\"',variables('nfsCommaSeparatedAddresses'),'\"',' NFS_PATH=', variables('nfsExportPath'))]",
+    "environmentVariables": "[concat(' ',parameters('secureAppEnvironmentVariables'),' UNIQUE_NAME=',variables('uniquename'),' LINUX_USER=',variables('adminUsername'),' BASE_DIR=',variables('nfsMountBaseDir'),' BOOTSTRAP_NFS_IP=',variables('bootstrapNFSIP'),' NFS_IP_CSV=\"',variables('nfsCommaSeparatedAddresses'),'\"',' NFS_PATH=', variables('nfsExportPath'))]",
 
     "jobSubmitterVmCount": "[parameters('jobSubmitterVmCount')]",
     "jobSubmitterVmSize": "[parameters('jobSubmitterVmSize')]",
+    "jobSubmitterThreadCount": "[parameters('jobSubmitterThreadCount')]",
     "jobSubmitterBootstrapScriptPath": "/bootstrap/bootstrap.jobsubmitter.sh",
     "jobSubmitterNicName": "[concat('jobSubmitter-',variables('uniquename'))]",
     "jobSubmitterVmName": "[concat('jobSubmitter-',variables('uniquename'))]",
-    "jobSubmitterEnvironmentVariables": "[concat(variables('environmentVariables'),' ',' NODE_PREFIX=', variables('jobSubmitterVmName'),' NODE_COUNT=',variables('jobSubmitterVmCount'),' BOOTSTRAP_SCRIPT_PATH=',variables('jobSubmitterBootstrapScriptPath'))]",
+    "jobSubmitterEnvironmentVariables": "[concat(variables('environmentVariables'),' ',' JOBSUBMITTER_THREAD_COUNT=', variables('jobSubmitterThreadCount'),' NODE_PREFIX=', variables('jobSubmitterVmName'),' NODE_COUNT=',variables('jobSubmitterVmCount'),' BOOTSTRAP_SCRIPT_PATH=',variables('jobSubmitterBootstrapScriptPath'))]",
 
     "orchestratorVmCount": "[parameters('orchestratorVmCount')]",
     "orchestratorVmSize": "[parameters('orchestratorVmSize')]",
+    "orchestratorThreadCount": "[parameters('orchestratorThreadCount')]",
     "orchestratorBootstrapScriptPath": "/bootstrap/bootstrap.orchestrator.sh",
     "orchestratorNicName": "[concat('orchestrator-',variables('uniquename'))]",
     "orchestratorVmName": "[concat('orchestrator-',variables('uniquename'))]",
-    "orchestratorEnvironmentVariables": "[concat(variables('environmentVariables'),' ',' NODE_PREFIX=', variables('orchestratorVmName'),' NODE_COUNT=',variables('orchestratorVmCount'),' BOOTSTRAP_SCRIPT_PATH=',variables('orchestratorBootstrapScriptPath'))]",
+    "orchestratorEnvironmentVariables": "[concat(variables('environmentVariables'),' ',' ORCHESTRATOR_THREAD_COUNT=', variables('orchestratorThreadCount'),' NODE_PREFIX=', variables('orchestratorVmName'),' NODE_COUNT=',variables('orchestratorVmCount'),' BOOTSTRAP_SCRIPT_PATH=',variables('orchestratorBootstrapScriptPath'))]",
     
     "workerVmCount": "[parameters('workerVmCount')]",
     "workerVmSize": "[parameters('workerVmSize')]",

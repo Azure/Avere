@@ -64,7 +64,7 @@ function mount_avere() {
         echo "Mounting to ${VFXT}:${NFS_PATH} to ${MOUNT_POINT}"
         mkdir -p $MOUNT_POINT
         # no need to write again if it is already there
-        if grep -F --quiet "$VFXT" /etc/fstab; then
+        if grep -F --quiet "${VFXT}:${NFS_PATH}    ${MOUNT_POINT}" /etc/fstab; then
             echo "not updating file, already there"
         else
             echo "${VFXT}:${NFS_PATH}    ${MOUNT_POINT}    nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0" >> /etc/fstab
@@ -229,12 +229,92 @@ EOM
     chown $LINUX_USER:$LINUX_USER $FILENAME
 }
 
+function write_throughput() {
+    FILENAME=/home/$LINUX_USER/throughput.conf
+    /bin/cat <<EOM >$FILENAME
+create_anchors=yes
+include=azure-clients.conf
+
+#N vFXT nodes ${NFS_IP_CSV}, 12 clients, 36 FSDs, 1TiB workingset
+fsd=default,depth=1,width=1,files=180,size=160m
+EOM
+
+    COUNTER=0
+    for VFXT in $(echo $NFS_IP_CSV | sed "s/,/ /g")
+    do
+        MOUNT_POINT="${BASE_DIR}${NODE_MOUNT_PREFIX}${COUNTER}"
+        FSD_HOST="host-${COUNTER}"
+        echo "fsd=fsd!${FSD_HOST},anchor=${MOUNT_POINT}/sequential/!${FSD_HOST}" >> $FILENAME
+        COUNTER=$(($COUNTER + 1))
+    done
+
+    /bin/cat <<EOM >>$FILENAME 
+
+fwd=format,threads=36,xfersize=512k,openflags=fsync
+fwd=default,threads=36,xfersize=512k,fileio=sequential,fileselect=sequential
+fwd=fwdW!host,host=!host,fsd=(fsd!host*),operation=write,openflags=fsync
+fwd=fwdR!host,host=!host,fsd=(fsd!host*),operation=read,openflags=o_direct
+
+rd=default,elapsed=10800,fwdrate=max,interval=1,maxdata=1012.5g
+#rd=makedirs1,fwd=(fwdWhost*),operations=(mkdir),maxdata=1m
+#rd=makefiles1,fwd=(fwdWhost*),operations=(create),maxdata=1m
+
+rd=writefiles1,fwd=(fwdWhost*),format=restart
+rd=writeread1,fwd=(fwdRhost*,fwdWhost*),format=no
+rd=readall1,fwd=(fwdRhost*),format=no
+rd=delall1,fwd=(fwdRhost*),operations=(delete),maxdata=1m
+EOM
+    chown $LINUX_USER:$LINUX_USER $FILENAME
+}
+
+function write_smallfileIO() {
+    FILENAME=/home/$LINUX_USER/smallfileIO.conf
+    /bin/cat <<EOM >$FILENAME
+create_anchors=yes
+include=azure-clients.conf
+
+fsd=default,depth=1,width=10,files=1500,size=384k
+EOM
+
+    COUNTER=0
+    for VFXT in $(echo $NFS_IP_CSV | sed "s/,/ /g")
+    do
+        MOUNT_POINT="${BASE_DIR}${NODE_MOUNT_PREFIX}${COUNTER}"
+        FSD_HOST="host-${COUNTER}"
+        echo "fsd=fsd!${FSD_HOST},anchor=${MOUNT_POINT}/sequential/!${FSD_HOST}" >> $FILENAME
+        COUNTER=$(($COUNTER + 1))
+    done
+
+    /bin/cat <<EOM >>$FILENAME 
+
+fwd=format,threads=48,xfersize=512k,openflags=fsync
+fwd=default,xfersize=16k,fileio=random,fileselect=(sequential),threads=24
+fwd=fwdrandW!host,host=!host,fsd=(fsd!host*),operation=write,openflags=o_direct,threads=48
+fwd=fwdseqW!host,host=!host,fsd=(fsd!host*),operation=write,openflags=fsync,fileio=sequential,xfersize=512k
+fwd=fwdrandR!host,host=!host,fsd=(fsd!host*),operation=read,openflags=o_direct
+fwd=fwdseqR!host,host=!host,fsd=(fsd!host*),operation=read,openflags=o_direct,fileio=sequential,xfersize=512k
+
+rd=default,elapsed=1800,fwdrate=max,interval=1,maxdata=202500m
+rd=seqwritefsync1,fwd=(fwdseqWhost*),format=restart
+rd=seqwritedirect1,fwd=(fwdseqWhost*),format=no
+rd=randwrite2,fwd=(fwdrandWhost*),format=no,elapsed=900
+rd=writeread1,fwd=(fwdrandRhost*,fwdrandWhost*),format=no
+rd=randread1,fwd=(fwdrandRhost*),format=no
+rd=seqreadcc1,fwd=(fwdseqRhost*),format=no
+rd=seqreaddirect1,fwd=(fwdseqRhost*),format=no,openflags=o_direct
+rd=deleteall1,fwd=(fwdRhost*),operations=(delete)
+EOM
+    chown $LINUX_USER:$LINUX_USER $FILENAME
+}
+
 function write_vdbench_files() {
     write_run_vdbench
     write_copy_idrsa
     write_azure_clients
     write_inmem
     write_ondisk
+    write_throughput
+    write_smallfileIO
 }
 
 function main() {
