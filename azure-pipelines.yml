@@ -16,8 +16,6 @@ steps:
     python3 --version
     pip install --upgrade pip setuptools wheel
     pip install -r test/requirements.txt
-    pip install pytest
-    pip install pytest-cov
   displayName: 'Install Python Dependencies'
 
 - script: |
