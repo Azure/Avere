@@ -19,17 +19,18 @@ from pprint import pformat
 from random import choice
 from string import ascii_lowercase
 
-import requests
 from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.resource import ResourceManagementClient
-from azure.mgmt.resource.resources.models import DeploymentMode
+from azure.mgmt.resource.resources.models import DeploymentMode, TemplateLink
 
 
 class AvereTemplateDeploy:
     def __init__(self, deploy_params={}, resource_group=None,
                  location='eastus2', debug=False):
         """Initialize, authenticate to Azure, generate deploy params."""
-        self._template_url = 'https://raw.githubusercontent.com/Azure/Avere/master/src/vfxt/azuredeploy-auto.json'
+        self.template_link = TemplateLink(
+            uri='https://raw.githubusercontent.com/' +
+                'Azure/Avere/master/src/vfxt/azuredeploy-auto.json')
         self.debug = debug
 
         self.deploy_params = deploy_params
@@ -87,15 +88,15 @@ class AvereTemplateDeploy:
             'servicePrincipalPassword': os.environ['AZURE_CLIENT_SECRET'],
             'servicePrincipalTenant': os.environ['AZURE_TENANT_ID']
         }
-        params = {**self.deploy_params, **deploy_secrets}
+        params = {**deploy_secrets, **self.deploy_params}
 
         return self.rm_client.deployments.create_or_update(
             resource_group_name=self.resource_group,
-            deployment_name='azuredeploy-auto',
+            deployment_name='avere_template_deploy',
             properties={
                 'mode': DeploymentMode.incremental,
                 'parameters': {k: {'value': v} for k, v in params.items()},
-                'template': requests.get(self._template_url).json()
+                'template_link': self.template_link
             }
         )
 
