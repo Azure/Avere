@@ -14,9 +14,10 @@ Objects require the following environment variables at instantiation:
 
 import json
 import os
+from datetime import datetime
 from pprint import pformat
 from random import choice
-from string import ascii_lowercase, digits
+from string import ascii_lowercase
 
 import requests
 from azure.common.credentials import ServicePrincipalCredentials
@@ -47,15 +48,16 @@ class AvereTemplateDeploy:
         )
 
         if not self.deploy_params:
-            random_id = 'av' + \
-                ''.join(choice(ascii_lowercase + digits) for _ in range(6))
-            self.resource_group = 'aapipe-' + random_id + '-rg'
+            gen_id = 'av' + \
+                datetime.utcnow().strftime('%m%d%H%M%S') + \
+                choice(ascii_lowercase)
+            self.resource_group = gen_id + '-rg'
             self.deploy_params = {
                 'virtualNetworkResourceGroup': self.resource_group,
-                'virtualNetworkName': random_id + '-vnet',
-                'virtualNetworkSubnetName': random_id + '-subnet',
-                'avereBackedStorageAccountName': random_id + 'sa',
-                'controllerName': random_id + '-con',
+                'virtualNetworkName': gen_id + '-vnet',
+                'virtualNetworkSubnetName': gen_id + '-subnet',
+                'avereBackedStorageAccountName': gen_id + 'sa',
+                'controllerName': gen_id + '-con',
                 'controllerAuthenticationType': 'password'
             }
             self._debug('> Generated deploy parameters: \n{}'.format(
