@@ -212,6 +212,7 @@
       "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
     },
     "createNic?": true,
+    "useExtension?": true,
     "storageAccountType": "Standard_LRS",
     "storageAccountKind": "StorageV2",
     "environmentVariables": "[concat(' AZURE_TENANT_ID=', variables('servicePrincipalTenant'),' AZURE_CLIENT_ID=', variables('servicePrincipalAppId'),' RESOURCE_GROUP=', resourceGroup().name,' LOCATION=', resourceGroup().location,' NETWORK_RESOURCE_GROUP=', variables('virtualNetworkResourceGroup'),' NETWORK=', variables('virtualNetworkName'),' SUBNET=', variables('virtualNetworkSubnetName'),' AVERE_CLUSTER_ROLE=\"', variables('avereClusterRole'),'\" CREATE_CLOUD_BACKED_CLUSTER=', variables('useAvereBackedStorageAccount'),' STORAGE_ACCOUNT=', variables('avereBackedStorageAccountName'),' CACHE_SIZE=', variables('avereCacheSizeGB'),' CLUSTER_NAME=', variables('avereClusterName'),' INSTANCE_TYPE=', variables('avereInstanceType'),' CONTROLLER_ADMIN_USER_NAME=',variables('controllerAdminUsername'),' DEBUG=\"',variables('additionalVFXTParameters'),'\"')]",
@@ -247,10 +248,8 @@
         "version": "latest"
       }
     },
-    "vs": "Creating vserver vserver (",
-    "ve": "/255.255.255.255",
-    "ms": " management address: ",
-    "maxIPLen": 15
+    "vsip": "VSERVER_IPS=",
+    "mip": "MGMT_IP="
   },
   "resources": [
     {
@@ -380,12 +379,14 @@
       }
     },
     {
+      "condition": "[variables('useExtension?')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "name": "[concat(variables('vmName'), '/configureagent')]",
       "apiVersion": "2017-12-01",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+        "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('avereBackedStorageAccountName'))]"
       ],
       "properties": {
         "publisher": "Microsoft.Azure.Extensions",
@@ -440,11 +441,11 @@
     },
     "VSERVER_IPS": {
       "type": "string",
-      "value": "[substring(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,variables('vs')),length(variables('vs'))),sub(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,variables('ve')),add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,variables('vs')),length(variables('vs')))))]"
+      "value": "[substring(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,variables('vsip')),length(variables('vsip'))),indexOf(substring(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,variables('vsip')),length(variables('vsip')))),'\n'))]"
     },
     "MGMT_IP": {
       "type": "string",
-      "value": "[substring(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,variables('ms')),length(variables('ms'))),indexOf(substring(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,variables('ms')),length(variables('ms'))),variables('maxIPLen')),'\n'))]"
+      "value": "[substring(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,variables('mip')),length(variables('mip'))),indexOf(substring(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,variables('mip')),length(variables('mip')))),'\n'))]"
     }
   }
 }

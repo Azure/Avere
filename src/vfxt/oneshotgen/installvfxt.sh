@@ -10,6 +10,7 @@ AZURE_HOME_DIR=/home/$CONTROLLER_ADMIN_USER_NAME
 VFXT_INSTALL_TEMPLATE=$AZURE_HOME_DIR/vfxtinstall
 CLOUD_BACKED_TEMPLATE=/create-cloudbacked-cluster
 MINIMAL_TEMPLATE=/create-minimal-cluster
+VFXT_LOG_FILE=$AZURE_HOME_DIR/vfxt.log
 
 function wait_azure_home_dir() {
     counter=0
@@ -48,12 +49,17 @@ function configure_vfxt_template() {
     sed -i 's/^CLUSTER_NAME/#CLUSTER_NAME/g' $VFXT_INSTALL_TEMPLATE
     sed -i 's/^ADMIN_PASSWORD/#ADMIN_PASSWORD/g' $VFXT_INSTALL_TEMPLATE
     sed -i 's/^INSTANCE_TYPE/#INSTANCE_TYPE/g' $VFXT_INSTALL_TEMPLATE
-    sed -i "s:~/vfxt.log:$AZURE_HOME_DIR/vfxt.log:g"  $VFXT_INSTALL_TEMPLATE
+    sed -i "s:~/vfxt.log:$VFXT_LOG_FILE:g"  $VFXT_INSTALL_TEMPLATE
 }
 
 function create_vfxt() {
     cd $AZURE_HOME_DIR
     $VFXT_INSTALL_TEMPLATE
+}
+
+function print_vfxt_vars() {
+    echo "VSERVER_IPS=$(sed -n "s/^.*Creating vserver vserver (\(.*\)\/255.255.255.255).*$/\1/p" $VFXT_LOG_FILE)"
+    echo "MGMT_IP=$(sed -n "s/^.*management address: \(.*\)/\1/p" $VFXT_LOG_FILE)"
 }
 
 function dump_env_vars() {
@@ -93,6 +99,9 @@ function main() {
 
     echo "create_vfxt"
     create_vfxt
+
+    echo "print vfxt vars"
+    print_vfxt_vars
 
     echo "installation complete"
 }
