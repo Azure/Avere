@@ -14,21 +14,23 @@ Objects require the following environment variables at instantiation:
 
 import json
 import os
+from datetime import datetime
 from pprint import pformat
 from random import choice
-from string import ascii_lowercase, digits
+from string import ascii_lowercase
 
-import requests
 from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.resource import ResourceManagementClient
-from azure.mgmt.resource.resources.models import DeploymentMode
+from azure.mgmt.resource.resources.models import DeploymentMode, TemplateLink
 
 
 class AvereTemplateDeploy:
     def __init__(self, deploy_params={}, resource_group=None,
                  location='eastus2', debug=False):
         """Initialize, authenticate to Azure, generate deploy params."""
-        self._template_url = 'https://raw.githubusercontent.com/Azure/Avere/master/src/vfxt/azuredeploy-auto.json'
+        self.template_link = TemplateLink(
+            uri='https://raw.githubusercontent.com/' +
+                'Azure/Avere/master/src/vfxt/azuredeploy-auto.json')
         self.debug = debug
 
         self.deploy_params = deploy_params
@@ -47,15 +49,16 @@ class AvereTemplateDeploy:
         )
 
         if not self.deploy_params:
-            random_id = 'av' + \
-                ''.join(choice(ascii_lowercase + digits) for _ in range(6))
-            self.resource_group = 'aapipe-' + random_id + '-rg'
+            gen_id = 'av' + \
+                datetime.utcnow().strftime('%m%d%H%M%S') + \
+                choice(ascii_lowercase)
+            self.resource_group = gen_id + '-rg'
             self.deploy_params = {
                 'virtualNetworkResourceGroup': self.resource_group,
-                'virtualNetworkName': random_id + '-vnet',
-                'virtualNetworkSubnetName': random_id + '-subnet',
-                'avereBackedStorageAccountName': random_id + 'sa',
-                'controllerName': random_id + '-con',
+                'virtualNetworkName': gen_id + '-vnet',
+                'virtualNetworkSubnetName': gen_id + '-subnet',
+                'avereBackedStorageAccountName': gen_id + 'sa',
+                'controllerName': gen_id + '-con',
                 'controllerAuthenticationType': 'password'
             }
             self._debug('> Generated deploy parameters: \n{}'.format(
@@ -85,15 +88,15 @@ class AvereTemplateDeploy:
             'servicePrincipalPassword': os.environ['AZURE_CLIENT_SECRET'],
             'servicePrincipalTenant': os.environ['AZURE_TENANT_ID']
         }
-        params = {**self.deploy_params, **deploy_secrets}
+        params = {**deploy_secrets, **self.deploy_params}
 
         return self.rm_client.deployments.create_or_update(
             resource_group_name=self.resource_group,
-            deployment_name='azuredeploy-auto',
+            deployment_name='avere_template_deploy',
             properties={
                 'mode': DeploymentMode.incremental,
                 'parameters': {k: {'value': v} for k, v in params.items()},
-                'template': requests.get(self._template_url).json()
+                'template_link': self.template_link
             }
         )
 
