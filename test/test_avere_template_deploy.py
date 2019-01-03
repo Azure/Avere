@@ -13,9 +13,7 @@ from avere_template_deploy import AvereTemplateDeploy
 # TEST CASES ##################################################################
 class TestDeployment:
     def test_deploy_template(self, atd, resource_group):
-        # 2018-1231: TURNED OFF FOR NOW
-        # wait_for_op(atd.deploy())
-        pass
+        wait_for_op(atd.deploy())
 
 
 # FIXTURES ####################################################################
