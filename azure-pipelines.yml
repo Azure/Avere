@@ -17,7 +17,7 @@ steps:
 
 - script: |
     ssh-keygen -t rsa -N "" -f id_rsa
-    cat ~/id_rsa.pub
+    cat ~/.ssh/id_rsa.pub
   displayName: 'Generate SSH keys'
 
 - script: |
