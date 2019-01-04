@@ -4,6 +4,7 @@
 Driver for testing template-based deployment of the Avere vFXT product.
 """
 
+import json
 from time import time
 
 import pytest
@@ -48,6 +49,8 @@ def wait_for_op(op, timeout_sec=60):
     result = op.result()
     if result:
         print('>> operation result: {}'.format(result))
+        print('>> result.properties: {}'.format(json.dumps(result.properties, indent=4)))
+    return result
 
 
 if __name__ == '__main__':

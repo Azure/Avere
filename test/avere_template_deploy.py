@@ -77,18 +77,20 @@ class AvereTemplateDeploy:
         self._debug('> Deleting resource group: ' + self.resource_group)
         return self.rm_client.resource_groups.delete(self.resource_group)
 
-    def deploy(self):
+    def deploy(self, add_secrets_params=True):
         """Deploys the Avere vFXT template."""
         self._debug('> Deploying template')
 
-        deploy_secrets = {
-            'adminPassword': os.environ['AVERE_ADMIN_PW'],
-            'controllerPassword': os.environ['AVERE_CONTROLLER_PW'],
-            'servicePrincipalAppId': os.environ['AZURE_CLIENT_ID'],
-            'servicePrincipalPassword': os.environ['AZURE_CLIENT_SECRET'],
-            'servicePrincipalTenant': os.environ['AZURE_TENANT_ID']
-        }
-        params = {**deploy_secrets, **self.deploy_params}
+        params = {**self.deploy_params}
+        if add_secrets_params:
+            deploy_secrets = {
+                'adminPassword': os.environ['AVERE_ADMIN_PW'],
+                'controllerPassword': os.environ['AVERE_CONTROLLER_PW'],
+                'servicePrincipalAppId': os.environ['AZURE_CLIENT_ID'],
+                'servicePrincipalPassword': os.environ['AZURE_CLIENT_SECRET'],
+                'servicePrincipalTenant': os.environ['AZURE_TENANT_ID']
+            }
+            params = {**deploy_secrets, **params}
 
         return self.rm_client.deployments.create_or_update(
             resource_group_name=self.resource_group,
