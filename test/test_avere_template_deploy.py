@@ -6,14 +6,28 @@ Driver for testing template-based deployment of the Avere vFXT product.
 
 from time import time
 
+import paramiko
 import pytest
+from scp import SCPClient
+
 from avere_template_deploy import AvereTemplateDeploy
 
 
 # TEST CASES ##################################################################
 class TestDeployment:
     def test_deploy_template(self, atd, resource_group):
-        wait_for_op(atd.deploy())
+        op = atd.deploy()
+        try:
+            wait_for_op(op)
+        finally:
+            result = op.result()
+            print('>> operation result: {}'.format(result))
+            if result:
+                print('>> result.properties: {}'.format(result.properties))
+                user, server = result.properties.outputs['ssH_STRING'].split('@')
+                ssh = createSSHClient(server, user)
+                scp = SCPClient(ssh.get_transport())
+                scp.get(r'~/vfxt.log', r'./vfxt.' + atd.resource_group + '.log')
 
 
 # FIXTURES ####################################################################
@@ -48,6 +62,16 @@ def wait_for_op(op, timeout_sec=60):
     result = op.result()
     if result:
         print('>> operation result: {}'.format(result))
+        print('>> result.properties: {}'.format(result.properties))
+    return result
+
+
+def createSSHClient(server, user):
+    client = paramiko.SSHClient()
+    client.load_system_host_keys()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(server, 22, user)
+    return client
 
 
 if __name__ == '__main__':

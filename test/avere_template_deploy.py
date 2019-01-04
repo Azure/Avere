@@ -37,6 +37,7 @@ class AvereTemplateDeploy:
         self.resource_group = self.deploy_params.pop('resourceGroup',
                                                      resource_group)
         self.location = self.deploy_params.pop('location', location)
+        self.ssh_pub_key_path = os.path.expanduser('~/.ssh/id_rsa.pub')
 
         self._debug('> Loading Azure credentials')
         self.rm_client = ResourceManagementClient(
@@ -59,7 +60,7 @@ class AvereTemplateDeploy:
                 'virtualNetworkSubnetName': gen_id + '-subnet',
                 'avereBackedStorageAccountName': gen_id + 'sa',
                 'controllerName': gen_id + '-con',
-                'controllerAuthenticationType': 'password'
+                'controllerAuthenticationType': 'sshPublicKey'
             }
             self._debug('> Generated deploy parameters: \n{}'.format(
                 json.dumps(self.deploy_params, indent=4)))
@@ -77,18 +78,24 @@ class AvereTemplateDeploy:
         self._debug('> Deleting resource group: ' + self.resource_group)
         return self.rm_client.resource_groups.delete(self.resource_group)
 
-    def deploy(self):
+    def deploy(self, add_secrets_params=True):
         """Deploys the Avere vFXT template."""
         self._debug('> Deploying template')
 
-        deploy_secrets = {
-            'adminPassword': os.environ['AVERE_ADMIN_PW'],
-            'controllerPassword': os.environ['AVERE_CONTROLLER_PW'],
-            'servicePrincipalAppId': os.environ['AZURE_CLIENT_ID'],
-            'servicePrincipalPassword': os.environ['AZURE_CLIENT_SECRET'],
-            'servicePrincipalTenant': os.environ['AZURE_TENANT_ID']
-        }
-        params = {**deploy_secrets, **self.deploy_params}
+        params = {**self.deploy_params}
+        if add_secrets_params:
+            with open(self.ssh_pub_key_path, 'r') as ssh_pub_key_file:
+                ssh_pub_key = ssh_pub_key_file.read()
+
+            deploy_secrets = {
+                'adminPassword': os.environ['AVERE_ADMIN_PW'],
+                'controllerPassword': os.environ['AVERE_CONTROLLER_PW'],
+                'servicePrincipalAppId': os.environ['AZURE_CLIENT_ID'],
+                'servicePrincipalPassword': os.environ['AZURE_CLIENT_SECRET'],
+                'servicePrincipalTenant': os.environ['AZURE_TENANT_ID'],
+                'controllerSSHKeyData': ssh_pub_key
+            }
+            params = {**deploy_secrets, **params}
 
         return self.rm_client.deployments.create_or_update(
             resource_group_name=self.resource_group,
