@@ -16,6 +16,10 @@ steps:
     architecture: 'x64'
 
 - script: |
+    ssh-keygen -t rsa -N "" -f id_rsa
+  displayName: 'Generate SSH keys'
+
+- script: |
     python3 --version
     pip install --upgrade pip setuptools wheel
     pip install -r test/requirements.txt
