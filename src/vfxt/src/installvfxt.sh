@@ -24,13 +24,6 @@ function wait_azure_home_dir() {
     done
 }
 
-function setup_az() {
-    # don't show the client secret
-    set +x
-    az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-    set -x
-}
-
 function configure_vfxt_template() {
     if [ "$CREATE_CLOUD_BACKED_CLUSTER" == "$ARM_TRUE" ]; then
         cp $CLOUD_BACKED_TEMPLATE $VFXT_INSTALL_TEMPLATE
@@ -49,6 +42,8 @@ function configure_vfxt_template() {
     sed -i 's/^CLUSTER_NAME/#CLUSTER_NAME/g' $VFXT_INSTALL_TEMPLATE
     sed -i 's/^ADMIN_PASSWORD/#ADMIN_PASSWORD/g' $VFXT_INSTALL_TEMPLATE
     sed -i 's/^INSTANCE_TYPE/#INSTANCE_TYPE/g' $VFXT_INSTALL_TEMPLATE
+    # replace "--from-environment" with "--on-instance" since we are using 
+    sed -i 's/ --from-environment / --on-instance /g' $VFXT_INSTALL_TEMPLATE
     sed -i "s:~/vfxt.log:$VFXT_LOG_FILE:g"  $VFXT_INSTALL_TEMPLATE
 }
 
@@ -65,10 +60,6 @@ function print_vfxt_vars() {
 function dump_env_vars() {
     echo "start env dump"
     echo $(pwd)
-    echo "export AZURE_CLIENT_ID=$AZURE_CLIENT_ID"
-    # don't show the client secret, only uncomment if you are debugging
-    # echo "export AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET"
-    echo "export AZURE_TENANT_ID=$AZURE_TENANT_ID"
     echo "export RESOURCE_GROUP=$RESOURCE_GROUP"
     echo "export LOCATION=$LOCATION"
     echo "export NETWORK_RESOURCE_GROUP=$NETWORK_RESOURCE_GROUP"
@@ -90,9 +81,6 @@ function main() {
 
     #echo "dump env vars for debugging"
     #dump_env_vars
-
-    echo "setup az"
-    setup_az
 
     echo "configure vfxt install template"
     configure_vfxt_template
