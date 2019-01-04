@@ -17,6 +17,8 @@ steps:
 
 - script: |
     cd
+    mkdir .ssh
+    cd .ssh
     ssh-keygen -t rsa -N "" -f id_rsa
     ls -al
     cat ~/.ssh/id_rsa.pub
