@@ -4,7 +4,6 @@
 Driver for testing template-based deployment of the Avere vFXT product.
 """
 
-import json
 from time import time
 
 import paramiko
@@ -24,7 +23,7 @@ class TestDeployment:
             result = op.result()
             print('>> operation result: {}'.format(result))
             if result:
-                print('>> result.properties: {}'.format(json.dumps(result.properties, indent=4)))
+                print('>> result.properties: {}'.format(result.properties))
                 user, server = result.properties.outputs['ssH_STRING'].split('@')
                 ssh = createSSHClient(server, user)
                 scp = SCPClient(ssh.get_transport())
@@ -63,7 +62,7 @@ def wait_for_op(op, timeout_sec=60):
     result = op.result()
     if result:
         print('>> operation result: {}'.format(result))
-        print('>> result.properties: {}'.format(json.dumps(result.properties, indent=4)))
+        print('>> result.properties: {}'.format(result.properties))
     return result
 
 
