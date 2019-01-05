@@ -1,7 +1,7 @@
 # https://aka.ms/yaml
-# trigger:
-# - master
-# - releases/*
+trigger:
+- master
+- releases/*
 
 pool:
   vmImage: 'Ubuntu 16.04'
@@ -43,7 +43,7 @@ steps:
       echo
     done
   displayName: 'Dump vfxt.log files'
-  condition: always()
+  condition: succeededOrFailed()
 
 - task: PublishTestResults@2
   condition: succeededOrFailed()
