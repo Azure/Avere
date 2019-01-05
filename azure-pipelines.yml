@@ -1,6 +1,3 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 trigger:
 - master
@@ -16,12 +13,10 @@ steps:
     architecture: 'x64'
 
 - script: |
-    cd
-    mkdir .ssh
-    cd .ssh
+    mkdir ~/.ssh && cd $_
     ssh-keygen -t rsa -N "" -f id_rsa
     ls -al
-    cat ~/.ssh/id_rsa.pub
+    echo "SSH PUBLIC KEY: $(cat ~/.ssh/id_rsa.pub)"
   displayName: 'Generate SSH keys'
 
 - script: |
@@ -41,8 +36,17 @@ steps:
     AZURE_CLIENT_SECRET: $(SPPW)
     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
+- script: |
+    for file in $(ls vfxt*.log); do
+      echo "DUMPING $file"
+      cat $file
+      echo
+    done
+  displayName: 'Dump vfxt.log files'
+  condition: succeededOrFailed()
+
 - task: PublishTestResults@2
   condition: succeededOrFailed()
   inputs:
     testResultsFiles: 'junit/test-results.xml'
-    testRunTitle: 'Publish test results for Python $(python.version)'
+    testRunTitle: 'Publish pytest results for Python $(python.version)'

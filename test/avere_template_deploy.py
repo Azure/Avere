@@ -13,6 +13,7 @@ Objects require the following environment variables at instantiation:
 """
 
 import json
+import logging
 import os
 from datetime import datetime
 from pprint import pformat
@@ -20,18 +21,18 @@ from random import choice
 from string import ascii_lowercase
 
 from azure.common.credentials import ServicePrincipalCredentials
+from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.resource.resources.models import DeploymentMode, TemplateLink
 
 
 class AvereTemplateDeploy:
     def __init__(self, deploy_params={}, resource_group=None,
-                 location='eastus2', debug=False):
+                 location='eastus2'):
         """Initialize, authenticate to Azure, generate deploy params."""
         self.template_link = TemplateLink(
             uri='https://raw.githubusercontent.com/' +
                 'Azure/Avere/master/src/vfxt/azuredeploy-auto.json')
-        self.debug = debug
 
         self.deploy_params = deploy_params
         self.resource_group = self.deploy_params.pop('resourceGroup',
@@ -39,13 +40,18 @@ class AvereTemplateDeploy:
         self.location = self.deploy_params.pop('location', location)
         self.ssh_pub_key_path = os.path.expanduser('~/.ssh/id_rsa.pub')
 
-        self._debug('> Loading Azure credentials')
+        logging.debug('> Loading Azure credentials')
+        sp_creds = ServicePrincipalCredentials(
+            client_id=os.environ['AZURE_CLIENT_ID'],
+            secret=os.environ['AZURE_CLIENT_SECRET'],
+            tenant=os.environ['AZURE_TENANT_ID']
+        )
         self.rm_client = ResourceManagementClient(
-            credentials=ServicePrincipalCredentials(
-                client_id=os.environ['AZURE_CLIENT_ID'],
-                secret=os.environ['AZURE_CLIENT_SECRET'],
-                tenant=os.environ['AZURE_TENANT_ID']
-            ),
+            credentials=sp_creds,
+            subscription_id=os.environ['AZURE_SUBSCRIPTION_ID']
+        )
+        self.nm_client = NetworkManagementClient(
+            credentials=sp_creds,
             subscription_id=os.environ['AZURE_SUBSCRIPTION_ID']
         )
 
@@ -60,14 +66,18 @@ class AvereTemplateDeploy:
                 'virtualNetworkSubnetName': gen_id + '-subnet',
                 'avereBackedStorageAccountName': gen_id + 'sa',
                 'controllerName': gen_id + '-con',
+                'controllerAdminUsername': 'azureuser',
                 'controllerAuthenticationType': 'sshPublicKey'
             }
-            self._debug('> Generated deploy parameters: \n{}'.format(
+            logging.debug('> Generated deploy parameters: \n{}'.format(
                 json.dumps(self.deploy_params, indent=4)))
+
+        self.controller_name = self.deploy_params['controllerName']
+        self.controller_user = self.deploy_params['controllerAdminUsername']
 
     def create_resource_group(self):
         """Creates the Azure resource group for this deployment."""
-        self._debug('> Creating resource group: ' + self.resource_group)
+        logging.debug('> Creating resource group: ' + self.resource_group)
         return self.rm_client.resource_groups.create_or_update(
             self.resource_group,
             {'location': self.location}
@@ -75,12 +85,12 @@ class AvereTemplateDeploy:
 
     def delete_resource_group(self):
         """Deletes the Azure resource group for this deployment."""
-        self._debug('> Deleting resource group: ' + self.resource_group)
+        logging.debug('> Deleting resource group: ' + self.resource_group)
         return self.rm_client.resource_groups.delete(self.resource_group)
 
     def deploy(self, add_secrets_params=True):
         """Deploys the Avere vFXT template."""
-        self._debug('> Deploying template')
+        logging.debug('> Deploying template')
 
         params = {**self.deploy_params}
         if add_secrets_params:
@@ -106,11 +116,6 @@ class AvereTemplateDeploy:
                 'template_link': self.template_link
             }
         )
-
-    def _debug(self, s):
-        """Prints the passed string, with a DEBUG header, if debug is on."""
-        if self.debug:
-            print('[DEBUG]: {}'.format(s))
 
     def __str__(self):
         return pformat(vars(self), indent=4)

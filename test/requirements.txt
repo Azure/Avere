@@ -1,6 +1,7 @@
+azure.mgmt.network
 azure.mgmt.resource
 requests
+paramiko
 pytest
 pytest-cov
-paramiko
 scp
