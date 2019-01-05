@@ -4,9 +4,12 @@
 Driver for testing template-based deployment of the Avere vFXT product.
 """
 
+import json
 import logging
+import os
 from time import time
 
+import requests
 import paramiko
 import pytest
 from scp import SCPClient
@@ -18,18 +21,44 @@ from avere_template_deploy import AvereTemplateDeploy
 class TestDeployment:
     def test_deploy_template(self, group_vars):
         atd = group_vars['atd']
+        atd.template = requests.get(
+                url='https://raw.githubusercontent.com/' +
+                    'Azure/Avere/master/src/vfxt/azuredeploy-auto.json').json()
+        with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
+            ssh_pub_key = ssh_pub_f.read()
+        atd.deploy_params = {
+            'virtualNetworkResourceGroup': atd.resource_group,
+            'virtualNetworkName': atd.deploy_id + '-vnet',
+            'virtualNetworkSubnetName': atd.deploy_id + '-subnet',
+            'avereBackedStorageAccountName': atd.deploy_id + 'sa',
+            'controllerName': atd.deploy_id + '-con',
+            'controllerAdminUsername': 'azureuser',
+            'controllerAuthenticationType': 'sshPublicKey',
+            'controllerSSHKeyData': ssh_pub_key,
+            'adminPassword': os.environ['AVERE_ADMIN_PW'],
+            'controllerPassword': os.environ['AVERE_CONTROLLER_PW'],
+            'servicePrincipalAppId': os.environ['AZURE_CLIENT_ID'],
+            'servicePrincipalPassword': os.environ['AZURE_CLIENT_SECRET'],
+            'servicePrincipalTenant': os.environ['AZURE_TENANT_ID']
+        }
+        group_vars['controller_name'] = atd.deploy_params['controllerName']
+        group_vars['controller_user'] = atd.deploy_params['controllerAdminUsername']
+
+        logging.debug('> Generated deploy parameters: \n{}'.format(
+            json.dumps(atd.deploy_params, indent=4)))
         group_vars['deploy_result'] = wait_for_op(atd.deploy())
 
     def test_get_vfxt_log(self, group_vars):
         atd = group_vars['atd']
         logging.info('> Getting vfxt.log from controller: {}'.format(
-            atd.controller_name))
+            group_vars['controller_name']))
         controller_ip = atd.nm_client.public_ip_addresses.get(
             atd.resource_group,
-            'publicip-' + atd.controller_name).ip_address
-        ssh = create_ssh_client(atd.controller_user, controller_ip)
+            'publicip-' + group_vars['controller_name']).ip_address
+        ssh = create_ssh_client(group_vars['controller_user'], controller_ip)
         scp = SCPClient(ssh.get_transport())
-        scp.get(r'~/vfxt.log', r'./vfxt.' + atd.controller_name + '.log')
+        scp.get(r'~/vfxt.log',
+                r'./vfxt.' + group_vars['controller_name'] + '.log')
 
 
 # FIXTURES ####################################################################
@@ -68,11 +97,11 @@ def wait_for_op(op, timeout_sec=60):
 
 def create_ssh_client(user, host, port=22):
     """Creates (and returns) an SSHClient. Auth'n is via publickey."""
-    client = paramiko.SSHClient()
-    client.load_system_host_keys()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(host, port, user)
-    return client
+    ssh_client = paramiko.SSHClient()
+    ssh_client.load_system_host_keys()
+    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh_client.connect(host, port, user)
+    return ssh_client
 
 
 if __name__ == '__main__':
