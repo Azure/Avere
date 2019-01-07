@@ -7,17 +7,16 @@ Driver for testing template-based deployment of the Avere vFXT product.
 import json
 import logging
 import os
-from time import time
+from time import sleep, time
 
-import requests
 import paramiko
 import pytest
+import requests
 from scp import SCPClient
 
 from avere_template_deploy import AvereTemplateDeploy
-from azure.mgmt.resource.resources.models import DeploymentMode, TemplateLink
 
-result = None
+
 # TEST CASES ##################################################################
 class TestDeployment:
 
@@ -63,38 +62,39 @@ class TestDeployment:
                 r'./vfxt.' + group_vars['controller_name'] + '.log')
 
 
-    # def test_vdbench(self, group_vars):
-    #     atd = group_vars['atd']
-    #     with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
-    #         ssh_pub_key = ssh_pub_f.read()
-    #     result = group_vars['deploy_result']
-    #     vserver = result.properties.outputs["vserveR_IPS"]["value"]
-    #     x = vserver.split("-")
-    #     ip1 = x[0]
-    #     ip2 = x[1]
-    #     ip1_split_list = ip1.split(".")
-    #     ip2_split_list = ip2.split(".")
-    #     outcome = ip1_split_list[-1]
-    #     outcome2 = ip2_split_list[-1]
+    def test_vdbench(self, group_vars):
+        atd = group_vars['atd']
+        with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
+            ssh_pub_key = ssh_pub_f.read()
+        result = group_vars['deploy_result']
+        vserver = result.properties.outputs["vserveR_IPS"]["value"]
+        x = vserver.split("-")
+        ip1 = x[0]
+        ip2 = x[1]
+        ip1_split_list = ip1.split(".")
+        ip2_split_list = ip2.split(".")
+        outcome = ip1_split_list[-1]
+        outcome2 = ip2_split_list[-1]
 
-    #     prefix = ".".join(ip1_split_list[:-1])
-    #     prefix += "."
+        prefix = ".".join(ip1_split_list[:-1])
+        prefix += "."
 
-    #     vserver_list = ",".join([prefix + str(n) for n in range(int(outcome), int(outcome2)+1)])
-    #     atd.template = requests.get(url="https://raw.githubusercontent.com/Azure/Avere/master/src/client/vmas/azuredeploy.json").json()
-    #     original_params = atd.deploy_params.copy()
-    #     atd.deploy_params = {'uniquename': 'testString',
-    #                          'sshKeyData': ssh_pub_key,
-    #                          'virtualNetworkResourceGroup': original_params['virtualNetworkResourceGroup'],
-    #                          'virtualNetworkName': original_params['virtualNetworkName'],
-    #                          'virtualNetworkSubnetName': original_params['virtualNetworkSubnetName'],
-    #                          'nfsCommaSeparatedAddresses': vserver_list,
-    #                          'vmCount': 12,
-    #                          'nfsExportPath': '/msazure',
-    #                          'bootstrapScriptPath': '/bootstrap/bootstrap.sh'
-    #                         }
-    #     wait_for_op(atd.deploy())
-    
+        vserver_list = ",".join([prefix + str(n) for n in range(int(outcome), int(outcome2)+1)])
+        atd.template = requests.get(url="https://raw.githubusercontent.com/Azure/Avere/master/src/client/vmas/azuredeploy.json").json()
+        original_params = atd.deploy_params.copy()
+        atd.deploy_params = {'uniquename': 'testString',
+                             'sshKeyData': ssh_pub_key,
+                             'virtualNetworkResourceGroup': original_params['virtualNetworkResourceGroup'],
+                             'virtualNetworkName': original_params['virtualNetworkName'],
+                             'virtualNetworkSubnetName': original_params['virtualNetworkSubnetName'],
+                             'nfsCommaSeparatedAddresses': vserver_list,
+                             'vmCount': 12,
+                             'nfsExportPath': '/msazure',
+                             'bootstrapScriptPath': '/bootstrap/bootstrap.sh'
+                            }
+        wait_for_op(atd.deploy())
+
+
 # FIXTURES ####################################################################
 @pytest.fixture(scope='class')
 def group_vars():
@@ -136,6 +136,39 @@ def create_ssh_client(user, host, port=22):
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh_client.connect(host, port, user)
     return ssh_client
+
+
+def run_ssh_commands(ssh_client, commands):
+    recv_buff_size = 16 * 1024
+    channel = ssh_client.invoke_shell()
+
+    try:
+        sleep(1)
+        channel.recv(recv_buff_size)
+        channel.send('\n')
+        sleep(1)
+        for cmd in commands:
+            # print('CMD   : ' + cmd)
+            channel.send(cmd + '\n')
+            while not channel.recv_ready():
+                sleep(0.5)
+            sleep(0.5)
+            cmd_out = channel.recv(recv_buff_size).decode('utf-8')
+            # print('OUTPUT: ' + cmd_out)
+            # print('-' * 40)
+
+            # Check return code of the last command run.
+            channel.send('echo $?\n')
+            while not channel.recv_ready():
+                sleep(0.5)
+            sleep(0.5)
+            cmd_rc = int(channel.recv(recv_buff_size).decode('utf-8').split('\n')[1])
+            if cmd_rc:
+                raise Exception('Command failed with RC ' + str(cmd_rc) + '\n' + cmd_out)
+
+            sleep(0.5)
+    finally:
+        channel.close()
 
 
 if __name__ == '__main__':
