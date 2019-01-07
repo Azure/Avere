@@ -7,11 +7,11 @@ Driver for testing template-based deployment of the Avere vFXT product.
 import json
 import logging
 import os
-from time import time
+from time import sleep, time
 
-import requests
 import paramiko
 import pytest
+import requests
 from scp import SCPClient
 
 from avere_template_deploy import AvereTemplateDeploy
@@ -136,6 +136,39 @@ def create_ssh_client(user, host, port=22):
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh_client.connect(host, port, user)
     return ssh_client
+
+
+def run_ssh_commands(ssh_client, commands):
+    recv_buff_size = 16 * 1024
+    channel = ssh_client.invoke_shell()
+
+    try:
+        sleep(1)
+        channel.recv(recv_buff_size)
+        channel.send('\n')
+        sleep(1)
+        for cmd in commands:
+            # print('CMD   : ' + cmd)
+            channel.send(cmd + '\n')
+            while not channel.recv_ready():
+                sleep(0.5)
+            sleep(0.5)
+            cmd_out = channel.recv(recv_buff_size).decode('utf-8')
+            # print('OUTPUT: ' + cmd_out)
+            # print('-' * 40)
+
+            # Check return code of the last command run.
+            channel.send('echo $?\n')
+            while not channel.recv_ready():
+                sleep(0.5)
+            sleep(0.5)
+            cmd_rc = int(channel.recv(recv_buff_size).decode('utf-8').split('\n')[1])
+            if cmd_rc:
+                raise Exception('Command failed with RC ' + str(cmd_rc) + '\n' + cmd_out)
+
+            sleep(0.5)
+    finally:
+        channel.close()
 
 
 if __name__ == '__main__':
