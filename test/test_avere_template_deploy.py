@@ -63,37 +63,37 @@ class TestDeployment:
                 r'./vfxt.' + group_vars['controller_name'] + '.log')
 
 
-    # def test_vdbench(self, group_vars):
-    #     atd = group_vars['atd']
-    #     with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
-    #         ssh_pub_key = ssh_pub_f.read()
-    #     result = group_vars['deploy_result']
-    #     vserver = result.properties.outputs["vserveR_IPS"]["value"]
-    #     x = vserver.split("-")
-    #     ip1 = x[0]
-    #     ip2 = x[1]
-    #     ip1_split_list = ip1.split(".")
-    #     ip2_split_list = ip2.split(".")
-    #     outcome = ip1_split_list[-1]
-    #     outcome2 = ip2_split_list[-1]
+    def test_vdbench(self, group_vars):
+        atd = group_vars['atd']
+        with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
+            ssh_pub_key = ssh_pub_f.read()
+        result = group_vars['deploy_result']
+        vserver = result.properties.outputs["vserveR_IPS"]["value"]
+        x = vserver.split("-")
+        ip1 = x[0]
+        ip2 = x[1]
+        ip1_split_list = ip1.split(".")
+        ip2_split_list = ip2.split(".")
+        outcome = ip1_split_list[-1]
+        outcome2 = ip2_split_list[-1]
 
-    #     prefix = ".".join(ip1_split_list[:-1])
-    #     prefix += "."
+        prefix = ".".join(ip1_split_list[:-1])
+        prefix += "."
 
-    #     vserver_list = ",".join([prefix + str(n) for n in range(int(outcome), int(outcome2)+1)])
-    #     atd.template = requests.get(url="https://raw.githubusercontent.com/Azure/Avere/master/src/client/vmas/azuredeploy.json").json()
-    #     original_params = atd.deploy_params.copy()
-    #     atd.deploy_params = {'uniquename': 'testString',
-    #                          'sshKeyData': ssh_pub_key,
-    #                          'virtualNetworkResourceGroup': original_params['virtualNetworkResourceGroup'],
-    #                          'virtualNetworkName': original_params['virtualNetworkName'],
-    #                          'virtualNetworkSubnetName': original_params['virtualNetworkSubnetName'],
-    #                          'nfsCommaSeparatedAddresses': vserver_list,
-    #                          'vmCount': 12,
-    #                          'nfsExportPath': '/msazure',
-    #                          'bootstrapScriptPath': '/bootstrap/bootstrap.sh'
-    #                         }
-    #     wait_for_op(atd.deploy())
+        vserver_list = ",".join([prefix + str(n) for n in range(int(outcome), int(outcome2)+1)])
+        atd.template = requests.get(url="https://raw.githubusercontent.com/Azure/Avere/master/src/client/vmas/azuredeploy.json").json()
+        original_params = atd.deploy_params.copy()
+        atd.deploy_params = {'uniquename': 'testString',
+                             'sshKeyData': ssh_pub_key,
+                             'virtualNetworkResourceGroup': original_params['virtualNetworkResourceGroup'],
+                             'virtualNetworkName': original_params['virtualNetworkName'],
+                             'virtualNetworkSubnetName': original_params['virtualNetworkSubnetName'],
+                             'nfsCommaSeparatedAddresses': vserver_list,
+                             'vmCount': 12,
+                             'nfsExportPath': '/msazure',
+                             'bootstrapScriptPath': '/bootstrap/bootstrap.sh'
+                            }
+        wait_for_op(atd.deploy())
     
 # FIXTURES ####################################################################
 @pytest.fixture(scope='class')
