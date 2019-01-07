@@ -92,7 +92,7 @@ class TestDeployment:
                              'nfsExportPath': '/msazure',
                              'bootstrapScriptPath': '/bootstrap/bootstrap.sh'
                             }
-        wait_for_op(atd.deploy(add_secrets_params=False))
+        wait_for_op(atd.deploy())
     
 # FIXTURES ####################################################################
 @pytest.fixture(scope='class')
