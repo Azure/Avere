@@ -63,10 +63,11 @@ class TestDeployment:
                 r'./vfxt.' + group_vars['controller_name'] + '.log')
 
 
-    def test_vdbench(self, atd):
-        with open(atd.ssh_pub_key_path, 'r') as ssh_pub_key_file:
-                 ssh_pub_key = ssh_pub_key_file.read()
-        
+    def test_vdbench(self, group_vars):
+        atd = group_vars['atd']
+        with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
+            ssh_pub_key = ssh_pub_f.read()
+        result = group_vars['deploy_result']
         vserver = result.properties.outputs["vserveR_IPS"]["value"]
         x = vserver.split("-")
         ip1 = x[0]
@@ -80,7 +81,7 @@ class TestDeployment:
         prefix += "."
 
         vserver_list = ",".join([prefix + str(n) for n in range(int(outcome), int(outcome2)+1)])
-        atd.template_link = TemplateLink(uri ="https://raw.githubusercontent.com/Azure/Avere/master/src/client/vmas/azuredeploy.json")
+        atd.template = requests.get(url="https://raw.githubusercontent.com/Azure/Avere/master/src/client/vmas/azuredeploy.json").json()
         original_params = atd.deploy_params.copy()
         atd.deploy_params = {'uniquename': 'testString',
                              'sshKeyData': ssh_pub_key,
