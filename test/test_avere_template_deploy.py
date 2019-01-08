@@ -105,7 +105,7 @@ def group_vars():
     Instantiates an AvereTemplateDeploy object, creates the resource group as
     test-group setup, and deletes the resource group as test-group teardown.
     """
-    atd = AvereTemplateDeploy()
+    atd = AvereTemplateDeploy(location='westus')
     rg = atd.create_resource_group()
     logging.info('> Created Resource Group: {}'.format(rg))
     yield {'atd': atd, 'deploy_result': None}
@@ -150,17 +150,17 @@ def run_ssh_commands(ssh_client, commands):
     Raises an Exception if any command fails (i.e., non-zero exit code).
     """
     for cmd in commands:
-        logging.debug('command to run: ' + cmd)
+        logging.debug('command to run: {}'.format(cmd))
         cmd_stdin, cmd_stdout, cmd_stderr = ssh_client.exec_command(cmd)
 
         cmd_rc = cmd_stdout.channel.recv_exit_status()
-        logging.debug('command exit code: ' + str(cmd_rc))
+        logging.debug('command exit code: {}'.format(cmd_rc))
 
         cmd_stdout = ''.join(cmd_stdout.readlines())
-        logging.debug('command output (stdout): ' + cmd_stdout)
+        logging.debug('command output (stdout): {}'.format(cmd_stdout))
 
         cmd_stderr = ''.join(cmd_stderr.readlines())
-        logging.debug('command output (stderr): ' + cmd_stderr)
+        logging.debug('command output (stderr): {}'.format(cmd_stderr))
 
         if cmd_rc:
             raise Exception(
