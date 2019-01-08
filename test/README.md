@@ -25,7 +25,9 @@ We are also going to be using pytest to verify the results that we are going to 
   * Create Resource Group
   * Deploy Template
   * Verify Resources
-  * [Run vdench](https://github.com/Azure/Avere/blob/master/docs/vdbench.md)
+  * Download VDBench Template
+  * Deploy VDBench Template
+  * [Run vdBench](https://github.com/Azure/Avere/blob/master/docs/vdbench.md)
   * Verify vdbench
 
 3. **Soak Test (7day vfxt) D16v3x3**
