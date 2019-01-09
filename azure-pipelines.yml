@@ -26,9 +26,6 @@ steps:
   displayName: 'Install Python Dependencies'
 
 - script: |
-    cd $BUILD_SOURCESDIRECTORY
-    pwd
-    ls src/vfxt/azuredeploy-auto.json
     pytest test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
   displayName: 'Test Avere vFXT template-based deployment'
   env:
