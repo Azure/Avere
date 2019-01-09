@@ -1,0 +1,57 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "controllerName": {
+      "value": "UNIQUENAME"
+    },
+    "avereBackedStorageAccountName": {
+      "value": "UNIQUENAME"
+    },
+    "controllerAdminUsername": {
+      "value": "azureuser"
+    },
+    "controllerSSHKeyData": {
+      "value": "SSH_PUBLIC_KEY"
+    },
+    "avereNodeCount": {
+      "value": 3
+    },
+    "adminPassword": {
+      "value": "PASSWORD"
+    },
+    "avereClusterRole": {
+      "value": "avere-cluster"
+    },
+    "avereClusterName": {
+      "value": "avere-cluster"
+    },
+    "avereInstanceType": {
+      "value": "Standard_D16s_v3"
+    },
+    "avereCacheSizeGB": {
+      "value": 1024
+    },
+    "useAvereBackedStorageAccount": {
+      "value": true
+    },
+    "createVirtualNetwork": {
+      "value": true
+    },
+    "virtualNetworkResourceGroup": {
+      "value": ""
+    },
+    "virtualNetworkName": {
+      "value": "vnet"
+    },
+    "virtualNetworkSubnetName": {
+      "value": "subnet"
+    },
+    "vnetAddressSpacePrefix": {
+      "value": "10.0.0.0/16"
+    },
+    "subnetAddressRangePrefix": {
+      "value": "10.0.0.0/20"
+    }
+  }
+}
