@@ -47,6 +47,49 @@ function configure_vfxt_template() {
     sed -i "s:~/vfxt.log:$VFXT_LOG_FILE:g"  $VFXT_INSTALL_TEMPLATE
 }
 
+function patch_vfxt_py() {
+    VFXTPYDIR=$(dirname $(pydoc vFXT | grep usr | tr -d '[:blank:]'))
+    MSAZURE_PATCH_FILE="$VFXTPYDIR/p"
+    MSAZURE_TARGET_FILE="$VFXTPYDIR/msazure.py"
+    /bin/cat <<EOM >$MSAZURE_PATCH_FILE
+diff --git a/vFXT/msazure.py b/vFXT/msazure.py
+index 4e72fd73..b660d9bb 100644
+--- a/vFXT/msazure.py
++++ b/vFXT/msazure.py
+@@ -2596,13 +2596,17 @@ class Service(ServiceBase):
+             association_id = str(uuid.uuid4())
+             try:
+                 scope = self._resource_group_scope()
+-                # if we span resource groups, the scope must be on the subscription
+-                if self.network_resource_group != self.resource_group:
+-                    scope = self._subscription_scope()
+                 r = conn.role_assignments.create(scope, association_id, body)
+                 if not r:
+-                    raise Exception("Failed to assign role {} to principal {}".format(role_name, principal))
++                    raise Exception("Failed to assign role {} to principal {} for resource group {}".format(role_name, principal, self.resource_group))
+                 log.debug("Assigned role {} with principal {} to scope {}: {}".format(role_name, principal, scope, body))
++                # if we span resource groups, the scope must be assigned to both resource groups
++                if self.network_resource_group != self.resource_group:
++                    network_scope = self._resource_group_scope(self.network_resource_group)
++                    network_association_id = str(uuid.uuid4())
++                    r2 = conn.role_assignments.create(network_scope, network_association_id, body)
++                    if not r2:
++                        raise Exception("Failed to assign role {} to principal {} for resource group {}".format(role_name, principal, self.network_resource_group))
+                 return r
+             except Exception as e:
+                 log.debug(e)
+EOM
+
+    # don't exit if the patch was already applied
+    set +e
+    patch --quiet --forward $MSAZURE_TARGET_FILE $MSAZURE_PATCH_FILE
+    set -e
+    rm -f $MSAZURE_PATCH_FILE
+    rm -f $VFXTPYDIR/*\.pyc
+    rm -f $VFXTPYDIR/*\.orig
+    rm -f $VFXTPYDIR/*\.rej
+}
+
 function create_vfxt() {
     cd $AZURE_HOME_DIR
     $VFXT_INSTALL_TEMPLATE
@@ -84,6 +127,9 @@ function main() {
 
     echo "configure vfxt install template"
     configure_vfxt_template
+
+    echo "patch vfxt.py"
+    patch_vfxt_py
 
     echo "create_vfxt"
     create_vfxt
