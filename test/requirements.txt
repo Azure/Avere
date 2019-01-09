@@ -5,3 +5,4 @@ paramiko
 pytest
 pytest-cov
 scp
+sshtunnel
