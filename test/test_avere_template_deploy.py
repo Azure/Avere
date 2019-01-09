@@ -141,8 +141,6 @@ def group_vars():
     logging.info('Created Resource Group: {}'.format(rg))
     vars = {'atd': atd, 'deploy_result': None}
     yield vars
-    if 'ssh_client' in vars:
-        vars['ssh_client'].close()
     logging.info('Deleting Resource Group: {}'.format(rg.name))
     wait_for_op(atd.delete_resource_group())
 
