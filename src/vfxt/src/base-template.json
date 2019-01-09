@@ -4,7 +4,8 @@
   "parameters": {
     "servicePrincipalTenant": {
       "type": "string",
-      "minLength": 36,
+      "defaultValue": "",
+      "minLength": 0,
       "maxLength": 36,
       "metadata": {
         "description": "Directory ID (tenant) of the Azure Active Directory used by the az cli to deploy vFXT installation."
@@ -12,14 +13,17 @@
     },
     "servicePrincipalAppId": {
       "type": "string",
-      "minLength": 36,
+      "defaultValue": "",
+      "minLength": 0,
       "maxLength": 36,
       "metadata": {
         "description": "Azure Active Directory Application client ID (appid) used by the az cli to deploy vFXT installation."
       }
     },
     "servicePrincipalPassword": {
-      "type": "securestring",
+      "type": "string",
+      "defaultValue": "",
+      "minLength": 0,
       "metadata": {
         "description": "Azure Active Directory Application client ID password used by the az cli to deploy vFXT installation."
       }
@@ -132,11 +136,18 @@
         "description": "The admin password used for the Avere vFXT cluster."
       }
     },
+    "avereCreateClusterRoleId": {
+      "type": "string",
+      "defaultValue": "a7b1b19a-0e83-4fe5-935c-faaefbfd18c3",
+      "metadata": {
+        "description": "The AAD role id used for creating of the vFXT cluster.  This is the ID obtained using the following az command: az role definition list --query '[*].{roleName:roleName, name:name}' -o table --name 'Avere Cluster Create'."
+      }
+    },
     "avereClusterRole": {
       "type": "string",
       "defaultValue": "avere-cluster",
       "metadata": {
-        "description": "The unique name used for the AAD role."
+        "description": "The AAD role used by the running vFXT cluster."
       }
     },
     "avereClusterName": {
@@ -179,9 +190,6 @@
     }
   },
   "variables": {
-    "servicePrincipalTenant": "[parameters('servicePrincipalTenant')]",
-    "servicePrincipalAppId": "[parameters('servicePrincipalAppId')]",
-    "servicePrincipalPassword": "[parameters('servicePrincipalPassword')]",
     "controllerName": "[parameters('controllerName')]",
     "controllerAdminUsername": "[parameters('controllerAdminUsername')]",
     "controllerAuthenticationType": "[parameters('controllerAuthenticationType')]",
@@ -195,6 +203,10 @@
     "virtualNetworkSubnetName": "[parameters('virtualNetworkSubnetName')]",
     "addressPrefix": "[parameters('vnetAddressSpacePrefix')]",
     "subnetPrefix": "[parameters('subnetAddressRangePrefix')]",
+    "avereCreateClusterRoleFullyQualifiedId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', parameters('avereCreateClusterRoleId'))]",
+    "createRoleAssignmentId": "[guid(concat(variables('vmName'), '-createrole'))]",
+    "createVNETRoleAssignmentId": "[guid(concat(variables('vmName'), '-createvnetrole'))]",
+    "vnetAssignRoleName": "vnetAssignRole",
     "avereClusterRole": "[parameters('avereClusterRole')]",
     "useAvereBackedStorageAccount": "[parameters('useAvereBackedStorageAccount')]",
     "avereBackedStorageAccountName": "[parameters('avereBackedStorageAccountName')]",
@@ -215,7 +227,7 @@
     "useExtension?": true,
     "storageAccountType": "Standard_LRS",
     "storageAccountKind": "StorageV2",
-    "environmentVariables": "[concat(' AZURE_TENANT_ID=', variables('servicePrincipalTenant'),' AZURE_CLIENT_ID=', variables('servicePrincipalAppId'),' RESOURCE_GROUP=', resourceGroup().name,' LOCATION=', resourceGroup().location,' NETWORK_RESOURCE_GROUP=', variables('virtualNetworkResourceGroup'),' NETWORK=', variables('virtualNetworkName'),' SUBNET=', variables('virtualNetworkSubnetName'),' AVERE_CLUSTER_ROLE=\"', variables('avereClusterRole'),'\" CREATE_CLOUD_BACKED_CLUSTER=', variables('useAvereBackedStorageAccount'),' STORAGE_ACCOUNT=', variables('avereBackedStorageAccountName'),' CACHE_SIZE=', variables('avereCacheSizeGB'),' CLUSTER_NAME=', variables('avereClusterName'),' INSTANCE_TYPE=', variables('avereInstanceType'),' CONTROLLER_ADMIN_USER_NAME=',variables('controllerAdminUsername'),' DEBUG=\"',variables('additionalVFXTParameters'),'\"')]",
+    "environmentVariables": "[concat(' RESOURCE_GROUP=', resourceGroup().name, ' LOCATION=', resourceGroup().location, ' NETWORK_RESOURCE_GROUP=', variables('virtualNetworkResourceGroup'), ' NETWORK=', variables('virtualNetworkName'),' SUBNET=', variables('virtualNetworkSubnetName'), ' AVERE_CLUSTER_ROLE=\"', variables('avereClusterRole'), '\" CREATE_CLOUD_BACKED_CLUSTER=', variables('useAvereBackedStorageAccount'), ' STORAGE_ACCOUNT=', variables('avereBackedStorageAccountName'), ' CACHE_SIZE=', variables('avereCacheSizeGB'), ' CLUSTER_NAME=', variables('avereClusterName'), ' INSTANCE_TYPE=', variables('avereInstanceType'), ' CONTROLLER_ADMIN_USER_NAME=', variables('controllerAdminUsername'), ' DEBUG=\"', variables('additionalVFXTParameters'), '\"')]",
     "sshKeyPath": "[concat('/home/',variables('controllerAdminUsername'),'/.ssh/authorized_keys')]",
     "controllerOSProfilePassword": {
       "computerName": "[variables('vmName')]",
@@ -353,6 +365,9 @@
         "averevfxt": "server"
       }, 
       "type": "Microsoft.Compute/virtualMachines",
+      "identity": {
+        "type": "SystemAssigned"
+      },
       "name": "[variables('vmName')]",
       "location": "[resourceGroup().location]",
       "plan": {
@@ -379,13 +394,56 @@
       }
     },
     {
+      "apiVersion": "2017-09-01",
+      "name": "[variables('createRoleAssignmentId')]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+      ],
+      "properties": {
+        "roleDefinitionId": "[variables('avereCreateClusterRoleFullyQualifiedId')]",
+        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines/', variables('vmName')), '2017-12-01', 'Full').identity.principalId]",
+        "scope": "[resourceGroup().id]"
+      }
+    },
+    {
+      "condition": "[not(variables('createVirtualNetwork'))]",
+      "apiVersion": "2018-05-01",
+      "name": "[variables('vnetAssignRoleName')]",
+      "type": "Microsoft.Resources/deployments",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+      ],
+      "resourceGroup": "[variables('virtualNetworkResourceGroup')]",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": [
+            {
+              "name": "[variables('createVNETRoleAssignmentId')]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2017-09-01",
+              "properties": {
+                "roleDefinitionId": "[variables('avereCreateClusterRoleFullyQualifiedId')]",
+                "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines/', variables('vmName')), '2017-12-01', 'Full').identity.principalId]",
+                "scope": "[concat(subscription().id, '/resourceGroups/', parameters('virtualNetworkResourceGroup'))]"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
       "condition": "[variables('useExtension?')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "name": "[concat(variables('vmName'), '/configureagent')]",
       "apiVersion": "2017-12-01",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]",
+        "[resourceId('Microsoft.Authorization/roleAssignments', variables('createRoleAssignmentId'))]",
+        "[concat('Microsoft.Resources/deployments/', variables('vnetAssignRoleName'))]",
         "[concat('Microsoft.Storage/storageAccounts/', variables('avereBackedStorageAccountName'))]"
       ],
       "properties": {
@@ -394,7 +452,7 @@
         "typeHandlerVersion": "2.0",
         "autoUpgradeMinorVersion": true,
         "protectedSettings": {
-          "commandToExecute": "[concat(' ADMIN_PASSWORD=', variables('adminPassword'),' AZURE_CLIENT_SECRET=',variables('servicePrincipalPassword'),variables('environmentVariables'), ' /bin/bash /opt/avere/installvfxt.sh')]"
+          "commandToExecute": "[concat(' ADMIN_PASSWORD=', variables('adminPassword'), variables('environmentVariables'), ' /bin/bash /opt/avere/installvfxt.sh')]"
         }
       }
     },
