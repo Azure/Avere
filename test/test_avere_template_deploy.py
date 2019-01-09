@@ -7,7 +7,7 @@ Driver for testing template-based deployment of the Avere vFXT product.
 import json
 import logging
 import os
-from time import time
+from time import sleep, time
 
 import paramiko
 import pytest
@@ -15,6 +15,7 @@ import requests
 from scp import SCPClient
 
 from avere_template_deploy import AvereTemplateDeploy
+from sshtunnel import SSHTunnelForwarder
 
 
 # TEST CASES ##################################################################
@@ -45,13 +46,14 @@ class TestDeployment:
         group_vars['controller_name'] = atd.deploy_params['controllerName']
         group_vars['controller_user'] = atd.deploy_params['controllerAdminUsername']
 
-        logging.debug('> Generated deploy parameters: \n{}'.format(
+        logging.debug('Generated deploy parameters: \n{}'.format(
             json.dumps(atd.deploy_params, indent=4)))
+        atd.deploy_name = 'test_deploy_template'
         group_vars['deploy_result'] = wait_for_op(atd.deploy())
 
     def test_get_vfxt_log(self, group_vars):
         atd = group_vars['atd']
-        logging.info('> Getting vfxt.log from controller: {}'.format(
+        logging.info('Getting vfxt.log from controller: {}'.format(
             group_vars['controller_name']))
         con_ip = atd.nm_client.public_ip_addresses.get(
             atd.resource_group,
@@ -65,7 +67,6 @@ class TestDeployment:
         scp_client.get(r'~/vfxt.log',
                        r'./vfxt.' + group_vars['controller_name'] + '.log')
 
-   
     def test_vdbench(self, group_vars):
         atd = group_vars['atd']
         with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
@@ -85,29 +86,33 @@ class TestDeployment:
 
         vserver_list = ",".join([prefix + str(n) for n in range(int(outcome), int(outcome2)+1)])
         ssh_client = group_vars["ssh_client"]
-        commands = """sudo apt-get update
+        commands = """
+            sudo apt-get update
             sudo apt-get install nfs-common
             sudo mkdir -p /nfs/node0
             sudo mkdir -p /nfs/node1
             sudo mkdir -p /nfs/node2
             sudo chown nobody:nogroup /nfs/node0
             sudo chown nobody:nogroup /nfs/node1
-            sudo chown nobody:nogroup /nfs/node2""".split('\n')
-        count = 0 
+            sudo chown nobody:nogroup /nfs/node2
+            """.split('\n')
+        count = 0
         for i in vserver_list.split(','):
             command = i + ":/msazure /nfs/node"+str(count)+ " nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0"
             echo_command = 'sudo sh -c \'echo "'+ command +'" >> /etc/fstab\''
             commands.append(echo_command)
             count += 1
-        commands = commands + """sudo mount -a
-                    sudo mkdir -p /nfs/node0/bootstrap
-                    cd /nfs/node0/bootstrap
-                    sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.vdbench.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/bootstrap.vdbench.sh
-                    sudo mkdir /bootstrap
-                    cd /bootstrap
-                    wget https://avereimageswestus.blob.core.windows.net/vdbench/vdbench50407.zip""".split('\n')
-        # commands = [s.strip() for s in commands if s.strip()]
-        run_ssh_commands(ssh_client,commands)         
+        commands = commands + """
+            sudo mount -a
+            sudo mkdir -p /nfs/node0/bootstrap
+            cd /nfs/node0/bootstrap
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.vdbench.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/bootstrap.vdbench.sh
+            sudo mkdir /bootstrap
+            cd /bootstrap
+            wget https://avereimageswestus.blob.core.windows.net/vdbench/vdbench50407.zip
+            """.split('\n')
+        commands = [s.strip() for s in commands if s.strip()]
+        run_ssh_commands(ssh_client, commands)
         atd.template = requests.get(url="https://raw.githubusercontent.com/Azure/Avere/master/src/client/vmas/azuredeploy.json").json()
         original_params = atd.deploy_params.copy()
         atd.deploy_params = {'uniquename': 'testString',
@@ -120,7 +125,9 @@ class TestDeployment:
                              'nfsExportPath': '/msazure',
                              'bootstrapScriptPath': '/bootstrap/bootstrap.vdbench.sh'
                             }
+        atd.deploy_name = 'test_vdbench'
         wait_for_op(atd.deploy())
+
 
 # FIXTURES ####################################################################
 @pytest.fixture(scope='class')
@@ -131,9 +138,12 @@ def group_vars():
     """
     atd = AvereTemplateDeploy(location='westus')
     rg = atd.create_resource_group()
-    logging.info('> Created Resource Group: {}'.format(rg))
-    yield {'atd': atd, 'deploy_result': None}
-    logging.info('> Deleting Resource Group: {}'.format(rg.name))
+    logging.info('Created Resource Group: {}'.format(rg))
+    vars = {'atd': atd, 'deploy_result': None}
+    yield vars
+    if 'ssh_client' in vars:
+        vars['ssh_client'].close()
+    logging.info('Deleting Resource Group: {}'.format(rg.name))
     wait_for_op(atd.delete_resource_group())
 
 
@@ -156,12 +166,35 @@ def wait_for_op(op, timeout_sec=60):
     return result
 
 
-def create_ssh_client(user, host, port=22):
+def create_ssh_tunnel(username, external_ip, internal_ip, internal_port=22):
+    """
+    Creates and starts an SSH tunnel.
+
+    username: group_vars['controller_user']
+    external_ip: group_vars['controller_ip']
+    internal_ip: <node, client IP -- 10.0.0.x>
+    """
+    ssh_tunnel = SSHTunnelForwarder(
+        external_ip,
+        ssh_username=username,
+        ssh_pkey=os.path.expanduser(r'~/.ssh/id_rsa'),
+        remote_bind_address=(internal_ip, internal_port)
+    )
+    ssh_tunnel.start()
+    logging.debug('local_bind_port: {}'.format(ssh_tunnel.local_bind_port))
+    logging.debug('tunnel_is_up: {}'.format(ssh_tunnel.tunnel_is_up))
+    logging.debug('tunnel_bindings: {}'.format(ssh_tunnel.tunnel_bindings))
+    sleep(1)  # Wait a second for the tunnel to settle.
+    return ssh_tunnel
+
+
+def create_ssh_client(username, hostname, port=22, password=None):
     """Creates (and returns) an SSHClient. Auth'n is via publickey."""
     ssh_client = paramiko.SSHClient()
     ssh_client.load_system_host_keys()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh_client.connect(host, port, user)
+    ssh_client.connect(username=username, hostname=hostname, port=port,
+                       password=password)
     return ssh_client
 
 
