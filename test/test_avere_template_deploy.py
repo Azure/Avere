@@ -11,7 +11,6 @@ from time import sleep, time
 
 import paramiko
 import pytest
-import requests
 from scp import SCPClient
 
 from avere_template_deploy import AvereTemplateDeploy
@@ -23,9 +22,8 @@ class TestDeployment:
 
     def test_deploy_template(self, group_vars):
         atd = group_vars['atd']
-        atd.template = requests.get(
-                url='https://raw.githubusercontent.com/' +
-                    'Azure/Avere/master/src/vfxt/azuredeploy-auto.json').json()
+        with open(os.environ['BUILD_SOURCESDIRECTORY'] + '/src/vfxt/azuredeploy-auto.json') as tfile:
+            atd.template = json.load(tfile)
         with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
         atd.deploy_params = {
@@ -110,7 +108,8 @@ class TestDeployment:
             """.split('\n')
         commands = [s.strip() for s in commands if s.strip()]
         run_ssh_commands(ssh_client, commands)
-        atd.template = requests.get(url="https://raw.githubusercontent.com/Azure/Avere/master/src/client/vmas/azuredeploy.json").json()
+        with open(os.environ['BUILD_SOURCESDIRECTORY'] + '/src/client/vmas/azuredeploy.json') as tfile:
+            atd.template = json.load(tfile)
         original_params = atd.deploy_params.copy()
         atd.deploy_params = {'uniquename': 'testString',
                              'sshKeyData': ssh_pub_key,
