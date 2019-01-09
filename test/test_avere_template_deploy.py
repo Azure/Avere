@@ -38,10 +38,7 @@ class TestDeployment:
             'controllerAuthenticationType': 'sshPublicKey',
             'controllerSSHKeyData': ssh_pub_key,
             'adminPassword': os.environ['AVERE_ADMIN_PW'],
-            'controllerPassword': os.environ['AVERE_CONTROLLER_PW'],
-            'servicePrincipalAppId': os.environ['AZURE_CLIENT_ID'],
-            'servicePrincipalPassword': os.environ['AZURE_CLIENT_SECRET'],
-            'servicePrincipalTenant': os.environ['AZURE_TENANT_ID']
+            'controllerPassword': os.environ['AVERE_CONTROLLER_PW']
         }
         group_vars['controller_name'] = atd.deploy_params['controllerName']
         group_vars['controller_user'] = atd.deploy_params['controllerAdminUsername']
