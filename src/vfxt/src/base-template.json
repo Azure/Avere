@@ -2,32 +2,6 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "servicePrincipalTenant": {
-      "type": "string",
-      "defaultValue": "",
-      "minLength": 0,
-      "maxLength": 36,
-      "metadata": {
-        "description": "Directory ID (tenant) of the Azure Active Directory used by the az cli to deploy vFXT installation."
-      }
-    },
-    "servicePrincipalAppId": {
-      "type": "string",
-      "defaultValue": "",
-      "minLength": 0,
-      "maxLength": 36,
-      "metadata": {
-        "description": "Azure Active Directory Application client ID (appid) used by the az cli to deploy vFXT installation."
-      }
-    },
-    "servicePrincipalPassword": {
-      "type": "string",
-      "defaultValue": "",
-      "minLength": 0,
-      "metadata": {
-        "description": "Azure Active Directory Application client ID password used by the az cli to deploy vFXT installation."
-      }
-    },
     "createVirtualNetwork": {
       "type": "bool",
       "defaultValue": true,
