@@ -2,28 +2,6 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "servicePrincipalTenant": {
-      "type": "string",
-      "minLength": 36,
-      "maxLength": 36,
-      "metadata": {
-        "description": "Directory ID (tenant) of the Azure Active Directory used by the az cli to deploy vFXT installation."
-      }
-    },
-    "servicePrincipalAppId": {
-      "type": "string",
-      "minLength": 36,
-      "maxLength": 36,
-      "metadata": {
-        "description": "Azure Active Directory Application client ID (appid) used by the az cli to deploy vFXT installation."
-      }
-    },
-    "servicePrincipalPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "Azure Active Directory Application client ID password used by the az cli to deploy vFXT installation."
-      }
-    },
     "createVirtualNetwork": {
       "type": "bool",
       "defaultValue": true,
@@ -132,11 +110,18 @@
         "description": "The admin password used for the Avere vFXT cluster."
       }
     },
+    "avereCreateClusterRoleId": {
+      "type": "string",
+      "defaultValue": "a7b1b19a-0e83-4fe5-935c-faaefbfd18c3",
+      "metadata": {
+        "description": "The AAD role id used for creating of the vFXT cluster.  This is the ID obtained using the following az command: az role definition list --query '[*].{roleName:roleName, name:name}' -o table --name 'Avere Cluster Create'."
+      }
+    },
     "avereClusterRole": {
       "type": "string",
       "defaultValue": "avere-cluster",
       "metadata": {
-        "description": "The unique name used for the AAD role."
+        "description": "The AAD role used by the running vFXT cluster."
       }
     },
     "avereClusterName": {
@@ -179,9 +164,6 @@
     }
   },
   "variables": {
-    "servicePrincipalTenant": "[parameters('servicePrincipalTenant')]",
-    "servicePrincipalAppId": "[parameters('servicePrincipalAppId')]",
-    "servicePrincipalPassword": "[parameters('servicePrincipalPassword')]",
     "controllerName": "[parameters('controllerName')]",
     "controllerAdminUsername": "[parameters('controllerAdminUsername')]",
     "controllerAuthenticationType": "[parameters('controllerAuthenticationType')]",
@@ -195,6 +177,10 @@
     "virtualNetworkSubnetName": "[parameters('virtualNetworkSubnetName')]",
     "addressPrefix": "[parameters('vnetAddressSpacePrefix')]",
     "subnetPrefix": "[parameters('subnetAddressRangePrefix')]",
+    "avereCreateClusterRoleFullyQualifiedId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', parameters('avereCreateClusterRoleId'))]",
+    "createRoleAssignmentId": "[guid(concat(variables('vmName'), '-createrole'))]",
+    "createVNETRoleAssignmentId": "[guid(concat(variables('vmName'), '-createvnetrole'))]",
+    "vnetAssignRoleName": "vnetAssignRole",
     "avereClusterRole": "[parameters('avereClusterRole')]",
     "useAvereBackedStorageAccount": "[parameters('useAvereBackedStorageAccount')]",
     "avereBackedStorageAccountName": "[parameters('avereBackedStorageAccountName')]",
@@ -215,18 +201,18 @@
     "useExtension?": true,
     "storageAccountType": "Standard_LRS",
     "storageAccountKind": "StorageV2",
-    "environmentVariables": "[concat(' AZURE_TENANT_ID=', variables('servicePrincipalTenant'),' AZURE_CLIENT_ID=', variables('servicePrincipalAppId'),' RESOURCE_GROUP=', resourceGroup().name,' LOCATION=', resourceGroup().location,' NETWORK_RESOURCE_GROUP=', variables('virtualNetworkResourceGroup'),' NETWORK=', variables('virtualNetworkName'),' SUBNET=', variables('virtualNetworkSubnetName'),' AVERE_CLUSTER_ROLE=\"', variables('avereClusterRole'),'\" CREATE_CLOUD_BACKED_CLUSTER=', variables('useAvereBackedStorageAccount'),' STORAGE_ACCOUNT=', variables('avereBackedStorageAccountName'),' CACHE_SIZE=', variables('avereCacheSizeGB'),' CLUSTER_NAME=', variables('avereClusterName'),' INSTANCE_TYPE=', variables('avereInstanceType'),' CONTROLLER_ADMIN_USER_NAME=',variables('controllerAdminUsername'),' DEBUG=\"',variables('additionalVFXTParameters'),'\"')]",
+    "environmentVariables": "[concat(' RESOURCE_GROUP=', resourceGroup().name, ' LOCATION=', resourceGroup().location, ' NETWORK_RESOURCE_GROUP=', variables('virtualNetworkResourceGroup'), ' NETWORK=', variables('virtualNetworkName'),' SUBNET=', variables('virtualNetworkSubnetName'), ' AVERE_CLUSTER_ROLE=\"', variables('avereClusterRole'), '\" CREATE_CLOUD_BACKED_CLUSTER=', variables('useAvereBackedStorageAccount'), ' STORAGE_ACCOUNT=', variables('avereBackedStorageAccountName'), ' CACHE_SIZE=', variables('avereCacheSizeGB'), ' CLUSTER_NAME=', variables('avereClusterName'), ' INSTANCE_TYPE=', variables('avereInstanceType'), ' CONTROLLER_ADMIN_USER_NAME=', variables('controllerAdminUsername'), ' DEBUG=\"', variables('additionalVFXTParameters'), '\"')]",
     "sshKeyPath": "[concat('/home/',variables('controllerAdminUsername'),'/.ssh/authorized_keys')]",
     "controllerOSProfilePassword": {
       "computerName": "[variables('vmName')]",
       "adminUsername": "[variables('controllerAdminUsername')]",
       "adminPassword": "[variables('controllerPassword')]",
-      "customData": "[base64('#cloud-config\n\nwrite_files:\n -  encoding: gzip\n    content: !!binary |\n        H4sIAAAAAAAC/41WbW+bSBD+zq+YYqTYaR2Sk3ofcuIDxTS1io0FOL3r5boisLZXh8HixUl6uvvtN7vGGDCJsGSxLzPPvOzsszN4pz6yWH30s40kDSCluyTNwY8iiFhMsw/gxyHQZ5ZDEgNN0ySVMprD+PnwoZKkOzPiOUtTk720oLL0TZ96xDUNez5xtV+vryX9+9IxyRd7ZpLJ1NHUTbKlqoL7nmNblukQfTKbzsnSxeFcn5nS/effPTKdu55uWcQzZwtL90xNaeKo+9VzzuIsR18lw7KXE/JJN76ak5OGGqTUz+k4iJIifPSDv2mI4yLLaSqhxelMt86FtyxmWz+qBIUzln1HPk+tbieuomQtSasiDnKGSXryWU78n0VKCY+UhCwdjuAfCfAXJEWMoNq1mD1tWEThT3gH4xBayPDXbxAmQoz/sojSHdxU8yOQMhyWQ3gPN6NRJcBWCKwc98ZrCkr9YDh8vqFxJc9/NNgkIKO/NMiT9OXMpTjBytj7LPIf0W9/xZF5tCxet9AzGiRxmMlNeF5FpxBWTAzDJKbSv7X8YV0VO0xglbQBl7nIIdskT9xpCCJG45wbSWkuRHgtvn8WQ/8n4HmwGMbjjKZ7FtDxLmVxwHZ+BOPiGJRhTc05VtkExrvWGgbhmB7q5zT20U6565lzXWhUFvES1B3HkFdszc+dVwXJ6XYXYUVVcYgjkRUEx3ojjZI1rKXrmY4MmoYSxxsln51SgL521joonZdGKNIoow2Edu2/pYynVB5CsQsxGnEAjBdVjPnc+ynjxZCVOQlhzOAiU384pmsvHcMkd469XKiD1nx98ZbNGo5lG7o3tefqoBr11p2b3jfb+aoOjoPemu7yE+qog/LbW0+/N0UZicMkyG6mOuhY6++HZzv6nUl0w7CXc+5Qa6E3kqEbX0ziTr+jR7Vxf/3Sf87PiFCf9c+OoPmF7rp4GhPMTHPeG0fsz7GWvD8W6Exz2gtFzm7/q6j7VmlQ/O1ahtcgGrddPBfiqp/o/YzGxXIPNE5R+YE38E5lFeKBku/xacQyItOFi4wvgogxCPXH1aXB3eAEvOdsh4R8/A4fhleXD6MH9ZePH69q/9HVpaI+3Kg7GZqBj+SaxdndDD1etK1t/dhf0y1nXz8MU5plt3Cw8xpkPciw2O4IjfddIeI7jn0HbgqpmivKcPcUjmqS9Fm0KC0a19q8Lvd4Oz5gUxO9APqXbEVQSNEvSQF+SiGkj8Ua35F1ifO68cN7oXU9IvJrflePidZ+XTpUmuSpKc15h8KRKzXlOOoQKlmRtNG7118HqDQ6RA4EqimHb1c2ztgRE3K21qH4xiuqvfnEdjjZJFX0trnQZb2iUDRWjbsEa0yJorVZh3CDyTSlMe3KXYM/MW+NeV1hhT1ttqndrvqt3Posbl1G3tSBaGGBt7CALeEBrqO3LduDsndEdGGG33BYJenpGpX3scEBUp0AeNuHRuVjeyWawLpE1V8B50koe3849lly2WF3NmENnBNzlzqnhbqc4OSDLe7sQbZF1HX50iG/bAbRMOVeYa55iqX/AaIBB7VqDQAA\n    path: /opt/avere/installvfxt.sh\n    permissions: \"0744\"\n\n')]"
+      "customData": "[base64('#cloud-config\n\nwrite_files:\n -  encoding: gzip\n    content: !!binary |\n        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\n    path: /opt/avere/installvfxt.sh\n    permissions: \"0744\"\n\n')]"
     },
     "controllerOSProfileSSHKey": {
       "computername": "[variables('vmName')]",
       "adminUsername": "[variables('controllerAdminUsername')]",
-      "customData": "[base64('#cloud-config\n\nwrite_files:\n -  encoding: gzip\n    content: !!binary |\n        H4sIAAAAAAAC/41WbW+bSBD+zq+YYqTYaR2Sk3ofcuIDxTS1io0FOL3r5boisLZXh8HixUl6uvvtN7vGGDCJsGSxLzPPvOzsszN4pz6yWH30s40kDSCluyTNwY8iiFhMsw/gxyHQZ5ZDEgNN0ySVMprD+PnwoZKkOzPiOUtTk720oLL0TZ96xDUNez5xtV+vryX9+9IxyRd7ZpLJ1NHUTbKlqoL7nmNblukQfTKbzsnSxeFcn5nS/effPTKdu55uWcQzZwtL90xNaeKo+9VzzuIsR18lw7KXE/JJN76ak5OGGqTUz+k4iJIifPSDv2mI4yLLaSqhxelMt86FtyxmWz+qBIUzln1HPk+tbieuomQtSasiDnKGSXryWU78n0VKCY+UhCwdjuAfCfAXJEWMoNq1mD1tWEThT3gH4xBayPDXbxAmQoz/sojSHdxU8yOQMhyWQ3gPN6NRJcBWCKwc98ZrCkr9YDh8vqFxJc9/NNgkIKO/NMiT9OXMpTjBytj7LPIf0W9/xZF5tCxet9AzGiRxmMlNeF5FpxBWTAzDJKbSv7X8YV0VO0xglbQBl7nIIdskT9xpCCJG45wbSWkuRHgtvn8WQ/8n4HmwGMbjjKZ7FtDxLmVxwHZ+BOPiGJRhTc05VtkExrvWGgbhmB7q5zT20U6565lzXWhUFvES1B3HkFdszc+dVwXJ6XYXYUVVcYgjkRUEx3ojjZI1rKXrmY4MmoYSxxsln51SgL521joonZdGKNIoow2Edu2/pYynVB5CsQsxGnEAjBdVjPnc+ynjxZCVOQlhzOAiU384pmsvHcMkd469XKiD1nx98ZbNGo5lG7o3tefqoBr11p2b3jfb+aoOjoPemu7yE+qog/LbW0+/N0UZicMkyG6mOuhY6++HZzv6nUl0w7CXc+5Qa6E3kqEbX0ziTr+jR7Vxf/3Sf87PiFCf9c+OoPmF7rp4GhPMTHPeG0fsz7GWvD8W6Exz2gtFzm7/q6j7VmlQ/O1ahtcgGrddPBfiqp/o/YzGxXIPNE5R+YE38E5lFeKBku/xacQyItOFi4wvgogxCPXH1aXB3eAEvOdsh4R8/A4fhleXD6MH9ZePH69q/9HVpaI+3Kg7GZqBj+SaxdndDD1etK1t/dhf0y1nXz8MU5plt3Cw8xpkPciw2O4IjfddIeI7jn0HbgqpmivKcPcUjmqS9Fm0KC0a19q8Lvd4Oz5gUxO9APqXbEVQSNEvSQF+SiGkj8Ua35F1ifO68cN7oXU9IvJrflePidZ+XTpUmuSpKc15h8KRKzXlOOoQKlmRtNG7118HqDQ6RA4EqimHb1c2ztgRE3K21qH4xiuqvfnEdjjZJFX0trnQZb2iUDRWjbsEa0yJorVZh3CDyTSlMe3KXYM/MW+NeV1hhT1ttqndrvqt3Posbl1G3tSBaGGBt7CALeEBrqO3LduDsndEdGGG33BYJenpGpX3scEBUp0AeNuHRuVjeyWawLpE1V8B50koe3849lly2WF3NmENnBNzlzqnhbqc4OSDLe7sQbZF1HX50iG/bAbRMOVeYa55iqX/AaIBB7VqDQAA\n    path: /opt/avere/installvfxt.sh\n    permissions: \"0744\"\n\n')]",
+      "customData": "[base64('#cloud-config\n\nwrite_files:\n -  encoding: gzip\n    content: !!binary |\n        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\n    path: /opt/avere/installvfxt.sh\n    permissions: \"0744\"\n\n')]",
       "linuxConfiguration": {
         "disablePasswordAuthentication": "true",
         "ssh": {
@@ -353,6 +339,9 @@
         "averevfxt": "server"
       }, 
       "type": "Microsoft.Compute/virtualMachines",
+      "identity": {
+        "type": "SystemAssigned"
+      },
       "name": "[variables('vmName')]",
       "location": "[resourceGroup().location]",
       "plan": {
@@ -379,13 +368,56 @@
       }
     },
     {
+      "apiVersion": "2017-09-01",
+      "name": "[variables('createRoleAssignmentId')]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+      ],
+      "properties": {
+        "roleDefinitionId": "[variables('avereCreateClusterRoleFullyQualifiedId')]",
+        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines/', variables('vmName')), '2017-12-01', 'Full').identity.principalId]",
+        "scope": "[resourceGroup().id]"
+      }
+    },
+    {
+      "condition": "[not(variables('createVirtualNetwork'))]",
+      "apiVersion": "2018-05-01",
+      "name": "[variables('vnetAssignRoleName')]",
+      "type": "Microsoft.Resources/deployments",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+      ],
+      "resourceGroup": "[variables('virtualNetworkResourceGroup')]",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": [
+            {
+              "name": "[variables('createVNETRoleAssignmentId')]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2017-09-01",
+              "properties": {
+                "roleDefinitionId": "[variables('avereCreateClusterRoleFullyQualifiedId')]",
+                "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines/', variables('vmName')), '2017-12-01', 'Full').identity.principalId]",
+                "scope": "[concat(subscription().id, '/resourceGroups/', parameters('virtualNetworkResourceGroup'))]"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
       "condition": "[variables('useExtension?')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "name": "[concat(variables('vmName'), '/configureagent')]",
       "apiVersion": "2017-12-01",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]",
+        "[resourceId('Microsoft.Authorization/roleAssignments', variables('createRoleAssignmentId'))]",
+        "[concat('Microsoft.Resources/deployments/', variables('vnetAssignRoleName'))]",
         "[concat('Microsoft.Storage/storageAccounts/', variables('avereBackedStorageAccountName'))]"
       ],
       "properties": {
@@ -394,7 +426,7 @@
         "typeHandlerVersion": "2.0",
         "autoUpgradeMinorVersion": true,
         "protectedSettings": {
-          "commandToExecute": "[concat(' ADMIN_PASSWORD=', variables('adminPassword'),' AZURE_CLIENT_SECRET=',variables('servicePrincipalPassword'),variables('environmentVariables'), ' /bin/bash /opt/avere/installvfxt.sh')]"
+          "commandToExecute": "[concat(' ADMIN_PASSWORD=', variables('adminPassword'), variables('environmentVariables'), ' /bin/bash /opt/avere/installvfxt.sh')]"
         }
       }
     },

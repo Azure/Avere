@@ -229,5 +229,22 @@
       }
     }
   ],
-  "outputs": {}
+  "outputs": {
+    "NODE_0_IP_ADDRESS": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicName'),'-0'))).ipConfigurations[0].properties.privateIPAddress]"
+    },
+    "NODE_0_NAME": {
+      "type": "string",
+      "value": "[concat(variables('vmName'), '-0')]"
+    },
+    "VM_COUNT": {
+      "type": "int",
+      "value": "[variables('vmCount')]"
+    },
+    "VM_PREFIX": {
+      "type": "string",
+      "value": "[concat(variables('vmName'), '-')]"
+    }
+  }
 }
