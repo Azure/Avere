@@ -81,6 +81,9 @@ class TestDeployment:
 
         vserver_list = ",".join([prefix + str(n) for n in range(int(outcome), int(outcome2)+1)])
         ssh_client = group_vars["ssh_client"]
+        # group_vars['controller_user'] = ''
+        # group_vars['controller_ip'] = ''
+        # ssh_client = create_ssh_client(group_vars['controller_user'], group_vars['controller_ip'])
         commands = """
             sudo apt-get update
             sudo apt-get install nfs-common
@@ -102,9 +105,10 @@ class TestDeployment:
             sudo mkdir -p /nfs/node0/bootstrap
             cd /nfs/node0/bootstrap
             sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.vdbench.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/bootstrap.vdbench.sh
-            sudo mkdir /bootstrap
-            cd /bootstrap
-            wget https://avereimageswestus.blob.core.windows.net/vdbench/vdbench50407.zip
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/vdbench50407.zip https://avereimageswestus.blob.core.windows.net/vdbench/vdbench50407.zip
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/vdbenchVerify.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/vdbenchVerify.sh
+            sudo chmod +x /nfs/node0/bootstrap/vdbenchVerify.sh
+            /nfs/node0/bootstrap/vdbenchVerify.sh
             """.split('\n')
         commands = [s.strip() for s in commands if s.strip()]
         run_ssh_commands(ssh_client, commands)
@@ -121,8 +125,32 @@ class TestDeployment:
                              'nfsExportPath': '/msazure',
                              'bootstrapScriptPath': '/bootstrap/bootstrap.vdbench.sh'
                             }
+        # rg_id = ""
+        # atd.resource_group = rg_id+"-rg"
+        # atd.deploy_params = {'uniquename': 'testString',
+        #                      'sshKeyData': ssh_pub_key,
+        #                      'virtualNetworkResourceGroup': atd.resource_group,
+        #                      'virtualNetworkName': rg_id +"-vnet",
+        #                      'virtualNetworkSubnetName': rg_id +"-subnet",
+        #                      'nfsCommaSeparatedAddresses': vserver_list,
+        #                      'vmCount': 12,
+        #                      'nfsExportPath': '/msazure',
+        #                      'bootstrapScriptPath': '/bootstrap/bootstrap.vdbench.sh'
+        #                     }
         atd.deploy_name = 'test_vdbench'
-        wait_for_op(atd.deploy())
+        group_vars['deploy_vd_result'] = wait_for_op(atd.deploy())
+        result_vd = group_vars['deploy_vd_result']
+        node_ip = result_vd.properties.outputs["nodE_0_IP_ADDRESS"]["value"]
+
+        ssh_tunnel = create_ssh_tunnel(group_vars['controller_user'], group_vars['controller_ip'], internal_ip = node_ip)
+        ssh_client_2 = create_ssh_client(group_vars['controller_user'], '127.0.0.1', ssh_tunnel.local_bind_port)
+        scp_client = SCPClient(ssh_client_2.get_transport())
+        scp_client.put(os.path.expanduser(r'~/.ssh/id_rsa'), r'~/.ssh/id_rsa')
+        # commands = """~/copy_idrsa.sh
+        #     cd
+        #     ./run_vdbench.sh inmem.conf uniquestring1
+        # """.split('\n')
+        # run_ssh_commands(ssh_client_2, commands)
 
 
 # FIXTURES ####################################################################
