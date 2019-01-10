@@ -177,7 +177,7 @@ def group_vars():
     Instantiates an AvereTemplateDeploy object, creates the resource group as
     test-group setup, and deletes the resource group as test-group teardown.
     """
-    atd = AvereTemplateDeploy(location='westus')
+    atd = AvereTemplateDeploy(location='centralus')
     rg = atd.create_resource_group()
     logging.info('Created Resource Group: {}'.format(rg))
     vars = {'atd': atd, 'deploy_result': None}
