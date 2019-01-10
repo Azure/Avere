@@ -142,15 +142,21 @@ class TestDeployment:
         result_vd = group_vars['deploy_vd_result']
         node_ip = result_vd.properties.outputs["nodE_0_IP_ADDRESS"]["value"]
 
-        ssh_tunnel = create_ssh_tunnel(group_vars['controller_user'], group_vars['controller_ip'], internal_ip = node_ip)
-        ssh_client_2 = create_ssh_client(group_vars['controller_user'], '127.0.0.1', ssh_tunnel.local_bind_port)
-        scp_client = SCPClient(ssh_client_2.get_transport())
-        scp_client.put(os.path.expanduser(r'~/.ssh/id_rsa'), r'~/.ssh/id_rsa')
-        # commands = """~/copy_idrsa.sh
-        #     cd
-        #     ./run_vdbench.sh inmem.conf uniquestring1
-        # """.split('\n')
-        # run_ssh_commands(ssh_client_2, commands)
+        with SSHTunnelForwarder(
+            group_vars['controller_ip'],
+            ssh_username=group_vars['controller_user'],
+            ssh_pkey=os.path.expanduser(r'~/.ssh/id_rsa'),
+            remote_bind_address=(node_ip, 22)
+        ) as ssh_tunnel:
+            sleep(1)
+            ssh_client_2 = create_ssh_client(group_vars['controller_user'], '127.0.0.1', ssh_tunnel.local_bind_port)
+            scp_client = SCPClient(ssh_client_2.get_transport())
+            scp_client.put(os.path.expanduser(r'~/.ssh/id_rsa'), r'~/.ssh/id_rsa')
+            # commands = """~/copy_idrsa.sh
+            #     cd
+            #     ./run_vdbench.sh inmem.conf uniquestring1
+            # """.split('\n')
+            # run_ssh_commands(ssh_client_2, commands)
 
 
 # FIXTURES ####################################################################
@@ -186,28 +192,6 @@ def wait_for_op(op, timeout_sec=60):
         logging.info('>> operation result: {}'.format(result))
         logging.info('>> result.properties: {}'.format(result.properties))
     return result
-
-
-def create_ssh_tunnel(username, external_ip, internal_ip, internal_port=22):
-    """
-    Creates and starts an SSH tunnel.
-
-    username: group_vars['controller_user']
-    external_ip: group_vars['controller_ip']
-    internal_ip: <node, client IP -- 10.0.0.x>
-    """
-    ssh_tunnel = SSHTunnelForwarder(
-        external_ip,
-        ssh_username=username,
-        ssh_pkey=os.path.expanduser(r'~/.ssh/id_rsa'),
-        remote_bind_address=(internal_ip, internal_port)
-    )
-    ssh_tunnel.start()
-    logging.debug('local_bind_port: {}'.format(ssh_tunnel.local_bind_port))
-    logging.debug('tunnel_is_up: {}'.format(ssh_tunnel.tunnel_is_up))
-    logging.debug('tunnel_bindings: {}'.format(ssh_tunnel.tunnel_bindings))
-    sleep(1)  # Wait a second for the tunnel to settle.
-    return ssh_tunnel
 
 
 def create_ssh_client(username, hostname, port=22, password=None):
