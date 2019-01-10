@@ -54,6 +54,11 @@ az ad sp create-for-rbac --role "Contributor" --scopes /subscriptions/$SUBSCRIPT
 # save the output somewhere safe
 export SP_APP_ID=#the appId of the Service Principal from the previous command
 az role assignment create --role "User Access Administrator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VFXT_RESOURCE_GROUP --assignee $SP_APP_ID
+###########################################################
+# pass the SP details to the person installing the vFXT
+# once complete, delete the SP with the following command:
+#    az ad sp delete --id $SP_APP_ID
+###########################################################
 ```
 
 ### Example: Create Service principal for Bring your own VNET Administrator
@@ -77,6 +82,11 @@ az role assignment create --role "User Access Administrator" --scope /subscripti
 # assign the "Virtual Machine Contributor" and the "Avere Contributor" to the scope of the VNET resource group
 az role assignment create --role "Virtual Machine Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VNET_RESOURCE_GROUP --assignee $SP_APP_ID
 az role assignment create --role "Avere Cluster Create" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VNET_RESOURCE_GROUP --assignee $SP_APP_ID
+###########################################################
+# pass the SP details to the person installing the vFXT
+# once complete, delete the SP with the following command:
+#    az ad sp delete --id $SP_APP_ID
+###########################################################
 ```
 
 ## Deploying the vFXT controller and vFXT cluster
