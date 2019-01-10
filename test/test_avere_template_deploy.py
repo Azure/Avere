@@ -142,22 +142,24 @@ class TestDeployment:
         result_vd = group_vars['deploy_vd_result']
         node_ip = result_vd.properties.outputs["nodE_0_IP_ADDRESS"]["value"]
 
-        # with SSHTunnelForwarder(
-        #     group_vars['controller_ip'],
-        #     ssh_username=group_vars['controller_user'],
-        #     ssh_pkey=os.path.expanduser(r'~/.ssh/id_rsa'),
-        #     remote_bind_address=(node_ip, 22)
-        # ) as ssh_tunnel:
-        #     sleep(1)
-        #     ssh_client_2 = create_ssh_client(group_vars['controller_user'], '127.0.0.1', ssh_tunnel.local_bind_port)
-        #     scp_client = SCPClient(ssh_client_2.get_transport())
-        #     scp_client.put(os.path.expanduser(r'~/.ssh/id_rsa'), r'~/.ssh/id_rsa')
-        #     # commands = """~/copy_idrsa.sh
-        #     #     cd
-        #     #     ./run_vdbench.sh inmem.conf uniquestring1
-        #     # """.split('\n')
-        #     # run_ssh_commands(ssh_client_2, commands)
-        #     ssh_client_2.close()
+        with SSHTunnelForwarder(
+            group_vars['controller_ip'],
+            ssh_username=group_vars['controller_user'],
+            ssh_pkey=os.path.expanduser(r'~/.ssh/id_rsa'),
+            remote_bind_address=(node_ip, 22)
+        ) as ssh_tunnel:
+            sleep(1)
+            try:
+                ssh_client_2 = create_ssh_client(group_vars['controller_user'], '127.0.0.1', ssh_tunnel.local_bind_port)
+                scp_client = SCPClient(ssh_client_2.get_transport())
+                scp_client.put(os.path.expanduser(r'~/.ssh/id_rsa'), r'~/.ssh/id_rsa')
+                # commands = """~/copy_idrsa.sh
+                #     cd
+                #     ./run_vdbench.sh inmem.conf uniquestring1
+                # """.split('\n')
+                # run_ssh_commands(ssh_client_2, commands)
+            finally:
+                ssh_client_2.close()
 
 
 # FIXTURES ####################################################################
