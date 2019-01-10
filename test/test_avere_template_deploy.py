@@ -62,10 +62,11 @@ class TestDeployment:
         scp_client.get(r'~/vfxt.log',
                        r'./vfxt.' + group_vars['controller_name'] + '.log')
 
-    def test_vdbench(self, group_vars):
+    def test_vdbench_setup(self, group_vars):
         atd = group_vars['atd']
         with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
+        group_vars['ssh_pub_key'] = ssh_pub_key
         result = group_vars['deploy_result']
         vserver = result.properties.outputs["vserveR_IPS"]["value"]
         x = vserver.split("-")
@@ -80,6 +81,7 @@ class TestDeployment:
         prefix += "."
 
         vserver_list = ",".join([prefix + str(n) for n in range(int(outcome), int(outcome2)+1)])
+        group_vars['vserver_list'] = vserver_list
         ssh_client = group_vars["ssh_client"]
         # group_vars['controller_user'] = ''
         # group_vars['controller_ip'] = ''
@@ -112,6 +114,11 @@ class TestDeployment:
             """.split('\n')
         commands = [s.strip() for s in commands if s.strip()]
         run_ssh_commands(ssh_client, commands)
+
+    def test_vdbench_deploy(self, group_vars):
+        atd = group_vars['atd']
+        ssh_pub_key = group_vars['ssh_pub_key']
+        vserver_list = group_vars['vserver_list']
         with open(os.environ['BUILD_SOURCESDIRECTORY'] + '/src/client/vmas/azuredeploy.json') as tfile:
             atd.template = json.load(tfile)
         original_params = atd.deploy_params.copy()
@@ -139,9 +146,10 @@ class TestDeployment:
         #                     }
         atd.deploy_name = 'test_vdbench'
         group_vars['deploy_vd_result'] = wait_for_op(atd.deploy())
+
+    def test_vdbench_template_run(self, group_vars):
         result_vd = group_vars['deploy_vd_result']
         node_ip = result_vd.properties.outputs["nodE_0_IP_ADDRESS"]["value"]
-
         with SSHTunnelForwarder(
             group_vars['controller_ip'],
             ssh_username=group_vars['controller_user'],
@@ -153,11 +161,11 @@ class TestDeployment:
                 ssh_client_2 = create_ssh_client(group_vars['controller_user'], '127.0.0.1', ssh_tunnel.local_bind_port)
                 scp_client = SCPClient(ssh_client_2.get_transport())
                 scp_client.put(os.path.expanduser(r'~/.ssh/id_rsa'), r'~/.ssh/id_rsa')
-                # commands = """~/copy_idrsa.sh
-                #     cd
-                #     ./run_vdbench.sh inmem.conf uniquestring1
-                # """.split('\n')
-                # run_ssh_commands(ssh_client_2, commands)
+                commands = """~/copy_idrsa.sh
+                    cd
+                """.split('\n')
+                # ./run_vdbench.sh inmem.conf uniquestring1  //goes in command
+                run_ssh_commands(ssh_client_2, commands)
             finally:
                 ssh_client_2.close()
 
