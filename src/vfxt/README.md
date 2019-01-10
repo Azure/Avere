@@ -6,76 +6,119 @@ This template implements [Deploy](../../docs/jumpstart_deploy.md).
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 
-# Experimental: Avere vFXT controller and vFXT - ARM template deployment
+# Avere vFXT controller and vFXT - ARM template deployment
 
-An experimental template to deploy everything in one deployment is listed below.  To create, you will need to create a scoped role, and then a service principal using that role.
+The following template deploys the Avere vFXT controller and vFXT in a single deployment.  The deployment will take about 30-40 minutes.  The controller and vFXT use managed identity, and the roles need to be configured correctly in your account prior to proceeding with the deployment.
+
+These instructions are in two steps:
+  1. [configure your roles](#managed-identity-and-roles) - this is a one time operation for each subscription
+  1. [deploy your vFXT](#deploying-the-vfxt-controller-and-vfxt-cluster) - there are three ways to deploy your vFXT cluster
+
+Once you have deployed your vFXT, proceed to the data ingest of the cluster described in the data ingest article: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-data-ingest.
 
 The construction of this template and packaging for marketplace can be found in the [src](./src) directory.
 
-Here are the instructions:
+## Managed Identity and Roles
 
-1. Open the cloud shell in the Azure portal or browse to https://shell.azure.com.
+The Avere vFXT controller and cluster use Azure [managed identities](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview) for deployment and operation.  Additionally the administrator deploying the roles also needs permission to deploy the Avere vFXT controller and cluster.
 
-2. Run ```az account set --subscription YOUR_SUBSCRIPTION_ID```
+The following table shows the roles required for each of the avere operations:
 
-3. If you are a Microsoft Employee using a Microsoft Subscription skip to step 6, other use these commands to create the role file: 
+   | Name | Description | Role Required |
+   | --- | --- | --- |
+   | **Controller (vFXT.py)** | the controller uses vFXT.py to create, destroy, and manage a vFXT cluster | "Avere Contributor" |
+   | **vFXT** | the vFXT manages Azure resources for new vServers, and in response to HA events | "avere-cluster" |
+   | **Standalone Administrator** | deploy the VNET, vFXT controller, and vFXT into the same resource group | "[User Access Administrator](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#user-access-administrator)" and "[Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#contributor)" for the VNET resource group |
+   | **Bring your own VNET Administrator**  | deploy vFXT controller, and vFXT into the same resource group but reference the VNET from a different resource group | "[User Access Administrator](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#user-access-administrator)" and "[Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#contributor)" for the vFXT resource Group, and "[Virtual Machine Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#virtual-machine-contributor)" and "Avere Contributor" for the VNET resource group|
 
-```bash
-/bin/cat <<EOM >avere-create-cluster.json
-{
-    "AssignableScopes": [
-        "/subscriptions/<subscription here>"
-    ],
-    "Name": "Avere Cluster Create",
-    "IsCustom": "true",
-    "Description": "Create Avere vFXT Clusters",
-    "NotActions": [],
-    "Actions": [
-          "Microsoft.Authorization/*/read",
-          "Microsoft.Authorization/roleAssignments/*",
-          "Microsoft.Authorization/roleDefinitions/*",
-          "Microsoft.Compute/*/read",
-          "Microsoft.Compute/availabilitySets/*",
-          "Microsoft.Compute/virtualMachines/*",
-          "Microsoft.Network/*/read",
-          "Microsoft.Network/networkInterfaces/*",
-          "Microsoft.Network/virtualNetworks/subnets/join/action",
-          "Microsoft.Network/virtualNetworks/subnets/read",
-          "Microsoft.Resources/subscriptions/resourceGroups/read",
-          "Microsoft.Resources/subscriptions/resourceGroups/resources/read",
-          "Microsoft.Storage/*/read",
-          "Microsoft.Storage/storageAccounts/listKeys/action"
-    ]
-}
-EOM
-```
+Here are the instructions to create custom Avere Roles:
+  1. "avere-cluster" - use instructions from [the Avere documention for runtime role creation](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-pre-role).  Microsoft employees use role "Avere Cluster Runtime Operator".
+  1. "Avere Contributor" - apply the ["Avere Contributor" role file](src/roles/AvereContributor.txt), using instructions from [the Avere documention for runtime role creation](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-pre-role).  Microsoft employees specify role "Avere Cluster Create".
+   
+There are two deployment modes of the Avere vFXT: standalone and "bring your own VNET".  In the standalone case, the deployment deploys the controller and vFXT cluster into a brand new VNET.  In the "bring your own VNET" deployment, the controller and vFXT cluster uses ip addresses from an existing vnet subnet.  Both of these cases require different role configurations.  The following two sections highlight show the strictest scoping to a service principal, but these can be generalized to any user principal.
 
-4. Edit the file to include your subscription ID. Save the file as ``avere-create-cluster.json``. 
+### Example: Create Service principal for Standalone Administrator
 
-![Console text editor showing the subscription ID and the "remove this line" selected for deletion](../../docs/images/edit_role.png)
+A standalone administrator deploys the controller and vFXT cluster into a brand new VNET all within the same resource group.
 
-5. Create the role:
+Here are the CLI instructions that can be used from the [Azure Cloud Shell](http://shell.azure.com) to create a service principal with the strictest possible scope for a standalone administrator.  This assumes you have ownership rights to the subscription:
 
 ```bash
-az role definition create --role-definition avere-create-cluster.json
+export SUBSCRIPTION=#YOUR SUBSCRIPTION
+export VFXT_RESOURCE_GROUP=#the target VFXT resource group
+export TARGET_LOCATION=#the resource group location
+az account set --subscription $SUBSCRIPTION
+az group create --location $TARGET_LOCATION --name $VFXT_RESOURCE_GROUP
+# create the SP
+az ad sp create-for-rbac --role "Contributor" --scopes /subscriptions/$SUBSCRIPTION/resourceGroups/$VFXT_RESOURCE_GROUP
+# save the output somewhere safe
+export SP_APP_ID=#the appId of the Service Principal from the previous command
+az role assignment create --role "User Access Administrator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VFXT_RESOURCE_GROUP --assignee $SP_APP_ID
 ```
 
-6. The following shows how to create the service principal required for use to run `az login` on the controller, but detailed instructions are [here](https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli?view=azure-cli-latest):
+### Example: Create Service principal for Bring your own VNET Administrator
+
+A Bring your own VNET Administrator deploys the controller and vFXT cluster into a resource group referencing a VNET from another resource group.
+
+Here are the CLI instructions that can be used from the [Azure Cloud Shell](http://shell.azure.com) to create a service principal with the strictest possible scope for a Bring your own VNET administrator.  This assumes you have ownership rights to the subscription:
 
 ```bash
-SUBSCRIPTION_ID="REPLACE WITH YOUR SUBSCRIPTION ID"
-az account set --subscription=$SUBSCRIPTION_ID
-az ad sp create-for-rbac --role="Avere Cluster Create" --scopes="/subscriptions/$SUBSCRIPTION_ID"
+export SUBSCRIPTION=#YOUR SUBSCRIPTION
+export VFXT_RESOURCE_GROUP=#the target VFXT resource group
+export TARGET_LOCATION=#the resource group location
+export VNET_RESOURCE_GROUP=#the target VNET resource group
+az account set --subscription $SUBSCRIPTION
+az group create --location $TARGET_LOCATION --name $VFXT_RESOURCE_GROUP
+# create the SP
+az ad sp create-for-rbac --role "Contributor" --scopes /subscriptions/$SUBSCRIPTION/resourceGroups/$VFXT_RESOURCE_GROUP
+# save the output somewhere safe
+export SP_APP_ID=#the appId of the Service Principal from the previous command
+az role assignment create --role "User Access Administrator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VFXT_RESOURCE_GROUP --assignee $SP_APP_ID
+# assign the "Virtual Machine Contributor" and the "Avere Contributor" to the scope of the VNET resource group
+az role assignment create --role "Virtual Machine Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VNET_RESOURCE_GROUP --assignee $SP_APP_ID
+az role assignment create --role "Avere Cluster Create" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VNET_RESOURCE_GROUP --assignee $SP_APP_ID
 ```
 
-> Note: please make sure that the value for parameter --role is the same name you defined as name property used on step 3. This is the role definition name that you are assigning to the Service Principal.
+## Deploying the vFXT controller and vFXT cluster
 
-If you already have a service principal to be used with password credential or missed the output with necessary information created in this step, please use the steps outlined [here](./recover_sp_information.md) to recover the information and add a new password.
+There are three ways to deploy the vFXT cluster.  In each of the methods you will need to have the minimum required role access described in the previous section.
 
-7. Deploy the script using the following "deploy to Azure" button (if the link doesn't work you need to be whitelisted, deploy azuredeploy-auto.json):
+   | Deployment Method | Details | URL |
+   | --- | --- | --- |
+   | **Portal Wizard** | the portal Wizard walks you through the creation of the controller and vFXT.  This is private preview, so please post github issue if you would like access | [wizard](https://portal.azure.com/?pub_source=email&pub_status=success#create/microsoft-avere.vfxt-template-previewavere-vfxt-arm) |
+   | **Portal Template** | this uses the default portal template wizard and requires care when entering fields  | <a href="https://portal.azure.com/?pub_source=email&pub_status=success#create/microsoft-avere.vfxt-template-previewavere-vfxt-arm" target="_blank"><img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/></a> |
+   | **Azure CLI** | the template can be automated using CLI or SDK | See the [example below](#example-using-cli-to-deploy-the-cluster). |
 
-<a href="https://portal.azure.com/?pub_source=email&pub_status=success#create/microsoft-avere.vfxt-template-previewavere-vfxt-arm" target="_blank">
-<img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
-</a>
+After the deployment completed, check the template output for some important information like management ip address and vserver ip address range.
 
-8. After your deployment completed, please check the template output for some important information like management ip address and vserver ip address range.
+Once you have deployed your vFXT, proceed to the data ingest of the cluster described in the data ingest article: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-data-ingest.
+
+### Example: using CLI to deploy the cluster
+
+This example assumes you are using a service principal created from the previous section.  You may also use this from the [Azure Cloud Shell](http://shell.azure.com) but avoid the login step if your account has enough permissions.
+
+```bash
+export SUBSCRIPTION=#YOUR SUBSCRIPTION
+export VFXT_RESOURCE_GROUP=#the target VFXT resource group
+###############################
+# only login if you do not have enough permissions, or want to use service principal created from previous step
+export AZURE_CLIENT_ID=#use service principal appId
+export AZURE_CLIENT_SECRET=#use service principal password
+export AZURE_TENANT_ID=#use service principal tenant
+az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+###############################
+az account set --subscription $SUBSCRIPTION
+curl -o azuredeploy-auto.json https://raw.githubusercontent.com/Azure/Avere/master/src/vfxt/azuredeploy-auto.json
+export STANDALONE_PARAMETERS_URL=https://raw.githubusercontent.com/Azure/Avere/master/src/vfxt/azuredeploy-auto.parameters.new.vnet.json
+export BYOVNET_PARAMETERS_URL=https://raw.githubusercontent.com/Azure/Avere/master/src/vfxt/azuredeploy-auto.parameters.use.existingvnet.json
+export PARAMETERS_URL=# depending on your install requirements, choose either $STANDALONE_PARAMETERS_URL or $BYOVNET_PARAMETERS_URL
+curl -o azuredeploy-auto.parameters.json $PARAMETERS_URL
+# edit the parameters with your unique values
+vi azuredeploy-auto.parameters.json
+# deploy the template
+az group deployment create --resource-group VFXT_RESOURCE_GROUP --template-file azuredeploy-auto.json --parameters @azuredeploy-auto.parameters.json
+```
+
+After the deployment completed, check the template output for some important information like management ip address and vserver ip address range.
+
+Once you have deployed your vFXT, proceed to the data ingest of the cluster described in the data ingest article: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-data-ingest.
