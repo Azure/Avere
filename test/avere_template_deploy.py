@@ -27,7 +27,8 @@ from azure.mgmt.resource.resources.models import DeploymentMode
 
 class AvereTemplateDeploy:
     def __init__(self, deploy_params={}, resource_group=None,
-                 location='eastus2', deploy_name='azurePySDK', template={}):
+                 location='eastus2', deploy_name='azurePySDK', template={},
+                 deploy_id=None):
         """Initialize, authenticate to Azure."""
         self.deploy_params = deploy_params
         self.resource_group = self.deploy_params.pop('resourceGroup',
@@ -35,6 +36,15 @@ class AvereTemplateDeploy:
         self.location = self.deploy_params.pop('location', location)
         self.deploy_name = self.deploy_params.pop('deployName', deploy_name)
         self.template = self.deploy_params.pop('template', template)
+        self.deploy_id = self.deploy_params.pop('deployId', deploy_id)
+
+        if not self.deploy_id:
+            self.deploy_id = 'av' + \
+                datetime.utcnow().strftime('%m%dx%H%M%S') + \
+                choice(ascii_lowercase)
+
+        if not self.resource_group:
+            self.resource_group = self.deploy_id + '-rg'
 
         logging.debug('> Loading Azure credentials')
         sp_creds = ServicePrincipalCredentials(
@@ -50,11 +60,6 @@ class AvereTemplateDeploy:
             credentials=sp_creds,
             subscription_id=os.environ['AZURE_SUBSCRIPTION_ID']
         )
-
-        self.deploy_id = 'av' + \
-            datetime.utcnow().strftime('%m%d%H%M%S') + choice(ascii_lowercase)
-        if not self.resource_group:
-            self.resource_group = self.deploy_id + '-rg'
 
     def create_resource_group(self):
         """Creates the Azure resource group for this deployment."""
