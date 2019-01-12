@@ -68,6 +68,7 @@ class TestDeployment:
         x = vserver_ips.split("-")
         ip1 = x[0]
         ip2 = x[1]
+
         ip1_split = ip1.split(".")
         ip_low = ip1_split[-1]
         ip_hi = ip2.split(".")[-1]

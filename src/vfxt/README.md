@@ -26,14 +26,14 @@ The following table shows the roles required for each of the avere operations:
 
    | Name | Description | Role Required |
    | --- | --- | --- |
-   | **Controller (vFXT.py)** | the controller uses vFXT.py to create, destroy, and manage a vFXT cluster | "Avere Contributor" |
-   | **vFXT** | the vFXT manages Azure resources for new vServers, and in response to HA events | "avere-cluster" |
-   | **Standalone Administrator** | deploy the VNET, vFXT controller, and vFXT into the same resource group | "[User Access Administrator](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#user-access-administrator)" and "[Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#contributor)" for the VNET resource group |
-   | **Bring your own VNET Administrator**  | deploy vFXT controller, and vFXT into the same resource group but reference the VNET from a different resource group | "[User Access Administrator](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#user-access-administrator)" and "[Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#contributor)" for the vFXT resource Group, and "[Virtual Machine Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#virtual-machine-contributor)" and "Avere Contributor" for the VNET resource group|
+   | **Controller (vFXT.py)** | the controller uses vFXT.py to create, destroy, and manage a vFXT cluster | "[Avere Contributor](https://github.com/Azure/Avere/blob/master/src/vfxt/src/roles/AvereContributor.txt)" where scoping to the target resource group and vnet resource group is handled by template |
+   | **vFXT** | the vFXT manages Azure resources for new vServers, and in response to HA events | "[avere-cluster](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-pre-role)" where scoping to the target resource group and vnet resource group is handled by vFXT.py |
+   | **Standalone Administrator** | deploy the VNET, vFXT controller, and vFXT into the same resource group | "[User Access Administrator](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#user-access-administrator)" and "[Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#contributor)" scoped to the target vFXT resource group |
+   | **Bring your own VNET Administrator**  | deploy vFXT controller, and vFXT into the same resource group but reference the VNET from a different resource group | "[User Access Administrator](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#user-access-administrator)" and "[Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#contributor)" scoped to the target vFXT resource Group, and "[Virtual Machine Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#virtual-machine-contributor)" and "[Avere Contributor](https://github.com/Azure/Avere/blob/master/src/vfxt/src/roles/AvereContributor.txt)" scoped to the VNET resource group|
 
 Here are the instructions to create custom Avere Roles:
-  1. "avere-cluster" - use instructions from [the Avere documention for runtime role creation](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-pre-role).  Microsoft employees use role "Avere Cluster Runtime Operator".
-  1. "Avere Contributor" - apply the ["Avere Contributor" role file](src/roles/AvereContributor.txt), using instructions from [the Avere documention for runtime role creation](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-pre-role).  Microsoft employees specify role "Avere Cluster Create".
+  1. "avere-cluster" - use instructions from [the Avere documention for runtime role creation](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-pre-role).  Microsoft employees should specify already defined role "Avere Cluster Runtime Operator".
+  1. "Avere Contributor" - apply the ["Avere Contributor" role file](src/roles/AvereContributor.txt), using instructions from [the Avere documentation for runtime role creation](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-pre-role).  Microsoft employees should specify already defined role "Avere Cluster Create".
    
 There are two deployment modes of the Avere vFXT: standalone and "bring your own VNET".  In the standalone case, the deployment deploys the controller and vFXT cluster into a brand new VNET.  In the "bring your own VNET" deployment, the controller and vFXT cluster uses ip addresses from an existing vnet subnet.  Both of these cases require different role configurations.  The following two sections highlight show the strictest scoping to a service principal, but these can be generalized to any user principal.
 
@@ -54,6 +54,11 @@ az ad sp create-for-rbac --role "Contributor" --scopes /subscriptions/$SUBSCRIPT
 # save the output somewhere safe
 export SP_APP_ID=#the appId of the Service Principal from the previous command
 az role assignment create --role "User Access Administrator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VFXT_RESOURCE_GROUP --assignee $SP_APP_ID
+###########################################################
+# pass the SP details to the person installing the vFXT
+# once complete, delete the SP with the following command:
+#    az ad sp delete --id $SP_APP_ID
+###########################################################
 ```
 
 ### Example: Create Service principal for Bring your own VNET Administrator
@@ -77,6 +82,11 @@ az role assignment create --role "User Access Administrator" --scope /subscripti
 # assign the "Virtual Machine Contributor" and the "Avere Contributor" to the scope of the VNET resource group
 az role assignment create --role "Virtual Machine Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VNET_RESOURCE_GROUP --assignee $SP_APP_ID
 az role assignment create --role "Avere Cluster Create" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VNET_RESOURCE_GROUP --assignee $SP_APP_ID
+###########################################################
+# pass the SP details to the person installing the vFXT
+# once complete, delete the SP with the following command:
+#    az ad sp delete --id $SP_APP_ID
+###########################################################
 ```
 
 ## Deploying the vFXT controller and vFXT cluster

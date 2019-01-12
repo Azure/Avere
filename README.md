@@ -1,4 +1,4 @@
-[![Build Status](https://dev.azure.com/averevfxt/nov20-testdep/_apis/build/status/Azure.Avere)](https://dev.azure.com/averevfxt/nov20-testdep/_build/latest?definitionId=1)
+[![Build Status](https://dev.azure.com/averevfxt/vfxt-github/_apis/build/status/Azure.Avere?branchName=master)](https://dev.azure.com/averevfxt/vfxt-github/_build/latest?definitionId=1?branchName=master)
 
 <img src="docs/images/avere_vfxt.png">
 
