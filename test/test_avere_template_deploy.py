@@ -21,6 +21,7 @@ from sshtunnel import SSHTunnelForwarder
 class TestDeployment:
 
     def test_deploy_template(self, group_vars):
+        log = logging.getLogger('test_deploy_template')
         atd = group_vars['atd']
         with open(os.environ['BUILD_SOURCESDIRECTORY'] + '/src/vfxt/azuredeploy-auto.json') as tfile:
             atd.template = json.load(tfile)
@@ -41,67 +42,52 @@ class TestDeployment:
         group_vars['controller_name'] = atd.deploy_params['controllerName']
         group_vars['controller_user'] = atd.deploy_params['controllerAdminUsername']
 
-        logging.debug('Generated deploy parameters: \n{}'.format(
+        log.debug('Generated deploy parameters: \n{}'.format(
             json.dumps(atd.deploy_params, indent=4)))
         atd.deploy_name = 'test_deploy_template'
-        group_vars['deploy_result'] = wait_for_op(atd.deploy())
+        try:
+            group_vars['deploy_result'] = wait_for_op(atd.deploy())
+        finally:
+            group_vars['controller_ip'] = atd.nm_client.public_ip_addresses.get(
+                atd.resource_group,
+                'publicip-' + group_vars['controller_name']).ip_address
 
-    def test_get_vfxt_log(self, group_vars):
-        atd = group_vars['atd']
-        logging.info('Getting vfxt.log from controller: {}'.format(
+    def test_get_vfxt_log(self, group_vars, scp_client):
+        log = logging.getLogger('test_get_vfxt_log')
+        log.info('Getting vfxt.log from controller: {}'.format(
             group_vars['controller_name']))
-        con_ip = atd.nm_client.public_ip_addresses.get(
-            atd.resource_group,
-            'publicip-' + group_vars['controller_name']).ip_address
-        group_vars['controller_ip'] = con_ip
-
-        ssh_client = create_ssh_client(group_vars['controller_user'], con_ip)
-        group_vars['ssh_client'] = ssh_client
-
-        scp_client = SCPClient(ssh_client.get_transport())
         scp_client.get(r'~/vfxt.log',
                        r'./vfxt.' + group_vars['controller_name'] + '.log')
 
-    def test_vdbench_setup(self, group_vars):
-        atd = group_vars['atd']
+    def test_vdbench_setup(self, group_vars, ssh_client):
         with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
         group_vars['ssh_pub_key'] = ssh_pub_key
         result = group_vars['deploy_result']
-        vserver = result.properties.outputs["vserveR_IPS"]["value"]
-        x = vserver.split("-")
+        vserver_ips = result.properties.outputs["vserveR_IPS"]["value"]
+        x = vserver_ips.split("-")
         ip1 = x[0]
         ip2 = x[1]
-        ip1_split_list = ip1.split(".")
-        ip2_split_list = ip2.split(".")
-        outcome = ip1_split_list[-1]
-        outcome2 = ip2_split_list[-1]
+        ip1_split = ip1.split(".")
+        ip_low = ip1_split[-1]
+        ip_hi = ip2.split(".")[-1]
 
-        prefix = ".".join(ip1_split_list[:-1])
-        prefix += "."
-
-        vserver_list = ",".join([prefix + str(n) for n in range(int(outcome), int(outcome2)+1)])
+        ip_prefix = ".".join(ip1_split[:-1]) + "."
+        vserver_list = [ip_prefix + str(n) for n in range(int(ip_low), int(ip_hi)+1)]
         group_vars['vserver_list'] = vserver_list
-        ssh_client = group_vars["ssh_client"]
-        # group_vars['controller_user'] = ''
-        # group_vars['controller_ip'] = ''
-        # ssh_client = create_ssh_client(group_vars['controller_user'], group_vars['controller_ip'])
         commands = """
             sudo apt-get update
             sudo apt-get install nfs-common
-            sudo mkdir -p /nfs/node0
-            sudo mkdir -p /nfs/node1
-            sudo mkdir -p /nfs/node2
-            sudo chown nobody:nogroup /nfs/node0
-            sudo chown nobody:nogroup /nfs/node1
-            sudo chown nobody:nogroup /nfs/node2
             """.split('\n')
-        count = 0
-        for i in vserver_list.split(','):
-            command = i + ":/msazure /nfs/node"+str(count)+ " nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0"
-            echo_command = 'sudo sh -c \'echo "'+ command +'" >> /etc/fstab\''
-            commands.append(echo_command)
-            count += 1
+        for i, vs_ip in enumerate(vserver_list):
+            commands.append('sudo mkdir -p /nfs/node{}'.format(i))
+            commands.append('sudo chown nobody:nogroup /nfs/node{}'.format(i))
+
+            fstab_line = vs_ip + ":/msazure /nfs/node" + str(i) + " nfs " + \
+                "hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0"
+
+            echo_str = 'sudo sh -c \'echo "' + fstab_line + '" >> /etc/fstab\''
+            commands.append(echo_str)
         commands = commands + """
             sudo mount -a
             sudo mkdir -p /nfs/node0/bootstrap
@@ -112,38 +98,43 @@ class TestDeployment:
             sudo chmod +x /nfs/node0/bootstrap/vdbenchVerify.sh
             /nfs/node0/bootstrap/vdbenchVerify.sh
             """.split('\n')
-        commands = [s.strip() for s in commands if s.strip()]
+        run_ssh_commands(ssh_client, commands)
+
+    def test_ping_nodes(self, group_vars, ssh_client):
+        commands = []
+        for vs_ip in group_vars['vserver_list']:
+            commands.append('ping -c 3 {}'.format(vs_ip))
+        run_ssh_commands(ssh_client, commands)
+
+    def test_node_basic_fileops(self, group_vars, ssh_client, scp_client):
+        script_name = 'check_node_basic_fileops.sh'
+        scp_client.put('{0}/test/{1}'.format(
+                       os.environ['BUILD_SOURCESDIRECTORY'], script_name),
+                       r'~/.')
+        commands = """
+            chmod +x {0}
+            ./{0}
+            """.format(script_name).split('\n')
         run_ssh_commands(ssh_client, commands)
 
     def test_vdbench_deploy(self, group_vars):
         atd = group_vars['atd']
         ssh_pub_key = group_vars['ssh_pub_key']
-        vserver_list = group_vars['vserver_list']
-        with open(os.environ['BUILD_SOURCESDIRECTORY'] + '/src/client/vmas/azuredeploy.json') as tfile:
+        with open('{}/src/client/vmas/azuredeploy.json'.format(
+                  os.environ['BUILD_SOURCESDIRECTORY'])) as tfile:
             atd.template = json.load(tfile)
-        original_params = atd.deploy_params.copy()
-        atd.deploy_params = {'uniquename': 'testString',
-                             'sshKeyData': ssh_pub_key,
-                             'virtualNetworkResourceGroup': original_params['virtualNetworkResourceGroup'],
-                             'virtualNetworkName': original_params['virtualNetworkName'],
-                             'virtualNetworkSubnetName': original_params['virtualNetworkSubnetName'],
-                             'nfsCommaSeparatedAddresses': vserver_list,
-                             'vmCount': 12,
-                             'nfsExportPath': '/msazure',
-                             'bootstrapScriptPath': '/bootstrap/bootstrap.vdbench.sh'
-                            }
-        # rg_id = ""
-        # atd.resource_group = rg_id+"-rg"
-        # atd.deploy_params = {'uniquename': 'testString',
-        #                      'sshKeyData': ssh_pub_key,
-        #                      'virtualNetworkResourceGroup': atd.resource_group,
-        #                      'virtualNetworkName': rg_id +"-vnet",
-        #                      'virtualNetworkSubnetName': rg_id +"-subnet",
-        #                      'nfsCommaSeparatedAddresses': vserver_list,
-        #                      'vmCount': 12,
-        #                      'nfsExportPath': '/msazure',
-        #                      'bootstrapScriptPath': '/bootstrap/bootstrap.vdbench.sh'
-        #                     }
+        orig_params = atd.deploy_params.copy()
+        atd.deploy_params = {
+            'uniquename': atd.deploy_id,
+            'sshKeyData': ssh_pub_key,
+            'virtualNetworkResourceGroup': orig_params['virtualNetworkResourceGroup'],
+            'virtualNetworkName': orig_params['virtualNetworkName'],
+            'virtualNetworkSubnetName': orig_params['virtualNetworkSubnetName'],
+            'nfsCommaSeparatedAddresses': ','.join(group_vars['vserver_list']),
+            'vmCount': 12,
+            'nfsExportPath': '/msazure',
+            'bootstrapScriptPath': '/bootstrap/bootstrap.vdbench.sh'
+        }
         atd.deploy_name = 'test_vdbench'
         group_vars['deploy_vd_result'] = wait_for_op(atd.deploy())
 
@@ -158,16 +149,22 @@ class TestDeployment:
         ) as ssh_tunnel:
             sleep(1)
             try:
-                ssh_client_2 = create_ssh_client(group_vars['controller_user'], '127.0.0.1', ssh_tunnel.local_bind_port)
-                scp_client = SCPClient(ssh_client_2.get_transport())
-                scp_client.put(os.path.expanduser(r'~/.ssh/id_rsa'), r'~/.ssh/id_rsa')
+                ssh_client = create_ssh_client(group_vars['controller_user'],
+                                               '127.0.0.1',
+                                               ssh_tunnel.local_bind_port)
+                scp_client = SCPClient(ssh_client.get_transport())
+                try:
+                    scp_client.put(os.path.expanduser(r'~/.ssh/id_rsa'),
+                                   r'~/.ssh/id_rsa')
+                finally:
+                    scp_client.close()
                 commands = """~/copy_idrsa.sh
                     cd
                 """.split('\n')
-                # ./run_vdbench.sh inmem.conf uniquestring1  //goes in command
-                run_ssh_commands(ssh_client_2, commands)
+                # ./run_vdbench.sh inmem.conf uniquestring1  # TODO: reenable
+                run_ssh_commands(ssh_client, commands)
             finally:
-                ssh_client_2.close()
+                ssh_client.close()
 
 
 # FIXTURES ####################################################################
@@ -177,13 +174,36 @@ def group_vars():
     Instantiates an AvereTemplateDeploy object, creates the resource group as
     test-group setup, and deletes the resource group as test-group teardown.
     """
-    atd = AvereTemplateDeploy(location='westus')
-    rg = atd.create_resource_group()
-    logging.info('Created Resource Group: {}'.format(rg))
-    vars = {'atd': atd, 'deploy_result': None}
+    log = logging.getLogger('group_vars')
+    vars = {
+        'atd': AvereTemplateDeploy(location='northcentralus')
+    }
+    rg = vars['atd'].create_resource_group()
+    log.info('Created Resource Group: {}'.format(rg))
+
+    # TODO: Remove after finalizing vdbench tests.
+    # vars['vserver_list'] = []
+    # vars['controller_user'] = ''
+    # vars['controller_ip'] = ''
+
     yield vars
-    logging.info('Deleting Resource Group: {}'.format(rg.name))
-    wait_for_op(atd.delete_resource_group())
+    log.info('Deleting Resource Group: {}'.format(rg.name))
+    wait_for_op(vars['atd'].delete_resource_group())
+
+
+@pytest.fixture()
+def ssh_client(group_vars):
+    client = create_ssh_client(group_vars['controller_user'],
+                               group_vars['controller_ip'])
+    yield client
+    client.close()
+
+
+@pytest.fixture()
+def scp_client(ssh_client):
+    client = SCPClient(ssh_client.get_transport())
+    yield client
+    client.close()
 
 
 # HELPER FUNCTIONS ############################################################
@@ -193,15 +213,16 @@ def wait_for_op(op, timeout_sec=60):
 
     op is an AzureOperationPoller object.
     """
+    log = logging.getLogger('wait_for_op')
     time_start = time()
     while not op.done():
         op.wait(timeout=timeout_sec)
-        logging.info('>> operation status: {0} ({1} sec)'.format(
-              op.status(), int(time() - time_start)))
+        log.info('>> operation status: {0} ({1} sec)'.format(
+                 op.status(), int(time() - time_start)))
     result = op.result()
     if result:
-        logging.info('>> operation result: {}'.format(result))
-        logging.info('>> result.properties: {}'.format(result.properties))
+        log.info('>> operation result: {}'.format(result))
+        log.info('>> result.properties: {}'.format(result.properties))
     return result
 
 
@@ -223,18 +244,23 @@ def run_ssh_commands(ssh_client, commands):
 
     Raises an Exception if any command fails (i.e., non-zero exit code).
     """
+    log = logging.getLogger('run_ssh_commands')
     for cmd in commands:
-        logging.debug('command to run: {}'.format(cmd))
+        cmd = cmd.strip()
+        if not cmd:  # do not run empty "commands"
+            continue
+
+        log.debug('command to run: {}'.format(cmd))
         cmd_stdin, cmd_stdout, cmd_stderr = ssh_client.exec_command(cmd)
 
         cmd_rc = cmd_stdout.channel.recv_exit_status()
-        logging.debug('command exit code: {}'.format(cmd_rc))
+        log.debug('command exit code: {}'.format(cmd_rc))
 
         cmd_stdout = ''.join(cmd_stdout.readlines())
-        logging.debug('command output (stdout): {}'.format(cmd_stdout))
+        log.debug('command output (stdout): {}'.format(cmd_stdout))
 
         cmd_stderr = ''.join(cmd_stderr.readlines())
-        logging.debug('command output (stderr): {}'.format(cmd_stderr))
+        log.debug('command output (stderr): {}'.format(cmd_stderr))
 
         if cmd_rc:
             raise Exception(
