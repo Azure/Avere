@@ -9,18 +9,18 @@
           "type": "Microsoft.Common.TextBlock",
           "visible": true,
           "options": {
-            "text": "Before creating a VM, you must create a new subscription for the Avere vFXT project, configure subscription ownership, create AAD RBAC roles for creation and cluster operation, check quotas and request an increase if needed, and accept terms for using the Avere vFXT software.",
+            "text": "Before creating a VM, you must create a new subscription for the Avere vFXT project, configure subscription ownership, create access control roles for creation and cluster operation, check quotas and request an increase if needed, and accept terms for using the Avere vFXT software.",
             "link": {
-              "label": "Read Prepare to create the Avere vFXT for detailed instructions",
-              "uri": "https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs"
+              "label": "Read 'Avere vFXT for Azure - deployment overview' for detailed instructions",
+              "uri": "https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-deploy-overview"
             }
           }
         },
         {
           "name": "controllerName",
           "type": "Microsoft.Common.TextBox",
-          "label": "Controller name",
-          "toolTip": "The unique name used for resource names associated with the controller.",
+          "label": "Cluster controller name",
+          "toolTip": "A unique name for the controller VM used to create and manage the Avere vFXT cluster.",
           "constraints": {
             "required": true,
             "regex": "^[a-z]([-a-z0-9]*[a-z0-9]){0,31}$",
@@ -33,7 +33,7 @@
           "type": "Microsoft.Compute.UserNameTextBox",
           "label": "Controller username",
           "defaultValue": "azureuser",
-          "toolTip": "Administrative username for the Avere vFXT controller.",
+          "toolTip": "Administrative login name for the cluster controller.",
           "osPlatform": "Linux",
           "constraints": {
             "required": true,
@@ -65,7 +65,7 @@
           "type": "Microsoft.Common.TextBlock",
           "visible": true,
           "options": {
-            "text": "Please provide the AAD role GUID used to create the Avere vFXT.",
+            "text": "Provide the GUID for the access control role to use to create the Avere vFXT cluster.",
             "link": {
               "label": "Learn more",
               "uri": "https://github.com/Azure/Avere/tree/master/src/vfxt#managed-identity-and-roles"
@@ -77,7 +77,7 @@
           "type": "Microsoft.Common.TextBox",
           "label": "Avere cluster create role ID",
           "defaultValue": "8e3af657-a8ff-443c-a75c-2fe8c4bcb635",
-          "toolTip": "The AAD role id used for creation of the vFXT cluster.  The default is the 'Owner' role.  However, we recommend you create your own role as described in the managed identity documentation, and you obtain the GUID by using the following az command: az role definition list --query '[*].{roleName:roleName, name:name}' -o table --name 'Avere Contributor'.",
+          "toolTip": "The RBAC role ID used to create the vFXT cluster. The default is the 'Owner' role, but you should create your own role as described in the managed identity documentation. Obtain the custom role's GUID with the following az command: az role definition list --query '[*].{roleName:roleName, name:name}' -o table --name 'Avere Contributor'.",
           "constraints": {
             "required": true
           },
@@ -87,19 +87,19 @@
       "steps": [
         {
           "name": "AvereVFXTConfiguration",
-          "label": "Avere vFXT Configuration",
+          "label": "Avere vFXT configuration",
           "subLabel": {
             "preValidation": "Configure the Avere vFXT",
             "postValidation": "Done"
           },
-          "bladeTitle": "Avere vFXT Configuration",
+          "bladeTitle": "Avere vFXT configuration",
           "elements": [
             {
               "name": "avereNodeCount",
               "type": "Microsoft.Common.DropDown",
-              "label": "Avere vFXT Node Count",
+              "label": "Avere vFXT cluster node count",
               "defaultValue": "3 nodes",
-              "toolTip": "An Avere vFXT cluster may have 3 to 12 nodes",
+              "toolTip": "Number of cluster nodes to create (between 3 and 12)",
               "constraints": {
                 "allowedValues": [
                   {
@@ -151,10 +151,10 @@
               "name": "adminPassword",
               "type": "Microsoft.Common.PasswordBox",
               "label": {
-                "password": "vFXT Node Password",
+                "password": "Cluster administration password",
                 "confirmPassword": "Confirm password"
               },
-              "toolTip": "The admin password used for the Avere vFXT cluster.",
+              "toolTip": "The password used with the username 'admin' to configure the Avere vFXT cluster.",
               "constraints": {
                 "required": true
               },
@@ -168,7 +168,7 @@
               "type": "Microsoft.Common.TextBlock",
               "visible": true,
               "options": {
-                "text": "Please provide the role name for the Avere vFXT.",
+                "text": "Provide the runtime access role for the cluster nodes.",
                 "link": {
                   "label": "Learn more",
                   "uri": "https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-pre-role"
@@ -178,9 +178,9 @@
             {
               "name": "avereClusterRole",
               "type": "Microsoft.Common.TextBox",
-              "label": "Avere cluster access role",
+              "label": "Avere cluster runtime role",
               "defaultValue": "avere-cluster",
-              "toolTip": "The unique name used for the AAD role.",
+              "toolTip": "The unique name of the RBAC role for cluster node operations.",
               "constraints": {
                 "required": true
               },
@@ -189,7 +189,7 @@
             {
               "name": "avereClusterName",
               "type": "Microsoft.Common.TextBox",
-              "label": "Avere cluster name",
+              "label": "Avere vFXT cluster name",
               "toolTip": "The cluster name should be unique within the resource group.",
               "constraints": {
                 "required": true,
@@ -202,7 +202,7 @@
               "name": "avereInstanceType",
               "type": "Microsoft.Compute.SizeSelector",
               "label": "Size",
-              "toolTip": "The SKU for the Avere vFXT VM.",
+              "toolTip": "The type of VM to use for the Avere vFXT cluster nodes.",
               "recommendedSizes": [
                 "Standard_D16s_v3",
                 "Standard_E32s_v3"
@@ -228,9 +228,9 @@
             {
               "name": "avereCacheSizeGB",
               "type": "Microsoft.Common.DropDown",
-              "label": "Avere vFXT Cache Size",
+              "label": "Cache size per node",
               "defaultValue": "1 TB",
-              "toolTip": "The attached disk cache size to use for each Avere vFXT VM",
+              "toolTip": "The attached disk cache size to use on each cluster node. The cluster's total cache size is the sum of all of the node caches.",
               "constraints": {
                 "allowedValues": [
                   {
@@ -254,7 +254,7 @@
                 "subnets": "Subnet"
               },
               "toolTip": {
-                "virtualNetwork": "Name of the virtual network",
+                "virtualNetwork": "Name of the Avere vFXT cluster's virtual network",
                 "subnets": "Subnet for the virtual network"
               },
               "defaultValue": {
@@ -284,7 +284,7 @@
               "type": "Microsoft.Common.DropDown",
               "label": "Use blob storage",
               "defaultValue": "true",
-              "toolTip": "If true, create the storage account and use that for the backing storage account.  If false, the minimal Avere vFXT cluster will be created.",
+              "toolTip": "If true, create a storage account and configure a new blob container as the cluster's backend storage. If false, you must attach storage after creating the cluster.",
               "constraints": {
                 "allowedValues": [
                   {
@@ -304,11 +304,11 @@
               "name": "avereBackedStorageAccountName",
               "type": "Microsoft.Common.TextBox",
               "label": "Storage account",
-              "toolTip": "A unique storage account to be created for backing the Avere vFXT.  If 'Use blob storage' is set to false, this field is unused.",
+              "toolTip": "A unique storage account name to use with the cluster blob storage. (Not needed if 'Use blob storage' is set to false.)",
               "constraints": {
                 "required": true,
                 "regex": "^[a-z0-9]{3,24}$",
-                "validationMessage": "The field can contain only lowercase letters and numbers.  Name must be between 3 and 24 characters."
+                "validationMessage": "The field can contain only lowercase letters and numbers. Name must be between 3 and 24 characters."
               },
               "visible": "[contains(steps('AvereVFXTConfiguration').useAvereBackedStorageAccount, 'true')]"
             }
