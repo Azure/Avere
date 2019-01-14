@@ -168,7 +168,7 @@ def group_vars():
     """
     log = logging.getLogger('group_vars')
     vars = {
-        'atd': AvereTemplateDeploy(location='northcentralus')
+        'atd': AvereTemplateDeploy(location='westus')
     }
     rg = vars['atd'].create_resource_group()
     log.info('Created Resource Group: {}'.format(rg))
