@@ -251,11 +251,11 @@
               "type": "Microsoft.Network.VirtualNetworkCombo",
               "label": {
                 "virtualNetwork": "Virtual network",
-                "subnets": "Subnets"
+                "subnets": "Subnet"
               },
               "toolTip": {
                 "virtualNetwork": "Name of the virtual network",
-                "subnets": "Subnets for the virtual network"
+                "subnets": "Subnet for the virtual network"
               },
               "defaultValue": {
                 "name": "VirtualNetwork",
