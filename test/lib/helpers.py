@@ -66,7 +66,7 @@ def run_ssh_commands(ssh_client, commands):
             )
 
 
-def splitList(self, vserver_ips):
+def splitList(vserver_ips):
     """
     splitList will take in a string of vservers split by a hyphen
 
