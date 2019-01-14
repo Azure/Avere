@@ -12,10 +12,10 @@ Objects require the following environment variables at instantiation:
     * AZURE_SUBSCRIPTION_ID
 """
 
+import json
 import logging
 import os
 from datetime import datetime
-from pprint import pformat
 from random import choice
 from string import ascii_lowercase
 
@@ -26,17 +26,17 @@ from azure.mgmt.resource.resources.models import DeploymentMode
 
 
 class AvereTemplateDeploy:
-    def __init__(self, deploy_params={}, resource_group=None,
-                 location='eastus2', deploy_name='azurePySDK', template={},
-                 deploy_id=None):
+    def __init__(self, deploy_id=None, deploy_name='azurePySDK',
+                 deploy_params={}, location='eastus2', resource_group=None,
+                 template={}, _fields={}
+                 ):
         """Initialize, authenticate to Azure."""
-        self.deploy_params = deploy_params
-        self.resource_group = self.deploy_params.pop('resourceGroup',
-                                                     resource_group)
-        self.location = self.deploy_params.pop('location', location)
-        self.deploy_name = self.deploy_params.pop('deployName', deploy_name)
-        self.template = self.deploy_params.pop('template', template)
-        self.deploy_id = self.deploy_params.pop('deployId', deploy_id)
+        self.deploy_id = _fields.pop('deploy_id', deploy_id)
+        self.deploy_name = _fields.pop('deploy_name', deploy_name)
+        self.deploy_params = _fields.pop('deploy_params', deploy_params)
+        self.location = _fields.pop('location', location)
+        self.resource_group = _fields.pop('resource_group', resource_group)
+        self.template = _fields.pop('template', template)
 
         if not self.deploy_id:
             self.deploy_id = 'av' + \
@@ -88,8 +88,14 @@ class AvereTemplateDeploy:
             }
         )
 
+    def serialize(self, *args, **kwargs):
+        _this = self.__dict__
+        _this.pop('rm_client', None)  # don't want to save these
+        _this.pop('nm_client', None)
+        return json.dumps(_this, *args, **kwargs)
+
     def __str__(self):
-        return pformat(vars(self), indent=4)
+        return self.serialize(sort_keys=True, indent=4)
 
 
 if __name__ == '__main__':
