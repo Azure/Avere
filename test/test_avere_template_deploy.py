@@ -7,9 +7,9 @@ Driver for testing template-based deployment of the Avere vFXT product.
 import json
 import logging
 import os
-from time import sleep, time
+from time import sleep
 
-import paramiko
+from lib import helpers
 import pytest
 from scp import SCPClient
 
@@ -46,7 +46,7 @@ class TestDeployment:
             json.dumps(atd.deploy_params, indent=4)))
         atd.deploy_name = 'test_deploy_template'
         try:
-            group_vars['deploy_result'] = wait_for_op(atd.deploy())
+            group_vars['deploy_result'] = helpers.wait_for_op(atd.deploy())
         finally:
             group_vars['controller_ip'] = atd.nm_client.public_ip_addresses.get(
                 atd.resource_group,
@@ -65,16 +65,7 @@ class TestDeployment:
         group_vars['ssh_pub_key'] = ssh_pub_key
         result = group_vars['deploy_result']
         vserver_ips = result.properties.outputs["vserveR_IPS"]["value"]
-        x = vserver_ips.split("-")
-        ip1 = x[0]
-        ip2 = x[1]
-
-        ip1_split = ip1.split(".")
-        ip_low = ip1_split[-1]
-        ip_hi = ip2.split(".")[-1]
-
-        ip_prefix = ".".join(ip1_split[:-1]) + "."
-        vserver_list = [ip_prefix + str(n) for n in range(int(ip_low), int(ip_hi)+1)]
+        vserver_list = helpers.splitList(vserver_ips)
         group_vars['vserver_list'] = vserver_list
         commands = """
             sudo apt-get update
@@ -99,13 +90,13 @@ class TestDeployment:
             sudo chmod +x /nfs/node0/bootstrap/vdbenchVerify.sh
             /nfs/node0/bootstrap/vdbenchVerify.sh
             """.split('\n')
-        run_ssh_commands(ssh_client, commands)
+        helpers.run_ssh_commands(ssh_client, commands)
 
     def test_ping_nodes(self, group_vars, ssh_client):
         commands = []
         for vs_ip in group_vars['vserver_list']:
             commands.append('ping -c 3 {}'.format(vs_ip))
-        run_ssh_commands(ssh_client, commands)
+        helpers.run_ssh_commands(ssh_client, commands)
 
     def test_node_basic_fileops(self, group_vars, ssh_client, scp_client):
         script_name = 'check_node_basic_fileops.sh'
@@ -116,7 +107,7 @@ class TestDeployment:
             chmod +x {0}
             ./{0}
             """.format(script_name).split('\n')
-        run_ssh_commands(ssh_client, commands)
+        helpers.run_ssh_commands(ssh_client, commands)
 
     def test_vdbench_deploy(self, group_vars):
         atd = group_vars['atd']
@@ -137,7 +128,7 @@ class TestDeployment:
             'bootstrapScriptPath': '/bootstrap/bootstrap.vdbench.sh'
         }
         atd.deploy_name = 'test_vdbench'
-        group_vars['deploy_vd_result'] = wait_for_op(atd.deploy())
+        group_vars['deploy_vd_result'] = helpers.wait_for_op(atd.deploy())
 
     def test_vdbench_template_run(self, group_vars):
         result_vd = group_vars['deploy_vd_result']
@@ -150,7 +141,7 @@ class TestDeployment:
         ) as ssh_tunnel:
             sleep(1)
             try:
-                ssh_client = create_ssh_client(group_vars['controller_user'],
+                ssh_client = helpers.create_ssh_client(group_vars['controller_user'],
                                                '127.0.0.1',
                                                ssh_tunnel.local_bind_port)
                 scp_client = SCPClient(ssh_client.get_transport())
@@ -163,7 +154,7 @@ class TestDeployment:
                     cd
                 """.split('\n')
                 # ./run_vdbench.sh inmem.conf uniquestring1  # TODO: reenable
-                run_ssh_commands(ssh_client, commands)
+                helpers.run_ssh_commands(ssh_client, commands)
             finally:
                 ssh_client.close()
 
@@ -189,12 +180,12 @@ def group_vars():
 
     yield vars
     log.info('Deleting Resource Group: {}'.format(rg.name))
-    wait_for_op(vars['atd'].delete_resource_group())
+    helpers.wait_for_op(vars['atd'].delete_resource_group())
 
 
 @pytest.fixture()
 def ssh_client(group_vars):
-    client = create_ssh_client(group_vars['controller_user'],
+    client = helpers.create_ssh_client(group_vars['controller_user'],
                                group_vars['controller_ip'])
     yield client
     client.close()
@@ -205,69 +196,6 @@ def scp_client(ssh_client):
     client = SCPClient(ssh_client.get_transport())
     yield client
     client.close()
-
-
-# HELPER FUNCTIONS ############################################################
-def wait_for_op(op, timeout_sec=60):
-    """
-    Wait for a long-running operation (op) for timeout_sec seconds.
-
-    op is an AzureOperationPoller object.
-    """
-    log = logging.getLogger('wait_for_op')
-    time_start = time()
-    while not op.done():
-        op.wait(timeout=timeout_sec)
-        log.info('>> operation status: {0} ({1} sec)'.format(
-                 op.status(), int(time() - time_start)))
-    result = op.result()
-    if result:
-        log.info('>> operation result: {}'.format(result))
-        log.info('>> result.properties: {}'.format(result.properties))
-    return result
-
-
-def create_ssh_client(username, hostname, port=22, password=None):
-    """Creates (and returns) an SSHClient. Auth'n is via publickey."""
-    ssh_client = paramiko.SSHClient()
-    ssh_client.load_system_host_keys()
-    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh_client.connect(username=username, hostname=hostname, port=port,
-                       password=password)
-    return ssh_client
-
-
-def run_ssh_commands(ssh_client, commands):
-    """
-    Runs a list of commands on the server connected via ssh_client.
-
-    If sudo_prefix is True, this will add 'sudo' before supplied commands.
-
-    Raises an Exception if any command fails (i.e., non-zero exit code).
-    """
-    log = logging.getLogger('run_ssh_commands')
-    for cmd in commands:
-        cmd = cmd.strip()
-        if not cmd:  # do not run empty "commands"
-            continue
-
-        log.debug('command to run: {}'.format(cmd))
-        cmd_stdin, cmd_stdout, cmd_stderr = ssh_client.exec_command(cmd)
-
-        cmd_rc = cmd_stdout.channel.recv_exit_status()
-        log.debug('command exit code: {}'.format(cmd_rc))
-
-        cmd_stdout = ''.join(cmd_stdout.readlines())
-        log.debug('command output (stdout): {}'.format(cmd_stdout))
-
-        cmd_stderr = ''.join(cmd_stderr.readlines())
-        log.debug('command output (stderr): {}'.format(cmd_stderr))
-
-        if cmd_rc:
-            raise Exception(
-                '"{}" failed with exit code {}.\n\tSTDOUT: {}\n\tSTDERR: {}'
-                .format(cmd, cmd_rc, cmd_stdout, cmd_stderr)
-            )
 
 
 if __name__ == '__main__':
