@@ -33,8 +33,10 @@ The following table shows the roles required for each of the avere operations:
 
 Here are the instructions to create custom Avere Roles:
   1. "avere-cluster" - use instructions from [the Avere documention for runtime role creation](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-pre-role).  Microsoft employees should specify already defined role "Avere Cluster Runtime Operator".
-  1. "Avere Contributor" - apply the ["Avere Contributor" role file](src/roles/AvereContributor.txt), using instructions from [the Avere documentation for runtime role creation](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-pre-role).  Microsoft employees should specify already defined role "Avere Cluster Create".
-   
+  1. "Avere Contributor" - apply the ["Avere Contributor" role file](src/roles/AvereContributor.txt), using instructions from [the Avere documentation for runtime role creation](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-pre-role).  Microsoft employees should specify already defined roleName "Avere Cluster Create" with roleId  "a7b1b19a-0e83-4fe5-935c-faaefbfd18c3".
+
+After creating the contributor role, you will need to get the role ID to pass to template (Microsoft employees use roleId "a7b1b19a-0e83-4fe5-935c-faaefbfd18c3").  The AAD role id is a GUID used for creating of the vFXT cluster.  This is the ID obtained using the following az command: az role definition list --query '[*].{roleName:roleName, name:name}' -o table --name 'Avere Contributor'.  Currently the template defaults to the [Owner role](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#owner) with GUID 8e3af657-a8ff-443c-a75c-2fe8c4bcb635.
+
 There are two deployment modes of the Avere vFXT: standalone and "bring your own VNET".  In the standalone case, the deployment deploys the controller and vFXT cluster into a brand new VNET.  In the "bring your own VNET" deployment, the controller and vFXT cluster uses ip addresses from an existing vnet subnet.  Both of these cases require different role configurations.  The following two sections highlight show the strictest scoping to a service principal, but these can be generalized to any user principal.
 
 ### Example: Create Service principal for Standalone Administrator

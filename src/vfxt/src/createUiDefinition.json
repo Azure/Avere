@@ -59,6 +59,29 @@
             "hidePassword": false
           },
           "osPlatform": "Linux"
+        },
+        {
+          "name": "textAADClusterCreateRole",
+          "type": "Microsoft.Common.TextBlock",
+          "visible": true,
+          "options": {
+            "text": "Please provide the AAD role GUID used to create the Avere vFXT.",
+            "link": {
+              "label": "Learn more",
+              "uri": "https://github.com/Azure/Avere/tree/master/src/vfxt#managed-identity-and-roles"
+            }
+          }
+        },
+        {
+          "name": "avereClusterCreateRoleId",
+          "type": "Microsoft.Common.TextBox",
+          "label": "Avere cluster create role ID",
+          "defaultValue": "8e3af657-a8ff-443c-a75c-2fe8c4bcb635",
+          "toolTip": "The AAD role id used for creation of the vFXT cluster.  The default is the 'Owner' role.  However, we recommend you create your own role as described in the managed identity documentation, and you obtain the GUID by using the following az command: az role definition list --query '[*].{roleName:roleName, name:name}' -o table --name 'Avere Contributor'.",
+          "constraints": {
+            "required": true
+          },
+          "visible": true
         }
       ],
       "steps": [
@@ -224,54 +247,15 @@
               "visible": true
             },
             {
-              "name": "useAvereBackedStorageAccount",
-              "type": "Microsoft.Common.DropDown",
-              "label": "Use blob storage",
-              "defaultValue": "true",
-              "toolTip": "If true, create the storage account and use that for the backing storage account.  If false, the minimal Avere vFXT cluster will be created.",
-              "constraints": {
-                "allowedValues": [
-                  {
-                    "label": "true",
-                    "value": "true"
-                  },
-                  {
-                    "label": "false",
-                    "value": "false"
-                  }
-                ],
-                "required": true
-              },
-              "visible": true
-            },
-            {
-              "name": "avereBackedStorageAccountName",
-              "type": "Microsoft.Storage.StorageAccountSelector",
-              "label": "Storage account",
-              "toolTip": "A unique storage account to be created for backing the Avere vFXT.  If 'useAvereBackedStorageAccount' is set to false, this field is unused.",
-              "defaultValue": {
-                "type": "Standard_LRS"
-              },
-              "constraints": {
-                "allowedTypes": [
-                    "Standard_LRS"
-                ]
-              },
-              "options": {
-                "hideExisting": true
-              },
-              "visible": "[contains(steps('AvereVFXTConfiguration').useAvereBackedStorageAccount, 'true')]"
-            },
-            {
               "name": "virtualNetwork",
               "type": "Microsoft.Network.VirtualNetworkCombo",
               "label": {
                 "virtualNetwork": "Virtual network",
-                "subnets": "Subnets"
+                "subnets": "Subnet"
               },
               "toolTip": {
                 "virtualNetwork": "Name of the virtual network",
-                "subnets": "Subnets for the virtual network"
+                "subnets": "Subnet for the virtual network"
               },
               "defaultValue": {
                 "name": "VirtualNetwork",
@@ -294,6 +278,39 @@
                   }
                 }
               }
+            },
+            {
+              "name": "useAvereBackedStorageAccount",
+              "type": "Microsoft.Common.DropDown",
+              "label": "Use blob storage",
+              "defaultValue": "true",
+              "toolTip": "If true, create the storage account and use that for the backing storage account.  If false, the minimal Avere vFXT cluster will be created.",
+              "constraints": {
+                "allowedValues": [
+                  {
+                    "label": "true",
+                    "value": "true"
+                  },
+                  {
+                    "label": "false",
+                    "value": "false"
+                  }
+                ],
+                "required": true
+              },
+              "visible": true
+            },
+            {
+              "name": "avereBackedStorageAccountName",
+              "type": "Microsoft.Common.TextBox",
+              "label": "Storage account",
+              "toolTip": "A unique storage account to be created for backing the Avere vFXT.  If 'Use blob storage' is set to false, this field is unused.",
+              "constraints": {
+                "required": true,
+                "regex": "^[a-z0-9]{3,24}$",
+                "validationMessage": "The field can contain only lowercase letters and numbers.  Name must be between 3 and 24 characters."
+              },
+              "visible": "[contains(steps('AvereVFXTConfiguration').useAvereBackedStorageAccount, 'true')]"
             }
           ]
         }
@@ -304,6 +321,7 @@
         "controllerAuthenticationType": "[basics('controllerSSHKeyData').authenticationType]",
         "controllerPassword": "[basics('controllerSSHKeyData').password]",
         "controllerSSHKeyData": "[basics('controllerSSHKeyData').sshPublicKey]",
+        "avereCreateClusterRoleId": "[basics('avereClusterCreateRoleId')]",
         
         "avereNodeCount": "[steps('AvereVFXTConfiguration').avereNodeCount]",
         "adminPassword": "[steps('AvereVFXTConfiguration').adminPassword]",
@@ -311,14 +329,14 @@
         "avereClusterName": "[steps('AvereVFXTConfiguration').avereClusterName]",
         "avereInstanceType": "[steps('AvereVFXTConfiguration').avereInstanceType]",
         "avereCacheSizeGB": "[steps('AvereVFXTConfiguration').avereCacheSizeGB]",
-        "useAvereBackedStorageAccount": "[contains(steps('AvereVFXTConfiguration').useAvereBackedStorageAccount, 'true')]",
-        "avereBackedStorageAccountName": "[coalesce(steps('AvereVFXTConfiguration').avereBackedStorageAccountName.name,'nostorage')]",
         "createVirtualNetwork": "[contains(steps('AvereVFXTConfiguration').virtualNetwork.newOrExisting, 'new')]",
         "virtualNetworkResourceGroup": "[steps('AvereVFXTConfiguration').virtualNetwork.resourceGroup]",
         "virtualNetworkName": "[steps('AvereVFXTConfiguration').virtualNetwork.name]",
         "virtualNetworkSubnetName": "[steps('AvereVFXTConfiguration').virtualNetwork.subnets.subnet1.name]",
         "vnetAddressSpacePrefix": "[first(steps('AvereVFXTConfiguration').virtualNetwork.addressPrefixes)]",
-        "subnetAddressRangePrefix": "[steps('AvereVFXTConfiguration').virtualNetwork.subnets.subnet1.addressPrefix]"
+        "subnetAddressRangePrefix": "[steps('AvereVFXTConfiguration').virtualNetwork.subnets.subnet1.addressPrefix]",
+        "useAvereBackedStorageAccount": "[contains(steps('AvereVFXTConfiguration').useAvereBackedStorageAccount, 'true')]",
+        "avereBackedStorageAccountName": "[steps('AvereVFXTConfiguration').avereBackedStorageAccountName]"
       }
     }
   }

@@ -1,36 +1,26 @@
-[
-  {
-    "Description": "Can create and manage an Avere vFXT cluster.",
-    "IsServiceRole": false,
-    "DataLayerProperty": {},
-    "IsBuiltIn": false,
-    "Name": "Avere Contributor",
-    "Permissions": [
-      {
-        Actions": [
-          "Microsoft.Authorization/*/read",
-          "Microsoft.Authorization/roleAssignments/*",
-          "Microsoft.Compute/*/read",
-          "Microsoft.Compute/availabilitySets/*",
-          "Microsoft.Compute/virtualMachines/*",
-          "Microsoft.Compute/disks/*",
-          "Microsoft.Network/*/read",
-          "Microsoft.Network/networkInterfaces/*",
-          "Microsoft.Network/virtualNetworks/subnets/join/action",
-          "Microsoft.Network/virtualNetworks/subnets/read",
-          "Microsoft.Resources/subscriptions/resourceGroups/read",
-          "Microsoft.Resources/subscriptions/resourceGroups/resources/read",
-          "Microsoft.Storage/*/read",
-          "Microsoft.Storage/storageAccounts/listKeys/action"
-      ],
-        "NotActions": [],
-        "DataActions": [],
-        "NotDataActions": [],
-        "Condition": null
-      }
-    ],
-    "Scopes": [
-      "/"
-    ]
-  }
-]
+{
+  "AssignableScopes": [
+    "/subscriptions/<subscription here>"
+  ],
+  "Name": "Avere Contributor",
+  "IsCustom": true,
+  "Description": "Can create and manage an Avere vFXT cluster.",
+  "NotActions": [],
+  "Actions": [
+    "Microsoft.Authorization/*/read",
+    "Microsoft.Authorization/roleAssignments/*",
+    "Microsoft.Compute/*/read",
+    "Microsoft.Compute/availabilitySets/*",
+    "Microsoft.Compute/virtualMachines/*",
+    "Microsoft.Compute/disks/*",
+    "Microsoft.Network/*/read",
+    "Microsoft.Network/networkInterfaces/*",
+    "Microsoft.Network/virtualNetworks/subnets/join/action",
+    "Microsoft.Network/virtualNetworks/subnets/read",
+    "Microsoft.Resources/subscriptions/resourceGroups/read",
+    "Microsoft.Resources/subscriptions/resourceGroups/resources/read",
+    "Microsoft.Storage/*/read",
+    "Microsoft.Storage/storageAccounts/listKeys/action"
+  ],
+  "DataActions": []
+}
