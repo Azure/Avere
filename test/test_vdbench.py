@@ -17,7 +17,7 @@ from lib.pytest_fixtures import (group_vars, scp_client, ssh_client,
 from sshtunnel import SSHTunnelForwarder
 
 
-class VDBench:
+class TestVDBench:
     def test_vdbench_setup(self, group_vars, ssh_client):
         # TODO: Ensure nodes are mounted on controller. (fixture?)
         commands = """
