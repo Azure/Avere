@@ -21,6 +21,7 @@ from sshtunnel import SSHTunnelForwarder
 class TestDeployment:
 
     def test_deploy_template(self, group_vars):
+        return
         log = logging.getLogger('test_deploy_template')
         td = group_vars['td_obj']
         with open(os.environ['BUILD_SOURCESDIRECTORY'] + '/src/vfxt/azuredeploy-auto.json') as tfile:
@@ -184,7 +185,9 @@ def group_vars():
 
     yield vars
 
-    td_obj = vars['td_obj']
+    log.info('Deleting Resource Group: {}'.format(rg.name))
+    helpers.wait_for_op(vars['td_obj'].delete_resource_group())
+
     vars['td_obj'] = json.loads(vars['td_obj'].serialize())
     if 'VFXT_TEST_VARS_FILE' in os.environ:
         log.debug('vars: {}'.format(
@@ -193,9 +196,6 @@ def group_vars():
             os.environ['VFXT_TEST_VARS_FILE']))
         with open(os.environ['VFXT_TEST_VARS_FILE'], 'w') as vtvf:
             json.dump(vars, vtvf)
-
-    log.info('Deleting Resource Group: {}'.format(rg.name))
-    helpers.wait_for_op(td_obj.delete_resource_group())
 
 
 @pytest.fixture()
