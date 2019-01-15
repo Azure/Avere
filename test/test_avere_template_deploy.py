@@ -22,6 +22,7 @@ from lib.pytest_fixtures import group_vars, scp_client, ssh_client
 class TestDeployment:
 
     def test_deploy_template(self, group_vars):
+        return
         log = logging.getLogger('test_deploy_template')
         td = group_vars['atd_obj']
         with open(os.environ['BUILD_SOURCESDIRECTORY'] + '/src/vfxt/azuredeploy-auto.json') as tfile:
@@ -62,6 +63,11 @@ class TestDeployment:
                        r'./vfxt.' + group_vars['controller_name'] + '.log')
 
     def test_ping_nodes(self, group_vars, ssh_client):
+        if 'vserver_list' not in group_vars:
+            vserver_ips = group_vars['deploy_outputs']["vserveR_IPS"]["value"]
+            vserver_list = helpers.splitList(vserver_ips)
+            group_vars['vserver_list'] = vserver_list
+
         commands = []
         for vs_ip in group_vars['vserver_list']:
             commands.append('ping -c 3 {}'.format(vs_ip))

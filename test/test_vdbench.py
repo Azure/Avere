@@ -22,9 +22,10 @@ class VDBench:
         with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
         group_vars['ssh_pub_key'] = ssh_pub_key
-        vserver_ips = group_vars['deploy_outputs']["vserveR_IPS"]["value"]
-        vserver_list = helpers.splitList(vserver_ips)
-        group_vars['vserver_list'] = vserver_list
+        if 'vserver_list' not in group_vars:
+            vserver_ips = group_vars['deploy_outputs']["vserveR_IPS"]["value"]
+            vserver_list = helpers.splitList(vserver_ips)
+            group_vars['vserver_list'] = vserver_list
         commands = """
             sudo apt-get update
             sudo apt-get install nfs-common
@@ -99,6 +100,7 @@ class VDBench:
                 helpers.run_ssh_commands(ssh_client, commands)
             finally:
                 ssh_client.close()
+
 
 if __name__ == '__main__':
     pytest.main()

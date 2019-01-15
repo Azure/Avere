@@ -57,7 +57,7 @@ steps:
   condition: succeededOrFailed()
 
 - script: |
-    az group delete -n $(grep resource_group $VFXT_TEST_VARS_FILE | sed -E 's/^.*: "([^"]+)".*$/\1/')
+    az group delete --yes -n $(grep resource_group $VFXT_TEST_VARS_FILE | sed -E 's/^.*: "([^"]+)".*$/\1/')
   displayName: 'delete resource group'
   condition: always()
   env:

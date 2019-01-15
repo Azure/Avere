@@ -56,3 +56,6 @@ def scp_client(ssh_client):
     client = SCPClient(ssh_client.get_transport())
     yield client
     client.close()
+
+if __name__ == '__main__':
+    pytest.main()

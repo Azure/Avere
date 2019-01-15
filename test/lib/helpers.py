@@ -83,3 +83,7 @@ def splitList(vserver_ips):
     ip_prefix = ".".join(ip1_split[:-1]) + "."
     vserver_list = [ip_prefix + str(n) for n in range(int(ip_low), int(ip_hi)+1)]
     return vserver_list
+
+
+if __name__ == '__main__':
+    pass
