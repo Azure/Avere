@@ -22,34 +22,35 @@ class TestDeployment:
 
     def test_deploy_template(self, group_vars):
         log = logging.getLogger('test_deploy_template')
-        atd = group_vars['atd']
+        td = group_vars['td_obj']
         with open(os.environ['BUILD_SOURCESDIRECTORY'] + '/src/vfxt/azuredeploy-auto.json') as tfile:
-            atd.template = json.load(tfile)
+            td.template = json.load(tfile)
         with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
-        atd.deploy_params = {
-            'virtualNetworkResourceGroup': atd.resource_group,
-            'virtualNetworkName': atd.deploy_id + '-vnet',
-            'virtualNetworkSubnetName': atd.deploy_id + '-subnet',
-            'avereBackedStorageAccountName': atd.deploy_id + 'sa',
-            'controllerName': atd.deploy_id + '-con',
+        td.deploy_params = {
+            'virtualNetworkResourceGroup': td.resource_group,
+            'virtualNetworkName': td.deploy_id + '-vnet',
+            'virtualNetworkSubnetName': td.deploy_id + '-subnet',
+            'avereBackedStorageAccountName': td.deploy_id + 'sa',
+            'controllerName': td.deploy_id + '-con',
             'controllerAdminUsername': 'azureuser',
             'controllerAuthenticationType': 'sshPublicKey',
             'controllerSSHKeyData': ssh_pub_key,
             'adminPassword': os.environ['AVERE_ADMIN_PW'],
             'controllerPassword': os.environ['AVERE_CONTROLLER_PW']
         }
-        group_vars['controller_name'] = atd.deploy_params['controllerName']
-        group_vars['controller_user'] = atd.deploy_params['controllerAdminUsername']
+        group_vars['controller_name'] = td.deploy_params['controllerName']
+        group_vars['controller_user'] = td.deploy_params['controllerAdminUsername']
 
         log.debug('Generated deploy parameters: \n{}'.format(
-            json.dumps(atd.deploy_params, indent=4)))
-        atd.deploy_name = 'test_deploy_template'
+            json.dumps(td.deploy_params, indent=4)))
+        td.deploy_name = 'test_deploy_template'
         try:
-            group_vars['deploy_result'] = helpers.wait_for_op(atd.deploy())
+            deploy_result = helpers.wait_for_op(td.deploy())
+            group_vars['deploy_outputs'] = deploy_result.properties.outputs
         finally:
-            group_vars['controller_ip'] = atd.nm_client.public_ip_addresses.get(
-                atd.resource_group,
+            group_vars['controller_ip'] = td.nm_client.public_ip_addresses.get(
+                td.resource_group,
                 'publicip-' + group_vars['controller_name']).ip_address
 
     def test_get_vfxt_log(self, group_vars, scp_client):
@@ -63,8 +64,7 @@ class TestDeployment:
         with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
         group_vars['ssh_pub_key'] = ssh_pub_key
-        result = group_vars['deploy_result']
-        vserver_ips = result.properties.outputs["vserveR_IPS"]["value"]
+        vserver_ips = group_vars['deploy_outputs']["vserveR_IPS"]["value"]
         vserver_list = helpers.splitList(vserver_ips)
         group_vars['vserver_list'] = vserver_list
         commands = """
@@ -110,14 +110,14 @@ class TestDeployment:
         helpers.run_ssh_commands(ssh_client, commands)
 
     def test_vdbench_deploy(self, group_vars):
-        atd = group_vars['atd']
+        td = group_vars['td_obj']
         ssh_pub_key = group_vars['ssh_pub_key']
         with open('{}/src/client/vmas/azuredeploy.json'.format(
                   os.environ['BUILD_SOURCESDIRECTORY'])) as tfile:
-            atd.template = json.load(tfile)
-        orig_params = atd.deploy_params.copy()
-        atd.deploy_params = {
-            'uniquename': atd.deploy_id,
+            td.template = json.load(tfile)
+        orig_params = td.deploy_params.copy()
+        td.deploy_params = {
+            'uniquename': td.deploy_id,
             'sshKeyData': ssh_pub_key,
             'virtualNetworkResourceGroup': orig_params['virtualNetworkResourceGroup'],
             'virtualNetworkName': orig_params['virtualNetworkName'],
@@ -127,12 +127,12 @@ class TestDeployment:
             'nfsExportPath': '/msazure',
             'bootstrapScriptPath': '/bootstrap/bootstrap.vdbench.sh'
         }
-        atd.deploy_name = 'test_vdbench'
-        group_vars['deploy_vd_result'] = helpers.wait_for_op(atd.deploy())
+        td.deploy_name = 'test_vdbench'
+        deploy_result = helpers.wait_for_op(td.deploy())
+        group_vars['deploy_vd_outputs'] = deploy_result.properties.outputs
 
     def test_vdbench_template_run(self, group_vars):
-        result_vd = group_vars['deploy_vd_result']
-        node_ip = result_vd.properties.outputs["nodE_0_IP_ADDRESS"]["value"]
+        node_ip = group_vars['deploy_vd_outputs']["nodE_0_IP_ADDRESS"]["value"]
         with SSHTunnelForwarder(
             group_vars['controller_ip'],
             ssh_username=group_vars['controller_user'],
@@ -141,9 +141,10 @@ class TestDeployment:
         ) as ssh_tunnel:
             sleep(1)
             try:
-                ssh_client = helpers.create_ssh_client(group_vars['controller_user'],
-                                               '127.0.0.1',
-                                               ssh_tunnel.local_bind_port)
+                ssh_client = helpers.create_ssh_client(
+                    group_vars['controller_user'],
+                    '127.0.0.1',
+                    ssh_tunnel.local_bind_port)
                 scp_client = SCPClient(ssh_client.get_transport())
                 try:
                     scp_client.put(os.path.expanduser(r'~/.ssh/id_rsa'),
@@ -167,26 +168,40 @@ def group_vars():
     test-group setup, and deletes the resource group as test-group teardown.
     """
     log = logging.getLogger('group_vars')
-    vars = {
-        'atd': AvereTemplateDeploy(location='westus')
-    }
-    rg = vars['atd'].create_resource_group()
+    vars = {}
+    if 'VFXT_TEST_VARS_FILE' in os.environ and \
+       os.path.isfile(os.environ['VFXT_TEST_VARS_FILE']):
+        log.debug('Loading into vars from {} (VFXT_TEST_VARS_FILE)'.format(
+            os.environ['VFXT_TEST_VARS_FILE']))
+        with open(os.environ['VFXT_TEST_VARS_FILE'], 'r') as vtvf:
+            vars = {**vars, **json.load(vtvf)}
+    log.debug('Loaded the following JSON into vars: {}'.format(
+        json.dumps(vars, sort_keys=True, indent=4)))
+
+    vars['td_obj'] = AvereTemplateDeploy(_fields=vars.pop('td_obj', {}))
+    rg = vars['td_obj'].create_resource_group()
     log.info('Created Resource Group: {}'.format(rg))
 
-    # TODO: Remove after finalizing vdbench tests.
-    # vars['vserver_list'] = []
-    # vars['controller_user'] = ''
-    # vars['controller_ip'] = ''
-
     yield vars
+
+    td_obj = vars['td_obj']
+    vars['td_obj'] = json.loads(vars['td_obj'].serialize())
+    if 'VFXT_TEST_VARS_FILE' in os.environ:
+        log.debug('vars: {}'.format(
+            json.dumps(vars, sort_keys=True, indent=4)))
+        log.debug('Saving vars to {} (VFXT_TEST_VARS_FILE)'.format(
+            os.environ['VFXT_TEST_VARS_FILE']))
+        with open(os.environ['VFXT_TEST_VARS_FILE'], 'w') as vtvf:
+            json.dump(vars, vtvf)
+
     log.info('Deleting Resource Group: {}'.format(rg.name))
-    helpers.wait_for_op(vars['atd'].delete_resource_group())
+    helpers.wait_for_op(td_obj.delete_resource_group())
 
 
 @pytest.fixture()
 def ssh_client(group_vars):
     client = helpers.create_ssh_client(group_vars['controller_user'],
-                               group_vars['controller_ip'])
+                                       group_vars['controller_ip'])
     yield client
     client.close()
 

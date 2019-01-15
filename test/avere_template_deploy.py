@@ -88,10 +88,25 @@ class AvereTemplateDeploy:
             }
         )
 
-    def serialize(self, *args, **kwargs):
+    def serialize(self, to_file=None, *args, **kwargs):
+        """
+        Serialize this object into a JSON string. The Resource/NetworkManager
+        members are not serialized since deserialized instances should still
+        authenticate.
+
+        If to_file is passed with a non-empty string value, the JSON string
+        will be saved to a file whose name (including path) is to_file's value.
+
+        This method returns the JSON string.
+        """
         _this = self.__dict__
         _this.pop('rm_client', None)  # don't want to save these
         _this.pop('nm_client', None)
+
+        if to_file:
+            with open(to_file, 'w') as tf:
+                json.dump(_this, tf)
+
         return json.dumps(_this, *args, **kwargs)
 
     def __str__(self):
