@@ -59,7 +59,7 @@ steps:
 - script: |
     az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
     az group delete --yes -n $(grep resource_group $VFXT_TEST_VARS_FILE | sed -E 's/^.*: "([^"]+)".*$/\1/')
-  displayName: 'delete resource group'
+  displayName: 'Delete resource group'
   condition: always()
   env:
     AZURE_TENANT_ID: $(SPTENANTID)
