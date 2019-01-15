@@ -32,10 +32,9 @@ class VDBench:
         helpers.run_ssh_commands(ssh_client, commands)
 
     def test_vdbench_deploy(self, group_vars):
-        if 'vserver_ip_list' not in group_vars:
+        if 'vserver_ip_list' not in group_vars:  # TODO: Make this a fixture.
             vserver_ips = group_vars['deploy_outputs']["vserveR_IPS"]["value"]
-            vserver_ip_list = helpers.splitList(vserver_ips)
-            group_vars['vserver_ip_list'] = vserver_ip_list
+            group_vars['vserver_ip_list'] = helpers.splitList(vserver_ips)
 
         td = group_vars['atd_obj']
         with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
