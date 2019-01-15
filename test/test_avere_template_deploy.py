@@ -9,11 +9,11 @@ import logging
 import os
 from time import sleep
 
-from lib import helpers
 import pytest
 from scp import SCPClient
 
 from avere_template_deploy import AvereTemplateDeploy
+from lib import helpers
 from sshtunnel import SSHTunnelForwarder
 
 
@@ -21,7 +21,6 @@ from sshtunnel import SSHTunnelForwarder
 class TestDeployment:
 
     def test_deploy_template(self, group_vars):
-        return
         log = logging.getLogger('test_deploy_template')
         td = group_vars['td_obj']
         with open(os.environ['BUILD_SOURCESDIRECTORY'] + '/src/vfxt/azuredeploy-auto.json') as tfile:
