@@ -58,14 +58,36 @@ class TestDeployment:
                        r'./vfxt.' + group_vars['controller_name'] + '.log')
 
     def test_ping_nodes(self, group_vars, ssh_client):
-        if 'vserver_list' not in group_vars:
+        if 'vserver_ip_list' not in group_vars:
             vserver_ips = group_vars['deploy_outputs']["vserveR_IPS"]["value"]
-            vserver_list = helpers.splitList(vserver_ips)
-            group_vars['vserver_list'] = vserver_list
+            vserver_ip_list = helpers.splitList(vserver_ips)
+            group_vars['vserver_ip_list'] = vserver_ip_list
 
         commands = []
-        for vs_ip in group_vars['vserver_list']:
+        for vs_ip in group_vars['vserver_ip_list']:
             commands.append('ping -c 3 {}'.format(vs_ip))
+        helpers.run_ssh_commands(ssh_client, commands)
+
+    def test_mount_nodes_on_controller(self, group_vars, ssh_client):
+        # TODO: Make this a fixture.
+        if 'vserver_ip_list' not in group_vars:
+            vserver_ips = group_vars['deploy_outputs']["vserveR_IPS"]["value"]
+            vserver_ip_list = helpers.splitList(vserver_ips)
+            group_vars['vserver_ip_list'] = vserver_ip_list
+
+        commands = """
+            sudo apt-get update
+            sudo apt-get install nfs-common
+            """.split('\n')
+
+        for i, vs_ip in enumerate(vserver_ip_list):
+            commands.append('sudo mkdir -p /nfs/node{}'.format(i))
+            commands.append('sudo chown nobody:nogroup /nfs/node{}'.format(i))
+            fstab_line = vs_ip + ":/msazure /nfs/node" + str(i) + " nfs " + \
+                "hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0"
+            commands.append('sudo sh -c \'echo "{}" >> /etc/fstab\''.format(fstab_line))
+
+        commands.append('sudo mount -a')
         helpers.run_ssh_commands(ssh_client, commands)
 
     def test_node_basic_fileops(self, group_vars, ssh_client, scp_client):

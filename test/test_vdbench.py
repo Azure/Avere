@@ -19,28 +19,8 @@ from sshtunnel import SSHTunnelForwarder
 class VDBench:
 
     def test_vdbench_setup(self, group_vars, ssh_client):
-        with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
-            ssh_pub_key = ssh_pub_f.read()
-        group_vars['ssh_pub_key'] = ssh_pub_key
-        if 'vserver_list' not in group_vars:
-            vserver_ips = group_vars['deploy_outputs']["vserveR_IPS"]["value"]
-            vserver_list = helpers.splitList(vserver_ips)
-            group_vars['vserver_list'] = vserver_list
+        # TODO: Ensure nodes are mounted on controller. (fixture)
         commands = """
-            sudo apt-get update
-            sudo apt-get install nfs-common
-            """.split('\n')
-        for i, vs_ip in enumerate(vserver_list):
-            commands.append('sudo mkdir -p /nfs/node{}'.format(i))
-            commands.append('sudo chown nobody:nogroup /nfs/node{}'.format(i))
-
-            fstab_line = vs_ip + ":/msazure /nfs/node" + str(i) + " nfs " + \
-                "hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0"
-
-            echo_str = 'sudo sh -c \'echo "' + fstab_line + '" >> /etc/fstab\''
-            commands.append(echo_str)
-        commands = commands + """
-            sudo mount -a
             sudo mkdir -p /nfs/node0/bootstrap
             cd /nfs/node0/bootstrap
             sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.vdbench.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/bootstrap.vdbench.sh
@@ -52,8 +32,14 @@ class VDBench:
         helpers.run_ssh_commands(ssh_client, commands)
 
     def test_vdbench_deploy(self, group_vars):
+        if 'vserver_ip_list' not in group_vars:
+            vserver_ips = group_vars['deploy_outputs']["vserveR_IPS"]["value"]
+            vserver_ip_list = helpers.splitList(vserver_ips)
+            group_vars['vserver_ip_list'] = vserver_ip_list
+
         td = group_vars['atd_obj']
-        ssh_pub_key = group_vars['ssh_pub_key']
+        with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
+            ssh_pub_key = ssh_pub_f.read()
         with open('{}/src/client/vmas/azuredeploy.json'.format(
                   os.environ['BUILD_SOURCESDIRECTORY'])) as tfile:
             td.template = json.load(tfile)
@@ -64,7 +50,7 @@ class VDBench:
             'virtualNetworkResourceGroup': orig_params['virtualNetworkResourceGroup'],
             'virtualNetworkName': orig_params['virtualNetworkName'],
             'virtualNetworkSubnetName': orig_params['virtualNetworkSubnetName'],
-            'nfsCommaSeparatedAddresses': ','.join(group_vars['vserver_list']),
+            'nfsCommaSeparatedAddresses': ','.join(group_vars['vserver_ip_list']),
             'vmCount': 12,
             'nfsExportPath': '/msazure',
             'bootstrapScriptPath': '/bootstrap/bootstrap.vdbench.sh'
