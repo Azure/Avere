@@ -336,7 +336,7 @@
         "vnetAddressSpacePrefix": "[first(steps('AvereVFXTConfiguration').virtualNetwork.addressPrefixes)]",
         "subnetAddressRangePrefix": "[steps('AvereVFXTConfiguration').virtualNetwork.subnets.subnet1.addressPrefix]",
         "useAvereBackedStorageAccount": "[contains(steps('AvereVFXTConfiguration').useAvereBackedStorageAccount, 'true')]",
-        "avereBackedStorageAccountName": "[steps('AvereVFXTConfiguration').avereBackedStorageAccountName]"
+        "avereBackedStorageAccountName": "[coalesce(steps('AvereVFXTConfiguration').avereBackedStorageAccountName, 'nostorage')]"
       }
     }
   }
