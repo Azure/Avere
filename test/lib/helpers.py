@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import logging
 from time import time
 
@@ -66,15 +68,15 @@ def run_ssh_commands(ssh_client, commands):
             )
 
 
-def splitList(vserver_ips):
+def split_ip_range(vserver_ips):
     """
-    splitList will take in a string of vservers split by a hyphen
+    split_ip_range will take in a string of vservers split by a hyphen
 
-    It will split it to a list of all vserverIps in that range
+    It will split it to a list of all vserver IPs in that range
     """
-    x = vserver_ips.split("-")
-    ip1 = x[0]
-    ip2 = x[1]
+    vs_ips = vserver_ips.split("-")
+    ip1 = vs_ips[0]
+    ip2 = vs_ips[1]
 
     ip1_split = ip1.split(".")
     ip_low = ip1_split[-1]

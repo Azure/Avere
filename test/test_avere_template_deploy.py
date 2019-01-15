@@ -11,7 +11,8 @@ import os
 import pytest
 
 from lib import helpers
-from lib.pytest_fixtures import group_vars, scp_client, ssh_client
+from lib.pytest_fixtures import (group_vars, scp_client, ssh_client,
+                                 vserver_ip_list)
 
 
 # TEST CASES ##################################################################
@@ -20,7 +21,8 @@ class TestDeployment:
     def test_deploy_template(self, group_vars):
         log = logging.getLogger('test_deploy_template')
         td = group_vars['atd_obj']
-        with open(os.environ['BUILD_SOURCESDIRECTORY'] + '/src/vfxt/azuredeploy-auto.json') as tfile:
+        with open('{}/src/vfxt/azuredeploy-auto.json'.format(
+                  os.environ['BUILD_SOURCESDIRECTORY'])) as tfile:
             td.template = json.load(tfile)
         with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
@@ -57,34 +59,27 @@ class TestDeployment:
         scp_client.get(r'~/vfxt.log',
                        r'./vfxt.' + group_vars['controller_name'] + '.log')
 
-    def test_ping_nodes(self, group_vars, ssh_client):
-        if 'vserver_ip_list' not in group_vars:  # TODO: Make this a fixture.
-            vserver_ips = group_vars['deploy_outputs']["vserveR_IPS"]["value"]
-            group_vars['vserver_ip_list'] = helpers.splitList(vserver_ips)
-
-        commands = []
-        for vs_ip in group_vars['vserver_ip_list']:
-            commands.append('ping -c 3 {}'.format(vs_ip))
-        helpers.run_ssh_commands(ssh_client, commands)
-
-    def test_mount_nodes_on_controller(self, group_vars, ssh_client):
-        if 'vserver_ip_list' not in group_vars:  # TODO: Make this a fixture.
-            vserver_ips = group_vars['deploy_outputs']["vserveR_IPS"]["value"]
-            group_vars['vserver_ip_list'] = helpers.splitList(vserver_ips)
-
+    def test_mount_nodes_on_controller(self, vserver_ip_list, ssh_client):
         commands = """
             sudo apt-get update
             sudo apt-get install nfs-common
             """.split('\n')
 
-        for i, vs_ip in enumerate(group_vars['vserver_ip_list']):
+        for i, vs_ip in enumerate(vserver_ip_list):
             commands.append('sudo mkdir -p /nfs/node{}'.format(i))
             commands.append('sudo chown nobody:nogroup /nfs/node{}'.format(i))
-            fstab_line = vs_ip + ":/msazure /nfs/node" + str(i) + " nfs " + \
+            fstab_line = "{}:/msazure /nfs/node{} nfs ".format(vs_ip, i) + \
                 "hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0"
-            commands.append('sudo sh -c \'echo "{}" >> /etc/fstab\''.format(fstab_line))
+            commands.append('sudo sh -c \'echo "{}" >> /etc/fstab\''.format(
+                            fstab_line))
 
         commands.append('sudo mount -a')
+        helpers.run_ssh_commands(ssh_client, commands)
+
+    def test_ping_nodes(self, vserver_ip_list, ssh_client):
+        commands = []
+        for vs_ip in vserver_ip_list:
+            commands.append('ping -c 3 {}'.format(vs_ip))
         helpers.run_ssh_commands(ssh_client, commands)
 
     def test_node_basic_fileops(self, group_vars, ssh_client, scp_client):

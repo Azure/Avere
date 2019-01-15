@@ -12,14 +12,15 @@ import pytest
 from scp import SCPClient
 
 from lib import helpers
-from lib.pytest_fixtures import group_vars, scp_client, ssh_client
+from lib.pytest_fixtures import (group_vars, scp_client, ssh_client,
+                                 vserver_ip_list)
 from sshtunnel import SSHTunnelForwarder
 
 
 class VDBench:
 
     def test_vdbench_setup(self, group_vars, ssh_client):
-        # TODO: Ensure nodes are mounted on controller. (fixture)
+        # TODO: Ensure nodes are mounted on controller. (fixture?)
         commands = """
             sudo mkdir -p /nfs/node0/bootstrap
             cd /nfs/node0/bootstrap
@@ -31,11 +32,7 @@ class VDBench:
             """.split('\n')
         helpers.run_ssh_commands(ssh_client, commands)
 
-    def test_vdbench_deploy(self, group_vars):
-        if 'vserver_ip_list' not in group_vars:  # TODO: Make this a fixture.
-            vserver_ips = group_vars['deploy_outputs']["vserveR_IPS"]["value"]
-            group_vars['vserver_ip_list'] = helpers.splitList(vserver_ips)
-
+    def test_vdbench_deploy(self, group_vars, vserver_ip_list):
         td = group_vars['atd_obj']
         with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
@@ -49,7 +46,7 @@ class VDBench:
             'virtualNetworkResourceGroup': orig_params['virtualNetworkResourceGroup'],
             'virtualNetworkName': orig_params['virtualNetworkName'],
             'virtualNetworkSubnetName': orig_params['virtualNetworkSubnetName'],
-            'nfsCommaSeparatedAddresses': ','.join(group_vars['vserver_ip_list']),
+            'nfsCommaSeparatedAddresses': ','.join(vserver_ip_list),
             'vmCount': 12,
             'nfsExportPath': '/msazure',
             'bootstrapScriptPath': '/bootstrap/bootstrap.vdbench.sh'

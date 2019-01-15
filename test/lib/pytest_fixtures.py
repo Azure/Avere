@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import json
 import logging
 import os
@@ -56,6 +58,15 @@ def scp_client(ssh_client):
     client = SCPClient(ssh_client.get_transport())
     yield client
     client.close()
+
+
+@pytest.fixture()
+def vserver_ip_list(group_vars):
+    if 'vserver_ip_list' not in group_vars:
+        vserver_ips = group_vars['deploy_outputs']["vserveR_IPS"]["value"]
+        group_vars['vserver_ip_list'] = helpers.split_ip_range(vserver_ips)
+    return group_vars['vserver_ip_list']
+
 
 if __name__ == '__main__':
     pytest.main()
