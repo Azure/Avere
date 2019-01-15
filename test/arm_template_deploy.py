@@ -1,11 +1,9 @@
 #!/usr/bin/python3
 
 """
-Class used for testing template-based deployment of the Avere vFXT product.
+Class used for testing Azure ARM template-based deployment.
 
 Objects require the following environment variables at instantiation:
-    * AVERE_ADMIN_PW
-    * AVERE_CONTROLLER_PW
     * AZURE_CLIENT_ID
     * AZURE_CLIENT_SECRET
     * AZURE_TENANT_ID
@@ -25,7 +23,7 @@ from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.resource.resources.models import DeploymentMode
 
 
-class AvereTemplateDeploy:
+class ArmTemplateDeploy:
     def __init__(self, deploy_id=None, deploy_name='azurePySDK',
                  deploy_params={}, location='eastus2', resource_group=None,
                  template={}, _fields={}
@@ -75,7 +73,7 @@ class AvereTemplateDeploy:
         return self.rm_client.resource_groups.delete(self.resource_group)
 
     def deploy(self):
-        """Deploys the Avere vFXT template."""
+        """Deploys the Azure ARM template."""
         logging.debug('> Deploying template')
         return self.rm_client.deployments.create_or_update(
             resource_group_name=self.resource_group,

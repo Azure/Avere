@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-Driver for testing template-based deployment of the Avere vFXT product.
+Driver for testing Azure ARM template-based deployment of the Avere vFXT.
 """
 
 import json
@@ -12,7 +12,7 @@ from time import sleep
 import pytest
 from scp import SCPClient
 
-from avere_template_deploy import AvereTemplateDeploy
+from arm_template_deploy import ArmTemplateDeploy
 from lib import helpers
 from sshtunnel import SSHTunnelForwarder
 
@@ -22,7 +22,7 @@ class TestDeployment:
 
     def test_deploy_template(self, group_vars):
         log = logging.getLogger('test_deploy_template')
-        td = group_vars['td_obj']
+        td = group_vars['atd_obj']
         with open(os.environ['BUILD_SOURCESDIRECTORY'] + '/src/vfxt/azuredeploy-auto.json') as tfile:
             td.template = json.load(tfile)
         with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
@@ -110,7 +110,7 @@ class TestDeployment:
         helpers.run_ssh_commands(ssh_client, commands)
 
     def test_vdbench_deploy(self, group_vars):
-        td = group_vars['td_obj']
+        td = group_vars['atd_obj']
         ssh_pub_key = group_vars['ssh_pub_key']
         with open('{}/src/client/vmas/azuredeploy.json'.format(
                   os.environ['BUILD_SOURCESDIRECTORY'])) as tfile:
@@ -164,7 +164,7 @@ class TestDeployment:
 @pytest.fixture(scope='class')
 def group_vars():
     """
-    Instantiates an AvereTemplateDeploy object, creates the resource group as
+    Instantiates an ArmTemplateDeploy object, creates the resource group as
     test-group setup, and deletes the resource group as test-group teardown.
     """
     log = logging.getLogger('group_vars')
@@ -178,16 +178,15 @@ def group_vars():
     log.debug('Loaded the following JSON into vars: {}'.format(
         json.dumps(vars, sort_keys=True, indent=4)))
 
-    vars['td_obj'] = AvereTemplateDeploy(_fields=vars.pop('td_obj', {}))
-    rg = vars['td_obj'].create_resource_group()
+    vars['atd_obj'] = ArmTemplateDeploy(_fields=vars.pop('atd_obj', {}))
+    rg = vars['atd_obj'].create_resource_group()
     log.info('Created Resource Group: {}'.format(rg))
 
     yield vars
 
-    log.info('Deleting Resource Group: {}'.format(rg.name))
-    helpers.wait_for_op(vars['td_obj'].delete_resource_group())
+    rm_client = vars['atd_obj'].rm_client  # TODO: remove after splitting tests
 
-    vars['td_obj'] = json.loads(vars['td_obj'].serialize())
+    vars['atd_obj'] = json.loads(vars['atd_obj'].serialize())
     if 'VFXT_TEST_VARS_FILE' in os.environ:
         log.debug('vars: {}'.format(
             json.dumps(vars, sort_keys=True, indent=4)))
@@ -195,6 +194,11 @@ def group_vars():
             os.environ['VFXT_TEST_VARS_FILE']))
         with open(os.environ['VFXT_TEST_VARS_FILE'], 'w') as vtvf:
             json.dump(vars, vtvf)
+
+    log.info('Deleting Resource Group: {}'.format(rg.name))
+    # helpers.wait_for_op(vars['atd_obj'].delete_resource_group())
+    helpers.wait_for_op(rm_client.resource_groups.delete(
+        vars['atd_obj']['resource_group']))  # TODO: remove after splitting tests
 
 
 @pytest.fixture()
