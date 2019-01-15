@@ -10,11 +10,11 @@ from time import sleep
 
 import pytest
 from scp import SCPClient
-from sshtunnel import SSHTunnelForwarder
 
-from arm_template_deploy import ArmTemplateDeploy
 from lib import helpers
 from lib.pytest_fixtures import group_vars, scp_client, ssh_client
+from sshtunnel import SSHTunnelForwarder
+
 
 class VDBench:
 
