@@ -25,7 +25,7 @@ from azure.mgmt.resource.resources.models import DeploymentMode
 
 class ArmTemplateDeploy:
     def __init__(self, deploy_id=None, deploy_name='azurePySDK',
-                 deploy_params={}, location='eastus2', resource_group=None,
+                 deploy_params={}, location='westus', resource_group=None,
                  template={}, _fields={}
                  ):
         """Initialize, authenticate to Azure."""

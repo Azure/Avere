@@ -61,38 +61,6 @@ class TestDeployment:
         scp_client.get(r'~/vfxt.log',
                        r'./vfxt.' + group_vars['controller_name'] + '.log')
 
-    def test_vdbench_setup(self, group_vars, ssh_client):
-        with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
-            ssh_pub_key = ssh_pub_f.read()
-        group_vars['ssh_pub_key'] = ssh_pub_key
-        vserver_ips = group_vars['deploy_outputs']["vserveR_IPS"]["value"]
-        vserver_list = helpers.splitList(vserver_ips)
-        group_vars['vserver_list'] = vserver_list
-        commands = """
-            sudo apt-get update
-            sudo apt-get install nfs-common
-            """.split('\n')
-        for i, vs_ip in enumerate(vserver_list):
-            commands.append('sudo mkdir -p /nfs/node{}'.format(i))
-            commands.append('sudo chown nobody:nogroup /nfs/node{}'.format(i))
-
-            fstab_line = vs_ip + ":/msazure /nfs/node" + str(i) + " nfs " + \
-                "hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0"
-
-            echo_str = 'sudo sh -c \'echo "' + fstab_line + '" >> /etc/fstab\''
-            commands.append(echo_str)
-        commands = commands + """
-            sudo mount -a
-            sudo mkdir -p /nfs/node0/bootstrap
-            cd /nfs/node0/bootstrap
-            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.vdbench.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/bootstrap.vdbench.sh
-            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/vdbench50407.zip https://avereimageswestus.blob.core.windows.net/vdbench/vdbench50407.zip
-            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/vdbenchVerify.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/vdbenchVerify.sh
-            sudo chmod +x /nfs/node0/bootstrap/vdbenchVerify.sh
-            /nfs/node0/bootstrap/vdbenchVerify.sh
-            """.split('\n')
-        helpers.run_ssh_commands(ssh_client, commands)
-
     def test_ping_nodes(self, group_vars, ssh_client):
         commands = []
         for vs_ip in group_vars['vserver_list']:
@@ -109,57 +77,6 @@ class TestDeployment:
             ./{0}
             """.format(script_name).split('\n')
         helpers.run_ssh_commands(ssh_client, commands)
-
-    def test_vdbench_deploy(self, group_vars):
-        td = group_vars['atd_obj']
-        ssh_pub_key = group_vars['ssh_pub_key']
-        with open('{}/src/client/vmas/azuredeploy.json'.format(
-                  os.environ['BUILD_SOURCESDIRECTORY'])) as tfile:
-            td.template = json.load(tfile)
-        orig_params = td.deploy_params.copy()
-        td.deploy_params = {
-            'uniquename': td.deploy_id,
-            'sshKeyData': ssh_pub_key,
-            'virtualNetworkResourceGroup': orig_params['virtualNetworkResourceGroup'],
-            'virtualNetworkName': orig_params['virtualNetworkName'],
-            'virtualNetworkSubnetName': orig_params['virtualNetworkSubnetName'],
-            'nfsCommaSeparatedAddresses': ','.join(group_vars['vserver_list']),
-            'vmCount': 12,
-            'nfsExportPath': '/msazure',
-            'bootstrapScriptPath': '/bootstrap/bootstrap.vdbench.sh'
-        }
-        td.deploy_name = 'test_vdbench'
-        deploy_result = helpers.wait_for_op(td.deploy())
-        group_vars['deploy_vd_outputs'] = deploy_result.properties.outputs
-
-    def test_vdbench_template_run(self, group_vars):
-        node_ip = group_vars['deploy_vd_outputs']["nodE_0_IP_ADDRESS"]["value"]
-        with SSHTunnelForwarder(
-            group_vars['controller_ip'],
-            ssh_username=group_vars['controller_user'],
-            ssh_pkey=os.path.expanduser(r'~/.ssh/id_rsa'),
-            remote_bind_address=(node_ip, 22)
-        ) as ssh_tunnel:
-            sleep(1)
-            try:
-                ssh_client = helpers.create_ssh_client(
-                    group_vars['controller_user'],
-                    '127.0.0.1',
-                    ssh_tunnel.local_bind_port)
-                scp_client = SCPClient(ssh_client.get_transport())
-                try:
-                    scp_client.put(os.path.expanduser(r'~/.ssh/id_rsa'),
-                                   r'~/.ssh/id_rsa')
-                finally:
-                    scp_client.close()
-                commands = """~/copy_idrsa.sh
-                    cd
-                """.split('\n')
-                # ./run_vdbench.sh inmem.conf uniquestring1  # TODO: reenable
-                helpers.run_ssh_commands(ssh_client, commands)
-            finally:
-                ssh_client.close()
-
 
 
 if __name__ == '__main__':

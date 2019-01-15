@@ -26,7 +26,7 @@ steps:
   displayName: 'Install Python Dependencies'
 
 - script: |
-    pytest test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
+    pytest test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results1.xml
   displayName: 'Test Avere vFXT template-based deployment'
   env:
     AVERE_ADMIN_PW: $(controllerpassword)
@@ -35,6 +35,17 @@ steps:
     AZURE_CLIENT_ID: $(SPAPPID)
     AZURE_CLIENT_SECRET: $(SPPW)
     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+    VFXT_TEST_VARS_FILE: pipelines.json
+
+- script: |
+    pytest test/test_vdbench.py --doctest-modules --junitxml=junit/test-results2.xml
+  displayName: 'Test vdbench on cluster'
+  env:
+    AZURE_TENANT_ID: $(SPTENANTID)
+    AZURE_CLIENT_ID: $(SPAPPID)
+    AZURE_CLIENT_SECRET: $(SPPW)
+    AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+    VFXT_TEST_VARS_FILE: pipelines.json
 
 - script: |
     for file in $(ls vfxt*.log); do
@@ -45,8 +56,15 @@ steps:
   displayName: 'Dump vfxt.log files'
   condition: succeededOrFailed()
 
+- script: |
+    az group delete -n $(grep resource_group $VFXT_TEST_VARS_FILE | sed -E 's/^.*: "([^"]+)".*$/\1/')
+  displayName: 'delete resource group'
+  ondition: always()
+  env:
+    VFXT_TEST_VARS_FILE: pipelines.json
+
 - task: PublishTestResults@2
   condition: succeededOrFailed()
   inputs:
-    testResultsFiles: 'junit/test-results.xml'
-    testRunTitle: 'Publish pytest results for Python $(python.version)'
+    testResultsFiles: 'junit/test-results*.xml'
+    testRunTitle: 'Publish pytest results'

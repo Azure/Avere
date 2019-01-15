@@ -33,8 +33,6 @@ def group_vars():
 
     yield vars
 
-    rm_client = vars['atd_obj'].rm_client  # TODO: remove after splitting tests
-
     vars['atd_obj'] = json.loads(vars['atd_obj'].serialize())
     if 'VFXT_TEST_VARS_FILE' in os.environ:
         log.debug('vars: {}'.format(
@@ -43,11 +41,6 @@ def group_vars():
             os.environ['VFXT_TEST_VARS_FILE']))
         with open(os.environ['VFXT_TEST_VARS_FILE'], 'w') as vtvf:
             json.dump(vars, vtvf)
-
-    log.info('Deleting Resource Group: {}'.format(rg.name))
-    # helpers.wait_for_op(vars['atd_obj'].delete_resource_group())
-    helpers.wait_for_op(rm_client.resource_groups.delete(
-        vars['atd_obj']['resource_group']))  # TODO: remove after splitting tests
 
 
 @pytest.fixture()
