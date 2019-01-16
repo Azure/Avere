@@ -1,0 +1,34 @@
+[
+  {
+    "Description": "Used by the Avere vFXT cluster to manage the cluster",
+    "IsServiceRole": false,
+    "IsBuiltInRole": true,
+    "Id": "c025889f-8102-4ebf-b32c-fc0c6f0c6bd9",
+    "Name": "Avere Operator",
+    "Permissions": [
+      {
+        "Actions": [
+          "Microsoft.Compute/virtualMachines/read",
+          "Microsoft.Network/networkInterfaces/read",
+          "Microsoft.Network/networkInterfaces/write",
+          "Microsoft.Network/virtualNetworks/subnets/read",
+          "Microsoft.Network/virtualNetworks/subnets/join/action",
+          "Microsoft.Network/networkSecurityGroups/join/action",
+          "Microsoft.Resources/subscriptions/resourceGroups/read",
+          "Microsoft.Storage/storageAccounts/blobServices/containers/delete",
+          "Microsoft.Storage/storageAccounts/blobServices/containers/read",
+          "Microsoft.Storage/storageAccounts/blobServices/containers/write"
+        ],
+        "DataActions": [
+          "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/delete",
+          "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read",
+          "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write"
+        ]
+      }
+    ],
+    "Scopes": [
+      "/"
+    ]
+  }
+]
+
