@@ -78,7 +78,7 @@ class TestVDBench:
                 commands = """
                     ~/copy_idrsa.sh
                     cd
-                    ./run_vdbench.sh inmem.conf uniquestring1
+                    ./run_vdbench.sh smallfileIO.conf uniquestring1
                     """.split("\n")
                 helpers.run_ssh_commands(ssh_client, commands)
             finally:
