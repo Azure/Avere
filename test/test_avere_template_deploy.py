@@ -51,13 +51,6 @@ class TestDeployment:
                 td.resource_group, "publicip-" + group_vars["controller_name"]
             ).ip_address
 
-    def test_get_vfxt_log(self, group_vars, scp_client):
-        log = logging.getLogger("test_get_vfxt_log")
-        log.info("Getting vfxt.log from controller: {}".format(
-            group_vars["controller_name"]))
-        scp_client.get(r"~/vfxt.log",
-                       r"./vfxt." + group_vars["controller_name"] + ".log")
-
     def test_mount_nodes_on_controller(self, vserver_ip_list, ssh_client):
         commands = """
             sudo apt-get update

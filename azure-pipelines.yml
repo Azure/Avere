@@ -38,6 +38,16 @@ steps:
     VFXT_TEST_VARS_FILE: pipelines.json
 
 - script: |
+    CONTROLLER_IP=$(grep controller_ip $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_ip": "([^"]+)".*$/\1/')
+    scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r azureuser@$CONTROLLER_IP:~/vfxt.log vfxt.log
+    echo ">>> vfxt.log:"
+    cat vfxt.log
+  displayName: 'Dump vfxt.log'
+  condition: always()
+  env:
+    VFXT_TEST_VARS_FILE: pipelines.json
+
+- script: |
     pytest test/test_vdbench.py --doctest-modules --junitxml=junit/test-results2.xml
   displayName: 'Test vdbench on cluster'
   env:
@@ -46,15 +56,6 @@ steps:
     AZURE_CLIENT_SECRET: $(SPPW)
     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
     VFXT_TEST_VARS_FILE: pipelines.json
-
-- script: |
-    for file in $(ls vfxt*.log); do
-      echo "DUMPING $file"
-      cat $file
-      echo
-    done
-  displayName: 'Dump vfxt.log files'
-  condition: succeededOrFailed()
 
 - script: |
     az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
