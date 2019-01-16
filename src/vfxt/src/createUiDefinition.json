@@ -12,7 +12,7 @@
             "text": "Before creating a VM, you must create a new subscription for the Avere vFXT project, configure subscription ownership, create access control roles for creation and cluster operation, check quotas and request an increase if needed, and accept terms for using the Avere vFXT software.",
             "link": {
               "label": "Read 'Avere vFXT for Azure - deployment overview' for detailed instructions",
-              "uri": "https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-deploy-overview"
+              "uri": "https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-deploy-overview"
             }
           }
         },
@@ -202,7 +202,7 @@
               "name": "avereInstanceType",
               "type": "Microsoft.Compute.SizeSelector",
               "label": "Size",
-              "toolTip": "The type of VM to use for the Avere vFXT cluster nodes.",
+              "toolTip": "The VM instance type to use for the Avere vFXT cluster nodes.",
               "recommendedSizes": [
                 "Standard_D16s_v3",
                 "Standard_E32s_v3"
@@ -284,7 +284,7 @@
               "type": "Microsoft.Common.DropDown",
               "label": "Use blob storage",
               "defaultValue": "true",
-              "toolTip": "If true, create a storage account and configure a new blob container as the cluster's backend storage. If false, you must attach storage after creating the cluster.",
+              "toolTip": "Choose 'true' to automatically create a storage account and a new blob container as the cluster's backend storage. If false, you must attach storage after creating the cluster.",
               "constraints": {
                 "allowedValues": [
                   {
