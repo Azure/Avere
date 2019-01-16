@@ -51,6 +51,13 @@ class TestDeployment:
                 td.resource_group, "publicip-" + group_vars["controller_name"]
             ).ip_address
 
+    def test_controller_version_check(self, ssh_client):
+        """
+        If /usr/local/bin/averecmd is present on the controller, then the
+        controller using v1.0.4 or newer.
+        """
+        helpers.run_ssh_commands(ssh_client, ['ls -l /usr/local/bin/averecmd'])
+
     def test_mount_nodes_on_controller(self, vserver_ip_list, ssh_client):
         commands = """
             sudo apt-get update
