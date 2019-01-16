@@ -39,9 +39,16 @@ steps:
 
 - script: |
     CONTROLLER_IP=$(grep controller_ip $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_ip": "([^"]+)".*$/\1/')
-    scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r azureuser@$CONTROLLER_IP:~/vfxt.log vfxt.log
-    echo ">>> vfxt.log:"
-    cat vfxt.log
+    CONTROLLER_NAME=$(grep controller_name $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_name": "([^"]+)".*$/\1/')
+    CONTROLLER_USER=$(grep controller_user $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_user": "([^"]+)".*$/\1/')
+
+    echo "CONTROLLER_IP  : $CONTROLLER_IP"
+    echo "CONTROLLER_NAME: $CONTROLLER_NAME"
+    echo "CONTROLLER_USER: $CONTROLLER_USER"
+
+    scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $CONTROLLER_USER@$CONTROLLER_IP:~/vfxt.log vfxt.$CONTROLLER_NAME.log
+    echo ">>> vfxt.$CONTROLLER_NAME.log:"
+    cat vfxt.$CONTROLLER_NAME.log
   displayName: 'Dump vfxt.log'
   condition: always()
   env:
@@ -60,6 +67,7 @@ steps:
 - script: |
     az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
     RESOURCE_GROUP=$(grep resource_group $VFXT_TEST_VARS_FILE | sed -E 's/^.*resource_group": "([^"]+)".*$/\1/')
+    echo "RESOURCE_GROUP: $RESOURCE_GROUP"
     az group delete --yes -n $RESOURCE_GROUP
   displayName: 'Delete resource group'
   condition: always()
