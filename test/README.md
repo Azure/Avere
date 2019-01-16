@@ -12,19 +12,29 @@ This pip install is being done for us in the requirements.txt
 
 We are also going to be using pytest to verify the results that we are going to verify the results from the template.
 
+Test Files are:
+  * test_avere_template_deploy.py
+  * test_vdbench.py
+  * lib/
+    * helpers.py
+    * pytest_fixtures.py
 
 **Scenarios:**
 1. **Deploy vFXT using the template**
-  * Download Template
+  * Download Avere Deployment Template
   * Create Resource Group
   * Deploy Template
   * Verify Resources
+  * Mount Nodes on Controller
+  * Ping Nodes
   * Clean-up Resource Group
-2. **Run vdbench** 
-  * Download Template
+2. **Run vdbench**
+  * Download Avere Deployment Template
   * Create Resource Group
   * Deploy Template
   * Verify Resources
+  * Ping Nodes
+  * Mount Nodes on Controller
   * Download VDBench Template
   * Deploy VDBench Template
   * [Run vdBench](https://github.com/Azure/Avere/blob/master/docs/vdbench.md)

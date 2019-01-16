@@ -1,21 +1,19 @@
 #!/usr/bin/python3
 
 """
-Class used for testing template-based deployment of the Avere vFXT product.
+Class used for testing Azure ARM template-based deployment.
 
 Objects require the following environment variables at instantiation:
-    * AVERE_ADMIN_PW
-    * AVERE_CONTROLLER_PW
     * AZURE_CLIENT_ID
     * AZURE_CLIENT_SECRET
     * AZURE_TENANT_ID
     * AZURE_SUBSCRIPTION_ID
 """
 
+import json
 import logging
 import os
 from datetime import datetime
-from pprint import pformat
 from random import choice
 from string import ascii_lowercase
 
@@ -25,18 +23,18 @@ from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.resource.resources.models import DeploymentMode
 
 
-class AvereTemplateDeploy:
-    def __init__(self, deploy_params={}, resource_group=None,
-                 location='eastus2', deploy_name='azurePySDK', template={},
-                 deploy_id=None):
+class ArmTemplateDeploy:
+    def __init__(self, deploy_id=None, deploy_name='azurePySDK',
+                 deploy_params={}, location='westus2', resource_group=None,
+                 template={}, _fields={}
+                 ):
         """Initialize, authenticate to Azure."""
-        self.deploy_params = deploy_params
-        self.resource_group = self.deploy_params.pop('resourceGroup',
-                                                     resource_group)
-        self.location = self.deploy_params.pop('location', location)
-        self.deploy_name = self.deploy_params.pop('deployName', deploy_name)
-        self.template = self.deploy_params.pop('template', template)
-        self.deploy_id = self.deploy_params.pop('deployId', deploy_id)
+        self.deploy_id = _fields.pop('deploy_id', deploy_id)
+        self.deploy_name = _fields.pop('deploy_name', deploy_name)
+        self.deploy_params = _fields.pop('deploy_params', deploy_params)
+        self.location = _fields.pop('location', location)
+        self.resource_group = _fields.pop('resource_group', resource_group)
+        self.template = _fields.pop('template', template)
 
         if not self.deploy_id:
             self.deploy_id = 'av' + \
@@ -75,7 +73,7 @@ class AvereTemplateDeploy:
         return self.rm_client.resource_groups.delete(self.resource_group)
 
     def deploy(self):
-        """Deploys the Avere vFXT template."""
+        """Deploys the Azure ARM template."""
         logging.debug('> Deploying template')
         return self.rm_client.deployments.create_or_update(
             resource_group_name=self.resource_group,
@@ -88,8 +86,29 @@ class AvereTemplateDeploy:
             }
         )
 
+    def serialize(self, to_file=None, *args, **kwargs):
+        """
+        Serialize this object into a JSON string. The Resource/NetworkManager
+        members are not serialized since deserialized instances should still
+        authenticate.
+
+        If to_file is passed with a non-empty string value, the JSON string
+        will be saved to a file whose name (including path) is to_file's value.
+
+        This method returns the JSON string.
+        """
+        _this = self.__dict__
+        _this.pop('rm_client', None)  # don't want to save these
+        _this.pop('nm_client', None)
+
+        if to_file:
+            with open(to_file, 'w') as tf:
+                json.dump(_this, tf)
+
+        return json.dumps(_this, *args, **kwargs)
+
     def __str__(self):
-        return pformat(vars(self), indent=4)
+        return self.serialize(sort_keys=True, indent=4)
 
 
 if __name__ == '__main__':
