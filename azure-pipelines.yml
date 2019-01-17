@@ -26,7 +26,7 @@ jobs:
       python3 --version
       pip install --upgrade pip setuptools wheel
       pip install -r test/requirements.txt
-    displayName: 'Install Python Dependencies'
+    displayName: 'Install Python dependencies'
 
   - script: |
       pytest test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results1.xml
@@ -58,6 +58,15 @@ jobs:
       VFXT_TEST_VARS_FILE: pipelines.json
 
   - script: |
+      CONTROLLER_NAME=$(grep controller_name $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_name": "([^"]+)".*$/\1/')
+      echo "CONTROLLER_NAME: $CONTROLLER_NAME"
+      grep -i -C 5 -e vfxt:ERROR -e exception vfxt.$CONTROLLER_NAME.log
+    displayName: 'Grep errors from vfxt.log (+/- 5 lines)'
+    condition: or(failed(), canceled())
+    env:
+      VFXT_TEST_VARS_FILE: pipelines.json
+
+  - script: |
       pytest test/test_vdbench.py --doctest-modules --junitxml=junit/test-results2.xml
     displayName: 'Test vdbench on Avere vFXT'
     env:
@@ -81,7 +90,7 @@ jobs:
       VFXT_TEST_VARS_FILE: pipelines.json
 
   - task: PublishTestResults@2
-    condition: succeededOrFailed()
+    condition: always()
     inputs:
       testResultsFiles: 'junit/test-results*.xml'
       testRunTitle: 'Publish pytest results'

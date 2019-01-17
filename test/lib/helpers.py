@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import logging
 from time import time
 
@@ -44,12 +42,12 @@ def run_averecmd(ssh_client, node_ip, password, method, user='admin', args=''):
     return eval(run_ssh_command(ssh_client, cmd)['stdout'])
 
 
-def run_ssh_command(ssh_client, command, ex_on_nonzero_rc=True):
+def run_ssh_command(ssh_client, command, ignore_nonzero_rc=False):
     """
     Run a command on the server connected via ssh_client.
 
-    If ex_on_nonzero_rc is True, an Exception is raised if any command fails
-    (i.e., non-zero exit code).
+    If ignore_nonzero_rc is False, assert when a command fails (i.e., non-zero
+    exit/return code).
     """
     log = logging.getLogger("run_ssh_command")
 
@@ -65,12 +63,12 @@ def run_ssh_command(ssh_client, command, ex_on_nonzero_rc=True):
     cmd_stderr = "".join(cmd_stderr.readlines())
     log.debug("command output (stderr): {}".format(cmd_stderr))
 
-    if cmd_rc and ex_on_nonzero_rc:
-        raise Exception(
+    if cmd_rc and not ignore_nonzero_rc:
+        log.error(
             '"{}" failed with exit code {}.\n\tSTDOUT: {}\n\tSTDERR: {}'.format(
-                command, cmd_rc, cmd_stdout, cmd_stderr
-            )
+                command, cmd_rc, cmd_stdout, cmd_stderr)
         )
+        assert(0 == cmd_rc)
 
     return {
         "command": command,
@@ -80,7 +78,7 @@ def run_ssh_command(ssh_client, command, ex_on_nonzero_rc=True):
     }
 
 
-def run_ssh_commands(ssh_client, commands, ex_on_nonzero_rc=True):
+def run_ssh_commands(ssh_client, commands, ignore_nonzero_rc=False):
     """
     Runs a list of commands on the server connected via ssh_client.
 
@@ -93,7 +91,7 @@ def run_ssh_commands(ssh_client, commands, ex_on_nonzero_rc=True):
         cmd = cmd.strip()
         log.debug("command to run: {}".format(cmd))
         if cmd:  # only run non-empty commands
-            results.append(run_ssh_command(ssh_client, cmd, ex_on_nonzero_rc))
+            results.append(run_ssh_command(ssh_client, cmd, ignore_nonzero_rc))
     return results
 
 
@@ -114,7 +112,3 @@ def split_ip_range(ip_range):
 
     ip_prefix = ".".join(ip1_split[:-1]) + "."
     return [ip_prefix + str(n) for n in range(int(ip_low), int(ip_hi) + 1)]
-
-
-if __name__ == "__main__":
-    pass
