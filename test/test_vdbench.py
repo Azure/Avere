@@ -12,7 +12,7 @@ import pytest
 from scp import SCPClient
 
 from lib import helpers
-from lib.pytest_fixtures import averecmd_params, ssh_con, test_vars, vs_ips
+from lib.pytest_fixtures import ssh_con, test_vars, vs_ips
 from sshtunnel import SSHTunnelForwarder
 
 
