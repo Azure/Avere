@@ -12,13 +12,13 @@ import pytest
 from scp import SCPClient
 
 from lib import helpers
-from lib.pytest_fixtures import ssh_con, test_vars, vs_ips
+from lib.pytest_fixtures import (mnt_nodes, ssh_con, test_vars,  # noqa: F401
+                                 vs_ips)
 from sshtunnel import SSHTunnelForwarder
 
 
 class TestVDBench:
-    def test_vdbench_setup(self, ssh_con):
-        # TODO: Ensure nodes are mounted on controller. (fixture?)
+    def test_vdbench_setup(self, mnt_nodes, ssh_con):  # noqa: F811
         commands = """
             sudo mkdir -p /nfs/node0/bootstrap
             cd /nfs/node0/bootstrap
@@ -30,7 +30,7 @@ class TestVDBench:
             """.split("\n")
         helpers.run_ssh_commands(ssh_con, commands)
 
-    def test_vdbench_deploy(self, test_vars, vs_ips):
+    def test_vdbench_deploy(self, test_vars, vs_ips):  # noqa: F811
         td = test_vars["atd_obj"]
         with open(os.path.expanduser(r"~/.ssh/id_rsa.pub"), "r") as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
@@ -53,7 +53,7 @@ class TestVDBench:
         deploy_result = helpers.wait_for_op(td.deploy())
         test_vars["deploy_vd_outputs"] = deploy_result.properties.outputs
 
-    def test_vdbench_template_run(self, test_vars):
+    def test_vdbench_run(self, test_vars):  # noqa: F811
         node_ip = test_vars["deploy_vd_outputs"]["nodE_0_IP_ADDRESS"]["value"]
         with SSHTunnelForwarder(
             test_vars["controller_ip"],

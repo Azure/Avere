@@ -11,7 +11,6 @@ from arm_template_deploy import ArmTemplateDeploy
 from lib import helpers
 
 
-# FIXTURES ####################################################################
 @pytest.fixture()
 def averecmd_params(test_vars, ssh_con, vs_ips):
     return {
@@ -19,6 +18,27 @@ def averecmd_params(test_vars, ssh_con, vs_ips):
         'password': test_vars['atd_obj'].deploy_params['adminPassword'],
         'node_ip': vs_ips[0]
     }
+
+
+@pytest.fixture()
+def mnt_nodes(ssh_con, vs_ips):
+    check = helpers.run_ssh_command(ssh_con, "ls ~/STATUS.NODES_MOUNTED",
+                                    ignore_nonzero_rc=True)
+    if check['rc']:  # nodes were not already mounted
+        commands = """
+            sudo apt-get update
+            sudo apt-get install nfs-common
+            """.split("\n")
+        for i, vs_ip in enumerate(vs_ips):
+            commands.append("sudo mkdir -p /nfs/node{}".format(i))
+            commands.append("sudo chown nobody:nogroup /nfs/node{}".format(i))
+            fstab_line = "{}:/msazure /nfs/node{} nfs ".format(vs_ip, i) + \
+                         "hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0"
+            commands.append("sudo sh -c 'echo \"{}\" >> /etc/fstab'".format(
+                            fstab_line))
+        commands.append("sudo mount -a")
+        commands.append("touch ~/STATUS.NODES_MOUNTED")
+        helpers.run_ssh_commands(ssh_con, commands)
 
 
 @pytest.fixture()
@@ -36,7 +56,7 @@ def ssh_con(test_vars):
     client.close()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def test_vars():
     """
     Instantiates an ArmTemplateDeploy object, creates the resource group as
