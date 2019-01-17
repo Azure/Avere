@@ -51,6 +51,17 @@ class TestDeployment:
                 td.resource_group, "publicip-" + test_vars["controller_name"]
             ).ip_address
 
+    def test_basic_fileops(self, mnt_nodes, scp_cli, ssh_con):  # noqa: F811
+        script_name = "check_node_basic_fileops.sh"
+        scp_cli.put("{0}/test/{1}".format(
+                       os.environ["BUILD_SOURCESDIRECTORY"], script_name),
+                    r"~/.")
+        commands = """
+            chmod +x {0}
+            ./{0}
+            """.format(script_name).split("\n")
+        helpers.run_ssh_commands(ssh_con, commands)
+
     def test_node_health(self, averecmd_params):  # noqa: F811
         for node in helpers.run_averecmd(**averecmd_params, method='node.list'):
             result = helpers.run_averecmd(**averecmd_params,
@@ -65,17 +76,6 @@ class TestDeployment:
         commands = []
         for vs_ip in vs_ips:
             commands.append("ping -c 3 {}".format(vs_ip))
-        helpers.run_ssh_commands(ssh_con, commands)
-
-    def test_basic_fileops(self, mnt_nodes, scp_cli, ssh_con):  # noqa: F811
-        script_name = "check_node_basic_fileops.sh"
-        scp_cli.put("{0}/test/{1}".format(
-                       os.environ["BUILD_SOURCESDIRECTORY"], script_name),
-                    r"~/.")
-        commands = """
-            chmod +x {0}
-            ./{0}
-            """.format(script_name).split("\n")
         helpers.run_ssh_commands(ssh_con, commands)
 
 
