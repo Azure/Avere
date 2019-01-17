@@ -12,12 +12,14 @@ import pytest
 
 from lib import helpers
 from lib.pytest_fixtures import (averecmd_params, mnt_nodes,  # noqa: F401
-                                 scp_cli, ssh_con, test_vars, vs_ips)
+                                 resource_group, scp_cli, ssh_con, test_vars,
+                                 vs_ips)
+
+vfxt_deploy_ok = False
 
 
-# TEST CASES ##################################################################
 class TestDeployment:
-    def test_deploy_template(self, test_vars):  # noqa: F811
+    def test_deploy_template(self, resource_group, test_vars):  # noqa: F811
         log = logging.getLogger("test_deploy_template")
         td = test_vars["atd_obj"]
         with open("{}/src/vfxt/azuredeploy-auto.json".format(
@@ -46,28 +48,34 @@ class TestDeployment:
         try:
             deploy_result = helpers.wait_for_op(td.deploy())
             test_vars["deploy_outputs"] = deploy_result.properties.outputs
+            global vfxt_deploy_ok
+            vfxt_deploy_ok = True
         finally:
             test_vars["controller_ip"] = td.nm_client.public_ip_addresses.get(
                 td.resource_group, "publicip-" + test_vars["controller_name"]
             ).ip_address
 
-    def test_node_health(self, averecmd_params):  # noqa: F811
+    @pytest.mark.xfail(not vfxt_deploy_ok, reason="vFXT deploy failed")  # noqa: F811,E501
+    def test_node_health(self, averecmd_params):
         for node in helpers.run_averecmd(**averecmd_params, method='node.list'):
             result = helpers.run_averecmd(**averecmd_params,
                                           method='node.get', args=node)
             assert(result[node]['state'] == 'up')
 
-    def test_ha_enabled(self, averecmd_params):  # noqa: F811
+    @pytest.mark.xfail(not vfxt_deploy_ok, reason="vFXT deploy failed")  # noqa: F811,E501
+    def test_ha_enabled(self, averecmd_params):
         result = helpers.run_averecmd(**averecmd_params, method='cluster.get')
         assert(result['ha'] == 'enabled')
 
-    def test_ping_nodes(self, ssh_con, vs_ips):  # noqa: F811
+    @pytest.mark.xfail(not vfxt_deploy_ok, reason="vFXT deploy failed")  # noqa: F811,E501
+    def test_ping_nodes(self, ssh_con, vs_ips):
         commands = []
         for vs_ip in vs_ips:
             commands.append("ping -c 3 {}".format(vs_ip))
         helpers.run_ssh_commands(ssh_con, commands)
 
-    def test_basic_fileops(self, mnt_nodes, scp_cli, ssh_con):  # noqa: F811
+    @pytest.mark.xfail(not vfxt_deploy_ok, reason="vFXT deploy failed")  # noqa: F811,E501
+    def test_basic_fileops(self, mnt_nodes, scp_cli, ssh_con):
         script_name = "check_node_basic_fileops.sh"
         scp_cli.put("{0}/test/{1}".format(
                        os.environ["BUILD_SOURCESDIRECTORY"], script_name),

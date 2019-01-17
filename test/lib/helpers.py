@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import logging
 from time import time
 
@@ -114,7 +112,3 @@ def split_ip_range(ip_range):
 
     ip_prefix = ".".join(ip1_split[:-1]) + "."
     return [ip_prefix + str(n) for n in range(int(ip_low), int(ip_hi) + 1)]
-
-
-if __name__ == "__main__":
-    pass

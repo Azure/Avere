@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import json
 import logging
 import os
@@ -12,11 +10,11 @@ from lib import helpers
 
 
 @pytest.fixture()
-def averecmd_params(test_vars, ssh_con, vs_ips):
+def averecmd_params(ssh_con, test_vars, vs_ips):
     return {
-        'ssh_client': ssh_con,
-        'password': test_vars['atd_obj'].deploy_params['adminPassword'],
-        'node_ip': vs_ips[0]
+        "ssh_client": ssh_con,
+        "password": test_vars["atd_obj"].deploy_params["adminPassword"],
+        "node_ip": vs_ips[0]
     }
 
 
@@ -39,6 +37,13 @@ def mnt_nodes(ssh_con, vs_ips):
         commands.append("sudo mount -a")
         commands.append("touch ~/STATUS.NODES_MOUNTED")
         helpers.run_ssh_commands(ssh_con, commands)
+
+
+@pytest.fixture()
+def resource_group(test_vars):
+    log = logging.getLogger("resource_group")
+    rg = test_vars["atd_obj"].create_resource_group()
+    log.info("Created Resource Group: {}".format(rg))
 
 
 @pytest.fixture()
@@ -74,13 +79,11 @@ def test_vars():
               json.dumps(vars, sort_keys=True, indent=4)))
 
     vars["atd_obj"] = ArmTemplateDeploy(_fields=vars.pop("atd_obj", {}))
-    rg = vars["atd_obj"].create_resource_group()
-    log.info("Created Resource Group: {}".format(rg))
 
     yield vars
 
-    vars["atd_obj"] = json.loads(vars["atd_obj"].serialize())
     if "VFXT_TEST_VARS_FILE" in os.environ:
+        vars["atd_obj"] = json.loads(vars["atd_obj"].serialize())
         log.debug("vars: {}".format(json.dumps(vars, sort_keys=True, indent=4)))
         log.debug("Saving vars to {} (VFXT_TEST_VARS_FILE)".format(
                   os.environ["VFXT_TEST_VARS_FILE"]))
@@ -94,7 +97,3 @@ def vs_ips(test_vars):
         vserver_ips = test_vars["deploy_outputs"]["vserveR_IPS"]["value"]
         test_vars["vs_ips"] = helpers.split_ip_range(vserver_ips)
     return test_vars["vs_ips"]
-
-
-if __name__ == "__main__":
-    pytest.main()
