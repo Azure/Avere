@@ -61,7 +61,7 @@ def ssh_con(test_vars):
     client.close()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def test_vars():
     """
     Instantiates an ArmTemplateDeploy object, creates the resource group as
