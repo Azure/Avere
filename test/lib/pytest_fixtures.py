@@ -12,13 +12,37 @@ from lib import helpers
 
 
 # FIXTURES ####################################################################
+@pytest.fixture()
+def averecmd_params(test_vars, ssh_con, vs_ips):
+    return {
+        'ssh_client': ssh_con,
+        'password': test_vars['atd_obj'].deploy_params['adminPassword'],
+        'node_ip': vs_ips[0]
+    }
+
+
+@pytest.fixture()
+def scp_cli(ssh_con):
+    client = SCPClient(ssh_con.get_transport())
+    yield client
+    client.close()
+
+
+@pytest.fixture()
+def ssh_con(test_vars):
+    client = helpers.create_ssh_client(test_vars["controller_user"],
+                                       test_vars["controller_ip"])
+    yield client
+    client.close()
+
+
 @pytest.fixture(scope="module")
-def group_vars():
+def test_vars():
     """
     Instantiates an ArmTemplateDeploy object, creates the resource group as
     test-group setup, and deletes the resource group as test-group teardown.
     """
-    log = logging.getLogger("group_vars")
+    log = logging.getLogger("test_vars")
     vars = {}
     if "VFXT_TEST_VARS_FILE" in os.environ and \
        os.path.isfile(os.environ["VFXT_TEST_VARS_FILE"]):
@@ -45,26 +69,11 @@ def group_vars():
 
 
 @pytest.fixture()
-def ssh_client(group_vars):
-    client = helpers.create_ssh_client(group_vars["controller_user"],
-                                       group_vars["controller_ip"])
-    yield client
-    client.close()
-
-
-@pytest.fixture()
-def scp_client(ssh_client):
-    client = SCPClient(ssh_client.get_transport())
-    yield client
-    client.close()
-
-
-@pytest.fixture()
-def vserver_ip_list(group_vars):
-    if "vserver_ip_list" not in group_vars:
-        vserver_ips = group_vars["deploy_outputs"]["vserveR_IPS"]["value"]
-        group_vars["vserver_ip_list"] = helpers.split_ip_range(vserver_ips)
-    return group_vars["vserver_ip_list"]
+def vs_ips(test_vars):
+    if "vs_ips" not in test_vars:
+        vserver_ips = test_vars["deploy_outputs"]["vserveR_IPS"]["value"]
+        test_vars["vs_ips"] = helpers.split_ip_range(vserver_ips)
+    return test_vars["vs_ips"]
 
 
 if __name__ == "__main__":
