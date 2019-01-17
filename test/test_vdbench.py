@@ -12,13 +12,12 @@ import pytest
 from scp import SCPClient
 
 from lib import helpers
-from lib.pytest_fixtures import (group_vars, scp_client, ssh_client,
-                                 vserver_ip_list)
+from lib.pytest_fixtures import ssh_con, test_vars, vs_ips
 from sshtunnel import SSHTunnelForwarder
 
 
 class TestVDBench:
-    def test_vdbench_setup(self, group_vars, ssh_client):
+    def test_vdbench_setup(self, ssh_con):
         # TODO: Ensure nodes are mounted on controller. (fixture?)
         commands = """
             sudo mkdir -p /nfs/node0/bootstrap
@@ -29,10 +28,10 @@ class TestVDBench:
             sudo chmod +x /nfs/node0/bootstrap/vdbenchVerify.sh
             /nfs/node0/bootstrap/vdbenchVerify.sh
             """.split("\n")
-        helpers.run_ssh_commands(ssh_client, commands)
+        helpers.run_ssh_commands(ssh_con, commands)
 
-    def test_vdbench_deploy(self, group_vars, vserver_ip_list):
-        td = group_vars["atd_obj"]
+    def test_vdbench_deploy(self, test_vars, vs_ips):
+        td = test_vars["atd_obj"]
         with open(os.path.expanduser(r"~/.ssh/id_rsa.pub"), "r") as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
         with open("{}/src/client/vmas/azuredeploy.json".format(
@@ -45,27 +44,27 @@ class TestVDBench:
             "virtualNetworkResourceGroup": orig_params["virtualNetworkResourceGroup"],
             "virtualNetworkName": orig_params["virtualNetworkName"],
             "virtualNetworkSubnetName": orig_params["virtualNetworkSubnetName"],
-            "nfsCommaSeparatedAddresses": ",".join(vserver_ip_list),
+            "nfsCommaSeparatedAddresses": ",".join(vs_ips),
             "vmCount": 12,
             "nfsExportPath": "/msazure",
             "bootstrapScriptPath": "/bootstrap/bootstrap.vdbench.sh",
         }
         td.deploy_name = "test_vdbench"
         deploy_result = helpers.wait_for_op(td.deploy())
-        group_vars["deploy_vd_outputs"] = deploy_result.properties.outputs
+        test_vars["deploy_vd_outputs"] = deploy_result.properties.outputs
 
-    def test_vdbench_template_run(self, group_vars):
-        node_ip = group_vars["deploy_vd_outputs"]["nodE_0_IP_ADDRESS"]["value"]
+    def test_vdbench_template_run(self, test_vars):
+        node_ip = test_vars["deploy_vd_outputs"]["nodE_0_IP_ADDRESS"]["value"]
         with SSHTunnelForwarder(
-            group_vars["controller_ip"],
-            ssh_username=group_vars["controller_user"],
+            test_vars["controller_ip"],
+            ssh_username=test_vars["controller_user"],
             ssh_pkey=os.path.expanduser(r"~/.ssh/id_rsa"),
             remote_bind_address=(node_ip, 22),
         ) as ssh_tunnel:
             sleep(1)
             try:
                 ssh_client = helpers.create_ssh_client(
-                    group_vars["controller_user"],
+                    test_vars["controller_user"],
                     "127.0.0.1",
                     ssh_tunnel.local_bind_port,
                 )

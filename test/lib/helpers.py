@@ -36,57 +36,84 @@ def create_ssh_client(username, hostname, port=22, password=None):
     return ssh_client
 
 
-def run_ssh_commands(ssh_client, commands):
+def run_averecmd(ssh_client, node_ip, password, method, user='admin', args=''):
+    """Run averecmd on the vFXT controller connected via ssh_client."""
+    cmd = "averecmd --raw --no-check-certificate " + \
+          "--user {0} --password {1} --server {2} {3} {4}".format(
+            user, password, node_ip, method, args)
+    return eval(run_ssh_command(ssh_client, cmd)['stdout'])
+
+
+def run_ssh_command(ssh_client, command, ex_on_nonzero_rc=True):
+    """
+    Run a command on the server connected via ssh_client.
+
+    If ex_on_nonzero_rc is True, an Exception is raised if any command fails
+    (i.e., non-zero exit code).
+    """
+    log = logging.getLogger("run_ssh_command")
+
+    log.debug("command to run: {}".format(command))
+    cmd_stdin, cmd_stdout, cmd_stderr = ssh_client.exec_command(command)
+
+    cmd_rc = cmd_stdout.channel.recv_exit_status()
+    log.debug("command exit code: {}".format(cmd_rc))
+
+    cmd_stdout = "".join(cmd_stdout.readlines())
+    log.debug("command output (stdout): {}".format(cmd_stdout))
+
+    cmd_stderr = "".join(cmd_stderr.readlines())
+    log.debug("command output (stderr): {}".format(cmd_stderr))
+
+    if cmd_rc and ex_on_nonzero_rc:
+        raise Exception(
+            '"{}" failed with exit code {}.\n\tSTDOUT: {}\n\tSTDERR: {}'.format(
+                command, cmd_rc, cmd_stdout, cmd_stderr
+            )
+        )
+
+    return {
+        "command": command,
+        "stdout": cmd_stdout,
+        "stderr": cmd_stderr,
+        "rc": cmd_rc
+    }
+
+
+def run_ssh_commands(ssh_client, commands, ex_on_nonzero_rc=True):
     """
     Runs a list of commands on the server connected via ssh_client.
 
-    If sudo_prefix is True, this will add 'sudo' before supplied commands.
-
-    Raises an Exception if any command fails (i.e., non-zero exit code).
+    If ex_on_nonzero_rc is True, an Exception is raised if any command fails
+    (i.e., non-zero exit code).
     """
     log = logging.getLogger("run_ssh_commands")
+    results = []
     for cmd in commands:
         cmd = cmd.strip()
-        if not cmd:  # do not run empty "commands"
-            continue
-
         log.debug("command to run: {}".format(cmd))
-        cmd_stdin, cmd_stdout, cmd_stderr = ssh_client.exec_command(cmd)
-
-        cmd_rc = cmd_stdout.channel.recv_exit_status()
-        log.debug("command exit code: {}".format(cmd_rc))
-
-        cmd_stdout = "".join(cmd_stdout.readlines())
-        log.debug("command output (stdout): {}".format(cmd_stdout))
-
-        cmd_stderr = "".join(cmd_stderr.readlines())
-        log.debug("command output (stderr): {}".format(cmd_stderr))
-
-        if cmd_rc:
-            raise Exception(
-                '"{}" failed with exit code {}.\n\tSTDOUT: {}\n\tSTDERR: {}'.format(
-                    cmd, cmd_rc, cmd_stdout, cmd_stderr
-                )
-            )
+        if cmd:  # only run non-empty commands
+            results.append(run_ssh_command(ssh_client, cmd, ex_on_nonzero_rc))
+    return results
 
 
-def split_ip_range(vserver_ips):
+def split_ip_range(ip_range):
     """
-    split_ip_range will take in a string of vservers split by a hyphen
+    split_ip_range will take in an IP address range split by a hyphen
+    (e.g., "10.0.0.1-10.0.0.9").
 
-    It will split it to a list of all vserver IPs in that range
+    It will split it to a list of all IPs in that range.
     """
-    vs_ips = vserver_ips.split("-")
-    ip1 = vs_ips[0]
-    ip2 = vs_ips[1]
+    ip_list = ip_range.split("-")
+    ip1 = ip_list[0]
+    ip2 = ip_list[1]
 
     ip1_split = ip1.split(".")
     ip_low = ip1_split[-1]
     ip_hi = ip2.split(".")[-1]
 
     ip_prefix = ".".join(ip1_split[:-1]) + "."
-    vserver_list = [ip_prefix + str(n) for n in range(int(ip_low), int(ip_hi) + 1)]
-    return vserver_list
+    return [ip_prefix + str(n) for n in range(int(ip_low), int(ip_hi) + 1)]
 
 
 if __name__ == "__main__":
