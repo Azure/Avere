@@ -44,6 +44,22 @@ def resource_group(test_vars):
     log = logging.getLogger("resource_group")
     rg = test_vars["atd_obj"].create_resource_group()
     log.info("Created Resource Group: {}".format(rg))
+    return rg
+
+
+@pytest.fixture()
+def storage_account(test_vars):
+    log = logging.getLogger("storage_account")
+    storage_account = helpers.wait_for_op(test_vars["atd_obj"].create_storage_account())
+    log.info("Created Storage Account: {}".format(storage_account))
+    return storage_account
+
+
+@pytest.fixture()
+def event_hub(test_vars):
+    log = logging.getLogger("event_hub")
+    event_hub = test_vars["atd_obj"].create_event_hub()
+    log.info("Created Event Hub : {}".format(event_hub))
 
 
 @pytest.fixture()

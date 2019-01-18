@@ -34,7 +34,7 @@ class TestVDBench:
         td = test_vars["atd_obj"]
         with open(os.path.expanduser(r"~/.ssh/id_rsa.pub"), "r") as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
-        with open("{}/src/client/vmas/azuredeploy.json".format(
+        with open("{}/src/go/cmd/edasim/deploymentartifacts/azuredeploy.json".format(
                   os.environ["BUILD_SOURCESDIRECTORY"])) as tfile:
             td.template = json.load(tfile)
         orig_params = td.deploy_params.copy()
