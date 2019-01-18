@@ -28,7 +28,7 @@ from azure.mgmt.storage.models import (
     SkuName,
     Kind
 )
-from azure.eventhub import EventHubClient
+# from azure.eventhub import EventHubClient
 
 
 class ArmTemplateDeploy:
@@ -93,11 +93,10 @@ class ArmTemplateDeploy:
         )
 
     def create_storage_account(self):
-        # sku=Sku(SkuName.standard_ragrs)
         return self.st_client.storage_accounts.create(
             self.resource_group,
             self.storage_account,
-            StorageAccountCreateParameters(sku=Sku(name = SkuName.standard_ragrs),
+            StorageAccountCreateParameters(sku=Sku(name=SkuName.standard_ragrs),
                                            kind=Kind.storage,
                                            location=self.location)
                                            )
