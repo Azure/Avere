@@ -172,7 +172,8 @@ jobs:
       # echo "RESOURCE_GROUP: $RESOURCE_GROUP"
       az eventhubs namespace create --name edasimeventhub --resource-group rebeccatest
       az eventhubs eventhub create --name edasimeventhub --resource-group rebeccatest --namespace-name edasimeventhub
-      az eventhubs edasimeventhub authorization-rule keys list --eventhub-name edasimeventhub --name RootManageSharedAccessKey --namespace-name edasimeventhub --resource-group rebeccatest
+      az eventhubs eventhub show --resource-group rebeccatest --namespace-name edasimeventhub --name edasimeventhub
+      # az eventhubs namespace authorization-rule keys list --eventhub-name edasimeventhub --name RootManageSharedAccessKey --namespace-name edasimeventhub --resource-group rebeccatest
 
       export AZURE_EVENTHUB_SENDERKEYNAME="RootManageSharedAccessKey"
       # export AZURE_EVENTHUB_SENDERKEY= $(az eventhubs eventhub authorization-rule keys list --eventhub-name edasimeventhub --name RootManageSharedAccessKey --namespace-name edasimeventhub --resource-group rebeccatest)
