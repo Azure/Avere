@@ -50,7 +50,11 @@ def resource_group(test_vars):
 @pytest.fixture()
 def storage_account(test_vars):
     log = logging.getLogger("storage_account")
-    storage_account = helpers.wait_for_op(test_vars["atd_obj"].create_storage_account())
+    atd = test_vars["atd_obj"]
+    storage_account = atd.st_client.storage_accounts.get_properties(
+        atd.resource_group,
+        atd.deploy_params["avereBackedStorageAccountName"]
+    )
     log.info("Created Storage Account: {}".format(storage_account))
     return storage_account
 

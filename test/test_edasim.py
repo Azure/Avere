@@ -41,10 +41,12 @@ class TestEdasim:
             storage_account.name)
         storage_keys = {v.key_name: v.value for v in storage_keys.keys}
         key = storage_keys['key1']
+        print("storage_account = {}".format(storage_account.name))
+        print("key = {}".format(key))
         commands = """
             export AZURE_STORAGE_ACCOUNT= {0}
             export AZURE_STORAGE_ACCOUNT_KEY={1}
-            """.format(storage_account, key).split("\n")
+            """.format(storage_account.name, key).split("\n")
         helpers.run_ssh_commands(ssh_con, commands)
 
     # def test_event_hub(self, test_vars):
