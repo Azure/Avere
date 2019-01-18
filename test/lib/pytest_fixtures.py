@@ -110,6 +110,6 @@ def test_vars():
 @pytest.fixture()
 def vs_ips(test_vars):
     if "vs_ips" not in test_vars:
-        vserver_ips = test_vars["deploy_outputs"]["vserveR_IPS"]["value"]
+        vserver_ips = test_vars["deploy_outputs"]["vserver_ips"]["value"]
         test_vars["vs_ips"] = helpers.split_ip_range(vserver_ips)
     return test_vars["vs_ips"]
