@@ -1,26 +1,8 @@
+import ast
 import logging
 from time import time
 
 import paramiko
-
-
-def wait_for_op(op, timeout_sec=60):
-    """
-    Wait for a long-running operation (op) for timeout_sec seconds.
-
-    op is an AzureOperationPoller object.
-    """
-    log = logging.getLogger("wait_for_op")
-    time_start = time()
-    while not op.done():
-        op.wait(timeout=timeout_sec)
-        log.info(">> operation status: {0} ({1} sec)".format(
-                 op.status(), int(time() - time_start)))
-    result = op.result()
-    if result:
-        log.info(">> operation result: {}".format(result))
-        log.info(">> result.properties: {}".format(result.properties))
-    return result
 
 
 def create_ssh_client(username, hostname, port=22, password=None):
@@ -39,7 +21,11 @@ def run_averecmd(ssh_client, node_ip, password, method, user='admin', args=''):
     cmd = "averecmd --raw --no-check-certificate " + \
           "--user {0} --password {1} --server {2} {3} {4}".format(
             user, password, node_ip, method, args)
-    return eval(run_ssh_command(ssh_client, cmd)['stdout'])
+    result = run_ssh_command(ssh_client, cmd)['stdout']
+    try:
+        return ast.literal_eval(result)
+    except (ValueError, SyntaxError):
+        return str(result).strip()  # could not eval, return as a string
 
 
 def run_ssh_command(ssh_client, command, ignore_nonzero_rc=False):
@@ -112,3 +98,60 @@ def split_ip_range(ip_range):
 
     ip_prefix = ".".join(ip1_split[:-1]) + "."
     return [ip_prefix + str(n) for n in range(int(ip_low), int(ip_hi) + 1)]
+
+
+# def upload_gsi():
+#     log = logging.getLogger("upload_gsi")
+#     assert('success' == run_averecmd(**averecmd_params,
+#                                      method='support.acceptTerms', args='yes'))
+#     if not run_averecmd(**averecmd_params, method='support.testUpload'):
+#         log.warning("GSI test upload failed. Proceeding anyway.")
+
+#     log.info("Starting normal GSI collection/upload")
+#     job_id = run_averecmd(**averecmd_params,
+#                             method='support.executeNormalMode',
+#                             args='cluster gsimin')
+#     log.debug("GSI upload job ID: {}".format(job_id))
+
+#     timeout_secs = 60 * 10
+#     time_start = time()
+#     time_end = time_start + timeout_secs
+#     gsi_upload_done = False
+#     while not gsi_upload_done and time() < time_end:
+#         gsi_upload_done = run_averecmd(**averecmd_params,
+#                                         method='support.taskIsDone',
+#                                         args=job_id)
+#         log.info(">> GSI collection/upload in progress ({} sec)".format(
+#                     int(time() - time_start)))
+#         sleep(10)
+
+#     if not gsi_upload_done:
+#         log.error("GSI upload did not complete after {} seconds".format(
+#                     timeout_secs))
+#         assert(gsi_upload_done)
+#     else:
+#         log.info("GSI upload complete")
+
+
+def wait_for_op(op, timeout_sec=60, max_polls=60):
+    """
+    Wait for a long-running operation (op), polling every timeout_sec seconds
+    until max_polls polls have completed. Thus maximum wait time is
+    (timeout_sec * max_polls) seconds.
+
+    op is an AzureOperationPoller object.
+    """
+    log = logging.getLogger("wait_for_op")
+    time_start = time()
+    polls = 1
+    while not op.done() and polls <= max_polls:
+        op.wait(timeout=timeout_sec)
+        log.info(">> operation status: {0} ({1} sec)".format(
+                 op.status(), int(time() - time_start)))
+        polls += 1
+    assert(op.done())
+    result = op.result()
+    if result:
+        log.info(">> operation result: {}".format(result))
+        log.info(">> result.properties: {}".format(result.properties))
+    return result
