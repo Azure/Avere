@@ -9,7 +9,6 @@
       {
         "Actions": [
           "Microsoft.Authorization/*/read",
-          "Microsoft.Authorization/roleAssignments/*",
           "Microsoft.Compute/*/read",
           "Microsoft.Compute/availabilitySets/*",
           "Microsoft.Compute/virtualMachines/*",
