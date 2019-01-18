@@ -156,7 +156,7 @@ jobs:
       az storage account create -n rebeccastorage -g rebeccatest
       az storage account keys list -g rebeccatest -n rebeccastorage
       export AZURE_STORAGE_ACCOUNT=rebeccastorage
-      export AZURE_STORAGE_ACCOUNT_KEY= az storage account keys list -g rebeccatest -n rebeccastorage
+      export AZURE_STORAGE_ACCOUNT_KEY=
     displayName: 'create storage'
     condition: always()
     env:
@@ -175,7 +175,7 @@ jobs:
       az eventhubs eventhub authorization-rule keys list --eventhub-name edasimeventhub --name RootManageSharedAccessKey --namespace-name edasimeventhub --resource-group rebeccatest
 
       export AZURE_EVENTHUB_SENDERKEYNAME="RootManageSharedAccessKey"
-      export AZURE_EVENTHUB_SENDERKEY= $(az eventhubs eventhub authorization-rule keys list --eventhub-name edasimeventhub --name RootManageSharedAccessKey --namespace-name edasimeventhub --resource-group rebeccatest)
+      # export AZURE_EVENTHUB_SENDERKEY= $(az eventhubs eventhub authorization-rule keys list --eventhub-name edasimeventhub --name RootManageSharedAccessKey --namespace-name edasimeventhub --resource-group rebeccatest)
       export AZURE_EVENTHUB_NAMESPACENAME="edasimeventhub"
       az group delete --yes -n rebeccatest
     displayName: 'create eventhub'
