@@ -81,8 +81,6 @@ jobs:
       az group create --name rebeccatest --location westus2
       # RESOURCE_GROUP=$(grep resource_group $VFXT_TEST_VARS_FILE | sed -E 's/^.*resource_group": "([^"]+)".*$/\1/')
       # echo "RESOURCE_GROUP: $RESOURCE_GROUP"
-      az config mode arm
-      # az group deployment create $RESOURCE_GROUP deploy_storage --template-uri https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/101-storage-blob-container/azuredeploy.json
       az storage account create -n rebeccastorage -g rebeccatest
       az storage account keys list -g rebeccatest -n rebeccastorage
       export AZURE_STORAGE_ACCOUNT=rebeccastorage
