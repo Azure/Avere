@@ -21,12 +21,20 @@ from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.resource.resources.models import DeploymentMode
+from azure.mgmt.storage import StorageManagementClient
+from azure.mgmt.storage.models import (
+    StorageAccountCreateParameters,
+    Sku,
+    SkuName,
+    Kind
+)
+from azure.eventhub import EventHubClient
 
 
 class ArmTemplateDeploy:
     def __init__(self, deploy_id=None, deploy_name='azurePySDK',
                  deploy_params={}, location='westus2', resource_group=None,
-                 template={}, _fields={}
+                 storage_account=None, event_hub=None, template={}, _fields={}
                  ):
         """Initialize, authenticate to Azure."""
         self.deploy_id = _fields.pop('deploy_id', deploy_id)
@@ -34,15 +42,24 @@ class ArmTemplateDeploy:
         self.deploy_params = _fields.pop('deploy_params', deploy_params)
         self.location = _fields.pop('location', location)
         self.resource_group = _fields.pop('resource_group', resource_group)
+        self.storage_account = _fields.pop('storage_account', storage_account)
+        self.event_hub = _fields.pop('event_hub', event_hub)
         self.template = _fields.pop('template', template)
 
         if not self.deploy_id:
-            self.deploy_id = 'av' + \
-                datetime.utcnow().strftime('%m%dx%H%M%S') + \
-                choice(ascii_lowercase)
+            # self.deploy_id = 'av' + \
+            #     datetime.utcnow().strftime('%m%dx%H%M%S') + \
+            #     choice(ascii_lowercase)
+            self.deploy_id = 'rebeccatest'
 
         if not self.resource_group:
             self.resource_group = self.deploy_id + '-rg'
+
+        if not self.storage_account:
+            self.storage_account = self.deploy_id + 'sa'
+
+        if not self.event_hub:
+            self.event_hub = self.deploy_id + '-eh'
 
         logging.debug('> Loading Azure credentials')
         sp_creds = ServicePrincipalCredentials(
@@ -58,6 +75,14 @@ class ArmTemplateDeploy:
             credentials=sp_creds,
             subscription_id=os.environ['AZURE_SUBSCRIPTION_ID']
         )
+        self.st_client = StorageManagementClient(
+            credentials=sp_creds,
+            subscription_id=os.environ['AZURE_SUBSCRIPTION_ID']
+        )
+        # self.eh_client = EventHubClient(
+        #     credentials=sp_creds,
+        #     subscription_id=os.environ['AZURE_SUBSCRIPTION_ID']
+        # )
 
     def create_resource_group(self):
         """Creates the Azure resource group for this deployment."""
@@ -66,6 +91,19 @@ class ArmTemplateDeploy:
             self.resource_group,
             {'location': self.location}
         )
+
+    def create_storage_account(self):
+        # sku=Sku(SkuName.standard_ragrs)
+        return self.st_client.storage_accounts.create(
+            self.resource_group,
+            self.storage_account,
+            StorageAccountCreateParameters(sku=Sku(name = SkuName.standard_ragrs),
+                                           kind=Kind.storage,
+                                           location=self.location)
+                                           )
+
+    def create_event_hub(self):
+        return self.eh_client
 
     def delete_resource_group(self):
         """Deletes the Azure resource group for this deployment."""
@@ -100,6 +138,7 @@ class ArmTemplateDeploy:
         _this = self.__dict__
         _this.pop('rm_client', None)  # don't want to save these
         _this.pop('nm_client', None)
+        _this.pop('st_client', None)
 
         if to_file:
             with open(to_file, 'w') as tf:

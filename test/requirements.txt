@@ -1,5 +1,7 @@
 azure.mgmt.network
 azure.mgmt.resource
+azure.mgmt.storage
+azure.eventhub
 paramiko
 pytest
 scp

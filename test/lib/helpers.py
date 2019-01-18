@@ -19,7 +19,7 @@ def wait_for_op(op, timeout_sec=60):
     result = op.result()
     if result:
         log.info(">> operation result: {}".format(result))
-        log.info(">> result.properties: {}".format(result.properties))
+        # log.info(">> result.properties: {}".format(result.properties))
     return result
 
 
