@@ -179,6 +179,8 @@
     "subnetPrefix": "[parameters('subnetAddressRangePrefix')]",
     "avereCreateClusterRoleFullyQualifiedId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', parameters('avereCreateClusterRoleId'))]",
     "createRoleAssignmentId": "[guid(concat(variables('vmName'), '-createrole'))]",
+    "userAdminClusterRoleFullyQualifiedId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/18d7d88d-d35e-4fb5-a5c3-7773c20a72d9')]",
+    "userAdminRoleAssignmentId": "[guid(concat(variables('vmName'), '-useradmin'))]",
     "createVNETRoleAssignmentId": "[guid(concat(variables('vmName'), '-createvnetrole'))]",
     "vnetAssignRoleName": "vnetAssignRole",
     "avereClusterRole": "[parameters('avereClusterRole')]",
@@ -381,6 +383,19 @@
       }
     },
     {
+      "apiVersion": "2017-09-01",
+      "name": "[variables('userAdminRoleAssignmentId')]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "dependsOn": [
+        "[concat('Microsoft.Authorization/roleAssignments/', variables('createRoleAssignmentId'))]"
+      ],
+      "properties": {
+        "roleDefinitionId": "[variables('userAdminClusterRoleFullyQualifiedId')]",
+        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines/', variables('vmName')), '2017-12-01', 'Full').identity.principalId]",
+        "scope": "[resourceGroup().id]"
+      }
+    },
+    {
       "condition": "[not(variables('createVirtualNetwork'))]",
       "apiVersion": "2018-05-01",
       "name": "[variables('vnetAssignRoleName')]",
@@ -416,7 +431,7 @@
       "apiVersion": "2017-12-01",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Authorization/roleAssignments', variables('createRoleAssignmentId'))]",
+        "[resourceId('Microsoft.Authorization/roleAssignments', variables('userAdminRoleAssignmentId'))]",
         "[concat('Microsoft.Resources/deployments/', variables('vnetAssignRoleName'))]",
         "[concat('Microsoft.Storage/storageAccounts/', variables('avereBackedStorageAccountName'))]"
       ],
@@ -443,39 +458,39 @@
     }
   ],
   "outputs": {
-    "SSH_STRING": {
+    "ssh_string": {
       "type": "string",
       "value": "[if(variables('createVirtualNetwork'), concat(variables('controllerAdminUsername'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress), concat(variables('controllerAdminUsername'), '@', reference(resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))).ipConfigurations[0].properties.privateIPAddress))]"
     },
-    "RESOURCE_GROUP": {
+    "resource_group": {
       "type": "string",
       "value": "[resourceGroup().name]"
     },
-    "LOCATION": {
+    "location": {
       "type": "string",
       "value": "[resourceGroup().location]"
     },
-    "NETWORK_RESOURCE_GROUP": {
+    "network_resource_group": {
       "type": "string",
       "value": "[variables('virtualNetworkResourceGroup')]"
     },
-    "NETWORK": {
+    "network": {
       "type": "string",
       "value": "[variables('virtualNetworkName')]"
     },
-    "SUBNET": {
+    "subnet": {
       "type": "string",
       "value": "[variables('virtualNetworkSubnetName')]"
     },
-    "SUBNET_ID": {
+    "subnet_id": {
       "type": "string",
       "value": "[variables('subnetId')]"
     },
-    "VSERVER_IPS": {
+    "vserver_ips": {
       "type": "string",
       "value": "[substring(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,variables('vsip')),length(variables('vsip'))),indexOf(substring(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,variables('vsip')),length(variables('vsip')))),'\n'))]"
     },
-    "MGMT_IP": {
+    "mgmt_ip": {
       "type": "string",
       "value": "[substring(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,variables('mip')),length(variables('mip'))),indexOf(substring(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,variables('mip')),length(variables('mip')))),'\n'))]"
     }
