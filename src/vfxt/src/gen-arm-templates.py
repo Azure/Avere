@@ -57,11 +57,7 @@ def convertToOneArmTemplateLine(clusterYamlFile):
 # Loads the base ARM template file and injects the Yaml for the shell scripts into it.
 def processBaseTemplate(baseTemplatePath,
                         clusterInstallScript,
-                        jumpboxTemplatePath = None,
-                        linuxJumpboxInstallScript = None,
-                        swarmWindowsAgentInstallScript = None,
-                        additionalFiles = [],
-                        windowsAgentDiagnosticsExtensionTemplatePath = None):
+                        additionalFiles = []):
 
     #String to replace in JSON file
     CLUSTER_YAML_REPLACE_STRING  = "#clusterCustomDataInstallYaml"
@@ -110,17 +106,19 @@ if __name__ == "__main__":
     
     # Shell Scripts to load into YAML
     VDBENCH_INSTALL_SCRIPT = "installvfxt.sh"
+    ENABLE_CLOUD_TRACE = "enablecloudtrace.sh"
     
     # Output ARM Template Files.  WIll Also Output name.parameters.json for each
     ARM_OUTPUT_TEMPLATE                                   = "mainTemplate.json"
     MARKETPLACE_UI_DEFINITION                             = "createUiDefinition.json"
     ARM_OUTPUT_TEMPLATE_FINAL                             = "../azuredeploy-auto.json"
     
-    # build the ARM template for jumpboxless
+    # build the ARM template
     with open(os.path.join(args.output_directory, ARM_OUTPUT_TEMPLATE), "w") as armTemplate:
         clusterTemplate = processBaseTemplate(
             baseTemplatePath=ARM_INPUT_TEMPLATE_TEMPLATE, 
-            clusterInstallScript=VDBENCH_INSTALL_SCRIPT)
+            clusterInstallScript=VDBENCH_INSTALL_SCRIPT,
+            additionalFiles=[ENABLE_CLOUD_TRACE])
         armTemplate.write(clusterTemplate)
 
     MARKETPLACE_ZIP                                   = "marketplace.zip"
