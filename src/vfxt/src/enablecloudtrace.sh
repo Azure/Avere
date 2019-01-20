@@ -15,7 +15,9 @@
 
 # report all lines, and exit on error
 set -x
-set -e
+
+# this script will handle all its errors, so don't set -e
+# set -e
 
 AZURE_HOME_DIR=/home/$CONTROLLER_ADMIN_USER_NAME
 VFXT_LOG_FILE=$AZURE_HOME_DIR/vfxt.log
