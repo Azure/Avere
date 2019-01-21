@@ -1,6 +1,6 @@
 import ast
 import logging
-from time import time
+from time import sleep, time
 
 import paramiko
 
@@ -100,37 +100,38 @@ def split_ip_range(ip_range):
     return [ip_prefix + str(n) for n in range(int(ip_low), int(ip_hi) + 1)]
 
 
-# def upload_gsi():
-#     log = logging.getLogger("upload_gsi")
-#     assert('success' == run_averecmd(**averecmd_params,
-#                                      method='support.acceptTerms', args='yes'))
-#     if not run_averecmd(**averecmd_params, method='support.testUpload'):
-#         log.warning("GSI test upload failed. Proceeding anyway.")
+def upload_gsi(averecmd_params):
+    """Initiates a GSI collection and upload from the controller."""
+    log = logging.getLogger("upload_gsi")
+    assert('success' == run_averecmd(**averecmd_params,
+                                     method='support.acceptTerms', args='yes'))
+    if not run_averecmd(**averecmd_params, method='support.testUpload'):
+        log.warning("GSI test upload failed. Proceeding anyway.")
 
-#     log.info("Starting normal GSI collection/upload")
-#     job_id = run_averecmd(**averecmd_params,
-#                             method='support.executeNormalMode',
-#                             args='cluster gsimin')
-#     log.debug("GSI upload job ID: {}".format(job_id))
+    log.info("Starting normal GSI collection/upload")
+    job_id = run_averecmd(**averecmd_params,
+                          method='support.executeNormalMode',
+                          args='cluster gsimin')
+    log.debug("GSI upload job ID: {}".format(job_id))
 
-#     timeout_secs = 60 * 10
-#     time_start = time()
-#     time_end = time_start + timeout_secs
-#     gsi_upload_done = False
-#     while not gsi_upload_done and time() < time_end:
-#         gsi_upload_done = run_averecmd(**averecmd_params,
-#                                         method='support.taskIsDone',
-#                                         args=job_id)
-#         log.info(">> GSI collection/upload in progress ({} sec)".format(
-#                     int(time() - time_start)))
-#         sleep(10)
+    timeout_secs = 60 * 10
+    time_start = time()
+    time_end = time_start + timeout_secs
+    gsi_upload_done = False
+    while not gsi_upload_done and time() < time_end:
+        gsi_upload_done = run_averecmd(**averecmd_params,
+                                       method='support.taskIsDone',
+                                       args=job_id)
+        log.info(">> GSI collection/upload in progress ({} sec)".format(
+                 int(time() - time_start)))
+        sleep(10)
 
-#     if not gsi_upload_done:
-#         log.error("GSI upload did not complete after {} seconds".format(
-#                     timeout_secs))
-#         assert(gsi_upload_done)
-#     else:
-#         log.info("GSI upload complete")
+    if not gsi_upload_done:
+        log.error("GSI upload did not complete after {} seconds".format(
+                  timeout_secs))
+        assert(gsi_upload_done)
+    else:
+        log.info("GSI upload complete")
 
 
 def wait_for_op(op, timeout_sec=60, max_polls=60):

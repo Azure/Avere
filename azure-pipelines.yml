@@ -29,7 +29,7 @@ jobs:
     displayName: 'Install Python dependencies'
 
   - script: |
-      pytest test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results1.xml
+      pytest test/test_avere_template_deploy.py test/test_vfxt_cluster_status.py --doctest-modules --junitxml=junit/test-results1.xml
     displayName: 'Test template-based deployment of Avere vFXT'
     env:
       AVERE_ADMIN_PW: $(controllerpassword)

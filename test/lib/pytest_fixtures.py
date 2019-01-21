@@ -14,7 +14,7 @@ def averecmd_params(ssh_con, test_vars):
     return {
         "ssh_client": ssh_con,
         "password": test_vars["atd_obj"].deploy_params["adminPassword"],
-        "node_ip": test_vars["deploy_outputs"]["mgmT_IP"]["value"]
+        "node_ip": test_vars["deploy_outputs"]["mgmt_ip"]["value"]
     }
 
 
