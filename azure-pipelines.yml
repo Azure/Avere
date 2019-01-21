@@ -29,7 +29,7 @@ jobs:
     displayName: 'Install Python dependencies'
 
   - script: |
-      pytest test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results1.xml
+      pytest test/test_avere_template_deploy.py test/test_vfxt_cluster_status.py --doctest-modules --junitxml=junit/test-results1.xml
     displayName: 'Test template-based deployment of Avere vFXT'
     env:
       AVERE_ADMIN_PW: $(controllerpassword)
@@ -66,15 +66,15 @@ jobs:
     env:
       VFXT_TEST_VARS_FILE: pipelines.json
 
-  - script: |
-      pytest test/test_vdbench.py --doctest-modules --junitxml=junit/test-results2.xml
-    displayName: 'Test vdbench on Avere vFXT'
-    env:
-      AZURE_TENANT_ID: $(SPTENANTID)
-      AZURE_CLIENT_ID: $(SPAPPID)
-      AZURE_CLIENT_SECRET: $(SPPW)
-      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      VFXT_TEST_VARS_FILE: pipelines.json
+  # - script: |
+  #     pytest test/test_vdbench.py --doctest-modules --junitxml=junit/test-results2.xml
+  #   displayName: 'Test vdbench on Avere vFXT'
+  #   env:
+  #     AZURE_TENANT_ID: $(SPTENANTID)
+  #     AZURE_CLIENT_ID: $(SPAPPID)
+  #     AZURE_CLIENT_SECRET: $(SPPW)
+  #     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+  #     VFXT_TEST_VARS_FILE: pipelines.json
 
   - script: |
       az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID

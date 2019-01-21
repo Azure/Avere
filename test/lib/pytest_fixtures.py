@@ -10,11 +10,11 @@ from lib import helpers
 
 
 @pytest.fixture()
-def averecmd_params(ssh_con, test_vars, vs_ips):
+def averecmd_params(ssh_con, test_vars):
     return {
         "ssh_client": ssh_con,
         "password": test_vars["atd_obj"].deploy_params["adminPassword"],
-        "node_ip": vs_ips[0]
+        "node_ip": test_vars["deploy_outputs"]["mgmt_ip"]["value"]
     }
 
 
