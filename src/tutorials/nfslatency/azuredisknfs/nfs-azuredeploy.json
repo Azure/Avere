@@ -213,15 +213,15 @@
     }
   ],
   "outputs": {
-    "RESOURCE_GROUP": {
+    "resource_group": {
       "type": "string",
       "value": "[resourceGroup().name]"
     },
-    "LOCATION": {
+    "location": {
       "type": "string",
       "value": "[resourceGroup().location]"
     },
-    "SSH_STRING": {
+    "ssh_string": {
       "type": "string",
       "value": "[concat('ssh ', variables('adminUsername'), '@', reference(concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress)]"
     }
