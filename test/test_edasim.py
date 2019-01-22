@@ -22,19 +22,19 @@ from lib.pytest_fixtures import (averecmd_params, mnt_nodes,  # noqa: F401
 # logging.basicConfig(level=logging.DEBUG)
 
 class TestEdasim:
-    def test_download_go(self):
-        commands = """
-            wget https://dl.google.com/go/go1.11.2.linux-amd64.tar.gz
-            tar xvf go1.11.2.linux-amd64.tar.gz
-            sudo chown -R root:root ./go
-            sudo mv go /usr/local
-            mkdir ~/gopath
-            echo "export GOPATH=$HOME/gopath" >> ~/.profile
-            echo "export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin" >> ~/.profile
-            source ~/.profile
-            rm go1.11.2.linux-amd64.tar.gz
-            """.split("\n")
-        helpers.run_ssh_commands(ssh_con, commands)
+    # def test_download_go(self, ssh_con):
+    #     commands = """
+    #         wget https://dl.google.com/go/go1.11.2.linux-amd64.tar.gz
+    #         tar xvf go1.11.2.linux-amd64.tar.gz
+    #         sudo chown -R root:root ./go
+    #         sudo mv go /usr/local
+    #         mkdir ~/gopath
+    #         echo "export GOPATH=$HOME/gopath" >> ~/.profile
+    #         echo "export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin" >> ~/.profile
+    #         source ~/.profile
+    #         rm go1.11.2.linux-amd64.tar.gz
+    #         """.split("\n")
+    #     helpers.run_ssh_commands(ssh_con, commands)
 
     def test_storage_account(self, test_vars, resource_group, storage_account, ssh_con):
         td = test_vars["atd_obj"]
