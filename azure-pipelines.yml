@@ -1,7 +1,7 @@
 # https://aka.ms/yaml
-trigger:
-- master
-- releases/*
+# trigger:
+# - master
+# - releases/*
 
 jobs:
 - job: template
@@ -52,10 +52,17 @@ jobs:
       scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $CONTROLLER_USER@$CONTROLLER_IP:~/vfxt.log vfxt.$CONTROLLER_NAME.log
       echo ">>> vfxt.$CONTROLLER_NAME.log:"
       cat vfxt.$CONTROLLER_NAME.log
+      cp vfxt.$CONTROLLER_NAME.log $BUILD_ARTIFACTSTAGINGDIRECTORY
     displayName: 'Dump vfxt.log from controller'
     condition: always()
     env:
       VFXT_TEST_VARS_FILE: pipelines.json
+
+  - task: PublishPipelineArtifact@0
+    displayName: 'Publish Pipelines Artifacts (test logs)'
+    inputs:
+      artifactName: 'testLogs'
+      targetPath: 'test/publish'
 
   - script: |
       CONTROLLER_NAME=$(grep controller_name $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_name": "([^"]+)".*$/\1/')
