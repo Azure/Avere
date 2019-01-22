@@ -1,0 +1,146 @@
+#!/bin/bash
+
+###########################################################
+#
+# Watch vfxt.log and enable cloud trace after the 
+# management IP is received, and disable cloud trace after
+# the script has finished.  The purpose of cloud trace is 
+# for additional debugging information during installation.
+#
+# Ensure completion by stopping if the vfxt.log file does 
+# not show up or if the installation script stops, and 
+# vfxt.log stops being updated.
+#
+###########################################################
+
+# report all lines, and exit on error
+set -x
+
+# this script will handle all its errors, so don't set -e
+# set -e
+
+AZURE_HOME_DIR=/home/$CONTROLLER_ADMIN_USER_NAME
+VFXT_LOG_FILE=$AZURE_HOME_DIR/vfxt.log
+WAIT_SECONDS=120
+RPC_ENABLE="enable"
+RPC_DISABLE="disable"
+
+function sendRPC() {
+    ipaddress=$1; action=$2
+
+    if [ "$action" == "$RPC_ENABLE" ] ; then 
+        # TODO - update with RPC enable cloud trace command, return non-zero if failed
+        echo "send ${action} to ${ipaddress}"
+        result=0
+    elif [ "$action" == "$RPC_DISABLE" ] ; then
+        # TODO - update with RPC disable cloud trace command, return non-zero if failed
+        echo "send ${action} to ${ipaddress}"
+        result=0
+    else
+        echo "ERROR: bad action"
+        result=1
+    fi
+
+    return $result
+}
+
+function check_halted_vfxt() {
+    now=$(date +%s)
+    filemtime=$(stat -c %Y $VFXT_LOG_FILE)
+    difference=$(($now-$filemtime))
+    if [ "$difference" -gt "$WAIT_SECONDS" ] ; then
+        echo "FATAL: the log file ${VFXT_LOG_FILE} has halted"
+        exit 1
+    fi
+}
+
+function wait_vfxt_log() {
+    counter=0
+    while [ ! -f $VFXT_LOG_FILE ]; do
+        sleep 1
+        counter=$((counter + 1))
+        if [ $counter -ge $WAIT_SECONDS ]; then
+            echo "file '${VFXT_LOG_FILE}' did not appear after ${WAIT_SECONDS} seconds"
+            exit 1
+        fi
+    done
+}
+
+function wait_management_ip() {
+    while :
+    do
+        ipaddress=$(egrep "^address=([0-9]{1,3}\.){3}[0-9]{1,3}" ${VFXT_LOG_FILE} | awk '{match($0,/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/); ip = substr($0,RSTART,RLENGTH); print ip}')
+        if [ "${#ipaddress}" -gt "0" ] 
+        then
+            echo "${ipaddress}"
+            break
+        fi
+        check_halted_vfxt
+        sleep 1
+    done
+}
+
+function wait_complete_message() {
+    while :
+    do
+        if grep --quiet "vfxt:INFO - Complete" ${VFXT_LOG_FILE}; then
+            echo "vfxt has completed installation"
+            break
+        fi
+        check_halted_vfxt
+        sleep 1
+    done
+}
+
+function enable_cloud_trace() {
+    ipaddress=$1
+    echo "trying to enable cloud trace "
+
+    while :
+    do
+        # retry forever until we reach the mgmt ip or the vfxt.log stops
+        if sendRPC $ipaddress $RPC_ENABLE ; then
+            echo "sendRPC success"
+            break
+        fi
+
+        check_halted_vfxt
+        sleep 5
+    done
+
+    echo "cloud trace enabled"
+}
+
+function disable_cloud_trace() {
+    ipaddress=$1
+    echo "trying to disable cloud trace "
+
+    while :
+    do
+        # retry forever until we reach the mgmt ip or the vfxt.log stops
+        if sendRPC $ipaddress $RPC_DISABLE ; then
+            echo "sendRPC success"
+            break
+        fi
+
+        check_halted_vfxt
+        sleep 5
+    done
+
+    echo "cloud trace disabled"
+}
+
+function main() {
+    echo "wait for vfxt log file to appear"
+    wait_vfxt_log
+
+    MGMT_IP=$(wait_management_ip)
+
+    enable_cloud_trace $MGMT_IP
+
+    wait_complete_message
+
+    disable_cloud_trace $MGMT_IP
+}
+
+main

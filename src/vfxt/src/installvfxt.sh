@@ -92,6 +92,8 @@ EOM
 
 function create_vfxt() {
     cd $AZURE_HOME_DIR
+    # enable cloud trace during installation
+    nohup /bin/bash /opt/avere/enablecloudtrace.sh > $AZURE_HOME_DIR/enablecloudtrace.log 2>&1 &
     # ensure the create cluster command is recorded for the future
     sleep 2 && ps -a -x -o cmd | egrep '[v]fxt.py' |  sed 's/--admin-password [^ ]*/--admin-password ***/' > create_cluster_command.log &
     $VFXT_INSTALL_TEMPLATE
