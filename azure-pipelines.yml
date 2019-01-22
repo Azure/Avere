@@ -16,8 +16,8 @@ jobs:
       architecture: 'x64'
 
   - script: |
-      mkdir publish
-      cd publish
+      mkdir test_artifacts
+      cd test_artifacts
       pwd
       echo "XYZ" > ABC.test
     displayName: '(DUMMY) Create fake test log file'
@@ -25,8 +25,8 @@ jobs:
   - task: PublishPipelineArtifact@0
     displayName: '(DUMMY) Publish Pipelines Artifacts'
     inputs:
-      artifactName: 'testLogs'
-      targetPath: 'publish'
+      artifactName: 'testArtifacts'
+      targetPath: 'test_artifacts'
     condition: always()
 
   # - script: |
