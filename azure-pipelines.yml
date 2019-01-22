@@ -16,21 +16,9 @@ jobs:
       architecture: 'x64'
 
   - script: |
-      mkdir ~/.ssh && cd $_
-      ssh-keygen -t rsa -N "" -f id_rsa
-      ls -al
-      echo "SSH PUBLIC KEY: $(cat ~/.ssh/id_rsa.pub)"
-    displayName: 'Generate SSH keys'
-
-  - script: |
-      python3 --version
-      pip install --upgrade pip setuptools wheel
-      pip install -r test/requirements.txt
-    displayName: 'Install Python dependencies'
-
-  - script: |
       mkdir ~/publish
       cd ~/publish
+      pwd
       echo "XYZ" > ABC.test
     displayName: '(DUMMY) Create fake test log file'
 
@@ -38,8 +26,21 @@ jobs:
     displayName: '(DUMMY) Publish Pipelines Artifacts'
     inputs:
       artifactName: 'testLogs'
-      targetPath: '~/publish'
+      targetPath: 'publish'
     condition: always()
+
+  # - script: |
+  #     mkdir ~/.ssh && cd $_
+  #     ssh-keygen -t rsa -N "" -f id_rsa
+  #     ls -al
+  #     echo "SSH PUBLIC KEY: $(cat ~/.ssh/id_rsa.pub)"
+  #   displayName: 'Generate SSH keys'
+
+  # - script: |
+  #     python3 --version
+  #     pip install --upgrade pip setuptools wheel
+  #     pip install -r test/requirements.txt
+  #   displayName: 'Install Python dependencies'
 
   # - script: |
   #     pytest test/test_avere_template_deploy.py test/test_vfxt_cluster_status.py --doctest-modules --junitxml=junit/test-results1.xml
