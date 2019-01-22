@@ -43,7 +43,7 @@
       }
     ],
     "outputs": {
-      "STORAGE_ACCOUNT": {
+      "storage_account": {
         "type": "string",
         "value": "[variables('avereBackedStorageAccountName')]"
       }

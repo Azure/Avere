@@ -177,15 +177,15 @@
     }
   ],
   "outputs": {
-    "RESOURCE_GROUP": {
+    "resource_group": {
       "type": "string",
       "value": "[resourceGroup().name]"
     },
-    "LOCATION": {
+    "location": {
       "type": "string",
       "value": "[resourceGroup().location]"
     },
-    "CLIENT_RDP_ADDRESS": {
+    "client_rdp_address": {
       "type": "string",
       "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress]"
     }

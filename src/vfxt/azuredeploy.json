@@ -224,31 +224,31 @@
     }
   ],
   "outputs": {
-    "SSH_STRING": {
+    "ssh_string": {
       "type": "string",
       "value": "[if(variables('createVirtualNetwork'), concat(variables('controllerAdminUsername'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress), concat(variables('controllerAdminUsername'), '@', reference(resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))).ipConfigurations[0].properties.privateIPAddress))]"
     },
-    "RESOURCE_GROUP": {
+    "resource_group": {
       "type": "string",
       "value": "[resourceGroup().name]"
     },
-    "LOCATION": {
+    "location": {
       "type": "string",
       "value": "[resourceGroup().location]"
     },
-    "NETWORK_RESOURCE_GROUP": {
+    "network_resource_group": {
       "type": "string",
       "value": "[if(variables('createVirtualNetwork'), '', variables('virtualNetworkResourceGroup'))]"
     },
-    "NETWORK": {
+    "network": {
       "type": "string",
       "value": "[variables('virtualNetworkName')]"
     },
-    "SUBNET": {
+    "subnet": {
       "type": "string",
       "value": "[variables('virtualNetworkSubnetName')]"
     },
-    "SUBNET_ID": {
+    "subnet_id": {
       "type": "string",
       "value": "[variables('subnetId')]"
     }
