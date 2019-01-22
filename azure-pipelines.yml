@@ -29,16 +29,16 @@ jobs:
     displayName: 'Install Python dependencies'
 
   - script: |
+      mkdir ~/publish
+      cd ~/publish
       echo "XYZ" > ABC.test
-      echo $BUILD_ARTIFACTSTAGINGDIRECTORY
-      cp ABC.test $BUILD_ARTIFACTSTAGINGDIRECTORY
     displayName: '(DUMMY) Create fake test log file'
 
   - task: PublishPipelineArtifact@0
     displayName: '(DUMMY) Publish Pipelines Artifacts'
     inputs:
       artifactName: 'testLogs'
-      targetPath: 'test/publish'
+      targetPath: '~/publish'
     condition: always()
 
   # - script: |
