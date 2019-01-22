@@ -16,61 +16,59 @@ jobs:
       architecture: 'x64'
 
   - script: |
-      mkdir test_artifacts
       mkdir ~/.ssh
       ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
       ls -al ~/.ssh
-      pwd
-      cp ~/.ssh/id_rsa.pub $BUILD_SOURCESDIRECTORY/test_artifacts/.
       echo "SSH PUBLIC KEY: $(cat ~/.ssh/id_rsa.pub)"
     displayName: 'Generate SSH keys'
 
-  # - script: |
-  #     python3 --version
-  #     pip install --upgrade pip setuptools wheel
-  #     pip install -r test/requirements.txt
-  #   displayName: 'Install Python dependencies'
+  - script: |
+      python3 --version
+      pip install --upgrade pip setuptools wheel
+      pip install -r test/requirements.txt
+    displayName: 'Install Python dependencies'
 
-  # - script: |
-  #     pytest test/test_avere_template_deploy.py test/test_vfxt_cluster_status.py --doctest-modules --junitxml=junit/test-results1.xml
-  #   displayName: 'Test template-based deployment of Avere vFXT'
-  #   env:
-  #     AVERE_ADMIN_PW: $(controllerpassword)
-  #     AVERE_CONTROLLER_PW: $(controllerpassword)
-  #     AZURE_TENANT_ID: $(SPTENANTID)
-  #     AZURE_CLIENT_ID: $(SPAPPID)
-  #     AZURE_CLIENT_SECRET: $(SPPW)
-  #     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-  #     VFXT_TEST_VARS_FILE: pipelines.json
+  - script: |
+      pytest test/test_avere_template_deploy.py test/test_vfxt_cluster_status.py --doctest-modules --junitxml=junit/test-results1.xml
+    displayName: 'Test template-based deployment of Avere vFXT'
+    env:
+      AVERE_ADMIN_PW: $(controllerpassword)
+      AVERE_CONTROLLER_PW: $(controllerpassword)
+      AZURE_TENANT_ID: $(SPTENANTID)
+      AZURE_CLIENT_ID: $(SPAPPID)
+      AZURE_CLIENT_SECRET: $(SPPW)
+      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+      VFXT_TEST_VARS_FILE: pipelines.json
 
-  # - script: |
-  #     CONTROLLER_IP=$(grep controller_ip $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_ip": "([^"]+)".*$/\1/')
-  #     CONTROLLER_NAME=$(grep controller_name $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_name": "([^"]+)".*$/\1/')
-  #     CONTROLLER_USER=$(grep controller_user $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_user": "([^"]+)".*$/\1/')
+  - script: |
+      CONTROLLER_IP=$(grep controller_ip $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_ip": "([^"]+)".*$/\1/')
+      CONTROLLER_NAME=$(grep controller_name $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_name": "([^"]+)".*$/\1/')
+      CONTROLLER_USER=$(grep controller_user $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_user": "([^"]+)".*$/\1/')
 
-  #     echo "CONTROLLER_IP  : $CONTROLLER_IP"
-  #     echo "CONTROLLER_NAME: $CONTROLLER_NAME"
-  #     echo "CONTROLLER_USER: $CONTROLLER_USER"
+      echo "CONTROLLER_IP  : $CONTROLLER_IP"
+      echo "CONTROLLER_NAME: $CONTROLLER_NAME"
+      echo "CONTROLLER_USER: $CONTROLLER_USER"
 
-  #     LOCAL_FILE="$BUILD_SOURCESDIRECTORY/test_artifacts/vfxt.$CONTROLLER_NAME.log"
-  #     scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $CONTROLLER_USER@$CONTROLLER_IP:~/vfxt.log $LOCAL_FILE
-  #     echo ">>> $LOCAL_FILE:"
-  #     cat $LOCAL_FILE
-  #   displayName: 'Dump vfxt.log from controller'
-  #   condition: always()
-  #   env:
-  #     VFXT_TEST_VARS_FILE: pipelines.json
+      mkdir $BUILD_SOURCESDIRECTORY/test_artifacts
+      LOCAL_FILE="$BUILD_SOURCESDIRECTORY/test_artifacts/vfxt.$CONTROLLER_NAME.log"
+      scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $CONTROLLER_USER@$CONTROLLER_IP:~/vfxt.log $LOCAL_FILE
+      echo ">>> $LOCAL_FILE:"
+      cat $LOCAL_FILE
+    displayName: 'Dump vfxt.log from controller'
+    condition: always()
+    env:
+      VFXT_TEST_VARS_FILE: pipelines.json
 
-  # - script: |
-  #     CONTROLLER_NAME=$(grep controller_name $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_name": "([^"]+)".*$/\1/')
-  #     echo "CONTROLLER_NAME: $CONTROLLER_NAME"
+  - script: |
+      CONTROLLER_NAME=$(grep controller_name $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_name": "([^"]+)".*$/\1/')
+      echo "CONTROLLER_NAME: $CONTROLLER_NAME"
 
-  #     LOCAL_FILE="$BUILD_SOURCESDIRECTORY/test_artifacts/vfxt.$CONTROLLER_NAME.log"
-  #     grep -i -C 5 -e vfxt:ERROR -e exception $LOCAL_FILE
-  #   displayName: 'Grep errors from vfxt.log (+/- 5 lines)'
-  #   condition: or(failed(), canceled())
-  #   env:
-  #     VFXT_TEST_VARS_FILE: pipelines.json
+      LOCAL_FILE="$BUILD_SOURCESDIRECTORY/test_artifacts/vfxt.$CONTROLLER_NAME.log"
+      grep -i -C 5 -e vfxt:ERROR -e exception $LOCAL_FILE
+    displayName: 'Grep errors from vfxt.log (+/- 5 lines)'
+    condition: or(failed(), canceled())
+    env:
+      VFXT_TEST_VARS_FILE: pipelines.json
 
   - task: PublishPipelineArtifact@0
     displayName: 'Publish Pipelines Artifacts (test logs)'
@@ -89,21 +87,21 @@ jobs:
   #     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
   #     VFXT_TEST_VARS_FILE: pipelines.json
 
-  # - script: |
-  #     az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-  #     RESOURCE_GROUP=$(grep resource_group $VFXT_TEST_VARS_FILE | sed -E 's/^.*resource_group": "([^"]+)".*$/\1/')
-  #     echo "RESOURCE_GROUP: $RESOURCE_GROUP"
-  #     az group delete --yes -n $RESOURCE_GROUP
-  #   displayName: 'Delete resource group'
-  #   condition: always()
-  #   env:
-  #     AZURE_TENANT_ID: $(SPTENANTID)
-  #     AZURE_CLIENT_ID: $(SPAPPID)
-  #     AZURE_CLIENT_SECRET: $(SPPW)
-  #     VFXT_TEST_VARS_FILE: pipelines.json
+  - script: |
+      az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+      RESOURCE_GROUP=$(grep resource_group $VFXT_TEST_VARS_FILE | sed -E 's/^.*resource_group": "([^"]+)".*$/\1/')
+      echo "RESOURCE_GROUP: $RESOURCE_GROUP"
+      az group delete --yes -n $RESOURCE_GROUP
+    displayName: 'Delete resource group'
+    condition: always()
+    env:
+      AZURE_TENANT_ID: $(SPTENANTID)
+      AZURE_CLIENT_ID: $(SPAPPID)
+      AZURE_CLIENT_SECRET: $(SPPW)
+      VFXT_TEST_VARS_FILE: pipelines.json
 
-  # - task: PublishTestResults@2
-  #   condition: always()
-  #   inputs:
-  #     testResultsFiles: 'junit/test-results*.xml'
-  #     testRunTitle: 'Publish pytest results'
+  - task: PublishTestResults@2
+    condition: always()
+    inputs:
+      testResultsFiles: 'junit/test-results*.xml'
+      testRunTitle: 'Publish pytest results'
