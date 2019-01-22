@@ -17,24 +17,13 @@ jobs:
 
   - script: |
       mkdir test_artifacts
-      cd test_artifacts
+      mkdir ~/.ssh
+      ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+      ls -al ~/.ssh
       pwd
-      echo "XYZ" > ABC.test
-    displayName: '(DUMMY) Create fake test log file'
-
-  - task: PublishPipelineArtifact@0
-    displayName: '(DUMMY) Publish Pipelines Artifacts'
-    inputs:
-      artifactName: 'testArtifacts'
-      targetPath: 'test_artifacts'
-    condition: always()
-
-  # - script: |
-  #     mkdir ~/.ssh && cd $_
-  #     ssh-keygen -t rsa -N "" -f id_rsa
-  #     ls -al
-  #     echo "SSH PUBLIC KEY: $(cat ~/.ssh/id_rsa.pub)"
-  #   displayName: 'Generate SSH keys'
+      cp ~/.ssh/id_rsa.pub $BUILD_SOURCESDIRECTORY/test_artifacts/.
+      echo "SSH PUBLIC KEY: $(cat ~/.ssh/id_rsa.pub)"
+    displayName: 'Generate SSH keys'
 
   # - script: |
   #     python3 --version
@@ -63,40 +52,42 @@ jobs:
   #     echo "CONTROLLER_NAME: $CONTROLLER_NAME"
   #     echo "CONTROLLER_USER: $CONTROLLER_USER"
 
-  #     scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $CONTROLLER_USER@$CONTROLLER_IP:~/vfxt.log vfxt.$CONTROLLER_NAME.log
-  #     echo ">>> vfxt.$CONTROLLER_NAME.log:"
-  #     cat vfxt.$CONTROLLER_NAME.log
-  #     cp vfxt.$CONTROLLER_NAME.log $BUILD_ARTIFACTSTAGINGDIRECTORY
+  #     LOCAL_FILE="$BUILD_SOURCESDIRECTORY/test_artifacts/vfxt.$CONTROLLER_NAME.log"
+  #     scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $CONTROLLER_USER@$CONTROLLER_IP:~/vfxt.log $LOCAL_FILE
+  #     echo ">>> $LOCAL_FILE:"
+  #     cat $LOCAL_FILE
   #   displayName: 'Dump vfxt.log from controller'
   #   condition: always()
   #   env:
   #     VFXT_TEST_VARS_FILE: pipelines.json
 
-  # # - task: PublishPipelineArtifact@0
-  # #   displayName: 'Publish Pipelines Artifacts (test logs)'
-  # #   inputs:
-  # #     artifactName: 'testLogs'
-  # #     targetPath: 'test/publish'
-  # #   condition: always()
-
   # - script: |
   #     CONTROLLER_NAME=$(grep controller_name $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_name": "([^"]+)".*$/\1/')
   #     echo "CONTROLLER_NAME: $CONTROLLER_NAME"
-  #     grep -i -C 5 -e vfxt:ERROR -e exception vfxt.$CONTROLLER_NAME.log
+
+  #     LOCAL_FILE="$BUILD_SOURCESDIRECTORY/test_artifacts/vfxt.$CONTROLLER_NAME.log"
+  #     grep -i -C 5 -e vfxt:ERROR -e exception $LOCAL_FILE
   #   displayName: 'Grep errors from vfxt.log (+/- 5 lines)'
   #   condition: or(failed(), canceled())
   #   env:
   #     VFXT_TEST_VARS_FILE: pipelines.json
 
-  # # - script: |
-  # #     pytest test/test_vdbench.py --doctest-modules --junitxml=junit/test-results2.xml
-  # #   displayName: 'Test vdbench on Avere vFXT'
-  # #   env:
-  # #     AZURE_TENANT_ID: $(SPTENANTID)
-  # #     AZURE_CLIENT_ID: $(SPAPPID)
-  # #     AZURE_CLIENT_SECRET: $(SPPW)
-  # #     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-  # #     VFXT_TEST_VARS_FILE: pipelines.json
+  - task: PublishPipelineArtifact@0
+    displayName: 'Publish Pipelines Artifacts (test logs)'
+    inputs:
+      artifactName: 'testArtifacts'
+      targetPath: 'test_artifacts'
+    condition: always()
+
+  # - script: |
+  #     pytest test/test_vdbench.py --doctest-modules --junitxml=junit/test-results2.xml
+  #   displayName: 'Test vdbench on Avere vFXT'
+  #   env:
+  #     AZURE_TENANT_ID: $(SPTENANTID)
+  #     AZURE_CLIENT_ID: $(SPAPPID)
+  #     AZURE_CLIENT_SECRET: $(SPPW)
+  #     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+  #     VFXT_TEST_VARS_FILE: pipelines.json
 
   # - script: |
   #     az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
