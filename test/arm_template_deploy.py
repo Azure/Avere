@@ -50,7 +50,7 @@ class ArmTemplateDeploy:
             # self.deploy_id = 'av' + \
             #     datetime.utcnow().strftime('%m%dx%H%M%S') + \
             #     choice(ascii_lowercase)
-            self.deploy_id = 'rebeccatest'
+            self.deploy_id = 'rebeccatest2'
 
         if not self.resource_group:
             self.resource_group = self.deploy_id + '-rg'
