@@ -16,8 +16,8 @@ jobs:
       architecture: 'x64'
 
   - script: |
-      mkdir ~/publish
-      cd ~/publish
+      mkdir publish
+      cd publish
       pwd
       echo "XYZ" > ABC.test
     displayName: '(DUMMY) Create fake test log file'
