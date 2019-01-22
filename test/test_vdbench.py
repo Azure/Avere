@@ -54,7 +54,7 @@ class TestVDBench:
         test_vars["deploy_vd_outputs"] = deploy_result.properties.outputs
 
     def test_vdbench_run(self, test_vars):  # noqa: F811
-        node_ip = test_vars["deploy_vd_outputs"]["nodE_0_IP_ADDRESS"]["value"]
+        node_ip = test_vars["deploy_vd_outputs"]["node_0_ip_address"]["value"]
         with SSHTunnelForwarder(
             test_vars["controller_ip"],
             ssh_username=test_vars["controller_user"],
