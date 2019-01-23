@@ -16,21 +16,33 @@ jobs:
       architecture: 'x64'
 
   - script: |
-      mkdir ~/.ssh && cd $_
-      ssh-keygen -t rsa -N "" -f id_rsa
-      ls -al
+      mkdir ~/.ssh
+      ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+      ls -al ~/.ssh
       echo "SSH PUBLIC KEY: $(cat ~/.ssh/id_rsa.pub)"
     displayName: 'Generate SSH keys'
 
   - script: |
-      python3 --version
       pip install --upgrade pip setuptools wheel
       pip install -r test/requirements.txt
     displayName: 'Install Python dependencies'
 
   - script: |
-      pytest test/test_avere_template_deploy.py test/test_vfxt_cluster_status.py --doctest-modules --junitxml=junit/test-results1.xml
+      pytest test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results1a.xml
     displayName: 'Test template-based deployment of Avere vFXT'
+    env:
+      AVERE_ADMIN_PW: $(controllerpassword)
+      AVERE_CONTROLLER_PW: $(controllerpassword)
+      AZURE_TENANT_ID: $(SPTENANTID)
+      AZURE_CLIENT_ID: $(SPAPPID)
+      AZURE_CLIENT_SECRET: $(SPPW)
+      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+      VFXT_TEST_VARS_FILE: pipelines.json
+
+  - script: |
+      pytest test/test_vfxt_cluster_status.py --doctest-modules --junitxml=junit/test-results1b.xml
+    displayName: 'Test cluster status, health, etc.'
+    condition: succeeded()
     env:
       AVERE_ADMIN_PW: $(controllerpassword)
       AVERE_CONTROLLER_PW: $(controllerpassword)
@@ -49,10 +61,15 @@ jobs:
       echo "CONTROLLER_NAME: $CONTROLLER_NAME"
       echo "CONTROLLER_USER: $CONTROLLER_USER"
 
-      scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $CONTROLLER_USER@$CONTROLLER_IP:~/vfxt.log vfxt.$CONTROLLER_NAME.log
-      echo ">>> vfxt.$CONTROLLER_NAME.log:"
-      cat vfxt.$CONTROLLER_NAME.log
-    displayName: 'Dump vfxt.log from controller'
+      mkdir $BUILD_SOURCESDIRECTORY/test_artifacts
+
+      ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
+      scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $CONTROLLER_USER@$CONTROLLER_IP:~/vfxt.log $ARTIFACTS_DIR/vfxt.$CONTROLLER_NAME.log
+      scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $CONTROLLER_USER@$CONTROLLER_IP:~/vfxt_deploy_artifacts.* $ARTIFACTS_DIR/.
+
+      echo "vfxt.log from $CONTROLLER_NAME:"
+      cat $ARTIFACTS_DIR/vfxt.$CONTROLLER_NAME.log
+    displayName: 'Collect vFXT deployment artifacts from controller; dump vfxt.log'
     condition: always()
     env:
       VFXT_TEST_VARS_FILE: pipelines.json
@@ -60,7 +77,9 @@ jobs:
   - script: |
       CONTROLLER_NAME=$(grep controller_name $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_name": "([^"]+)".*$/\1/')
       echo "CONTROLLER_NAME: $CONTROLLER_NAME"
-      grep -i -C 5 -e vfxt:ERROR -e exception vfxt.$CONTROLLER_NAME.log
+
+      LOCAL_VFXT_LOG="$BUILD_SOURCESDIRECTORY/test_artifacts/vfxt.$CONTROLLER_NAME.log"
+      grep -i -C 5 -e vfxt:ERROR -e exception $LOCAL_VFXT_LOG
     displayName: 'Grep errors from vfxt.log (+/- 5 lines)'
     condition: or(failed(), canceled())
     env:
@@ -75,6 +94,13 @@ jobs:
   #     AZURE_CLIENT_SECRET: $(SPPW)
   #     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
   #     VFXT_TEST_VARS_FILE: pipelines.json
+
+  - task: PublishPipelineArtifact@0
+    displayName: 'Publish Pipelines Artifacts (node logs, rolling trace)'
+    inputs:
+      artifactName: 'testArtifacts'
+      targetPath: 'test_artifacts'
+    condition: always()
 
   - script: |
       az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
