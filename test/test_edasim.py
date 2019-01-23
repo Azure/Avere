@@ -118,15 +118,13 @@ class TestEdasim:
     def test_edasim_deploy(self, test_vars, vs_ips, ssh_con):  # noqa: F811
         td = test_vars["atd_obj"]
         td.template = requests.get(
-                url=('https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/template/azuredeploy.json').json()
-
+                url=('https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/template/azuredeploy.json').json())
         with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
-
         command3 = command1 + command2
         orig_params = td.deploy_params.copy()
         td.deploy_params = {
-            'secureAppEnvironmentVariables' = command3,
+            'secureAppEnvironmentVariables': command3,
             "uniquename": td.deploy_id,
             "sshKeyData": ssh_pub_key,
             "virtualNetworkResourceGroup": orig_params["virtualNetworkResourceGroup"],
