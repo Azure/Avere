@@ -99,7 +99,7 @@ There are three ways to deploy the vFXT cluster.  In each of the methods you wil
    | Deployment Method | Details | URL |
    | --- | --- | --- |
    | **Portal Wizard** | the portal Wizard walks you through the creation of the controller and vFXT.  This is private preview, so please post github issue if you would like access | [wizard](https://portal.azure.com/?pub_source=email&pub_status=success#create/microsoft-avere.vfxt-template-previewavere-vfxt-arm) |
-   | **Portal Template** | this uses the default portal template wizard and requires care when entering fields  | <a href="https://portal.azure.com/?pub_source=email&pub_status=success#create/microsoft-avere.vfxt-template-previewavere-vfxt-arm" target="_blank"><img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/></a> |
+   | **Portal Template** | this uses the default portal template wizard and requires care when entering fields  | <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fvfxt%2Fazuredeploy-auto.json" target="_blank"><img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/></a> |
    | **Azure CLI** | the template can be automated using CLI or SDK | See the [example below](#example-using-cli-to-deploy-the-cluster). |
 
 After the deployment completed, check the template output for some important information like management ip address and vserver ip address range.
