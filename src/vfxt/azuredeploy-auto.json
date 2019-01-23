@@ -165,10 +165,6 @@
     "enableCloudTraceDebugging": {
       "type": "bool",
       "defaultValue": false,
-      "allowedValues": [
-        true,
-        false
-      ],
       "metadata": {
         "description": "When working with Azure Support, set this value to true, otherwise keep as false."
       }
