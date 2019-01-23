@@ -58,12 +58,12 @@ class TestEdasim:
         with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
         td.deploy_params = {
-            'namespaceName': "edasimeventhub",
+            'namespaceName': "edasimeventhub2",
             'namespaceAuthorizationRuleName': 'edasimeventhub',
-            'eventHubName': 'edasimeventhub',
+            'eventHubName': 'edasimeventhub2',
             'eventhubAuthorizationRuleName': 'edasimeventhub',
             'eventhubAuthorizationRuleName1': 'edasimeventhub1',
-            'consumerGroupName': 'test',
+            'consumerGroupName': 'edasimtest',
         }
 
         logging.debug('> Generated deploy parameters: \n{}'.format(
@@ -79,8 +79,6 @@ class TestEdasim:
             export AZURE_EVENTHUB_NAMESPACENAME="edasimeventhub"
             """.format(policy_primary_key).split("\n")
         helpers.run_ssh_commands(ssh_con, commands)
-
-
 
 
 ##########################################################
