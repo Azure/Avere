@@ -28,8 +28,21 @@ jobs:
     displayName: 'Install Python dependencies'
 
   - script: |
-      pytest test/test_avere_template_deploy.py test/test_vfxt_cluster_status.py --doctest-modules --junitxml=junit/test-results1.xml
+      pytest test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results1a.xml
     displayName: 'Test template-based deployment of Avere vFXT'
+    env:
+      AVERE_ADMIN_PW: $(controllerpassword)
+      AVERE_CONTROLLER_PW: $(controllerpassword)
+      AZURE_TENANT_ID: $(SPTENANTID)
+      AZURE_CLIENT_ID: $(SPAPPID)
+      AZURE_CLIENT_SECRET: $(SPPW)
+      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+      VFXT_TEST_VARS_FILE: pipelines.json
+
+  - script: |
+      pytest test/test_vfxt_cluster_status.py --doctest-modules --junitxml=junit/test-results1b.xml
+    displayName: 'Test cluster status, health, etc.'
+    condition: succeeded()
     env:
       AVERE_ADMIN_PW: $(controllerpassword)
       AVERE_CONTROLLER_PW: $(controllerpassword)
@@ -56,7 +69,7 @@ jobs:
 
       echo "vfxt.log from $CONTROLLER_NAME:"
       cat $ARTIFACTS_DIR/vfxt.$CONTROLLER_NAME.log
-    displayName: 'Collect vFXT deployment artifacts from controller'
+    displayName: 'Collect vFXT deployment artifacts from controller; dump vfxt.log'
     condition: always()
     env:
       VFXT_TEST_VARS_FILE: pipelines.json
@@ -83,7 +96,7 @@ jobs:
   #     VFXT_TEST_VARS_FILE: pipelines.json
 
   - task: PublishPipelineArtifact@0
-    displayName: 'Publish Pipelines Artifacts (test logs)'
+    displayName: 'Publish Pipelines Artifacts (node logs, rolling trace)'
     inputs:
       artifactName: 'testArtifacts'
       targetPath: 'test_artifacts'
