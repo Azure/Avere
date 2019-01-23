@@ -254,7 +254,7 @@
                 "subnets": "Subnet"
               },
               "toolTip": {
-                "virtualNetwork": "Name of the Avere vFXT cluster's virtual network",
+                "virtualNetwork": "Create or select the Avere vFXT cluster's virtual network",
                 "subnets": "Subnet for the virtual network"
               },
               "defaultValue": {
