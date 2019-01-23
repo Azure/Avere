@@ -95,7 +95,7 @@ jobs:
   #     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
   #     VFXT_TEST_VARS_FILE: pipelines.json
 
-   - script: |
+  - script: |
       pytest test/test_edasim.py --doctest-modules --junitxml=junit/test-results3.xml
     displayName: 'Test edasim on Avere vFXT'
     env:
