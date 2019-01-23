@@ -113,6 +113,7 @@ jobs:
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   - task: PublishPipelineArtifact@0
     displayName: 'Publish Pipelines Artifacts (node logs, rolling trace)'
     inputs:
@@ -124,6 +125,9 @@ jobs:
   - script: |
 =======
    - script: |
+>>>>>>> fix yaml
+=======
+  - script: |
 >>>>>>> fix yaml
       pytest test/test_edasim.py --doctest-modules --junitxml=junit/test-results3.xml
     displayName: 'Test edasim on Avere vFXT'
