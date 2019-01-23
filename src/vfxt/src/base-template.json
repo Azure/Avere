@@ -161,6 +161,13 @@
       "metadata": {
         "description": "The cache size in GB to use for each Avere vFXT VM."
       }
+    },
+    "enableCloudTraceDebugging": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "When working with Azure Support, set this value to true, otherwise keep as false."
+      }
     }
   },
   "variables": {
@@ -189,7 +196,8 @@
     "avereClusterName": "[parameters('avereClusterName')]",
     "avereInstanceType": "[parameters('avereInstanceType')]",
     "avereCacheSizeGB": "[parameters('avereCacheSizeGB')]",
-    "additionalVFXTParameters": "[concat(' --nodes ', parameters('avereNodeCount'), ' --debug')]",
+    "enableCloudTraceDebugging": "[parameters('enableCloudTraceDebugging')]",
+    "additionalVFXTParameters": "[concat(' --nodes ', parameters('avereNodeCount'), if(variables('enableCloudTraceDebugging'),' --skip-cleanup ',''), ' --debug')]",
     "controllerVMSize": "Standard_A1_v2",
     "publicIPAddressName": "[concat('publicip-',variables('controllerName'))]",
     "networkSecurityGroupName": "[concat('nsg-',variables('controllerName'))]",
@@ -203,7 +211,7 @@
     "useExtension?": true,
     "storageAccountType": "Standard_LRS",
     "storageAccountKind": "StorageV2",
-    "environmentVariables": "[concat(' RESOURCE_GROUP=', resourceGroup().name, ' LOCATION=', resourceGroup().location, ' NETWORK_RESOURCE_GROUP=', variables('virtualNetworkResourceGroup'), ' NETWORK=', variables('virtualNetworkName'),' SUBNET=', variables('virtualNetworkSubnetName'), ' AVERE_CLUSTER_ROLE=\"', variables('avereClusterRole'), '\" CREATE_CLOUD_BACKED_CLUSTER=', variables('useAvereBackedStorageAccount'), ' STORAGE_ACCOUNT=', variables('avereBackedStorageAccountName'), ' CACHE_SIZE=', variables('avereCacheSizeGB'), ' CLUSTER_NAME=', variables('avereClusterName'), ' INSTANCE_TYPE=', variables('avereInstanceType'), ' CONTROLLER_ADMIN_USER_NAME=', variables('controllerAdminUsername'), ' DEBUG=\"', variables('additionalVFXTParameters'), '\"')]",
+    "environmentVariables": "[concat(' RESOURCE_GROUP=', resourceGroup().name, ' LOCATION=', resourceGroup().location, ' NETWORK_RESOURCE_GROUP=', variables('virtualNetworkResourceGroup'), ' NETWORK=', variables('virtualNetworkName'),' SUBNET=', variables('virtualNetworkSubnetName'), ' AVERE_CLUSTER_ROLE=\"', variables('avereClusterRole'), '\" CREATE_CLOUD_BACKED_CLUSTER=', variables('useAvereBackedStorageAccount'), ' STORAGE_ACCOUNT=', variables('avereBackedStorageAccountName'), ' CACHE_SIZE=', variables('avereCacheSizeGB'), ' CLUSTER_NAME=', variables('avereClusterName'), ' INSTANCE_TYPE=', variables('avereInstanceType'), ' CONTROLLER_ADMIN_USER_NAME=', variables('controllerAdminUsername'),' ENABLE_CLOUD_TRACE_DEBUG=', variables('enableCloudTraceDebugging'), ' DEBUG=\"', variables('additionalVFXTParameters'), '\"')]",
     "sshKeyPath": "[concat('/home/',variables('controllerAdminUsername'),'/.ssh/authorized_keys')]",
     "controllerOSProfilePassword": {
       "computerName": "[variables('vmName')]",
@@ -339,7 +347,7 @@
       "apiVersion": "2017-12-01",
       "tags": {
         "averevfxt": "server"
-      }, 
+      },
       "type": "Microsoft.Compute/virtualMachines",
       "identity": {
         "type": "SystemAssigned"

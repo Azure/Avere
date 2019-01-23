@@ -45,6 +45,8 @@ function configure_vfxt_template() {
     # replace "--from-environment" with "--on-instance" since we are using 
     sed -i 's/ --from-environment / --on-instance /g' $VFXT_INSTALL_TEMPLATE
     sed -i "s:~/vfxt.log:$VFXT_LOG_FILE:g"  $VFXT_INSTALL_TEMPLATE
+    # do not trace password in log, instead the command is captured in file ~/create_cluster_command.log, with password correctly redacted
+    sed -i "s/^set -exu/set -eu/g"  $VFXT_INSTALL_TEMPLATE
 }
 
 function patch_vfxt_py() {
@@ -91,12 +93,26 @@ EOM
 }
 
 function create_vfxt() {
+    #######################################################
+    # do not trace passwords
+    #######################################################
+    set -x
+    #######################################################
+
     cd $AZURE_HOME_DIR
     # enable cloud trace during installation
-    nohup /bin/bash /opt/avere/enablecloudtrace.sh > $AZURE_HOME_DIR/enablecloudtrace.log 2>&1 &
+    if [ "${ENABLE_CLOUD_TRACE_DEBUG}" == "${ARM_TRUE}" ] ; then
+        nohup /bin/bash /opt/avere/enablecloudtrace.sh > $AZURE_HOME_DIR/enablecloudtrace.log 2>&1 &
+    fi
     # ensure the create cluster command is recorded for the future
     sleep 2 && ps -a -x -o cmd | egrep '[v]fxt.py' |  sed 's/--admin-password [^ ]*/--admin-password ***/' > create_cluster_command.log &
     $VFXT_INSTALL_TEMPLATE
+    
+    #######################################################
+    # re-enable tracing
+    #######################################################
+    set +x
+    #######################################################
 }
 
 function print_vfxt_vars() {
