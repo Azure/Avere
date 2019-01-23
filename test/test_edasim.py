@@ -20,21 +20,28 @@ from lib.pytest_fixtures import (averecmd_params, mnt_nodes,  # noqa: F401
                                  scp_cli, ssh_con, test_vars, vs_ips)
 
 # logging.basicConfig(level=logging.DEBUG)
+command1 = ""
+command2 = ""
+command3 = ""
+
 
 class TestEdasim:
-    # def test_download_go(self, ssh_con):
-    #     commands = """
-    #         wget https://dl.google.com/go/go1.11.2.linux-amd64.tar.gz
-    #         tar xvf go1.11.2.linux-amd64.tar.gz
-    #         sudo chown -R root:root ./go
-    #         sudo mv go /usr/local
-    #         mkdir ~/gopath
-    #         echo "export GOPATH=$HOME/gopath" >> ~/.profile
-    #         echo "export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin" >> ~/.profile
-    #         source ~/.profile
-    #         rm go1.11.2.linux-amd64.tar.gz
-    #         """.split("\n")
-    #     helpers.run_ssh_commands(ssh_con, commands)
+    def test_download_go(self, ssh_con):
+        commands = """
+            wget https://dl.google.com/go/go1.11.2.linux-amd64.tar.gz
+            tar xvf go1.11.2.linux-amd64.tar.gz
+            sudo chown -R root:root ./go
+            sudo mv go /usr/local
+            mkdir ~/gopath
+            echo "export GOPATH=$HOME/gopath" >> ~/.profile
+            echo "export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin" >> ~/.profile
+            source ~/.profile
+            rm go1.11.2.linux-amd64.tar.gz
+
+            cd $GOPATH
+            go get -v github.com/Azure/Avere/src/go/...
+            """.split("\n")
+        helpers.run_ssh_commands(ssh_con, commands)
 
     def test_storage_account(self, test_vars, resource_group, storage_account, ssh_con):
         td = test_vars["atd_obj"]
@@ -50,6 +57,7 @@ class TestEdasim:
             export AZURE_STORAGE_ACCOUNT_KEY={1}
             """.format(storage_account.name, key).split("\n")
         helpers.run_ssh_commands(ssh_con, commands)
+        command1 = "AZURE_STORAGE_ACCOUNT={} AZURE_STORAGE_ACCOUNT_KEY={}".format(storage_account.name, key)
 
     def test_event_hub(self, test_vars, ssh_con):
         td = test_vars["atd_obj"]
@@ -76,25 +84,11 @@ class TestEdasim:
         commands = """
             export AZURE_EVENTHUB_SENDERKEYNAME="RootManageSharedAccessKey"
             export AZURE_EVENTHUB_SENDERKEY={0}
-            export AZURE_EVENTHUB_NAMESPACENAME="edasimeventhub"
+            export AZURE_EVENTHUB_NAMESPACENAME="edasimeventhub2"
             """.format(policy_primary_key).split("\n")
         helpers.run_ssh_commands(ssh_con, commands)
+        command2 = """AZURE_EVENTHUB_SENDERKEYNAME='RootManageSharedAccessKey' AZURE_EVENTHUB_SENDERKEY={} AZURE_EVENTHUB_NAMESPACENAME='edasimeventhub2'""".format(policy_primary_key)
 
-
-##########################################################
-        # td.template = requests.get(
-        #         url=('https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/template/azuredeploy.json').json()
-        # with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
-        #     ssh_pub_key = ssh_pub_f.read()
-        # commands = """
-        #     AZURE_STORAGE_ACCOUNT=AZURE_STORAGE_ACCOUNT AZURE_STORAGE_ACCOUNT_KEY=AZURE_STORAGE_ACCOUNT_KEY AZURE_EVENTHUB_SENDERKEYNAME="RootManageSharedAccessKey" AZURE_EVENTHUB_SENDERKEY=AZURE_EVENTHUB_SENDERKEY AZURE_EVENTHUB_NAMESPACENAME="edasimeventhub"
-        #     """.split("\n")
-        # td.deploy_params = {
-        #         'secureAppEnvironmentVariables' = commands
-        # }
-
-        # ds
-        # helpers.run_ssh_commands(ssh_con, commands)
 
     def test_edasim_setup(self, mnt_nodes, ssh_con):  # noqa: F811
         commands = """
@@ -121,7 +115,34 @@ class TestEdasim:
             """.split("\n")
         helpers.run_ssh_commands(ssh_con, commands)
 
-    # def test_edasim_deploy(self, test_vars, vs_ips):  # noqa: F811
+    def test_edasim_deploy(self, test_vars, vs_ips, ssh_con):  # noqa: F811
+        td = test_vars["atd_obj"]
+        td.template = requests.get(
+                url=('https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/template/azuredeploy.json').json()
+
+        with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
+            ssh_pub_key = ssh_pub_f.read()
+
+        command3 = command1 + command2
+        orig_params = td.deploy_params.copy()
+        td.deploy_params = {
+            'secureAppEnvironmentVariables' = command3,
+            "uniquename": td.deploy_id,
+            "sshKeyData": ssh_pub_key,
+            "virtualNetworkResourceGroup": orig_params["virtualNetworkResourceGroup"],
+            "virtualNetworkName": orig_params["virtualNetworkName"],
+            "virtualNetworkSubnetName": orig_params["virtualNetworkSubnetName"],
+            "nfsCommaSeparatedAddresses": ",".join(vs_ips),
+            "nfsExportPath": "/msazure",
+        }
+
+        td.deploy_name = "test_edasim"
+        deploy_result = helpers.wait_for_op(td.deploy())
+        test_vars["deploy_edasim_outputs"] = deploy_result.properties.outputs
+
+
+        # ds
+        # helpers.run_ssh_commands(ssh_con, commands)
     #     td = test_vars["atd_obj"]
     #     with open(os.path.expanduser(r"~/.ssh/id_rsa.pub"), "r") as ssh_pub_f:
     #         ssh_pub_key = ssh_pub_f.read()
