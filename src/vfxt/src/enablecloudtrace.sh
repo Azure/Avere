@@ -72,7 +72,7 @@ function sendRPC() {
                 -r admin@$node_ip:/var/log $artifacts_dir/$node
         done
 
-        tar -zcf vfxt_deploy_artifacts.$(hostname).tar.gz vfxt.log $(basename $artifacts_dir)
+        tar -zcf vfxt_deploy_artifacts.$(hostname).tar.gz *.log $(basename $artifacts_dir)
         result=$((result+$?))
 
         result=$?
