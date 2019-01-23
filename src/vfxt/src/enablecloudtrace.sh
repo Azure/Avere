@@ -2,13 +2,13 @@
 
 ###########################################################
 #
-# Watch vfxt.log and enable cloud trace after the 
+# Watch vfxt.log and enable cloud trace after the
 # management IP is received, and disable cloud trace after
-# the script has finished.  The purpose of cloud trace is 
+# the script has finished.  The purpose of cloud trace is
 # for additional debugging information during installation.
 #
-# Ensure completion by stopping if the vfxt.log file does 
-# not show up or if the installation script stops, and 
+# Ensure completion by stopping if the vfxt.log file does
+# not show up or if the installation script stops, and
 # vfxt.log stops being updated.
 #
 ###########################################################
@@ -26,21 +26,62 @@ RPC_ENABLE="enable"
 RPC_DISABLE="disable"
 
 function sendRPC() {
+    set +x
     ipaddress=$1; action=$2
 
-    if [ "$action" == "$RPC_ENABLE" ] ; then 
-        # TODO - update with RPC enable cloud trace command, return non-zero if failed
+    AVERECMD="averecmd --raw --no-check-certificate --user admin --password $ADMIN_PASSWORD --server $ipaddress"
+    if [ "$action" == "$RPC_ENABLE" ] ; then
+        echo "send 'support.acceptTerms yes' to ${ipaddress}"
+        $AVERECMD support.acceptTerms yes
+        result=$?
+
         echo "send ${action} to ${ipaddress}"
-        result=0
+        $AVERECMD support.modify "{'traceLevel': '0x4000000000000', 'rollingTrace': 'yes', 'statsMonitor': 'yes', 'memoryDebugging': 'yes'}"
+        result=$((result+$?))
     elif [ "$action" == "$RPC_DISABLE" ] ; then
-        # TODO - update with RPC disable cloud trace command, return non-zero if failed
         echo "send ${action} to ${ipaddress}"
-        result=0
+
+        # Turn off tracing.
+        $AVERECMD support.modify "{'traceLevel': '0x1', 'rollingTrace': 'no', 'statsMonitor': 'no', 'memoryDebugging': 'no'}"
+        result=$?
+
+        # Download the traces and node logs from each node.
+        artifacts_dir=$AZURE_HOME_DIR/vfxt_deploy_artifacts
+
+        sudo apt install sshpass
+        result=$((result+$?))
+
+        node_names=$($AVERECMD node.list | sed 's/[^a-zA-Z0-9_-]/ /g')
+        result=$((result+$?))
+
+        for node in $node_names; do
+            node_ip=$($AVERECMD node.get $node | perl -pe "s/^.+primaryClusterIP\D+([^']+)'.+$/\1/")
+            result=$((result+$?))
+
+            mkdir -p $artifacts_dir/$node/trace
+            result=$((result+$?))
+
+            sshpass -p $ADMIN_PASSWORD \
+                scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                -r admin@$node_ip:/support/trace/rolling $artifacts_dir/$node/trace
+            result=$((result+$?))
+
+            # Node logs. Some permission denial is expected, so ignore the RC.
+            sshpass -p $ADMIN_PASSWORD \
+                scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                -r admin@$node_ip:/var/log $artifacts_dir/$node
+        done
+
+        tar -zcf vfxt_deploy_artifacts.$(hostname).tar.gz vfxt.log $(basename $artifacts_dir)
+        result=$((result+$?))
+
+        result=$?
     else
         echo "ERROR: bad action"
         result=1
     fi
 
+    set -x
     return $result
 }
 
@@ -70,7 +111,7 @@ function wait_management_ip() {
     while :
     do
         ipaddress=$(egrep "^address=([0-9]{1,3}\.){3}[0-9]{1,3}" ${VFXT_LOG_FILE} | awk '{match($0,/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/); ip = substr($0,RSTART,RLENGTH); print ip}')
-        if [ "${#ipaddress}" -gt "0" ] 
+        if [ "${#ipaddress}" -gt "0" ]
         then
             echo "${ipaddress}"
             break
@@ -85,6 +126,9 @@ function wait_complete_message() {
     do
         if grep --quiet "vfxt:INFO - Complete" ${VFXT_LOG_FILE}; then
             echo "vfxt has completed installation"
+            break
+        elif grep --quiet "vfxt:ERROR - Failed to create cluster" ${VFXT_LOG_FILE}; then
+            echo "vfxt installation failed"
             break
         fi
         check_halted_vfxt
