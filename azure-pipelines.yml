@@ -28,7 +28,23 @@ jobs:
     displayName: 'Install Python dependencies'
 
   - script: |
+<<<<<<< HEAD
       pytest test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results1a.xml
+=======
+      pytest test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results1.xml
+    displayName: 'Test template-based deployment of Avere vFXT'
+    env:
+      AVERE_ADMIN_PW: $(controllerpassword)
+      AVERE_CONTROLLER_PW: $(controllerpassword)
+      AZURE_TENANT_ID: $(SPTENANTID)
+      AZURE_CLIENT_ID: $(SPAPPID)
+      AZURE_CLIENT_SECRET: $(SPPW)
+      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+      VFXT_TEST_VARS_FILE: pipelines.json
+
+  - script: |
+      pytest test/test_avere_template_deploy.py test/test_vfxt_cluster_status.py --doctest-modules --junitxml=junit/test-results1.xml
+>>>>>>> fix merge
     displayName: 'Test template-based deployment of Avere vFXT'
     env:
       AVERE_ADMIN_PW: $(controllerpassword)
@@ -91,12 +107,25 @@ jobs:
   #     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
   #     VFXT_TEST_VARS_FILE: pipelines.json
 
+<<<<<<< HEAD
   - task: PublishPipelineArtifact@0
     displayName: 'Publish Pipelines Artifacts (node logs, rolling trace)'
     inputs:
       artifactName: 'testArtifacts'
       targetPath: 'test_artifacts'
     condition: always()
+=======
+
+  - script: |
+      pytest test/test_edasim.py --doctest-modules --junitxml=junit/test-results3.xml
+    displayName: 'Test edasim on Avere vFXT'
+    env:
+      AZURE_TENANT_ID: $(SPTENANTID)
+      AZURE_CLIENT_ID: $(SPAPPID)
+      AZURE_CLIENT_SECRET: $(SPPW)
+      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+      VFXT_TEST_VARS_FILE: pipelines.json
+>>>>>>> fix merge
 
   - script: |
       az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
