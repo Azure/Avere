@@ -32,24 +32,19 @@ rm go1.11.2.linux-amd64.tar.gz
 
  2. setup edasim code
 ```bash
-# apply fix for storage queue, remove following lines once fix #9 is committed
+# checkout edasim, all dependencies and build the binaries
 cd $GOPATH
 go get -v github.com/Azure/Avere/src/go/...
 ```
 
 ## Storage Preparation
 
- 1. use the portal or cloud shell to create you storage account
+ 1. use the portal or cloud shell to create a standard storage account
  1. create the following queues
      1. jobcomplete
      1. jobprocess
      1. jobready
      1. uploader
- 1. use the portal or cloud shell to get the storage account key and set the following environment variables
-```bash
-export AZURE_STORAGE_ACCOUNT=YOUR_STORAGE_ACCOUNT
-export AZURE_STORAGE_ACCOUNT_KEY=YOUR_STORAGE_ACCOUNT_KEY
-```
 
 The eda simulator will automatically create the necessary queues.
 
@@ -57,13 +52,6 @@ The eda simulator will automatically create the necessary queues.
 
  1. use the portal or cloud shell to create an "Event Hubs Namespace" Resource with Pricing Tier "Standard" resource in the same region as the vFXT.  For this example, we created `edasimeventhub`
  1. once created, browse to "Shared Access Policies", click on "RootManageSharedAccessKey" and copy the primary key
- 1. next you will need to set your environment variables with everything you just created:
-
-```bash
-export AZURE_EVENTHUB_SENDERKEYNAME="RootManageSharedAccessKey"
-export AZURE_EVENTHUB_SENDERKEY="PASTE_SENDER_KEY_HERE"
-export AZURE_EVENTHUB_NAMESPACENAME="edasimeventhub"
-```
 
 ## Build Environment String
 
@@ -85,7 +73,7 @@ These deployment instructions describe the installation of all components requir
         ```bash
         sudo -s
         apt-get update
-        apt-get install nfs-common
+        apt-get install -y nfs-common
         mkdir -p /nfs/node0
         mkdir -p /nfs/node1
         mkdir -p /nfs/node2
