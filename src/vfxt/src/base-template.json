@@ -197,7 +197,7 @@
     "avereInstanceType": "[parameters('avereInstanceType')]",
     "avereCacheSizeGB": "[parameters('avereCacheSizeGB')]",
     "enableCloudTraceDebugging": "[parameters('enableCloudTraceDebugging')]",
-    "additionalVFXTParameters": "[concat(' --nodes ', parameters('avereNodeCount'), ' --debug')]",
+    "additionalVFXTParameters": "[concat(' --nodes ', parameters('avereNodeCount'), if(variables('enableCloudTraceDebugging'),' --skip-cleanup ',''), ' --debug')]",
     "controllerVMSize": "Standard_A1_v2",
     "publicIPAddressName": "[concat('publicip-',variables('controllerName'))]",
     "networkSecurityGroupName": "[concat('nsg-',variables('controllerName'))]",
