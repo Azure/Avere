@@ -50,7 +50,7 @@
     "avereNamespacePath": {
       "type": "string",
       "metadata": {
-        "description": "The Avere vFXT namespace path."
+        "description": "The Avere vFXT namespace path, example (/msazure)."
       }
     }
   },

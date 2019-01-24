@@ -54,7 +54,7 @@ This step downloads the frames to render, the client mounting script, and the re
 3. Copy the following file, keeping the same name, to the Avere vFXT volume. Store it in a folder named ``/nfs/node1/bootstrap``:
 
    ```
-   https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/mayabatchcentosbootstrap.sh
+   https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/mayabatch/centosbootstrap.sh
    ```
 	
 4. Copy the following file, keeping the same name, to the Avere vFXT volume. Store it in a folder named ``/nfs/node1/src``:
