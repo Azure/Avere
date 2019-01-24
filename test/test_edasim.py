@@ -122,14 +122,14 @@ class TestEdasim:
         with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
         command3 = command1 + command2
-        orig_params = td.deploy_params.copy()
+        # orig_params = td.deploy_params.copy()
         td.deploy_params = {
-            'secureAppEnvironmentVariables': command3,
+            "secureAppEnvironmentVariables": command3,
             "uniquename": td.deploy_id,
             "sshKeyData": ssh_pub_key,
-            "virtualNetworkResourceGroup": orig_params["virtualNetworkResourceGroup"],
-            "virtualNetworkName": orig_params["virtualNetworkName"],
-            "virtualNetworkSubnetName": orig_params["virtualNetworkSubnetName"],
+            "virtualNetworkResourceGroup": td.resource_group,
+            "virtualNetworkName": td.deploy_id + "-vnet",
+            "virtualNetworkSubnetName": td.deploy_id + "-subnet",
             "nfsCommaSeparatedAddresses": ",".join(vs_ips),
             "nfsExportPath": "/msazure",
         }
