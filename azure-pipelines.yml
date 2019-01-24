@@ -28,10 +28,6 @@ jobs:
     displayName: 'Install Python dependencies'
 
   - script: |
-<<<<<<< HEAD
-<<<<<<< HEAD
-      pytest test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results1a.xml
-=======
       pytest test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results1.xml
     displayName: 'Test template-based deployment of Avere vFXT'
     env:
@@ -45,10 +41,6 @@ jobs:
 
   - script: |
       pytest test/test_avere_template_deploy.py test/test_vfxt_cluster_status.py --doctest-modules --junitxml=junit/test-results1.xml
->>>>>>> fix merge
-=======
-      pytest test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results1a.xml
->>>>>>> fix yaml
     displayName: 'Test template-based deployment of Avere vFXT'
     env:
       AVERE_ADMIN_PW: $(controllerpassword)
@@ -111,24 +103,14 @@ jobs:
   #     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
   #     VFXT_TEST_VARS_FILE: pipelines.json
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
   - task: PublishPipelineArtifact@0
     displayName: 'Publish Pipelines Artifacts (node logs, rolling trace)'
     inputs:
       artifactName: 'testArtifacts'
       targetPath: 'test_artifacts'
     condition: always()
-=======
 
   - script: |
-=======
-   - script: |
->>>>>>> fix yaml
-=======
-  - script: |
->>>>>>> fix yaml
       pytest test/test_edasim.py --doctest-modules --junitxml=junit/test-results3.xml
     displayName: 'Test edasim on Avere vFXT'
     env:
@@ -137,14 +119,6 @@ jobs:
       AZURE_CLIENT_SECRET: $(SPPW)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
       VFXT_TEST_VARS_FILE: pipelines.json
->>>>>>> fix merge
-
-  - task: PublishPipelineArtifact@0
-    displayName: 'Publish Pipelines Artifacts (node logs, rolling trace)'
-    inputs:
-      artifactName: 'testArtifacts'
-      targetPath: 'test_artifacts'
-    condition: always()
 
   - script: |
       az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
@@ -172,7 +146,6 @@ jobs:
       AZURE_CLIENT_SECRET: $(SPPW)
       VFXT_TEST_VARS_FILE: pipelines.json
 
-<<<<<<< HEAD
   # - script: |
   #     az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
   #     RESOURCE_GROUP=$(grep resource_group $VFXT_TEST_VARS_FILE | sed -E 's/^.*resource_group": "([^"]+)".*$/\1/')
@@ -192,10 +165,3 @@ jobs:
   #   inputs:
   #     testResultsFiles: 'junit/test-results*.xml'
   #     testRunTitle: 'Publish pytest results'
-=======
-  - task: PublishTestResults@2
-    condition: always()
-    inputs:
-      testResultsFiles: 'junit/test-results*.xml'
-      testRunTitle: 'Publish pytest results'
->>>>>>> fix yaml
