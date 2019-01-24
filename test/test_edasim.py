@@ -26,22 +26,15 @@ command3 = ""
 
 
 class TestEdasim:
-    # def test_download_go(self, ssh_con):
-    #     commands = """
-    #         wget https://dl.google.com/go/go1.11.2.linux-amd64.tar.gz
-    #         tar xvf go1.11.2.linux-amd64.tar.gz
-    #         sudo chown -R root:root ./go
-    #         sudo mv go /usr/local
-    #         mkdir ~/gopath
-    #         echo "export GOPATH=$HOME/gopath" >> ~/.profile
-    #         echo "export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin" >> ~/.profile
-    #         source ~/.profile
-    #         rm go1.11.2.linux-amd64.tar.gz
-
-    #         cd $GOPATH
-    #         go get -v github.com/Azure/Avere/src/go/...
-    #         """.split("\n")
-    #     helpers.run_ssh_commands(ssh_con, commands)
+    def test_download_go(self, ssh_con):
+        commands = """
+            sudo apt -y install golang-go
+            mkdir ~/gopath
+            echo "export GOPATH=$HOME/gopath" >> ~/.profile
+            echo "export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin" >> ~/.profile
+            source ~/.profile && cd $GOPATH && go get -v github.com/Azure/Avere/src/go/...
+            """.split("\n")
+        helpers.run_ssh_commands(ssh_con, commands)
 
     def test_storage_account(self, test_vars, resource_group, storage_account, ssh_con):
         td = test_vars["atd_obj"]
