@@ -138,6 +138,7 @@ class ArmTemplateDeploy:
         _this.pop('rm_client', None)  # don't want to save these
         _this.pop('nm_client', None)
         _this.pop('st_client', None)
+        _this.pop('template', None)
 
         if to_file:
             with open(to_file, 'w') as tf:

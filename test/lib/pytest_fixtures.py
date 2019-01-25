@@ -53,7 +53,8 @@ def storage_account(test_vars):
     atd = test_vars["atd_obj"]
     storage_account = atd.st_client.storage_accounts.get_properties(
         atd.resource_group,
-        atd.deploy_params["avereBackedStorageAccountName"]
+        atd.deploy_id + "sa"
+        # atd.deploy_params["avereBackedStorageAccountName"]
     )
     log.info("Created Storage Account: {}".format(storage_account))
     return storage_account
