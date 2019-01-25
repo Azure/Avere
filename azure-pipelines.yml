@@ -43,7 +43,7 @@ jobs:
       pytest test/test_avere_template_deploy.py test/test_vfxt_cluster_status.py --doctest-modules --junitxml=junit/test-results1.xml
     displayName: 'Test template-based deployment of Avere vFXT'
     env:
-      AVERE_ADMIN_PW: $(controllerpassword)
+      AVERE_ADMIN_PW: $(controllerpassword)gi
       AVERE_CONTROLLER_PW: $(controllerpassword)
       AZURE_TENANT_ID: $(SPTENANTID)
       AZURE_CLIENT_ID: $(SPAPPID)
