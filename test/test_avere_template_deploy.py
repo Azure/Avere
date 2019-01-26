@@ -35,7 +35,8 @@ class TestVfxtTemplateDeploy:
             "controllerSSHKeyData": ssh_pub_key,
             "adminPassword": os.environ["AVERE_ADMIN_PW"],
             "controllerPassword": os.environ["AVERE_CONTROLLER_PW"],
-            "enableCloudTraceDebugging": True
+            "enableCloudTraceDebugging": True,
+            "avereInstanceType": "Standard_D16s_v3"
         }
         test_vars["controller_name"] = td.deploy_params["controllerName"]
         test_vars["controller_user"] = td.deploy_params["controllerAdminUsername"]

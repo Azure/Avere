@@ -21,7 +21,7 @@ set -x
 
 AZURE_HOME_DIR=/home/$CONTROLLER_ADMIN_USER_NAME
 VFXT_LOG_FILE=$AZURE_HOME_DIR/vfxt.log
-WAIT_SECONDS=120
+WAIT_SECONDS=300
 RPC_ENABLE="enable"
 RPC_DISABLE="disable"
 
@@ -40,41 +40,7 @@ function sendRPC() {
         result=$((result+$?))
     elif [ "$action" == "$RPC_DISABLE" ] ; then
         echo "send ${action} to ${ipaddress}"
-
-        # Turn off tracing.
         $AVERECMD support.modify "{'traceLevel': '0x1', 'rollingTrace': 'no', 'statsMonitor': 'no', 'memoryDebugging': 'no'}"
-        result=$?
-
-        # Download the traces and node logs from each node.
-        artifacts_dir=$AZURE_HOME_DIR/vfxt_deploy_artifacts
-
-        sudo apt install sshpass
-        result=$((result+$?))
-
-        node_names=$($AVERECMD node.list | sed 's/[^a-zA-Z0-9_-]/ /g')
-        result=$((result+$?))
-
-        for node in $node_names; do
-            node_ip=$($AVERECMD node.get $node | perl -pe "s/^.+primaryClusterIP\D+([^']+)'.+$/\1/")
-            result=$((result+$?))
-
-            mkdir -p $artifacts_dir/$node/trace
-            result=$((result+$?))
-
-            sshpass -p $ADMIN_PASSWORD \
-                scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-                -r admin@$node_ip:/support/trace/rolling $artifacts_dir/$node/trace
-            result=$((result+$?))
-
-            # Node logs. Some permission denial is expected, so ignore the RC.
-            sshpass -p $ADMIN_PASSWORD \
-                scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-                -r admin@$node_ip:/var/log $artifacts_dir/$node
-        done
-
-        tar -zcf vfxt_deploy_artifacts.$(hostname).tar.gz *.log $(basename $artifacts_dir)
-        result=$((result+$?))
-
         result=$?
     else
         echo "ERROR: bad action"

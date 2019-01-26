@@ -16,19 +16,20 @@ def create_ssh_client(username, hostname, port=22, password=None):
     return ssh_client
 
 
-def run_averecmd(ssh_client, node_ip, password, method, user='admin', args=''):
+def run_averecmd(ssh_client, node_ip, password, method, user='admin', args='',
+                 timeout=60):
     """Run averecmd on the vFXT controller connected via ssh_client."""
     cmd = "averecmd --raw --no-check-certificate " + \
           "--user {0} --password {1} --server {2} {3} {4}".format(
             user, password, node_ip, method, args)
-    result = run_ssh_command(ssh_client, cmd)['stdout']
+    result = run_ssh_command(ssh_client, cmd, timeout=timeout)['stdout']
     try:
         return ast.literal_eval(result)
     except (ValueError, SyntaxError):
         return str(result).strip()  # could not eval, return as a string
 
 
-def run_ssh_command(ssh_client, command, ignore_nonzero_rc=False):
+def run_ssh_command(ssh_client, command, ignore_nonzero_rc=False, timeout=None):
     """
     Run a command on the server connected via ssh_client.
 
@@ -38,33 +39,33 @@ def run_ssh_command(ssh_client, command, ignore_nonzero_rc=False):
     log = logging.getLogger("run_ssh_command")
 
     log.debug("command to run: {}".format(command))
-    cmd_stdin, cmd_stdout, cmd_stderr = ssh_client.exec_command(command)
+    cmd_in, cmd_out, cmd_err = ssh_client.exec_command(command, timeout=timeout)
 
-    cmd_rc = cmd_stdout.channel.recv_exit_status()
+    cmd_rc = cmd_out.channel.recv_exit_status()
     log.debug("command exit code: {}".format(cmd_rc))
 
-    cmd_stdout = "".join(cmd_stdout.readlines())
-    log.debug("command output (stdout): {}".format(cmd_stdout))
+    cmd_out = "".join(cmd_out.readlines())
+    log.debug("command output (stdout): {}".format(cmd_out))
 
-    cmd_stderr = "".join(cmd_stderr.readlines())
-    log.debug("command output (stderr): {}".format(cmd_stderr))
+    cmd_err = "".join(cmd_err.readlines())
+    log.debug("command output (stderr): {}".format(cmd_err))
 
     if cmd_rc and not ignore_nonzero_rc:
         log.error(
             '"{}" failed with exit code {}.\n\tSTDOUT: {}\n\tSTDERR: {}'.format(
-                command, cmd_rc, cmd_stdout, cmd_stderr)
+                command, cmd_rc, cmd_out, cmd_err)
         )
         assert(0 == cmd_rc)
 
     return {
         "command": command,
-        "stdout": cmd_stdout,
-        "stderr": cmd_stderr,
+        "stdout": cmd_out,
+        "stderr": cmd_err,
         "rc": cmd_rc
     }
 
 
-def run_ssh_commands(ssh_client, commands, ignore_nonzero_rc=False):
+def run_ssh_commands(ssh_client, commands, **kwargs):
     """
     Runs a list of commands on the server connected via ssh_client.
 
@@ -77,7 +78,7 @@ def run_ssh_commands(ssh_client, commands, ignore_nonzero_rc=False):
         cmd = cmd.strip()
         log.debug("command to run: {}".format(cmd))
         if cmd:  # only run non-empty commands
-            results.append(run_ssh_command(ssh_client, cmd, ignore_nonzero_rc))
+            results.append(run_ssh_command(ssh_client, cmd, **kwargs))
     return results
 
 
