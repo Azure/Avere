@@ -65,7 +65,7 @@
           "type": "Microsoft.Common.TextBlock",
           "visible": true,
           "options": {
-            "text": "Provide the GUID for the access control role to use to create the Avere vFXT cluster.",
+            "text": "Provide the GUID of the access control role the cluster controller will use to create the Avere vFXT cluster.",
             "link": {
               "label": "Learn more",
               "uri": "https://github.com/Azure/Avere/tree/master/src/vfxt#managed-identity-and-roles"
@@ -77,7 +77,7 @@
           "type": "Microsoft.Common.TextBox",
           "label": "Avere cluster create role ID",
           "defaultValue": "8e3af657-a8ff-443c-a75c-2fe8c4bcb635",
-          "toolTip": "The RBAC role ID used to create the vFXT cluster. The default is the 'Owner' role, but you should create your own role as described in the managed identity documentation. Obtain the custom role's GUID with the following az command: az role definition list --query '[*].{roleName:roleName, name:name}' -o table --name 'Avere Contributor'.",
+          "toolTip": "The RBAC role ID used to create the vFXT cluster. The default is the 'Owner' role, but you can create your own role as described in the Avere vFXT for Azure documentation. Obtain the custom role's GUID with the following az command: az role definition list --query '[*].{roleName:roleName, name:name}' -o table --name 'YOUR ROLE NAME'.",
           "constraints": {
             "required": true
           },
@@ -168,17 +168,17 @@
               "type": "Microsoft.Common.TextBlock",
               "visible": true,
               "options": {
-                "text": "Provide the runtime access role for the cluster nodes.",
+                "text": "Provide the operating access role for the cluster nodes.",
                 "link": {
                   "label": "Learn more",
-                  "uri": "https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-pre-role"
+                  "uri": "https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-prereqs#create-the-cluster-node-access-role"
                 }
               }
             },
             {
               "name": "avereClusterRole",
               "type": "Microsoft.Common.TextBox",
-              "label": "Avere cluster runtime role",
+              "label": "Avere cluster operations role",
               "defaultValue": "avere-cluster",
               "toolTip": "The unique name of the RBAC role for cluster node operations.",
               "constraints": {
@@ -254,7 +254,7 @@
                 "subnets": "Subnet"
               },
               "toolTip": {
-                "virtualNetwork": "Create or select the Avere vFXT cluster's virtual network",
+                "virtualNetwork": "Create or select the Avere vFXT cluster's virtual network. If you create a new vnet, the cluster controller will be assigned a public IP address for access.",
                 "subnets": "Subnet for the virtual network"
               },
               "defaultValue": {

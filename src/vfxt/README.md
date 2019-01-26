@@ -1,12 +1,4 @@
-# Avere vFXT cluster controller node - ARM template deployment
-
-This template implements [Deploy](../../docs/jumpstart_deploy.md).
-
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fvfxt%2Fazuredeploy.json" target="_blank">
-<img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
-</a>
-
-# Avere vFXT controller and vFXT - ARM template deployment
+# Avere vFXT for Azure controller and vFXT - ARM template deployment
 
 The following template deploys the Avere vFXT controller and vFXT in a single deployment.  The deployment will take about 30-40 minutes.  The controller and vFXT use managed identity, and the roles need to be configured correctly in your account prior to proceeding with the deployment.
 
@@ -135,3 +127,11 @@ az group deployment create --resource-group VFXT_RESOURCE_GROUP --template-file 
 After the deployment completed, check the template output for some important information like management ip address and vserver ip address range.
 
 Once you have deployed your vFXT, proceed to the data ingest of the cluster described in the data ingest article: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-data-ingest.
+
+# Avere vFXT for Azure cluster controller node - ARM template deployment
+
+This template implements [Deploy](../../docs/jumpstart_deploy.md).
+
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fvfxt%2Fazuredeploy.json" target="_blank">
+<img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
+</a>
