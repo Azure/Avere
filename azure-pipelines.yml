@@ -63,7 +63,7 @@ jobs:
 
       ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
       mkdir -p $ARTIFACTS_DIR
-      tar -zcvf ${ARTIFACTS_DIR}/vfxt_artifacts_${CONTROLLER_USER}.tar.gz vfxt_artifacts_*
+      tar -zcvf ${ARTIFACTS_DIR}/vfxt_artifacts_${CONTROLLER_NAME}.tar.gz vfxt_artifacts_*
       scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $CONTROLLER_USER@$CONTROLLER_IP:~/*.log $ARTIFACTS_DIR/.
       scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ~/.ssh/* $CONTROLLER_USER@$CONTROLLER_IP:~/.ssh/.
 
