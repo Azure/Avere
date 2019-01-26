@@ -6,7 +6,6 @@ Driver for testing Azure ARM template-based deployment of the Avere vFXT.
 
 import logging
 import os
-import tarfile
 from time import sleep
 
 import pytest
@@ -116,9 +115,6 @@ class TestVfxtClusterStatus:
                         scp_client.close()
                 finally:
                     ssh_client.close()
-
-        with tarfile.open(artifacts_dir + ".tar.gz", "w:gz") as tar:
-            tar.add(artifacts_dir, arcname=os.path.basename(artifacts_dir))
 
 
 if __name__ == "__main__":
