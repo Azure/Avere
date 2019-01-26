@@ -13,7 +13,7 @@ from lib import helpers
 def averecmd_params(ssh_con, test_vars):
     return {
         "ssh_client": ssh_con,
-        "password": test_vars["atd_obj"].deploy_params["adminPassword"],
+        "password": os.environ["AVERE_ADMIN_PW"],
         "node_ip": test_vars["deploy_outputs"]["mgmt_ip"]["value"]
     }
 
