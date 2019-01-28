@@ -22,13 +22,6 @@ from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.resource.resources.models import DeploymentMode
 from azure.mgmt.storage import StorageManagementClient
-from azure.mgmt.storage.models import (
-    StorageAccountCreateParameters,
-    Sku,
-    SkuName,
-    Kind
-)
-# from azure.eventhub import EventHubClient
 
 
 class ArmTemplateDeploy:
