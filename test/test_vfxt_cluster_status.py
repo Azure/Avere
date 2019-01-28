@@ -1,26 +1,33 @@
 #!/usr/bin/python3
 
-"""
-Driver for testing Azure ARM template-based deployment of the Avere vFXT.
-"""
+"""vFXT cluster health status checks."""
 
+# standard imports
 import logging
 import os
+import sys
 from time import sleep
 
+# from requirements.txt
 import pytest
 from scp import SCPClient
+from sshtunnel import SSHTunnelForwarder
 
+# local libraries
 from lib.helpers import (create_ssh_client, run_averecmd, run_ssh_commands,
                          upload_gsi)
 from lib.pytest_fixtures import (averecmd_params, mnt_nodes,  # noqa: F401
                                  resource_group, scp_cli, ssh_con, test_vars,
                                  vs_ips)
-from sshtunnel import SSHTunnelForwarder
 
 
 class TestVfxtClusterStatus:
+    """Basic vFXT cluster health tests."""
     def test_basic_fileops(self, mnt_nodes, scp_cli, ssh_con):  # noqa: F811
+        """
+        Quick check of file operations.
+        See check_node_basic_fileops.sh for more information.
+        """
         script_name = "check_node_basic_fileops.sh"
         scp_cli.put("{0}/test/{1}".format(
                        os.environ["BUILD_SOURCESDIRECTORY"], script_name),
@@ -32,16 +39,19 @@ class TestVfxtClusterStatus:
         run_ssh_commands(ssh_con, commands)
 
     def test_node_health(self, averecmd_params):  # noqa: F811
+        """Check that cluster is reporting that all nodes are up."""
         for node in run_averecmd(**averecmd_params, method='node.list'):
             result = run_averecmd(**averecmd_params, method='node.get',
                                   args=node)
             assert(result[node]['state'] == 'up')
 
     def test_ha_enabled(self, averecmd_params):  # noqa: F811
+        """Check that high-availability (HA) is enabled."""
         result = run_averecmd(**averecmd_params, method='cluster.get')
         assert(result['ha'] == 'enabled')
 
     def test_ping_nodes(self, ssh_con, vs_ips):  # noqa: F811
+        """Ping all of the nodes from the controller."""
         commands = []
         for vs_ip in vs_ips:
             commands.append("ping -c 3 {}".format(vs_ip))
@@ -49,7 +59,14 @@ class TestVfxtClusterStatus:
 
 
 class TestVfxtSupport:
+    """
+    Test/support artifact gathering.
+    These tests should attempt to run even if deployment has failed.
+    """
     def test_for_cores(self, averecmd_params):  # noqa: F811
+        """
+        Check the cluster for cores. If a core is found, collect/send a GSI.
+        """
         log = logging.getLogger("test_for_cores")
         node_cores = run_averecmd(**averecmd_params,
                                   method='support.listCores',
@@ -66,23 +83,32 @@ class TestVfxtSupport:
 
         assert(not cores_found)
 
-    def test_artifacts_collect(self, averecmd_params, scp_cli, test_vars):  # noqa: F811
+    def test_artifacts_collect(self, averecmd_params, scp_cli, test_vars):  # noqa: F811, E501
+        """
+        Collect test artifacts (node logs, rolling trace) from each node.
+        Artifacts are stored to local directories.
+        """
         log = logging.getLogger("test_collect_artifacts")
 
         artifacts_dir = "vfxt_artifacts_" + test_vars["atd_obj"].deploy_id
         nodes = run_averecmd(**averecmd_params, method="node.list")
+        log.debug("nodes found: {}".format(nodes))
         for node in nodes:
             node_dir = artifacts_dir + "/" + node
             node_dir_log = node_dir + "/log"
             node_dir_trace = node_dir + "/trace"
+            log.debug("node_dir_log = {}, node_dir_trace = {}".format(
+                node_dir_log, node_dir_trace))
 
+            # make local directories to store downloaded artifacts
             os.makedirs(node_dir_trace, exist_ok=True)
             os.makedirs(node_dir_log, exist_ok=True)
 
+            # get this node's primary cluster IP address
             node_ip = run_averecmd(**averecmd_params,
                                    method="node.get",
                                    args=node)[node]["primaryClusterIP"]["IP"]
-            log.debug("node {}, using IP {}".format(node, node_ip))
+            log.debug("tunneling to node {} using IP {}".format(node, node_ip))
             with SSHTunnelForwarder(
                 test_vars["controller_ip"],
                 ssh_username=test_vars["controller_user"],
@@ -99,16 +125,18 @@ class TestVfxtSupport:
                     )
                     scp_client = SCPClient(ssh_client.get_transport())
                     try:
+                        # list of files from /var/log/ to download
                         var_log_files = ["messages", "xmlrpc.log"]
                         for f in var_log_files:
-                            if not f.strip():
-                                continue
                             scp_client.get("/var/log/" + f.strip(),
                                            node_dir_log, recursive=True)
+
+                        # assumes that rolling trace was enabled and some trace
+                        # data was collected on the nodes
                         scp_client.get("/support/trace/rolling",
                                        node_dir_trace, recursive=True)
 
-                        # TODO: 2019-0125: Turned off until for now.
+                        # TODO: 2019-0125: Turned off for now.
                         # scp_client.get("/support/gsi",
                         #                node_dir, recursive=True)
                         # scp_client.get("/support/cores",
@@ -120,4 +148,4 @@ class TestVfxtSupport:
 
 
 if __name__ == "__main__":
-    pytest.main()
+    pytest.main(sys.argv)

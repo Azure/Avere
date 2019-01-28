@@ -1,7 +1,9 @@
+# standard imports
 import ast
 import logging
 from time import sleep, time
 
+# from requirements.txt
 import paramiko
 
 

@@ -1,12 +1,16 @@
+# standard imports
 import json
 import logging
 import os
 
+# from requirements.txt
 import pytest
+from arm_template_deploy import ArmTemplateDeploy
 from scp import SCPClient
 
-from arm_template_deploy import ArmTemplateDeploy
-from lib import helpers
+# local libraries
+from lib.helpers import (create_ssh_client, run_ssh_command, run_ssh_commands,
+                         split_ip_range)
 
 
 @pytest.fixture()
@@ -20,8 +24,8 @@ def averecmd_params(ssh_con, test_vars):
 
 @pytest.fixture()
 def mnt_nodes(ssh_con, vs_ips):
-    check = helpers.run_ssh_command(ssh_con, "ls ~/STATUS.NODES_MOUNTED",
-                                    ignore_nonzero_rc=True)
+    check = run_ssh_command(ssh_con, "ls ~/STATUS.NODES_MOUNTED",
+                            ignore_nonzero_rc=True)
     if check['rc']:  # nodes were not already mounted
         commands = """
             sudo apt-get update
@@ -36,7 +40,7 @@ def mnt_nodes(ssh_con, vs_ips):
                             fstab_line))
         commands.append("sudo mount -a")
         commands.append("touch ~/STATUS.NODES_MOUNTED")
-        helpers.run_ssh_commands(ssh_con, commands)
+        run_ssh_commands(ssh_con, commands)
 
 
 @pytest.fixture()
@@ -55,8 +59,8 @@ def scp_cli(ssh_con):
 
 @pytest.fixture()
 def ssh_con(test_vars):
-    client = helpers.create_ssh_client(test_vars["controller_user"],
-                                       test_vars["controller_ip"])
+    client = create_ssh_client(test_vars["controller_user"],
+                               test_vars["controller_ip"])
     yield client
     client.close()
 
@@ -64,8 +68,8 @@ def ssh_con(test_vars):
 @pytest.fixture(scope="module")
 def test_vars():
     """
-    Instantiates an ArmTemplateDeploy object, creates the resource group as
-    test-group setup, and deletes the resource group as test-group teardown.
+    Loads saved test variables, instantiates an ArmTemplateDeploy object, and
+    dumps test variables during teardown.
     """
     log = logging.getLogger("test_vars")
     vars = {}
@@ -95,5 +99,5 @@ def test_vars():
 def vs_ips(test_vars):
     if "vs_ips" not in test_vars:
         vserver_ips = test_vars["deploy_outputs"]["vserver_ips"]["value"]
-        test_vars["vs_ips"] = helpers.split_ip_range(vserver_ips)
+        test_vars["vs_ips"] = split_ip_range(vserver_ips)
     return test_vars["vs_ips"]

@@ -4,21 +4,27 @@
 Driver for testing Azure ARM template-based deployment of the Avere vFXT.
 """
 
+# standard imports
 import json
+import logging
 import os
+import sys
 from time import sleep
 
+# from requirements.txt
 import pytest
 from scp import SCPClient
+from sshtunnel import SSHTunnelForwarder
 
+# local libraries
 from lib import helpers
 from lib.pytest_fixtures import (mnt_nodes, ssh_con, test_vars,  # noqa: F401
                                  vs_ips)
-from sshtunnel import SSHTunnelForwarder
 
 
 class TestVDBench:
     def test_vdbench_setup(self, mnt_nodes, ssh_con):  # noqa: F811
+        log = logging.getLogger("test_vdbench_setup")
         commands = """
             sudo mkdir -p /nfs/node0/bootstrap
             cd /nfs/node0/bootstrap
@@ -31,6 +37,7 @@ class TestVDBench:
         helpers.run_ssh_commands(ssh_con, commands)
 
     def test_vdbench_deploy(self, test_vars, vs_ips):  # noqa: F811
+        log = logging.getLogger("test_vdbench_deploy")
         td = test_vars["atd_obj"]
         with open(os.path.expanduser(r"~/.ssh/id_rsa.pub"), "r") as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
@@ -54,6 +61,7 @@ class TestVDBench:
         test_vars["deploy_vd_outputs"] = deploy_result.properties.outputs
 
     def test_vdbench_run(self, test_vars):  # noqa: F811
+        log = logging.getLogger("test_vdbench_run")
         node_ip = test_vars["deploy_vd_outputs"]["node_0_ip_address"]["value"]
         with SSHTunnelForwarder(
             test_vars["controller_ip"],
@@ -85,4 +93,4 @@ class TestVDBench:
 
 
 if __name__ == "__main__":
-    pytest.main()
+    pytest.main(sys.argv)
