@@ -5,25 +5,6 @@ from time import sleep, time
 import paramiko
 
 
-def wait_for_op(op, timeout_sec=60):
-    """
-    Wait for a long-running operation (op) for timeout_sec seconds.
-
-    op is an AzureOperationPoller object.
-    """
-    log = logging.getLogger("wait_for_op")
-    time_start = time()
-    while not op.done():
-        op.wait(timeout=timeout_sec)
-        log.info(">> operation status: {0} ({1} sec)".format(
-                 op.status(), int(time() - time_start)))
-    result = op.result()
-    if result:
-        log.info(">> operation result: {}".format(result))
-        # log.info(">> result.properties: {}".format(result.properties))
-    return result
-
-
 def create_ssh_client(username, hostname, port=22, password=None):
     """Creates (and returns) an SSHClient. Auth'n is via publickey."""
     ssh_client = paramiko.SSHClient()
