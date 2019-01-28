@@ -9,8 +9,7 @@ from arm_template_deploy import ArmTemplateDeploy
 from scp import SCPClient
 
 # local libraries
-from lib.helpers import (create_ssh_client, run_ssh_command, run_ssh_commands,
-                         split_ip_range)
+from lib.helpers import (create_ssh_client, run_ssh_command, run_ssh_commands)
 
 
 @pytest.fixture()
@@ -18,12 +17,12 @@ def averecmd_params(ssh_con, test_vars):
     return {
         "ssh_client": ssh_con,
         "password": os.environ["AVERE_ADMIN_PW"],
-        "node_ip": test_vars["deploy_outputs"]["mgmt_ip"]["value"]
+        "node_ip": test_vars["cluster_mgmt_ip"]
     }
 
 
 @pytest.fixture()
-def mnt_nodes(ssh_con, vs_ips):
+def mnt_nodes(ssh_con, test_vars):
     check = run_ssh_command(ssh_con, "ls ~/STATUS.NODES_MOUNTED",
                             ignore_nonzero_rc=True)
     if check['rc']:  # nodes were not already mounted
@@ -31,7 +30,7 @@ def mnt_nodes(ssh_con, vs_ips):
             sudo apt-get update
             sudo apt-get install nfs-common
             """.split("\n")
-        for i, vs_ip in enumerate(vs_ips):
+        for i, vs_ip in enumerate(test_vars["cluster_vs_ips"]):
             commands.append("sudo mkdir -p /nfs/node{}".format(i))
             commands.append("sudo chown nobody:nogroup /nfs/node{}".format(i))
             fstab_line = "{}:/msazure /nfs/node{} nfs ".format(vs_ip, i) + \
@@ -48,6 +47,7 @@ def resource_group(test_vars):
     log = logging.getLogger("resource_group")
     rg = test_vars["atd_obj"].create_resource_group()
     log.info("Created Resource Group: {}".format(rg))
+    return rg
 
 
 @pytest.fixture()
@@ -93,11 +93,3 @@ def test_vars():
                   os.environ["VFXT_TEST_VARS_FILE"]))
         with open(os.environ["VFXT_TEST_VARS_FILE"], "w") as vtvf:
             json.dump(vars, vtvf)
-
-
-@pytest.fixture()
-def vs_ips(test_vars):
-    if "vs_ips" not in test_vars:
-        vserver_ips = test_vars["deploy_outputs"]["vserver_ips"]["value"]
-        test_vars["vs_ips"] = split_ip_range(vserver_ips)
-    return test_vars["vs_ips"]

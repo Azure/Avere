@@ -18,8 +18,7 @@ from sshtunnel import SSHTunnelForwarder
 
 # local libraries
 from lib import helpers
-from lib.pytest_fixtures import (mnt_nodes, ssh_con, test_vars,  # noqa: F401
-                                 vs_ips)
+from lib.pytest_fixtures import (mnt_nodes, ssh_con, test_vars)  # noqa: F401
 
 
 class TestVDBench:
@@ -36,7 +35,7 @@ class TestVDBench:
             """.split("\n")
         helpers.run_ssh_commands(ssh_con, commands)
 
-    def test_vdbench_deploy(self, test_vars, vs_ips):  # noqa: F811
+    def test_vdbench_deploy(self, test_vars):  # noqa: F811
         log = logging.getLogger("test_vdbench_deploy")
         td = test_vars["atd_obj"]
         with open(os.path.expanduser(r"~/.ssh/id_rsa.pub"), "r") as ssh_pub_f:
@@ -51,7 +50,7 @@ class TestVDBench:
             "virtualNetworkResourceGroup": orig_params["virtualNetworkResourceGroup"],
             "virtualNetworkName": orig_params["virtualNetworkName"],
             "virtualNetworkSubnetName": orig_params["virtualNetworkSubnetName"],
-            "nfsCommaSeparatedAddresses": ",".join(vs_ips),
+            "nfsCommaSeparatedAddresses": ",".join(test_vars["cluster_vs_ips"]),
             "vmCount": 12,
             "nfsExportPath": "/msazure",
             "bootstrapScriptPath": "/bootstrap/bootstrap.vdbench.sh",

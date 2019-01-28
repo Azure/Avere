@@ -14,7 +14,7 @@ import sys
 import pytest
 
 # local libraries
-from lib.helpers import wait_for_op
+from lib.helpers import split_ip_range, wait_for_op
 from lib.pytest_fixtures import resource_group, test_vars  # noqa: F401
 
 
@@ -50,8 +50,9 @@ class TestVfxtTemplateDeploy:
                   json.dumps(atd.deploy_params, indent=4)))
         atd.deploy_name = "test_deploy_template"
         try:
-            deploy_result = wait_for_op(atd.deploy())
-            test_vars["deploy_outputs"] = deploy_result.properties.outputs
+            deploy_outputs = wait_for_op(atd.deploy()).properties.outputs
+            test_vars["cluster_mgmt_ip"] = deploy_outputs["mgmt_ip"]["value"]
+            test_vars["cluster_vs_ips"] = split_ip_range(deploy_outputs["vserver_ips"]["value"])
         finally:
             test_vars["controller_ip"] = atd.nm_client.public_ip_addresses.get(
                 atd.resource_group, "publicip-" + test_vars["controller_name"]

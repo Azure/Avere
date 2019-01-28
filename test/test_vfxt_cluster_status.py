@@ -17,8 +17,7 @@ from sshtunnel import SSHTunnelForwarder
 from lib.helpers import (create_ssh_client, run_averecmd, run_ssh_commands,
                          upload_gsi)
 from lib.pytest_fixtures import (averecmd_params, mnt_nodes,  # noqa: F401
-                                 resource_group, scp_cli, ssh_con, test_vars,
-                                 vs_ips)
+                                 resource_group, scp_cli, ssh_con, test_vars)
 
 
 class TestVfxtClusterStatus:
@@ -52,10 +51,10 @@ class TestVfxtClusterStatus:
         result = run_averecmd(**averecmd_params, method="cluster.get")
         assert result["ha"] == "enabled"
 
-    def test_ping_nodes(self, ssh_con, vs_ips):  # noqa: F811
+    def test_ping_nodes(self, ssh_con, test_vars):  # noqa: F811
         """Ping all of the nodes from the controller."""
         commands = []
-        for vs_ip in vs_ips:
+        for vs_ip in test_vars["cluster_vs_ips"]:
             commands.append("ping -c 3 {}".format(vs_ip))
         run_ssh_commands(ssh_con, commands)
 
