@@ -28,7 +28,7 @@ jobs:
     displayName: 'Install Python dependencies'
 
   - script: |
-      pytest test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results1a.xml
+      pytest test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results01.xml
     displayName: 'Test template-based deployment of Avere vFXT'
     env:
       AVERE_ADMIN_PW: $(controllerpassword)
@@ -40,7 +40,7 @@ jobs:
       VFXT_TEST_VARS_FILE: pipelines.json
 
   - script: |
-      pytest test/test_vfxt_cluster_status.py -k TestVfxtClusterStatus --doctest-modules --junitxml=junit/test-results1b.xml
+      pytest test/test_vfxt_cluster_status.py -k TestVfxtClusterStatus --doctest-modules --junitxml=junit/test-results02.xml
     displayName: 'Test cluster status, health, etc.'
     condition: succeeded()
     env:
@@ -53,7 +53,7 @@ jobs:
       VFXT_TEST_VARS_FILE: pipelines.json
 
   - script: |
-      pytest test/test_vfxt_cluster_status.py -k TestVfxtSupport --doctest-modules --junitxml=junit/test-results1b.xml
+      pytest test/test_vfxt_cluster_status.py -k TestVfxtSupport --doctest-modules --junitxml=junit/test-results03.xml
 
       CONTROLLER_IP=$(grep controller_ip $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_ip": "([^"]+)".*$/\1/')
       CONTROLLER_NAME=$(grep controller_name $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_name": "([^"]+)".*$/\1/')
@@ -90,7 +90,7 @@ jobs:
       VFXT_TEST_VARS_FILE: pipelines.json
 
   # - script: |
-  #     pytest test/test_vdbench.py --doctest-modules --junitxml=junit/test-results2.xml
+  #     pytest test/test_vdbench.py --doctest-modules --junitxml=junit/test-results04.xml
   #   displayName: 'Test vdbench on Avere vFXT'
   #   env:
   #     AZURE_TENANT_ID: $(SPTENANTID)
