@@ -116,7 +116,6 @@ jobs:
       targetPath: 'test_artifacts'
     condition: always()
 
-
   - script: |
       az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
       RESOURCE_GROUP=$(grep resource_group $VFXT_TEST_VARS_FILE | sed -E 's/^.*resource_group": "([^"]+)".*$/\1/')
@@ -129,7 +128,6 @@ jobs:
       AZURE_CLIENT_ID: $(SPAPPID)
       AZURE_CLIENT_SECRET: $(SPPW)
       VFXT_TEST_VARS_FILE: pipelines.json
-
 
   - task: PublishTestResults@2
     condition: always()
