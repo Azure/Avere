@@ -34,7 +34,7 @@ from azure.mgmt.storage.models import (
 class ArmTemplateDeploy:
     def __init__(self, deploy_id=None, deploy_name='azurePySDK',
                  deploy_params={}, location='westus2', resource_group=None,
-                 storage_account=None, event_hub=None, template={}, _fields={}
+                 storage_account=None, template={}, _fields={}
                  ):
         """Initialize, authenticate to Azure."""
         self.deploy_id = _fields.pop('deploy_id', deploy_id)
@@ -43,7 +43,6 @@ class ArmTemplateDeploy:
         self.location = _fields.pop('location', location)
         self.resource_group = _fields.pop('resource_group', resource_group)
         self.storage_account = _fields.pop('storage_account', storage_account)
-        self.event_hub = _fields.pop('event_hub', event_hub)
         self.template = _fields.pop('template', template)
 
         if not self.deploy_id:
@@ -56,9 +55,6 @@ class ArmTemplateDeploy:
 
         if not self.storage_account:
             self.storage_account = self.deploy_id + 'sa'
-
-        if not self.event_hub:
-            self.event_hub = self.deploy_id + '-eh'
 
         logging.debug('> Loading Azure credentials')
         sp_creds = ServicePrincipalCredentials(
