@@ -16,7 +16,7 @@ from sshtunnel import SSHTunnelForwarder
 
 from lib import helpers
 from lib.pytest_fixtures import (averecmd_params, mnt_nodes,  # noqa: F401
-                                 resource_group, storage_account, event_hub,
+                                 resource_group, storage_account,
                                  scp_cli, ssh_con, test_vars, vs_ips)
 
 # logging.basicConfig(level=logging.DEBUG)

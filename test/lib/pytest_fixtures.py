@@ -54,18 +54,9 @@ def storage_account(test_vars):
     storage_account = atd.st_client.storage_accounts.get_properties(
         atd.resource_group,
         atd.deploy_id + "sa"
-        # atd.deploy_params["avereBackedStorageAccountName"]
     )
-    log.info("Created Storage Account: {}".format(storage_account))
+    log.info("Linked Storage Account: {}".format(storage_account))
     return storage_account
-
-
-@pytest.fixture()
-def event_hub(test_vars):
-    log = logging.getLogger("event_hub")
-    event_hub = test_vars["atd_obj"].create_event_hub()
-    log.info("Created Event Hub : {}".format(event_hub))
-
 
 @pytest.fixture()
 def scp_cli(ssh_con):
