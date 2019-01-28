@@ -78,10 +78,6 @@ class ArmTemplateDeploy:
             credentials=sp_creds,
             subscription_id=os.environ['AZURE_SUBSCRIPTION_ID']
         )
-        # self.eh_client = EventHubClient(
-        #     credentials=sp_creds,
-        #     subscription_id=os.environ['AZURE_SUBSCRIPTION_ID']
-        # )
 
     def create_resource_group(self):
         """Creates the Azure resource group for this deployment."""
@@ -90,18 +86,6 @@ class ArmTemplateDeploy:
             self.resource_group,
             {'location': self.location}
         )
-
-    def create_storage_account(self):
-        return self.st_client.storage_accounts.create(
-            self.resource_group,
-            self.storage_account,
-            StorageAccountCreateParameters(sku=Sku(name=SkuName.standard_ragrs),
-                                           kind=Kind.storage,
-                                           location=self.location)
-                                           )
-
-    def create_event_hub(self):
-        return self.eh_client
 
     def delete_resource_group(self):
         """Deletes the Azure resource group for this deployment."""
