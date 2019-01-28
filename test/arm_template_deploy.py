@@ -47,10 +47,9 @@ class ArmTemplateDeploy:
         self.template = _fields.pop('template', template)
 
         if not self.deploy_id:
-            # self.deploy_id = 'av' + \
-            #     datetime.utcnow().strftime('%m%dx%H%M%S') + \
-            #     choice(ascii_lowercase)
-            self.deploy_id = 'makar'
+            self.deploy_id = 'av' + \
+                datetime.utcnow().strftime('%m%dx%H%M%S') + \
+                choice(ascii_lowercase)
 
         if not self.resource_group:
             self.resource_group = self.deploy_id + '-rg'
