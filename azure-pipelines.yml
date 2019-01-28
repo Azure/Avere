@@ -28,7 +28,7 @@ jobs:
     displayName: 'Install Python dependencies'
 
   - script: |
-      pytest test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results1.xml
+      pytest test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results01.xml
     displayName: 'Test template-based deployment of Avere vFXT'
     env:
       AVERE_ADMIN_PW: $(controllerpassword)
@@ -40,19 +40,8 @@ jobs:
       VFXT_TEST_VARS_FILE: pipelines.json
 
   - script: |
-      pytest test/test_avere_template_deploy.py test/test_vfxt_cluster_status.py --doctest-modules --junitxml=junit/test-results1.xml
-    displayName: 'Test template-based deployment of Avere vFXT'
-    env:
-      AVERE_ADMIN_PW: $(controllerpassword)gi
-      AVERE_CONTROLLER_PW: $(controllerpassword)
-      AZURE_TENANT_ID: $(SPTENANTID)
-      AZURE_CLIENT_ID: $(SPAPPID)
-      AZURE_CLIENT_SECRET: $(SPPW)
-      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      VFXT_TEST_VARS_FILE: pipelines.json
-
-  - script: |
       pytest test/test_vfxt_cluster_status.py --doctest-modules --junitxml=junit/test-results1b.xml
+      pytest test/test_vfxt_cluster_status.py -k TestVfxtClusterStatus --doctest-modules --junitxml=junit/test-results02.xml
     displayName: 'Test cluster status, health, etc.'
     condition: succeeded()
     env:
@@ -65,6 +54,8 @@ jobs:
       VFXT_TEST_VARS_FILE: pipelines.json
 
   - script: |
+      pytest test/test_vfxt_cluster_status.py -k TestVfxtSupport --doctest-modules --junitxml=junit/test-results03.xml
+
       CONTROLLER_IP=$(grep controller_ip $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_ip": "([^"]+)".*$/\1/')
       CONTROLLER_NAME=$(grep controller_name $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_name": "([^"]+)".*$/\1/')
       CONTROLLER_USER=$(grep controller_user $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_user": "([^"]+)".*$/\1/')
@@ -84,6 +75,12 @@ jobs:
     displayName: 'Collect vFXT deployment artifacts and dump vfxt.log'
     condition: always()
     env:
+      AVERE_ADMIN_PW: $(controllerpassword)
+      AVERE_CONTROLLER_PW: $(controllerpassword)
+      AZURE_TENANT_ID: $(SPTENANTID)
+      AZURE_CLIENT_ID: $(SPAPPID)
+      AZURE_CLIENT_SECRET: $(SPPW)
+      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
       VFXT_TEST_VARS_FILE: pipelines.json
 
   - script: |
@@ -94,7 +91,7 @@ jobs:
       VFXT_TEST_VARS_FILE: pipelines.json
 
   # - script: |
-  #     pytest test/test_vdbench.py --doctest-modules --junitxml=junit/test-results2.xml
+  #     pytest test/test_vdbench.py --doctest-modules --junitxml=junit/test-results04.xml
   #   displayName: 'Test vdbench on Avere vFXT'
   #   env:
   #     AZURE_TENANT_ID: $(SPTENANTID)
@@ -104,7 +101,7 @@ jobs:
   #     VFXT_TEST_VARS_FILE: pipelines.json
 
   - script: |
-      pytest test/test_edasim.py --doctest-modules --junitxml=junit/test-results3.xml
+      pytest test/test_edasim.py --doctest-modules --junitxml=junit/test-results05.xml
     displayName: 'Test edasim on Avere vFXT'
     env:
       AZURE_TENANT_ID: $(SPTENANTID)
@@ -132,22 +129,22 @@ jobs:
 
   - script: |
       az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-      # RESOURCE_GROUP=$(grep resource_group $VFXT_TEST_VARS_FILE | sed -E 's/^.*resource_group": "([^"]+)".*$/\1/')
-      # echo "RESOURCE_GROUP: $RESOURCE_GROUP"
-      az eventhubs namespace create --name edasimeventhub --resource-group rebeccatest
-      az eventhubs eventhub create --name edasimeventhub --resource-group rebeccatest --namespace-name edasimeventhub
+      RESOURCE_GROUP=$(grep resource_group $VFXT_TEST_VARS_FILE | sed -E 's/^.*resource_group": "([^"]+)".*$/\1/')
+      echo "RESOURCE_GROUP: $RESOURCE_GROUP"
+      az eventhubs namespace create --name edasimeventhub --resource-group $RESOURCE_GROUP
+      az eventhubs eventhub create --name edasimeventhub --resource-group $RESOURCE_GROUP --namespace-name edasimeventhub
       az eventhubs eventhub authorization-rule keys list --eventhub-name edasimeventhub
                                                    --name RootManageSharedAccessKey
                                                    --namespace-name edasimeventhub
-                                                   --resource-group rebeccatest
+                                                   --resource-group $RESOURCE_GROUP
 
       export AZURE_EVENTHUB_SENDERKEYNAME="RootManageSharedAccessKey"
       export AZURE_EVENTHUB_SENDERKEY= $(az eventhubs eventhub authorization-rule keys list --eventhub-name edasimeventhub
                                                    --name RootManageSharedAccessKey
                                                    --namespace-name edasimeventhub
-                                                   --resource-group rebeccatest)
+                                                   --resource-group $RESOURCE_GROUP)
       export AZURE_EVENTHUB_NAMESPACENAME="edasimeventhub"
-      az group delete --yes -n rebeccatest
+      az group delete --yes -n $RESOURCE_GROUP
     displayName: 'create eventhub'
     condition: always()
     env:

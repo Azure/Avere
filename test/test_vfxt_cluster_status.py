@@ -47,6 +47,8 @@ class TestVfxtClusterStatus:
             commands.append("ping -c 3 {}".format(vs_ip))
         run_ssh_commands(ssh_con, commands)
 
+
+class TestVfxtSupport:
     def test_for_cores(self, averecmd_params):  # noqa: F811
         log = logging.getLogger("test_for_cores")
         node_cores = run_averecmd(**averecmd_params,
