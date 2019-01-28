@@ -138,19 +138,8 @@ class ArmTemplateDeploy:
         _this.pop('rm_client', None)  # don't want to save these for security
         _this.pop('nm_client', None)
         _this.pop('st_client', None)
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
         _this.pop('template', None)
         _this.pop('deploy_params', None)
-=======
->>>>>>> edasim trial/error
-=======
-        _this.pop('template', None)
->>>>>>> Minor changes to edasim test and supporting files
-=======
-        _this.pop('template', None)
->>>>>>> 89421d84fc80ccfe50885b511a79b24ea07292a4
 
         if to_file:
             with open(to_file, 'w') as tf:
