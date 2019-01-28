@@ -40,7 +40,7 @@ jobs:
       VFXT_TEST_VARS_FILE: pipelines.json
 
   - script: |
-      pytest test/test_vfxt_cluster_status.py -k "not test_artifacts_collect" --doctest-modules --junitxml=junit/test-results1b.xml
+      pytest test/test_vfxt_cluster_status.py -k TestVfxtClusterStatus --doctest-modules --junitxml=junit/test-results1b.xml
     displayName: 'Test cluster status, health, etc.'
     condition: succeeded()
     env:
@@ -53,7 +53,7 @@ jobs:
       VFXT_TEST_VARS_FILE: pipelines.json
 
   - script: |
-      pytest test/test_vfxt_cluster_status.py -k "test_artifacts_collect" --doctest-modules --junitxml=junit/test-results1b.xml
+      pytest test/test_vfxt_cluster_status.py -k TestVfxtSupport --doctest-modules --junitxml=junit/test-results1b.xml
 
       CONTROLLER_IP=$(grep controller_ip $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_ip": "([^"]+)".*$/\1/')
       CONTROLLER_NAME=$(grep controller_name $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_name": "([^"]+)".*$/\1/')
