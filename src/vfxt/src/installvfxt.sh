@@ -12,6 +12,21 @@ CLOUD_BACKED_TEMPLATE=/create-cloudbacked-cluster
 MINIMAL_TEMPLATE=/create-minimal-cluster
 VFXT_LOG_FILE=$AZURE_HOME_DIR/vfxt.log
 
+function retrycmd_if_failure() {
+    retries=$1; max_wait_sleep=$2; shift && shift
+    for i in $(seq 1 $retries); do
+        ${@}
+        [ $? -eq 0  ] && break || \
+        if [ $i -eq $retries ]; then
+            echo Executed \"$@\" $i times;
+            return 1
+        else
+            sleep $(($RANDOM % $max_wait_sleep))
+        fi
+    done
+    echo Executed \"$@\" $i times;
+}
+
 function wait_azure_home_dir() {
     counter=0
     while [ ! -d $AZURE_HOME_DIR ]; do
@@ -22,6 +37,25 @@ function wait_azure_home_dir() {
             exit 1
         fi
     done
+}
+
+function wait_az_login_and_vnet() {
+    # wait for RBAC assignments to be applied
+    # unfortunately, the RBAC assignments take undetermined time past their associated resource completions to be assigned.  
+    set +e
+    if ! retrycmd_if_failure 120 5 az login --identity ; then
+        echo "MANAGED IDENTITY FAILURE: failed to login after waiting 10 minutes, this is managed identity bug"
+        exit 1
+    fi
+    if ! retrycmd_if_failure 12 5 az account set --subscription $SUBSCRIPTION_ID ; then
+        echo "MANAGED IDENTITY FAILURE: failed to set subscription"
+        exit 1
+    fi
+    if ! retrycmd_if_failure 120 5 az network vnet subnet list -g $NETWORK_RESOURCE_GROUP --vnet-name $NETWORK ; then
+        echo "RBAC ASSIGNMENT FAILURE: failed to list vnet after waiting 10 minutes, this is rbac assignment bug"
+        exit 1
+    fi
+    set -e
 }
 
 function configure_vfxt_template() {
@@ -141,6 +175,9 @@ function dump_env_vars() {
 function main() {
     echo "wait azure home dir"
     wait_azure_home_dir
+
+    echo "wait az login"
+    wait_az_login_and_vnet
 
     #echo "dump env vars for debugging"
     #dump_env_vars
