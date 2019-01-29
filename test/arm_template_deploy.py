@@ -21,12 +21,13 @@ from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.resource.resources.models import DeploymentMode
+from azure.mgmt.storage import StorageManagementClient
 
 
 class ArmTemplateDeploy:
     def __init__(self, deploy_id=None, deploy_name='azurePySDK',
                  deploy_params={}, location='westus2', resource_group=None,
-                 template={}, _fields={}
+                 storage_account=None, template={}, _fields={}
                  ):
         """Initialize, authenticate to Azure."""
         self.deploy_id = _fields.pop('deploy_id', deploy_id)
@@ -34,6 +35,7 @@ class ArmTemplateDeploy:
         self.deploy_params = _fields.pop('deploy_params', deploy_params)
         self.location = _fields.pop('location', location)
         self.resource_group = _fields.pop('resource_group', resource_group)
+        self.storage_account = _fields.pop('storage_account', storage_account)
         self.template = _fields.pop('template', template)
 
         if not self.deploy_id:
@@ -43,6 +45,9 @@ class ArmTemplateDeploy:
 
         if not self.resource_group:
             self.resource_group = self.deploy_id + '-rg'
+
+        if not self.storage_account:
+            self.storage_account = self.deploy_id + 'sa'
 
         logging.debug('> Loading Azure credentials')
         sp_creds = ServicePrincipalCredentials(
@@ -55,6 +60,10 @@ class ArmTemplateDeploy:
             subscription_id=os.environ['AZURE_SUBSCRIPTION_ID']
         )
         self.nm_client = NetworkManagementClient(
+            credentials=sp_creds,
+            subscription_id=os.environ['AZURE_SUBSCRIPTION_ID']
+        )
+        self.st_client = StorageManagementClient(
             credentials=sp_creds,
             subscription_id=os.environ['AZURE_SUBSCRIPTION_ID']
         )

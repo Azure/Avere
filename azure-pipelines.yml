@@ -99,6 +99,16 @@ jobs:
   #     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
   #     VFXT_TEST_VARS_FILE: pipelines.json
 
+  - script: |
+      pytest test/test_edasim.py --doctest-modules --junitxml=junit/test-results05.xml
+    displayName: 'Test edasim on Avere vFXT'
+    env:
+      AZURE_TENANT_ID: $(SPTENANTID)
+      AZURE_CLIENT_ID: $(SPAPPID)
+      AZURE_CLIENT_SECRET: $(SPPW)
+      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+      VFXT_TEST_VARS_FILE: pipelines.json
+
   - task: PublishPipelineArtifact@0
     displayName: 'Publish Pipelines Artifacts (node logs, rolling trace)'
     inputs:

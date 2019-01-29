@@ -44,7 +44,19 @@ def resource_group(test_vars):
     log = logging.getLogger("resource_group")
     rg = test_vars["atd_obj"].create_resource_group()
     log.info("Created Resource Group: {}".format(rg))
+    return rg
 
+
+@pytest.fixture()
+def storage_account(test_vars):
+    log = logging.getLogger("storage_account")
+    atd = test_vars["atd_obj"]
+    storage_account = atd.st_client.storage_accounts.get_properties(
+        atd.resource_group,
+        atd.deploy_id + "sa"
+    )
+    log.info("Linked Storage Account: {}".format(storage_account))
+    return storage_account
 
 @pytest.fixture()
 def scp_cli(ssh_con):
