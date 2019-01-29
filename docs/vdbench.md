@@ -41,7 +41,7 @@ These deployment instructions describe the installation of all components requir
     curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.vdbench.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/bootstrap.vdbench.sh
     ```
 
-5. Download the latest vdbench from https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html, and scp to the `/bootstrap` directory.  To download you will need to create an account with Oracle and accept the license.
+5. Download the latest vdbench from https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html, and scp the zip file to the `/nfs/node0/bootstrap` directory.  To download you will need to create an account with Oracle and accept the license.
 
 6. From your controller, verify your vdbench setup by running the following script.  If the script shows success, you are ready to deploy.  Otherwise you will need to fix each error listed.
 
