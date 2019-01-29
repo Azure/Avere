@@ -32,7 +32,6 @@
           "name": "controllerAdminUsername",
           "type": "Microsoft.Compute.UserNameTextBox",
           "label": "Controller username",
-          "defaultValue": "azureuser",
           "toolTip": "Administrative login name for the cluster controller.",
           "osPlatform": "Linux",
           "constraints": {
@@ -79,7 +78,9 @@
           "defaultValue": "8e3af657-a8ff-443c-a75c-2fe8c4bcb635",
           "toolTip": "The RBAC role ID used to create the vFXT cluster. The default is the 'Owner' role, but you can create your own role as described in the Avere vFXT for Azure documentation. Obtain the custom role's GUID with the following az command: az role definition list --query '[*].{roleName:roleName, name:name}' -o table --name 'YOUR ROLE NAME'.",
           "constraints": {
-            "required": true
+            "required": true,
+            "regex": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+            "validationMessage": "Only valid GUIDs will be allowed for the Avere cluster create role ID."
           },
           "visible": true
         }
@@ -182,7 +183,9 @@
               "defaultValue": "avere-cluster",
               "toolTip": "The unique name of the RBAC role for cluster node operations.",
               "constraints": {
-                "required": true
+                "required": true,
+                "regex": "^.{1,128}$",
+                "validationMessage": "Can include letters, numbers, spaces, and special characters. Maximum number of characters is 128."
               },
               "visible": true
             },
@@ -316,6 +319,7 @@
         }
       ],
       "outputs": {
+        "location": "[location()]",
         "controllerName": "[basics('controllerName')]",
         "controllerAdminUsername": "[basics('controllerAdminUsername')]",
         "controllerAuthenticationType": "[basics('controllerSSHKeyData').authenticationType]",
@@ -336,7 +340,9 @@
         "vnetAddressSpacePrefix": "[first(steps('AvereVFXTConfiguration').virtualNetwork.addressPrefixes)]",
         "subnetAddressRangePrefix": "[steps('AvereVFXTConfiguration').virtualNetwork.subnets.subnet1.addressPrefix]",
         "useAvereBackedStorageAccount": "[contains(steps('AvereVFXTConfiguration').useAvereBackedStorageAccount, 'true')]",
-        "avereBackedStorageAccountName": "[coalesce(steps('AvereVFXTConfiguration').avereBackedStorageAccountName, 'nostorage')]"
+        "avereBackedStorageAccountName": "[coalesce(steps('AvereVFXTConfiguration').avereBackedStorageAccountName, 'nostorage')]",
+
+        "rbacRoleAssignmentUniqueId": "[guid()]"
       }
     }
   }
