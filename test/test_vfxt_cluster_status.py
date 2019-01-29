@@ -16,8 +16,6 @@ from sshtunnel import SSHTunnelForwarder
 # local libraries
 from lib.helpers import (create_ssh_client, run_averecmd, run_ssh_commands,
                          upload_gsi)
-from lib.pytest_fixtures import (averecmd_params, mnt_nodes,  # noqa: F401
-                                 resource_group, scp_cli, ssh_con, test_vars)
 
 
 class TestVfxtClusterStatus:

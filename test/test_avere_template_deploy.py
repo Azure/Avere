@@ -15,7 +15,6 @@ import pytest
 
 # local libraries
 from lib.helpers import split_ip_range, wait_for_op
-from lib.pytest_fixtures import resource_group, test_vars  # noqa: F401
 
 
 class TestVfxtTemplateDeploy:

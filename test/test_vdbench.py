@@ -17,8 +17,7 @@ from scp import SCPClient
 from sshtunnel import SSHTunnelForwarder
 
 # local libraries
-from lib import helpers
-from lib.pytest_fixtures import (mnt_nodes, ssh_con, test_vars)  # noqa: F401
+from lib.helpers import create_ssh_client, run_ssh_commands, wait_for_op
 
 
 class TestVDBench:
@@ -33,7 +32,7 @@ class TestVDBench:
             sudo chmod +x /nfs/node0/bootstrap/vdbenchVerify.sh
             /nfs/node0/bootstrap/vdbenchVerify.sh
             """.split("\n")
-        helpers.run_ssh_commands(ssh_con, commands)
+        run_ssh_commands(ssh_con, commands)
 
     def test_vdbench_deploy(self, test_vars):  # noqa: F811
         log = logging.getLogger("test_vdbench_deploy")
@@ -56,7 +55,7 @@ class TestVDBench:
             "bootstrapScriptPath": "/bootstrap/bootstrap.vdbench.sh",
         }
         atd.deploy_name = "test_vdbench"
-        deploy_result = helpers.wait_for_op(atd.deploy())
+        deploy_result = wait_for_op(atd.deploy())
         test_vars["deploy_vd_outputs"] = deploy_result.properties.outputs
 
     def test_vdbench_run(self, test_vars):  # noqa: F811
@@ -70,7 +69,7 @@ class TestVDBench:
         ) as ssh_tunnel:
             sleep(1)
             try:
-                ssh_client = helpers.create_ssh_client(
+                ssh_client = create_ssh_client(
                     test_vars["controller_user"],
                     "127.0.0.1",
                     ssh_tunnel.local_bind_port,
@@ -86,7 +85,7 @@ class TestVDBench:
                     cd
                     ./run_vdbench.sh inmem.conf uniquestring1
                     """.split("\n")
-                helpers.run_ssh_commands(ssh_client, commands)
+                run_ssh_commands(ssh_client, commands)
             finally:
                 ssh_client.close()
 

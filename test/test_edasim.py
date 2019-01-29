@@ -15,9 +15,7 @@ import pytest
 import requests
 
 # local libraries
-from lib import helpers
-from lib.pytest_fixtures import (mnt_nodes, resource_group,  # noqa: F401
-                                 scp_cli, ssh_con, storage_account, test_vars)
+from lib.helpers import run_ssh_commands, wait_for_op
 
 
 class TestEdasim:
@@ -29,7 +27,7 @@ class TestEdasim:
             echo "export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin" >> ~/.profile
             source ~/.profile && cd $GOPATH && go get -v github.com/Azure/Avere/src/go/...
             """.split("\n")
-        helpers.run_ssh_commands(ssh_con, commands)
+        run_ssh_commands(ssh_con, commands)
 
     def test_storage_account(self, resource_group, ssh_con, storage_account, test_vars):  # noqa: F811, E501
         log = logging.getLogger("test_storage_account")
@@ -45,7 +43,7 @@ class TestEdasim:
             export AZURE_STORAGE_ACCOUNT= {0}
             export AZURE_STORAGE_ACCOUNT_KEY={1}
             """.format(storage_account.name, key).split("\n")
-        helpers.run_ssh_commands(ssh_con, commands)
+        run_ssh_commands(ssh_con, commands)
         test_vars["cmd1"] = "AZURE_STORAGE_ACCOUNT=\"{}\" AZURE_STORAGE_ACCOUNT_KEY=\"{}\" ".format(storage_account.name, key)
 
     def test_event_hub(self, ssh_con, test_vars):  # noqa: F811
@@ -64,7 +62,7 @@ class TestEdasim:
         atd.deploy_name = "test_event_hub"
         log.debug('Generated deploy parameters: \n{}'.format(
             json.dumps(atd.deploy_params, indent=4)))
-        deploy_result = helpers.wait_for_op(atd.deploy())
+        deploy_result = wait_for_op(atd.deploy())
         test_vars["deploy_eh_outputs"] = deploy_result.properties.outputs
         log.debug(test_vars["deploy_eh_outputs"])
         policy_primary_key = test_vars["deploy_eh_outputs"]["eventHubSharedAccessPolicyPrimaryKey"]["value"]
@@ -74,7 +72,7 @@ class TestEdasim:
             export AZURE_EVENTHUB_SENDERKEY={0}
             export AZURE_EVENTHUB_NAMESPACENAME="edasimeventhub2"
             """.format(policy_primary_key).split("\n")
-        helpers.run_ssh_commands(ssh_con, commands)
+        run_ssh_commands(ssh_con, commands)
         test_vars["cmd2"] = "AZURE_EVENTHUB_SENDERKEYNAME=\"RootManageSharedAccessKey\" AZURE_EVENTHUB_SENDERKEY=\"{}\" AZURE_EVENTHUB_NAMESPACENAME=\"edasimeventhub2\"".format(policy_primary_key)
 
     def test_edasim_setup(self, mnt_nodes, ssh_con):  # noqa: F811
@@ -100,7 +98,7 @@ class TestEdasim:
             sudo curl --retry 5 --retry-delay 5 -o orchestrator.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/orchestrator.service
             sudo curl --retry 5 --retry-delay 5 -o worker.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/worker.service
             """.split("\n")
-        helpers.run_ssh_commands(ssh_con, commands)
+        run_ssh_commands(ssh_con, commands)
 
     def test_edasim_deploy(self, test_vars):  # noqa: F811
         atd = test_vars["atd_obj"]
@@ -120,7 +118,7 @@ class TestEdasim:
             "nfsExportPath": "/msazure",
         }
         atd.deploy_name = "test_edasim_deploy"
-        deploy_result = helpers.wait_for_op(atd.deploy())
+        deploy_result = wait_for_op(atd.deploy())
         test_vars["deploy_edasim_outputs"] = deploy_result.properties.outputs
 
 
