@@ -46,7 +46,7 @@ def mnt_nodes(ssh_con, test_vars):
 def resource_group(test_vars):
     log = logging.getLogger("resource_group")
     rg = test_vars["atd_obj"].create_resource_group()
-    log.info("Created Resource Group: {}".format(rg))
+    log.info("Resource Group: {}".format(rg))
     return rg
 
 
@@ -54,12 +54,13 @@ def resource_group(test_vars):
 def storage_account(test_vars):
     log = logging.getLogger("storage_account")
     atd = test_vars["atd_obj"]
-    storage_account = atd.st_client.storage_accounts.get_properties(
+    sa = atd.st_client.storage_accounts.get_properties(
         atd.resource_group,
-        atd.deploy_id + "sa"
+        atd.storage_account
     )
-    log.info("Linked Storage Account: {}".format(storage_account))
-    return storage_account
+    log.info("Storage Account: {}".format(sa))
+    return sa
+
 
 @pytest.fixture()
 def scp_cli(ssh_con):
@@ -103,4 +104,4 @@ def test_vars():
         log.debug("Saving vars to {} (VFXT_TEST_VARS_FILE)".format(
                   os.environ["VFXT_TEST_VARS_FILE"]))
         with open(os.environ["VFXT_TEST_VARS_FILE"], "w") as vtvf:
-            json.dump(vars, vtvf)
+            json.dump(vars, vtvf, sort_keys=True, indent=4)

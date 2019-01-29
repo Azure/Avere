@@ -98,11 +98,12 @@ class ArmTemplateDeploy:
             },
         )
 
-    def serialize(self, to_file=None, *args, **kwargs):
+    def serialize(self, store_template=False, to_file=None, *args, **kwargs):
         """
-        Serialize this object into a JSON string. The Resource/NetworkManager
-        members are not serialized since deserialized instances should still
-        authenticate.
+        Serialize this object into a JSON string. The Resource/Network/Storage
+        Mgmt Client members are not serialized since deserialized instances
+        should re-authenticate. Similarly, the deploy_params members can
+        contain secrets (depending on the template), so it is not saved.
 
         If to_file is passed with a non-empty string value, the JSON string
         will be saved to a file whose name (including path) is to_file's value.
@@ -113,8 +114,10 @@ class ArmTemplateDeploy:
         _this.pop("rm_client", None)  # don't want to save these for security
         _this.pop("nm_client", None)
         _this.pop("st_client", None)
-        _this.pop("template", None)
         _this.pop("deploy_params", None)
+
+        if not store_template:
+            _this.pop("template", None)
 
         if to_file:
             with open(to_file, "w") as tf:

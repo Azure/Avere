@@ -37,15 +37,15 @@ class TestVDBench:
 
     def test_vdbench_deploy(self, test_vars):  # noqa: F811
         log = logging.getLogger("test_vdbench_deploy")
-        td = test_vars["atd_obj"]
+        atd = test_vars["atd_obj"]
         with open(os.path.expanduser(r"~/.ssh/id_rsa.pub"), "r") as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
         with open("{}/src/client/vmas/azuredeploy.json".format(
                   os.environ["BUILD_SOURCESDIRECTORY"])) as tfile:
-            td.template = json.load(tfile)
-        orig_params = td.deploy_params.copy()
-        td.deploy_params = {
-            "uniquename": td.deploy_id,
+            atd.template = json.load(tfile)
+        orig_params = atd.deploy_params.copy()
+        atd.deploy_params = {
+            "uniquename": atd.deploy_id,
             "sshKeyData": ssh_pub_key,
             "virtualNetworkResourceGroup": orig_params["virtualNetworkResourceGroup"],
             "virtualNetworkName": orig_params["virtualNetworkName"],
@@ -55,8 +55,8 @@ class TestVDBench:
             "nfsExportPath": "/msazure",
             "bootstrapScriptPath": "/bootstrap/bootstrap.vdbench.sh",
         }
-        td.deploy_name = "test_vdbench"
-        deploy_result = helpers.wait_for_op(td.deploy())
+        atd.deploy_name = "test_vdbench"
+        deploy_result = helpers.wait_for_op(atd.deploy())
         test_vars["deploy_vd_outputs"] = deploy_result.properties.outputs
 
     def test_vdbench_run(self, test_vars):  # noqa: F811

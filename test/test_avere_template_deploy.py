@@ -44,7 +44,6 @@ class TestVfxtTemplateDeploy:
         }
         test_vars["controller_name"] = atd.deploy_params["controllerName"]
         test_vars["controller_user"] = atd.deploy_params["controllerAdminUsername"]
-        test_vars["storage_account"] = atd.deploy_params["avereBackedStorageAccountName"]
 
         log.debug("Generated deploy parameters: \n{}".format(
                   json.dumps(atd.deploy_params, indent=4)))

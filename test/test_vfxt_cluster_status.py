@@ -91,7 +91,6 @@ class TestVfxtSupport:
         Artifacts are stored to local directories.
         """
         log = logging.getLogger("test_collect_artifacts")
-
         artifacts_dir = "vfxt_artifacts_" + test_vars["atd_obj"].deploy_id
         nodes = run_averecmd(**averecmd_params, method="node.list")
         log.debug("nodes found: {}".format(nodes))

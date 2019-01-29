@@ -1,47 +1,46 @@
 #!/usr/bin/python3
 
 """
-Driver for testing edasim
+Driver for testing EDASIM
 """
 
+# standard imports
 import json
-import os
-from time import sleep
 import logging
+import os
+import sys
+
+# from requirements.txt
 import pytest
 import requests
-from scp import SCPClient
 
-from sshtunnel import SSHTunnelForwarder
-
+# local libraries
 from lib import helpers
-from lib.pytest_fixtures import (averecmd_params, mnt_nodes,  # noqa: F401
-                                 resource_group, storage_account,
-                                 scp_cli, ssh_con, test_vars, vs_ips)
-
-# logging.basicConfig(level=logging.DEBUG)
+from lib.pytest_fixtures import (mnt_nodes, resource_group,  # noqa: F401
+                                 scp_cli, ssh_con, storage_account, test_vars)
 
 
 class TestEdasim:
-    def test_download_go(self, ssh_con):
+    def test_download_go(self, ssh_con):  # noqa: F811
         commands = """
             sudo apt -y install golang-go
-            mkdir ~/gopath
+            mkdir -p ~/gopath
             echo "export GOPATH=$HOME/gopath" >> ~/.profile
             echo "export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin" >> ~/.profile
             source ~/.profile && cd $GOPATH && go get -v github.com/Azure/Avere/src/go/...
             """.split("\n")
         helpers.run_ssh_commands(ssh_con, commands)
 
-    def test_storage_account(self, test_vars, resource_group, storage_account, ssh_con):
-        td = test_vars["atd_obj"]
-        storage_keys = td.st_client.storage_accounts.list_keys(
+    def test_storage_account(self, resource_group, ssh_con, storage_account, test_vars):  # noqa: F811, E501
+        log = logging.getLogger("test_storage_account")
+        atd = test_vars["atd_obj"]
+        storage_keys = atd.st_client.storage_accounts.list_keys(
             resource_group.name,
             storage_account.name)
         storage_keys = {v.key_name: v.value for v in storage_keys.keys}
         key = storage_keys['key1']
-        print("storage_account = {}".format(storage_account.name))
-        print("key = {}".format(key))
+        log.debug("storage_account = {}".format(storage_account.name))
+        log.debug("key = {}".format(key))
         commands = """
             export AZURE_STORAGE_ACCOUNT= {0}
             export AZURE_STORAGE_ACCOUNT_KEY={1}
@@ -49,13 +48,12 @@ class TestEdasim:
         helpers.run_ssh_commands(ssh_con, commands)
         test_vars["cmd1"] = "AZURE_STORAGE_ACCOUNT=\"{}\" AZURE_STORAGE_ACCOUNT_KEY=\"{}\" ".format(storage_account.name, key)
 
-    def test_event_hub(self, test_vars, ssh_con):
-        td = test_vars["atd_obj"]
-        td.template = requests.get(
+    def test_event_hub(self, ssh_con, test_vars):  # noqa: F811
+        log = logging.getLogger("test_event_hub")
+        atd = test_vars["atd_obj"]
+        atd.template = requests.get(
                 url='https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/301-eventHub-create-authrule-namespace-and-eventHub/azuredeploy.json').json()
-        with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
-            ssh_pub_key = ssh_pub_f.read()
-        td.deploy_params = {
+        atd.deploy_params = {
             'namespaceName': "edasimeventhub2",
             'namespaceAuthorizationRuleName': 'edasimeventhub',
             'eventHubName': 'edasimeventhub2',
@@ -63,14 +61,14 @@ class TestEdasim:
             'eventhubAuthorizationRuleName1': 'edasimeventhub1',
             'consumerGroupName': 'edasimtest',
         }
-
-        logging.debug('> Generated deploy parameters: \n{}'.format(
-            json.dumps(td.deploy_params, indent=4)))
-        deploy_result = helpers.wait_for_op(td.deploy())
+        atd.deploy_name = "test_event_hub"
+        log.debug('Generated deploy parameters: \n{}'.format(
+            json.dumps(atd.deploy_params, indent=4)))
+        deploy_result = helpers.wait_for_op(atd.deploy())
         test_vars["deploy_eh_outputs"] = deploy_result.properties.outputs
-        print(test_vars["deploy_eh_outputs"])
+        log.debug(test_vars["deploy_eh_outputs"])
         policy_primary_key = test_vars["deploy_eh_outputs"]["eventHubSharedAccessPolicyPrimaryKey"]["value"]
-        print(policy_primary_key)
+        log.debug("policy_primary_key = {}".format(policy_primary_key))
         commands = """
             export AZURE_EVENTHUB_SENDERKEYNAME="RootManageSharedAccessKey"
             export AZURE_EVENTHUB_SENDERKEY={0}
@@ -78,7 +76,6 @@ class TestEdasim:
             """.format(policy_primary_key).split("\n")
         helpers.run_ssh_commands(ssh_con, commands)
         test_vars["cmd2"] = "AZURE_EVENTHUB_SENDERKEYNAME=\"RootManageSharedAccessKey\" AZURE_EVENTHUB_SENDERKEY=\"{}\" AZURE_EVENTHUB_NAMESPACENAME=\"edasimeventhub2\"".format(policy_primary_key)
-
 
     def test_edasim_setup(self, mnt_nodes, ssh_con):  # noqa: F811
         commands = """
@@ -105,29 +102,27 @@ class TestEdasim:
             """.split("\n")
         helpers.run_ssh_commands(ssh_con, commands)
 
-    def test_edasim_deploy(self, test_vars, vs_ips, ssh_con):  # noqa: F811
-        td = test_vars["atd_obj"]
-        td.template = requests.get(
-                url='https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/template/azuredeploy.json').json()
+    def test_edasim_deploy(self, test_vars):  # noqa: F811
+        atd = test_vars["atd_obj"]
         with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
-        # print(">>>>> " + test_vars["cmd1"] + test_vars["cmd2"] + " <<<<<")
-        # orig_params = td.deploy_params.copy()
-        td.deploy_params = {
+        with open("{}/src/go/cmd/edasim/deploymentartifacts/template/azuredeploy.json".format(
+                  os.environ["BUILD_SOURCESDIRECTORY"])) as tfile:
+            atd.template = json.load(tfile)
+        atd.deploy_params = {
             "secureAppEnvironmentVariables": test_vars["cmd1"] + test_vars["cmd2"],
-            "uniquename": td.deploy_id,
+            "uniquename": atd.deploy_id,
             "sshKeyData": ssh_pub_key,
-            "virtualNetworkResourceGroup": td.resource_group,
-            "virtualNetworkName": td.deploy_id + "-vnet",
-            "virtualNetworkSubnetName": td.deploy_id + "-subnet",
-            "nfsCommaSeparatedAddresses": ",".join(vs_ips),
+            "virtualNetworkResourceGroup": atd.resource_group,
+            "virtualNetworkName": atd.deploy_id + "-vnet",
+            "virtualNetworkSubnetName": atd.deploy_id + "-subnet",
+            "nfsCommaSeparatedAddresses": ",".join(test_vars["cluster_vs_ips"]),
             "nfsExportPath": "/msazure",
         }
-
-        td.deploy_name = "test_edasim"
-        deploy_result = helpers.wait_for_op(td.deploy())
+        atd.deploy_name = "test_edasim_deploy"
+        deploy_result = helpers.wait_for_op(atd.deploy())
         test_vars["deploy_edasim_outputs"] = deploy_result.properties.outputs
 
 
 if __name__ == "__main__":
-    pytest.main()
+    pytest.main(sys.argv)
