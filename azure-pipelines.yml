@@ -19,7 +19,7 @@ jobs:
       mkdir ~/.ssh
       echo $ID_RSA > ~/.ssh/id_rsa
       chmod 600 ~/.ssh/id_rsa
-      ssh-keygen -y -N "" -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub.X
+      ssh-keygen -y -N "" -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
       ls -al ~/.ssh
       echo "SSH PUBLIC KEY: $(cat ~/.ssh/id_rsa.pub)"
     displayName: 'Generate SSH keys'
