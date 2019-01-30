@@ -1,15 +1,17 @@
+# standard imports
 import ast
 import logging
 from time import sleep, time
 
-import paramiko
+# from requirements.txt
+from paramiko import AutoAddPolicy, SSHClient
 
 
 def create_ssh_client(username, hostname, port=22, password=None):
     """Creates (and returns) an SSHClient. Auth'n is via publickey."""
-    ssh_client = paramiko.SSHClient()
+    ssh_client = SSHClient()
     ssh_client.load_system_host_keys()
-    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh_client.set_missing_host_key_policy(AutoAddPolicy())
     ssh_client.connect(
         username=username, hostname=hostname, port=port, password=password
     )
@@ -68,37 +70,33 @@ def run_ssh_command(ssh_client, command, ignore_nonzero_rc=False, timeout=None):
 def run_ssh_commands(ssh_client, commands, **kwargs):
     """
     Runs a list of commands on the server connected via ssh_client.
-
-    If ex_on_nonzero_rc is True, an Exception is raised if any command fails
-    (i.e., non-zero exit code).
     """
     log = logging.getLogger("run_ssh_commands")
     results = []
-    for cmd in commands:
-        cmd = cmd.strip()
-        log.debug("command to run: {}".format(cmd))
-        if cmd:  # only run non-empty commands
-            results.append(run_ssh_command(ssh_client, cmd, **kwargs))
+    for command in commands:
+        command = command.strip()
+        if command:  # only run non-empty commands
+            log.debug("command to run: {}".format(command))
+            results.append(run_ssh_command(ssh_client, command, **kwargs))
     return results
 
 
 def split_ip_range(ip_range):
     """
-    split_ip_range will take in an IP address range split by a hyphen
+    This function will split ip_range into a list of all IPs in that range.
+
+    ip_range is in an IP address range split by a hyphen
     (e.g., "10.0.0.1-10.0.0.9").
-
-    It will split it to a list of all IPs in that range.
     """
+    from ipaddress import ip_address
+
     ip_list = ip_range.split("-")
-    ip1 = ip_list[0]
-    ip2 = ip_list[1]
+    ip_0 = ip_list[0]
+    ip_1 = ip_list[1]
 
-    ip1_split = ip1.split(".")
-    ip_low = ip1_split[-1]
-    ip_hi = ip2.split(".")[-1]
-
-    ip_prefix = ".".join(ip1_split[:-1]) + "."
-    return [ip_prefix + str(n) for n in range(int(ip_low), int(ip_hi) + 1)]
+    ip_start = int(ip_address(ip_0).packed.hex(), 16)
+    ip_end = int(ip_address(ip_1).packed.hex(), 16)
+    return [ip_address(ip).exploded for ip in range(ip_start, ip_end + 1)]
 
 
 def upload_gsi(averecmd_params):

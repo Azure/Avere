@@ -1,12 +1,15 @@
+# standard imports
 import json
 import logging
 import os
 
+# from requirements.txt
 import pytest
+from arm_template_deploy import ArmTemplateDeploy
 from scp import SCPClient
 
-from arm_template_deploy import ArmTemplateDeploy
-from lib import helpers
+# local libraries
+from lib.helpers import (create_ssh_client, run_ssh_command, run_ssh_commands)
 
 
 @pytest.fixture()
@@ -14,20 +17,20 @@ def averecmd_params(ssh_con, test_vars):
     return {
         "ssh_client": ssh_con,
         "password": os.environ["AVERE_ADMIN_PW"],
-        "node_ip": test_vars["deploy_outputs"]["mgmt_ip"]["value"]
+        "node_ip": test_vars["cluster_mgmt_ip"]
     }
 
 
 @pytest.fixture()
-def mnt_nodes(ssh_con, vs_ips):
-    check = helpers.run_ssh_command(ssh_con, "ls ~/STATUS.NODES_MOUNTED",
-                                    ignore_nonzero_rc=True)
+def mnt_nodes(ssh_con, test_vars):
+    check = run_ssh_command(ssh_con, "ls ~/STATUS.NODES_MOUNTED",
+                            ignore_nonzero_rc=True)
     if check['rc']:  # nodes were not already mounted
         commands = """
             sudo apt-get update
             sudo apt-get install nfs-common
             """.split("\n")
-        for i, vs_ip in enumerate(vs_ips):
+        for i, vs_ip in enumerate(test_vars["cluster_vs_ips"]):
             commands.append("sudo mkdir -p /nfs/node{}".format(i))
             commands.append("sudo chown nobody:nogroup /nfs/node{}".format(i))
             fstab_line = "{}:/msazure /nfs/node{} nfs ".format(vs_ip, i) + \
@@ -36,27 +39,28 @@ def mnt_nodes(ssh_con, vs_ips):
                             fstab_line))
         commands.append("sudo mount -a")
         commands.append("touch ~/STATUS.NODES_MOUNTED")
-        helpers.run_ssh_commands(ssh_con, commands)
+        run_ssh_commands(ssh_con, commands)
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def resource_group(test_vars):
     log = logging.getLogger("resource_group")
     rg = test_vars["atd_obj"].create_resource_group()
-    log.info("Created Resource Group: {}".format(rg))
+    log.info("Resource Group: {}".format(rg))
     return rg
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def storage_account(test_vars):
     log = logging.getLogger("storage_account")
     atd = test_vars["atd_obj"]
-    storage_account = atd.st_client.storage_accounts.get_properties(
+    sa = atd.st_client.storage_accounts.get_properties(
         atd.resource_group,
-        atd.deploy_id + "sa"
+        atd.storage_account
     )
-    log.info("Linked Storage Account: {}".format(storage_account))
-    return storage_account
+    log.info("Storage Account: {}".format(sa))
+    return sa
+
 
 @pytest.fixture()
 def scp_cli(ssh_con):
@@ -67,8 +71,8 @@ def scp_cli(ssh_con):
 
 @pytest.fixture()
 def ssh_con(test_vars):
-    client = helpers.create_ssh_client(test_vars["controller_user"],
-                                       test_vars["controller_ip"])
+    client = create_ssh_client(test_vars["controller_user"],
+                               test_vars["controller_ip"])
     yield client
     client.close()
 
@@ -76,8 +80,8 @@ def ssh_con(test_vars):
 @pytest.fixture(scope="module")
 def test_vars():
     """
-    Instantiates an ArmTemplateDeploy object, creates the resource group as
-    test-group setup, and deletes the resource group as test-group teardown.
+    Loads saved test variables, instantiates an ArmTemplateDeploy object, and
+    dumps test variables during teardown.
     """
     log = logging.getLogger("test_vars")
     vars = {}
@@ -100,12 +104,4 @@ def test_vars():
         log.debug("Saving vars to {} (VFXT_TEST_VARS_FILE)".format(
                   os.environ["VFXT_TEST_VARS_FILE"]))
         with open(os.environ["VFXT_TEST_VARS_FILE"], "w") as vtvf:
-            json.dump(vars, vtvf)
-
-
-@pytest.fixture()
-def vs_ips(test_vars):
-    if "vs_ips" not in test_vars:
-        vserver_ips = test_vars["deploy_outputs"]["vserver_ips"]["value"]
-        test_vars["vs_ips"] = helpers.split_ip_range(vserver_ips)
-    return test_vars["vs_ips"]
+            json.dump(vars, vtvf, sort_keys=True, indent=4)
