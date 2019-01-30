@@ -28,7 +28,7 @@ jobs:
     displayName: 'Install Python dependencies'
 
   - script: |
-      pytest --disable-pytest-warnings test/test_avere_template_deploy.py --doctest-modules --junitxml=junit/test-results01.xml
+      pytest --disable-pytest-warnings test/test_vfxt_template_deploy.py --doctest-modules --junitxml=junit/test-results01.xml
     displayName: 'Test template-based deployment of Avere vFXT'
     env:
       AVERE_ADMIN_PW: $(controllerpassword)
