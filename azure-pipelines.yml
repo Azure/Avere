@@ -4,7 +4,7 @@
 # - releases/*
 
 variables:
-  cleanup_rg: 'true'
+  skip_rg_cleanup: 'false'
 
 jobs:
 - job: template
@@ -17,7 +17,7 @@ jobs:
     inputs:
       versionSpec: '3.7'
       architecture: 'x64'
-    condition: and(always(), eq(variables['cleanup_rg'], 'true'))
+    condition: and(always(), ne(variables['skip_rg_cleanup'], 'true'))
 
   - script: |
       mkdir ~/.ssh
