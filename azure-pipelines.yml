@@ -3,9 +3,14 @@ trigger:
 - master
 - releases/*
 
+variables:
+  skip_rg_cleanup: 'false'
+  VFXT_DEPLOY_LOCATION: 'eastus2'
+  VFXT_TEST_VARS_FILE: 'pipelines.json'
+
 jobs:
 - job: template
-  timeoutInMinutes: 180
+  timeoutInMinutes: 120
   pool:
     vmImage: 'Ubuntu 16.04'
 
@@ -31,6 +36,10 @@ jobs:
     displayName: 'Install Python dependencies'
 
   - script: |
+      if [ -n "$VFXT_DEPLOY_LOCATION" ]; then
+        jq -n --arg loc $VFXT_DEPLOY_LOCATION '{ atd_obj: { location: $loc } }' > $VFXT_TEST_VARS_FILE
+      fi
+
       pytest --disable-pytest-warnings test/test_vfxt_template_deploy.py --doctest-modules --junitxml=junit/test-results01.xml
     displayName: 'Test template-based deployment of Avere vFXT'
     env:
@@ -40,7 +49,6 @@ jobs:
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      VFXT_TEST_VARS_FILE: pipelines.json
 
   - script: |
       pytest --disable-pytest-warnings test/test_vfxt_cluster_status.py -k TestVfxtClusterStatus --doctest-modules --junitxml=junit/test-results02.xml
@@ -53,14 +61,13 @@ jobs:
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      VFXT_TEST_VARS_FILE: pipelines.json
 
   - script: |
       pytest --disable-pytest-warnings test/test_vfxt_cluster_status.py -k TestVfxtSupport --doctest-modules --junitxml=junit/test-results03.xml
 
-      CONTROLLER_IP=$(grep controller_ip $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_ip": "([^"]+)".*$/\1/')
-      CONTROLLER_NAME=$(grep controller_name $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_name": "([^"]+)".*$/\1/')
-      CONTROLLER_USER=$(grep controller_user $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_user": "([^"]+)".*$/\1/')
+      CONTROLLER_IP=$(jq -r .controller_ip $VFXT_TEST_VARS_FILE)
+      CONTROLLER_NAME=$(jq -r .controller_name $VFXT_TEST_VARS_FILE)
+      CONTROLLER_USER=$(jq -r .controller_user $VFXT_TEST_VARS_FILE)
 
       echo "CONTROLLER_IP  : $CONTROLLER_IP"
       echo "CONTROLLER_NAME: $CONTROLLER_NAME"
@@ -83,14 +90,11 @@ jobs:
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      VFXT_TEST_VARS_FILE: pipelines.json
 
   - script: |
       grep -i -C 5 -e vfxt:ERROR -e exception $BUILD_SOURCESDIRECTORY/test_artifacts/vfxt.log
     displayName: 'Grep errors from vfxt.log (+/- 5 lines)'
     condition: or(failed(), canceled())
-    env:
-      VFXT_TEST_VARS_FILE: pipelines.json
 
   # - script: |
   #     pytest --disable-pytest-warnings test/test_vdbench.py --doctest-modules --junitxml=junit/test-results04.xml
@@ -100,7 +104,6 @@ jobs:
   #     AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
   #     AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
   #     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-  #     VFXT_TEST_VARS_FILE: pipelines.json
 
   - script: |
       pytest --disable-pytest-warnings test/test_edasim.py --doctest-modules --junitxml=junit/test-results05.xml
@@ -110,7 +113,6 @@ jobs:
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      VFXT_TEST_VARS_FILE: pipelines.json
 
   - task: PublishPipelineArtifact@0
     displayName: 'Publish Pipelines Artifacts (node logs, rolling trace)'
@@ -121,16 +123,15 @@ jobs:
 
   - script: |
       az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-      RESOURCE_GROUP=$(grep resource_group $VFXT_TEST_VARS_FILE | sed -E 's/^.*resource_group": "([^"]+)".*$/\1/')
+      RESOURCE_GROUP=$(jq -r .atd_obj.resource_group $VFXT_TEST_VARS_FILE)
       echo "RESOURCE_GROUP: $RESOURCE_GROUP"
       az group delete --yes -n $RESOURCE_GROUP
     displayName: 'Delete resource group'
-    condition: always()
+    condition: and(always(), ne(variables['skip_rg_cleanup'], 'true'))
     env:
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      VFXT_TEST_VARS_FILE: pipelines.json
 
   - task: PublishTestResults@2
     condition: always()
