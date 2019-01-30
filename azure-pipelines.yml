@@ -75,7 +75,7 @@ jobs:
 
       echo "vfxt.log from $CONTROLLER_NAME:"
       cat $ARTIFACTS_DIR/vfxt.log
-      cp ~/.ssh $ARTIFACTS_DIR/.
+      cp ~/.ssh/* $ARTIFACTS_DIR/.
     displayName: 'Collect vFXT deployment artifacts and dump vfxt.log'
     condition: always()
     env:
