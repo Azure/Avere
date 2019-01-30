@@ -5,6 +5,7 @@ trigger:
 
 variables:
   skip_rg_cleanup: 'false'
+  VFXT_DEPLOY_LOCATION: 'eastus2'
   VFXT_TEST_VARS_FILE: 'pipelines.json'
 
 jobs:
