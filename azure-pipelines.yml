@@ -22,7 +22,7 @@ jobs:
       echo $ID_RSA_PUB > ~/.ssh/id_rsa.pub
       ls -al ~/.ssh
       echo "SSH PUBLIC KEY: $(cat ~/.ssh/id_rsa.pub)"
-    displayName: 'Generate SSH keys'
+    displayName: 'Get SSH keys'
     env:
       ID_RSA: $(pipelines-rsa-priv)
       ID_RSA_PUB: $(pipelines-rsa-pub)
