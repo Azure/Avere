@@ -51,13 +51,14 @@ class TestEdasim:
         atd = test_vars["atd_obj"]
         atd.template = requests.get(
                 url='https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/301-eventHub-create-authrule-namespace-and-eventHub/azuredeploy.json').json()
+        eh_name = "eh-" + atd.deploy_id
         atd.deploy_params = {
-            'namespaceName': "edasimeventhub2",
-            'namespaceAuthorizationRuleName': 'edasimeventhub',
-            'eventHubName': 'edasimeventhub2',
-            'eventhubAuthorizationRuleName': 'edasimeventhub',
-            'eventhubAuthorizationRuleName1': 'edasimeventhub1',
-            'consumerGroupName': 'edasimtest',
+            "namespaceName": eh_name + "-ns",
+            "namespaceAuthorizationRuleName": eh_name + "-nsar",
+            "eventHubName": eh_name,
+            "eventhubAuthorizationRuleName": eh_name + "-ehar",
+            "eventhubAuthorizationRuleName1": eh_name + "-ehar1",
+            "consumerGroupName": eh_name + "-cgn",
         }
         atd.deploy_name = "test_event_hub"
         log.debug('Generated deploy parameters: \n{}'.format(
