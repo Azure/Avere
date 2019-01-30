@@ -17,10 +17,14 @@ jobs:
 
   - script: |
       mkdir ~/.ssh
-      ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+      echo $ID_RSA > ~/.ssh/id_rsa
+      chmod 600 ~/.ssh/id_rsa
+      ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
       ls -al ~/.ssh
       echo "SSH PUBLIC KEY: $(cat ~/.ssh/id_rsa.pub)"
     displayName: 'Generate SSH keys'
+    env:
+      ID_RSA: $(pipelines-rsa-priv)
 
   - script: |
       pip install --upgrade pip setuptools wheel
@@ -31,11 +35,11 @@ jobs:
       pytest --disable-pytest-warnings test/test_vfxt_template_deploy.py --doctest-modules --junitxml=junit/test-results01.xml
     displayName: 'Test template-based deployment of Avere vFXT'
     env:
-      AVERE_ADMIN_PW: $(controllerpassword)
-      AVERE_CONTROLLER_PW: $(controllerpassword)
-      AZURE_TENANT_ID: $(SPTENANTID)
-      AZURE_CLIENT_ID: $(SPAPPID)
-      AZURE_CLIENT_SECRET: $(SPPW)
+      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+      AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
+      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
       VFXT_TEST_VARS_FILE: pipelines.json
 
@@ -44,11 +48,11 @@ jobs:
     displayName: 'Test cluster status, health, etc.'
     condition: succeeded()
     env:
-      AVERE_ADMIN_PW: $(controllerpassword)
-      AVERE_CONTROLLER_PW: $(controllerpassword)
-      AZURE_TENANT_ID: $(SPTENANTID)
-      AZURE_CLIENT_ID: $(SPAPPID)
-      AZURE_CLIENT_SECRET: $(SPPW)
+      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+      AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
+      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
       VFXT_TEST_VARS_FILE: pipelines.json
 
@@ -74,11 +78,11 @@ jobs:
     displayName: 'Collect vFXT deployment artifacts and dump vfxt.log'
     condition: always()
     env:
-      AVERE_ADMIN_PW: $(controllerpassword)
-      AVERE_CONTROLLER_PW: $(controllerpassword)
-      AZURE_TENANT_ID: $(SPTENANTID)
-      AZURE_CLIENT_ID: $(SPAPPID)
-      AZURE_CLIENT_SECRET: $(SPPW)
+      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+      AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
+      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
       VFXT_TEST_VARS_FILE: pipelines.json
 
@@ -93,9 +97,9 @@ jobs:
   #     pytest --disable-pytest-warnings test/test_vdbench.py --doctest-modules --junitxml=junit/test-results04.xml
   #   displayName: 'Test vdbench on Avere vFXT'
   #   env:
-  #     AZURE_TENANT_ID: $(SPTENANTID)
-  #     AZURE_CLIENT_ID: $(SPAPPID)
-  #     AZURE_CLIENT_SECRET: $(SPPW)
+  #     AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+  #     AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+  #     AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
   #     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
   #     VFXT_TEST_VARS_FILE: pipelines.json
 
@@ -103,9 +107,9 @@ jobs:
       pytest --disable-pytest-warnings test/test_edasim.py --doctest-modules --junitxml=junit/test-results05.xml
     displayName: 'Test edasim on Avere vFXT'
     env:
-      AZURE_TENANT_ID: $(SPTENANTID)
-      AZURE_CLIENT_ID: $(SPAPPID)
-      AZURE_CLIENT_SECRET: $(SPPW)
+      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
       VFXT_TEST_VARS_FILE: pipelines.json
 
@@ -124,9 +128,9 @@ jobs:
     displayName: 'Delete resource group'
     condition: always()
     env:
-      AZURE_TENANT_ID: $(SPTENANTID)
-      AZURE_CLIENT_ID: $(SPAPPID)
-      AZURE_CLIENT_SECRET: $(SPPW)
+      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       VFXT_TEST_VARS_FILE: pipelines.json
 
   - task: PublishTestResults@2
