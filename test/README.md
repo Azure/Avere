@@ -13,11 +13,14 @@ This pip install is being done for us in the requirements.txt
 We are also going to be using pytest to verify the results that we are going to verify the results from the template.
 
 Test Files are:
+  * arm_template_deploy.py
+  * conftest.py
   * test_avere_template_deploy.py
+  * test_edasim.py
   * test_vdbench.py
+  * test_vfxt_template_deploy.py
   * lib/
     * helpers.py
-    * pytest_fixtures.py
 
 **Scenarios:**
 1. **Deploy vFXT using the template**
