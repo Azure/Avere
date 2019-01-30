@@ -1,7 +1,7 @@
 # https://aka.ms/yaml
-# trigger:
-# - master
-# - releases/*
+trigger:
+- master
+- releases/*
 
 jobs:
 - job: template
@@ -119,18 +119,18 @@ jobs:
       targetPath: 'test_artifacts'
     condition: always()
 
-  # - script: |
-  #     az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-  #     RESOURCE_GROUP=$(grep resource_group $VFXT_TEST_VARS_FILE | sed -E 's/^.*resource_group": "([^"]+)".*$/\1/')
-  #     echo "RESOURCE_GROUP: $RESOURCE_GROUP"
-  #     az group delete --yes -n $RESOURCE_GROUP
-  #   displayName: 'Delete resource group'
-  #   condition: always()
-  #   env:
-  #     AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-  #     AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-  #     AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-  #     VFXT_TEST_VARS_FILE: pipelines.json
+  - script: |
+      az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+      RESOURCE_GROUP=$(grep resource_group $VFXT_TEST_VARS_FILE | sed -E 's/^.*resource_group": "([^"]+)".*$/\1/')
+      echo "RESOURCE_GROUP: $RESOURCE_GROUP"
+      az group delete --yes -n $RESOURCE_GROUP
+    displayName: 'Delete resource group'
+    condition: always()
+    env:
+      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+      VFXT_TEST_VARS_FILE: pipelines.json
 
   - task: PublishTestResults@2
     condition: always()
