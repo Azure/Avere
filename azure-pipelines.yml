@@ -1,7 +1,7 @@
 # https://aka.ms/yaml
-trigger:
-- master
-- releases/*
+# trigger:
+# - master
+# - releases/*
 
 variables:
   skip_rg_cleanup: 'false'
@@ -20,6 +20,7 @@ jobs:
 
   - script: |
       mkdir ~/.ssh
+      jq
       echo $ID_RSA | sed 's/ RSA PRIVATE KEY/RSAPRIVATEKEY/g; s/ /\n/g; s/RSAPRIVATEKEY/ RSA PRIVATE KEY/g' > ~/.ssh/id_rsa
       chmod 600 ~/.ssh/id_rsa
       ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
@@ -27,77 +28,93 @@ jobs:
     displayName: 'Get SSH keys'
     env:
       ID_RSA: $(pipelines-rsa-priv)
+      ENVAR_1: 'envar value 1'
+      ENVAR_2: 'envar value 2'
 
   - script: |
       pip install --upgrade pip setuptools wheel
       pip install -r test/requirements.txt
+      echo "ENVAR_1 = $ENVAR_1"
+      echo "ENVAR_2 = $ENVAR_2"
     displayName: 'Install Python dependencies'
-
-  - script: |
-      pytest --disable-pytest-warnings test/test_vfxt_template_deploy.py --doctest-modules --junitxml=junit/test-results01.xml
-    displayName: 'Test template-based deployment of Avere vFXT'
     env:
-      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
-      AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
-      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      VFXT_TEST_VARS_FILE: pipelines.json
-
-  - script: |
-      pytest --disable-pytest-warnings test/test_vfxt_cluster_status.py -k TestVfxtClusterStatus --doctest-modules --junitxml=junit/test-results02.xml
-    displayName: 'Test cluster status, health, etc.'
-    condition: succeeded()
-    env:
-      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
-      AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
-      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      VFXT_TEST_VARS_FILE: pipelines.json
-
-  - script: |
-      pytest --disable-pytest-warnings test/test_vfxt_cluster_status.py -k TestVfxtSupport --doctest-modules --junitxml=junit/test-results03.xml
-
-      CONTROLLER_IP=$(grep controller_ip $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_ip": "([^"]+)".*$/\1/')
-      CONTROLLER_NAME=$(grep controller_name $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_name": "([^"]+)".*$/\1/')
-      CONTROLLER_USER=$(grep controller_user $VFXT_TEST_VARS_FILE | sed -E 's/^.*controller_user": "([^"]+)".*$/\1/')
-
-      echo "CONTROLLER_IP  : $CONTROLLER_IP"
-      echo "CONTROLLER_NAME: $CONTROLLER_NAME"
-      echo "CONTROLLER_USER: $CONTROLLER_USER"
-
-      ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
-      mkdir -p $ARTIFACTS_DIR
-      tar -zcvf ${ARTIFACTS_DIR}/vfxt_artifacts_${CONTROLLER_NAME}.tar.gz vfxt_artifacts_*
-      scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $CONTROLLER_USER@$CONTROLLER_IP:~/*.log $ARTIFACTS_DIR/.
-      scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ~/.ssh/* $CONTROLLER_USER@$CONTROLLER_IP:~/.ssh/.
-
-      echo "vfxt.log from $CONTROLLER_NAME:"
-      cat $ARTIFACTS_DIR/vfxt.log
-    displayName: 'Collect vFXT deployment artifacts and dump vfxt.log'
-    condition: always()
-    env:
-      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
-      AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
-      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      VFXT_TEST_VARS_FILE: pipelines.json
-
-  - script: |
-      grep -i -C 5 -e vfxt:ERROR -e exception $BUILD_SOURCESDIRECTORY/test_artifacts/vfxt.log
-    displayName: 'Grep errors from vfxt.log (+/- 5 lines)'
-    condition: or(failed(), canceled())
-    env:
-      VFXT_TEST_VARS_FILE: pipelines.json
+      ENVAR_2: 'envar value 2'
 
   # - script: |
-  #     pytest --disable-pytest-warnings test/test_vdbench.py --doctest-modules --junitxml=junit/test-results04.xml
-  #   displayName: 'Test vdbench on Avere vFXT'
+  #     pytest --disable-pytest-warnings test/test_vfxt_template_deploy.py --doctest-modules --junitxml=junit/test-results01.xml
+  #   displayName: 'Test template-based deployment of Avere vFXT'
+  #   env:
+  #     AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+  #     AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
+  #     AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+  #     AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+  #     AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+  #     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+  #     VFXT_TEST_VARS_FILE: pipelines.json
+
+  # - script: |
+  #     pytest --disable-pytest-warnings test/test_vfxt_cluster_status.py -k TestVfxtClusterStatus --doctest-modules --junitxml=junit/test-results02.xml
+  #   displayName: 'Test cluster status, health, etc.'
+  #   condition: succeeded()
+  #   env:
+  #     AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+  #     AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
+  #     AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+  #     AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+  #     AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+  #     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+  #     VFXT_TEST_VARS_FILE: pipelines.json
+
+  # - script: |
+  #     pytest --disable-pytest-warnings test/test_vfxt_cluster_status.py -k TestVfxtSupport --doctest-modules --junitxml=junit/test-results03.xml
+
+  #     CONTROLLER_IP=$(jq -r .controller_ip $VFXT_TEST_VARS_FILE)
+  #     CONTROLLER_NAME=$(jq -r .controller_name $VFXT_TEST_VARS_FILE)
+  #     CONTROLLER_USER=$(jq -r .controller_user $VFXT_TEST_VARS_FILE)
+
+  #     echo "CONTROLLER_IP  : $CONTROLLER_IP"
+  #     echo "CONTROLLER_NAME: $CONTROLLER_NAME"
+  #     echo "CONTROLLER_USER: $CONTROLLER_USER"
+
+  #     ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
+  #     mkdir -p $ARTIFACTS_DIR
+  #     tar -zcvf ${ARTIFACTS_DIR}/vfxt_artifacts_${CONTROLLER_NAME}.tar.gz vfxt_artifacts_*
+  #     scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $CONTROLLER_USER@$CONTROLLER_IP:~/*.log $ARTIFACTS_DIR/.
+  #     scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ~/.ssh/* $CONTROLLER_USER@$CONTROLLER_IP:~/.ssh/.
+
+  #     echo "vfxt.log from $CONTROLLER_NAME:"
+  #     cat $ARTIFACTS_DIR/vfxt.log
+  #   displayName: 'Collect vFXT deployment artifacts and dump vfxt.log'
+  #   condition: always()
+  #   env:
+  #     AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+  #     AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
+  #     AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+  #     AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+  #     AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+  #     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+  #     VFXT_TEST_VARS_FILE: pipelines.json
+
+  # - script: |
+  #     grep -i -C 5 -e vfxt:ERROR -e exception $BUILD_SOURCESDIRECTORY/test_artifacts/vfxt.log
+  #   displayName: 'Grep errors from vfxt.log (+/- 5 lines)'
+  #   condition: or(failed(), canceled())
+  #   env:
+  #     VFXT_TEST_VARS_FILE: pipelines.json
+
+  # # - script: |
+  # #     pytest --disable-pytest-warnings test/test_vdbench.py --doctest-modules --junitxml=junit/test-results04.xml
+  # #   displayName: 'Test vdbench on Avere vFXT'
+  # #   env:
+  # #     AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+  # #     AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+  # #     AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+  # #     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+  # #     VFXT_TEST_VARS_FILE: pipelines.json
+
+  # - script: |
+  #     pytest --disable-pytest-warnings test/test_edasim.py --doctest-modules --junitxml=junit/test-results05.xml
+  #   displayName: 'Test edasim on Avere vFXT'
   #   env:
   #     AZURE_TENANT_ID: $(AZURE-TENANT-ID)
   #     AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
@@ -105,38 +122,28 @@ jobs:
   #     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
   #     VFXT_TEST_VARS_FILE: pipelines.json
 
-  - script: |
-      pytest --disable-pytest-warnings test/test_edasim.py --doctest-modules --junitxml=junit/test-results05.xml
-    displayName: 'Test edasim on Avere vFXT'
-    env:
-      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      VFXT_TEST_VARS_FILE: pipelines.json
+  # - task: PublishPipelineArtifact@0
+  #   displayName: 'Publish Pipelines Artifacts (node logs, rolling trace)'
+  #   inputs:
+  #     artifactName: 'testArtifacts'
+  #     targetPath: 'test_artifacts'
+  #   condition: always()
 
-  - task: PublishPipelineArtifact@0
-    displayName: 'Publish Pipelines Artifacts (node logs, rolling trace)'
-    inputs:
-      artifactName: 'testArtifacts'
-      targetPath: 'test_artifacts'
-    condition: always()
+  # - script: |
+  #     az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+  #     RESOURCE_GROUP=$(jq -r .atd_obj.resource_group $VFXT_TEST_VARS_FILE)
+  #     echo "RESOURCE_GROUP: $RESOURCE_GROUP"
+  #     az group delete --yes -n $RESOURCE_GROUP
+  #   displayName: 'Delete resource group'
+  #   condition: and(always(), ne(variables['skip_rg_cleanup'], 'true'))
+  #   env:
+  #     AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+  #     AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+  #     AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+  #     VFXT_TEST_VARS_FILE: pipelines.json
 
-  - script: |
-      az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-      RESOURCE_GROUP=$(grep resource_group $VFXT_TEST_VARS_FILE | sed -E 's/^.*resource_group": "([^"]+)".*$/\1/')
-      echo "RESOURCE_GROUP: $RESOURCE_GROUP"
-      az group delete --yes -n $RESOURCE_GROUP
-    displayName: 'Delete resource group'
-    condition: and(always(), ne(variables['skip_rg_cleanup'], 'true'))
-    env:
-      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      VFXT_TEST_VARS_FILE: pipelines.json
-
-  - task: PublishTestResults@2
-    condition: always()
-    inputs:
-      testResultsFiles: 'junit/test-results*.xml'
-      testRunTitle: 'Publish pytest results'
+  # - task: PublishTestResults@2
+  #   condition: always()
+  #   inputs:
+  #     testResultsFiles: 'junit/test-results*.xml'
+  #     testRunTitle: 'Publish pytest results'
