@@ -35,6 +35,10 @@ jobs:
     displayName: 'Install Python dependencies'
 
   - script: |
+      if [ -n "$VFXT_DEPLOY_LOCATION" ]; then
+        jq -n --arg loc $VFXT_DEPLOY_LOCATION '{ atd_obj: { location: $loc } }' > $VFXT_TEST_VARS_FILE
+      fi
+
       pytest --disable-pytest-warnings test/test_vfxt_template_deploy.py --doctest-modules --junitxml=junit/test-results01.xml
     displayName: 'Test template-based deployment of Avere vFXT'
     env:
