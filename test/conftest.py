@@ -12,6 +12,45 @@ from scp import SCPClient
 from lib.helpers import (create_ssh_client, run_ssh_command, run_ssh_commands)
 
 
+# COMMAND-LINE OPTIONS ########################################################
+def pytest_addoption(parser):
+    def test_vars_envar_check():
+        if "VFXT_TEST_VARS_FILE" in os.environ:
+            return os.environ["VFXT_TEST_VARS_FILE"]
+        return None
+
+    parser.addoption(
+        "--location", action="store", default="westus2",
+        help="Azure region short name to use for deployments (default: westus2)",
+    )
+    parser.addoption(
+        "--prefer_cli_args", action="store_true",
+        default=False,
+        help="When specified, prioritize custom command-line arguments over "
+        + "the values in the file pointed to by \"test_vars_file\".",
+    )
+    parser.addoption(
+        "--ssh_priv_key", action="store",
+        default=os.path.expanduser(r"~/.ssh/id_rsa"),
+        help="SSH private key to use in deployments and tests (default: ~/.ssh/id_rsa)",
+    )
+    parser.addoption(
+        "--ssh_pub_key", action="store",
+        default=os.path.expanduser(r"~/.ssh/id_rsa.pub"),
+        help="SSH public key to use in deployments and tests (default: ~/.ssh/id_rsa.pub)",
+    )
+    parser.addoption(
+        "--test_vars_file", action="store",
+        default=test_vars_envar_check(),
+        help="Test variables file used for passing values between runs. This "
+        + "file is in JSON format. It is loaded during test setup and written "
+        + "out during test teardown. The contents of this file override other "
+        + "custom command-line options unless the \"prefer_cli_args\" option "
+        + "is specified. (default: $VFXT_TEST_VARS_FILE if set, else None)"
+    )
+
+
+# FIXTURES ####################################################################
 @pytest.fixture()
 def averecmd_params(ssh_con, test_vars):
     return {
@@ -78,30 +117,53 @@ def ssh_con(test_vars):
 
 
 @pytest.fixture(scope="module")
-def test_vars():
+def test_vars(request):
     """
     Loads saved test variables, instantiates an ArmTemplateDeploy object, and
     dumps test variables during teardown.
     """
     log = logging.getLogger("test_vars")
-    vars = {}
-    if "VFXT_TEST_VARS_FILE" in os.environ and \
-       os.path.isfile(os.environ["VFXT_TEST_VARS_FILE"]):
-        log.debug("Loading into vars from {} (VFXT_TEST_VARS_FILE)".format(
-                  os.environ["VFXT_TEST_VARS_FILE"]))
-        with open(os.environ["VFXT_TEST_VARS_FILE"], "r") as vtvf:
-            vars = {**vars, **json.load(vtvf)}
-    log.debug("Loaded the following JSON into vars: {}".format(
-              json.dumps(vars, sort_keys=True, indent=4)))
 
-    vars["atd_obj"] = ArmTemplateDeploy(_fields=vars.pop("atd_obj", {}))
+    # Load command-line arguments into a dictionary.
+    test_vars_file = request.config.getoption("--test_vars_file")
+    cl_opts = {
+        "location": request.config.getoption("--location"),
+        "ssh_priv_key": request.config.getoption("--ssh_priv_key"),
+        "ssh_pub_key": request.config.getoption("--ssh_pub_key"),
+        "test_vars_file": test_vars_file
+    }
+    cja = {"sort_keys": True, "indent": 4}  # common JSON arguments
+    log.debug("JSON from command-line args: {}".format(
+              json.dumps(cl_opts, **cja)))
+
+    vars = {**cl_opts}  # prime vars with cl_opts
+
+    # Load JSON from test_vars_file, if specified.
+    if test_vars_file and os.path.isfile(test_vars_file):
+        log.debug("Loading into vars from {} (test_vars_file)".format(
+                  test_vars_file))
+        with open(test_vars_file, "r") as vtvf:
+            vars = {**vars, **json.load(vtvf)}
+        log.debug("After loading from test_vars_file, vars is : {}".format(
+                json.dumps(vars, **cja)))
+
+    # Override test_vars_file values with command-line arguments.
+    if request.config.getoption("--prefer_cli_args"):
+        vars = {**vars, **cl_opts}
+        log.debug("Overwrote vars with command-line args: {}".format(
+              json.dumps(vars, **cja)))
+
+    atd_obj = ArmTemplateDeploy(_fields={**vars})
+    # "Promote" serializable members to the top level.
+    vars = {**vars, **json.loads(atd_obj.serialize())}
+    vars["atd_obj"] = atd_obj  # store the object in a common place
 
     yield vars
 
-    if "VFXT_TEST_VARS_FILE" in os.environ:
-        vars["atd_obj"] = json.loads(vars["atd_obj"].serialize())
-        log.debug("vars: {}".format(json.dumps(vars, sort_keys=True, indent=4)))
-        log.debug("Saving vars to {} (VFXT_TEST_VARS_FILE)".format(
-                  os.environ["VFXT_TEST_VARS_FILE"]))
-        with open(os.environ["VFXT_TEST_VARS_FILE"], "w") as vtvf:
-            json.dump(vars, vtvf, sort_keys=True, indent=4)
+    if test_vars_file:  # write out vars to test_vars_file
+        vars = {**vars, **json.loads(vars["atd_obj"].serialize())}
+        vars.pop("atd_obj")
+        log.debug("vars: {}".format(json.dumps(vars, **cja)))
+        log.debug("Saving vars to {} (test_vars_file)".format(test_vars_file))
+        with open(test_vars_file, "w") as vtvf:
+            json.dump(vars, vtvf, **cja)
