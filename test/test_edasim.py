@@ -90,7 +90,7 @@ class TestEdasim:
             cd /nfs/node0/bootstrap/rsyslog
             sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/rsyslog/33-jobsubmitter.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/33-jobsubmitter.conf
             sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/rsyslog/30-orchestrator.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/30-orchestrator.conf
-            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/rsyslog/1-worker.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/31-worker.conf
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/rsyslog/31-worker.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/31-worker.conf
             sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/rsyslog/32-onpremjobuploader.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/32-onpremjobuploader.conf
             sudo mkdir -p /nfs/node0/bootstrap/systemd
             cd /nfs/node0/bootstrap/systemd
