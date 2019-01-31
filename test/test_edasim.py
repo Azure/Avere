@@ -119,6 +119,36 @@ class TestEdasim:
         deploy_result = wait_for_op(atd.deploy())
         test_vars["deploy_edasim_outputs"] = deploy_result.properties.outputs
 
+        def test_vdbench_run(self, test_vars):  # noqa: F811
+        log = logging.getLogger("test_edasim_run")
+        node_ip = test_vars["deploy_edasim_outputs"]["node_0_ip_address"]["value"]
+        with SSHTunnelForwarder(
+            test_vars["controller_ip"],
+            ssh_username=test_vars["controller_user"],
+            ssh_pkey=os.path.expanduser(r"~/.ssh/id_rsa"),
+            remote_bind_address=(node_ip, 22),
+        ) as ssh_tunnel:
+            sleep(1)
+            try:
+                ssh_client = create_ssh_client(
+                    test_vars["controller_user"],
+                    "127.0.0.1",
+                    ssh_tunnel.local_bind_port,
+                )
+                scp_client = SCPClient(ssh_client.get_transport())
+                try:
+                    scp_client.put(os.path.expanduser(r"~/.ssh/id_rsa"),
+                                   r"~/.ssh/id_rsa")
+                finally:
+                    scp_client.close()
+                commands = """
+                    ~/copy_idrsa.sh
+                    cd
+                    """.split("\n")
+                run_ssh_commands(ssh_client, commands)
+            finally:
+                ssh_client.close()
+
 
 if __name__ == "__main__":
     pytest.main(sys.argv)
