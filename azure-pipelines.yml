@@ -4,12 +4,14 @@ trigger:
 - releases/*
 
 variables:
-  skip_rg_cleanup: 'false'
+  RUN_EDASIM_STEP: 'true'
+  RUN_VDBENCH_STEP: 'false'
+  SKIP_RG_CLEANUP: 'false'
   VFXT_DEPLOY_LOCATION: 'westus2'
   VFXT_TEST_VARS_FILE: 'pipelines.json'
 
 jobs:
-- job: template
+- job: vfxt_template_testing
   timeoutInMinutes: 120
   pool:
     vmImage: 'Ubuntu 16.04'
@@ -102,18 +104,20 @@ jobs:
     displayName: 'Grep errors from vfxt.log (+/- 5 lines)'
     condition: or(failed(), canceled())
 
-  # - script: |
-  #     pytest --disable-pytest-warnings test/test_vdbench.py --doctest-modules --junitxml=junit/test-results04.xml
-  #   displayName: 'Test vdbench on Avere vFXT'
-  #   env:
-  #     AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-  #     AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-  #     AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-  #     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+  - script: |
+      pytest --disable-pytest-warnings test/test_vdbench.py --doctest-modules --junitxml=junit/test-results04.xml
+    displayName: 'Test vdbench on Avere vFXT'
+    condition: and(succeeded(), eq(variables['RUN_VDBENCH_STEP'], 'true'))
+    env:
+      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
       pytest --disable-pytest-warnings test/test_edasim.py --doctest-modules --junitxml=junit/test-results05.xml
     displayName: 'Test edasim on Avere vFXT'
+    condition: and(succeeded(), eq(variables['RUN_EDASIM_STEP'], 'true'))
     env:
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
@@ -132,8 +136,8 @@ jobs:
       RESOURCE_GROUP=$(jq -r .atd_obj.resource_group $VFXT_TEST_VARS_FILE)
       echo "RESOURCE_GROUP: $RESOURCE_GROUP"
       az group delete --yes -n $RESOURCE_GROUP
-    displayName: 'Delete resource group'
-    condition: and(always(), ne(variables['skip_rg_cleanup'], 'true'))
+    displayName: 'Clean up resource group'
+    condition: and(always(), ne(variables['SKIP_RG_CLEANUP'], 'true'))
     env:
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
