@@ -219,7 +219,7 @@
   "outputs": {
     "node_0_ip_address": {
       "type": "string",
-      "value": "[reference(concat(resourceId('Microsoft.Compute/virtualMachineScaleSets/', variables('vmName')), '/virtualMachines/0/networkInterfaces/vmnic-anhowe1109fclient'), '2017-03-30').ipConfigurations[0].properties.privateIPAddress]"
+      "value": "[reference(concat(resourceId('Microsoft.Compute/virtualMachineScaleSets/', variables('vmName')), '/virtualMachines/0/networkInterfaces/', variables('nicName')), '2017-03-30').ipConfigurations[0].properties.privateIPAddress]"
     },
     "vm_count": {
       "type": "int",

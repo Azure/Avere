@@ -539,5 +539,22 @@
       }
     }
   ],
-  "outputs": {}
+  "outputs": {
+    "jobsubmitter_0_ip_address": {
+      "type": "string",
+      "value": "[reference(concat(resourceId('Microsoft.Compute/virtualMachineScaleSets/', variables('jobSubmitterVmName')), '/virtualMachines/0/networkInterfaces/', variables('jobSubmitterNicName')), '2017-03-30').ipConfigurations[0].properties.privateIPAddress]"
+    },
+	  "orchestrator_0_ip_address": {
+      "type": "string",
+      "value": "[reference(concat(resourceId('Microsoft.Compute/virtualMachineScaleSets/', variables('orchestratorVmName')), '/virtualMachines/0/networkInterfaces/', variables('orchestratorNicName')), '2017-03-30').ipConfigurations[0].properties.privateIPAddress]"
+    },
+	  "worker_0_ip_address": {
+      "type": "string",
+      "value": "[reference(concat(resourceId('Microsoft.Compute/virtualMachineScaleSets/', variables('workerVmName')), '/virtualMachines/0/networkInterfaces/', variables('workerNicName')), '2017-03-30').ipConfigurations[0].properties.privateIPAddress]"
+    },
+	  "onpremjobuploader_0_ip_address": {
+      "type": "string",
+      "value": "[reference(concat(resourceId('Microsoft.Compute/virtualMachineScaleSets/', variables('onpremjobuploaderVmName')), '/virtualMachines/0/networkInterfaces/', variables('onpremjobuploaderNicName')), '2017-03-30').ipConfigurations[0].properties.privateIPAddress]"
+    }
+  }
 }
