@@ -5,7 +5,7 @@ trigger:
 
 variables:
   skip_rg_cleanup: 'false'
-  VFXT_DEPLOY_LOCATION: 'eastus2'
+  VFXT_DEPLOY_LOCATION: 'westus2'
   VFXT_TEST_VARS_FILE: 'pipelines.json'
 
 jobs:
@@ -38,6 +38,8 @@ jobs:
   - script: |
       if [ -n "$VFXT_DEPLOY_LOCATION" ]; then
         jq -n --arg loc $VFXT_DEPLOY_LOCATION '{ atd_obj: { location: $loc } }' > $VFXT_TEST_VARS_FILE
+        echo "LOCATION = $VFXT_DEPLOY_LOCATION"
+        cat $VFXT_TEST_VARS_FILE
       fi
 
       pytest --disable-pytest-warnings test/test_vfxt_template_deploy.py --doctest-modules --junitxml=junit/test-results01.xml
@@ -51,6 +53,10 @@ jobs:
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
+      if [ -f $VFXT_TEST_VARS_FILE ]; then
+        cat $VFXT_TEST_VARS_FILE
+      fi
+
       pytest --disable-pytest-warnings test/test_vfxt_cluster_status.py -k TestVfxtClusterStatus --doctest-modules --junitxml=junit/test-results02.xml
     displayName: 'Test cluster status, health, etc.'
     condition: succeeded()
