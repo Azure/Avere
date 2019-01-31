@@ -9,6 +9,8 @@ import json
 import logging
 import os
 import sys
+from time import sleep
+
 
 # from requirements.txt
 import pytest
@@ -119,9 +121,9 @@ class TestEdasim:
         deploy_result = wait_for_op(atd.deploy())
         test_vars["deploy_edasim_outputs"] = deploy_result.properties.outputs
 
-        def test_vdbench_run(self, test_vars):  # noqa: F811
+    def test_edasim_run(self, test_vars):  # noqa: F811
         log = logging.getLogger("test_edasim_run")
-        node_ip = test_vars["deploy_edasim_outputs"]["node_0_ip_address"]["value"]
+        node_ip = test_vars["deploy_edasim_outputs"]["jobsubmitter_0_ip_address"]["value"]
         with SSHTunnelForwarder(
             test_vars["controller_ip"],
             ssh_username=test_vars["controller_user"],
@@ -144,6 +146,7 @@ class TestEdasim:
                 commands = """
                     ~/copy_idrsa.sh
                     cd
+                    ./jobrun.sh
                     """.split("\n")
                 run_ssh_commands(ssh_client, commands)
             finally:
