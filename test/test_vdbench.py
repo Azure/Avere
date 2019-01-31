@@ -73,6 +73,7 @@ class TestVDBench:
                     test_vars["controller_user"],
                     "127.0.0.1",
                     ssh_tunnel.local_bind_port,
+                    key_filename=test_vars["ssh_priv_key"]
                 )
                 scp_client = SCPClient(ssh_client.get_transport())
                 try:

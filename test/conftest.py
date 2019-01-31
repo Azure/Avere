@@ -111,7 +111,8 @@ def scp_cli(ssh_con):
 @pytest.fixture()
 def ssh_con(test_vars):
     client = create_ssh_client(test_vars["controller_user"],
-                               test_vars["controller_ip"])
+                               test_vars["controller_ip"],
+                               key_filename=test_vars["ssh_priv_key"])
     yield client
     client.close()
 
