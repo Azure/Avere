@@ -15,6 +15,8 @@ from time import sleep
 # from requirements.txt
 import pytest
 import requests
+from sshtunnel import SSHTunnelForwarder
+from scp import SCPClient
 
 # local libraries
 from lib.helpers import create_ssh_client, run_ssh_commands, wait_for_op
