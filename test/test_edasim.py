@@ -147,8 +147,6 @@ class TestEdasim:
                 finally:
                     scp_client.close()
                 commands = """
-                    ~/copy_idrsa.sh
-                    cd
                     ./jobrun.sh
                     """.split("\n")
                 run_ssh_commands(ssh_client, commands)
