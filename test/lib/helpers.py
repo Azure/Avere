@@ -7,13 +7,14 @@ from time import sleep, time
 from paramiko import AutoAddPolicy, SSHClient
 
 
-def create_ssh_client(username, hostname, port=22, password=None):
+def create_ssh_client(username, hostname, port=22, password=None, key_filename=None):
     """Creates (and returns) an SSHClient. Auth'n is via publickey."""
     ssh_client = SSHClient()
     ssh_client.load_system_host_keys()
     ssh_client.set_missing_host_key_policy(AutoAddPolicy())
     ssh_client.connect(
-        username=username, hostname=hostname, port=port, password=password
+        username=username, hostname=hostname, port=port,
+        password=password, key_filename=key_filename
     )
     return ssh_client
 

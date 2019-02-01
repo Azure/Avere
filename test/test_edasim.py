@@ -103,7 +103,7 @@ class TestEdasim:
 
     def test_edasim_deploy(self, test_vars):  # noqa: F811
         atd = test_vars["atd_obj"]
-        with open(os.path.expanduser(r'~/.ssh/id_rsa.pub'), 'r') as ssh_pub_f:
+        with open(test_vars["ssh_pub_key"], 'r') as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
         with open("{}/src/go/cmd/edasim/deploymentartifacts/template/azuredeploy.json".format(
                   os.environ["BUILD_SOURCESDIRECTORY"])) as tfile:

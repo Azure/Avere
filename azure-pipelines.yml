@@ -38,13 +38,9 @@ jobs:
     displayName: 'Install Python dependencies'
 
   - script: |
-      if [ -n "$VFXT_DEPLOY_LOCATION" ]; then
-        jq -n --arg loc $VFXT_DEPLOY_LOCATION '{ atd_obj: { location: $loc } }' > $VFXT_TEST_VARS_FILE
-        echo "LOCATION = $VFXT_DEPLOY_LOCATION"
-        cat $VFXT_TEST_VARS_FILE
-      fi
-
-      pytest --disable-pytest-warnings test/test_vfxt_template_deploy.py --doctest-modules --junitxml=junit/test-results01.xml
+      pytest --disable-pytest-warnings test/test_vfxt_template_deploy.py \
+        --location $VFXT_DEPLOY_LOCATION \
+        --doctest-modules --junitxml=junit/test-results01.xml
     displayName: 'Test template-based deployment of Avere vFXT'
     env:
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
@@ -59,7 +55,9 @@ jobs:
         cat $VFXT_TEST_VARS_FILE
       fi
 
-      pytest --disable-pytest-warnings test/test_vfxt_cluster_status.py -k TestVfxtClusterStatus --doctest-modules --junitxml=junit/test-results02.xml
+      pytest --disable-pytest-warnings test/test_vfxt_cluster_status.py \
+        -k TestVfxtClusterStatus \
+        --doctest-modules --junitxml=junit/test-results02.xml
     displayName: 'Test cluster status, health, etc.'
     condition: succeeded()
     env:
@@ -71,7 +69,9 @@ jobs:
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
-      pytest --disable-pytest-warnings test/test_vfxt_cluster_status.py -k TestVfxtSupport --doctest-modules --junitxml=junit/test-results03.xml
+      pytest --disable-pytest-warnings test/test_vfxt_cluster_status.py \
+        -k TestVfxtSupport \
+        --doctest-modules --junitxml=junit/test-results03.xml
 
       CONTROLLER_IP=$(jq -r .controller_ip $VFXT_TEST_VARS_FILE)
       CONTROLLER_NAME=$(jq -r .controller_name $VFXT_TEST_VARS_FILE)
@@ -105,7 +105,8 @@ jobs:
     condition: or(failed(), canceled())
 
   - script: |
-      pytest --disable-pytest-warnings test/test_vdbench.py --doctest-modules --junitxml=junit/test-results04.xml
+      pytest --disable-pytest-warnings test/test_vdbench.py \
+        --doctest-modules --junitxml=junit/test-results04.xml
     displayName: 'Test vdbench on Avere vFXT'
     condition: and(succeeded(), eq(variables['RUN_VDBENCH_STEP'], 'true'))
     env:
@@ -115,7 +116,8 @@ jobs:
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
-      pytest --disable-pytest-warnings test/test_edasim.py --doctest-modules --junitxml=junit/test-results05.xml
+      pytest --disable-pytest-warnings test/test_edasim.py \
+        --doctest-modules --junitxml=junit/test-results05.xml
     displayName: 'Test edasim on Avere vFXT'
     condition: and(succeeded(), eq(variables['RUN_EDASIM_STEP'], 'true'))
     env:
@@ -133,7 +135,7 @@ jobs:
 
   - script: |
       az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-      RESOURCE_GROUP=$(jq -r .atd_obj.resource_group $VFXT_TEST_VARS_FILE)
+      RESOURCE_GROUP=$(jq -r .resource_group $VFXT_TEST_VARS_FILE)
       echo "RESOURCE_GROUP: $RESOURCE_GROUP"
       az group delete --yes -n $RESOURCE_GROUP
     displayName: 'Clean up resource group'
