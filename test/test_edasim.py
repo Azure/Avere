@@ -17,7 +17,8 @@ import pytest
 import requests
 
 # local libraries
-from lib.helpers import run_ssh_commands, wait_for_op
+from lib.helpers import create_ssh_client, run_ssh_commands, wait_for_op
+
 
 
 class TestEdasim:
