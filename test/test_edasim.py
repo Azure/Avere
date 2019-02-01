@@ -8,13 +8,16 @@ Driver for testing EDASIM
 import json
 import logging
 import sys
+from time import sleep
 
 # from requirements.txt
 import pytest
 import requests
+from sshtunnel import SSHTunnelForwarder
 
 # local libraries
-from lib.helpers import run_ssh_commands, wait_for_op
+from lib.helpers import (create_ssh_client, run_ssh_command, run_ssh_commands,
+                         wait_for_op)
 
 
 class TestEdasim:
@@ -78,25 +81,22 @@ class TestEdasim:
     def test_edasim_setup(self, mnt_nodes, ssh_con):  # noqa: F811
         commands = """
             sudo mkdir -p /nfs/node0/bootstrap
-            cd /nfs/node0/bootstrap
-            curl --retry 5 --retry-delay 5 -o bootstrap.jobsubmitter.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.jobsubmitter.sh
-            curl --retry 5 --retry-delay 5 -o bootstrap.orchestrator.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.orchestrator.sh
-            curl --retry 5 --retry-delay 5 -o bootstrap.onpremjobuploader.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.onpremjobuploader.sh
-            curl --retry 5 --retry-delay 5 -o bootstrap.worker.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.worker.sh
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.jobsubmitter.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.jobsubmitter.sh
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.orchestrator.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.orchestrator.sh
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.onpremjobuploader.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.onpremjobuploader.sh
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.worker.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.worker.sh
             sudo mkdir -p /nfs/node0/bootstrap/edasim
             source ~/.profile && sudo cp $GOPATH/bin/* /nfs/node0/bootstrap/edasim
             sudo mkdir -p /nfs/node0/bootstrap/rsyslog
-            cd /nfs/node0/bootstrap/rsyslog
-            sudo curl --retry 5 --retry-delay 5 -o 33-jobsubmitter.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/33-jobsubmitter.conf
-            sudo curl --retry 5 --retry-delay 5 -o 30-orchestrator.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/30-orchestrator.conf
-            sudo curl --retry 5 --retry-delay 5 -o 31-worker.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/31-worker.conf
-            sudo curl --retry 5 --retry-delay 5 -o 32-onpremjobuploader.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/32-onpremjobuploader.conf
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/rsyslog/33-jobsubmitter.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/33-jobsubmitter.conf
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/rsyslog/30-orchestrator.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/30-orchestrator.conf
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/rsyslog/31-worker.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/31-worker.conf
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/rsyslog/32-onpremjobuploader.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/32-onpremjobuploader.conf
             sudo mkdir -p /nfs/node0/bootstrap/systemd
-            cd /nfs/node0/bootstrap/systemd
-            sudo curl --retry 5 --retry-delay 5 -o jobsubmitter.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/jobsubmitter.service
-            sudo curl --retry 5 --retry-delay 5 -o onpremjobuploader.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/onpremjobuploader.service
-            sudo curl --retry 5 --retry-delay 5 -o orchestrator.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/orchestrator.service
-            sudo curl --retry 5 --retry-delay 5 -o worker.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/worker.service
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/systemd/jobsubmitter.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/jobsubmitter.service
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/systemd/onpremjobuploader.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/onpremjobuploader.service
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/systemd/orchestrator.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/orchestrator.service
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/systemd/worker.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/worker.service
             """.split("\n")
         run_ssh_commands(ssh_con, commands)
 
@@ -120,6 +120,27 @@ class TestEdasim:
         atd.deploy_name = "test_edasim_deploy"
         deploy_result = wait_for_op(atd.deploy())
         test_vars["deploy_edasim_outputs"] = deploy_result.properties.outputs
+
+    def test_edasim_run(self, test_vars):  # noqa: F811
+        log = logging.getLogger("test_edasim_run")
+        node_ip = test_vars["deploy_edasim_outputs"]["jobsubmitter_0_ip_address"]["value"]
+        with SSHTunnelForwarder(
+            test_vars["controller_ip"],
+            ssh_username=test_vars["controller_user"],
+            ssh_pkey=test_vars["ssh_priv_key"],
+            remote_bind_address=(node_ip, 22),
+        ) as ssh_tunnel:
+            sleep(1)
+            try:
+                ssh_client = create_ssh_client(
+                    test_vars["controller_user"],
+                    "127.0.0.1",
+                    ssh_tunnel.local_bind_port,
+                    key_filename=test_vars["ssh_priv_key"]
+                )
+                run_ssh_command(ssh_client, ". .profile && ./jobrun.sh testrun")
+            finally:
+                ssh_client.close()
 
 
 if __name__ == "__main__":
