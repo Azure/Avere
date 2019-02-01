@@ -11,16 +11,14 @@ import os
 import sys
 from time import sleep
 
-
 # from requirements.txt
 import pytest
 import requests
 from sshtunnel import SSHTunnelForwarder
-from scp import SCPClient
 
 # local libraries
-from lib.helpers import create_ssh_client, run_ssh_commands, wait_for_op
-
+from lib.helpers import (create_ssh_client, run_ssh_command, run_ssh_commands,
+                         wait_for_op)
 
 
 class TestEdasim:
@@ -124,15 +122,9 @@ class TestEdasim:
         deploy_result = wait_for_op(atd.deploy())
         test_vars["deploy_edasim_outputs"] = deploy_result.properties.outputs
 
-    def test_edasim_run(self, test_vars, storage_account, resource_group):  # noqa: F811
+    def test_edasim_run(self, test_vars):  # noqa: F811
         log = logging.getLogger("test_edasim_run")
         node_ip = test_vars["deploy_edasim_outputs"]["jobsubmitter_0_ip_address"]["value"]
-        atd = test_vars["atd_obj"]
-        storage_keys = atd.st_client.storage_accounts.list_keys(
-            resource_group.name,
-            storage_account.name)
-        storage_keys = {v.key_name: v.value for v in storage_keys.keys}
-        key = storage_keys['key1']
         with SSHTunnelForwarder(
             test_vars["controller_ip"],
             ssh_username=test_vars["controller_user"],
@@ -146,16 +138,7 @@ class TestEdasim:
                     "127.0.0.1",
                     ssh_tunnel.local_bind_port,
                 )
-                scp_client = SCPClient(ssh_client.get_transport())
-                try:
-                    scp_client.put(os.path.expanduser(r"~/.ssh/id_rsa"),
-                                   r"~/.ssh/id_rsa")
-                finally:
-                    scp_client.close()
-                commands = """
-                    export AZURE_STORAGE_ACCOUNT={0} && export AZURE_STORAGE_ACCOUNT_KEY={1} && ./jobrun.sh testrun
-                    """.format(storage_account.name, key).split("\n")
-                run_ssh_commands(ssh_client, commands)
+                run_ssh_command(ssh_client, ". .profile && ./jobrun.sh testrun")
             finally:
                 ssh_client.close()
 
