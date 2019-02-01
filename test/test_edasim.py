@@ -153,7 +153,7 @@ class TestEdasim:
                 finally:
                     scp_client.close()
                 commands = """
-                    export AZURE_STORAGE_ACCOUNT= {0}
+                    export AZURE_STORAGE_ACCOUNT={0}
                     export AZURE_STORAGE_ACCOUNT_KEY={1}
                     ./jobrun.sh testrun
                     """.format(storage_account.name, key).split("\n")
