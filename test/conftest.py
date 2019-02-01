@@ -14,11 +14,19 @@ from lib.helpers import (create_ssh_client, run_ssh_command, run_ssh_commands)
 
 # COMMAND-LINE OPTIONS ########################################################
 def pytest_addoption(parser):
-    def test_vars_envar_check():
-        if "VFXT_TEST_VARS_FILE" in os.environ:
-            return os.environ["VFXT_TEST_VARS_FILE"]
+    def envar_check(envar):
+        if envar in os.environ:
+            return os.environ[envar]
         return None
 
+    parser.addoption(
+        "--build_root", action="store",
+        default=envar_check("BUILD_SOURCESDIRECTORY"),
+        help="Local path to the root of the Azure/Avere repo clone "
+        + "(e.g., /home/user1/git/Azure/Avere). This is used to find the "
+        + "various templates that are deployed during these tests. (default: "
+        + "$BUILD_SOURCESDIRECTORY if set, else current directory)",
+    )
     parser.addoption(
         "--location", action="store", default="westus2",
         help="Azure region short name to use for deployments (default: westus2)",
@@ -41,7 +49,7 @@ def pytest_addoption(parser):
     )
     parser.addoption(
         "--test_vars_file", action="store",
-        default=test_vars_envar_check(),
+        default=envar_check("VFXT_TEST_VARS_FILE"),
         help="Test variables file used for passing values between runs. This "
         + "file is in JSON format. It is loaded during test setup and written "
         + "out during test teardown. The contents of this file override other "
@@ -126,8 +134,13 @@ def test_vars(request):
     log = logging.getLogger("test_vars")
 
     # Load command-line arguments into a dictionary.
+    build_root = request.config.getoption("--build_root")
+    if not build_root:
+        build_root = os.getcwd()
+
     test_vars_file = request.config.getoption("--test_vars_file")
     cl_opts = {
+        "build_root": build_root,
         "location": request.config.getoption("--location"),
         "ssh_priv_key": request.config.getoption("--ssh_priv_key"),
         "ssh_pub_key": request.config.getoption("--ssh_pub_key"),
