@@ -37,7 +37,7 @@ class TestVDBench:
     def test_vdbench_deploy(self, test_vars):  # noqa: F811
         log = logging.getLogger("test_vdbench_deploy")
         atd = test_vars["atd_obj"]
-        with open(os.path.expanduser(r"~/.ssh/id_rsa.pub"), "r") as ssh_pub_f:
+        with open(test_vars["ssh_pub_key"], "r") as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
         with open("{}/src/client/vmas/azuredeploy.json".format(
                   os.environ["BUILD_SOURCESDIRECTORY"])) as tfile:
@@ -64,7 +64,7 @@ class TestVDBench:
         with SSHTunnelForwarder(
             test_vars["controller_ip"],
             ssh_username=test_vars["controller_user"],
-            ssh_pkey=os.path.expanduser(r"~/.ssh/id_rsa"),
+            ssh_pkey=test_vars["ssh_priv_key"],
             remote_bind_address=(node_ip, 22),
         ) as ssh_tunnel:
             sleep(1)
@@ -73,11 +73,11 @@ class TestVDBench:
                     test_vars["controller_user"],
                     "127.0.0.1",
                     ssh_tunnel.local_bind_port,
+                    key_filename=test_vars["ssh_priv_key"]
                 )
                 scp_client = SCPClient(ssh_client.get_transport())
                 try:
-                    scp_client.put(os.path.expanduser(r"~/.ssh/id_rsa"),
-                                   r"~/.ssh/id_rsa")
+                    scp_client.put(test_vars["ssh_priv_key"], r"~/.ssh/id_rsa")
                 finally:
                     scp_client.close()
                 commands = """

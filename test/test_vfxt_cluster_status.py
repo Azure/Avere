@@ -111,7 +111,7 @@ class TestVfxtSupport:
             with SSHTunnelForwarder(
                 test_vars["controller_ip"],
                 ssh_username=test_vars["controller_user"],
-                ssh_pkey=os.path.expanduser(r"~/.ssh/id_rsa"),
+                ssh_pkey=test_vars["ssh_priv_key"],
                 remote_bind_address=(node_ip, 22),
             ) as ssh_tunnel:
                 sleep(1)

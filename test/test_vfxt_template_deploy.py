@@ -24,7 +24,7 @@ class TestVfxtTemplateDeploy:
         with open("{}/src/vfxt/azuredeploy-auto.json".format(
                   os.environ["BUILD_SOURCESDIRECTORY"])) as tfile:
             atd.template = json.load(tfile)
-        with open(os.path.expanduser(r"~/.ssh/id_rsa.pub"), "r") as ssh_pub_f:
+        with open(test_vars["ssh_pub_key"], "r") as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
         atd.deploy_params = {
             "avereClusterName": atd.deploy_id + "-cluster",
