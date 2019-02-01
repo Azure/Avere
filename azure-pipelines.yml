@@ -135,7 +135,7 @@ jobs:
 
   - script: |
       az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-      RESOURCE_GROUP=$(jq -r .atd_obj.resource_group $VFXT_TEST_VARS_FILE)
+      RESOURCE_GROUP=$(jq -r .resource_group $VFXT_TEST_VARS_FILE)
       echo "RESOURCE_GROUP: $RESOURCE_GROUP"
       az group delete --yes -n $RESOURCE_GROUP
     displayName: 'Clean up resource group'
