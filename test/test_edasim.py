@@ -124,9 +124,15 @@ class TestEdasim:
         deploy_result = wait_for_op(atd.deploy())
         test_vars["deploy_edasim_outputs"] = deploy_result.properties.outputs
 
-    def test_edasim_run(self, test_vars):  # noqa: F811
+    def test_edasim_run(self, test_vars, storage_account, resource_group):  # noqa: F811
         log = logging.getLogger("test_edasim_run")
         node_ip = test_vars["deploy_edasim_outputs"]["jobsubmitter_0_ip_address"]["value"]
+        atd = test_vars["atd_obj"]
+        storage_keys = atd.st_client.storage_accounts.list_keys(
+            resource_group.name,
+            storage_account.name)
+        storage_keys = {v.key_name: v.value for v in storage_keys.keys}
+        key = storage_keys['key1']
         with SSHTunnelForwarder(
             test_vars["controller_ip"],
             ssh_username=test_vars["controller_user"],
@@ -147,8 +153,10 @@ class TestEdasim:
                 finally:
                     scp_client.close()
                 commands = """
+                    export AZURE_STORAGE_ACCOUNT= {0}
+                    export AZURE_STORAGE_ACCOUNT_KEY={1}
                     ./jobrun.sh testrun
-                    """.split("\n")
+                    """.format(storage_account.name, key).split("\n")
                 run_ssh_commands(ssh_client, commands)
             finally:
                 ssh_client.close()
