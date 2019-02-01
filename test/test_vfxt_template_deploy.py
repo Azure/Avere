@@ -22,7 +22,7 @@ class TestVfxtTemplateDeploy:
         log = logging.getLogger("test_deploy_template")
         atd = test_vars["atd_obj"]
         with open("{}/src/vfxt/azuredeploy-auto.json".format(
-                  os.environ["BUILD_SOURCESDIRECTORY"])) as tfile:
+                  test_vars["build_root"])) as tfile:
             atd.template = json.load(tfile)
         with open(test_vars["ssh_pub_key"], "r") as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()

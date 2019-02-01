@@ -21,15 +21,14 @@ from lib.helpers import (create_ssh_client, run_averecmd, run_ssh_commands,
 class TestVfxtClusterStatus:
     """Basic vFXT cluster health tests."""
 
-    def test_basic_fileops(self, mnt_nodes, scp_cli, ssh_con):  # noqa: F811
+    def test_basic_fileops(self, mnt_nodes, scp_cli, ssh_con, test_vars):  # noqa: E501, F811
         """
         Quick check of file operations.
         See check_node_basic_fileops.sh for more information.
         """
         script_name = "check_node_basic_fileops.sh"
         scp_cli.put(
-            "{0}/test/{1}".format(os.environ["BUILD_SOURCESDIRECTORY"],
-                                  script_name),
+            "{0}/test/{1}".format(test_vars["build_root"], script_name),
             r"~/.",
         )
         commands = """
@@ -41,7 +40,8 @@ class TestVfxtClusterStatus:
     def test_node_health(self, averecmd_params):  # noqa: F811
         """Check that cluster is reporting that all nodes are up."""
         for node in run_averecmd(**averecmd_params, method="node.list"):
-            result = run_averecmd(**averecmd_params, method="node.get", args=node)
+            result = run_averecmd(**averecmd_params,
+                                  method="node.get", args=node)
             assert result[node]["state"] == "up"
 
     def test_ha_enabled(self, averecmd_params):  # noqa: F811

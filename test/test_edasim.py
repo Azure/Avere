@@ -7,7 +7,6 @@ Driver for testing EDASIM
 # standard imports
 import json
 import logging
-import os
 import sys
 
 # from requirements.txt
@@ -106,7 +105,7 @@ class TestEdasim:
         with open(test_vars["ssh_pub_key"], 'r') as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
         with open("{}/src/go/cmd/edasim/deploymentartifacts/template/azuredeploy.json".format(
-                  os.environ["BUILD_SOURCESDIRECTORY"])) as tfile:
+                  test_vars["build_root"])) as tfile:
             atd.template = json.load(tfile)
         atd.deploy_params = {
             "secureAppEnvironmentVariables": test_vars["cmd1"] + test_vars["cmd2"],

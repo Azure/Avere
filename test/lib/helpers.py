@@ -55,7 +55,7 @@ def run_ssh_command(ssh_client, command, ignore_nonzero_rc=False, timeout=None):
 
     if cmd_rc and not ignore_nonzero_rc:
         log.error(
-            '"{}" failed with exit code {}.\n\tSTDOUT: {}\n\tSTDERR: {}'.format(
+            '"{}" failed with exit code {}\n\tSTDOUT: {}\n\tSTDERR: {}'.format(
                 command, cmd_rc, cmd_out, cmd_err)
         )
         assert(0 == cmd_rc)

@@ -7,7 +7,6 @@ Driver for testing Azure ARM template-based deployment of the Avere vFXT.
 # standard imports
 import json
 import logging
-import os
 import sys
 from time import sleep
 
@@ -40,7 +39,7 @@ class TestVDBench:
         with open(test_vars["ssh_pub_key"], "r") as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
         with open("{}/src/client/vmas/azuredeploy.json".format(
-                  os.environ["BUILD_SOURCESDIRECTORY"])) as tfile:
+                  test_vars["build_root"])) as tfile:
             atd.template = json.load(tfile)
         orig_params = atd.deploy_params.copy()
         atd.deploy_params = {
