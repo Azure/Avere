@@ -128,7 +128,7 @@ class TestEdasim:
         with SSHTunnelForwarder(
             test_vars["controller_ip"],
             ssh_username=test_vars["controller_user"],
-            ssh_pkey=os.path.expanduser(r"~/.ssh/id_rsa"),
+            ssh_pkey=test_vars["ssh_priv_key"],
             remote_bind_address=(node_ip, 22),
         ) as ssh_tunnel:
             sleep(1)
@@ -137,6 +137,7 @@ class TestEdasim:
                     test_vars["controller_user"],
                     "127.0.0.1",
                     ssh_tunnel.local_bind_port,
+                    key_filename=test_vars["ssh_priv_key"]
                 )
                 run_ssh_command(ssh_client, ". .profile && ./jobrun.sh testrun")
             finally:
