@@ -147,7 +147,7 @@ class TestEdasim:
                 finally:
                     scp_client.close()
                 commands = """
-                    ./jobrun.sh
+                    ./jobrun.sh testrun
                     """.split("\n")
                 run_ssh_commands(ssh_client, commands)
             finally:
