@@ -1,11 +1,11 @@
 # https://aka.ms/yaml
-trigger:
-- master
-- releases/*
+# trigger:
+# - master
+# - releases/*
 
 variables:
   RUN_EDASIM_STEP: 'true'
-  RUN_VDBENCH_STEP: 'false'
+  RUN_VDBENCH_STEP: 'true'
   SKIP_RG_CLEANUP: 'false'
   VFXT_DEPLOY_LOCATION: 'westus2'
   VFXT_TEST_VARS_FILE: 'pipelines.json'
