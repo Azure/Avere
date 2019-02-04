@@ -186,7 +186,7 @@ EOM
 }
 
 function write_inmem_32() {
-    FILENAME=/home/$LINUX_USER/inmem.conf
+    FILENAME=/home/$LINUX_USER/inmem32.conf
     /bin/cat <<EOM >$FILENAME
 create_anchors=yes
 include=azure-clients.conf
