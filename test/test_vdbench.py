@@ -18,6 +18,7 @@ from sshtunnel import SSHTunnelForwarder
 # local libraries
 from lib.helpers import create_ssh_client, run_ssh_commands, wait_for_op
 
+#sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.vdbench.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/bootstrap.vdbench.sh
 
 class TestVDBench:
     def test_vdbench_setup(self, mnt_nodes, ssh_con):  # noqa: F811
@@ -25,7 +26,7 @@ class TestVDBench:
         commands = """
             sudo mkdir -p /nfs/node0/bootstrap
             cd /nfs/node0/bootstrap
-            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.vdbench.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/bootstrap.vdbench.sh
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.vdbench.sh https://raw.githubusercontent.com/Azure/Avere/fix_vdbecnh/src/clientapps/vdbench/bootstrap.vdbench.sh
             sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/vdbench50407.zip https://avereimageswestus.blob.core.windows.net/vdbench/vdbench50407.zip
             sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/vdbenchVerify.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/vdbenchVerify.sh
             sudo chmod +x /nfs/node0/bootstrap/vdbenchVerify.sh
