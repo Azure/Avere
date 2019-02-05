@@ -12,7 +12,7 @@ This 60-minute demo takes you through rendering an animated movie using Azure Ba
 
 ## Prerequisites
 
-1. Install a vFXT cluster according to [Deploy a vFXT cluster](jumpstart_deploy.md), and [configure storage](configure_storage.md).
+1. Install a vFXT cluster using the [Avere vFXT Marketplace Wizard](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/microsoft-avere.vfxt-template?tab=Overview).
 
 2. Create a Windows 10 workstation for Avere vFXT with [Windows 10 workstation for Avere vFXT](windows_10_avere_vfxt_mounted_workstation.md).
 
@@ -24,19 +24,19 @@ This 60-minute demo takes you through rendering an animated movie using Azure Ba
        sudo -s
        apt-get update
        apt-get install nfs-common
+       mkdir -p /nfs/node0
        mkdir -p /nfs/node1
        mkdir -p /nfs/node2
-       mkdir -p /nfs/node3
+       chown nobody:nogroup /nfs/node0
        chown nobody:nogroup /nfs/node1
        chown nobody:nogroup /nfs/node2
-       chown nobody:nogroup /nfs/node3
        ```
 
     2. Edit `/etc/fstab` to add the following lines but *using your vFXT node IP addresses*. Add more lines if your cluster has more than three nodes. 
         ```bash
-        172.16.0.12:/msazure	/nfs/node1	nfs auto,rsize=524288,wsize=524288,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0
-        172.16.0.13:/msazure	/nfs/node2	nfs auto,rsize=524288,wsize=524288,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0
-        172.16.0.14:/msazure	/nfs/node3	nfs auto,rsize=524288,wsize=524288,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0
+        10.0.0.12:/msazure	/nfs/node0	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
+        10.0.0.13:/msazure	/nfs/node1	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
+        10.0.0.14:/msazure	/nfs/node2	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
         ```
 
     3. To mount all shares, type `mount -a` from the cluster controller. 
@@ -54,7 +54,7 @@ This step downloads the frames to render, the client mounting script, and the re
 3. Copy the following file, keeping the same name, to the Avere vFXT volume. Store it in a folder named ``/nfs/node1/bootstrap``:
 
    ```
-   https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/mayabatchcentosbootstrap.sh
+   https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/mayabatch/centosbootstrap.sh
    ```
 	
 4. Copy the following file, keeping the same name, to the Avere vFXT volume. Store it in a folder named ``/nfs/node1/src``:
