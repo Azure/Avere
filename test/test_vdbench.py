@@ -18,6 +18,7 @@ from sshtunnel import SSHTunnelForwarder
 # local libraries
 from lib.helpers import create_ssh_client, run_ssh_commands, wait_for_op
 
+#command to replace when back in master
 #sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.vdbench.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/bootstrap.vdbench.sh
 
 class TestVDBench:
