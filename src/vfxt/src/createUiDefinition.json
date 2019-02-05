@@ -180,7 +180,6 @@
               "name": "avereClusterRole",
               "type": "Microsoft.Common.TextBox",
               "label": "Avere cluster operations role",
-              "defaultValue": "avere-cluster",
               "toolTip": "The unique name of the RBAC role for cluster node operations.",
               "constraints": {
                 "required": true,

@@ -131,7 +131,6 @@
     },
     "avereClusterName": {
       "type": "string",
-      "defaultValue": "avere-cluster",
       "metadata": {
         "description": "The cluster name should be unique within the resource group."
       }
@@ -220,6 +219,7 @@
     "networkSecurityGroupName": "[concat('nsg-',variables('controllerName'))]",
     "subnetId": "[resourceId(variables('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('virtualNetworkSubnetName'))]",
     "vmName": "[concat('vm-',variables('controllerName'))]",
+    "extensionName": "[concat('/create.vfxt',if(variables('createVirtualNetwork'),'.vnet','.novnet'),if(variables('useAvereBackedStorageAccount'),'.stg','.nostg'))]",
     "pipObject": {
       "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
     },
@@ -451,7 +451,7 @@
     {
       "condition": "[variables('useExtension?')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(variables('vmName'), '/configureagent')]",
+      "name": "[concat(variables('vmName'), variables('extensionName'))]",
       "apiVersion": "2017-12-01",
       "location": "[variables('location')]",
       "dependsOn": [
@@ -512,11 +512,11 @@
     },
     "vserver_ips": {
       "type": "string",
-      "value": "[substring(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,variables('vsip')),length(variables('vsip'))),indexOf(substring(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,variables('vsip')),length(variables('vsip')))),'\n'))]"
+      "value": "[substring(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions',variables('extensionName'))).instanceView.statuses[0].message,add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions',variables('extensionName'))).instanceView.statuses[0].message,variables('vsip')),length(variables('vsip'))),indexOf(substring(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions',variables('extensionName'))).instanceView.statuses[0].message,add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions',variables('extensionName'))).instanceView.statuses[0].message,variables('vsip')),length(variables('vsip')))),'\n'))]"
     },
     "mgmt_ip": {
       "type": "string",
-      "value": "[substring(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,variables('mip')),length(variables('mip'))),indexOf(substring(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions/configureagent')).instanceView.statuses[0].message,variables('mip')),length(variables('mip')))),'\n'))]"
+      "value": "[substring(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions',variables('extensionName'))).instanceView.statuses[0].message,add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions',variables('extensionName'))).instanceView.statuses[0].message,variables('mip')),length(variables('mip'))),indexOf(substring(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions',variables('extensionName'))).instanceView.statuses[0].message,add(indexOf(reference(concat('Microsoft.Compute/virtualMachines/',variables('vmName'),'/extensions',variables('extensionName'))).instanceView.statuses[0].message,variables('mip')),length(variables('mip')))),'\n'))]"
     }
   }
 }
