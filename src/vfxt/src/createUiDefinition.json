@@ -284,7 +284,7 @@
             {
               "name": "useAvereBackedStorageAccount",
               "type": "Microsoft.Common.DropDown",
-              "label": "Use blob storage",
+              "label": "Create and use blob storage",
               "defaultValue": "true",
               "toolTip": "Choose 'true' to automatically create a storage account and a new blob container as the cluster's backend storage. If false, you must attach storage after creating the cluster.",
               "constraints": {
@@ -305,8 +305,8 @@
             {
               "name": "avereBackedStorageAccountName",
               "type": "Microsoft.Common.TextBox",
-              "label": "Storage account",
-              "toolTip": "A unique storage account name to use with the cluster blob storage. (Not needed if 'Use blob storage' is set to false.)",
+              "label": "(New) Storage account",
+              "toolTip": "A unique storage account name to create and use with the cluster blob storage. (Not needed if 'Create and use blob storage' is set to false.)",
               "constraints": {
                 "required": true,
                 "regex": "^[a-z0-9]{3,24}$",
