@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 set -x
 
@@ -51,7 +51,7 @@ function apt_get_install() {
 }
 
 function config_linux() {
-    export DEBIAN_FRONTEND=noninteractive  
+    export DEBIAN_FRONTEND=noninteractive
     apt_get_update
     apt_get_install 20 10 180 default-jre zip csh unzip
 }
@@ -84,7 +84,7 @@ function install_vdbench() {
     pushd $DIRECTORY
     BOOTSTRAP_PATH="$(dirname ${BASE_DIR}${NODE_MOUNT_PREFIX}0${BOOTSTRAP_SCRIPT_PATH})"
     VDBENCHSRC="$BOOTSTRAP_PATH/vdbench*.zip"
-    
+
     if ! ls $VDBENCHSRC > /dev/null 2>&1; then
         echo "MISSING: $VDBENCHSRC, please ensure the vdbench zip is downloaded to the bootstrap directory and reinstall."
         exit 1
@@ -101,10 +101,10 @@ function install_vdbench() {
 function write_run_vdbench() {
     FILENAME=/home/$LINUX_USER/run_vdbench.sh
     /bin/cat <<EOM >$FILENAME
-#!/usr/bin/env bash 
-CONF=\$1 
-UNIQ=\$2 
-JUNC=vdbench 
+#!/usr/bin/env bash
+CONF=\$1
+UNIQ=\$2
+JUNC=vdbench
 /home/$LINUX_USER/vdbench/vdbench -f /home/$LINUX_USER/\${CONF} -o /home/$LINUX_USER/vdbench/output/\`date +%F\`_\${CONF}_\${UNIQ}
 EOM
     chown $LINUX_USER:$LINUX_USER $FILENAME
@@ -126,7 +126,7 @@ function write_copy_idrsa() {
 function write_azure_clients() {
     FILENAME=/home/$LINUX_USER/azure-clients.conf
 /bin/cat <<EOM >$FILENAME
-hd=default,user=${LINUX_USER},shell=ssh 
+hd=default,user=${LINUX_USER},shell=ssh
 EOM
     # add each of the clients
     COUNTER=0
@@ -145,9 +145,52 @@ EOM
 function write_inmem() {
     FILENAME=/home/$LINUX_USER/inmem.conf
     /bin/cat <<EOM >$FILENAME
-create_anchors=yes 
-include=azure-clients.conf 
- 
+create_anchors=yes
+include=azure-clients.conf
+
+fsd=default,depth=1,width=1,files=28,size=32m
+EOM
+
+    COUNTER=0
+    for VFXT in $(echo $NFS_IP_CSV | sed "s/,/ /g")
+    do
+        MOUNT_POINT="${BASE_DIR}${NODE_MOUNT_PREFIX}${COUNTER}"
+        FSD_HOST="host-${COUNTER}"
+        echo "fsd=fsd!${FSD_HOST},anchor=${MOUNT_POINT}/vdbench/!sizedir/!${FSD_HOST}" >> $FILENAME
+        COUNTER=$(($COUNTER + 1))
+    done
+
+    /bin/cat <<EOM >>$FILENAME
+
+fwd=default,xfersize=512k,fileio=sequential,fileselect=sequential,threads=24
+fwd=fwdW!host,host=!host,fsd=(fsd!host*),operation=write,openflags=fsync
+fwd=fwdR!host,host=!host,fsd=(fsd!host*),operation=read,openflags=o_direct
+
+rd=default,elapsed=600,fwdrate=max,interval=1,maxdata=126g
+rd=makedirs1,fwd=(fwdWhost*),operations=(mkdir),maxdata=1m
+rd=makefiles1,fwd=(fwdWhost*),operations=(create),maxdata=1m
+
+rd=writefiles1,fwd=(fwdWhost*)
+rd=writeread1,fwd=(fwdRhost*,fwdWhost*)
+rd=readall1,fwd=(fwdRhost*),format=no,maxdata=432g
+
+rd=writefiles2,fwd=(fwdWhost*)
+rd=writeread2,fwd=(fwdRhost*,fwdWhost*)
+rd=readall2,fwd=(fwdRhost*),format=no,maxdata=432g
+
+rd=writefiles3,fwd=(fwdWhost*)
+rd=writeread3,fwd=(fwdRhost*,fwdWhost*)
+rd=readall3,fwd=(fwdRhost*),format=no,maxdata=432g
+EOM
+    chown $LINUX_USER:$LINUX_USER $FILENAME
+}
+
+function write_inmem_32() {
+    FILENAME=/home/$LINUX_USER/inmem32.conf
+    /bin/cat <<EOM >$FILENAME
+create_anchors=yes
+include=azure-clients.conf
+
 fsd=default,depth=1,width=1,files=64,size=32m
 EOM
 
@@ -160,26 +203,26 @@ EOM
         COUNTER=$(($COUNTER + 1))
     done
 
-    /bin/cat <<EOM >>$FILENAME 
+    /bin/cat <<EOM >>$FILENAME
 
-fwd=default,xfersize=512k,fileio=sequential,fileselect=sequential,threads=24 
-fwd=fwdW!host,host=!host,fsd=(fsd!host*),operation=write,openflags=fsync 
-fwd=fwdR!host,host=!host,fsd=(fsd!host*),operation=read,openflags=o_direct 
- 
-rd=default,elapsed=1080,fwdrate=max,interval=1,maxdata=72g 
-rd=makedirs1,fwd=(fwdWhost*),operations=(mkdir),maxdata=1m 
-rd=makefiles1,fwd=(fwdWhost*),operations=(create),maxdata=1m 
- 
-rd=writefiles1,fwd=(fwdWhost*) 
-rd=writeread1,fwd=(fwdRhost*,fwdWhost*) 
-rd=readall1,fwd=(fwdRhost*) 
- 
-rd=writefiles2,fwd=(fwdWhost*) 
-rd=writeread2,fwd=(fwdRhost*,fwdWhost*) 
-rd=readall2,fwd=(fwdRhost*),format=no 
- 
-rd=writefiles3,fwd=(fwdWhost*) 
-rd=writeread3,fwd=(fwdRhost*,fwdWhost*) 
+fwd=default,xfersize=512k,fileio=sequential,fileselect=sequential,threads=24
+fwd=fwdW!host,host=!host,fsd=(fsd!host*),operation=write,openflags=fsync
+fwd=fwdR!host,host=!host,fsd=(fsd!host*),operation=read,openflags=o_direct
+
+rd=default,elapsed=1080,fwdrate=max,interval=1,maxdata=72g
+rd=makedirs1,fwd=(fwdWhost*),operations=(mkdir),maxdata=1m
+rd=makefiles1,fwd=(fwdWhost*),operations=(create),maxdata=1m
+
+rd=writefiles1,fwd=(fwdWhost*)
+rd=writeread1,fwd=(fwdRhost*,fwdWhost*)
+rd=readall1,fwd=(fwdRhost*)
+
+rd=writefiles2,fwd=(fwdWhost*)
+rd=writeread2,fwd=(fwdRhost*,fwdWhost*)
+rd=readall2,fwd=(fwdRhost*),format=no
+
+rd=writefiles3,fwd=(fwdWhost*)
+rd=writeread3,fwd=(fwdRhost*,fwdWhost*)
 rd=readall3,fwd=(fwdRhost*)
 EOM
     chown $LINUX_USER:$LINUX_USER $FILENAME
@@ -188,9 +231,9 @@ EOM
 function write_ondisk() {
     FILENAME=/home/$LINUX_USER/ondisk.conf
     /bin/cat <<EOM >$FILENAME
-create_anchors=yes 
-include=azure-clients.conf 
- 
+create_anchors=yes
+include=azure-clients.conf
+
 fsd=default,depth=1,width=1,files=180,size=32m
 EOM
 
@@ -203,28 +246,28 @@ EOM
         COUNTER=$(($COUNTER + 1))
     done
 
-    /bin/cat <<EOM >>$FILENAME 
- 
-fwd=format,threads=18,xfersize=512k,openflags=fsync 
-fwd=default,xfersize=512k,fileio=sequential,fileselect=sequential,threads=18 
-fwd=fwdW!host,host=!host,fsd=(fsd!host*),operation=write,openflags=fsync 
-fwd=fwdR!host,host=!host,fsd=(fsd!host*),operation=read,openflags=o_direct 
- 
-rd=default,elapsed=10800,fwdrate=max,interval=1,maxdata=202.5g 
-rd=makedirs1,fwd=(fwdWhost*),operations=(mkdir),maxdata=1m 
-rd=makefiles1,fwd=(fwdWhost*),operations=(create),maxdata=1m 
- 
-rd=writefiles1,fwd=(fwdWhost*) 
-rd=writeread1,fwd=(fwdRhost*,fwdWhost*) 
-rd=readall1,fwd=(fwdRhost*) 
- 
-rd=writefiles2,fwd=(fwdWhost*) 
-rd=writeread2,fwd=(fwdRhost*,fwdWhost*) 
-rd=readall2,fwd=(fwdRhost*) 
- 
-rd=writefiles3,fwd=(fwdWhost*) 
-rd=writeread3,fwd=(fwdRhost*,fwdWhost*) 
-rd=readall3,fwd=(fwdRhost*) 
+    /bin/cat <<EOM >>$FILENAME
+
+fwd=format,threads=18,xfersize=512k,openflags=fsync
+fwd=default,xfersize=512k,fileio=sequential,fileselect=sequential,threads=18
+fwd=fwdW!host,host=!host,fsd=(fsd!host*),operation=write,openflags=fsync
+fwd=fwdR!host,host=!host,fsd=(fsd!host*),operation=read,openflags=o_direct
+
+rd=default,elapsed=10800,fwdrate=max,interval=1,maxdata=202.5g
+rd=makedirs1,fwd=(fwdWhost*),operations=(mkdir),maxdata=1m
+rd=makefiles1,fwd=(fwdWhost*),operations=(create),maxdata=1m
+
+rd=writefiles1,fwd=(fwdWhost*)
+rd=writeread1,fwd=(fwdRhost*,fwdWhost*)
+rd=readall1,fwd=(fwdRhost*)
+
+rd=writefiles2,fwd=(fwdWhost*)
+rd=writeread2,fwd=(fwdRhost*,fwdWhost*)
+rd=readall2,fwd=(fwdRhost*)
+
+rd=writefiles3,fwd=(fwdWhost*)
+rd=writeread3,fwd=(fwdRhost*,fwdWhost*)
+rd=readall3,fwd=(fwdRhost*)
 EOM
     chown $LINUX_USER:$LINUX_USER $FILENAME
 }
@@ -248,7 +291,7 @@ EOM
         COUNTER=$(($COUNTER + 1))
     done
 
-    /bin/cat <<EOM >>$FILENAME 
+    /bin/cat <<EOM >>$FILENAME
 
 fwd=format,threads=36,xfersize=512k,openflags=fsync
 fwd=default,threads=36,xfersize=512k,fileio=sequential,fileselect=sequential
@@ -285,7 +328,7 @@ EOM
         COUNTER=$(($COUNTER + 1))
     done
 
-    /bin/cat <<EOM >>$FILENAME 
+    /bin/cat <<EOM >>$FILENAME
 
 fwd=format,threads=48,xfersize=512k,openflags=fsync
 fwd=default,xfersize=16k,fileio=random,fileselect=(sequential),threads=24

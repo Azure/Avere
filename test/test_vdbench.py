@@ -41,13 +41,12 @@ class TestVDBench:
         with open("{}/src/client/vmas/azuredeploy.json".format(
                   test_vars["build_root"])) as tfile:
             atd.template = json.load(tfile)
-        orig_params = atd.deploy_params.copy()
         atd.deploy_params = {
             "uniquename": atd.deploy_id,
             "sshKeyData": ssh_pub_key,
-            "virtualNetworkResourceGroup": orig_params["virtualNetworkResourceGroup"],
-            "virtualNetworkName": orig_params["virtualNetworkName"],
-            "virtualNetworkSubnetName": orig_params["virtualNetworkSubnetName"],
+            "virtualNetworkResourceGroup": atd.resource_group,
+            "virtualNetworkName": atd.deploy_id + "-vnet",
+            "virtualNetworkSubnetName": atd.deploy_id + "-subnet",
             "nfsCommaSeparatedAddresses": ",".join(test_vars["cluster_vs_ips"]),
             "vmCount": 12,
             "nfsExportPath": "/msazure",
