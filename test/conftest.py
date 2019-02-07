@@ -170,6 +170,13 @@ def test_vars(request):
     atd_obj = ArmTemplateDeploy(_fields={**vars})
     # "Promote" serializable members to the top level.
     vars = {**vars, **json.loads(atd_obj.serialize())}
+
+    if test_vars_file:  # write out vars to test_vars_file
+        log.debug("vars: {}".format(json.dumps(vars, **cja)))
+        log.debug("Saving vars to {} (test_vars_file)".format(test_vars_file))
+        with open(test_vars_file, "w") as vtvf:
+            json.dump(vars, vtvf, **cja)
+
     vars["atd_obj"] = atd_obj  # store the object in a common place
 
     yield vars
