@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import sys
+from uuid import uuid4
 
 # from requirements.txt
 import pytest
@@ -27,6 +28,7 @@ class TestVfxtTemplateDeploy:
         with open(test_vars["ssh_pub_key"], "r") as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
         atd.deploy_params = {
+            "avereInstanceType": "Standard_D16s_v3",
             "avereClusterName": atd.deploy_id + "-cluster",
             "virtualNetworkResourceGroup": atd.resource_group,
             "virtualNetworkName": atd.deploy_id + "-vnet",
@@ -36,10 +38,11 @@ class TestVfxtTemplateDeploy:
             "controllerAdminUsername": "azureuser",
             "controllerAuthenticationType": "sshPublicKey",
             "controllerSSHKeyData": ssh_pub_key,
-            "adminPassword": os.environ["AVERE_ADMIN_PW"],
             "controllerPassword": os.environ["AVERE_CONTROLLER_PW"],
+            "avereNodeCount": 3,
+            "adminPassword": os.environ["AVERE_ADMIN_PW"],
+            "rbacRoleAssignmentUniqueId": str(uuid4()),
             "enableCloudTraceDebugging": True,
-            "avereInstanceType": "Standard_D16s_v3"
         }
         test_vars["controller_name"] = atd.deploy_params["controllerName"]
         test_vars["controller_user"] = atd.deploy_params["controllerAdminUsername"]
