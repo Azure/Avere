@@ -1,7 +1,7 @@
 # https://aka.ms/yaml
-trigger:
-- master
-- releases/*
+# trigger:
+# - master
+# - releases/*
 
 variables:
   VFXT_TEST_VARS_FILE: 'pipelines.json'
@@ -111,16 +111,16 @@ jobs:
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
-  - script: |
-      pytest --disable-pytest-warnings test/test_edasim.py \
-        --doctest-modules --junitxml=junit/test-results05.xml
-    displayName: 'Test edasim on Avere vFXT'
-    condition: and(succeeded(), eq(variables['RUN_EDASIM_STEP'], 'true'))
-    env:
-      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+  # - script: |
+  #     pytest --disable-pytest-warnings test/test_edasim.py \
+  #       --doctest-modules --junitxml=junit/test-results05.xml
+  #   displayName: 'Test edasim on Avere vFXT'
+  #   condition: and(succeeded(), eq(variables['RUN_EDASIM_STEP'], 'true'))
+  #   env:
+  #     AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+  #     AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+  #     AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+  #     AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - task: PublishPipelineArtifact@0
     displayName: 'Publish Pipelines Artifacts (node logs, rolling trace)'
