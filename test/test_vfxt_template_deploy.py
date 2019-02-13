@@ -73,7 +73,6 @@ class TestVfxtTemplateDeploy:
             "virtualNetworkResourceGroup": atd.resource_group,
             "virtualNetworkName": atd.deploy_id + "-vnet",
             "virtualNetworkSubnetName": atd.deploy_id + "-subnet",
-            "avereBackedStorageAccountName": atd.deploy_id + "sa",
             "controllerName": atd.deploy_id + "-con",
             "controllerAdminUsername": "azureuser",
             "controllerAuthenticationType": "sshPublicKey",
@@ -87,7 +86,7 @@ class TestVfxtTemplateDeploy:
         }
         test_vars["controller_name"] = atd.deploy_params["controllerName"]
         test_vars["controller_user"] = atd.deploy_params["controllerAdminUsername"]
-
+        test_vars["storage_off"] = True
         log.debug("Generated deploy parameters: \n{}".format(
                   json.dumps(atd.deploy_params, indent=4)))
         atd.deploy_name = "test_deploy_template"
