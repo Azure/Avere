@@ -10,6 +10,7 @@ from scp import SCPClient
 
 # local libraries
 from lib.helpers import (create_ssh_client, run_ssh_command, run_ssh_commands)
+g_test_vars = {}
 
 
 # COMMAND-LINE OPTIONS ########################################################
@@ -125,7 +126,7 @@ def ssh_con(test_vars):
     client.close()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="module", autouse=True)
 def test_vars(request):
     """
     Loads saved test variables, instantiates an ArmTemplateDeploy object, and
@@ -179,6 +180,7 @@ def test_vars(request):
 
     vars["atd_obj"] = atd_obj  # store the object in a common place
 
+    g_test_vars = {**vars}
     yield vars
 
     if test_vars_file:  # write out vars to test_vars_file
