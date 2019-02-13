@@ -26,7 +26,7 @@ class TestVfxtClusterStatus:
         Quick check of file operations.
         See check_node_basic_fileops.sh for more information.
         """
-        if test_vars["useAvereBackedStorageAccount"] is True:
+        if test_vars["useAvereBackedStorageAccount"] is False:
             pytest.skip("not a test for storage")
 
         script_name = "check_node_basic_fileops.sh"
