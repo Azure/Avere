@@ -73,6 +73,7 @@ class TestVfxtTemplateDeploy:
             "virtualNetworkResourceGroup": atd.resource_group,
             "virtualNetworkName": atd.deploy_id + "-vnet",
             "virtualNetworkSubnetName": atd.deploy_id + "-subnet",
+            "avereBackedStorageAccountName": atd.deploy_id + "sa",
             "controllerName": atd.deploy_id + "-con",
             "controllerAdminUsername": "azureuser",
             "controllerAuthenticationType": "sshPublicKey",
