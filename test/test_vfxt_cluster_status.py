@@ -22,7 +22,7 @@ from conftest import g_test_vars
 class TestVfxtClusterStatus:
     """Basic vFXT cluster health tests."""
 
-    @pytest.mark.skipif(not g_test_vars["storage_account"], reason="no storage account")
+    @pytest.mark.skipif(("storage_account" not in g_test_vars) or (not g_test_vars["storage_account"]), reason="no storage account")
     def test_basic_fileops(self, mnt_nodes, scp_cli, ssh_con, test_vars):  # noqa: E501, F811
         """
         Quick check of file operations.
