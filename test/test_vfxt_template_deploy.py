@@ -84,7 +84,7 @@ class TestVfxtTemplateDeploy:
             "adminPassword": os.environ["AVERE_ADMIN_PW"],
             "rbacRoleAssignmentUniqueId": str(uuid4()),
             "enableCloudTraceDebugging": True,
-            "useAvereBackedStorageAccount": False
+            "useAvereBackedStorageAccount": False,
         }
         test_vars["controller_name"] = atd.deploy_params["controllerName"]
         test_vars["controller_user"] = atd.deploy_params["controllerAdminUsername"]
