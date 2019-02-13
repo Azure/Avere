@@ -21,24 +21,26 @@ from lib.helpers import (create_ssh_client, run_averecmd, run_ssh_commands,
 class TestVfxtClusterStatus:
     """Basic vFXT cluster health tests."""
 
-    def test_basic_fileops(self, mnt_nodes, scp_cli, ssh_con, test_vars):  # noqa: E501, F811
-        """
-        Quick check of file operations.
-        See check_node_basic_fileops.sh for more information.
-        """
-        if test_vars["useAvereBackedStorageAccount"] is False:
-            pytest.skip("not a test for storage")
+    def test_basic_fileops(self, test_vars):
+        @pytest.mark.skipif(test_vars["useAvereBackedStorageAccount"] is False, "storage is empty")
+        def test_basic_fileops(self, mnt_nodes, scp_cli, ssh_con, test_vars):  # noqa: E501, F811
+            """
+            Quick check of file operations.
+            See check_node_basic_fileops.sh for more information.
+            """
+            #if test_vars["useAvereBackedStorageAccount"] is False:
+            #    pytest.skip("not a test for storage")
 
-        script_name = "check_node_basic_fileops.sh"
-        scp_cli.put(
-            "{0}/test/{1}".format(test_vars["build_root"], script_name),
-            r"~/.",
-        )
-        commands = """
-            chmod +x {0}
-            ./{0}
-            """.format(script_name).split("\n")
-        run_ssh_commands(ssh_con, commands)
+            script_name = "check_node_basic_fileops.sh"
+            scp_cli.put(
+                "{0}/test/{1}".format(test_vars["build_root"], script_name),
+                r"~/.",
+            )
+            commands = """
+                chmod +x {0}
+                ./{0}
+                """.format(script_name).split("\n")
+            run_ssh_commands(ssh_con, commands)
 
     def test_node_health(self, averecmd_params):  # noqa: F811
         """Check that cluster is reporting that all nodes are up."""
