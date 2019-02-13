@@ -29,7 +29,7 @@ class TestVfxtTemplateDeploy:
         with open(test_vars["ssh_pub_key"], "r") as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
         atd.deploy_params = {
-            "avereInstanceType": "Standard_D16s_v3",
+            "avereInstanceType": "Standard_E32s_v3",
             "avereClusterName": atd.deploy_id + "-cluster",
             "virtualNetworkResourceGroup": atd.resource_group,
             "virtualNetworkName": atd.deploy_id + "-vnet",

@@ -12,6 +12,8 @@ The construction of this template and packaging for marketplace can be found in 
 
 ## Managed Identity and Roles
 
+> **NOTE** - If you need information about what to enter in the "Avere cluster create role ID" field of the Create Avere vFXT deployment template, read the prerequisites documentation at [docs.microsoft.com/avere](https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-prereqs#create-access-roles). 
+
 The Avere vFXT controller and cluster use Azure [managed identities](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview) for deployment and operation.  Additionally the administrator deploying the roles also needs permission to deploy the Avere vFXT controller and cluster.
 
 The following table shows the roles required for each of the avere operations:
