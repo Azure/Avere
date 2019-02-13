@@ -1,13 +1,12 @@
 # https://aka.ms/yaml
-# trigger:
-# - master
-# - releases/*
+trigger:
+- master
+- releases/*
 
 variables:
   VFXT_TEST_VARS_FILE: 'pipelines.json'
   RUN_DEPLOY: 'false'
   RUN_EMPTY_STORAGE: 'true'
-
 
 jobs:
 - job: vfxt_template_testing

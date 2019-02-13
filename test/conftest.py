@@ -10,7 +10,6 @@ from scp import SCPClient
 
 # local libraries
 from lib.helpers import (create_ssh_client, run_ssh_command, run_ssh_commands)
-g_test_vars = {}
 
 
 # COMMAND-LINE OPTIONS ########################################################
@@ -71,6 +70,9 @@ def averecmd_params(ssh_con, test_vars):
 
 @pytest.fixture()
 def mnt_nodes(ssh_con, test_vars):
+    if ("storage_account" not in test_vars) or (not test_vars["storage_account"]):
+        return
+
     check = run_ssh_command(ssh_con, "ls ~/STATUS.NODES_MOUNTED",
                             ignore_nonzero_rc=True)
     if check['rc']:  # nodes were not already mounted
@@ -126,7 +128,7 @@ def ssh_con(test_vars):
     client.close()
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="module")
 def test_vars(request):
     """
     Loads saved test variables, instantiates an ArmTemplateDeploy object, and
@@ -180,7 +182,6 @@ def test_vars(request):
 
     vars["atd_obj"] = atd_obj  # store the object in a common place
 
-    g_test_vars = {**vars}
     yield vars
 
     if test_vars_file:  # write out vars to test_vars_file

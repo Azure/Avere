@@ -16,18 +16,18 @@ from sshtunnel import SSHTunnelForwarder
 # local libraries
 from lib.helpers import (create_ssh_client, run_averecmd, run_ssh_commands,
                          upload_gsi)
-from conftest import g_test_vars
 
 
 class TestVfxtClusterStatus:
     """Basic vFXT cluster health tests."""
 
-    @pytest.mark.skipif(("storage_account" not in g_test_vars) or (not g_test_vars["storage_account"]), reason="no storage account")
     def test_basic_fileops(self, mnt_nodes, scp_cli, ssh_con, test_vars):  # noqa: E501, F811
         """
         Quick check of file operations.
         See check_node_basic_fileops.sh for more information.
         """
+        if ("storage_account" not in test_vars) or (not test_vars["storage_account"]):
+            pytest.skip("no storage account")
 
         script_name = "check_node_basic_fileops.sh"
         scp_cli.put(
