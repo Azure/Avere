@@ -5,6 +5,9 @@
 
 variables:
   VFXT_TEST_VARS_FILE: 'pipelines.json'
+  RUN_DEPLOY: 'false'
+  RUN_EMPTY_STORAGE: 'true'
+
 
 jobs:
 - job: vfxt_template_testing
@@ -35,9 +38,26 @@ jobs:
 
   - script: |
       pytest --disable-pytest-warnings test/test_vfxt_template_deploy.py \
+        -k test_deploy_template \
         --location $VFXT_DEPLOY_LOCATION \
         --doctest-modules --junitxml=junit/test-results01.xml
     displayName: 'Test template-based deployment of Avere vFXT'
+    condition: and(succeeded(), eq(variables['RUN_DEPLOY'], 'true'))
+    env:
+      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+      AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
+      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+
+  - script: |
+      pytest --disable-pytest-warnings test/test_vfxt_template_deploy.py \
+        -k test_deploy_template_no_storage \
+        --location $VFXT_DEPLOY_LOCATION \
+        --doctest-modules --junitxml=junit/test-results01b.xml
+    displayName: 'Test deploy of vFXT without storage'
+    condition: and(succeeded(), eq(variables['RUN_EMPTY_STORAGE'], 'true'))
     env:
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
       AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
