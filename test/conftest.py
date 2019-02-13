@@ -5,11 +5,12 @@ import os
 
 # from requirements.txt
 import pytest
-from arm_template_deploy import ArmTemplateDeploy
 from scp import SCPClient
 
 # local libraries
-from lib.helpers import (create_ssh_client, run_ssh_command, run_ssh_commands)
+from arm_template_deploy import ArmTemplateDeploy
+from lib.helpers import (create_ssh_client, run_ssh_command, run_ssh_commands,
+                         wait_for_op)
 
 
 # COMMAND-LINE OPTIONS ########################################################
@@ -188,3 +189,25 @@ def test_vars(request):
         log.debug("Saving vars to {} (test_vars_file)".format(test_vars_file))
         with open(test_vars_file, "w") as vtvf:
             json.dump(vars, vtvf, **cja)
+
+
+@pytest.fixture()
+def ext_vnet(test_vars):
+    log = logging.getLogger("ext_vnet")
+    vnet_atd = ArmTemplateDeploy(
+        resource_group=test_vars["atd_obj"].deploy_id + "-vnet-rg"
+    )
+    rg = vnet_atd.create_resource_group()
+    log.info("Resource Group: {}".format(rg))
+
+    vnet_atd.deploy_name = "ext_vnet"
+    with open("{}/src/vfxt/azuredeploy.vnet.json".format(
+                test_vars["build_root"])) as tfile:
+        vnet_atd.template = json.load(tfile)
+    vnet_atd.deploy_params = {
+        "virtualNetworkName": test_vars["atd_obj"].deploy_id + "-vnet",
+        "virtualNetworkSubnetName": test_vars["atd_obj"].deploy_id + "-subnet",
+    }
+    test_vars["ext_vnet"] = wait_for_op(vnet_atd.deploy()).properties.outputs
+    log.debug(test_vars["ext_vnet"])
+    return test_vars["ext_vnet"]

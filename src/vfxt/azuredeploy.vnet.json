@@ -1,0 +1,88 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualNetworkName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the virtual network (VNET)."
+            }
+        },
+        "virtualNetworkSubnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the subnet in the VNET."
+            }
+        },
+        "vnetAddressSpacePrefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/16",
+            "metadata": {
+                "description": "The IP address prefix of the virtual network (VNET)."
+            }
+        },
+        "subnetAddressRangePrefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/24",
+            "metadata": {
+                "description": "The IP address range prefix of the subnet in the VNET."
+            }
+        }
+    },
+    "variables": {
+        "virtualNetworkName": "[parameters('virtualNetworkName')]",
+        "subnetName": "[parameters('virtualNetworkSubnetName')]",
+        "addressPrefix": "[parameters('vnetAddressSpacePrefix')]",
+        "subnetPrefix": "[parameters('subnetAddressRangePrefix')]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2017-10-01",
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[variables('virtualNetworkName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[variables('addressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('subnetName')]",
+                        "properties": {
+                            "addressPrefix": "[variables('subnetPrefix')]",
+                            "serviceEndpoints": [
+                                {
+                                    "service": "Microsoft.Storage"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {
+        "resource_group": {
+            "type": "string",
+            "value": "[resourceGroup().name]"
+        },
+        "location": {
+            "type": "string",
+            "value": "[resourceGroup().location]"
+        },
+        "virtual_network_name": {
+            "type": "string",
+            "value": "[variables('virtualNetworkName')]"
+        },
+        "subnet_name": {
+            "type": "string",
+            "value": "[variables('subnetName')]"
+        },
+        "subnet_id": {
+            "type": "string",
+            "value": "[concat(resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName')),'/subnets/',variables('subnetName'))]"
+        }
+    }
+}
