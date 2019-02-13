@@ -137,9 +137,8 @@
     },
     "avereInstanceType": {
       "type": "string",
-      "defaultValue": "Standard_D16s_v3",
+      "defaultValue": "Standard_E32s_v3",
       "allowedValues": [
-        "Standard_D16s_v3",
         "Standard_E32s_v3"
       ],
       "metadata": {

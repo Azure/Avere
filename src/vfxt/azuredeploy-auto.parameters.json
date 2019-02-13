@@ -39,7 +39,7 @@
       "value": "UNIQUE"
     },
     "avereInstanceType": {
-      "value": "Standard_D16s_v3"
+      "value": "Standard_E32s_v3"
     }
   }
 }
