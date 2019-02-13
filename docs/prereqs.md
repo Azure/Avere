@@ -36,7 +36,7 @@ You must have sufficient quota for the following Azure components. Here are the 
 
 |Azure component|Quota|
 |----------|-----------|
-|Virtual machines|3 or more D16s_v3 or E32s_v3|
+|Virtual machines|3 or more E32s_v3|
 |Premium SSD storage|200GB OS and 1-4TB Cache per node|
 |Storage account (optional) |v2|
 |Data backend storage (optional) |One LRS Blob container |
