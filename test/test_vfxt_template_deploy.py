@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import sys
+import time
 from uuid import uuid4
 
 # from requirements.txt
@@ -99,6 +100,8 @@ class TestVfxtTemplateDeploy:
             test_vars["controller_ip"] = atd.nm_client.public_ip_addresses.get(
                 atd.resource_group, "publicip-" + test_vars["controller_name"]
             ).ip_address
+
+        time.sleep(60)
 
 if __name__ == "__main__":
     pytest.main(sys.argv)
