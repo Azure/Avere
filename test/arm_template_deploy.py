@@ -50,8 +50,8 @@ class ArmTemplateDeploy:
         if not self.resource_group:
             self.resource_group = self.deploy_id + "-rg"
 
-        if not self.storage_account:
-            self.storage_account = self.deploy_id + "sa"
+        # if not self.storage_account:
+        #     self.storage_account = self.deploy_id + "sa"
 
         logging.debug("Loading Azure credentials")
         sp_creds = ServicePrincipalCredentials(

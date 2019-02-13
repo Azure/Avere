@@ -26,8 +26,8 @@ class TestVfxtClusterStatus:
         Quick check of file operations.
         See check_node_basic_fileops.sh for more information.
         """
-        if test_vars["storage_off"] is True:
-            pytest.skip("unsupported configuration")
+        if test_vars["useAvereBackedStorageAccount"] is True:
+            pytest.skip("not a test for storage")
 
         script_name = "check_node_basic_fileops.sh"
         scp_cli.put(
