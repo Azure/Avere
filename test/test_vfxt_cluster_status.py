@@ -26,6 +26,9 @@ class TestVfxtClusterStatus:
         Quick check of file operations.
         See check_node_basic_fileops.sh for more information.
         """
+        if ("storage_account" not in test_vars) or (not test_vars["storage_account"]):
+            pytest.skip("no storage account")
+
         script_name = "check_node_basic_fileops.sh"
         scp_cli.put(
             "{0}/test/{1}".format(test_vars["build_root"], script_name),
