@@ -134,7 +134,7 @@ jobs:
       pytest --disable-pytest-warnings test/test_edasim.py \
         --doctest-modules --junitxml=junit/test-results05.xml
     displayName: 'Test edasim on Avere vFXT'
-    condition: and(succeeded(), eq(variables['RUN_EDASIM_STEP'], 'true'))
+    condition: and(succeeded(), eq(variables['RUN_EDASIM_STEP'], 'true'), eq(variables['RUN_EMPTY_STORAGE'], 'false'))
     env:
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
