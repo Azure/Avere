@@ -5,8 +5,6 @@ trigger:
 
 variables:
   VFXT_TEST_VARS_FILE: 'pipelines.json'
-  RUN_DEPLOY: 'true'
-  RUN_EMPTY_STORAGE: 'false'
 
 jobs:
 - job: vfxt_template_testing
