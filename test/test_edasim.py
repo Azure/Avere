@@ -31,22 +31,23 @@ class TestEdasim:
             """.split("\n")
         run_ssh_commands(ssh_con, commands)
 
-    def test_storage_account(self, resource_group, ssh_con, storage_account, test_vars):  # noqa: F811, E501
+    def test_storage_account(self, resource_group, ssh_con, test_vars):  # noqa: F811, E501
         log = logging.getLogger("test_storage_account")
         atd = test_vars["atd_obj"]
+        storage_account = test_vars["storage_account"]
         storage_keys = atd.st_client.storage_accounts.list_keys(
             resource_group.name,
-            storage_account.name)
+            storage_account)
         storage_keys = {v.key_name: v.value for v in storage_keys.keys}
         key = storage_keys['key1']
-        log.debug("storage_account = {}".format(storage_account.name))
+        log.debug("storage_account = {}".format(storage_account))
         log.debug("key = {}".format(key))
         commands = """
             export AZURE_STORAGE_ACCOUNT= {0}
             export AZURE_STORAGE_ACCOUNT_KEY={1}
-            """.format(storage_account.name, key).split("\n")
+            """.format(storage_account, key).split("\n")
         run_ssh_commands(ssh_con, commands)
-        test_vars["cmd1"] = "AZURE_STORAGE_ACCOUNT=\"{}\" AZURE_STORAGE_ACCOUNT_KEY=\"{}\" ".format(storage_account.name, key)
+        test_vars["cmd1"] = "AZURE_STORAGE_ACCOUNT=\"{}\" AZURE_STORAGE_ACCOUNT_KEY=\"{}\" ".format(storage_account, key)
 
     def test_event_hub(self, ssh_con, test_vars):  # noqa: F811
         log = logging.getLogger("test_event_hub")
