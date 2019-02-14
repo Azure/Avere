@@ -60,7 +60,7 @@ class TestVfxtTemplateDeploy:
                 atd.resource_group, "publicip-" + test_vars["controller_name"]
             ).ip_address
 
-    def test_deploy_template_no_storage(self, resource_group, test_vars):  # noqa: F811
+    def test_no_storage_account_deploy(self, resource_group, test_vars):  # noqa: F811
         log = logging.getLogger("test_deploy_template")
         atd = test_vars["atd_obj"]
         with open("{}/src/vfxt/azuredeploy-auto.json".format(

@@ -52,7 +52,7 @@ jobs:
 
   - script: |
       pytest --disable-pytest-warnings test/test_vfxt_template_deploy.py \
-        -k test_deploy_template_no_storage \
+        -k test_no_storage_account_deploy \
         --location $VFXT_DEPLOY_LOCATION \
         --doctest-modules --junitxml=junit/test-results01b.xml
     displayName: 'Test deploy of vFXT without storage'
