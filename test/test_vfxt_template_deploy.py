@@ -21,6 +21,11 @@ from lib.helpers import split_ip_range, wait_for_op
 
 class TestVfxtTemplateDeploy:
     def test_deploy_template(self, resource_group, test_vars):  # noqa: F811
+        """
+        Deploy a vFXT cluster.
+          - create a new VNET
+          - use an Avere-backed storage account
+        """
         log = logging.getLogger("test_deploy_template")
         atd = test_vars["atd_obj"]
         with open("{}/src/vfxt/azuredeploy-auto.json".format(
@@ -47,12 +52,13 @@ class TestVfxtTemplateDeploy:
             "virtualNetworkResourceGroup": atd.resource_group,
             "virtualNetworkSubnetName": atd.deploy_id + "-subnet",
         }
+
         test_vars["controller_name"] = atd.deploy_params["controllerName"]
         test_vars["controller_user"] = atd.deploy_params["controllerAdminUsername"]
         test_vars["storage_account"] = atd.deploy_params["avereBackedStorageAccountName"]
-
         log.debug("Generated deploy parameters: \n{}".format(
                   json.dumps(atd.deploy_params, indent=4)))
+
         atd.deploy_name = "test_deploy_template"
         try:
             deploy_outputs = wait_for_op(atd.deploy()).properties.outputs
@@ -64,6 +70,11 @@ class TestVfxtTemplateDeploy:
             ).ip_address
 
     def test_no_storage_account_deploy(self, resource_group, test_vars):  # noqa: E501, F811
+        """
+        Deploy a vFXT cluster.
+          - create a new VNET
+          - do NOT use an Avere-backed storage account
+        """
         log = logging.getLogger("test_deploy_template")
         atd = test_vars["atd_obj"]
         with open("{}/src/vfxt/azuredeploy-auto.json".format(
@@ -92,11 +103,13 @@ class TestVfxtTemplateDeploy:
             "useAvereBackedStorageAccount": False,
             "avereBackedStorageAccountName": atd.deploy_id + "sa",  # BUG
         }
+
         test_vars["controller_name"] = atd.deploy_params["controllerName"]
         test_vars["controller_user"] = atd.deploy_params["controllerAdminUsername"]
         log.debug("Generated deploy parameters: \n{}".format(
                   json.dumps(atd.deploy_params, indent=4)))
-        atd.deploy_name = "test_deploy_template"
+
+        atd.deploy_name = "test_no_storage_account_deploy"
         try:
             deploy_outputs = wait_for_op(atd.deploy()).properties.outputs
             test_vars["cluster_mgmt_ip"] = deploy_outputs["mgmt_ip"]["value"]
@@ -107,7 +120,12 @@ class TestVfxtTemplateDeploy:
                 atd.resource_group, "publicip-" + test_vars["controller_name"]
             ).ip_address
 
-    def test_deploy_template_byovnet(self, resource_group, test_vars, ext_vnet):  # noqa: E501, F811
+    def test_byovnet_deploy(self, resource_group, test_vars, ext_vnet):  # noqa: E501, F811
+        """
+        Deploy a vFXT cluster.
+          - do NOT create a new VNET
+          - use an Avere-backed storage account
+        """
         log = logging.getLogger("test_deploy_template_byovnet")
         atd = test_vars["atd_obj"]
         with open("{}/src/vfxt/azuredeploy-auto.json".format(
@@ -134,20 +152,18 @@ class TestVfxtTemplateDeploy:
             "virtualNetworkName": ext_vnet["virtual_network_name"]["value"],
             "virtualNetworkSubnetName": ext_vnet["subnet_name"]["value"],
         }
+
         test_vars["controller_name"] = atd.deploy_params["controllerName"]
         test_vars["controller_user"] = atd.deploy_params["controllerAdminUsername"]
+        test_vars["storage_account"] = atd.deploy_params["avereBackedStorageAccountName"]
+        test_vars["public_ip"] = ext_vnet["public_ip_address"]["value"]
         log.debug("Generated deploy parameters: \n{}".format(
                   json.dumps(atd.deploy_params, indent=4)))
+
         atd.deploy_name = "test_deploy_template_byovnet"
-        try:
-            deploy_outputs = wait_for_op(atd.deploy()).properties.outputs
-            test_vars["cluster_mgmt_ip"] = deploy_outputs["mgmt_ip"]["value"]
-            test_vars["cluster_vs_ips"] = split_ip_range(deploy_outputs["vserver_ips"]["value"])
-        finally:
-            # test_vars["public_ip"] = atd.nm_client.public_ip_addresses.get(
-            #     atd.resource_group, "publicip-" + test_vars["controller_name"]
-            # ).ip_address
-            pass
+        deploy_outputs = wait_for_op(atd.deploy()).properties.outputs
+        test_vars["cluster_mgmt_ip"] = deploy_outputs["mgmt_ip"]["value"]
+        test_vars["cluster_vs_ips"] = split_ip_range(deploy_outputs["vserver_ips"]["value"])
 
 
 if __name__ == "__main__":
