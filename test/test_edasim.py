@@ -126,7 +126,7 @@ class TestEdasim:
         log = logging.getLogger("test_edasim_run")
         node_ip = test_vars["deploy_edasim_outputs"]["jobsubmitter_0_ip_address"]["value"]
         with SSHTunnelForwarder(
-            test_vars["controller_ip"],
+            test_vars["public_ip"],
             ssh_username=test_vars["controller_user"],
             ssh_pkey=test_vars["ssh_priv_key"],
             remote_bind_address=(node_ip, 22),

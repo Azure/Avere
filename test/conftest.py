@@ -123,7 +123,7 @@ def scp_cli(ssh_con):
 @pytest.fixture()
 def ssh_con(test_vars):
     client = create_ssh_client(test_vars["controller_user"],
-                               test_vars["controller_ip"],
+                               test_vars["public_ip"],
                                key_filename=test_vars["ssh_priv_key"])
     yield client
     client.close()
@@ -196,8 +196,13 @@ def test_vars(request):
 
 @pytest.fixture()
 def ext_vnet(test_vars):
+    """
+    Creates a resource group containing a new VNET, subnet, public IP, and
+    jumpbox for use in other tests.
+    """
     log = logging.getLogger("ext_vnet")
     vnet_atd = ArmTemplateDeploy(
+        location=test_vars["location"],
         resource_group=test_vars["atd_obj"].deploy_id + "-vnet-rg"
     )
     rg = vnet_atd.create_resource_group()
@@ -207,9 +212,14 @@ def ext_vnet(test_vars):
     with open("{}/src/vfxt/azuredeploy.vnet.json".format(
                 test_vars["build_root"])) as tfile:
         vnet_atd.template = json.load(tfile)
+
+    with open(test_vars["ssh_pub_key"], "r") as ssh_pub_f:
+        ssh_pub_key = ssh_pub_f.read()
+
     vnet_atd.deploy_params = {
-        "virtualNetworkName": test_vars["atd_obj"].deploy_id + "-vnet",
-        "virtualNetworkSubnetName": test_vars["atd_obj"].deploy_id + "-subnet",
+        "uniqueName": test_vars["atd_obj"].deploy_id,
+        "jumpboxAdminUsername": "azureuser",
+        "jumpboxSSHKeyData": ssh_pub_key
     }
     test_vars["ext_vnet"] = wait_for_op(vnet_atd.deploy()).properties.outputs
     log.debug(test_vars["ext_vnet"])

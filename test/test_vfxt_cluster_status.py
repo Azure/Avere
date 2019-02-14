@@ -112,7 +112,7 @@ class TestVfxtSupport:
                                    args=node)[node]["primaryClusterIP"]["IP"]
             log.debug("tunneling to node {} using IP {}".format(node, node_ip))
             with SSHTunnelForwarder(
-                test_vars["controller_ip"],
+                test_vars["public_ip"],
                 ssh_username=test_vars["controller_user"],
                 ssh_pkey=test_vars["ssh_priv_key"],
                 remote_bind_address=(node_ip, 22),

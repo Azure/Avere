@@ -86,19 +86,19 @@ jobs:
         -k TestVfxtSupport \
         --doctest-modules --junitxml=junit/test-results03.xml
 
-      CONTROLLER_IP=$(jq -r .controller_ip $VFXT_TEST_VARS_FILE)
+      PUBLIC_IP=$(jq -r .public_ip $VFXT_TEST_VARS_FILE)
       CONTROLLER_NAME=$(jq -r .controller_name $VFXT_TEST_VARS_FILE)
       CONTROLLER_USER=$(jq -r .controller_user $VFXT_TEST_VARS_FILE)
 
-      echo "CONTROLLER_IP  : $CONTROLLER_IP"
+      echo "PUBLIC_IP  : $PUBLIC_IP"
       echo "CONTROLLER_NAME: $CONTROLLER_NAME"
       echo "CONTROLLER_USER: $CONTROLLER_USER"
 
       ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
       mkdir -p $ARTIFACTS_DIR
       tar -zcvf ${ARTIFACTS_DIR}/vfxt_artifacts_${CONTROLLER_NAME}.tar.gz vfxt_artifacts_*
-      scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $CONTROLLER_USER@$CONTROLLER_IP:~/*.log $ARTIFACTS_DIR/.
-      scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ~/.ssh/* $CONTROLLER_USER@$CONTROLLER_IP:~/.ssh/.
+      scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $CONTROLLER_USER@$PUBLIC_IP:~/*.log $ARTIFACTS_DIR/.
+      scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ~/.ssh/* $CONTROLLER_USER@$PUBLIC_IP:~/.ssh/.
 
       echo "vfxt.log from $CONTROLLER_NAME:"
       cat $ARTIFACTS_DIR/vfxt.log
