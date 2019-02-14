@@ -206,12 +206,10 @@
               "label": "Size",
               "toolTip": "The VM instance type to use for the Avere vFXT cluster nodes.",
               "recommendedSizes": [
-                "Standard_D16s_v3",
                 "Standard_E32s_v3"
               ],
               "constraints": {
                 "allowedSizes": [
-                  "Standard_D16s_v3",
                   "Standard_E32s_v3"
                 ]
               },

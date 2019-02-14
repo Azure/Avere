@@ -71,6 +71,9 @@ def averecmd_params(ssh_con, test_vars):
 
 @pytest.fixture()
 def mnt_nodes(ssh_con, test_vars):
+    if ("storage_account" not in test_vars) or (not test_vars["storage_account"]):
+        return
+
     check = run_ssh_command(ssh_con, "ls ~/STATUS.NODES_MOUNTED",
                             ignore_nonzero_rc=True)
     if check['rc']:  # nodes were not already mounted
