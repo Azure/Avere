@@ -203,7 +203,7 @@ def ext_vnet(test_vars):
     log = logging.getLogger("ext_vnet")
     vnet_atd = ArmTemplateDeploy(
         location=test_vars["location"],
-        resource_group=test_vars["atd_obj"].deploy_id + "-vnet-rg"
+        resource_group=test_vars["atd_obj"].deploy_id + "-rg-vnet"
     )
     rg = vnet_atd.create_resource_group()
     log.info("Resource Group: {}".format(rg))
