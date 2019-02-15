@@ -6,6 +6,7 @@ import os
 # from requirements.txt
 import pytest
 from scp import SCPClient
+from sshtunnel import SSHTunnelForwarder
 
 # local libraries
 from arm_template_deploy import ArmTemplateDeploy
@@ -122,11 +123,31 @@ def scp_cli(ssh_con):
 
 @pytest.fixture()
 def ssh_con(test_vars):
-    client = create_ssh_client(test_vars["controller_user"],
-                               test_vars["public_ip"],
-                               key_filename=test_vars["ssh_priv_key"])
+    """ SSH to the controller. """
+    ssh_params = {
+        "username": test_vars["controller_user"],
+        "hostname": test_vars["public_ip"],
+        "key_filename": test_vars["ssh_priv_key"]
+    }
+
+    ssh_tunnel = None
+    if test_vars["public_ip"] != test_vars["controller_ip"]:
+        ssh_tunnel = SSHTunnelForwarder(
+            ssh_params["hostname"],
+            ssh_username=ssh_params["username"],
+            ssh_pkey=ssh_params["key_filename"],
+            remote_bind_address=(test_vars["controller_ip"], 22),
+        )
+        ssh_tunnel.start()
+        ssh_params["hostname"] = "127.0.0.1"
+        ssh_params["port"] = ssh_tunnel.local_bind_port
+
+    client = create_ssh_client(**ssh_params)
     yield client
     client.close()
+
+    if ssh_tunnel:
+        ssh_tunnel.stop()
 
 
 @pytest.fixture(scope="module")
