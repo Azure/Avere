@@ -37,7 +37,7 @@ jobs:
       pytest --disable-pytest-warnings test/test_vfxt_template_deploy.py \
         -k test_deploy_template \
         --location $VFXT_DEPLOY_LOCATION \
-        --doctest-modules --junitxml=junit/test-results01.xml
+        --doctest-modules --junitxml=junit/test-results01a.xml
     displayName: 'Test template-based deployment of Avere vFXT'
     condition: and(succeeded(), eq(variables['RUN_DEPLOY'], 'true'))
     env:
@@ -67,7 +67,7 @@ jobs:
       pytest --disable-pytest-warnings test/test_vfxt_template_deploy.py \
         -k test_byovnet_deploy \
         --location $VFXT_DEPLOY_LOCATION \
-        --doctest-modules --junitxml=junit/test-results01b.xml
+        --doctest-modules --junitxml=junit/test-results01c.xml
     displayName: 'Test deploy of vFXT with a VNET in a different resource group'
     condition: and(succeeded(), eq(variables['RUN_BYOVNET'], 'true'))
     env:

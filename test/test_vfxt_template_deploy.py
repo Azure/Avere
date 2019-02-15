@@ -66,12 +66,13 @@ class TestVfxtTemplateDeploy:
             test_vars["cluster_mgmt_ip"] = deploy_outputs["mgmt_ip"]["value"]
             test_vars["cluster_vs_ips"] = split_ip_range(deploy_outputs["vserver_ips"]["value"])
         finally:
-            (c_priv_ip, c_pub_ip) = get_vm_ips(
-                atd.nm_client, atd.resource_group, test_vars["controller_name"])
-            test_vars["controller_ip"] = c_pub_ip or c_priv_ip
+            # (c_priv_ip, c_pub_ip) = get_vm_ips(
+            #     atd.nm_client, atd.resource_group, test_vars["controller_name"])
+            # test_vars["controller_ip"] = c_pub_ip or c_priv_ip
             test_vars["public_ip"] = atd.nm_client.public_ip_addresses.get(
                 atd.resource_group, "publicip-" + test_vars["controller_name"]
             ).ip_address
+            test_vars["controller_ip"] = test_vars["public_ip"]
 
     def test_no_storage_account_deploy(self, resource_group, test_vars):  # noqa: E501, F811
         """
@@ -120,12 +121,13 @@ class TestVfxtTemplateDeploy:
             test_vars["cluster_vs_ips"] = split_ip_range(deploy_outputs["vserver_ips"]["value"])
             time.sleep(60)
         finally:
-            (c_priv_ip, c_pub_ip) = get_vm_ips(
-                atd.nm_client, atd.resource_group, test_vars["controller_name"])
-            test_vars["controller_ip"] = c_pub_ip or c_priv_ip
+            # (c_priv_ip, c_pub_ip) = get_vm_ips(
+            #     atd.nm_client, atd.resource_group, test_vars["controller_name"])
+            # test_vars["controller_ip"] = c_pub_ip or c_priv_ip
             test_vars["public_ip"] = atd.nm_client.public_ip_addresses.get(
                 atd.resource_group, "publicip-" + test_vars["controller_name"]
             ).ip_address
+            test_vars["controller_ip"] = test_vars["public_ip"]
 
     def test_byovnet_deploy(self, ext_vnet, resource_group, test_vars):  # noqa: E501, F811
         """
