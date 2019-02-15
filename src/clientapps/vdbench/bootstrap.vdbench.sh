@@ -442,7 +442,7 @@ function write_vdbench_files() {
     write_copy_idrsa
     write_azure_clients
     write_inmem
-    write_3node_inmem_32
+    write_3node_inmem32
     write_ondisk
     write_throughput
     write_smallfileIO
