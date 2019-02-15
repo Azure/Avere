@@ -81,7 +81,7 @@ class TestVDBench:
                 commands = """
                     ~/copy_idrsa.sh
                     cd
-                    ./run_vdbench.sh inmem.conf uniquestring1
+                    ./run_vdbench.sh inmem32node3.conf uniquestring1
                     """.split("\n")
                 run_ssh_commands(ssh_client, commands)
             finally:
