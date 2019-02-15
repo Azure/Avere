@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+from time import sleep
 
 # from requirements.txt
 import pytest
@@ -145,6 +146,7 @@ def ssh_con(test_vars):
             remote_bind_address=(test_vars["controller_ip"], 22),
         )
         ssh_tunnel.start()
+        sleep(5)
         log.debug("SSH tunnel connected: {}".format(ssh_params))
         log.debug("Local bind port: {}".format(ssh_tunnel.local_bind_port))
 
