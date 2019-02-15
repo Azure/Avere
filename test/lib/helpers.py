@@ -19,6 +19,24 @@ def create_ssh_client(username, hostname, port=22, password=None, key_filename=N
     return ssh_client
 
 
+def get_vm_ips(nm_client, resource_group, vm_name):
+    """
+    Get the private and public IP addresses for a given virtual machine.
+    If a virtual machine has the more than one IP address of each type, then
+    only the first one (as determined by the Azure SDK) is returned.
+
+    This function returns the following tuple: (private IP, public IP)
+
+    If a given VM does not have a private or public IP address, its tuple
+    entry will be None.
+    """
+    for nif in nm_client.network_interfaces.list(resource_group):
+        if vm_name in nif.name:
+            ipc = nif.ip_configurations[0]
+            return (ipc.private_ip_address, ipc.public_ip_address)
+    return (None, None)  # (private IP, public IP)
+
+
 def run_averecmd(ssh_client, node_ip, password, method, user='admin', args='',
                  timeout=60):
     """Run averecmd on the vFXT controller connected via ssh_client."""

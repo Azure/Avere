@@ -16,10 +16,11 @@ from uuid import uuid4
 import pytest
 
 # local libraries
-from lib.helpers import split_ip_range, wait_for_op
+from lib.helpers import get_vm_ips, split_ip_range, wait_for_op
 
 
 class TestVfxtTemplateDeploy:
+    # TODO: modularize common code
     def test_deploy_template(self, resource_group, test_vars):  # noqa: F811
         """
         Deploy a vFXT cluster.
@@ -53,9 +54,9 @@ class TestVfxtTemplateDeploy:
             "virtualNetworkSubnetName": atd.deploy_id + "-subnet",
         }
 
+        test_vars["storage_account"] = atd.deploy_params["avereBackedStorageAccountName"]
         test_vars["controller_name"] = atd.deploy_params["controllerName"]
         test_vars["controller_user"] = atd.deploy_params["controllerAdminUsername"]
-        test_vars["storage_account"] = atd.deploy_params["avereBackedStorageAccountName"]
         log.debug("Generated deploy parameters: \n{}".format(
                   json.dumps(atd.deploy_params, indent=4)))
 
@@ -65,6 +66,9 @@ class TestVfxtTemplateDeploy:
             test_vars["cluster_mgmt_ip"] = deploy_outputs["mgmt_ip"]["value"]
             test_vars["cluster_vs_ips"] = split_ip_range(deploy_outputs["vserver_ips"]["value"])
         finally:
+            (c_priv_ip, c_pub_ip) = get_vm_ips(
+                atd.nm_client, atd.resource_group, test_vars["controller_name"])
+            test_vars["controller_ip"] = c_pub_ip or c_priv_ip
             test_vars["public_ip"] = atd.nm_client.public_ip_addresses.get(
                 atd.resource_group, "publicip-" + test_vars["controller_name"]
             ).ip_address
@@ -116,11 +120,14 @@ class TestVfxtTemplateDeploy:
             test_vars["cluster_vs_ips"] = split_ip_range(deploy_outputs["vserver_ips"]["value"])
             time.sleep(60)
         finally:
+            (c_priv_ip, c_pub_ip) = get_vm_ips(
+                atd.nm_client, atd.resource_group, test_vars["controller_name"])
+            test_vars["controller_ip"] = c_pub_ip or c_priv_ip
             test_vars["public_ip"] = atd.nm_client.public_ip_addresses.get(
                 atd.resource_group, "publicip-" + test_vars["controller_name"]
             ).ip_address
 
-    def test_byovnet_deploy(self, resource_group, test_vars, ext_vnet):  # noqa: E501, F811
+    def test_byovnet_deploy(self, ext_vnet, resource_group, test_vars):  # noqa: E501, F811
         """
         Deploy a vFXT cluster.
           - do NOT create a new VNET
@@ -153,17 +160,22 @@ class TestVfxtTemplateDeploy:
             "virtualNetworkSubnetName": ext_vnet["subnet_name"]["value"],
         }
 
+        test_vars["storage_account"] = atd.deploy_params["avereBackedStorageAccountName"]
         test_vars["controller_name"] = atd.deploy_params["controllerName"]
         test_vars["controller_user"] = atd.deploy_params["controllerAdminUsername"]
-        test_vars["storage_account"] = atd.deploy_params["avereBackedStorageAccountName"]
-        test_vars["public_ip"] = ext_vnet["public_ip_address"]["value"]
         log.debug("Generated deploy parameters: \n{}".format(
                   json.dumps(atd.deploy_params, indent=4)))
 
         atd.deploy_name = "test_deploy_template_byovnet"
-        deploy_outputs = wait_for_op(atd.deploy()).properties.outputs
-        test_vars["cluster_mgmt_ip"] = deploy_outputs["mgmt_ip"]["value"]
-        test_vars["cluster_vs_ips"] = split_ip_range(deploy_outputs["vserver_ips"]["value"])
+        try:
+            deploy_outputs = wait_for_op(atd.deploy()).properties.outputs
+            test_vars["cluster_mgmt_ip"] = deploy_outputs["mgmt_ip"]["value"]
+            test_vars["cluster_vs_ips"] = split_ip_range(deploy_outputs["vserver_ips"]["value"])
+        finally:
+            test_vars["controller_ip"] = get_vm_ips(
+                atd.nm_client, atd.resource_group, test_vars["controller_name"]
+            )[0]
+            test_vars["public_ip"] = ext_vnet["public_ip_address"]["value"]
 
 
 if __name__ == "__main__":
