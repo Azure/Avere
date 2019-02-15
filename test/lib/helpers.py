@@ -33,7 +33,10 @@ def get_vm_ips(nm_client, resource_group, vm_name):
     for nif in nm_client.network_interfaces.list(resource_group):
         if vm_name in nif.name:
             ipc = nif.ip_configurations[0]
-            return (ipc.private_ip_address, ipc.public_ip_address)
+            pub_ip = ipc.public_ip_address
+            if pub_ip:
+                pub_ip = pub_ip.ip_address
+            return (ipc.private_ip_address, pub_ip)
     return (None, None)  # (private IP, public IP)
 
 
