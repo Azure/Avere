@@ -116,7 +116,7 @@ def storage_account(test_vars):
 
 
 @pytest.fixture()
-def scp_cli(ssh_con):
+def scp_con(ssh_con):
     """Create an SCP client based on an SSH connection to the controller."""
     client = SCPClient(ssh_con.get_transport())
     yield client

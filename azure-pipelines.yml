@@ -100,24 +100,7 @@ jobs:
       pytest --disable-pytest-warnings test/test_vfxt_cluster_status.py \
         -k TestVfxtSupport \
         --doctest-modules --junitxml=junit/test-results03.xml
-
-      PUBLIC_IP=$(jq -r .public_ip $VFXT_TEST_VARS_FILE)
-      CONTROLLER_NAME=$(jq -r .controller_name $VFXT_TEST_VARS_FILE)
-      CONTROLLER_USER=$(jq -r .controller_user $VFXT_TEST_VARS_FILE)
-
-      echo "PUBLIC_IP  : $PUBLIC_IP"
-      echo "CONTROLLER_NAME: $CONTROLLER_NAME"
-      echo "CONTROLLER_USER: $CONTROLLER_USER"
-
-      ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
-      mkdir -p $ARTIFACTS_DIR
-      tar -zcvf ${ARTIFACTS_DIR}/vfxt_artifacts_${CONTROLLER_NAME}.tar.gz vfxt_artifacts_*
-      scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $CONTROLLER_USER@$PUBLIC_IP:~/*.log $ARTIFACTS_DIR/.
-      scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ~/.ssh/* $CONTROLLER_USER@$PUBLIC_IP:~/.ssh/.
-
-      echo "vfxt.log from $CONTROLLER_NAME:"
-      cat $ARTIFACTS_DIR/vfxt.log
-    displayName: 'Collect vFXT deployment artifacts and dump vfxt.log'
+    displayName: 'Collect vFXT deployment artifacts'
     condition: always()
     env:
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
@@ -126,6 +109,22 @@ jobs:
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+
+  - script: |
+      RESOURCE_GROUP=$(jq -r .resource_group $VFXT_TEST_VARS_FILE)
+      CONTROLLER_NAME=$(jq -r .controller_name $VFXT_TEST_VARS_FILE)
+
+      echo "RESOURCE_GROUP: $RESOURCE_GROUP"
+      echo "CONTROLLER_NAME: $CONTROLLER_NAME"
+
+      ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
+      mkdir -p $ARTIFACTS_DIR
+      tar -zcvf ${ARTIFACTS_DIR}/vfxt_artifacts_${RESOURCE_GROUP}.tar.gz vfxt_artifacts_*
+
+      echo "vfxt.log from $CONTROLLER_NAME:"
+      cat vfxt_artifacts_*/vfxt.log
+    displayName: 'Archive deployment artifacts and dump vfxt.log'
+    condition: always()
 
   - script: |
       grep -i -C 5 -e vfxt:ERROR -e exception $BUILD_SOURCESDIRECTORY/test_artifacts/vfxt.log
@@ -167,6 +166,7 @@ jobs:
       echo "RESOURCE_GROUP: $RESOURCE_GROUP"
       az group delete --yes -n $RESOURCE_GROUP
       if [ "true" = "$RUN_BYOVNET" ]; then
+        echo "RESOURCE_GROUP (vnet): ${RESOURCE_GROUP}-vnet"
         az group delete --yes -n "${RESOURCE_GROUP}-vnet"
       fi
     displayName: 'Clean up resource group'
