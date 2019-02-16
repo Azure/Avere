@@ -111,18 +111,20 @@ jobs:
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
-      RESOURCE_GROUP=$(jq -r .resource_group $VFXT_TEST_VARS_FILE)
+      DEPLOY_ID=$(jq -r .deploy_id $VFXT_TEST_VARS_FILE)
       CONTROLLER_NAME=$(jq -r .controller_name $VFXT_TEST_VARS_FILE)
+      T_ARTIFACTS_DIR="vfxt_artifacts_${DEPLOY_ID}"
 
-      echo "RESOURCE_GROUP: $RESOURCE_GROUP"
+      echo "DEPLOY_ID: $DEPLOY_ID"
       echo "CONTROLLER_NAME: $CONTROLLER_NAME"
+      echo "T_ARTIFACTS_DIR: $T_ARTIFACTS_DIR"
 
-      ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
-      mkdir -p $ARTIFACTS_DIR
-      tar -zcvf ${ARTIFACTS_DIR}/vfxt_artifacts_${RESOURCE_GROUP}.tar.gz vfxt_artifacts_*
+      P_ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
+      mkdir -p $P_ARTIFACTS_DIR
+      tar -zcvf ${P_ARTIFACTS_DIR}/vfxt_artifacts_${DEPLOY_ID}.tar.gz ${T_ARTIFACTS_DIR}
 
-      echo "vfxt.log from $CONTROLLER_NAME:"
-      cat vfxt_artifacts_*/vfxt.log
+      echo "vfxt.log from ${T_ARTIFACTS_DIR}:"
+      cat ${T_ARTIFACTS_DIR}/vfxt.log
     displayName: 'Archive deployment artifacts and dump vfxt.log'
     condition: always()
 

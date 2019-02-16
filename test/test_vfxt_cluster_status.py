@@ -96,7 +96,8 @@ class TestVfxtSupport:
         os.makedirs(artifacts_dir, exist_ok=True)
 
         log.debug("Copying logs from controller to {}".format(artifacts_dir))
-        scp_con.get("~/*.log", artifacts_dir)
+        for lf in ["vfxt.log", "enablecloudtrace.log", "create_cluster_command.log"]:
+            scp_con.get("~/" + lf, artifacts_dir)
 
         log.debug("Copying SSH keys to the controller")
         scp_con.put(test_vars["ssh_priv_key"], "~/.ssh/.")
