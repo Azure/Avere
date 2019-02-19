@@ -2,14 +2,22 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "uniqueName": {
+            "type": "string",
+            "metadata": {
+                "description": "The unique name used as a basis for resource names."
+            }
+        },
         "virtualNetworkName": {
             "type": "string",
+            "defaultValue": "[concat(parameters('uniqueName'), '-vnet')]",
             "metadata": {
                 "description": "The name of the virtual network (VNET)."
             }
         },
         "virtualNetworkSubnetName": {
             "type": "string",
+            "defaultValue": "[concat(parameters('uniqueName'), '-subnet')]",
             "metadata": {
                 "description": "The name of the subnet in the VNET."
             }
@@ -27,13 +35,44 @@
             "metadata": {
                 "description": "The IP address range prefix of the subnet in the VNET."
             }
+        },
+        "jumpboxAdminUsername": {
+            "type": "string",
+            "defaultValue": "azureuser",
+            "metadata": {
+                "description": "The administrative username for the jumpbox."
+            }
+        },
+        "jumpboxSSHKeyData": {
+            "type": "string",
+            "metadata": {
+                "description": "The SSH public key used to connect to the jumpbox."
+            }
         }
     },
     "variables": {
+        "vmSku": "Standard_A1",
+        "uniqueName": "[parameters('uniqueName')]",
         "virtualNetworkName": "[parameters('virtualNetworkName')]",
         "subnetName": "[parameters('virtualNetworkSubnetName')]",
         "addressPrefix": "[parameters('vnetAddressSpacePrefix')]",
-        "subnetPrefix": "[parameters('subnetAddressRangePrefix')]"
+        "subnetPrefix": "[parameters('subnetAddressRangePrefix')]",
+        "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
+        "publicIPAddressName": "[concat(variables('uniqueName'), '-publicip')]",
+        "storageAccountType": "Standard_LRS",
+        "jumpboxName": "[concat('jbox-', variables('uniqueName'))]",
+        "jumpboxSAName": "[concat(variables('uniqueName'), 'jbsa')]",
+        "jumpboxOSDiskName": "[concat(variables('jumpboxName'), '-osdisk')]",
+        "jumpboxIPConfigName": "[concat(variables('jumpboxName'), '-ipconfig')]",
+        "jumpboxNicName": "[concat(variables('jumpboxName'), '-nic')]",
+        "jumpboxSSHKeyPath": "[concat('/home/',parameters('jumpboxAdminUsername'),'/.ssh/authorized_keys')]",
+        "osType": {
+            "publisher": "Canonical",
+            "offer": "UbuntuServer",
+            "sku": "16.04-LTS",
+            "version": "latest"
+        },
+        "imageReference": "[variables('osType')]"
     },
     "resources": [
         {
@@ -61,28 +100,131 @@
                     }
                 ]
             }
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('publicIPAddressName')]",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2017-10-01",
+            "properties": {
+                "publicIPAllocationMethod": "Static"
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[variables('jumpboxNicName')]",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2017-10-01",
+            "dependsOn": [
+                "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
+                "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "[variables('jumpboxIPConfigName')]",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+                            },
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('jumpboxSAName')]",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-06-15",
+            "properties": {
+                "accountType": "[variables('storageAccountType')]"
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[variables('jumpboxName')]",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2017-03-30",
+            "dependsOn": [
+                "[concat('Microsoft.Storage/storageAccounts/', variables('jumpboxSAName'))]",
+                "[concat('Microsoft.Network/networkInterfaces/', variables('jumpboxNicName'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[variables('vmSku')]"
+                },
+                "osProfile": {
+                    "computerName": "[variables('jumpboxName')]",
+                    "adminUsername": "[parameters('jumpboxAdminUsername')]",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": true,
+                        "ssh": {
+                            "publicKeys": [
+                                {
+                                    "path": "[variables('jumpboxSSHKeyPath')]",
+                                    "keyData": "[parameters('jumpboxSSHKeyData')]"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "storageProfile": {
+                    "imageReference": "[variables('imageReference')]",
+                    "osDisk": {
+                        "name": "[variables('jumpboxOSDiskName')]",
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('jumpboxNicName'))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true,
+                        "storageUri": "[concat('http://',variables('jumpboxSAName'),'.blob.core.windows.net')]"
+                    }
+                }
+            }
         }
     ],
     "outputs": {
-        "resource_group": {
-            "type": "string",
-            "value": "[resourceGroup().name]"
-        },
         "location": {
             "type": "string",
             "value": "[resourceGroup().location]"
         },
-        "virtual_network_name": {
+        "public_host": {
             "type": "string",
-            "value": "[variables('virtualNetworkName')]"
+            "value": "[variables('jumpboxName')]"
+        },
+        "public_ip_address": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))).ipAddress]"
+        },
+        "resource_group": {
+            "type": "string",
+            "value": "[resourceGroup().name]"
+        },
+        "subnet_id": {
+            "type": "string",
+            "value": "[concat(resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName')),'/subnets/',variables('subnetName'))]"
         },
         "subnet_name": {
             "type": "string",
             "value": "[variables('subnetName')]"
         },
-        "subnet_id": {
+        "virtual_network_name": {
             "type": "string",
-            "value": "[concat(resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName')),'/subnets/',variables('subnetName'))]"
+            "value": "[variables('virtualNetworkName')]"
         }
     }
 }

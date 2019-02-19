@@ -21,7 +21,7 @@ from lib.helpers import (create_ssh_client, run_averecmd, run_ssh_commands,
 class TestVfxtClusterStatus:
     """Basic vFXT cluster health tests."""
 
-    def test_basic_fileops(self, mnt_nodes, scp_cli, ssh_con, test_vars):  # noqa: E501, F811
+    def test_basic_fileops(self, mnt_nodes, scp_con, ssh_con, test_vars):  # noqa: E501, F811
         """
         Quick check of file operations.
         See check_node_basic_fileops.sh for more information.
@@ -30,7 +30,7 @@ class TestVfxtClusterStatus:
             pytest.skip("no storage account")
 
         script_name = "check_node_basic_fileops.sh"
-        scp_cli.put(
+        scp_con.put(
             "{0}/test/{1}".format(test_vars["build_root"], script_name),
             r"~/.",
         )
@@ -86,13 +86,23 @@ class TestVfxtSupport:
 
         assert(not cores_found)
 
-    def test_artifacts_collect(self, averecmd_params, scp_cli, test_vars):  # noqa: F811, E501
+    def test_artifacts_collect(self, averecmd_params, scp_con, test_vars):  # noqa: F811, E501
         """
         Collect test artifacts (node logs, rolling trace) from each node.
         Artifacts are stored to local directories.
         """
         log = logging.getLogger("test_collect_artifacts")
         artifacts_dir = "vfxt_artifacts_" + test_vars["atd_obj"].deploy_id
+        os.makedirs(artifacts_dir, exist_ok=True)
+
+        log.debug("Copying logs from controller to {}".format(artifacts_dir))
+        for lf in ["vfxt.log", "enablecloudtrace.log", "create_cluster_command.log"]:
+            scp_con.get("~/" + lf, artifacts_dir)
+
+        log.debug("Copying SSH keys to the controller")
+        scp_con.put(test_vars["ssh_priv_key"], "~/.ssh/.")
+        scp_con.put(test_vars["ssh_pub_key"], "~/.ssh/.")
+
         nodes = run_averecmd(**averecmd_params, method="node.list")
         log.debug("nodes found: {}".format(nodes))
         last_error = None
@@ -113,7 +123,7 @@ class TestVfxtSupport:
                                    args=node)[node]["primaryClusterIP"]["IP"]
             log.debug("tunneling to node {} using IP {}".format(node, node_ip))
             with SSHTunnelForwarder(
-                test_vars["controller_ip"],
+                test_vars["public_ip"],
                 ssh_username=test_vars["controller_user"],
                 ssh_pkey=test_vars["ssh_priv_key"],
                 remote_bind_address=(node_ip, 22),

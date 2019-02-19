@@ -24,19 +24,19 @@
       "type": "string",
       "defaultValue": "[resourceGroup().name]",
       "metadata": {
-        "description": "The resource group name for the VNET.  If createVirtualNetwork is set to true, the current resource group must be specified, otherwise the value should be blank."
+        "description": "The resource group name for the VNET. If createVirtualNetwork is set to true, this field should be blank. Otherwise, provide the name of the resource group containing an existing VNET."
       }
     },
     "virtualNetworkName": {
       "type": "string",
       "metadata": {
-        "description": "The name used for the virtual network.  If createVirtualNetwork is set to true, you may reuse the unique name above."
+        "description": "The unique name used for the virtual network. If createVirtualNetwork is set to true, you may reuse the unique name above."
       }
     },
     "virtualNetworkSubnetName": {
       "type": "string",
       "metadata": {
-        "description": "The unique name used for the virtual network subnet.  If createVirtualNetwork is set to true, you may reuse the unique name above."
+        "description": "The unique name used for the virtual network subnet. If createVirtualNetwork is set to true, you may reuse the unique name above."
       }
     },
     "vnetAddressSpacePrefix":{
@@ -189,7 +189,7 @@
     "virtualNetworkSubnetName": "[parameters('virtualNetworkSubnetName')]",
     "addressPrefix": "[parameters('vnetAddressSpacePrefix')]",
     "subnetPrefix": "[parameters('subnetAddressRangePrefix')]",
-    "useAvereBackedStorageAccount": "[parameters('useAvereBackedStorageAccount')]",    
+    "useAvereBackedStorageAccount": "[parameters('useAvereBackedStorageAccount')]",
     "avereBackedStorageAccountName": "[parameters('avereBackedStorageAccountName')]",
     "controllerName": "[parameters('controllerName')]",
     "controllerAdminUsername": "[parameters('controllerAdminUsername')]",
