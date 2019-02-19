@@ -25,7 +25,7 @@ class TestVDBench:
         commands = """
             sudo mkdir -p /nfs/node0/bootstrap
             cd /nfs/node0/bootstrap
-            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.vdbench.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/bootstrap.vdbench.sh
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.vdbench.sh https://raw.githubusercontent.com/Azure/Avere/vdbench_32/src/clientapps/vdbench/bootstrap.vdbench.sh
             sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/vdbench50407.zip https://avereimageswestus.blob.core.windows.net/vdbench/vdbench50407.zip
             sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/vdbenchVerify.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/vdbenchVerify.sh
             sudo chmod +x /nfs/node0/bootstrap/vdbenchVerify.sh
@@ -81,7 +81,7 @@ class TestVDBench:
                 commands = """
                     ~/copy_idrsa.sh
                     cd
-                    ./run_vdbench.sh inmem.conf uniquestring1
+                    ./run_vdbench.sh inmem32node3.conf uniquestring1
                     """.split("\n")
                 run_ssh_commands(ssh_client, commands)
             finally:
