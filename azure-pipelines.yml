@@ -37,7 +37,7 @@ jobs:
       pytest --disable-pytest-warnings test/test_vfxt_template_deploy.py \
         -k test_deploy_template \
         --location $VFXT_DEPLOY_LOCATION \
-        --doctest-modules --junitxml=junit/test-results01.xml
+        --doctest-modules --junitxml=junit/test-results01a.xml
     displayName: 'Test template-based deployment of Avere vFXT'
     condition: and(succeeded(), eq(variables['RUN_DEPLOY'], 'true'))
     env:
@@ -55,6 +55,21 @@ jobs:
         --doctest-modules --junitxml=junit/test-results01b.xml
     displayName: 'Test deploy of vFXT without storage'
     condition: and(succeeded(), eq(variables['RUN_EMPTY_STORAGE'], 'true'))
+    env:
+      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+      AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
+      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+
+  - script: |
+      pytest --disable-pytest-warnings test/test_vfxt_template_deploy.py \
+        -k test_byovnet_deploy \
+        --location $VFXT_DEPLOY_LOCATION \
+        --doctest-modules --junitxml=junit/test-results01c.xml
+    displayName: 'Test deploy of vFXT with a VNET in a different resource group'
+    condition: and(succeeded(), eq(variables['RUN_BYOVNET'], 'true'))
     env:
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
       AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
@@ -85,24 +100,7 @@ jobs:
       pytest --disable-pytest-warnings test/test_vfxt_cluster_status.py \
         -k TestVfxtSupport \
         --doctest-modules --junitxml=junit/test-results03.xml
-
-      CONTROLLER_IP=$(jq -r .controller_ip $VFXT_TEST_VARS_FILE)
-      CONTROLLER_NAME=$(jq -r .controller_name $VFXT_TEST_VARS_FILE)
-      CONTROLLER_USER=$(jq -r .controller_user $VFXT_TEST_VARS_FILE)
-
-      echo "CONTROLLER_IP  : $CONTROLLER_IP"
-      echo "CONTROLLER_NAME: $CONTROLLER_NAME"
-      echo "CONTROLLER_USER: $CONTROLLER_USER"
-
-      ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
-      mkdir -p $ARTIFACTS_DIR
-      tar -zcvf ${ARTIFACTS_DIR}/vfxt_artifacts_${CONTROLLER_NAME}.tar.gz vfxt_artifacts_*
-      scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $CONTROLLER_USER@$CONTROLLER_IP:~/*.log $ARTIFACTS_DIR/.
-      scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ~/.ssh/* $CONTROLLER_USER@$CONTROLLER_IP:~/.ssh/.
-
-      echo "vfxt.log from $CONTROLLER_NAME:"
-      cat $ARTIFACTS_DIR/vfxt.log
-    displayName: 'Collect vFXT deployment artifacts and dump vfxt.log'
+    displayName: 'Collect vFXT deployment artifacts'
     condition: always()
     env:
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
@@ -111,6 +109,24 @@ jobs:
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+
+  - script: |
+      DEPLOY_ID=$(jq -r .deploy_id $VFXT_TEST_VARS_FILE)
+      CONTROLLER_NAME=$(jq -r .controller_name $VFXT_TEST_VARS_FILE)
+      T_ARTIFACTS_DIR="vfxt_artifacts_${DEPLOY_ID}"
+
+      echo "DEPLOY_ID: $DEPLOY_ID"
+      echo "CONTROLLER_NAME: $CONTROLLER_NAME"
+      echo "T_ARTIFACTS_DIR: $T_ARTIFACTS_DIR"
+
+      P_ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
+      mkdir -p $P_ARTIFACTS_DIR
+      tar -zcvf ${P_ARTIFACTS_DIR}/vfxt_artifacts_${DEPLOY_ID}.tar.gz ${T_ARTIFACTS_DIR}
+
+      echo "vfxt.log from ${T_ARTIFACTS_DIR}:"
+      cat ${T_ARTIFACTS_DIR}/vfxt.log
+    displayName: 'Archive deployment artifacts and dump vfxt.log'
+    condition: always()
 
   - script: |
       grep -i -C 5 -e vfxt:ERROR -e exception $BUILD_SOURCESDIRECTORY/test_artifacts/vfxt.log
@@ -151,6 +167,10 @@ jobs:
       RESOURCE_GROUP=$(jq -r .resource_group $VFXT_TEST_VARS_FILE)
       echo "RESOURCE_GROUP: $RESOURCE_GROUP"
       az group delete --yes -n $RESOURCE_GROUP
+      if [ "true" = "$RUN_BYOVNET" ]; then
+        echo "RESOURCE_GROUP (vnet): ${RESOURCE_GROUP}-vnet"
+        az group delete --yes -n "${RESOURCE_GROUP}-vnet"
+      fi
     displayName: 'Clean up resource group'
     condition: and(always(), ne(variables['SKIP_RG_CLEANUP'], 'true'))
     env:

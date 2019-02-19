@@ -2,14 +2,17 @@
 import json
 import logging
 import os
+from time import sleep
 
 # from requirements.txt
 import pytest
-from arm_template_deploy import ArmTemplateDeploy
 from scp import SCPClient
+from sshtunnel import SSHTunnelForwarder
 
 # local libraries
-from lib.helpers import (create_ssh_client, run_ssh_command, run_ssh_commands)
+from arm_template_deploy import ArmTemplateDeploy
+from lib.helpers import (create_ssh_client, run_ssh_command, run_ssh_commands,
+                         wait_for_op)
 
 
 # COMMAND-LINE OPTIONS ########################################################
@@ -113,7 +116,8 @@ def storage_account(test_vars):
 
 
 @pytest.fixture()
-def scp_cli(ssh_con):
+def scp_con(ssh_con):
+    """Create an SCP client based on an SSH connection to the controller."""
     client = SCPClient(ssh_con.get_transport())
     yield client
     client.close()
@@ -121,11 +125,46 @@ def scp_cli(ssh_con):
 
 @pytest.fixture()
 def ssh_con(test_vars):
-    client = create_ssh_client(test_vars["controller_user"],
-                               test_vars["controller_ip"],
-                               key_filename=test_vars["ssh_priv_key"])
+    """Create an SSH connection to the controller."""
+    log = logging.getLogger("ssh_con")
+    ssh_params = {  # common parameters for SSH tunnel, connection
+        "username": test_vars["controller_user"],
+        "hostname": test_vars["public_ip"],
+        "key_filename": test_vars["ssh_priv_key"]
+    }
+
+    ssh_tunnel = None
+    # If the controller's IP is not the same as the public IP, then we are
+    # using a jumpbox to get into the VNET containing the controller. In that
+    # case, create an SSH tunnel before connecting to the controller.
+    if test_vars["public_ip"] != test_vars["controller_ip"]:
+        log.debug("Creating an SSH tunnel to the jumpbox.")
+        ssh_tunnel = SSHTunnelForwarder(
+            ssh_params["hostname"],
+            ssh_username=ssh_params["username"],
+            ssh_pkey=ssh_params["key_filename"],
+            remote_bind_address=(test_vars["controller_ip"], 22),
+        )
+        ssh_tunnel.start()
+        sleep(5)
+        log.debug("SSH tunnel connected: {}".format(ssh_params))
+        log.debug("Local bind port: {}".format(ssh_tunnel.local_bind_port))
+
+        # When SSH'ing to the controller below, we'll instead connect to
+        # localhost through the local bind port connected to the SSH tunnel.
+        ssh_params["hostname"] = "127.0.0.1"
+        ssh_params["port"] = ssh_tunnel.local_bind_port
+
+    log.debug("Creating SSH client connection: {}".format(ssh_params))
+    client = create_ssh_client(**ssh_params)
     yield client
+
+    log.debug("Closing SSH client connection.")
     client.close()
+
+    if ssh_tunnel:
+        log.debug("Closing SSH tunnel.")
+        ssh_tunnel.stop()
 
 
 @pytest.fixture(scope="module")
@@ -191,3 +230,35 @@ def test_vars(request):
         log.debug("Saving vars to {} (test_vars_file)".format(test_vars_file))
         with open(test_vars_file, "w") as vtvf:
             json.dump(vars, vtvf, **cja)
+
+
+@pytest.fixture()
+def ext_vnet(test_vars):
+    """
+    Creates a resource group containing a new VNET, subnet, public IP, and
+    jumpbox for use in other tests.
+    """
+    log = logging.getLogger("ext_vnet")
+    vnet_atd = ArmTemplateDeploy(
+        location=test_vars["location"],
+        resource_group=test_vars["atd_obj"].deploy_id + "-rg-vnet"
+    )
+    rg = vnet_atd.create_resource_group()
+    log.info("Resource Group: {}".format(rg))
+
+    vnet_atd.deploy_name = "ext_vnet"
+    with open("{}/src/vfxt/azuredeploy.vnet.json".format(
+                test_vars["build_root"])) as tfile:
+        vnet_atd.template = json.load(tfile)
+
+    with open(test_vars["ssh_pub_key"], "r") as ssh_pub_f:
+        ssh_pub_key = ssh_pub_f.read()
+
+    vnet_atd.deploy_params = {
+        "uniqueName": test_vars["atd_obj"].deploy_id,
+        "jumpboxAdminUsername": "azureuser",
+        "jumpboxSSHKeyData": ssh_pub_key
+    }
+    test_vars["ext_vnet"] = wait_for_op(vnet_atd.deploy()).properties.outputs
+    log.debug(test_vars["ext_vnet"])
+    return test_vars["ext_vnet"]
