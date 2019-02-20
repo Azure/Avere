@@ -89,9 +89,10 @@ jobs:
       )
 
       for ce in "${common_errors[@]}"; do
-          msg_found=$(grep "$ce" $deploy_results_file)
-          if [[ -n $msg_found ]]; then
+          grep_res=$(grep "$ce" $deploy_results_file)
+          if [[ -n $grep_res ]]; then
               echo "MESSAGE FOUND: $ce"
+              msg_found=1
           fi
       done
 
