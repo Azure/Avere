@@ -25,7 +25,7 @@ jobs:
       chmod 600 ~/.ssh/id_rsa
       ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
       ls -al ~/.ssh
-    displayName: 'Get SSH keys'
+    displayName: 'SETUP: Get SSH keys'
     condition: succeeded()
     env:
       ID_RSA: $(pipelines-rsa-priv)
@@ -34,10 +34,13 @@ jobs:
       set -xe
       pip install --upgrade pip setuptools wheel
       pip install -r test/requirements.txt
-    displayName: 'Install Python dependencies'
+    displayName: 'SETUP: Install Python dependencies'
     condition: succeeded()
 
   - script: |
+      echo "\$VFXT_DEPLOY_NEW_VNET  = $VFXT_DEPLOY_NEW_VNET"
+      echo "\$VFXT_DEPLOY_WITH_BLOB = $VFXT_DEPLOY_WITH_BLOB"
+
       test_to_run="Unrecognized_Deploy_Options"
       if   [[ "true"  = $VFXT_DEPLOY_NEW_VNET &&
               "true"  = $VFXT_DEPLOY_WITH_BLOB ]]; then
@@ -67,7 +70,7 @@ jobs:
       pytest $test_to_run $PYTEST_OPTIONS \
         --location $VFXT_DEPLOY_LOCATION \
         --doctest-modules --junitxml=junit/test-deploy.xml
-    displayName: 'Test ARM template-based deployment of Avere vFXT'
+    displayName: 'TEST: Deploy vFXT cluster'
     condition: succeeded()
     env:
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
@@ -79,18 +82,25 @@ jobs:
 
   - script: |
       # Check for common error messages that might occur during deployment.
+      deploy_results_file="junit/test-deploy.xml"
       declare -a common_errors=(
         "Operation results in exceeding quota limits"
         "A hash conflict was encountered for the role Assignment ID"
       )
 
       for ce in "${common_errors[@]}"; do
-          found=$(grep "$ce" junit/test-deploy.xml)
-          if [[ -n $found ]]; then
+          msg_found=$(grep "$ce" $deploy_results_file)
+          if [[ -n $msg_found ]]; then
               echo "MESSAGE FOUND: $ce"
           fi
       done
-    displayName: 'Check for common deploy error messages'
+
+      if [[ -z $msg_found ]]; then
+        echo "No common error messages found in $deploy_results_file"
+        cat $deploy_results_file
+        exit 1
+      fi
+    displayName: 'CHECK: Common deploy error messages'
     condition: or(failed(), canceled())
 
   - script: |
@@ -102,7 +112,7 @@ jobs:
       pytest test/test_vfxt_cluster_status.py $PYTEST_OPTIONS \
         -k TestVfxtClusterStatus \
         --doctest-modules --junitxml=junit/test-results02.xml
-    displayName: 'Test cluster status, health, etc.'
+    displayName: 'TEST: Cluster status, health'
     condition: succeeded()
     env:
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
@@ -117,7 +127,7 @@ jobs:
       pytest test/test_vfxt_cluster_status.py $PYTEST_OPTIONS \
         -k TestVfxtSupport \
         --doctest-modules --junitxml=junit/test-results03.xml
-    displayName: 'Collect vFXT deployment artifacts'
+    displayName: 'TEST: Collect deployment artifacts, log files'
     condition: always()
     env:
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
@@ -142,19 +152,19 @@ jobs:
 
       echo "vfxt.log from ${T_ARTIFACTS_DIR}:"
       cat ${T_ARTIFACTS_DIR}/vfxt.log
-    displayName: 'Archive deployment artifacts and dump vfxt.log'
+    displayName: 'ARCHIVE: Deployment artifacts, log files'
     condition: always()
 
   - script: |
       grep -i -C 5 -e vfxt:ERROR -e exception $BUILD_SOURCESDIRECTORY/test_artifacts/vfxt.log
-    displayName: 'Grep errors from vfxt.log (+/- 5 lines)'
+    displayName: 'CHECK: Grep errors from vfxt.log (+/- 5 lines)'
     condition: or(failed(), canceled())
 
   - script: |
       set -x
       pytest test/test_vdbench.py $PYTEST_OPTIONS \
         --doctest-modules --junitxml=junit/test-results04.xml
-    displayName: 'Test vdbench on Avere vFXT'
+    displayName: 'TEST: vdbench'
     condition: and(succeeded(), eq(variables['RUN_VDBENCH_STEP'], 'true'))
     env:
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
@@ -166,7 +176,7 @@ jobs:
       set -x
       pytest test/test_edasim.py $PYTEST_OPTIONS \
         --doctest-modules --junitxml=junit/test-results05.xml
-    displayName: 'Test edasim on Avere vFXT'
+    displayName: 'TEST: edasim'
     condition: and(succeeded(), eq(variables['RUN_EDASIM_STEP'], 'true'), eq(variables['RUN_EMPTY_STORAGE'], 'false'))
     env:
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
@@ -175,7 +185,7 @@ jobs:
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - task: PublishPipelineArtifact@0
-    displayName: 'Publish Pipelines Artifacts (node logs, rolling trace)'
+    displayName: 'PUBLISH: Deployment artifacts, log files'
     inputs:
       artifactName: 'testArtifacts'
       targetPath: 'test_artifacts'
@@ -191,7 +201,7 @@ jobs:
         echo "Deleting resource group (vnet): ${RESOURCE_GROUP}-vnet"
         az group delete --yes -n "${RESOURCE_GROUP}-vnet"
       fi
-    displayName: 'Clean up resource group(s)'
+    displayName: 'CLEAN UP: Delete resource group(s)'
     condition: and(always(), ne(variables['SKIP_RG_CLEANUP'], 'true'))
     env:
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
@@ -202,4 +212,4 @@ jobs:
     condition: always()
     inputs:
       testResultsFiles: 'junit/test-*.xml'
-      testRunTitle: 'Publish pytest results'
+      testRunTitle: 'PUBLISH: pytest results'
