@@ -271,6 +271,52 @@ EOM
     chown $LINUX_USER:$LINUX_USER $FILENAME
 }
 
+function write_6node_inmem32() {
+    FILENAME=/home/$LINUX_USER/inmem32node6.conf
+    /bin/cat <<EOM >$FILENAME
+create_anchors=yes
+include=azure-clients.conf
+
+fsd=default,depth=1,width=1,files=96,size=16m
+EOM
+
+    COUNTER=0
+    for VFXT in $(echo $NFS_IP_CSV | sed "s/,/ /g")
+    do
+        MOUNT_POINT="${BASE_DIR}${NODE_MOUNT_PREFIX}${COUNTER}"
+        FSD_HOST="host-${COUNTER}"
+        echo "fsd=fsd!${FSD_HOST},anchor=${MOUNT_POINT}/vdbench/!sizedir/!${FSD_HOST}" >> $FILENAME
+        COUNTER=$(($COUNTER + 1))
+    done
+
+    /bin/cat <<EOM >>$FILENAME
+
+fwd=default,xfersize=512k,fileio=sequential,fileselect=sequential,threads=24
+fwd=format,xfersize=512k,threads=24
+fwd=fwdW!host,host=!host,fsd=(fsd!host*),operation=write,openflags=fsync
+fwd=fwdR!host,host=!host,fsd=(fsd!host*),operation=read,openflags=o_direct
+
+rd=default,elapsed=300,fwdrate=max,interval=1,maxdata=216g
+rd=makedirs1,fwd=(fwdWhost*),operations=(mkdir),maxdata=1m
+rd=makefiles1,fwd=(fwdWhost*),operations=(create),maxdata=1m
+
+rd=writefiles1,fwd=(fwdWhost*),format=restart,maxdata=1m
+rd=writeread1,fwd=(fwdRhost*,fwdWhost*),format=no
+rd=readall1,fwd=(fwdRhost*),format=no,maxdata=432g
+
+rd=writefiles2,fwd=(fwdWhost*),format=no
+rd=writeread2,fwd=(fwdRhost*,fwdWhost*),format=no
+rd=readall2,fwd=(fwdRhost*),format=no,maxdata=432g
+
+rd=writefiles3,fwd=(fwdWhost*)
+rd=writeread3,fwd=(fwdRhost*,fwdWhost*),format=no
+rd=readall3,fwd=(fwdRhost*),format=no,maxdata=432g
+
+rd=deleteall1=fwd(fwdRhost*),format=no,operations=(delete),maxdata=1m
+EOM
+    chown $LINUX_USER:$LINUX_USER $FILENAME
+}
+
 function write_ondisk() {
     FILENAME=/home/$LINUX_USER/ondisk.conf
     /bin/cat <<EOM >$FILENAME
@@ -316,7 +362,7 @@ EOM
 }
 
 function write_3node_32_ondisk() {
-    FILENAME=/home/$LINUX_USER/ondisk32.conf
+    FILENAME=/home/$LINUX_USER/ondisk32_3node.conf
     /bin/cat <<EOM >$FILENAME
 create_anchors=yes
 include=azure-clients.conf
@@ -355,6 +401,50 @@ rd=readall2,fwd=(fwdRhost*)
 rd=writefiles3,fwd=(fwdWhost*)
 rd=writeread3,fwd=(fwdRhost*,fwdWhost*)
 rd=readall3,fwd=(fwdRhost*)
+EOM
+    chown $LINUX_USER:$LINUX_USER $FILENAME
+}
+
+function write_6node_32_ondisk() {
+    FILENAME=/home/$LINUX_USER/ondisk32_6node.conf
+    /bin/cat <<EOM >$FILENAME
+create_anchors=yes
+include=azure-clients.conf
+
+fsd=default,depth=1,width=1,files=1024,size=24m
+EOM
+
+    COUNTER=0
+    for VFXT in $(echo $NFS_IP_CSV | sed "s/,/ /g")
+    do
+        MOUNT_POINT="${BASE_DIR}${NODE_MOUNT_PREFIX}${COUNTER}"
+        FSD_HOST="host-${COUNTER}"
+        echo "fsd=fsd!${FSD_HOST},anchor=${MOUNT_POINT}/!junction/!sizedir/!${FSD_HOST}" >> $FILENAME
+        COUNTER=$(($COUNTER + 1))
+    done
+
+    /bin/cat <<EOM >>$FILENAME
+
+fwd=default,xfersize=512k,fileio=sequential,fileselect=sequential,threads=24
+fwd=format,xfersize=512k,threads=24
+fwd=fwdW!host,host=!host,fsd=(fsd!host*),operation=write,openflags=fsync
+fwd=fwdR!host,host=!host,fsd=(fsd!host*),operation=read,openflags=o_direct
+
+rd=default,elapsed=2000,fwdrate=max,interval=1,maxdata=3.375t
+rd=makedirs1,fwd=(fwdWhost*),operations=(mkdir),maxdata=1m
+rd=makefiles1,fwd=(fwdWhost*),operations=(create),maxdata=1m
+
+rd=writefiles1,fwd=(fwdWhost*),format=restart,maxdata=1m
+rd=writeread1,fwd=(fwdRhost*,fwdWhost*),format=no
+rd=readall1,fwd=(fwdRhost*),format=no
+
+rd=writefiles2,fwd=(fwdWhost*),format=no
+rd=writeread2,fwd=(fwdRhost*,fwdWhost*),format=no
+rd=readall2,fwd=(fwdRhost*),format=no
+
+# only do this cycle twice, since it takes an hour each lap around the track
+
+rd=deleteall1=fwd(fwdRhost*),format=no,operations=(delete),maxdata=1m
 EOM
     chown $LINUX_USER:$LINUX_USER $FILENAME
 }
@@ -443,7 +533,10 @@ function write_vdbench_files() {
     write_azure_clients
     write_inmem
     write_3node_inmem32
+    write_6node_inmem32
     write_ondisk
+    write_3node_32_ondisk
+    write_6node_32_ondisk
     write_throughput
     write_smallfileIO
 }
