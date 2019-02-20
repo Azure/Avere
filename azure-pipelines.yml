@@ -61,9 +61,7 @@ jobs:
       else
           # The VFXT_DEPLOY_* variables checked above are strings and not
           # constrained to "true" or "false" for their values.
-          echo 'ERROR: Unrecognized deploy options. These variables should be "true" or "false":'
-          echo "       \$VFXT_DEPLOY_NEW_VNET  = $VFXT_DEPLOY_NEW_VNET"
-          echo "       \$VFXT_DEPLOY_WITH_BLOB = $VFXT_DEPLOY_WITH_BLOB"
+          echo 'ERROR: Unrecognized deploy options. \$VFXT_DEPLOY_* above should be "true" or "false":'
       fi
 
       set -x
