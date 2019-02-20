@@ -19,27 +19,56 @@ jobs:
       architecture: 'x64'
 
   - script: |
+      set -e
       mkdir ~/.ssh
       echo $ID_RSA | sed 's/ RSA PRIVATE KEY/RSAPRIVATEKEY/g; s/ /\n/g; s/RSAPRIVATEKEY/ RSA PRIVATE KEY/g' > ~/.ssh/id_rsa
       chmod 600 ~/.ssh/id_rsa
       ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
       ls -al ~/.ssh
     displayName: 'Get SSH keys'
+    condition: succeeded()
     env:
       ID_RSA: $(pipelines-rsa-priv)
 
   - script: |
+      set -xe
       pip install --upgrade pip setuptools wheel
       pip install -r test/requirements.txt
     displayName: 'Install Python dependencies'
+    condition: succeeded()
 
   - script: |
-      pytest --disable-pytest-warnings test/test_vfxt_template_deploy.py \
-        -k test_deploy_template \
+      test_to_run="Unrecognized_Deploy_Options"
+      if   [[ "true"  = $VFXT_DEPLOY_NEW_VNET &&
+              "true"  = $VFXT_DEPLOY_WITH_BLOB ]]; then
+          test_to_run="test/test_vfxt_template_deploy.py::TestVfxtTemplateDeploy::test_deploy_template"
+
+      elif [[ "true"  = $VFXT_DEPLOY_NEW_VNET &&
+              "false" = $VFXT_DEPLOY_WITH_BLOB ]]; then
+          test_to_run="test/test_vfxt_template_deploy.py::TestVfxtTemplateDeploy::test_no_storage_account_deploy"
+
+      elif [[ "false" = $VFXT_DEPLOY_NEW_VNET &&
+              "true"  = $VFXT_DEPLOY_WITH_BLOB ]]; then
+          test_to_run="test/test_vfxt_template_deploy.py::TestVfxtTemplateDeploy::test_byovnet_deploy"
+
+      elif [[ "false" = $VFXT_DEPLOY_NEW_VNET &&
+              "false" = $VFXT_DEPLOY_WITH_BLOB ]]; then
+          test_to_run="Not_Yet_Implemented"
+
+      else
+          # The VFXT_DEPLOY_* variables checked above are strings and not
+          # constrained to "true" or "false" for their values.
+          echo 'ERROR: Unrecognized deploy options. These variables should be "true" or "false":'
+          echo "       \$VFXT_DEPLOY_NEW_VNET  = $VFXT_DEPLOY_NEW_VNET"
+          echo "       \$VFXT_DEPLOY_WITH_BLOB = $VFXT_DEPLOY_WITH_BLOB"
+      fi
+
+      set -x
+      pytest $test_to_run $PYTEST_OPTIONS \
         --location $VFXT_DEPLOY_LOCATION \
-        --doctest-modules --junitxml=junit/test-results01a.xml
-    displayName: 'Test template-based deployment of Avere vFXT'
-    condition: and(succeeded(), eq(variables['RUN_DEPLOY'], 'true'))
+        --doctest-modules --junitxml=junit/test-deploy.xml
+    displayName: 'Test ARM template-based deployment of Avere vFXT'
+    condition: succeeded()
     env:
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
       AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
@@ -49,41 +78,28 @@ jobs:
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
-      pytest --disable-pytest-warnings test/test_vfxt_template_deploy.py \
-        -k test_no_storage_account_deploy \
-        --location $VFXT_DEPLOY_LOCATION \
-        --doctest-modules --junitxml=junit/test-results01b.xml
-    displayName: 'Test deploy of vFXT without storage'
-    condition: and(succeeded(), eq(variables['RUN_EMPTY_STORAGE'], 'true'))
-    env:
-      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
-      AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
-      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+      # Check for common error messages that might occur during deployment.
+      declare -a common_errors=(
+        "Operation results in exceeding quota limits"
+        "A hash conflict was encountered for the role Assignment ID"
+      )
+
+      for ce in "${common_errors[@]}"; do
+          found=$(grep "$ce" junit/test-deploy.xml)
+          if [[ -n $found ]]; then
+              echo "MESSAGE FOUND: $ce"
+          fi
+      done
+    displayName: 'Check for common deploy error messages'
+    condition: or(failed(), canceled())
 
   - script: |
-      pytest --disable-pytest-warnings test/test_vfxt_template_deploy.py \
-        -k test_byovnet_deploy \
-        --location $VFXT_DEPLOY_LOCATION \
-        --doctest-modules --junitxml=junit/test-results01c.xml
-    displayName: 'Test deploy of vFXT with a VNET in a different resource group'
-    condition: and(succeeded(), eq(variables['RUN_BYOVNET'], 'true'))
-    env:
-      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
-      AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
-      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-
-  - script: |
-      if [ -f $VFXT_TEST_VARS_FILE ]; then
+      if [[ -f $VFXT_TEST_VARS_FILE ]]; then
         cat $VFXT_TEST_VARS_FILE
       fi
 
-      pytest --disable-pytest-warnings test/test_vfxt_cluster_status.py \
+      set -x
+      pytest test/test_vfxt_cluster_status.py $PYTEST_OPTIONS \
         -k TestVfxtClusterStatus \
         --doctest-modules --junitxml=junit/test-results02.xml
     displayName: 'Test cluster status, health, etc.'
@@ -97,7 +113,8 @@ jobs:
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
-      pytest --disable-pytest-warnings test/test_vfxt_cluster_status.py \
+      set -x
+      pytest test/test_vfxt_cluster_status.py $PYTEST_OPTIONS \
         -k TestVfxtSupport \
         --doctest-modules --junitxml=junit/test-results03.xml
     displayName: 'Collect vFXT deployment artifacts'
@@ -134,7 +151,8 @@ jobs:
     condition: or(failed(), canceled())
 
   - script: |
-      pytest --disable-pytest-warnings test/test_vdbench.py \
+      set -x
+      pytest test/test_vdbench.py $PYTEST_OPTIONS \
         --doctest-modules --junitxml=junit/test-results04.xml
     displayName: 'Test vdbench on Avere vFXT'
     condition: and(succeeded(), eq(variables['RUN_VDBENCH_STEP'], 'true'))
@@ -145,7 +163,8 @@ jobs:
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
-      pytest --disable-pytest-warnings test/test_edasim.py \
+      set -x
+      pytest test/test_edasim.py $PYTEST_OPTIONS \
         --doctest-modules --junitxml=junit/test-results05.xml
     displayName: 'Test edasim on Avere vFXT'
     condition: and(succeeded(), eq(variables['RUN_EDASIM_STEP'], 'true'), eq(variables['RUN_EMPTY_STORAGE'], 'false'))
@@ -165,13 +184,14 @@ jobs:
   - script: |
       az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
       RESOURCE_GROUP=$(jq -r .resource_group $VFXT_TEST_VARS_FILE)
-      echo "RESOURCE_GROUP: $RESOURCE_GROUP"
+      echo "Deleting resoruce group: $RESOURCE_GROUP"
       az group delete --yes -n $RESOURCE_GROUP
-      if [ "true" = "$RUN_BYOVNET" ]; then
-        echo "RESOURCE_GROUP (vnet): ${RESOURCE_GROUP}-vnet"
+
+      if [[ "false" = $VFXT_DEPLOY_NEW_VNET ]]; then
+        echo "Deleting resource group (vnet): ${RESOURCE_GROUP}-vnet"
         az group delete --yes -n "${RESOURCE_GROUP}-vnet"
       fi
-    displayName: 'Clean up resource group'
+    displayName: 'Clean up resource group(s)'
     condition: and(always(), ne(variables['SKIP_RG_CLEANUP'], 'true'))
     env:
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
@@ -181,5 +201,5 @@ jobs:
   - task: PublishTestResults@2
     condition: always()
     inputs:
-      testResultsFiles: 'junit/test-results*.xml'
+      testResultsFiles: 'junit/test-*.xml'
       testRunTitle: 'Publish pytest results'
