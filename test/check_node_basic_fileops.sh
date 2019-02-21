@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 
 # Simple file operations check for a vFXT controller that has mounted three
 # vFXT nodes. These checks do operations such as writing a file in one mount,
