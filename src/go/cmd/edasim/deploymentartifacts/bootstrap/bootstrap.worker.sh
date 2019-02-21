@@ -1,9 +1,10 @@
-#!/bin/bash 
-
+#!/bin/bash
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 set -x
 
 ###########################################################
-# on rare occasions the extension beats the user setup, 
+# on rare occasions the extension beats the user setup,
 # wait until complete
 ###########################################################
 WAIT_SECONDS=600
@@ -99,13 +100,13 @@ EOM
     DST_FILE=/lib/systemd/system/${WORKER_SERVICE_FILE}
 
     cp $SRC_FILE $DST_FILE
-    
+
     sed -i "s/USERREPLACE/$LINUX_USER/g" $DST_FILE
     sed -i "s/GROUPREPLACE/$LINUX_USER/g" $DST_FILE
     sed -i "s/UNIQUENAMEREPLACE/$UNIQUE_NAME/g" $DST_FILE
     WORKDIRCSV=$(get_mount_csv_string)
     sed -i "s:WORKDIRSCSVREPLACE:$WORKDIRCSV:g" $DST_FILE
-    
+
     # copy the rsyslog file
     cp $BOOTSTRAP_PATH/rsyslog/$RSYSLOG_FILE /etc/rsyslog.d/.
 }
