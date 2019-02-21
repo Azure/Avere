@@ -1,8 +1,10 @@
 #!/bin/bash
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 
 #
 # The following script mounts a default round robin's across the
-# vFXT ip addresses.  
+# vFXT ip addresses.
 #
 # Save this script to any Avere vFXT volume, for example:
 #     /bootstrap/centosbootstrap.sh
@@ -16,7 +18,7 @@
 #     BOOTSTRAP_NFS_IP=172.16.0.22
 #     BOOTSTRAP_NFS_PATH=msazure
 #
-# This is executed as a startup task from batch, using the 
+# This is executed as a startup task from batch, using the
 # following command line:
 #
 #     bash -c 'sudo yum -y install nfs-utils && sudo mkdir -p $BOOTSTRAP_PATH && sudo mount ${BOOTSTRAP_NFS_IP}:/${BOOTSTRAP_NFS_PATH} $BOOTSTRAP_PATH && sudo -E /bin/bash $BOOTSTRAP_SCRIPT 2>&1 | sudo tee -a /var/log/bootstrap.log && sudo umount $BOOTSTRAP_PATH && sudo rmdir $BOOTSTRAP_PATH'
@@ -38,7 +40,7 @@ function retrycmd_if_failure() {
 }
 
 function mount_round_robin() {
-    # to ensure the nodes are spread out somewhat evenly the default 
+    # to ensure the nodes are spread out somewhat evenly the default
     # mount point is based on this node's IP octet4 % vFXT node count.
     declare -a AVEREVFXT_NODES="($(echo ${NFS_IP_CSV} | sed "s/,/ /g"))"
     OCTET4=$((`hostname -i | sed -e 's/^.*\.\([0-9]*\)/\1/'  | sed 's/[^0-9]*//g'`))
@@ -55,8 +57,8 @@ function mount_round_robin() {
     fi
     if ! grep -qs "${DEFAULT_MOUNT_POINT} " /proc/mounts; then
         retrycmd_if_failure 12 20 mount "${DEFAULT_MOUNT_POINT}" || exit 1
-    fi   
-} 
+    fi
+}
 
 function main() {
     echo "mount round robin default path"

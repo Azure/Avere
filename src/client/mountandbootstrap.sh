@@ -1,5 +1,6 @@
 #!/bin/bash
-
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 # Save this script to any Avere vFXT volume, for example:
 #     /bootstrap/bootstrap.sh
 #
@@ -57,7 +58,7 @@ function main() {
 
     echo "dump env vars"
     debug_dump_env_vars
-    
+
     echo "mount bootstrap and install"
     mount_bootstrap_and_install
 }

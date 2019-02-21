@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 """
 ~snider
 mppopulate: 2m17
@@ -114,7 +115,7 @@ def process_directory(directory):
                     data['fsize'] += readfile(fentry)
             except:
                 pass
-                
+
     except Exception, e:
         print "fail"
         traceback.print_exc()
@@ -131,9 +132,9 @@ while Results.keys():
         process_result(r.get(timeout=1))
         del Results[r]
     time.sleep(.1)
-    
+
 Pool.close()
-Pool.join()   
+Pool.join()
 
 print "Total files primed: %s" % count(Data['files'])
 print "Total data primed: %s" % bytes(Data['size'])

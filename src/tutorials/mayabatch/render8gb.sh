@@ -1,5 +1,6 @@
 #!/bin/bash -ex
-
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 #
 # Save this script to any Avere vFXT volume, for example:
 #     /src/render8gb.sh
@@ -13,7 +14,7 @@
 #     DEBUG_PATH=/nfs/default/debug
 #     ADDITIONAL_FLAGS=" -of png "
 #
-# This is executed as the render job from batch, using the 
+# This is executed as the render job from batch, using the
 # following command line:
 #
 #     /bin/bash -c '/bin/bash [parameters('renderScriptPath')] ; err=$? ; exit $err'
@@ -26,7 +27,7 @@ function log_debug_info() {
     set
     mount
     whoami
-    
+
     # add empty file named after this machine's ip to the mount folder for the job
     MOUNT_POINT=`mount | grep default | sed -e 's/^\([^:]*\):.*/\1/'`
     THIS_HOST=`hostname -i`
@@ -73,7 +74,7 @@ function render_scene() {
 }
 
 function main() {
-    
+
     log_debug_info
 
     #stagger_on_first_task_round_algorithm1
