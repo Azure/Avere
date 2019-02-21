@@ -24,8 +24,7 @@ jobs:
 
   - script: |
       set -e
-      env | sort
-      ln -s $DOWNLOADSECUREFILE_SECUREFILEPATH ~/.ssh
+      ln -s $AGENT_TEMPDIRECTORY ~/.ssh
       chmod 600 ~/.ssh/id_rsa
       ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
       ls -al ~/.ssh
