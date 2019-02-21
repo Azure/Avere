@@ -105,6 +105,7 @@ class TestVfxtSupport:
 
         nodes = run_averecmd(**averecmd_params, method="node.list")
         log.debug("nodes found: {}".format(nodes))
+        last_error = None
         for node in nodes:
             node_dir = artifacts_dir + "/" + node
             node_dir_log = node_dir + "/log"
@@ -137,26 +138,40 @@ class TestVfxtSupport:
                     )
                     scp_client = SCPClient(ssh_client.get_transport())
                     try:
-                        # list of files from /var/log/ to download
-                        var_log_files = ["messages", "xmlrpc.log"]
-                        for f in var_log_files:
-                            scp_client.get("/var/log/" + f.strip(),
-                                           node_dir_log, recursive=True)
+                        # Calls below catch exceptions and report them to the
+                        # error log, but then continue. This is because a
+                        # failure to collect artifacts on one node should not
+                        # prevent collection from other nodes. After collection
+                        # has completed, the last exception will be raised.
 
-                        # assumes that rolling trace was enabled and some trace
-                        # data was collected on the nodes
-                        scp_client.get("/support/trace/rolling",
-                                       node_dir_trace, recursive=True)
+                        # list of files and directories to download
+                        to_collect = [
+                            "/var/log/messages",
+                            "/var/log/xmlrpc.log",
 
-                        # TODO: 2019-0125: Turned off for now.
-                        # scp_client.get("/support/gsi",
-                        #                node_dir, recursive=True)
-                        # scp_client.get("/support/cores",
-                        #                node_dir, recursive=True)
+                            # assumes rolling trace was enabled during deploy
+                            "/support/trace/rolling",
+
+                            # TODO: 2019-0219: turned off for now
+                            # "/support/gsi",
+                            # "/support/cores",
+                        ]
+                        for tc in to_collect:
+                            try:
+                                scp_client.get(tc.strip(),
+                                               node_dir_log, recursive=True)
+                            except Exception as ex:
+                                log.error("({}) Exception caught: {}".format(
+                                          node, ex))
+                                last_error = ex
                     finally:
                         scp_client.close()
                 finally:
                     ssh_client.close()
+
+        if last_error:
+            log.error("See previous error(s) above. Raising last exception.")
+            raise last_error
 
 
 if __name__ == "__main__":
