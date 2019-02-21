@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (C) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 
 # standard imports
