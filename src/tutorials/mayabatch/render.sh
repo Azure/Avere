@@ -1,7 +1,9 @@
 #!/bin/bash -ex
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 
 #
-# The following script render a generic maya scene.  
+# The following script render a generic maya scene.
 #
 # Save this script to any Avere vFXT volume, for example:
 #     /src/render.sh
@@ -14,7 +16,7 @@
 #     IMAGES_OUTPUT_BASE_PATH=/nfs/default/images
 #     ADDITIONAL_FLAGS=" -of png "
 #
-# This is executed as the render job from batch, using the 
+# This is executed as the render job from batch, using the
 # following command line:
 #
 #     /bin/bash -c '/bin/bash [parameters('renderScriptPath')] ; err=$? ; exit $err'

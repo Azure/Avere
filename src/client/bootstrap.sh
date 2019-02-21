@@ -1,8 +1,9 @@
 #!/bin/bash
-
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 #
 # The following script mounts a default folder round robined across
-# the vFXT ip addresses.  
+# the vFXT ip addresses.
 #
 # Save this script to any Avere vFXT volume, for example:
 #     /bootstrap/bootstrap.sh
@@ -29,7 +30,7 @@ function retrycmd_if_failure() {
 }
 
 function mount_round_robin() {
-    # to ensure the nodes are spread out somewhat evenly the default 
+    # to ensure the nodes are spread out somewhat evenly the default
     # mount point is based on this node's IP octet4 % vFXT node count.
     declare -a AVEREVFXT_NODES="($(echo ${NFS_IP_CSV} | sed "s/,/ /g"))"
     OCTET4=$((`hostname -i | sed -e 's/^.*\.\([0-9]*\)/\1/'`))
@@ -46,8 +47,8 @@ function mount_round_robin() {
     fi
     if ! grep -qs "${DEFAULT_MOUNT_POINT} " /proc/mounts; then
         retrycmd_if_failure 12 20 mount "${DEFAULT_MOUNT_POINT}" || exit 1
-    fi   
-} 
+    fi
+}
 
 function main() {
     echo "mount round robin default path"

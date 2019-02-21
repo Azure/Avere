@@ -1,4 +1,6 @@
 #!/usr/bin/python
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 import base64
 import os
 import gzip
@@ -16,7 +18,7 @@ def buildb64GzipStringFromFile(file):
 
     # gzip the script file
     # mtime=0 sets a fixed timestamp in GZip header to the Epoch which is January 1st, 1970
-    # Make sure it doens't change unless the stream changes 
+    # Make sure it doens't change unless the stream changes
     with gzip.GzipFile(fileobj=compressedbuffer, mode='wb', mtime=0) as f:
         f.write(content)
     b64GzipStream=base64.b64encode(compressedbuffer.getvalue())
@@ -39,12 +41,12 @@ def processBaseTemplate(baseTemplatePath,
 
     #String to replace in JSON file
     CLUSTER_YAML_REPLACE_STRING  = "#clusterCustomData"
-    
+
     # Load Base Template
     armTemplate = []
     with open(baseTemplatePath) as f:
         armTemplate = f.read()
-        
+
     # Generate cluster Yaml file for ARM
     clusterYamlFile = convertToOneArmTemplateLine(buildb64GzipStringFromFile(clusterInstallScript))
     armTemplate = armTemplate.replace(CLUSTER_YAML_REPLACE_STRING, clusterYamlFile)
@@ -66,7 +68,7 @@ if __name__ == "__main__":
     # Parse Arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--output_directory",  help="Directory to write templates files to.  Default is current directory.")
-    
+
     args = parser.parse_args()
 
     if (args.output_directory == None) :
@@ -85,14 +87,14 @@ if __name__ == "__main__":
 
     # Powershell Script to save to Custom Data
     VDBENCH_INSTALL_SCRIPT = "parts/setupMachine.ps1"
-    
+
     # Output ARM Template Files.  WIll Also Output name.parameters.json for each
     ARM_OUTPUT_TEMPLATE                                   = "win10-azuredeploy.json"
-    
+
     # build the ARM template for jumpboxless
     with open(os.path.join(args.output_directory, ARM_OUTPUT_TEMPLATE), "w") as armTemplate:
         clusterTemplate = processBaseTemplate(
-            baseTemplatePath=ARM_INPUT_TEMPLATE_TEMPLATE, 
+            baseTemplatePath=ARM_INPUT_TEMPLATE_TEMPLATE,
             clusterInstallScript=VDBENCH_INSTALL_SCRIPT)
         armTemplate.write(clusterTemplate)
 

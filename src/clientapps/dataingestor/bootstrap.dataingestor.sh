@@ -1,5 +1,6 @@
 #!/bin/bash -ex
-
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 set -x
 
 function retrycmd_if_failure() {
@@ -52,7 +53,7 @@ function apt_get_install() {
 }
 
 function config_linux() {
-	export DEBIAN_FRONTEND=noninteractive  
+	export DEBIAN_FRONTEND=noninteractive
 	apt_get_update
 	apt_get_install 20 10 180 nfs-common parallel
 }
@@ -82,19 +83,19 @@ function write_parallelcp() {
     sudo /bin/cat <<EOM >$FILENAME
 #!/bin/bash
 
-display_usage() { 
-    echo -e "\nUsage: \$0 SOURCE_DIR DEST_DIR\n" 
-} 
+display_usage() {
+    echo -e "\nUsage: \$0 SOURCE_DIR DEST_DIR\n"
+}
 
-if [  \$# -le 1 ] ; then 
+if [  \$# -le 1 ] ; then
     display_usage
     exit 1
-fi 
- 
-if [[ ( \$# == "--help") ||  \$# == "-h" ]] ; then 
+fi
+
+if [[ ( \$# == "--help") ||  \$# == "-h" ]] ; then
     display_usage
     exit 0
-fi 
+fi
 
 SOURCE_DIR="\$1"
 DEST_DIR="\$2"
