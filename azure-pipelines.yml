@@ -18,14 +18,17 @@ jobs:
       versionSpec: '3.7'
       architecture: 'x64'
 
+  - task: DownloadSecureFile@1
+    inputs:
+      secureFile: 'id_rsa'
+
   - script: |
       set -e
-      mkdir ~/.ssh
-      echo $ID_RSA | sed 's/ RSA PRIVATE KEY/RSAPRIVATEKEY/g; s/ /\n/g; s/RSAPRIVATEKEY/ RSA PRIVATE KEY/g' > ~/.ssh/id_rsa
+      ln -s $AGENT.TEMPDIRECTORY ~/.ssh
       chmod 600 ~/.ssh/id_rsa
       ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
       ls -al ~/.ssh
-    displayName: 'SETUP: Get SSH keys'
+    displayName: 'SETUP: SSH keys'
     condition: succeeded()
     env:
       ID_RSA: $(pipelines-rsa-priv)
