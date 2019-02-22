@@ -5,17 +5,15 @@
 import json
 import logging
 import os
-from time import sleep
 
 # from requirements.txt
 import pytest
+from fabric import Connection
 from scp import SCPClient
-from sshtunnel import SSHTunnelForwarder
 
 # local libraries
 from arm_template_deploy import ArmTemplateDeploy
-from lib.helpers import (create_ssh_client, run_ssh_command, run_ssh_commands,
-                         wait_for_op)
+from lib.helpers import (run_ssh_command, run_ssh_commands, wait_for_op)
 
 
 # COMMAND-LINE OPTIONS ########################################################
@@ -121,8 +119,11 @@ def storage_account(test_vars):
 @pytest.fixture()
 def scp_con(ssh_con):
     """Create an SCP client based on an SSH connection to the controller."""
+    log = logging.getLogger("scp_con")
     client = SCPClient(ssh_con.get_transport())
+    # client = SCPClient(ssh_con.transport)  # FABRIC
     yield client
+    log.debug("Closing SCP client.")
     client.close()
 
 
@@ -130,44 +131,47 @@ def scp_con(ssh_con):
 def ssh_con(test_vars):
     """Create an SSH connection to the controller."""
     log = logging.getLogger("ssh_con")
-    ssh_params = {  # common parameters for SSH tunnel, connection
-        "username": test_vars["controller_user"],
-        "hostname": test_vars["public_ip"],
-        "key_filename": test_vars["ssh_priv_key"]
-    }
 
-    ssh_tunnel = None
+    # SSH connection/client to the public IP.
+    pub_client = Connection(test_vars["public_ip"],
+                            user=test_vars["controller_user"],
+                            connect_kwargs={
+                                "key_filename": test_vars["ssh_priv_key"],
+                            })
+
     # If the controller's IP is not the same as the public IP, then we are
     # using a jumpbox to get into the VNET containing the controller. In that
     # case, create an SSH tunnel before connecting to the controller.
+    msg_con = "SSH connection to controller ({})".format(test_vars["controller_ip"])
     if test_vars["public_ip"] != test_vars["controller_ip"]:
-        log.debug("Creating an SSH tunnel to the jumpbox.")
-        ssh_tunnel = SSHTunnelForwarder(
-            ssh_params["hostname"],
-            ssh_username=ssh_params["username"],
-            ssh_pkey=ssh_params["key_filename"],
-            remote_bind_address=(test_vars["controller_ip"], 22),
-        )
-        ssh_tunnel.start()
-        sleep(5)
-        log.debug("SSH tunnel connected: {}".format(ssh_params))
-        log.debug("Local bind port: {}".format(ssh_tunnel.local_bind_port))
+        tunnel_local_port = 2222
+        tunnel_remote_port = 22
 
-        # When SSH'ing to the controller below, we'll instead connect to
-        # localhost through the local bind port connected to the SSH tunnel.
-        ssh_params["hostname"] = "127.0.0.1"
-        ssh_params["port"] = ssh_tunnel.local_bind_port
+        msg_con += " via jumpbox ({0}), local port {1}".format(
+            test_vars["public_ip"], tunnel_local_port)
 
-    log.debug("Creating SSH client connection: {}".format(ssh_params))
-    client = create_ssh_client(**ssh_params)
-    yield client
+        log.debug("Opening {}".format(msg_con))
+        with pub_client.forward_local(local_port=tunnel_local_port,
+                                      remote_port=tunnel_remote_port,
+                                      remote_host=test_vars["controller_ip"]):
+            client = Connection("127.0.0.1",
+                                user="admin",
+                                port=tunnel_local_port,
+                                connect_kwargs={
+                                    "password": os.environ["AVERE_ADMIN_PW"]
+                                })
+            client.open()
+            yield client.client
+            # yield client  # FABRIC
+        log.debug("{} closed".format(msg_con))
+    else:
+        log.debug("Opening {}".format(msg_con))
+        pub_client.open()
+        yield pub_client.client
+        # yield pub_client  # FABRIC
+        log.debug("Closing {}".format(msg_con))
 
-    log.debug("Closing SSH client connection.")
-    client.close()
-
-    if ssh_tunnel:
-        log.debug("Closing SSH tunnel.")
-        ssh_tunnel.stop()
+    pub_client.close()
 
 
 @pytest.fixture(scope="module")
