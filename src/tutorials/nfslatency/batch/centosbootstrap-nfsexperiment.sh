@@ -1,5 +1,6 @@
 #!/bin/bash -x
-
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 #
 # The following script mounts a default round robin's across the
 # vFXT ip addresses.
@@ -56,11 +57,11 @@ function mount_round_robin_e32() {
     NFS_PATH="/westus"
     TARGET_MOUNT_POINT="/nfs/${NFS_PATH}vfxt"
     mount_target $NFS_PATH $TARGET_MOUNT_POINT $ROUND_ROBIN_IP
-    
+
     NFS_PATH="/westindia"
     TARGET_MOUNT_POINT="/nfs/${NFS_PATH}vfxt"
     mount_target $NFS_PATH $TARGET_MOUNT_POINT $ROUND_ROBIN_IP
-    
+
     NFS_PATH="/southeastasia"
     TARGET_MOUNT_POINT="/nfs/${NFS_PATH}vfxt"
     mount_target $NFS_PATH $TARGET_MOUNT_POINT $ROUND_ROBIN_IP
@@ -69,19 +70,19 @@ function mount_round_robin_e32() {
 function mount_regional_cluster() {
     # no need to write again if it is already there
     NFS_PATH=/datadisks/disk1
-    
+
     TARGET_MOUNT_POINT=/nfs/eastus
     TARGET_IP=$TARGET_IP_EASTUS
     mount_target $NFS_PATH $TARGET_MOUNT_POINT $TARGET_IP
-    
+
     TARGET_MOUNT_POINT=/nfs/westus
     TARGET_IP=$TARGET_IP_WESTUS
     mount_target $NFS_PATH $TARGET_MOUNT_POINT $TARGET_IP
-    
+
     TARGET_MOUNT_POINT=/nfs/westindia
     TARGET_IP=$TARGET_IP_WESTINDIA
     mount_target $NFS_PATH $TARGET_MOUNT_POINT $TARGET_IP
-    
+
     TARGET_MOUNT_POINT=/nfs/southeastasia
     TARGET_IP=$TARGET_IP_SOUTHEASTASIA
     mount_target $NFS_PATH $TARGET_MOUNT_POINT $TARGET_IP

@@ -1,4 +1,6 @@
 #!/usr/bin/python3
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 
 """
 Driver for testing Azure ARM template-based deployment of the Avere vFXT.
@@ -38,6 +40,7 @@ class TestVfxtTemplateDeploy:
             "adminPassword": os.environ["AVERE_ADMIN_PW"],
             "avereBackedStorageAccountName": atd.deploy_id + "sa",
             "avereClusterName": atd.deploy_id + "-cluster",
+            "avereClusterRole": "Avere Cluster Runtime Operator",
             "avereInstanceType": "Standard_E32s_v3",
             "avereNodeCount": 3,
             "controllerAdminUsername": "azureuser",
@@ -90,6 +93,7 @@ class TestVfxtTemplateDeploy:
         atd.deploy_params = {
             "adminPassword": os.environ["AVERE_ADMIN_PW"],
             "avereClusterName": atd.deploy_id + "-cluster",
+            "avereClusterRole": "Avere Cluster Runtime Operator",
             "avereInstanceType": "Standard_E32s_v3",
             "avereNodeCount": 3,
             "controllerAdminUsername": "azureuser",
@@ -146,6 +150,7 @@ class TestVfxtTemplateDeploy:
             "adminPassword": os.environ["AVERE_ADMIN_PW"],
             "avereBackedStorageAccountName": atd.deploy_id + "sa",
             "avereClusterName": atd.deploy_id + "-cluster",
+            "avereClusterRole": "Avere Cluster Runtime Operator",
             "avereInstanceType": "Standard_E32s_v3",
             "avereNodeCount": 3,
             "controllerAdminUsername": "azureuser",

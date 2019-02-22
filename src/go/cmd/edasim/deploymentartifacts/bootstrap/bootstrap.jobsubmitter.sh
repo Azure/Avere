@@ -1,9 +1,10 @@
-#!/bin/bash 
-
+#!/bin/bash
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 set -x
 
 ###########################################################
-# on rare occasions the extension beats the user setup, 
+# on rare occasions the extension beats the user setup,
 # wait until complete
 ###########################################################
 WAIT_SECONDS=600
@@ -93,7 +94,7 @@ function get_node_csv_string() {
 function write_system_files() {
     # configuration inspired by https://fabianlee.org/2017/05/21/golang-running-a-go-binary-as-a-systemd-service-on-ubuntu-16-04/
     BOOTSTRAP_PATH="$(dirname ${BASE_DIR}${NODE_MOUNT_PREFIX}0${BOOTSTRAP_SCRIPT_PATH})"
-    
+
     # disable output so secrets are not printed
     set +x
     # write env file
@@ -113,7 +114,7 @@ EOM
     DST_FILE=/lib/systemd/system/${JOBSUBMITTER_SERVICE_FILE}
 
     cp $SRC_FILE $DST_FILE
-    
+
     WORKDIRCSV=$(get_node_csv_string $WORK_DIR)
     sed -i "s/USERREPLACE/$LINUX_USER/g" $DST_FILE
     sed -i "s/GROUPREPLACE/$LINUX_USER/g" $DST_FILE
@@ -148,7 +149,7 @@ function configure_user() {
     echo "export AZURE_EVENTHUB_NAMESPACENAME=$AZURE_EVENTHUB_NAMESPACENAME" >> $USER_PROFILE_FILE
     echo "export UNIQUE_NAME=$UNIQUE_NAME" >> $USER_PROFILE_FILE
     set -x
-    
+
     BOOTSTRAP_PATH="$(dirname ${BASE_DIR}${NODE_MOUNT_PREFIX}0${BOOTSTRAP_SCRIPT_PATH})"
 
     # write the jobrun script file
