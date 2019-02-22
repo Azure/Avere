@@ -4,6 +4,7 @@
 # standard imports
 import ast
 import logging
+import socket
 from time import sleep, time
 
 # from requirements.txt
@@ -20,6 +21,14 @@ def create_ssh_client(username, hostname, port=22, password=None, key_filename=N
         password=password, key_filename=key_filename
     )
     return ssh_client
+
+
+def get_unused_local_port():
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind(("", 0))
+    port = sock.getsockname()[1]
+    sock.close()
+    return port
 
 
 def get_vm_ips(nm_client, resource_group, vm_name):
@@ -90,6 +99,42 @@ def run_ssh_command(ssh_client, command, ignore_nonzero_rc=False, timeout=None):
         "stderr": cmd_err,
         "rc": cmd_rc
     }
+
+
+# def run_ssh_command_fabric(ssh_client, command, ignore_nonzero_rc=False, timeout=None):
+#     """
+#     Run a command on the server connected via ssh_client.
+
+#     If ignore_nonzero_rc is False, assert when a command fails (i.e., non-zero
+#     exit/return code).
+#     """
+#     log = logging.getLogger("run_ssh_command")
+
+#     log.debug("command to run: {}".format(command))
+#     cmd_result = ssh_client.run(command, timeout=timeout)
+
+#     cmd_rc = cmd_out.channel.recv_exit_status()
+#     log.debug("command exit code: {}".format(cmd_rc))
+
+#     cmd_out = "".join(cmd_out.readlines())
+#     log.debug("command output (stdout): {}".format(cmd_out))
+
+#     cmd_err = "".join(cmd_err.readlines())
+#     log.debug("command output (stderr): {}".format(cmd_err))
+
+#     if cmd_rc and not ignore_nonzero_rc:
+#         log.error(
+#             '"{}" failed with exit code {}\n\tSTDOUT: {}\n\tSTDERR: {}'.format(
+#                 command, cmd_rc, cmd_out, cmd_err)
+#         )
+#         assert(0 == cmd_rc)
+
+#     return {
+#         "command": command,
+#         "stdout": cmd_out,
+#         "stderr": cmd_err,
+#         "rc": cmd_rc
+#     }
 
 
 def run_ssh_commands(ssh_client, commands, **kwargs):

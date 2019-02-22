@@ -15,7 +15,8 @@ from fabric import Connection
 from scp import SCPClient
 
 # local libraries
-from lib.helpers import (run_averecmd, run_ssh_commands, upload_gsi)
+from lib.helpers import (get_unused_local_port, run_averecmd, run_ssh_commands,
+                         upload_gsi)
 
 
 class TestVfxtClusterStatus:
@@ -122,16 +123,17 @@ class TestVfxtSupport:
                                    method="node.get",
                                    args=node)[node]["primaryClusterIP"]["IP"]
             log.debug("Tunneling to node {} using IP {}".format(node, node_ip))
+            tunnel_local_port = get_unused_local_port()
             with Connection(test_vars["public_ip"],
                             user=test_vars["controller_user"],
                             connect_kwargs={
                                 "key_filename": test_vars["ssh_priv_key"],
-                            }).forward_local(local_port=2222,
+                            }).forward_local(local_port=tunnel_local_port,
                                              remote_port=22,
                                              remote_host=node_ip):
                 node_c = Connection("127.0.0.1",
                                     user="admin",
-                                    port=2222,
+                                    port=tunnel_local_port,
                                     connect_kwargs={
                                         "password": os.environ["AVERE_ADMIN_PW"]
                                     })

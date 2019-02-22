@@ -13,7 +13,8 @@ from scp import SCPClient
 
 # local libraries
 from arm_template_deploy import ArmTemplateDeploy
-from lib.helpers import (run_ssh_command, run_ssh_commands, wait_for_op)
+from lib.helpers import (get_unused_local_port, run_ssh_command,
+                         run_ssh_commands, wait_for_op)
 
 
 # COMMAND-LINE OPTIONS ########################################################
@@ -144,7 +145,7 @@ def ssh_con(test_vars):
     # case, create an SSH tunnel before connecting to the controller.
     msg_con = "SSH connection to controller ({})".format(test_vars["controller_ip"])
     if test_vars["public_ip"] != test_vars["controller_ip"]:
-        tunnel_local_port = 2222
+        tunnel_local_port = get_unused_local_port()
         tunnel_remote_port = 22
 
         msg_con += " via jumpbox ({0}), local port {1}".format(
@@ -155,10 +156,10 @@ def ssh_con(test_vars):
                                       remote_port=tunnel_remote_port,
                                       remote_host=test_vars["controller_ip"]):
             client = Connection("127.0.0.1",
-                                user="admin",
+                                user=test_vars["controller_user"],
                                 port=tunnel_local_port,
                                 connect_kwargs={
-                                    "password": os.environ["AVERE_ADMIN_PW"]
+                                    "key_filename": test_vars["ssh_priv_key"],
                                 })
             client.open()
             yield client.client
