@@ -118,20 +118,25 @@ def storage_account(test_vars):
 
 
 @pytest.fixture()
-def scp_con(ssh_con):
+def scp_con(ssh_con_fabric):
     """Create an SCP client based on an SSH connection to the controller."""
     log = logging.getLogger("scp_con")
-    client = SCPClient(ssh_con.get_transport())
-    # client = SCPClient(ssh_con.transport)  # FABRIC
+    # client = SCPClient(ssh_con.get_transport())  # PARAMIKO
+    client = SCPClient(ssh_con_fabric.transport)
     yield client
     log.debug("Closing SCP client.")
     client.close()
 
 
 @pytest.fixture()
-def ssh_con(test_vars):
+def ssh_con(ssh_con_fabric):
+    return ssh_con_fabric.client
+
+
+@pytest.fixture()
+def ssh_con_fabric(test_vars):
     """Create an SSH connection to the controller."""
-    log = logging.getLogger("ssh_con")
+    log = logging.getLogger("ssh_con_fabric")
 
     # SSH connection/client to the public IP.
     pub_client = Connection(test_vars["public_ip"],
@@ -162,14 +167,12 @@ def ssh_con(test_vars):
                                     "key_filename": test_vars["ssh_priv_key"],
                                 })
             client.open()
-            yield client.client
-            # yield client  # FABRIC
+            yield client
         log.debug("{} closed".format(msg_con))
     else:
         log.debug("Opening {}".format(msg_con))
         pub_client.open()
-        yield pub_client.client
-        # yield pub_client  # FABRIC
+        yield pub_client
         log.debug("Closing {}".format(msg_con))
 
     pub_client.close()
