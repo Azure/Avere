@@ -53,7 +53,7 @@ class TestVfxtTemplateDeploy:
 
             "createVirtualNetwork": True,
             "virtualNetworkName": atd.deploy_id + "-vnet",
-            "virtualNetworkResourceGroup": atd.resource_group,
+            "virtualNetworkResourceGroup": atd.deploy_id + "-rg",
             "virtualNetworkSubnetName": atd.deploy_id + "-subnet",
         }
 
