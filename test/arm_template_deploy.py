@@ -72,7 +72,7 @@ class ArmTemplateDeploy:
             subscription_id=os.environ["AZURE_SUBSCRIPTION_ID"]
         )
         self.rm_client_deploy = ResourceManagementClient(
-            credentials=sp_creds_cluster,
+            credentials=sp_creds_operator,
             subscription_id=os.environ["AZURE_SUBSCRIPTION_ID"]
         )
         self.nm_client = NetworkManagementClient(
