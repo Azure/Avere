@@ -87,7 +87,7 @@ class ArmTemplateDeploy:
     def create_resource_group(self):
         """Creates the Azure resource group for this deployment."""
         logging.debug("Creating resource group: " + self.resource_group)
-        return self.rm_client.resource_groups.create_or_update(
+        return self.rm_client_deploy.resource_groups.create_or_update(
             self.resource_group,
             {"location": self.location}
         )
