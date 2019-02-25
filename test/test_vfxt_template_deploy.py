@@ -73,7 +73,7 @@ class TestVfxtTemplateDeploy:
             #     atd.nm_client, atd.resource_group, test_vars["controller_name"])
             # test_vars["controller_ip"] = c_pub_ip or c_priv_ip
             test_vars["public_ip"] = atd.nm_client.public_ip_addresses.get(
-                atd.resource_group, "publicip-" + test_vars["controller_name"]
+                atd.deploy_id + "-rg", "publicip-" + test_vars["controller_name"]
             ).ip_address
             test_vars["controller_ip"] = test_vars["public_ip"]
 
