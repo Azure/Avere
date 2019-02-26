@@ -127,6 +127,7 @@ class ArmTemplateDeploy:
         _this.pop("rm_client", None)  # don't want to save these for security
         _this.pop("nm_client", None)
         _this.pop("st_client", None)
+        _this.pop("rm_client_2", None)
         _this.pop("deploy_params", None)
 
         if not store_template:
