@@ -101,7 +101,7 @@ class ArmTemplateDeploy:
     def deploy(self):
         """Deploys the Azure ARM template."""
         logging.debug("Deploying template")
-        return self.rm_client_2.deployments.create_or_update(
+        return self.rm_client.deployments.create_or_update(
             resource_group_name=self.resource_group,
             deployment_name=self.deploy_name,
             properties={
