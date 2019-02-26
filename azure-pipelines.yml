@@ -39,7 +39,7 @@ jobs:
 
   - script: |
       az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-      az group create -l $VFXT_DEPLOY_LOCATION -n MyResourceGroup
+      az group create -l $VFXT_DEPLOY_LOCATION -n MyResourceGroup2
     displayName: 'Create Resource Group'
     condition: succeeded()
     env:
