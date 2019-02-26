@@ -4,6 +4,7 @@
 # standard imports
 import ast
 import logging
+import socket
 from time import sleep, time
 
 # from requirements.txt
@@ -12,6 +13,8 @@ from paramiko import AutoAddPolicy, SSHClient
 
 def create_ssh_client(username, hostname, port=22, password=None, key_filename=None):
     """Creates (and returns) an SSHClient. Auth'n is via publickey."""
+    log = logging.getLogger("create_ssh_client")
+    log.warn(">>> DEPRECATION IN PROGRESS [create_ssh_client] <<<")
     ssh_client = SSHClient()
     ssh_client.load_system_host_keys()
     ssh_client.set_missing_host_key_policy(AutoAddPolicy())
@@ -20,6 +23,16 @@ def create_ssh_client(username, hostname, port=22, password=None, key_filename=N
         password=password, key_filename=key_filename
     )
     return ssh_client
+
+
+def get_unused_local_port():
+    """Get an unused, unreserved local port."""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind(("", 0))
+    port = sock.getsockname()[1]
+    sock.close()
+    sleep(2)  # for the port to fully free up
+    return port
 
 
 def get_vm_ips(nm_client, resource_group, vm_name):
@@ -90,6 +103,56 @@ def run_ssh_command(ssh_client, command, ignore_nonzero_rc=False, timeout=None):
         "stderr": cmd_err,
         "rc": cmd_rc
     }
+
+
+def run_ssh_command_fabric(ssh_client, command, ignore_nonzero_rc=False):
+    """
+    Run a command on the server connected via ssh_client.
+
+    If ignore_nonzero_rc is False, assert when a command fails (i.e., non-zero
+    exit/return code).
+    """
+    log = logging.getLogger("run_ssh_command_fabric")
+
+    log.debug("command to run: {}".format(command))
+    cmd_result = ssh_client.run(command, hide=True, warn=ignore_nonzero_rc)
+
+    cmd_rc = cmd_result.exited
+    log.debug("command exit code: {}".format(cmd_rc))
+
+    cmd_out = cmd_result.stdout
+    log.debug("command output (stdout): {}".format(cmd_out))
+
+    cmd_err = cmd_result.stderr
+    log.debug("command output (stderr): {}".format(cmd_err))
+
+    if cmd_rc and not ignore_nonzero_rc:
+        log.error(
+            '"{}" failed with exit code {}\n\tSTDOUT: {}\n\tSTDERR: {}'.format(
+                command, cmd_rc, cmd_out, cmd_err)
+        )
+        assert(0 == cmd_rc)
+
+    return {
+        "command": command,
+        "stdout": cmd_out,
+        "stderr": cmd_err,
+        "rc": cmd_rc
+    }
+
+
+def run_ssh_commands_fabric(ssh_client, commands, **kwargs):
+    """
+    Runs a list of commands on the server connected via ssh_client.
+    """
+    log = logging.getLogger("run_ssh_commands_fabric")
+    results = []
+    for command in commands:
+        command = command.strip()
+        if command:  # only run non-empty commands
+            log.debug("command to run: {}".format(command))
+            results.append(run_ssh_command_fabric(ssh_client, command, **kwargs))
+    return results
 
 
 def run_ssh_commands(ssh_client, commands, **kwargs):

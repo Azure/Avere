@@ -8,15 +8,15 @@
 import logging
 import os
 import sys
-from time import sleep
+from time import sleep, time
 
 # from requirements.txt
 import pytest
+from fabric import Connection
 from scp import SCPClient
-from sshtunnel import SSHTunnelForwarder
 
 # local libraries
-from lib.helpers import (create_ssh_client, run_averecmd, run_ssh_commands,
+from lib.helpers import (get_unused_local_port, run_averecmd, run_ssh_commands,
                          upload_gsi)
 
 
@@ -44,10 +44,20 @@ class TestVfxtClusterStatus:
 
     def test_node_health(self, averecmd_params):  # noqa: F811
         """Check that cluster is reporting that all nodes are up."""
+        log = logging.getLogger("test_node_health")
         for node in run_averecmd(**averecmd_params, method="node.list"):
-            result = run_averecmd(**averecmd_params,
-                                  method="node.get", args=node)
-            assert result[node]["state"] == "up"
+            timeout_secs = 60
+            time_start = time()
+            time_end = time_start + timeout_secs
+            while time() <= time_end:
+                result = run_averecmd(**averecmd_params,
+                                      method="node.get", args=node)
+                node_state = result[node]["state"]
+                log.info('Node {0} has state "{1}"'.format(node, node_state))
+                if node_state == "up":
+                    break
+                sleep(10)
+            assert node_state == "up"
 
     def test_ha_enabled(self, averecmd_params):  # noqa: F811
         """Check that high-availability (HA) is enabled."""
@@ -106,7 +116,7 @@ class TestVfxtSupport:
         scp_con.put(test_vars["ssh_pub_key"], "~/.ssh/.")
 
         nodes = run_averecmd(**averecmd_params, method="node.list")
-        log.debug("nodes found: {}".format(nodes))
+        log.debug("Nodes found: {}".format(nodes))
         last_error = None
         for node in nodes:
             node_dir = artifacts_dir + "/" + node
@@ -123,53 +133,54 @@ class TestVfxtSupport:
             node_ip = run_averecmd(**averecmd_params,
                                    method="node.get",
                                    args=node)[node]["primaryClusterIP"]["IP"]
-            log.debug("tunneling to node {} using IP {}".format(node, node_ip))
-            with SSHTunnelForwarder(
-                test_vars["public_ip"],
-                ssh_username=test_vars["controller_user"],
-                ssh_pkey=test_vars["ssh_priv_key"],
-                remote_bind_address=(node_ip, 22),
-            ) as ssh_tunnel:
-                sleep(1)
+            log.debug("Tunneling to node {} using IP {}".format(node, node_ip))
+            tunnel_local_port = get_unused_local_port()
+            with Connection(test_vars["public_ip"],
+                            user=test_vars["controller_user"],
+                            connect_kwargs={
+                                "key_filename": test_vars["ssh_priv_key"],
+                            }).forward_local(local_port=tunnel_local_port,
+                                             remote_port=22,
+                                             remote_host=node_ip):
+                node_c = Connection("127.0.0.1",
+                                    user="admin",
+                                    port=tunnel_local_port,
+                                    connect_kwargs={
+                                        "password": os.environ["AVERE_ADMIN_PW"]
+                                    })
+                node_c.open()
+                scp_client = SCPClient(node_c.transport)
                 try:
-                    ssh_client = create_ssh_client(
-                        "admin",
-                        "127.0.0.1",
-                        ssh_tunnel.local_bind_port,
-                        password=os.environ["AVERE_ADMIN_PW"],
-                    )
-                    scp_client = SCPClient(ssh_client.get_transport())
-                    try:
-                        # Calls below catch exceptions and report them to the
-                        # error log, but then continue. This is because a
-                        # failure to collect artifacts on one node should not
-                        # prevent collection from other nodes. After collection
-                        # has completed, the last exception will be raised.
+                    # Calls below catch exceptions and report them to the
+                    # error log, but then continue. This is because a
+                    # failure to collect artifacts on one node should not
+                    # prevent collection from other nodes. After collection
+                    # has completed, the last exception will be raised.
 
-                        # list of files and directories to download
-                        to_collect = [
-                            "/var/log/messages",
-                            "/var/log/xmlrpc.log",
+                    # list of files and directories to download
+                    to_collect = [
+                        "/var/log/messages",
+                        "/var/log/xmlrpc.log",
 
-                            # assumes rolling trace was enabled during deploy
-                            "/support/trace/rolling",
+                        # assumes rolling trace was enabled during deploy
+                        "/support/trace/rolling",
 
-                            # TODO: 2019-0219: turned off for now
-                            # "/support/gsi",
-                            # "/support/cores",
-                        ]
-                        for tc in to_collect:
-                            try:
-                                scp_client.get(tc.strip(),
-                                               node_dir_log, recursive=True)
-                            except Exception as ex:
-                                log.error("({}) Exception caught: {}".format(
-                                          node, ex))
-                                last_error = ex
-                    finally:
-                        scp_client.close()
+                        # TODO: 2019-0219: turned off for now
+                        # "/support/gsi",
+                        # "/support/cores",
+                    ]
+                    for tc in to_collect:
+                        log.debug("SCP'ing {} from node {} to {}".format(
+                                  tc, node, node_dir_log))
+                        try:
+                            scp_client.get(tc, node_dir_log, recursive=True)
+                        except Exception as ex:
+                            log.error("({}) Exception caught: {}".format(
+                                      node, ex))
+                            last_error = ex
                 finally:
-                    ssh_client.close()
+                    scp_client.close()
+            log.debug("Connections to node {} closed".format(node))
 
         if last_error:
             log.error("See previous error(s) above. Raising last exception.")
