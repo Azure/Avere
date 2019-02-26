@@ -101,8 +101,7 @@ def mnt_nodes(ssh_con, test_vars):
 @pytest.fixture(scope="module")
 def resource_group(test_vars):
     log = logging.getLogger("resource_group")
-    rg = "MyResourceGroup"
-    #rg = test_vars["atd_obj"].create_resource_group()
+    rg = test_vars["atd_obj"].create_resource_group()
     log.info("Resource Group: {}".format(rg))
     return rg
 

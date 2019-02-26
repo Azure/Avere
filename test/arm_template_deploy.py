@@ -85,13 +85,13 @@ class ArmTemplateDeploy:
             subscription_id=os.environ["AZURE_SUBSCRIPTION_ID"]
         )
 
-    # def create_resource_group(self):
-    #     """Creates the Azure resource group for this deployment."""
-    #     logging.debug("Creating resource group: " + self.resource_group)
-    #     return self.rm_client.resource_groups.create_or_update(
-    #         self.resource_group,
-    #         {"location": self.location}
-    #     )
+    def create_resource_group(self):
+        """Creates the Azure resource group for this deployment."""
+        logging.debug("Creating resource group: " + self.resource_group)
+        return self.rm_client.resource_groups.create_or_update(
+            self.resource_group,
+            {"location": self.location}
+        )
 
     def delete_resource_group(self):
         """Deletes the Azure resource group for this deployment."""
