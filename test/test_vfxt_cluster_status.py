@@ -8,6 +8,7 @@
 import logging
 import os
 import sys
+from time import sleep, time
 
 # from requirements.txt
 import pytest
@@ -43,10 +44,20 @@ class TestVfxtClusterStatus:
 
     def test_node_health(self, averecmd_params):  # noqa: F811
         """Check that cluster is reporting that all nodes are up."""
+        log = logging.getLogger("test_node_health")
         for node in run_averecmd(**averecmd_params, method="node.list"):
-            result = run_averecmd(**averecmd_params,
-                                  method="node.get", args=node)
-            assert result[node]["state"] == "up"
+            timeout_secs = 60
+            time_start = time()
+            time_end = time_start + timeout_secs
+            while time() <= time_end:
+                result = run_averecmd(**averecmd_params,
+                                      method="node.get", args=node)
+                node_state = result[node]["state"]
+                log.info('Node {0} has state "{1}"'.format(node, node_state))
+                if node_state == "up":
+                    break
+                sleep(10)
+            assert node_state == "up"
 
     def test_ha_enabled(self, averecmd_params):  # noqa: F811
         """Check that high-availability (HA) is enabled."""

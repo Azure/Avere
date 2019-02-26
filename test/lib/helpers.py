@@ -31,6 +31,7 @@ def get_unused_local_port():
     sock.bind(("", 0))
     port = sock.getsockname()[1]
     sock.close()
+    sleep(2)  # for the port to fully free up
     return port
 
 
