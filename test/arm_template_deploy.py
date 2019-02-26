@@ -63,11 +63,11 @@ class ArmTemplateDeploy:
             secret=os.environ["AZURE_CLIENT_SECRET_CLUSTER"],
             tenant=os.environ["AZURE_TENANT_ID"],
         )
-        sp_creds_operator = ServicePrincipalCredentials(
-            client_id=os.environ["AZURE_CLIENT_ID_OPERATOR"],
-            secret=os.environ["AZURE_CLIENT_SECRET_OPERATOR"],
-            tenant=os.environ["AZURE_TENANT_ID"],
-        )
+        # sp_creds_operator = ServicePrincipalCredentials(
+        #     client_id=os.environ["AZURE_CLIENT_ID_OPERATOR"],
+        #     secret=os.environ["AZURE_CLIENT_SECRET_OPERATOR"],
+        #     tenant=os.environ["AZURE_TENANT_ID"],
+        # )
         self.rm_client = ResourceManagementClient(
             credentials=sp_creds,
             subscription_id=os.environ["AZURE_SUBSCRIPTION_ID"]
@@ -81,7 +81,7 @@ class ArmTemplateDeploy:
             subscription_id=os.environ['AZURE_SUBSCRIPTION_ID']
         )
         self.rm_client_2 = ResourceManagementClient(
-            credentials=sp_creds_operator,
+            credentials=sp_creds_cluster,
             subscription_id=os.environ["AZURE_SUBSCRIPTION_ID"]
         )
 
@@ -101,7 +101,7 @@ class ArmTemplateDeploy:
     def deploy(self):
         """Deploys the Azure ARM template."""
         logging.debug("Deploying template")
-        return self.rm_client.deployments.create_or_update(
+        return self.rm_client_2.deployments.create_or_update(
             resource_group_name=self.resource_group,
             deployment_name=self.deploy_name,
             properties={
