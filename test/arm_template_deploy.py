@@ -50,7 +50,7 @@ class ArmTemplateDeploy:
 
         if not self.resource_group:
             #self.resource_group = self.deploy_id + "-rg"
-            self.resource_group = "MyResourceGroup"
+            self.resource_group = "MyResourceGroup2"
 
         logging.debug("Loading Azure credentials")
         sp_creds = ServicePrincipalCredentials(
