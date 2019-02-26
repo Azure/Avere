@@ -1,7 +1,7 @@
 # https://aka.ms/yaml
-trigger:
-- master
-- releases/*
+# trigger:
+# - master
+# - releases/*
 
 variables:
   VFXT_TEST_VARS_FILE: 'pipelines.json'
@@ -36,6 +36,20 @@ jobs:
       pip install -r test/requirements.txt
     displayName: 'SETUP: Install Python dependencies'
     condition: succeeded()
+
+  - script: - |
+      az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+      az group create -l westus -n MyResourceGroup
+    displayName: 'Create Resource Group'
+    condition: succeeded()
+    env:
+      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+      AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
+      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+
 
   - script: |
       echo "\$VFXT_DEPLOY_NEW_VNET  = $VFXT_DEPLOY_NEW_VNET"
@@ -77,6 +91,10 @@ jobs:
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+      AZURE_CLIENT_ID_CLUSTER: $(AZURE-CLIENT-ID-CLUSTER)
+      AZURE_CLIENT_SECRET_CLUSTER: $(AZURE-CLIENT-SECRET-CLUSTER)
+      AZURE_CLIENT_ID_OPERATOR: $(AZURE-CLIENT-ID-OPERATOR)
+      AZURE_CLIENT_SECRET_OPERATOR: $(AZURE-CLIENT-SECRET-OPERATOR)
 
   - script: |
       # Check for common error messages that might occur during deployment.

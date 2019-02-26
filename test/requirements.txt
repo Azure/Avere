@@ -5,3 +5,4 @@ paramiko
 pytest
 scp
 sshtunnel
+azure-cli
