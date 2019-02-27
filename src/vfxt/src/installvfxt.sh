@@ -83,7 +83,7 @@ function configure_vfxt_template() {
     sed -i "s/^set -exu/set -eu/g"  $VFXT_INSTALL_TEMPLATE
 }
 
-function patch_vfxt_py() {
+function patch_vfxt_py1() {
     VFXTPYDIR=$(dirname $(pydoc vFXT | grep usr | tr -d '[:blank:]'))
     MSAZURE_PATCH_FILE="$VFXTPYDIR/p"
     MSAZURE_TARGET_FILE="$VFXTPYDIR/msazure.py"
@@ -114,6 +114,36 @@ index 4e72fd73..b660d9bb 100644
                  return r
              except Exception as e:
                  log.debug(e)
+EOM
+
+    # don't exit if the patch was already applied
+    set +e
+    patch --quiet --forward $MSAZURE_TARGET_FILE $MSAZURE_PATCH_FILE
+    set -e
+    rm -f $MSAZURE_PATCH_FILE
+    rm -f $VFXTPYDIR/*\.pyc
+    rm -f $VFXTPYDIR/*\.orig
+    rm -f $VFXTPYDIR/*\.rej
+}
+
+function patch_vfxt_py2() {
+    VFXTPYDIR=$(dirname $(pydoc vFXT | grep usr | tr -d '[:blank:]'))
+    MSAZURE_PATCH_FILE="$VFXTPYDIR/p"
+    MSAZURE_TARGET_FILE="$VFXTPYDIR/msazure.py"
+    /bin/cat <<EOM >$MSAZURE_PATCH_FILE
+diff --git a/vFXT/msazure.py b/vFXT/msazure.py
+index 4e72fd73..b660d9bb 100644
+--- a/vFXT/msazure.py
++++ b/vFXT/msazure.py
+@@ -558,7 +558,7 @@
+                         endpoint_data = json.loads(response.read())
+                         for endpoint_name in endpoint_data['cloudEndpoint']:
+                             endpoint = endpoint_data['cloudEndpoint'][endpoint_name]
+-                            if instance_data['compute']['location'] in endpoint['locations']:
++                            if instance_data['compute']['location'].lower() in [_.lower() for _ in endpoint['locations']]: # force lowercase comparision
+                                 instance_data['endpoint'] = endpoint
+                                 instance_data['token_resource'] = 'https://{}'.format(endpoint['endpoint']) # Always assume URL format
+                         break
 EOM
 
     # don't exit if the patch was already applied
@@ -186,7 +216,8 @@ function main() {
     configure_vfxt_template
 
     echo "patch vfxt.py"
-    patch_vfxt_py
+    patch_vfxt_py1
+    patch_vfxt_py2
 
     echo "create_vfxt"
     create_vfxt
