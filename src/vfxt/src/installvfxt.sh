@@ -83,7 +83,7 @@ function configure_vfxt_template() {
     sed -i "s/^set -exu/set -eu/g"  $VFXT_INSTALL_TEMPLATE
 }
 
-function patch_vfxt_py() {
+function patch_vfxt_py1() {
     VFXTPYDIR=$(dirname $(pydoc vFXT | grep usr | tr -d '[:blank:]'))
     MSAZURE_PATCH_FILE="$VFXTPYDIR/p"
     MSAZURE_TARGET_FILE="$VFXTPYDIR/msazure.py"
@@ -114,6 +114,58 @@ index 4e72fd73..b660d9bb 100644
                  return r
              except Exception as e:
                  log.debug(e)
+EOM
+
+    # don't exit if the patch was already applied
+    set +e
+    patch --quiet --forward $MSAZURE_TARGET_FILE $MSAZURE_PATCH_FILE
+    set -e
+    rm -f $MSAZURE_PATCH_FILE
+    rm -f $VFXTPYDIR/*\.pyc
+    rm -f $VFXTPYDIR/*\.orig
+    rm -f $VFXTPYDIR/*\.rej
+}
+
+function patch_vfxt_py2() {
+    VFXTPYDIR=$(dirname $(pydoc vFXT | grep usr | tr -d '[:blank:]'))
+    MSAZURE_PATCH_FILE="$VFXTPYDIR/p"
+    MSAZURE_TARGET_FILE="$VFXTPYDIR/msazure.py"
+    /bin/cat <<EOM >$MSAZURE_PATCH_FILE
+diff --git a/vFXT/msazure.py b/vFXT/msazure.py
+index 4e72fd73..b660d9bb 100644
+--- a/vFXT/msazure.py
++++ b/vFXT/msazure.py
+@@ -234,6 +234,11 @@ class Service(ServiceBase):
+     AZURE_ENVIRONMENTS = {
+         'usGovCloud': { 'endpoint': 'https://management.usgovcloudapi.net/', 'storage_suffix': 'core.usgovcloudapi.net'}
+     }
++    REGION_FIXUP = {
++        "centralindia": "indiacentral",
++        "southindia": "indiasouth",
++        "westindia": "indiawest",
++    }
+ 
+     def __init__(self, subscription_id=None, application_id=None, application_secret=None,
+                        tenant_id=None, resource_group=None, storage_account=None,
+@@ -547,6 +552,9 @@ class Service(ServiceBase):
+                     # reconnect on failure
+                     conn = httplib.HTTPConnection(connection_host, connection_port, source_address=source_address, timeout=CONNECTION_TIMEOUT)
+ 
++            instance_location = instance_data['compute']['location'].lower() # region may be mixed case
++            instance_location = cls.REGION_FIXUP.get(instance_location) or instance_location # region may be transposed
++
+             # endpoint metadata
+             attempts = 0
+             endpoint_conn = httplib.HTTPSConnection(cls.AZURE_ENDPOINT_HOST, source_address=source_address, timeout=CONNECTION_TIMEOUT)
+@@ -558,7 +566,7 @@ class Service(ServiceBase):
+                         endpoint_data = json.loads(response.read())
+                         for endpoint_name in endpoint_data['cloudEndpoint']:
+                             endpoint = endpoint_data['cloudEndpoint'][endpoint_name]
+-                            if instance_data['compute']['location'] in endpoint['locations']:
++                            if instance_location in [_.lower() for _ in endpoint['locations']]: # force lowercase comparison
+                                 instance_data['endpoint'] = endpoint
+                                 instance_data['token_resource'] = 'https://{}'.format(endpoint['endpoint']) # Always assume URL format
+                         break
 EOM
 
     # don't exit if the patch was already applied
@@ -186,7 +238,8 @@ function main() {
     configure_vfxt_template
 
     echo "patch vfxt.py"
-    patch_vfxt_py
+    patch_vfxt_py1
+    patch_vfxt_py2
 
     echo "create_vfxt"
     create_vfxt
