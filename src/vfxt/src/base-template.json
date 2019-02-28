@@ -218,7 +218,7 @@
     "networkSecurityGroupName": "[concat('nsg-',variables('controllerName'))]",
     "subnetId": "[resourceId(variables('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('virtualNetworkSubnetName'))]",
     "vmName": "[concat('vm-',variables('controllerName'))]",
-    "extensionName": "[concat('/create.vfxt',if(variables('createVirtualNetwork'),'.vnet','.novnet'),if(variables('useAvereBackedStorageAccount'),'.stg','.nostg'))]",
+    "extensionName": "[concat('/create.vfxt',if(variables('createVirtualNetwork'),'.vnet','.novnet'),if(variables('useAvereBackedStorageAccount'),'.stg','.nostg'),'.',variables('location'))]",
     "pipObject": {
       "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
     },
