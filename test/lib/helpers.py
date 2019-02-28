@@ -5,6 +5,7 @@
 import ast
 import logging
 import socket
+from contextlib import closing
 from time import sleep, time
 
 # from requirements.txt
@@ -27,12 +28,10 @@ def create_ssh_client(username, hostname, port=22, password=None, key_filename=N
 
 def get_unused_local_port():
     """Get an unused, unreserved local port."""
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind(("", 0))
-    port = sock.getsockname()[1]
-    sock.close()
-    sleep(2)  # for the port to fully free up
-    return port
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+        sock.bind(("localhost", 0))
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return sock.getsockname()[1]
 
 
 def get_vm_ips(nm_client, resource_group, vm_name):
