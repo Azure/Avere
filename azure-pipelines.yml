@@ -38,6 +38,19 @@ jobs:
     condition: succeeded()
 
   - script: |
+      set -x
+      python3 -m unittest discover test/unit_test/ -v
+    displayName: 'UNIT TEST'
+    condition: succeeded()
+    env:
+      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+      AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
+      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+
+  - script: |
       echo "\$VFXT_DEPLOY_NEW_VNET  = $VFXT_DEPLOY_NEW_VNET"
       echo "\$VFXT_DEPLOY_WITH_BLOB = $VFXT_DEPLOY_WITH_BLOB"
 
