@@ -5,6 +5,9 @@
 import json
 import logging
 import os
+from datetime import datetime
+from random import choice
+from string import ascii_lowercase
 
 # from requirements.txt
 import pytest
@@ -273,3 +276,32 @@ def ext_vnet(test_vars):
     test_vars["ext_vnet"] = wait_for_op(vnet_atd.deploy()).properties.outputs
     log.debug(test_vars["ext_vnet"])
     return test_vars["ext_vnet"]
+
+
+@pytest.fixture
+def setup_unit(
+    deploy_id=None,
+    deploy_name="azurePySDK",
+    location="westus2",
+    resource_group=None,
+    _fields={},
+):
+    """Testfields"""
+    deploy_id = _fields.pop("deploy_id", deploy_id)
+    deploy_name = _fields.pop("deploy_name", deploy_name)
+    location = _fields.pop("location", location)
+    resource_group = _fields.pop("resource_group", resource_group)
+
+    if not deploy_id:
+        deploy_id = (
+            "av"
+            + datetime.utcnow().strftime("%m%dx%H%M%S")
+            + choice(ascii_lowercase)
+        )
+
+    if not resource_group:
+        resource_group = deploy_id + "-rg"
+
+    return {'deploy_id': deploy_id,
+            'resource_group': resource_group}
+

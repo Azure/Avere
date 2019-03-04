@@ -2,49 +2,19 @@
 # Copyright (C) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 # import json
-import os
-from datetime import datetime
-from random import choice
-from string import ascii_lowercase
-from uuid import uuid4
 import json
-import pytest
+import os
 import sys
+from uuid import uuid4
 
-
-@pytest.fixture
-def setup(
-    deploy_id=None,
-    deploy_name="azurePySDK",
-    location="westus2",
-    resource_group=None,
-    _fields={},
-):
-    """Testfields"""
-    deploy_id = _fields.pop("deploy_id", deploy_id)
-    deploy_name = _fields.pop("deploy_name", deploy_name)
-    location = _fields.pop("location", location)
-    resource_group = _fields.pop("resource_group", resource_group)
-
-    if not deploy_id:
-        deploy_id = (
-            "av"
-            + datetime.utcnow().strftime("%m%dx%H%M%S")
-            + choice(ascii_lowercase)
-        )
-
-    if not resource_group:
-        resource_group = deploy_id + "-rg"
-
-    return {'deploy_id': deploy_id,
-            'resource_group': resource_group}
+import pytest
 
 
 class TestUnitDeploy:
-    def test_json_vfxt_deploy(self, setup):
+    def test_json_vfxt_deploy(self, setup_unit):
         # deploy template
-        deploy_id = setup.get("deploy_id")
-        resource_group = setup.get("resource_group")
+        deploy_id = setup_unit.get("deploy_id")
+        resource_group = setup_unit.get("resource_group")
 
         with open("src/vfxt/azuredeploy-auto.json") as tfile:
             schema = json.load(tfile)
@@ -73,14 +43,15 @@ class TestUnitDeploy:
         testvalue = self.checkdata(schema, data)
         assert testvalue is True
 
-    def test_json_vfxt_negative_deploy(self, setup):
+    def test_json_vfxt_negative_deploy(self, setup_unit):
         # deploy template
-        deploy_id = setup.get("deploy_id")
-        resource_group = setup.get("resource_group")
+        deploy_id = setup_unit.get("deploy_id")
+        resource_group = setup_unit.get("resource_group")
         with open("src/vfxt/azuredeploy-auto.json") as tfile:
             schema = json.load(tfile)
 
         # The data to be tested:
+        # enableCloudTrace is wrong
         data = {
             "adminPassword": os.environ["AVERE_ADMIN_PW"],
             "avereBackedStorageAccountName": deploy_id + "sa",
@@ -104,10 +75,10 @@ class TestUnitDeploy:
         testvalue = self.checkdata(schema, data)
         assert testvalue is False
 
-    def test_json_vdbench_deploy(self, setup):
+    def test_json_vdbench_deploy(self, setup_unit):
         # deploy template
-        deploy_id = setup.get("deploy_id")
-        resource_group = setup.get("resource_group")
+        deploy_id = setup_unit.get("deploy_id")
+        resource_group = setup_unit.get("resource_group")
         with open("src/client/vmas/azuredeploy.json") as tfile:
             schema = json.load(tfile)
 
@@ -127,14 +98,15 @@ class TestUnitDeploy:
         testvalue = self.checkdata(schema, data)
         assert testvalue is True
 
-    def test_json_vdbench_negative_deploy(self, setup):
+    def test_json_vdbench_negative_deploy(self, setup_unit):
         # deploy template
-        deploy_id = setup.get("deploy_id")
-        resource_group = setup.get("resource_group")
+        deploy_id = setup_unit.get("deploy_id")
+        resource_group = setup_unit.get("resource_group")
         with open("src/client/vmas/azuredeploy.json") as tfile:
             schema = json.load(tfile)
 
         # The data to be tested:
+        # virtualNetwrokName is wrong
         data = {
             "uniquename": deploy_id,
             "sshKeyData": 2,
