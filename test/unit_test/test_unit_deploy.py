@@ -3,6 +3,7 @@
 # Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 # import json
 import json
+import logging
 import os
 import sys
 from uuid import uuid4
@@ -55,13 +56,13 @@ class TestUnitDeploy:
             "avereClusterName": deploy_id + "-cluster",
             "avereClusterRole": "Avere Cluster Runtime Operator",
             "avereInstanceType": "Standard_E32s_v3",
-            "avereNodeCount": False,
+            "avereNodeCount": False,  # bad type
             "controllerAdminUsername": "azureuser",
             "controllerAuthenticationType": "sshPublicKey",
             "controllerName": deploy_id + "-con",
             "controllerPassword": os.environ["AVERE_CONTROLLER_PW"],
             "controllerSSHKeyData": "string",
-            "enableCloudTraceDebugging": 2,
+            "enableCloudTraceDebugging": 2,  # bad type
             "rbacRoleAssignmentUniqueId": str(uuid4()),
             "createVirtualNetwork": True,
             "virtualNetworkName": deploy_id + "-vnet",
@@ -160,12 +161,12 @@ class TestUnitDeploy:
                 type_str = v["type"]
             schema_types[k] = {"type": type_str}
 
+        all_passed = True
         for key, item in data.items():
-            if isinstance(item, eval(schema_types[key]["type"])):
-                True
-            else:
-                return False
-        return True
+            if not isinstance(item, eval(schema_types[key]["type"])):
+                logging.error("{}: {} is not of expected type {}".format(key, item, schema_types[key]["type"]))
+                all_passed = False
+        return all_passed
 
     def check_key(self, schema, data):
         for key, item in data.items():
