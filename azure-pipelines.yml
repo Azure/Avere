@@ -39,7 +39,8 @@ jobs:
 
   - script: |
       set -x
-      python3 -m unittest discover test/unit_test/ -v
+      pytest test/unit_test/test_unit_deploy.py \
+        --doctest-modules --junitxml=junit/test-unit.xml
     displayName: 'UNIT TEST'
     condition: succeeded()
     env:

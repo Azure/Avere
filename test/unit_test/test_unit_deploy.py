@@ -7,105 +7,117 @@ from datetime import datetime
 from random import choice
 from string import ascii_lowercase
 from uuid import uuid4
-import unittest
 import json
+import pytest
+import sys
 
 
-class TestUnitDeploy(unittest.TestCase):
-    def setUp(
-        self,
-        deploy_id=None,
-        deploy_name="azurePySDK",
-        location="westus2",
-        resource_group=None,
-        _fields={},
-    ):
-        """Initialize, authenticate to Azure."""
-        self.deploy_id = _fields.pop("deploy_id", deploy_id)
-        self.deploy_name = _fields.pop("deploy_name", deploy_name)
-        self.location = _fields.pop("location", location)
-        self.resource_group = _fields.pop("resource_group", resource_group)
+@pytest.fixture
+def setup(
+    deploy_id=None,
+    deploy_name="azurePySDK",
+    location="westus2",
+    resource_group=None,
+    _fields={},
+):
+    """Testfields"""
+    deploy_id = _fields.pop("deploy_id", deploy_id)
+    deploy_name = _fields.pop("deploy_name", deploy_name)
+    location = _fields.pop("location", location)
+    resource_group = _fields.pop("resource_group", resource_group)
 
-        if not self.deploy_id:
-            self.deploy_id = (
-                "av"
-                + datetime.utcnow().strftime("%m%dx%H%M%S")
-                + choice(ascii_lowercase)
-            )
+    if not deploy_id:
+        deploy_id = (
+            "av"
+            + datetime.utcnow().strftime("%m%dx%H%M%S")
+            + choice(ascii_lowercase)
+        )
 
-        if not self.resource_group:
-            self.resource_group = self.deploy_id + "-rg"
+    if not resource_group:
+        resource_group = deploy_id + "-rg"
 
-    def test_json_vfxt_deploy(self):
+    return {'deploy_id': deploy_id,
+            'resource_group': resource_group}
+
+
+class TestUnitDeploy:
+    def test_json_vfxt_deploy(self, setup):
         # deploy template
+        deploy_id = setup.get("deploy_id")
+        resource_group = setup.get("resource_group")
+
         with open("src/vfxt/azuredeploy-auto.json") as tfile:
             schema = json.load(tfile)
 
         # The data to be tested:
         data = {
             "adminPassword": os.environ["AVERE_ADMIN_PW"],
-            "avereBackedStorageAccountName": self.deploy_id + "sa",
-            "avereClusterName": self.deploy_id + "-cluster",
+            "avereBackedStorageAccountName": deploy_id + "sa",
+            "avereClusterName": deploy_id + "-cluster",
             "avereClusterRole": "Avere Cluster Runtime Operator",
             "avereInstanceType": "Standard_E32s_v3",
             "avereNodeCount": 3,
             "controllerAdminUsername": "azureuser",
             "controllerAuthenticationType": "sshPublicKey",
-            "controllerName": self.deploy_id + "-con",
+            "controllerName": deploy_id + "-con",
             "controllerPassword": os.environ["AVERE_CONTROLLER_PW"],
             "controllerSSHKeyData": "string",
             "enableCloudTraceDebugging": True,
             "rbacRoleAssignmentUniqueId": str(uuid4()),
             "createVirtualNetwork": True,
-            "virtualNetworkName": self.deploy_id + "-vnet",
-            "virtualNetworkResourceGroup": self.resource_group,
-            "virtualNetworkSubnetName": self.deploy_id + "-subnet",
+            "virtualNetworkName": deploy_id + "-vnet",
+            "virtualNetworkResourceGroup": resource_group,
+            "virtualNetworkSubnetName": deploy_id + "-subnet",
         }
 
         testvalue = self.checkdata(schema, data)
-        self.assertTrue(testvalue)
+        assert testvalue is True
 
-    def test_json_vfxt_negative_deploy(self):
+    def test_json_vfxt_negative_deploy(self, setup):
         # deploy template
+        deploy_id = setup.get("deploy_id")
+        resource_group = setup.get("resource_group")
         with open("src/vfxt/azuredeploy-auto.json") as tfile:
             schema = json.load(tfile)
 
         # The data to be tested:
         data = {
             "adminPassword": os.environ["AVERE_ADMIN_PW"],
-            "avereBackedStorageAccountName": self.deploy_id + "sa",
-            "avereClusterName": self.deploy_id + "-cluster",
+            "avereBackedStorageAccountName": deploy_id + "sa",
+            "avereClusterName": deploy_id + "-cluster",
             "avereClusterRole": "Avere Cluster Runtime Operator",
             "avereInstanceType": "Standard_E32s_v3",
             "avereNodeCount": False,
             "controllerAdminUsername": "azureuser",
             "controllerAuthenticationType": "sshPublicKey",
-            "controllerName": self.deploy_id + "-con",
+            "controllerName": deploy_id + "-con",
             "controllerPassword": os.environ["AVERE_CONTROLLER_PW"],
             "controllerSSHKeyData": "string",
             "enableCloudTraceDebugging": 2,
             "rbacRoleAssignmentUniqueId": str(uuid4()),
             "createVirtualNetwork": True,
-            "virtualNetworkName": self.deploy_id + "-vnet",
-            "virtualNetworkResourceGroup": self.resource_group,
-            "virtualNetworkSubnetName": self.deploy_id + "-subnet",
+            "virtualNetworkName": deploy_id + "-vnet",
+            "virtualNetworkResourceGroup": resource_group,
+            "virtualNetworkSubnetName": deploy_id + "-subnet",
         }
 
         testvalue = self.checkdata(schema, data)
-        self.assertFalse(testvalue)
+        assert testvalue is False
 
-    def test_json_vdbench_deploy(self):
+    def test_json_vdbench_deploy(self, setup):
         # deploy template
+        deploy_id = setup.get("deploy_id")
+        resource_group = setup.get("resource_group")
         with open("src/client/vmas/azuredeploy.json") as tfile:
             schema = json.load(tfile)
 
         # The data to be tested:
         data = {
-            "uniquename": self.deploy_id,
+            "uniquename": deploy_id,
             "sshKeyData": "sshPublicKey",
-            "virtualNetworkResourceGroup": self.resource_group,
-            "virtualNetworkName": self.deploy_id + "-vnet",
-            "virtualNetworkSubnetName": self.deploy_id + "-subnet",
+            "virtualNetworkResourceGroup": resource_group,
+            "virtualNetworkName": deploy_id + "-vnet",
+            "virtualNetworkSubnetName": deploy_id + "-subnet",
             "nfsCommaSeparatedAddresses": "10.0.0.4, 10.0.0.5",
             "vmCount": 12,
             "nfsExportPath": "/msazure",
@@ -113,20 +125,22 @@ class TestUnitDeploy(unittest.TestCase):
         }
 
         testvalue = self.checkdata(schema, data)
-        self.assertTrue(testvalue)
+        assert testvalue is True
 
-    def test_json_vdbench_negative_deploy(self):
+    def test_json_vdbench_negative_deploy(self, setup):
         # deploy template
+        deploy_id = setup.get("deploy_id")
+        resource_group = setup.get("resource_group")
         with open("src/client/vmas/azuredeploy.json") as tfile:
             schema = json.load(tfile)
 
         # The data to be tested:
         data = {
-            "uniquename": self.deploy_id,
+            "uniquename": deploy_id,
             "sshKeyData": 2,
-            "virtualNetworkResourceGroup": self.resource_group,
+            "virtualNetworkResourceGroup": resource_group,
             "virtualNetworkName": True,
-            "virtualNetworkSubnetName": self.deploy_id + "-subnet",
+            "virtualNetworkSubnetName": deploy_id + "-subnet",
             "nfsCommaSeparatedAddresses": "10.0.0.4, 10.0.0.5",
             "vmCount": 12,
             "nfsExportPath": "/msazure",
@@ -134,7 +148,7 @@ class TestUnitDeploy(unittest.TestCase):
         }
 
         testvalue = self.checkdata(schema, data)
-        self.assertFalse(testvalue)
+        assert testvalue is False
 
     def checkdata(self, schema, data):
         schema_types = {}
@@ -157,4 +171,4 @@ class TestUnitDeploy(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    pytest.main(sys.argv)
