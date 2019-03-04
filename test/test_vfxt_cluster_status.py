@@ -13,6 +13,7 @@ from time import sleep, time
 # from requirements.txt
 import pytest
 from fabric import Connection
+from paramiko.ssh_exception import NoValidConnectionsError
 from scp import SCPClient
 
 # local libraries
@@ -64,8 +65,8 @@ class TestVfxtClusterStatus:
         result = run_averecmd(**averecmd_params, method="cluster.get")
         assert result["ha"] == "enabled"
 
-    def test_ping_nodes(self, ssh_con, test_vars):  # noqa: F811
-        """Ping all of the nodes from the controller."""
+    def test_ping_vservers(self, ssh_con, test_vars):  # noqa: F811
+        """Ping all of the vserver IPs from the controller."""
         commands = []
         for vs_ip in test_vars["cluster_vs_ips"]:
             commands.append("ping -c 3 {}".format(vs_ip))
@@ -133,6 +134,7 @@ class TestVfxtSupport:
             node_ip = run_averecmd(**averecmd_params,
                                    method="node.get",
                                    args=node)[node]["primaryClusterIP"]["IP"]
+
             log.debug("Tunneling to node {} using IP {}".format(node, node_ip))
             tunnel_local_port = get_unused_local_port()
             with Connection(test_vars["public_ip"],
@@ -148,7 +150,24 @@ class TestVfxtSupport:
                                     connect_kwargs={
                                         "password": os.environ["AVERE_ADMIN_PW"]
                                     })
-                node_c.open()
+
+                # get_unused_local_port actually uses the port to know it's
+                # available before making it available again and returning the
+                # port number. Rarely, there is a race where the open() call
+                # below fails because the port is not yet fully available
+                # again. Retry the open() call a few times to help.
+                for i in range(1, 6):
+                    try:
+                        node_c.open()
+                        break
+                    except NoValidConnectionsError as ex:
+                        exp_err = "Unable to connect to port {} on 127.0.0.1".format(tunnel_local_port)
+                        if exp_err not in str(ex):
+                            raise
+                        else:
+                            log.warn(exp_err + " (attempt #{})".str(i))
+                            sleep(1)
+
                 scp_client = SCPClient(node_c.transport)
                 try:
                     # Calls below catch exceptions and report them to the

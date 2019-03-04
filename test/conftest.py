@@ -79,12 +79,14 @@ def mnt_nodes(ssh_con, test_vars):
         return
 
     check = run_ssh_command(ssh_con, "ls ~/STATUS.NODES_MOUNTED",
-                            ignore_nonzero_rc=True)
+                            ignore_nonzero_rc=True, timeout=30)
     if check['rc']:  # nodes were not already mounted
-        commands = """
-            sudo apt-get update
-            sudo apt-get install nfs-common
-            """.split("\n")
+        # Update needed packages.
+        commands = ["sudo apt-get update", "sudo apt-get install nfs-common"]
+        run_ssh_commands(ssh_con, commands, timeout=600)
+
+        # Set up mount points and /etc/fstab.
+        commands = []
         for i, vs_ip in enumerate(test_vars["cluster_vs_ips"]):
             commands.append("sudo mkdir -p /nfs/node{}".format(i))
             commands.append("sudo chown nobody:nogroup /nfs/node{}".format(i))
@@ -92,9 +94,11 @@ def mnt_nodes(ssh_con, test_vars):
                          "hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0"
             commands.append("sudo sh -c 'echo \"{}\" >> /etc/fstab'".format(
                             fstab_line))
-        commands.append("sudo mount -a")
-        commands.append("touch ~/STATUS.NODES_MOUNTED")
-        run_ssh_commands(ssh_con, commands)
+        run_ssh_commands(ssh_con, commands, timeout=30)
+
+        # Mount the nodes.
+        run_ssh_command(ssh_con, "sudo mount -a", timeout=300)
+        run_ssh_command(ssh_con, "touch ~/STATUS.NODES_MOUNTED", timeout=30)
 
 
 @pytest.fixture(scope="module")
