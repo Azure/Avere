@@ -38,6 +38,7 @@ jobs:
     condition: succeeded()
 
   - script: |
+      echo "\$VFXT_DEPLOY_LOCATION  = $VFXT_DEPLOY_LOCATION"
       echo "\$VFXT_DEPLOY_NEW_VNET  = $VFXT_DEPLOY_NEW_VNET"
       echo "\$VFXT_DEPLOY_WITH_BLOB = $VFXT_DEPLOY_WITH_BLOB"
 
