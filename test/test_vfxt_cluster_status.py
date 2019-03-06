@@ -136,70 +136,76 @@ class TestVfxtSupport:
                                    args=node)[node]["primaryClusterIP"]["IP"]
 
             log.debug("Tunneling to node {} using IP {}".format(node, node_ip))
-            tunnel_local_port = get_unused_local_port()
-            with Connection(test_vars["public_ip"],
-                            user=test_vars["controller_user"],
-                            connect_kwargs={
-                                "key_filename": test_vars["ssh_priv_key"],
-                            }).forward_local(local_port=tunnel_local_port,
-                                             remote_port=22,
-                                             remote_host=node_ip):
-                node_c = Connection("127.0.0.1",
-                                    user="admin",
-                                    port=tunnel_local_port,
-                                    connect_kwargs={
-                                        "password": os.environ["AVERE_ADMIN_PW"]
-                                    })
 
-                # get_unused_local_port actually uses the port to know it's
-                # available before making it available again and returning the
-                # port number. Rarely, there is a race where the open() call
-                # below fails because the port is not yet fully available
-                # again. Retry the open() call a few times to help.
-                for i in range(1, 6):
+            # get_unused_local_port actually uses the port to know it's
+            # available before making it available again and returning the
+            # port number. Rarely, there is a race where the open() call
+            # below fails because the port is not yet fully available
+            # again. In those cases, try getting a new port.
+            for port_attempt in range(1, 11):
+                tunnel_local_port = get_unused_local_port()
+                with Connection(test_vars["public_ip"],
+                                user=test_vars["controller_user"],
+                                connect_kwargs={
+                                    "key_filename": test_vars["ssh_priv_key"],
+                                }).forward_local(local_port=tunnel_local_port,
+                                                 remote_port=22,
+                                                 remote_host=node_ip):
+                    node_c = Connection("127.0.0.1",
+                                        user="admin",
+                                        port=tunnel_local_port,
+                                        connect_kwargs={
+                                            "password": os.environ["AVERE_ADMIN_PW"]
+                                        })
                     try:
                         node_c.open()
-                        break
+
+                        # If port_attempt > 1, last_error had the exception
+                        # from the last iteration. Clear it.
+                        last_error = None
                     except NoValidConnectionsError as ex:
+                        last_error = ex
                         exp_err = "Unable to connect to port {} on 127.0.0.1".format(tunnel_local_port)
                         if exp_err not in str(ex):
                             raise
                         else:
-                            log.warn(exp_err + " (attempt #{})".str(i))
-                            sleep(1)
+                            log.warn("{0} (attempt #{1}, retrying)".format(
+                                     exp_err, str(port_attempt)))
+                            continue  # iterate
 
-                scp_client = SCPClient(node_c.transport)
-                try:
-                    # Calls below catch exceptions and report them to the
-                    # error log, but then continue. This is because a
-                    # failure to collect artifacts on one node should not
-                    # prevent collection from other nodes. After collection
-                    # has completed, the last exception will be raised.
+                    scp_client = SCPClient(node_c.transport)
+                    try:
+                        # Calls below catch exceptions and report them to the
+                        # error log, but then continue. This is because a
+                        # failure to collect artifacts on one node should not
+                        # prevent collection from other nodes. After collection
+                        # has completed, the last exception will be raised.
 
-                    # list of files and directories to download
-                    to_collect = [
-                        "/var/log/messages",
-                        "/var/log/xmlrpc.log",
+                        # list of files and directories to download
+                        to_collect = [
+                            "/var/log/messages",
+                            "/var/log/xmlrpc.log",
 
-                        # assumes rolling trace was enabled during deploy
-                        "/support/trace/rolling",
+                            # assumes rolling trace was enabled during deploy
+                            "/support/trace/rolling",
 
-                        # TODO: 2019-0219: turned off for now
-                        # "/support/gsi",
-                        # "/support/cores",
-                    ]
-                    for tc in to_collect:
-                        log.debug("SCP'ing {} from node {} to {}".format(
-                                  tc, node, node_dir_log))
-                        try:
-                            scp_client.get(tc, node_dir_log, recursive=True)
-                        except Exception as ex:
-                            log.error("({}) Exception caught: {}".format(
-                                      node, ex))
-                            last_error = ex
-                finally:
-                    scp_client.close()
-            log.debug("Connections to node {} closed".format(node))
+                            # TODO: 2019-0219: turned off for now
+                            # "/support/gsi",
+                            # "/support/cores",
+                        ]
+                        for tc in to_collect:
+                            log.debug("SCP'ing {} from node {} to {}".format(
+                                    tc, node, node_dir_log))
+                            try:
+                                scp_client.get(tc, node_dir_log, recursive=True)
+                            except Exception as ex:
+                                log.error("({}) Exception caught: {}".format(
+                                        node, ex))
+                                last_error = ex
+                    finally:
+                        scp_client.close()
+                log.debug("Connections to node {} closed".format(node))
+                break  # no need to iterate again
 
         if last_error:
             log.error("See previous error(s) above. Raising last exception.")
