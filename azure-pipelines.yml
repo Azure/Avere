@@ -103,6 +103,8 @@ jobs:
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
+      echo "\$VFXT_DEPLOY_LOCATION  = $VFXT_DEPLOY_LOCATION"
+
       # Check for common error messages that might occur during deployment.
       deploy_results_file="junit/test-deploy.xml"
       declare -a common_errors=(
@@ -212,6 +214,15 @@ jobs:
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+
+  - script: |
+      python test/region_deploy_utils.py --update_last_success
+    displayName: 'CLEANUP: Update last successful run timestamp for region'
+    condition: and(succeeded(), eq(variables['VFXT_DEPLOY_LOCATION'], ''))
+    env:
+      PIPELINES_DATA_STORAGE_ACCOUNT: $(PIPELINES-DATA-STORAGE-ACCOUNT)
+      PIPELINES_DATA_STORAGE_ACCOUNT_KEY: $(PIPELINES-DATA-STORAGE-ACCOUNT-KEY)
+      PIPELINES_DATA_TABLE_NAME: $(PIPELINES-DATA-TABLE-NAME)
 
   - task: PublishPipelineArtifact@0
     displayName: 'PUBLISH: Deployment artifacts, log files'
