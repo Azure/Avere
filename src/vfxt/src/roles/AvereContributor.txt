@@ -16,12 +16,13 @@
     "Microsoft.Network/*/read",
     "Microsoft.Network/networkInterfaces/*",
     "Microsoft.Network/virtualNetworks/subnets/join/action",
+    "Microsoft.Network/virtualNetworks/subnets/joinViaServiceEndpoint/action",
     "Microsoft.Network/virtualNetworks/subnets/read",
     "Microsoft.Resources/deployments/*",
     "Microsoft.Resources/subscriptions/resourceGroups/read",
     "Microsoft.Resources/subscriptions/resourceGroups/resources/read",
     "Microsoft.Storage/*/read",
-    "Microsoft.Storage/storageAccounts/listKeys/action",
+    "Microsoft.Storage/storageAccounts/*",
     "Microsoft.Support/*"
   ],
   "DataActions": []
