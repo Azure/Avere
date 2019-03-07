@@ -38,6 +38,7 @@ jobs:
     condition: succeeded()
 
   - script: |
+      python test/region_deploy_utils.py --update_region_list
       python test/region_deploy_utils.py --get_next_region > REGION_TO_TEST
 
       if [[ "$?" -eq "0" ]]; then
@@ -52,7 +53,7 @@ jobs:
       PIPELINES_DATA_TABLE_NAME: $(PIPELINES-DATA-TABLE-NAME)
 
   - script: |
-      if [[ -z "$VFXT_DEPLOY_LOCATION" -a -s REGION_TO_TEST ]]; then
+      if [ -z "$VFXT_DEPLOY_LOCATION" -a -s REGION_TO_TEST ]; then
         export VFXT_DEPLOY_LOCATION=$(cat REGION_TO_TEST)
       fi
       echo "\$VFXT_DEPLOY_LOCATION  = $VFXT_DEPLOY_LOCATION"
