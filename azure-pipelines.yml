@@ -87,11 +87,9 @@ jobs:
       fi
 
       set -x
-      pytest BAD_VALUE_ON_PURPOSE $PYTEST_OPTIONS \
-        --location $VFXT_DEPLOY_LOCATION
-      # pytest $test_to_run $PYTEST_OPTIONS \
-      #   --location $VFXT_DEPLOY_LOCATION \
-      #   --doctest-modules --junitxml=junit/test-deploy.xml
+      pytest $test_to_run $PYTEST_OPTIONS \
+        --location $VFXT_DEPLOY_LOCATION \
+        --doctest-modules --junitxml=junit/test-deploy.xml
     displayName: 'TEST: Deploy vFXT cluster'
     condition: succeeded()
     env:
@@ -103,8 +101,6 @@ jobs:
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
-      echo "\$VFXT_DEPLOY_LOCATION  = $VFXT_DEPLOY_LOCATION"
-
       # Check for common error messages that might occur during deployment.
       deploy_results_file="junit/test-deploy.xml"
       declare -a common_errors=(
