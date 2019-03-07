@@ -85,10 +85,13 @@ jobs:
       declare -a common_errors=(
         "Operation results in exceeding quota limits"
         "A hash conflict was encountered for the role Assignment ID"
+        "Corefiler configured with empty bucket but bucket \S+ has existing data"
       )
 
+      echo
+      echo
       for ce in "${common_errors[@]}"; do
-          grep_res=$(grep "$ce" $deploy_results_file)
+          grep_res=$(grep -E "$ce" $deploy_results_file)
           if [[ -n $grep_res ]]; then
               echo "MESSAGE FOUND: $ce"
               msg_found=1
@@ -97,6 +100,9 @@ jobs:
 
       if [[ -z $msg_found ]]; then
         echo "No common error messages found in $deploy_results_file"
+        echo
+        echo
+        echo "Dumping $deploy_results_file:"
         cat $deploy_results_file
         exit 1
       fi
