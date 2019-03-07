@@ -40,12 +40,6 @@ def pytest_addoption(parser):
         help="Azure region short name to use for deployments (default: westus2)",
     )
     parser.addoption(
-        "--prefer_cli_args", action="store_true",
-        default=False,
-        help="When specified, prioritize custom command-line arguments over "
-        + "the values in the file pointed to by \"test_vars_file\".",
-    )
-    parser.addoption(
         "--ssh_priv_key", action="store",
         default=os.path.expanduser(r"~/.ssh/id_rsa"),
         help="SSH private key to use in deployments and tests (default: ~/.ssh/id_rsa)",
@@ -60,9 +54,8 @@ def pytest_addoption(parser):
         default=envar_check("VFXT_TEST_VARS_FILE"),
         help="Test variables file used for passing values between runs. This "
         + "file is in JSON format. It is loaded during test setup and written "
-        + "out during test teardown. The contents of this file override other "
-        + "custom command-line options unless the \"prefer_cli_args\" option "
-        + "is specified. (default: $VFXT_TEST_VARS_FILE if set, else None)"
+        + "out during test teardown. Command-line options override variables "
+        + "in this file. (default: $VFXT_TEST_VARS_FILE if set, else None)"
     )
 
 
@@ -82,12 +75,14 @@ def mnt_nodes(ssh_con, test_vars):
         return
 
     check = run_ssh_command(ssh_con, "ls ~/STATUS.NODES_MOUNTED",
-                            ignore_nonzero_rc=True)
+                            ignore_nonzero_rc=True, timeout=30)
     if check['rc']:  # nodes were not already mounted
-        commands = """
-            sudo apt-get update
-            sudo apt-get install nfs-common
-            """.split("\n")
+        # Update needed packages.
+        commands = ["sudo apt-get update", "sudo apt-get install nfs-common"]
+        run_ssh_commands(ssh_con, commands, timeout=600)
+
+        # Set up mount points and /etc/fstab.
+        commands = []
         for i, vs_ip in enumerate(test_vars["cluster_vs_ips"]):
             commands.append("sudo mkdir -p /nfs/node{}".format(i))
             commands.append("sudo chown nobody:nogroup /nfs/node{}".format(i))
@@ -95,9 +90,11 @@ def mnt_nodes(ssh_con, test_vars):
                          "hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0"
             commands.append("sudo sh -c 'echo \"{}\" >> /etc/fstab'".format(
                             fstab_line))
-        commands.append("sudo mount -a")
-        commands.append("touch ~/STATUS.NODES_MOUNTED")
-        run_ssh_commands(ssh_con, commands)
+        run_ssh_commands(ssh_con, commands, timeout=30)
+
+        # Mount the nodes.
+        run_ssh_command(ssh_con, "sudo mount -a", timeout=300)
+        run_ssh_command(ssh_con, "touch ~/STATUS.NODES_MOUNTED", timeout=30)
 
 
 @pytest.fixture(scope="module")
@@ -218,9 +215,8 @@ def test_vars(request):
                 json.dumps(vars, **cja)))
 
     # Override test_vars_file values with command-line arguments.
-    if request.config.getoption("--prefer_cli_args"):
-        vars = {**vars, **cl_opts}
-        log.debug("Overwrote vars with command-line args: {}".format(
+    vars = {**vars, **cl_opts}
+    log.debug("Overwrote vars with command-line args: {}".format(
               json.dumps(vars, **cja)))
 
     atd_obj = ArmTemplateDeploy(_fields={**vars})

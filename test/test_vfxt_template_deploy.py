@@ -83,7 +83,7 @@ class TestVfxtTemplateDeploy:
           - create a new VNET
           - do NOT use an Avere-backed storage account
         """
-        log = logging.getLogger("test_deploy_template")
+        log = logging.getLogger("test_no_storage_account_deploy")
         atd = test_vars["atd_obj"]
         with open("{}/src/vfxt/azuredeploy-auto.json".format(
                   test_vars["build_root"])) as tfile:
@@ -139,7 +139,7 @@ class TestVfxtTemplateDeploy:
           - do NOT create a new VNET
           - use an Avere-backed storage account
         """
-        log = logging.getLogger("test_deploy_template_byovnet")
+        log = logging.getLogger("test_byovnet_deploy")
         atd = test_vars["atd_obj"]
         with open("{}/src/vfxt/azuredeploy-auto.json".format(
                   test_vars["build_root"])) as tfile:
@@ -173,7 +173,7 @@ class TestVfxtTemplateDeploy:
         log.debug("Generated deploy parameters: \n{}".format(
                   json.dumps(atd.deploy_params, indent=4)))
 
-        atd.deploy_name = "test_deploy_template_byovnet"
+        atd.deploy_name = "test_byovnet_deploy"
         try:
             deploy_outputs = wait_for_op(atd.deploy()).properties.outputs
             test_vars["cluster_mgmt_ip"] = deploy_outputs["mgmt_ip"]["value"]
