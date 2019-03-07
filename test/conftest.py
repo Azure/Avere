@@ -5,17 +5,16 @@
 import json
 import logging
 import os
-from time import sleep
 
 # from requirements.txt
 import pytest
+from fabric import Connection
 from scp import SCPClient
-from sshtunnel import SSHTunnelForwarder
 
 # local libraries
 from arm_template_deploy import ArmTemplateDeploy
-from lib.helpers import (create_ssh_client, run_ssh_command, run_ssh_commands,
-                         wait_for_op)
+from lib.helpers import (get_unused_local_port, run_ssh_command,
+                         run_ssh_commands, wait_for_op)
 
 
 # COMMAND-LINE OPTIONS ########################################################
@@ -38,12 +37,6 @@ def pytest_addoption(parser):
         help="Azure region short name to use for deployments (default: westus2)",
     )
     parser.addoption(
-        "--prefer_cli_args", action="store_true",
-        default=False,
-        help="When specified, prioritize custom command-line arguments over "
-        + "the values in the file pointed to by \"test_vars_file\".",
-    )
-    parser.addoption(
         "--ssh_priv_key", action="store",
         default=os.path.expanduser(r"~/.ssh/id_rsa"),
         help="SSH private key to use in deployments and tests (default: ~/.ssh/id_rsa)",
@@ -58,9 +51,8 @@ def pytest_addoption(parser):
         default=envar_check("VFXT_TEST_VARS_FILE"),
         help="Test variables file used for passing values between runs. This "
         + "file is in JSON format. It is loaded during test setup and written "
-        + "out during test teardown. The contents of this file override other "
-        + "custom command-line options unless the \"prefer_cli_args\" option "
-        + "is specified. (default: $VFXT_TEST_VARS_FILE if set, else None)"
+        + "out during test teardown. Command-line options override variables "
+        + "in this file. (default: $VFXT_TEST_VARS_FILE if set, else None)"
     )
 
 
@@ -80,12 +72,14 @@ def mnt_nodes(ssh_con, test_vars):
         return
 
     check = run_ssh_command(ssh_con, "ls ~/STATUS.NODES_MOUNTED",
-                            ignore_nonzero_rc=True)
+                            ignore_nonzero_rc=True, timeout=30)
     if check['rc']:  # nodes were not already mounted
-        commands = """
-            sudo apt-get update
-            sudo apt-get install nfs-common
-            """.split("\n")
+        # Update needed packages.
+        commands = ["sudo apt-get update", "sudo apt-get install nfs-common"]
+        run_ssh_commands(ssh_con, commands, timeout=600)
+
+        # Set up mount points and /etc/fstab.
+        commands = []
         for i, vs_ip in enumerate(test_vars["cluster_vs_ips"]):
             commands.append("sudo mkdir -p /nfs/node{}".format(i))
             commands.append("sudo chown nobody:nogroup /nfs/node{}".format(i))
@@ -93,9 +87,11 @@ def mnt_nodes(ssh_con, test_vars):
                          "hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0"
             commands.append("sudo sh -c 'echo \"{}\" >> /etc/fstab'".format(
                             fstab_line))
-        commands.append("sudo mount -a")
-        commands.append("touch ~/STATUS.NODES_MOUNTED")
-        run_ssh_commands(ssh_con, commands)
+        run_ssh_commands(ssh_con, commands, timeout=30)
+
+        # Mount the nodes.
+        run_ssh_command(ssh_con, "sudo mount -a", timeout=300)
+        run_ssh_command(ssh_con, "touch ~/STATUS.NODES_MOUNTED", timeout=30)
 
 
 @pytest.fixture(scope="module")
@@ -119,55 +115,64 @@ def storage_account(test_vars):
 
 
 @pytest.fixture()
-def scp_con(ssh_con):
+def scp_con(ssh_con_fabric):
     """Create an SCP client based on an SSH connection to the controller."""
-    client = SCPClient(ssh_con.get_transport())
+    log = logging.getLogger("scp_con")
+    # client = SCPClient(ssh_con.get_transport())  # PARAMIKO
+    client = SCPClient(ssh_con_fabric.transport)
     yield client
+    log.debug("Closing SCP client.")
     client.close()
 
 
 @pytest.fixture()
-def ssh_con(test_vars):
-    """Create an SSH connection to the controller."""
-    log = logging.getLogger("ssh_con")
-    ssh_params = {  # common parameters for SSH tunnel, connection
-        "username": test_vars["controller_user"],
-        "hostname": test_vars["public_ip"],
-        "key_filename": test_vars["ssh_priv_key"]
-    }
+def ssh_con(ssh_con_fabric):
+    return ssh_con_fabric.client
 
-    ssh_tunnel = None
+
+@pytest.fixture()
+def ssh_con_fabric(test_vars):
+    """Create an SSH connection to the controller."""
+    log = logging.getLogger("ssh_con_fabric")
+
+    # SSH connection/client to the public IP.
+    pub_client = Connection(test_vars["public_ip"],
+                            user=test_vars["controller_user"],
+                            connect_kwargs={
+                                "key_filename": test_vars["ssh_priv_key"],
+                            })
+
     # If the controller's IP is not the same as the public IP, then we are
     # using a jumpbox to get into the VNET containing the controller. In that
     # case, create an SSH tunnel before connecting to the controller.
+    msg_con = "SSH connection to controller ({})".format(test_vars["controller_ip"])
     if test_vars["public_ip"] != test_vars["controller_ip"]:
-        log.debug("Creating an SSH tunnel to the jumpbox.")
-        ssh_tunnel = SSHTunnelForwarder(
-            ssh_params["hostname"],
-            ssh_username=ssh_params["username"],
-            ssh_pkey=ssh_params["key_filename"],
-            remote_bind_address=(test_vars["controller_ip"], 22),
-        )
-        ssh_tunnel.start()
-        sleep(5)
-        log.debug("SSH tunnel connected: {}".format(ssh_params))
-        log.debug("Local bind port: {}".format(ssh_tunnel.local_bind_port))
+        tunnel_local_port = get_unused_local_port()
+        tunnel_remote_port = 22
 
-        # When SSH'ing to the controller below, we'll instead connect to
-        # localhost through the local bind port connected to the SSH tunnel.
-        ssh_params["hostname"] = "127.0.0.1"
-        ssh_params["port"] = ssh_tunnel.local_bind_port
+        msg_con += " via jumpbox ({0}), local port {1}".format(
+            test_vars["public_ip"], tunnel_local_port)
 
-    log.debug("Creating SSH client connection: {}".format(ssh_params))
-    client = create_ssh_client(**ssh_params)
-    yield client
+        log.debug("Opening {}".format(msg_con))
+        with pub_client.forward_local(local_port=tunnel_local_port,
+                                      remote_port=tunnel_remote_port,
+                                      remote_host=test_vars["controller_ip"]):
+            client = Connection("127.0.0.1",
+                                user=test_vars["controller_user"],
+                                port=tunnel_local_port,
+                                connect_kwargs={
+                                    "key_filename": test_vars["ssh_priv_key"],
+                                })
+            client.open()
+            yield client
+        log.debug("{} closed".format(msg_con))
+    else:
+        log.debug("Opening {}".format(msg_con))
+        pub_client.open()
+        yield pub_client
+        log.debug("Closing {}".format(msg_con))
 
-    log.debug("Closing SSH client connection.")
-    client.close()
-
-    if ssh_tunnel:
-        log.debug("Closing SSH tunnel.")
-        ssh_tunnel.stop()
+    pub_client.close()
 
 
 @pytest.fixture(scope="module")
@@ -207,9 +212,8 @@ def test_vars(request):
                 json.dumps(vars, **cja)))
 
     # Override test_vars_file values with command-line arguments.
-    if request.config.getoption("--prefer_cli_args"):
-        vars = {**vars, **cl_opts}
-        log.debug("Overwrote vars with command-line args: {}".format(
+    vars = {**vars, **cl_opts}
+    log.debug("Overwrote vars with command-line args: {}".format(
               json.dumps(vars, **cja)))
 
     atd_obj = ArmTemplateDeploy(_fields={**vars})

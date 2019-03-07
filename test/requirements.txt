@@ -1,7 +1,7 @@
 azure.mgmt.network
 azure.mgmt.resource
 azure.mgmt.storage
-paramiko
+fabric
 pytest
 scp
 sshtunnel
