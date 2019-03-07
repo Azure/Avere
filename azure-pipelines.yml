@@ -40,7 +40,7 @@ jobs:
   - script: |
       python test/region_deploy_utils.py --get_next_region > REGION_TO_TEST
 
-      if [ "$?" eq "0" ]; then
+      if [[ "$?" -eq "0" ]]; then
         echo "##vso[task.setvariable variable=deploy_region]$(cat REGION_TO_TEST)"
         export VFXT_DEPLOY_LOCATION=$(cat REGION_TO_TEST)
         echo "\$DEPLOY_REGION = $DEPLOY_REGION"
