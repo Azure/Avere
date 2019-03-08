@@ -37,7 +37,6 @@ jobs:
       pip install -r test/requirements.txt
     displayName: 'SETUP: Install Python dependencies'
     condition: succeeded()
-    failOnStderr: true
 
   - script: |
       python test/internal/region_deploy_utils.py --update_region_list
