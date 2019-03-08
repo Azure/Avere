@@ -12,7 +12,7 @@ import os
 from argparse import ArgumentParser
 
 from azure.common.credentials import ServicePrincipalCredentials
-from azure.cosmosdb.table.models import Entity
+from azure.cosmosdb.table.models import EdmType, Entity, EntityProperty
 from azure.cosmosdb.table.tableservice import TableService
 from azure.mgmt.subscription import SubscriptionClient
 
@@ -47,7 +47,7 @@ def get_next_region_name():
     # Number of regions available for deployment (in the table).
     num_regions = table_service.get_entity(
         table_name, part_table_control, "NumberOfRegions"
-        ).NumberOfRegions
+        ).NumberOfRegions.value
     logging.debug("num_regions: {}".format(num_regions))
 
     # Rowkey for the last region used (from the table).
@@ -91,7 +91,8 @@ def get_next_region_name():
         table_name, {
             "PartitionKey": part_table_control,
             "RowKey": "LastRegionRowKeyUsed",
-            "LastRegionRowKeyUsed": curr_region_rowkey
+            "LastRegionRowKeyUsed":
+                EntityProperty(EdmType.INT32, curr_region_rowkey)
         })
 
     return region
@@ -192,7 +193,8 @@ def update_available_region_names():
     )
     last_rowkey_entity.pop("etag", None)
     last_rowkey_entity.pop("Timestamp", None)
-    last_rowkey_entity.NumberOfRegions = len(new_entities)
+    last_rowkey_entity.NumberOfRegions = EntityProperty(
+        EdmType.INT32, len(new_entities))
     logging.debug("last_rowkey_entity = {}".format(last_rowkey_entity))
     table_service.update_entity(table_name, last_rowkey_entity)
 
@@ -201,7 +203,7 @@ def update_available_region_names():
 def get_last_region_rowkey_used():
     return table_service.get_entity(
         table_name, part_table_control, "LastRegionRowKeyUsed"
-        ).LastRegionRowKeyUsed
+        ).LastRegionRowKeyUsed.value
 
 
 def get_region_shortname(rowkey):
