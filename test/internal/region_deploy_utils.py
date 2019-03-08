@@ -26,8 +26,15 @@ table_name = os.environ["PIPELINES_DATA_TABLE_NAME"]
 part_table_control = "tableControl"
 part_deploy_region = "deployRegion"
 
-# Regions for exclusion, inclusion.
-regions_to_exclude = []
+# Regions to always exclude, include.
+regions_to_exclude = [
+    # 2019-03-08: currently in region build-out
+    "australiacentral", "australiacentral2", "francesouth",
+    "southafricanorth", "southafricawest",
+
+    # 2019-03-08: not currently working with anhowe's sub
+    "centralindia",
+]
 regions_to_include = []
 
 # Cooldown. Number of hours since last successful run in a region that need to
