@@ -2,6 +2,10 @@
 # Copyright (C) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 
+###############################################################################
+# NOTE: This file is for Microsoft Azure DevOps Pipeline use only. ############
+###############################################################################
+
 import datetime
 import logging
 import os

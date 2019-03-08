@@ -38,8 +38,8 @@ jobs:
     condition: succeeded()
 
   - script: |
-      python test/region_deploy_utils.py --update_region_list
-      python test/region_deploy_utils.py --get_next_region > REGION_TO_TEST
+      python test/internal/region_deploy_utils.py --update_region_list
+      python test/internal/region_deploy_utils.py --get_next_region > REGION_TO_TEST
 
       if [[ "$?" -eq "0" ]]; then
         echo "REGION TO TEST: $(cat REGION_TO_TEST)"
@@ -212,7 +212,7 @@ jobs:
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
-      python test/region_deploy_utils.py --update_last_success
+      python test/internal/region_deploy_utils.py --update_last_success
     displayName: 'CLEANUP: Update last successful run timestamp for region'
     condition: and(succeeded(), eq(variables['VFXT_DEPLOY_LOCATION'], ''))
     env:
