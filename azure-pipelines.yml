@@ -40,6 +40,19 @@ jobs:
 
   - script: |
       python test/internal/region_deploy_utils.py --update_region_list
+    displayName: 'SETUP: Update region list'
+    condition: and(succeeded(), eq(variables['VFXT_DEPLOY_LOCATION'], ''))
+    failOnStderr: true
+    env:
+      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+      PIPELINES_DATA_STORAGE_ACCOUNT: $(PIPELINES-DATA-STORAGE-ACCOUNT)
+      PIPELINES_DATA_STORAGE_ACCOUNT_KEY: $(PIPELINES-DATA-STORAGE-ACCOUNT-KEY)
+      PIPELINES_DATA_TABLE_NAME: $(PIPELINES-DATA-TABLE-NAME)
+
+  - script: |
       python test/internal/region_deploy_utils.py --get_next_region > REGION_TO_TEST
 
       if [[ "$?" -eq "0" ]]; then
@@ -215,9 +228,14 @@ jobs:
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
-      python test/internal/region_deploy_utils.py --update_last_success
+      if [ -z "$VFXT_DEPLOY_LOCATION" -a -s REGION_TO_TEST ]; then
+        export VFXT_DEPLOY_LOCATION=$(cat REGION_TO_TEST)
+      fi
+      python test/internal/region_deploy_utils.py \
+        --update_last_success \
+        --last_success_region $VFXT_DEPLOY_LOCATION
     displayName: 'CLEANUP: Update last successful run timestamp for region'
-    condition: and(succeeded(), eq(variables['VFXT_DEPLOY_LOCATION'], ''))
+    condition: succeeded()
     env:
       PIPELINES_DATA_STORAGE_ACCOUNT: $(PIPELINES-DATA-STORAGE-ACCOUNT)
       PIPELINES_DATA_STORAGE_ACCOUNT_KEY: $(PIPELINES-DATA-STORAGE-ACCOUNT-KEY)

@@ -91,8 +91,8 @@ def get_next_region_name():
 
 
 # UPDATE LAST SUCCESSFUL RUN FOR REGION #######################################
-def update_last_successful_run_for_region():
-    region = get_region_shortname(get_last_region_rowkey_used())
+def update_last_successful_run_for_region(_region=None):
+    region = _region or get_region_shortname(get_last_region_rowkey_used())
 
     # Get a particular entry matching the region shortname.
     region_entities = [x for x in table_service.query_entities(
@@ -103,8 +103,8 @@ def update_last_successful_run_for_region():
 
     if len(region_entities) > 1:
         logging.debug("WARNING: " +
-              "Found {} entities for {}. Using first entry.".format(
-                  len(region_entities), region))
+                      "Found {} entities for {}. Using first entry.".format(
+                          len(region_entities), region))
     region_entity = region_entities[0]
     logging.debug("region_entity (orig): {}".format(region_entity))
 
@@ -228,7 +228,12 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--update_last_success",
                         action="store_true", default=False,
                         help="Update the last successful run timestamp for " +
-                             "the current region.")
+                             "the current region (table's LastRowKeyUsed).")
+
+    parser.add_argument("--last_success_region", default=None,
+                        help="If specified, update the last successful run " +
+                        "timestamp for the specified region instead of the " +
+                        "current region (table's LastRowKeyUsed).")
 
     parser.add_argument("-c", "--cooldown-hours", type=int,
                         default=cooldown_hours,
@@ -256,4 +261,4 @@ if __name__ == "__main__":
         print(get_next_region_name())
     elif args.update_last_success:
         logging.debug("> update_last_successful_run_for_region")
-        update_last_successful_run_for_region()
+        update_last_successful_run_for_region(args.last_success_region)
