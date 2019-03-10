@@ -11,6 +11,7 @@ VFXT_INSTALL_TEMPLATE=$AZURE_HOME_DIR/vfxtinstall
 CLOUD_BACKED_TEMPLATE=/create-cloudbacked-cluster
 MINIMAL_TEMPLATE=/create-minimal-cluster
 VFXT_LOG_FILE=$AZURE_HOME_DIR/vfxt.log
+ARM_ENDPOINT=https://management.azure.com/metadata/endpoints?api-version=2017-12-01
 
 function retrycmd_if_failure() {
     retries=$1; max_wait_sleep=$2; shift && shift
@@ -37,6 +38,15 @@ function wait_azure_home_dir() {
             exit 1
         fi
     done
+}
+
+function wait_arm_endpoint() {
+    # ensure the arm endpoint is reachable
+    # https://docs.microsoft.com/en-us/azure/virtual-machines/windows/instance-metadata-service#getting-azure-environment-where-the-vm-is-running
+    if ! retrycmd_if_failure 12 2 curl -m 5 -o /dev/null $ARM_ENDPOINT ; then
+        echo "no internet! arm endpoint $ARM_ENDPOINT not reachable.  Please see https://aka.ms/averedocs on what endpoints are required."
+        exit 1
+    fi
 }
 
 function wait_az_login_and_vnet() {
@@ -225,6 +235,10 @@ function dump_env_vars() {
 }
 
 function main() {
+
+    echo "wait arm endpoint"
+    wait_arm_endpoint
+
     echo "wait azure home dir"
     wait_azure_home_dir
 
