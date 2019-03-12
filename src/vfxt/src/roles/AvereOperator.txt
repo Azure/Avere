@@ -1,10 +1,10 @@
 {
+    "Description": "Used by the Avere vFXT cluster to manage the cluster",
     "AssignableScopes": [
         "/subscriptions/<subscription here>"
     ],
     "Name": "Avere Operator",
     "IsCustom": "true",
-    "Description": "Used by the Avere vFXT cluster to manage the cluster",
     "NotActions": [],
     "Actions": [
         "Microsoft.Compute/virtualMachines/read",
