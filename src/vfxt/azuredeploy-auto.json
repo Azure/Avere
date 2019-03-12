@@ -211,6 +211,7 @@
     "userAdminClusterRoleFullyQualifiedId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/18d7d88d-d35e-4fb5-a5c3-7773c20a72d9')]",
     "userAdminRoleAssignmentId": "[guid(concat(variables('rbacRoleAssignmentUniqueId'), '-useradmin'))]",
     "createVNETRoleAssignmentId": "[guid(concat(variables('rbacRoleAssignmentUniqueId'), '-createvnetrole'))]",
+    "byonetUserAdminRoleAssignmentId": "[guid(concat(variables('rbacRoleAssignmentUniqueId'), '-byovnetuseradmin'))]",
     "vnetAssignRoleName": "vnetAssignRole",
     "additionalVFXTParameters": "[concat(' --nodes ', variables('avereNodeCount'), if(variables('enableCloudTraceDebugging'),' --skip-cleanup ',''), ' --debug')]",
     "controllerVMSize": "Standard_A1_v2",
@@ -479,6 +480,19 @@
               "apiVersion": "2018-09-01-preview",
               "properties": {
                 "roleDefinitionId": "[variables('avereCreateClusterRoleFullyQualifiedId')]",
+                "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines/', variables('vmName')), '2017-12-01', 'Full').identity.principalId]",
+                "scope": "[concat(subscription().id, '/resourceGroups/', parameters('virtualNetworkResourceGroup'))]"
+              }
+            },
+            {
+              "name": "[variables('byonetUserAdminRoleAssignmentId')]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2018-09-01-preview",
+              "dependsOn": [
+                "[concat('Microsoft.Authorization/roleAssignments/', variables('createVNETRoleAssignmentId'))]"
+              ],
+              "properties": {
+                "roleDefinitionId": "[variables('userAdminClusterRoleFullyQualifiedId')]",
                 "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines/', variables('vmName')), '2017-12-01', 'Full').identity.principalId]",
                 "scope": "[concat(subscription().id, '/resourceGroups/', parameters('virtualNetworkResourceGroup'))]"
               }
