@@ -1,5 +1,9 @@
+azure.cosmosdb.table
+azure-graphrbac
+azure-mgmt-authorization
 azure.mgmt.network
 azure.mgmt.resource
+azure.mgmt.subscription
 azure.mgmt.storage
 fabric
 pytest

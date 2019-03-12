@@ -1,7 +1,7 @@
 # https://aka.ms/yaml
-# trigger:
-# - master
-# - releases/*
+trigger:
+- master
+- releases/*
 
 variables:
   VFXT_TEST_VARS_FILE: 'pipelines.json'
@@ -38,7 +38,6 @@ jobs:
     condition: succeeded()
 
   - script: |
-<<<<<<< HEAD
       az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
       az group create -l $VFXT_DEPLOY_LOCATION -n MyResourceGroup2
     displayName: 'Create Resource Group'
@@ -53,9 +52,7 @@ jobs:
 
 
   - script: |
-=======
       echo "\$VFXT_DEPLOY_LOCATION  = $VFXT_DEPLOY_LOCATION"
->>>>>>> master
       echo "\$VFXT_DEPLOY_NEW_VNET  = $VFXT_DEPLOY_NEW_VNET"
       echo "\$VFXT_DEPLOY_WITH_BLOB = $VFXT_DEPLOY_WITH_BLOB"
 

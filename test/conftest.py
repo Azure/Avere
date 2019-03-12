@@ -101,6 +101,13 @@ def resource_group(test_vars):
     log.info("Resource Group: {}".format(rg))
     return rg
 
+@pytest.fixture(scope="module")
+def sp_creds_2(test_vars):
+    log = logging.getLogger("sp_creds_2")
+    service_creds_2 = test_vars["atd_obj"].create_service_creds()
+    log.info("service_creds: {}".format(service_creds_2))
+    return service_creds_2
+
 
 @pytest.fixture(scope="module")
 def storage_account(test_vars):

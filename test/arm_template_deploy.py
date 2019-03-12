@@ -12,7 +12,8 @@ Objects require the following environment variables at instantiation:
     * AZURE_SUBSCRIPTION_ID
 """
 
-# standard imports
+# standard
+import uuid
 import json
 import logging
 import os
@@ -27,12 +28,22 @@ from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.resource.resources.models import DeploymentMode
 from azure.mgmt.storage import StorageManagementClient
 
+from azure.graphrbac import GraphRbacManagementClient
+from azure.common.credentials import UserPassCredentials
+from azure.mgmt.authorization import AuthorizationManagementClient
+
 
 class ArmTemplateDeploy:
-    def __init__(self, deploy_id=None, deploy_name="azurePySDK",
-                 deploy_params={}, location="westus2", resource_group=None,
-                 template={}, _fields={}
-                 ):
+    def __init__(
+        self,
+        deploy_id=None,
+        deploy_name="azurePySDK",
+        deploy_params={},
+        location="westus2",
+        resource_group=None,
+        template={},
+        _fields={},
+    ):
         """Initialize, authenticate to Azure."""
         self.deploy_id = _fields.pop("deploy_id", deploy_id)
         self.deploy_name = _fields.pop("deploy_name", deploy_name)
@@ -49,8 +60,8 @@ class ArmTemplateDeploy:
             )
 
         if not self.resource_group:
-            #self.resource_group = self.deploy_id + "-rg"
-            self.resource_group = "MyResourceGroup2"
+            self.resource_group = self.deploy_id + "-rg"
+            # self.resource_group = "MyResourceGroup2"
 
         logging.debug("Loading Azure credentials")
         sp_creds = ServicePrincipalCredentials(
@@ -58,40 +69,106 @@ class ArmTemplateDeploy:
             secret=os.environ["AZURE_CLIENT_SECRET"],
             tenant=os.environ["AZURE_TENANT_ID"],
         )
-        sp_creds_cluster = ServicePrincipalCredentials(
-            client_id=os.environ["AZURE_CLIENT_ID_CLUSTER"],
-            secret=os.environ["AZURE_CLIENT_SECRET_CLUSTER"],
-            tenant=os.environ["AZURE_TENANT_ID"],
-        )
-        # sp_creds_operator = ServicePrincipalCredentials(
-        #     client_id=os.environ["AZURE_CLIENT_ID_OPERATOR"],
-        #     secret=os.environ["AZURE_CLIENT_SECRET_OPERATOR"],
-        #     tenant=os.environ["AZURE_TENANT_ID"],
-        # )
+
         self.rm_client = ResourceManagementClient(
-            credentials=sp_creds,
-            subscription_id=os.environ["AZURE_SUBSCRIPTION_ID"]
+            credentials=sp_creds, subscription_id=os.environ["AZURE_SUBSCRIPTION_ID"]
         )
         self.nm_client = NetworkManagementClient(
-            credentials=sp_creds,
-            subscription_id=os.environ["AZURE_SUBSCRIPTION_ID"]
+            credentials=sp_creds, subscription_id=os.environ["AZURE_SUBSCRIPTION_ID"]
         )
         self.st_client = StorageManagementClient(
-            credentials=sp_creds,
-            subscription_id=os.environ['AZURE_SUBSCRIPTION_ID']
+            credentials=sp_creds, subscription_id=os.environ["AZURE_SUBSCRIPTION_ID"]
         )
-        self.rm_client_2 = ResourceManagementClient(
-            credentials=sp_creds_cluster,
-            subscription_id=os.environ["AZURE_SUBSCRIPTION_ID"]
+
+        self.graphrbac_client = GraphRbacManagementClient(
+            credentials=sp_creds, tenant_id=os.environ["AZURE_TENANT_ID"]
         )
+
+        self.authorization_client = AuthorizationManagementClient(
+            credentials=sp_creds, subscription_id=os.environ["AZURE_SUBSCRIPTION_ID"]
+        )
+
+        # credentials = UserPassCredentials(
+        #     username="test",
+        #     password="test",
+        #     client_id=os.environ["AZURE_CLIENT_ID"],
+        #     secret=os.environ["AZURE_CLIENT_SECRET"],
+        #     resource="https://graph.windows.net",
+        # )
 
     def create_resource_group(self):
         """Creates the Azure resource group for this deployment."""
         logging.debug("Creating resource group: " + self.resource_group)
         return self.rm_client.resource_groups.create_or_update(
-            self.resource_group,
-            {"location": self.location}
+            self.resource_group, {"location": self.location}
         )
+
+    def create_service_creds(self):
+        """Creates the Azure service creds for this deployment."""
+        logging.debug("Creating servicecreds: " + self.resource_group)
+        # Get "avere contributor test" built-in role as a RoleDefinition object
+
+        app = self.graphrbac_client.applications.create(
+            {
+                "available_to_other_tenants": False,
+                "display_name": "SP_contributor" + self.deploy_id,
+                "identifier_uris": ["http://github.com/azure/avere"],
+                "app_roles": [
+                    {
+                        "allowed_member_types": ["UserAccessAdmin"],
+                        "description": "useraccessadmin",
+                        "display_name": "UserAccessAdmin",
+                        "id": uuid.uuid4(),  # Random, but fixed for tests
+                        "is_enabled": True,
+                        "value": "User Access Administrator",
+                    },
+                    {
+                        "allowed_member_types": ["Contributor"],
+                        "description": "Contributor",
+                        "display_name": "Contributor",
+                        "id": uuid.uuid4(),
+                        "is_enabled": True,
+                        "value": "Contributor",
+                    },
+                ]
+                # {"allowed_member_types": ["Avere Contributor Test"],
+                #     "description": "Avere Contributor Test",
+                #     "display_name": "Avere Contributor Test",
+                #     "id": uuid,
+                #     "is_enabled": True,
+                #     "value": "Avere Contributor Test"
+                # },
+                # {
+                #     "allowed_member_types": ["Avere Operator Test"],
+                #     "description": "Avere Operator Test",
+                #     "display_name": "Avere Operator Test",
+                #     "id": uuid,
+                #     "is_enabled": True,
+                #     "value": "Avere Operator Test"}
+            }
+        )
+        print(app)
+        service_pr = self.graphrbac_client.service_principals.create(
+            {"app_id": app.app_id, "account_enabled": False})
+
+        role_name = "Avere Contributor Test"
+        roles = list(
+            self.authorization_client.role_definitions.list(
+                self.resource_group, filter="roleName eq '{}'".format(role_name)
+            )
+        )
+        assert len(roles) == 1
+        contributor_role = roles[0]
+
+        # Add RG scope to the SP role
+        test = self.authorization_client.role_assignments.create(
+            self.resource_group,
+            uuid.uuid4(),  # Role assignment random name
+            {"role_definition_id": contributor_role.id, "principal_id": service_pr},
+        )
+        logging.error(">>>>>>>> test = {}".format(test))
+        print(">>>>>>>> test = {}".format(test))
+        return test
 
     def delete_resource_group(self):
         """Deletes the Azure resource group for this deployment."""
@@ -101,7 +178,7 @@ class ArmTemplateDeploy:
     def deploy(self):
         """Deploys the Azure ARM template."""
         logging.debug("Deploying template")
-        return self.rm_client_2.deployments.create_or_update(
+        return self.rm_client.deployments.create_or_update(
             resource_group_name=self.resource_group,
             deployment_name=self.deploy_name,
             properties={
@@ -127,7 +204,8 @@ class ArmTemplateDeploy:
         _this.pop("rm_client", None)  # don't want to save these for security
         _this.pop("nm_client", None)
         _this.pop("st_client", None)
-        _this.pop("rm_client_2", None)
+        _this.pop("graphrbac_client", None)
+        _this.pop("authorization_client", None)
         _this.pop("deploy_params", None)
 
         if not store_template:

@@ -23,7 +23,7 @@ from lib.helpers import get_vm_ips, split_ip_range, wait_for_op
 
 class TestVfxtTemplateDeploy:
     # TODO: modularize common code
-    def test_deploy_template(self, resource_group, test_vars):  # noqa: F811
+    def test_deploy_template(self, resource_group, test_vars, sp_creds_2):  # noqa: F811
         """
         Deploy a vFXT cluster.
           - create a new VNET
@@ -40,8 +40,9 @@ class TestVfxtTemplateDeploy:
             "adminPassword": os.environ["AVERE_ADMIN_PW"],
             "avereBackedStorageAccountName": atd.deploy_id + "sa",
             "avereClusterName": atd.deploy_id + "-cluster",
-            "avereClusterRole": "Avere Cluster Create",
+            "avereClusterRole": "Avere Operator Test ",
             "avereInstanceType": "Standard_E32s_v3",
+            "avereCreateClusterRoleId": "262e476e-c050-4cc5-a1ae-6a33422fc019",
             "avereNodeCount": 3,
             "controllerAdminUsername": "azureuser",
             "controllerAuthenticationType": "sshPublicKey",
@@ -50,7 +51,6 @@ class TestVfxtTemplateDeploy:
             "controllerSSHKeyData": ssh_pub_key,
             "enableCloudTraceDebugging": True,
             "rbacRoleAssignmentUniqueId": str(uuid4()),
-
             "createVirtualNetwork": True,
             "virtualNetworkName": atd.deploy_id + "-vnet",
             "virtualNetworkResourceGroup": atd.resource_group,
