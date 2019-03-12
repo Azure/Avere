@@ -3,8 +3,8 @@
     "/subscriptions/<subscription here>"
   ],
   "Name": "Avere Contributor",
-  "IsCustom": true,
   "Description": "Can create and manage an Avere vFXT cluster.",
+  "IsCustom": true,
   "NotActions": [],
   "Actions": [
     "Microsoft.Authorization/*/read",
