@@ -166,11 +166,29 @@ jobs:
 
   - script: |
       set -x
+      P_ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
+      mkdir -p $P_ARTIFACTS_DIR
+
+      # Collect various test artifacts (e.g., controller/node logs).
       pytest test/test_vfxt_cluster_status.py $PYTEST_OPTIONS \
         -k TestVfxtSupport \
         --doctest-modules --junitxml=junit/test-results03.xml
+      pyt_res=$?
+
+      # Get controller logs in case the pytest call failed.
+      vfxt_log_loc=$(find ${BUILD_SOURCESDIRECTORY} -name vfxt.log)
+      if [ -z "$vfxt_log_loc" ]; then
+        CONTROLLER_USER=$(jq -r .controller_user $VFXT_TEST_VARS_FILE)
+        PUBLIC_IP=$(jq -r .public_ip $VFXT_TEST_VARS_FILE)
+        scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $CONTROLLER_USER@$PUBLIC_IP:~/*.log ${P_ARTIFACTS_DIR}/.
+      else
+        cp $vfxt_log_loc ${P_ARTIFACTS_DIR}/.
+      fi
+
+      exit $pyt_res
     displayName: 'TEST: Collect deployment artifacts, log files'
     condition: always()
+    failOnStderr: true
     env:
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
       AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
@@ -191,15 +209,13 @@ jobs:
       P_ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
       mkdir -p $P_ARTIFACTS_DIR
       tar -zcvf ${P_ARTIFACTS_DIR}/vfxt_artifacts_${DEPLOY_ID}.tar.gz ${T_ARTIFACTS_DIR}
-
-      echo "vfxt.log from ${T_ARTIFACTS_DIR}:"
-      cat ${T_ARTIFACTS_DIR}/vfxt.log
     displayName: 'ARCHIVE: Deployment artifacts, log files'
     condition: always()
     failOnStderr: true
 
   - script: |
-      grep -i -C 5 -e vfxt:ERROR -e exception $BUILD_SOURCESDIRECTORY/test_artifacts/vfxt.log
+      P_ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
+      grep -i -C 5 -e vfxt:ERROR -e exception ${P_ARTIFACTS_DIR}/vfxt.log
     displayName: 'CHECK: Grep errors from vfxt.log (+/- 5 lines)'
     condition: or(failed(), canceled())
 
