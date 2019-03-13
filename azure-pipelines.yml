@@ -169,7 +169,7 @@ jobs:
       P_ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
       mkdir -p $P_ARTIFACTS_DIR
 
-      # Collect other artifacts. Might grab a second copy of controller logs.
+      # Collect various test artifacts (e.g., controller/node logs).
       pytest test/test_vfxt_cluster_status.py $PYTEST_OPTIONS \
         -k TestVfxtSupport \
         --doctest-modules --junitxml=junit/test-results03.xml
