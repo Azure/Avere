@@ -107,6 +107,8 @@ if __name__ == "__main__":
     # Shell Scripts to load into YAML
     VDBENCH_INSTALL_SCRIPT = "installvfxt.sh"
     ENABLE_CLOUD_TRACE = "enablecloudtrace.sh"
+    AVERE_CMD = "averecmd.txt"
+    PYTHON_REQUIREMENTS = "python_requirements.txt"
     
     # Output ARM Template Files.  WIll Also Output name.parameters.json for each
     ARM_OUTPUT_TEMPLATE                                   = "mainTemplate.json"
@@ -118,7 +120,7 @@ if __name__ == "__main__":
         clusterTemplate = processBaseTemplate(
             baseTemplatePath=ARM_INPUT_TEMPLATE_TEMPLATE, 
             clusterInstallScript=VDBENCH_INSTALL_SCRIPT,
-            additionalFiles=[ENABLE_CLOUD_TRACE])
+            additionalFiles=[ENABLE_CLOUD_TRACE, AVERE_CMD, PYTHON_REQUIREMENTS])
         armTemplate.write(clusterTemplate)
 
     MARKETPLACE_ZIP                                   = "marketplace.zip"

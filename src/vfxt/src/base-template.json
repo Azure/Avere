@@ -255,6 +255,14 @@
       }
     },
     "controllerOSProfile": "[if(equals(variables('controllerAuthenticationType'),'password'),variables('controllerOSProfilePassword'),variables('controllerOSProfileSSHKey'))]",
+    "ubuntuStorageProfile": {
+      "imageReference": {
+        "publisher": "Canonical",
+        "offer": "UbuntuServer",
+        "sku": "18.04-LTS",
+        "version": "latest"
+      }
+    },
     "controllerStorageProfile": {
       "imageReference": {
         "publisher": "microsoft-avere",
@@ -263,6 +271,14 @@
         "version": "latest"
       }
     },
+    "controllerStorageProfilePlan": {
+      "name": "avere-vfxt-controller",
+      "publisher": "microsoft-avere",
+      "product": "vfxt"
+    },
+    "useController": false,
+    "plan": "[if(variables('useController'), variables('controllerStorageProfilePlan1'), json('null'))]",
+    "storageProfile": "[if(variables('useController'), variables('controllerStorageProfile'), variables('ubuntuStorageProfile'))]",
     "vsip": "VSERVER_IPS=",
     "mip": "MGMT_IP="
   },
@@ -410,11 +426,7 @@
       },
       "name": "[variables('vmName')]",
       "location": "[variables('location')]",
-      "plan": {
-        "name": "avere-vfxt-controller",
-        "publisher": "microsoft-avere",
-        "product": "vfxt"
-      },
+      "plan": "[variables('plan')]",
       "dependsOn": [
         "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
       ],
@@ -423,7 +435,7 @@
           "vmSize": "[variables('controllerVMSize')]"
         },
         "osProfile": "[variables('controllerOSProfile')]",
-        "storageProfile": "[variables('controllerStorageProfile')]",
+        "storageProfile": "[variables('storageProfile')]",
         "networkProfile": {
           "networkInterfaces": [
             {
