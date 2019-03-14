@@ -188,7 +188,6 @@ jobs:
       exit $pyt_res
     displayName: 'TEST: Collect deployment artifacts, log files'
     condition: always()
-    failOnStderr: true
     env:
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
       AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
