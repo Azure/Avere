@@ -280,7 +280,8 @@ function config_linux() {
     export DEBIAN_FRONTEND=noninteractive  
     apt_get_update
     apt_get_install 20 10 180 curl dirmngr python-pip nfs-common build-essential python-dev python-setuptools
-    retrycmd_if_failure 12 5 apt remove --purge -y python-keyring
+    # this is no longer need because it is not longer there (mar 2019 ubuntu)
+    # retrycmd_if_failure 12 5 apt remove --purge -y python-keyring
     retrycmd_if_failure 12 5 pip install --requirement /opt/avere/python_requirements.txt
 }
 
