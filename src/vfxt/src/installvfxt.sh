@@ -275,17 +275,17 @@ function apt_get_install() {
 }
 
 function config_linux() {
-	#hostname=`hostname -s`
-	#sudo sed -ie "s/127.0.0.1 localhost/127.0.0.1 localhost ${hostname}/" /etc/hosts
-	export DEBIAN_FRONTEND=noninteractive  
-	apt_get_update
-	apt_get_install 20 10 180 curl dirmngr python-pip nfs-common build-essential python-dev python-setuptools
-    apt remove --purge -y python-keyring
-    pip install --requirement /opt/avere/python_requirements.txt
+    #hostname=`hostname -s`
+    #sudo sed -ie "s/127.0.0.1 localhost/127.0.0.1 localhost ${hostname}/" /etc/hosts
+    export DEBIAN_FRONTEND=noninteractive  
+    apt_get_update
+    apt_get_install 20 10 180 curl dirmngr python-pip nfs-common build-essential python-dev python-setuptools
+    retrycmd_if_failure 12 5 apt remove --purge -y python-keyring
+    retrycmd_if_failure 12 5 pip install --requirement /opt/avere/python_requirements.txt
 }
 
 function install_vfxt() {
-    pip install --no-deps vFXT
+    retrycmd_if_failure 12 5 pip install --no-deps vFXT
     mv /opt/avere/averecmd.txt /usr/local/bin/averecmd
     chmod 755 /usr/local/bin/averecmd
 }
@@ -308,15 +308,17 @@ function main() {
     echo "wait azure home dir"
     wait_azure_home_dir
 
-    echo "configure linux"
-    config_linux
+    if [ "$BUILD_CONTROLLER" == "$ARM_TRUE" ]; then
+        echo "configure linux"
+        config_linux
 
-    echo "install_vfxt_py"
-    install_vfxt
+        echo "install_vfxt_py"
+        install_vfxt
 
-    echo "install_vfxt_docs"
-    install_vfxt_py_docs
-
+        echo "install_vfxt_docs"
+        install_vfxt_py_docs    
+    fi
+    
     echo "wait az login"
     wait_az_login_and_vnet
 

@@ -137,7 +137,7 @@ msrest==0.6.4
 msrestazure==0.6.0
 ndg-httpsclient==0.5.1
 oauthlib==2.1.0
-paramiko==2.4.1
+paramiko==2.4.2
 pathlib2==2.3.2
 pbr==4.1.0
 prompt-toolkit==1.0.15
