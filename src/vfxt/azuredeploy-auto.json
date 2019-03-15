@@ -277,7 +277,7 @@
       "product": "vfxt"
     },
     "buildController": true,
-    "plan": "[if(variables('buildController'),json('null'),variables('controllerStorageProfilePlan1'))]",
+    "plan": "[if(variables('buildController'),json('null'),variables('controllerStorageProfilePlan'))]",
     "storageProfile": "[if(variables('buildController'),variables('ubuntuStorageProfile'),variables('controllerStorageProfile'))]",
     "vsip": "VSERVER_IPS=",
     "mip": "MGMT_IP="
