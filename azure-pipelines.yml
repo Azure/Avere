@@ -235,7 +235,7 @@ jobs:
       pytest test/test_edasim.py $PYTEST_OPTIONS \
         --doctest-modules --junitxml=junit/test-results05.xml
     displayName: 'TEST: edasim'
-    condition: and(succeeded(), eq(variables['RUN_EDASIM_STEP'], 'true'), eq(variables['RUN_EMPTY_STORAGE'], 'false'))
+    condition: and(succeeded(), eq(variables['RUN_EDASIM_STEP'], 'true'), eq(variables['VFXT_DEPLOY_WITH_BLOB'], 'true'))
     env:
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
