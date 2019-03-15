@@ -53,7 +53,9 @@ jobs:
       PIPELINES_DATA_TABLE_NAME: $(PIPELINES-DATA-TABLE-NAME)
 
   - script: |
-      python test/internal/region_deploy_utils.py --get_next_region > REGION_TO_TEST
+      python test/internal/region_deploy_utils.py \
+        --cooldown-hours $REGION_COOLDOWN_HOURS   \
+        --get_next_region > REGION_TO_TEST
 
       if [[ "$?" -eq "0" ]]; then
         echo "REGION TO TEST: $(cat REGION_TO_TEST)"
