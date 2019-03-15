@@ -152,7 +152,7 @@ If you have a proxy, see the proxy section below.
  
 **Germany**
   * Open up access to all IP addresses under `management.microsoftazure.de`, TCP port `443`
-  * Upgrades from `download.averesystems.com unsupported`
+  * Upgrades from `download.averesystems.com` unsupported
  
 ### Scenario: Bring your own DNS Server
  
