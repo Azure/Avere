@@ -85,20 +85,30 @@
       }
     },
     "avereNodeCount": {
-      "type": "int",
-      "defaultValue": 3,
-      "minValue": 3,
-      "maxValue": 12,
+      "type": "string",
+      "defaultValue": "3",
+      "allowedValues": [
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12"
+      ],
       "metadata": {
         "description": "The number of vFXT nodes in the Avere vFXT cluster"
       }
     },
     "avereCacheSizeGB": {
-      "type": "int",
-      "defaultValue": 1024,
+      "type": "string",
+      "defaultValue": "1024",
       "allowedValues": [
-        1024,
-        4096
+        "1024",
+        "4096"
       ],
       "metadata": {
         "description": "The cache size in GB to use for each Avere vFXT VM."
