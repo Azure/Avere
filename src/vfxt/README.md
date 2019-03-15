@@ -130,10 +130,69 @@ After the deployment completed, check the template output for some important inf
 
 Once you have deployed your vFXT, proceed to the data ingest of the cluster described in the data ingest article: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-data-ingest.
 
-# Avere vFXT for Azure cluster controller node - ARM template deployment
+## Internet Access
 
-This template implements [Deploy](../../docs/jumpstart_deploy.md).
+The following shows how to handle restricted internet access, by configuring any of Internet access, DNS, and proxy:
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fvfxt%2Fazuredeploy.json" target="_blank">
-<img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
-</a>
+### Scenario: Internet Blocked
+
+If you have a proxy, see the proxy section below.
+
+**PROD**
+  * Open up access to all IP addresses under `management.azure.com`, TCP port `443`
+  * Open up `download.averesystems.com`, TCP port `443`
+
+**Gov**
+  * Open up access to all IP addresses under `management.usgovcloudapi.net`, TCP port `443`
+  * Upgrades from `download.averesystems.com` unsupported
+ 
+**China**
+  * Open up access to all IP addresses under `management.chinacloudapi.cn`, TCP port `443`
+  * Upgrades from `download.averesystems.com` unsupported
+ 
+**Germany**
+  * Open up access to all IP addresses under `management.microsoftazure.de`, TCP port `443`
+  * Upgrades from `download.averesystems.com unsupported`
+ 
+### Scenario: Bring your own DNS Server
+ 
+**PROD**
+  * Add `management.azure.com` to DNS Server
+  * Add `download.averesystems.com` to DNS Server
+  * After creating storage account, to avoid DNS poisoning, add `<account>.blob.core.windows.net`, `<account>.queue.core.windows.net`.  Add a cronjob to run every 15 minutes for refresh in case storage account is migrated.  Alternatively and more reliably, DNS forward the Azure Storage account.
+ 
+**Gov**
+  * Add `management.usgovcloudapi.net` to DNS Server
+  * After creating storage account, add blob and queue DNS storage account names.   Add a cronjob to run every 15 minutes for refresh in case storage account is migrated.  Alternatively and more reliably, DNS forward the Azure Storage account.
+ 
+**China**
+  * Add `management.chinacloudapi.cn` to DNS Server
+  * After creating storage account, add blob and queue DNS storage account names.   Add a cronjob to run every 15 minutes for refresh in case storage account is migrated.  Alternatively and more reliably, DNS forward the Azure Storage account.
+ 
+**Germany**
+  *  Add `management.microsoftazure.de` to DNS Server
+  *  After creating storage account, add blob and queue DNS storage account names.   Add a cronjob to run every 15 minutes for refresh in case storage account is migrated.  Alternatively and more reliably, DNS forward the Azure Storage account.
+
+### Scenario Proxy (Advanced)
+
+This advanced scenario can be done via deployment of the template `azuredeploy-auto.json`.  You can configure a proxy by adjusting the `additionalVFXTParameters`:
+  * `--proxy-uri http://PROXY_IP:PROXY_PORT`
+  * `--cluster-proxy-uri http://PROXY_IP:PROXY_PORT`
+
+For example you would adjust the `additionalVFXTParameters` variable in the template `azuredeploy-auto.json` to the following:
+
+```json
+"additionalVFXTParameters": "[concat(' --nodes ', variables('avereNodeCount'), if(variables('enableCloudTraceDebugging'),' --skip-cleanup ',''), '--proxy-uri http://PROXY_IP:PROXY_PORT --cluster-proxy-uri http://PROXY_IP:PROXY_PORT', ' --debug')]",
+```
+
+## Debugging
+
+There are a few tools for debugging:
+  1. **Log files**
+      1. `sudo tail -f /var/lib/waagent/custom-script/download/0/stdout` - this will show the progress of the custom script extension
+      1. `sudo tail -f /var/lib/waagent/custom-script/download/0/stderr` - this will show the error output from the custom script extension     
+      1. `tail -f ~/vfxt.log` - this will show the progress of the vfxt installation
+  1. **Debug mode**
+      1. parameter `enableCloudTraceDebugging` - enabling this will enable more tracing on the vfxt nodes, and ensure vfxt resources are not cleaned up in the event of a failure.
+
+

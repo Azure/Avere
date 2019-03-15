@@ -103,7 +103,7 @@ if __name__ == "__main__":
     # Note:  These files are not useable ARM templates on their own or valid JSON
     # They require processing by this script.
     ARM_INPUT_TEMPLATE_TEMPLATE                          = "base-template.json"
-    MINIMAL_ARM_INPUT_TEMPLATE_TEMPLATE                  = "base-template-minimal.json"
+    MINIMAL_ARM_INPUT_TEMPLATE_TEMPLATE                  = "base-template-tf.json"
     
     # Shell Scripts to load into YAML
     VDBENCH_INSTALL_SCRIPT = "installvfxt.sh"
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     
     # Output ARM Template Files.  WIll Also Output name.parameters.json for each
     ARM_OUTPUT_TEMPLATE                                   = "mainTemplate.json"
-    MINIMAL_OUTPUT_TEMPLATE                               = "../azuredeploy-minimal.json"
+    MINIMAL_OUTPUT_TEMPLATE                               = "../azuredeploy-tf.json"
     MARKETPLACE_UI_DEFINITION                             = "createUiDefinition.json"
     ARM_OUTPUT_TEMPLATE_FINAL                             = "../azuredeploy-auto.json"
     
