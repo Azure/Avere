@@ -207,7 +207,7 @@ def test_vars(request):
 
     default_cl_opts = {  # defaults for command-line options
         "build_root": build_root,
-        "location": "westus22222222",
+        "location": "westus2",
         "ssh_priv_key": os.path.expanduser(r"~/.ssh/id_rsa"),
         "ssh_pub_key": os.path.expanduser(r"~/.ssh/id_rsa.pub"),
         "test_vars_file": test_vars_file
