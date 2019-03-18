@@ -102,7 +102,8 @@ if __name__ == "__main__":
     # Input Arm Template Artifacts to be processed in
     # Note:  These files are not useable ARM templates on their own or valid JSON
     # They require processing by this script.
-    ARM_INPUT_TEMPLATE_TEMPLATE                  = "base-template.json"
+    ARM_INPUT_TEMPLATE_TEMPLATE                          = "base-template.json"
+    MINIMAL_ARM_INPUT_TEMPLATE_TEMPLATE                  = "base-template-tf.json"
     
     # Shell Scripts to load into YAML
     VDBENCH_INSTALL_SCRIPT = "installvfxt.sh"
@@ -112,6 +113,7 @@ if __name__ == "__main__":
     
     # Output ARM Template Files.  WIll Also Output name.parameters.json for each
     ARM_OUTPUT_TEMPLATE                                   = "mainTemplate.json"
+    MINIMAL_OUTPUT_TEMPLATE                               = "../azuredeploy-tf.json"
     MARKETPLACE_UI_DEFINITION                             = "createUiDefinition.json"
     ARM_OUTPUT_TEMPLATE_FINAL                             = "../azuredeploy-auto.json"
     
@@ -123,6 +125,15 @@ if __name__ == "__main__":
             additionalFiles=[ENABLE_CLOUD_TRACE, AVERE_CMD, PYTHON_REQUIREMENTS])
         armTemplate.write(clusterTemplate)
 
+    # build the minimal ARM template
+    with open(os.path.join(args.output_directory, MINIMAL_OUTPUT_TEMPLATE), "w") as armTemplate:
+        clusterTemplate = processBaseTemplate(
+            baseTemplatePath=MINIMAL_ARM_INPUT_TEMPLATE_TEMPLATE, 
+            clusterInstallScript=VDBENCH_INSTALL_SCRIPT,
+            additionalFiles=[ENABLE_CLOUD_TRACE, AVERE_CMD, PYTHON_REQUIREMENTS])
+        armTemplate.write(clusterTemplate)
+
+    # build the zip file
     MARKETPLACE_ZIP                                   = "marketplace.zip"
 
     # zipfile format is not compatible with Azure Marketplace so break out to powershell

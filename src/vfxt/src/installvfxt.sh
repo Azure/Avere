@@ -47,7 +47,7 @@ function wait_arm_endpoint() {
     # ensure the arm endpoint is reachable
     # https://docs.microsoft.com/en-us/azure/virtual-machines/windows/instance-metadata-service#getting-azure-environment-where-the-vm-is-running
     if ! retrycmd_if_failure 12 2 curl -m 5 -o /dev/null $ARM_ENDPOINT ; then
-        echo "no internet! arm endpoint $ARM_ENDPOINT not reachable.  Please see https://aka.ms/averedocs on what endpoints are required."
+        echo "no internet! arm endpoint $ARM_ENDPOINT not reachable.  Please see https://github.com/Azure/Avere/tree/master/src/vfxt#internet-access on how to configure firewall, dns, or proxy."
         exit 1
     fi
 }
