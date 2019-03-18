@@ -1,24 +1,30 @@
 [
   {
-    "Description": "Used by the Avere vFXT cluster to manage the cluster",
+    "Description": "Can create and manage an Avere vFXT cluster.",
     "Metadata": {
       "CreatedBy": null,
-      "CreatedOn": "2019-03-18T20:02:38.3399857Z",
+      "CreatedOn": "2019-03-18T20:00:58.9207889Z",
       "UpdatedBy": null,
-      "UpdatedOn": "2019-03-18T20:02:38.3399857Z"
+      "UpdatedOn": "2019-03-18T20:10:47.0821722Z"
     },
     "IsBuiltIn": true,
-    "AdminSecurityClaim": "Microsoft.Storage",
-    "Id": "c025889f81024ebfb32cfc0c6f0c6bd9",
-    "Name": "Avere Operator",
+    "AdminSecurityClaim": null,
+    "Id": "4f8fab4f18524a58a46a8eaf358af14a",
+    "Name": "Avere Contributor",
     "IsServiceRole": true,
     "Permissions": [
       {
         "Actions": [
+          "Microsoft.Compute/*/read",
+          "Microsoft.Compute/availabilitySets/*",
+          "Microsoft.Compute/virtualMachines/*",
+          "Microsoft.Compute/disks/*",
+          "Microsoft.Resources/deployments/*",
+          "Microsoft.Insights/alertRules/*",
           "Microsoft.Resources/subscriptions/resourceGroups/read",
-          "Microsoft.Storage/storageAccounts/blobServices/containers/delete",
-          "Microsoft.Storage/storageAccounts/blobServices/containers/read",
-          "Microsoft.Storage/storageAccounts/blobServices/containers/write"
+          "Microsoft.Storage/*/read",
+          "Microsoft.Storage/storageAccounts/*",
+          "Microsoft.Support/*"
         ],
         "NotActions": [],
         "DataActions": [
@@ -36,4 +42,3 @@
     ]
   }
 ]
-
