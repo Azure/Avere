@@ -11,7 +11,7 @@
     "AdminSecurityClaim": "Microsoft.Storage",
     "Id": "c025889f81024ebfb32cfc0c6f0c6bd9",
     "Name": "Avere Operator",
-    "IsServiceRole": true,
+    "IsServiceRole": false,
     "Permissions": [
       {
         "Actions": [

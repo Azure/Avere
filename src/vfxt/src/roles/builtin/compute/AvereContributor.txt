@@ -11,7 +11,7 @@
     "AdminSecurityClaim": null,
     "Id": "4f8fab4f18524a58a46a8eaf358af14a",
     "Name": "Avere Contributor",
-    "IsServiceRole": true,
+    "IsServiceRole": false,
     "Permissions": [
       {
         "Actions": [
