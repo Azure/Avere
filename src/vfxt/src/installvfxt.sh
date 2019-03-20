@@ -240,7 +240,7 @@ function apt_get_update() {
     retries=10
     apt_update_output=/tmp/apt-get-update.out
     for i in $(seq 1 $retries); do
-        timeout 120 apt-get update 2>&1
+        timeout 300 apt-get update 2>&1
         [ $? -eq 0  ] && break
         if [ $i -eq $retries ]; then
             set -e
@@ -260,7 +260,6 @@ function apt_get_install() {
         #echo "timeout $timeout apt-get install --no-install-recommends -y ${@}"
         #timeout $timeout apt-get install --no-install-recommends -y ${@}
         apt-get install --no-install-recommends -y ${@}
-        echo "completed"
         [ $? -eq 0  ] && break || \
         if [ $i -eq $retries ]; then
             set -e
