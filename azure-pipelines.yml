@@ -29,6 +29,7 @@ jobs:
       ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
     displayName: 'SETUP: SSH keys'
     condition: succeeded()
+    failOnStderr: true
 
   - script: |
       set -xe
@@ -90,6 +91,9 @@ jobs:
       PIPELINES_DATA_TABLE_NAME: $(PIPELINES-DATA-TABLE-NAME)
 
   - script: |
+      if [ -z "$VFXT_DEPLOY_LOCATION" -a -s REGION_TO_TEST ]; then
+        export VFXT_DEPLOY_LOCATION=$(cat REGION_TO_TEST)
+      fi
       echo "\$VFXT_DEPLOY_LOCATION  = $VFXT_DEPLOY_LOCATION"
       echo "\$VFXT_DEPLOY_NEW_VNET  = $VFXT_DEPLOY_NEW_VNET"
       echo "\$VFXT_DEPLOY_WITH_BLOB = $VFXT_DEPLOY_WITH_BLOB"
@@ -249,6 +253,7 @@ jobs:
       tar -zcvf ${P_ARTIFACTS_DIR}/vfxt_artifacts_${DEPLOY_ID}.tar.gz ${T_ARTIFACTS_DIR}
     displayName: 'ARCHIVE: Deployment artifacts, log files'
     condition: always()
+    failOnStderr: true
 
   - script: |
       P_ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
