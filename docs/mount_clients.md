@@ -46,6 +46,13 @@ The function above is part of the [Batch example](maya_azure_batch_avere_vfxt_de
 
 ## Identifying IP addresses and paths to mount
 
+Newly installed linux machines need the nfs client tools installed if not already installed.  Here is the sample command for ubuntu to install the nfs client tools:
+
+```bash
+apt-get update
+apt-get install nfs-common
+```
+
 From your client, the ``mount`` command maps the cluster vserver to a path on the local filesystem.  
 
 The vserver path is identified with its IP address, plus the path to the junction that you defined.
