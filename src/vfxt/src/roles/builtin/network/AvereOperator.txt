@@ -15,6 +15,11 @@
     "Permissions": [
       {
         "Actions": [
+          "Microsoft.Network/networkInterfaces/read",
+          "Microsoft.Network/networkInterfaces/write",
+          "Microsoft.Network/virtualNetworks/subnets/read",
+          "Microsoft.Network/virtualNetworks/subnets/join/action",
+          "Microsoft.Network/networkSecurityGroups/join/action",
           "Microsoft.Resources/subscriptions/resourceGroups/read",
           "Microsoft.Storage/storageAccounts/blobServices/containers/delete",
           "Microsoft.Storage/storageAccounts/blobServices/containers/read",
