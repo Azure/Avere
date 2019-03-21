@@ -138,41 +138,21 @@ The following shows how to handle restricted internet access, by configuring any
 
 If you have a proxy, see the proxy section below.
 
-**PROD**
-  * Open up access to all IP addresses under `management.azure.com`, TCP port `443`
+Here are the requirements for a locked down network security group:
   * Open up `download.averesystems.com`, TCP port `443`
+  * ensure "Microsoft.Service" endpoint is setup on all Virtual Network Subnets
+  * Open up access to TCP port `443` to 'AzureConnectors' and 'AzureCloud' as shown in the below image:
 
-**Gov**
-  * Open up access to all IP addresses under `management.usgovcloudapi.net`, TCP port `443`
-  * Upgrades from `download.averesystems.com` unsupported
- 
-**China**
-  * Open up access to all IP addresses under `management.chinacloudapi.cn`, TCP port `443`
-  * Upgrades from `download.averesystems.com` unsupported
- 
-**Germany**
-  * Open up access to all IP addresses under `management.microsoftazure.de`, TCP port `443`
-  * Upgrades from `download.averesystems.com` unsupported
- 
+  ![Network Security group outbound rules showing opening up TCP port `443` to 'AzureConnectors' and 'AzureCloud'](../../docs/images/outboundrules.png)
+
+  
 ### Scenario: Bring your own DNS Server
- 
-**PROD**
+
+Here are the requirements for a "Bring your own DNS Server" scenario:
   * Add `management.azure.com` to DNS Server
   * Add `download.averesystems.com` to DNS Server
-  * After creating storage account, to avoid DNS poisoning, add `<account>.blob.core.windows.net`, `<account>.queue.core.windows.net`.  Add a cronjob to run every 15 minutes for refresh in case storage account is migrated.  Alternatively and more reliably, DNS forward the Azure Storage account.
+  * DNS forward the Azure Storage account dns name to a Microsoft DNS server.  Note that storage accounts change IP addresses frequently, so adding a static entry will eventually fail.
  
-**Gov**
-  * Add `management.usgovcloudapi.net` to DNS Server
-  * After creating storage account, add blob and queue DNS storage account names.   Add a cronjob to run every 15 minutes for refresh in case storage account is migrated.  Alternatively and more reliably, DNS forward the Azure Storage account.
- 
-**China**
-  * Add `management.chinacloudapi.cn` to DNS Server
-  * After creating storage account, add blob and queue DNS storage account names.   Add a cronjob to run every 15 minutes for refresh in case storage account is migrated.  Alternatively and more reliably, DNS forward the Azure Storage account.
- 
-**Germany**
-  *  Add `management.microsoftazure.de` to DNS Server
-  *  After creating storage account, add blob and queue DNS storage account names.   Add a cronjob to run every 15 minutes for refresh in case storage account is migrated.  Alternatively and more reliably, DNS forward the Azure Storage account.
-
 ### Scenario Proxy (Advanced)
 
 This advanced scenario can be done via deployment of the template `azuredeploy-auto.json`.  You can configure a proxy by adjusting the `additionalVFXTParameters`:
