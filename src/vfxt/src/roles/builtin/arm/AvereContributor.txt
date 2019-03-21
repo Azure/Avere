@@ -15,6 +15,7 @@
     "Permissions": [
       {
         "Actions": [
+          "Microsoft.Authorization/*/read",
           "Microsoft.Resources/deployments/*",
           "Microsoft.Insights/alertRules/*",
           "Microsoft.Resources/subscriptions/resourceGroups/read",

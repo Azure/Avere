@@ -15,6 +15,7 @@
     "Permissions": [
       {
         "Actions": [
+          "Microsoft.Authorization/*/read",
           "Microsoft.Network/*/read",
           "Microsoft.Network/networkInterfaces/*",
           "Microsoft.Network/virtualNetworks/read",

@@ -15,6 +15,7 @@
     "Permissions": [
       {
         "Actions": [
+          "Microsoft.Authorization/*/read",
           "Microsoft.Compute/*/read",
           "Microsoft.Compute/availabilitySets/*",
           "Microsoft.Compute/virtualMachines/*",
