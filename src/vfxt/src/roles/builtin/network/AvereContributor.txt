@@ -15,6 +15,12 @@
     "Permissions": [
       {
         "Actions": [
+          "Microsoft.Network/*/read",
+          "Microsoft.Network/networkInterfaces/*",
+          "Microsoft.Network/virtualNetworks/subnets/read",
+          "Microsoft.Network/virtualNetworks/subnets/join/action",
+          "Microsoft.Network/virtualNetworks/subnets/joinViaServiceEndpoint/action",
+          "Microsoft.Network/networkSecurityGroups/join/action",
           "Microsoft.Resources/deployments/*",
           "Microsoft.Insights/alertRules/*",
           "Microsoft.Resources/subscriptions/resourceGroups/read",
