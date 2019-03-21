@@ -153,7 +153,7 @@ Here are the requirements for a "Bring your own DNS Server" scenario:
   * Add `download.averesystems.com` to DNS Server
   * DNS forward the Azure Storage account dns name to a Microsoft DNS server.  Note that storage accounts change IP addresses frequently, so adding a static entry will eventually fail.
  
-### Scenario Proxy (Advanced)
+### Scenario: Proxy (Advanced)
 
 This advanced scenario can be done via deployment of the template `azuredeploy-auto.json`.  You can configure a proxy by adjusting the `additionalVFXTParameters`:
   * `--proxy-uri http://PROXY_IP:PROXY_PORT`
