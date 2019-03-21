@@ -34,6 +34,9 @@ regions_to_exclude = [
 
     # 2019-03-08: not currently working with anhowe's sub
     "centralindia",
+
+    # 2019-03-14: E32s VMs not available in this region
+    "westcentralus",
 ]
 regions_to_include = []
 

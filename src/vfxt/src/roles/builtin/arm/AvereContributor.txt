@@ -18,6 +18,7 @@
           "Microsoft.Resources/deployments/*",
           "Microsoft.Insights/alertRules/*",
           "Microsoft.Resources/subscriptions/resourceGroups/read",
+          "Microsoft.Resources/subscriptions/resourceGroups/resources/read",
           "Microsoft.Storage/*/read",
           "Microsoft.Storage/storageAccounts/*",
           "Microsoft.Support/*"

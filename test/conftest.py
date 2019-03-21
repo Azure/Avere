@@ -19,36 +19,27 @@ from lib.helpers import (get_unused_local_port, run_ssh_command,
 
 # COMMAND-LINE OPTIONS ########################################################
 def pytest_addoption(parser):
-    def envar_check(envar):
-        if envar in os.environ:
-            return os.environ[envar]
-        return None
-
     parser.addoption(
-        "--build_root", action="store",
-        default=envar_check("BUILD_SOURCESDIRECTORY"),
+        "--build_root", action="store", default=None,
         help="Local path to the root of the Azure/Avere repo clone "
         + "(e.g., /home/user1/git/Azure/Avere). This is used to find the "
         + "various templates that are deployed during these tests. (default: "
         + "$BUILD_SOURCESDIRECTORY if set, else current directory)",
     )
     parser.addoption(
-        "--location", action="store", default="westus2",
+        "--location", action="store", default=None,
         help="Azure region short name to use for deployments (default: westus2)",
     )
     parser.addoption(
-        "--ssh_priv_key", action="store",
-        default=os.path.expanduser(r"~/.ssh/id_rsa"),
+        "--ssh_priv_key", action="store", default=None,
         help="SSH private key to use in deployments and tests (default: ~/.ssh/id_rsa)",
     )
     parser.addoption(
-        "--ssh_pub_key", action="store",
-        default=os.path.expanduser(r"~/.ssh/id_rsa.pub"),
+        "--ssh_pub_key", action="store", default=None,
         help="SSH public key to use in deployments and tests (default: ~/.ssh/id_rsa.pub)",
     )
     parser.addoption(
-        "--test_vars_file", action="store",
-        default=envar_check("VFXT_TEST_VARS_FILE"),
+        "--test_vars_file", action="store", default=None,
         help="Test variables file used for passing values between runs. This "
         + "file is in JSON format. It is loaded during test setup and written "
         + "out during test teardown. Command-line options override variables "
@@ -190,24 +181,48 @@ def test_vars(request):
     """
     log = logging.getLogger("test_vars")
 
-    # Load command-line arguments into a dictionary.
-    build_root = request.config.getoption("--build_root")
-    if not build_root:
-        build_root = os.getcwd()
+    def envar_check(envar):
+        if envar in os.environ:
+            return os.environ[envar]
+        return None
 
-    test_vars_file = request.config.getoption("--test_vars_file")
+    # Load command-line arguments into a dictionary.
     cl_opts = {
-        "build_root": build_root,
+        "build_root": request.config.getoption("--build_root"),
         "location": request.config.getoption("--location"),
         "ssh_priv_key": request.config.getoption("--ssh_priv_key"),
         "ssh_pub_key": request.config.getoption("--ssh_pub_key"),
-        "test_vars_file": test_vars_file
+        "test_vars_file": request.config.getoption("--test_vars_file")
     }
     cja = {"sort_keys": True, "indent": 4}  # common JSON arguments
     log.debug("JSON from command-line args: {}".format(
               json.dumps(cl_opts, **cja)))
 
-    vars = {**cl_opts}  # prime vars with cl_opts
+    # Set build_root value (command-line arg, envar, cwd).
+    build_root = request.config.getoption("--build_root")
+    if not build_root:
+        build_root = envar_check("BUILD_SOURCESDIRECTORY")
+    if not build_root:
+        build_root = os.getcwd()
+    log.debug("build_root = {}".format(build_root))
+
+    # Set test_vars_file value (command-line arg, envar).
+    test_vars_file = request.config.getoption("--test_vars_file")
+    if not test_vars_file:
+        test_vars_file = envar_check("VFXT_TEST_VARS_FILE")
+    log.debug("test_vars_file = {}".format(test_vars_file))
+
+    default_cl_opts = {  # defaults for command-line options
+        "build_root": build_root,
+        "location": "westus2",
+        "ssh_priv_key": os.path.expanduser(r"~/.ssh/id_rsa"),
+        "ssh_pub_key": os.path.expanduser(r"~/.ssh/id_rsa.pub"),
+        "test_vars_file": test_vars_file
+    }
+    log.debug("Defaults for command-line args: {}".format(
+              json.dumps(default_cl_opts, **cja)))
+
+    vars = {}
 
     # Load JSON from test_vars_file, if specified.
     if test_vars_file and os.path.isfile(test_vars_file):
@@ -215,12 +230,16 @@ def test_vars(request):
                   test_vars_file))
         with open(test_vars_file, "r") as vtvf:
             vars = {**vars, **json.load(vtvf)}
-        log.debug("After loading from test_vars_file, vars is : {}".format(
+        log.debug("After loading from test_vars_file, vars is: {}".format(
                 json.dumps(vars, **cja)))
 
     # Override test_vars_file values with command-line arguments.
-    vars = {**vars, **cl_opts}
-    log.debug("Overwrote vars with command-line args: {}".format(
+    for k, v in cl_opts.items():
+        if v:  # specified on the command-line, so override
+            vars[k] = v
+        elif k not in vars:  # not specified on command-line nor test vars file
+            vars[k] = default_cl_opts[k]  # use the default
+    log.debug("After overriding with command-line args, vars is: {}".format(
               json.dumps(vars, **cja)))
 
     atd_obj = ArmTemplateDeploy(_fields={**vars})

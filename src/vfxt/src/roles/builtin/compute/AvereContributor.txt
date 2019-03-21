@@ -15,6 +15,10 @@
     "Permissions": [
       {
         "Actions": [
+          "Microsoft.Compute/*/read",
+          "Microsoft.Compute/availabilitySets/*",
+          "Microsoft.Compute/virtualMachines/*",
+          "Microsoft.Compute/disks/*",
           "Microsoft.Resources/deployments/*",
           "Microsoft.Insights/alertRules/*",
           "Microsoft.Resources/subscriptions/resourceGroups/read",
