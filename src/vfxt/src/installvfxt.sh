@@ -301,7 +301,9 @@ function install_vfxt_py_docs() {
 }
 
 function main() {
-
+    # ensure waagent upgrade does not interrupt this CSE
+    retrycmd_if_failure 12 5 apt-mark hold walinuxagent
+    
     echo "wait arm endpoint"
     wait_arm_endpoint
 
@@ -337,6 +339,9 @@ function main() {
 
     echo "print vfxt vars"
     print_vfxt_vars
+
+    # ensure waagent upgrade can proceed
+    retrycmd_if_failure 12 5 apt-mark unhold walinuxagent
 
     echo "installation complete"
 }
