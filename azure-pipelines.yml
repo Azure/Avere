@@ -39,7 +39,6 @@ jobs:
     condition: succeeded()
 
   - script: |
-<<<<<<< HEAD
       set -x
       pytest test/unit_test/test_unit_deploy.py \
         --doctest-modules --junitxml=junit/test-unit.xml
@@ -48,21 +47,17 @@ jobs:
     env:
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
       AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
-=======
+
+  - script: |
       python test/internal/region_deploy_utils.py --update_region_list
     displayName: 'SETUP: Update region list'
     condition: and(succeeded(), eq(variables['VFXT_DEPLOY_LOCATION'], ''))
     failOnStderr: true
     env:
->>>>>>> master
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-<<<<<<< HEAD
-
-  - script: |
-=======
       PIPELINES_DATA_STORAGE_ACCOUNT: $(PIPELINES-DATA-STORAGE-ACCOUNT)
       PIPELINES_DATA_STORAGE_ACCOUNT_KEY: $(PIPELINES-DATA-STORAGE-ACCOUNT-KEY)
       PIPELINES_DATA_TABLE_NAME: $(PIPELINES-DATA-TABLE-NAME)
@@ -91,34 +86,27 @@ jobs:
       if [ -z "$VFXT_DEPLOY_LOCATION" -a -s REGION_TO_TEST ]; then
         export VFXT_DEPLOY_LOCATION=$(cat REGION_TO_TEST)
       fi
->>>>>>> master
       echo "\$VFXT_DEPLOY_LOCATION  = $VFXT_DEPLOY_LOCATION"
       echo "\$VFXT_DEPLOY_NEW_VNET  = $VFXT_DEPLOY_NEW_VNET"
       echo "\$VFXT_DEPLOY_WITH_BLOB = $VFXT_DEPLOY_WITH_BLOB"
-
       test_to_run="Unrecognized_Deploy_Options"
       if   [[ "true"  = $VFXT_DEPLOY_NEW_VNET &&
               "true"  = $VFXT_DEPLOY_WITH_BLOB ]]; then
           test_to_run="test/test_vfxt_template_deploy.py::TestVfxtTemplateDeploy::test_deploy_template"
-
       elif [[ "true"  = $VFXT_DEPLOY_NEW_VNET &&
               "false" = $VFXT_DEPLOY_WITH_BLOB ]]; then
           test_to_run="test/test_vfxt_template_deploy.py::TestVfxtTemplateDeploy::test_no_storage_account_deploy"
-
       elif [[ "false" = $VFXT_DEPLOY_NEW_VNET &&
               "true"  = $VFXT_DEPLOY_WITH_BLOB ]]; then
           test_to_run="test/test_vfxt_template_deploy.py::TestVfxtTemplateDeploy::test_byovnet_deploy"
-
       elif [[ "false" = $VFXT_DEPLOY_NEW_VNET &&
               "false" = $VFXT_DEPLOY_WITH_BLOB ]]; then
           test_to_run="Not_Yet_Implemented"
-
       else
           # The VFXT_DEPLOY_* variables checked above are strings and not
           # constrained to "true" or "false" for their values.
           echo 'ERROR: Unrecognized deploy options. \$VFXT_DEPLOY_* above should be "true" or "false":'
       fi
-
       set -x
       pytest $test_to_run $PYTEST_OPTIONS \
         --location $VFXT_DEPLOY_LOCATION \
