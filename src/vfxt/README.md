@@ -21,15 +21,15 @@ The following table shows the roles required for each of the avere operations:
    | Name | Description | Role Required |
    | --- | --- | --- |
    | **Controller (vFXT.py)** | the controller uses vFXT.py to create, destroy, and manage a vFXT cluster | "[Avere Contributor](https://github.com/Azure/Avere/blob/master/src/vfxt/src/roles/AvereContributor.txt)" and "[User Access Administrator](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#user-access-administrator)" where scoping to the target resource group and vnet resource group is handled by template |
-   | **vFXT** | the vFXT manages Azure resources for new vServers, and in response to HA events | "[avere-cluster](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-pre-role)" where scoping to the target resource group and vnet resource group is handled by vFXT.py |
-   | **Standalone Administrator** | deploy the VNET, vFXT controller, and vFXT into the same resource group | "[User Access Administrator](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#user-access-administrator)" and "[Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#contributor)" scoped to the target vFXT resource group |
+   | **vFXT** | the vFXT manages Azure resources for new vServers, and in response to HA events | "[Avere Operator](https://github.com/Azure/Avere/blob/master/src/vfxt/src/roles/AvereOperator.txt)" where scoping to the target resource group and vnet resource group is handled by vFXT.py |
+   | **Standalone Administrator** | this is the princepal that deploys the VNET, vFXT controller, and vFXT into the same resource group | "[User Access Administrator](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#user-access-administrator)" and "[Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#contributor)" scoped to the target vFXT resource group |
    | **Bring your own VNET Administrator**  | deploy vFXT controller, and vFXT into the same resource group but reference the VNET from a different resource group | "[User Access Administrator](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#user-access-administrator)" and "[Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#contributor)" scoped to the target vFXT resource Group, and "[Virtual Machine Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#virtual-machine-contributor)", "[User Access Administrator](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#user-access-administrator)", and "[Avere Contributor](https://github.com/Azure/Avere/blob/master/src/vfxt/src/roles/AvereContributor.txt)" scoped to the VNET resource group.|
 
 Here are the instructions to create custom Avere Roles:
-  1. "avere-cluster" - use instructions from [the Avere documention for runtime role creation](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-pre-role).  Microsoft employees should specify already defined role "Avere Cluster Runtime Operator".
+  1. "Avere Operator" - apply the "[Avere Operator](https://github.com/Azure/Avere/blob/master/src/vfxt/src/roles/AvereOperator.txt)", using instructions from [the Avere documention for runtime role creation](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-pre-role).  Microsoft employees should specify already defined role "Avere Cluster Runtime Operator".
   1. "Avere Contributor" - apply the ["Avere Contributor" role file](src/roles/AvereContributor.txt), using instructions from [the Avere documentation for runtime role creation](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-pre-role).  Microsoft employees should specify already defined roleName "Avere Cluster Create" with roleId  "a7b1b19a-0e83-4fe5-935c-faaefbfd18c3".
 
-After creating the contributor role, you will need to get the role ID to pass to template (Microsoft employees use roleId "a7b1b19a-0e83-4fe5-935c-faaefbfd18c3").  The AAD role id is a GUID used for creating of the vFXT cluster.  This is the ID obtained using the following az command: az role definition list --query '[*].{roleName:roleName, name:name}' -o table --name 'Avere Contributor'.  Currently the template defaults to the [Owner role](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#owner) with GUID 8e3af657-a8ff-443c-a75c-2fe8c4bcb635.
+After creating the contributor role, you will need to get the role ID to pass to template (Microsoft employees use roleId "a7b1b19a-0e83-4fe5-935c-faaefbfd18c3").  The AAD role id is a GUID used for creating of the vFXT cluster.  This is the ID obtained using the following az command: `az role definition list --query '[*].{roleName:roleName, name:name}' -o table --name 'Avere Contributor'`.  Currently the template defaults to the [Owner role](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#owner) with GUID 8e3af657-a8ff-443c-a75c-2fe8c4bcb635.
 
 There are two deployment modes of the Avere vFXT: standalone and "bring your own VNET".  In the standalone case, the deployment deploys the controller and vFXT cluster into a brand new VNET.  In the "bring your own VNET" deployment, the controller and vFXT cluster uses ip addresses from an existing vnet subnet.  Both of these cases require different role configurations.  The following two sections highlight show the strictest scoping to a service principal, but these can be generalized to any user principal.
 
@@ -77,7 +77,7 @@ export SP_APP_ID=#the appId of the Service Principal from the previous command
 az role assignment create --role "User Access Administrator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VFXT_RESOURCE_GROUP --assignee $SP_APP_ID
 # assign the "Virtual Machine Contributor" and the "Avere Contributor" to the scope of the VNET resource group
 az role assignment create --role "Virtual Machine Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VNET_RESOURCE_GROUP --assignee $SP_APP_ID
-az role assignment create --role "Avere Cluster Create" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VNET_RESOURCE_GROUP --assignee $SP_APP_ID
+az role assignment create --role "Avere Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VNET_RESOURCE_GROUP --assignee $SP_APP_ID
 az role assignment create --role "User Access Administrator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VNET_RESOURCE_GROUP --assignee $SP_APP_ID
 ###########################################################
 # pass the SP details to the person installing the vFXT
@@ -130,10 +130,49 @@ After the deployment completed, check the template output for some important inf
 
 Once you have deployed your vFXT, proceed to the data ingest of the cluster described in the data ingest article: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-data-ingest.
 
-# Avere vFXT for Azure cluster controller node - ARM template deployment
+## Internet Access
 
-This template implements [Deploy](../../docs/jumpstart_deploy.md).
+The following shows how to handle restricted internet access, by configuring any of Internet access, DNS, and proxy:
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fvfxt%2Fazuredeploy.json" target="_blank">
-<img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
-</a>
+### Scenario: Internet Blocked
+
+If you have a proxy, see the proxy section below.
+
+Here are the requirements for a locked down network security group:
+  * Open up `download.averesystems.com`, TCP port `443`
+  * ensure "Microsoft.Service" endpoint is setup on all Virtual Network Subnets
+  * Open up access to TCP port `443` to 'AzureConnectors' and 'AzureCloud' as shown in the below image:
+
+  ![Network Security group outbound rules showing opening up TCP port `443` to 'AzureConnectors' and 'AzureCloud'](../../docs/images/outboundrules.png)
+
+  
+### Scenario: Bring your own DNS Server
+
+Here are the requirements for a "Bring your own DNS Server" scenario:
+  * Add `management.azure.com` to DNS Server
+  * Add `download.averesystems.com` to DNS Server
+  * DNS forward the Azure Storage account dns name to a Microsoft DNS server.  Note that storage accounts change IP addresses frequently, so adding a static entry will eventually fail.
+ 
+### Scenario: Proxy (Advanced)
+
+This advanced scenario can be done via deployment of the template `azuredeploy-auto.json`.  You can configure a proxy by adjusting the `additionalVFXTParameters`:
+  * `--proxy-uri http://PROXY_IP:PROXY_PORT`
+  * `--cluster-proxy-uri http://PROXY_IP:PROXY_PORT`
+
+For example you would adjust the `additionalVFXTParameters` variable in the template `azuredeploy-auto.json` to the following:
+
+```json
+"additionalVFXTParameters": "[concat(' --nodes ', variables('avereNodeCount'), if(variables('enableCloudTraceDebugging'),' --skip-cleanup ',''), '--proxy-uri http://PROXY_IP:PROXY_PORT --cluster-proxy-uri http://PROXY_IP:PROXY_PORT', ' --debug')]",
+```
+
+## Debugging
+
+There are a few tools for debugging:
+  1. **Log files**
+      1. `sudo tail -f /var/lib/waagent/custom-script/download/0/stdout` - this will show the progress of the custom script extension
+      1. `sudo tail -f /var/lib/waagent/custom-script/download/0/stderr` - this will show the error output from the custom script extension     
+      1. `tail -f ~/vfxt.log` - this will show the progress of the vfxt installation
+  1. **Debug mode**
+      1. parameter `enableCloudTraceDebugging` - enabling this will enable more tracing on the vfxt nodes, and ensure vfxt resources are not cleaned up in the event of a failure.
+
+

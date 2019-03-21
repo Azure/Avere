@@ -3,8 +3,8 @@
     "/subscriptions/<subscription here>"
   ],
   "Name": "Avere Contributor",
-  "IsCustom": true,
   "Description": "Can create and manage an Avere vFXT cluster.",
+  "IsCustom": true,
   "NotActions": [],
   "Actions": [
     "Microsoft.Authorization/*/read",
@@ -15,9 +15,10 @@
     "Microsoft.Insights/alertRules/*",
     "Microsoft.Network/*/read",
     "Microsoft.Network/networkInterfaces/*",
+    "Microsoft.Network/virtualNetworks/subnets/read",
     "Microsoft.Network/virtualNetworks/subnets/join/action",
     "Microsoft.Network/virtualNetworks/subnets/joinViaServiceEndpoint/action",
-    "Microsoft.Network/virtualNetworks/subnets/read",
+    "Microsoft.Network/networkSecurityGroups/join/action",
     "Microsoft.Resources/deployments/*",
     "Microsoft.Resources/subscriptions/resourceGroups/read",
     "Microsoft.Resources/subscriptions/resourceGroups/resources/read",
@@ -25,5 +26,9 @@
     "Microsoft.Storage/storageAccounts/*",
     "Microsoft.Support/*"
   ],
-  "DataActions": []
+  "DataActions": [
+    "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/delete",
+    "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read",
+    "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write"
+  ]
 }

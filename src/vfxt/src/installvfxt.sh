@@ -11,19 +11,23 @@ VFXT_INSTALL_TEMPLATE=$AZURE_HOME_DIR/vfxtinstall
 CLOUD_BACKED_TEMPLATE=/create-cloudbacked-cluster
 MINIMAL_TEMPLATE=/create-minimal-cluster
 VFXT_LOG_FILE=$AZURE_HOME_DIR/vfxt.log
+ARM_ENDPOINT=https://management.azure.com/metadata/endpoints?api-version=2017-12-01
 
 function retrycmd_if_failure() {
+    set +e
     retries=$1; max_wait_sleep=$2; shift && shift
     for i in $(seq 1 $retries); do
         ${@}
         [ $? -eq 0  ] && break || \
         if [ $i -eq $retries ]; then
             echo Executed \"$@\" $i times;
+            set -e
             return 1
         else
             sleep $(($RANDOM % $max_wait_sleep))
         fi
     done
+    set -e
     echo Executed \"$@\" $i times;
 }
 
@@ -39,10 +43,18 @@ function wait_azure_home_dir() {
     done
 }
 
+function wait_arm_endpoint() {
+    # ensure the arm endpoint is reachable
+    # https://docs.microsoft.com/en-us/azure/virtual-machines/windows/instance-metadata-service#getting-azure-environment-where-the-vm-is-running
+    if ! retrycmd_if_failure 12 2 curl -m 5 -o /dev/null $ARM_ENDPOINT ; then
+        echo "no internet! arm endpoint $ARM_ENDPOINT not reachable.  Please see https://github.com/Azure/Avere/tree/master/src/vfxt#internet-access on how to configure firewall, dns, or proxy."
+        exit 1
+    fi
+}
+
 function wait_az_login_and_vnet() {
     # wait for RBAC assignments to be applied
     # unfortunately, the RBAC assignments take undetermined time past their associated resource completions to be assigned.  
-    set +e
     if ! retrycmd_if_failure 120 5 az login --identity ; then
         echo "MANAGED IDENTITY FAILURE: failed to login after waiting 10 minutes, this is managed identity bug"
         exit 1
@@ -55,7 +67,6 @@ function wait_az_login_and_vnet() {
         echo "RBAC ASSIGNMENT FAILURE: failed to list vnet after waiting 10 minutes, this is rbac assignment bug"
         exit 1
     fi
-    set -e
 }
 
 function configure_vfxt_template() {
@@ -224,10 +235,90 @@ function dump_env_vars() {
     echo "finish env dump"
 }
 
+function apt_get_update() {
+    set +e
+    retries=10
+    apt_update_output=/tmp/apt-get-update.out
+    for i in $(seq 1 $retries); do
+        timeout 300 apt-get update 2>&1
+        [ $? -eq 0  ] && break
+        if [ $i -eq $retries ]; then
+            set -e
+            return 1
+        else sleep 30
+        fi
+    done
+    set +e
+    echo Executed apt-get update $i times
+}
+
+function apt_get_install() {
+    set +e
+    retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
+    for i in $(seq 1 $retries); do
+        # timeout occasionally freezes
+        #echo "timeout $timeout apt-get install --no-install-recommends -y ${@}"
+        #timeout $timeout apt-get install --no-install-recommends -y ${@}
+        apt-get install --no-install-recommends -y ${@}
+        [ $? -eq 0  ] && break || \
+        if [ $i -eq $retries ]; then
+            set -e
+            return 1
+        else
+            sleep $wait_sleep
+            apt_get_update
+        fi
+    done
+    set -e
+    echo Executed apt-get install --no-install-recommends -y \"$@\" $i times;
+}
+
+function config_linux() {
+    #hostname=`hostname -s`
+    #sudo sed -ie "s/127.0.0.1 localhost/127.0.0.1 localhost ${hostname}/" /etc/hosts
+    export DEBIAN_FRONTEND=noninteractive  
+    apt_get_update
+    apt_get_install 20 10 180 curl dirmngr python-pip nfs-common build-essential python-dev python-setuptools
+    # this is no longer need because it is not longer there (mar 2019 ubuntu)
+    # retrycmd_if_failure 12 5 apt remove --purge -y python-keyring
+    retrycmd_if_failure 12 5 pip install --requirement /opt/avere/python_requirements.txt
+}
+
+function install_vfxt() {
+    retrycmd_if_failure 12 5 pip install --no-deps vFXT
+    mv /opt/avere/averecmd.txt /usr/local/bin/averecmd
+    chmod 755 /usr/local/bin/averecmd
+}
+
+function install_vfxt_py_docs() {
+    pushd / &>/dev/null
+    curl --retry 5 --retry-delay 5 -o vfxtdistdoc.tgz https://averedistribution.blob.core.windows.net/public/vfxtdistdoc.tgz &>/dev/null || true
+    if [ -f vfxtdistdoc.tgz ]; then
+            tar --no-same-owner -xf vfxtdistdoc.tgz
+            rm -f vfxtdistdoc.tgz
+    fi
+    popd &>/dev/null
+}
+
 function main() {
+
+    echo "wait arm endpoint"
+    wait_arm_endpoint
+
     echo "wait azure home dir"
     wait_azure_home_dir
 
+    if [ "$BUILD_CONTROLLER" == "$ARM_TRUE" ]; then
+        echo "configure linux"
+        config_linux
+
+        echo "install_vfxt_py"
+        install_vfxt
+
+        echo "install_vfxt_docs"
+        install_vfxt_py_docs    
+    fi
+    
     echo "wait az login"
     wait_az_login_and_vnet
 

@@ -28,7 +28,7 @@ To setup the above architecture run the following steps:
    | --- | --- | --- | --- |
    | Compute and vFXT | East US | 10.0.0.0/16 | 10.0.0.0/24 (vFXT), 10.0.4.0/22 (Azure Batch Compute) |
    | NFS East US | East US | 192.168.255.0/28 | 192.168.255.0/28 |
-   | NFS West US | East US | 192.168.255.16/28 | 192.168.255.16/28 |
+   | NFS West US | West US | 192.168.255.16/28 | 192.168.255.16/28 |
    | NFS Southeast Asia | Southeast Asia | 192.168.255.32/28 | 192.168.255.32/28 |
    | NFS West India | West India | 192.168.255.48/28 | 192.168.255.48/28 |
 

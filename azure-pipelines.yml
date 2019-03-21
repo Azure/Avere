@@ -29,6 +29,7 @@ jobs:
       ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
     displayName: 'SETUP: SSH keys'
     condition: succeeded()
+    failOnStderr: true
 
   - script: |
       set -xe
@@ -38,6 +39,7 @@ jobs:
     condition: succeeded()
 
   - script: |
+<<<<<<< HEAD
       set -x
       pytest test/unit_test/test_unit_deploy.py \
         --doctest-modules --junitxml=junit/test-unit.xml
@@ -46,12 +48,50 @@ jobs:
     env:
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
       AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
+=======
+      python test/internal/region_deploy_utils.py --update_region_list
+    displayName: 'SETUP: Update region list'
+    condition: and(succeeded(), eq(variables['VFXT_DEPLOY_LOCATION'], ''))
+    failOnStderr: true
+    env:
+>>>>>>> master
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+<<<<<<< HEAD
 
   - script: |
+=======
+      PIPELINES_DATA_STORAGE_ACCOUNT: $(PIPELINES-DATA-STORAGE-ACCOUNT)
+      PIPELINES_DATA_STORAGE_ACCOUNT_KEY: $(PIPELINES-DATA-STORAGE-ACCOUNT-KEY)
+      PIPELINES_DATA_TABLE_NAME: $(PIPELINES-DATA-TABLE-NAME)
+
+  - script: |
+      python test/internal/region_deploy_utils.py \
+        --cooldown-hours $REGION_COOLDOWN_HOURS   \
+        --get_next_region > REGION_TO_TEST
+
+      if [[ "$?" -eq "0" ]]; then
+        echo "REGION TO TEST: $(cat REGION_TO_TEST)"
+      fi
+    displayName: 'SETUP: Get region to test in'
+    condition: and(succeeded(), eq(variables['VFXT_DEPLOY_LOCATION'], ''))
+    failOnStderr: true
+    env:
+      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+      PIPELINES_DATA_STORAGE_ACCOUNT: $(PIPELINES-DATA-STORAGE-ACCOUNT)
+      PIPELINES_DATA_STORAGE_ACCOUNT_KEY: $(PIPELINES-DATA-STORAGE-ACCOUNT-KEY)
+      PIPELINES_DATA_TABLE_NAME: $(PIPELINES-DATA-TABLE-NAME)
+
+  - script: |
+      if [ -z "$VFXT_DEPLOY_LOCATION" -a -s REGION_TO_TEST ]; then
+        export VFXT_DEPLOY_LOCATION=$(cat REGION_TO_TEST)
+      fi
+>>>>>>> master
       echo "\$VFXT_DEPLOY_LOCATION  = $VFXT_DEPLOY_LOCATION"
       echo "\$VFXT_DEPLOY_NEW_VNET  = $VFXT_DEPLOY_NEW_VNET"
       echo "\$VFXT_DEPLOY_WITH_BLOB = $VFXT_DEPLOY_WITH_BLOB"
@@ -144,9 +184,26 @@ jobs:
 
   - script: |
       set -x
+      P_ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
+      mkdir -p $P_ARTIFACTS_DIR
+
+      # Collect various test artifacts (e.g., controller/node logs).
       pytest test/test_vfxt_cluster_status.py $PYTEST_OPTIONS \
         -k TestVfxtSupport \
         --doctest-modules --junitxml=junit/test-results03.xml
+      pyt_res=$?
+
+      # Get controller logs in case the pytest call failed.
+      vfxt_log_loc=$(find ${BUILD_SOURCESDIRECTORY} -name vfxt.log)
+      if [ -z "$vfxt_log_loc" ]; then
+        CONTROLLER_USER=$(jq -r .controller_user $VFXT_TEST_VARS_FILE)
+        PUBLIC_IP=$(jq -r .public_ip $VFXT_TEST_VARS_FILE)
+        scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $CONTROLLER_USER@$PUBLIC_IP:~/*.log ${P_ARTIFACTS_DIR}/.
+      else
+        cp $vfxt_log_loc ${P_ARTIFACTS_DIR}/.
+      fi
+
+      exit $pyt_res
     displayName: 'TEST: Collect deployment artifacts, log files'
     condition: always()
     env:
@@ -156,6 +213,17 @@ jobs:
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+
+  - script: |
+      if [ -z "$VFXT_DEPLOY_LOCATION" -a -s REGION_TO_TEST ]; then
+        export VFXT_DEPLOY_LOCATION=$(cat REGION_TO_TEST)
+      fi
+      echo "\$VFXT_DEPLOY_LOCATION = $VFXT_DEPLOY_LOCATION"
+      echo
+      echo "Versions reported by vfxt.py:"
+      grep ' version' $(find ${BUILD_SOURCESDIRECTORY} -name vfxt.log)
+    displayName: 'INFO: Deployment region, version checks, etc.'
+    condition: always()
 
   - script: |
       DEPLOY_ID=$(jq -r .deploy_id $VFXT_TEST_VARS_FILE)
@@ -169,14 +237,13 @@ jobs:
       P_ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
       mkdir -p $P_ARTIFACTS_DIR
       tar -zcvf ${P_ARTIFACTS_DIR}/vfxt_artifacts_${DEPLOY_ID}.tar.gz ${T_ARTIFACTS_DIR}
-
-      echo "vfxt.log from ${T_ARTIFACTS_DIR}:"
-      cat ${T_ARTIFACTS_DIR}/vfxt.log
     displayName: 'ARCHIVE: Deployment artifacts, log files'
     condition: always()
+    failOnStderr: true
 
   - script: |
-      grep -i -C 5 -e vfxt:ERROR -e exception $BUILD_SOURCESDIRECTORY/test_artifacts/vfxt.log
+      P_ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
+      grep -i -C 5 -e vfxt:ERROR -e exception ${P_ARTIFACTS_DIR}/vfxt.log
     displayName: 'CHECK: Grep errors from vfxt.log (+/- 5 lines)'
     condition: or(failed(), canceled())
 
@@ -197,12 +264,26 @@ jobs:
       pytest test/test_edasim.py $PYTEST_OPTIONS \
         --doctest-modules --junitxml=junit/test-results05.xml
     displayName: 'TEST: edasim'
-    condition: and(succeeded(), eq(variables['RUN_EDASIM_STEP'], 'true'), eq(variables['RUN_EMPTY_STORAGE'], 'false'))
+    condition: and(succeeded(), eq(variables['RUN_EDASIM_STEP'], 'true'), eq(variables['VFXT_DEPLOY_WITH_BLOB'], 'true'))
     env:
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+
+  - script: |
+      if [ -z "$VFXT_DEPLOY_LOCATION" -a -s REGION_TO_TEST ]; then
+        export VFXT_DEPLOY_LOCATION=$(cat REGION_TO_TEST)
+      fi
+      python test/internal/region_deploy_utils.py \
+        --update_last_success \
+        --last_success_region $VFXT_DEPLOY_LOCATION
+    displayName: 'CLEANUP: Update last successful run timestamp for region'
+    condition: succeeded()
+    env:
+      PIPELINES_DATA_STORAGE_ACCOUNT: $(PIPELINES-DATA-STORAGE-ACCOUNT)
+      PIPELINES_DATA_STORAGE_ACCOUNT_KEY: $(PIPELINES-DATA-STORAGE-ACCOUNT-KEY)
+      PIPELINES_DATA_TABLE_NAME: $(PIPELINES-DATA-TABLE-NAME)
 
   - task: PublishPipelineArtifact@0
     displayName: 'PUBLISH: Deployment artifacts, log files'
