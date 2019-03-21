@@ -89,24 +89,30 @@ jobs:
       echo "\$VFXT_DEPLOY_LOCATION  = $VFXT_DEPLOY_LOCATION"
       echo "\$VFXT_DEPLOY_NEW_VNET  = $VFXT_DEPLOY_NEW_VNET"
       echo "\$VFXT_DEPLOY_WITH_BLOB = $VFXT_DEPLOY_WITH_BLOB"
+
       test_to_run="Unrecognized_Deploy_Options"
       if   [[ "true"  = $VFXT_DEPLOY_NEW_VNET &&
               "true"  = $VFXT_DEPLOY_WITH_BLOB ]]; then
           test_to_run="test/test_vfxt_template_deploy.py::TestVfxtTemplateDeploy::test_deploy_template"
+
       elif [[ "true"  = $VFXT_DEPLOY_NEW_VNET &&
               "false" = $VFXT_DEPLOY_WITH_BLOB ]]; then
           test_to_run="test/test_vfxt_template_deploy.py::TestVfxtTemplateDeploy::test_no_storage_account_deploy"
+
       elif [[ "false" = $VFXT_DEPLOY_NEW_VNET &&
               "true"  = $VFXT_DEPLOY_WITH_BLOB ]]; then
           test_to_run="test/test_vfxt_template_deploy.py::TestVfxtTemplateDeploy::test_byovnet_deploy"
+
       elif [[ "false" = $VFXT_DEPLOY_NEW_VNET &&
               "false" = $VFXT_DEPLOY_WITH_BLOB ]]; then
           test_to_run="Not_Yet_Implemented"
+
       else
           # The VFXT_DEPLOY_* variables checked above are strings and not
           # constrained to "true" or "false" for their values.
           echo 'ERROR: Unrecognized deploy options. \$VFXT_DEPLOY_* above should be "true" or "false":'
       fi
+
       set -x
       pytest $test_to_run $PYTEST_OPTIONS \
         --location $VFXT_DEPLOY_LOCATION \
