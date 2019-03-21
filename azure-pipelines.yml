@@ -53,7 +53,9 @@ jobs:
       PIPELINES_DATA_TABLE_NAME: $(PIPELINES-DATA-TABLE-NAME)
 
   - script: |
-      python test/internal/region_deploy_utils.py --get_next_region > REGION_TO_TEST
+      python test/internal/region_deploy_utils.py \
+        --cooldown-hours $REGION_COOLDOWN_HOURS   \
+        --get_next_region > REGION_TO_TEST
 
       if [[ "$?" -eq "0" ]]; then
         echo "REGION TO TEST: $(cat REGION_TO_TEST)"
@@ -246,7 +248,7 @@ jobs:
       pytest test/test_edasim.py $PYTEST_OPTIONS \
         --doctest-modules --junitxml=junit/test-results05.xml
     displayName: 'TEST: edasim'
-    condition: and(succeeded(), eq(variables['RUN_EDASIM_STEP'], 'true'), eq(variables['RUN_EMPTY_STORAGE'], 'false'))
+    condition: and(succeeded(), eq(variables['RUN_EDASIM_STEP'], 'true'), eq(variables['VFXT_DEPLOY_WITH_BLOB'], 'true'))
     env:
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
