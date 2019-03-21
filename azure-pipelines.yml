@@ -87,25 +87,6 @@ jobs:
       PIPELINES_DATA_TABLE_NAME: $(PIPELINES-DATA-TABLE-NAME)
 
   - script: |
-      python test/internal/region_deploy_utils.py \
-        --cooldown-hours $REGION_COOLDOWN_HOURS   \
-        --get_next_region > REGION_TO_TEST
-      if [[ "$?" -eq "0" ]]; then
-        echo "REGION TO TEST: $(cat REGION_TO_TEST)"
-      fi
-    displayName: 'SETUP: Get region to test in'
-    condition: and(succeeded(), eq(variables['VFXT_DEPLOY_LOCATION'], ''))
-    failOnStderr: true
-    env:
-      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      PIPELINES_DATA_STORAGE_ACCOUNT: $(PIPELINES-DATA-STORAGE-ACCOUNT)
-      PIPELINES_DATA_STORAGE_ACCOUNT_KEY: $(PIPELINES-DATA-STORAGE-ACCOUNT-KEY)
-      PIPELINES_DATA_TABLE_NAME: $(PIPELINES-DATA-TABLE-NAME)
-
-  - script: |
       if [ -z "$VFXT_DEPLOY_LOCATION" -a -s REGION_TO_TEST ]; then
         export VFXT_DEPLOY_LOCATION=$(cat REGION_TO_TEST)
       fi
