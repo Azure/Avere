@@ -17,6 +17,7 @@
           "Microsoft.Insights/alertRules/*",
           "Microsoft.Network/*/read",
           "Microsoft.Network/networkInterfaces/*",
+          "Microsoft.Network/virtualNetworks/read",
           "Microsoft.Network/virtualNetworks/subnets/read",
           "Microsoft.Network/virtualNetworks/subnets/join/action",
           "Microsoft.Network/virtualNetworks/subnets/joinViaServiceEndpoint/action",
