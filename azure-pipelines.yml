@@ -50,8 +50,6 @@ jobs:
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
-<<<<<<< HEAD
-=======
   - script: |
       python test/internal/region_deploy_utils.py \
         --cooldown-hours $REGION_COOLDOWN_HOURS   \
@@ -71,7 +69,6 @@ jobs:
       PIPELINES_DATA_STORAGE_ACCOUNT: $(PIPELINES-DATA-STORAGE-ACCOUNT)
       PIPELINES_DATA_STORAGE_ACCOUNT_KEY: $(PIPELINES-DATA-STORAGE-ACCOUNT-KEY)
       PIPELINES_DATA_TABLE_NAME: $(PIPELINES-DATA-TABLE-NAME)
->>>>>>> master
 
   - script: |
       echo "\$VFXT_DEPLOY_LOCATION  = $VFXT_DEPLOY_LOCATION"
