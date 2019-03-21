@@ -197,6 +197,17 @@ jobs:
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
+      if [ -z "$VFXT_DEPLOY_LOCATION" -a -s REGION_TO_TEST ]; then
+        export VFXT_DEPLOY_LOCATION=$(cat REGION_TO_TEST)
+      fi
+      echo "\$VFXT_DEPLOY_LOCATION = $VFXT_DEPLOY_LOCATION"
+      echo
+      echo "Versions reported by vfxt.py:"
+      grep ' version' $(find ${BUILD_SOURCESDIRECTORY} -name vfxt.log)
+    displayName: 'INFO: Deployment region, version checks, etc.'
+    condition: always()
+
+  - script: |
       DEPLOY_ID=$(jq -r .deploy_id $VFXT_TEST_VARS_FILE)
       CONTROLLER_NAME=$(jq -r .controller_name $VFXT_TEST_VARS_FILE)
       T_ARTIFACTS_DIR="vfxt_artifacts_${DEPLOY_ID}"
