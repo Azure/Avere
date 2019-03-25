@@ -472,7 +472,7 @@
       }
     },
     {
-      "condition": "[not(variables('createVirtualNetwork'))]",
+      "condition": "[and(not(variables('createVirtualNetwork')),not(equals(resourceGroup().name, variables('virtualNetworkResourceGroup'))))]",
       "apiVersion": "2018-05-01",
       "name": "[variables('vnetAssignRoleName')]",
       "type": "Microsoft.Resources/deployments",
