@@ -262,7 +262,7 @@
                 "addressPrefixSize": "/16"
               },
               "constraints": {
-                "minAddressPrefixSize": "/24"
+                "minAddressPrefixSize": "/32"
               },
               "subnets": {
                 "subnet1": {
