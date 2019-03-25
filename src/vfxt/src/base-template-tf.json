@@ -200,7 +200,7 @@
       "publisher": "microsoft-avere",
       "product": "vfxt"
     },
-    "buildController": true,
+    "buildController": false,
     "storageProfile": "[variables('ubuntuStorageProfile')]",
     "vsip": "VSERVER_IPS=",
     "mip": "MGMT_IP="
