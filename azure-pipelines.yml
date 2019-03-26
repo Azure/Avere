@@ -32,11 +32,20 @@ jobs:
     condition: succeeded()
     failOnStderr: true
 
-  - script: |
-      git clone https://msazure.visualstudio.com/DefaultCollection/One/_git/Avere-sv
-    displayName: 'SETUP: SV repo'
-    condition: succeeded()
-
+- script: |
+      docker login https://$(dockerRegistry) -u $(dockerUsername) -p $(dockerPassword)
+      docker pull $(dockerRegistry)/test
+      docker run $(dockerRegistry)/test
+      echo GIT_UN
+      echo GIT_PAT
+  displayName: 'Docker login, pull, and run'
+  condition: succeeded()
+  env:
+    dockerRegistry: $(DOCKER-REGISTRY)
+    dockerUsername: $(DOCKER-UN)
+    dockerPassword: $(DOCKER-PW)
+    GIT_UN: $(GIT-UN)
+    GIT_PAT: $(GIT-PAT)
 
   - script: |
       lksds
@@ -330,3 +339,8 @@ jobs:
     # Writes an error to the build summary and the log with details about the error
   #  Write-Error "$("the Write-Error PowerShell command reported that") $($env:ErrorMessage)"
    # exit 1
+
+
+
+
+
