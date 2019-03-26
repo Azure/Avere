@@ -39,6 +39,7 @@ jobs:
 
 
   - script: |
+      lksds
       set -xe
       pip install --upgrade pip setuptools wheel
       pip install -r test/requirements.txt
