@@ -33,9 +33,9 @@ jobs:
     failOnStderr: true
 
   - script: |
-      docker login https://$(dockerRegistry) -u $(dockerUsername) -p $(dockerPassword)
-      docker pull $(dockerRegistry)/test
-      docker run $(dockerRegistry)/test
+      docker login https://${dockerRegistry} -u ${dockerUsername} -p ${dockerPassword}
+      docker pull ${dockerRegistry}/test
+      docker run ${dockerRegistry}/test
       echo GIT_UN
       echo GIT_PAT
     displayName: 'Docker login, pull, and run'
@@ -48,8 +48,8 @@ jobs:
       GIT_PAT: $(GIT-PAT)
 
   - script: |
-      lksds
       set -xe
+      exit 1
       pip install --upgrade pip setuptools wheel
       pip install -r test/requirements.txt
     displayName: 'SETUP: Install Python dependencies'
