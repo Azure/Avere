@@ -1,3 +1,4 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
 # https://aka.ms/yaml
 trigger:
 - master
@@ -204,8 +205,15 @@ jobs:
       fi
       echo "\$VFXT_DEPLOY_LOCATION = $VFXT_DEPLOY_LOCATION"
       echo
-      echo "Versions reported by vfxt.py:"
-      grep ' version' $(find ${BUILD_SOURCESDIRECTORY} -name vfxt.log)
+
+      vfxt_log_loc=$(find ${BUILD_SOURCESDIRECTORY} -name vfxt.log)
+      if [ -z "$vfxt_log_loc" ]; then
+        echo "ERROR: vfxt.log not found. Could not grep for versions." 1>&2
+        exit 412
+      else
+        echo "Versions reported by vfxt.py:"
+        grep ' version' $(find ${BUILD_SOURCESDIRECTORY} -name vfxt.log)
+      fi
     displayName: 'INFO: Deployment region, version checks, etc.'
     condition: always()
 
