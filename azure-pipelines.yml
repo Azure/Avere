@@ -33,21 +33,6 @@ jobs:
     failOnStderr: true
 
   - script: |
-      docker login https://${dockerRegistry} -u ${dockerUsername} -p ${dockerPassword}
-      docker pull ${dockerRegistry}/test
-      docker run ${dockerRegistry}/test
-      echo $GIT_UN
-      echo $GIT_PAT
-    displayName: 'Docker login, pull, and run'
-    condition: succeeded()
-    env:
-      dockerRegistry: $(DOCKER-REGISTRY)
-      dockerUsername: $(DOCKER-UN)
-      dockerPassword: $(DOCKER-PW)
-      GIT_UN: $(GIT-UN)
-      GIT_PAT: $(GIT-PAT)
-
-  - script: |
       set -xe
       pip install --upgrade pip setuptools wheel
       pip install -r test/requirements.txt
@@ -181,6 +166,21 @@ jobs:
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+
+  - script: |
+      docker login https://${dockerRegistry} -u ${dockerUsername} -p ${dockerPassword}
+      docker pull ${dockerRegistry}/test
+      docker run ${dockerRegistry}/test
+      echo $GIT_UN
+      echo $GIT_PAT
+    displayName: 'Docker login, pull, and run'
+    condition: succeeded()
+    env:
+      dockerRegistry: $(DOCKER-REGISTRY)
+      dockerUsername: $(DOCKER-UN)
+      dockerPassword: $(DOCKER-PW)
+      GIT_UN: $(GIT-UN)
+      GIT_PAT: $(GIT-PAT)
 
   - script: |
       set -x
