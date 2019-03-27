@@ -49,7 +49,6 @@ jobs:
 
   - script: |
       set -xe
-      exit 1
       pip install --upgrade pip setuptools wheel
       pip install -r test/requirements.txt
     displayName: 'SETUP: Install Python dependencies'
