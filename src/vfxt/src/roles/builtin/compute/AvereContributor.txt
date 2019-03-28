@@ -32,7 +32,8 @@
           "Microsoft.Resources/subscriptions/resourceGroups/read",
           "Microsoft.Storage/*/read",
           "Microsoft.Storage/storageAccounts/*",
-          "Microsoft.Support/*"
+          "Microsoft.Support/*",
+          "Microsoft.Resources/subscriptions/resourceGroups/resources/read"
         ],
         "NotActions": [],
         "DataActions": [
