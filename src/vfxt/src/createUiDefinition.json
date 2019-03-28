@@ -9,7 +9,7 @@
           "type": "Microsoft.Common.TextBlock",
           "visible": true,
           "options": {
-            "text": "Before creating a VM, you must create a new subscription for the Avere vFXT project, configure subscription ownership, create access control roles for creation and cluster operation, check quotas and request an increase if needed, and accept terms for using the Avere vFXT software.",
+            "text": "Before creating a VM, you must create a new subscription for the Avere vFXT project, configure subscription ownership, check quotas and request an increase if needed, and accept terms for using the Avere vFXT software.",
             "link": {
               "label": "Read 'Avere vFXT for Azure - deployment overview' for detailed instructions",
               "uri": "https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-deploy-overview"
@@ -58,31 +58,6 @@
             "hidePassword": false
           },
           "osPlatform": "Linux"
-        },
-        {
-          "name": "textAADClusterCreateRole",
-          "type": "Microsoft.Common.TextBlock",
-          "visible": true,
-          "options": {
-            "text": "Provide the GUID of the access control role the cluster controller will use to create the Avere vFXT cluster.",
-            "link": {
-              "label": "Learn more",
-              "uri": "https://github.com/Azure/Avere/tree/master/src/vfxt#managed-identity-and-roles"
-            }
-          }
-        },
-        {
-          "name": "avereClusterCreateRoleId",
-          "type": "Microsoft.Common.TextBox",
-          "label": "Avere cluster create role ID",
-          "defaultValue": "8e3af657-a8ff-443c-a75c-2fe8c4bcb635",
-          "toolTip": "The RBAC role ID used to create the vFXT cluster. The default is the 'Owner' role, but you can create your own role as described in the Avere vFXT for Azure documentation. Obtain the custom role's GUID with the following az command: az role definition list --query '[*].{roleName:roleName, name:name}' -o table --name 'YOUR ROLE NAME'.",
-          "constraints": {
-            "required": true,
-            "regex": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
-            "validationMessage": "Only valid GUIDs will be allowed for the Avere cluster create role ID."
-          },
-          "visible": true
         }
       ],
       "steps": [
@@ -161,30 +136,6 @@
               },
               "options": {
                 "hideConfirmation": false
-              },
-              "visible": true
-            },
-            {
-              "name": "text1",
-              "type": "Microsoft.Common.TextBlock",
-              "visible": true,
-              "options": {
-                "text": "Provide the operating access role for the cluster nodes.",
-                "link": {
-                  "label": "Learn more",
-                  "uri": "https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-prereqs#create-the-cluster-node-access-role"
-                }
-              }
-            },
-            {
-              "name": "avereClusterRole",
-              "type": "Microsoft.Common.TextBox",
-              "label": "Avere cluster operations role",
-              "toolTip": "The unique name of the RBAC role for cluster node operations.",
-              "constraints": {
-                "required": true,
-                "regex": "^.{1,128}$",
-                "validationMessage": "Can include letters, numbers, spaces, and special characters. Maximum number of characters is 128."
               },
               "visible": true
             },
@@ -322,11 +273,11 @@
         "controllerAuthenticationType": "[basics('controllerSSHKeyData').authenticationType]",
         "controllerPassword": "[basics('controllerSSHKeyData').password]",
         "controllerSSHKeyData": "[basics('controllerSSHKeyData').sshPublicKey]",
-        "avereCreateClusterRoleId": "[basics('avereClusterCreateRoleId')]",
-        
+        "avereCreateClusterRoleId": "4f8fab4f-1852-4a58-a46a-8eaf358af14a",
+
         "avereNodeCount": "[steps('AvereVFXTConfiguration').avereNodeCount]",
         "adminPassword": "[steps('AvereVFXTConfiguration').adminPassword]",
-        "avereClusterRole": "[steps('AvereVFXTConfiguration').avereClusterRole]",
+        "avereClusterRole": "Avere Operator",
         "avereClusterName": "[steps('AvereVFXTConfiguration').avereClusterName]",
         "avereInstanceType": "[steps('AvereVFXTConfiguration').avereInstanceType]",
         "avereCacheSizeGB": "[steps('AvereVFXTConfiguration').avereCacheSizeGB]",

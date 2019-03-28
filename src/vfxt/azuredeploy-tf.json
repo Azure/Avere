@@ -56,14 +56,14 @@
     },
     "avereCreateClusterRoleId": {
       "type": "string",
-      "defaultValue": "8e3af657-a8ff-443c-a75c-2fe8c4bcb635",
+      "defaultValue": "4f8fab4f-1852-4a58-a46a-8eaf358af14a",
       "metadata": {
-        "description": "The AAD role id used for creation of the vFXT cluster.  The default GUID is the Owner built-in role.  However, we recommend you create your own role as described in https://github.com/Azure/Avere/tree/master/src/vfxt#managed-identity-and-roles.  After role creation, obtain the ID by using the following az command: az role definition list --query '[*].{roleName:roleName, name:name}' -o table --name 'Avere Contributor'.  Microsoft employees use 'a7b1b19a-0e83-4fe5-935c-faaefbfd18c3'."
+        "description": "The AAD role id used for creation of the vFXT cluster.  The default GUID is the Avere Contributor built-in role."
       }
     },
     "avereClusterRole": {
       "type": "string",
-      "defaultValue": "avere-cluster",
+      "defaultValue": "Avere Operator",
       "metadata": {
         "description": "The AAD role used by the running vFXT cluster."
       }
