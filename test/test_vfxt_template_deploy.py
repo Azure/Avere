@@ -40,7 +40,6 @@ class TestVfxtTemplateDeploy:
             "adminPassword": os.environ["AVERE_ADMIN_PW"],
             "avereBackedStorageAccountName": atd.deploy_id + "sa",
             "avereClusterName": atd.deploy_id + "-cluster",
-            "avereClusterRole": "Avere Cluster Runtime Operator",
             "avereInstanceType": "Standard_E32s_v3",
             "avereNodeCount": 3,
             "controllerAdminUsername": "azureuser",
@@ -93,7 +92,6 @@ class TestVfxtTemplateDeploy:
         atd.deploy_params = {
             "adminPassword": os.environ["AVERE_ADMIN_PW"],
             "avereClusterName": atd.deploy_id + "-cluster",
-            "avereClusterRole": "Avere Cluster Runtime Operator",
             "avereInstanceType": "Standard_E32s_v3",
             "avereNodeCount": 3,
             "controllerAdminUsername": "azureuser",
@@ -150,7 +148,6 @@ class TestVfxtTemplateDeploy:
             "adminPassword": os.environ["AVERE_ADMIN_PW"],
             "avereBackedStorageAccountName": atd.deploy_id + "sa",
             "avereClusterName": atd.deploy_id + "-cluster",
-            "avereClusterRole": "Avere Cluster Runtime Operator",
             "avereInstanceType": "Standard_E32s_v3",
             "avereNodeCount": 3,
             "controllerAdminUsername": "azureuser",
