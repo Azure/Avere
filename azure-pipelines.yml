@@ -171,7 +171,7 @@ jobs:
       set -x
       pytest test/test_vfxt_client_docker.py $PYTEST_OPTIONS
     displayName: 'TEST: docker/client'
-    condition: and(succeeded(), eq(variables['RUN_DOCKER_CLIENT_STEP'], 'true')
+    condition: and(succeeded(), eq(variables['RUN_DOCKER_CLIENT_STEP'], 'true'))
     env:
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
