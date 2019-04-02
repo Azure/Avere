@@ -273,7 +273,7 @@ def ext_vnet(test_vars):
     log.info("Resource Group: {}".format(rg))
 
     vnet_atd.deploy_name = "ext_vnet"
-    with open("{}/src/vfxt/azuredeploy.vnet.json".format(
+    with open("{}/src/vfxt/azuredeploy-tf.json".format(
                 test_vars["build_root"])) as tfile:
         vnet_atd.template = json.load(tfile)
 
