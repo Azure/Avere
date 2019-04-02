@@ -1,12 +1,11 @@
 # Copyright (C) Microsoft Corporation. All rights reserved.
 # https://aka.ms/yaml
-# trigger:
-# - master
-# - releases/*
+trigger:
+- master
+- releases/*
 
 variables:
   VFXT_TEST_VARS_FILE: 'pipelines.json'
-  VFXT_DEPLOY_LOCATION: 'westus2'
 
 jobs:
 - job: vfxt_template_testing
@@ -168,26 +167,11 @@ jobs:
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
-  # - script: |
-  #     docker login https://${dockerRegistry} -u ${dockerUsername} -p ${dockerPassword}
-  #     docker pull ${dockerRegistry}/test
-  #     docker run ${dockerRegistry}/test
-  #     echo $GIT_UN
-  #     echo $GIT_PAT
-  #   displayName: 'Docker login, pull, and run'
-  #   condition: succeeded()
-  #   env:
-  #     dockerRegistry: $(DOCKER-REGISTRY)
-  #     dockerUsername: $(DOCKER-UN)
-  #     dockerPassword: $(DOCKER-PW)
-  #     GIT_UN: $(GIT-UN)
-  #     GIT_PAT: $(GIT-PAT)
-
   - script: |
       set -x
       pytest test/test_vfxt_client_docker.py $PYTEST_OPTIONS
     displayName: 'TEST: docker/client'
-    condition: succeeded()
+    condition: and(succeeded(), eq(variables['RUN_DOCKER_CLIENT_STEP'], 'true')
     env:
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
@@ -338,26 +322,6 @@ jobs:
     inputs:
       testResultsFiles: 'junit/test-*.xml'
       testRunTitle: 'PUBLISH: pytest results'
-
-# PowerShell
-# Run a PowerShell script on Windows, macOS, or Linux.
-#- task: PowerShell@2
-#  inputs:
-    #targetType: 'filePath' # Optional. Options: filePath, inline
-    #filePath: # Required when targetType == FilePath
-    #arguments: # Optional
-    #script: '# Write your powershell commands here.' # Required when targetType == Inline
-    #errorActionPreference: 'stop' # Optional. Options: stop, continue, silentlyContinue
-    #failOnStderr: false # Optional
-    #ignoreLASTEXITCODE: false # Optional
-    #pwsh: false # Optional
-    #workingDirectory: # Optional
-    # Writes an error to the build summary and the log with details about the error
-  #  Write-Error "$("the Write-Error PowerShell command reported that") $($env:ErrorMessage)"
-   # exit 1
-
-  #  test
-
 
 
 
