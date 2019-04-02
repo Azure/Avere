@@ -15,7 +15,7 @@ from paramiko import AutoAddPolicy, SSHClient
 def create_ssh_client(username, hostname, port=22, password=None, key_filename=None):
     """Creates (and returns) an SSHClient. Auth'n is via publickey."""
     log = logging.getLogger("create_ssh_client")
-    log.warn(">>> DEPRECATION IN PROGRESS [create_ssh_client] <<<")
+    log.warning(">>> DEPRECATION IN PROGRESS [create_ssh_client] <<<")
     ssh_client = SSHClient()
     ssh_client.load_system_host_keys()
     ssh_client.set_missing_host_key_policy(AutoAddPolicy())

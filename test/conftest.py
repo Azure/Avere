@@ -163,8 +163,8 @@ def ssh_con_fabric(test_vars):
                     if exp_err not in str(ex):
                         raise
                     else:
-                        log.warn("{0} (attempt #{1}, retrying)".format(
-                                 exp_err, str(port_attempt)))
+                        log.warning("{0} (attempt #{1}, retrying)".format(
+                                    exp_err, str(port_attempt)))
                         continue
 
                 yield client
