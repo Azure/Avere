@@ -164,11 +164,12 @@ def ssh_con_fabric(test_vars):
                         raise
                     else:
                         log.warn("{0} (attempt #{1}, retrying)".format(
-                                exp_err, str(port_attempt)))
+                                 exp_err, str(port_attempt)))
                         continue
 
                 yield client
             log.debug("{} closed".format(msg_con))
+            break  # no need to iterate again
     else:
         log.debug("Opening {}".format(msg_con))
         pub_client.open()
