@@ -9,6 +9,7 @@ import os
 # from requirements.txt
 import pytest
 from fabric import Connection
+from paramiko.ssh_exception import NoValidConnectionsError
 from scp import SCPClient
 
 # local libraries
@@ -138,25 +139,36 @@ def ssh_con_fabric(test_vars):
     # case, create an SSH tunnel before connecting to the controller.
     msg_con = "SSH connection to controller ({})".format(test_vars["controller_ip"])
     if test_vars["public_ip"] != test_vars["controller_ip"]:
-        tunnel_local_port = get_unused_local_port()
-        tunnel_remote_port = 22
+        for port_attempt in range(1, 11):
+            tunnel_local_port = get_unused_local_port()
+            tunnel_remote_port = 22
 
-        msg_con += " via jumpbox ({0}), local port {1}".format(
-            test_vars["public_ip"], tunnel_local_port)
+            msg_con += " via jumpbox ({0}), local port {1}".format(
+                test_vars["public_ip"], tunnel_local_port)
 
-        log.debug("Opening {}".format(msg_con))
-        with pub_client.forward_local(local_port=tunnel_local_port,
-                                      remote_port=tunnel_remote_port,
-                                      remote_host=test_vars["controller_ip"]):
-            client = Connection("127.0.0.1",
-                                user=test_vars["controller_user"],
-                                port=tunnel_local_port,
-                                connect_kwargs={
-                                    "key_filename": test_vars["ssh_priv_key"],
-                                })
-            client.open()
-            yield client
-        log.debug("{} closed".format(msg_con))
+            log.debug("Opening {}".format(msg_con))
+            with pub_client.forward_local(local_port=tunnel_local_port,
+                                          remote_port=tunnel_remote_port,
+                                          remote_host=test_vars["controller_ip"]):
+                client = Connection("127.0.0.1",
+                                    user=test_vars["controller_user"],
+                                    port=tunnel_local_port,
+                                    connect_kwargs={
+                                        "key_filename": test_vars["ssh_priv_key"],
+                                    })
+                try:
+                    client.open()
+                except NoValidConnectionsError as ex:
+                    exp_err = "Unable to connect to port {} on 127.0.0.1".format(tunnel_local_port)
+                    if exp_err not in str(ex):
+                        raise
+                    else:
+                        log.warn("{0} (attempt #{1}, retrying)".format(
+                                exp_err, str(port_attempt)))
+                        continue
+
+                yield client
+            log.debug("{} closed".format(msg_con))
     else:
         log.debug("Opening {}".format(msg_con))
         pub_client.open()
