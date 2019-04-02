@@ -6,7 +6,6 @@ trigger:
 
 variables:
   VFXT_TEST_VARS_FILE: 'pipelines.json'
-  VFXT_DEPLOY_NEW_VNET: 'false'
 
 jobs:
 - job: vfxt_template_testing
@@ -323,7 +322,4 @@ jobs:
     inputs:
       testResultsFiles: 'junit/test-*.xml'
       testRunTitle: 'PUBLISH: pytest results'
-
-
-
-
+      
