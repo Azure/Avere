@@ -129,3 +129,13 @@ az group deployment create --resource-group VFXT_RESOURCE_GROUP --template-file 
 After the deployment completed, check the template output for some important information like management ip address and vserver ip address range.
 
 Once you have deployed your vFXT, proceed to the data ingest of the cluster described in the data ingest article: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-data-ingest.
+
+## Debugging
+
+There are a few tools for debugging:
+  1. **Log files**
+      1. `sudo tail -f /var/lib/waagent/custom-script/download/0/stdout` - this will show the progress of the custom script extension
+      1. `sudo tail -f /var/lib/waagent/custom-script/download/0/stderr` - this will show the error output from the custom script extension     
+      1. `tail -f ~/vfxt.log` - this will show the progress of the vfxt installation
+  1. **Debug mode**
+      1. parameter `enableCloudTraceDebugging` - enabling this will enable more tracing on the vfxt nodes, and ensure vfxt resources are not cleaned up in the event of a failure.
