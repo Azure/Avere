@@ -59,7 +59,7 @@ def run_averecmd(ssh_client, node_ip, password, method, user='admin', args='',
                  timeout=60):
     """Run averecmd on the vFXT controller connected via ssh_client."""
     cmd = "averecmd --raw --no-check-certificate " + \
-          "--user {0} --password {1} --server {2} {3} {4}".format(
+          "--user {0} --password '{1}' --server {2} {3} {4}".format(
             user, password, node_ip, method, args)
     result = run_ssh_command(ssh_client, cmd, timeout=timeout)['stdout']
     try:
