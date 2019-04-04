@@ -1,8 +1,24 @@
 # Copyright (C) Microsoft Corporation. All rights reserved.
 # https://aka.ms/yaml
+
 trigger:
-- master
-- releases/*
+  branches:
+    include:
+    - master
+    - releases/*
+  paths:
+    exclude:
+    - docs/*
+
+pr:
+  branches:
+    include:
+    - master
+    - releases/*
+  paths:
+    exclude:
+    - docs/*
+
 
 variables:
   VFXT_TEST_VARS_FILE: 'pipelines.json'
@@ -322,4 +338,4 @@ jobs:
     inputs:
       testResultsFiles: 'junit/test-*.xml'
       testRunTitle: 'PUBLISH: pytest results'
-      
+
