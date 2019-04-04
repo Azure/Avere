@@ -350,7 +350,7 @@
         "typeHandlerVersion": "2.0",
         "autoUpgradeMinorVersion": true,
         "protectedSettings": {
-          "commandToExecute": "[concat(' ADMIN_PASSWORD=', variables('adminPassword'), variables('environmentVariables'), ' /bin/bash /opt/avere/installvfxt.sh')]"
+          "commandToExecute": "[concat(' ADMIN_PASSWORD=\"', variables('adminPassword'), '\" ', variables('environmentVariables'), ' /bin/bash /opt/avere/installvfxt.sh')]"
         }
       }
     }
