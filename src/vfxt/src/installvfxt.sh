@@ -54,7 +54,7 @@ function wait_arm_endpoint() {
 
 function wait_az_login_and_vnet() {
     # wait for RBAC assignments to be applied
-    # unfortunately, the RBAC assignments take undetermined time past their associated resource completions to be assigned.  
+    # unfortunately, the RBAC assignments take undetermined time past their associated resource completions to be assigned.
     if ! retrycmd_if_failure 120 5 az login --identity ; then
         echo "MANAGED IDENTITY FAILURE: failed to login after waiting 10 minutes, this is managed identity bug"
         exit 1
@@ -87,7 +87,7 @@ function configure_vfxt_template() {
     sed -i 's/^CLUSTER_NAME/#CLUSTER_NAME/g' $VFXT_INSTALL_TEMPLATE
     sed -i 's/^ADMIN_PASSWORD/#ADMIN_PASSWORD/g' $VFXT_INSTALL_TEMPLATE
     sed -i 's/^INSTANCE_TYPE/#INSTANCE_TYPE/g' $VFXT_INSTALL_TEMPLATE
-    # replace "--from-environment" with "--on-instance" since we are using 
+    # replace "--from-environment" with "--on-instance" since we are using
     sed -i 's/ --from-environment / --on-instance /g' $VFXT_INSTALL_TEMPLATE
     sed -i "s:~/vfxt.log:$VFXT_LOG_FILE:g"  $VFXT_INSTALL_TEMPLATE
     # do not trace password in log, instead the command is captured in file ~/create_cluster_command.log, with password correctly redacted
@@ -155,13 +155,13 @@ index 4e72fd73..b660d9bb 100644
 +        "southindia": "indiasouth",
 +        "westindia": "indiawest",
 +    }
- 
+
      def __init__(self, subscription_id=None, application_id=None, application_secret=None,
                         tenant_id=None, resource_group=None, storage_account=None,
 @@ -547,6 +552,9 @@ class Service(ServiceBase):
                      # reconnect on failure
                      conn = httplib.HTTPConnection(connection_host, connection_port, source_address=source_address, timeout=CONNECTION_TIMEOUT)
- 
+
 +            instance_location = instance_data['compute']['location'].lower() # region may be mixed case
 +            instance_location = cls.REGION_FIXUP.get(instance_location) or instance_location # region may be transposed
 +
@@ -189,6 +189,81 @@ EOM
     rm -f $VFXTPYDIR/*\.rej
 }
 
+function patch_vfxt_py3() {
+    VFXTPYDIR=$(dirname $(pydoc vFXT | grep usr | tr -d '[:blank:]'))
+    MSAZURE_PATCH_FILE="$VFXTPYDIR/p"
+    MSAZURE_TARGET_FILE="$VFXTPYDIR/msazure.py"
+    /bin/cat <<EOM >$MSAZURE_PATCH_FILE
+diff --git a/vFXT/msazure.py b/vFXT/msazure.py
+index bedc3ace..80c5c2e8 100644
+--- a/vFXT/msazure.py
++++ b/vFXT/msazure.py
+@@ -2039,7 +2039,7 @@ class Service(ServiceBase):
+             Raises: vFXTConfigurationException
+         '''
+         addr_range = addr_range or self.private_range
+-        netmask    = '255.255.255.255'
++        netmask = '255.255.255.255'
+
+         if not addr_range:
+             network = self._get_network()
+@@ -2053,17 +2053,38 @@ class Service(ServiceBase):
+         else:
+             log.debug("Using specified address range {}".format(addr_range))
+
+-        used = self.in_use_addresses(addr_range)
+-        if in_use:
+-            used.extend(in_use)
+-            used = list(set(used))
++        cidr = Cidr(addr_range)
++        generator = cidr.addresses()
++        # skip first reserved
++        for _ in range(0, 4):
++            next(generator)
+
+         try:
+-            addr_cidr = Cidr(addr_range)
+-            avail     = addr_cidr.available(count, contiguous, used)
++            used = set()
++            avail = []
++            conn = self.connection('network')
++            for address in generator:
++                if address in used:
++                    continue
++                check = conn.virtual_networks.check_ip_address_availability(self.network_resource_group, network.name, address)
++                if not check.available:
++                    # mark a range as used from this address to the address *before* the next available address as reported
++                    used.update(Cidr.expand_address_range(address, Cidr.to_address(Cidr.from_address(check.available_ip_addresses[0])-1)))
++                if avail and contiguous:
++                    if Cidr.from_address(avail[-1]) != Cidr.from_address(address)-1:
++                        # if we wanted a contiguous list start over if the last found isn't just before the current address
++                        avail = []
++                avail.append(address)
++                if len(avail) == count:
++                    break
++            else:
++                raise vFXTConfigurationException("Check that the subnet or specified address range has enough free addresses")
++
+             if not netmask:
+-                netmask   = addr_cidr.netmask
++                netmask = cidr.netmask
+             return (avail, netmask)
++        except vFXTConfigurationException:
++            raise
+         except Exception as e:
+             raise vFXTConfigurationException("Check that the subnet or specified address range has enough free addresses: {}".format(e))
+EOM
+
+    # don't exit if the patch was already applied
+    set +e
+    patch --quiet --forward $MSAZURE_TARGET_FILE $MSAZURE_PATCH_FILE
+    set -e
+    rm -f $MSAZURE_PATCH_FILE
+    rm -f $VFXTPYDIR/*\.pyc
+    rm -f $VFXTPYDIR/*\.orig
+    rm -f $VFXTPYDIR/*\.rej
+}
+
 function create_vfxt() {
     #######################################################
     # do not trace passwords
@@ -204,7 +279,7 @@ function create_vfxt() {
     # ensure the create cluster command is recorded for the future
     sleep 2 && ps -a -x -o cmd | egrep '[v]fxt.py' |  sed 's/--admin-password [^ ]*/--admin-password ***/' > create_cluster_command.log &
     $VFXT_INSTALL_TEMPLATE
-    
+
     #######################################################
     # re-enable tracing
     #######################################################
@@ -276,7 +351,7 @@ function apt_get_install() {
 function config_linux() {
     #hostname=`hostname -s`
     #sudo sed -ie "s/127.0.0.1 localhost/127.0.0.1 localhost ${hostname}/" /etc/hosts
-    export DEBIAN_FRONTEND=noninteractive  
+    export DEBIAN_FRONTEND=noninteractive
     apt_get_update
     apt_get_install 20 10 180 curl dirmngr python-pip nfs-common build-essential python-dev python-setuptools
     # this is no longer need because it is not longer there (mar 2019 ubuntu)
@@ -303,7 +378,7 @@ function install_vfxt_py_docs() {
 function main() {
     # ensure waagent upgrade does not interrupt this CSE
     retrycmd_if_failure 120 10 apt-mark hold walinuxagent
-    
+
     echo "wait arm endpoint"
     wait_arm_endpoint
 
@@ -318,9 +393,9 @@ function main() {
         install_vfxt
 
         echo "install_vfxt_docs"
-        install_vfxt_py_docs    
+        install_vfxt_py_docs
     fi
-    
+
     echo "wait az login"
     wait_az_login_and_vnet
 
