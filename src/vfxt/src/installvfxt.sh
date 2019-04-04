@@ -408,6 +408,7 @@ function main() {
     echo "patch vfxt.py"
     patch_vfxt_py1
     patch_vfxt_py2
+    patch_vfxt_py3
 
     echo "create_vfxt"
     create_vfxt
