@@ -29,7 +29,7 @@ function sendRPC() {
     set +x
     ipaddress=$1; action=$2
 
-    AVERECMD="averecmd --raw --no-check-certificate --user admin --password '$ADMIN_PASSWORD' --server $ipaddress"
+    AVERECMD="averecmd --raw --no-check-certificate --user admin --password $ADMIN_PASSWORD --server $ipaddress"
     if [ "$action" == "$RPC_ENABLE" ] ; then
         echo "send 'support.acceptTerms yes' to ${ipaddress}"
         $AVERECMD support.acceptTerms yes
