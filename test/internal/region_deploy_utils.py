@@ -50,7 +50,7 @@ def get_next_region_name():
     # Number of regions available for deployment (in the table).
     num_regions = table_service.get_entity(
         table_name, part_table_control, "NumberOfRegions"
-        ).NumberOfRegions.value
+        ).VALUE.value
     logging.debug("num_regions: {}".format(num_regions))
 
     # Rowkey for the last region used (from the table).
@@ -94,7 +94,7 @@ def get_next_region_name():
         table_name, {
             "PartitionKey": part_table_control,
             "RowKey": "LastRegionRowKeyUsed",
-            "LastRegionRowKeyUsed":
+            "VALUE":
                 EntityProperty(EdmType.INT32, curr_region_rowkey)
         })
 
@@ -196,7 +196,7 @@ def update_available_region_names():
     )
     last_rowkey_entity.pop("etag", None)
     last_rowkey_entity.pop("Timestamp", None)
-    last_rowkey_entity.NumberOfRegions = EntityProperty(
+    last_rowkey_entity.VALUE = EntityProperty(
         EdmType.INT32, len(new_entities))
     logging.debug("last_rowkey_entity = {}".format(last_rowkey_entity))
     table_service.update_entity(table_name, last_rowkey_entity)
@@ -206,7 +206,7 @@ def update_available_region_names():
 def get_last_region_rowkey_used():
     return table_service.get_entity(
         table_name, part_table_control, "LastRegionRowKeyUsed"
-        ).LastRegionRowKeyUsed.value
+        ).VALUE.value
 
 
 def get_region_shortname(rowkey):
