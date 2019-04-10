@@ -76,14 +76,19 @@ def mnt_nodes(ssh_con, test_vars):
             commands.append("sudo mkdir -p /nfs/node{}".format(i))
             commands.append("sudo chown nobody:nogroup /nfs/node{}".format(i))
             fstab_line = "{}:/msazure /nfs/node{} nfs ".format(vs_ip, i) + \
-                         "hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0"
+                         "hard,nointr,proto=tcp,mountproto=tcp,retry=5 0 0"
             commands.append("sudo sh -c 'echo \"{}\" >> /etc/fstab'".format(
                             fstab_line))
         run_ssh_commands(ssh_con, commands, timeout=30)
 
         # Mount the nodes.
-        run_ssh_command(ssh_con, "sudo mount -a", timeout=300)
-        run_ssh_command(ssh_con, "touch ~/STATUS.NODES_MOUNTED", timeout=30)
+        try:
+            run_ssh_command(ssh_con, "sudo mount -av", timeout=300)
+            run_ssh_command(ssh_con, "touch ~/STATUS.NODES_MOUNTED", timeout=30)
+        except e:
+            # Show what is currently mounted at the time of failure.
+            log.info(run_ssh_command(ssh_con, "cat /etc/mtab", timeout=30))
+            raise
 
 
 @pytest.fixture(scope="module")
