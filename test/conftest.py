@@ -85,10 +85,10 @@ def mnt_nodes(ssh_con, test_vars):
         try:
             run_ssh_command(ssh_con, "sudo mount -av", timeout=300)
             run_ssh_command(ssh_con, "touch ~/STATUS.NODES_MOUNTED", timeout=30)
-        except e:
+        except Exception as ex:
             # Show what is currently mounted at the time of failure.
             log.info(run_ssh_command(ssh_con, "cat /etc/mtab", timeout=30))
-            raise
+            raise ex
 
 
 @pytest.fixture(scope="module")
