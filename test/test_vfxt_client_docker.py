@@ -38,7 +38,7 @@ class TestClientDocker:
             "virtualNetworkName": atd.deploy_id + "-vnet",
             "virtualNetworkSubnetName": atd.deploy_id + "-subnet",
             "nfsCommaSeparatedAddresses": ",".join(test_vars["cluster_vs_ips"]),
-            "vmCount": 3,
+            "vmCount": 1,
             "nfsExportPath": "/msazure",
             "bootstrapScriptPath": "/bootstrap/bootstrap.vdbench.sh",
         }
@@ -49,6 +49,7 @@ class TestClientDocker:
     def test_client_docker_run(self, test_vars):  # noqa: F811
         log = logging.getLogger("test_client_docker_run")
         node_ip = test_vars["deploy_client_docker_outputs"]["node_0_ip_address"]["value"]
+
         with SSHTunnelForwarder(
             test_vars["public_ip"],
             ssh_username=test_vars["controller_user"],
