@@ -84,7 +84,6 @@ class TestClientDocker:
             finally:
                 ssh_client.close()
 
-#sudo docker run {0}/test
 if __name__ == "__main__":
     pytest.main(sys.argv)
 
