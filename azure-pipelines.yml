@@ -22,8 +22,6 @@ pr:
 
 variables:
   VFXT_TEST_VARS_FILE: 'pipelines.json'
-  RUN_DOCKER_CLIENT_STEP: 'true'
-  SKIP_RG_CLEANUP: 'true'
 
 jobs:
 - job: vfxt_template_testing
@@ -187,6 +185,10 @@ jobs:
 
   - script: |
       set -x
+      az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+      STORAGE_ACT=$(jq -r .storage_account $VFXT_TEST_VARS_FILE)
+      az storage account keys list --account-name $STORAGE_ACT > keys.json
+      export SA_KEY="$(jq -r '.[0].value' keys.json)"
       pytest test/test_vfxt_client_docker.py $PYTEST_OPTIONS
     displayName: 'TEST: docker/client'
     condition: and(succeeded(), eq(variables['RUN_DOCKER_CLIENT_STEP'], 'true'))

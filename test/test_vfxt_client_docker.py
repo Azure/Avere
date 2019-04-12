@@ -76,10 +76,10 @@ class TestClientDocker:
                     sudo docker login https://{0} -u {1} -p {2}
                     sudo docker pull {0}/test1
 
-                    echo "export STORAGEACT={3}" >> ~/.bashrc
-                    echo "export MGMIP={4}" >> ~/.bashrc
-                    echo "export KEY={5}" >> ~/.bashrc
-                    """.format(os.environ["dockerRegistry"], os.environ["dockerUsername"], os.environ["dockerPassword"], atd.deploy_id + "sa", test_vars["public_ip"], os.environ["AZURE_CLIENT_SECRET"]).split("\n")
+                    echo "export STORAGEACT='{3}'" >> ~/.bashrc
+                    echo "export MGMIP={4}'" >> ~/.bashrc
+                    echo "export SA_KEY={5}" >> ~/.bashrc
+                    """.format(os.environ["dockerRegistry"], os.environ["dockerUsername"], os.environ["dockerPassword"], atd.deploy_id + "sa", test_vars["public_ip"], os.environ["SA_KEY"]).split("\n")
                 run_ssh_commands(ssh_client, commands)
             finally:
                 ssh_client.close()
