@@ -77,8 +77,8 @@ class TestClientDocker:
                     sudo docker pull {0}/test1
 
                     echo "export STORAGEACT='{3}'" >> ~/.bashrc
-                    echo "export MGMIP={4}'" >> ~/.bashrc
-                    echo "export SA_KEY={5}" >> ~/.bashrc
+                    echo "export MGMIP='{4}'" >> ~/.bashrc
+                    echo "export SA_KEY='{5}'" >> ~/.bashrc
                     """.format(os.environ["dockerRegistry"], os.environ["dockerUsername"], os.environ["dockerPassword"], atd.deploy_id + "sa", test_vars["public_ip"], os.environ["SA_KEY"]).split("\n")
                 run_ssh_commands(ssh_client, commands)
             finally:
