@@ -63,6 +63,7 @@ def mnt_nodes(ssh_con, test_vars):
     if ("storage_account" not in test_vars) or (not test_vars["storage_account"]):
         return
 
+    log = logging.getLogger("mnt_nodes")
     check = run_ssh_command(ssh_con, "ls ~/STATUS.NODES_MOUNTED",
                             ignore_nonzero_rc=True, timeout=30)
     if check['rc']:  # nodes were not already mounted
@@ -86,8 +87,21 @@ def mnt_nodes(ssh_con, test_vars):
             run_ssh_command(ssh_con, "sudo mount -av", timeout=300)
             run_ssh_command(ssh_con, "touch ~/STATUS.NODES_MOUNTED", timeout=30)
         except Exception as ex:
-            # Show what is currently mounted at the time of failure.
-            log.info(run_ssh_command(ssh_con, "cat /etc/mtab", timeout=30))
+            def _log_diag(in_str):
+                log.info(json.dumps(in_str, indent=4).replace("\\n", "\n"))
+
+            # Show some diag info.
+            log.info("Exception caught when attempting to mount. Diag info:")
+            diag_commands = """
+                cat /etc/mtab
+                nfsstat
+                sudo ufw status
+                service portmap status
+                sudo iptables -L
+            """.split("\n")
+            _log_diag(run_ssh_commands(ssh_con, diag_commands, ignore_nonzero_rc=True))
+            for vs_ip in test_vars["cluster_vs_ips"]:
+                _log_diag(run_ssh_command(ssh_con, "rpcinfo -p " + vs_ip, ignore_nonzero_rc=True))
             raise ex
 
 
