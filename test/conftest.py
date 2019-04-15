@@ -87,8 +87,6 @@ def mnt_nodes(ssh_con, test_vars):
             log.info(json.dumps(in_str, indent=4).replace("\\n", "\n"))
         try:
             commands = """
-                sudo service portmap restart
-                sleep 3
                 sudo mount -av
                 touch ~/STATUS.NODES_MOUNTED
             """.split("\n")
@@ -101,11 +99,16 @@ def mnt_nodes(ssh_con, test_vars):
                 nfsstat
                 sudo ufw status
                 service portmap status
-                sudo iptables -L
+                sudo iptables -n -L -v
+                netstat -rn
             """.split("\n")
             _log_diag(run_ssh_commands(ssh_con, diag_commands, ignore_nonzero_rc=True))
             for vs_ip in test_vars["cluster_vs_ips"]:
                 _log_diag(run_ssh_command(ssh_con, "rpcinfo -p " + vs_ip, ignore_nonzero_rc=True))
+
+                run_ssh_command(ssh_con, "sudo apt -y install traceroute nmap", ignore_nonzero_rc=True)
+                _log_diag(run_ssh_command(ssh_con, "traceroute " + vs_ip, ignore_nonzero_rc=True))
+                _log_diag(run_ssh_command(ssh_con, "sudo nmap -sS " + vs_ip, ignore_nonzero_rc=True))
             raise
 
 
