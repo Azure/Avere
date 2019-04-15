@@ -38,7 +38,7 @@ class TestClientDocker:
             "virtualNetworkName": atd.deploy_id + "-vnet",
             "virtualNetworkSubnetName": atd.deploy_id + "-subnet",
             "nfsCommaSeparatedAddresses": ",".join(test_vars["cluster_vs_ips"]),
-            "vmCount": 3,
+            "vmCount": 1,
             "nfsExportPath": "/msazure",
             "bootstrapScriptPath": "/bootstrap/bootstrap.vdbench.sh",
         }
@@ -49,6 +49,7 @@ class TestClientDocker:
     def test_client_docker_run(self, test_vars):  # noqa: F811
         log = logging.getLogger("test_client_docker_run")
         node_ip = test_vars["deploy_client_docker_outputs"]["node_0_ip_address"]["value"]
+        atd = test_vars["atd_obj"]
         with SSHTunnelForwarder(
             test_vars["public_ip"],
             ssh_username=test_vars["controller_user"],
@@ -73,13 +74,15 @@ class TestClientDocker:
                     curl -fsSL https://get.docker.com -o get-docker.sh
                     sudo sh get-docker.sh
                     sudo docker login https://{0} -u {1} -p {2}
-                    sudo docker pull {0}/test
-                    sudo docker run {0}/test
-                    """.format(os.environ["dockerRegistry"], os.environ["dockerUsername"], os.environ["dockerPassword"]).split("\n")
+                    sudo docker pull {0}/test1
+
+                    echo "export STORAGEACT='{3}'" >> ~/.bashrc
+                    echo "export MGMIP='{4}'" >> ~/.bashrc
+                    echo "export SA_KEY='{5}'" >> ~/.bashrc
+                    """.format(os.environ["dockerRegistry"], os.environ["dockerUsername"], os.environ["dockerPassword"], atd.deploy_id + "sa", test_vars["public_ip"], os.environ["SA_KEY"]).split("\n")
                 run_ssh_commands(ssh_client, commands)
             finally:
                 ssh_client.close()
-
 
 if __name__ == "__main__":
     pytest.main(sys.argv)
