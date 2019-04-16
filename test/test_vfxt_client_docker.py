@@ -75,7 +75,7 @@ class TestClientDocker:
                     curl -fsSL https://get.docker.com -o get-docker.sh
                     sudo sh get-docker.sh
                     sudo docker login https://{0} -u {1} -p {2}
-                    sudo docker pull {0}/test1
+                    sudo docker pull {0}/test
 
                     echo "export STORAGEACT='{3}'" >> ~/.bashrc
                     echo "export MGMIP='{4}'" >> ~/.bashrc
