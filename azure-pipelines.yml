@@ -192,6 +192,7 @@ jobs:
     displayName: 'TEST: docker/client'
     condition: and(succeeded(), eq(variables['RUN_DOCKER_CLIENT_STEP'], 'true'))
     env:
+      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
