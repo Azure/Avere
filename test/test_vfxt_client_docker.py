@@ -50,6 +50,7 @@ class TestClientDocker:
         log = logging.getLogger("test_client_docker_run")
         node_ip = test_vars["deploy_client_docker_outputs"]["node_0_ip_address"]["value"]
         atd = test_vars["atd_obj"]
+        cluster_mgmt_ip = test_vars["cluster_mgmt_ip"]
         with SSHTunnelForwarder(
             test_vars["public_ip"],
             ssh_username=test_vars["controller_user"],
@@ -79,7 +80,9 @@ class TestClientDocker:
                     echo "export STORAGEACT='{3}'" >> ~/.bashrc
                     echo "export MGMIP='{4}'" >> ~/.bashrc
                     echo "export SA_KEY='{5}'" >> ~/.bashrc
-                    """.format(os.environ["dockerRegistry"], os.environ["dockerUsername"], os.environ["dockerPassword"], atd.deploy_id + "sa", test_vars["public_ip"], os.environ["SA_KEY"]).split("\n")
+                    echo "export CLUSTER_MGMT_IP='{6}'" >> ~/.bashrc
+                    echo "export ADMIN_PW='{7}'" >> ~/.bashrc
+                    """.format(os.environ["dockerRegistry"], os.environ["dockerUsername"], os.environ["dockerPassword"], atd.deploy_id + "sa", test_vars["public_ip"], os.environ["SA_KEY"], cluster_mgmt_ip, os.environ["AVERE_ADMIN_PW"]).split("\n")
                 run_ssh_commands(ssh_client, commands)
             finally:
                 ssh_client.close()
