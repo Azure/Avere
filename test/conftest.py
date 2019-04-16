@@ -14,8 +14,8 @@ from scp import SCPClient
 
 # local libraries
 from arm_template_deploy import ArmTemplateDeploy
-from lib.helpers import (get_unused_local_port, run_ssh_command,
-                         run_ssh_commands, wait_for_op)
+from lib.helpers import (get_unused_local_port, run_averecmd, run_ssh_command,
+                         run_ssh_commands, split_ip_range, wait_for_op)
 
 
 # COMMAND-LINE OPTIONS ########################################################
@@ -50,11 +50,77 @@ def pytest_addoption(parser):
 
 # FIXTURES ####################################################################
 @pytest.fixture()
-def averecmd_params(ssh_con, test_vars):
+def cluster_ips(test_vars):
+    """
+    Return a list of known cluster IPs. The cluster mgmt IP, at a minimum,
+    must be known. Cluster node and vserver IPs are also added to the list of
+    cluster IPs that is returned.
+    """
+    c_ips = [test_vars["cluster_mgmt_ip"]]
+    if "cluster_node_ips" in test_vars:
+        c_ips += test_vars["cluster_node_ips"]
+    if "cluster_vs_ips" in test_vars:
+        c_ips += test_vars["cluster_vs_ips"]
+    return c_ips
+
+
+@pytest.fixture()
+def node_ips(cluster_ips, ssh_con, test_vars):
+    """Queries the cluster to get a list of IPs for each node."""
+    log = logging.getLogger("node_ips")
+    last_ex = None
+    for _ip in cluster_ips:
+        # For resiliency, attempt to issue averecmd calls to known cluster IPs.
+        try:
+            result = run_averecmd(ssh_client=ssh_con,
+                                  password=os.environ["AVERE_ADMIN_PW"],
+                                  node_ip=_ip,
+                                  method="cluster.get")
+            test_vars["averecmd_ip"] = _ip  # this IP worked for averecmd
+            c_ips = result["clusterIPs"][0]
+            node_ip_range = "{0}-{1}".format(c_ips["firstIP"], c_ips["lastIP"])
+            test_vars["cluster_node_ips"] = split_ip_range(node_ip_range)
+            return test_vars["cluster_node_ips"]
+        except Exception as e:
+            log.error("cluster.get failed for IP {}".format(_ip))
+            log.error(e)
+            last_ex = e
+    assert not last_ex
+
+
+@pytest.fixture()
+def node_names(cluster_ips, ssh_con, test_vars):
+    """Queries the cluster to get a list of node names."""
+    log = logging.getLogger("node_names")
+    last_ex = None
+    for _ip in cluster_ips:
+        # For resiliency, attempt to issue averecmd calls to known cluster IPs.
+        try:
+            nodes = run_averecmd(ssh_client=ssh_con,
+                                 password=os.environ["AVERE_ADMIN_PW"],
+                                 node_ip=_ip,
+                                 method="node.list")
+            test_vars["averecmd_ip"] = _ip  # this IP worked for averecmd
+            test_vars["nodes"] = nodes
+            return test_vars["nodes"]
+        except Exception as e:
+            log.error("node.list failed for IP {}".format(_ip))
+            log.error(e)
+            last_ex = e
+    assert not last_ex
+
+
+@pytest.fixture()
+def averecmd_params(ssh_con, node_ips, node_names, test_vars):
+    """Convenience fixture: common averecmd parameters."""
+    node_ip = test_vars["cluster_mgmt_ip"]
+    if "averecmd_ip" in test_vars:
+        node_ip = test_vars["averecmd_ip"]
+
     return {
         "ssh_client": ssh_con,
         "password": os.environ["AVERE_ADMIN_PW"],
-        "node_ip": test_vars["cluster_mgmt_ip"]
+        "node_ip": node_ip
     }
 
 

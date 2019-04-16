@@ -24,6 +24,43 @@ from lib.helpers import (get_unused_local_port, run_averecmd, run_ssh_commands,
 class TestVfxtClusterStatus:
     """Basic vFXT cluster health tests."""
 
+    def test_ping_node_ips(self, node_ips, ssh_con, test_vars):  # noqa: F811
+        """Ping the node IPs from the controller."""
+        commands = []
+        for node_ip in node_ips:
+            commands.append("ping -c 3 {}".format(node_ip))
+        run_ssh_commands(ssh_con, commands)
+
+    def test_node_health(self, averecmd_params, node_names, test_vars):  # noqa: F811
+        """Get the node IPs and store them in test_vars."""
+        log = logging.getLogger("test_node_health")
+
+        node_ips = {}  # will store a map of node names and IPs
+        for node in node_names:
+            timeout_secs = 60
+            time_start = time()
+            time_end = time_start + timeout_secs
+            while time() <= time_end:
+                result = run_averecmd(**averecmd_params,
+                                      method="node.get", args=node)
+                node_state = result[node]["state"]
+                log.info('Node {0} has state "{1}"'.format(node, node_state))
+                if node_state == "up":
+                    # Save the node IPs while we're here.
+                    node_ips[node] = [x["IP"] for x in result[node]["clusterIPs"]]
+                    node_ips[node].append(result[node]["clientFacingIPs"]["vserver"][0]["IP"])
+                    break
+                sleep(10)
+            assert node_state == "up"
+
+        if node_ips:
+            test_vars["node_ips"] = node_ips
+
+    def test_ha_enabled(self, averecmd_params):  # noqa: F811
+        """Check that high-availability (HA) is enabled."""
+        result = run_averecmd(**averecmd_params, method="cluster.get")
+        assert result["ha"] == "enabled"
+
     def test_basic_fileops(self, mnt_nodes, scp_con, ssh_con, test_vars):  # noqa: E501, F811
         """
         Quick check of file operations.
@@ -43,30 +80,8 @@ class TestVfxtClusterStatus:
             """.format(script_name).split("\n")
         run_ssh_commands(ssh_con, commands)
 
-    def test_node_health(self, averecmd_params):  # noqa: F811
-        """Check that cluster is reporting that all nodes are up."""
-        log = logging.getLogger("test_node_health")
-        for node in run_averecmd(**averecmd_params, method="node.list"):
-            timeout_secs = 60
-            time_start = time()
-            time_end = time_start + timeout_secs
-            while time() <= time_end:
-                result = run_averecmd(**averecmd_params,
-                                      method="node.get", args=node)
-                node_state = result[node]["state"]
-                log.info('Node {0} has state "{1}"'.format(node, node_state))
-                if node_state == "up":
-                    break
-                sleep(10)
-            assert node_state == "up"
-
-    def test_ha_enabled(self, averecmd_params):  # noqa: F811
-        """Check that high-availability (HA) is enabled."""
-        result = run_averecmd(**averecmd_params, method="cluster.get")
-        assert result["ha"] == "enabled"
-
     def test_ping_vservers(self, ssh_con, test_vars):  # noqa: F811
-        """Ping all of the vserver IPs from the controller."""
+        """Ping the vserver IPs from the controller."""
         commands = []
         for vs_ip in test_vars["cluster_vs_ips"]:
             commands.append("ping -c 3 {}".format(vs_ip))
