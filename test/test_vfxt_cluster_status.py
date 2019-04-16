@@ -114,7 +114,7 @@ class TestVfxtSupport:
 
         assert(not cores_found)
 
-    def test_artifacts_collect(self, averecmd_params, scp_con, test_vars):  # noqa: F811, E501
+    def test_artifacts_collect(self, averecmd_params, node_names, scp_con, test_vars):  # noqa: F811, E501
         """
         Collect test artifacts (node logs, rolling trace) from each node.
         Artifacts are stored to local directories.
@@ -131,10 +131,8 @@ class TestVfxtSupport:
         scp_con.put(test_vars["ssh_priv_key"], "~/.ssh/.")
         scp_con.put(test_vars["ssh_pub_key"], "~/.ssh/.")
 
-        nodes = run_averecmd(**averecmd_params, method="node.list")
-        log.debug("Nodes found: {}".format(nodes))
         last_error = None
-        for node in nodes:
+        for node in node_names:
             node_dir = artifacts_dir + "/" + node
             node_dir_log = node_dir + "/log"
             node_dir_trace = node_dir + "/trace"
