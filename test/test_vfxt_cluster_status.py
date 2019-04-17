@@ -48,7 +48,8 @@ class TestVfxtClusterStatus:
                 if node_state == "up":
                     # Save the node IPs while we're here.
                     node_ips[node] = [x["IP"] for x in result[node]["clusterIPs"]]
-                    node_ips[node].append(result[node]["clientFacingIPs"]["vserver"][0]["IP"])
+                    if result[node]["clientFacingIPs"]["vserver"]:
+                        node_ips[node].append(result[node]["clientFacingIPs"]["vserver"][0]["IP"])
                     break
                 sleep(10)
             assert node_state == "up"
