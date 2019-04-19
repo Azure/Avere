@@ -276,7 +276,7 @@
       "publisher": "microsoft-avere",
       "product": "vfxt"
     },
-    "buildController": true,
+    "buildController": false,
     "plan": "[if(variables('buildController'),json('null'),variables('controllerStorageProfilePlan'))]",
     "storageProfile": "[if(variables('buildController'),variables('ubuntuStorageProfile'),variables('controllerStorageProfile'))]",
     "vsip": "VSERVER_IPS=",
