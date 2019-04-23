@@ -23,13 +23,24 @@ from lib.helpers import create_ssh_client, run_ssh_commands, wait_for_op
 
 
 class TestClientDocker:
-    def test_client_docker_setup(self, mnt_nodes, ssh_con):  # noqa: F811
+    def test_client_docker_setup(self, mnt_nodes, ssh_con, test_vars):  # noqa: F811
         log = logging.getLogger("test_client_dockersetup")
+        atd = test_vars["atd_obj"]
+        cluster_mgmt_ip = test_vars["cluster_mgmt_ip"]
+
         commands = """
             sudo mkdir -p /nfs/node0/bootstrap
             cd /nfs/node0/bootstrap
             sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.dockerfile.sh https://raw.githubusercontent.com/Azure/Avere/docker/test/bootstrap.dockerfile.sh
-            """.split("\n")
+            sed -i -e 's/<dockerRegistry>/{0}/g' bootstrap.dockerfile.sh
+            sed -i -e 's/<dockerUsername>/{1}/g' bootstrap.dockerfile.sh
+            sed -i -e 's/<dockerPassword>/{2}/g' bootstrap.dockerfile.sh
+            sed -i -e 's/<storageAcct>/{3}/g' bootstrap.dockerfile.sh
+            sed -i -e 's/<publicIp>/{4}/g' bootstrap.dockerfile.sh
+            sed -i -e 's/<saKey>/{5}/g' bootstrap.dockerfile.sh
+            sed -i -e 's/<clusterMgmt>/{6}/g' bootstrap.dockerfile.sh
+            sed -i -e 's/<avereAdminPw>/{7}/g' bootstrap.dockerfile.sh
+            """.format(os.environ["dockerRegistry"], os.environ["dockerUsername"], os.environ["dockerPassword"], atd.deploy_id + "sa", test_vars["public_ip"], os.environ["SA_KEY"], cluster_mgmt_ip, os.environ["AVERE_ADMIN_PW"]).split("\n")
         run_ssh_commands(ssh_con, commands)
 
     def test_client_docker_deploy(self, test_vars):  # noqa: F811
@@ -81,18 +92,7 @@ class TestClientDocker:
                     scp_client.close()
                 commands = """
                     ~/copy_idrsa.sh
-                    cd
-                    curl -fsSL https://get.docker.com -o get-docker.sh
-                    sudo sh get-docker.sh
-                    sudo docker login https://{0} -u {1} -p {2}
-                    sudo docker pull {0}/test
-
-                    echo "export STORAGEACT='{3}'" >> ~/.bashrc
-                    echo "export MGMIP='{4}'" >> ~/.bashrc
-                    echo "export SA_KEY='{5}'" >> ~/.bashrc
-                    echo "export CLUSTER_MGMT_IP='{6}'" >> ~/.bashrc
-                    echo "export ADMIN_PW='{7}'" >> ~/.bashrc
-                    """.format(os.environ["dockerRegistry"], os.environ["dockerUsername"], os.environ["dockerPassword"], atd.deploy_id + "sa", test_vars["public_ip"], os.environ["SA_KEY"], cluster_mgmt_ip, os.environ["AVERE_ADMIN_PW"]).split("\n")
+                    """.split("\n")
                 run_ssh_commands(ssh_client, commands)
             finally:
                 ssh_client.close()
