@@ -23,6 +23,15 @@ from lib.helpers import create_ssh_client, run_ssh_commands, wait_for_op
 
 
 class TestClientDocker:
+    def test_client_docker_setup(self, mnt_nodes, ssh_con):  # noqa: F811
+        log = logging.getLogger("test_client_dockersetup")
+        commands = """
+            sudo mkdir -p /nfs/node0/bootstrap
+            cd /nfs/node0/bootstrap
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.dockerfile.sh https://raw.githubusercontent.com/Azure/Avere/docker/test/bootstrap.dockerfile.sh
+            """.split("\n")
+        run_ssh_commands(ssh_con, commands)
+
     def test_client_docker_deploy(self, test_vars):  # noqa: F811
         log = logging.getLogger("test_vdbench_deploy")
         atd = test_vars["atd_obj"]
@@ -38,9 +47,9 @@ class TestClientDocker:
             "virtualNetworkName": atd.deploy_id + "-vnet",
             "virtualNetworkSubnetName": atd.deploy_id + "-subnet",
             "nfsCommaSeparatedAddresses": ",".join(test_vars["cluster_vs_ips"]),
-            "vmCount": 1,
+            "vmCount": 3,
             "nfsExportPath": "/msazure",
-            "bootstrapScriptPath": "/bootstrap/bootstrap.vdbench.sh",
+            "bootstrapScriptPath": "/bootstrap/bootstrap.dockerfile.sh",
         }
         atd.deploy_name = "test_client_docker"
         deploy_result = wait_for_op(atd.deploy())
@@ -71,6 +80,7 @@ class TestClientDocker:
                 finally:
                     scp_client.close()
                 commands = """
+                    ~/copy_idrsa.sh
                     cd
                     curl -fsSL https://get.docker.com -o get-docker.sh
                     sudo sh get-docker.sh
