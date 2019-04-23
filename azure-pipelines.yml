@@ -1,27 +1,31 @@
 # Copyright (C) Microsoft Corporation. All rights reserved.
 # https://aka.ms/yaml
 
-trigger:
-  branches:
-    include:
-    - master
-    - releases/*
-  paths:
-    exclude:
-    - docs/*
+# trigger:
+#   branches:
+#     include:
+#     - master
+#     - releases/*
+#   paths:
+#     exclude:
+#     - docs/*
 
-pr:
-  branches:
-    include:
-    - master
-    - releases/*
-  paths:
-    exclude:
-    - docs/*
+# pr:
+#   branches:
+#     include:
+#     - master
+#     - releases/*
+#   paths:
+#     exclude:
+#     - docs/*
 
 
 variables:
   VFXT_TEST_VARS_FILE: 'pipelines.json'
+  VFXT_DEPLOY_LOCATION: 'westus2'
+  RUN_DOCKER_CLIENT_STEP: 'true'
+  SKIP_RG_CLEANUP: 'true'
+
 
 jobs:
 - job: vfxt_template_testing
