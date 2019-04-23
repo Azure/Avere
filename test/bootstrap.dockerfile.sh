@@ -108,12 +108,27 @@ EOM
     chown $LINUX_USER:$LINUX_USER $FILENAME
 }
 
+function write_docker_steps(){
+    cd
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sudo sh get-docker.sh
+    sudo docker login https://<dockerRegistry> -u <dockerUsername> -p <dockerPassword>
+    sudo docker pull <dockerRegistry>/test
+
+    echo "export STORAGEACT='<storageAcct>'" >> ~/.bashrc
+    echo "export MGMIP='<publicIp>'" >> ~/.bashrc
+    echo "export SA_KEY='<saKey>'" >> ~/.bashrc
+    echo "export CLUSTER_MGMT_IP='<clusterMgmt>'" >> ~/.bashrc
+    echo "export ADMIN_PW='<avereAdminPw>'" >> ~/.bashrc
+    cd -
+
+}
 
 
 function write_docker_files() {
     write_copy_idrsa
+    write_docker_steps
     write_azure_clients
-
 }
 
 function main() {
