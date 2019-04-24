@@ -22,7 +22,6 @@
 
 variables:
   VFXT_TEST_VARS_FILE: 'pipelines.json'
-  VFXT_DEPLOY_LOCATION: 'westus2'
   RUN_DOCKER_CLIENT_STEP: 'true'
   SKIP_RG_CLEANUP: 'true'
 
