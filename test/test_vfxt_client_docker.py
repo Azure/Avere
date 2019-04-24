@@ -27,7 +27,6 @@ class TestClientDocker:
         log = logging.getLogger("test_client_dockersetup")
         atd = test_vars["atd_obj"]
         cluster_mgmt_ip = test_vars["cluster_mgmt_ip"]
-
         commands = """
             sudo mkdir -p /nfs/node0/bootstrap
             cd /nfs/node0/bootstrap
