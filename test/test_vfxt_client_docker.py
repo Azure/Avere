@@ -32,6 +32,8 @@ class TestClientDocker:
             sudo mkdir -p /nfs/node0/bootstrap
             cd /nfs/node0/bootstrap
             sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.dockerfile.sh https://raw.githubusercontent.com/Azure/Avere/docker/test/bootstrap.dockerfile.sh
+            pwd
+            ls
             sed -i -e 's/<dockerRegistry>/{0}/g' bootstrap.dockerfile.sh
             sed -i -e 's/<dockerUsername>/{1}/g' bootstrap.dockerfile.sh
             sed -i -e 's/<dockerPassword>/{2}/g' bootstrap.dockerfile.sh
