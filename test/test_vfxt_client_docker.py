@@ -96,6 +96,7 @@ class TestClientDocker:
             finally:
                 ssh_client.close()
 
+
 if __name__ == "__main__":
     pytest.main(sys.argv)
 
