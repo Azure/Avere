@@ -32,14 +32,14 @@ class TestClientDocker:
             sudo mkdir -p /nfs/node0/bootstrap
             cd /nfs/node0/bootstrap
             sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.dockerfile.sh https://raw.githubusercontent.com/Azure/Avere/docker/test/bootstrap.dockerfile.sh
-            sed -i -e 's/<dockerRegistry>/{0}/g' /nfs/node0/bootstrap/bootstrap.dockerfile.sh
-            sed -i -e 's/<dockerUsername>/{1}/g' /nfs/node0/bootstrap/bootstrap.dockerfile.sh
-            sed -i -e 's/<dockerPassword>/{2}/g' /nfs/node0/bootstrap/bootstrap.dockerfile.sh
-            sed -i -e 's/<storageAcct>/{3}/g' /nfs/node0/bootstrap/bootstrap.dockerfile.sh
-            sed -i -e 's/<publicIp>/{4}/g' /nfs/node0/bootstrap/bootstrap.dockerfile.sh
-            sed -i -e 's/<saKey>/{5}/g' /nfs/node0/bootstrap/bootstrap.dockerfile.sh
-            sed -i -e 's/<clusterMgmt>/{6}/g' /nfs/node0/bootstrap/bootstrap.dockerfile.sh
-            sed -i -e 's/<avereAdminPw>/{7}/g' /nfs/node0/bootstrap/bootstrap.dockerfile.sh
+            sudo sed -i -e 's/<dockerRegistry>/{0}/g' /nfs/node0/bootstrap/bootstrap.dockerfile.sh
+            sudo sed -i -e 's/<dockerUsername>/{1}/g' /nfs/node0/bootstrap/bootstrap.dockerfile.sh
+            sudo sed -i -e 's/<dockerPassword>/{2}/g' /nfs/node0/bootstrap/bootstrap.dockerfile.sh
+            sudo sed -i -e 's/<storageAcct>/{3}/g' /nfs/node0/bootstrap/bootstrap.dockerfile.sh
+            sudo sed -i -e 's/<publicIp>/{4}/g' /nfs/node0/bootstrap/bootstrap.dockerfile.sh
+            sudo sed -i -e 's/<saKey>/{5}/g' /nfs/node0/bootstrap/bootstrap.dockerfile.sh
+            sudo sed -i -e 's/<clusterMgmt>/{6}/g' /nfs/node0/bootstrap/bootstrap.dockerfile.sh
+            sudo sed -i -e 's/<avereAdminPw>/{7}/g' /nfs/node0/bootstrap/bootstrap.dockerfile.sh
             """.format(os.environ["dockerRegistry"], os.environ["dockerUsername"], os.environ["dockerPassword"], atd.deploy_id + "sa", test_vars["public_ip"], os.environ["SA_KEY"], cluster_mgmt_ip, os.environ["AVERE_ADMIN_PW"]).split("\n")
         run_ssh_commands(ssh_con, commands)
 
