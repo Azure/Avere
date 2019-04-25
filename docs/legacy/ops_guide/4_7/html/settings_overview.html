@@ -73,17 +73,17 @@
 <p class="first admonition-title">Note</p>
 <p>In early versions of Avere OS it was mandatory to have one vserver per core filer. This is no longer true, and most administrators set up a <em>global namespace</em> configuration, in which one vserver can handle requests for multiple core filers.</p>
 <p>The global namespace configuration also allows vservers to show a client-side virtual filesystem that does not necessarily correspond exactly to back-end storage.</p>
-<p class="last">A legacy option called <em>simple namespace</em> also exists in the product.</p>
+<p class="last">A legacy option called <em>simple namespace</em> also exists in some versions of the product.</p>
 </div>
 <p>The vserver is created by the nodes that make up your cluster. It does not reside in any one node.</p>
-<p>Before setting up your cluster, you should decide how many vservers to create, and whether they will use the Avere OS global namespace (GNS) feature, or be configured for simple namespace. You must choose the namespace type when creating a vserver.</p>
+<p>Before setting up your cluster, you should decide how many vservers to create, and whether they will use the Avere OS global namespace (GNS) feature, or be configured for simple namespace (not recommended). You must choose the namespace type when creating a vserver.</p>
 <ul class="simple">
 <li>With a global namespace configuration:<ul>
 <li>One vserver can process requests for multiple, diverse core filers</li>
 <li>Clients see a virtual filesystem defined by the cluster administrator</li>
 </ul>
 </li>
-<li>In a simple namespace configuration:<ul>
+<li>In a simple namespace configuration (not recommended):<ul>
 <li>One vserver is mapped to each core filer</li>
 <li>The vserver shows clients the exact same directory structure that exists on the core
 filer</li>
