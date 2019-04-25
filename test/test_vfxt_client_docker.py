@@ -91,6 +91,8 @@ class TestClientDocker:
                     scp_client.close()
                 commands = """
                     ~/copy_idrsa.sh
+                    cd
+                    ./docker.sh
                     """.split("\n")
                 run_ssh_commands(ssh_client, commands)
             finally:
