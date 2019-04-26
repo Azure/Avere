@@ -15,7 +15,7 @@ ARM_ENDPOINT=https://management.azure.com/metadata/endpoints?api-version=2017-12
 
 function retrycmd_if_failure() {
     set +e
-    retries=$1; max_wait_sleep=$2; shift && shift
+    retries=$1; wait_sleep=$2; shift && shift
     for i in $(seq 1 $retries); do
         ${@}
         [ $? -eq 0  ] && break || \
@@ -24,7 +24,7 @@ function retrycmd_if_failure() {
             set -e
             return 1
         else
-            sleep $(($RANDOM % $max_wait_sleep))
+            sleep $wait_sleep
         fi
     done
     set -e
@@ -46,7 +46,7 @@ function wait_azure_home_dir() {
 function wait_arm_endpoint() {
     # ensure the arm endpoint is reachable
     # https://docs.microsoft.com/en-us/azure/virtual-machines/windows/instance-metadata-service#getting-azure-environment-where-the-vm-is-running
-    if ! retrycmd_if_failure 12 2 curl -m 5 -o /dev/null $ARM_ENDPOINT ; then
+    if ! retrycmd_if_failure 24 5 curl -m 5 -o /dev/null $ARM_ENDPOINT ; then
         echo "no internet! arm endpoint $ARM_ENDPOINT not reachable.  Please see https://github.com/Azure/Avere/tree/master/src/vfxt#internet-access on how to configure firewall, dns, or proxy."
         exit 1
     fi
@@ -302,7 +302,7 @@ function install_vfxt_py_docs() {
 
 function main() {
     # ensure waagent upgrade does not interrupt this CSE
-    retrycmd_if_failure 120 10 apt-mark hold walinuxagent
+    retrycmd_if_failure 240 5 apt-mark hold walinuxagent
     
     echo "wait arm endpoint"
     wait_arm_endpoint
@@ -341,7 +341,7 @@ function main() {
     print_vfxt_vars
 
     # ensure waagent upgrade can proceed
-    retrycmd_if_failure 120 5 apt-mark unhold walinuxagent
+    retrycmd_if_failure 240 5 apt-mark unhold walinuxagent
 
     echo "installation complete"
 }
