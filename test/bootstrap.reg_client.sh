@@ -76,14 +76,45 @@ function setup_regression_clients() {
     # Exit on any errors.
     set -e
 
-    # Install Ansible.
-    sudo apt install ansible -y
+    # $HOME isn't set at this point in the VM's lifecycle. Set it and go there.
+    ORIG_DIR=$(pwd)
+    export HOME=/home/$LINUX_USER
+    cd $HOME
 
-    # Environment variables.
-    GIT_USERNAME="<git_username>"
-    GIT_PASSWORD="<git_password>"
+    # Install Ansible and Blobfuse.
+    wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb
+    sudo dpkg -i packages-microsoft-prod.deb
+    sudo apt update
+    sudo apt install ansible blobfuse -y
+
+    # Configure blobfuse.
+    sudo mkdir /mnt/resource/blobfusetmp -p
+    sudo chown $LINUX_USER /mnt/resource/blobfusetmp
+    mkdir -p blobmnt
+    echo "accountName <pipelines_sa>"         >  fuse_connection.cfg
+    echo "accountKey <pipelines_sa_key>"      >> fuse_connection.cfg
+    echo "containerName vfxt-pipelines-blob"  >> fuse_connection.cfg
+    chmod 600 fuse_connection.cfg
+
+    # Mount the Azure blob to blobmnt.
+    blobfuse blobmnt \
+        --tmp-path=/mnt/resource/blobfusetmp \
+        --config-file=fuse_connection.cfg \
+        --file-cache-timeout-in-seconds=0 \
+        -o attr_timeout=240 \
+        -o entry_timeout=240 \
+        -o negative_timeout=120
+
+    # Copy Azure blob contents (STAF tarball).
+    cp blobmnt/STAF*.tar.gz /tmp
+
+    # Unmount the Azure blob and clean up.
+    sudo umount blobmnt
+    sudo rm -r blobmnt /mnt/resource/blobfusetmp
 
     # Clone Avre-ansible and Avere-sv repos.
+    GIT_USERNAME="<git_username>"
+    GIT_PASSWORD="<git_password>"
     git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@msazure.visualstudio.com/DefaultCollection/One/_git/Avere-ansible
     git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@msazure.visualstudio.com/DefaultCollection/One/_git/Avere-sv
 
@@ -91,17 +122,20 @@ function setup_regression_clients() {
     cp Avere-sv/requirements.txt /tmp/requirements.sv
     cp Avere-sv/requirements.txt /tmp/requirements.ats
 
-    # Get STAF tarball and then move it to /tmp.
-    wget https://sourceforge.net/projects/staf/files/staf/V3.4.26/STAF3426-linux-amd64.tar.gz
-    mv STAF3426-linux-amd64.tar.gz /tmp
+    # Copy pip.conf to a few places.
+    PIP_CONF_FILE=$(find /nfs -name pip.conf -print -quit)
+    sudo cp -v $PIP_CONF_FILE /etc/.
+    sudo cp -v $PIP_CONF_FILE /etc/default/.
 
-    # # Copy pip.conf to a few places.
-    # sudo cp pip.conf /etc/.
-    # sudo cp pip.conf /etc/default/.
+    # Run Ansible playbooks.
+    ansible-playbook Avere-ansible/ansible/ats_venv/ats_venv.yml
+    ansible-playbook Avere-ansible/ansible/sv_venv/sv_venv.yml
+    ansible-playbook Avere-ansible/ansible/staf/staf.yml
 
-    # # Run Ansible playbooks.
-    # ansible-playbook Avere-ansible/ansible/ats_venv/ats_venv.yml
-    # ansible-playbook Avere-ansible/ansible/sv_venv/sv_venv.yml
+    # Set STAF envars to load on login.
+    sudo echo "source /usr/local/staf/STAFEnv.sh" >> ~/.bashrc
+
+    cd $ORIG_DIR
 
     set +e
 }
@@ -156,9 +190,3 @@ exit ##
 # echo "# needed for STAF" >> hosts
 # echo "10.0.0.4 staf" >> hosts      ####### NEED ARG
 # sudo mv hosts /etc/hosts
-
-# # Run Ansible playbooks.
-# ansible-playbook Avere-ansible/ansible/staf/staf.yml
-
-# # Set STAF envars.
-# . /usr/local/staf/STAFEnv.sh

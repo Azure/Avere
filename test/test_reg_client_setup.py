@@ -36,7 +36,9 @@ class TestRegressionClientSetup:
         # This dict maps those tags to the values they should eventually have.
         replacements = {
             '<git_username>': os.environ["GIT_UN"],
-            '<git_password>': os.environ["GIT_PAT"]
+            '<git_password>': os.environ["GIT_PAT"],
+            '<pipelines_sa>': os.environ["PIPELINES_DATA_STORAGE_ACCOUNT"],
+            '<pipelines_sa_key>': os.environ["PIPELINES_DATA_STORAGE_ACCOUNT_KEY"]
         }
 
         for boot_file in ["bootstrap.reg_client.sh", "bootstrap.reg_client_staf.sh"]:

@@ -76,8 +76,49 @@ function setup_regression_clients() {
     # Exit on any errors.
     set -e
 
-    # Install Docker.
-    sudo apt install docker.io -y
+    # $HOME isn't set at this point in the VM's lifecycle. Set it and go there.
+    ORIG_DIR=$(pwd)
+    export HOME=/home/$LINUX_USER
+    cd $HOME
+
+    # Install Docker and Blobfuse.
+    wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb
+    sudo dpkg -i packages-microsoft-prod.deb
+    sudo apt update
+    sudo apt install docker.io blobfuse -y
+
+    # Configure blobfuse.
+    sudo mkdir /mnt/resource/blobfusetmp -p
+    sudo chown $LINUX_USER /mnt/resource/blobfusetmp
+    mkdir -p blobmnt
+    echo "accountName <pipelines_sa>"         >  fuse_connection.cfg
+    echo "accountKey <pipelines_sa_key>"      >> fuse_connection.cfg
+    echo "containerName vfxt-pipelines-blob"  >> fuse_connection.cfg
+    chmod 600 fuse_connection.cfg
+
+    # Mount the Azure blob to blobmnt.
+    blobfuse blobmnt \
+        --tmp-path=/mnt/resource/blobfusetmp \
+        --config-file=fuse_connection.cfg \
+        --file-cache-timeout-in-seconds=0 \
+        -o attr_timeout=240 \
+        -o entry_timeout=240 \
+        -o negative_timeout=120
+
+    # Copy Azure blob contents.
+    cp -r blobmnt/docker-staf .
+
+    # Unmount the Azure blob and clean up.
+    sudo umount blobmnt
+    sudo rm -r blobmnt /mnt/resource/blobfusetmp
+
+    # Build Docker STAF image.
+    sudo docker build -t azpipelines/staf docker-staf/.
+
+    # Run Docker STAF image.
+    sudo docker run -d -p 6500:6500 -p 6550:6550 -t azpipelines/staf
+
+    cd $ORIG_DIR
 
     set +e
 }
