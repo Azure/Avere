@@ -1,0 +1,374 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "uniquename": {
+      "type": "string",
+      "metadata": {
+        "description": "The unique name used for resource names associated with these virtual machine clients"
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "defaultValue": "azureuser",
+      "metadata": {
+        "description": "The admin username for the virtual machine clients."
+      }
+    },
+    "sshKeyData": {
+      "type": "string",
+      "defaultValue": "",
+      "minLength": 0,
+      "metadata": {
+        "description": "The public SSH key used for access to the VM."
+      }
+    },
+    "vmCount": {
+      "type": "int",
+      "metadata": {
+        "description": "The number of vms to deploy."
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_DS2_v2",
+      "metadata": {
+        "description": "The SKU size of vms to deploy."
+      }
+    },
+    "virtualNetworkResourceGroup": {
+      "type": "string",
+      "metadata": {
+        "description": "The resource group name for the VNET containing the Avere vFXT."
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name used for the virtual network for the VNET containing the Avere vFXT."
+      }
+    },
+    "virtualNetworkSubnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "The unique name used for the virtual network subnet for the VNET containing the Avere vFXT."
+      }
+    },
+    "nfsCommaSeparatedAddresses": {
+      "type": "string",
+      "metadata": {
+        "description": "A comma separated list of Avere vFXT vServer IP Addresses. (ex. '10.0.0.12,10.0.0.13,10.0.0.14')"
+      }
+    },
+    "nfsExportPath": {
+      "type": "string",
+      "metadata": {
+        "description": "The path exported from the NFS server that will be mounted. (ex. '/msazure')"
+      }
+    },
+    "nfsMountBaseDir": {
+      "type": "string",
+      "defaultValue": "/nfs",
+      "metadata": {
+        "description": "The base directory to contain all NFS mounts."
+      }
+    },
+    "bootstrapScriptPath": {
+      "type": "string",
+      "metadata": {
+        "description": "The path on the mounted NFS share to the bootstrap script used for further installation. (ex. '/bootstrap/bootstrap.sh')"
+      }
+    },
+    "bootstrapScriptStafPath": {
+      "type": "string",
+      "metadata": {
+        "description": "The path on the mounted NFS share to the bootstrap script used for further installation. (ex. '/bootstrap/bootstrap.sh')"
+      }
+    },
+    "appEnvironmentVariables": {
+      "type": "securestring",
+      "defaultValue": "",
+      "minLength": 0,
+      "metadata": {
+        "description": "Optional environment variables set before calling the bootstrap script.  Example: \"ENV1=foo ENV2=bar\""
+      }
+    }
+  },
+  "variables": {
+    "uniquename": "[concat(parameters('uniquename'))]",
+    "adminUsername": "[parameters('adminUsername')]",
+    "sshKeyData": "[parameters('sshKeyData')]",
+    "vmCount": "[sub(parameters('vmCount'), 1)]",
+    "vmSize": "[parameters('vmSize')]",
+    "virtualNetworkResourceGroup": "[parameters('virtualNetworkResourceGroup')]",
+    "virtualNetworkName": "[parameters('virtualNetworkName')]",
+    "virtualNetworkSubnetName": "[parameters('virtualNetworkSubnetName')]",
+    "nfsCommaSeparatedAddresses": "[parameters('nfsCommaSeparatedAddresses')]",
+    "nfsExportPath": "[parameters('nfsExportPath')]",
+    "nfsMountBaseDir": "[parameters('nfsMountBaseDir')]",
+    "bootstrapScriptPath": "[parameters('bootstrapScriptPath')]",
+    "bootstrapScriptStafPath": "[parameters('bootstrapScriptStafPath')]",
+    "vnetID": "[resourceId(variables('virtualNetworkResourceGroup'),'Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+    "subnetId": "[concat(variables('vnetID'),'/subnets/',variables('virtualNetworkSubnetName'))]",
+    "nicName": "[concat('vmnic-',variables('uniquename'))]",
+    "vmName": "[concat('vm-',variables('uniquename'))]",
+    "asName": "[concat('as-',variables('uniquename'))]",
+    "bootstrapNFSIP": "[split(variables('nfsCommaSeparatedAddresses'),',')[0]]",
+    "sshKeyPath": "[concat('/home/',variables('adminUsername'),'/.ssh/authorized_keys')]",
+    "imageReference": {
+        "publisher": "Canonical",
+        "offer": "UbuntuServer",
+        "sku": "18.04-LTS",
+        "version": "latest"
+    },
+    "environmentVariables": "[concat(' ',parameters('appEnvironmentVariables'),' LINUX_USER=',variables('adminUsername'),' NODE_PREFIX=', variables('vmName'),' NODE_COUNT=',variables('vmCount'),' BASE_DIR=',variables('nfsMountBaseDir'),' BOOTSTRAP_NFS_IP=', variables('bootstrapNFSIP'),' NFS_IP_CSV=\"',variables('nfsCommaSeparatedAddresses'),'\"',' NFS_PATH=', variables('nfsExportPath'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2018-02-01",
+      "name": "pid-7a86fa6c-a5c7-4f21-b9fa-efa3dcbfbb86",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": []
+        }
+      }
+    },
+    {
+      "apiVersion": "2017-12-01",
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[variables('asName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "platformFaultDomainCount": 2,
+        "platformUpdateDomainCount": 5
+      },
+      "sku": {
+        "name": "Aligned"
+      }
+    },
+    {
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('nicName'), '-rc-staf')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnetId')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('nicName'), '-rc', copyIndex())]",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "nicLoopNode",
+        "count": "[variables('vmCount')]"
+      },
+      "dependsOn": [],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnetId')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2017-12-01",
+      "tags": {
+        "averevfxt": "client"
+      },
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(variables('vmName'), '-rc-staf')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'), '-rc-staf')]",
+        "[concat('Microsoft.Compute/availabilitySets/',variables('asName'))]"
+      ],
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets',variables('asName'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[variables('vmSize')]"
+        },
+        "osProfile": {
+          "computername": "[concat(variables('vmName'), '-rc-staf')]",
+          "adminUsername": "[variables('adminUsername')]",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": "true",
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[variables('sshKeyPath')]",
+                  "keyData": "[variables('sshKeyData')]"
+                }
+              ]
+            }
+          }
+        },
+        "storageProfile": {
+          "osDisk": {
+            "createOption": "FromImage",
+            "caching": "ReadWrite"
+          },
+          "imageReference": "[variables('imageReference')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicName'), '-rc-staf'))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "apiVersion": "2017-12-01",
+      "tags": {
+        "averevfxt": "client"
+      },
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(variables('vmName'), '-rc', copyIndex())]",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "vmLoopNode",
+        "count": "[variables('vmCount')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'), '-rc', copyIndex())]",
+        "[concat('Microsoft.Compute/availabilitySets/',variables('asName'))]"
+      ],
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets',variables('asName'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[variables('vmSize')]"
+        },
+        "osProfile": {
+          "computername": "[concat(variables('vmName'), '-rc', copyIndex())]",
+          "adminUsername": "[variables('adminUsername')]",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": "true",
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[variables('sshKeyPath')]",
+                  "keyData": "[variables('sshKeyData')]"
+                }
+              ]
+            }
+          }
+        },
+        "storageProfile": {
+          "osDisk": {
+            "createOption": "FromImage",
+            "caching": "ReadWrite"
+          },
+          "imageReference": "[variables('imageReference')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicName'), '-rc', copyIndex()))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('vmName'), '-rc-staf', '/configureagent')]",
+      "apiVersion": "2017-12-01",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'), '-rc-staf')]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.0",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "fileUris": [
+            "https://raw.githubusercontent.com/Azure/Avere/master/src/client/mountandbootstrap.sh"
+          ],
+          "commandToExecute": "[concat(variables('environmentVariables'), ' BOOTSTRAP_SCRIPT_PATH=', variables('bootstrapScriptStafPath'), ' /bin/bash mountandbootstrap.sh')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('vmName'), '-rc', copyIndex(), '/configureagent')]",
+      "apiVersion": "2017-12-01",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "vmExtensionNode",
+        "count": "[variables('vmCount')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'), '-rc', copyIndex())]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.0",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "fileUris": [
+            "https://raw.githubusercontent.com/Azure/Avere/master/src/client/mountandbootstrap.sh"
+          ],
+          "commandToExecute": "[concat(variables('environmentVariables'), ' BOOTSTRAP_SCRIPT_PATH=', variables('bootstrapScriptPath'), ' /bin/bash mountandbootstrap.sh')]"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "staf_ip_address": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicName'),'-rc-staf'))).ipConfigurations[0].properties.privateIPAddress]"
+    },
+    "staf_name": {
+      "type": "string",
+      "value": "[concat(variables('vmName'), '-rc-staf')]"
+    },
+    "client_0_ip_address": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicName'),'-rc0'))).ipConfigurations[0].properties.privateIPAddress]"
+    },
+    "client_0_name": {
+      "type": "string",
+      "value": "[concat(variables('vmName'), '-rc0')]"
+    },
+    "reg_count": {
+      "type": "int",
+      "value": "[add(variables('vmCount'), 1)]"
+    },
+    "vm_prefix": {
+      "type": "string",
+      "value": "[concat(variables('vmName'), '-rc')]"
+    }
+  }
+}
