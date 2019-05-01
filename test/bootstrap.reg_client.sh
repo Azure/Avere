@@ -154,39 +154,3 @@ function main() {
 }
 
 main
-
-
-
-#######
-exit ##
-#######
-
-################################################################################
-# STAF SERVER
-################################################################################
-
-# # Add IP address to /etc/hosts
-# cp /etc/hosts hosts
-# echo " " >> hosts
-# echo "# needed for STAF" >> hosts
-# echo "$(hostname --ip-address) staf" >> hosts
-# sudo mv hosts /etc/hosts
-
-# # TO DO: GET docker-staf STUFF
-
-# # Build Docker STAF image.
-# sudo docker build -t azpipelines/staf docker-staf/.
-
-# # Run Docker STAF image.
-# sudo docker run -d -p 6500:6500 -p 6550:6550 -t azpipelines/staf
-
-################################################################################
-# STAF CLIENTS
-################################################################################
-
-# # Add IP address to /etc/hosts
-# cp /etc/hosts hosts
-# echo " " >> hosts
-# echo "# needed for STAF" >> hosts
-# echo "10.0.0.4 staf" >> hosts      ####### NEED ARG
-# sudo mv hosts /etc/hosts
