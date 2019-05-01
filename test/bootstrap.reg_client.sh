@@ -133,7 +133,7 @@ function setup_regression_clients() {
     ansible-playbook Avere-ansible/ansible/staf/staf.yml
 
     # Set STAF envars to load on login.
-    sudo echo "source /usr/local/staf/STAFEnv.sh" >> ~/.bashrc
+    sudo sed -i '1isource /usr/local/staf/STAFEnv.sh' ~/.bashrc
 
     cd $ORIG_DIR
 

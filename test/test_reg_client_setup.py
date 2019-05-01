@@ -3,24 +3,24 @@
 # Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 
 """
-Driver for testing Azure ARM template-based deployment of the Avere vFXT.
+Sets up VM clients for vFXT regression testing.
 """
 
 # standard imports
 import json
-import os
 import logging
+import os
 import sys
 import tempfile
-from time import sleep
 
 # from requirements.txt
 import pytest
-from scp import SCPClient
-from sshtunnel import SSHTunnelForwarder
+from fabric import Connection
+from paramiko.ssh_exception import NoValidConnectionsError
 
 # local libraries
-from lib.helpers import create_ssh_client, run_ssh_command, run_ssh_commands, wait_for_op
+from lib.helpers import (get_unused_local_port, run_ssh_command,
+                         run_ssh_commands, wait_for_op)
 
 
 class TestRegressionClientSetup:
@@ -72,12 +72,21 @@ class TestRegressionClientSetup:
         run_ssh_command(ssh_con, "sudo mv ~/pip.conf {0}/.".format(boot_dir))
 
         log.debug("Copying SSH keys to the controller")
+        # Not needed for automation, but useful for manual intervention.
         scp_con.put(test_vars["ssh_priv_key"], "~/.ssh/.")
         scp_con.put(test_vars["ssh_pub_key"], "~/.ssh/.")
 
     def test_reg_clients_deploy(self, test_vars):  # noqa: F811
+        """
+        Deploys <num_vms> VM clients for vFXT regression testing.
+        <num_vms> must be at least 2.
+          * one VM is a STAF server
+          * (<num_vms> - 1) VMs are STAF clients
+        """
         log = logging.getLogger("test_reg_clients_deploy")
+        num_vms = 5  # number of regression clients
         atd = test_vars["atd_obj"]
+
         with open(test_vars["ssh_pub_key"], "r") as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
         with open("{}/src/client/vmas/azuredeploy.reg_clients.json".format(
@@ -90,7 +99,7 @@ class TestRegressionClientSetup:
             "virtualNetworkName": atd.deploy_id + "-vnet",
             "virtualNetworkSubnetName": atd.deploy_id + "-subnet",
             "nfsCommaSeparatedAddresses": ",".join(test_vars["cluster_vs_ips"]),
-            "vmCount": 2,
+            "vmCount": num_vms,
             "nfsExportPath": "/msazure",
             "bootstrapScriptPath": "/bootstrap/bootstrap.reg_client.sh",
             "bootstrapScriptStafPath": "/bootstrap/bootstrap.reg_client_staf.sh",
@@ -99,47 +108,73 @@ class TestRegressionClientSetup:
         deploy_result = wait_for_op(atd.deploy())
         test_vars["reg_client_outputs"] = deploy_result.properties.outputs
 
-    # def test_client_docker_run(self, test_vars):  # noqa: F811
-    #     log = logging.getLogger("test_client_docker_run")
-    #     node_ip = test_vars["deploy_client_docker_outputs"]["node_0_ip_address"]["value"]
-    #     atd = test_vars["atd_obj"]
-    #     cluster_mgmt_ip = test_vars["cluster_mgmt_ip"]
-    #     with SSHTunnelForwarder(
-    #         test_vars["public_ip"],
-    #         ssh_username=test_vars["controller_user"],
-    #         ssh_pkey=test_vars["ssh_priv_key"],
-    #         remote_bind_address=(node_ip, 22),
-    #     ) as ssh_tunnel:
-    #         sleep(1)
-    #         try:
-    #             ssh_client = create_ssh_client(
-    #                 test_vars["controller_user"],
-    #                 "127.0.0.1",
-    #                 ssh_tunnel.local_bind_port,
-    #                 key_filename=test_vars["ssh_priv_key"]
-    #             )
-    #             scp_client = SCPClient(ssh_client.get_transport())
-    #             try:
-    #                 scp_client.put(test_vars["ssh_priv_key"], r"~/.ssh/id_rsa")
-    #             finally:
-    #                 scp_client.close()
-    #             commands = """
-    #                 cd
-    #                 curl -fsSL https://get.docker.com -o get-docker.sh
-    #                 sudo sh get-docker.sh
-    #                 sudo docker login https://{0} -u {1} -p {2}
-    #                 sudo docker pull {0}/test
+        log.debug("Get private IPs for the STAF clients.")
+        test_vars["staf_client_priv_ips"] = []
+        for i in range(num_vms - 1):
+            test_vars["staf_client_priv_ips"].append(
+                atd.nm_client.network_interfaces.get(
+                    atd.resource_group,
+                    "vmnic-" + atd.deploy_id + "-rc" + str(i),
+                ).ip_configurations[0].private_ip_address
+            )
 
-    #                 echo "export STORAGEACT='{3}'" >> ~/.bashrc
-    #                 echo "export MGMIP='{4}'" >> ~/.bashrc
-    #                 echo "export SA_KEY='{5}'" >> ~/.bashrc
-    #                 echo "export CLUSTER_MGMT_IP='{6}'" >> ~/.bashrc
-    #                 echo "export ADMIN_PW='{7}'" >> ~/.bashrc
-    #                 """.format(os.environ["dockerRegistry"], os.environ["dockerUsername"], os.environ["dockerPassword"], atd.deploy_id + "sa", test_vars["public_ip"], os.environ["SA_KEY"], cluster_mgmt_ip, os.environ["AVERE_ADMIN_PW"]).split("\n")
-    #             run_ssh_commands(ssh_client, commands)
-    #         finally:
-    #             ssh_client.close()
+    def test_update_reg_clients_hosts(self, test_vars):
+        """
+        Updates /etc/hosts on the STAF clients so they can contact the STAF
+        server. Also does a quick STAF check.
+        """
+        log = logging.getLogger("test_update_reg_clients_hosts")
+        commands = """
+            cp /etc/hosts .
+            echo ' '                >> hosts
+            echo '# STAF server IP' >> hosts
+            echo '{0} staf'         >> hosts
+            sudo mv hosts /etc/hosts
+            staf staf ping ping
+            staf staf namedcounter list
+        """.format(test_vars["reg_client_outputs"]["staf_ip_address"]["value"]).split("\n")
+
+        last_error = None
+        for staf_client_ip in test_vars["staf_client_priv_ips"]:
+            for port_attempt in range(1, 11):
+                tunnel_local_port = get_unused_local_port()
+                with Connection(test_vars["public_ip"],
+                                user=test_vars["controller_user"],
+                                connect_kwargs={
+                                    "key_filename": test_vars["ssh_priv_key"],
+                                }).forward_local(local_port=tunnel_local_port,
+                                                 remote_port=22,
+                                                 remote_host=staf_client_ip):
+                    node_c = Connection("127.0.0.1",
+                                        user=test_vars["controller_user"],
+                                        port=tunnel_local_port,
+                                        connect_kwargs={
+                                            "key_filename": test_vars["ssh_priv_key"],
+                                        })
+                    try:
+                        node_c.open()
+
+                        # If port_attempt > 1, last_error had the exception
+                        # from the last iteration. Clear it.
+                        last_error = None
+                    except NoValidConnectionsError as ex:
+                        last_error = ex
+                        exp_err = "Unable to connect to port {} on 127.0.0.1".format(tunnel_local_port)
+                        if exp_err not in str(ex):
+                            raise
+                        else:
+                            log.warning("{0} (attempt #{1}, retrying)".format(
+                                        exp_err, str(port_attempt)))
+                            continue  # iterate
+
+                    run_ssh_commands(node_c.client, commands)
+                log.debug("Connection to {} closed".format(staf_client_ip))
+                break  # no need to iterate again
+
+            if last_error:
+                log.error("See previous error(s) above. Raising last exception.")
+                raise last_error
+
 
 if __name__ == "__main__":
     pytest.main(sys.argv)
-
