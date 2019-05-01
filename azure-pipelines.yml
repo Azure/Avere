@@ -208,8 +208,8 @@ jobs:
       GIT_PAT: $(GIT-PAT)
 
   - script: |
-      pytest test/test/test_reg_client_setup.py $PYTEST_OPTIONS
-    displayName: 'TEST: docker/client'
+      pytest test/test_reg_client_setup.py $PYTEST_OPTIONS
+    displayName: 'SETUP: vFXT Regression Clients'
     condition: and(succeeded(), eq(variables['RUN_REG_CLIENT_STEP'], 'true'))
     env:
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
