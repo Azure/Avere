@@ -79,12 +79,6 @@
         "description": "The path on the mounted NFS share to the bootstrap script used for further installation. (ex. '/bootstrap/bootstrap.sh')"
       }
     },
-    "bootstrapScriptStafPath": {
-      "type": "string",
-      "metadata": {
-        "description": "The path on the mounted NFS share to the bootstrap script used for further installation. (ex. '/bootstrap/bootstrap.sh')"
-      }
-    },
     "appEnvironmentVariables": {
       "type": "securestring",
       "defaultValue": "",
@@ -107,7 +101,6 @@
     "nfsExportPath": "[parameters('nfsExportPath')]",
     "nfsMountBaseDir": "[parameters('nfsMountBaseDir')]",
     "bootstrapScriptPath": "[parameters('bootstrapScriptPath')]",
-    "bootstrapScriptStafPath": "[parameters('bootstrapScriptStafPath')]",
     "vnetID": "[resourceId(variables('virtualNetworkResourceGroup'),'Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "subnetId": "[concat(variables('vnetID'),'/subnets/',variables('virtualNetworkSubnetName'))]",
     "nicName": "[concat('vmnic-',variables('uniquename'))]",
@@ -121,7 +114,7 @@
         "sku": "18.04-LTS",
         "version": "latest"
     },
-    "environmentVariables": "[concat(' ',parameters('appEnvironmentVariables'),' LINUX_USER=',variables('adminUsername'),' NODE_PREFIX=', variables('vmName'),' NODE_COUNT=',variables('vmCount'),' BASE_DIR=',variables('nfsMountBaseDir'),' BOOTSTRAP_NFS_IP=', variables('bootstrapNFSIP'),' NFS_IP_CSV=\"',variables('nfsCommaSeparatedAddresses'),'\"',' NFS_PATH=', variables('nfsExportPath'))]"
+    "environmentVariables": "[concat(' ',parameters('appEnvironmentVariables'),' LINUX_USER=',variables('adminUsername'),' NODE_PREFIX=', variables('vmName'),' NODE_COUNT=',variables('vmCount'),' BASE_DIR=',variables('nfsMountBaseDir'),' BOOTSTRAP_SCRIPT_PATH=', variables('bootstrapScriptPath'),' BOOTSTRAP_NFS_IP=', variables('bootstrapNFSIP'),' NFS_IP_CSV=\"',variables('nfsCommaSeparatedAddresses'),'\"',' NFS_PATH=', variables('nfsExportPath'))]"
   },
   "resources": [
     {
@@ -315,7 +308,7 @@
           "fileUris": [
             "https://raw.githubusercontent.com/Azure/Avere/master/src/client/mountandbootstrap.sh"
           ],
-          "commandToExecute": "[concat(variables('environmentVariables'), ' BOOTSTRAP_SCRIPT_PATH=', variables('bootstrapScriptStafPath'), ' /bin/bash mountandbootstrap.sh')]"
+          "commandToExecute": "[concat(variables('environmentVariables'), ' REG_CLIENT_TYPE=SERVER', ' /bin/bash mountandbootstrap.sh')]"
         }
       }
     },
@@ -340,7 +333,7 @@
           "fileUris": [
             "https://raw.githubusercontent.com/Azure/Avere/master/src/client/mountandbootstrap.sh"
           ],
-          "commandToExecute": "[concat(variables('environmentVariables'), ' BOOTSTRAP_SCRIPT_PATH=', variables('bootstrapScriptPath'), ' /bin/bash mountandbootstrap.sh')]"
+          "commandToExecute": "[concat(variables('environmentVariables'), ' REG_CLIENT_TYPE=CLIENT', ' /bin/bash mountandbootstrap.sh')]"
         }
       }
     }

@@ -101,8 +101,7 @@ class TestRegressionClientSetup:
             "nfsCommaSeparatedAddresses": ",".join(test_vars["cluster_vs_ips"]),
             "vmCount": num_vms,
             "nfsExportPath": "/msazure",
-            "bootstrapScriptPath": "/bootstrap/bootstrap.reg_client.sh",
-            "bootstrapScriptStafPath": "/bootstrap/bootstrap.reg_client_staf.sh",
+            "bootstrapScriptPath": "/bootstrap/bootstrap.reg_client.sh"
         }
         atd.deploy_name = "test_reg_clients_deploy"
         deploy_result = wait_for_op(atd.deploy())
