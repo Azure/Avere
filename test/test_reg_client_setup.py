@@ -29,6 +29,7 @@ class TestRegressionClientSetup:
 
         # Make the bootstrap directory.
         boot_dir = "/nfs/node0/bootstrap"
+        boot_file = "bootstrap.reg_client.sh"
         run_ssh_command(ssh_con, "sudo mkdir -p {}".format(boot_dir))
 
         # The bootstrap file contains some placeholder tags for data that we
@@ -41,31 +42,30 @@ class TestRegressionClientSetup:
             '<pipelines_sa_key>': os.environ["PIPELINES_DATA_STORAGE_ACCOUNT_KEY"]
         }
 
-        for boot_file in ["bootstrap.reg_client.sh", "bootstrap.reg_client_staf.sh"]:
-            # Read the local copy of the bootstrap file into memory.
-            base_file = "{0}/test/{1}".format(test_vars["build_root"], boot_file)
-            with open(base_file, "rt") as fin:
-                base_file_content = fin.read()
+        # Read the local copy of the bootstrap file into memory.
+        base_file = "{0}/test/{1}".format(test_vars["build_root"], boot_file)
+        with open(base_file, "rt") as fin:
+            base_file_content = fin.read()
 
-            # Replace all instances of placeholder tags with their values.
-            for k, v in replacements.items():
-                base_file_content = base_file_content.replace(k, v)
+        # Replace all instances of placeholder tags with their values.
+        for k, v in replacements.items():
+            base_file_content = base_file_content.replace(k, v)
 
-            # Create a temporary file and copy the in-memory (post-replace)
-            # bootstrap file into that temporary file.
-            temp_file = tempfile.NamedTemporaryFile(mode='w+t', delete=False)
-            log.debug("Temporary file created: {}".format(temp_file.name))
-            temp_file.write(base_file_content)
-            temp_file.close()
+        # Create a temporary file and copy the in-memory (post-replace)
+        # bootstrap file into that temporary file.
+        temp_file = tempfile.NamedTemporaryFile(mode='w+t', delete=False)
+        log.debug("Temporary file created: {}".format(temp_file.name))
+        temp_file.write(base_file_content)
+        temp_file.close()
 
-            # Copy the temp file to the controller (in the user's home dir).
-            scp_con.put(temp_file.name, "~/{}".format(boot_file))
-            os.remove(temp_file.name)
-            log.debug("Temporary file deleted: {}".format(temp_file.name))
+        # Copy the temp file to the controller (in the user's home dir).
+        scp_con.put(temp_file.name, "~/{}".format(boot_file))
+        os.remove(temp_file.name)
+        log.debug("Temporary file deleted: {}".format(temp_file.name))
 
-            # Move the bootstrap file from the controller user's home dir to
-            # the bootstrap directory (root privileges required).
-            run_ssh_command(ssh_con, "sudo mv ~/{0} {1}/.".format(boot_file, boot_dir))
+        # Move the bootstrap file from the controller user's home dir to
+        # the bootstrap directory (root privileges required).
+        run_ssh_command(ssh_con, "sudo mv ~/{0} {1}/.".format(boot_file, boot_dir))
 
         # Copy and move the pip.conf file.
         scp_con.put("{0}/pip.conf".format(test_vars["build_root"], "~/."))
