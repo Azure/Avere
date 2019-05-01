@@ -84,8 +84,18 @@ class TestRegressionClientSetup:
           * (<num_vms> - 1) VMs are STAF clients
         """
         log = logging.getLogger("test_reg_clients_deploy")
-        num_vms = 2  # number of regression clients
         atd = test_vars["atd_obj"]
+
+        num_vms = -1  # number of regression VMs (-1 initially, 2 by default)
+        if "NUM_REG_VMS" in os.environ:
+            num_vms = int(os.environ["NUM_REG_VMS"])
+        if "num_reg_vms" in test_vars:
+            num_vms = int(test_vars["num_reg_vms"])
+        if num_vms < 2:
+            if num_vms != -1:  # user set the value incorrectly; enforce min
+                log.warning("Number of VMs must be > 1. Setting to 2.")
+            num_vms = 2
+        log.info("Deploying {} regression VMs".format(num_vms))
 
         with open(test_vars["ssh_pub_key"], "r") as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
