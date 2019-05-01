@@ -84,7 +84,7 @@ class TestRegressionClientSetup:
           * (<num_vms> - 1) VMs are STAF clients
         """
         log = logging.getLogger("test_reg_clients_deploy")
-        num_vms = 5  # number of regression clients
+        num_vms = 2  # number of regression clients
         atd = test_vars["atd_obj"]
 
         with open(test_vars["ssh_pub_key"], "r") as ssh_pub_f:
