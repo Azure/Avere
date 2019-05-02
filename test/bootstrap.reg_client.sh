@@ -73,14 +73,6 @@ function mount_avere() {
 }
 
 function setup_staf_server() {
-    # Exit on any errors.
-    set -e
-
-    # $HOME isn't set at this point in the VM's lifecycle. Set it and go there.
-    ORIG_DIR=$(pwd)
-    export HOME=/home/$LINUX_USER
-    cd $HOME
-
     # Install Docker and Blobfuse.
     wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb
     sudo dpkg -i packages-microsoft-prod.deb
@@ -118,20 +110,11 @@ function setup_staf_server() {
     # Run Docker STAF image.
     sudo docker run -d -p 6500:6500 -p 6550:6550 -t azpipelines/staf
 
-    cd $ORIG_DIR
-
-    set +e
+    # Set ownership of $LINUX_USER's homedir.
+    chown -R $LINUX_USER /home/$LINUX_USER
 }
 
 function setup_staf_client() {
-    # Exit on any errors.
-    set -e
-
-    # $HOME isn't set at this point in the VM's lifecycle. Set it and go there.
-    ORIG_DIR=$(pwd)
-    export HOME=/home/$LINUX_USER
-    cd $HOME
-
     # Install Ansible and Blobfuse.
     wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb
     sudo dpkg -i packages-microsoft-prod.deb
@@ -186,9 +169,15 @@ function setup_staf_client() {
     # Set STAF envars to load on login.
     sudo sed -i '1isource /usr/local/staf/STAFEnv.sh' ~/.bashrc
 
-    cd $ORIG_DIR
+    # Set ownership of $LINUX_USER's homedir and make Python dir writeable.
+    chown -R $LINUX_USER /home/$LINUX_USER
+    chmod -R 777 /usr/sv/env/lib/python2.7
 
-    set +e
+    # Virtual env setup.
+    cd Avere-sv
+    source /usr/sv/env/bin/activate
+    export PYTHONPATH=~/Avere-sv:~/Avere-sv/averesv:$PYTHONPATH:$PATH
+    python setup.py develop
 }
 
 function main() {
@@ -198,6 +187,12 @@ function main() {
     echo "STEP: mount_avere"
     mount_avere
 
+    # $HOME isn't set at this point in the VM's lifecycle. Set it and go there.
+    ORIG_DIR=$(pwd)
+    export HOME=/home/$LINUX_USER
+    cd $HOME
+
+    set -e
     if [ "$REG_CLIENT_TYPE" == "SERVER" ]; then
         echo "STEP: setup_staf_server"
         setup_staf_server
@@ -205,6 +200,9 @@ function main() {
         echo "STEP: setup_staf_client"
         setup_staf_client
     fi
+    set +e
+
+    cd $ORIG_DIR
 
     echo "DONE: installation complete"
 }

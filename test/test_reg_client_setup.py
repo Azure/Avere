@@ -17,6 +17,7 @@ import tempfile
 import pytest
 from fabric import Connection
 from paramiko.ssh_exception import NoValidConnectionsError
+from scp import SCPClient
 
 # local libraries
 from lib.helpers import (get_unused_local_port, run_ssh_command,
@@ -73,8 +74,8 @@ class TestRegressionClientSetup:
 
         log.debug("Copying SSH keys to the controller")
         # Not needed for automation, but useful for manual intervention.
-        scp_con.put(test_vars["ssh_priv_key"], "~/.ssh/.")
-        scp_con.put(test_vars["ssh_pub_key"], "~/.ssh/.")
+        scp_con.put(test_vars["ssh_priv_key"], "~/.ssh/id_rsa")
+        scp_con.put(test_vars["ssh_pub_key"], "~/.ssh/id_rsa.pub")
 
     def test_reg_clients_deploy(self, test_vars):  # noqa: F811
         """
@@ -133,6 +134,7 @@ class TestRegressionClientSetup:
         server. Also does a quick STAF check.
         """
         log = logging.getLogger("test_update_reg_clients_hosts")
+        atd = test_vars["atd_obj"]
         commands = """
             cp /etc/hosts .
             echo ' '                >> hosts
@@ -141,7 +143,27 @@ class TestRegressionClientSetup:
             sudo mv hosts /etc/hosts
             staf staf ping ping
             staf staf namedcounter list
-        """.format(test_vars["reg_client_outputs"]["staf_ip_address"]["value"]).split("\n")
+            echo '#!/bin/bash' > ~/hostdb_entries.sh
+            chmod 755 ~/hostdb_entries.sh
+            echo "cd ~/Avere-sv" >> ~/hostdb_entries.sh
+            echo "source /usr/sv/env/bin/activate" >> ~/hostdb_entries.sh
+            echo "export PYTHONPATH=~/Avere-sv:~/Avere-sv/averesv:$PYTHONPATH:$PATH" >> ~/hostdb_entries.sh
+            echo "averesv/hostdb.py -a vfxt -m {1} -p '{2}'" >> ~/hostdb_entries.sh
+        """.format(
+            test_vars["reg_client_outputs"]["staf_ip_address"]["value"],
+            test_vars["cluster_mgmt_ip"],
+            os.environ["AVERE_ADMIN_PW"]
+        ).split("\n")
+
+        # Add hostdb entry calls for each regression client.
+        for i, staf_client_ip in enumerate(test_vars["staf_client_priv_ips"]):
+            commands.append("echo 'averesv/hostdb.py -L regclient{0} -m {1}' >> ~/hostdb_entries.sh".format(
+                i, staf_client_ip))
+
+        # Get the storage account's access key and add that hostdb entry, too.
+        sa_key = atd.st_client.storage_accounts.list_keys(
+            atd.resource_group, test_vars["storage_account"]).keys[0].value
+        commands.append("echo 'averesv/hostdb.py -s {0}.blob.core.windows.net -m {0}.blob.core.windows.net -M az --cloudCreds \"{0}::{1}\"' >> ~/hostdb_entries.sh".format(test_vars["storage_account"], sa_key))
 
         last_error = None
         for staf_client_ip in test_vars["staf_client_priv_ips"]:
@@ -177,6 +199,12 @@ class TestRegressionClientSetup:
                             continue  # iterate
 
                     run_ssh_commands(node_c.client, commands)
+
+                    # Copy SSH keys to the client.
+                    scp_cli = SCPClient(node_c.transport)
+                    scp_cli.put(test_vars["ssh_priv_key"], "~/.ssh/id_rsa")
+                    scp_cli.put(test_vars["ssh_pub_key"], "~/.ssh/id_rsa.pub")
+                    scp_cli.close()
                 log.debug("Connection to {} closed".format(staf_client_ip))
                 break  # no need to iterate again
 
