@@ -213,6 +213,7 @@ jobs:
     displayName: 'SETUP: vFXT Regression Clients'
     condition: and(succeeded(), eq(variables['RUN_REG_CLIENT_STEP'], 'true'))
     env:
+      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
