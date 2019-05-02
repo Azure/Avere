@@ -39,8 +39,13 @@ jobs:
     inputs:
       secureFile: 'id_rsa'
 
+  - task: DownloadSecureFile@1
+    inputs:
+      secureFile: 'pip.conf'
+
   - script: |
       set -e
+      cp $AGENT_TEMPDIRECTORY/pip.conf .
       ln -s $AGENT_TEMPDIRECTORY ~/.ssh
       chmod 600 ~/.ssh/id_rsa
       ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
@@ -202,6 +207,21 @@ jobs:
       dockerPassword: $(DOCKER-PW)
       GIT_UN: $(GIT-UN)
       GIT_PAT: $(GIT-PAT)
+
+  - script: |
+      pytest test/test_reg_client_setup.py $PYTEST_OPTIONS
+    displayName: 'SETUP: vFXT Regression Clients'
+    condition: and(succeeded(), eq(variables['RUN_REG_CLIENT_STEP'], 'true'))
+    env:
+      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+      GIT_UN: $(GIT-UN)
+      GIT_PAT: $(GIT-PAT)
+      PIPELINES_DATA_STORAGE_ACCOUNT: $(PIPELINES-DATA-STORAGE-ACCOUNT)
+      PIPELINES_DATA_STORAGE_ACCOUNT_KEY: $(PIPELINES-DATA-STORAGE-ACCOUNT-KEY)
 
   - script: |
       set -x
