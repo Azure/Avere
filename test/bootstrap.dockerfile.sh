@@ -125,6 +125,7 @@ echo "export CLUSTER_MGMT_IP='<clusterMgmt>'" >> ~/.bashrc
 echo "export ADMIN_PW='<avereAdminPw>'" >> ~/.bashrc
 ls ~/.*
 cat ~/.bashrc
+. .bashrc
 EOM
 
 chown $LINUX_USER:$LINUX_USER $FILENAME
