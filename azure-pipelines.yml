@@ -23,7 +23,6 @@ pr:
 variables:
   VFXT_TEST_VARS_FILE: 'pipelines.json'
 
-
 jobs:
 - job: vfxt_template_testing
   timeoutInMinutes: 180
