@@ -109,17 +109,49 @@ function setup_staf_server() {
 
     # Run Docker STAF image.
     sudo docker run -d -p 6500:6500 -p 6550:6550 -t azpipelines/staf
+}
 
-    # Set ownership of $LINUX_USER's homedir.
+function setup_sv_virtualenv() {
+    # Install Ansible.
+    sudo apt install ansible -y
+
+    # Clone Avre-ansible and Avere-sv repos.
+    GIT_USERNAME="<git_username>"
+    GIT_PASSWORD="<git_password>"
+    git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@msazure.visualstudio.com/DefaultCollection/One/_git/Avere-ansible
+    git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@msazure.visualstudio.com/DefaultCollection/One/_git/Avere-sv
+
+    # Copy requirements.txt (needed for Ansible playbooks).
+    cp Avere-sv/requirements.txt /tmp/requirements.sv
+    cp Avere-sv/requirements.txt /tmp/requirements.ats
+
+    # Copy pip.conf to a few places.
+    PIP_CONF_FILE=$(find /nfs -name pip.conf -print -quit)
+    sudo cp -v $PIP_CONF_FILE /etc/.
+    sudo cp -v $PIP_CONF_FILE /etc/default/.
+
+    # Run Ansible playbooks.
+    ansible-playbook Avere-ansible/ansible/ats_venv/ats_venv.yml
+    ansible-playbook Avere-ansible/ansible/sv_venv/sv_venv.yml
+
+    # Set ownership of $LINUX_USER's homedir and make Python dir writeable.
     chown -R $LINUX_USER /home/$LINUX_USER
+    chmod -R 777 /usr/sv/env/lib/python2.7
+
+    # Virtual env setup.
+    cd Avere-sv
+    source /usr/sv/env/bin/activate
+    export PYTHONPATH=~/Avere-sv:~/Avere-sv/averesv:$PYTHONPATH:$PATH
+    python setup.py develop
+    cd ..
 }
 
 function setup_staf_client() {
-    # Install Ansible and Blobfuse.
+    # Install Blobfuse.
     wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb
     sudo dpkg -i packages-microsoft-prod.deb
     sudo apt update
-    sudo apt install ansible blobfuse -y
+    sudo apt install blobfuse -y
 
     # Configure blobfuse.
     sudo mkdir /mnt/resource/blobfusetmp -p
@@ -146,38 +178,11 @@ function setup_staf_client() {
     sudo umount blobmnt
     sudo rm -r blobmnt /mnt/resource/blobfusetmp
 
-    # Clone Avre-ansible and Avere-sv repos.
-    GIT_USERNAME="<git_username>"
-    GIT_PASSWORD="<git_password>"
-    git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@msazure.visualstudio.com/DefaultCollection/One/_git/Avere-ansible
-    git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@msazure.visualstudio.com/DefaultCollection/One/_git/Avere-sv
-
-    # Copy requirements.txt (needed for Ansible playbooks).
-    cp Avere-sv/requirements.txt /tmp/requirements.sv
-    cp Avere-sv/requirements.txt /tmp/requirements.ats
-
-    # Copy pip.conf to a few places.
-    PIP_CONF_FILE=$(find /nfs -name pip.conf -print -quit)
-    sudo cp -v $PIP_CONF_FILE /etc/.
-    sudo cp -v $PIP_CONF_FILE /etc/default/.
-
-    # Run Ansible playbooks.
-    ansible-playbook Avere-ansible/ansible/ats_venv/ats_venv.yml
-    ansible-playbook Avere-ansible/ansible/sv_venv/sv_venv.yml
+    # Run Ansible playbook.
     ansible-playbook Avere-ansible/ansible/staf/staf.yml
 
     # Set STAF envars to load on login.
     sudo sed -i '1isource /usr/local/staf/STAFEnv.sh' ~/.bashrc
-
-    # Set ownership of $LINUX_USER's homedir and make Python dir writeable.
-    chown -R $LINUX_USER /home/$LINUX_USER
-    chmod -R 777 /usr/sv/env/lib/python2.7
-
-    # Virtual env setup.
-    cd Avere-sv
-    source /usr/sv/env/bin/activate
-    export PYTHONPATH=~/Avere-sv:~/Avere-sv/averesv:$PYTHONPATH:$PATH
-    python setup.py develop
 }
 
 function main() {
@@ -196,10 +201,19 @@ function main() {
     if [ "$REG_CLIENT_TYPE" == "SERVER" ]; then
         echo "STEP: setup_staf_server"
         setup_staf_server
-    else
+    fi
+
+    echo "STEP: setup_sv_virtualenv"
+    setup_sv_virtualenv
+
+    if [ "$REG_CLIENT_TYPE" == "CLIENT" ]; then
         echo "STEP: setup_staf_client"
         setup_staf_client
     fi
+
+    # Set ownership of $LINUX_USER's homedir and make Python dir writeable.
+    chown -R $LINUX_USER /home/$LINUX_USER
+
     set +e
 
     cd $ORIG_DIR
