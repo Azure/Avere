@@ -80,58 +80,89 @@ class TestRegressionClientSetup:
     def test_reg_clients_deploy(self, test_vars):  # noqa: F811
         """
         Deploys <num_vms> VM clients for vFXT regression testing.
-        <num_vms> must be at least 2.
-          * one VM is a STAF server
-          * (<num_vms> - 1) VMs are STAF clients
+        <num_vms> must be at least 1.
+          * the first VM is a STAF server
+          * the next (<num_vms> - 1) VMs are STAF clients
+        All regression client VMs can run SV.
         """
         log = logging.getLogger("test_reg_clients_deploy")
         atd = test_vars["atd_obj"]
 
-        num_vms = -1  # number of regression VMs (-1 initially, 2 by default)
+        num_vms = -1  # number of regression VMs (-1 initially, 1 by default)
         if "NUM_REG_VMS" in os.environ:
             num_vms = int(os.environ["NUM_REG_VMS"])
         if "num_reg_vms" in test_vars:
             num_vms = int(test_vars["num_reg_vms"])
-        if num_vms < 2:
+        if num_vms < 1:
             if num_vms != -1:  # user set the value incorrectly; enforce min
-                log.warning("Number of VMs must be > 1. Setting to 2.")
-            num_vms = 2
+                log.warning("Number of VMs must be > 0. Setting to 1.")
+            num_vms = 1
         log.info("Deploying {} regression VMs".format(num_vms))
 
         with open(test_vars["ssh_pub_key"], "r") as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
-        with open("{}/src/client/vmas/azuredeploy.reg_clients.json".format(
+        with open("{}/src/client/vmas/azuredeploy.json".format(
                   test_vars["build_root"])) as tfile:
             atd.template = json.load(tfile)
+
+        staf_server_unique_name = atd.deploy_id + "-rc-staf"
         atd.deploy_params = {
-            "uniquename": atd.deploy_id,
+            "uniquename": staf_server_unique_name,
             "sshKeyData": ssh_pub_key,
             "virtualNetworkResourceGroup": atd.resource_group,
             "virtualNetworkName": atd.deploy_id + "-vnet",
             "virtualNetworkSubnetName": atd.deploy_id + "-subnet",
             "nfsCommaSeparatedAddresses": ",".join(test_vars["cluster_vs_ips"]),
-            "vmCount": num_vms,
+            "vmCount": 1,
             "nfsExportPath": "/msazure",
-            "bootstrapScriptPath": "/bootstrap/bootstrap.reg_client.sh"
+            "bootstrapScriptPath": "/bootstrap/bootstrap.reg_client.sh",
+            "appEnvironmentVariables": " REG_CLIENT_TYPE=SERVER "
         }
-        atd.deploy_name = "test_reg_clients_deploy"
-        deploy_result = wait_for_op(atd.deploy())
-        test_vars["reg_client_outputs"] = deploy_result.properties.outputs
 
-        log.debug("Get private IPs for the STAF clients.")
+        # The first regression client to be deployed is also a STAF server.
+        atd.deploy_name = "deploy_reg_client_1"
+        deploy_handle = atd.deploy()
+
+        if ((num_vms - 1) > 0):
+            # Remove the first entry of the "resources" section, which is an
+            # empty deployment used for tracking purposes. This avoids a
+            # collision when attempting to update the empty deployment.
+            atd.template["resources"].pop(0)
+
+            log.debug("Deploying {} more regression VM(s)".format(num_vms - 1))
+            atd.deploy_params["uniquename"] = atd.deploy_id + "-rc"
+            atd.deploy_params["vmCount"] = num_vms - 1
+            atd.deploy_params["appEnvironmentVariables"] = " REG_CLIENT_TYPE=CLIENT "
+            atd.deploy_name = "deploy_reg_clients_N"
+            deploy_result_2 = wait_for_op(atd.deploy())
+
+        # Wait for the result of the first deployment.
+        deploy_result_1 = wait_for_op(deploy_handle)
+
+        log.debug("deploy 1 outputs = {}".format(deploy_result_1.properties.outputs))
+
+        log.debug("Get the IP for the first regression client (STAF server).")
+        test_vars["staf_server_priv_ip"] = atd.nm_client.network_interfaces.get(
+            atd.resource_group,
+            "vmnic-" + staf_server_unique_name + "-0",
+        ).ip_configurations[0].private_ip_address
+
         test_vars["staf_client_priv_ips"] = []
-        for i in range(num_vms - 1):
-            test_vars["staf_client_priv_ips"].append(
-                atd.nm_client.network_interfaces.get(
-                    atd.resource_group,
-                    "vmnic-" + atd.deploy_id + "-rc" + str(i),
-                ).ip_configurations[0].private_ip_address
-            )
+        if ((num_vms - 1) > 0):
+            log.debug("deploy 2 outputs = {}".format(deploy_result_2.properties.outputs))
+            log.debug("Get private IPs for the STAF clients.")
+            for i in range(num_vms - 1):
+                test_vars["staf_client_priv_ips"].append(
+                    atd.nm_client.network_interfaces.get(
+                        atd.resource_group,
+                        "vmnic-" + atd.deploy_params["uniquename"] + "-" + str(i),
+                    ).ip_configurations[0].private_ip_address
+                )
 
     def test_update_reg_clients_hosts(self, test_vars):
         """
         Updates /etc/hosts on the STAF clients so they can contact the STAF
-        server. Also does a quick STAF check.
+        server.
         """
         log = logging.getLogger("test_update_reg_clients_hosts")
         atd = test_vars["atd_obj"]
@@ -141,8 +172,6 @@ class TestRegressionClientSetup:
             echo '# STAF server IP' >> hosts
             echo '{0} staf'         >> hosts
             sudo mv hosts /etc/hosts
-            staf staf ping ping
-            staf staf namedcounter list
             echo '#!/bin/bash' > ~/hostdb_entries.sh
             chmod 755 ~/hostdb_entries.sh
             echo "cd ~/Avere-sv" >> ~/hostdb_entries.sh
@@ -150,7 +179,7 @@ class TestRegressionClientSetup:
             echo "export PYTHONPATH=~/Avere-sv:~/Avere-sv/averesv:$PYTHONPATH:$PATH" >> ~/hostdb_entries.sh
             echo "averesv/hostdb.py -a vfxt -m {1} -p '{2}'" >> ~/hostdb_entries.sh
         """.format(
-            test_vars["reg_client_outputs"]["staf_ip_address"]["value"],
+            test_vars["staf_server_priv_ip"],
             test_vars["cluster_mgmt_ip"],
             os.environ["AVERE_ADMIN_PW"]
         ).split("\n")
