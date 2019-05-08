@@ -5,8 +5,6 @@ The following shows how to handle restricted internet access, by configuring any
 
 ## Scenario: Internet Blocked
 
-If you have a proxy, see the proxy section below.
-
 Here are the requirements for a locked down network security group:
   * Open up `download.averesystems.com`, TCP port `443`
   * ensure "Microsoft.Service" endpoint is setup on all Virtual Network Subnets
@@ -14,7 +12,8 @@ Here are the requirements for a locked down network security group:
 
   ![Network Security group outbound rules showing opening up TCP port `443` to 'AzureConnectors' and 'AzureCloud'](../../docs/images/outboundrules.png)
 
-  
+If you have a proxy, see the proxy section below.
+ 
 ## Scenario: Bring your own DNS Server
 
 Here are the requirements for a "Bring your own DNS Server" scenario:
