@@ -262,6 +262,42 @@ jobs:
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
+      P_ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
+
+      # Array of messages to search for in the collected artifacts (logs).
+      #
+      # IMPORTANT:
+      #   - Each quoted string is a separate message to check for, so if the
+      #     message itself contains quotes, be sure to nest/escape.
+      #   - Messages are evaluated as Perl-style regular expressions. Be aware
+      #     of potential issues when new messages contain punctuation (e.g.,
+      #     "." matches any character, so use "\." to require a period).
+      MSGS_TO_CHECK_REGEX=(
+        "Allocating HA disk space for core filer"
+      )
+
+      exit_code=0
+      IFS="" # Internal Field Separator
+      for msg in ${MSGS_TO_CHECK_REGEX[@]}; do
+        echo "INFO: Checking for /$msg/ in $P_ARTIFACTS_DIR"
+        grep_output=$(grep -r -P "$msg" $P_ARTIFACTS_DIR)
+        if [ -n "$grep_output" ]; then
+          (>&2 echo "ERROR: MATCH FOUND!")
+          (>&2 echo "$grep_output")
+          exit_code=1
+        else
+          echo "INFO: No matches found."
+        fi
+        echo
+      done
+
+      echo "INFO: Done."
+      exit $exit_code
+    displayName: 'TEST: Check for error messages in artifacts'
+    condition: always()
+    failOnStderr: true
+
+  - script: |
       if [ -z "$VFXT_DEPLOY_LOCATION" -a -s REGION_TO_TEST ]; then
         export VFXT_DEPLOY_LOCATION=$(cat REGION_TO_TEST)
       fi
