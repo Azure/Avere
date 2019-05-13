@@ -24,7 +24,6 @@ VFXT_LOG_FILE=$AZURE_HOME_DIR/vfxt.log
 WAIT_SECONDS=300
 RPC_ENABLE="enable"
 RPC_DISABLE="disable"
-RPC_ENABLE_2="enable2"
 
 function sendRPC() {
     set +x
@@ -37,20 +36,12 @@ function sendRPC() {
         result=$?
 
         echo "send ${action} to ${ipaddress}"
-        $AVERECMD support.modify "{'traceLevel': '0x4000000000000', 'rollingTrace': 'yes', 'statsMonitor': 'yes', 'memoryDebugging': 'yes'}"
+        $AVERECMD support.modify "{'traceLevel': '0xE00000000100', 'rollingTrace': 'yes', 'statsMonitor': 'yes', 'memoryDebugging': 'yes'}"
         result=$((result+$?))
     elif [ "$action" == "$RPC_DISABLE" ] ; then
         echo "send ${action} to ${ipaddress}"
         $AVERECMD support.modify "{'traceLevel': '0x1', 'rollingTrace': 'no', 'statsMonitor': 'no', 'memoryDebugging': 'no'}"
         result=$?
-    elif [ "$action" == "$RPC_ENABLE_2" ] ; then
-        echo "send 'support.acceptTerms yes' to ${ipaddress}"
-        $AVERECMD support.acceptTerms yes
-        result=$?
-
-        echo "send ${action} to ${ipaddress}"
-        $AVERECMD support.modify "{'traceLevel': '0xa00000000100', 'rollingTrace': 'yes', 'statsMonitor': 'yes', 'memoryDebugging': 'yes'}"
-        result=$((result+$?))
     else
         echo "ERROR: bad action"
         result=1
@@ -130,26 +121,6 @@ function enable_cloud_trace() {
     echo "cloud trace enabled"
 }
 
-
-function enable_cloud_node_trace() {
-    ipaddress=$1
-    echo "trying to enable cloud node trace "
-
-    while :
-    do
-        # retry forever until we reach the mgmt ip or the vfxt.log stops
-        if sendRPC $ipaddress $RPC_ENABLE_2 ; then
-            echo "sendRPC success"
-            break
-        fi
-
-        check_halted_vfxt
-        sleep 5
-    done
-
-    echo "cloud node trace enabled"
-}
-
 function disable_cloud_trace() {
     ipaddress=$1
     echo "trying to disable cloud trace "
@@ -180,8 +151,6 @@ function main() {
     wait_complete_message
 
     disable_cloud_trace $MGMT_IP
-
-    enable_cloud_node_trace $MGMT_IP
 }
 
 main
