@@ -24,7 +24,7 @@ VFXT_LOG_FILE=$AZURE_HOME_DIR/vfxt.log
 WAIT_SECONDS=300
 RPC_ENABLE="enable"
 RPC_DISABLE="disable"
-RPC_ENABLE_2="enable"
+RPC_ENABLE_2="enable2"
 
 function sendRPC() {
     set +x
