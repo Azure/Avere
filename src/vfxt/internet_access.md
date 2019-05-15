@@ -8,7 +8,7 @@ The following shows how to handle restricted internet access, by configuring any
 Here are the requirements for a locked down network security group:
   * Open up `download.averesystems.com`, TCP port `443`
   * ensure "Microsoft.Service" endpoint is setup on all Virtual Network Subnets
-  * Open up access to TCP port `443` to 'AzureConnectors' and 'AzureCloud' as shown in the below image:
+  * Open up access to TCP port `443` to 'AzureCloud' as shown in the below image:
 
   ![Network Security group outbound rules showing opening up TCP port `443` to 'AzureConnectors' and 'AzureCloud'](../../docs/images/outboundrules.png)
 
