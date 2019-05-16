@@ -36,7 +36,7 @@ function sendRPC() {
         result=$?
 
         echo "send ${action} to ${ipaddress}"
-        $AVERECMD support.modify "{'traceLevel': '0x4000000000000', 'rollingTrace': 'yes', 'statsMonitor': 'yes', 'memoryDebugging': 'yes'}"
+        $AVERECMD support.modify "{'traceLevel': '0xE00000000100', 'rollingTrace': 'yes', 'statsMonitor': 'yes', 'memoryDebugging': 'yes'}"
         result=$((result+$?))
     elif [ "$action" == "$RPC_DISABLE" ] ; then
         echo "send ${action} to ${ipaddress}"
