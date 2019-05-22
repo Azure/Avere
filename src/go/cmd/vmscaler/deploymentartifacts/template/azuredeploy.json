@@ -1,0 +1,334 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "The unique name of the storage account to create for access to queue."
+      }
+    },
+    "uniquename": {
+      "type": "string",
+      "metadata": {
+        "description": "The unique name used for resource names associated with these virtual machine clients"
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "defaultValue": "azureuser",
+      "metadata": {
+        "description": "The admin username for the virtual machine clients."
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The vm password."
+      }
+    },
+    "virtualNetworkResourceGroup": {
+      "type": "string",
+      "metadata": {
+        "description": "The resource group name for the VNET containing the Avere vFXT."
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name used for the virtual network for the VNET containing the Avere vFXT."
+      }
+    },
+    "virtualNetworkSubnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "The unique name used for the virtual network subnet for the VNET containing the Avere vFXT."
+      }
+    },
+    "bootstrapNFSIP": {
+      "type": "string",
+      "metadata": {
+        "description": "The NFS address used for mounting the bootstrap directory"
+      }
+    },
+    "nfsExportPath": {
+      "type": "string",
+      "defaultValue": "/msazure",
+      "metadata": {
+        "description": "The path exported from the NFS server that will be mounted. (ex. '/msazure')"
+      }
+    },
+    "vmscalerBootstrapScriptPath": {
+      "type": "string",
+      "defaultValue": "/boostrap/bootstrap.vmscaler.sh",
+      "metadata": {
+        "description": "The bootstrap script path that configures the vmscaler as a service"
+      }
+    },
+    "vmscalerVmSize": {
+      "type": "string",
+      "defaultValue": "Standard_D2s_v3",
+      "metadata": {
+        "description": "The SKU size of worker vms to deploy."
+      }
+    },
+    "vmssImageId": {
+      "type": "string",
+      "metadata": {
+        "description": "The custom image id to be used for the VMSS instances."
+      }
+    },
+    "vmssAdminUsername": {
+      "type": "string",
+      "defaultValue": "azureuser",
+      "metadata": {
+        "description": "The admin username for the VMSS instances."
+      }
+    },
+    "vmssAdminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The vm password for the VMSS instances."
+      }
+    },
+    "vmssSKU": {
+      "type": "string",
+      "defaultValue": "Standard_DS2_v2",
+      "metadata": {
+        "description": "The sku to use for the VMSS instances."
+      }
+    },
+    "vmsPerVMSS": {
+      "type": "int",
+      "defaultValue": 25,
+      "metadata": {
+        "description": "the number of nodes per VMSS, vary this number to vary performance"
+      }
+    },
+    "priority": {
+      "type": "string",
+      "defaultValue": "Low",
+      "allowedValues": [
+        "Low",
+        "Regular"
+      ],
+      "metadata": {
+        "description": "The sku to use for the VMSS instances."
+      }
+    },
+    "rbacRoleAssignmentUniqueId": {
+      "type": "string",
+      "defaultValue": "",
+      "minLength": 0,
+      "metadata": {
+        "description": "The Azure role assignment unique id.  If blank, vmname is used."
+      }
+    }
+  },
+  "variables": {
+    "storageAccountName": "[concat(parameters('storageAccountName'))]",
+    "uniquename": "[concat(parameters('uniquename'))]",
+    "adminUsername": "[parameters('adminUsername')]",
+    "adminPassword": "[parameters('adminPassword')]",
+    "virtualNetworkResourceGroup": "[parameters('virtualNetworkResourceGroup')]",
+    "virtualNetworkName": "[parameters('virtualNetworkName')]",
+    "virtualNetworkSubnetName": "[parameters('virtualNetworkSubnetName')]",
+    "bootstrapNFSIP": "[parameters('bootstrapNFSIP')]",
+    "nfsExportPath": "[parameters('nfsExportPath')]",
+    "vmscalerBootstrapScriptPath": "[parameters('vmscalerBootstrapScriptPath')]",
+    "vmscalerVmSize": "[parameters('vmscalerVmSize')]",
+    "vmssImageId": "[parameters('vmssImageId')]",
+    "vmssAdminUsername": "[parameters('vmssAdminUsername')]",
+    "vmssAdminPassword": "[parameters('vmssAdminPassword')]",
+    "vmssSKU": "[parameters('vmssSKU')]",
+    "vmsPerVMSS": "[parameters('vmsPerVMSS')]",
+    "priority": "[parameters('priority')]",
+    
+    "bootstrapPath": "/b",
+    "vnetID": "[resourceId(variables('virtualNetworkResourceGroup'),'Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+    "subnetId": "[concat(variables('vnetID'),'/subnets/',variables('virtualNetworkSubnetName'))]",
+    "storageAccountType": "Standard_LRS",
+    "storageAccountKind": "StorageV2",
+    "location": "[resourceGroup().location]",
+    "vmskusize": "Standard_DS2_v2",
+    "rbacRoleAssignmentUniqueId": "[if(greater(length(parameters('rbacRoleAssignmentUniqueId')), 0), parameters('rbacRoleAssignmentUniqueId'), variables('uniquename'))]",
+    "vmContributorRoleAssignmentId": "[guid(concat(variables('rbacRoleAssignmentUniqueId'), resourceGroup().name, '-createrole'))]",
+    "createClusterRoleFullyQualifiedId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/9980e02c-c2be-4d73-94e8-173b1dc7cf3c')]",
+    "createVNETRoleAssignmentId": "[guid(concat(variables('rbacRoleAssignmentUniqueId'), resourceGroup().name, '-createvnetrole'))]",
+
+    "environmentVariables": "[concat(' export BOOTSTRAP_PATH=\"',variables('bootstrapPath'),'\" && ',' export BOOTSTRAP_NFS_IP=\"',variables('bootstrapNFSIP'),'\" && ',' export BOOTSTRAP_NFS_PATH=\"',variables('nfsExportPath'),'\" && ',' export BOOTSTRAP_SCRIPT=\"',variables('vmscalerBootstrapScriptPath'),'\" && ',' export IMAGE_ID=\"',variables('vmssImageId'),'\" && ',' export LOCATION=\"',variables('location'),'\" && ',' export LINUX_USER=\"',variables('adminUsername'),'\" && ',' export VM_PASSWORD=\"',variables('adminPassword'),'\" && ',' export RESOURCE_GROUP=\"',resourceGroup().name,'\" && ',' export VNET_RG=\"',variables('virtualNetworkResourceGroup'),'\" && ',' export VNET_NAME=\"',variables('virtualNetworkName'),'\" && ',' export SUBNET_NAME=\"',variables('virtualNetworkSubnetName'),'\" && ',' export SKU=\"',variables('vmssSKU'),'\" && ',' export VMS_PER_VMSS=',variables('vmsPerVMSS'),' && ',' export PRIORITY=',variables('priority'),' && ',' export AZURE_STORAGE_ACCOUNT=\"',variables('storageAccountName'),'\" ')]",
+    "bootstrapCommand": "yum -y install nfs-utils && mkdir -p $BOOTSTRAP_PATH && r=30 && for i in $(seq 1 $r); do mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' ${BOOTSTRAP_NFS_IP}:${BOOTSTRAP_NFS_PATH} $BOOTSTRAP_PATH && break || [ $i == $r ] && break 0 || sleep 10; done && /bin/bash ${BOOTSTRAP_PATH}${BOOTSTRAP_SCRIPT} 2>&1 | tee -a /var/log/bootstrap.log && umount $BOOTSTRAP_PATH && rmdir $BOOTSTRAP_PATH",
+    "fullcommand": "[concat(variables('environmentVariables'),' && ',variables('bootstrapCommand')]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2018-02-01",
+      "name": "pid-7a86fa6c-a5c7-4f21-b9fa-efa3dcbfbb86",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": []
+        }
+      }
+    },
+    {
+      "name": "[variables('storageAccountName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2017-10-01",
+      "sku": {
+        "name": "[variables('storageAccountType')]"
+      },
+      "kind": "[variables('storageAccountKind')]",
+      "location": "[variables('location')]",
+      "properties": {
+        "networkAcls": {
+          "bypass": "None",
+          "virtualNetworkRules": [
+            {
+              "id": "[variables('subnetId')]",
+              "action": "Allow"
+            }
+          ],
+          "defaultAction": "Deny"
+        }
+      }
+    },
+    {
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('uniqueName')]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnetId')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2017-12-01",
+      "type": "Microsoft.Compute/virtualMachines",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "name": "[variables('uniquename')]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('uniquename'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('vmskusize')]"
+        },
+        "osProfile": {
+          "computerName": "[variables('uniquename')]",
+          "adminUsername": "[variables('adminUsername')]",
+          "adminPassword": "[variables('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "OpenLogic",
+            "offer": "CentOS",
+            "sku": "7.6",
+            "version": "latest"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "apiVersion": "2018-09-01-preview",
+      "name": "[variables('createRoleAssignmentId')]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('uniquename'))]"
+      ],
+      "properties": {
+        "roleDefinitionId": "[variables('createClusterRoleFullyQualifiedId')]",
+        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines/', variables('uniquename')), '2017-12-01', 'Full').identity.principalId]",
+        "scope": "[resourceGroup().id]"
+      }
+    },
+    {
+      "apiVersion": "2018-05-01",
+      "name": "vnetAssignRole",
+      "type": "Microsoft.Resources/deployments",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('uniquename'))]"
+      ],
+      "resourceGroup": "[variables('virtualNetworkResourceGroup')]",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": [
+            {
+              "name": "[variables('createVNETRoleAssignmentId')]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2018-09-01-preview",
+              "properties": {
+                "roleDefinitionId": "[variables('createClusterRoleFullyQualifiedId')]",
+                "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines/', variables('uniquename')), '2017-12-01', 'Full').identity.principalId]",
+                "scope": "[concat(subscription().id, '/resourceGroups/', parameters('virtualNetworkResourceGroup'))]"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "condition": "[variables('useExtension?')]",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('uniquename'), variables('extensionName'))]",
+      "apiVersion": "2017-12-01",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Authorization/roleAssignments', variables('createRoleAssignmentId'))]",
+        "[concat('Microsoft.Resources/deployments/vnetAssignRole'))]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.0",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "commandToExecute": "[concat('export AZURE_STORAGE_ACCOUNT=\"',listKeys(resourceId('Microsoft.Storage/storageAccounts',parameters('storageAccountName')),'2017-10-01').keys[0].value,'\" && ',variables('fullcommand'))]"
+        }
+      }
+    }
+  ],
+  "outputs": {
+	  "ssh_string": {
+      "type": "string",
+      "value": "[concat(variables('adminUsername'), '@', reference(resourceId('Microsoft.Network/networkInterfaces',variables('uniquename'))).ipConfigurations[0].properties.privateIPAddress)]"
+    },
+    "resource_group": {
+      "type": "string",
+      "value": "[resourceGroup().name]"
+    },
+    "location": {
+      "type": "string",
+      "value": "[variables('location')]"
+    }
+  }
+}

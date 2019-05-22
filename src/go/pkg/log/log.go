@@ -27,7 +27,7 @@ const (
 	infoPrefix    = "INFO: "
 	warningPrefix = "WARNING: "
 	errorPrefix   = "ERROR: "
-	defaultFlags  = l.Ltime | l.Lmicroseconds | l.Lshortfile | l.LUTC
+	defaultFlags  = l.Ldate | l.Ltime | l.Lmicroseconds | l.Lshortfile | l.LUTC
 )
 
 func init() {

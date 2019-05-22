@@ -41,7 +41,7 @@ func ValidateQueueName(queueName string) (bool, string) {
 	matched, err := regexp.MatchString("^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$", queueName)
 
 	if err != nil {
-		errorMessage := fmt.Sprintf("error while parsing queue Name '%s' to server: %v", queueName, err)
+		errorMessage := fmt.Sprintf("error while parsing queue Name '%s': %v", queueName, err)
 		return false, errorMessage
 	}
 
