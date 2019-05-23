@@ -1,12 +1,11 @@
----
+<!--
 AUTHOR: Cliff Friedel
 VERSION: 1.2
 CHANGELOG: 
 Version 1.0 - Initial creation of the document, May 17 2019
 Version 1.1 - Modification to update links for supplemental reading, May 20 2019
 Version 1.2 - Formatting and small editorial changes, May 23 2019
-
----
+-->
 
 # Applying export rules
 
