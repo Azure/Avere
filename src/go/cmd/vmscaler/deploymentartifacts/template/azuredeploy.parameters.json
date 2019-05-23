@@ -1,0 +1,59 @@
+{
+  "storageAccountName": {
+    "value": "UNIQUE"
+  },
+  "uniquename": {
+    "value": "UNIQUE"
+  },
+  "adminUsername": {
+    "value": "azureuser"
+  },
+  "adminPassword": {
+    "value": "SSHKEY"
+  },
+  "virtualNetworkResourceGroup": {
+    "value": "UNIQUE"
+  },
+  "virtualNetworkName": {
+    "value": "UNIQUE"
+  },
+  "virtualNetworkSubnetName": {
+    "value": "UNIQUE"
+  },
+  "bootstrapNFSIP": {
+    "value": "10.0.0.12"
+  },
+  "nfsExportPath": {
+    "value": "/msazure"
+  },
+  "vmscalerBootstrapScriptPath": {
+    "value": "/boostrap/bootstrap.vmscaler.sh"
+  },
+  "vmscalerVmSize": {
+    "value": "Standard_D2s_v3"
+  },
+  "vmssImageId": {
+    "value": "UNIQUE"
+  },
+  "vmssAdminUsername": {
+    "value": "UNIQUE"
+  },
+  "vmssAdminPassword": {
+    "value": "UNIQUE"
+  },
+  "vmssSKU": {
+    "value": "Standard_D2s_v3"
+  },
+  "vmsPerVMSS": {
+    "value": 25
+  },
+  "priority": {
+    "value": "Low"
+  },
+  "secureAppEnvironmentVariables": {
+    "value": ""
+  },
+  "rbacRoleAssignmentUniqueId": {
+    "value": ""
+  }
+}
