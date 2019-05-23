@@ -26,7 +26,7 @@ For our example, we will examine a GNS vserver that has two junctions pointing t
 * The second point is for a junction called ``/disk1``, which points to an export ``/ifs/foo`` on the back-end filer named ``isilon``.
 * The third point is for a junction called ``/disk2``, which points to an export ``/vol/vol1`` on the back-end filer ``netapp``. 
  
-For our export policies, we will create three:
+We will create three export policies:
  
 * **Default** - This rule allows read/write access to everyone.
 * **NetworkA** - This rule allows the network 10.0.0.0/24 read/write access and restricts everyone else.
@@ -42,7 +42,7 @@ Let's say that we want ``/disk1`` to be accessed by NetworkA and ``/disk2`` to b
 
 * ``/`` would stay at **Default**
 * ``/disk1`` would be assigned the **NetworkA** export policy 
-* ``/disk2`` would be assigned NetworkB export policy.  
+* ``/disk2`` would be assigned the **NetworkB** export policy.  
 
 Figure 1 shows the global namespace structure with the policies applied.
 
