@@ -5,7 +5,6 @@ package vmscaler
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -156,21 +155,25 @@ func (v *VMScaler) getTotalNodes() {
 
 	i, err := v.rgClient.GetResourceGroupIntTag(v.ResourceGroup, TOTAL_NODES_TAG_KEY)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "unable to read tag: %s", err)
-		os.Exit(1)
+		log.Error.Printf("unable to read tag, going to set to 0: %s", err)
+		v.TotalNodes = int64(0)
+		if e := v.setTotalNodes(); e != nil {
+			log.Error.Printf("unable to set the nodes to %v: %v", v.TotalNodes, e)
+		}
+	} else {
+		v.TotalNodes = int64(i)
 	}
-	v.TotalNodes = int64(i)
 }
 
-func (v *VMScaler) setTotalNodes() {
+func (v *VMScaler) setTotalNodes() error {
 	log.Debug.Printf("[VMScaler.setTotalNodes")
 	defer log.Debug.Printf("VMScaler.setTotalNodes]")
 
 	_, err := v.rgClient.SetTotalNodesIntTag(v.ResourceGroup, TOTAL_NODES_TAG_KEY, int(v.TotalNodes))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "unable to read tag: %s", err)
-		os.Exit(1)
+		return fmt.Errorf("unable to write tag: %s", err)
 	}
+	return nil
 }
 
 type QueueMessage struct {
@@ -245,7 +248,9 @@ func (v *VMScaler) deleteNodes() error {
 		} else {
 			v.TotalNodes = 0
 		}
-		v.setTotalNodes()
+		if e := v.setTotalNodes(); e != nil {
+			log.Error.Printf("error setting nodes to %v: %v", v.TotalNodes, e)
+		}
 	}
 
 	// delete the instances
