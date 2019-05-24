@@ -30,10 +30,11 @@ func usage(errs ...error) {
 	fmt.Fprintf(os.Stderr, "required env vars:\n")
 	fmt.Fprintf(os.Stderr, "\t%s - azure storage account\n", azure.AZURE_STORAGE_ACCOUNT)
 	fmt.Fprintf(os.Stderr, "\t%s - azure storage account key\n", azure.AZURE_STORAGE_ACCOUNT_KEY)
+	fmt.Fprintf(os.Stderr, "\t%s - Account Subscription ID\n", azure.AZURE_SUBSCRIPTION_ID)
+	fmt.Fprintf(os.Stderr, "optional env vars (alternatively comes from IMDS):\n")
 	fmt.Fprintf(os.Stderr, "\t%s - Account AD Tenant ID\n", azure.AZURE_TENANT_ID)
 	fmt.Fprintf(os.Stderr, "\t%s - Account AD Client ID\n", azure.AZURE_CLIENT_ID)
 	fmt.Fprintf(os.Stderr, "\t%s - Account AD Client Secret\n", azure.AZURE_CLIENT_SECRET)
-	fmt.Fprintf(os.Stderr, "\t%s - Account Subscription ID\n", azure.AZURE_SUBSCRIPTION_ID)
 	fmt.Fprintf(os.Stderr, "\n")
 	fmt.Fprintf(os.Stderr, "options:\n")
 	flag.PrintDefaults()
@@ -41,12 +42,9 @@ func usage(errs ...error) {
 
 func verifyEnvVars() bool {
 	available := true
+	available = available && cli.VerifyEnvVar(azure.AZURE_SUBSCRIPTION_ID)
 	available = available && cli.VerifyEnvVar(azure.AZURE_STORAGE_ACCOUNT)
 	available = available && cli.VerifyEnvVar(azure.AZURE_STORAGE_ACCOUNT_KEY)
-	available = available && cli.VerifyEnvVar(azure.AZURE_TENANT_ID)
-	available = available && cli.VerifyEnvVar(azure.AZURE_CLIENT_ID)
-	available = available && cli.VerifyEnvVar(azure.AZURE_CLIENT_SECRET)
-	available = available && cli.VerifyEnvVar(azure.AZURE_SUBSCRIPTION_ID)
 	return available
 }
 
