@@ -27,7 +27,7 @@
     "value": "/msazure"
   },
   "vmscalerBootstrapScriptPath": {
-    "value": "/boostrap/bootstrap.vmscaler.sh"
+    "value": "/bootstrap/bootstrap.vmscaler.sh"
   },
   "vmscalerVmSize": {
     "value": "Standard_D2s_v3"
@@ -49,9 +49,6 @@
   },
   "priority": {
     "value": "Low"
-  },
-  "secureAppEnvironmentVariables": {
-    "value": ""
   },
   "rbacRoleAssignmentUniqueId": {
     "value": ""

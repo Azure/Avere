@@ -50,9 +50,9 @@ To setup the above architecture run the following steps:
    ```bash
    # SSH to eastus NFS server
    sudo mkdir -p /datadisks/disks1/bootstrap
-   sudo wget -O /datadisks/disks1/bootstrap/centosboostrap.sh https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/nfslatency/batch/centosboostrap-nfsexperiment.sh
+   sudo wget -O /datadisks/disks1/bootstrap/centosbootstrap.sh https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/nfslatency/batch/centosbootstrap-nfsexperiment.sh
    # edit the file to update the IP addresses of each server
-   vi centosboostrap.sh
+   vi centosbootstrap.sh
    ```
 
 8. [Setup Azure Batch](maya_azure_batch_avere_vfxt_demo.md#create-an-azure-batch-account-and-a-pool) and create a 500 single core low-priority nodes, ensuring you pass in the above boot.  As a tip, it is useful to add 20 extra nodes to iron out the bumps of the nodes that get pre-empted.  The mount points are under NFS and are setup as shown in the following table on each batch node:

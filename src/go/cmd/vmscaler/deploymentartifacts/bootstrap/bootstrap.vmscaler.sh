@@ -39,14 +39,14 @@ function remove_quotes() {
 }
 
 function copy_binaries() {
-    BOOTSTRAP_PATH="$(dirname ${BOOTSTRAP_PATH}${BOOTSTRAP_NFS_PATH}${BOOTSTRAP_SCRIPT})"
-    VMSCALER_BIN=$BOOTSTRAP_PATH/vmscalerbin
+    BOOTSTRAP_BASE_PATH="$(dirname ${BOOTSTRAP_PATH}${BOOTSTRAP_SCRIPT})"
+    VMSCALER_BIN=$BOOTSTRAP_BASE_PATH/vmscalerbin
     cp $VMSCALER_BIN/* /usr/local/bin/.
 }
 
 function write_system_files() {
     # configuration inspired by https://fabianlee.org/2017/05/21/golang-running-a-go-binary-as-a-systemd-service-on-ubuntu-16-04/
-    BOOTSTRAP_PATH="$(dirname ${BOOTSTRAP_PATH}${BOOTSTRAP_NFS_PATH}${BOOTSTRAP_SCRIPT})"
+    BOOTSTRAP_BASE_PATH="$(dirname ${BOOTSTRAP_PATH}${BOOTSTRAP_SCRIPT})"
 
     # write env file
     ENVFILE=/etc/default/vmscaler
@@ -57,7 +57,7 @@ EOM
     chmod 600 $ENVFILE
 
     # copy the systemd file and search replace users/groups/workdircsv
-    SRC_FILE=$BOOTSTRAP_PATH/systemd/${VMSCALER_SERVICE_FILE}
+    SRC_FILE=$BOOTSTRAP_BASE_PATH/systemd/${VMSCALER_SERVICE_FILE}
     DST_FILE=/lib/systemd/system/${VMSCALER_SERVICE_FILE}
 
     cp $SRC_FILE $DST_FILE
@@ -76,7 +76,7 @@ EOM
     sed -i "s/PRIORITYREPLACE/$PRIORITY/g" $DST_FILE
 
     # copy the rsyslog file
-    cp $BOOTSTRAP_PATH/rsyslog/$RSYSLOG_FILE /etc/rsyslog.d/.
+    cp $BOOTSTRAP_BASE_PATH/rsyslog/$RSYSLOG_FILE /etc/rsyslog.d/.
 }
 
 function configure_rsyslog() {

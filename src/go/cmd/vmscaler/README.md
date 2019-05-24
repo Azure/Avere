@@ -15,7 +15,15 @@ The vmscaler uses Azure Storage Queue for deletion of instances.  This enables a
 
 ## Installation Instructions for Linux
 
- 1. If not already installed go, install golang:
+These instructions work on centos 7 (systemd) and Ubuntu 18.04
+
+1. if this is centos, install git
+
+```bash
+sudo yum install git
+```
+
+1. If not already installed go, install golang:
 
 ```bash
 wget https://dl.google.com/go/go1.11.2.linux-amd64.tar.gz
@@ -40,7 +48,14 @@ go get -v github.com/Azure/Avere/src/go/...
 
 These deployment instructions describe the installation of all components required to run Vdbench:
 
-1. Mount the nfs share.  For this example, we are mounding to /nfs/node0
+1. Mount the nfs share.  For this example, we are mounding to /nfs/node0.  Here are the sample commands for CentOS 7:
+
+```bash
+sudo yum -y install nfs-utils 
+sudo mkdir -p /nfs/node0
+sudo sudo mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' 10.0.16.12:/msazure /nfs/node0
+```
+
 
 2. On the controller, setup all vmscaler binaries (using instructions to build above), bootstrap scripts, and service configuration files:
     ```bash
@@ -65,7 +80,8 @@ These deployment instructions describe the installation of all components requir
     curl --retry 5 --retry-delay 5 -o vmscaler.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/vmscaler.service
     ```
 
-6. Deploy the eda simulator cluster by clicking the "Deploy to Azure" button below::
+6. Deploy the vmscaler cluster by clicking the "Deploy to Azure" button below:
+
     <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fgo%2Fcmd%2Fvmscaler%2Fdeploymentartifacts%2Ftemplate%2Fazuredeploy.json" target="_blank">
     <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
     </a>

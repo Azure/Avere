@@ -96,8 +96,8 @@ Here is the setup for the experiment:
         11. `parallelcp /mnt/tools1GB /nfs/node1/tools1GB`
         12. `parallelcp /mnt/tools5GB /nfs/node1/tools5GB`
         13. `mkdir /nfs/node1/bootstrap`
-    2. Download and build the [eventhubsender utility](https://github.com/anhowe/azure-util/tree/master/eventhubsender) and save to `/nfs/avere/boostrap`
-    3. `curl --retry 5 --retry-delay 5 -o /nfs/avere/boostrap/bootstrap.sh https://raw.githubusercontent.com/anhowe/azure-util/master/deployer/templates/bootstrap.sh`
+    2. Download and build the [eventhubsender utility](https://github.com/anhowe/azure-util/tree/master/eventhubsender) and save to `/nfs/avere/bootstrap`
+    3. `curl --retry 5 --retry-delay 5 -o /nfs/avere/bootstrap/bootstrap.sh https://raw.githubusercontent.com/anhowe/azure-util/master/deployer/templates/bootstrap.sh`
 
 Then with each template from the [deployer utility](https://github.com/anhowe/azure-util/tree/master/deployer) directory, perform an experiment of booting 1000 VMs.
 
