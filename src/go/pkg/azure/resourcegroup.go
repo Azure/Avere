@@ -57,6 +57,9 @@ func (rg *ResourceGroup) SetTotalNodesIntTag(resourceGroupName string, tagName s
 		return nil, err
 	}
 	valStr := strconv.Itoa(val)
+	if group.Tags == nil {
+		group.Tags = make(map[string]*string)
+	}
 	group.Tags[tagName] = &valStr
 	// set the READ-ONLY property
 	group.Properties = nil
