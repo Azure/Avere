@@ -7,6 +7,8 @@ const (
 	DEFAULT_SKU = "Standard_DS14_v2"
 	// the default is based on the following study https://github.com/Azure/Avere/blob/master/docs/azure_vm_provision_best_practices.md
 	DEFAULT_VMS_PER_VMSS = 25
+	MINIMUM_VMS_PER_VMSS = 16
+	MAXIMUM_VMS_PER_VMSS = 250
 
 	DEFAULT_VMSS_SINGLEPLACEMENTGROUP = false
 	DEFAULT_VMSS_OVERPROVISION        = false

@@ -42,7 +42,7 @@
     "value": "UNIQUE"
   },
   "vmssSKU": {
-    "value": "Standard_D2s_v3"
+    "value": "Standard_DS14_v2"
   },
   "vmsPerVMSS": {
     "value": 25

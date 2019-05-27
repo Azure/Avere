@@ -122,6 +122,12 @@ func initializeApplicationVariables(ctx context.Context) (*vmscaler.VMScaler, er
 		os.Exit(1)
 	}
 
+	if *vmsPerVMSS < vmscaler.MINIMUM_VMS_PER_VMSS || *vmsPerVMSS > vmscaler.MAXIMUM_VMS_PER_VMSS {
+		fmt.Fprintf(os.Stderr, "ERROR: vmsPerVMSS must be in the range [%d, %d]\n", vmscaler.MINIMUM_VMS_PER_VMSS, vmscaler.MAXIMUM_VMS_PER_VMSS)
+		usage()
+		os.Exit(1)
+	}
+
 	authorizer, err := auth.NewAuthorizerFromEnvironment()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: authorizer from environment failed: %s", err)
