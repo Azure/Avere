@@ -6,7 +6,7 @@ and energy to build a new image so even getting started with their apps, scripts
 
 In an effort to make the transition from Google GCE to Microsoft Azure easier, we thought it made some sense to document how one might do that. It's pretty straight-forward and only takes about an hour once you know what to do (and most of that is wait time on the downloading/converting/uploading steps). 
 
-*You'll notice that this is Debian/Ubuntu specific so, if you're using Centos, just substitute "yum" for "apt-get".
+*You'll notice that this is Debian/Ubuntu specific so, if you're using Centos, just substitute "yum" for "apt-get".*
 
 Here's how I did it:
 
