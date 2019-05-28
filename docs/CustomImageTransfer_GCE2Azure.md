@@ -14,7 +14,7 @@ This page gives you just about all you need to prepare the image for Azure:
 https://docs.microsoft.com/en-us/azure/virtual-machines/linux/create-upload-ubuntu
 
 ---
-Important - you should follow the steps on the link above, the immediate steps below on initially preparing the image are what I did at the time and are here for convenience and reference. The link above will be updated with any new changes/requirements: 
+Important - you should follow the steps on the link above, the immediate steps below on initially preparing the image are what we did at the time and are here for convenience and reference. The link above will be updated with any new changes/requirements: 
 ```
 # sudo apt-get update
 # sudo apt-get install linux-generic-hwe-16.04 linux-cloud-tools-generic-hwe-16.04
@@ -64,7 +64,7 @@ Deprovision the VM:
 
 A GCE image, of course, also comes loaded with a bunch of GCE-related goodies that should probably be removed. 
 
-SSHGuard caused me some trouble so I removed that:
+SSHGuard caused some trouble so we removed that:
 ```
 sudo apt-get remove --purge sshguard
 ```
@@ -109,7 +109,7 @@ You will want to disable cloudinit and let waagent do the provisioning from the 
 ```
 vi /etc/waagent
 ```
-Make these changes (I disabled the firewall to simplify the installation):
+Make these changes (the firewall was disabled to simplify the installation and is not required):
 ```
 # Enable instance creation
 Provisioning.Enabled=y
@@ -145,7 +145,7 @@ Create image in GCE (https://cloud.google.com/sdk/gcloud/reference/beta/compute/
 $ gcloud compute images create ubuntu-demo-image --source-disk=ubuntu-demo --source-disk-zone=us-east4-c
 ```
 
-I needed an easy way to get the image into Azure so I made it publicly accessible by putting it into a public bucket and exporting the image into that bucket.
+We needed an easy way to get the image into Azure so made it publicly accessible by putting it into a public bucket and exporting the image into that bucket.
 
 Make bucket publicly accessible (https://cloud.google.com/storage/docs/access-control/making-data-public)
 ```
@@ -160,8 +160,6 @@ $ gcloud compute images export --destination-uri=gs://mybucket-public/ubuntu-dem
 # Convert VHDX to VHD
 
 Azure supports VHD images, not VHDX. Fortunately, there is a simple PowerShell utility that can convert the image to VHD. If you've been using Hyper-V in your environment, and specifically using Windows, you may already have the utility installed. If you're a Linux-only shop or don't run your own Hyper-V environment, then you'll need to install the tools on a Windows server. 
-
-Here is how I did it:
 
 Log into your Windows Server or spin up a new one in Azure. 
 
@@ -193,13 +191,11 @@ Convert VHDX to VHD using PowerShell (https://docs.microsoft.com/en-us/azure/vir
 Convert-VHD -Path c:\Path\To\Image\ubuntu-demo-image.vhdx -DestinationPath c:\Path\To\Image\ubuntu-demo-image.vhd -VHDType Fixed
 ```
 # Upload to Azure
-Let's get the VHD uploaded to Azure. 
-
 Creating a publicly-accessible Blob storage container seems to be the most simplistic approach.
 
 If you're new to Azure, you may want to download the AZ CLI (https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest). 
 
-For this exercise, I already had a Resource Group created (named 'keep'). Documentation, examples, tutorials on how to do that can be found here: https://docs.microsoft.com/en-us/cli/azure/group?view=azure-cli-latest#az-group-create
+For this exercise, a Resource Group already existed (named 'keep'). Documentation, examples, tutorials on how to create your own Resource Group can be found here: https://docs.microsoft.com/en-us/cli/azure/group?view=azure-cli-latest#az-group-create
 
 Create ADLS storage account:
 ```
