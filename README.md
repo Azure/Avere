@@ -17,6 +17,7 @@ These tutorials help you understand cluster performance testing and common use-c
   * [Why use the Avere vFXT for Rendering?](docs/why_avere_for_rendering.md) - Shows the results of rending against NFS at various latencies and how Avere vFXT hides the latency.
   * [Best Practices for Improving Azure Virtual Machine (VM) Boot Time](docs/azure_vm_provision_best_practices.md) - The Avere vFXT is commonly used with burstable compute workloads. We hear from our customers that it is very challenging to boot thousands of Azure virtual machines quickly. This article describes best practices for booting thousands of VMs in the fastest possible time.
   * [Windows 10 workstation for Avere vFXT](docs/windows_10_avere_vfxt_mounted_workstation.md) - Creates a Windows workstation within the same VNET as the Avere vFXT and automatically mounts the vFXT cluster and installs various Azure tools for debugging.
+  * [Transfer Custom VM Image from GCE to Azure](docs/CustomImageTransfer_GCE2Azure.md) - A guide on directly transferring your custom VM image from GCE to Azure.
   
 ## Resources
   * [vFXT guides](http://library.averesystems.com/#vfxt) - Additional documentation about the Avere vFXT cluster
