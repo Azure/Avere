@@ -41,9 +41,6 @@
   "vmsPerVMSS": {
     "value": 25
   },
-  "priority": {
-    "value": "Low"
-  },
   "rbacRoleAssignmentUniqueId": {
     "value": ""
   }

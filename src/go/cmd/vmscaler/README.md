@@ -125,7 +125,6 @@ Here is a summary of the input parameters:
   * **vmssImageId** - The custom image id to be used for the VMSS instances.
   * **vmssSKU** - The sku to use for the VMSS instances.
   * **vmsPerVMSS** - The number of nodes per VMSS, vary this number to vary performance.  This is based on the report [Best Practices for Improving Azure Virtual Machine (VM) Boot Time](../../../../docs/azure_vm_provision_best_practices.md).
-  * **vmssPriority** - The priority to use for the VMSS instances, the choices are "Low" or "Regular".
 
 After deploying, the deployment output variables show the following:
  * **ssh_string** - the username and ip address combined as an SSH address.  This will be a private IP address, so you will need to be on the same virtual network.
