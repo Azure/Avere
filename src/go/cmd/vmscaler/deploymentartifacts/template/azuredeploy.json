@@ -101,17 +101,6 @@
       "metadata": {
         "description": "The number of nodes per VMSS, vary this number to vary performance"
       }
-    },
-    "vmssPriority": {
-      "type": "string",
-      "defaultValue": "Low",
-      "allowedValues": [
-        "Low",
-        "Regular"
-      ],
-      "metadata": {
-        "description": "The priority to use for the VMSS instances."
-      }
     }
   },
   "variables": {
@@ -131,8 +120,8 @@
     "vmssAdminPassword": "[parameters('adminPassword')]",
     "vmssSKU": "[parameters('vmssSKU')]",
     "vmsPerVMSS": "[parameters('vmsPerVMSS')]",
-    "vmssPriority": "[parameters('vmssPriority')]",
-    
+
+    "vmssPriority": "Low",
     "bootstrapPath": "/b",
     "vnetID": "[resourceId(variables('virtualNetworkResourceGroup'),'Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "subnetId": "[concat(variables('vnetID'),'/subnets/',variables('virtualNetworkSubnetName'))]",
