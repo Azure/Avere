@@ -8,8 +8,6 @@ In an effort to make the transition from Google GCE to Microsoft Azure easier, w
 
 *You'll notice that this is Debian/Ubuntu specific so, if you're using Centos, just substitute "yum" for "apt-get".*
 
-Here's how I did it:
-
 # Prepare image
 
 This page gives you just about all you need to prepare the image for Azure:
