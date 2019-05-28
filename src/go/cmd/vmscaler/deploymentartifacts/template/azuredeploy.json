@@ -61,7 +61,6 @@
     },
     "nfsExportPath": {
       "type": "string",
-      "defaultValue": "/msazure",
       "metadata": {
         "description": "The path exported from the NFS server that will be mounted. (ex. '/msazure')"
       }

@@ -84,7 +84,7 @@ EOM
     DST_FILE=/home/$LINUX_USER/delete_vmss_instance.sh
     cp  $SRC_FILE $DST_FILE
     sed -i "s/STORAGEACCOUNTREPLACE/$AZURE_STORAGE_ACCOUNT/g" $DST_FILE
-    sed -i "s/STORAGEKEYREPLACE/$(remove_quotes $AZURE_STORAGE_ACCOUNT_KEY)/g" $DST_FILE
+    sed -i "s:STORAGEKEYREPLACE:$(remove_quotes $AZURE_STORAGE_ACCOUNT_KEY):g" $DST_FILE
 }
 
 function configure_rsyslog() {
