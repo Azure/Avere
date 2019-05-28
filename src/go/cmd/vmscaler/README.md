@@ -80,7 +80,12 @@ These deployment instructions describe the installation of all components requir
     mkdir -p /nfs/node0/bootstrap
     cd /nfs/node0/bootstrap
     curl --retry 5 --retry-delay 5 -o bootstrap.vmscaler.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/vmscaler/deploymentartifacts/bootstrap/bootstrap.vmscaler.sh
-    
+
+    # download the vmss script files
+    mkdir -p /nfs/node0/bootstrap
+    cd /nfs/node0/bootstrap
+    curl --retry 5 --retry-delay 5 -o delete_vmss_instance.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/vmscaler/deploymentartifacts/bootstrap/delete_vmss_instance.sh    
+
     # copy in the built binaries
     mkdir -p /nfs/node0/bootstrap/vmscalerbin
     cp $GOPATH/bin/vmscaler /nfs/node0/bootstrap/vmscalerbin
@@ -122,6 +127,11 @@ Here is a summary of the input parameters:
   * **vmsPerVMSS** - The number of nodes per VMSS, vary this number to vary performance.  This is based on the report [Best Practices for Improving Azure Virtual Machine (VM) Boot Time](../../../../docs/azure_vm_provision_best_practices.md).
   * **vmssPriority** - The priority to use for the VMSS instances, the choices are "Low" or "Regular".
 
+After deploying, the deployment output variables show the following:
+ * **ssh_string** - the username and ip address combined as an SSH address.  This will be a private IP address, so you will need to be on the same virtual network.
+ * **resource_group** - the resource group where the VM was deployed.
+ * **location** - the location where the VM was deployed
+
 ## RBAC
 
 The deployed VM is configured with managed identity and has the following scoped RBAC access:
@@ -137,3 +147,9 @@ The deployed VM is configured with managed identity and has the following scoped
 The VMScaler automatically runs as a systemd service.  The logs for the service are under /var/log/vmscaler/ directory.  The process is self-restarting.
 
 The number of VMs deployed is controlled by setting the `TOTAL_NODES` on the resource group.  An empty resource group starts out with 0 nodes.
+
+## Deletion of VMSS Instances
+
+After the VMScaler deploys, the file `delete_vmss_instance.sh` is written to the user directory.  This file can be run on any VMSS instance within the resource group of the VMScaler to delete the instance.  Once the instance is deleted, the capacity decreases by 1.
+
+One method of scaling down the VMSS nodes is to call this script when the node has gone idle.  The VMScaler will automatically scale down the instances all the way to 0 if necessary.
