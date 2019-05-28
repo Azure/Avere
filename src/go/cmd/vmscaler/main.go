@@ -65,8 +65,7 @@ func initializeApplicationVariables(ctx context.Context) (*vmscaler.VMScaler, er
 	var singlePlacementGroup = flag.Bool("singlePlacementGroup", vmscaler.DEFAULT_VMSS_SINGLEPLACEMENTGROUP, "configure VMSS to span multiple tenants")
 	var overProvision = flag.Bool("overProvision", vmscaler.DEFAULT_VMSS_OVERPROVISION, "configure VMSS to use overprovisioning")
 	var priority = flag.String("priority", string(compute.Low), "the priority of the VMSS nodes")
-	var storageAccountQueuePrefix = flag.String("storageAccountQueuePrefix", vmscaler.DEFAULT_QUEUE_PREFIX, "the eviction policy for low priority nodes")
-
+	
 	var debug = flag.Bool("debug", false, "enable debug output")
 
 	flag.Parse()
@@ -141,7 +140,7 @@ func initializeApplicationVariables(ctx context.Context) (*vmscaler.VMScaler, er
 		computePriority = compute.Regular
 	}
 
-	queueName := buildQueueName(*storageAccountQueuePrefix, cli.GetEnv(azure.AZURE_SUBSCRIPTION_ID), *resourceGroup)
+	queueName := buildQueueName(vmscaler.DEFAULT_QUEUE_PREFIX, cli.GetEnv(azure.AZURE_SUBSCRIPTION_ID), *resourceGroup)
 	azure.FatalValidateQueueName(queueName)
 
 	return &vmscaler.VMScaler{

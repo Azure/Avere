@@ -35,12 +35,6 @@
   "vmssImageId": {
     "value": "UNIQUE"
   },
-  "vmssAdminUsername": {
-    "value": "UNIQUE"
-  },
-  "vmssAdminPassword": {
-    "value": "UNIQUE"
-  },
   "vmssSKU": {
     "value": "Standard_DS14_v2"
   },
