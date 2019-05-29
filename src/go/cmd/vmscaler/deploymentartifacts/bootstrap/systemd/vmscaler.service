@@ -15,10 +15,9 @@ RestartSec=2
 EnvironmentFile=/etc/default/vmscaler
 ExecStart=/usr/local/bin/vmscaler -imageId "IMAGEIDREPLACE" -location "LOCATIONREPLACE" -username "USERREPLACE" -password "VMSECRETREPLACE" -resourceGroup "RESOURCEGROUPREPLACE" -vnetResourceGroup "VNETRGREPLACE" -vnetName "VNETNAMEREPLACE" -subnetName "SUBNETREPLACE" -vmSku "SKUREPLACE" -vmsPerVMSS VMSPERVMSSREPLACE -priority "PRIORITYREPLACE"
 
-# make sure log directory exists and owned by syslog
+# make sure log directory exists
 PermissionsStartOnly=true
 ExecStartPre=/bin/mkdir -p /var/log/vmscaler
-ExecStartPre=/bin/chown syslog:adm /var/log/vmscaler
 ExecStartPre=/bin/chmod 755 /var/log/vmscaler
 StandardOutput=syslog
 StandardError=syslog

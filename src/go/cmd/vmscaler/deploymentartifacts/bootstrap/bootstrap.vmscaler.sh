@@ -39,32 +39,31 @@ function remove_quotes() {
 }
 
 function copy_binaries() {
-    BOOTSTRAP_PATH="$(dirname ${BOOTSTRAP_PATH}${BOOTSTRAP_NFS_PATH}${BOOTSTRAP_SCRIPT})"
-    VMSCALER_BIN=$BOOTSTRAP_PATH/vmscalerbin
+    BOOTSTRAP_BASE_PATH="$(dirname ${BOOTSTRAP_PATH}${BOOTSTRAP_SCRIPT})"
+    VMSCALER_BIN=$BOOTSTRAP_BASE_PATH/vmscalerbin
     cp $VMSCALER_BIN/* /usr/local/bin/.
 }
 
 function write_system_files() {
     # configuration inspired by https://fabianlee.org/2017/05/21/golang-running-a-go-binary-as-a-systemd-service-on-ubuntu-16-04/
-    BOOTSTRAP_PATH="$(dirname ${BOOTSTRAP_PATH}${BOOTSTRAP_NFS_PATH}${BOOTSTRAP_SCRIPT})"
+    BOOTSTRAP_BASE_PATH="$(dirname ${BOOTSTRAP_PATH}${BOOTSTRAP_SCRIPT})"
 
     # write env file
     ENVFILE=/etc/default/vmscaler
     /bin/cat <<EOM >$ENVFILE
 AZURE_STORAGE_ACCOUNT=$AZURE_STORAGE_ACCOUNT
 AZURE_STORAGE_ACCOUNT_KEY="$(remove_quotes $AZURE_STORAGE_ACCOUNT_KEY)"
+AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID
 EOM
     chmod 600 $ENVFILE
 
     # copy the systemd file and search replace users/groups/workdircsv
-    SRC_FILE=$BOOTSTRAP_PATH/systemd/${VMSCALER_SERVICE_FILE}
+    SRC_FILE=$BOOTSTRAP_BASE_PATH/systemd/${VMSCALER_SERVICE_FILE}
     DST_FILE=/lib/systemd/system/${VMSCALER_SERVICE_FILE}
 
     cp $SRC_FILE $DST_FILE
 
-    sed -i "s/USERREPLACE/$LINUX_USER/g" $DST_FILE
-    sed -i "s/GROUPREPLACE/$LINUX_USER/g" $DST_FILE
-    sed -i "s/IMAGEIDREPLACE/$IMAGE_ID/g" $DST_FILE
+    sed -i "s:IMAGEIDREPLACE:$IMAGE_ID:g" $DST_FILE
     sed -i "s/LOCATIONREPLACE/$LOCATION/g" $DST_FILE
     sed -i "s/VMSECRETREPLACE/$VM_PASSWORD/g" $DST_FILE
     sed -i "s/RESOURCEGROUPREPLACE/$RESOURCE_GROUP/g" $DST_FILE
@@ -74,9 +73,30 @@ EOM
     sed -i "s/SKUREPLACE/$SKU/g" $DST_FILE
     sed -i "s/VMSPERVMSSREPLACE/$VMS_PER_VMSS/g" $DST_FILE
     sed -i "s/PRIORITYREPLACE/$PRIORITY/g" $DST_FILE
+    sed -i "s/USERREPLACE/$LINUX_USER/g" $DST_FILE
+    sed -i "s/GROUPREPLACE/$LINUX_USER/g" $DST_FILE
 
     # copy the rsyslog file
-    cp $BOOTSTRAP_PATH/rsyslog/$RSYSLOG_FILE /etc/rsyslog.d/.
+    cp $BOOTSTRAP_BASE_PATH/rsyslog/$RSYSLOG_FILE /etc/rsyslog.d/.
+
+    # copy the delete vmss instance file
+    SRC_FILE=$BOOTSTRAP_BASE_PATH/delete_vmss_instance.sh
+    DST_FILE=/home/$LINUX_USER/delete_vmss_instance.sh
+    cp  $SRC_FILE $DST_FILE
+    sed -i "s/STORAGEACCOUNTREPLACE/$AZURE_STORAGE_ACCOUNT/g" $DST_FILE
+    sed -i "s:STORAGEKEYREPLACE:$(remove_quotes $AZURE_STORAGE_ACCOUNT_KEY):g" $DST_FILE
+    chmod +x $DST_FILE
+
+    # copy the set capacity files
+    SRC_FILE=$BOOTSTRAP_BASE_PATH/set_capacity.imds.sh
+    DST_FILE=/home/$LINUX_USER/set_capacity.imds.sh
+    cp  $SRC_FILE $DST_FILE
+    chmod +x $DST_FILE
+    
+    SRC_FILE=$BOOTSTRAP_BASE_PATH/set_capacity.service_principal.sh
+    DST_FILE=/home/$LINUX_USER/set_capacity.service_principal.sh
+    cp  $SRC_FILE $DST_FILE
+    chmod +x $DST_FILE
 }
 
 function configure_rsyslog() {

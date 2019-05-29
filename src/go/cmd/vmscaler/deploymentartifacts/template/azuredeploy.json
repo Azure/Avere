@@ -14,6 +14,14 @@
         "description": "The unique name used for resource names associated with these virtual machine clients"
       }
     },
+    "rbacRoleAssignmentUniqueId": {
+      "type": "string",
+      "defaultValue": "",
+      "minLength": 0,
+      "metadata": {
+        "description": "The Azure role assignment unique id.  Use a guid from https://www.guidgenerator.com.  If blank, vmname is used."
+      }
+    },
     "adminUsername": {
       "type": "string",
       "defaultValue": "azureuser",
@@ -53,14 +61,13 @@
     },
     "nfsExportPath": {
       "type": "string",
-      "defaultValue": "/msazure",
       "metadata": {
         "description": "The path exported from the NFS server that will be mounted. (ex. '/msazure')"
       }
     },
     "vmscalerBootstrapScriptPath": {
       "type": "string",
-      "defaultValue": "/boostrap/bootstrap.vmscaler.sh",
+      "defaultValue": "/bootstrap/bootstrap.vmscaler.sh",
       "metadata": {
         "description": "The bootstrap script path that configures the vmscaler as a service"
       }
@@ -69,7 +76,7 @@
       "type": "string",
       "defaultValue": "Standard_D2s_v3",
       "metadata": {
-        "description": "The SKU size of worker vms to deploy."
+        "description": "The SKU size of worker vm to deploy."
       }
     },
     "vmssImageId": {
@@ -78,22 +85,9 @@
         "description": "The custom image id to be used for the VMSS instances."
       }
     },
-    "vmssAdminUsername": {
-      "type": "string",
-      "defaultValue": "azureuser",
-      "metadata": {
-        "description": "The admin username for the VMSS instances."
-      }
-    },
-    "vmssAdminPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "The vm password for the VMSS instances."
-      }
-    },
     "vmssSKU": {
       "type": "string",
-      "defaultValue": "Standard_DS2_v2",
+      "defaultValue": "Standard_DS14_v2",
       "metadata": {
         "description": "The sku to use for the VMSS instances."
       }
@@ -101,27 +95,10 @@
     "vmsPerVMSS": {
       "type": "int",
       "defaultValue": 25,
+      "minValue": 16,
+      "maxValue": 250,
       "metadata": {
-        "description": "the number of nodes per VMSS, vary this number to vary performance"
-      }
-    },
-    "priority": {
-      "type": "string",
-      "defaultValue": "Low",
-      "allowedValues": [
-        "Low",
-        "Regular"
-      ],
-      "metadata": {
-        "description": "The sku to use for the VMSS instances."
-      }
-    },
-    "rbacRoleAssignmentUniqueId": {
-      "type": "string",
-      "defaultValue": "",
-      "minLength": 0,
-      "metadata": {
-        "description": "The Azure role assignment unique id.  If blank, vmname is used."
+        "description": "The number of nodes per VMSS, vary this number to vary performance"
       }
     }
   },
@@ -138,12 +115,12 @@
     "vmscalerBootstrapScriptPath": "[parameters('vmscalerBootstrapScriptPath')]",
     "vmscalerVmSize": "[parameters('vmscalerVmSize')]",
     "vmssImageId": "[parameters('vmssImageId')]",
-    "vmssAdminUsername": "[parameters('vmssAdminUsername')]",
-    "vmssAdminPassword": "[parameters('vmssAdminPassword')]",
+    "vmssAdminUsername": "[parameters('adminUsername')]",
+    "vmssAdminPassword": "[parameters('adminPassword')]",
     "vmssSKU": "[parameters('vmssSKU')]",
     "vmsPerVMSS": "[parameters('vmsPerVMSS')]",
-    "priority": "[parameters('priority')]",
-    
+
+    "vmssPriority": "Low",
     "bootstrapPath": "/b",
     "vnetID": "[resourceId(variables('virtualNetworkResourceGroup'),'Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "subnetId": "[concat(variables('vnetID'),'/subnets/',variables('virtualNetworkSubnetName'))]",
@@ -151,14 +128,19 @@
     "storageAccountKind": "StorageV2",
     "location": "[resourceGroup().location]",
     "vmskusize": "Standard_DS2_v2",
+    "vmssImageResourceGroup": "[substring(variables('vmssImageId'), 0, indexOf(variables('vmssImageId'), '/providers/Microsoft.Compute/images/'))]",
+    "vmssImageResourceGroupName": "[substring(variables('vmssImageResourceGroup'), add(lastIndexOf(variables('vmssImageResourceGroup'),'/'), 1))]",
     "rbacRoleAssignmentUniqueId": "[if(greater(length(parameters('rbacRoleAssignmentUniqueId')), 0), parameters('rbacRoleAssignmentUniqueId'), variables('uniquename'))]",
     "vmContributorRoleAssignmentId": "[guid(concat(variables('rbacRoleAssignmentUniqueId'), resourceGroup().name, '-createrole'))]",
-    "createClusterRoleFullyQualifiedId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/9980e02c-c2be-4d73-94e8-173b1dc7cf3c')]",
     "createVNETRoleAssignmentId": "[guid(concat(variables('rbacRoleAssignmentUniqueId'), resourceGroup().name, '-createvnetrole'))]",
-
-    "environmentVariables": "[concat(' export BOOTSTRAP_PATH=\"',variables('bootstrapPath'),'\" && ',' export BOOTSTRAP_NFS_IP=\"',variables('bootstrapNFSIP'),'\" && ',' export BOOTSTRAP_NFS_PATH=\"',variables('nfsExportPath'),'\" && ',' export BOOTSTRAP_SCRIPT=\"',variables('vmscalerBootstrapScriptPath'),'\" && ',' export IMAGE_ID=\"',variables('vmssImageId'),'\" && ',' export LOCATION=\"',variables('location'),'\" && ',' export LINUX_USER=\"',variables('adminUsername'),'\" && ',' export VM_PASSWORD=\"',variables('adminPassword'),'\" && ',' export RESOURCE_GROUP=\"',resourceGroup().name,'\" && ',' export VNET_RG=\"',variables('virtualNetworkResourceGroup'),'\" && ',' export VNET_NAME=\"',variables('virtualNetworkName'),'\" && ',' export SUBNET_NAME=\"',variables('virtualNetworkSubnetName'),'\" && ',' export SKU=\"',variables('vmssSKU'),'\" && ',' export VMS_PER_VMSS=',variables('vmsPerVMSS'),' && ',' export PRIORITY=',variables('priority'),' && ',' export AZURE_STORAGE_ACCOUNT=\"',variables('storageAccountName'),'\" ')]",
+    "readImageRoleAssignmentId": "[guid(concat(variables('rbacRoleAssignmentUniqueId'), resourceGroup().name, '-readimage'))]",
+    "contributorRoleFullyQualifiedId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+    "subnetJoinRoleFullyQualifiedId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/c025889f-8102-4ebf-b32c-fc0c6f0c6bd9')]",
+    "readImageRoleFullyQualifiedId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/4f8fab4f-1852-4a58-a46a-8eaf358af14a')]",
+    "singleQuote": "'",
+    "environmentVariables": "[concat(' export BOOTSTRAP_PATH=\"',variables('bootstrapPath'),'\" && ',' export BOOTSTRAP_NFS_IP=\"',variables('bootstrapNFSIP'),'\" && ',' export BOOTSTRAP_NFS_PATH=\"',variables('nfsExportPath'),'\" && ',' export BOOTSTRAP_SCRIPT=\"',variables('vmscalerBootstrapScriptPath'),'\" && ',' export IMAGE_ID=\"',variables('vmssImageId'),'\" && ',' export LOCATION=\"',variables('location'),'\" && ',' export LINUX_USER=\"',variables('adminUsername'),'\" && ',' export VM_PASSWORD=',variables('singleQuote'),variables('adminPassword'),variables('singleQuote'),' && ',' export RESOURCE_GROUP=\"',resourceGroup().name,'\" && ',' export VNET_RG=\"',variables('virtualNetworkResourceGroup'),'\" && ',' export VNET_NAME=\"',variables('virtualNetworkName'),'\" && ',' export SUBNET_NAME=\"',variables('virtualNetworkSubnetName'),'\" && ',' export SKU=\"',variables('vmssSKU'),'\" && ',' export VMS_PER_VMSS=',variables('vmsPerVMSS'),' && ',' export PRIORITY=',variables('vmssPriority'),' && ',' export AZURE_STORAGE_ACCOUNT=\"',variables('storageAccountName'),'\" ',' && ',' export AZURE_SUBSCRIPTION_ID=\"',subscription().subscriptionId,'\" ')]",
     "bootstrapCommand": "yum -y install nfs-utils && mkdir -p $BOOTSTRAP_PATH && r=30 && for i in $(seq 1 $r); do mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' ${BOOTSTRAP_NFS_IP}:${BOOTSTRAP_NFS_PATH} $BOOTSTRAP_PATH && break || [ $i == $r ] && break 0 || sleep 10; done && /bin/bash ${BOOTSTRAP_PATH}${BOOTSTRAP_SCRIPT} 2>&1 | tee -a /var/log/bootstrap.log && umount $BOOTSTRAP_PATH && rmdir $BOOTSTRAP_PATH",
-    "fullcommand": "[concat(variables('environmentVariables'),' && ',variables('bootstrapCommand')]"
+    "fullcommand": "[concat(variables('environmentVariables'),' && ',variables('bootstrapCommand'))]"
   },
   "resources": [
     {
@@ -244,12 +226,21 @@
             "offer": "CentOS",
             "sku": "7.6",
             "version": "latest"
+          },
+          "osDisk": {
+            "osType": "Linux",
+            "createOption": "FromImage",
+            "caching": "ReadWrite",
+            "managedDisk": {
+                "storageAccountType": "Standard_LRS"
+            },
+            "diskSizeGB": 1024
           }
         },
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('uniqueName'))]"
             }
           ]
         }
@@ -257,13 +248,13 @@
     },
     {
       "apiVersion": "2018-09-01-preview",
-      "name": "[variables('createRoleAssignmentId')]",
+      "name": "[variables('vmContributorRoleAssignmentId')]",
       "type": "Microsoft.Authorization/roleAssignments",
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', variables('uniquename'))]"
       ],
       "properties": {
-        "roleDefinitionId": "[variables('createClusterRoleFullyQualifiedId')]",
+        "roleDefinitionId": "[variables('contributorRoleFullyQualifiedId')]",
         "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines/', variables('uniquename')), '2017-12-01', 'Full').identity.principalId]",
         "scope": "[resourceGroup().id]"
       }
@@ -287,7 +278,7 @@
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2018-09-01-preview",
               "properties": {
-                "roleDefinitionId": "[variables('createClusterRoleFullyQualifiedId')]",
+                "roleDefinitionId": "[variables('subnetJoinRoleFullyQualifiedId')]",
                 "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines/', variables('uniquename')), '2017-12-01', 'Full').identity.principalId]",
                 "scope": "[concat(subscription().id, '/resourceGroups/', parameters('virtualNetworkResourceGroup'))]"
               }
@@ -297,22 +288,50 @@
       }
     },
     {
-      "condition": "[variables('useExtension?')]",
+      "apiVersion": "2018-05-01",
+      "name": "readImageAssignRole",
+      "type": "Microsoft.Resources/deployments",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('uniquename'))]"
+      ],
+      "resourceGroup": "[variables('vmssImageResourceGroupName')]",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": [
+            {
+              "name": "[variables('readImageRoleAssignmentId')]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2018-09-01-preview",
+              "properties": {
+                "roleDefinitionId": "[variables('readImageRoleFullyQualifiedId')]",
+                "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines/', variables('uniquename')), '2017-12-01', 'Full').identity.principalId]",
+                "scope": "[variables('vmssImageResourceGroup')]"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(variables('uniquename'), variables('extensionName'))]",
+      "name": "[concat(variables('uniquename'), '/configurevmscaler')]",
       "apiVersion": "2017-12-01",
       "location": "[variables('location')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Authorization/roleAssignments', variables('createRoleAssignmentId'))]",
-        "[concat('Microsoft.Resources/deployments/vnetAssignRole'))]"
+        "[resourceId('Microsoft.Authorization/roleAssignments', variables('vmContributorRoleAssignmentId'))]",
+        "[concat('Microsoft.Resources/deployments/vnetAssignRole')]",
+        "[concat('Microsoft.Resources/deployments/readImageAssignRole')]"
       ],
       "properties": {
         "publisher": "Microsoft.Azure.Extensions",
         "type": "CustomScript",
         "typeHandlerVersion": "2.0",
         "autoUpgradeMinorVersion": true,
-        "settings": {
-          "commandToExecute": "[concat('export AZURE_STORAGE_ACCOUNT=\"',listKeys(resourceId('Microsoft.Storage/storageAccounts',parameters('storageAccountName')),'2017-10-01').keys[0].value,'\" && ',variables('fullcommand'))]"
+        "protectedSettings": {
+          "commandToExecute": "[concat('export AZURE_STORAGE_ACCOUNT_KEY=',variables('singleQuote'),listKeys(resourceId('Microsoft.Storage/storageAccounts',parameters('storageAccountName')),'2017-10-01').keys[0].value,variables('singleQuote'),' && ',variables('fullcommand'))]"
         }
       }
     }

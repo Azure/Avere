@@ -30,10 +30,11 @@ func usage(errs ...error) {
 	fmt.Fprintf(os.Stderr, "required env vars:\n")
 	fmt.Fprintf(os.Stderr, "\t%s - azure storage account\n", azure.AZURE_STORAGE_ACCOUNT)
 	fmt.Fprintf(os.Stderr, "\t%s - azure storage account key\n", azure.AZURE_STORAGE_ACCOUNT_KEY)
+	fmt.Fprintf(os.Stderr, "\t%s - Account Subscription ID\n", azure.AZURE_SUBSCRIPTION_ID)
+	fmt.Fprintf(os.Stderr, "optional env vars (alternatively comes from IMDS):\n")
 	fmt.Fprintf(os.Stderr, "\t%s - Account AD Tenant ID\n", azure.AZURE_TENANT_ID)
 	fmt.Fprintf(os.Stderr, "\t%s - Account AD Client ID\n", azure.AZURE_CLIENT_ID)
 	fmt.Fprintf(os.Stderr, "\t%s - Account AD Client Secret\n", azure.AZURE_CLIENT_SECRET)
-	fmt.Fprintf(os.Stderr, "\t%s - Account Subscription ID\n", azure.AZURE_SUBSCRIPTION_ID)
 	fmt.Fprintf(os.Stderr, "\n")
 	fmt.Fprintf(os.Stderr, "options:\n")
 	flag.PrintDefaults()
@@ -41,12 +42,9 @@ func usage(errs ...error) {
 
 func verifyEnvVars() bool {
 	available := true
+	available = available && cli.VerifyEnvVar(azure.AZURE_SUBSCRIPTION_ID)
 	available = available && cli.VerifyEnvVar(azure.AZURE_STORAGE_ACCOUNT)
 	available = available && cli.VerifyEnvVar(azure.AZURE_STORAGE_ACCOUNT_KEY)
-	available = available && cli.VerifyEnvVar(azure.AZURE_TENANT_ID)
-	available = available && cli.VerifyEnvVar(azure.AZURE_CLIENT_ID)
-	available = available && cli.VerifyEnvVar(azure.AZURE_CLIENT_SECRET)
-	available = available && cli.VerifyEnvVar(azure.AZURE_SUBSCRIPTION_ID)
 	return available
 }
 
@@ -55,7 +53,6 @@ func initializeApplicationVariables(ctx context.Context) (*vmscaler.VMScaler, er
 	var vnetName = flag.String("vnetName", "", "the virtual network name")
 	var subnetName = flag.String("subnetName", "", "the subnet name")
 
-	// TODO: get from resource group
 	var location = flag.String("location", "westus2", "the location of the VMSS instances")
 
 	var resourceGroup = flag.String("resourceGroup", "", "the resource group name that contains the VMSS instances")
@@ -67,7 +64,6 @@ func initializeApplicationVariables(ctx context.Context) (*vmscaler.VMScaler, er
 	var singlePlacementGroup = flag.Bool("singlePlacementGroup", vmscaler.DEFAULT_VMSS_SINGLEPLACEMENTGROUP, "configure VMSS to span multiple tenants")
 	var overProvision = flag.Bool("overProvision", vmscaler.DEFAULT_VMSS_OVERPROVISION, "configure VMSS to use overprovisioning")
 	var priority = flag.String("priority", string(compute.Low), "the priority of the VMSS nodes")
-	var storageAccountQueuePrefix = flag.String("storageAccountQueuePrefix", vmscaler.DEFAULT_QUEUE_PREFIX, "the eviction policy for low priority nodes")
 
 	var debug = flag.Bool("debug", false, "enable debug output")
 
@@ -124,6 +120,12 @@ func initializeApplicationVariables(ctx context.Context) (*vmscaler.VMScaler, er
 		os.Exit(1)
 	}
 
+	if *vmsPerVMSS < vmscaler.MINIMUM_VMS_PER_VMSS || *vmsPerVMSS > vmscaler.MAXIMUM_VMS_PER_VMSS {
+		fmt.Fprintf(os.Stderr, "ERROR: vmsPerVMSS must be in the range [%d, %d]\n", vmscaler.MINIMUM_VMS_PER_VMSS, vmscaler.MAXIMUM_VMS_PER_VMSS)
+		usage()
+		os.Exit(1)
+	}
+
 	authorizer, err := auth.NewAuthorizerFromEnvironment()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: authorizer from environment failed: %s", err)
@@ -137,7 +139,7 @@ func initializeApplicationVariables(ctx context.Context) (*vmscaler.VMScaler, er
 		computePriority = compute.Regular
 	}
 
-	queueName := buildQueueName(*storageAccountQueuePrefix, cli.GetEnv(azure.AZURE_SUBSCRIPTION_ID), *resourceGroup)
+	queueName := buildQueueName(vmscaler.DEFAULT_QUEUE_PREFIX, cli.GetEnv(azure.AZURE_SUBSCRIPTION_ID), *resourceGroup)
 	azure.FatalValidateQueueName(queueName)
 
 	return &vmscaler.VMScaler{
@@ -177,6 +179,9 @@ func buildQueueName(queuePrefix string, subid string, resourceGroup string) stri
 func main() {
 	// setup the shared context
 	ctx, cancel := context.WithCancel(context.Background())
+	// these nodes mount the Avere vFXT, and usage is attributed to the Avere vFXT
+	// for more information see https://docs.microsoft.com/en-us/azure/marketplace/azure-partner-customer-usage-attribution
+	ctx = azure.SetUsageAttribution(ctx, azure.AVERE_USAGE_GUID)
 	syncWaitGroup := sync.WaitGroup{}
 
 	// initialize and start the orchestrator

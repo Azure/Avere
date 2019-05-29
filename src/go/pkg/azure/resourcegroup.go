@@ -22,6 +22,12 @@ func InitializeResourceGroup(ctx context.Context, authorizer autorest.Authorizer
 	groupsClient := resources.NewGroupsClient(subscriptionId)
 	groupsClient.Authorizer = authorizer
 
+	// add usage guid per https://docs.microsoft.com/en-us/azure/marketplace/azure-partner-customer-usage-attribution#example-the-python-sdk
+	if usageGuid, ok := GetUsageAttribution(ctx); ok {
+		log.Info.Printf("Add usage guid %s to resource group client", usageGuid)
+		groupsClient.AddToUserAgent(usageGuid)
+	}
+
 	return &ResourceGroup{
 		GroupsClient: groupsClient,
 		Context:      ctx,
@@ -57,6 +63,9 @@ func (rg *ResourceGroup) SetTotalNodesIntTag(resourceGroupName string, tagName s
 		return nil, err
 	}
 	valStr := strconv.Itoa(val)
+	if group.Tags == nil {
+		group.Tags = make(map[string]*string)
+	}
 	group.Tags[tagName] = &valStr
 	// set the READ-ONLY property
 	group.Properties = nil
