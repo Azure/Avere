@@ -81,10 +81,17 @@ These deployment instructions describe the installation of all components requir
     cd /nfs/node0/bootstrap
     curl --retry 5 --retry-delay 5 -o bootstrap.vmscaler.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/vmscaler/deploymentartifacts/bootstrap/bootstrap.vmscaler.sh
 
-    # download the vmss script files
     mkdir -p /nfs/node0/bootstrap
     cd /nfs/node0/bootstrap
-    curl --retry 5 --retry-delay 5 -o delete_vmss_instance.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/vmscaler/deploymentartifacts/bootstrap/delete_vmss_instance.sh    
+    curl --retry 5 --retry-delay 5 -o delete_vmss_instance.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/vmscaler/deploymentartifacts/bootstrap/delete_vmss_instance.sh
+
+    mkdir -p /nfs/node0/bootstrap
+    cd /nfs/node0/bootstrap
+    curl --retry 5 --retry-delay 5 -o set_capacity.imds.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/vmscaler/deploymentartifacts/bootstrap/set_capacity.imds.sh
+
+    mkdir -p /nfs/node0/bootstrap
+    cd /nfs/node0/bootstrap
+    curl --retry 5 --retry-delay 5 -o set_capacity.service_principal.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/vmscaler/deploymentartifacts/bootstrap/set_capacity.service_principal.sh
 
     # copy in the built binaries
     mkdir -p /nfs/node0/bootstrap/vmscalerbin
