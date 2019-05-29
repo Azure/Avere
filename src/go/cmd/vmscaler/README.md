@@ -13,6 +13,8 @@ The features include:
 
 The VMScaler uses the Azure Storage Queue for deletion of instances.  This enables a node to self-destruct, or a render manager to choose which nodes to delete.
 
+A separate VMScaler / Resource Group pair is created per VM SKU.
+
 ## Installation Instructions for Linux
 
 These instructions work on Centos 7 (systemd) and Ubuntu 18.04.  This creates a manager node that runs the VMScaler application as a service.  Here are the general steps:
@@ -154,8 +156,16 @@ The VMScaler automatically runs as a systemd service.  The logs for the service 
 
 The number of VMs deployed is controlled by setting the `TOTAL_NODES` on the resource group.  An empty resource group starts out with 0 nodes.
 
-## Deletion of VMSS Instances
+## Automating Scale-up and Scale-down of VMSS Instances
 
-After the VMScaler deploys, the file `delete_vmss_instance.sh` is written to the user directory.  This file can be run on any VMSS instance within the resource group of the VMScaler to delete the instance.  Once the instance is deleted, the capacity decreases by 1.
+After the VMScaler deploys, the following files are written to the user directory to automate scale-up and scale-down:
 
-One method of scaling down the VMSS nodes is to call this script when the node has gone idle.  The VMScaler will automatically scale down the instances all the way to 0 if necessary.
+| Name | Role Required |
+| --- | --- |
+| `set_capacity.imds.sh` | Set the capacity of the resource group lower or higher.  This uses managed identity and can only be run from the VMScaler VM. |
+| `set_capacity.serviceprincipal.sh` | Set the capacity of the resource group lower or higher using a service principal.  To create the service principal you can use these [instructions](https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli?view=azure-cli-latest).  The service principal can be scoped to the resource group, but needs at least *Contributor* role to write to the resource group.|
+| `delete_vmss_instance.sh` | This is run from any VMSS instance in the VM farm.  This has auth specific to the resource group / storage account, so cannot be used for other resource group / vmscaler deployments. | 
+ 
+To scale-up, use either of the set capacity scripts to set the `TOTAL_NODES` capacity higher on the resource group.  The VMScaler will automatically scale-up the instances.  If the value is set lower than the existing capacity, the VMScaler will lazily allow evictions to get the VM farm to lower capacity.
+
+One method of actively scaling down the VMSS nodes is to call the delete vmss instance script when the node has gone idle.  This will cause the VMScaler to delete the instance and decrement the capacity by 1.  The VMScaler will automatically scale down the instances all the way to 0.
