@@ -1,17 +1,15 @@
 # VMScaler - maintain a VM farm of low priority VMSS nodes
 
-The VMScaler maintains a VM farm of low priority Virtual Machine Scaleset (VMSS) nodes.  It does this by managing the VMSS capacity within a resource group including quickly restoring evicted nodes.  The primary use case is cloud burstable render farms by VFX rendering houses.
+The VMScaler maintains a VM farm of low priority Virtual Machine Scaleset (VMSS) nodes.  It does this by managing the total node capacity of all running VMSS instances within a resource group.  The primary use case is cloud burstable render farms by VFX rendering houses.
 
 The features include:
- 1. Ability to set the number of nodes to run within a resource group by setting the `TOTAL_NODES` tag on that group.
- 1.	Ability to set the density of VMSS for the fastest boot times according to the report [Best Practices for Improving Azure Virtual Machine (VM) Boot Time](../../../../docs/azure_vm_provision_best_practices.md)
- 1.	Even if nodes are evicted, ensures the node count stays at `TOTAL_NODES` tag set on the resource group
- 1.	Self-running VM locked down by RBAC to VMSS actions only of the resource group.
- 1.	"Seals" VMSS instances that no longer resize.
+ 1.	Restore evicted low-priority nodes and ensure the node count stays at the value set by the resource group tag `TOTAL_NODES`.
+ 1.	"Seals" VMSS instances that no longer increase in size.
  1.	Creates new VMSS instances to make up for sealed instances.
- 1.	A node deletes itself by queuing a delete instance message.  The VMScaler uses this message to decrement `TOTAL_NODES` and delete the instance.
-
-The VMScaler uses the Azure Storage Queue for deletion of instances.  This enables a node to self-destruct, or a render manager to choose which nodes to delete.
+ 1.	Automation scripts that can be used by render managers for automated scale-up / scale-down of capacity.
+ 1.	Self-running VM locked down by RBAC to VMSS actions only of the resource group.
+ 1. The VMScaler uses managed identity and has scoped access only the resource group, VNET, and custom image.
+ 1. Ability to set the density of VMSS for the fastest boot times according to the report [Best Practices for Improving Azure Virtual Machine (VM) Boot Time](../../../../docs/azure_vm_provision_best_practices.md).
 
 A separate VMScaler / Resource Group pair is created per VM SKU.
 
