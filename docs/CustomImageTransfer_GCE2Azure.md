@@ -200,16 +200,16 @@ For this exercise, a Resource Group already existed (named 'keep'). Documentatio
 Create ADLS storage account:
 ```
 Connect-AzAccount
-$location = ‘eastus'
-$storageaccountname = ‘myvmstore'
+$location = "eastus"
+$storageaccountname = "myvmstore"
 
 New-AzStorageAccount `
 >>     -ResourceGroupName keep -Name $storageaccountname -Location $location -SkuName "Standard_LRS" `
->>     -Kind “Storage"
+>>     -Kind "Storage"
 ```
 Make it public:
 ```
-New-AzStorageContext -StorageAccountName $storageaccountname -Anonymous -Protocol “http"
+New-AzStorageContext -StorageAccountName $storageaccountname -Anonymous -Protocol "http"
 ```
 Create a container named 'public' to drop the image into:
 ```
