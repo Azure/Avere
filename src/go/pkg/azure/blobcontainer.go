@@ -62,8 +62,8 @@ func getCustomHTTPClient() *http.Client {
 	}*/
 
 	AnthonyBernieDialer := func(network, addr string) (net.Conn, error) {
-		log.Info.Printf("[AnthonyBernieDialier %s, %s", network, addr)
-		defer log.Info.Printf("AnthonyBernieDialier]")
+		//log.Info.Printf("[AnthonyBernieDialier %s, %s", network, addr)
+		//defer log.Info.Printf("AnthonyBernieDialier]")
 		/*ipAddr, err := net.ResolveIPAddr(network, addr)
 		if err != nil {
 			return nil, err
