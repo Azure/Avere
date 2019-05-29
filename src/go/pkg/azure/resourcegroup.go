@@ -24,7 +24,7 @@ func InitializeResourceGroup(ctx context.Context, authorizer autorest.Authorizer
 
 	// add usage guid per https://docs.microsoft.com/en-us/azure/marketplace/azure-partner-customer-usage-attribution#example-the-python-sdk
 	if usageGuid, ok := GetUsageAttribution(ctx); ok {
-		log.Info.Printf("Add usage guid %s to resource group client")
+		log.Info.Printf("Add usage guid %s to resource group client", usageGuid)
 		groupsClient.AddToUserAgent(usageGuid)
 	}
 

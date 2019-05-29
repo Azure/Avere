@@ -32,7 +32,7 @@ func InitializeVmss(ctx context.Context, authorizer autorest.Authorizer, subscri
 
 	// add usage guid per https://docs.microsoft.com/en-us/azure/marketplace/azure-partner-customer-usage-attribution#example-the-python-sdk
 	if usageGuid, ok := GetUsageAttribution(ctx); ok {
-		log.Info.Printf("Add usage guid %s to vmss client")
+		log.Info.Printf("Add usage guid %s to vmss client", usageGuid)
 		vmssClient.AddToUserAgent(usageGuid)
 	}
 
