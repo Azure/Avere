@@ -53,7 +53,6 @@ func initializeApplicationVariables(ctx context.Context) (*vmscaler.VMScaler, er
 	var vnetName = flag.String("vnetName", "", "the virtual network name")
 	var subnetName = flag.String("subnetName", "", "the subnet name")
 
-	// TODO: get from resource group
 	var location = flag.String("location", "westus2", "the location of the VMSS instances")
 
 	var resourceGroup = flag.String("resourceGroup", "", "the resource group name that contains the VMSS instances")
@@ -65,7 +64,7 @@ func initializeApplicationVariables(ctx context.Context) (*vmscaler.VMScaler, er
 	var singlePlacementGroup = flag.Bool("singlePlacementGroup", vmscaler.DEFAULT_VMSS_SINGLEPLACEMENTGROUP, "configure VMSS to span multiple tenants")
 	var overProvision = flag.Bool("overProvision", vmscaler.DEFAULT_VMSS_OVERPROVISION, "configure VMSS to use overprovisioning")
 	var priority = flag.String("priority", string(compute.Low), "the priority of the VMSS nodes")
-	
+
 	var debug = flag.Bool("debug", false, "enable debug output")
 
 	flag.Parse()
@@ -180,6 +179,9 @@ func buildQueueName(queuePrefix string, subid string, resourceGroup string) stri
 func main() {
 	// setup the shared context
 	ctx, cancel := context.WithCancel(context.Background())
+	// these nodes mount the Avere vFXT, and usage is attributed to the Avere vFXT
+	// for more information see https://docs.microsoft.com/en-us/azure/marketplace/azure-partner-customer-usage-attribution
+	ctx = azure.SetUsageAttribution(ctx, azure.AVERE_USAGE_GUID)
 	syncWaitGroup := sync.WaitGroup{}
 
 	// initialize and start the orchestrator
