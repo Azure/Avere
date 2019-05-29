@@ -85,6 +85,18 @@ EOM
     cp  $SRC_FILE $DST_FILE
     sed -i "s/STORAGEACCOUNTREPLACE/$AZURE_STORAGE_ACCOUNT/g" $DST_FILE
     sed -i "s:STORAGEKEYREPLACE:$(remove_quotes $AZURE_STORAGE_ACCOUNT_KEY):g" $DST_FILE
+    chmod +x $DST_FILE
+
+    # copy the set capacity files
+    SRC_FILE=$BOOTSTRAP_BASE_PATH/set_capacity.imds.sh
+    DST_FILE=/home/$LINUX_USER/set_capacity.imds.sh
+    cp  $SRC_FILE $DST_FILE
+    chmod +x $DST_FILE
+    
+    SRC_FILE=$BOOTSTRAP_BASE_PATH/set_capacity.service_principal.sh
+    DST_FILE=/home/$LINUX_USER/set_capacity.service_principal.sh
+    cp  $SRC_FILE $DST_FILE
+    chmod +x $DST_FILE
 }
 
 function configure_rsyslog() {
