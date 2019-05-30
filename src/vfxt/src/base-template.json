@@ -172,6 +172,13 @@
         "description": "When working with Azure Support, set this value to true, otherwise keep as false."
       }
     },
+    "controllerImageReferenceId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Only for use with Azure Support."
+      }
+    },
     "rbacRoleAssignmentUniqueId": {
       "type": "string",
       "defaultValue": "",
@@ -263,13 +270,17 @@
         "version": "latest"
       }
     },
+    "controllerMarketplaceImageReference": {
+      "publisher": "microsoft-avere",
+      "offer": "vfxt",
+      "sku": "avere-vfxt-controller",
+      "version": "latest"
+    },
+    "controllerSupportImageReference": {
+      "id": "[parameters('controllerImageReferenceId')]"
+    },
     "controllerStorageProfile": {
-      "imageReference": {
-        "publisher": "microsoft-avere",
-        "offer": "vfxt",
-        "sku": "avere-vfxt-controller",
-        "version": "latest"
-      }
+      "imageReference": "[if(greater(length(parameters('controllerImageReferenceId')), 0), variables('controllerSupportImageReference'), variables('controllerMarketplaceImageReference'))]"
     },
     "controllerStorageProfilePlan": {
       "name": "avere-vfxt-controller",
@@ -277,7 +288,7 @@
       "product": "vfxt"
     },
     "buildController": false,
-    "plan": "[if(variables('buildController'),json('null'),variables('controllerStorageProfilePlan'))]",
+    "plan": "[if(or(variables('buildController'), greater(length(parameters('controllerImageReferenceId')), 0)), json('null'), variables('controllerStorageProfilePlan'))]",
     "storageProfile": "[if(variables('buildController'),variables('ubuntuStorageProfile'),variables('controllerStorageProfile'))]",
     "vsip": "VSERVER_IPS=",
     "mip": "MGMT_IP="
