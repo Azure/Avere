@@ -18,22 +18,22 @@ To help balance client requests among all the nodes in the cluster, you should m
 
 ### Sample balanced client mounting script
 
-This code example uses client IP addresses as a randomizing element to distribute clients to all of the vFXT cluster's available IP addresses. 
+This code example uses client IP addresses to distribute clients to all of the vFXT cluster's available IP addresses. 
 
 ```bash
-function mount_round_robin() {
-    # to ensure the nodes are spread out somewhat evenly the default 
+function select_vserver_address() {
+    # to ensure node traffic is spread out somewhat evenly the default 
     # mount point is based on this node's IP octet4 % vFXT node count.
     declare -a AVEREVFXT_NODES="($(echo ${NFS_IP_CSV} | sed "s/,/ /g"))"
     OCTET4=$((`hostname -i | sed -e 's/^.*\.\([0-9]*\)/\1/'`))
     DEFAULT_MOUNT_INDEX=$((${OCTET4} % ${#AVEREVFXT_NODES[@]}))
-    ROUND_ROBIN_IP=${AVEREVFXT_NODES[${DEFAULT_MOUNT_INDEX}]}
+    SELECTED_IP=${AVEREVFXT_NODES[${DEFAULT_MOUNT_INDEX}]}
 
     DEFAULT_MOUNT_POINT="${BASE_DIR}/default"
 
     # no need to write again if it is already there
     if ! grep --quiet "${DEFAULT_MOUNT_POINT}" /etc/fstab; then
-        echo "${ROUND_ROBIN_IP}:${NFS_PATH}    ${DEFAULT_MOUNT_POINT}    nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0" >> /etc/fstab
+        echo "${SELECTED_IP}:${NFS_PATH}    ${DEFAULT_MOUNT_POINT}    nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0" >> /etc/fstab
         mkdir -p "${DEFAULT_MOUNT_POINT}"
         chown nfsnobody:nfsnobody "${DEFAULT_MOUNT_POINT}"
     fi
