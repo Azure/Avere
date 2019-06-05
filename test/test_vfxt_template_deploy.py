@@ -58,6 +58,8 @@ class TestVfxtTemplateDeploy:
 
         if "VFXT_CONTROLLER_IMG_REF_ID" in os.environ:
             atd.deploy_params["controllerImageReferenceId"] = os.environ["VFXT_CONTROLLER_IMG_REF_ID"]
+        if "NODE_IMAGE_SAS_URL" in os.environ:
+            atd.deploy_params["nodeImageId"] = os.environ["NODE_IMAGE_SAS_URL"]
 
         test_vars["storage_account"] = atd.deploy_params["avereBackedStorageAccountName"]
         test_vars["controller_name"] = atd.deploy_params["controllerName"]
@@ -116,6 +118,8 @@ class TestVfxtTemplateDeploy:
 
         if "VFXT_CONTROLLER_IMG_REF_ID" in os.environ:
             atd.deploy_params["controllerImageReferenceId"] = os.environ["VFXT_CONTROLLER_IMG_REF_ID"]
+        if "NODE_IMAGE_SAS_URL" in os.environ:
+            atd.deploy_params["nodeImageId"] = os.environ["NODE_IMAGE_SAS_URL"]
 
         test_vars["controller_name"] = atd.deploy_params["controllerName"]
         test_vars["controller_user"] = atd.deploy_params["controllerAdminUsername"]
@@ -172,6 +176,8 @@ class TestVfxtTemplateDeploy:
 
         if "VFXT_CONTROLLER_IMG_REF_ID" in os.environ:
             atd.deploy_params["controllerImageReferenceId"] = os.environ["VFXT_CONTROLLER_IMG_REF_ID"]
+        if "NODE_IMAGE_SAS_URL" in os.environ:
+            atd.deploy_params["nodeImageId"] = os.environ["NODE_IMAGE_SAS_URL"]
 
         test_vars["storage_account"] = atd.deploy_params["avereBackedStorageAccountName"]
         test_vars["controller_name"] = atd.deploy_params["controllerName"]
