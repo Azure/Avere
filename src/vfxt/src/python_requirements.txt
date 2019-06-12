@@ -4,6 +4,7 @@ applicationinsights==0.11.7
 argcomplete==1.10.0
 asn1crypto==0.24.0
 azure-batch==6.0.0
+azure-cli==2.0.66
 azure-cli-acr==2.2.8
 azure-cli-acs==2.4.3
 azure-cli-advisor==2.0.0
@@ -62,7 +63,6 @@ azure-cli-sqlvm==0.1.1
 azure-cli-storage==2.4.2
 azure-cli-telemetry==1.0.2
 azure-cli-vm==2.2.22
-azure-cli==2.0.66
 azure-common==1.1.22
 azure-datalake-store==0.0.39
 azure-functions-devops-build==0.0.22
@@ -109,8 +109,8 @@ azure-mgmt-msi==0.2.0
 azure-mgmt-network==2.7.0
 azure-mgmt-nspkg==3.0.2
 azure-mgmt-policyinsights==0.3.1
-azure-mgmt-privatedns==0.1.0
 azure-mgmt-powerbiembedded==2.0.0
+azure-mgmt-privatedns==0.1.0
 azure-mgmt-rdbms==1.8.0
 azure-mgmt-recoveryservices==0.1.1
 azure-mgmt-recoveryservicesbackup==0.1.2
@@ -171,7 +171,6 @@ psutil==5.6.3
 pyasn1==0.4.5
 pycparser==2.19
 pydocumentdb==2.3.3
-python-dateutil==2.7.3
 Pygments==2.4.2
 PyJWT==1.6.4
 PyNaCl==1.2.1
