@@ -32,8 +32,8 @@ regions_to_exclude = [
     "australiacentral", "australiacentral2", "francesouth",
     "southafricanorth", "southafricawest",
 
-    # 2019-03-08: not currently working with anhowe's sub
-    "centralindia",
+    # 2019-06-24: not currently working with test sub
+    "centralindia", "uaecentral", "uaenorth",
 
     # 2019-03-14: E32s VMs not available in this region
     "westcentralus",
