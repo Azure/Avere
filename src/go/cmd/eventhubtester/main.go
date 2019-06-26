@@ -14,7 +14,7 @@ import (
 	"github.com/Azure/Avere/src/go/pkg/azure"
 	"github.com/Azure/Avere/src/go/pkg/cli"
 	"github.com/Azure/Avere/src/go/pkg/log"
-	"github.com/Azure/azure-amqp-common-go/persist"
+	"github.com/Azure/azure-event-hubs-go/persist"
 	"github.com/Azure/azure-amqp-common-go/sas"
 	eventhubs "github.com/Azure/azure-event-hubs-go"
 )
