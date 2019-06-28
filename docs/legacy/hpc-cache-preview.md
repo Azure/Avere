@@ -20,3 +20,16 @@ When you add a storage target, you set the client-facing filepath. Client machin
 ### Choose a usage model 
 
 When you create a storage target, you need to choose the *usage model* for that target. This model determines how your data is cached. 
+
+
+## Additional information
+
+Details about the Azure HPC Cache will be available in late summer 2019. 
+
+### Terms of service
+
+This product is in Private Preview. Terms of Service will be made available in Public Preview or General Availability phases.
+
+### Pricing
+
+This product is in Private Preview. Pricing information will be made available in Public Preview or General Availability phases.
