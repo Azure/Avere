@@ -38,6 +38,8 @@ Steps to add the RBAC role:
 1. In the **Select** field, search for "storagecache". This should match one security principal, named HPC Cache Resource Provider. Click that principal to select it. 
 1. Click the **Save** button to add the role assignment to the storage account. 
 
+![screenshot of add role assignment GUI](add-role.png)
+
 #### Using the aggregated namespace 
 
 The HPC Cache allows clients to access a variety of storage systems through a virtual namespace that hides the details of the back-end storage system. 
