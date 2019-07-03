@@ -1,4 +1,6 @@
-# HPC Cache Private Preview documentation (draft version 2019-07-03)  
+# HPC Cache Private Preview documentation 
+
+## (Draft version - 2019-07-03)  
 
 This page provides partial documentation for the Azure HPC Cache private preview. 
 
