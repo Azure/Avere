@@ -1,0 +1,15 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "uniqueName": {
+      "value": "averenfswestindia"
+    },
+    "sshKeyData": {
+      "value": "SSH_PUBLIC_KEY"
+    },
+    "vnetAddressSpacePrefix": {
+      "value": "192.168.255.48/28"
+    }
+  }
+}
