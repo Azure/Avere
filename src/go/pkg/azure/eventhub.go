@@ -107,7 +107,7 @@ func (e *EventHubSender) sendEventsBatch() {
 	}
 	e.mux.Unlock()
 
-	err := e.hub.SendBatch(e.ctx, eventhubs.NewEventBatch(events))
+	err := e.hub.SendBatch(e.ctx, eventhubs.NewEventBatchIterator(events...))
 	if err != nil {
 		log.Error.Printf("failed to send batch: %v\n", err)
 	}

@@ -20,11 +20,12 @@ These tutorials help you understand cluster performance testing and common use-c
   * [Transfer Custom VM Image from GCE to Azure](docs/CustomImageTransfer_GCE2Azure.md) - A guide on directly transferring your custom VM image from GCE to Azure.
   
 ## Resources
-  * [vFXT guides](http://library.averesystems.com/#vfxt) - Additional documentation about the Avere vFXT cluster
-  * [vfxt.py usage](http://library.averesystems.com/#vfxt) - Usage guide for the vfxt.py script  
-  * [FXT Cluster Creation Guide](http://library.averesystems.com/#fxt_cluster) - Although this guide is for creating clusters of physical FXT appliances, some configuration information is relevant for vFXT clusters as well. 
-  * [Cluster Configuration Guide](http://library.averesystems.com/#operations) - A conceptual guide and complete settings reference for administering an Avere cluster. 
-  * [Dashboard Guide](http://library.averesystems.com/#operations) - How to use the cluster monitoring features of the Avere Control Panel.
+  * [vFXT guides](https://azure.github.io/Avere/#vfxt) - Additional documentation about Avere vFXT clusters
+  * [vfxt.py usage](https://github.com/Azure/AvereSDK/blob/master/docs/README.md) - Usage guide for the vfxt.py script  
+  * [Azure FXT Edge Filer documentation](https://docs.microsoft.com/en-us/azure/fxt-edge-filer/) - Information about the Azure FXT Edge Filer hybrid storage cache (released July 2019)
+  * [FXT Cluster Creation Guide](https://azure.github.io/Avere/#fxt_cluster) - Although this guide is for creating clusters of physical FXT appliances, some configuration information is relevant for vFXT clusters as well. 
+  * [Cluster Configuration Guide](https://azure.github.io/Avere/#operations) - A conceptual guide and complete settings reference for administering an Avere cluster. 
+  * [Dashboard Guide](https://azure.github.io/Avere/#operations) - How to use the cluster monitoring features of the Avere Control Panel.
 
 ### Legal Notices
 
