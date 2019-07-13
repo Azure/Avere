@@ -165,6 +165,28 @@
         "description": "The cache size in GB to use for each Avere vFXT VM."
       }
     },
+    "rbacRoleAssignmentUniqueId": {
+      "type": "string",
+      "defaultValue": "",
+      "minLength": 0,
+      "metadata": {
+        "description": "The Azure role assignment unique id.  If blank, vmname is used."
+      }
+    },
+    "controllerMarketplaceOffer": {
+      "type": "string",
+      "defaultValue": "vfxt",
+      "metadata": {
+        "description": "The Azure Marketplace offer for the vFXT controller."
+      }
+    },
+    "controllerMarketplaceVersion": {
+      "type": "string",
+      "defaultValue": "latest",
+      "metadata": {
+        "description": "The Azure Marketplace version for the vFXT controller."
+      }
+    },
     "enableCloudTraceDebugging": {
       "type": "bool",
       "defaultValue": false,
@@ -184,14 +206,6 @@
       "defaultValue": "",
       "metadata": {
         "description": "Only for use with Azure Support."
-      }
-    },
-    "rbacRoleAssignmentUniqueId": {
-      "type": "string",
-      "defaultValue": "",
-      "minLength": 0,
-      "metadata": {
-        "description": "The Azure role assignment unique id.  If blank, vmname is used."
       }
     }
   },
@@ -279,9 +293,9 @@
     },
     "controllerMarketplaceImageReference": {
       "publisher": "microsoft-avere",
-      "offer": "vfxt",
+      "offer": "[parameters('controllerMarketplaceOffer')]",
       "sku": "avere-vfxt-controller",
-      "version": "latest"
+      "version": "[parameters('controllerMarketplaceVersion')]"
     },
     "controllerSupportImageReference": {
       "id": "[parameters('controllerImageReferenceId')]"
@@ -292,7 +306,7 @@
     "controllerStorageProfilePlan": {
       "name": "avere-vfxt-controller",
       "publisher": "microsoft-avere",
-      "product": "vfxt"
+      "product": "[parameters('controllerMarketplaceOffer')]"
     },
     "buildController": false,
     "plan": "[if(or(variables('buildController'), greater(length(parameters('controllerImageReferenceId')), 0)), json('null'), variables('controllerStorageProfilePlan'))]",

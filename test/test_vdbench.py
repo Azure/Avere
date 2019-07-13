@@ -9,6 +9,7 @@ Driver for testing Azure ARM template-based deployment of the Avere vFXT.
 # standard imports
 import json
 import logging
+import os
 import sys
 from time import sleep
 
@@ -24,15 +25,16 @@ from lib.helpers import create_ssh_client, run_ssh_commands, wait_for_op
 class TestVDBench:
     def test_vdbench_setup(self, mnt_nodes, ssh_con):  # noqa: F811
         log = logging.getLogger("test_vdbench_setup")
+        vdbench_url = os.environ.get("VDBENCH_URL", "http://localhost")
         commands = """
             sudo mkdir -p /nfs/node0/bootstrap
             cd /nfs/node0/bootstrap
             sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.vdbench.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/bootstrap.vdbench.sh
-            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/vdbench50407.zip https://avereimageswestus.blob.core.windows.net/vdbench/vdbench50407.zip
+            sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/vdbench50407.zip {0}
             sudo curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/vdbenchVerify.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/vdbenchVerify.sh
             sudo chmod +x /nfs/node0/bootstrap/vdbenchVerify.sh
             /nfs/node0/bootstrap/vdbenchVerify.sh
-            """.split("\n")
+            """.format(vdbench_url).split("\n")
         run_ssh_commands(ssh_con, commands)
 
     def test_vdbench_deploy(self, test_vars):  # noqa: F811
