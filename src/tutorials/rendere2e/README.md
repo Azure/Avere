@@ -12,9 +12,14 @@ The goal of this tutorial is to be able to setup a full render environment on Az
 
 # NFS Filer
 
+
+
+
 # Network
 
 # Avere vFXT
+
+The Avere vFXT hides latency to the core filer and keeps storage close to the cloud.  To install Avere, verify you have the [prerequisites](), you can use the wizard [Avere vFXT Marketplace Wizard](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/microsoft-avere.vfxt-template?tab=Overview).
 
 # Building Custom Image
 
