@@ -31,7 +31,6 @@ function apt_get_install() {
         #echo "timeout $timeout apt-get install --no-install-recommends -y ${@}"
         #timeout $timeout apt-get install --no-install-recommends -y ${@}
         apt-get install --no-install-recommends -y ${@}
-        echo "completed"
         [ $? -eq 0  ] && break || \
         if [ $i -eq $retries ]; then
             return 1
@@ -40,6 +39,7 @@ function apt_get_install() {
             apt_get_update
         fi
     done
+    echo "completed"
     echo Executed apt-get install --no-install-recommends -y \"$@\" $i times;
 }
 
