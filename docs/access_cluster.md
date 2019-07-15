@@ -5,4 +5,4 @@ The link you followed has been replaced by documentation in [docs.microsoft.com/
 
 Please read [Access the vFXT cluster](https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-cluster-gui) for current information.
 
-If you think this is a mistake, you can view the [removed, obsolete file](https://github.com/Azure/Avere/blob/master/docs/legacy/obs/access_cluster.md).
+If you think this is a mistake, you can view the [removed, obsolete file](legacy/obs/access_cluster.md).
