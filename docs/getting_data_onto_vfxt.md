@@ -4,4 +4,4 @@ The link you followed has been replaced by documentation in [docs.microsoft.com/
 
 Please read [Move data to the vFXT cluster](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-data-ingest) for current information.
 
-If you think this is a mistake, you can view the [removed, obsolete file](https://github.com/Azure/Avere/blob/master/docs/legacy/obs/getting_data_onto_vfxt.md).
+If you think this is a mistake, you can view the [removed, obsolete file](legacy/obs/getting_data_onto_vfxt.md).
