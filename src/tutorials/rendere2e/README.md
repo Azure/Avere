@@ -1,4 +1,4 @@
-# End to End Render
+# Azure Cloud Burst Rendering E2E
 
 Cloud Burst rendering is an M&E Rendering scenario and enables VFX and rendering studios the ability to use the elastic capacity of the Azure cloud.  The advantages of this approach are the following:
 1. **Speed** - it is immediate to spin up cloud resources in comparison to ordering and installing on prem machines.
@@ -26,6 +26,7 @@ This tutorial walks through the following architecture components:
  * Avere vFXT
  * Scaling Render Nodes
  * Security
+ * Azure Render Farm Manager
 
 The goal of this tutorial is to be able to setup a full render environment on Azure and then be able to swap out the components that match to your specific configuration.
 
@@ -35,7 +36,7 @@ The NFS filer holds your digital assets, rendering tools, and any other files re
 
 For this step there are two options:
 1. **use your on-premises NFS filer** - The on-premises NFS based filer may have one or more IP addresses.  This on-premises filer will need to be configured to allow `no_root_squash` and access to the avere subnet created in the network section.
-1. **build a simple NFS filer** - If you don't have an oprem filer, install the [Simple NFS Filer](simplenfsfiler/).  Once you have completed the installation, you will need to copy digital assets to it.  If you don't have digital assets, copy these blender assets: TODO: add blender assets.
+1. **build a simple NFS filer** - If you don't have an oprem filer, install the [Simple NFS Filer](simplenfsfiler/).  Once you have completed the installation, you will need to copy digital assets to it.  If you don't have digital assets, copy the blender assets described in this [this article](install_blender.md).
 
 # Azure Region
 
@@ -72,7 +73,7 @@ Now the next step is to connect your VNET to your NAS Filer.  Here are the optio
 There are two ways to build custom images on Azure:
 1. **import from an existing image** - this approach uses one of your existing images whether they rely on-premisis or in another cloud:
     1. [build from on-premisis and upload to Azure](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/create-upload-centos)
-    1. [migrate image from AWS](https://nam06.safelinks.protection.outlook.com/?url=https%3A%2F%2Fdocs.microsoft.com%2Fen-us%2Fazure%2Fsite-recovery%2Fmigrate-tutorial-aws-azure&data=02%7C01%7CAnthony.Howe%40microsoft.com%7Cfcd878b368ad41eeda3008d6dec56626%7C72f988bf86f141af91ab2d7cd011db47%7C1%7C0%7C636941336730860909&sdata=v4Vka%2B7tFJRXbKu2x9MFGj3QtyO0I9RKcEkd1kjaNog%3D&reserved=0) - TODO fix safe link.
+    1. [migrate image from AWS](https://docs.microsoft.com/en-us/azure/site-recovery/migrate-tutorial-aws-azure) - fix safe link.
     1. [migrate image from GCP](../../../docs/CustomImageTransfer_GCE2Azure.md)
 1. **build from an Azure stock image** - Another approach is to deploy a virtual machine (VM) on Azure, and install all your render software and render manager agents.  Once this is complete, [this article](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/capture-image) describes how to capture the VM to an image.
 
@@ -91,7 +92,9 @@ Use VM or VMSS to startup more than 1 VM, up to 5 VMs.  This will enable you to 
 
 # Avere vFXT
 
-The Avere vFXT hides latency to the core filer and keeps storage close to the cloud.  To install Avere, verify you have the [prerequisites](TODO: addr), you can use the wizard [Avere vFXT Marketplace Wizard](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/microsoft-avere.vfxt-template?tab=Overview).  Follow the [Add Storage Article](TODO) to add your NFS filer.  Your NFS filer must have `no_root_squash` enabled.
+The Avere vFXT hides latency to the core filer and keeps storage close to the cloud.  To install Avere, verify you have the [prerequisites](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs), you can use the wizard [Avere vFXT Marketplace Wizard](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/microsoft-avere.vfxt-template?tab=Overview).  Follow the [Add Storage Article](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-add-storage) to add your NFS filer.  Your NFS filer must have `no_root_squash` enabled.
+
+Additionally you may request to the Avere team to be registered into private preview of the cache xervice.  Click [here](https://github.com/Azure/Avere/blob/master/docs/legacy/hpc-cache-preview.md) to learn more about getting started.
 
 # Scaling Render Nodes
 
@@ -99,19 +102,12 @@ To scale out your custom image there are multiple solutions on Azure, in the ord
 1. [VMSS](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview) - this is the simplest way to scale quickly.  Here are some related articles
     1. [Best Practices for Improving Azure Virtual Machine (VM) Boot Time](../../../docs/azure_vm_provision_best_practices.md) - The Avere vFXT is commonly used with burstable compute workloads. We hear from our customers that it is very challenging to boot thousands of Azure virtual machines quickly. This article describes best practices for booting thousands of VMs in the fastest possible time.
     1. [VMScaler](../../../src/go/cmd/vmscaler/README.md) - A vm manager that manages a VM farm of low priority VMSS nodes.  The primary use case is cloud burstable render farms by VFX rendering houses.
-1. [Azure Batch](../../../docs/maya_azure_batch_avere_vfxt_demo.md) - Demonstrates how to use the Autodesk Maya Renderer with Azure Batch and the Avere vFXT cluster to generate a rendered movie.
+1. [Azure Batch](../../../docs/maya_azure_batch_avere_vfxt_demo.md) - Demonstrates how to use the Autodesk Maya Renderer with Azure Batch and the Avere vFXT cluster to generate a rendered movie.  Once you have installed Azure Batch, checkout the Azure Render Farm Manager described below.
 
-Some tips:
-* you will 
-* nodes coming up and down on the same IP address and SSH collisions
-* include VMSS
-* include boot time study
-* include Azure Batch study
-* talk about cost, best SKUs, low-priority
-
-# Azure Render Farm Manager
-
-If you have used Azure Batch for scaling you can install the [Azure Render Farm Manager](https://github.com/Azure/azure-render-farm-manager).  The Azure Render Farm Manager enables you to create and manage your cloud hybrid render farm.
+To keep the costs low here are some tips:
+* use low-priority VMs on your VMSS or Azure Batch.  These can save you 70% of your VM cost.  You will need to design your software so that it can handle pre-emption
+* the best performance to value SKUs for rendering are the physical core sku DS14v2 / D14v2 or the FS32v2 SKUs
+* use ephemeral OS disks - [ephemeral os disks](https://azure.microsoft.com/en-us/updates/azure-ephemeral-os-disk-now-generally-available/) have restricted SKUs, but these can save you approximately 20-30% of your VM cost.
 
 # Security
 
@@ -128,3 +124,21 @@ As you build your solution, build in multiple layers of security.  From outer to
     * have a policy to rotate certs
 * RBAC
     * use RBAC to restrict Azure resources from each other
+
+If your automation uses SSH to communicate to hosts, one common error is the failed `known_hosts` error "REMOTE HOST IDENTIFICATION HAS CHANGED!".  This is common because of restoration of hosts after low-priority eviction or scale-down then scale-up because the new hosts assume a new identity.  Provided you have the security layers in place discussed previously, the best way to handle this is to disable the host check.  There are two ways to do this:
+
+1. **disable host check in config** - for the automation user, disable the host check by adding the following rule to `.ssh/config` file.  SSH config does not allow CIDR ranges, so you have to use patterns, and the below example allows 10.0.0.0/16:
+    ```
+    Host 10.0.*
+        StrictHostKeyChecking no
+        UserKnownHostsFile=/dev/null
+        LogLevel=error
+    ```
+2. **disable host check on command line** - here are the ssh command line parameters to disable the host check:
+    ```
+    ssh -o KnownHostsFile=/dev/null -o StrictHostKeyChecking=no 
+    ```
+
+# Azure Render Farm Manager
+
+If you have used Azure Batch for scaling you can install the [Azure Render Farm Manager](https://github.com/Azure/azure-render-farm-manager).  The Azure Render Farm Manager enables you to create and manage your cloud hybrid render farm.
