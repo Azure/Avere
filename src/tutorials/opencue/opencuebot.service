@@ -5,8 +5,10 @@ After=network.target
 [Service]
 User=cuebot
 Group=opencue
-ExecStart=/usr/bin/java -jar /bin/opencue/JAR_FILE --datasource.cueDataSource.url=DB_URL --datasource.cueDataSource.username=DB_USER --datasource.cueDataSource.password=DB_PASSWORD
+ExecStart=/usr/bin/java -jar JAR_FILE --datasource.cueDataSource.url=DB_URL --datasource.cueDataSource.username=DB_USER --datasource.cueDataSource.password=DB_PASSWORD
 SuccessExitStatus=143
+StandardOutput=syslog
+StandardError=syslog
 
 [Install]
 WantedBy=multi-user.target
