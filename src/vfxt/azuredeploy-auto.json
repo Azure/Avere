@@ -487,7 +487,8 @@
       "properties": {
         "roleDefinitionId": "[variables('avereCreateClusterRoleFullyQualifiedId')]",
         "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines/', variables('vmName')), '2017-12-01', 'Full').identity.principalId]",
-        "scope": "[resourceGroup().id]"
+        "scope": "[resourceGroup().id]",
+        "principalType": "ServicePrincipal"
       }
     },
     {
@@ -500,7 +501,8 @@
       "properties": {
         "roleDefinitionId": "[variables('userAdminClusterRoleFullyQualifiedId')]",
         "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines/', variables('vmName')), '2017-12-01', 'Full').identity.principalId]",
-        "scope": "[resourceGroup().id]"
+        "scope": "[resourceGroup().id]",
+        "principalType": "ServicePrincipal"
       }
     },
     {
@@ -525,7 +527,8 @@
               "properties": {
                 "roleDefinitionId": "[variables('avereCreateClusterRoleFullyQualifiedId')]",
                 "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines/', variables('vmName')), '2017-12-01', 'Full').identity.principalId]",
-                "scope": "[concat(subscription().id, '/resourceGroups/', parameters('virtualNetworkResourceGroup'))]"
+                "scope": "[concat(subscription().id, '/resourceGroups/', parameters('virtualNetworkResourceGroup'))]",
+                "principalType": "ServicePrincipal"
               }
             },
             {
@@ -538,7 +541,8 @@
               "properties": {
                 "roleDefinitionId": "[variables('userAdminClusterRoleFullyQualifiedId')]",
                 "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines/', variables('vmName')), '2017-12-01', 'Full').identity.principalId]",
-                "scope": "[concat(subscription().id, '/resourceGroups/', parameters('virtualNetworkResourceGroup'))]"
+                "scope": "[concat(subscription().id, '/resourceGroups/', parameters('virtualNetworkResourceGroup'))]",
+                "principalType": "ServicePrincipal"
               }
             }
           ]
