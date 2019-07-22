@@ -33,6 +33,7 @@ function apt_get_install() {
         apt-get install --no-install-recommends -y ${@}
         [ $? -eq 0  ] && break || \
         if [ $i -eq $retries ]; then
+            echo "failed"
             return 1
         else
             sleep $wait_sleep
