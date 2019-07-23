@@ -12,4 +12,4 @@ For an introduction and overview of OpenCue, refer to https://www.opencue.io/doc
 
 ### Render Node
 
-In addition to the RQD agent for communication with the Cuebot app service, the render node image has autofs setup to an NFS mount export. This enables access to the Azure HPC Cache managed service for client applications (such as Blender) that are running on each render node.
+In addition to hosting the RQD agent for communication with the Cuebot app service, the render node image also has autofs setup to an NFS endpoint, which is specified as an input parameter before OpenCue deployment. This enables access to the data cache service for client applications (such as Blender) that are running on each render node.
