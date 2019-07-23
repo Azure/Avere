@@ -6,6 +6,10 @@
 
 * **Java App Service** - https://www.opencue.io/docs/getting-started/deploying-cuebot/
 
-* **Render Node (In Development)** - https://www.opencue.io/docs/getting-started/deploying-rqd/
+* **Render Node ** - https://www.opencue.io/docs/getting-started/deploying-rqd/
 
 For an introduction and overview of OpenCue, refer to https://www.opencue.io/docs/concepts/opencue-overview/
+
+### Render Node
+
+In addition to the RQD agent for communication with the Cuebot app service, the render node image has autofs setup to an NFS mount export. This enables access to the Azure HPC Cache managed service for client applications (such as Blender) that are running on each render node.
