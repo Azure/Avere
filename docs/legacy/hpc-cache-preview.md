@@ -93,7 +93,7 @@ When you create a storage target that points to an NFS storage system, you need 
   * Read/write - If clients use the cache to read and write, choose this option.
   * Clients bypass the cache - Choose this option if your clients write data directly to the storage system without first writing to the cache. 
 
-![screenshot of NFS storage target creation formhpc-cache-preview/create-add-nfs.png)
+![screenshot of NFS storage target creation form](hpc-cache-preview/create-add-nfs.png)
 
 For a Blob storage target, you also need to supply this information: 
 
