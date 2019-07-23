@@ -80,6 +80,19 @@
       "metadata": {
         "description": "Name must be between 1 and 64 characters (alphanumeric, underscore and period)."
       }
+    },
+    "cacheServiceExport": {
+      "type": "string",
+      "metadata": {
+        "description": "NFS export from cache data service."
+      }
+    },
+    "cacheClientMount": {
+      "type": "string",
+      "defaultValue": "/cache",
+      "metadata": {
+        "description": "NFS mount for cache client application."
+      }
     }
   },
   "variables": {
@@ -108,8 +121,10 @@
       "[concat('mkdir ', variables('imageSolutionDirectory'))]"
     ],
     "cueReleaseVersion": "0.2.31",
-    "cueReleaseUrl": "[concat('https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v', variables('cueReleaseVersion'))]",
-    "cueGitHubUrl": "https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/opencue",
+    "cueReleaseUrl": "[concat('https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v', variables('cueReleaseVersion'), '/')]",
+    "cueGitHubUrl": "https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/opencue/",
+    "cueStorageUrl": "https://azmediauscentral.blob.core.windows.net/bin/",
+    "cueBlenderFile": "blender-2.80rc2-linux-glibc217-x86_64.tar.bz2",
     "singleQuote": "'"
   },
   "resources": [
@@ -190,9 +205,9 @@
             "type": "Shell",
             "inline": [
               "[concat('cd ', variables('imageSolutionDirectory'))]",
-              "[concat('wget ', variables('cueReleaseUrl'), '/schema-', variables('cueReleaseVersion'), '.sql')]",
-              "[concat('wget ', variables('cueReleaseUrl'), '/demo_data-', variables('cueReleaseVersion'), '.sql')]",
-              "[concat('wget ', variables('cueReleaseUrl'), '/cuebot-', variables('cueReleaseVersion'), '-all.jar')]",
+              "[concat('wget ', variables('cueReleaseUrl'), 'schema-', variables('cueReleaseVersion'), '.sql')]",
+              "[concat('wget ', variables('cueReleaseUrl'), 'demo_data-', variables('cueReleaseVersion'), '.sql')]",
+              "[concat('wget ', variables('cueReleaseUrl'), 'cuebot-', variables('cueReleaseVersion'), '-all.jar')]",
               "[concat(variables('imageSudoCommand'), 'yum -y install postgresql-contrib')]",
               "[concat('psql \"', variables('databaseServerConnection'), '\" --command=\"', variables('databaseServerCreateDatabase'), '\"')]",
               "[concat('psql \"', variables('databaseServerConnection'), '\" --command=\"', variables('databaseServerCreateUser'), '\"')]",
@@ -203,7 +218,7 @@
               "[concat(variables('imageSudoCommand'), 'groupadd -r opencue')]",
               "[concat(variables('imageSudoCommand'), 'useradd -r -s /bin/false -g opencue cuebot')]",
               "cd /etc/systemd/system",
-              "[concat('wget ', variables('cueGitHubUrl'), '/opencue-bot.service')]",
+              "[concat('wget ', variables('cueGitHubUrl'), 'opencue-bot.service')]",
               "[concat('sed -i ', variables('singleQuote'), 's|JAR_FILE|', variables('imageSolutionDirectory'), '/cuebot-', variables('cueReleaseVersion'), '-all.jar|', variables('singleQuote'), ' opencue-bot.service')]",
               "[concat('sed -i ', variables('singleQuote'), 's|DB_URL|', variables('databaseHostUrl'), '|', variables('singleQuote'), ' opencue-bot.service')]",
               "[concat('sed -i ', variables('singleQuote'), 's|DB_USER|', variables('databaseUser'), '|', variables('singleQuote'), ' opencue-bot.service')]",
@@ -264,7 +279,7 @@
               "[concat(variables('imageSudoCommand'), 'pip install --upgrade pip')]",
               "[concat(variables('imageSudoCommand'), 'pip install pipenv')]",
               "[concat('cd ', variables('imageSolutionDirectory'))]",
-              "[concat('wget ', variables('cueReleaseUrl'), '/rqd-', variables('cueReleaseVersion'), '-all.tar.gz')]",
+              "[concat('wget ', variables('cueReleaseUrl'), 'rqd-', variables('cueReleaseVersion'), '-all.tar.gz')]",
               "[concat('tar -xzf rqd-', variables('cueReleaseVersion'), '-all.tar.gz')]",
               "[concat('cd rqd-', variables('cueReleaseVersion'), '-all')]",
               "[concat(variables('imageSudoCommand'), 'pipenv install')]",
@@ -274,7 +289,19 @@
           {
             "type": "Shell",
             "inline": [
-              "[concat(variables('imageSudoCommand'), 'yum -y install nfs-utils')]"
+              "cd /etc",
+              "[concat(variables('imageSudoCommand'), 'echo \"', parameters('cacheClientMount'), ' -fstype=nfs,rw ', parameters('cacheServiceExport'), '\" >> auto.mount')]",
+              "[concat(variables('imageSudoCommand'), 'yum -y install autofs')]",
+              "[concat(variables('imageSudoCommand'), 'systemctl enable autofs')]",
+              "[concat(variables('imageSudoCommand'), 'systemctl start autofs')]"
+            ]
+          },
+          {
+            "type": "Shell",
+            "inline": [
+              "[concat('cd ', variables('imageSolutionDirectory'))]",
+              "[concat('wget ', variables('cueStorageUrl'), variables('cueBlenderFile'))]",
+              "[concat('tar -xjf ', variables('cueBlenderFile'))]"
             ]
           }
         ],
