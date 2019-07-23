@@ -6,7 +6,7 @@
 
 * **Java App Service** - https://www.opencue.io/docs/getting-started/deploying-cuebot/
 
-* **Render Node ** - https://www.opencue.io/docs/getting-started/deploying-rqd/
+* **Render Node** - https://www.opencue.io/docs/getting-started/deploying-rqd/
 
 For an introduction and overview of OpenCue, refer to https://www.opencue.io/docs/concepts/opencue-overview/
 
