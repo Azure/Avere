@@ -39,7 +39,7 @@
         "description": "User password for application database login."
       }
     },
-    "databaseServerAdminName": {
+    "databaseServerAdminUsername": {
       "type": "string",
       "metadata": {
         "description": "User name for server administrator login."
@@ -51,7 +51,7 @@
         "description": "User password for server administrator login."
       }
     },
-    "imageNameAppService": {
+    "imageNameRenderApp": {
       "type": "string",
       "minLength": 1,
       "maxLength": 80,
@@ -80,6 +80,19 @@
       "metadata": {
         "description": "Name must be between 1 and 64 characters (alphanumeric, underscore and period)."
       }
+    },
+    "cacheServiceExport": {
+      "type": "string",
+      "metadata": {
+        "description": "NFS export from cache data service."
+      }
+    },
+    "cacheClientMount": {
+      "type": "string",
+      "defaultValue": "/cache",
+      "metadata": {
+        "description": "NFS mount for cache client application."
+      }
     }
   },
   "variables": {
@@ -90,11 +103,12 @@
     "databaseHost": "[concat(variables('databaseServerName'), '.postgres.database.azure.com')]",
     "databaseHostUrl": "[concat('jdbc:postgresql://', variables('databaseHost'), ':5432/', variables('databaseName'), '?sslmode=require')]",
     "databaseConnection": "[concat('host=', variables('databaseHost'), ' port=5432 user=', variables('databaseUser'), ' password=', parameters('databaseUserPassword'), ' dbname=', variables('databaseName'))]",
-    "databaseServerConnection": "[concat('host=', variables('databaseHost'), ' port=5432 user=', parameters('databaseServerAdminName'), '@', variables('databaseServerName'), ' password=', parameters('databaseServerAdminPassword'), ' dbname=postgres')]",
+    "databaseServerConnection": "[concat('host=', variables('databaseHost'), ' port=5432 user=', parameters('databaseServerAdminUsername'), '@', variables('databaseServerName'), ' password=', parameters('databaseServerAdminPassword'), ' dbname=postgres')]",
     "databaseServerCreateDatabase": "[concat('CREATE DATABASE ', variables('databaseName'))]",
     "databaseServerCreateUser": "[concat('CREATE ROLE ', parameters('databaseUserName'), ' WITH LOGIN PASSWORD ', variables('singleQuote'), parameters('databaseUserPassword'), variables('singleQuote'))]",
     "databaseServerAuthorizeUser": "[concat('GRANT ALL PRIVILEGES ON DATABASE ', variables('databaseName'), ' TO ', parameters('databaseUserName'))]",
     "imageGalleryApiVersion": "2019-03-01",
+    "imageDefinitionName": "OpenCue",
     "imagePublisher": "OpenLogic",
     "imageOffer": "CentOS",
     "imageSku": "7.6",
@@ -107,8 +121,10 @@
       "[concat('mkdir ', variables('imageSolutionDirectory'))]"
     ],
     "cueReleaseVersion": "0.2.31",
-    "cueReleaseUrl": "[concat('https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v', variables('cueReleaseVersion'))]",
-    "cueGitHubUrl": "https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/opencue",
+    "cueReleaseUrl": "[concat('https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v', variables('cueReleaseVersion'), '/')]",
+    "cueGitHubUrl": "https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/opencue/",
+    "cueStorageUrl": "https://azmediauscentral.blob.core.windows.net/bin/",
+    "cueBlenderFile": "blender-2.80rc2-linux-glibc217-x86_64.tar.bz2",
     "singleQuote": "'"
   },
   "resources": [
@@ -118,7 +134,7 @@
       "location": "[resourceGroup().location]",
       "name": "[variables('databaseServerName')]",
       "properties": {
-        "administratorLogin": "[parameters('databaseServerAdminName')]",
+        "administratorLogin": "[parameters('databaseServerAdminUsername')]",
         "administratorLoginPassword": "[parameters('databaseServerAdminPassword')]",
         "version": "11"
       },
@@ -149,7 +165,7 @@
       "type": "Microsoft.Compute/galleries/images",
       "apiVersion": "[variables('imageGalleryApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[concat(parameters('imageGalleryName'), '/', parameters('imageNameAppService'))]",
+      "name": "[concat(parameters('imageGalleryName'), '/', variables('imageDefinitionName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Compute/galleries', parameters('imageGalleryName'))]"
       ],
@@ -166,10 +182,10 @@
       "type": "Microsoft.VirtualMachineImages/imageTemplates",
       "apiVersion": "[variables('imageBuilderApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('imageNameAppService')]",
+      "name": "[parameters('imageNameRenderApp')]",
       "dependsOn": [
         "[resourceId('Microsoft.DBforPostgreSQL/servers/firewallRules', variables('databaseServerName'), 'AllowAllWindowsAzureIps')]",
-        "[resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageNameAppService'))]"
+        "[resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), variables('imageDefinitionName'))]"
       ],
       "properties": {
         "buildTimeoutInMinutes": 30,
@@ -189,9 +205,9 @@
             "type": "Shell",
             "inline": [
               "[concat('cd ', variables('imageSolutionDirectory'))]",
-              "[concat('wget ', variables('cueReleaseUrl'), '/schema-', variables('cueReleaseVersion'), '.sql')]",
-              "[concat('wget ', variables('cueReleaseUrl'), '/demo_data-', variables('cueReleaseVersion'), '.sql')]",
-              "[concat('wget ', variables('cueReleaseUrl'), '/cuebot-', variables('cueReleaseVersion'), '-all.jar')]",
+              "[concat('wget ', variables('cueReleaseUrl'), 'schema-', variables('cueReleaseVersion'), '.sql')]",
+              "[concat('wget ', variables('cueReleaseUrl'), 'demo_data-', variables('cueReleaseVersion'), '.sql')]",
+              "[concat('wget ', variables('cueReleaseUrl'), 'cuebot-', variables('cueReleaseVersion'), '-all.jar')]",
               "[concat(variables('imageSudoCommand'), 'yum -y install postgresql-contrib')]",
               "[concat('psql \"', variables('databaseServerConnection'), '\" --command=\"', variables('databaseServerCreateDatabase'), '\"')]",
               "[concat('psql \"', variables('databaseServerConnection'), '\" --command=\"', variables('databaseServerCreateUser'), '\"')]",
@@ -202,28 +218,104 @@
               "[concat(variables('imageSudoCommand'), 'groupadd -r opencue')]",
               "[concat(variables('imageSudoCommand'), 'useradd -r -s /bin/false -g opencue cuebot')]",
               "cd /etc/systemd/system",
-              "[concat('wget ', variables('cueGitHubUrl'), '/opencuebot.service')]",
-              "[concat('sed -i ', variables('singleQuote'), 's|JAR_FILE|', variables('imageSolutionDirectory'), '/cuebot-', variables('cueReleaseVersion'), '-all.jar|', variables('singleQuote'), ' opencuebot.service')]",
-              "[concat('sed -i ', variables('singleQuote'), 's|DB_URL|', variables('databaseHostUrl'), '|', variables('singleQuote'), ' opencuebot.service')]",
-              "[concat('sed -i ', variables('singleQuote'), 's|DB_USER|', variables('databaseUser'), '|', variables('singleQuote'), ' opencuebot.service')]",
-              "[concat('sed -i ', variables('singleQuote'), 's|DB_PASSWORD|', parameters('databaseUserPassword'), '|', variables('singleQuote'), ' opencuebot.service')]",
+              "[concat('wget ', variables('cueGitHubUrl'), 'opencue-bot.service')]",
+              "[concat('sed -i ', variables('singleQuote'), 's|JAR_FILE|', variables('imageSolutionDirectory'), '/cuebot-', variables('cueReleaseVersion'), '-all.jar|', variables('singleQuote'), ' opencue-bot.service')]",
+              "[concat('sed -i ', variables('singleQuote'), 's|DB_URL|', variables('databaseHostUrl'), '|', variables('singleQuote'), ' opencue-bot.service')]",
+              "[concat('sed -i ', variables('singleQuote'), 's|DB_USER|', variables('databaseUser'), '|', variables('singleQuote'), ' opencue-bot.service')]",
+              "[concat('sed -i ', variables('singleQuote'), 's|DB_PASSWORD|', parameters('databaseUserPassword'), '|', variables('singleQuote'), ' opencue-bot.service')]",
               "[concat(variables('imageSudoCommand'), 'systemctl daemon-reload')]",
-              "[concat(variables('imageSudoCommand'), 'systemctl enable opencuebot')]",
-              "[concat(variables('imageSudoCommand'), 'systemctl start opencuebot')]"
+              "[concat(variables('imageSudoCommand'), 'systemctl enable opencue-bot')]",
+              "[concat(variables('imageSudoCommand'), 'systemctl start opencue-bot')]"
             ]
           }
         ],
         "distribute": [
           {
             "type": "ManagedImage",
-            "runOutputName": "[concat(parameters('imageNameAppService'), '-ManagedImage')]",
-            "imageId": "[resourceId('Microsoft.Compute/images', parameters('imageNameAppService'))]",
+            "runOutputName": "[concat(parameters('imageNameRenderApp'), '-ManagedImage')]",
+            "imageId": "[resourceId('Microsoft.Compute/images', parameters('imageNameRenderApp'))]",
             "location": "[resourceGroup().location]"
           },
           {
             "type": "SharedImage",
-            "runOutputName": "[concat(parameters('imageNameAppService'), '-SharedImage')]",
-            "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageNameAppService'))]",
+            "runOutputName": "[concat(parameters('imageNameRenderApp'), '-SharedImage')]",
+            "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), variables('imageDefinitionName'))]",
+            "replicationRegions": [
+              "[resourceGroup().location]"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.VirtualMachineImages/imageTemplates",
+      "apiVersion": "[variables('imageBuilderApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('imageNameRenderNode')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), variables('imageDefinitionName'))]"
+      ],
+      "properties": {
+        "buildTimeoutInMinutes": 30,
+        "source": {
+          "type": "PlatformImage",
+          "publisher": "[variables('imagePublisher')]",
+          "offer": "[variables('imageOffer')]",
+          "sku": "[variables('imageSku')]",
+          "version": "[variables('imageVersion')]"
+        },
+        "customize": [
+          {
+            "type": "Shell",
+            "inline": "[variables('imageBaselineCommands')]"
+          },
+          {
+            "type": "Shell",
+            "inline": [
+              "[concat(variables('imageSudoCommand'), 'yum -y install gcc')]",
+              "[concat(variables('imageSudoCommand'), 'yum -y install epel-release')]",
+              "[concat(variables('imageSudoCommand'), 'yum -y install python-devel')]",
+              "[concat(variables('imageSudoCommand'), 'yum -y install python-pip')]",
+              "[concat(variables('imageSudoCommand'), 'pip install --upgrade pip')]",
+              "[concat(variables('imageSudoCommand'), 'pip install pipenv')]",
+              "[concat('cd ', variables('imageSolutionDirectory'))]",
+              "[concat('wget ', variables('cueReleaseUrl'), 'rqd-', variables('cueReleaseVersion'), '-all.tar.gz')]",
+              "[concat('tar -xzf rqd-', variables('cueReleaseVersion'), '-all.tar.gz')]",
+              "[concat('cd rqd-', variables('cueReleaseVersion'), '-all')]",
+              "[concat(variables('imageSudoCommand'), 'pipenv install')]",
+              "[concat(variables('imageSudoCommand'), 'pipenv run python setup.py install')]"
+            ]
+          },
+          {
+            "type": "Shell",
+            "inline": [
+              "cd /etc",
+              "[concat(variables('imageSudoCommand'), 'echo \"', parameters('cacheClientMount'), ' -fstype=nfs,rw ', parameters('cacheServiceExport'), '\" >> auto.mount')]",
+              "[concat(variables('imageSudoCommand'), 'yum -y install autofs')]",
+              "[concat(variables('imageSudoCommand'), 'systemctl enable autofs')]",
+              "[concat(variables('imageSudoCommand'), 'systemctl start autofs')]"
+            ]
+          },
+          {
+            "type": "Shell",
+            "inline": [
+              "[concat('cd ', variables('imageSolutionDirectory'))]",
+              "[concat('wget ', variables('cueStorageUrl'), variables('cueBlenderFile'))]",
+              "[concat('tar -xjf ', variables('cueBlenderFile'))]"
+            ]
+          }
+        ],
+        "distribute": [
+          {
+            "type": "ManagedImage",
+            "runOutputName": "[concat(parameters('imageNameRenderNode'), '-ManagedImage')]",
+            "imageId": "[resourceId('Microsoft.Compute/images', parameters('imageNameRenderNode'))]",
+            "location": "[resourceGroup().location]"
+          },
+          {
+            "type": "SharedImage",
+            "runOutputName": "[concat(parameters('imageNameRenderNode'), '-SharedImage')]",
+            "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), variables('imageDefinitionName'))]",
             "replicationRegions": [
               "[resourceGroup().location]"
             ]
