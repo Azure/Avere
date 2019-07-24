@@ -1,6 +1,6 @@
 # HPC Cache Private Preview documentation 
 
-*(Draft/preview version - updated 2019-07-22)*  
+*(Draft/preview version - updated 2019-07-24)*  
 
 This page provides partial documentation for the Azure HPC Cache private preview. 
 
@@ -81,13 +81,13 @@ For an NFS storage target, you must specify how to reach the storage export and 
 
 * **Hostname:Export** - Provide the fully qualified domain name (FQDN) and export that the storage target will point to. You can create multiple storage targets to represent different exports on the same NFS storage system. 
 
-  **Note:** Although the example in the screenshot uses an IP address, FQDN is preferred. An IP address can be used if necessary. 
+  **Note:** Although the example in the screenshot uses an IP address, FQDN is preferred. An IP address can be used if necessary.
 
 * **Usage model** - Choose one of the data caching profiles based on your workflow, described [below](#choose-a-usage-model).
 
 #### Choose a usage model
 
-When you create a storage target that points to an NFS storage system, you need to choose the *usage model* for that target. This model determines how your data is cached. 
+When you create a storage target that points to an NFS storage system, you need to choose the *usage model* for that target. This model determines how your data is cached.
 
   * Read heavy - If you mostly use the cache to speed up data read access, choose this option. 
   * Read/write - If clients use the cache to read and write, choose this option.
@@ -140,9 +140,32 @@ After about 10 minutes, the Azure HPC Cache is visible in your subscription's Re
 
 ## Access the Azure HPC Cache system
 
-After the cache is created, clients mount it by accessing the NICs inside the cache's subnet. 
+After the cache is created, NFS clients can access it with a simple mount command. 
 
-**Note:** These NICs will show in the resource group with names ending in `-cluster-nic-` and a number; do not alter or delete them or the cache will become unavailable. 
+Use the mount addresses listed on the cache overview page and the virtual namespace path that you set when you created the storage target. 
+
+![screenshot of Azure HPC Cache instance's Overview page, with a highlight box around the mount addresses list on the lower right](hpc-cache-preview/mount-addresses.png)
+
+**Note:** The cache mount addresses correspond to network interfaces inside the cache's subnet. These NICs appear in the resource group with names ending in `-cluster-nic-` and a number. Do not alter or delete these interfaces, or the cache will become unavailable. 
+
+The storage targets paths are shown in the Storage Targets page. 
+![screenshot of the cache's Storage target panel, with a highlight box around an entry in the Path column of the table](hpc-cache-preview/storage-target-path.png)
+
+Use a mount command like the following: 
+
+sudo mount *cache_mount_address*:/*storage_target_path* *local_path*
+
+Example: 
+
+```
+root@test-client:/tmp# mkdir hpccache
+root@test-client:/tmp# sudo mount 10.0.0.28:/blob-demo-0722 ./hpccache/
+root@test-client:/tmp# 
+```
+
+After this command succeeds, the contents of the storage export should be visible in the ``hpccache`` directory on the client. 
+
+**Note:** Your clients must be able to access the secure virtual network and subnet that houses your cache. For example, create client VMs within the same virtual network, or use a jump host in the virtual network for access from outside. (Remember that nothing else can be hosted inside the cache's subnet.)
 
 ## Additional information
 
@@ -150,8 +173,11 @@ More details about the Azure HPC Cache will be available in September 2019.
 
 ### Terms of service
 
-This product is in Private Preview. Terms of Service will be made available in Public Preview or General Availability phases.
+This product is in Private Preview. Terms of Service will be available in Public Preview or General Availability phases.
 
 ### Pricing
 
-This product is in Private Preview. Pricing information will be made available in Public Preview or General Availability phases.
+This product is in Private Preview. Pricing information will be available during the Public Preview or General Availability phase.
+
+
+
