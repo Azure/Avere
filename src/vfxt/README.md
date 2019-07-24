@@ -12,7 +12,7 @@ The construction of this template and packaging for marketplace can be found in 
 
 ## Managed Identity and Roles
 
-> **NOTE** - If you need information about what to enter in the "Avere cluster create role ID" field of the Create Avere vFXT deployment template, read the prerequisites documentation at [docs.microsoft.com/avere](https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-prereqs#create-access-roles). 
+> **NOTE** - If you need information about what to enter in the "Avere cluster create role ID" field of the Create Avere vFXT deployment template, read the prerequisites documentation at [docs.microsoft.com/avere](https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-prereqs#create-access-roles).
 
 The Avere vFXT controller and cluster use Azure [managed identities](https://docs.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview) for deployment and operation.  Additionally the administrator deploying the roles also needs permission to deploy the Avere vFXT controller and cluster.
 
@@ -92,7 +92,7 @@ There are three ways to deploy the vFXT cluster.  In each of the methods you wil
 
    | Deployment Method | Details | URL |
    | --- | --- | --- |
-   | **Portal Wizard** | the portal Wizard walks you through the creation of the controller and vFXT.  This is private preview, so please post github issue if you would like access | [wizard](https://portal.azure.com/?pub_source=email&pub_status=success#create/microsoft-avere.vfxt-template-previewavere-vfxt-arm) |
+   | **Portal Wizard** | the portal Wizard walks you through the creation of the controller and vFXT.  This is private preview, so please post github issue if you would like access | [wizard](https://portal.azure.com/?pub_source=email&pub_status=success#create/microsoft-avere.vfxt-templateavere-vfxt-arm) |
    | **Portal Template** | this uses the default portal template wizard and requires care when entering fields  | <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fvfxt%2Fazuredeploy-auto.json" target="_blank"><img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/></a> |
    | **Azure CLI** | the template can be automated using CLI or SDK | See the [example below](#example-using-cli-to-deploy-the-cluster). |
 
@@ -135,7 +135,7 @@ Once you have deployed your vFXT, proceed to the data ingest of the cluster desc
 There are a few tools for debugging:
   1. **Log files**
       1. `sudo tail -f /var/lib/waagent/custom-script/download/0/stdout` - this will show the progress of the custom script extension
-      1. `sudo tail -f /var/lib/waagent/custom-script/download/0/stderr` - this will show the error output from the custom script extension     
+      1. `sudo tail -f /var/lib/waagent/custom-script/download/0/stderr` - this will show the error output from the custom script extension
       1. `tail -f ~/vfxt.log` - this will show the progress of the vfxt installation
   1. **Debug mode**
       1. parameter `enableCloudTraceDebugging` - enabling this will enable more tracing on the vfxt nodes, and ensure vfxt resources are not cleaned up in the event of a failure.
