@@ -32,6 +32,8 @@ Before using the Azure Portal to create a new HPC Cache, check these prerequisit
   * Access tier (default): **Hot** 
   * It is a good practice to use a storage account in the same location as your cache. 
 
+**Note:** Additional requirements apply to the private preview offering. Read [Private preview prerequisites](hpc-cache-preview/preview-prereqs.md) for a current list. 
+
 ## Creating a cache 
 
 Use the Azure portal to create the cache instance. During the private preview, your subscription must be whitelisted, and the Azure HPC Cache team will share the URL to use to create a cache instance. 
