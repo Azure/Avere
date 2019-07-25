@@ -1,14 +1,16 @@
-# HPC Cache Private Preview documentation 
+# HPC Cache Private Preview documentation
 
-*(Draft/preview version - updated 2019-07-24)*  
+*Last updated 2019-07-25*  
 
-This page provides partial documentation for the Azure HPC Cache private preview. 
+This page provides documentation for the Azure HPC Cache private preview. It is being updated during the preview period and might change frequently. 
 
-Information is subject to change - please verify this information with your Microsoft Service and Support representative before using it in a production environment or in a high-value test.
+Because information is subject to change, please verify this information with your Microsoft Service and Support representative before using it in a high-value test or a production-impacting environment.
+
+To join the private preview, contact **[???]**
 
 ## Getting started
 
-Before using the Azure Portal to create a new HPC Cache, check these prerequisites. 
+Before using the Azure Portal to create a new Azure HPC Cache, check these prerequisites. 
 
 * Your subscription must be whitelisted for the private preview program. Contact the Azure HPC Cache team to request access.
 
@@ -18,7 +20,7 @@ Before using the Azure Portal to create a new HPC Cache, check these prerequisit
   * The subnet cannot host any other VMs, even for related services like client machines.
   * If you use multiple cache instances, each one needs its own subnet.
 
-* You must authorize storage account access by giving the Azure HPC Cache instance Storage Account Contributor role privileges on your account. If you are not the storage account owner, have the owner do this step. Details are [below](#add-the-access-control-role-to-your-account).  
+* You must authorize storage account access by giving the Azure HPC Cache instance Storage Account Contributor role privileges on your account. If you are not the storage account owner, have the owner do this step. Details are [below](#add-the-access-control-role-to-your-account). 
 
 * Storage prerequisites - if you want to use Azure Blob storage with the Azure HPC Cache, you need a compatible storage account and an empty Blob container. 
 
@@ -34,7 +36,7 @@ Before using the Azure Portal to create a new HPC Cache, check these prerequisit
 
 **Note:** Additional requirements apply to the private preview offering. Read [Private preview prerequisites](hpc-cache-preview/preview-prereqs.md) for a current list. 
 
-## Creating a cache 
+## Creating a cache
 
 Use the Azure portal to create the cache instance. During the private preview, your subscription must be whitelisted, and the Azure HPC Cache team will share the URL to use to create a cache instance. 
 
