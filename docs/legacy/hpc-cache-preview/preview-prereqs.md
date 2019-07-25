@@ -48,3 +48,7 @@ You should create a dedicated subnet for the Azure HPC Cache to ensure that ther
   ![screenshot of virtual network DNS configuration with "default (Azure-provided)" selected under "Servers"](default-dns.png)
 
 * **NTP** - Azure HPC Cache uses time.windows.com as its NTP server and will set that automatically.
+
+**Client access**
+
+Clients can mount the cluster and make NFS requests to access the cache. SMB access is not supported.
