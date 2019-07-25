@@ -12,21 +12,39 @@ You must have an Azure subscription. There are no specific limits to the type of
 
 **Access permission and roles** 
 
-The bulk of the service lies outside of your subscription and so you don’t need a great deal of permission to get started. However you will need to be able to create virtual NICs in the subscription. To do this you can either be the “Service Administrator” for the subscription (meaning that you have full control over everything) or you should assign your portal/Azure user the “Contributor” role. 
+The bulk of the service lies outside of your subscription, so high-level permissions aren't necessary.  However, the Azure HPC Cache needs to be able to create virtual NICs in the subscription. 
 
-If you must have a more specific role, or questions about applying permissions to a specific scope such as an RG please contact 0c454b08.microsoft.com@amer.teams.ms with the specific requirements your environment requires. 
+The user creating the cache must either: 
 
-Resource Group – A regular resource group. You may use a common RG with other resources but if you have security requirements that require scoping you may want to consider using an RG dedicated to the HPC Cache environment (see Permissions/Roles above). 
+* Be a Service Administrator for the subscription, or 
+* Be assigned the Contributor role for the subscription. 
 
-A virtual network and a subnet – The Azure HPC Cache network interfaces will reside in a specific virtual network/subnet in your subscription.  BEST PRACTICE – You should create a dedicated subnet for the Azure HPC Cache to ensure there are no conflicts with IP address acquisition from other assets in your subscription.  
+[Read more about subscription administrative access in Azure](https://docs.microsoft.com/azure/role-based-access-control/rbac-and-directory-admin-roles)
 
-How large should my subnet be? Please plan on 64 addresses for the subnet. 
+If you want to use a more specific role, or have questions about applying permissions to a smaller scope (like a resource group), please contact the private preview team (0c454b08.microsoft.com@amer.teams.ms) with your environment's requirements.
 
-Should I install clients in the same subnet? – No. If the service has a failover issue it may lose an IP address previously used if at the same time another asset in that subnet attempts to bind one. That conflict is best avoided if you isolate the service instance. 
+**Resource Group**
 
-DNS – Please ensure that you use the default Azure DNS configuration as the service requires it for name resolution, shown below: 
- 
+You need a standard resource group for the cache.
 
- 
+You can put the Azure HPC Cache in a resource group that includes other resources, but if you have security requirements that require scoping (see Access permissions and roles, above) you might want to use a resource group dedicated to the cache environment.
 
-NTP – Azure HPC Cache uses time.windows.com as its NTP server and will set that automatically.  
+**Virtual network and subnet**
+
+The Azure HPC Cache network interfaces will reside in a specific virtual network and subnet in your subscription. 
+
+You should create a dedicated subnet for the Azure HPC Cache to ensure that there are no conflicts with IP address acquisition from other assets in your subscription. The cache needs exclusive access to its range of IP addresses.  
+
+* The subnet should hold 64 IP addresses. 
+
+* Do not install clients in the same subnet. 
+
+  Hosting clients in the same subnet increases the chance of an IP address conflict with the cache. If the cache has a failover, it might lose an IP address at the same time a client asset in the subnet attempts to bind one. If the client asset receives the IP address that the cache expects, there is a conflict that can delay cache operation. That conflict is avoided if you isolate the cache service in its own subnet. 
+
+* **DNS** - The virtual network must use the default DNS server configuration.
+
+  The Azure HPC Cache requires the default Azure DNS server configuration for name resolution. Make sure the virtual network is configured as shown below: 
+  
+  ![screenshot of virtual network DNS configuration with "default (Azure-provided)" selected under "Servers"](default-dns.png)
+
+* **NTP** - Azure HPC Cache uses time.windows.com as its NTP server and will set that automatically.
