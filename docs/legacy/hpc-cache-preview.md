@@ -117,7 +117,7 @@ For an NFS storage target, you must specify how to reach the storage export and 
 
   **Note:** Although the example in a screenshot below uses an IP address, FQDN is preferred. An IP address can be used if necessary.
 
-* **Usage model** - Choose one of the data caching profiles based on your workflow, described in[Choose a usage model, below](#choose-a-usage-model).
+* **Usage model** - Choose one of the data caching profiles based on your workflow, described in [Choose a usage model, below](#choose-a-usage-model).
 
 For a Blob storage target, you also need to supply this information: 
 
