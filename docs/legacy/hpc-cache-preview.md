@@ -203,6 +203,14 @@ After this command succeeds, the contents of the storage export should be visibl
 
 **Note:** Your clients must be able to access the secure virtual network and subnet that houses your cache. For example, create client VMs within the same virtual network, or use a jump host in the virtual network for access from outside. (Remember that nothing else can be hosted inside the cache's subnet.)
 
+## Populate new Blob storage
+
+If you are using a new Blob container as a storage target, you might want to move your existing data to the container as soon as you connect a few clients. The Azure HPC Cache optimizes back-end writes in parallel, so the most efficient way to move data onto its back-end storage is through multiple connections. 
+
+The [Parallel data ingest](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-data-ingest) documentation provided for the Avere vFXT for Azure product outlines data copying strategies that work well with the Azure HPC Cache.
+
+Note that a basic, single-threaded copy operation does not give a good result when moving large datasets to Blob storage through the Azure HPC Cache.
+
 ## Additional information
 
 More details about the Azure HPC Cache will be available in September 2019. 
@@ -216,6 +224,3 @@ This product is in Private Preview. Terms of Service will be available in Public
 <!-- link in GUI to this heading -->
 
 This product is in Private Preview. Pricing information will be available during the Public Preview or General Availability phase.
-
-
-
