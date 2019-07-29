@@ -1,6 +1,6 @@
 # Azure HPC Cache Private Preview documentation
 
-*Last updated 2019-07-25*  
+*Last updated 2019-07-29*  
 
 This page provides documentation for the Azure HPC Cache private preview. It is being updated during the preview period and might change frequently. 
 
@@ -40,7 +40,7 @@ Before using the Azure Portal to create a new Azure HPC Cache, make sure your en
 
 * The Azure HPC Cache needs to be able to create virtual network interfaces (NICs). The user who creates the cache must have sufficient privileges in the subscription to create NICs. There are several ways to authorize this access; read [Additional prerequisites](hpc-cache-preview/preview-prereqs.md) to learn more.
 
-* If using Blob storage, the Azure HPC Cache instance needs authorization to access your storage account as a Storage Account Contributor. Details are [below](#add-the-access-control-role-to-your-account).
+* If using Blob storage, the Azure HPC Cache application needs authorization to access your storage account as a Storage Account Contributor. Details are [below](#add-the-access-control-role-to-your-account).
 
 ### Storage infrastructure
 
@@ -55,7 +55,7 @@ Before using the Azure Portal to create a new Azure HPC Cache, make sure your en
   * Replication: **Locally redundant storage (LRS)**
   * Access tier (default): **Hot**
 
-  It is a good practice to use a storage account in the same location as your cache.
+  It is a good practice to use a storage account in the same region as your cache.
 
 * Authorize the cache to access your Azure storage account by assigning it the Storage Account Contributor role as described [below](#add-the-access-control-role-to-your-account). If you are not the storage account owner, have the owner do this step.
 
@@ -77,7 +77,7 @@ In **Service Details**, set the cache name and these other attributes:
 
 * Location - Only **East US** is supported during the private preview. 
 * Virtual network - You can select an existing one or create a new virtual network. 
-* Subnet - Choose or create a subnet with at least 64 IP addresses (/24) that will be used only for the Azure HPC Cache.
+* Subnet - Choose or create a subnet with at least 64 IP addresses (/26) that will be used only for the Azure HPC Cache.
 
 ### Cache sizing
 <!-- change to "set cache size" if we can change the link in the GUI -->
@@ -86,8 +86,8 @@ On the **Cache** page, you must set the capacity of your Azure HPC Cache.
 
 Cache capacity is determined by two factors: 
 
-  * The number of operations per second that you want the cache to support (throughput)
-  * The amount of data you want to have room for in the cache storage
+* The number of operations per second that you want the cache to support (throughput)
+* The amount of data you want to have room for in the cache storage
 
 Choose one of the available throughput values (in GB/second) and cache storage sizes (in TB). The IOPS capacity is calculated and shown underneath the value selectors. 
 
