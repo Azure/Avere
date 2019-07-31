@@ -45,9 +45,13 @@ You should create a dedicated subnet for the Azure HPC Cache to ensure that ther
 
   Hosting clients in the same subnet increases the chance of an IP address conflict with the cache. If the cache has a failover, it might lose an IP address at the same time a client asset in the subnet attempts to bind one. If the client asset receives the IP address that the cache expects, there is a conflict that can delay cache operation. That conflict is avoided if you isolate the cache service in its own subnet. 
 
-* **DNS** - The virtual network must use the default DNS server configuration.
+* **DNS** - The virtual network needs access to the Azure default DNS server. 
 
-  The Azure HPC Cache requires the default Azure DNS server configuration for name resolution. Make sure the virtual network is configured as shown below: 
+  If you use another DNS server (for example, to resolve hostnames for on-premises storage or to provide round-robin load balancing to the cache mount points), you must set up forwarding so that the cache can resolve Azure service endpoints.
+  
+  Read more about DNS forwarding in [Name resolution for resources in Azure virtual networks](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-name-resolution-for-vms-and-role-instances).
+
+  If you do not set up your own DNS server, use the default Azure DNS server configuration as shown below:
   
   ![screenshot of virtual network DNS configuration with "default (Azure-provided)" selected under "Servers"](default-dns.png)
 

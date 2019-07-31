@@ -1,6 +1,6 @@
 # Azure HPC Cache Private Preview documentation
 
-*Last updated 2019-07-29*  
+*Last updated 2019-07-31*  
 
 This page provides documentation for the Azure HPC Cache private preview. It is being updated during the preview period and might change frequently. 
 
@@ -34,7 +34,11 @@ Before using the Azure Portal to create a new Azure HPC Cache, make sure your en
   * The subnet cannot host any other VMs, even for related services like client machines.
   * If you use multiple cache instances, each one needs its own subnet.
 
-* The virtual network for the cache should be configured to use the default Azure-provided DNS server. Read [Additional prerequisites](hpc-cache-preview/preview-prereqs.md) for more information about network configuration.
+* The cache's virtual network needs access to the Azure DNS server. If you set up a custom DNS server, you must configure forwarding so that the cache can access Azure service endpoints.
+
+  A custom DNS server is needed to resolve hostnames for on-premises storage and can be useful if you want round-robin load balancing among the cache's mount addresses.
+
+  For more information about setting up a DNS system and configuring forwarding for Azure resources, read [Name resolution for resources in Azure virtual networks](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-name-resolution-for-vms-and-role-instances).
 
 ### Permissions
 
