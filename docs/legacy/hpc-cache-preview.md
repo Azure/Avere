@@ -133,8 +133,9 @@ For a Blob storage target, you also need to supply this information:
 
 ![screenshot of blob storage target creation form](hpc-cache-preview/create-add-blob.png)
 
-#### Add the access control role to your account (Blob storage only)
 <a id="add-the-access-control-role-to-your-account"></a>
+#### Add the access control role to your account (Blob storage only)
+
 
 The Azure HPC Cache uses [role-based access control (RBAC)](https://docs.microsoft.com/azure/role-based-access-control/index) to authorize the cache application to access your storage account for Azure Blob storage targets. 
 
