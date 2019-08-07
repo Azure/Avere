@@ -129,7 +129,7 @@ jobs:
       pytest $test_to_run $PYTEST_OPTIONS \
         --location $VFXT_DEPLOY_LOCATION \
         --doctest-modules --junitxml=junit/test-deploy.xml | tee /tmp/test_output.log
-      rc=$?
+      rc=${PIPESTATUS[0]}
       set +x
 
       if [ ${rc} -ne 0 ]; then
@@ -188,7 +188,7 @@ jobs:
       pytest test/test_vfxt_cluster_status.py $PYTEST_OPTIONS \
         -k TestVfxtClusterStatus \
         --doctest-modules --junitxml=junit/test-results02.xml | tee /tmp/test_output.log
-      rc=$?
+      rc=${PIPESTATUS[0]}
       set +x
 
       if [ ${rc} -ne 0 ]; then
@@ -252,7 +252,7 @@ jobs:
       pytest test/test_vfxt_cluster_status.py $PYTEST_OPTIONS \
         -k TestVfxtSupport \
         --doctest-modules --junitxml=junit/test-results03.xml | tee /tmp/test_output.log
-      pyt_res=$?
+      pyt_res=${PIPESTATUS[0]}
 
       if [ ${pyt_res} -ne 0 ]; then
         grep -e '^E ' -e '^ERROR ' /tmp/test_output.log | sed -E 's/^E +//g' > /tmp/errs.log
