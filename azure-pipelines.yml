@@ -128,7 +128,17 @@ jobs:
       set -x
       pytest $test_to_run $PYTEST_OPTIONS \
         --location $VFXT_DEPLOY_LOCATION \
-        --doctest-modules --junitxml=junit/test-deploy.xml
+        --doctest-modules --junitxml=junit/test-deploy.xml | /tmp/test_output.log
+      rc=$?
+      set +x
+
+      if [ ${rc} -ne 0 ]; then
+        grep -e '^E ' -e '^ERROR ' /tmp/test_output.log | sed -E 's/^E +//g' > /tmp/errs.log
+        while read line; do
+          echo "##vso[task.logissue type=error;] $line"
+        done < /tmp/errs.log
+        echo "##vso[task.complete result=Failed;]"
+      fi
     displayName: 'TEST: Deploy vFXT cluster'
     condition: succeeded()
     env:
@@ -177,7 +187,17 @@ jobs:
       set -x
       pytest test/test_vfxt_cluster_status.py $PYTEST_OPTIONS \
         -k TestVfxtClusterStatus \
-        --doctest-modules --junitxml=junit/test-results02.xml
+        --doctest-modules --junitxml=junit/test-results02.xml | /tmp/test_output.log
+      rc=$?
+      set +x
+
+      if [ ${rc} -ne 0 ]; then
+        grep -e '^E ' -e '^ERROR ' /tmp/test_output.log | sed -E 's/^E +//g' > /tmp/errs.log
+        while read line; do
+          echo "##vso[task.logissue type=error;] $line"
+        done < /tmp/errs.log
+        echo "##vso[task.complete result=Failed;]"
+      fi
     displayName: 'TEST: Cluster status, health'
     condition: succeeded()
     env:
@@ -231,8 +251,15 @@ jobs:
       # Collect various test artifacts (e.g., controller/node logs).
       pytest test/test_vfxt_cluster_status.py $PYTEST_OPTIONS \
         -k TestVfxtSupport \
-        --doctest-modules --junitxml=junit/test-results03.xml
+        --doctest-modules --junitxml=junit/test-results03.xml | /tmp/test_output.log
       pyt_res=$?
+
+      if [ ${pyt_res} -ne 0 ]; then
+        grep -e '^E ' -e '^ERROR ' /tmp/test_output.log | sed -E 's/^E +//g' > /tmp/errs.log
+        while read line; do
+          echo "##vso[task.logissue type=error;] $line"
+        done < /tmp/errs.log
+      fi
 
       # Copy VFXT_TEST_VARS_FILE to the artifacts directory.
       if [[ -f $VFXT_TEST_VARS_FILE ]]; then
@@ -250,7 +277,9 @@ jobs:
         cp $vfxt_log_loc ${P_ARTIFACTS_DIR}/.
       fi
 
-      exit $pyt_res
+      if [ ${pyt_res} -ne 0 ]; then
+        echo "##vso[task.complete result=Failed;]"
+      fi
     displayName: 'TEST: Collect deployment artifacts, log files'
     condition: always()
     env:
