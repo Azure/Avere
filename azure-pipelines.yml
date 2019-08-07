@@ -128,7 +128,7 @@ jobs:
       set -x
       pytest $test_to_run $PYTEST_OPTIONS \
         --location $VFXT_DEPLOY_LOCATION \
-        --doctest-modules --junitxml=junit/test-deploy.xml | /tmp/test_output.log
+        --doctest-modules --junitxml=junit/test-deploy.xml | tee /tmp/test_output.log
       rc=$?
       set +x
 
@@ -187,7 +187,7 @@ jobs:
       set -x
       pytest test/test_vfxt_cluster_status.py $PYTEST_OPTIONS \
         -k TestVfxtClusterStatus \
-        --doctest-modules --junitxml=junit/test-results02.xml | /tmp/test_output.log
+        --doctest-modules --junitxml=junit/test-results02.xml | tee /tmp/test_output.log
       rc=$?
       set +x
 
@@ -251,7 +251,7 @@ jobs:
       # Collect various test artifacts (e.g., controller/node logs).
       pytest test/test_vfxt_cluster_status.py $PYTEST_OPTIONS \
         -k TestVfxtSupport \
-        --doctest-modules --junitxml=junit/test-results03.xml | /tmp/test_output.log
+        --doctest-modules --junitxml=junit/test-results03.xml | tee /tmp/test_output.log
       pyt_res=$?
 
       if [ ${pyt_res} -ne 0 ]; then
