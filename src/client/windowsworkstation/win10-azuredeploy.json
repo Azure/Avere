@@ -67,7 +67,7 @@
     "publicIPAddressName": "[concat('publicip-',variables('uniqueName'))]",
     "vmName": "[concat('vm-',variables('uniqueName'))]",
     "imageReference": {
-      "publisher": "MicrosoftVisualStudio",
+      "publisher": "microsoftvisualstudio",
       "offer": "Windows",
       "sku": "Windows-10-N-x64",
       "version": "latest"
