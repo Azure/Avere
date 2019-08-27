@@ -83,6 +83,8 @@ Change these values:
 Create cloud filer:
 
 https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-add-storage#create-a-core-filer
+https://azure.github.io/Avere/legacy/ops_guide/4_7/html/new_core_filer_cloud.html
+
 ```
 bucketname=storageaccount/containername
 (ex: avereblobstorage/avereblob)
