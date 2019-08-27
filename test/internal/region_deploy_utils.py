@@ -32,11 +32,11 @@ regions_to_exclude = [
     "australiacentral", "australiacentral2", "francesouth",
     "southafricanorth", "southafricawest",
 
-    # 2019-06-24: not currently working with test sub
-    "centralindia", "uaecentral", "uaenorth",
+    # 2019-08-25: not currently working with test sub
+    "centralindia", "uaecentral", "uaenorth", "germanynorth",
 
-    # 2019-03-14: E32s VMs not available in this region
-    "westcentralus",
+    # 2019-08-25: E32s VMs not available in this region for the test sub
+    "westcentralus", "germanywestcentral",
 ]
 regions_to_include = []
 
