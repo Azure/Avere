@@ -1,7 +1,9 @@
 Prereqs:
+
 https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs#configure-subscription-owner-permissions
 
 Deploy controller:
+
 https://portal.azure.us/#create/microsoft-avere.vfxtavere-vfxt-controller
 
 Login to controller and sudo to root
@@ -10,6 +12,7 @@ sudo -s
 ```
 
 Login to Azure CLI:
+
 https://docs.microsoft.com/en-us/azure/azure-government/documentation-government-get-started-connect-with-cli
 ```
 az cloud set --name AzureUSGovernment
@@ -17,6 +20,7 @@ az login
 ```
 
 Accept license terms:
+
 https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs#accept-software-terms
 
 ```
@@ -60,7 +64,6 @@ json file looks like this:
 ```
 Edit deployment script:
 ```
-vi /create-cloudbacked-cluster
 vi /create-minimal-cluster
 ```
 
@@ -78,10 +81,22 @@ Change these values:
 ```
 
 Create cloud filer:
+
 https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-add-storage#create-a-core-filer
 
 Configure junction:
+
 https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-add-storage#create-a-junction
+
+Mount junction:
+
+https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-mount-clients
+
+Moving data onto vFXT:
+
+https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-data-ingest
+
+
 
 Helpful az commands:
 
