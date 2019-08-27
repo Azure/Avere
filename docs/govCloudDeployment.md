@@ -77,6 +77,12 @@ Change these values:
 + CACHE_SIZE=4096
 ```
 
+Create cloud filer:
+https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-add-storage#create-a-core-filer
+
+Configure junction:
+https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-add-storage#create-a-junction
+
 Helpful az commands:
 
 List accounts:
