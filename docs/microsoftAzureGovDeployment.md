@@ -88,8 +88,16 @@ bucketname=storageaccount/containername
 (ex: avereblobstorage/avereblob)
 ```
 
-Caveat - different storage endpoint is needed for Microsoft Azure Government
+**Caveat - different storage endpoint is needed for Microsoft Azure Government**
+Need to SSH to avere cluster node and manually change the 'mass' name. 
+```
+dbutil.py set mass2 serverName avereblobstorage.blob.core.usgovcloudapi.net -x
+```
 
+Was set to:
+```
+serverName: avereblobstorage.blob.core.windows.net
+```
 
 Configure junction:
 
