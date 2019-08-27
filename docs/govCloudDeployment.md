@@ -4,6 +4,11 @@ https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs#configure-s
 Deploy controller:
 https://portal.azure.us/#create/microsoft-avere.vfxtavere-vfxt-controller
 
+Login to controller and sudo to root
+```
+sudo -s
+```
+
 Login to Azure CLI:
 https://docs.microsoft.com/en-us/azure/azure-government/documentation-government-get-started-connect-with-cli
 ```
@@ -56,8 +61,32 @@ json file looks like this:
 Edit deployment script:
 ```
 vi /create-cloudbacked-cluster
+vi /create-minimal-cluster
 ```
 
+Change these values:
+```
++ RESOURCE_GROUP=avere-rg
++ LOCATION=usgovvirginia
++ NETWORK=avere-rg-vnet
++ SUBNET=default
++ AVERE_CLUSTER_ROLE=avere-cluster
++ CLUSTER_NAME=avere-cluster-fairfax
++ ADMIN_PASSWORD=<CHOOSE PASSWORD FOR CLUSTER>
++ INSTANCE_TYPE=Standard_E32s_v3
++ CACHE_SIZE=4096
+```
+
+Helpful az commands:
+
+List accounts:
+```
+az account show
+```
+List roles:
+```
+az role definition list
+```
 List locations:
 ```
 az account list-locations
