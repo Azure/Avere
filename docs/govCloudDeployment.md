@@ -8,20 +8,25 @@ Deploy controller:
 az login:
 
 https://docs.microsoft.com/en-us/azure/azure-government/documentation-government-get-started-connect-with-cli
+```
 az cloud set --name AzureUSGovernment
 az login
-
+```
 
 Accept license terms:
 https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs#accept-software-terms
 
+```
 az account set --subscription abc123de-f456-abc7-89de-f01234567890
 az vm image accept-terms --urn microsoft-avere:vfxt:avere-vfxt-controller:latest
+```
 
 Create role:
-
+```
 az role definition create --role-definition avere-cluster.json
-
+```
+json file looks like this:
+```
 {
     "AssignableScopes": [
         "/subscriptions/f75a88ac-70d5-405e-a2fd-95b308e8042a"
@@ -49,11 +54,13 @@ az role definition create --role-definition avere-cluster.json
         "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write"
     ]
 }
-
+```
 Edit deployment script:
+```
 vi /create-cloudbacked-cluster
-
+```
 
 List locations:
+```
 az account list-locations
-
+```
