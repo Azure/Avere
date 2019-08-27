@@ -1,6 +1,6 @@
-##Standing up vFXT in Azure Government Cloud
+#Standing up vFXT in Azure Government Cloud
 
-#Prereqs:
+##Prereqs:
 
 https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs#configure-subscription-owner-permissions
 
