@@ -1,19 +1,19 @@
-#Standing up vFXT in Azure Government Cloud
+# Standing up vFXT in Azure Government Cloud
 
-##Prereqs:
+## Prereqs:
 
 https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs#configure-subscription-owner-permissions
 
-#Deploy controller:
+## Deploy controller:
 
 https://portal.azure.us/#create/microsoft-avere.vfxtavere-vfxt-controller
 
-#Login to controller and sudo to root
+## Login to controller and sudo to root
 ```
 sudo -s
 ```
 
-#Login to Azure CLI:
+## Login to Azure CLI:
 
 https://docs.microsoft.com/en-us/azure/azure-government/documentation-government-get-started-connect-with-cli
 ```
@@ -21,7 +21,7 @@ az cloud set --name AzureUSGovernment
 az login
 ```
 
-#Accept license terms:
+## Accept license terms:
 
 https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs#accept-software-terms
 
@@ -30,7 +30,7 @@ az account set --subscription abc123de-f456-abc7-89de-f01234567890
 az vm image accept-terms --urn microsoft-avere:vfxt:avere-vfxt-controller:latest
 ```
 
-#Create role:
+## Create role:
 ```
 az role definition create --role-definition avere-cluster.json
 ```
@@ -65,7 +65,7 @@ json file looks like this:
 }
 ```
 
-#Deploy vFXT
+## Deploy vFXT
 
 Edit deployment script:
 ```
@@ -84,8 +84,8 @@ Change these values:
 + INSTANCE_TYPE=Standard_E32s_v3
 + CACHE_SIZE=4096
 ```
-#Configure vFXT
-Create cloud filer:
+## Configure vFXT
+###### Create cloud filer:
 
 https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-add-storage#create-a-core-filer
 https://azure.github.io/Avere/legacy/ops_guide/4_7/html/new_core_filer_cloud.html
@@ -107,21 +107,21 @@ Was set to:
 serverName: avereblobstorage.blob.core.windows.net
 ```
 
-Configure junction:
+###### Configure junction:
 
 https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-add-storage#create-a-junction
 
-Mount junction:
+###### Mount junction:
 
 https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-mount-clients
 
-Moving data onto vFXT:
+###### Moving data onto vFXT:
 
 https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-data-ingest
 
 
 
-#Helpful az commands:
+## Helpful az commands:
 
 List accounts:
 ```
