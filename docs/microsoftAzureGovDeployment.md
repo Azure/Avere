@@ -83,6 +83,13 @@ Change these values:
 Create cloud filer:
 
 https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-add-storage#create-a-core-filer
+```
+bucketname=storageaccount/containername
+(ex: avereblobstorage/avereblob)
+```
+
+Caveat - different storage endpoint is needed for Microsoft Azure Government
+
 
 Configure junction:
 
