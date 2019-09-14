@@ -36,10 +36,11 @@ class TestVfxtTemplateDeploy:
             atd.template = json.load(tfile)
         with open(test_vars["ssh_pub_key"], "r") as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
+        storage_account_name = atd.deploy_id.replace("-", "").replace("_", "").lower() + "sa"
         atd.deploy_params = {
             "adminPassword": os.environ["AVERE_ADMIN_PW"],
-            "avereBackedStorageAccountName": atd.deploy_id + "sa",
-            "avereClusterName": atd.deploy_id + "-cluster",
+            "avereBackedStorageAccountName": storage_account_name[:24],
+            "avereClusterName": atd.deploy_id.lower() + "-cluster",
             "avereInstanceType": "Standard_E32s_v3",
             "avereNodeCount": 3,
             "controllerAdminUsername": "azureuser",
@@ -100,7 +101,7 @@ class TestVfxtTemplateDeploy:
             ssh_pub_key = ssh_pub_f.read()
         atd.deploy_params = {
             "adminPassword": os.environ["AVERE_ADMIN_PW"],
-            "avereClusterName": atd.deploy_id + "-cluster",
+            "avereClusterName": atd.deploy_id.lower() + "-cluster",
             "avereInstanceType": "Standard_E32s_v3",
             "avereNodeCount": 3,
             "controllerAdminUsername": "azureuser",
@@ -162,10 +163,11 @@ class TestVfxtTemplateDeploy:
             atd.template = json.load(tfile)
         with open(test_vars["ssh_pub_key"], "r") as ssh_pub_f:
             ssh_pub_key = ssh_pub_f.read()
+        storage_account_name = atd.deploy_id.replace("-", "").replace("_", "").lower() + "sa"
         atd.deploy_params = {
             "adminPassword": os.environ["AVERE_ADMIN_PW"],
-            "avereBackedStorageAccountName": atd.deploy_id + "sa",
-            "avereClusterName": atd.deploy_id + "-cluster",
+            "avereBackedStorageAccountName": storage_account_name[:24],
+            "avereClusterName": atd.deploy_id.lower() + "-cluster",
             "avereInstanceType": "Standard_E32s_v3",
             "avereNodeCount": 3,
             "controllerAdminUsername": "azureuser",
