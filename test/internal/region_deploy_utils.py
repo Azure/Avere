@@ -32,8 +32,9 @@ regions_to_exclude = [
     "australiacentral", "australiacentral2", "francesouth",
     "southafricanorth", "southafricawest",
 
-    # 2019-08-25: not currently working with test sub
+    # 2019-09-13: not currently working with test sub
     "centralindia", "uaecentral", "uaenorth", "germanynorth",
+    "switzerlandwest", "switzerlandnorth",
 
     # 2019-08-25: E32s VMs not available in this region for the test sub
     "westcentralus", "germanywestcentral",
