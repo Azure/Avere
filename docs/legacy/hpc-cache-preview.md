@@ -217,6 +217,16 @@ The [Parallel data ingest](https://docs.microsoft.com/en-us/azure/avere-vfxt/ave
 
 Note that a basic, single-threaded copy operation does not give a good result when moving large datasets to Blob storage through the Azure HPC Cache.
 
+## Considerations and steps for Regional recovery
+
+The HPC Cache runs within a given subscription in a given region.  Customers wishing to minimize the risk of a full-region outage may consider the following approach:
+
+1. Ensure that the backend storage (Blob or customer NAS enviornment whether in Azure or located on-premises) is accessible in a second region. 
+2. In the event of a failure of the current region (where the HPC Cache is located), create and configure a second HPC Cache in the region where the backend storage is accessible.  For example, if the customer storage is accessible from East US 2 while the main HPC Cache and compute environments are located in East US, prepare to create the second HPC Cache instance in East US 2.
+3. Remember that the HPC Cache represents the data access portion of your architecutre; the client compute environment running in your primary region must also be re-established in the second region.  
+
+Note that the HPC Cache may be created programmatically (via ARM template or API code) and so the creation and recovery may be automated through your preferred means.
+
 ## Additional information
 
 More details about the Azure HPC Cache will be available in September 2019. 
