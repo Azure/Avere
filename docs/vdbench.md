@@ -1,6 +1,6 @@
-# Vdbench - measuring vFXT performance
+# Vdbench - measuring HPC Cache or vFXT performance
 
-This is a basic setup to generate small and medium sized workloads to test the vFXT memory and disk subsystems.  The suggested configuration is 12 x Standard_D2s_v3 clients for each group of 3 vFXT nodes.
+This is a basic setup to generate small and medium sized workloads to test the HPC Cache or vFXT memory and disk subsystems.  The suggested configuration is 12 x Standard_D2s_v3 clients for each group of 3 HPC Cache or vFXT nodes.
 
 [vdbench download and documentation](https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html)
 
@@ -8,9 +8,9 @@ This is a basic setup to generate small and medium sized workloads to test the v
 
 These deployment instructions describe the installation of all components required to run Vdbench:
 
-1. Deploy an Avere vFXT as described in [Deploy](jumpstart_deploy.md).
+1. Deploy an HPC Cache or Avere vFXT.
 
-2. If you have not already done so, ssh to the controller, and mount to the Avere vFXT:
+2. If you have not already done so, ssh to the controller, and mount to the addresses of the HPC Cache or Avere vFXT:
 
     1. Run the following commands:
         ```bash
@@ -25,7 +25,7 @@ These deployment instructions describe the installation of all components requir
         chown nobody:nogroup /nfs/node2
         ```
 
-    2. Edit `/etc/fstab` to add the following lines but *using your vFXT node IP addresses*. Add more lines if your cluster has more than three nodes.
+    2. Edit `/etc/fstab` to add the following lines but *using your HPC Cache or vFXT node IP addresses*. Add more lines if your cluster has more than three nodes.
         ```bash
         10.0.0.12:/msazure	/nfs/node0	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
         10.0.0.13:/msazure	/nfs/node1	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
@@ -79,7 +79,7 @@ These deployment instructions describe the installation of all components requir
    ./run_vdbench.sh inmem.conf uniquestring1
    ```
 
-2. Log in to the Avere vFXT cluster GUI (Avere Control Panel - instructions [here](access_cluster.md)) to watch the performance metrics. You will see a similar performance chart to the following:
+2. Browse to the HPC Cache resource in the portal or log in to Avere vFXT cluster GUI (Avere Control Panel - instructions [here](access_cluster.md)) to watch the performance metrics. You will see a similar performance chart to the following:
 
    <img src="images/vdbench_inmem.png">
 
