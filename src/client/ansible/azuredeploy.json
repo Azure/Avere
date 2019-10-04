@@ -1,0 +1,204 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "uniquename": {
+      "type": "string",
+      "metadata": {
+        "description": "The unique name used for resource names associated with these virtual machine clients"
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "defaultValue": "azureuser",
+      "metadata": {
+        "description": "The admin username for the virtual machine clients."
+      }
+    },
+    "sshKeyData": {
+      "type": "string",
+      "defaultValue": "",
+      "minLength": 0,
+      "metadata": {
+        "description": "The public SSH key used for access to the VM."
+      }
+    },
+    "customImageResourceId": {
+      "type": "string",
+      "metadata": {
+        "description": "The custom image id"
+      }
+    },
+    "vmCount": {
+      "type": "int",
+      "metadata": {
+        "description": "The number of vms to deploy."
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_DS2_v2",
+      "metadata": {
+        "description": "The SKU size of vms to deploy."
+      }
+    },
+    "virtualNetworkResourceGroup": {
+      "type": "string",
+      "metadata": {
+        "description": "The resource group name for the VNET containing the Avere vFXT."
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name used for the virtual network for the VNET containing the Avere vFXT."
+      }
+    },
+    "virtualNetworkSubnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "The unique name used for the virtual network subnet for the VNET containing the Avere vFXT."
+      }
+    },
+    "nfsHost": {
+      "type": "string",
+      "metadata": {
+        "description": "The host name or ip address of the NFS filer."
+      }
+    },
+    "nfsExport": {
+      "type": "string",
+      "metadata": {
+        "description": "The nfs filer export to mount."
+      }
+    },
+    "localMountPoint": {
+      "type": "string",
+      "metadata": {
+        "description": "The local mountpoint."
+      }
+    }
+  },
+  "variables": {
+    "uniquename": "[concat(parameters('uniquename'))]",
+    "adminUsername": "[parameters('adminUsername')]",
+    "sshKeyData": "[parameters('sshKeyData')]",
+    "customImageResourceId": "[parameters('customImageResourceId')]",
+    "vmCount": "[parameters('vmCount')]",
+    "vmSize": "[parameters('vmSize')]",
+    "virtualNetworkResourceGroup": "[parameters('virtualNetworkResourceGroup')]",
+    "virtualNetworkName": "[parameters('virtualNetworkName')]",
+    "virtualNetworkSubnetName": "[parameters('virtualNetworkSubnetName')]",
+    "nfsHost": "[parameters('nfsHost')]",
+    "nfsExport": "[parameters('nfsExport')]",
+    "localMountPoint": "[parameters('localMountPoint')]",
+    "vnetID": "[resourceId(variables('virtualNetworkResourceGroup'),'Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+    "subnetId": "[concat(variables('vnetID'),'/subnets/',variables('virtualNetworkSubnetName'))]",
+    "nicName": "[concat('vmnic-',variables('uniquename'))]",
+    "vmName": "[variables('uniquename')]",
+    "sshKeyPath": "[concat('/home/',variables('adminUsername'),'/.ssh/authorized_keys')]",
+    "imageReference": {
+      "id": "[variables('customImageResourceId')]"
+    },
+    "gzipBase64Script": "H4sIADI0l10AA41UXU/bMBR9z6+4ayPaanU/gL0wugltMJBoiyibkCZUuYlDrnDsYDtAxfrfZydNP9KNLcpDcs+9x+ce+7r+rjtD0Z1RHXte3avDTYwadKAwNRBIEeF9ppgGEzP4MZxM4Fxq0wYqQgjlMh5JzuUzivsjWw/Q74BmpoBimy1owsBIOB9Pbqajk+Hp9Or69OziFt6DzqIIX0BGwKk2YJ5lzmAfGRjHYRFMgYah1aBzbL8DKLShnGsYnU1yJYnMxHJBQTVEyJmyyfa9Zo8ZqqpOYOIJlRQJEwaeqEI64y5Hwow57UUfO3oJYEGUKuZkR1Llv3m21TJ1FTbLOAuxYoDNXXfi+nKoa6BUW1Cc3l6Nr6skKTUxsJdUKsPCYrnL8ZeTy+lw/H10czW+GFUruAwoL3yBVKIwnmf7AvICdfiKOuV0bglZkDnCQCaJtVF7XpSJwKAU8I0Zt9EnhdxmC169Yl/yptFuAbz2O53+fm/x0R6EElw+q6YJsftEMCXLvq3Jn6AbsqeuyDivVGEEP8H/DIQ9Qg/uKqjtSlRCy2emGH2oQBFWApozlkK/jIZSsPKbBbEEv/mW6F9gnQISNqABJOq3vMWuVyNbu2lUvPZvUPOb2462an9IG7szf+CS89VIyDgmaJiCRseuSyJkPNRwAMfHx+DH/8N2+E+2wzfYcmdqfnUQiL8jejd0WNsyafJ3k3LTVwa5jFYJd5kJuijQdMKuYPZ6UA9gVzBUmS32i+JGsAO0Ip9nCZB5eVeAiDTJDHK9VTd0A7JZlTyEqICk4FcHLIfV4IO3NQR+U9vT2gdftbbmoJg8IqERUxW2hRtB1U6VNHJggrSd4+tfxYyaDw56DfBfy4tkcVR8FzfCYlcR7O1Vzr4dH4TBwKqBuxUKvRVeDEHRQj4Bm14kFMXKh43t8vJAfW3xMlB650hcref9BkZCMxxMBgAA",
+    "environmentVariables": "[concat(' HOST_NAME_PREFIX=\"',variables('vmName'),'\" NFS_HOST=\"', variables('nfsHost'),'\" NFS_EXPORT=\"', variables('nfsExport'),'\" LOCAL_MOUNTPOINT=\"', variables('localMountPoint'),'\" ')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "[variables('vmName')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2019-03-01",
+      "tags": {
+        "averevfxt": "client"
+      }, 
+      "dependsOn": [        
+      ],
+      "sku": {
+        "name": "[variables('vmSize')]",
+        "tier": "Standard",
+        "capacity": "[variables('vmCount')]"
+      },
+      "properties": {
+        "overprovision": "false",
+        "singlePlacementGroup": "false",
+        "upgradePolicy": {
+          "mode": "Manual"
+        },
+        "virtualMachineProfile": {
+          "storageProfile": {
+            "osDisk": {
+              "createOption": "FromImage",
+              "diffDiskSettings": { 
+                "option": "Local" 
+              },
+              "caching": "ReadOnly"
+            },
+            "imageReference": "[variables('imageReference')]"
+          },
+          "osProfile": {
+            "computerNamePrefix": "[variables('vmName')]",
+            "adminUsername": "[variables('adminUsername')]",
+            "linuxConfiguration": {
+              "disablePasswordAuthentication": "true",
+              "ssh": {
+                "publicKeys": [
+                  {
+                    "path": "[variables('sshKeyPath')]",
+                    "keyData": "[variables('sshKeyData')]"
+                  }
+                ]
+              }
+            }
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "[variables('nicName')]",
+                "properties": {
+                  "primary": true,
+                  "ipConfigurations": [
+                    {
+                      "name": "ipconfig",
+                      "properties": {
+                        "subnet": {
+                          "id": "[variables('subnetId')]"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "customScript",
+                "properties": {
+                  "publisher": "Microsoft.Azure.Extensions",
+                  "type": "CustomScript",
+                  "typeHandlerVersion": "2.0",
+                  "autoUpgradeMinorVersion": true,
+                  "settings": {
+                    "commandToExecute": "[concat('echo ', variables('gzipBase64Script'), ' | base64 --decode | gunzip | ',variables('environmentVariables'),' /bin/bash')]"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "node_0_ip_address": {
+      "type": "string",
+      "value": "[reference(concat(resourceId('Microsoft.Compute/virtualMachineScaleSets/', variables('vmName')), '/virtualMachines/0/networkInterfaces/', variables('nicName')), '2017-03-30').ipConfigurations[0].properties.privateIPAddress]"
+    },
+    "vm_count": {
+      "type": "int",
+      "value": "[variables('vmCount')]"
+    }
+  }
+}

@@ -1,0 +1,80 @@
+---
+- hosts: localhost
+  connection: local
+  vars:
+    resource_group: myrg
+    location: eastus
+    vmss_name: my
+    admin_username: azureuser
+    admin_password: "YOUR_PASSWORD"
+    customImageResourceId: /subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/eastusimages/providers/Microsoft.Compute/images/centos64
+    vmCount: 2
+    vmSize: Standard_DS2_v2
+    subnetId: /subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/myvmssjb/providers/Microsoft.Network/virtualNetworks/vmssvnet/subnets/default
+    nfsHost: 'mynfshost.mycompany.com'
+    nfsExport: '/someexport'
+    localMountPoint: '/nfs/filer'
+    envVars: ' HOST_NAME_PREFIX=\"{{ vmss_name }}\" NFS_HOST=\"{{ nfsHost }}\" NFS_EXPORT=\"{{ nfsExport }}\" LOCAL_MOUNTPOINT=\"{{ localMountPoint }}\" ' 
+    gzipBase64Script: 'H4sIADI0l10AA41UXU/bMBR9z6+4ayPaanU/gL0wugltMJBoiyibkCZUuYlDrnDsYDtAxfrfZydNP9KNLcpDcs+9x+ce+7r+rjtD0Z1RHXte3avDTYwadKAwNRBIEeF9ppgGEzP4MZxM4Fxq0wYqQgjlMh5JzuUzivsjWw/Q74BmpoBimy1owsBIOB9Pbqajk+Hp9Or69OziFt6DzqIIX0BGwKk2YJ5lzmAfGRjHYRFMgYah1aBzbL8DKLShnGsYnU1yJYnMxHJBQTVEyJmyyfa9Zo8ZqqpOYOIJlRQJEwaeqEI64y5Hwow57UUfO3oJYEGUKuZkR1Llv3m21TJ1FTbLOAuxYoDNXXfi+nKoa6BUW1Cc3l6Nr6skKTUxsJdUKsPCYrnL8ZeTy+lw/H10czW+GFUruAwoL3yBVKIwnmf7AvICdfiKOuV0bglZkDnCQCaJtVF7XpSJwKAU8I0Zt9EnhdxmC169Yl/yptFuAbz2O53+fm/x0R6EElw+q6YJsftEMCXLvq3Jn6AbsqeuyDivVGEEP8H/DIQ9Qg/uKqjtSlRCy2emGH2oQBFWApozlkK/jIZSsPKbBbEEv/mW6F9gnQISNqABJOq3vMWuVyNbu2lUvPZvUPOb2462an9IG7szf+CS89VIyDgmaJiCRseuSyJkPNRwAMfHx+DH/8N2+E+2wzfYcmdqfnUQiL8jejd0WNsyafJ3k3LTVwa5jFYJd5kJuijQdMKuYPZ6UA9gVzBUmS32i+JGsAO0Ip9nCZB5eVeAiDTJDHK9VTd0A7JZlTyEqICk4FcHLIfV4IO3NQR+U9vT2gdftbbmoJg8IqERUxW2hRtB1U6VNHJggrSd4+tfxYyaDw56DfBfy4tkcVR8FzfCYlcR7O1Vzr4dH4TBwKqBuxUKvRVeDEHRQj4Bm14kFMXKh43t8vJAfW3xMlB650hcref9BkZCMxxMBgAA'
+    commandToExecute: 'echo {{ gzipBase64Script }} | base64 --decode | gunzip | {{ envVars }} /bin/bash'
+  tasks:
+    - name: Create a resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        location: "{{ location }}"
+
+    - name: CREATE virtualMachineScaleSets
+      azure_rm_resource:
+        api_version: '2019-03-01'
+        resource_group: "{{ resource_group }}"
+        provider: compute
+        resource_type: virtualMachineScaleSets
+        resource_name: "{{ vmss_name }}"
+        body:
+          name: "{{ vmss_name }}"
+          type: "Microsoft.Compute/virtualMachineScaleSets"
+          location: "eastus"
+          tags:
+          sku:
+            name: "{{ vmSize }}"
+            tier: Standard
+            capacity: "{{ vmCount }}"
+          properties:
+            upgradePolicy:
+              mode: Manual
+            virtualMachineProfile:
+              osProfile:
+                computerNamePrefix: "{{ vmss_name }}"
+                adminUsername: "{{ admin_username }}"
+                adminPassword: "{{ admin_password }}"
+              storageProfile:
+                imageReference:
+                  id: "{{ customImageResourceId }}"
+                osDisk:
+                  caching: ReadOnly
+                  createOption: FromImage
+                  diffDiskSettings:
+                    option: Local
+              networkProfile:
+                networkInterfaceConfigurations:
+                  - '{"name": "n", "properties": { "primary": true, "ipConfigurations": [{"name":"i", "properties": {"subnet": {"id": "{{ subnetId }}" }}}]}}'
+              extensionProfile:
+                extensions:
+                  - '{"name": "cse", "properties": {"publisher": "Microsoft.Azure.Extensions", "type": "CustomScript", "typeHandlerVersion": "2.0", "autoUpgradeMinorVersion": true, "settings": { "commandToExecute": "{{ commandToExecute }}"}}}'
+              priority: Low
+              evictionPolicy: delete
+            overprovision: false
+            singlePlacementGroup: false
+
+    - name: Wait for vmss to be ready
+      azure_rm_resource_facts:
+        api_version: '2019-03-01'
+        resource_group: "{{ resource_group }}"
+        provider: compute
+        resource_type: virtualMachineScaleSets
+        resource_name: "{{ vmss_name }}"
+      register: output
+      until: (output.response[0].properties.provisioningState == 'Succeeded') or (output.response[0].properties.provisioningState == 'Failed')
+      failed_when: output.response[0].properties.provisioningState == 'Failed'
+      retries: 2400
+      delay: 10
