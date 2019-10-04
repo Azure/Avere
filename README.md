@@ -11,7 +11,7 @@ The Avere vFXT is an enterprise-scale clustered file system built for the cloud.
 These tutorials help you understand cluster performance testing and common use-case tasks.
 
   * [Virtual Machine Client Implementations that mount the Avere vFXT Edge Filer](docs/clients.md) - This tutorial discusses how to deploy and mount 3 types of virtual machines: loose VMs, VM availability sets (VMAS), and VM scale sets (VMSS).
-  * [Measure vFXT performance with vdbench](docs/vdbench.md) - Deploys vdbench on an *N*-node cluster to demonstrate the storage performance characteristics of the Avere vFXT cluster
+  * [Measure HPC Cache or vFXT performance with vdbench](docs/vdbench.md) - Deploys vdbench on an *N*-node cluster to demonstrate the storage performance characteristics of the HPC Cache or Avere vFXT cluster
   * [Data Ingestor](docs/data_ingestor.md) - This tutorial implements a data ingestor containing the tools required to efficiently load data onto the Avere vFXT Edge Filer.
   * [Rendering using Azure Batch and Avere vFXT](docs/maya_azure_batch_avere_vfxt_demo.md) - Demonstrates how to use the Autodesk Maya Renderer with Azure Batch and the Avere vFXT cluster to generate a rendered movie.
   * [Why use the Avere vFXT for Rendering?](docs/why_avere_for_rendering.md) - Shows the results of rending against NFS at various latencies and how Avere vFXT hides the latency.
