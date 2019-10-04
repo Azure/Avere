@@ -3,7 +3,7 @@
 This folder contains an example template and ansible file that deploys VMSS with Custom Script Extension (CSE).  The following techniques are demonstrated:
 1. Update the host name of each VMSS node
 1. Run the CSE in a secure firewalled environment
-1. Convert the template to VMSS
+1. Convert the template to Ansible
 
 A custom script extension is chosen over cloud-init for the following reasons:
 1. Some OS's like CentOS6 do not support cloud-init
