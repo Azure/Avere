@@ -6,6 +6,84 @@ set -x
 
 NODE_MOUNT_PREFIX="/node"
 
+#######################################
+# wait for network to become ready
+#######################################
+ensureAzureNetwork()
+{
+  # ensure the hostname -i works
+  networkHealthy=1
+  for i in {1..120}; do
+    hostname -i
+    if [ $? -eq 0 ]
+    then
+      # hostname has been found continue
+      networkHealthy=0
+      echo "the network is healthy"
+      break
+    fi
+    sleep 1
+  done
+  if [ $networkHealthy -ne 0 ]
+  then
+    echo "the network is not healthy, cannot resolve ip address, aborting install"
+    ifconfig
+    ip a
+    exit 2
+  fi
+  # ensure all names are resolvable
+  networkHealthy=1
+  for i in {1..120}; do
+    COUNTER=0
+    while [ $COUNTER -lt $NODE_COUNT ]; do
+        HOST_NUMBER=$(($COUNTER + 1))
+        HOST_NUMBER_HEX=$( printf '%x' $HOST_NUMBER )
+        NODE_NAME="${NODE_PREFIX}-${COUNTER}"
+        host ${NODE_NAME}
+        if [ $? -ne 0 ]
+        then
+            echo "command 'host ${NODE_NAME}' failed"
+            break
+        fi
+        COUNTER=$[$COUNTER+1]
+    done
+    if [ $COUNTER -eq $NODE_COUNT ]
+    then
+        # hostname has been found continue
+      networkHealthy=0
+      echo "the network is healthy"
+      break
+    fi
+    sleep 1
+  done
+  if [ $networkHealthy -ne 0 ]
+  then
+    echo "not all vdbench host names resolve, is DNS blocked?, aborting install"
+    exit 1
+  fi
+  # ensure hostname -f works
+  networkHealthy=1
+  for i in {1..120}; do
+    hostname -f
+    if [ $? -eq 0 ]
+    then
+      # hostname has been found continue
+      networkHealthy=0
+      echo "the network is healthy"
+      break
+    fi
+    sleep 1
+  done
+  if [ $networkHealthy -ne 0 ]
+  then
+    echo "the network is not healthy, cannot resolve hostname, aborting install"
+    ifconfig
+    ip a
+    exit 2
+  fi
+  VMNAME=`hostname`
+}
+
 function retrycmd_if_failure() {
     retries=$1; max_wait_sleep=$2; shift && shift
     for i in $(seq 1 $retries); do
@@ -136,7 +214,7 @@ EOM
         HOST_NUMBER=$(($COUNTER + 1))
         HOST_NUMBER_HEX=$( printf '%x' $HOST_NUMBER )
         NODE_NAME="${NODE_PREFIX}-${COUNTER}"
-        IP=$( host ${NODE_NAME} | sed -e "s/.*\ //" )
+        IP=$( host ${NODE_NAME} | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
         echo "NODE NAME ${NODE_NAME}, $IP"
         echo "hd=host${HOST_NUMBER_HEX},system=${IP}">>$FILENAME
         COUNTER=$[$COUNTER+1]
@@ -544,6 +622,9 @@ function write_vdbench_files() {
 }
 
 function main() {
+    echo "ensure Azure network"
+    ensureAzureNetwork
+
     echo "config Linux"
     config_linux
 
