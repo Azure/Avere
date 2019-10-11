@@ -5,6 +5,7 @@
 set -x
 
 NODE_MOUNT_PREFIX="/node"
+HOST_DNS_SERVER="168.63.129.16"
 
 #######################################
 # wait for network to become ready
@@ -33,16 +34,16 @@ ensureAzureNetwork()
   fi
   # ensure all names are resolvable
   networkHealthy=1
-  for i in {1..120}; do
+  for i in {1..240}; do
     COUNTER=0
     while [ $COUNTER -lt $NODE_COUNT ]; do
         HOST_NUMBER=$(($COUNTER + 1))
         HOST_NUMBER_HEX=$( printf '%x' $HOST_NUMBER )
         NODE_NAME="${NODE_PREFIX}-${COUNTER}"
-        host ${NODE_NAME}
+        host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER}
         if [ $? -ne 0 ]
         then
-            echo "command 'host ${NODE_NAME}' failed"
+            echo "command 'host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER}' failed"
             break
         fi
         COUNTER=$[$COUNTER+1]
@@ -196,7 +197,9 @@ function write_copy_idrsa() {
     echo "#!/usr/bin/env bash" > "copy_idrsa.sh"
     COUNTER=0
     while [ $COUNTER -lt $NODE_COUNT ]; do
-        echo "scp -o \"StrictHostKeyChecking no\" /home/$LINUX_USER/.ssh/id_rsa ${NODE_PREFIX}-${COUNTER}:.ssh/id_rsa" >> $FILENAME
+        NODE_NAME="${NODE_PREFIX}-${COUNTER}"
+        IP=$( host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER} | grep ${NODE_NAME} | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
+        echo "scp -o \"StrictHostKeyChecking no\" /home/$LINUX_USER/.ssh/id_rsa ${IP}:.ssh/id_rsa" >> $FILENAME
         COUNTER=$[$COUNTER+1]
     done
     chown $LINUX_USER:$LINUX_USER $FILENAME
@@ -214,7 +217,7 @@ EOM
         HOST_NUMBER=$(($COUNTER + 1))
         HOST_NUMBER_HEX=$( printf '%x' $HOST_NUMBER )
         NODE_NAME="${NODE_PREFIX}-${COUNTER}"
-        IP=$( host ${NODE_NAME} | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
+        IP=$( host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER} | grep ${NODE_NAME} | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
         echo "NODE NAME ${NODE_NAME}, $IP"
         echo "hd=host${HOST_NUMBER_HEX},system=${IP}">>$FILENAME
         COUNTER=$[$COUNTER+1]

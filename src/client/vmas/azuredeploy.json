@@ -242,7 +242,7 @@
           "fileUris": [
             "https://raw.githubusercontent.com/Azure/Avere/master/src/client/mountandbootstrap.sh"
           ],
-          "commandToExecute": "[concat(variables('environmentVariables'), ' /bin/bash mountandbootstrap.sh')]"
+          "commandToExecute": "[concat(' DNS_SUFFIX=.',reference(resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicName'),'-', copyIndex()))).dnsSettings.internalDomainNameSuffix, variables('environmentVariables'), ' /bin/bash mountandbootstrap.sh')]"
         }
       }
     }
