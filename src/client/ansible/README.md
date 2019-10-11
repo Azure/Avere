@@ -1,9 +1,9 @@
 # Deploying VMSS and Custom Script Extension (CSE) with Ansible
 
 This folder contains an example template and ansible file that deploys VMSS with Custom Script Extension (CSE).  The following techniques are demonstrated:
-1. Update the host name of each VMSS node
-1. Run the CSE in a secure firewalled environment
-1. Convert the template to Ansible
+1. [Update the host name of each VMSS node](#update-the-host-name-of-each-vmss-node)
+1. [Run the CSE in a secure firewalled environment](#run-the-cse-in-a-secure-firewalled-environment)
+1. [Convert the template to Ansible](#convert-the-template-to-ansible)
 
 A custom script extension is chosen over cloud-init for the following reasons:
 1. Some OS's like CentOS6 do not support cloud-init
@@ -38,7 +38,7 @@ The resulting line from the above command can be used in the property of the `gz
 echo H4s...gAA | base64 --decode | gunzip | HOST_NAME_PREFIX="myvm" NFS_HOST="myvm.mycompany.com" NFS_EXPORT="/someexport" LOCAL_MOUNTPOINT="/nfs/filer" /bin/bash
 ```
 
-## Convert the template to VMSS
+## Convert the template to Ansible
 
 For ansible, the combination of `azure_rm_virtualmachinescaleset` and `azure_rm_virtualmachinescalesetextension` does not work for VMSS for the following reasons:
 1. the VMSS is outdated and does not support the latest features such as low priority nodes or placement groups
