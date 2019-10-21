@@ -50,6 +50,6 @@ Click the following links to learn more about the data ingestor tools:
 
 1. msrsync -  available from GitHub at https://github.com/jbd/msrsync
 
-2. parallelcp - mentioned in the [ingestion guide](getting_data_onto_vfxt.md#using-the-parallel-copy-script).
+2. parallelcp - mentioned in the [ingestion guide](https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-data-ingest#use-the-parallel-copy-script).
 
-To learn more about parallel ingestion, please refer to the [ingestion guide](getting_data_onto_vfxt.md#using-the-parallel-copy-script).
+To learn more about parallel ingestion, please refer to the [ingestion guide](https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-data-ingest).

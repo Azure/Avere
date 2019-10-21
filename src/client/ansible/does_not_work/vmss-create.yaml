@@ -1,0 +1,54 @@
+---
+- hosts: localhost
+  connection: local
+  vars:
+    resource_group: YOUR_PASSWORD
+    location: eastus
+    vmss_name: my
+    admin_username: azureuser
+    admin_password: "YOUR_PASSWORD"
+    customImageResourceId: /subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/eastusimages/providers/Microsoft.Compute/images/centos64
+    vmCount: 2
+    virtualNetworkResourceGroup: myvmssjb
+    virtualNetworkName: vmssvnet
+    virtualNetworkSubnetName: default
+    scriptExtension: 'H4sICKgXl10AA2huLnNoAI2QzU/CQBDF7/0rnqUJ9LAtCDdRQyKKB8GIBxNjSOlO0w3bLXYXxSD/u+WjCsWvOU3em3kz+VWO/LFQ/jjQsWVpMmBzVHAh9FQGb6A5hTNDHGGaJIHi2rKimQqNSBWuyPRSbTqcZ6R1zcXCwqaiNIOAUFg0PK9xXF+egKeFua04X1VBQmAskJKJKQs2QaRxBp/Ti69mUpa2RIRHOOdg9Iw6nkquiUmVpG2NMwomJSsSJUFLoikahcpTRUVPYZzCqf329DtyUmC8iipY1HCt5SGrfr67Cyr+4ndqO7V9oq79zdggNGSaq+H1NcZJikQYylD18rssEiS5RhPtdhtO/J+01p9prV/S1mRspzcY3o/6nZvu6Paue3n9wJyDpw+llr0HafgzpDX0T0CrCbewfTKhL5QwHvcVmdc0myC/YILMrNJ3Qq0Pyd26EewCAAA='
+    
+  tasks:
+    - name: Create a resource group
+      azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        location: "{{ location }}"
+    
+    - name: Create Scale Set
+      azure_rm_virtualmachinescaleset:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vmss_name }}"
+        vm_size: Standard_DS1_v2
+        admin_username: "{{ admin_username }}"
+        admin_password: "{{ admin_password }}"
+        ssh_password_enabled: true
+        capacity: 2
+        virtual_network_resource_group: "{{ virtualNetworkResourceGroup }}"
+        virtual_network_name: "{{ virtualNetworkName }}"
+        subnet_name: "{{ virtualNetworkSubnetName }}"
+        upgrade_policy: Manual
+        tier: Standard
+        managed_disk_type: Standard_LRS
+        os_disk_caching: ReadOnly
+        image:
+          name: 'centos64'
+          resource_group: 'eastusimages'
+        overprovision: false
+
+    - name: Install VMSS Extension
+      azure_rm_virtualmachinescalesetextension:
+        name: customScript
+        location: "{{ location }}"
+        resource_group: "{{ resource_group }}"
+        vmss_name: "{{ vmss_name }}"
+        publisher: Microsoft.Azure.Extensions
+        type: CustomScript
+        type_handler_version: 2.0
+        settings: '{"commandToExecute": "echo {{ scriptExtension }} | base64 --decode | gunzip | HOST_NAME_PREFIX={{ vmss_name }} /bin/bash"}'
+        auto_upgrade_minor_version: true
