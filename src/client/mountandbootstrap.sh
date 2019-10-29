@@ -33,10 +33,14 @@ function install_nfs() {
 
 function mount_bootstrap_and_install() {
     echo "mount bootstrap, and run bootstrap script"
+    OPT_DIR=/opt
+    RUN_SCRIPT=$OPT_DIR/bootstrap.sh
     BOOTSTRAP_BASE_DIR=$BASE_DIR/b
     mkdir -p $BOOTSTRAP_BASE_DIR
     retrycmd_if_failure 60 5 mount -o "hard,nointr,proto=tcp,mountproto=tcp,retry=30" ${BOOTSTRAP_NFS_IP}:${NFS_PATH} ${BOOTSTRAP_BASE_DIR}
-    /bin/bash ${BOOTSTRAP_BASE_DIR}${BOOTSTRAP_SCRIPT_PATH} 2>&1 | tee -a /var/log/bootstrap.log
+    mkdir -p $OPT_DIR
+    retrycmd_if_failure 60 5 cp ${BOOTSTRAP_BASE_DIR}${BOOTSTRAP_SCRIPT_PATH} ${RUN_SCRIPT}
+    /bin/bash ${RUN_SCRIPT} 2>&1 | tee -a /var/log/bootstrap.log
     umount $BOOTSTRAP_BASE_DIR
     rmdir $BOOTSTRAP_BASE_DIR
 }
