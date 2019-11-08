@@ -1,0 +1,183 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualNetworkName": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 64,
+      "metadata": {
+        "description": "Name must be between 2 and 64 characters (alphanumeric, hyphen, underscore and period)."
+      }
+    },
+    "virtualNetworkAddressSpace": {
+      "type": "string",
+      "metadata": {
+        "description": "The address space (CIDR) of the virtual network."
+      }
+    },
+    "virtualNetworkDomainNameServers": {
+      "type": "array",
+      "metadata": {
+        "description": "The custom DNS servers for the virtual network."
+      }
+    },
+    "virtualNetworkPrivateDomainName": {
+      "type": "string",
+      "metadata": {
+        "description": "The private domain name for the virtual network."
+      }
+    },
+    "virtualNetworkSubnets": {
+      "type": "array",
+      "metadata": {
+        "description": "The subnets in the virtual network."
+      }
+    },
+    "virtualNetworkGateway": {
+      "type": "object",
+      "metadata": {
+        "description": "The gateway to the virtual network."
+      }
+    }
+  },
+  "variables": {
+    "virtualNetworkApiVersion": "2019-09-01",
+    "virtualNetworkGatewayZoned": "[endsWith(parameters('virtualNetworkGateway').vpnTier, 'AZ')]",
+    "privateDomainApiVersion": "2018-09-01",
+    "privateDomainUndefined": "[equals(variables('privateDomainName'), variables('privateDomainNone'))]",
+    "privateDomainName": "[if(equals(parameters('virtualNetworkPrivateDomainName'), ''), variables('privateDomainNone'), parameters('virtualNetworkPrivateDomainName'))]",
+    "privateDomainNone": "none.com"
+  },
+  "functions": [
+  ],
+  "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('virtualNetworkName')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('virtualNetworkAddressSpace')]"
+          ]
+        },
+        "dhcpOptions": {
+          "dnsServers": "[parameters('virtualNetworkDomainNameServers')]"
+        },        
+        "copy": [
+          {
+            "name": "subnets",
+            "count": "[length(parameters('virtualNetworkSubnets'))]",
+            "input": {
+              "name": "[parameters('virtualNetworkSubnets')[copyIndex('subnets')].name]",
+              "properties": {
+                "addressPrefix": "[parameters('virtualNetworkSubnets')[copyIndex('subnets')].addressSpace]",
+                "serviceEndpoints": "[parameters('virtualNetworkSubnets')[copyIndex('subnets')].serviceEndpoints]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "condition": "[not(variables('privateDomainUndefined'))]",
+      "type": "Microsoft.Network/privateDnsZones",
+      "apiVersion": "[variables('privateDomainApiVersion')]",
+      "location": "global",
+      "name": "[variables('privateDomainName')]",
+      "properties": {
+      }
+    },
+    {
+      "condition": "[not(variables('privateDomainUndefined'))]",
+      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+      "apiVersion": "[variables('privateDomainApiVersion')]",
+      "location": "global",
+      "name": "[concat(variables('privateDomainName'), '/', parameters('virtualNetworkName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDomainName'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]"
+      ],
+      "properties": {
+        "virtualNetwork": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]"
+        },
+        "registrationEnabled": true
+      }
+    },
+    {
+      "condition": "[parameters('virtualNetworkGateway').enabled]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('virtualNetworkName')]",
+      "sku": {
+        "name": "[if(variables('virtualNetworkGatewayZoned'), 'Standard', 'Basic')]"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "[if(variables('virtualNetworkGatewayZoned'), 'Static', 'Dynamic')]",
+        "dnsSettings": "[if(equals(parameters('virtualNetworkGateway').vpnDomainLabel, ''), json('null'), json(concat('{\"domainNameLabel\": \"', parameters('virtualNetworkGateway').vpnDomainLabel, '\"}')))]"
+      }
+    },
+    {
+      "condition": "[parameters('virtualNetworkGateway').enabled]",
+      "type": "Microsoft.Network/virtualNetworkGateways",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('virtualNetworkName')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('virtualNetworkName'))]"
+      ],
+      "properties": {
+        "sku": {
+          "name": "[parameters('virtualNetworkGateway').vpnTier]",
+          "tier": "[parameters('virtualNetworkGateway').vpnTier]"
+        },
+        "gatewayType": "[parameters('virtualNetworkGateway').type]",
+        "vpnType": "[parameters('virtualNetworkGateway').vpnType]",
+        "ipConfigurations": [
+          {
+            "name": "vNetGatewayConfig",
+            "properties": {
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), 'GatewaySubnet')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('virtualNetworkName'))]"
+              }
+            }
+          }
+        ],
+        "vpnClientConfiguration": {
+          "vpnClientProtocols": "[parameters('virtualNetworkGateway').vpnClientProtocols]",
+          "vpnClientAddressPool": {
+            "addressPrefixes": [
+              "[parameters('virtualNetworkGateway').vpnClientAddressSpace]"
+            ]
+          },
+          "vpnClientRootCertificates": [
+            {
+              "name": "[parameters('virtualNetworkGateway').vpnClientRootCertificateName]",
+              "properties": {
+                "publicCertData": "[parameters('virtualNetworkGateway').vpnClientRootCertificateData]"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "virtualNetworkName": {
+      "type": "string",
+      "value": "[parameters('virtualNetworkName')]"
+    },
+    "virtualNetworkPrivateDomainName": {
+      "type": "string",
+      "value": "[if(variables('privateDomainUndefined'), '', variables('privateDomainName'))]"
+    }
+  }
+}

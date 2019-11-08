@@ -1,0 +1,104 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "imageGalleryName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "metadata": {
+        "description": "Name must be between 1 and 64 characters (alphanumeric, underscore and period)."
+      }
+    },
+    "imageDefinitionName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "metadata": {
+        "description": "Name must be between 1 and 80 characters (alphanumeric, underscore and period)."
+      }
+    },
+    "imageSourceType": {
+      "type": "string",
+      "allowedValues": [
+        "Linux",
+        "Windows"
+      ],
+      "metadata": {
+        "description": "The type of the source image."
+      }
+    },
+    "imageSourcePublisher": {
+      "type": "string",
+      "metadata": {
+        "description": "The publisher of the source image."
+      }
+    },
+    "imageSourceOffer": {
+      "type": "string",
+      "metadata": {
+        "description": "The offer of the source image."
+      }
+    },
+    "imageSourceSku": {
+      "type": "string",
+      "metadata": {
+        "description": "The sku of the source image."
+      }
+    }
+  },
+  "variables": {
+    "imageGalleryApiVersion": "2019-07-01"
+  },
+  "functions": [
+  ],
+  "resources": [
+     {
+      "type": "Microsoft.Compute/galleries",
+      "apiVersion": "[variables('imageGalleryApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('imageGalleryName')]",
+      "properties": {
+      }
+    },
+    {
+      "type": "Microsoft.Compute/galleries/images",
+      "apiVersion": "[variables('imageGalleryApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[concat(parameters('imageGalleryName'), '/', parameters('imageDefinitionName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/galleries', parameters('imageGalleryName'))]"
+      ],
+      "properties": {
+        "osType": "[parameters('imageSourceType')]",
+        "identifier": {
+          "publisher": "[parameters('imageSourcePublisher')]",
+          "offer": "[parameters('imageSourceOffer')]",
+          "sku": "[parameters('imageSourceSku')]"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "imageGalleryName": {
+      "type": "string",
+      "value": "[parameters('imageGalleryName')]"
+    },
+    "imageDefinitionName": {
+      "type": "string",
+      "value": "[parameters('imageDefinitionName')]"
+    },
+    "imageSourcePublisher": {
+      "type": "string",
+      "value": "[parameters('imageSourcePublisher')]"
+    },
+    "imageSourceOffer": {
+      "type": "string",
+      "value": "[parameters('imageSourceOffer')]"
+    },
+    "imageSourceSku": {
+      "type": "string",
+      "value": "[parameters('imageSourceSku')]"
+    }
+  }
+}

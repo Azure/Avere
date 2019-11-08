@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "imageGalleryName": {
+      "value": "ArtistAnywhere"
+    },
+    "imageDefinitionName": {
+      "value": "Render"
+    },
+    "imageSourceType": {
+      "value": "Linux"
+    },
+    "imageSourcePublisher": {
+      "value": "OpenLogic"
+    },
+    "imageSourceOffer": {
+      "value": "CentOS"
+    },
+    "imageSourceSku": {
+      "value": "8.0"
+    }
+  }
+}
