@@ -28,13 +28,15 @@ part_deploy_region = "deployRegion"
 
 # Regions to always exclude, include.
 regions_to_exclude = [
-    # 2019-03-08: currently in region build-out
-    "australiacentral", "australiacentral2", "francesouth",
+    # 2019-11-14: not currently working with test sub
+    "australiacentral", "australiacentral2",
+    "centralindia",
+    "francesouth",
+    "germanynorth",
+    "norwayeast", "norwaywest",
     "southafricanorth", "southafricawest",
-
-    # 2019-09-13: not currently working with test sub
-    "centralindia", "uaecentral", "uaenorth", "germanynorth",
     "switzerlandwest", "switzerlandnorth",
+    "uaecentral", "uaenorth",
 
     # 2019-08-25: E32s VMs not available in this region for the test sub
     "westcentralus", "germanywestcentral",
