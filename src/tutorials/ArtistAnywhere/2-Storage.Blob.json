@@ -66,8 +66,6 @@
     "storageCachePrincipalId": "831d4223-7a3c-4121-a445-1e423591e57b",
     "roleAssignmentApiVersion": "2019-04-01-preview"
   },
-  "functions": [
-  ],
   "resources": [
     {
       "condition": "[variables('storageAccountNetworked')]",

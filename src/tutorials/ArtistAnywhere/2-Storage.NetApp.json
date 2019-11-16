@@ -66,8 +66,6 @@
     "bytesPerTebibyte": 1099511627776,
     "bytesPerGibibyte": 1073741824
   },
-  "functions": [
-  ],
   "resources": [
     {
       "type": "Microsoft.Network/virtualNetworks",

@@ -39,7 +39,7 @@
             }
           ],
           "mountOptions": "-fstype=nfs,vers=3",
-          "usageModel": "READ_HEAVY_INFREQ",
+          "usageModel": "WRITE_AROUND",
           "size": 1024
         }
       ]

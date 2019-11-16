@@ -63,8 +63,6 @@
     "cacheApiVersion": "2019-11-01",
     "cacheStorageTargets": "[and(greater(length(parameters('cacheStorageTargets')), 0), not(equals(parameters('cacheStorageTargets')[0].name, '')))]"
   },
-  "functions": [
-  ],
   "resources": [
     {
       "type": "Microsoft.StorageCache/caches",

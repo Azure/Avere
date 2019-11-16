@@ -34,9 +34,6 @@
           "addressSpace": "10.0.20.0/24",
           "serviceEndpoints": [
             {
-              "service": "Microsoft.AzureCosmosDB"
-            },
-            {
               "service": "Microsoft.Sql"
             }
           ]
@@ -61,7 +58,7 @@
         "type": "Vpn",
         "vpnType": "RouteBased",
         "vpnTier": "VpnGw1AZ",
-        "vpnDomainLabel": "",
+        "vpnDomainLabel": "Artist",
         "vpnClientProtocols": [
           "IkeV2",
           "SSTP"

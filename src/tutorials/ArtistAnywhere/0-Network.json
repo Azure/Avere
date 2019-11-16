@@ -49,8 +49,6 @@
     "privateDomainName": "[if(equals(parameters('virtualNetworkPrivateDomainName'), ''), variables('privateDomainNone'), parameters('virtualNetworkPrivateDomainName'))]",
     "privateDomainNone": "none.com"
   },
-  "functions": [
-  ],
   "resources": [
     {
       "type": "Microsoft.Network/virtualNetworks",
@@ -118,7 +116,7 @@
       },
       "properties": {
         "publicIPAllocationMethod": "[if(variables('virtualNetworkGatewayZoned'), 'Static', 'Dynamic')]",
-        "dnsSettings": "[if(equals(parameters('virtualNetworkGateway').vpnDomainLabel, ''), json('null'), json(concat('{\"domainNameLabel\": \"', parameters('virtualNetworkGateway').vpnDomainLabel, '\"}')))]"
+        "dnsSettings": "[if(equals(parameters('virtualNetworkGateway').vpnDomainLabel, ''), json('null'), json(concat('{\"domainNameLabel\": \"', toLower(parameters('virtualNetworkGateway').vpnDomainLabel), '\"}')))]"
       }
     },
     {

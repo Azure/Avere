@@ -5,20 +5,23 @@
     "imageGalleryName": {
       "value": "ArtistAnywhere"
     },
-    "imageDefinitionName": {
-      "value": "Render"
-    },
-    "imageSourceType": {
-      "value": "Linux"
-    },
-    "imageSourcePublisher": {
-      "value": "OpenLogic"
-    },
-    "imageSourceOffer": {
-      "value": "CentOS"
-    },
-    "imageSourceSku": {
-      "value": "8.0"
+    "imageDefinitions": {
+      "value": [
+        {
+          "name": "Render",
+          "type": "Linux",
+          "publisher": "OpenLogic",
+          "offer": "CentOS",
+          "sku": "8.0"
+        },
+        {
+          "name": "Scaler",
+          "type": "Linux",
+          "publisher": "AzureCycleCloud",
+          "offer": "Azure-CycleCloud-VM",
+          "sku": "CycleCloud-78"
+        }
+      ]
     }
   }
 }
