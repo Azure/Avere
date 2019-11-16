@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "cacheName": {
+      "value": "ArtistAnywhere"
+    },
+    "cacheThroughput": {
+      "value": "Standard_2G"
+    },
+    "cacheSize": {
+      "value": 3072
+    },
+    "cacheStorageTargets": {
+      "value": [
+        {
+          "name": "",
+          "type": "nfs3",
+          "target": "",
+          "junctions": [
+            {
+              "namespacePath": "",
+              "nfsExport": "",
+              "targetPath": ""
+            }
+          ],
+          "usageModel": "WRITE_AROUND"
+        }
+      ]
+    },
+    "virtualNetworkResourceGroupName": {
+      "value": ""
+    },
+    "virtualNetworkName": {
+      "value": ""
+    },
+    "virtualNetworkSubnetName": {
+      "value": "Cache"
+    }
+  }
+}

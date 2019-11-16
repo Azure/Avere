@@ -1,0 +1,72 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualNetworkName": {
+      "value": "ArtistAnywhere"
+    },
+    "virtualNetworkAddressSpace": {
+      "value": "10.0.0.0/18"
+    },
+    "virtualNetworkDomainNameServers": {
+      "value": [
+      ]
+    },
+    "virtualNetworkPrivateDomainName": {
+      "value": "media.com"
+    },
+    "virtualNetworkSubnets": {
+      "value": [
+        {
+          "name": "Worker",
+          "addressSpace": "10.0.0.0/20",
+          "serviceEndpoints": [
+          ]
+        },
+        {
+          "name": "Studio",
+          "addressSpace": "10.0.16.0/22",
+          "serviceEndpoints": [
+          ]
+        },
+        {
+          "name": "Manager",
+          "addressSpace": "10.0.20.0/24",
+          "serviceEndpoints": [
+            {
+              "service": "Microsoft.Sql"
+            }
+          ]
+        },
+        {
+          "name": "Cache",
+          "addressSpace": "10.0.21.0/25",
+          "serviceEndpoints": [
+          ]
+        },
+        {
+          "name": "GatewaySubnet",
+          "addressSpace": "10.0.21.128/27",
+          "serviceEndpoints": [
+          ]
+        }
+      ]
+    },
+    "virtualNetworkGateway": {
+      "value": {
+        "enabled": false,
+        "type": "Vpn",
+        "vpnType": "RouteBased",
+        "vpnTier": "VpnGw1AZ",
+        "vpnDomainLabel": "Artist",
+        "vpnClientProtocols": [
+          "IkeV2",
+          "SSTP"
+        ],
+        "vpnClientAddressSpace": "10.1.0.0/28",
+        "vpnClientRootCertificateName": "ArtistAnywhere",
+        "vpnClientRootCertificateData": "MIIC7zCCAdegAwIBAgIQP9fLHZW/8alLgh66OaSDZDANBgkqhkiG9w0BAQsFADAaMRgwFgYDVQQDDA9BcnRpc3QgQW55d2hlcmUwHhcNMTkxMTAyMjI0NDU2WhcNMjAxMTAyMjMwNDU2WjAaMRgwFgYDVQQDDA9BcnRpc3QgQW55d2hlcmUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDVIrvk7PMdVApG6X52pcvmRkfMytmUF1y1KSz8CvVzGUzFvtJeON3XOrYR04JZNHH9vXCeyUAY0VzQbmXfYuPR21XnGBLvvGJ3AmteU09JUTSE8zJp2PahNviOF1vSnsId/hR08/aOCA/K0jhOBszuVRcp4yfw5tC+uGBc2svEdI3e6EDKCTBADXAq/xQLyw+u3whW5RxQEuave6eoSm0SnaJp77wBCLNxqgrFxtod6OTMfe6p8FLNXxq/53aOZwLiIiBmusVQPUPpgTERpiN2YopW8IshOlwD0NjrhIvx+AHDCt6VXFUsyPSzILcqcMcVY7U9LF+M0Sp9WC1HlVaRAgMBAAGjMTAvMA4GA1UdDwEB/wQEAwICBDAdBgNVHQ4EFgQUqbgaYs9md6VKjBTEIDKeDMZJtAYwDQYJKoZIhvcNAQELBQADggEBAHTPjC1wwwZD90IJoK8kBKbDG+MS9XtKPIbg1+DHqrt6jfsUpf714Iz4WyQwYks5pT2WhkajswFKqDZuG8dgejEET459cXF649hl+zqMGuNNh+Vdp9aqWUeGn1viQhUO7YynPx7cWJn7JuGBf+hCoyNY0cAxa+VfgR+iSOGSGrAzB9t6M9ary5ATe/8m1KqRK18MvKuloezQ6Hw2BwmM6WkaOGP/IpmpO2uPIRgGtckcVlkbxWim7rQvrOvRNEaBDP9e01Q8LkCapvjNO3cl8VSYMZ+SvETd7uJCfK61HuOn1Oyh39OYVBkXxmtpKzmSymwhb54Yi6dr2UClu0oXYQA="
+      }
+    }
+  }
+}
