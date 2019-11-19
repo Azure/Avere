@@ -1,0 +1,111 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "renderManager": {
+      "type": "object",
+      "metadata": {
+        "description": "The render farm manager configuration."
+      }
+    },
+    "virtualNetworkResourceGroupName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the virtual network resource group."
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the virtual network resource."
+      }
+    },
+    "virtualNetworkSubnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the virtual network subnet."
+      }
+    }
+  },
+  "variables": {
+    "dataServerApiVersion": "2017-12-01",
+    "dataServerName": "[toLower(parameters('renderManager').dataServerName)]",
+    "dataServerHost": "[concat(variables('dataServerName'), '.postgres.database.azure.com')]",
+    "databaseAdminUsername": "[concat(parameters('renderManager').databaseAdminUsername, '@', variables('dataServerName'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.DBforPostgreSQL/servers",
+      "apiVersion": "[variables('dataServerApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[variables('dataServerName')]",
+      "sku": {
+        "name": "[parameters('renderManager').dataServerType]"
+      },
+      "properties": {
+        "version": "[parameters('renderManager').dataServerSqlVersion]",
+        "administratorLogin": "[parameters('renderManager').databaseAdminUsername]",
+        "administratorLoginPassword": "[parameters('renderManager').databaseAdminPassword]",
+        "storageProfile": {
+          "storageMB": "[parameters('renderManager').dataServerStorageMB]",
+          "storageAutoGrow": "[parameters('renderManager').dataServerStorageAutoGrow]",
+          "backupRetentionDays": "[parameters('renderManager').dataServerBackupRetentionDays]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DBforPostgreSQL/servers/virtualNetworkRules",
+      "apiVersion": "[variables('dataServerApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[concat(variables('dataServerName'), '/virtualNetwork')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/servers', variables('dataServerName'))]"
+      ],
+      "properties": {
+        "virtualNetworkSubnetId": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('virtualNetworkSubnetName'))]"
+      }
+    },
+    {
+      "condition": "[not(equals(parameters('renderManager').databaseAdminIpAddress, ''))]",
+      "type": "Microsoft.DBforPostgreSQL/servers/firewallRules",
+      "apiVersion": "[variables('dataServerApiVersion')]",
+      "name": "[concat(variables('dataServerName'), '/adminClient')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/servers', variables('dataServerName'))]"
+      ],
+      "properties": {
+        "startIpAddress": "[parameters('renderManager').databaseAdminIpAddress]",
+        "endIpAddress": "[parameters('renderManager').databaseAdminIpAddress]"
+      }
+    },
+    {
+      "type": "Microsoft.DBforPostgreSQL/servers/databases",
+      "apiVersion": "[variables('dataServerApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[concat(variables('dataServerName'), '/', parameters('renderManager').databaseName)]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/servers', variables('dataServerName'))]"
+      ],
+      "properties": {
+      }
+    }
+  ],
+  "outputs": {
+    "managerDatabaseConnection": {
+      "type": "string",
+      "value": "[concat('host=', variables('dataServerHost'), ' port=5432 sslmode=require dbname=', parameters('renderManager').databaseName, ' user=', variables('databaseAdminUsername'), ' password=', parameters('renderManager').databaseAdminPassword)]"
+    },
+    "managerDatabaseEndpoint": {
+      "type": "string",
+      "value": "[concat('jdbc:postgresql://', variables('dataServerHost'), ':5432/', parameters('renderManager').databaseName, '?sslmode=require')]"
+    },
+    "managerDatabaseUsername": {
+      "type": "string",
+      "value": "[variables('databaseAdminUsername')]"
+    },
+    "managerDatabasePassword": {
+      "type": "string",
+      "value": "[parameters('renderManager').databaseAdminPassword]"
+    }
+  }
+}

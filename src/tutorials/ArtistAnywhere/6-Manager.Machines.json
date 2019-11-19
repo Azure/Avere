@@ -1,0 +1,196 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appRootDirectory": {
+      "type": "string",
+      "metadata": {
+        "description": "The render farm manager root directory."
+      }
+    },
+    "databaseConnection": {
+      "type": "string",
+      "metadata": {
+        "description": "The render farm manager database connection."
+      }
+    },
+    "renderManagers": {
+      "type": "array",
+      "metadata": {
+        "description": "The set of render farm manager machines."
+      }
+    },
+    "imageVersionId": {
+      "type": "string",
+      "metadata": {
+        "description": "The render farm manager image version identifier."
+      }
+    },
+    "machineExtensionScript": {
+      "type": "string",
+      "metadata": {
+        "description": "The render farm manager extension script (compressed and encoded)."
+      }
+    },
+    "virtualNetworkResourceGroupName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the virtual network resource group."
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the virtual network resource."
+      }
+    },
+    "virtualNetworkSubnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the virtual network subnet."
+      }
+    }
+  },
+  "variables": {
+    "virtualMachineApiVersion": "2019-07-01",
+    "networkInterfaceApiVersion": "2019-09-01",
+    "availabilitySetName": "renderManagers"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "apiVersion": "[variables('virtualMachineApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[variables('availabilitySetName')]",
+      "sku": {
+        "name": "Aligned"
+      },
+      "properties": {
+        "platformFaultDomainCount": 2,
+        "platformUpdateDomainCount": 5
+      }
+    },
+    {
+      "condition": "[parameters('renderManagers')[copyIndex()].publicAddress]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "[variables('networkInterfaceApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('renderManagers')[copyIndex()].name]",
+      "properties": {
+        "publicIPAllocationMethod": "Static"
+      },
+      "copy": {
+        "name": "publicIPAddresses",
+        "count": "[length(parameters('renderManagers'))]"
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "[variables('networkInterfaceApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('renderManagers')[copyIndex()].name]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('renderManagers')[copyIndex()].name)]"
+      ],
+      "properties": {
+        "primary": true,
+        "enableAcceleratedNetworking": "[parameters('renderManagers')[copyIndex()].acceleratedNetworking]",
+        "ipConfigurations": [
+          {
+            "name": "ipConfig1",
+            "properties": {
+              "subnet": {
+                "id": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('virtualNetworkSubnetName'))]"
+              },
+              "publicIPAddress": "[if(parameters('renderManagers')[copyIndex()].publicAddress, json(concat('{\"id\": \"', resourceId('Microsoft.Network/publicIPAddresses', parameters('renderManagers')[copyIndex()].name), '\"}')), json('null'))]"
+            }
+          }
+        ]
+      },
+      "copy": {
+        "name": "networkInterfaces",
+        "count": "[length(parameters('renderManagers'))]"
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "[variables('virtualMachineApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('renderManagers')[copyIndex()].name]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', parameters('renderManagers')[copyIndex()].name)]"
+      ],
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[parameters('renderManagers')[copyIndex()].machineSize]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('renderManagers')[copyIndex()].name)]"
+            }
+          ]
+        },
+        "storageProfile": {
+          "imageReference": {
+            "id": "[parameters('imageVersionId')]"
+          },
+          "osDisk": {
+            "caching": "ReadOnly",
+            "createOption": "FromImage"
+          }
+        },
+        "osProfile": {
+          "computerName": "[parameters('renderManagers')[copyIndex()].name]",
+          "adminUsername": "[parameters('renderManagers')[copyIndex()].adminUsername]",
+          "adminPassword": "[parameters('renderManagers')[copyIndex()].adminPassword]",
+          "linuxConfiguration": {
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[concat('/home/', parameters('renderManagers')[copyIndex()].adminUsername, '/.ssh/authorized_keys')]",
+                  "keyData": "[parameters('renderManagers')[copyIndex()].sshKeyData]"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "copy": {
+        "mode": "Serial",
+        "name": "renderManagers",
+        "count": "[length(parameters('renderManagers'))]"
+      },
+      "resources": [
+        {
+          "type": "extensions",
+          "apiVersion": "[variables('virtualMachineApiVersion')]",
+          "location": "[resourceGroup().location]",
+          "name": "[parameters('renderManagers')[copyIndex()].name]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', parameters('renderManagers')[copyIndex()].name)]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.Azure.Extensions",
+            "autoUpgradeMinorVersion": true,
+            "typeHandlerVersion": "2.0",
+            "type": "CustomScript",
+            "protectedSettings": {
+              "commandToExecute": "[concat('echo ', parameters('machineExtensionScript'), ' | base64 --decode | gunzip | sed \"s|\r$||\" | APP_DIRECTORY=\"', parameters('appRootDirectory'), '\" DB_CONNECTION=\"', parameters('databaseConnection'), '\" /bin/bash')]"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "renderManagers": {
+      "type": "array",
+      "value": "[reference(resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName')), variables('virtualMachineApiVersion')).virtualMachines]"
+    }
+  }
+}

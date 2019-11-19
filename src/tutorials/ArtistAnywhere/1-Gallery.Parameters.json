@@ -12,14 +12,8 @@
           "type": "Linux",
           "publisher": "OpenLogic",
           "offer": "CentOS",
-          "sku": "8.0"
-        },
-        {
-          "name": "Scaler",
-          "type": "Linux",
-          "publisher": "AzureCycleCloud",
-          "offer": "Azure-CycleCloud-VM",
-          "sku": "CycleCloud-78"
+          "sku": "8.0",
+          "version": "latest"
         }
       ]
     }

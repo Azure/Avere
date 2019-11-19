@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "renderManager": {
+      "value": {
+        "appRootDirectory": "",
+        "databaseEndpoint": "",
+        "databaseUsername": "",
+        "databasePassword": "",
+        "databaseSchemaUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.2.119/schema-0.2.119.sql",
+        "databaseDataUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.2.119/demo_data-0.2.119.sql",
+        "softwareUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.2.119/cuebot-0.2.119-all.jar",
+        "serviceUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/cuebot/deploy/systemd/opencue-cuebot.service"
+      }
+    },
+    "imageBuilder": {
+      "value": {
+        "templateName": "RenderManager",
+        "timeoutMinutes": 30
+      }
+    }
+  }
+}
