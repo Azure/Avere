@@ -16,10 +16,10 @@ param (
 	[string] $serviceRootDirectory = "/home/az/",
 
 	# Set to true to deploy Azure NetApp Files (http://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
-	[boolean] $storageDeployNetApp = $true,
+	[boolean] $storageDeployNetApp = $false,
 
 	# Set to true to deploy Azure Blob Storage (http://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview)
-	[boolean] $storageDeployBlob = $true
+	[boolean] $storageDeployBlob = $false
 )
 
 $templateRootDirectory = $PSScriptRoot
