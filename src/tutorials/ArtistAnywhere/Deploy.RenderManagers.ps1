@@ -48,7 +48,7 @@ $templateParameters = (Get-Content "$templateRootDirectory\4-Manager.Data.Parame
 
 $dataServerExists = $false
 $dataServerName = $templateParameters.renderManager.value.dataServerName.ToLower()
-$dataServers = (az postgres server list --resource-group $resourceGroupName) | ConvertFrom-Json
+$dataServers = (az postgres server list --resource-group $resourceGroupName) | ConvertFrom-Json -AsHashTable
 foreach ($dataServer in $dataServers) {
 	if ($dataServer.name -eq $dataServerName) {
 		$dataServerExists = $true
@@ -58,7 +58,7 @@ foreach ($dataServer in $dataServers) {
 $databaseExists = $false
 if ($dataServerExists) {
 	$databaseName = $templateParameters.renderManager.value.databaseName
-	$databases = (az postgres db list --resource-group $resourceGroupName --server-name $dataServerName) | ConvertFrom-Json -AsHashTable
+	$databases = (az postgres db list --resource-group $resourceGroupName --server-name $dataServerName) | ConvertFrom-Json
 	foreach ($database in $databases) {
 		if ($database.name -eq $databaseName) {
 			$databaseExists = $true
