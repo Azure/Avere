@@ -2,22 +2,22 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "appRootDirectory": {
+    "renderManagers": {
+      "type": "array",
+      "metadata": {
+        "description": "The render farm managers configuration."
+      }
+    },
+    "rootDirectory": {
       "type": "string",
       "metadata": {
         "description": "The render farm manager root directory."
       }
     },
-    "databaseConnection": {
+    "databaseAdminSql": {
       "type": "string",
       "metadata": {
-        "description": "The render farm manager database connection."
-      }
-    },
-    "renderManagers": {
-      "type": "array",
-      "metadata": {
-        "description": "The set of render farm manager machines."
+        "description": "The render farm manager database admin connection."
       }
     },
     "imageVersionId": {
@@ -53,15 +53,18 @@
   },
   "variables": {
     "virtualMachineApiVersion": "2019-07-01",
-    "networkInterfaceApiVersion": "2019-09-01",
-    "availabilitySetName": "renderManagers"
+    "virtualNetworkApiVersion": "2019-09-01",
+    "loadBalancerName": "renderManagers",
+    "loadBalancerNameBackend": "backendPool1",
+    "loadBalancerNameFrontend": "frontendConfig1",
+    "loadBalancerNameProbe": "lbProbe1"
   },
   "resources": [
     {
       "type": "Microsoft.Compute/availabilitySets",
       "apiVersion": "[variables('virtualMachineApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[variables('availabilitySetName')]",
+      "name": "[variables('loadBalancerName')]",
       "sku": {
         "name": "Aligned"
       },
@@ -71,26 +74,67 @@
       }
     },
     {
-      "condition": "[parameters('renderManagers')[copyIndex()].publicAddress]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "[variables('networkInterfaceApiVersion')]",
+      "type": "Microsoft.Network/loadBalancers",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('renderManagers')[copyIndex()].name]",
-      "properties": {
-        "publicIPAllocationMethod": "Static"
+      "name": "[variables('loadBalancerName')]",
+      "sku": {
+        "name": "Standard"
       },
-      "copy": {
-        "name": "publicIPAddresses",
-        "count": "[length(parameters('renderManagers'))]"
+      "properties": {
+        "backendAddressPools": [
+          {
+            "name": "[variables('loadBalancerNameBackend')]"
+          }
+        ],
+        "frontendIPConfigurations": [
+          {
+            "name": "[variables('loadBalancerNameFrontend')]",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('virtualNetworkSubnetName'))]"
+              }
+            }
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "lbRule1",
+            "properties": {
+              "backendAddressPool": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), variables('loadBalancerNameBackend'))]"
+              },
+              "frontendIPConfiguration": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', variables('loadBalancerName'), variables('loadBalancerNameFrontend'))]"
+              },
+              "probe": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/probes', variables('loadBalancerName'), variables('loadBalancerNameProbe'))]"
+              },
+              "protocol": "Tcp",
+              "backendPort": 8443,
+              "frontendPort": 8443
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "[variables('loadBalancerNameProbe')]",
+            "properties": {
+              "protocol": "Tcp",
+              "port": 8443
+            }
+          }
+        ]
       }
     },
     {
       "type": "Microsoft.Network/networkInterfaces",
-      "apiVersion": "[variables('networkInterfaceApiVersion')]",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
       "location": "[resourceGroup().location]",
       "name": "[parameters('renderManagers')[copyIndex()].name]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('renderManagers')[copyIndex()].name)]"
+        "[resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName'))]"
       ],
       "properties": {
         "primary": true,
@@ -99,16 +143,21 @@
           {
             "name": "ipConfig1",
             "properties": {
+              "privateIPAllocationMethod": "Dynamic",
               "subnet": {
                 "id": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('virtualNetworkSubnetName'))]"
               },
-              "publicIPAddress": "[if(parameters('renderManagers')[copyIndex()].publicAddress, json(concat('{\"id\": \"', resourceId('Microsoft.Network/publicIPAddresses', parameters('renderManagers')[copyIndex()].name), '\"}')), json('null'))]"
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), variables('loadBalancerNameBackend'))]"
+                }
+              ]
             }
           }
         ]
       },
       "copy": {
-        "name": "networkInterfaces",
+        "name": "renderManagers",
         "count": "[length(parameters('renderManagers'))]"
       }
     },
@@ -118,12 +167,12 @@
       "location": "[resourceGroup().location]",
       "name": "[parameters('renderManagers')[copyIndex()].name]",
       "dependsOn": [
-        "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]",
+        "[resourceId('Microsoft.Compute/availabilitySets', variables('loadBalancerName'))]",
         "[resourceId('Microsoft.Network/networkInterfaces', parameters('renderManagers')[copyIndex()].name)]"
       ],
       "properties": {
         "availabilitySet": {
-          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('loadBalancerName'))]"
         },
         "hardwareProfile": {
           "vmSize": "[parameters('renderManagers')[copyIndex()].machineSize]"
@@ -180,7 +229,7 @@
             "typeHandlerVersion": "2.0",
             "type": "CustomScript",
             "protectedSettings": {
-              "commandToExecute": "[concat('echo ', parameters('machineExtensionScript'), ' | base64 --decode | gunzip | sed \"s|\r$||\" | APP_DIRECTORY=\"', parameters('appRootDirectory'), '\" DB_CONNECTION=\"', parameters('databaseConnection'), '\" /bin/bash')]"
+              "commandToExecute": "[concat('echo ', parameters('machineExtensionScript'), ' | base64 --decode | gunzip | sed \"s|\r$||\" | ROOT_DIRECTORY=\"', parameters('rootDirectory'), '\" DB_ADMIN_CONNECTION=\"', parameters('databaseAdminSql'), '\" /bin/bash')]"
             }
           }
         }
@@ -188,9 +237,9 @@
     }
   ],
   "outputs": {
-    "renderManagers": {
-      "type": "array",
-      "value": "[reference(resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName')), variables('virtualMachineApiVersion')).virtualMachines]"
+    "renderManager": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', variables('loadBalancerName'), variables('loadBalancerNameFrontend')), variables('virtualNetworkApiVersion')).privateIPAddress]"
     }
   }
 }

@@ -4,7 +4,7 @@
   "parameters": {
     "renderManager": {
       "value": {
-        "dataServerName": "Render",
+        "dataServerName": "Render-Manager",
         "dataServerType": "MO_Gen5_4",
         "dataServerSqlVersion": 11,
         "dataServerStorageMB": 5120,
@@ -12,8 +12,7 @@
         "dataServerBackupRetentionDays": 7,
         "databaseName": "OpenCue",
         "databaseAdminUsername": "sa",
-        "databaseAdminPassword": "P@ssword1234",
-        "databaseAdminIpAddress": ""
+        "databaseAdminPassword": "P@ssword1234"
       }
     },
     "virtualNetworkSubnetName": {

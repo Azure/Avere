@@ -66,19 +66,6 @@
       }
     },
     {
-      "condition": "[not(equals(parameters('renderManager').databaseAdminIpAddress, ''))]",
-      "type": "Microsoft.DBforPostgreSQL/servers/firewallRules",
-      "apiVersion": "[variables('dataServerApiVersion')]",
-      "name": "[concat(variables('dataServerName'), '/adminClient')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.DBforPostgreSQL/servers', variables('dataServerName'))]"
-      ],
-      "properties": {
-        "startIpAddress": "[parameters('renderManager').databaseAdminIpAddress]",
-        "endIpAddress": "[parameters('renderManager').databaseAdminIpAddress]"
-      }
-    },
-    {
       "type": "Microsoft.DBforPostgreSQL/servers/databases",
       "apiVersion": "[variables('dataServerApiVersion')]",
       "location": "[resourceGroup().location]",
@@ -91,7 +78,7 @@
     }
   ],
   "outputs": {
-    "managerDatabaseConnection": {
+    "managerDatabaseAdminSql": {
       "type": "string",
       "value": "[concat('host=', variables('dataServerHost'), ' port=5432 sslmode=require dbname=', parameters('renderManager').databaseName, ' user=', variables('databaseAdminUsername'), ' password=', parameters('renderManager').databaseAdminPassword)]"
     },

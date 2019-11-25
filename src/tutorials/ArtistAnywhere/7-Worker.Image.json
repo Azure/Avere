@@ -1,11 +1,11 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
-  "parameters": {
-    "renderManager": {
+  "parameters": {  
+    "renderWorker": {
       "type": "object",
       "metadata": {
-        "description": "The render farm manager configuration."
+        "description": "The render farm worker configuration."
       }
     },
     "imageGalleryName": {
@@ -50,25 +50,43 @@
             "name": "OpenCue",
             "type": "Shell",
             "inline": [
-              "yum -y install postgresql-contrib",
-              "yum -y install java-1.8.0-openjdk",
-              "[concat('useradd --system --create-home ', replace(replace(parameters('renderManager').rootDirectory, 'home', ''), '/', ''))]",
-              "[concat('cd ', parameters('renderManager').rootDirectory)]",
-              "[concat('curl --location ', parameters('renderManager').databaseSchemaUrl, ' --output opencue-cuebot-schema.sql')]",
-              "[concat('curl --location ', parameters('renderManager').databaseDataUrl, ' --output opencue-cuebot-data.sql')]",
-              "[concat('curl --location ', parameters('renderManager').softwareUrl, ' --output opencue-cuebot.jar')]",
-              "[concat('curl --location ', parameters('renderManager').serviceUrl, ' --output opencue-cuebot.service')]",
-              "sed --in-place '/Environment=DB_URL/d' opencue-cuebot.service",
-              "sed --in-place '/Environment=DB_USER/d' opencue-cuebot.service",
-              "sed --in-place '/Environment=DB_PASS/d' opencue-cuebot.service",
-              "sed --in-place '/Environment=JAR_PATH/d' opencue-cuebot.service",
-              "[concat('sed --in-place ''/Environment=OPTIONS/i Environment=DB_URL=', parameters('renderManager').databaseEndpoint, ''' opencue-cuebot.service')]",
-              "[concat('sed --in-place ''/Environment=OPTIONS/i Environment=DB_USER=', parameters('renderManager').databaseUsername, ''' opencue-cuebot.service')]",
-              "[concat('sed --in-place ''/Environment=OPTIONS/i Environment=DB_PASS=', parameters('renderManager').databasePassword, ''' opencue-cuebot.service')]",
-              "[concat('sed --in-place ''/Environment=OPTIONS/a Environment=JAR_PATH=', parameters('renderManager').rootDirectory, 'opencue-cuebot.jar'' opencue-cuebot.service')]",
-              "sed --in-place '/SyslogIdentifier/a RestartSec=30' opencue-cuebot.service",
-              "sed --in-place '/SyslogIdentifier/a Restart=always' opencue-cuebot.service",
-              "cp opencue-cuebot.service /etc/systemd/system"
+              "yum -y install gcc",
+              "yum -y install epel-release",
+              "yum -y install python-devel",
+              "yum -y install python-pip",
+              "[concat('curl --location ', parameters('renderWorker').requirementsUrl, ' --output requirements.txt')]",
+              "pip install --upgrade pip",
+              "pip install --requirement requirements.txt --ignore-installed",
+              "[concat('useradd --system --create-home ', replace(replace(parameters('renderWorker').rootDirectory, 'home', ''), '/', ''))]",
+              "[concat('cd ', parameters('renderWorker').rootDirectory)]",
+              "[concat('curl --location ', parameters('renderWorker').serviceUrl, ' --output opencue-rqd.service')]",
+              "sed --in-place '/SyslogIdentifier/a RestartSec=30' opencue-rqd.service",
+              "sed --in-place '/SyslogIdentifier/a Restart=always' opencue-rqd.service",
+              "cp opencue-rqd.service /etc/systemd/system",
+              "[concat('curl --location ', parameters('renderWorker').softwareUrl, ' --output opencue-rqd.jar.gz')]",
+              "[concat('tar -xzf opencue-rqd.jar.gz')]",
+              "cd rqd*",
+              "python setup.py install"
+            ]
+          },
+          {
+            "name": "Blender",
+            "type": "Shell",
+            "inline": [
+              "yum -y install libXi",
+              "yum -y install libXrender",
+              "yum -y install mesa-libGL",
+              "[concat('cd ', parameters('renderWorker').rootDirectory)]",
+              "[concat('curl --location ', parameters('renderWorker').blenderUrl, ' --output blender.jar.bz2')]",
+              "[concat('tar -xjf blender.jar.bz2')]"
+            ]
+          },
+          {
+            "name": "Cache",
+            "type": "Shell",
+            "inline": [
+              "yum -y install nfs-utils",
+              "yum -y install autofs"
             ]
           }
         ],

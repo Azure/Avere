@@ -1,0 +1,20 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "renderWorker": {
+      "value": {
+        "requirementsUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/requirements.txt",
+        "softwareUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.2.145/rqd-0.2.145-all.tar.gz",
+        "serviceUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/rqd/deploy/opencue-rqd.service",
+        "blenderUrl": "https://mirror.clarkson.edu/blender/release/Blender2.81/blender-2.81-linux-glibc217-x86_64.tar.bz2"
+      }
+    },
+    "imageBuilder": {
+      "value": {
+        "templateName": "RenderWorker",
+        "timeoutMinutes": 30
+      }
+    }
+  }
+}

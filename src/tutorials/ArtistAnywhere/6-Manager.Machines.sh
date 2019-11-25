@@ -3,12 +3,12 @@
 set -e # Stops execution upon error
 set -x # Displays executed commands
 
-cd "$APP_DIRECTORY"
+cd "$ROOT_DIRECTORY"
 
-if [ "$DB_CONNECTION" -ne "" ]
+if [ "$DB_ADMIN_CONNECTION" -ne "" ]
 then
-    psql "$DB_CONNECTION" --file=opencue-cuebot-schema.sql
-    psql "$DB_CONNECTION" --file=opencue-cuebot-data.sql
+    psql "$DB_ADMIN_CONNECTION" --file=opencue-cuebot-schema.sql
+    psql "$DB_ADMIN_CONNECTION" --file=opencue-cuebot-data.sql
 fi
 
 systemctl enable opencue-cuebot

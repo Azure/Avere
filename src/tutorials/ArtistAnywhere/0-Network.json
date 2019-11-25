@@ -44,10 +44,7 @@
   "variables": {
     "virtualNetworkApiVersion": "2019-09-01",
     "virtualNetworkGatewayZoned": "[endsWith(parameters('virtualNetworkGateway').vpnTier, 'AZ')]",
-    "privateDomainApiVersion": "2018-09-01",
-    "privateDomainUndefined": "[equals(variables('privateDomainName'), variables('privateDomainNone'))]",
-    "privateDomainName": "[if(equals(parameters('virtualNetworkPrivateDomainName'), ''), variables('privateDomainNone'), parameters('virtualNetworkPrivateDomainName'))]",
-    "privateDomainNone": "none.com"
+    "privateDomainApiVersion": "2018-09-01"
   },
   "resources": [
     {
@@ -80,22 +77,20 @@
       }
     },
     {
-      "condition": "[not(variables('privateDomainUndefined'))]",
       "type": "Microsoft.Network/privateDnsZones",
       "apiVersion": "[variables('privateDomainApiVersion')]",
       "location": "global",
-      "name": "[variables('privateDomainName')]",
+      "name": "[parameters('virtualNetworkPrivateDomainName')]",
       "properties": {
       }
     },
     {
-      "condition": "[not(variables('privateDomainUndefined'))]",
       "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
       "apiVersion": "[variables('privateDomainApiVersion')]",
       "location": "global",
-      "name": "[concat(variables('privateDomainName'), '/', parameters('virtualNetworkName'))]",
+      "name": "[concat(parameters('virtualNetworkPrivateDomainName'), '/', parameters('virtualNetworkName'))]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDomainName'))]",
+        "[resourceId('Microsoft.Network/privateDnsZones', parameters('virtualNetworkPrivateDomainName'))]",
         "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]"
       ],
       "properties": {
@@ -175,7 +170,7 @@
     },
     "virtualNetworkPrivateDomainName": {
       "type": "string",
-      "value": "[if(variables('privateDomainUndefined'), '', variables('privateDomainName'))]"
+      "value": "[parameters('virtualNetworkPrivateDomainName')]"
     }
   }
 }

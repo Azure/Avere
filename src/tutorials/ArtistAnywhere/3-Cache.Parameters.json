@@ -11,7 +11,7 @@
     "cacheSize": {
       "value": 3072
     },
-    "cacheStorageTargets": {
+    "storageTargets": {
       "value": [
         {
           "name": "",
