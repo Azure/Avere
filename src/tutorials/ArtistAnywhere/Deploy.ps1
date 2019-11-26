@@ -114,7 +114,7 @@ if ($jobOutput) {
 	$cacheMounts = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($jobOutput.ToString()))
 }
 $jobOutput = Receive-Job -InstanceId $renderManagersJob.InstanceId -Wait
-if (!jobOutput) { return }
+if (!$jobOutput) { return }
 $renderManager = $jobOutput.ToString()
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (* - Background Jobs End)")
 
