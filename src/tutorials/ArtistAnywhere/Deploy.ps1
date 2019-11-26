@@ -108,9 +108,13 @@ if (!$imageVersion) {
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (7.1 - Worker Image Version Build End)")
 
 # * - Background Jobs End
+$cacheMounts = ""
 $jobOutput = Receive-Job -InstanceId $storageCacheJob.InstanceId -Wait
-$cacheMounts = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($jobOutput.ToString()))
+if ($jobOutput) {
+	$cacheMounts = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($jobOutput.ToString()))
+}
 $jobOutput = Receive-Job -InstanceId $renderManagersJob.InstanceId -Wait
+if (!jobOutput) { return }
 $renderManager = $jobOutput.ToString()
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (* - Background Jobs End)")
 
