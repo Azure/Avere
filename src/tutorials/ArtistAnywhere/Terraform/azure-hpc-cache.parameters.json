@@ -1,0 +1,37 @@
+{
+  "cacheName": {
+    "value": "HPC-Cache"
+  },
+  "cacheThroughput": {
+    "value": "Standard_2G"
+  },
+  "cacheSize": {
+    "value": 3072
+  },
+  "storageTargets": {
+    "value": [
+      {
+        "name": "",
+        "type": "nfs3",
+        "target": "",
+        "junctions": [
+          {
+            "namespacePath": "",
+            "nfsExport": "",
+            "targetPath": ""
+          }
+        ],
+        "usageModel": "WRITE_AROUND"
+      }
+    ]
+  },
+  "virtualNetworkResourceGroupName": {
+    "value": "Azure.Artist.Anywhere-Network"
+  },
+  "virtualNetworkName": {
+    "value": "ArtistAnywhere"
+  },
+  "virtualNetworkSubnetName": {
+    "value": "Cache"
+  }
+}

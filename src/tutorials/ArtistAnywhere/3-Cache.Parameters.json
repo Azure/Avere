@@ -29,10 +29,10 @@
       ]
     },
     "virtualNetworkResourceGroupName": {
-      "value": ""
+      "value": "Azure.Artist.Anywhere-Network"
     },
     "virtualNetworkName": {
-      "value": ""
+      "value": "ArtistAnywhere"
     },
     "virtualNetworkSubnetName": {
       "value": "Cache"
