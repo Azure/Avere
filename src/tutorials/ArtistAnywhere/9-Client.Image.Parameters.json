@@ -1,0 +1,22 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "renderClient": {
+      "value": {
+        "requirementsUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/requirements.txt",
+        "pyCueUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.2.145/pycue-0.2.145-all.tar.gz",
+        "pyOutlineUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.2.145/pyoutline-0.2.145-all.tar.gz",
+        "cueSubmitUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.2.145/cuesubmit-0.2.145-all.tar.gz",
+        "cueAdminUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.2.145/cueadmin-0.2.145-all.tar.gz",
+        "cueGuiUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.2.145/cuegui-0.2.145-all.tar.gz"
+      }
+    },
+    "imageBuilder": {
+      "value": {
+        "templateName": "RenderClient",
+        "timeoutMinutes": 30
+      }
+    }
+  }
+}

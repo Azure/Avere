@@ -5,7 +5,7 @@ set -x # Displays executed commands
 
 cd "$ROOT_DIRECTORY"
 
-if [ "$DB_ADMIN_CONNECTION" -ne "" ]
+if [ "$DB_ADMIN_CONNECTION" != "" ]
 then
     psql "$DB_ADMIN_CONNECTION" --file=opencue-cuebot-schema.sql
     psql "$DB_ADMIN_CONNECTION" --file=opencue-cuebot-data.sql

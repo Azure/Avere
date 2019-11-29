@@ -1,0 +1,108 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "renderClient": {
+      "type": "object",
+      "metadata": {
+        "description": "The render farm client configuration."
+      }
+    },
+    "imageGalleryName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the shared image gallery."
+      }
+    },
+    "imageDefinition": {
+      "type": "object",
+      "metadata": {
+        "description": "The definition of the shared image."
+      }
+    },
+    "imageBuilder": {
+      "type": "object",
+      "metadata": {
+        "description": "The builder of the shared image."
+      }
+    }
+  },
+  "variables": {
+    "imageBuilderApiVersion": "2019-05-01-preview"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.VirtualMachineImages/imageTemplates",
+      "apiVersion": "[variables('imageBuilderApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('imageBuilder').templateName]",
+      "properties": {
+        "buildTimeoutInMinutes": "[parameters('imageBuilder').timeoutMinutes]",
+        "source": {
+          "type": "PlatformImage",
+          "publisher": "[parameters('imageDefinition').publisher]",
+          "offer": "[parameters('imageDefinition').offer]",
+          "sku": "[parameters('imageDefinition').sku]",
+          "version": "[parameters('imageDefinition').version]"
+        },
+        "customize": [
+          {
+            "name": "OpenCue",
+            "type": "Shell",
+            "inline": [
+              "yum -y install gcc",
+              "yum -y install epel-release",
+              "yum -y install python-devel",
+              "yum -y install python-pip",
+              "yum -y install mesa-libGL",
+              "[concat('curl --location ', parameters('renderClient').requirementsUrl, ' --output requirements.txt')]",
+              "pip install --upgrade pip",
+              "pip install --requirement requirements.txt --ignore-installed",
+              "[concat('useradd --system --create-home ', replace(replace(parameters('renderClient').rootDirectory, 'home', ''), '/', ''))]",
+              "[concat('cd ', parameters('renderClient').rootDirectory)]",
+              "[concat('curl --location ', parameters('renderClient').pyCueUrl, ' --output opencue-pycue.tar.gz')]",
+              "[concat('curl --location ', parameters('renderClient').pyOutlineUrl, ' --output opencue-pyoutline.tar.gz')]",
+              "[concat('curl --location ', parameters('renderClient').cueSubmitUrl, ' --output opencue-cuesubmit.tar.gz')]",
+              "[concat('curl --location ', parameters('renderClient').cueAdminUrl, ' --output opencue-cueadmin.tar.gz')]",
+              "[concat('curl --location ', parameters('renderClient').cueGuiUrl, ' --output opencue-cuegui.tar.gz')]",
+              "[concat('tar -xzf opencue-pycue.tar.gz')]",
+              "[concat('tar -xzf opencue-pyoutline.tar.gz')]",
+              "[concat('tar -xzf opencue-cuesubmit.tar.gz')]",
+              "[concat('tar -xzf opencue-cueadmin.tar.gz')]",
+              "[concat('tar -xzf opencue-cuegui.tar.gz')]",
+              "cd pycue*",
+              "python setup.py install",
+              "cd ../pyoutline*",
+              "python setup.py install",
+              "cd ../cuesubmit*",
+              "python setup.py install",
+              "cd ../cueadmin*",
+              "python setup.py install",
+              "cd ../cuegui*",
+              "python setup.py install"
+            ]
+          }
+        ],
+        "distribute": [
+          {
+            "type": "SharedImage",
+            "runOutputName": "SharedImage",
+            "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageDefinition').name)]",
+            "replicationRegions": [
+              "[resourceGroup().location]"
+            ],
+            "artifactTags": {
+              "imageTemplate": "[parameters('imageBuilder').templateName]"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "imageTemplateName": {
+      "type": "string",
+      "value": "[parameters('imageBuilder').templateName]"
+    }
+  }
+}

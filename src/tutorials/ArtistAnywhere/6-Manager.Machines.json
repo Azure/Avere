@@ -61,6 +61,51 @@
   },
   "resources": [
     {
+      "condition": "[parameters('renderManagers')[copyIndex()].publicAddress]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('renderManagers')[copyIndex()].name]",
+      "sku": {
+        "name": "Standard"
+      },      
+      "properties": {
+        "publicIPAllocationMethod": "Static"
+      },
+      "copy": {
+        "name": "renderManagers",
+        "count": "[length(parameters('renderManagers'))]"
+      }
+    },
+    {
+      "condition": "[parameters('renderManagers')[copyIndex()].publicAddress]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('renderManagers')[copyIndex()].name]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "AllowSSH",
+            "properties": {
+              "priority": 100,
+              "access": "Allow",
+              "protocol": "TCP",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "22"
+            }
+          }
+        ]
+      },
+      "copy": {
+        "name": "renderManagers",
+        "count": "[length(parameters('renderManagers'))]"
+      }
+    },
+    {
       "type": "Microsoft.Compute/availabilitySets",
       "apiVersion": "[variables('virtualMachineApiVersion')]",
       "location": "[resourceGroup().location]",
@@ -134,7 +179,9 @@
       "location": "[resourceGroup().location]",
       "name": "[parameters('renderManagers')[copyIndex()].name]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName'))]"
+        "[resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('renderManagers')[copyIndex()].name)]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('renderManagers')[copyIndex()].name)]"
       ],
       "properties": {
         "primary": true,
@@ -151,10 +198,12 @@
                 {
                   "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), variables('loadBalancerNameBackend'))]"
                 }
-              ]
+              ],
+              "publicIpAddress": "[if(parameters('renderManagers')[copyIndex()].publicAddress, json(concat('{\"id\": \"', resourceId('Microsoft.Network/publicIPAddresses', parameters('renderManagers')[copyIndex()].name), '\"}')), json('null'))]"
             }
           }
-        ]
+        ],
+        "networkSecurityGroup": "[if(parameters('renderManagers')[copyIndex()].publicAddress, json(concat('{\"id\": \"', resourceId('Microsoft.Network/networkSecurityGroups', parameters('renderManagers')[copyIndex()].name), '\"}')), json('null'))]"
       },
       "copy": {
         "name": "renderManagers",

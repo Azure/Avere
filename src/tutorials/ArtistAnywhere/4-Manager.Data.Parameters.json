@@ -5,7 +5,7 @@
     "renderManager": {
       "value": {
         "dataServerName": "Render-Manager",
-        "dataServerType": "MO_Gen5_4",
+        "dataServerType": "MO_Gen5_8",
         "dataServerSqlVersion": 11,
         "dataServerStorageMB": 5120,
         "dataServerStorageAutoGrow": "Enabled",

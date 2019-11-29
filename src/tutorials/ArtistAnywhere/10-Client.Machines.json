@@ -1,0 +1,201 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "renderClients": {
+      "type": "array",
+      "metadata": {
+        "description": "The render farm clients configuration."
+      }
+    },
+    "renderManager": {
+      "type": "string",
+      "metadata": {
+        "description": "The render farm manager endpoint."
+      }
+    },
+    "imageVersionId": {
+      "type": "string",
+      "metadata": {
+        "description": "The render farm client image version identifier."
+      }
+    },
+    "machineExtensionScript": {
+      "type": "string",
+      "metadata": {
+        "description": "The render farm client extension script (compressed and encoded)."
+      }
+    },
+    "virtualNetworkResourceGroupName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the virtual network resource group."
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the virtual network resource."
+      }
+    },
+    "virtualNetworkSubnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the virtual network subnet."
+      }
+    }
+  },
+  "variables": {
+    "virtualMachineApiVersion": "2019-07-01",
+    "virtualNetworkApiVersion": "2019-09-01"
+  },
+  "resources": [
+    {
+      "condition": "[parameters('renderClients')[copyIndex()].publicAddress]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('renderClients')[copyIndex()].name]",
+      "sku": {
+        "name": "Standard"
+      },      
+      "properties": {
+        "publicIPAllocationMethod": "Static"
+      },
+      "copy": {
+        "name": "renderClients",
+        "count": "[length(parameters('renderClients'))]"
+      }
+    },
+    {
+      "condition": "[parameters('renderClients')[copyIndex()].publicAddress]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('renderClients')[copyIndex()].name]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "AllowSSH",
+            "properties": {
+              "priority": 100,
+              "access": "Allow",
+              "protocol": "TCP",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "22"
+            }
+          }
+        ]
+      },
+      "copy": {
+        "name": "renderClients",
+        "count": "[length(parameters('renderClients'))]"
+      }
+    },    
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('renderClients')[copyIndex()].name]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('renderClients')[copyIndex()].name)]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('renderClients')[copyIndex()].name)]"
+      ],
+      "properties": {
+        "primary": true,
+        "enableAcceleratedNetworking": "[parameters('renderClients')[copyIndex()].acceleratedNetworking]",
+        "ipConfigurations": [
+          {
+            "name": "ipConfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('virtualNetworkSubnetName'))]"
+              },
+              "publicIpAddress": "[if(parameters('renderClients')[copyIndex()].publicAddress, json(concat('{\"id\": \"', resourceId('Microsoft.Network/publicIPAddresses', parameters('renderClients')[copyIndex()].name), '\"}')), json('null'))]"
+            }
+          }
+        ],
+        "networkSecurityGroup": "[if(parameters('renderClients')[copyIndex()].publicAddress, json(concat('{\"id\": \"', resourceId('Microsoft.Network/networkSecurityGroups', parameters('renderClients')[copyIndex()].name), '\"}')), json('null'))]"
+      },
+      "copy": {
+        "name": "renderClients",
+        "count": "[length(parameters('renderClients'))]"
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "[variables('virtualMachineApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('renderClients')[copyIndex()].name]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', parameters('renderClients')[copyIndex()].name)]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('renderClients')[copyIndex()].machineSize]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('renderClients')[copyIndex()].name)]"
+            }
+          ]
+        },
+        "storageProfile": {
+          "imageReference": {
+            "id": "[parameters('imageVersionId')]"
+          },
+          "osDisk": {
+            "caching": "ReadOnly",
+            "createOption": "FromImage"
+          }
+        },
+        "osProfile": {
+          "computerName": "[parameters('renderClients')[copyIndex()].name]",
+          "adminUsername": "[parameters('renderClients')[copyIndex()].adminUsername]",
+          "adminPassword": "[parameters('renderClients')[copyIndex()].adminPassword]",
+          "linuxConfiguration": {
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[concat('/home/', parameters('renderClients')[copyIndex()].adminUsername, '/.ssh/authorized_keys')]",
+                  "keyData": "[parameters('renderClients')[copyIndex()].sshKeyData]"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "copy": {
+        "name": "renderClients",
+        "count": "[length(parameters('renderClients'))]"
+      },
+      "resources": [
+        {
+          "type": "extensions",
+          "apiVersion": "[variables('virtualMachineApiVersion')]",
+          "location": "[resourceGroup().location]",
+          "name": "[parameters('renderClients')[copyIndex()].name]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', parameters('renderClients')[copyIndex()].name)]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.Azure.Extensions",
+            "autoUpgradeMinorVersion": true,
+            "typeHandlerVersion": "2.0",
+            "type": "CustomScript",
+            "protectedSettings": {
+              "commandToExecute": "[concat('echo ', parameters('machineExtensionScript'), ' | base64 --decode | gunzip | sed \"s|\r$||\" | RENDER_MANAGER=\"', parameters('renderManager'), '\" /bin/bash')]"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {
+  }
+}

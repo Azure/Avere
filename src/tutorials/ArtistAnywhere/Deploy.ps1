@@ -19,7 +19,10 @@ param (
 	[boolean] $storageDeployNetApp = $false,
 
 	# Set to true to deploy Azure Blob Storage (http://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview)
-	[boolean] $storageDeployBlob = $false
+	[boolean] $storageDeployBlob = $false,
+
+	# Set to true to deploy Azure Virtual Machines with a render farm manager client app for render job submission
+	[boolean] $clientDeploy = $false
 )
 
 $templateRootDirectory = $PSScriptRoot
@@ -153,3 +156,78 @@ $templateParameters = ($templateParameters | ConvertTo-Json -Compress -Depth 3).
 $groupDeployment = (az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 if (!$groupDeployment) { return }
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (8 - Worker Machines Deployment End)")
+
+if ($clientDeploy) {
+
+	# 9 - Client Image Template
+	$resourceGroupName = "$resourceGroupNamePrefix-Gallery"
+	$imageTemplateName = "RenderClient"
+	$imageTemplate = (az resource list --resource-group $resourceGroupName --resource-type $imageTemplateResourceType --name $imageTemplateName) | ConvertFrom-Json
+	if ($imageTemplate.length -eq 0) {
+		Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (9 - Client Image Template Deployment Start)")
+		$resourceGroup = az group create --resource-group $resourceGroupName --location $regionLocationCompute
+		if (!$resourceGroup) { return }
+
+		$roleAssignment = az role assignment create --resource-group $resourceGroupName --role Contributor --assignee $imageBuilderServiceId
+		if (!$roleAssignment) { return }
+
+		$templateResources = "$templateRootDirectory\9-Client.Image.json"
+		$templateParameters = (Get-Content "$templateRootDirectory\9-Client.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
+
+		$templateParameters.renderClient.value | Add-Member -MemberType NoteProperty -Name "rootDirectory" -Value $serviceRootDirectory
+		$templateParameter = New-Object PSObject
+		$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $imageGalleryName
+		$templateParameters | Add-Member -MemberType NoteProperty -Name "imageGalleryName" -Value $templateParameter
+		$templateParameter = New-Object PSObject
+		$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $imageDefinition
+		$templateParameters | Add-Member -MemberType NoteProperty -Name "imageDefinition" -Value $templateParameter
+		$templateParameters = ($templateParameters | ConvertTo-Json -Compress).Replace('"', '\"')
+		$groupDeployment = (az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
+		if (!$groupDeployment) { return }
+
+		$imageTemplateName = $groupDeployment.properties.outputs.imageTemplateName.value
+		Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (9 - Client Image Template Deployment End)")
+	}
+
+	# 9.1 - Client Image Version
+	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (9.1 - Client Image Version Build Start)")
+	$resourceGroupName = "$resourceGroupNamePrefix-Gallery"
+	$imageVersion = Get-ImageVersion $resourceGroupName $imageGalleryName $imageDefinition.name $imageTemplateName
+	if (!$imageVersion) {
+		$imageVersion = (az resource invoke-action --resource-group $resourceGroupName --resource-type $imageTemplateResourceType --name $imageTemplateName --action Run) | ConvertFrom-Json
+		if (!$imageVersion) { return }
+		$imageVersion = Get-ImageVersion $resourceGroupName $imageGalleryName $imageDefinition.name $imageTemplateName
+	}
+	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (9.1 - Client Image Version Build End)")
+
+	# 10 - Client Machines
+	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (10 - Client Machines Deployment Start)")
+	$resourceGroupName = "$resourceGroupNamePrefix-Client"
+	$resourceGroup = az group create --resource-group $resourceGroupName --location $regionLocationCompute
+	if (!$resourceGroup) { return }
+
+	$templateResources = "$templateRootDirectory\10-Client.Machines.json"
+	$templateParameters = (Get-Content "$templateRootDirectory\10-Client.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
+	$machineExtensionScript = Get-MachineExtensionScript "10-Client.Machines.sh"
+
+	$templateParameter = New-Object PSObject
+	$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $renderManager
+	$templateParameters | Add-Member -MemberType NoteProperty -Name "renderManager" -Value $templateParameter
+	$templateParameter = New-Object PSObject
+	$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $imageVersion.id
+	$templateParameters | Add-Member -MemberType NoteProperty -Name "imageVersionId" -Value $templateParameter
+	$templateParameter = New-Object PSObject
+	$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $machineExtensionScript
+	$templateParameters | Add-Member -MemberType NoteProperty -Name "machineExtensionScript" -Value $templateParameter
+	$templateParameter = New-Object PSObject
+	$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $computeNetworkResourceGroupName
+	$templateParameters | Add-Member -MemberType NoteProperty -Name "virtualNetworkResourceGroupName" -Value $templateParameter
+	$templateParameter = New-Object PSObject
+	$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $computeNetworkName
+	$templateParameters | Add-Member -MemberType NoteProperty -Name "virtualNetworkName" -Value $templateParameter
+	$templateParameters = ($templateParameters | ConvertTo-Json -Compress -Depth 3).Replace('"', '\"')
+	$groupDeployment = (az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
+	if (!$groupDeployment) { return }
+	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (10 - Client Machines Deployment End)")
+
+}
