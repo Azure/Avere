@@ -73,9 +73,9 @@
             "name": "Blender",
             "type": "Shell",
             "inline": [
-              "yum -y install libXi",
-              "yum -y install libXrender",
               "yum -y install mesa-libGL",
+              "yum -y install libXrender",
+              "yum -y install libXi",
               "[concat('cd ', parameters('renderWorker').rootDirectory)]",
               "[concat('curl --location ', parameters('renderWorker').blenderUrl, ' --output blender.jar.bz2')]",
               "[concat('tar -xjf blender.jar.bz2')]"

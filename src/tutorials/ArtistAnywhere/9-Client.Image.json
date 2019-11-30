@@ -54,7 +54,6 @@
               "yum -y install epel-release",
               "yum -y install python-devel",
               "yum -y install python-pip",
-              "yum -y install mesa-libGL",
               "[concat('curl --location ', parameters('renderClient').requirementsUrl, ' --output requirements.txt')]",
               "pip install --upgrade pip",
               "pip install --requirement requirements.txt --ignore-installed",
@@ -80,6 +79,21 @@
               "python setup.py install",
               "cd ../cuegui*",
               "python setup.py install"
+            ]
+          },
+          {
+            "name": "X11",
+            "type": "Shell",
+            "inline": [
+              "yum -y install xorg-x11-server-Xorg",
+              "yum -y install xorg-x11-xauth",
+              "yum -y install mesa-libGL",
+              "yum -y install qt5-qtbase-devel",
+              "yum -y install libXrender",
+              "cd /etc/ssh",
+              "sed --in-place 's/#X11Forwarding yes/X11Forwarding yes/' sshd_config",
+              "sed --in-place 's/#X11DisplayOffset 10/X11DisplayOffset 10/' sshd_config",
+              "sed --in-place 's/#X11UseLocalhost yes/X11UseLocalhost yes/' sshd_config"
             ]
           }
         ],
