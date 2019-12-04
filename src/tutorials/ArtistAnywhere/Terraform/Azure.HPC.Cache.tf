@@ -90,7 +90,7 @@ resource "azurerm_template_deployment" "storage_cache" {
         }
       },
       {
-        "condition": "[and(variables('storageTargets'), greater(parameters('storageTargets')[copyIndex()].junctions.length, 0))]",
+        "condition": "[and(variables('storageTargets'), greater(length(parameters('storageTargets')[copyIndex()].junctions), 0))]",
         "type": "Microsoft.StorageCache/caches/storageTargets",
         "apiVersion": "[variables('cacheApiVersion')]",
         "location": "[resourceGroup().location]",
