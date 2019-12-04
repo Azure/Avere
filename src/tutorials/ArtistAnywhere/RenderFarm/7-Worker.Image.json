@@ -1,11 +1,11 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
-  "parameters": {
-    "renderClient": {
+  "parameters": {  
+    "renderWorker": {
       "type": "object",
       "metadata": {
-        "description": "The render farm client configuration."
+        "description": "The render farm worker configuration."
       }
     },
     "imageGalleryName": {
@@ -54,53 +54,37 @@
               "yum -y install epel-release",
               "yum -y install python-devel",
               "yum -y install python-pip",
-              "[concat('curl --location ', parameters('renderClient').requirementsUrl, ' --output requirements.txt')]",
+              "[concat('curl --location ', parameters('renderWorker').requirementsUrl, ' --output requirements.txt')]",
               "pip install --upgrade pip",
               "pip install --requirement requirements.txt --ignore-installed",
-              "[concat('useradd --system --create-home ', replace(replace(parameters('renderClient').rootDirectory, 'home', ''), '/', ''))]",
-              "[concat('cd ', parameters('renderClient').rootDirectory)]",
-              "[concat('curl --location ', parameters('renderClient').rqdSoftwareUrl, ' --output opencue-rqd.jar.gz')]",
-              "[concat('curl --location ', parameters('renderClient').rqdServiceUrl, ' --output opencue-rqd.service')]",
-              "[concat('curl --location ', parameters('renderClient').pyCueUrl, ' --output opencue-pycue.tar.gz')]",
-              "[concat('curl --location ', parameters('renderClient').pyOutlineUrl, ' --output opencue-pyoutline.tar.gz')]",
-              "[concat('curl --location ', parameters('renderClient').cueSubmitUrl, ' --output opencue-cuesubmit.tar.gz')]",
-              "[concat('curl --location ', parameters('renderClient').cueAdminUrl, ' --output opencue-cueadmin.tar.gz')]",
-              "[concat('curl --location ', parameters('renderClient').cueGuiUrl, ' --output opencue-cuegui.tar.gz')]",
+              "[concat('useradd --system --create-home ', replace(replace(parameters('renderWorker').rootDirectory, 'home', ''), '/', ''))]",
+              "[concat('cd ', parameters('renderWorker').rootDirectory)]",
+              "[concat('curl --location ', parameters('renderWorker').softwareUrl, ' --output opencue-rqd.jar.gz')]",
+              "[concat('curl --location ', parameters('renderWorker').serviceUrl, ' --output opencue-rqd.service')]",
               "[concat('tar -xzf opencue-rqd.jar.gz')]",
-              "[concat('tar -xzf opencue-pycue.tar.gz')]",
-              "[concat('tar -xzf opencue-pyoutline.tar.gz')]",
-              "[concat('tar -xzf opencue-cuesubmit.tar.gz')]",
-              "[concat('tar -xzf opencue-cueadmin.tar.gz')]",
-              "[concat('tar -xzf opencue-cuegui.tar.gz')]",
               "cd rqd*",
-              "python setup.py install",
-              "cd ../pycue*",
-              "python setup.py install",
-              "cd ../pyoutline*",
-              "python setup.py install",
-              "cd ../cuesubmit*",
-              "python setup.py install",
-              "cd ../cueadmin*",
-              "python setup.py install",
-              "cd ../cuegui*",
               "python setup.py install"
             ]
           },
           {
-            "name": "X11",
+            "name": "Storage",
             "type": "Shell",
             "inline": [
-              "yum -y install xorg-x11-server-Xorg",
-              "yum -y install xorg-x11-xauth",
-              "yum -y install qt5-qtbase",
+              "yum -y install nfs-utils",
+              "yum -y install autofs"
+            ]
+          },
+          {
+            "name": "Render",
+            "type": "Shell",
+            "inline": [
+              "yum -y install libXi",
               "yum -y install libXrender",
               "yum -y install mesa-libGL",
-              "yum -y install mesa-dri-drivers",
-              "cd /etc/ssh",
-              "sed --in-place 's/#X11Forwarding yes/X11Forwarding yes/' sshd_config",
-              "sed --in-place 's/#X11DisplayOffset 10/X11DisplayOffset 10/' sshd_config",
-              "sed --in-place 's/#X11UseLocalhost yes/X11UseLocalhost yes/' sshd_config"
-              ]
+              "[concat('cd ', parameters('renderWorker').rootDirectory)]",
+              "[concat('curl --location ', parameters('renderWorker').blenderUrl, ' --output blender.jar.bz2')]",
+              "[concat('tar -xjf blender.jar.bz2')]"
+            ]
           }
         ],
         "distribute": [

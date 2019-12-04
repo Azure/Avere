@@ -1,0 +1,69 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageAccountName": {
+      "value": "ArtistAnywhere"
+    },
+    "storageAccountType": {
+      "value": "StorageV2"
+    },
+    "storageAccountReplication": {
+      "value": "Standard_LRS"
+    },
+    "storageAccessTier": {
+      "value": "Hot"
+    },
+    "storageContainers": {
+      "value": [
+        {
+          "name": "Scenes"
+        },
+        {
+          "name": "Frames"
+        }
+      ]
+    },
+    "storageTargets": {
+      "value": [
+        {
+          "name": "Scenes",
+          "junctions": [
+            {
+              "namespacePath": "/storage/1/scenes",
+              "targetPath": ""
+            }
+          ],
+          "namespacePath": "",
+          "mountOptions": "-fstype=nfs,vers=3"
+        },
+        {
+          "name": "Frames",
+          "junctions": [
+          ],
+          "namespacePath": "/storage/1/frames",
+          "mountOptions": "-fstype=nfs,vers=3"
+        }
+      ]
+    },
+    "virtualNetworkName": {
+      "value": "Storage1"
+    },
+    "virtualNetworkAddressSpace": {
+      "value": ""
+    },
+    "virtualNetworkSubnets": {
+      "value": [
+        {
+          "name": "Default",
+          "addressSpace": "10.0.65.0/25",
+          "serviceEndpoints": [
+            {
+              "service": "Microsoft.Storage"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

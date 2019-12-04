@@ -17,12 +17,12 @@ cd /etc
 sed --in-place "/auto.misc/i /-\t/etc/auto.render" auto.master
 
 cp auto.misc auto.render
-IFS='|' read -a cacheMounts <<< "$CACHE_MOUNTS"
-for cacheMount in "${cacheMounts[@]}"
+IFS='|' read -a storageMounts <<< "$STORAGE_MOUNTS"
+for storageMount in "${storageMounts[@]}"
 do
-	autoMount="$(sed 's|;|\t|g' <<< $cacheMount)"
+	autoMount="$(sed 's|;|\t|g' <<< $storageMount)"
 	sed --in-place "/fstype=iso9660/i $autoMount" auto.render
-	mountPath="$(cut --delimiter ';' --fields 1 <<< $cacheMount)"
+	mountPath="$(cut --delimiter ';' --fields 1 <<< $storageMount)"
 	mkdir --parents $mountPath
 done
 

@@ -1,0 +1,77 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "netAppAccountName": {
+      "value": "ArtistAnywhere"
+    },
+    "capacityPoolName": {
+      "value": "Media"
+    },
+    "capacityPoolTier": {
+      "value": "Standard"
+    },
+    "capacityPoolSize": {
+      "value": 4
+    },
+    "storageVolumes": {
+      "value": [
+        {
+          "name": "Scenes",
+          "size": 2048
+        },
+        {
+          "name": "Frames",
+          "size": 2048
+        }
+      ]
+    },
+    "storageTargets": {
+      "value": [
+        {
+          "name": "Scenes",
+          "junctions": [
+            {
+              "namespacePath": "/storage/0/scenes",
+              "nfsExport": "/scenes",
+              "targetPath": ""
+            }
+          ],
+          "namespacePath": "",
+          "mountOptions": "-fstype=nfs,vers=3",
+          "usageModel": "WRITE_AROUND"
+        },
+        {
+          "name": "Frames",
+          "junctions": [
+          ],
+          "namespacePath": "/storage/1/scenes",
+          "mountOptions": "-fstype=nfs,vers=3",
+          "usageModel": ""
+        }
+      ]
+    },
+    "virtualNetworkName": {
+      "value": "Storage0"
+    },
+    "virtualNetworkAddressSpace": {
+      "value": "10.0.64.0/24"
+    },
+    "virtualNetworkSubnets": {
+      "value": [
+        {
+          "name": "Default",
+          "addressSpace": "10.0.64.0/25",
+          "delegations": [
+            {
+              "name": "netAppVolumes",
+              "properties": {
+                "serviceName": "Microsoft.NetApp/volumes"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -67,7 +67,7 @@ Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (1 - Gallery Deploymen
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (* - Background Jobs Start)")
 $imageDefinition = Get-ImageDefinition "Render" $imageDefinitions
 $storageCacheJob = Start-Job -FilePath "$templateRootDirectory\Deploy.StorageCache.ps1" -ArgumentList $resourceGroupNamePrefix, $regionLocationCompute, $regionLocationStorage, $storageDeployNetApp, $storageDeployBlob, $computeNetworkResourceGroupName, $computeNetworkName, $privateDomainName
-$renderManagersJob = Start-Job -FilePath "$templateRootDirectory\Deploy.RenderManagers.ps1" -ArgumentList $resourceGroupNamePrefix, $regionLocationCompute, $serviceRootDirectory, $imageGalleryResourceGroupName, $imageGalleryName, $imageDefinition, $computeNetworkResourceGroupName, $computeNetworkName
+$renderFarmJob = Start-Job -FilePath "$templateRootDirectory\Deploy.RenderFarm.ps1" -ArgumentList $resourceGroupNamePrefix, $regionLocationCompute, $serviceRootDirectory, $imageGalleryResourceGroupName, $imageGalleryName, $imageDefinition, $computeNetworkResourceGroupName, $computeNetworkName
 
 # 7 - Worker Image Template
 $resourceGroupName = "$resourceGroupNamePrefix-Gallery"
@@ -111,12 +111,12 @@ if (!$imageVersion) {
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (7.1 - Worker Image Version Build End)")
 
 # * - Background Jobs End
-$cacheMounts = ""
+$storageMounts = ""
 $jobOutput = Receive-Job -InstanceId $storageCacheJob.InstanceId -Wait
 if ($jobOutput) {
-	$cacheMounts = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($jobOutput.ToString()))
+	$storageMounts = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($jobOutput.ToString()))
 }
-$jobOutput = Receive-Job -InstanceId $renderManagersJob.InstanceId -Wait
+$jobOutput = Receive-Job -InstanceId $renderFarmJob.InstanceId -Wait
 if (!$jobOutput) { return }
 $renderManager = $jobOutput.ToString()
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (* - Background Jobs End)")
@@ -135,8 +135,8 @@ $templateParameter = New-Object PSObject
 $templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $serviceRootDirectory
 $templateParameters | Add-Member -MemberType NoteProperty -Name "rootDirectory" -Value $templateParameter
 $templateParameter = New-Object PSObject
-$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $cacheMounts
-$templateParameters | Add-Member -MemberType NoteProperty -Name "cacheMounts" -Value $templateParameter
+$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $storageMounts
+$templateParameters | Add-Member -MemberType NoteProperty -Name "storageMounts" -Value $templateParameter
 $templateParameter = New-Object PSObject
 $templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $renderManager
 $templateParameters | Add-Member -MemberType NoteProperty -Name "renderManager" -Value $templateParameter
@@ -207,14 +207,14 @@ if ($clientDeploy) {
 
 	$templateResources = "$templateRootDirectory\10-Client.Machines.json"
 	$templateParameters = (Get-Content "$templateRootDirectory\10-Client.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
-	$machineExtensionScript = Get-MachineExtensionScript "10-Client.Machines.sh"
+	$machineExtensionScript = Get-MachineExtensionScript "8-Worker.Machines.sh"
 
 	$templateParameter = New-Object PSObject
 	$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $serviceRootDirectory
 	$templateParameters | Add-Member -MemberType NoteProperty -Name "rootDirectory" -Value $templateParameter
 	$templateParameter = New-Object PSObject
-	$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $cacheMounts
-	$templateParameters | Add-Member -MemberType NoteProperty -Name "cacheMounts" -Value $templateParameter
+	$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $storageMounts
+	$templateParameters | Add-Member -MemberType NoteProperty -Name "storageMounts" -Value $templateParameter
 	$templateParameter = New-Object PSObject
 	$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $renderManager
 	$templateParameters | Add-Member -MemberType NoteProperty -Name "renderManager" -Value $templateParameter

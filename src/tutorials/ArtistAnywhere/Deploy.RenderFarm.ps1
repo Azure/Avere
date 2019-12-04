@@ -36,6 +36,7 @@ $imageBuilderServiceId = $using:imageBuilderServiceId
 $imageTemplateResourceType = $using:imageTemplateResourceType
 
 Import-Module "$templateRootDirectory\Deploy.psm1"
+$templateRootDirectory = $templateRootDirectory + "\RenderFarm"
 
 # 4 - Manager Data
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (4 - Manager Data Deployment Start)")

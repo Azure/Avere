@@ -6,7 +6,7 @@ resource "azurerm_resource_group" "storage_cache" {
 resource "azurerm_template_deployment" "storage_cache" {
   name                = "Azure-HPC-Cache"
   resource_group_name = "${azurerm_resource_group.storage_cache.name}"
-  parameters_body     = "${file("./azure-hpc-cache.parameters.json")}"
+  parameters_body     = "${file("./Azure.HPC.Cache.Parameters.json")}"
   deployment_mode     = "Incremental"
 
   template_body = <<DEPLOY
@@ -90,7 +90,7 @@ resource "azurerm_template_deployment" "storage_cache" {
         }
       },
       {
-        "condition": "[variables('storageTargets')]",
+        "condition": "[and(variables('storageTargets'), greater(parameters('storageTargets')[copyIndex()].junctions.length, 0))]",
         "type": "Microsoft.StorageCache/caches/storageTargets",
         "apiVersion": "[variables('cacheApiVersion')]",
         "location": "[resourceGroup().location]",

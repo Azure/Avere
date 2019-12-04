@@ -20,10 +20,10 @@
         "description": "The render farm worker root directory."
       }
     },
-    "cacheMounts": {
+    "storageMounts": {
       "type": "string",
       "metadata": {
-        "description": "The render farm workers storage cache mounts."
+        "description": "The render farm workers storage mounts."
       }
     },
     "imageVersionId": {
@@ -180,7 +180,7 @@
                   "typeHandlerVersion": "2.0",
                   "type": "CustomScript",
                   "protectedSettings": {
-                    "commandToExecute": "[concat('echo ', parameters('machineExtensionScript'), ' | base64 --decode | gunzip | sed \"s|\r$||\" | ROOT_DIRECTORY=\"', parameters('rootDirectory'), '\" RENDER_MANAGER=\"', parameters('renderManager'), '\" CACHE_MOUNTS=\"', base64ToString(parameters('cacheMounts')), '\" /bin/bash')]"
+                    "commandToExecute": "[concat('echo ', parameters('machineExtensionScript'), ' | base64 --decode | gunzip | sed \"s|\r$||\" | ROOT_DIRECTORY=\"', parameters('rootDirectory'), '\" RENDER_MANAGER=\"', parameters('renderManager'), '\" STORAGE_MOUNTS=\"', base64ToString(parameters('storageMounts')), '\" /bin/bash')]"
                   }
                 }
               }

@@ -53,6 +53,8 @@ if (!$computeNetworkResourceGroupName -or !$computeNetworkName) {
 	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (0 - Network Deployment End)")
 }
 
+$templateRootDirectory = $templateRootDirectory + "\StorageCache"
+
 # 2 - Storage
 $storageTargets = @()
 if ($regionLocationStorage -ne "") {
@@ -154,20 +156,26 @@ if (!$cacheDomainRecord) { return }
 $cacheMountHost = $cacheDomainRecord.fqdn
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (3.1 - Cache DNS Record Set End)")
 
-# 3.2 - Cache Mounts
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (3.2 - Cache Mounts Start)")
-$cacheMounts = ""; $outerDelimiter = "|"; $innerDelimiter = ";"
-$cacheMountOptions = ",hard,proto=tcp,mountproto=tcp,retry=30"
+# 3.2 - Storage Mounts
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (3.2 - Storage Mounts Start)")
+$storageMounts = ""; $outerDelimiter = "|"; $innerDelimiter = ";"
+$storageMountOptions = ",hard,proto=tcp,mountproto=tcp,retry=30"
 foreach ($storageTarget in $storageTargets) {
-	foreach ($storageTargetJunction in $storageTarget.junctions) {
-		if ($cacheMounts -ne "") {
-			$cacheMounts = $cacheMounts + $outerDelimiter
+	if ($storageTarget.junctions.length -eq 0) {
+		$storageMounts = $storageMounts + $storageTarget.namespacePath + $innerDelimiter
+		$storageMounts = $storageMounts + $storageTarget.mountOptions + $storageMountOptions + $innerDelimiter
+		$storageMounts = $storageMounts + $storageTarget.host + ":" + $storageTarget.namespacePath
+	} else {
+		foreach ($storageTargetJunction in $storageTarget.junctions) {
+			if ($storageMounts -ne "") {
+				$storageMounts = $storageMounts + $outerDelimiter
+			}
+			$storageMounts = $storageMounts + $storageTargetJunction.namespacePath + $innerDelimiter
+			$storageMounts = $storageMounts + $storageTarget.mountOptions + $storageMountOptions + $innerDelimiter
+			$storageMounts = $storageMounts + $cacheMountHost + ":" + $storageTargetJunction.namespacePath
 		}
-		$cacheMounts = $cacheMounts + $storageTargetJunction.namespacePath + $innerDelimiter
-		$cacheMounts = $cacheMounts + $storageTarget.mountOptions + $cacheMountOptions + $innerDelimiter
-		$cacheMounts = $cacheMounts + $cacheMountHost + ":" + $storageTargetJunction.namespacePath
 	}
 }
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (3.2 - Cache Mounts End)")
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (3.2 - Storage Mounts End)")
 
-Write-Output -InputObject $cacheMounts
+Write-Output -InputObject $storageMounts
