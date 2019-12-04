@@ -7,7 +7,7 @@
       "metadata": {
         "description": "The render farm manager endpoint."
       }
-    },    
+    },
     "renderWorkers": {
       "type": "array",
       "metadata": {
@@ -25,13 +25,13 @@
       "metadata": {
         "description": "The render farm workers storage cache mounts."
       }
-    },    
+    },
     "imageVersionId": {
       "type": "string",
       "metadata": {
         "description": "The render farm worker image version identifier."
       }
-    },    
+    },
     "machineExtensionScript": {
       "type": "string",
       "metadata": {

@@ -59,17 +59,22 @@
               "pip install --requirement requirements.txt --ignore-installed",
               "[concat('useradd --system --create-home ', replace(replace(parameters('renderClient').rootDirectory, 'home', ''), '/', ''))]",
               "[concat('cd ', parameters('renderClient').rootDirectory)]",
+              "[concat('curl --location ', parameters('renderClient').rqdSoftwareUrl, ' --output opencue-rqd.jar.gz')]",
+              "[concat('curl --location ', parameters('renderClient').rqdServiceUrl, ' --output opencue-rqd.service')]",
               "[concat('curl --location ', parameters('renderClient').pyCueUrl, ' --output opencue-pycue.tar.gz')]",
               "[concat('curl --location ', parameters('renderClient').pyOutlineUrl, ' --output opencue-pyoutline.tar.gz')]",
               "[concat('curl --location ', parameters('renderClient').cueSubmitUrl, ' --output opencue-cuesubmit.tar.gz')]",
               "[concat('curl --location ', parameters('renderClient').cueAdminUrl, ' --output opencue-cueadmin.tar.gz')]",
               "[concat('curl --location ', parameters('renderClient').cueGuiUrl, ' --output opencue-cuegui.tar.gz')]",
+              "[concat('tar -xzf opencue-rqd.jar.gz')]",
               "[concat('tar -xzf opencue-pycue.tar.gz')]",
               "[concat('tar -xzf opencue-pyoutline.tar.gz')]",
               "[concat('tar -xzf opencue-cuesubmit.tar.gz')]",
               "[concat('tar -xzf opencue-cueadmin.tar.gz')]",
               "[concat('tar -xzf opencue-cuegui.tar.gz')]",
-              "cd pycue*",
+              "cd rqd*",
+              "python setup.py install",
+              "cd ../pycue*",
               "python setup.py install",
               "cd ../pyoutline*",
               "python setup.py install",
@@ -87,14 +92,15 @@
             "inline": [
               "yum -y install xorg-x11-server-Xorg",
               "yum -y install xorg-x11-xauth",
-              "yum -y install mesa-libGL",
-              "yum -y install qt5-qtbase-devel",
+              "yum -y install qt5-qtbase",
               "yum -y install libXrender",
+              "yum -y install mesa-libGL",
+              "yum -y install mesa-dri-drivers",
               "cd /etc/ssh",
               "sed --in-place 's/#X11Forwarding yes/X11Forwarding yes/' sshd_config",
               "sed --in-place 's/#X11DisplayOffset 10/X11DisplayOffset 10/' sshd_config",
               "sed --in-place 's/#X11UseLocalhost yes/X11UseLocalhost yes/' sshd_config"
-            ]
+              ]
           }
         ],
         "distribute": [

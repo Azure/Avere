@@ -68,7 +68,7 @@
       "name": "[parameters('renderManagers')[copyIndex()].name]",
       "sku": {
         "name": "Standard"
-      },      
+      },
       "properties": {
         "publicIPAllocationMethod": "Static"
       },

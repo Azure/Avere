@@ -20,7 +20,7 @@
           "name": "Scenes",
           "junctions": [
             {
-              "namespacePath": "/storage0/scenes",
+              "namespacePath": "/storage/0/scenes",
               "nfsExport": "/scenes",
               "targetPath": ""
             }
@@ -33,7 +33,7 @@
           "name": "Tools",
           "junctions": [
             {
-              "namespacePath": "/storage0/tools",
+              "namespacePath": "/storage/0/tools",
               "nfsExport": "/tools",
               "targetPath": ""
             }

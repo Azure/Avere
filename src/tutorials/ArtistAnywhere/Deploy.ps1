@@ -158,7 +158,6 @@ if (!$groupDeployment) { return }
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (8 - Worker Machines Deployment End)")
 
 if ($clientDeploy) {
-
 	# 9 - Client Image Template
 	$resourceGroupName = "$resourceGroupNamePrefix-Gallery"
 	$imageTemplateName = "RenderClient"
@@ -211,6 +210,12 @@ if ($clientDeploy) {
 	$machineExtensionScript = Get-MachineExtensionScript "10-Client.Machines.sh"
 
 	$templateParameter = New-Object PSObject
+	$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $serviceRootDirectory
+	$templateParameters | Add-Member -MemberType NoteProperty -Name "rootDirectory" -Value $templateParameter
+	$templateParameter = New-Object PSObject
+	$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $cacheMounts
+	$templateParameters | Add-Member -MemberType NoteProperty -Name "cacheMounts" -Value $templateParameter
+	$templateParameter = New-Object PSObject
 	$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $renderManager
 	$templateParameters | Add-Member -MemberType NoteProperty -Name "renderManager" -Value $templateParameter
 	$templateParameter = New-Object PSObject
@@ -229,5 +234,4 @@ if ($clientDeploy) {
 	$groupDeployment = (az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 	if (!$groupDeployment) { return }
 	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (10 - Client Machines Deployment End)")
-
 }

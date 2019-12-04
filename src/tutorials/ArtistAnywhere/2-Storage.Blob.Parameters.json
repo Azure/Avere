@@ -20,7 +20,7 @@
           "name": "Scenes",
           "junctions": [
             {
-              "namespacePath": "/storage1/scenes",
+              "namespacePath": "/storage/1/scenes",
               "targetPath": ""
             }
           ],
@@ -30,7 +30,7 @@
           "name": "Tools",
           "junctions": [
             {
-              "namespacePath": "/storage1/tools",
+              "namespacePath": "/storage/1/tools",
               "targetPath": ""
             }
           ],

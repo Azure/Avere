@@ -60,7 +60,7 @@
         },
         "dhcpOptions": {
           "dnsServers": "[parameters('virtualNetworkDomainNameServers')]"
-        },        
+        },
         "copy": [
           {
             "name": "subnets",

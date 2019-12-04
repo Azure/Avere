@@ -7,7 +7,7 @@
         {
           "name": "renderWorkers",
           "machineSize": "Standard_D16s_v3",
-          "machineCount": 6,
+          "machineCount": 10,
           "machinePriority": "Low",
           "ephemeralDisk": true,
           "adminUsername": "sa",

@@ -51,7 +51,7 @@ resource "azurerm_template_deployment" "storage_cache" {
         "metadata": {
           "description": "The cache storage targets."
         }
-      },      
+      },
       "virtualNetworkResourceGroupName": {
         "type": "string",
         "metadata": {

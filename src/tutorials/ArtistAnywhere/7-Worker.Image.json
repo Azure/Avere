@@ -59,11 +59,8 @@
               "pip install --requirement requirements.txt --ignore-installed",
               "[concat('useradd --system --create-home ', replace(replace(parameters('renderWorker').rootDirectory, 'home', ''), '/', ''))]",
               "[concat('cd ', parameters('renderWorker').rootDirectory)]",
-              "[concat('curl --location ', parameters('renderWorker').serviceUrl, ' --output opencue-rqd.service')]",
-              "sed --in-place '/SyslogIdentifier/a RestartSec=30' opencue-rqd.service",
-              "sed --in-place '/SyslogIdentifier/a Restart=always' opencue-rqd.service",
-              "cp opencue-rqd.service /etc/systemd/system",
               "[concat('curl --location ', parameters('renderWorker').softwareUrl, ' --output opencue-rqd.jar.gz')]",
+              "[concat('curl --location ', parameters('renderWorker').serviceUrl, ' --output opencue-rqd.service')]",
               "[concat('tar -xzf opencue-rqd.jar.gz')]",
               "cd rqd*",
               "python setup.py install"
