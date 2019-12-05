@@ -69,6 +69,8 @@ $imageDefinition = Get-ImageDefinition "Render" $imageDefinitions
 $storageCacheJob = Start-Job -FilePath "$templateRootDirectory\Deploy.StorageCache.ps1" -ArgumentList $resourceGroupNamePrefix, $regionLocationCompute, $regionLocationStorage, $storageDeployNetApp, $storageDeployBlob, $computeNetworkResourceGroupName, $computeNetworkName, $privateDomainName
 $renderManagersJob = Start-Job -FilePath "$templateRootDirectory\Deploy.RenderManagers.ps1" -ArgumentList $resourceGroupNamePrefix, $regionLocationCompute, $serviceRootDirectory, $imageGalleryResourceGroupName, $imageGalleryName, $imageDefinition, $computeNetworkResourceGroupName, $computeNetworkName
 
+$templateRootDirectory = $templateRootDirectory + "\RenderWorkers"
+
 # 7 - Worker Image Template
 $resourceGroupName = "$resourceGroupNamePrefix-Gallery"
 $imageTemplateName = "RenderWorker"
@@ -156,6 +158,8 @@ $templateParameters = ($templateParameters | ConvertTo-Json -Compress -Depth 3).
 $groupDeployment = (az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 if (!$groupDeployment) { return }
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (8 - Worker Machines Deployment End)")
+
+$templateRootDirectory = $templateRootDirectory + "\RenderClients"
 
 if ($clientDeploy) {
 	# 9 - Client Image Template
