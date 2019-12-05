@@ -2,7 +2,7 @@
 
 Azure Artist Anywhere is a set of <a href="https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview" target="_blank">Azure Resource Manager (ARM)</a> templates and <a href="https://github.com/PowerShell/PowerShell/releases/latest" target="_blank">PowerShell Core</a> scripts for the automated deployment of a media rendering solution in Azure. By structuring the solution as a set of parameterized templates, it provides a lightweight framework that can be modified and extended to meet various deployment requirements.
 
-Azure Artist Anywhere consists of the following open-source software and Azure services:
+Azure Artist Anywhere is composed of the following open-source software and Azure services:
 
 <table>
     <tr>
@@ -68,5 +68,7 @@ The following diagram depicts the high-level solution architecture, including mu
 The following diagram depicts the 3 parallel processes (1 main + 2 background jobs) for efficiently deploying the solution.
 
 ![](README.ParallelDeployment.png)
+
+*Deploy.ps1* is the main orchestration script for deployment of the entire solution. The *Deploy.StorageCache.ps1* script can be executed directly for deployment of the Network, Storage and Cache service tiers only. The *Deploy.RenderManagers.ps1* script is not intended to be executed directly.
 
 For more information, contact Rick Shahid (rick.shahid@microsoft.com)
