@@ -159,8 +159,6 @@ $groupDeployment = (az group deployment create --resource-group $resourceGroupNa
 if (!$groupDeployment) { return }
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (8 - Worker Machines Deployment End)")
 
-$templateRootDirectory = $templateRootDirectory + "\RenderClients"
-
 if ($clientDeploy) {
 	# 9 - Client Image Template
 	$resourceGroupName = "$resourceGroupNamePrefix-Gallery"
