@@ -45,7 +45,7 @@
           "name": "Frames",
           "junctions": [
           ],
-          "namespacePath": "/storage/1/scenes",
+          "namespacePath": "/storage/0/frames",
           "mountOptions": "-fstype=nfs,vers=3",
           "usageModel": ""
         }

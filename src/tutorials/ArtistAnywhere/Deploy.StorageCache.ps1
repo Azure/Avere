@@ -162,6 +162,9 @@ $storageMounts = ""; $outerDelimiter = "|"; $innerDelimiter = ";"
 $storageMountOptions = ",hard,proto=tcp,mountproto=tcp,retry=30"
 foreach ($storageTarget in $storageTargets) {
 	if ($storageTarget.junctions.length -eq 0) {
+		if ($storageMounts -ne "") {
+			$storageMounts = $storageMounts + $outerDelimiter
+		}
 		$storageMounts = $storageMounts + $storageTarget.namespacePath + $innerDelimiter
 		$storageMounts = $storageMounts + $storageTarget.mountOptions + $storageMountOptions + $innerDelimiter
 		$storageMounts = $storageMounts + $storageTarget.host + ":" + $storageTarget.namespacePath
