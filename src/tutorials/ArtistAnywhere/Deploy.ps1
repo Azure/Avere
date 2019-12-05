@@ -67,7 +67,7 @@ Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (1 - Gallery Deploymen
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (* - Background Jobs Start)")
 $imageDefinition = Get-ImageDefinition "Render" $imageDefinitions
 $storageCacheJob = Start-Job -FilePath "$templateRootDirectory\Deploy.StorageCache.ps1" -ArgumentList $resourceGroupNamePrefix, $regionLocationCompute, $regionLocationStorage, $storageDeployNetApp, $storageDeployBlob, $computeNetworkResourceGroupName, $computeNetworkName, $privateDomainName
-$renderFarmJob = Start-Job -FilePath "$templateRootDirectory\Deploy.RenderFarm.ps1" -ArgumentList $resourceGroupNamePrefix, $regionLocationCompute, $serviceRootDirectory, $imageGalleryResourceGroupName, $imageGalleryName, $imageDefinition, $computeNetworkResourceGroupName, $computeNetworkName
+$renderManagersJob = Start-Job -FilePath "$templateRootDirectory\Deploy.RenderManagers.ps1" -ArgumentList $resourceGroupNamePrefix, $regionLocationCompute, $serviceRootDirectory, $imageGalleryResourceGroupName, $imageGalleryName, $imageDefinition, $computeNetworkResourceGroupName, $computeNetworkName
 
 # 7 - Worker Image Template
 $resourceGroupName = "$resourceGroupNamePrefix-Gallery"
@@ -116,7 +116,7 @@ $jobOutput = Receive-Job -InstanceId $storageCacheJob.InstanceId -Wait
 if ($jobOutput) {
 	$storageMounts = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($jobOutput.ToString()))
 }
-$jobOutput = Receive-Job -InstanceId $renderFarmJob.InstanceId -Wait
+$jobOutput = Receive-Job -InstanceId $renderManagersJob.InstanceId -Wait
 if (!$jobOutput) { return }
 $renderManager = $jobOutput.ToString()
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (* - Background Jobs End)")
