@@ -21,7 +21,7 @@ param (
 	# Set to true to deploy Azure Blob Storage (http://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview)
 	[boolean] $storageDeployBlob = $false,
 
-	# Set to true to deploy Azure Virtual Machines with a render farm manager client app for render job submission
+	# Set to true to deploy Azure Virtual Machines with OpenCue (http://www.opencue.io) render manager client apps
 	[boolean] $clientDeploy = $false
 )
 
