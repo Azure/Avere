@@ -69,9 +69,9 @@ The following diagram depicts the 3 parallel processes (1 main + 2 background jo
 
 ![](README.ParallelDeployment.png)
 
-*Deploy.ps1* is the main orchestration script for deploying the solution. The *Deploy.StorageCache.ps1* script can be executed directly for deploying the Network, Storage and Cache service tiers only. In contrast, the *Deploy.RenderManagers.ps1* script is not intended to be executed directly. *Deploy.psm1* is a shared module that is referenced by each script.
+*Deploy.ps1* is the main orchestration script for deploying the solution. The *Deploy.StorageCache.ps1* script can be executed directly for deployment of the Network, Storage and Cache service tiers only. In contrast, the *Deploy.RenderManagers.ps1* script is not intended to be executed directly. Finally, *Deploy.psm1* is a shared module that is referenced by each script.
 
-The following output from the *Deploy.ps1* orchestration script captures the start/end times for each module deployed. Note that the background job parallel processes have overlapping times as expected in relation to the main deployment process.
+The following output from the *Deploy.ps1* orchestration script captures the start / end times for each module deployed. Note that the background job processes have overlapping times as expected in relation to the main deployment process.
 
 ![](README.ParallelDeployment.Run.png)
 
