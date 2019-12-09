@@ -118,6 +118,7 @@ $jobOutput = Receive-Job -InstanceId $storageCacheJob.InstanceId -Wait
 if ($jobOutput) {
 	$storageMounts = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($jobOutput.ToString()))
 }
+if ($storageMounts -eq "") { return }
 $jobOutput = Receive-Job -InstanceId $renderManagersJob.InstanceId -Wait
 if (!$jobOutput) { return }
 $renderManager = $jobOutput.ToString()
