@@ -57,6 +57,7 @@ Azure Artist Anywhere is composed of the following open-source software and Azur
             <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/linux/shared-image-galleries" target="_blank">Azure Shared Image Gallery</a>
         </td>
         <td>
+            <a href="https://docs.microsoft.com/en-us/azure/azure-monitor/" target="_blank">Azure Monitor</a>
         </td>
     </tr>
 </table>
@@ -71,7 +72,7 @@ The following diagram depicts the 3 parallel processes (1 main + 2 background jo
 
 *Deploy.ps1* is the main orchestration script for deploying the solution. The *Deploy.StorageCache.ps1* script can be executed directly for deployment of the Network, Storage and Cache service tiers only. In contrast, the *Deploy.RenderManagers.ps1* script is *not* intended to be executed directly. Finally, *Deploy.psm1* is a shared module that is referenced by each script.
 
-The following output from the *Deploy.ps1* orchestration script captures the *start* and *end* times for each module deployed. Note that the background job processes have overlapping times as expected in relation to the main deployment process.
+The following output from the *Deploy.ps1* orchestration script captures the *start* and *end* times for each deployment step. Note that the background job processes have overlapping times as expected in relation to the main deployment process.
 
 ![](README.ParallelDeployment.Run.png)
 
