@@ -4,7 +4,7 @@
   "parameters": {
     "renderManager": {
       "value": {
-        "dataServerName": "Render-Manager",
+        "dataServerName": "RenderManagers",
         "dataServerType": "MO_Gen5_8",
         "dataServerSqlVersion": 11,
         "dataServerStorageMB": 5120,
@@ -12,7 +12,10 @@
         "dataServerBackupRetentionDays": 7,
         "databaseName": "OpenCue",
         "databaseAdminUsername": "sa",
-        "databaseAdminPassword": "P@ssword1234"
+        "databaseAdminPassword": "P@ssword1234",
+        "keyVaultName": "ArtistAnywhere",
+        "keyVaultTier": "Standard",
+        "keyVaultAdminId": "ef54b085-8b87-4b95-b2a7-cbe762e5664f"
       }
     },
     "virtualNetworkSubnetName": {

@@ -33,6 +33,12 @@
         }
       ]
     },
+    "monitorAnalytics": {
+      "value": {
+        "workspaceId": "",
+        "workspaceKey": ""
+      }
+    },
     "virtualNetworkSubnetName": {
       "value": "Manager"
     }

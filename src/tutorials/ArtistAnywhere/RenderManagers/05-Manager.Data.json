@@ -31,7 +31,9 @@
     "dataServerApiVersion": "2017-12-01",
     "dataServerName": "[toLower(parameters('renderManager').dataServerName)]",
     "dataServerHost": "[concat(variables('dataServerName'), '.postgres.database.azure.com')]",
-    "databaseAdminUsername": "[concat(parameters('renderManager').databaseAdminUsername, '@', variables('dataServerName'))]"
+    "databaseAdminUsername": "[concat(parameters('renderManager').databaseAdminUsername, '@', variables('dataServerName'))]",
+    "managedIdentityApiVersion": "2018-11-30",
+    "keyVaultApiVersion": "2019-09-01"
   },
   "resources": [
     {
@@ -75,6 +77,67 @@
       ],
       "properties": {
       }
+    },
+    {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "[variables('managedIdentityApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('renderManager').keyVaultName]",
+      "properties": {
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "[variables('keyVaultApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('renderManager').keyVaultName]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('renderManager').keyVaultName)]"
+      ],
+      "properties": {
+        "sku": {
+          "name": "[parameters('renderManager').keyVaultTier]",
+          "family": "A"
+        },
+        "tenantId": "[subscription().tenantId]",
+        "enabledForDeployment": "true",
+        "enabledForDiskEncryption": "true",
+        "enabledForTemplateDeployment": "true",
+        "accessPolicies": [
+          {
+            "tenantId": "[subscription().tenantId]",
+            "objectId": "[parameters('renderManager').keyVaultAdminId]",
+            "permissions": {
+              "keys": [
+                "All"
+              ],
+              "secrets": [
+                "All"
+              ],
+              "certificates": [
+                "All"
+              ]
+            }
+          },
+          {
+            "tenantId": "[subscription().tenantId]",
+            "objectId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('renderManager').keyVaultName), variables('managedIdentityApiVersion')).principalId]",
+            "permissions": {
+              "secrets": [
+                "Get"
+              ]
+            }
+          }
+        ],
+        "networkAcls": {
+          "defaultAction": "Deny",
+          "virtualNetworkRules": [
+            {
+              "id": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('virtualNetworkSubnetName'))]"
+            }
+          ]
+        }
+      }
     }
   ],
   "outputs": {
@@ -93,6 +156,14 @@
     "managerDatabasePassword": {
       "type": "string",
       "value": "[parameters('renderManager').databaseAdminPassword]"
+    },
+    "managedIdentityId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('renderManager').keyVaultName), variables('managedIdentityApiVersion')).principalId]"
+    },
+    "keyVaultUri": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.KeyVault/vaults', parameters('renderManager').keyVaultName), variables('keyVaultApiVersion')).vaultUri]"
     }
   }
 }

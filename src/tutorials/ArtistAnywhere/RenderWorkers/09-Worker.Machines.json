@@ -14,6 +14,12 @@
         "description": "The render farm workers configuration."
       }
     },
+    "monitorAnalytics": {
+      "type": "object",
+      "metadata": {
+        "description": "The monitor log analytics configuration."
+      }
+    },
     "rootDirectory": {
       "type": "string",
       "metadata": {
@@ -173,7 +179,34 @@
           "extensionProfile": {
             "extensions": [
               {
-                "name": "[parameters('renderWorkers')[copyIndex()].name]",
+                "name": "[concat(parameters('renderWorkers')[copyIndex()].name, 'Monitor')]",
+                "properties": {
+                  "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+                  "autoUpgradeMinorVersion": true,
+                  "typeHandlerVersion": "1.12",
+                  "type": "OmsAgentForLinux",
+                  "protectedSettings": {
+                    "workspaceKey": "[parameters('monitorAnalytics').workspaceKey]"
+                  },
+                  "settings": {
+                    "workspaceId": "[parameters('monitorAnalytics').workspaceId]"
+                  }
+                }
+              },
+              {
+                "name": "[concat(parameters('renderWorkers')[copyIndex()].name, 'Dependency')]",
+                "properties": {
+                  "publisher": "Microsoft.Azure.Monitoring.DependencyAgent",
+                  "autoUpgradeMinorVersion": true,
+                  "typeHandlerVersion": "9.9",
+                  "type": "DependencyAgentLinux",
+                  "provisionAfterExtensions": [
+                    "[concat(parameters('renderWorkers')[copyIndex()].name, 'Monitor')]"
+                  ]
+                }
+              },
+              {
+                "name": "[concat(parameters('renderWorkers')[copyIndex()].name, 'Extension')]",
                 "properties": {
                   "publisher": "Microsoft.Azure.Extensions",
                   "autoUpgradeMinorVersion": true,

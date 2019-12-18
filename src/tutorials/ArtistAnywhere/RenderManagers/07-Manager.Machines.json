@@ -8,6 +8,12 @@
         "description": "The render farm managers configuration."
       }
     },
+    "monitorAnalytics": {
+      "type": "object",
+      "metadata": {
+        "description": "The monitor log analytics configuration."
+      }
+    },    
     "rootDirectory": {
       "type": "string",
       "metadata": {
@@ -54,7 +60,7 @@
   "variables": {
     "virtualMachineApiVersion": "2019-07-01",
     "virtualNetworkApiVersion": "2019-09-01",
-    "loadBalancerName": "renderManagers",
+    "loadBalancerName": "RenderManagers",
     "loadBalancerNameBackend": "backendPool1",
     "loadBalancerNameFrontend": "frontendConfig1",
     "loadBalancerNameProbe": "lbProbe1"
@@ -268,7 +274,7 @@
           "type": "extensions",
           "apiVersion": "[variables('virtualMachineApiVersion')]",
           "location": "[resourceGroup().location]",
-          "name": "[parameters('renderManagers')[copyIndex()].name]",
+          "name": "[concat(parameters('renderManagers')[copyIndex()].name, 'Extension')]",
           "dependsOn": [
             "[resourceId('Microsoft.Compute/virtualMachines', parameters('renderManagers')[copyIndex()].name)]"
           ],

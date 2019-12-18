@@ -35,37 +35,37 @@ if (!$templateRootDirectory) {
 
 Import-Module "$templateRootDirectory\Deploy.psm1"
 
-# 0 - Network
+# 00 - Network
 if (!$computeNetworkResourceGroupName -or !$computeNetworkName) {
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (0 - Network Deployment Start)")
+	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (00 - Network Deployment Start)")
 	$resourceGroupName = "$resourceGroupNamePrefix-Network"
 	$resourceGroup = az group create --resource-group $resourceGroupName --location $regionLocationCompute
 	if (!$resourceGroup) { return }
 
-	$templateResources = "$templateRootDirectory\0-Network.json"
-	$templateParameters = "$templateRootDirectory\0-Network.Parameters.json"
+	$templateResources = "$templateRootDirectory\00-Network.json"
+	$templateParameters = "$templateRootDirectory\00-Network.Parameters.json"
 	$groupDeployment = (az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 	if (!$groupDeployment) { return }
 
 	$computeNetworkResourceGroupName = $resourceGroupName
 	$computeNetworkName = $groupDeployment.properties.outputs.virtualNetworkName.value
 	$privateDomainName = $groupDeployment.properties.outputs.virtualNetworkPrivateDomainName.value
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (0 - Network Deployment End)")
+	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (00 - Network Deployment End)")
 }
 
 $templateRootDirectory = $templateRootDirectory + "\StorageCache"
 
-# 2 - Storage
+# 03.0 - Storage
 $storageTargets = @()
 if ($regionLocationStorage -ne "") {
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (2 - Storage Deployment Start)")
+	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (03.0 - Storage Deployment Start)")
 	$resourceGroupName = "$resourceGroupNamePrefix-Storage"
 	$resourceGroup = az group create --resource-group $resourceGroupName --location $regionLocationStorage
 	if (!$resourceGroup) { return }
 
 	if ($storageDeployBlob) {
-		$templateResources = "$templateRootDirectory\2-Storage.Blob.json"
-		$templateParameters = "$templateRootDirectory\2-Storage.Blob.Parameters.json"
+		$templateResources = "$templateRootDirectory\03-Storage.Blob.json"
+		$templateParameters = "$templateRootDirectory\03-Storage.Blob.Parameters.json"
 
 		$groupDeployment = (az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 		if (!$groupDeployment) { return }
@@ -81,8 +81,8 @@ if ($regionLocationStorage -ne "") {
 	}
 
 	if ($storageDeployNetApp) {
-		$templateResources = "$templateRootDirectory\2-Storage.NetApp.json"
-		$templateParameters = "$templateRootDirectory\2-Storage.NetApp.Parameters.json"
+		$templateResources = "$templateRootDirectory\03-Storage.NetApp.json"
+		$templateParameters = "$templateRootDirectory\03-Storage.NetApp.Parameters.json"
 
 		$groupDeployment = (az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 		if (!$groupDeployment) { return }
@@ -113,17 +113,17 @@ if ($regionLocationStorage -ne "") {
 			if (!$networkPeering) { return }
 		}
 	}
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (2 - Storage Deployment End)")
+	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (03.0 - Storage Deployment End)")
 }
 
-# 3 - Cache
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (3 - Cache Deployment Start)")
+# 04.0 - Cache
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (04.0 - Cache Deployment Start)")
 $resourceGroupName = "$resourceGroupNamePrefix-Cache"
 $resourceGroup = az group create --resource-group $resourceGroupName --location $regionLocationCompute
 if (!$resourceGroup) { return }
 
-$templateResources = "$templateRootDirectory\3-Cache.json"
-$templateParameters = (Get-Content "$templateRootDirectory\3-Cache.Parameters.json" -Raw | ConvertFrom-Json).parameters
+$templateResources = "$templateRootDirectory\04-Cache.json"
+$templateParameters = (Get-Content "$templateRootDirectory\04-Cache.Parameters.json" -Raw | ConvertFrom-Json).parameters
 if ($templateParameters.storageTargets.value.length -gt 0 -and $templateParameters.storageTargets.value[0].name -ne "") {
 	$templateParameters.storageTargets.value = $templateParameters.storageTargets.value + $storageTargets
 } else {
@@ -141,10 +141,10 @@ if (!$groupDeployment) { return }
 
 $cacheSubnetName = $groupDeployment.properties.outputs.cacheSubnetName.value
 $cacheMountAddresses = $groupDeployment.properties.outputs.cacheMountAddresses.value
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (3 - Cache Deployment End)")
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (04.0 - Cache Deployment End)")
 
-# 3.1 - Cache DNS
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (3.1 - Cache DNS Record Set Start)")
+# 04.1 - Cache DNS
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (04.1 - Cache DNS Record Set Start)")
 $cacheSubdomainName = $cacheSubnetName.ToLower()
 az network private-dns record-set a delete --resource-group $computeNetworkResourceGroupName --zone-name $privateDomainName --name $cacheSubdomainName --yes
 foreach ($cacheMountAddress in $cacheMountAddresses) {
@@ -154,10 +154,10 @@ foreach ($cacheMountAddress in $cacheMountAddresses) {
 $cacheDomainRecord = (az network private-dns record-set a show --resource-group $computeNetworkResourceGroupName --zone-name $privateDomainName --name $cacheSubdomainName) | ConvertFrom-Json
 if (!$cacheDomainRecord) { return }
 $cacheMountHost = $cacheDomainRecord.fqdn
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (3.1 - Cache DNS Record Set End)")
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (04.1 - Cache DNS Record Set End)")
 
-# 3.2 - Storage Mounts
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (3.2 - Storage Mounts Start)")
+# 04.2 - Storage Mounts
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (04.2 - Storage Mounts Start)")
 $storageMounts = ""; $outerDelimiter = "|"; $innerDelimiter = ";"
 $storageMountOptions = ",hard,proto=tcp,mountproto=tcp,retry=30"
 foreach ($storageTarget in $storageTargets) {
@@ -179,6 +179,6 @@ foreach ($storageTarget in $storageTargets) {
 		}
 	}
 }
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (3.2 - Storage Mounts End)")
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (04.2 - Storage Mounts End)")
 
 Write-Output -InputObject $storageMounts

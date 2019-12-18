@@ -1,5 +1,5 @@
 ﻿function Set-NetworkPeering ($storageNetworkResourceGroupName, $storageNetworkName, $storageNetworkId, $storageType) {
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (2.1 - Storage (" + $storageType + ") Network Peering Start)")
+	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (03.1 - Storage (" + $storageType + ") Network Peering Start)")
 	$networkPeeringName = $storageNetworkName
 	$networkPeering = az network vnet peering create --resource-group $computeNetworkResourceGroupName --vnet-name $computeNetworkName --name $networkPeeringName --remote-vnet $storageNetworkId --allow-vnet-access
 	if (!$networkPeering) { return }
@@ -7,7 +7,7 @@
 	$networkPeeringName = $computeNetworkName
 	$networkPeering = az network vnet peering create --resource-group $storageNetworkResourceGroupName --vnet-name $storageNetworkName --name $networkPeeringName --remote-vnet $computeNetworkId --allow-vnet-access
 	if (!$networkPeering) { return }
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (2.1 - Storage (" + $storageType + ") Network Peering End)")
+	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (03.1 - Storage (" + $storageType + ") Network Peering End)")
 	return $networkPeering
 }
 

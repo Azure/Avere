@@ -31,37 +31,52 @@ $imageTemplateResourceType = "Microsoft.VirtualMachineImages/imageTemplates"
 
 Import-Module "$templateRootDirectory\Deploy.psm1"
 
-# 0 - Network
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (0 - Network Deployment Start)")
+# 00 - Network
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (00 - Network Deployment Start)")
 $resourceGroupName = "$resourceGroupNamePrefix-Network"
 $resourceGroup = az group create --resource-group $resourceGroupName --location $regionLocationCompute
 if (!$resourceGroup) { return }
 
-$templateResources = "$templateRootDirectory\0-Network.json"
-$templateParameters = "$templateRootDirectory\0-Network.Parameters.json"
+$templateResources = "$templateRootDirectory\00-Network.json"
+$templateParameters = "$templateRootDirectory\00-Network.Parameters.json"
 $groupDeployment = (az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 if (!$groupDeployment) { return }
 
 $computeNetworkResourceGroupName = $resourceGroupName
 $computeNetworkName = $groupDeployment.properties.outputs.virtualNetworkName.value
 $privateDomainName = $groupDeployment.properties.outputs.virtualNetworkPrivateDomainName.value
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (0 - Network Deployment End)")
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (00 - Network Deployment End)")
 
-# 1 - Gallery
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (1 - Gallery Deployment Start)")
+# 01 - Monitor
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (01 - Monitor Deployment Start)")
+$resourceGroupName = "$resourceGroupNamePrefix-Monitor"
+$resourceGroup = az group create --resource-group $resourceGroupName --location $regionLocationCompute
+if (!$resourceGroup) { return }
+
+$templateResources = "$templateRootDirectory\01-Monitor.json"
+$templateParameters = "$templateRootDirectory\01-Monitor.Parameters.json"
+$groupDeployment = (az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
+if (!$groupDeployment) { return }
+
+$monitorAnalyticsWorkspaceId = $groupDeployment.properties.outputs.monitorAnalyticsWorkspaceId.value
+$monitorAnalyticsWorkspaceKey = $groupDeployment.properties.outputs.monitorAnalyticsWorkspaceKey.value
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (01 - Monitor Deployment End)")
+
+# 02 - Gallery
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (02 - Gallery Deployment Start)")
 $resourceGroupName = "$resourceGroupNamePrefix-Gallery"
 $resourceGroup = az group create --resource-group $resourceGroupName --location $regionLocationCompute
 if (!$resourceGroup) { return }
 
-$templateResources = "$templateRootDirectory\1-Gallery.json"
-$templateParameters = "$templateRootDirectory\1-Gallery.Parameters.json"
+$templateResources = "$templateRootDirectory\02-Gallery.json"
+$templateParameters = "$templateRootDirectory\02-Gallery.Parameters.json"
 $groupDeployment = (az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 if (!$groupDeployment) { return }
 
 $imageGalleryResourceGroupName = $resourceGroupName
 $imageGalleryName = $groupDeployment.properties.outputs.imageGalleryName.value
 $imageDefinitions = $groupDeployment.properties.outputs.imageDefinitions.value
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (1 - Gallery Deployment End)")
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (02 - Gallery Deployment End)")
 
 # * - Background Jobs Start
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (* - Background Jobs Start)")
@@ -71,20 +86,20 @@ $renderManagersJob = Start-Job -FilePath "$templateRootDirectory\Deploy.RenderMa
 
 $templateRootDirectory = $templateRootDirectory + "\RenderWorkers"
 
-# 7 - Worker Image Template
+# 08.0 - Worker Image Template
 $resourceGroupName = "$resourceGroupNamePrefix-Gallery"
 $imageTemplateName = "RenderWorker"
 $imageTemplate = (az resource list --resource-group $resourceGroupName --resource-type $imageTemplateResourceType --name $imageTemplateName) | ConvertFrom-Json
 if ($imageTemplate.length -eq 0) {
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (7 - Worker Image Template Deployment Start)")
+	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (08.0 - Worker Image Template Deployment Start)")
 	$resourceGroup = az group create --resource-group $resourceGroupName --location $regionLocationCompute
 	if (!$resourceGroup) { return }
 
 	$roleAssignment = az role assignment create --resource-group $resourceGroupName --role Contributor --assignee $imageBuilderServiceId
 	if (!$roleAssignment) { return }
 
-	$templateResources = "$templateRootDirectory\7-Worker.Image.json"
-	$templateParameters = (Get-Content "$templateRootDirectory\7-Worker.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
+	$templateResources = "$templateRootDirectory\08-Worker.Image.json"
+	$templateParameters = (Get-Content "$templateRootDirectory\08-Worker.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
 	$templateParameters.renderWorker.value | Add-Member -MemberType NoteProperty -Name "rootDirectory" -Value $serviceRootDirectory
 	$templateParameter = New-Object PSObject
@@ -98,11 +113,11 @@ if ($imageTemplate.length -eq 0) {
 	if (!$groupDeployment) { return }
 
 	$imageTemplateName = $groupDeployment.properties.outputs.imageTemplateName.value
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (7 - Worker Image Template Deployment End)")
+	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (08.0 - Worker Image Template Deployment End)")
 }
 
-# 7.1 - Worker Image Version
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (7.1 - Worker Image Version Build Start)")
+# 08.1 - Worker Image Version
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (08.1 - Worker Image Version Build Start)")
 $resourceGroupName = "$resourceGroupNamePrefix-Gallery"
 $imageVersion = Get-ImageVersion $resourceGroupName $imageGalleryName $imageDefinition.name $imageTemplateName
 if (!$imageVersion) {
@@ -110,7 +125,7 @@ if (!$imageVersion) {
 	if (!$imageVersion) { return }
 	$imageVersion = Get-ImageVersion $resourceGroupName $imageGalleryName $imageDefinition.name $imageTemplateName
 }
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (7.1 - Worker Image Version Build End)")
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (08.1 - Worker Image Version Build End)")
 
 # * - Background Jobs End
 $storageMounts = ""
@@ -124,16 +139,18 @@ if (!$jobOutput) { return }
 $renderManager = $jobOutput.ToString()
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (* - Background Jobs End)")
 
-# 8 - Worker Machines
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (8 - Worker Machines Deployment Start)")
+# 09 - Worker Machines
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (09 - Worker Machines Deployment Start)")
 $resourceGroupName = "$resourceGroupNamePrefix-Worker"
 $resourceGroup = az group create --resource-group $resourceGroupName --location $regionLocationCompute
 if (!$resourceGroup) { return }
 
-$templateResources = "$templateRootDirectory\8-Worker.Machines.json"
-$templateParameters = (Get-Content "$templateRootDirectory\8-Worker.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
-$machineExtensionScript = Get-MachineExtensionScript "8-Worker.Machines.sh"
+$templateResources = "$templateRootDirectory\09-Worker.Machines.json"
+$templateParameters = (Get-Content "$templateRootDirectory\09-Worker.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
+$machineExtensionScript = Get-MachineExtensionScript "09-Worker.Machines.sh"
 
+$templateParameters.monitorAnalytics.value.workspaceId = $monitorAnalyticsWorkspaceId
+$templateParameters.monitorAnalytics.value.workspaceKey = $monitorAnalyticsWorkspaceKey
 $templateParameter = New-Object PSObject
 $templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $serviceRootDirectory
 $templateParameters | Add-Member -MemberType NoteProperty -Name "rootDirectory" -Value $templateParameter
@@ -158,23 +175,23 @@ $templateParameters | Add-Member -MemberType NoteProperty -Name "virtualNetworkN
 $templateParameters = ($templateParameters | ConvertTo-Json -Compress -Depth 3).Replace('"', '\"')
 $groupDeployment = (az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 if (!$groupDeployment) { return }
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (8 - Worker Machines Deployment End)")
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (09 - Worker Machines Deployment End)")
 
 if ($clientDeploy) {
-	# 9 - Client Image Template
+	# 10.0 - Client Image Template
 	$resourceGroupName = "$resourceGroupNamePrefix-Gallery"
 	$imageTemplateName = "RenderClient"
 	$imageTemplate = (az resource list --resource-group $resourceGroupName --resource-type $imageTemplateResourceType --name $imageTemplateName) | ConvertFrom-Json
 	if ($imageTemplate.length -eq 0) {
-		Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (9 - Client Image Template Deployment Start)")
+		Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (10.0 - Client Image Template Deployment Start)")
 		$resourceGroup = az group create --resource-group $resourceGroupName --location $regionLocationCompute
 		if (!$resourceGroup) { return }
 
 		$roleAssignment = az role assignment create --resource-group $resourceGroupName --role Contributor --assignee $imageBuilderServiceId
 		if (!$roleAssignment) { return }
 
-		$templateResources = "$templateRootDirectory\9-Client.Image.json"
-		$templateParameters = (Get-Content "$templateRootDirectory\9-Client.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
+		$templateResources = "$templateRootDirectory\10-Client.Image.json"
+		$templateParameters = (Get-Content "$templateRootDirectory\10-Client.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
 		$templateParameters.renderClient.value | Add-Member -MemberType NoteProperty -Name "rootDirectory" -Value $serviceRootDirectory
 		$templateParameter = New-Object PSObject
@@ -188,11 +205,11 @@ if ($clientDeploy) {
 		if (!$groupDeployment) { return }
 
 		$imageTemplateName = $groupDeployment.properties.outputs.imageTemplateName.value
-		Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (9 - Client Image Template Deployment End)")
+		Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (10.0 - Client Image Template Deployment End)")
 	}
 
-	# 9.1 - Client Image Version
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (9.1 - Client Image Version Build Start)")
+	# 10.1 - Client Image Version
+	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (10.1 - Client Image Version Build Start)")
 	$resourceGroupName = "$resourceGroupNamePrefix-Gallery"
 	$imageVersion = Get-ImageVersion $resourceGroupName $imageGalleryName $imageDefinition.name $imageTemplateName
 	if (!$imageVersion) {
@@ -200,17 +217,17 @@ if ($clientDeploy) {
 		if (!$imageVersion) { return }
 		$imageVersion = Get-ImageVersion $resourceGroupName $imageGalleryName $imageDefinition.name $imageTemplateName
 	}
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (9.1 - Client Image Version Build End)")
+	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (10.1 - Client Image Version Build End)")
 
-	# 10 - Client Machines
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (10 - Client Machines Deployment Start)")
-	$resourceGroupName = "$resourceGroupNamePrefix-Client"
+	# 11 - Client Machines
+	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (11 - Client Machines Deployment Start)")
+	$resourceGroupName = "$resourceGroupNamePrefix-Worker"
 	$resourceGroup = az group create --resource-group $resourceGroupName --location $regionLocationCompute
 	if (!$resourceGroup) { return }
 
-	$templateResources = "$templateRootDirectory\10-Client.Machines.json"
-	$templateParameters = (Get-Content "$templateRootDirectory\10-Client.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
-	$machineExtensionScript = Get-MachineExtensionScript "8-Worker.Machines.sh"
+	$templateResources = "$templateRootDirectory\11-Client.Machines.json"
+	$templateParameters = (Get-Content "$templateRootDirectory\11-Client.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
+	$machineExtensionScript = Get-MachineExtensionScript "09-Worker.Machines.sh"
 
 	$templateParameter = New-Object PSObject
 	$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $serviceRootDirectory
@@ -236,5 +253,5 @@ if ($clientDeploy) {
 	$templateParameters = ($templateParameters | ConvertTo-Json -Compress -Depth 3).Replace('"', '\"')
 	$groupDeployment = (az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 	if (!$groupDeployment) { return }
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (10 - Client Machines Deployment End)")
+	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (11 - Client Machines Deployment End)")
 }

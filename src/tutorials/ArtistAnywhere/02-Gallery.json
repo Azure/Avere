@@ -1,0 +1,64 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "imageGalleryName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "metadata": {
+        "description": "Name must be between 1 and 64 characters (alphanumeric, underscore and period)."
+      }
+    },
+    "imageDefinitions": {
+      "type": "array",
+      "metadata": {
+        "description": "The image definitions for the render farm manager, worker and scaler machines."
+      }
+    }
+  },
+  "variables": {
+    "imageGalleryApiVersion": "2019-07-01"
+  },
+  "resources": [
+     {
+      "type": "Microsoft.Compute/galleries",
+      "apiVersion": "[variables('imageGalleryApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('imageGalleryName')]",
+      "properties": {
+      }
+    },
+    {
+      "type": "Microsoft.Compute/galleries/images",
+      "apiVersion": "[variables('imageGalleryApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[concat(parameters('imageGalleryName'), '/', parameters('imageDefinitions')[copyIndex()].name)]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/galleries', parameters('imageGalleryName'))]"
+      ],
+      "properties": {
+        "osType": "[parameters('imageDefinitions')[copyIndex()].type]",
+        "identifier": {
+          "publisher": "[parameters('imageDefinitions')[copyIndex()].publisher]",
+          "offer": "[parameters('imageDefinitions')[copyIndex()].offer]",
+          "sku": "[parameters('imageDefinitions')[copyIndex()].sku]"
+        }
+      },
+      "copy": {
+        "name": "imageDefinitions",
+        "count": "[length(parameters('imageDefinitions'))]"
+      }
+    }
+  ],
+  "outputs": {
+    "imageGalleryName": {
+      "type": "string",
+      "value": "[parameters('imageGalleryName')]"
+    },
+    "imageDefinitions": {
+      "type": "array",
+      "value": "[parameters('imageDefinitions')]"
+    }
+  }
+}

@@ -38,14 +38,14 @@ $imageTemplateResourceType = $using:imageTemplateResourceType
 Import-Module "$templateRootDirectory\Deploy.psm1"
 $templateRootDirectory = $templateRootDirectory + "\RenderManagers"
 
-# 4 - Manager Data
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (4 - Manager Data Deployment Start)")
+# 05 - Manager Data
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (05 - Manager Data Deployment Start)")
 $resourceGroupName = "$resourceGroupNamePrefix-Manager"
 $resourceGroup = az group create --resource-group $resourceGroupName --location $regionLocationCompute
 if (!$resourceGroup) { return }
 
-$templateResources = "$templateRootDirectory\4-Manager.Data.json"
-$templateParameters = (Get-Content "$templateRootDirectory\4-Manager.Data.Parameters.json" -Raw | ConvertFrom-Json).parameters
+$templateResources = "$templateRootDirectory\05-Manager.Data.json"
+$templateParameters = (Get-Content "$templateRootDirectory\05-Manager.Data.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
 $dataServerExists = $false
 $dataServerName = $templateParameters.renderManager.value.dataServerName.ToLower()
@@ -82,22 +82,22 @@ $managerDatabaseEndpoint = $groupDeployment.properties.outputs.managerDatabaseEn
 $managerDatabaseUsername = $groupDeployment.properties.outputs.managerDatabaseUsername.value
 $managerDatabasePassword = $groupDeployment.properties.outputs.managerDatabasePassword.value
 if ($databaseExists) { $managerDatabaseAdminSql = "" }
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (4 - Manager Data Deployment End)")
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (05 - Manager Data Deployment End)")
 
-# 5 - Manager Image Template
+# 06.0 - Manager Image Template
 $resourceGroupName = "$resourceGroupNamePrefix-Gallery"
 $imageTemplateName = "RenderManager"
 $imageTemplate = (az resource list --resource-group $resourceGroupName --resource-type $imageTemplateResourceType --name $imageTemplateName) | ConvertFrom-Json
 if ($imageTemplate.length -eq 0) {
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (5 - Manager Image Template Deployment Start)")
+	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (06.0 - Manager Image Template Deployment Start)")
 	$resourceGroup = az group create --resource-group $resourceGroupName --location $regionLocationCompute
 	if (!$resourceGroup) { return }
 
 	$roleAssignment = az role assignment create --resource-group $resourceGroupName --role Contributor --assignee $imageBuilderServiceId
 	if (!$roleAssignment) { return }
 
-	$templateResources = "$templateRootDirectory\5-Manager.Image.json"
-	$templateParameters = (Get-Content "$templateRootDirectory\5-Manager.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
+	$templateResources = "$templateRootDirectory\06-Manager.Image.json"
+	$templateParameters = (Get-Content "$templateRootDirectory\06-Manager.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
 	$templateParameters.renderManager.value | Add-Member -MemberType NoteProperty -Name "rootDirectory" -Value $serviceRootDirectory
 	if ($templateParameters.renderManager.value.databaseEndpoint -eq "") {
@@ -120,11 +120,11 @@ if ($imageTemplate.length -eq 0) {
 	if (!$groupDeployment) { return }
 
 	$imageTemplateName = $groupDeployment.properties.outputs.imageTemplateName.value
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (5 - Manager Image Template Deployment End)")
+	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (06.0 - Manager Image Template Deployment End)")
 }
 
-# 5.1 - Manager Image Version
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (5.1 - Manager Image Version Build Start)")
+# 06.1 - Manager Image Version
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (06.1 - Manager Image Version Build Start)")
 $resourceGroupName = "$resourceGroupNamePrefix-Gallery"
 $imageVersion = Get-ImageVersion $resourceGroupName $imageGalleryName $imageDefinition.name $imageTemplateName
 if (!$imageVersion) {
@@ -132,18 +132,20 @@ if (!$imageVersion) {
 	if (!$imageVersion) { return }
 	$imageVersion = Get-ImageVersion $resourceGroupName $imageGalleryName $imageDefinition.name $imageTemplateName
 }
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (5.1 - Manager Image Version Build End)")
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (06.1 - Manager Image Version Build End)")
 
-# 6 - Manager Machines
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (6 - Manager Machines Deployment Start)")
+# 07 - Manager Machines
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (07 - Manager Machines Deployment Start)")
 $resourceGroupName = "$resourceGroupNamePrefix-Manager"
 $resourceGroup = az group create --resource-group $resourceGroupName --location $regionLocationCompute
 if (!$resourceGroup) { return }
 
-$templateResources = "$templateRootDirectory\6-Manager.Machines.json"
-$templateParameters = (Get-Content "$templateRootDirectory\6-Manager.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
-$machineExtensionScript = Get-MachineExtensionScript "6-Manager.Machines.sh"
+$templateResources = "$templateRootDirectory\07-Manager.Machines.json"
+$templateParameters = (Get-Content "$templateRootDirectory\07-Manager.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
+$machineExtensionScript = Get-MachineExtensionScript "07-Manager.Machines.sh"
 
+$templateParameters.monitorAnalytics.value.workspaceId = $using:monitorAnalyticsWorkspaceId
+$templateParameters.monitorAnalytics.value.workspaceKey = $using:monitorAnalyticsWorkspaceKey
 $templateParameter = New-Object PSObject
 $templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $serviceRootDirectory
 $templateParameters | Add-Member -MemberType NoteProperty -Name "rootDirectory" -Value $templateParameter
@@ -167,6 +169,6 @@ $groupDeployment = (az group deployment create --resource-group $resourceGroupNa
 if (!$groupDeployment) { return }
 
 $renderManager = $groupDeployment.properties.outputs.renderManager.value
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (6 - Manager Machines Deployment End)")
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (07 - Manager Machines Deployment End)")
 
 Write-Output -InputObject $renderManager
