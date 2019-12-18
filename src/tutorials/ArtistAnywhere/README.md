@@ -75,16 +75,16 @@ Azure Artist Anywhere is composed of the following open-source software and Azur
 
 The following diagram depicts the high-level solution architecture, including multiple options for networking and storage.
 
-![](README.SolutionArchitecture.png)
+![](README-SolutionArchitecture.png)
 
 The following diagram depicts the 3 parallel processes (1 main + 2 background jobs) for efficiently deploying the solution.
 
-![](README.ParallelDeployment.png)
+![](README-ParallelDeployment.png)
 
 *Deploy.ps1* is the main orchestration script for deploying the solution. The *Deploy.StorageCache.ps1* script can be executed directly for deployment of the Network, Storage and Cache service tiers only. In contrast, the *Deploy.RenderManagers.ps1* script is *not* intended to be executed directly. Finally, *Deploy.psm1* is a shared module that is referenced by each script.
 
 The following output from the *Deploy.ps1* orchestration script captures the *start* and *end* times for each deployment step. Note that the background job processes have overlapping times as expected in relation to the main deployment process.
 
-![](README.ParallelDeployment.Run.png)
+![](README-ParallelDeployment.Run.png)
 
 For more information, contact Rick Shahid (rick.shahid@microsoft.com)
