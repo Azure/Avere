@@ -29,8 +29,8 @@ Azure Artist Anywhere is composed of the following open-source software and Azur
     </tr>
     <tr>
         <td>
-             <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/" target="_blank">Azure Virtual Machines</a>
-       </td>
+            <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/" target="_blank">Azure Virtual Machines</a>
+        </td>
         <td>
             <a href="https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blobs-overview" target="_blank">Azure Blob Storage</a>
         </td>
@@ -40,8 +40,8 @@ Azure Artist Anywhere is composed of the following open-source software and Azur
     </tr>
     <tr>
         <td>
-             <a href="https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview" target="_blank">Azure Virtual Machine Scale Sets</a>
-       </td>
+            <a href="https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview" target="_blank">Azure Virtual Machine Scale Sets</a>
+        </td>
         <td>
             <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-overview" target="_blank">Azure Image Builder</a>
         </td>
@@ -51,13 +51,24 @@ Azure Artist Anywhere is composed of the following open-source software and Azur
     </tr>
     <tr>
         <td>
-             <a href="https://docs.microsoft.com/en-us/azure/dns/private-dns-overview" target="_blank">Azure Private DNS</a>
-       </td>
+            <a href="https://docs.microsoft.com/en-us/azure/dns/private-dns-overview" target="_blank">Azure Private DNS</a>
+        </td>
         <td>
             <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/linux/shared-image-galleries" target="_blank">Azure Shared Image Gallery</a>
         </td>
         <td>
             <a href="https://docs.microsoft.com/en-us/azure/azure-monitor/" target="_blank">Azure Monitor</a>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <a href="https://docs.microsoft.com/en-us/azure/key-vault/key-vault-overview" target="_blank">Azure Key Vault (TBD)</a>
+        </td>
+        <td>
+            <a href="https://docs.microsoft.com/en-us/azure/batch/batch-technical-overview" target="_blank">Azure Batch (TBD)</a>
+        </td>
+        <td>
+            <a href="https://docs.microsoft.com/en-us/azure/cyclecloud/overview" target="_blank">Azure CycleCloud (TBD)</a>
         </td>
     </tr>
 </table>
