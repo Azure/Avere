@@ -164,28 +164,19 @@
     },
     "storageTargets": {
       "type": "array",
-      "value": [
-        {
-          "name": "[concat(parameters('virtualNetworkName'), '.', parameters('storageTargets')[0].name)]",
+      "copy": {
+        "count": "[length(parameters('storageTargets'))]",
+        "input": {
+          "name": "[concat(parameters('virtualNetworkName'), '.', parameters('storageTargets')[copyIndex()].name)]",
           "type": "nfs3",
-          "host": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('netAppAccountName'), parameters('capacityPoolName'), parameters('storageTargets')[0].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
-          "target": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('netAppAccountName'), parameters('capacityPoolName'), parameters('storageTargets')[0].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
-          "junctions": "[parameters('storageTargets')[0].junctions]",
-          "namespacePath": "[parameters('storageTargets')[0].namespacePath]",
-          "mountOptions": "[parameters('storageTargets')[0].mountOptions]",
-          "usageModel": "[parameters('storageTargets')[0].usageModel]"
-        },
-        {
-          "name": "[concat(parameters('virtualNetworkName'), '.', parameters('storageTargets')[1].name)]",
-          "type": "nfs3",
-          "host": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('netAppAccountName'), parameters('capacityPoolName'), parameters('storageTargets')[1].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
-          "target": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('netAppAccountName'), parameters('capacityPoolName'), parameters('storageTargets')[1].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
-          "junctions": "[parameters('storageTargets')[1].junctions]",
-          "namespacePath": "[parameters('storageTargets')[1].namespacePath]",
-          "mountOptions": "[parameters('storageTargets')[1].mountOptions]",
-          "usageModel": "[parameters('storageTargets')[1].usageModel]"
+          "host": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('netAppAccountName'), parameters('capacityPoolName'), parameters('storageTargets')[copyIndex()].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
+          "target": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('netAppAccountName'), parameters('capacityPoolName'), parameters('storageTargets')[copyIndex()].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
+          "junctions": "[parameters('storageTargets')[copyIndex()].junctions]",
+          "namespacePath": "[parameters('storageTargets')[copyIndex()].namespacePath]",
+          "mountOptions": "[parameters('storageTargets')[copyIndex()].mountOptions]",
+          "usageModel": "[parameters('storageTargets')[copyIndex()].usageModel]"
         }
-      ]
+      }
     }
   }
 }

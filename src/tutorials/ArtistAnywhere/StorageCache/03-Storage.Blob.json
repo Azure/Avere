@@ -167,26 +167,18 @@
     },
     "storageTargets": {
       "type": "array",
-      "value": [
-        {
-          "name": "[if(variables('storageAccountNetworked'), concat(parameters('virtualNetworkName'), '.', parameters('storageTargets')[0].name), parameters('storageTargets')[0].name)]",
+      "copy": {
+        "count": "[length(parameters('storageTargets'))]",
+        "input": {
+          "name": "[if(variables('storageAccountNetworked'), concat(parameters('virtualNetworkName'), '.', parameters('storageTargets')[copyIndex()].name), parameters('storageTargets')[copyIndex()].name)]",
           "type": "clfs",
           "host": "[split(reference(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))).primaryEndpoints.blob, '/')[2]]",
-          "target": "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('storageAccountName'), 'default', toLower(parameters('storageTargets')[0].name))]",
-          "junctions": "[parameters('storageTargets')[0].junctions]",
-          "namespacePath": "[parameters('storageTargets')[0].namespacePath]",
-          "mountOptions": "[parameters('storageTargets')[0].mountOptions]"
-        },
-        {
-          "name": "[if(variables('storageAccountNetworked'), concat(parameters('virtualNetworkName'), '.', parameters('storageTargets')[1].name), parameters('storageTargets')[1].name)]",
-          "type": "clfs",
-          "host": "[split(reference(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))).primaryEndpoints.blob, '/')[2]]",
-          "target": "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('storageAccountName'), 'default', toLower(parameters('storageTargets')[1].name))]",
-          "junctions": "[parameters('storageTargets')[1].junctions]",
-          "namespacePath": "[parameters('storageTargets')[1].namespacePath]",
-          "mountOptions": "[parameters('storageTargets')[1].mountOptions]"
+          "target": "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('storageAccountName'), 'default', toLower(parameters('storageTargets')[copyIndex()].name))]",
+          "junctions": "[parameters('storageTargets')[copyIndex()].junctions]",
+          "namespacePath": "[parameters('storageTargets')[copyIndex()].namespacePath]",
+          "mountOptions": "[parameters('storageTargets')[copyIndex()].mountOptions]"
         }
-      ]
+      }
     }
   }
 }
