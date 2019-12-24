@@ -257,7 +257,7 @@
               "publicKeys": [
                 {
                   "path": "[concat('/home/', parameters('renderManagers')[copyIndex()].adminUsername, '/.ssh/authorized_keys')]",
-                  "keyData": "[parameters('renderManagers')[copyIndex()].sshKeyData]"
+                  "keyData": "[parameters('renderManagers')[copyIndex()].sshPublicKeyData]"
                 }
               ]
             }

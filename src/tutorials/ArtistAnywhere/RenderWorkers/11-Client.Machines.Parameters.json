@@ -9,14 +9,14 @@
           "machineSize": "Standard_NV6",
           "adminUsername": "sa",
           "adminPassword": "P@ssword1234",
-          "sshKeyData": "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAjm36gZ6MXN5nbKbjuKjQeLV7SdyuRD4R7szSqCbT03bu9y10D8XQ1+aQuTs8vgEFknhHRJzGu1mw4GbyJlQLVgkWmUlRbnzkBaz6iv7XkO0iSuOjKKREt+dY9e8JVpGlsZxPj8ZGxmUbxH0XSw9AEmAF2pULYTdMT3pkCsIvqley6z8TZ2FAe63n9ZXfsDOsJt2tOYXG4dA5Mgv1LTwZtdsZ5BiufuX1luXOirhjIGS3wSRgxLN2prwoS7tC+msndNHWkdo/3o0WkV00fVoKvQRmQtkL6qm3SOPE4piCJ7DDXhKe8DoioLrKYMhVPdjbRWETksZsnjdd/K4K6VVpZQ== rsa-key-20190710",
+          "sshPublicKeyData": "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAjPxMeoa7sDaVVv+P/Ao75I5CZeu23tb4/yGpFdu1RAByS6yGnOFZ15LjeRcVGiv+tDdJLF/4ACG/XkRCFkQpwAc+ZgtCwc27o80458eSqVd3GimYAPZw+umD+raLMIlNCA2wpbbcGONNcMqtwzfaKAsmegmojW4zh17NR2rduPHN4UUB4k0vPzmWJN8kH1B2/dh1GwsvJzNCLYVVw2Z5gDr65Bu+XLXAe2iUfmpTgWmyD+tjvmDc8R9fqLQHcrW+m2t1Jw9oxWJ3fYBV14vAcuHtARPKtO7NPrHgo6yP9e7Sm4btqyoMyg4gnjD8g4rAMZ6FAY8rjWqjZ11ToKf6fw== rsa-key-20191224",
           "acceleratedNetworking": false,
           "publicAddress": false
         }
       ]
     },
     "virtualNetworkSubnetName": {
-      "value": "Studio"
+      "value": "Artist"
     }
   }
 }
