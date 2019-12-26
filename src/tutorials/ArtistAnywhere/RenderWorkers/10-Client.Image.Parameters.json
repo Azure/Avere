@@ -4,10 +4,7 @@
   "parameters": {
     "renderClient": {
       "value": {
-        "cueRequirementsUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/requirements.txt",
-        "guiRequirementsUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/requirements_gui.txt",
-        "rqdSoftwareUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.6/rqd-0.3.6-all.tar.gz",
-        "rqdServiceUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/rqd/deploy/opencue-rqd.service",
+        "requirementsUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/requirements_gui.txt",
         "pyCueUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.6/pycue-0.3.6-all.tar.gz",
         "pyOutlineUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.6/pyoutline-0.3.6-all.tar.gz",
         "cueSubmitUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.6/cuesubmit-0.3.6-all.tar.gz",

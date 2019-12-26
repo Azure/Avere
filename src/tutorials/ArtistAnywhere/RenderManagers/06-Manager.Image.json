@@ -8,12 +8,6 @@
         "description": "The render farm manager configuration."
       }
     },
-    "imageGalleryName": {
-      "type": "string",
-      "metadata": {
-        "description": "The name of the shared image gallery."
-      }
-    },
     "imageDefinition": {
       "type": "object",
       "metadata": {
@@ -50,8 +44,8 @@
             "name": "OpenCue",
             "type": "Shell",
             "inline": [
-              "yum -y install postgresql-contrib",
               "yum -y install java-1.8.0-openjdk",
+              "yum -y install postgresql-contrib",
               "[concat('useradd --system --create-home ', replace(replace(parameters('renderManager').rootDirectory, 'home', ''), '/', ''))]",
               "[concat('cd ', parameters('renderManager').rootDirectory)]",
               "[concat('curl --location ', parameters('renderManager').databaseSchemaUrl, ' --output opencue-cuebot-schema.sql')]",
@@ -76,7 +70,7 @@
           {
             "type": "SharedImage",
             "runOutputName": "SharedImage",
-            "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageDefinition').name)]",
+            "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('imageBuilder').imageGalleryName, parameters('imageDefinition').name)]",
             "replicationRegions": [
               "[resourceGroup().location]"
             ],

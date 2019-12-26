@@ -8,18 +8,6 @@
         "description": "The render farm client configuration."
       }
     },
-    "imageGalleryName": {
-      "type": "string",
-      "metadata": {
-        "description": "The name of the shared image gallery."
-      }
-    },
-    "imageDefinition": {
-      "type": "object",
-      "metadata": {
-        "description": "The definition of the shared image."
-      }
-    },
     "imageBuilder": {
       "type": "object",
       "metadata": {
@@ -39,44 +27,28 @@
       "properties": {
         "buildTimeoutInMinutes": "[parameters('imageBuilder').timeoutMinutes]",
         "source": {
-          "type": "PlatformImage",
-          "publisher": "[parameters('imageDefinition').publisher]",
-          "offer": "[parameters('imageDefinition').offer]",
-          "sku": "[parameters('imageDefinition').sku]",
-          "version": "[parameters('imageDefinition').version]"
+          "type": "SharedImageVersion",
+          "imageVersionId": "[parameters('imageBuilder').imageVersionId]"
         },
         "customize": [
           {
             "name": "OpenCue",
             "type": "Shell",
             "inline": [
-              "yum -y install gcc",
-              "yum -y install epel-release",
-              "yum -y install python-devel",
-              "yum -y install python-pip",
-              "[concat('curl --location ', parameters('renderClient').cueRequirementsUrl, ' --output requirements.txt')]",
-              "[concat('curl --location ', parameters('renderClient').guiRequirementsUrl, ' --output requirements-gui.txt')]",
-              "pip install --upgrade pip",
-              "pip install --requirement requirements.txt --ignore-installed",
-              "pip install --requirement requirements-gui.txt",
-              "[concat('useradd --system --create-home ', replace(replace(parameters('renderClient').rootDirectory, 'home', ''), '/', ''))]",
+              "[concat('curl --location ', parameters('renderClient').requirementsUrl, ' --output requirements.txt')]",
+              "pip install --requirement requirements.txt",
               "[concat('cd ', parameters('renderClient').rootDirectory)]",
-              "[concat('curl --location ', parameters('renderClient').rqdSoftwareUrl, ' --output opencue-rqd.jar.gz')]",
-              "[concat('curl --location ', parameters('renderClient').rqdServiceUrl, ' --output opencue-rqd.service')]",
               "[concat('curl --location ', parameters('renderClient').pyCueUrl, ' --output opencue-pycue.tar.gz')]",
               "[concat('curl --location ', parameters('renderClient').pyOutlineUrl, ' --output opencue-pyoutline.tar.gz')]",
               "[concat('curl --location ', parameters('renderClient').cueSubmitUrl, ' --output opencue-cuesubmit.tar.gz')]",
               "[concat('curl --location ', parameters('renderClient').cueAdminUrl, ' --output opencue-cueadmin.tar.gz')]",
               "[concat('curl --location ', parameters('renderClient').cueGuiUrl, ' --output opencue-cuegui.tar.gz')]",
-              "[concat('tar -xzf opencue-rqd.jar.gz')]",
               "[concat('tar -xzf opencue-pycue.tar.gz')]",
               "[concat('tar -xzf opencue-pyoutline.tar.gz')]",
               "[concat('tar -xzf opencue-cuesubmit.tar.gz')]",
               "[concat('tar -xzf opencue-cueadmin.tar.gz')]",
               "[concat('tar -xzf opencue-cuegui.tar.gz')]",
-              "cd rqd*",
-              "python setup.py install",
-              "cd ../pycue*",
+              "cd pycue*",
               "python setup.py install",
               "cd ../pyoutline*",
               "python setup.py install",
@@ -86,23 +58,6 @@
               "python setup.py install",
               "cd ../cuegui*",
               "python setup.py install"
-            ]
-          },
-          {
-            "name": "Storage",
-            "type": "Shell",
-            "inline": [
-              "yum -y install nfs-utils",
-              "yum -y install autofs"
-            ]
-          },
-          {
-            "name": "Render",
-            "type": "Shell",
-            "inline": [
-              "yum -y install libXrender",
-              "yum -y install mesa-libGL",
-              "yum -y install mesa-dri-drivers"
             ]
           },
           {
@@ -123,7 +78,7 @@
           {
             "type": "SharedImage",
             "runOutputName": "SharedImage",
-            "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageDefinition').name)]",
+            "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('imageBuilder').imageGalleryName, parameters('imageBuilder').imageDefinitionName)]",
             "replicationRegions": [
               "[resourceGroup().location]"
             ],

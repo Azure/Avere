@@ -102,9 +102,7 @@ if ($imageTemplate.length -eq 0) {
 	$templateParameters = (Get-Content "$templateRootDirectory\08-Worker.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
 	$templateParameters.renderWorker.value | Add-Member -MemberType NoteProperty -Name "rootDirectory" -Value $serviceRootDirectory
-	$templateParameter = New-Object PSObject
-	$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $imageGalleryName
-	$templateParameters | Add-Member -MemberType NoteProperty -Name "imageGalleryName" -Value $templateParameter
+	$templateParameters.imageBuilder.value | Add-Member -MemberType NoteProperty -Name "imageGalleryName" -Value $imageGalleryName
 	$templateParameter = New-Object PSObject
 	$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $imageDefinition
 	$templateParameters | Add-Member -MemberType NoteProperty -Name "imageDefinition" -Value $templateParameter
@@ -194,12 +192,9 @@ if ($clientDeploy) {
 		$templateParameters = (Get-Content "$templateRootDirectory\10-Client.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
 		$templateParameters.renderClient.value | Add-Member -MemberType NoteProperty -Name "rootDirectory" -Value $serviceRootDirectory
-		$templateParameter = New-Object PSObject
-		$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $imageGalleryName
-		$templateParameters | Add-Member -MemberType NoteProperty -Name "imageGalleryName" -Value $templateParameter
-		$templateParameter = New-Object PSObject
-		$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $imageDefinition
-		$templateParameters | Add-Member -MemberType NoteProperty -Name "imageDefinition" -Value $templateParameter
+		$templateParameters.imageBuilder.value | Add-Member -MemberType NoteProperty -Name "imageGalleryName" -Value $imageGalleryName
+		$templateParameters.imageBuilder.value | Add-Member -MemberType NoteProperty -Name "imageDefinitionName" -Value $imageDefinition.name
+		$templateParameters.imageBuilder.value | Add-Member -MemberType NoteProperty -Name "imageVersionId" -Value $imageVersion.id
 		$templateParameters = ($templateParameters | ConvertTo-Json -Compress).Replace('"', '\"')
 		$groupDeployment = (az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 		if (!$groupDeployment) { return }

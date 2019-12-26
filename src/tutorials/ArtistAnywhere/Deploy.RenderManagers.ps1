@@ -100,6 +100,7 @@ if ($imageTemplate.length -eq 0) {
 	$templateParameters = (Get-Content "$templateRootDirectory\06-Manager.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
 	$templateParameters.renderManager.value | Add-Member -MemberType NoteProperty -Name "rootDirectory" -Value $serviceRootDirectory
+	$templateParameters.imageBuilder.value | Add-Member -MemberType NoteProperty -Name "imageGalleryName" -Value $imageGalleryName
 	if ($templateParameters.renderManager.value.databaseEndpoint -eq "") {
 		$templateParameters.renderManager.value.databaseEndpoint = $managerDatabaseEndpoint
 	}
@@ -109,9 +110,6 @@ if ($imageTemplate.length -eq 0) {
 	if ($templateParameters.renderManager.value.databasePassword -eq "") {
 		$templateParameters.renderManager.value.databasePassword = $managerDatabasePassword
 	}
-	$templateParameter = New-Object PSObject
-	$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $imageGalleryName
-	$templateParameters | Add-Member -MemberType NoteProperty -Name "imageGalleryName" -Value $templateParameter
 	$templateParameter = New-Object PSObject
 	$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $imageDefinition
 	$templateParameters | Add-Member -MemberType NoteProperty -Name "imageDefinition" -Value $templateParameter

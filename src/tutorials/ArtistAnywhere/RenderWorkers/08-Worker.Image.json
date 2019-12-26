@@ -8,12 +8,6 @@
         "description": "The render farm worker configuration."
       }
     },
-    "imageGalleryName": {
-      "type": "string",
-      "metadata": {
-        "description": "The name of the shared image gallery."
-      }
-    },
     "imageDefinition": {
       "type": "object",
       "metadata": {
@@ -81,6 +75,7 @@
               "yum -y install libXi",
               "yum -y install libXrender",
               "yum -y install mesa-libGL",
+              "yum -y install mesa-dri-drivers",
               "[concat('cd ', parameters('renderWorker').rootDirectory)]",
               "[concat('curl --location ', parameters('renderWorker').blenderUrl, ' --output blender.jar.bz2')]",
               "[concat('tar -xjf blender.jar.bz2')]"
@@ -91,7 +86,7 @@
           {
             "type": "SharedImage",
             "runOutputName": "SharedImage",
-            "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageDefinition').name)]",
+            "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('imageBuilder').imageGalleryName, parameters('imageDefinition').name)]",
             "replicationRegions": [
               "[resourceGroup().location]"
             ],
