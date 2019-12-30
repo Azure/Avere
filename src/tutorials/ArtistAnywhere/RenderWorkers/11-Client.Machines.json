@@ -14,6 +14,12 @@
         "description": "The render farm manager endpoint."
       }
     },
+    "monitorAnalytics": {
+      "type": "object",
+      "metadata": {
+        "description": "The monitor log analytics configuration."
+      }
+    },
     "rootDirectory": {
       "type": "string",
       "metadata": {
@@ -63,59 +69,10 @@
   },
   "resources": [
     {
-      "condition": "[parameters('renderClients')[copyIndex()].publicAddress]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "[variables('virtualNetworkApiVersion')]",
-      "location": "[resourceGroup().location]",
-      "name": "[parameters('renderClients')[copyIndex()].name]",
-      "sku": {
-        "name": "Standard"
-      },
-      "properties": {
-        "publicIPAllocationMethod": "Static"
-      },
-      "copy": {
-        "name": "renderClients",
-        "count": "[length(parameters('renderClients'))]"
-      }
-    },
-    {
-      "condition": "[parameters('renderClients')[copyIndex()].publicAddress]",
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "apiVersion": "[variables('virtualNetworkApiVersion')]",
-      "location": "[resourceGroup().location]",
-      "name": "[parameters('renderClients')[copyIndex()].name]",
-      "properties": {
-        "securityRules": [
-          {
-            "name": "AllowSSH",
-            "properties": {
-              "priority": 100,
-              "access": "Allow",
-              "protocol": "TCP",
-              "direction": "Inbound",
-              "sourceAddressPrefix": "*",
-              "sourcePortRange": "*",
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "22"
-            }
-          }
-        ]
-      },
-      "copy": {
-        "name": "renderClients",
-        "count": "[length(parameters('renderClients'))]"
-      }
-    },
-    {
       "type": "Microsoft.Network/networkInterfaces",
       "apiVersion": "[variables('virtualNetworkApiVersion')]",
       "location": "[resourceGroup().location]",
       "name": "[parameters('renderClients')[copyIndex()].name]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('renderClients')[copyIndex()].name)]",
-        "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('renderClients')[copyIndex()].name)]"
-      ],
       "properties": {
         "primary": true,
         "enableAcceleratedNetworking": "[parameters('renderClients')[copyIndex()].acceleratedNetworking]",
@@ -126,12 +83,10 @@
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
                 "id": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('virtualNetworkSubnetName'))]"
-              },
-              "publicIpAddress": "[if(parameters('renderClients')[copyIndex()].publicAddress, json(concat('{\"id\": \"', resourceId('Microsoft.Network/publicIPAddresses', parameters('renderClients')[copyIndex()].name), '\"}')), json('null'))]"
+              }
             }
           }
-        ],
-        "networkSecurityGroup": "[if(parameters('renderClients')[copyIndex()].publicAddress, json(concat('{\"id\": \"', resourceId('Microsoft.Network/networkSecurityGroups', parameters('renderClients')[copyIndex()].name), '\"}')), json('null'))]"
+        ]
       },
       "copy": {
         "name": "renderClients",
@@ -187,6 +142,27 @@
         "count": "[length(parameters('renderClients'))]"
       },
       "resources": [
+        {
+          "type": "extensions",
+          "apiVersion": "[variables('virtualMachineApiVersion')]",
+          "location": "[resourceGroup().location]",
+          "name": "[concat(parameters('renderClients')[copyIndex()].name, 'Monitor')]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', parameters('renderClients')[copyIndex()].name)]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+            "autoUpgradeMinorVersion": true,
+            "typeHandlerVersion": "1.12",
+            "type": "OmsAgentForLinux",
+            "protectedSettings": {
+              "workspaceKey": "[parameters('monitorAnalytics').workspaceKey]"
+            },
+            "settings": {
+              "workspaceId": "[parameters('monitorAnalytics').workspaceId]"
+            }
+          }
+        },
         {
           "type": "extensions",
           "apiVersion": "[variables('virtualMachineApiVersion')]",

@@ -69,59 +69,10 @@
   },
   "resources": [
     {
-      "condition": "[parameters('renderWorkers')[copyIndex()].publicAddress]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "[variables('virtualNetworkApiVersion')]",
-      "location": "[resourceGroup().location]",
-      "name": "[parameters('renderWorkers')[copyIndex()].name]",
-      "sku": {
-        "name": "Standard"
-      },
-      "properties": {
-        "publicIPAllocationMethod": "Static"
-      },
-      "copy": {
-        "name": "renderWorkers",
-        "count": "[length(parameters('renderWorkers'))]"
-      }
-    },
-    {
-      "condition": "[parameters('renderWorkers')[copyIndex()].publicAddress]",
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "apiVersion": "[variables('virtualNetworkApiVersion')]",
-      "location": "[resourceGroup().location]",
-      "name": "[parameters('renderWorkers')[copyIndex()].name]",
-      "properties": {
-        "securityRules": [
-          {
-            "name": "AllowSSH",
-            "properties": {
-              "priority": 100,
-              "access": "Allow",
-              "protocol": "TCP",
-              "direction": "Inbound",
-              "sourceAddressPrefix": "*",
-              "sourcePortRange": "*",
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "22"
-            }
-          }
-        ]
-      },
-      "copy": {
-        "name": "renderWorkers",
-        "count": "[length(parameters('renderWorkers'))]"
-      }
-    },
-    {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
       "apiVersion": "[variables('virtualMachineApiVersion')]",
       "location": "[resourceGroup().location]",
       "name": "[parameters('renderWorkers')[copyIndex()].name]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('renderWorkers')[copyIndex()].name)]",
-        "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('renderWorkers')[copyIndex()].name)]"
-      ],
       "sku": {
         "name": "[parameters('renderWorkers')[copyIndex()].machineSize]",
         "capacity": "[parameters('renderWorkers')[copyIndex()].machineCount]"
@@ -141,12 +92,10 @@
                       "properties": {
                         "subnet": {
                           "id": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('virtualNetworkSubnetName'))]"
-                        },
-                        "publicIpAddressConfiguration": "[if(parameters('renderWorkers')[copyIndex()].publicAddress, json(concat('{\"name\": \"', parameters('renderWorkers')[copyIndex()].name, '\"}')), json('null'))]"
+                        }
                       }
                     }
-                  ],
-                  "networkSecurityGroup": "[if(parameters('renderWorkers')[copyIndex()].publicAddress, json(concat('{\"id\": \"', resourceId('Microsoft.Network/networkSecurityGroups', parameters('renderWorkers')[copyIndex()].name), '\"}')), json('null'))]"
+                  ]
                 }
               }
             ]

@@ -147,8 +147,12 @@ $templateResources = "$templateRootDirectory\09-Worker.Machines.json"
 $templateParameters = (Get-Content "$templateRootDirectory\09-Worker.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
 $machineExtensionScript = Get-MachineExtensionScript "09-Worker.Machines.sh"
 
-$templateParameters.monitorAnalytics.value.workspaceId = $monitorAnalyticsWorkspaceId
-$templateParameters.monitorAnalytics.value.workspaceKey = $monitorAnalyticsWorkspaceKey
+if ($templateParameters.monitorAnalytics.value.workspaceId -eq "") {
+	$templateParameters.monitorAnalytics.value.workspaceId = $monitorAnalyticsWorkspaceId
+}
+if ($templateParameters.monitorAnalytics.value.workspaceKey -eq "") {
+	$templateParameters.monitorAnalytics.value.workspaceKey = $monitorAnalyticsWorkspaceKey
+}
 $templateParameter = New-Object PSObject
 $templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $serviceRootDirectory
 $templateParameters | Add-Member -MemberType NoteProperty -Name "rootDirectory" -Value $templateParameter
@@ -224,6 +228,12 @@ if ($clientDeploy) {
 	$templateParameters = (Get-Content "$templateRootDirectory\11-Client.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
 	$machineExtensionScript = Get-MachineExtensionScript "09-Worker.Machines.sh"
 
+	if ($templateParameters.monitorAnalytics.value.workspaceId -eq "") {
+		$templateParameters.monitorAnalytics.value.workspaceId = $monitorAnalyticsWorkspaceId
+	}
+	if ($templateParameters.monitorAnalytics.value.workspaceKey -eq "") {
+		$templateParameters.monitorAnalytics.value.workspaceKey = $monitorAnalyticsWorkspaceKey
+	}
 	$templateParameter = New-Object PSObject
 	$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $serviceRootDirectory
 	$templateParameters | Add-Member -MemberType NoteProperty -Name "rootDirectory" -Value $templateParameter
