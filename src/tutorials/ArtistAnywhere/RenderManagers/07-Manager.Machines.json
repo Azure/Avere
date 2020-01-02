@@ -13,7 +13,7 @@
       "metadata": {
         "description": "The monitor log analytics configuration."
       }
-    },    
+    },
     "rootDirectory": {
       "type": "string",
       "metadata": {
@@ -60,62 +60,19 @@
   "variables": {
     "virtualMachineApiVersion": "2019-07-01",
     "virtualNetworkApiVersion": "2019-09-01",
-    "loadBalancerName": "RenderManagers",
-    "loadBalancerNameBackend": "backendPool1",
-    "loadBalancerNameFrontend": "frontendConfig1",
-    "loadBalancerNameProbe": "lbProbe1"
+    "loadBalancerNameInternal": "RenderManagersInternal",
+    "loadBalancerNameOutbound": "RenderManagersOutbound",
+    "loadBalancerNameBackend": "lbBackendPool1",
+    "loadBalancerNameFrontend": "lbFrontendConfig1",
+    "loadBalancerNameProbe": "lbProbe1",
+    "loadBalancerNameRule": "lbRule1"
   },
   "resources": [
-    {
-      "condition": "[parameters('renderManagers')[copyIndex()].publicAddress]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "[variables('virtualNetworkApiVersion')]",
-      "location": "[resourceGroup().location]",
-      "name": "[parameters('renderManagers')[copyIndex()].name]",
-      "sku": {
-        "name": "Standard"
-      },
-      "properties": {
-        "publicIPAllocationMethod": "Static"
-      },
-      "copy": {
-        "name": "renderManagers",
-        "count": "[length(parameters('renderManagers'))]"
-      }
-    },
-    {
-      "condition": "[parameters('renderManagers')[copyIndex()].publicAddress]",
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "apiVersion": "[variables('virtualNetworkApiVersion')]",
-      "location": "[resourceGroup().location]",
-      "name": "[parameters('renderManagers')[copyIndex()].name]",
-      "properties": {
-        "securityRules": [
-          {
-            "name": "AllowSSH",
-            "properties": {
-              "priority": 100,
-              "access": "Allow",
-              "protocol": "TCP",
-              "direction": "Inbound",
-              "sourceAddressPrefix": "*",
-              "sourcePortRange": "*",
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "22"
-            }
-          }
-        ]
-      },
-      "copy": {
-        "name": "renderManagers",
-        "count": "[length(parameters('renderManagers'))]"
-      }
-    },
     {
       "type": "Microsoft.Compute/availabilitySets",
       "apiVersion": "[variables('virtualMachineApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[variables('loadBalancerName')]",
+      "name": "[variables('loadBalancerNameInternal')]",
       "sku": {
         "name": "Aligned"
       },
@@ -128,7 +85,7 @@
       "type": "Microsoft.Network/loadBalancers",
       "apiVersion": "[variables('virtualNetworkApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[variables('loadBalancerName')]",
+      "name": "[variables('loadBalancerNameInternal')]",
       "sku": {
         "name": "Standard"
       },
@@ -149,31 +106,88 @@
             }
           }
         ],
-        "loadBalancingRules": [
-          {
-            "name": "lbRule1",
-            "properties": {
-              "backendAddressPool": {
-                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), variables('loadBalancerNameBackend'))]"
-              },
-              "frontendIPConfiguration": {
-                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', variables('loadBalancerName'), variables('loadBalancerNameFrontend'))]"
-              },
-              "probe": {
-                "id": "[resourceId('Microsoft.Network/loadBalancers/probes', variables('loadBalancerName'), variables('loadBalancerNameProbe'))]"
-              },
-              "protocol": "Tcp",
-              "backendPort": 8443,
-              "frontendPort": 8443
-            }
-          }
-        ],
         "probes": [
           {
             "name": "[variables('loadBalancerNameProbe')]",
             "properties": {
               "protocol": "Tcp",
               "port": 8443
+            }
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "[variables('loadBalancerNameRule')]",
+            "properties": {
+              "backendAddressPool": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerNameInternal'), variables('loadBalancerNameBackend'))]"
+              },
+              "frontendIPConfiguration": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', variables('loadBalancerNameInternal'), variables('loadBalancerNameFrontend'))]"
+              },
+              "probe": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/probes', variables('loadBalancerNameInternal'), variables('loadBalancerNameProbe'))]"
+              },
+              "protocol": "Tcp",
+              "backendPort": 8443,
+              "frontendPort": 8443
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[variables('loadBalancerNameOutbound')]",
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static"
+      }
+    },
+    {
+      "type": "Microsoft.Network/loadBalancers",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[variables('loadBalancerNameOutbound')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('loadBalancerNameOutbound'))]"
+      ],
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "backendAddressPools": [
+          {
+            "name": "[variables('loadBalancerNameBackend')]"
+          }
+        ],
+        "frontendIPConfigurations": [
+          {
+            "name": "[variables('loadBalancerNameFrontend')]",
+            "properties": {
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('loadBalancerNameOutbound'))]"
+              }
+            }
+          }
+        ],
+        "outboundRules": [
+          {
+            "name": "outboundRule1",
+            "properties": {
+              "protocol": "Tcp",
+              "backendAddressPool": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerNameOutbound'), variables('loadBalancerNameBackend'))]"
+              },
+              "frontendIPConfigurations": [
+                {
+                  "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', variables('loadBalancerNameOutbound'), variables('loadBalancerNameFrontend'))]"
+                }
+              ]
             }
           }
         ]
@@ -185,9 +199,8 @@
       "location": "[resourceGroup().location]",
       "name": "[parameters('renderManagers')[copyIndex()].name]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName'))]",
-        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('renderManagers')[copyIndex()].name)]",
-        "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('renderManagers')[copyIndex()].name)]"
+        "[resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerNameInternal'))]",
+        "[resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerNameOutbound'))]"
       ],
       "properties": {
         "primary": true,
@@ -202,14 +215,15 @@
               },
               "loadBalancerBackendAddressPools": [
                 {
-                  "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), variables('loadBalancerNameBackend'))]"
+                  "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerNameInternal'), variables('loadBalancerNameBackend'))]"
+                },
+                {
+                  "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerNameOutbound'), variables('loadBalancerNameBackend'))]"
                 }
-              ],
-              "publicIpAddress": "[if(parameters('renderManagers')[copyIndex()].publicAddress, json(concat('{\"id\": \"', resourceId('Microsoft.Network/publicIPAddresses', parameters('renderManagers')[copyIndex()].name), '\"}')), json('null'))]"
+              ]
             }
           }
-        ],
-        "networkSecurityGroup": "[if(parameters('renderManagers')[copyIndex()].publicAddress, json(concat('{\"id\": \"', resourceId('Microsoft.Network/networkSecurityGroups', parameters('renderManagers')[copyIndex()].name), '\"}')), json('null'))]"
+        ]
       },
       "copy": {
         "name": "renderManagers",
@@ -222,12 +236,12 @@
       "location": "[resourceGroup().location]",
       "name": "[parameters('renderManagers')[copyIndex()].name]",
       "dependsOn": [
-        "[resourceId('Microsoft.Compute/availabilitySets', variables('loadBalancerName'))]",
+        "[resourceId('Microsoft.Compute/availabilitySets', variables('loadBalancerNameInternal'))]",
         "[resourceId('Microsoft.Network/networkInterfaces', parameters('renderManagers')[copyIndex()].name)]"
       ],
       "properties": {
         "availabilitySet": {
-          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('loadBalancerName'))]"
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('loadBalancerNameInternal'))]"
         },
         "hardwareProfile": {
           "vmSize": "[parameters('renderManagers')[copyIndex()].machineSize]"
@@ -274,6 +288,27 @@
           "type": "extensions",
           "apiVersion": "[variables('virtualMachineApiVersion')]",
           "location": "[resourceGroup().location]",
+          "name": "[concat(parameters('renderManagers')[copyIndex()].name, 'Monitor')]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', parameters('renderManagers')[copyIndex()].name)]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+            "autoUpgradeMinorVersion": true,
+            "typeHandlerVersion": "1.12",
+            "type": "OmsAgentForLinux",
+            "protectedSettings": {
+              "workspaceKey": "[parameters('monitorAnalytics').workspaceKey]"
+            },
+            "settings": {
+              "workspaceId": "[parameters('monitorAnalytics').workspaceId]"
+            }
+          }
+        },        
+        {
+          "type": "extensions",
+          "apiVersion": "[variables('virtualMachineApiVersion')]",
+          "location": "[resourceGroup().location]",
           "name": "[concat(parameters('renderManagers')[copyIndex()].name, 'Extension')]",
           "dependsOn": [
             "[resourceId('Microsoft.Compute/virtualMachines', parameters('renderManagers')[copyIndex()].name)]"
@@ -294,7 +329,7 @@
   "outputs": {
     "renderManager": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', variables('loadBalancerName'), variables('loadBalancerNameFrontend')), variables('virtualNetworkApiVersion')).privateIPAddress]"
+      "value": "[reference(resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', variables('loadBalancerNameInternal'), variables('loadBalancerNameFrontend')), variables('virtualNetworkApiVersion')).privateIPAddress]"
     }
   }
 }

@@ -4,7 +4,7 @@
   "parameters": {
     "renderManager": {
       "value": {
-        "dataServerName": "RenderManagers",
+        "dataServerName": "ArtistAnywhere",
         "dataServerType": "MO_Gen5_8",
         "dataServerSqlVersion": 11,
         "dataServerStorageMB": 5120,
