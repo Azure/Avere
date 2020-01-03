@@ -29,6 +29,13 @@ func init() {
 
 // RandStringRunesUltraFast returns a random string of size byteCount
 func RandStringRunesUltraFast(byteCount int) string {
+	return string(RandStringRunesUltraFastBytes(byteCount))
+}
+
+// RandStringRunesUltraFast returns a random string of size byteCount
+func RandStringRunesUltraFastBytes(byteCount int) []byte {
+	log.Debug.Printf("[RandStringRunesUltraFast(%v)", byteCount)
+	defer log.Debug.Printf("RandStringRunesUltraFast(%v)]", byteCount)
 	tIndex := rand.Int31n(randomTableSize)
 	//byteCount := kbCount * kb
 	b := make([]byte, byteCount)
@@ -36,7 +43,7 @@ func RandStringRunesUltraFast(byteCount int) string {
 		b[i] = randomTable[tIndex]
 		tIndex = (tIndex + 1) % randomTableSize
 	}
-	return string(b)
+	return b
 }
 
 // RandStringRunesSlow returns a random string of size byteCount
