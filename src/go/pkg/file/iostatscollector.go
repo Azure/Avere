@@ -38,7 +38,7 @@ func InitializeIOStatsCollector(uniqueName string) *IOStatsCollector {
 	}
 }
 
-// RecordEvent records the evenet
+// RecordEvent records the event
 func (i *IOStatsCollector) RecordEvent(eMsg string) {
 	i.mux.Lock()
 	defer i.mux.Unlock()
