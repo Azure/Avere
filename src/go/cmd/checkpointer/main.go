@@ -3,6 +3,7 @@
 package main
 
 import (
+	"runtime/debug"
 	"fmt"
 	"hash/fnv"
 	"os"
@@ -28,7 +29,7 @@ func getUniqueStr() string {
 }
 
 func generateCheckpoint() {
-	removeFiles := false
+	removeFiles := true
 	samples := 10
 	directoryName := "tmp"
 	uniqueName := "testing"
@@ -51,6 +52,9 @@ func generateCheckpoint() {
 		if removeFiles {
 			os.RemoveAll(fullpath)	
 		}
+		cpf.Payload = nil
+		cpf = nil
+		debug.FreeOSMemory()
 	}
 
 	// finish up
