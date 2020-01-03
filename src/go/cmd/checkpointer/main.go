@@ -28,6 +28,7 @@ func getUniqueStr() string {
 }
 
 func generateCheckpoint() {
+	removeFiles := false
 	samples := 10
 	directoryName := "tmp"
 	uniqueName := "testing"
@@ -47,12 +48,16 @@ func generateCheckpoint() {
 		} else {
 			log.Info.Printf("wrote checkpoint file %s", fullpath)
 		}
-		os.RemoveAll(fullpath)	
+		if removeFiles {
+			os.RemoveAll(fullpath)	
+		}
 	}
 
 	// finish up
 	log.Info.Printf("results: %s", simpleProfiler.GetSummary())
-	os.RemoveAll(directoryName)
+	if removeFiles {
+		os.RemoveAll(directoryName)
+	}
 }
 
 func main() {

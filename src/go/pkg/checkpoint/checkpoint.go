@@ -3,7 +3,6 @@
 package checkpoint
 
 import (
-	"encoding/json"
 	"fmt"
 	"path"
 	"strings"
@@ -16,7 +15,7 @@ import (
 // CheckpointFile represents a checkpoint file
 type CheckpointFile struct {
 	Name string
-	PaddedString   string
+	Payload   []byte
 }
 
 // InitializeCheckpointFile sets the unique name of the job configuration and the batch name
@@ -31,45 +30,31 @@ func ReadCheckpointFile(reader *file.ReaderWriter, filename string) (*Checkpoint
 	log.Debug.Printf("[ReadCheckpointFile %s", filename)
 	defer log.Debug.Printf("ReadCheckpointFile %s]", filename)
 	uniqueName, runName := GetCheckpointNameParts(filename)
+	name := GetName(filename)
 	byteValue, err := reader.ReadFile(filename, uniqueName, runName)
 	if err != nil {
 		return nil, err
 	}
-
-	var result CheckpointFile
-	if err := json.Unmarshal([]byte(byteValue), &result); err != nil {
-		return nil, err
-	}
-
-	// clear the padded string for GC
-	result.PaddedString = ""
-	return &result, nil
+	
+	return &CheckpointFile{
+			Name: name,
+			Payload: byteValue,
+		}, nil
 }
 
 // WriteJobConfigFile writes the job configuration file to disk, padding it so it makes the necessary size
 func (c *CheckpointFile) WriteCheckpointFile(writer *file.ReaderWriter, filepath string, fileSizeBytes int) (string, error) {
 	filename := path.Join(filepath, c.getCheckpointFileName())
-	
+	uniqueName, runName := GetCheckpointNameParts(filename)
+
 	log.Debug.Printf("[WriteCheckpointFile(%s)", filename)
 	defer log.Debug.Printf("WriteCheckpointFile(%s)]", filename)
-	// learn the size of the current object
-	data, err := json.Marshal(c)
-	if err != nil {
-		return "", err
-	}
 
-	// pad and re-martial to match the bytes
-	padLength := (fileSizeBytes) - len(data)
-	if padLength > 0 {
-		c.PaddedString = random.RandStringRunesUltraFast(padLength)
-		data, err = json.Marshal(c)
-		if err != nil {
-			return "", err
-		}
+	if fileSizeBytes > 0 {
+		c.Payload = random.RandStringRunesUltraFastBytes(fileSizeBytes)
 	}
-
-	uniqueName, runName := GetCheckpointNameParts(filename)
-	if err := writer.WriteFile(filename, []byte(data), uniqueName, runName); err != nil {
+	
+	if err := writer.WriteFile(filename, c.Payload, uniqueName, runName); err != nil {
 		return "", err
 	}
 
@@ -78,6 +63,12 @@ func (c *CheckpointFile) WriteCheckpointFile(writer *file.ReaderWriter, filepath
 
 func (c *CheckpointFile) getCheckpointFileName() string {
 	return fmt.Sprintf("%s.cp", c.Name)
+}
+
+// return the filename
+func GetName(fullFilePath string) string {
+	fn := path.Base(fullFilePath)
+	return strings.TrimSuffix(fn, path.Ext(fn))
 }
 
 // GetCheckpointName returns the checkpoint name, which is just the parent directory
