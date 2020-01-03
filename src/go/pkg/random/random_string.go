@@ -28,9 +28,9 @@ func init() {
 }
 
 // RandStringRunesUltraFast returns a random string of size byteCount
-func RandStringRunesUltraFast(kbCount int) string {
+func RandStringRunesUltraFast(byteCount int) string {
 	tIndex := rand.Int31n(randomTableSize)
-	byteCount := kbCount * kb
+	//byteCount := kbCount * kb
 	b := make([]byte, byteCount)
 	for i := 0; i < byteCount; i++ {
 		b[i] = randomTable[tIndex]
