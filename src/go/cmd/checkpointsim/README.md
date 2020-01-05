@@ -1,13 +1,15 @@
-# Checkpoint Simulator - test the speed of a POSIX FileSystem for checkpointing
+# Checkpoint Simulator
+
+Use the checkpoint simulator to test the speed of a POSIX FileSystem for checkpointing.
 
 ## Installation Instructions for Linux
 
-These instructions work on Centos 7 (systemd) and Ubuntu 18.04.  This creates a manager node that runs the VMScaler application as a service.  Here are the general steps:
+These instructions work on Centos 7 and Ubuntu 18.04. Here are the general steps:
  1. Build the Golang binary
  1. Install the binary and service files to an NFS share
- 1. Deploy the VMScaler VM
+ 1. Run the checkpoint simulator against the desired POSIX filesystem path
 
-### Build the VMScaler binary
+### Build the checkpointsim binary
 
 1. if this is centos, install git
 
