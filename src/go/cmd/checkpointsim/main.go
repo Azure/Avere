@@ -129,7 +129,7 @@ func generateCheckpoint(ctx context.Context, syncWaitGroup *sync.WaitGroup, chec
 		cpf := checkpoint.InitializeCheckpointFile(DefaultCheckpointName)
 		filePath := path.Join(checkpointSim.TargetDirectory, checkpoint.GenerateCheckpointName(checkpointSim.UniqueName, frameName))
 		dirMgr.EnsureDirectory(filePath)
-		fullpath, err := cpf.WriteCheckpointFile(frw, filePath, 2*checkpoint.GB)
+		fullpath, err := cpf.WriteCheckpointFile(frw, filePath, int(checkpointSim.CheckpointSizeBytes))
 		if err != nil {
 			log.Error.Printf("Error writing checkpoint file: %v", err)
 		} else {

@@ -14,8 +14,8 @@ import (
 
 // CheckpointFile represents a checkpoint file
 type CheckpointFile struct {
-	Name string
-	Payload   []byte
+	Name    string
+	Payload []byte
 }
 
 // InitializeCheckpointFile sets the unique name of the job configuration and the batch name
@@ -35,11 +35,11 @@ func ReadCheckpointFile(reader *file.ReaderWriter, filename string) (*Checkpoint
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &CheckpointFile{
-			Name: name,
-			Payload: byteValue,
-		}, nil
+		Name:    name,
+		Payload: byteValue,
+	}, nil
 }
 
 // WriteJobConfigFile writes the job configuration file to disk, padding it so it makes the necessary size
@@ -51,9 +51,9 @@ func (c *CheckpointFile) WriteCheckpointFile(writer *file.ReaderWriter, filepath
 	defer log.Debug.Printf("WriteCheckpointFile(%s)]", filename)
 
 	if fileSizeBytes > 0 {
-		c.Payload = random.RandStringRunesUltraFastBytes(fileSizeBytes)
+		c.Payload = random.RandStringRunesUltraFastBytesParallel(fileSizeBytes)
 	}
-	
+
 	if err := writer.WriteFile(filename, c.Payload, uniqueName, runName); err != nil {
 		return "", err
 	}
