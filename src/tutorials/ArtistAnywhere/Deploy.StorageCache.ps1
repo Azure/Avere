@@ -161,22 +161,13 @@ Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (04.2 - Storage Mounts
 $storageMounts = ""; $outerDelimiter = "|"; $innerDelimiter = ";"
 $storageMountOptions = ",hard,proto=tcp,mountproto=tcp,retry=30"
 foreach ($storageTarget in $storageTargets) {
-	if ($storageTarget.junctions.length -eq 0) {
+	foreach ($storageTargetJunction in $storageTarget.junctions) {
 		if ($storageMounts -ne "") {
 			$storageMounts = $storageMounts + $outerDelimiter
 		}
-		$storageMounts = $storageMounts + $storageTarget.namespacePath + $innerDelimiter
+		$storageMounts = $storageMounts + $storageTargetJunction.namespacePath + $innerDelimiter
 		$storageMounts = $storageMounts + $storageTarget.mountOptions + $storageMountOptions + $innerDelimiter
-		$storageMounts = $storageMounts + $storageTarget.host + ":" + $storageTarget.namespacePath
-	} else {
-		foreach ($storageTargetJunction in $storageTarget.junctions) {
-			if ($storageMounts -ne "") {
-				$storageMounts = $storageMounts + $outerDelimiter
-			}
-			$storageMounts = $storageMounts + $storageTargetJunction.namespacePath + $innerDelimiter
-			$storageMounts = $storageMounts + $storageTarget.mountOptions + $storageMountOptions + $innerDelimiter
-			$storageMounts = $storageMounts + $cacheMountHost + ":" + $storageTargetJunction.namespacePath
-		}
+		$storageMounts = $storageMounts + $cacheMountHost + ":" + $storageTargetJunction.namespacePath
 	}
 }
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (04.2 - Storage Mounts End)")

@@ -34,14 +34,16 @@
               "targetPath": ""
             }
           ],
-          "namespacePath": "",
           "mountOptions": "-fstype=nfs,vers=3"
         },
         {
           "name": "Frames",
           "junctions": [
+            {
+              "namespacePath": "/storage/1/frames",
+              "targetPath": ""
+            }
           ],
-          "namespacePath": "/storage/1/frames",
           "mountOptions": "-fstype=nfs,vers=3"
         }
       ]

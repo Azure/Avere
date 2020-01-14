@@ -37,17 +37,20 @@
               "targetPath": ""
             }
           ],
-          "namespacePath": "",
           "mountOptions": "-fstype=nfs,vers=3",
           "usageModel": "WRITE_AROUND"
         },
         {
           "name": "Frames",
           "junctions": [
+            {
+              "namespacePath": "/storage/0/frames",
+              "nfsExport": "/frames",
+              "targetPath": ""
+            }
           ],
-          "namespacePath": "/storage/0/frames",
           "mountOptions": "-fstype=nfs,vers=3",
-          "usageModel": ""
+          "usageModel": "WRITE_AROUND"
         }
       ]
     },

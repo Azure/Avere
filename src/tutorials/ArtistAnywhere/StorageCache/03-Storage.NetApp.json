@@ -172,7 +172,6 @@
           "host": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('netAppAccountName'), parameters('capacityPoolName'), parameters('storageTargets')[copyIndex()].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
           "target": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('netAppAccountName'), parameters('capacityPoolName'), parameters('storageTargets')[copyIndex()].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
           "junctions": "[parameters('storageTargets')[copyIndex()].junctions]",
-          "namespacePath": "[parameters('storageTargets')[copyIndex()].namespacePath]",
           "mountOptions": "[parameters('storageTargets')[copyIndex()].mountOptions]",
           "usageModel": "[parameters('storageTargets')[copyIndex()].usageModel]"
         }
