@@ -55,9 +55,13 @@
               "[concat('cd ', parameters('renderWorker').rootDirectory)]",
               "[concat('curl --location ', parameters('renderWorker').softwareUrl, ' --output opencue-rqd.jar.gz')]",
               "[concat('curl --location ', parameters('renderWorker').serviceUrl, ' --output opencue-rqd.service')]",
+              "sed --in-place '/SyslogIdentifier/a RestartSec=30' opencue-rqd.service",
+              "sed --in-place '/SyslogIdentifier/a Restart=always' opencue-rqd.service",
               "tar -xzf opencue-rqd.jar.gz",
               "cd rqd*",
-              "python setup.py install"
+              "python setup.py install",
+              "mkdir /shots",
+              "chmod -R 0777 /shots"
             ]
           },
           {
@@ -78,7 +82,8 @@
               "yum -y install mesa-dri-drivers",
               "[concat('cd ', parameters('renderWorker').rootDirectory)]",
               "[concat('curl --location ', parameters('renderWorker').blenderUrl, ' --output blender.jar.bz2')]",
-              "tar -xjf blender.jar.bz2"
+              "tar -xjf blender.jar.bz2",
+              "mv blender-*/* /usr/local/bin"
             ]
           }
         ],
