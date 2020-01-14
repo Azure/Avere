@@ -44,7 +44,7 @@
             "name": "OpenCue",
             "type": "Shell",
             "inline": [
-              "yum -y install java-1.8.0-openjdk",
+              "yum -y install java-11-openjdk",
               "yum -y install postgresql-contrib",
               "[concat('useradd --system --create-home ', replace(replace(parameters('renderManager').rootDirectory, 'home', ''), '/', ''))]",
               "[concat('cd ', parameters('renderManager').rootDirectory)]",
