@@ -11,7 +11,7 @@
         "dataServerStorageAutoGrow": "Enabled",
         "dataServerBackupRetentionDays": 7,
         "databaseName": "OpenCue",
-        "databaseAdminUsername": "sa",
+        "databaseAdminUsername": "az",
         "databaseAdminPassword": "P@ssword1234",
         "keyVaultName": "ArtistAnywhere",
         "keyVaultTier": "Standard",
