@@ -5,6 +5,8 @@ package random
 import (
 	crand "crypto/rand"
 	"math/rand"
+	"runtime"
+	"sync"
 	"time"
 
 	"github.com/Azure/Avere/src/go/pkg/log"
@@ -17,26 +19,72 @@ const (
 	letterIdxMax    = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
 	kb              = 1024
 	mb              = kb * kb
+	gb              = kb * mb
 	randomTableSize = 10 * mb // 10 MB random table
 )
 
 var randomTable []byte
+var numCPU int
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
 	randomTable = []byte(RandStringRunesSlow(randomTableSize))
+	numCPU = runtime.NumCPU()
 }
 
 // RandStringRunesUltraFast returns a random string of size byteCount
-func RandStringRunesUltraFast(kbCount int) string {
+func RandStringRunesUltraFast(byteCount int) string {
+	if byteCount >= gb {
+		return string(RandStringRunesUltraFastBytesParallel(byteCount))
+	} else {
+		return string(RandStringRunesUltraFastBytes(byteCount))
+	}
+}
+
+// RandStringRunesUltraFast returns a random string of size byteCount
+func RandStringRunesUltraFastBytes(byteCount int) []byte {
+	log.Debug.Printf("[RandStringRunesUltraFast(%v)", byteCount)
+	defer log.Debug.Printf("RandStringRunesUltraFast(%v)]", byteCount)
 	tIndex := rand.Int31n(randomTableSize)
-	byteCount := kbCount * kb
 	b := make([]byte, byteCount)
 	for i := 0; i < byteCount; i++ {
 		b[i] = randomTable[tIndex]
 		tIndex = (tIndex + 1) % randomTableSize
 	}
-	return string(b)
+	return b
+}
+
+// RandStringRunesUltraFast returns a random string of size byteCount
+func RandStringRunesUltraFastBytesParallel(byteCount int) []byte {
+	log.Debug.Printf("[RandStringRunesUltraFastBytesParallel(%v)", byteCount)
+	defer log.Debug.Printf("RandStringRunesUltraFastBytesParallel(%v)]", byteCount)
+	b := make([]byte, byteCount)
+
+	syncWaitGroups := sync.WaitGroup{}
+	syncWaitGroups.Add(numCPU)
+	countPerCPU := byteCount / numCPU
+
+	for i := 0; i < numCPU; i++ {
+		startIndex := i * countPerCPU
+		stopIndex := countPerCPU
+		if i == (numCPU - 1) {
+			stopIndex = countPerCPU + (byteCount % numCPU)
+		}
+		go fillTable(&syncWaitGroups, startIndex, stopIndex, b)
+	}
+	syncWaitGroups.Wait()
+	return b
+}
+
+func fillTable(syncWaitGroup *sync.WaitGroup, startIndex int, count int, buffer []byte) {
+	log.Debug.Printf("[fillTable(%v,%v)", startIndex, count)
+	defer log.Debug.Printf("fillTable(%v,%v)]", startIndex, count)
+	defer syncWaitGroup.Done()
+	tIndex := rand.Int31n(randomTableSize)
+	for i := startIndex; i < (startIndex + count); i++ {
+		buffer[i] = randomTable[tIndex]
+		tIndex = (tIndex + 1) % randomTableSize
+	}
 }
 
 // RandStringRunesSlow returns a random string of size byteCount

@@ -24,6 +24,15 @@ from lib.helpers import (get_unused_local_port, run_averecmd, run_ssh_commands,
 class TestVfxtClusterStatus:
     """Basic vFXT cluster health tests."""
 
+    def test_set_custom_setting(self, averecmd_params):  # noqa: F811
+        """INTERNAL USE ONLY"""
+        custom_settings = os.environ.get('INTERNAL_CUSTOM_SETTING', None)
+        if custom_settings:
+            run_averecmd(
+                **averecmd_params, method="support.setCustomSetting",
+                args=custom_settings
+            )
+
     def test_ping_node_ips(self, node_ips, ssh_con, test_vars):  # noqa: F811
         """Ping the node IPs from the controller."""
         commands = []
