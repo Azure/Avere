@@ -12,7 +12,7 @@
       "value": "/data"
     },
     "nfsExportOptions": {
-      "value": "*(rw,async,no_root_squash)"
+      "value": "*(rw,sync,no_root_squash)"
     },
     "virtualNetworkResourceGroup": {
       "value": "UNIQUE"
