@@ -2,10 +2,10 @@
 
 # variables that must be set beforehand
 # EXPORT_PATH=/data
-# EXPORT_OPTIONS="*(rw,async,no_root_squash)"
+# EXPORT_OPTIONS="*(rw,sync,no_root_squash)"
 #
 # called like this:
-#  sudo EXPORT_PATH=/data EXPORT_OPTIONS="*(rw,async,no_root_squash)" ./installnfs.sh
+#  sudo EXPORT_PATH=/data EXPORT_OPTIONS="*(rw,sync,no_root_squash)" ./installnfs.sh
 #
 
 set -x
@@ -51,7 +51,7 @@ function apt_get_install() {
 function config_linux() {
 	export DEBIAN_FRONTEND=noninteractive  
 	apt_get_update
-	apt_get_install 20 10 180 nfs-kernel-server nfs-common
+	apt_get_install 20 10 180 rpcbind nfs-common nfs4-acl-tools nfs-kernel-server
 }
 
 # export the ephemeral disk as specified by $EXPORT_PATH
@@ -66,8 +66,10 @@ function configure_nfs() {
     else
         echo -e "\n${EXPORT_PATH}   ${EXPORT_OPTIONS}" >> /etc/exports
     fi
+
+    # update to use 64 threads to get most performance
+    sed -i 's/^RPCNFSDCOUNT=.*$/RPCNFSDCOUNT=64/g' /etc/default/nfs-kernel-server
     
-    systemctl enable nfs-kernel-server.service
     systemctl restart nfs-kernel-server.service
 }
 

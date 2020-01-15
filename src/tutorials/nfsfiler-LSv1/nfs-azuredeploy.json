@@ -38,7 +38,7 @@
     },
     "nfsExportOptions": {
       "type": "string",
-      "defaultValue": "*(rw,async,no_root_squash)",
+      "defaultValue": "*(rw,sync,no_root_squash)",
       "metadata": {
         "description": "The mount options used in /etc/exports"
       }
