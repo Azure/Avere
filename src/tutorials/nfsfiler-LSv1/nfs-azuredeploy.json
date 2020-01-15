@@ -45,7 +45,6 @@
     },
     "virtualNetworkResourceGroup": {
       "type": "string",
-      "defaultValue": "[resourceGroup().name]",
       "metadata": {
         "description": "The resource group name for the VNET."
       }
@@ -61,6 +60,13 @@
       "metadata": {
         "description": "The unique name used for the virtual network subnet."
       }
+    },
+    "installScriptBlobUrl": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/nfsfiler-LSv1/installnfs.sh",
+      "metadata": {
+        "description": "The blob url to the install script.  This is currently set to github, but could be added to a blob url of a locked down storage account."
+      }
     }
   },
   "variables": {
@@ -73,9 +79,10 @@
     "virtualNetworkResourceGroup": "[parameters('virtualNetworkResourceGroup')]",
     "virtualNetworkName": "[parameters('virtualNetworkName')]",
     "virtualNetworkSubnetName": "[parameters('virtualNetworkSubnetName')]",
-    
+    "installScriptBlobUrl": "[parameters('installScriptBlobUrl')]",
+        
     "sshKeyPath": "[concat('/home/',variables('adminUsername'),'/.ssh/authorized_keys')]",
-    "environmentVariables": "[concat(' EXPORT_PATH=', variables('nfsExportPath'),' EXPORT_OPTIONS=', variables('nfsExportOptions'))]",
+    "environmentVariables": "[concat(' EXPORT_PATH=', variables('nfsExportPath'),' EXPORT_OPTIONS=\"', variables('nfsExportOptions'), '\"')]",
     "imageReference": {
       "publisher": "Canonical",
       "offer": "UbuntuServer",
@@ -83,7 +90,6 @@
       "version": "latest"
     },
     "subnetId": "[resourceId(variables('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('virtualNetworkSubnetName'))]"
-    
   },
   "resources": [
     {
@@ -160,7 +166,7 @@
         "autoUpgradeMinorVersion": true,
         "settings": {
           "fileUris": [
-            "https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/nsffiler-LSv1/installnfs.sh"
+            "[variables('installScriptBlobUrl')]"
           ],
           "commandToExecute": "[concat(variables('environmentVariables'), ' /bin/bash installnfs.sh')]"
         }

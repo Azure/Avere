@@ -36,3 +36,10 @@ az group deployment create --resource-group $DstResourceGroupName --template-fil
 ```
 
 5. deploy the template, and capture the output variables to get the IP address, and exported path.
+
+# Design Considerations
+
+* custom script extension is used instead of cloud-init (customData) to get feedback on success or failure of the script
+* for simplicity the install script is downloaded from Github, but you could upload the script to a locked down blob storage account, and specify the script in the variable `installScriptBlobUrl` 
+* retry logic throughout script to handle cloud failures
+* no_root_squash is used on the nfs filer so it is ready for HPC Cache or and Avere vFXT to mount it.
