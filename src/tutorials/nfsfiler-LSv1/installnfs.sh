@@ -51,13 +51,20 @@ function apt_get_install() {
 function config_linux() {
 	export DEBIAN_FRONTEND=noninteractive  
 	apt_get_update
-	apt_get_install 20 10 180 rpcbind nfs-common nfs4-acl-tools nfs-kernel-server
+	apt_get_install 20 10 180 nfs-kernel-server nfs-common
 }
 
 # export the ephemeral disk as specified by $EXPORT_PATH
 function configure_nfs() {
-    # add a symbolic link to the ephemeral disk, then export
-    ln -s $EPHEMERAL_DISK_PATH $EXPORT_PATH
+    # stop the nfs service
+    systemctl stop nfs-kernel-server.service
+
+    # move the ephemeral mount to the mount chosen by the customer
+    # we cannot do the symbolic link because it is not supported by nfsv4
+    umount $EPHEMERAL_DISK_PATH
+    mkdir -p $EXPORT_PATH
+    sed -i "s:${EPHEMERAL_DISK_PATH}:${EXPORT_PATH}:g" /etc/fstab
+    mount ${EXPORT_PATH}
     
     # configure NFS export for the export path
     grep "^${EXPORT_PATH}" /etc/exports > /dev/null 2>&1
@@ -70,7 +77,8 @@ function configure_nfs() {
     # update to use 64 threads to get most performance
     sed -i 's/^RPCNFSDCOUNT=.*$/RPCNFSDCOUNT=64/g' /etc/default/nfs-kernel-server
     
-    systemctl restart nfs-kernel-server.service
+    # start the nfs service
+    systemctl start nfs-kernel-server.service
 }
 
 function main() {
