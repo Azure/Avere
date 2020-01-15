@@ -5,6 +5,15 @@
     "sshKeyData": {
       "value": "SSH_PUBLIC_KEY"
     },
+    "uniqueName": {
+      "value": "uniqueName"
+    },
+    "nfsExportPath": {
+      "value": "/data"
+    },
+    "nfsExportOptions": {
+      "value": "*(rw,async,no_root_squash)"
+    },
     "virtualNetworkResourceGroup": {
       "value": "UNIQUE"
     },
