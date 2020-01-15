@@ -1,0 +1,188 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "adminUsername": {
+      "type": "string",
+      "defaultValue": "azureuser",
+      "metadata": {
+        "description": "Admin username on the VM."
+      }
+    },
+    "sshKeyData": {
+      "type": "string",
+      "metadata": {
+        "description": "The public SSH key used for access to the VM."
+      }
+    },
+    "uniqueName": {
+      "type": "string",
+      "defaultValue": "cloudnfsfiler",
+      "metadata": {
+        "description": "The unique name used for the VM and for resource names associated with the VM."
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_L32s",
+      "metadata": {
+        "description": "Size of the VM."
+      }
+    },
+    "nfsExportPath": {
+      "type": "string",
+      "defaultValue": "/data",
+      "metadata": {
+        "description": "The nfs export path exposed in /etc/exports"
+      }
+    },
+    "nfsExportOptions": {
+      "type": "string",
+      "defaultValue": "*(rw,async,no_root_squash)",
+      "metadata": {
+        "description": "The mount options used in /etc/exports"
+      }
+    },
+    "virtualNetworkResourceGroup": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().name]",
+      "metadata": {
+        "description": "The resource group name for the VNET."
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "metadata": {
+        "description": "The unique name used for the virtual network."
+      }
+    },
+    "virtualNetworkSubnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "The unique name used for the virtual network subnet."
+      }
+    },
+  },
+  "variables": {
+    "adminUsername": "[parameters('adminUsername')]",
+    "sshKeyData": "[parameters('sshKeyData')]",
+    "vmName": "[parameters('uniqueName')]",
+    "vmSize": "[parameters('vmSize')]",
+    "nfsExportPath": "[parameters('nfsExportPath')]",
+    "nfsExportOptions": "[parameters('nfsExportOptions')]",
+    "virtualNetworkResourceGroup": "[parameters('virtualNetworkResourceGroup')]",
+    "virtualNetworkName": "[parameters('virtualNetworkName')]",
+    "virtualNetworkSubnetName": "[parameters('virtualNetworkSubnetName')]",
+    
+    "sshKeyPath": "[concat('/home/',variables('adminUsername'),'/.ssh/authorized_keys')]",
+    "environmentVariables": "[concat(' EXPORT_PATH=', variables('nfsExportPath'),' EXPORT_OPTIONS=', variables('nfsExportOptions'))]",
+    "imageReference": {
+      "publisher": "Canonical",
+      "offer": "UbuntuServer",
+      "sku": "18.04-LTS",
+      "version": "latest"
+    },
+    "subnetId": "[resourceId(variables('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('virtualNetworkSubnetName'))]"
+    
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('vmName'), '-nic')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnetId')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2017-12-01",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(variables('vmName'))]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('vmName'), '-nic')]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('vmSize')]"
+        },
+        "osProfile": {
+          "computername": "[concat(variables('vmName'))]",
+          "adminUsername": "[variables('adminUsername')]",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": "true",
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[variables('sshKeyPath')]",
+                  "keyData": "[variables('sshKeyData')]"
+                }
+              ]
+            }
+          }
+        },
+        "storageProfile": {
+          "imageReference": "[variables('imageReference')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('vmName'), '-nic'))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('vmName'), '/configurenfs')]",
+      "apiVersion": "2017-12-01",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.0",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "fileUris": [
+            "https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/nsffiler-LSv1/installnfs.sh"
+          ],
+          "commandToExecute": "[concat(variables('environmentVariables'), ' /bin/bash installnfs.sh')]"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "RESOURCE_GROUP": {
+      "type": "string",
+      "value": "[resourceGroup().name]"
+    },
+    "LOCATION": {
+      "type": "string",
+      "value": "[resourceGroup().location]"
+    },
+    "SSH_STRING": {
+      "type": "string",
+      "value": "[concat('ssh ', variables('adminUsername'), '@', reference(resourceId('Microsoft.Network/networkInterfaces',concat(variables('vmName'), '-nic'))).ipConfigurations[0].properties.privateIPAddress)]"
+    },
+    "NFS_MOUNT": {
+      "type": "string",
+      "value": "[concat(reference(resourceId('Microsoft.Network/networkInterfaces',concat(variables('vmName'), '-nic'))).ipConfigurations[0].properties.privateIPAddress, ':', variables('nfsExportPath'))]"
+    }
+  }
+}
