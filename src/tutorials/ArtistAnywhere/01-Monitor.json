@@ -5,7 +5,7 @@
     "logAnalytics": {
       "type": "object",
       "metadata": {
-        "description": "The log analytics workspace."
+        "description": "The log analytics configuration."
       }
     }
   },
@@ -23,7 +23,7 @@
           "name": "[parameters('logAnalytics').tier]"
         }
       }
-    }        
+    }
   ],
   "outputs": {
     "monitorAnalyticsWorkspaceId": {
@@ -33,6 +33,6 @@
     "monitorAnalyticsWorkspaceKey": {
       "type": "string",
       "value": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalytics').name), variables('operationalInsightsApiVersion')).primarySharedKey]"
-    }    
+    }
   }
 }

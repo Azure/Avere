@@ -44,7 +44,7 @@ if (!$groupDeployment) { return }
 
 $computeNetworkResourceGroupName = $resourceGroupName
 $computeNetworkName = $groupDeployment.properties.outputs.virtualNetworkName.value
-$privateDomainName = $groupDeployment.properties.outputs.virtualNetworkPrivateDomainName.value
+$virtualNetworkDomainName = $groupDeployment.properties.outputs.virtualNetworkDomainName.value
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (00 - Network Deployment End)")
 
 # 01 - Monitor
@@ -62,32 +62,32 @@ $monitorAnalyticsWorkspaceId = $groupDeployment.properties.outputs.monitorAnalyt
 $monitorAnalyticsWorkspaceKey = $groupDeployment.properties.outputs.monitorAnalyticsWorkspaceKey.value
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (01 - Monitor Deployment End)")
 
-# 02 - Gallery
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (02 - Gallery Deployment Start)")
-$resourceGroupName = "$resourceGroupNamePrefix-Gallery"
+# 02 - Image
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (02 - Image Deployment Start)")
+$resourceGroupName = "$resourceGroupNamePrefix-Image"
 $resourceGroup = az group create --resource-group $resourceGroupName --location $regionLocationCompute
 if (!$resourceGroup) { return }
 
-$templateResources = "$templateRootDirectory\02-Gallery.json"
-$templateParameters = "$templateRootDirectory\02-Gallery.Parameters.json"
+$templateResources = "$templateRootDirectory\02-Image.json"
+$templateParameters = "$templateRootDirectory\02-Image.Parameters.json"
 $groupDeployment = (az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 if (!$groupDeployment) { return }
 
 $imageGalleryResourceGroupName = $resourceGroupName
 $imageGalleryName = $groupDeployment.properties.outputs.imageGalleryName.value
 $imageDefinitions = $groupDeployment.properties.outputs.imageDefinitions.value
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (02 - Gallery Deployment End)")
+Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (02 - Image Deployment End)")
 
 # * - Background Jobs Start
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (* - Background Jobs Start)")
 $imageDefinition = Get-ImageDefinition "Render" $imageDefinitions
-$storageCacheJob = Start-Job -FilePath "$templateRootDirectory\Deploy.StorageCache.ps1" -ArgumentList $resourceGroupNamePrefix, $regionLocationCompute, $regionLocationStorage, $storageDeployNetApp, $storageDeployBlob, $computeNetworkResourceGroupName, $computeNetworkName, $privateDomainName
+$storageCacheJob = Start-Job -FilePath "$templateRootDirectory\Deploy.StorageCache.ps1" -ArgumentList $resourceGroupNamePrefix, $regionLocationCompute, $regionLocationStorage, $storageDeployNetApp, $storageDeployBlob, $computeNetworkResourceGroupName, $computeNetworkName, $virtualNetworkDomainName
 $renderManagersJob = Start-Job -FilePath "$templateRootDirectory\Deploy.RenderManagers.ps1" -ArgumentList $resourceGroupNamePrefix, $regionLocationCompute, $serviceRootDirectory, $imageGalleryResourceGroupName, $imageGalleryName, $imageDefinition, $computeNetworkResourceGroupName, $computeNetworkName
 
 $templateRootDirectory = $templateRootDirectory + "\RenderWorkers"
 
 # 08.0 - Worker Image Template
-$resourceGroupName = "$resourceGroupNamePrefix-Gallery"
+$resourceGroupName = "$resourceGroupNamePrefix-Image"
 $imageTemplateName = "RenderWorker"
 $imageTemplate = (az resource list --resource-group $resourceGroupName --resource-type $imageTemplateResourceType --name $imageTemplateName) | ConvertFrom-Json
 if ($imageTemplate.length -eq 0) {
@@ -116,7 +116,7 @@ if ($imageTemplate.length -eq 0) {
 
 # 08.1 - Worker Image Version
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (08.1 - Worker Image Version Build Start)")
-$resourceGroupName = "$resourceGroupNamePrefix-Gallery"
+$resourceGroupName = "$resourceGroupNamePrefix-Image"
 $imageVersion = Get-ImageVersion $resourceGroupName $imageGalleryName $imageDefinition.name $imageTemplateName
 if (!$imageVersion) {
 	$imageVersion = (az resource invoke-action --resource-group $resourceGroupName --resource-type $imageTemplateResourceType --name $imageTemplateName --action Run) | ConvertFrom-Json
@@ -181,7 +181,7 @@ Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (09 - Worker Machines 
 
 if ($clientDeploy) {
 	# 10.0 - Client Image Template
-	$resourceGroupName = "$resourceGroupNamePrefix-Gallery"
+	$resourceGroupName = "$resourceGroupNamePrefix-Image"
 	$imageTemplateName = "RenderClient"
 	$imageTemplate = (az resource list --resource-group $resourceGroupName --resource-type $imageTemplateResourceType --name $imageTemplateName) | ConvertFrom-Json
 	if ($imageTemplate.length -eq 0) {
@@ -209,7 +209,7 @@ if ($clientDeploy) {
 
 	# 10.1 - Client Image Version
 	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (10.1 - Client Image Version Build Start)")
-	$resourceGroupName = "$resourceGroupNamePrefix-Gallery"
+	$resourceGroupName = "$resourceGroupNamePrefix-Image"
 	$imageVersion = Get-ImageVersion $resourceGroupName $imageGalleryName $imageDefinition.name $imageTemplateName
 	if (!$imageVersion) {
 		$imageVersion = (az resource invoke-action --resource-group $resourceGroupName --resource-type $imageTemplateResourceType --name $imageTemplateName --action Run) | ConvertFrom-Json

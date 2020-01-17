@@ -8,12 +8,12 @@
     "virtualNetworkAddressSpace": {
       "value": "10.0.0.0/18"
     },
-    "virtualNetworkDomainNameServers": {
+    "virtualNetworkDomainName": {
+      "value": "media.com"
+    },
+    "virtualNetworkDomainServers": {
       "value": [
       ]
-    },
-    "virtualNetworkPrivateDomainName": {
-      "value": "media.com"
     },
     "virtualNetworkSubnets": {
       "value": [
@@ -59,9 +59,9 @@
       "value": {
         "enabled": false,
         "type": "Vpn",
-        "vpnType": "RouteBased",
         "vpnTier": "VpnGw1AZ",
-        "vpnDomainLabel": "Artist",
+        "vpnType": "RouteBased",
+        "vpnDomainLabel": "artist",
         "vpnClientProtocols": [
           "IkeV2",
           "SSTP"

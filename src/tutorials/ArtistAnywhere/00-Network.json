@@ -16,16 +16,16 @@
         "description": "The address space (CIDR) of the virtual network."
       }
     },
-    "virtualNetworkDomainNameServers": {
-      "type": "array",
-      "metadata": {
-        "description": "The custom DNS servers for the virtual network."
-      }
-    },
-    "virtualNetworkPrivateDomainName": {
+    "virtualNetworkDomainName": {
       "type": "string",
       "metadata": {
         "description": "The private domain name for the virtual network."
+      }
+    },
+    "virtualNetworkDomainServers": {
+      "type": "array",
+      "metadata": {
+        "description": "The custom DNS servers for the virtual network."
       }
     },
     "virtualNetworkSubnets": {
@@ -43,8 +43,8 @@
   },
   "variables": {
     "virtualNetworkApiVersion": "2019-09-01",
-    "virtualNetworkGatewayZoned": "[endsWith(parameters('virtualNetworkGateway').vpnTier, 'AZ')]",
-    "privateDomainApiVersion": "2018-09-01"
+    "virtualNetworkDomainApiVersion": "2018-09-01",
+    "virtualNetworkGatewayZoned": "[endsWith(parameters('virtualNetworkGateway').vpnTier, 'AZ')]"
   },
   "resources": [
     {
@@ -59,7 +59,7 @@
           ]
         },
         "dhcpOptions": {
-          "dnsServers": "[parameters('virtualNetworkDomainNameServers')]"
+          "dnsServers": "[parameters('virtualNetworkDomainServers')]"
         },
         "copy": [
           {
@@ -78,20 +78,20 @@
     },
     {
       "type": "Microsoft.Network/privateDnsZones",
-      "apiVersion": "[variables('privateDomainApiVersion')]",
+      "apiVersion": "[variables('virtualNetworkDomainApiVersion')]",
       "location": "global",
-      "name": "[parameters('virtualNetworkPrivateDomainName')]",
+      "name": "[parameters('virtualNetworkDomainName')]",
       "properties": {
       }
     },
     {
       "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
-      "apiVersion": "[variables('privateDomainApiVersion')]",
+      "apiVersion": "[variables('virtualNetworkDomainApiVersion')]",
       "location": "global",
-      "name": "[concat(parameters('virtualNetworkPrivateDomainName'), '/', parameters('virtualNetworkName'))]",
+      "name": "[concat(parameters('virtualNetworkDomainName'), '/', parameters('virtualNetworkName'))]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/privateDnsZones', parameters('virtualNetworkPrivateDomainName'))]",
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]"
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+        "[resourceId('Microsoft.Network/privateDnsZones', parameters('virtualNetworkDomainName'))]"
       ],
       "properties": {
         "virtualNetwork": {
@@ -111,7 +111,7 @@
       },
       "properties": {
         "publicIPAllocationMethod": "[if(variables('virtualNetworkGatewayZoned'), 'Static', 'Dynamic')]",
-        "dnsSettings": "[if(equals(parameters('virtualNetworkGateway').vpnDomainLabel, ''), json('null'), json(concat('{\"domainNameLabel\": \"', toLower(parameters('virtualNetworkGateway').vpnDomainLabel), '\"}')))]"
+        "dnsSettings": "[if(equals(parameters('virtualNetworkGateway').vpnDomainLabel, ''), json('null'), json(concat('{\"domainNameLabel\": \"', parameters('virtualNetworkGateway').vpnDomainLabel, '\"}')))]"
       }
     },
     {
@@ -129,11 +129,11 @@
           "name": "[parameters('virtualNetworkGateway').vpnTier]",
           "tier": "[parameters('virtualNetworkGateway').vpnTier]"
         },
-        "gatewayType": "[parameters('virtualNetworkGateway').type]",
         "vpnType": "[parameters('virtualNetworkGateway').vpnType]",
+        "gatewayType": "[parameters('virtualNetworkGateway').type]",
         "ipConfigurations": [
           {
-            "name": "vNetGatewayConfig",
+            "name": "vpnGatewayConfig",
             "properties": {
               "subnet": {
                 "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), 'GatewaySubnet')]"
@@ -168,9 +168,9 @@
       "type": "string",
       "value": "[parameters('virtualNetworkName')]"
     },
-    "virtualNetworkPrivateDomainName": {
+    "virtualNetworkDomainName": {
       "type": "string",
-      "value": "[parameters('virtualNetworkPrivateDomainName')]"
+      "value": "[parameters('virtualNetworkDomainName')]"
     }
   }
 }

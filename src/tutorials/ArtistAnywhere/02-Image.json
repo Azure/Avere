@@ -5,15 +5,15 @@
     "imageGalleryName": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 64,
+      "maxLength": 80,
       "metadata": {
-        "description": "Name must be between 1 and 64 characters (alphanumeric, underscore and period)."
+        "description": "Name must be between 1 and 80 characters (alphanumeric, underscore and period)."
       }
     },
     "imageDefinitions": {
       "type": "array",
       "metadata": {
-        "description": "The image definitions for the render farm manager, worker and scaler machines."
+        "description": "The image definitions within the shared image gallery."
       }
     }
   },
@@ -39,6 +39,8 @@
       ],
       "properties": {
         "osType": "[parameters('imageDefinitions')[copyIndex()].type]",
+        "osState": "[parameters('imageDefinitions')[copyIndex()].state]",
+        "hyperVGeneration": "[parameters('imageDefinitions')[copyIndex()].generation]",
         "identifier": {
           "publisher": "[parameters('imageDefinitions')[copyIndex()].publisher]",
           "offer": "[parameters('imageDefinitions')[copyIndex()].offer]",

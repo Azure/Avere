@@ -85,7 +85,7 @@ if ($databaseExists) { $managerDatabaseAdminSql = "" }
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (05 - Manager Data Deployment End)")
 
 # 06.0 - Manager Image Template
-$resourceGroupName = "$resourceGroupNamePrefix-Gallery"
+$resourceGroupName = "$resourceGroupNamePrefix-Image"
 $imageTemplateName = "RenderManager"
 $imageTemplate = (az resource list --resource-group $resourceGroupName --resource-type $imageTemplateResourceType --name $imageTemplateName) | ConvertFrom-Json
 if ($imageTemplate.length -eq 0) {
@@ -123,7 +123,7 @@ if ($imageTemplate.length -eq 0) {
 
 # 06.1 - Manager Image Version
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (06.1 - Manager Image Version Build Start)")
-$resourceGroupName = "$resourceGroupNamePrefix-Gallery"
+$resourceGroupName = "$resourceGroupNamePrefix-Image"
 $imageVersion = Get-ImageVersion $resourceGroupName $imageGalleryName $imageDefinition.name $imageTemplateName
 if (!$imageVersion) {
 	$imageVersion = (az resource invoke-action --resource-group $resourceGroupName --resource-type $imageTemplateResourceType --name $imageTemplateName --action Run) | ConvertFrom-Json

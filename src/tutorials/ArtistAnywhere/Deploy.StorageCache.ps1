@@ -25,7 +25,7 @@ param (
 	[string] $computeNetworkName,
 
 	# Set to the Azure resource name for the Azure Private DNS Zone resource
-	[string] $privateDomainName
+	[string] $virtualNetworkDomainName
 )
 
 $templateRootDirectory = $PSScriptRoot
@@ -49,7 +49,7 @@ if (!$computeNetworkResourceGroupName -or !$computeNetworkName) {
 
 	$computeNetworkResourceGroupName = $resourceGroupName
 	$computeNetworkName = $groupDeployment.properties.outputs.virtualNetworkName.value
-	$privateDomainName = $groupDeployment.properties.outputs.virtualNetworkPrivateDomainName.value
+	$virtualNetworkDomainName = $groupDeployment.properties.outputs.virtualNetworkDomainName.value
 	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (00 - Network Deployment End)")
 }
 
@@ -146,12 +146,12 @@ Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (04.0 - Cache Deployme
 # 04.1 - Cache DNS
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (04.1 - Cache DNS Record Set Start)")
 $cacheSubdomainName = $cacheSubnetName.ToLower()
-az network private-dns record-set a delete --resource-group $computeNetworkResourceGroupName --zone-name $privateDomainName --name $cacheSubdomainName --yes
+az network private-dns record-set a delete --resource-group $computeNetworkResourceGroupName --zone-name $virtualNetworkDomainName --name $cacheSubdomainName --yes
 foreach ($cacheMountAddress in $cacheMountAddresses) {
-	$cacheMountRecord = az network private-dns record-set a add-record --resource-group $computeNetworkResourceGroupName --zone-name $privateDomainName --record-set-name $cacheSubdomainName --ipv4-address $cacheMountAddress
+	$cacheMountRecord = az network private-dns record-set a add-record --resource-group $computeNetworkResourceGroupName --zone-name $virtualNetworkDomainName --record-set-name $cacheSubdomainName --ipv4-address $cacheMountAddress
 	if (!$cacheMountRecord) { return }
 }
-$cacheDomainRecord = (az network private-dns record-set a show --resource-group $computeNetworkResourceGroupName --zone-name $privateDomainName --name $cacheSubdomainName) | ConvertFrom-Json
+$cacheDomainRecord = (az network private-dns record-set a show --resource-group $computeNetworkResourceGroupName --zone-name $virtualNetworkDomainName --name $cacheSubdomainName) | ConvertFrom-Json
 if (!$cacheDomainRecord) { return }
 $cacheMountHost = $cacheDomainRecord.fqdn
 Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (04.1 - Cache DNS Record Set End)")

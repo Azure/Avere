@@ -10,17 +10,11 @@
         {
           "name": "Render",
           "type": "Linux",
+          "generation": "v1",
+          "state": "Generalized",
           "publisher": "OpenLogic",
           "offer": "CentOS",
           "sku": "7.7",
-          "version": "latest"
-        },
-        {
-          "name": "Cycle",
-          "type": "Linux",
-          "publisher": "AzureCycleCloud",
-          "offer": "Azure-CycleCloud-VM",
-          "sku": "7.9",
           "version": "latest"
         }
       ]
