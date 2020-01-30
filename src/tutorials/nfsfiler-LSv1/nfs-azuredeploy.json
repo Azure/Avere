@@ -84,9 +84,9 @@
     "sshKeyPath": "[concat('/home/',variables('adminUsername'),'/.ssh/authorized_keys')]",
     "environmentVariables": "[concat(' EXPORT_PATH=', variables('nfsExportPath'),' EXPORT_OPTIONS=\"', variables('nfsExportOptions'), '\"')]",
     "imageReference": {
-      "publisher": "Canonical",
-      "offer": "UbuntuServer",
-      "sku": "18.04-LTS",
+      "publisher": "OpenLogic",
+      "offer": "CentOS",
+      "sku": "7.7",
       "version": "latest"
     },
     "subnetId": "[resourceId(variables('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('virtualNetworkSubnetName'))]"
