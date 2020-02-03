@@ -18,15 +18,6 @@
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Cluster &gt; General Setup" href="gui_cluster_general_setup.html" />
     <link rel="prev" title="Core Filer &gt; Cloud Snapshot Policies" href="gui_cloud_snapshot_policies.html" /> 
-
-   <!-- use for draft review builds only - enables web page annotation internally -->
-<!--
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script src="_static/annotator-full.min.js"></script>
-    <script src="_static/annotate_init.js"></script>
-    <link rel="stylesheet" href="_static/annotator.min.css">
--->
-
   </head><body>
 
 <a href="https://azure.github.io/Avere/">
@@ -116,6 +107,12 @@ or After a Migration</td>
 </tr>
 </tbody>
 </table>
+
+<div class="admonition note">
+  <p class="first admonition-title">Note</p>
+  <p>Starting in Avere OS 5.3.3, the default writeback delay for <span class="guilabel">Full Caching</span> is 1 hour instead of 10 minutes. This change does not affect cache policies in clusters upgraded to 5.3.3 or later, but it does affect clusters created with the new software.</p>
+</div>
+
 <div class="section" id="clients-bypassing-the-cluster">
 <h3>Clients Bypassing the Cluster<a class="headerlink" href="#clients-bypassing-the-cluster" title="Permalink to this headline">     </a></h3>
 <p>The policy named <span class="guilabel">Clients Bypassing the Cluster</span> is designed for the use case where some clients mount the Avere cluster but other clients mount the core filer directly.</p>

@@ -19,14 +19,6 @@
     <link rel="next" title="Cluster &gt; Monitoring" href="gui_monitoring_settings.html" />
     <link rel="prev" title="Node Details" href="gui_node_details.html" /> 
 
-   <!-- use for draft review builds only - enables web page annotation internally -->
-<!--
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script src="_static/annotator-full.min.js"></script>
-    <script src="_static/annotate_init.js"></script>
-    <link rel="stylesheet" href="_static/annotator.min.css">
--->
-
   </head><body>
 
 <a href="https://azure.github.io/Avere/">
@@ -60,6 +52,12 @@
 <p>The High Availability settings page is used to configure high availability (HA) for the cluster. HA is an optional feature, but using it is recommended to provide data protection and avoid service interruptions.</p>
 <img alt="High Availability page" src="_images/gui_ha.png" />
 <p>There are two major sections on the settings page. The HA checkbox (1) turns the basic high availability feature on or off. The <span class="guilabel">Core Filer Data Parameters</span> section (2) enables and configures an optional feature that stores backup cache changes on a core filer. These are described in more detail below.</p>
+
+<div class="admonition note">
+  <p class="first admonition-title">Note</p>
+  <p>In Avere OS 5.1 and later releases, the Core Filer Data Parameters section is absent. Use the checkbox to enable or disable HA.</p>
+</div>
+
 <div class="section" id="about-high-availability">
 <span id="high-availability-overview"></span><h2>About High Availability<a class="headerlink" href="#about-high-availability" title="Permalink to this headline">     </a></h2>
 <p>Avere OS’s High Availability (HA) feature provides access to cached data even if nodes fail or become temporarily unavailable. In an HA configuration, each node caches written information for another node in the cluster.</p>
