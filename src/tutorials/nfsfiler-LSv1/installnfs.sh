@@ -8,10 +8,9 @@
 #  sudo EXPORT_PATH=/data EXPORT_OPTIONS="*(rw,sync,no_root_squash)" ./installnfs.sh
 #
 
-set -x
+# terraform variables: tf_env_variables
 
-# export the ephemeral disk
-EPHEMERAL_DISK_PATH="/mnt/resource"
+set -x
 
 function yum_install() {
     retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
@@ -20,7 +19,8 @@ function yum_install() {
         [ $? -eq 0  ] && break || \
         if [ $i -eq $retries ]; then
             echo "failed"
-            return 1
+            touch /opt/installnfs.failed
+            exit 1
         else
             sleep $wait_sleep
         fi
@@ -42,14 +42,30 @@ function configure_nfs() {
 
     # stop the nfs service
     systemctl stop nfs-server rpcbind
-    
-    # move the ephemeral mount to the mount chosen by the customer
-    # we cannot do the symbolic link because it is not supported by nfsv4
-    umount $EPHEMERAL_DISK_PATH
+
     mkdir -p $EXPORT_PATH
-    sed -i "s:${EPHEMERAL_DISK_PATH}:${EXPORT_PATH}:g" /etc/waagent.conf
-    # restart waagent to mount the new share
-    systemctl restart waagent
+
+    grep -e "/mnt\s" /etc/fstab > /dev/null 2>&1
+    if [ $? = "0" ]; then
+        # this is managed by the new cloud init
+
+        # export the ephemeral disk
+        EPHEMERAL_DISK_PATH="/mnt"
+        umount $EPHEMERAL_DISK_PATH
+        sed -i "s:${EPHEMERAL_DISK_PATH}:${EXPORT_PATH}:g" /etc/fstab
+        mount ${EXPORT_PATH}
+    else 
+        # this is managed by older waagent
+
+        # export the ephemeral disk
+        EPHEMERAL_DISK_PATH="/mnt/resource"
+        # move the ephemeral mount to the mount chosen by the customer
+        # we cannot do the symbolic link because it is not supported by nfsv4
+        umount $EPHEMERAL_DISK_PATH
+        sed -i "s:${EPHEMERAL_DISK_PATH}:${EXPORT_PATH}:g" /etc/waagent.conf
+        # restart waagent to mount the new share
+        systemctl restart waagent
+    fi
     
     # configure NFS export for the export path
     grep "^${EXPORT_PATH}" /etc/exports > /dev/null 2>&1
@@ -67,14 +83,17 @@ function configure_nfs() {
 }
 
 function main() {
-
+    mkdir -p /opt
+    
     if [ -z "$EXPORT_PATH" ]; then
         echo "env var EXPORT_PATH is not defined, please define"
+        touch /opt/installnfs.failed
         exit 1
     fi
 
     if [ -z "$EXPORT_OPTIONS" ]; then
         echo "env var EXPORT_OPTIONS is not defined, please define"
+        touch /opt/installnfs.failed
         exit 1
     fi
 
@@ -85,6 +104,8 @@ function main() {
     configure_nfs
     
     echo "installation complete"
+
+    touch /opt/installnfs.complete
 }
 
 main
