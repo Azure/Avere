@@ -15,6 +15,7 @@ import (
 
 const (
 	AvereInstanceType = "Standard_E32s_v3"
+	AvereAdminUsername = "admin"
 	NodeCacheSize     = 4096
 	AverOperatorRole  = "Avere Operator"
 	MinNodesToAdd     = 1
@@ -50,11 +51,13 @@ type AvereVfxt struct {
 	NetworkName          string
 	SubnetName           string
 
+	GlobalCustomSettings *[]string
+
 	// populated during creation
 	AvereOSVersion     string
 	ManagementIP       string
-	VServerIPAddresses []string
-	NodeNames          []string
+	VServerIPAddresses *[]string
+	NodeNames          *[]string
 }
 
 // NewAvereVfxt creates new AvereVfxt
@@ -69,7 +72,12 @@ func NewAvereVfxt(
 	nodeCount int,
 	networkResourceGroup string,
 	networkName string,
-	subnetName string) *AvereVfxt {
+	subnetName string,
+	globalCustomSettings *[]string,
+	avereOSVersion string,
+	managementIP string,
+	vServerIPAddresses *[]string,
+	nodeNames *[]string) *AvereVfxt {
 	return &AvereVfxt{
 		ControllerAddress:    controllerAddress,
 		ControllerUsename:    controllerUsername,
@@ -82,6 +90,11 @@ func NewAvereVfxt(
 		NetworkResourceGroup: networkResourceGroup,
 		NetworkName:          networkName,
 		SubnetName:           subnetName,
+		GlobalCustomSettings: globalCustomSettings,
+		AvereOSVersion: avereOSVersion,
+		ManagementIP: managementIP,
+		VServerIPAddresses: vServerIPAddresses,
+		NodeNames: nodeNames,
 	}
 }
 
@@ -118,7 +131,8 @@ func (a *AvereVfxt) CreateVfxt() error {
 	if err != nil {
 		return fmt.Errorf("Error creating vfxt: %s", err)
 	}
-	a.NodeNames = strings.Split(nodes, " ")
+	nodeNamesRaw := strings.Split(nodes, " ")
+	a.NodeNames = &(nodeNamesRaw)
 
 	return nil
 }
@@ -135,9 +149,29 @@ func (a *AvereVfxt) DestroyVfxt() error {
 	}
 	a.AvereOSVersion = ""
 	a.ManagementIP = ""
-	a.VServerIPAddresses = make([]string, 0)
-	a.NodeNames = make([]string, 0)
+	a.VServerIPAddresses = &([]string{})
+	a.NodeNames = &([]string{})
 
+	return nil
+}
+
+func (a *AvereVfxt) ApplyCustomSetting(customSetting string) error {
+	cmd := a.getSetCustomSettingCommand(customSetting)
+	log.Printf("cmd: %s\n", cmd)
+	stdoutBuf, stderrBuf, err := SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, cmd)
+	if err != nil {
+		return fmt.Errorf("Error applying command: '%s' '%s'", cmd, stdoutBuf.String(), stderrBuf.String())
+	}
+	return nil
+}
+
+func (a *AvereVfxt) RemoveCustomSetting(customSetting string) error {
+	cmd := a.getRemoveCustomSettingCommand(customSetting)
+	log.Printf("cmd: %s\n", cmd)
+	stdoutBuf, stderrBuf, err := SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, cmd)
+	if err != nil {
+		return fmt.Errorf("Error applying command: '%s' '%s'", cmd, stdoutBuf.String(), stderrBuf.String())
+	}
 	return nil
 }
 
@@ -192,13 +226,26 @@ func (a *AvereVfxt) getBaseVfxtCommand() string {
 	return sb.String()
 }
 
-func getVServerIPRange(vserverIpRange string) []string {
+func (a *AvereVfxt) getRemoveCustomSettingCommand(command string) string {
+	firstArgument := strings.Split(command, " ")[0]
+	return fmt.Sprintf("%s support.removeCustomSetting %s", a.getBaseAvereCmd(), firstArgument)
+}
+
+func (a *AvereVfxt) getSetCustomSettingCommand(command string) string {
+	return fmt.Sprintf("%s support.setCustomSetting %s", a.getBaseAvereCmd(), command)
+}
+
+func (a *AvereVfxt) getBaseAvereCmd() string {
+	return fmt.Sprintf("averecmd --server %s --no-check-certificate --user %s --password '%s'", a.ManagementIP, AvereAdminUsername, a.AvereAdminPassword)
+}
+
+func getVServerIPRange(vserverIpRange string) *[]string {
 	rangeIPs := strings.Split(vserverIpRange, VServerRangeSeperator)
 	if len(rangeIPs) != 2 {
 		// something wrong with the parse, just set the result
 		ipAddrs := make([]string, 1, 1)
 		ipAddrs = append(ipAddrs, vserverIpRange)
-		return ipAddrs
+		return &ipAddrs
 	}
 	ipAddrStart := net.ParseIP(rangeIPs[0]).To4()
 	ipAddrEnd := net.ParseIP(rangeIPs[1]).To4()
@@ -207,7 +254,7 @@ func getVServerIPRange(vserverIpRange string) []string {
 		// something wrong with the parse, just set the result
 		ipAddrs := make([]string, 1, 1)
 		ipAddrs = append(ipAddrs, vserverIpRange)
-		return ipAddrs
+		return &ipAddrs
 	}
 
 	length := (ipAddrEnd[3] - ipAddrStart[3]) + 1
@@ -218,7 +265,7 @@ func getVServerIPRange(vserverIpRange string) []string {
 		ipAddrs = append(ipAddrs, ipIncr.String())
 		ipIncr[3]++
 	}
-	return ipAddrs
+	return &ipAddrs
 }
 
 func getLastManagementIPAddress(stderrBuf bytes.Buffer) (string, error) {
