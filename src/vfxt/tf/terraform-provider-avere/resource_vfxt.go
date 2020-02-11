@@ -101,47 +101,6 @@ func resourceVfxt() *schema.Resource {
 	}
 }
 
-func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
-	controllerAddress := d.Get("controller_address").(string)
-	controllerAdminUsername := d.Get("controller_admin_username").(string)
-	authMethod, err := GetKeyFileAuthMethod()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get key file: %s", err)
-	}
-	
-	// get the optional fields
-	globalCustomSettingsRaw := d.Get("global_custom_settings").(*schema.Set).List()
-	var avereOSVersion string
-	if val, ok := d.Get("vfxt_os_version").(string) ; ok {
-		avereOSVersion = val
-	}
-	var managementIP string
-	if val, ok := d.Get("vfxt_management_ip").(string) ; ok {
-		managementIP = val
-	}
-	vServerIPAddressesRaw := d.Get("vserver_ip_addresses").(*schema.Set).List()
-	nodeNamesRaw := d.Get("node_names").(*schema.Set).List()
-
-	return NewAvereVfxt(
-		controllerAddress,
-		controllerAdminUsername,
-		authMethod,
-		d.Get("resource_group").(string),
-		d.Get("location").(string),
-		d.Get("vfxt_cluster_name").(string),
-		d.Get("vfxt_admin_password").(string),
-		d.Get("vfxt_node_count").(int),
-		d.Get("network_resource_group").(string),
-		d.Get("network_name").(string),
-		d.Get("subnet_name").(string),
-		utils.ExpandStringSlice(globalCustomSettingsRaw),
-		avereOSVersion,
-		managementIP,
-		utils.ExpandStringSlice(vServerIPAddressesRaw),
-		utils.ExpandStringSlice(nodeNamesRaw),
-	), nil
-}
-
 func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 	averevxt, err := fillAvereVfxt(d)
 	if err != nil {
@@ -152,12 +111,6 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("failed to create cluster: %s\n", err)
 	}
 
-	for _, customSetting := range d.Get("global_custom_settings").([]string) {
-		if err := averevxt.ApplyCustomSetting(customSetting) ; err != nil {
-			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", customSetting, err)
-		}
-	}
-
 	d.Set("vfxt_os_version", averevxt.AvereOSVersion)
 	d.Set("vfxt_management_ip", averevxt.ManagementIP)
 	d.Set("vserver_ip_addresses", schema.NewSet(schema.HashString, utils.FlattenStringSlice(averevxt.VServerIPAddresses)))
@@ -165,6 +118,13 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 
 	// the management ip will uniquely identify the cluster in the VNET
 	d.SetId(averevxt.ManagementIP)
+
+	// apply the global custom settings, if they fail, we can try to re-apply on the update
+	for _, v := range d.Get("global_custom_settings").(*schema.Set).List() {
+		if err := averevxt.ApplyCustomSetting(v.(string)) ; err != nil {
+			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", v.(string), err)
+		}
+	}
 
 	return resourceVfxtRead(d, m)
 }
@@ -220,4 +180,45 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 	d.SetId("")
 	
 	return nil
+}
+
+func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
+	controllerAddress := d.Get("controller_address").(string)
+	controllerAdminUsername := d.Get("controller_admin_username").(string)
+	authMethod, err := GetKeyFileAuthMethod()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get key file: %s", err)
+	}
+	
+	// get the optional fields
+	globalCustomSettingsRaw := d.Get("global_custom_settings").(*schema.Set).List()
+	var avereOSVersion string
+	if val, ok := d.Get("vfxt_os_version").(string) ; ok {
+		avereOSVersion = val
+	}
+	var managementIP string
+	if val, ok := d.Get("vfxt_management_ip").(string) ; ok {
+		managementIP = val
+	}
+	vServerIPAddressesRaw := d.Get("vserver_ip_addresses").(*schema.Set).List()
+	nodeNamesRaw := d.Get("node_names").(*schema.Set).List()
+
+	return NewAvereVfxt(
+		controllerAddress,
+		controllerAdminUsername,
+		authMethod,
+		d.Get("resource_group").(string),
+		d.Get("location").(string),
+		d.Get("vfxt_cluster_name").(string),
+		d.Get("vfxt_admin_password").(string),
+		d.Get("vfxt_node_count").(int),
+		d.Get("network_resource_group").(string),
+		d.Get("network_name").(string),
+		d.Get("subnet_name").(string),
+		utils.ExpandStringSlice(globalCustomSettingsRaw),
+		avereOSVersion,
+		managementIP,
+		utils.ExpandStringSlice(vServerIPAddressesRaw),
+		utils.ExpandStringSlice(nodeNamesRaw),
+	), nil
 }
