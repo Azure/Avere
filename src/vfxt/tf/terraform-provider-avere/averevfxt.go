@@ -23,6 +23,9 @@ const (
 	MaxNodesToAdd         = 3
 	VfxtLogDateFormat     = "2006-01-02.15.04.05"
 	VServerRangeSeperator = "-"
+	AverecmdRetryCount = 12
+	AverecmdRetrySleepSeconds = 10
+	AverecmdLogFile = "~/averecmd.log"
 )
 
 // matching strings for the vfxt.py output
@@ -33,6 +36,9 @@ var matchVServerIPRangeRegex = regexp.MustCompile(` - vFXT.cluster:INFO - Creati
 var	matchCreateFailure = regexp.MustCompile(`^(.*vfxt:ERROR.*)$`)
 var	matchVfxtFailure = regexp.MustCompile(`^(.*vFXTCreateFailure:.*)$`)
 var matchVfxtNotFound = regexp.MustCompile(`(vfxt:ERROR - Cluster not found)`)
+var matchWrongCheckCode = regexp.MustCompile(`(wrong check code)`)
+var matchWrongNumberOfArgs = regexp.MustCompile(`(Wrong number of arguments)`)
+var matchLoginFailed = regexp.MustCompile(`(login for user admin failed)`)
 
 type AvereVfxt struct {
 	ControllerAddress string
@@ -100,7 +106,6 @@ func NewAvereVfxt(
 
 func (a *AvereVfxt) CreateVfxt() error {
 	cmd := a.getCreateVfxtCommand()
-	log.Printf("cmd: %s\n", cmd)
 	stdoutBuf, stderrBuf, err := SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, cmd)
 	if err != nil {
 		//allErrors := getAllVfxtErrors(stdoutBuf, stderrBuf)
@@ -156,21 +161,29 @@ func (a *AvereVfxt) DestroyVfxt() error {
 }
 
 func (a *AvereVfxt) ApplyCustomSetting(customSetting string) error {
-	cmd := a.getSetCustomSettingCommand(customSetting)
-	log.Printf("cmd: %s\n", cmd)
-	stdoutBuf, stderrBuf, err := SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, cmd)
-	if err != nil {
-		return fmt.Errorf("Error applying command: '%s' '%s'", cmd, stdoutBuf.String(), stderrBuf.String())
-	}
-	return nil
+	return a.AvereCommand(a.getSetCustomSettingCommand(customSetting))
 }
 
 func (a *AvereVfxt) RemoveCustomSetting(customSetting string) error {
-	cmd := a.getRemoveCustomSettingCommand(customSetting)
-	log.Printf("cmd: %s\n", cmd)
-	stdoutBuf, stderrBuf, err := SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, cmd)
-	if err != nil {
-		return fmt.Errorf("Error applying command: '%s' '%s'", cmd, stdoutBuf.String(), stderrBuf.String())
+	return a.AvereCommand(a.getRemoveCustomSettingCommand(customSetting))
+}
+
+func (a *AvereVfxt) AvereCommand(cmd string) error {
+	for retries:=0 ; ; retries++ {
+		stdoutBuf, stderrBuf, err := SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, cmd)
+		if err == nil {
+			// success
+			break
+		}
+		if isAverecmdNotRetryable(stdoutBuf, stderrBuf) {
+			// failure not retryable
+			return fmt.Errorf("Non retryable error applying command: '%s' '%s'", stdoutBuf.String(), stderrBuf.String()) 
+		}
+		if retries > AverecmdRetryCount {
+			// failure after exhausted retries
+			return fmt.Errorf("Failure after %d retries applying command: '%s' '%s'", retries, stdoutBuf.String(), stderrBuf.String()) 
+		}
+		time.Sleep(AverecmdRetrySleepSeconds * time.Second)
 	}
 	return nil
 }
@@ -226,13 +239,17 @@ func (a *AvereVfxt) getBaseVfxtCommand() string {
 	return sb.String()
 }
 
-func (a *AvereVfxt) getRemoveCustomSettingCommand(command string) string {
-	firstArgument := strings.Split(command, " ")[0]
-	return fmt.Sprintf("%s support.removeCustomSetting %s", a.getBaseAvereCmd(), firstArgument)
+func (a *AvereVfxt) getSetCustomSettingCommand(command string) string {
+	return wrapCommandForLogging(fmt.Sprintf("%s support.setCustomSetting %s", a.getBaseAvereCmd(), command), AverecmdLogFile)
 }
 
-func (a *AvereVfxt) getSetCustomSettingCommand(command string) string {
-	return fmt.Sprintf("%s support.setCustomSetting %s", a.getBaseAvereCmd(), command)
+func (a *AvereVfxt) getRemoveCustomSettingCommand(command string) string {
+	firstArgument := strings.Split(command, " ")[0]
+	return wrapCommandForLogging(fmt.Sprintf("%s support.removeCustomSetting %s", a.getBaseAvereCmd(), firstArgument), AverecmdLogFile)
+}
+
+func wrapCommandForLogging(cmd string, outputfile string) string {
+	return fmt.Sprintf("echo $(date) '%s' | sed 's/--password [^ ]*/--admin-password ***/' >> %s && %s 1> >(tee -a %s) 2> >(tee -a %s >&2)", cmd, outputfile, cmd, outputfile, outputfile)
 }
 
 func (a *AvereVfxt) getBaseAvereCmd() string {
@@ -329,6 +346,19 @@ func getAllVfxtErrors(stdoutBuf bytes.Buffer, stderrBuf bytes.Buffer) string {
 	sb.WriteString(getErrors(stdoutBuf, stderrBuf, matchVfxtFailure))
 
 	return sb.String()
+}
+
+func isAverecmdNotRetryable(stdoutBuf bytes.Buffer, stderrBuf bytes.Buffer) bool {
+	if len(getErrors(stdoutBuf, stderrBuf, matchWrongCheckCode)) > 0 {
+		return true
+	}
+	if len(getErrors(stdoutBuf, stderrBuf, matchWrongNumberOfArgs)) > 0 {
+		return true
+	}
+	if len(getErrors(stdoutBuf, stderrBuf, matchLoginFailed)) > 0 {
+		return true
+	}
+	return false
 }
 
 func getErrors(stdoutBuf bytes.Buffer, stderrBuf bytes.Buffer, errorRegex *regexp.Regexp) string {
