@@ -1,8 +1,11 @@
+// Copyright (C) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 package main
 
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -26,6 +29,23 @@ const (
 	AverecmdRetryCount = 12
 	AverecmdRetrySleepSeconds = 10
 	AverecmdLogFile = "~/averecmd.log"
+
+	// cache policies
+	CachePolicyClientsBypass = "Clients Bypassing the Cluster"
+	CachePolicyReadCaching = "Read Caching"
+	CachePolicyReadWriteCaching = "Read and Write Caching"
+	CachePolicyFullCaching = "Full Caching"
+	CachePolicyTransitioningClients = "Transitioning Clients Before or After a Migration"
+
+	// filer class
+	FilerClassNetappNonClustered = "NetappNonClustered"
+	FilerClassNetappClustered = "NetappClustered"
+	FilerClassEMCIsilon = "EmcIsilon"
+	FilerClassOther = "Other"
+
+	// filer retry 
+	FilerRetryCount = 120
+	FilerRetrySleepSeconds = 10
 )
 
 // matching strings for the vfxt.py output
@@ -39,6 +59,17 @@ var matchVfxtNotFound = regexp.MustCompile(`(vfxt:ERROR - Cluster not found)`)
 var matchWrongCheckCode = regexp.MustCompile(`(wrong check code)`)
 var matchWrongNumberOfArgs = regexp.MustCompile(`(Wrong number of arguments)`)
 var matchLoginFailed = regexp.MustCompile(`(login for user admin failed)`)
+var matchMethodNotSupported = regexp.MustCompile(`(Method Not Supported)`)
+var matchMustRemoveRelatedJunction = regexp.MustCompile(`(You must remove the related junction.s. before you can remove this core filer)`)
+
+type CoreFiler struct {
+	Name string `json:"name"`
+	FqdnOrPrimaryIp string `json:"networkName"`
+	CachePolicy string `json:"policyName"`
+	InternalName string `json:"internalName"`
+	FilerClass string `json:"filerClass"`
+	AdminState string `json:"adminState"`
+}
 
 type AvereVfxt struct {
 	ControllerAddress string
@@ -49,6 +80,8 @@ type AvereVfxt struct {
 	ResourceGroup string
 	Location      string
 
+	/*NEED PROXY INFO*/
+
 	AvereVfxtName      string
 	AvereAdminPassword string
 	NodeCount          int
@@ -56,8 +89,6 @@ type AvereVfxt struct {
 	NetworkResourceGroup string
 	NetworkName          string
 	SubnetName           string
-
-	GlobalCustomSettings *[]string
 
 	// populated during creation
 	AvereOSVersion     string
@@ -79,7 +110,6 @@ func NewAvereVfxt(
 	networkResourceGroup string,
 	networkName string,
 	subnetName string,
-	globalCustomSettings *[]string,
 	avereOSVersion string,
 	managementIP string,
 	vServerIPAddresses *[]string,
@@ -96,7 +126,6 @@ func NewAvereVfxt(
 		NetworkResourceGroup: networkResourceGroup,
 		NetworkName:          networkName,
 		SubnetName:           subnetName,
-		GlobalCustomSettings: globalCustomSettings,
 		AvereOSVersion: avereOSVersion,
 		ManagementIP: managementIP,
 		VServerIPAddresses: vServerIPAddresses,
@@ -161,29 +190,127 @@ func (a *AvereVfxt) DestroyVfxt() error {
 }
 
 func (a *AvereVfxt) ApplyCustomSetting(customSetting string) error {
-	return a.AvereCommand(a.getSetCustomSettingCommand(customSetting))
+	_, err := a.AvereCommand(a.getSetCustomSettingCommand(customSetting))
+	return err
 }
 
 func (a *AvereVfxt) RemoveCustomSetting(customSetting string) error {
-	return a.AvereCommand(a.getRemoveCustomSettingCommand(customSetting))
+	_, err := a.AvereCommand(a.getRemoveCustomSettingCommand(customSetting))
+	return err
 }
 
-func (a *AvereVfxt) AvereCommand(cmd string) error {
+func (a *AvereVfxt) GetExistingFilers() (map[string]*CoreFiler, error) {
+	coreFilers, err := a.GetExistingFilerNames()
+	if err != nil {
+		return nil, err
+	}
+	results := make(map[string]*CoreFiler)
+	for _, filer := range coreFilers {
+		result, err := a.GetFiler(filer)
+		if err != nil {
+			return nil, fmt.Errorf("Error retrieving filer %s: %v", filer, err)
+		}
+		results[filer] = result
+	}
+	return results, nil
+}
+
+func (a *AvereVfxt) GetExistingFilerNames() ([]string, error) {
+	coreFilersJson, err := a.AvereCommand(a.getListCoreFilersJsonCommand())
+	if err != nil {
+		return nil, err
+	}
+	var results []string
+	if err := json.Unmarshal([]byte(coreFilersJson), &results); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+func (a *AvereVfxt) GetFiler(filer string) (*CoreFiler, error) {
+	coreFilerJson, err := a.AvereCommand(a.getFilerJsonCommand(filer))
+	if err != nil {
+		return nil, err
+	}
+	var result map[string]CoreFiler
+	if err := json.Unmarshal([]byte(coreFilerJson), &result); err != nil {
+		return nil, err
+	}
+	coreFiler := result[filer]
+	return &coreFiler, nil
+}
+
+func (a* AvereVfxt) CreateCoreFiler(corefiler *CoreFiler) error {
+	_, err := a.AvereCommand(a.getCreateFilerCommand(corefiler))
+	return err
+}
+
+func (a* AvereVfxt) DeleteCoreFiler(corefilerName string) error {
+	_, err := a.AvereCommand(a.getDeleteFilerCommand(corefilerName))
+	if err != nil {
+		return err
+	}
+	for retries:=0 ; ; retries++ {
+		coreFilers, err := a.GetExistingFilerNames()
+		if err != nil {
+			return err
+		}
+
+		exists := false
+		for _, filer := range coreFilers {
+			if filer == corefilerName {
+				exists = true
+				break
+			}
+		}
+		if !exists {
+			// the filer has been deleted
+			return nil
+		}
+
+		if retries > FilerRetryCount {
+			return fmt.Errorf("Failure to delete after %d retries trying to delete filer %s", retries, corefilerName)
+		}
+		time.Sleep(FilerRetrySleepSeconds * time.Second)
+	}
+}
+
+func (a *AvereVfxt) AvereCommand(cmd string) (string, error) {
+	var result string
 	for retries:=0 ; ; retries++ {
 		stdoutBuf, stderrBuf, err := SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, cmd)
 		if err == nil {
 			// success
+			result = stdoutBuf.String()
 			break
 		}
 		if isAverecmdNotRetryable(stdoutBuf, stderrBuf) {
 			// failure not retryable
-			return fmt.Errorf("Non retryable error applying command: '%s' '%s'", stdoutBuf.String(), stderrBuf.String()) 
+			return "", fmt.Errorf("Non retryable error applying command: '%s' '%s'", stdoutBuf.String(), stderrBuf.String()) 
 		}
 		if retries > AverecmdRetryCount {
 			// failure after exhausted retries
-			return fmt.Errorf("Failure after %d retries applying command: '%s' '%s'", retries, stdoutBuf.String(), stderrBuf.String()) 
+			return "", fmt.Errorf("Failure after %d retries applying command: '%s' '%s'", retries, stdoutBuf.String(), stderrBuf.String()) 
 		}
 		time.Sleep(AverecmdRetrySleepSeconds * time.Second)
+	}
+	return result, nil
+}
+
+// no change can be made to the core parameters of the existing filers
+func EnsureNoCoreAttributeChangeForExistingFilers(oldFiler map[string]*CoreFiler, newFiler map[string]*CoreFiler) error {
+	for k, new := range newFiler {
+		old, ok := oldFiler[k]
+		if !ok {
+			// no change since the core filer didn't previously exist
+			continue
+		}
+		if old.FqdnOrPrimaryIp != new.FqdnOrPrimaryIp {
+			return fmt.Errorf("Error: the fqdn or ip changed for filer '%s'.  To change delete the filer, and re-add", k)
+		}
+		if old.CachePolicy != new.CachePolicy {
+			return fmt.Errorf("Error: the cache policy changed for filer '%s'.  To change delete the filer, and re-add", k)
+		}
 	}
 	return nil
 }
@@ -239,12 +366,28 @@ func (a *AvereVfxt) getBaseVfxtCommand() string {
 	return sb.String()
 }
 
-func (a *AvereVfxt) getSetCustomSettingCommand(command string) string {
-	return wrapCommandForLogging(fmt.Sprintf("%s support.setCustomSetting %s", a.getBaseAvereCmd(), command), AverecmdLogFile)
+func (a *AvereVfxt) getListCoreFilersJsonCommand() string {
+	return wrapCommandForLogging(fmt.Sprintf("%s --json corefiler.list", a.getBaseAvereCmd()), AverecmdLogFile)
 }
 
-func (a *AvereVfxt) getRemoveCustomSettingCommand(command string) string {
-	firstArgument := strings.Split(command, " ")[0]
+func (a *AvereVfxt) getFilerJsonCommand(filer string) string {
+	return wrapCommandForLogging(fmt.Sprintf("%s --json corefiler.get %s", a.getBaseAvereCmd(), filer), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getCreateFilerCommand(coreFiler *CoreFiler) string {
+	return wrapCommandForLogging(fmt.Sprintf("%s corefiler.create %s %s true \"{'filerNetwork':'cluster','filerClass':'Other','cachePolicy':'%s',}\"", a.getBaseAvereCmd(), coreFiler.Name, coreFiler.FqdnOrPrimaryIp, coreFiler.CachePolicy), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getDeleteFilerCommand(filer string) string {
+	return wrapCommandForLogging(fmt.Sprintf("%s corefiler.remove %s", a.getBaseAvereCmd(), filer), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getSetCustomSettingCommand(customSetting string) string {
+	return wrapCommandForLogging(fmt.Sprintf("%s support.setCustomSetting %s", a.getBaseAvereCmd(), customSetting), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getRemoveCustomSettingCommand(customSetting string) string {
+	firstArgument := strings.Split(customSetting, " ")[0]
 	return wrapCommandForLogging(fmt.Sprintf("%s support.removeCustomSetting %s", a.getBaseAvereCmd(), firstArgument), AverecmdLogFile)
 }
 
@@ -356,6 +499,12 @@ func isAverecmdNotRetryable(stdoutBuf bytes.Buffer, stderrBuf bytes.Buffer) bool
 		return true
 	}
 	if len(getErrors(stdoutBuf, stderrBuf, matchLoginFailed)) > 0 {
+		return true
+	}
+	if len(getErrors(stdoutBuf, stderrBuf, matchMethodNotSupported)) > 0 {
+		return true
+	}
+	if len(getErrors(stdoutBuf, stderrBuf, matchMustRemoveRelatedJunction)) > 0 {
 		return true
 	}
 	return false

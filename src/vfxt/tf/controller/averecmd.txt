@@ -11,6 +11,7 @@ import logging
 import pprint
 import socket
 import httplib
+import json
 from datetime import datetime
 import ssl
 
@@ -204,6 +205,7 @@ class PrintFormat(object):
     RAW = 0     # No interpretation, raw python data structures
     PLAIN = 1     # Slightly more human-readable (some interpretation, but not much)
     PRETTY = 2     # A more human-readable format
+    JSON = 3       # JSON output
 
 def print_plain(res):
     if isinstance(res, str):
@@ -241,6 +243,8 @@ def print_result(print_format, res):
     elif (print_format == PrintFormat.PRETTY):
         sys.stdout.write('res = ')
         pprint.pprint(res, width=120)
+    elif (print_format == PrintFormat.JSON):
+        sys.stdout.write('%s' % json.dumps(res))
     else:
         logging.debug('*** Unknown print format : %s\n', print_format)
         print_plain(res)
@@ -296,6 +300,7 @@ def usage():
     print '  --quiet            : just the facts, m\'am'
     print '  --normal           : print normal results (default)'
     print '  --pretty           : pretty-print results'
+    print '  --json             : print json object'
     print '  --raw              : print raw return data (suitable for an eval in python)'
     print '  --upload_keytab    : path to keytab to upload with nfs.uploadKeytab'
     print '  --upload_pem       : path to certificate file/bundle to upload (in PEM format)'
@@ -659,7 +664,7 @@ def main():
         opts,args = getopt.getopt(sys.argv[1:],"",[
             'help', 'methods', 'modules', 'server=',
             'user=', 'password=', 'nologin', 'simple-proxy', 'apis=',
-            'verbose', 'http-verbose', 'quiet', 'quieter', 'raw', 'pretty',
+            'verbose', 'http-verbose', 'quiet', 'quieter', 'raw', 'pretty', 'json',
             'upload_keytab=', 'upload_pem=', 'prompt',
             'no-check-certificate', 'ssl-help'])
     except getopt.GetoptError as err:
@@ -714,6 +719,8 @@ def main():
             print_format = PrintFormat.RAW
         elif opt in ('--pretty'):
             print_format = PrintFormat.PRETTY
+        elif opt in ('--json'):
+            print_format = PrintFormat.JSON
         elif opt in ('--upload_keytab'):
             keytab_path = arg
         elif opt in ('--no-check-certificate'):
