@@ -1,3 +1,5 @@
+// Copyright (C) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
 package main
 
 import (
@@ -15,56 +17,56 @@ func resourceVfxt() *schema.Resource {
 		Delete: resourceVfxtDelete,
 
 		Schema: map[string]*schema.Schema{
-			"controller_address": &schema.Schema{
+			"controller_address": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"controller_admin_username": &schema.Schema{
+			"controller_admin_username": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"resource_group": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"location": &schema.Schema{
+			"resource_group": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"network_resource_group": &schema.Schema{
+			"location": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"network_name": &schema.Schema{
+			"network_resource_group": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"subnet_name": &schema.Schema{
+			"network_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"vfxt_cluster_name": &schema.Schema{
+			"subnet_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"vfxt_admin_password": &schema.Schema{
+			"vfxt_cluster_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"vfxt_admin_password": {
 				Type:      schema.TypeString,
 				Required:  true,
 				ForceNew:  true,
 				Sensitive: true,
 			},
-			"vfxt_node_count": &schema.Schema{
+			"vfxt_node_count": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ValidateFunc: validation.IntBetween(3, 16),
 			},
-			"global_custom_settings": &schema.Schema{
+			"global_custom_settings": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -73,15 +75,80 @@ func resourceVfxt() *schema.Resource {
 				},
 				Set: schema.HashString,
 			},
-			"vfxt_os_version": &schema.Schema{
+			"vserver_settings": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringIsNotWhiteSpace,
+				},
+				Set: schema.HashString,
+			},
+			"core_filer": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type: schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringIsNotWhiteSpace,
+						},
+						"fqdn_or_primary_ip": {
+							Type: schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringIsNotWhiteSpace,
+						},
+						"cache_policy": {
+							Type: schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								CachePolicyClientsBypass,
+								CachePolicyReadCaching,
+								CachePolicyReadWriteCaching,
+								CachePolicyFullCaching,
+								CachePolicyTransitioningClients,
+							}, false),
+						},
+						"custom_settings": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringIsNotWhiteSpace,
+							},
+							Set: schema.HashString,
+						},
+						"junction": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"namespace_path": {
+										Type: schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringIsNotWhiteSpace,
+									},
+									"core_filer_export": {
+										Type: schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringIsNotWhiteSpace,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"vfxt_os_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vfxt_management_ip": &schema.Schema{
+			"vfxt_management_ip": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vserver_ip_addresses": &schema.Schema{
+			"vserver_ip_addresses": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -89,7 +156,7 @@ func resourceVfxt() *schema.Resource {
 				},
 				Set: schema.HashString,
 			},
-			"node_names": &schema.Schema{
+			"node_names": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -102,26 +169,31 @@ func resourceVfxt() *schema.Resource {
 }
 
 func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
-	averevxt, err := fillAvereVfxt(d)
+	avereVfxt, err := fillAvereVfxt(d)
 	if err != nil {
 		return err
 	}
 
-	if err := averevxt.CreateVfxt(); err != nil {
+	if err := avereVfxt.CreateVfxt(); err != nil {
 		return fmt.Errorf("failed to create cluster: %s\n", err)
 	}
 
-	d.Set("vfxt_os_version", averevxt.AvereOSVersion)
-	d.Set("vfxt_management_ip", averevxt.ManagementIP)
-	d.Set("vserver_ip_addresses", schema.NewSet(schema.HashString, utils.FlattenStringSlice(averevxt.VServerIPAddresses)))
-	d.Set("node_names", schema.NewSet(schema.HashString, utils.FlattenStringSlice(averevxt.NodeNames)))
+	d.Set("vfxt_os_version", avereVfxt.AvereOSVersion)
+	d.Set("vfxt_management_ip", avereVfxt.ManagementIP)
+	d.Set("vserver_ip_addresses", schema.NewSet(schema.HashString, utils.FlattenStringSlice(avereVfxt.VServerIPAddresses)))
+	d.Set("node_names", schema.NewSet(schema.HashString, utils.FlattenStringSlice(avereVfxt.NodeNames)))
 
 	// the management ip will uniquely identify the cluster in the VNET
-	d.SetId(averevxt.ManagementIP)
+	d.SetId(avereVfxt.ManagementIP)
+
+	// add the new core filers
+	if err := updateCoreFilers(d, avereVfxt); err != nil {
+		return err
+	}
 
 	// apply the global custom settings, if they fail, we can try to re-apply on the update
 	for _, v := range d.Get("global_custom_settings").(*schema.Set).List() {
-		if err := averevxt.ApplyCustomSetting(v.(string)) ; err != nil {
+		if err := avereVfxt.ApplyCustomSetting(v.(string)) ; err != nil {
 			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", v.(string), err)
 		}
 	}
@@ -134,10 +206,12 @@ func resourceVfxtRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
-	averevxt, err := fillAvereVfxt(d)
+	avereVfxt, err := fillAvereVfxt(d)
 	if err != nil {
 		return err
 	}
+
+	// update the global customer settings
 	if d.HasChange("global_custom_settings") {
 		old, new := d.GetChange("global_custom_settings")
 		os := old.(*schema.Set)
@@ -145,16 +219,23 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 
 		removalList := os.Difference(ns)
 		for _, v := range removalList.List() {
-			if err := averevxt.RemoveCustomSetting(v.(string)) ; err != nil {
+			if err := avereVfxt.RemoveCustomSetting(v.(string)) ; err != nil {
 				return fmt.Errorf("ERROR: failed to remove custom setting '%s': %s", v.(string), err)
 			}
 		}
 
 		// always apply the settings, as the operation is idempotent
 		for _, v := range ns.List() {
-			if err := averevxt.ApplyCustomSetting(v.(string)) ; err != nil {
+			if err := avereVfxt.ApplyCustomSetting(v.(string)) ; err != nil {
 				return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", v.(string), err)
 			}
+		}
+	}
+
+	// update the core filers
+	if d.HasChange("core_filer") {
+		if err := updateCoreFilers(d, avereVfxt); err != nil {
+			return err
 		}
 	}
 
@@ -191,7 +272,6 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	}
 	
 	// get the optional fields
-	globalCustomSettingsRaw := d.Get("global_custom_settings").(*schema.Set).List()
 	var avereOSVersion string
 	if val, ok := d.Get("vfxt_os_version").(string) ; ok {
 		avereOSVersion = val
@@ -215,10 +295,76 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get("network_resource_group").(string),
 		d.Get("network_name").(string),
 		d.Get("subnet_name").(string),
-		utils.ExpandStringSlice(globalCustomSettingsRaw),
 		avereOSVersion,
 		managementIP,
 		utils.ExpandStringSlice(vServerIPAddressesRaw),
 		utils.ExpandStringSlice(nodeNamesRaw),
 	), nil
+}
+
+func updateCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) error {
+	new := d.Get("core_filer")
+	newFilers, err := expandCoreFilers(new.(*schema.Set).List())
+	if err != nil {
+		return err
+	}
+	// get the list of existing core filers
+	existingFilers, err := averevfxt.GetExistingFilers()
+	if err != nil {
+		return err
+	}
+
+	// compare old and new core filers and raise error if any change
+	if err := EnsureNoCoreAttributeChangeForExistingFilers(existingFilers, newFilers) ; err != nil {
+		return err
+	}
+
+	// delete any removed filers
+	for k, v := range existingFilers {
+		if _, ok := newFilers[k] ; ok {
+			// the filer still exists
+			continue
+		}
+		if err := averevfxt.DeleteCoreFiler(v.Name) ; err != nil {
+			return err
+		}
+	}
+
+	// add any new filers
+	for k, v := range newFilers {
+		if _, ok := existingFilers[k] ; ok {
+			// the filer exists
+			continue
+		}
+		if err := averevfxt.CreateCoreFiler(v) ; err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
+	results := make(map[string]*CoreFiler)
+	for _, v := range l {
+		input := v.(map[string]interface{})
+		
+		// get the properties
+		name := input["name"].(string)
+		fqdnOrPrimaryIp := input["fqdn_or_primary_ip"].(string)
+		cachePolicy := input["cache_policy"].(string)
+		
+		// verify no duplicates
+		if _, ok := results[name] ; ok {
+			return nil, fmt.Errorf("Error: two or more core filers share the same key '%s'", name)
+		}
+
+		// add to map
+		output := &CoreFiler{
+			Name: name,
+			FqdnOrPrimaryIp: fqdnOrPrimaryIp,
+			CachePolicy: cachePolicy,
+		}
+		results[name] = output
+	}
+	return results, nil
 }
