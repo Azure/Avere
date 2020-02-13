@@ -29,6 +29,7 @@ const (
 	AverecmdRetryCount = 12
 	AverecmdRetrySleepSeconds = 10
 	AverecmdLogFile = "~/averecmd.log"
+	VServerName = "vserver"
 
 	// cache policies
 	CachePolicyClientsBypass = "Clients Bypassing the Cluster"
@@ -56,11 +57,15 @@ var matchVServerIPRangeRegex = regexp.MustCompile(` - vFXT.cluster:INFO - Creati
 var	matchCreateFailure = regexp.MustCompile(`^(.*vfxt:ERROR.*)$`)
 var	matchVfxtFailure = regexp.MustCompile(`^(.*vFXTCreateFailure:.*)$`)
 var matchVfxtNotFound = regexp.MustCompile(`(vfxt:ERROR - Cluster not found)`)
+
+// non-retryable errors
 var matchWrongCheckCode = regexp.MustCompile(`(wrong check code)`)
 var matchWrongNumberOfArgs = regexp.MustCompile(`(Wrong number of arguments)`)
 var matchLoginFailed = regexp.MustCompile(`(login for user admin failed)`)
 var matchMethodNotSupported = regexp.MustCompile(`(Method Not Supported)`)
 var matchMustRemoveRelatedJunction = regexp.MustCompile(`(You must remove the related junction.s. before you can remove this core filer)`)
+var matchCannotFindMass = regexp.MustCompile(`('Cannot find MASS)`)
+var matchJunctionNotFound = regexp.MustCompile(`(removeJunction failed.*'Cannot find junction)`)
 
 type CoreFiler struct {
 	Name string `json:"name"`
@@ -69,6 +74,12 @@ type CoreFiler struct {
 	InternalName string `json:"internalName"`
 	FilerClass string `json:"filerClass"`
 	AdminState string `json:"adminState"`
+}
+
+type Junction struct {
+	NameSpacePath string `json:"path"`
+	CoreFilerName string `json:"mass"`
+	CoreFilerExport string `json:"export"`
 }
 
 type AvereVfxt struct {
@@ -275,6 +286,53 @@ func (a* AvereVfxt) DeleteCoreFiler(corefilerName string) error {
 	}
 }
 
+func (a *AvereVfxt) GetExistingJunctions() (map[string]*Junction, error) {
+	results := make(map[string]*Junction)
+	coreJunctionsJson, err := a.AvereCommand(a.getListJunctionsJsonCommand())
+	if err != nil {
+		return nil, err
+	}
+	var jsonResults []Junction
+	if err := json.Unmarshal([]byte(coreJunctionsJson), &jsonResults); err != nil {
+		return nil, err
+	}
+	for _, v := range jsonResults {
+		// create a new object to assign v
+		newJunction := Junction{}
+		newJunction = v
+		results[v.NameSpacePath] = &newJunction
+	}
+	return results, nil
+}
+
+func (a* AvereVfxt) CreateJunction(junction *Junction) error {
+	_, err := a.AvereCommand(a.getCreateJunctionCommand(junction))
+	return err
+}
+
+func (a* AvereVfxt) DeleteJunction(junctionNameSpacePath string) error {
+	_, err := a.AvereCommand(a.getDeleteJunctionCommand(junctionNameSpacePath))
+	if err != nil {
+		return err
+	}
+	for retries:=0 ; ; retries++ {
+		junctions, err := a.GetExistingJunctions()
+		if err != nil {
+			return err
+		}
+
+		if _, ok := junctions[junctionNameSpacePath] ; !ok {
+			// the junction is gone
+			return nil
+		}
+
+		if retries > FilerRetryCount {
+			return fmt.Errorf("Failure to delete after %d retries trying to delete junction %s", retries, junctionNameSpacePath)
+		}
+		time.Sleep(FilerRetrySleepSeconds * time.Second)
+	}
+}
+
 func (a *AvereVfxt) AvereCommand(cmd string) (string, error) {
 	var result string
 	for retries:=0 ; ; retries++ {
@@ -290,7 +348,7 @@ func (a *AvereVfxt) AvereCommand(cmd string) (string, error) {
 		}
 		if retries > AverecmdRetryCount {
 			// failure after exhausted retries
-			return "", fmt.Errorf("Failure after %d retries applying command: '%s' '%s'", retries, stdoutBuf.String(), stderrBuf.String()) 
+			return "", fmt.Errorf("Failure after %d retries applying command: '%s' '%s'", AverecmdRetryCount, stdoutBuf.String(), stderrBuf.String()) 
 		}
 		time.Sleep(AverecmdRetrySleepSeconds * time.Second)
 	}
@@ -385,6 +443,18 @@ func (a *AvereVfxt) getDeleteFilerCommand(filer string) string {
 func (a *AvereVfxt) getSetCustomSettingCommand(customSetting string) string {
 	return wrapCommandForLogging(fmt.Sprintf("%s support.setCustomSetting %s", a.getBaseAvereCmd(), customSetting), AverecmdLogFile)
 }
+
+func (a *AvereVfxt) getListJunctionsJsonCommand() string {
+	return wrapCommandForLogging(fmt.Sprintf("%s --json vserver.listJunctions %s", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getCreateJunctionCommand(junction *Junction) string {
+	return wrapCommandForLogging(fmt.Sprintf("%s vserver.addJunction %s %s %s %s \"{'sharesubdir':'','inheritPolicy':'yes','sharename':'','access':'posix','createSubdirs':'yes','subdir':'','policy':''}\"", a.getBaseAvereCmd(), VServerName, junction.NameSpacePath, junction.CoreFilerName, junction.CoreFilerExport), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getDeleteJunctionCommand(junctionNameSpacePath string) string {
+	return wrapCommandForLogging(fmt.Sprintf("%s vserver.removeJunction %s %s", a.getBaseAvereCmd(), VServerName, junctionNameSpacePath), AverecmdLogFile)
+} 
 
 func (a *AvereVfxt) getRemoveCustomSettingCommand(customSetting string) string {
 	firstArgument := strings.Split(customSetting, " ")[0]
@@ -505,6 +575,12 @@ func isAverecmdNotRetryable(stdoutBuf bytes.Buffer, stderrBuf bytes.Buffer) bool
 		return true
 	}
 	if len(getErrors(stdoutBuf, stderrBuf, matchMustRemoveRelatedJunction)) > 0 {
+		return true
+	}
+	if len(getErrors(stdoutBuf, stderrBuf, matchCannotFindMass)) > 0 {
+		return true
+	}
+	if len(getErrors(stdoutBuf, stderrBuf, matchJunctionNotFound)) > 0 {
 		return true
 	}
 	return false

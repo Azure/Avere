@@ -187,7 +187,12 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 	d.SetId(avereVfxt.ManagementIP)
 
 	// add the new core filers
-	if err := updateCoreFilers(d, avereVfxt); err != nil {
+	if err := createCoreFilers(d, avereVfxt); err != nil {
+		return err
+	}
+
+	// add the new junctions
+	if err := createJunctions(d, avereVfxt); err != nil {
 		return err
 	}
 
@@ -234,7 +239,19 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 
 	// update the core filers
 	if d.HasChange("core_filer") {
-		if err := updateCoreFilers(d, avereVfxt); err != nil {
+		// delete junctions before delete core filers
+		if err := deleteJunctions(d, avereVfxt); err != nil {
+			return err
+		}
+		if err := deleteCoreFilers(d, avereVfxt); err != nil {
+			return err
+		}
+		// create core filers before adding junctions
+		if err := createCoreFilers(d, avereVfxt); err != nil {
+			return err
+		}
+		// the junctions are embedded in the core filers, add the new junctions
+		if err := createJunctions(d, avereVfxt); err != nil {
 			return err
 		}
 	}
@@ -302,7 +319,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	), nil
 }
 
-func updateCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) error {
+func createCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 	new := d.Get("core_filer")
 	newFilers, err := expandCoreFilers(new.(*schema.Set).List())
 	if err != nil {
@@ -319,6 +336,32 @@ func updateCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 		return err
 	}
 
+	// add any new filers
+	for k, v := range newFilers {
+		if _, ok := existingFilers[k] ; ok {
+			// the filer exists
+			continue
+		}
+		if err := averevfxt.CreateCoreFiler(v) ; err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func deleteCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) error {
+	new := d.Get("core_filer")
+	newFilers, err := expandCoreFilers(new.(*schema.Set).List())
+	if err != nil {
+		return err
+	}
+	// get the list of existing core filers
+	existingFilers, err := averevfxt.GetExistingFilers()
+	if err != nil {
+		return err
+	}
+
 	// delete any removed filers
 	for k, v := range existingFilers {
 		if _, ok := newFilers[k] ; ok {
@@ -330,16 +373,58 @@ func updateCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 		}
 	}
 
-	// add any new filers
-	for k, v := range newFilers {
-		if _, ok := existingFilers[k] ; ok {
-			// the filer exists
+	return nil
+}
+
+func createJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
+	new := d.Get("core_filer")
+	newJunctions, err := expandJunctions(new.(*schema.Set).List())
+	if err != nil {
+		return err
+	}
+	// get the map of existing junctions
+	existingJunctions, err := averevfxt.GetExistingJunctions()
+	if err != nil {
+		return err
+	}
+
+	// add any new junctions
+	for k, v := range newJunctions {
+		if _, ok := existingJunctions[k] ; ok {
+			// the junction exists, and we know from deletion they are the same
 			continue
 		}
-		if err := averevfxt.CreateCoreFiler(v) ; err != nil {
+		if err := averevfxt.CreateJunction(v) ; err != nil {
 			return err
 		}
 	}
+
+	return nil
+}
+
+func deleteJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
+	new := d.Get("core_filer")
+	newJunctions, err := expandJunctions(new.(*schema.Set).List())
+	if err != nil {
+		return err
+	}
+	// get the map of existing junctions
+	existingJunctions, err := averevfxt.GetExistingJunctions()
+	if err != nil {
+		return err
+	}
+
+	// delete any removed or updated junctions
+	for k, existingJunction := range existingJunctions {
+		if newJunction, ok := newJunctions[k] ; ok && *newJunction == *existingJunction {
+			// the junction exists, and is the same as previous
+			continue
+		}
+		if err := averevfxt.DeleteJunction(existingJunction.NameSpacePath) ; err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -365,6 +450,29 @@ func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 			CachePolicy: cachePolicy,
 		}
 		results[name] = output
+	}
+	return results, nil
+}
+
+func expandJunctions(l []interface{}) (map[string]*Junction, error) {
+	results := make(map[string]*Junction)
+	for _, v := range l {
+		input := v.(map[string]interface{})
+		coreFilerName := input["name"].(string)
+		junctions := input["junction"].(*schema.Set).List()
+		for _, jv := range junctions {
+			junctionRaw := jv.(map[string]interface{})
+			junction := &Junction {
+				NameSpacePath: junctionRaw["namespace_path"].(string),
+				CoreFilerName: coreFilerName,
+				CoreFilerExport: junctionRaw["core_filer_export"].(string),
+			}
+			// verify no duplicates
+			if _, ok := results[junction.NameSpacePath] ; ok {
+				return nil, fmt.Errorf("Error: two or more junctions share the same namespace_path '%s'", junction.NameSpacePath)
+			}
+			results[junction.NameSpacePath] = junction
+		}
 	}
 	return results, nil
 }
