@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net"
 	"regexp"
 	"strings"
@@ -26,7 +25,7 @@ const (
 	MaxNodesToAdd         = 3
 	VfxtLogDateFormat     = "2006-01-02.15.04.05"
 	VServerRangeSeperator = "-"
-	AverecmdRetryCount = 12
+	AverecmdRetryCount = 30 // wait 5 minutes (ex. remove core filer gets perm denied for a while)
 	AverecmdRetrySleepSeconds = 10
 	AverecmdLogFile = "~/averecmd.log"
 	VServerName = "vserver"
@@ -74,12 +73,27 @@ type CoreFiler struct {
 	InternalName string `json:"internalName"`
 	FilerClass string `json:"filerClass"`
 	AdminState string `json:"adminState"`
+	CustomSettings []string
 }
 
 type Junction struct {
 	NameSpacePath string `json:"path"`
 	CoreFilerName string `json:"mass"`
 	CoreFilerExport string `json:"export"`
+}
+
+type CustomSetting struct {
+	Name string `json:"name"`
+	Value string `json:"value"`
+	CheckCode string `json:"checkCode"`
+}
+
+func initializeCustomSetting(customSettingString string) *CustomSetting {
+	return &CustomSetting{
+		Name:  getCustomSettingName(customSettingString),
+		CheckCode: getCustomSettingCheckCode(customSettingString),
+		Value: getCustomSettingValue(customSettingString),
+	}
 }
 
 type AvereVfxt struct {
@@ -146,10 +160,9 @@ func NewAvereVfxt(
 
 func (a *AvereVfxt) CreateVfxt() error {
 	cmd := a.getCreateVfxtCommand()
-	stdoutBuf, stderrBuf, err := SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, cmd)
+	_, stderrBuf, err := SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, cmd)
 	if err != nil {
 		//allErrors := getAllVfxtErrors(stdoutBuf, stderrBuf)
-		log.Printf("stdout: %s",stdoutBuf.String())
 		return fmt.Errorf("Error creating vfxt: %v, from vfxt.py: '%s'", err, stderrBuf.String())
 		//return fmt.Errorf("Error creating vfxt: %v, from vfxt.py: '%s'", err, allErrors)
 	}
@@ -232,6 +245,42 @@ func (a *AvereVfxt) GetExistingFilerNames() ([]string, error) {
 	return results, nil
 }
 
+func (a *AvereVfxt) GetCoreFilerCustomSettings(coreFileInternalName string) (map[string]*CustomSetting, error) {
+	customSettings, err := a.GetCustomSettings()
+	if err != nil {
+		return nil, err
+	}
+	results := make(map[string]*CustomSetting, 0)
+	prefix := fmt.Sprintf("%s.", coreFileInternalName)
+	for _, v := range customSettings {
+		customSetting := CustomSetting{}
+		customSetting = *v
+		// add the custom settings that have the prefix
+		if strings.HasPrefix(customSetting.Name, prefix) {
+			results[customSetting.Name] = &customSetting
+		}
+	}
+	return results, nil
+}
+
+func (a *AvereVfxt) GetCustomSettings() (map[string]*CustomSetting, error) {
+	customSettingsJson, err := a.AvereCommand(a.getListCustomSettingsJsonCommand())
+	if err != nil {
+		return nil, err
+	}
+	var resultRaw []CustomSetting
+	if err := json.Unmarshal([]byte(customSettingsJson), &resultRaw); err != nil {
+		return nil, err
+	}
+	results := make(map[string]*CustomSetting, 0)
+	for _, v := range resultRaw {
+		customSetting := CustomSetting{}
+		customSetting = v
+		results[customSetting.Name] = &customSetting
+	}
+	return results, nil
+}
+
 func (a *AvereVfxt) GetExistingFilers() (map[string]*CoreFiler, error) {
 	coreFilers, err := a.GetExistingFilerNames()
 	if err != nil {
@@ -264,6 +313,83 @@ func (a *AvereVfxt) GetFiler(filer string) (*CoreFiler, error) {
 func (a* AvereVfxt) CreateCoreFiler(corefiler *CoreFiler) error {
 	_, err := a.AvereCommand(a.getCreateFilerCommand(corefiler))
 	return err
+}
+
+func (a* AvereVfxt) EnsureInternalName(corefiler *CoreFiler) error {
+	// Ensure internal name
+	if len(corefiler.InternalName) == 0 {
+		// get the internal name
+		newfiler, err := a.GetFiler(corefiler.Name)
+		if err != nil {
+			return err
+		}
+		// add the settings
+		corefiler.InternalName = newfiler.InternalName
+	}
+	return nil
+}
+
+func (a* AvereVfxt) AddCoreFilerCustomSettings(corefiler *CoreFiler) error {
+	// ensure the internal name exists
+	a.EnsureInternalName(corefiler)
+	if len(corefiler.CustomSettings) == 0 {
+		// no custom settings to add
+		return nil
+	}
+
+	// get the mass custom settings
+	existingCustomSettings, err := a.GetCoreFilerCustomSettings(corefiler.InternalName)
+	if err != nil {
+		return err
+	}
+
+	// add the new settings
+	for _, v := range corefiler.CustomSettings {
+		customSettingName := getCustomSettingName(getCoreFilerCustomSettingName(corefiler.InternalName, v))
+		if _, ok := existingCustomSettings[customSettingName] ; ok {
+			// the custom setting already exists
+			continue
+		}
+		if _, err := a.AvereCommand(a.getSetCoreFilerSettingCommand(corefiler, v)) ; err != nil{
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (a* AvereVfxt) RemoveCoreFilerCustomSettings(corefiler *CoreFiler) error {
+	// ensure the internal name exists
+	a.EnsureInternalName(corefiler)
+	
+	// get the mass custom settings
+	existingCustomSettings, err := a.GetCoreFilerCustomSettings(corefiler.InternalName)
+	if err != nil {
+		return err
+	}
+	
+	newSettingsSet := make(map[string]*CustomSetting)
+	for _, v := range corefiler.CustomSettings {
+		customSettingStr := getCoreFilerCustomSettingName(corefiler.InternalName, v)
+		newSettingsSet[getCustomSettingName(customSettingStr)] = initializeCustomSetting(customSettingStr)
+	}
+	
+	// remove any that have changed or no longer exist
+	for k, v := range existingCustomSettings {
+		if _, ok := newSettingsSet[k] ; ok  {
+			// due to the universal checkcode being different from the mass checkcode, only
+			// compare name and value
+			if (*v).Name == (*(newSettingsSet[k])).Name && (*v).Value == (*(newSettingsSet[k])).Value {
+				// the setting still exists
+				continue
+			}			
+		}
+		if _, err := a.AvereCommand(a.getRemoveCoreFilerSettingCommand(corefiler, v.Name)) ; err != nil{
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (a* AvereVfxt) DeleteCoreFiler(corefilerName string) error {
@@ -462,22 +588,68 @@ func (a *AvereVfxt) getDeleteJunctionCommand(junctionNameSpacePath string) strin
 	return wrapCommandForLogging(fmt.Sprintf("%s vserver.removeJunction %s %s", a.getBaseAvereCmd(), VServerName, junctionNameSpacePath), AverecmdLogFile)
 }
 
+func (a *AvereVfxt) getListCustomSettingsJsonCommand() string {
+	return wrapCommandForLogging(fmt.Sprintf("%s --json support.listCustomSettings", a.getBaseAvereCmd()), AverecmdLogFile)
+}
+
 func (a *AvereVfxt) getSetCustomSettingCommand(customSetting string) string {
 	return wrapCommandForLogging(fmt.Sprintf("%s support.setCustomSetting %s", a.getBaseAvereCmd(), customSetting), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getRemoveCustomSettingCommand(customSetting string) string {
-	firstArgument := strings.Split(customSetting, " ")[0]
+	firstArgument := getCustomSettingName(customSetting)
 	return wrapCommandForLogging(fmt.Sprintf("%s support.removeCustomSetting %s", a.getBaseAvereCmd(), firstArgument), AverecmdLogFile)
 }
 
-func (a *AvereVfxt) getSetVServerSettingCommand(vserverSetting string) string {
-	return wrapCommandForLogging(fmt.Sprintf("%s support.setCustomSetting %s1.%s", a.getBaseAvereCmd(), VServerName, vserverSetting), AverecmdLogFile)
+func (a *AvereVfxt) getSetVServerSettingCommand(customSetting string) string {
+	vServerCustomSetting := getVServerCustomSettingName(customSetting)
+	return a.getSetCustomSettingCommand(vServerCustomSetting)
 }
 
-func (a *AvereVfxt) getRemoveVServerSettingCommand(vserverSetting string) string {
-	firstArgument := strings.Split(vserverSetting, " ")[0]
-	return wrapCommandForLogging(fmt.Sprintf("%s support.removeCustomSetting %s1.%s", a.getBaseAvereCmd(), VServerName, firstArgument), AverecmdLogFile)
+func (a *AvereVfxt) getRemoveVServerSettingCommand(customSetting string) string {
+	vServerCustomSetting := getVServerCustomSettingName(customSetting)
+	return a.getRemoveCustomSettingCommand(vServerCustomSetting)
+}
+
+func (a *AvereVfxt) getSetCoreFilerSettingCommand(corefiler *CoreFiler, customSetting string) string {
+	coreFilerCustomSetting := getCoreFilerCustomSettingName(corefiler.InternalName, customSetting)
+	return a.getSetCustomSettingCommand(coreFilerCustomSetting)
+}
+
+func (a *AvereVfxt) getRemoveCoreFilerSettingCommand(corefiler *CoreFiler, customSettingName string) string {
+	return a.getRemoveCustomSettingCommand(customSettingName)
+}
+
+func getCustomSettingName(customSettingString string) string {
+	return strings.Split(customSettingString, " ")[0]
+}
+
+func getCustomSettingCheckCode(customSettingString string) string {
+	parts := strings.Split(customSettingString, " ")
+	if len(parts) > 1 {
+		return parts[1]
+	}
+	return ""
+}
+
+func getCustomSettingValue(customSettingString string) string {
+	parts := strings.Split(customSettingString, " ")
+	if len(parts) > 2 {
+		var sb strings.Builder
+		for i:=2; i < len(parts) ; i++ {
+			sb.WriteString(fmt.Sprintf("%s ", parts[i]))
+		}
+		return strings.TrimSpace(sb.String())
+	}
+	return ""
+}
+
+func getVServerCustomSettingName(customSetting string) string {
+	return fmt.Sprintf("%s1.%s", VServerName, customSetting)
+}
+
+func getCoreFilerCustomSettingName(internalName string, customSetting string) string {
+	return fmt.Sprintf("%s.%s", internalName, customSetting) 
 }
 
 func wrapCommandForLogging(cmd string, outputfile string) string {
