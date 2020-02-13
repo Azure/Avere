@@ -186,6 +186,14 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 	// the management ip will uniquely identify the cluster in the VNET
 	d.SetId(avereVfxt.ManagementIP)
 
+	if err := createGlobalSettings(d, avereVfxt); err != nil {
+		return err
+	}
+
+	if err := createVServerSettings(d, avereVfxt); err != nil {
+		return err
+	}
+
 	// add the new core filers
 	if err := createCoreFilers(d, avereVfxt); err != nil {
 		return err
@@ -194,13 +202,6 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 	// add the new junctions
 	if err := createJunctions(d, avereVfxt); err != nil {
 		return err
-	}
-
-	// apply the global custom settings, if they fail, we can try to re-apply on the update
-	for _, v := range d.Get("global_custom_settings").(*schema.Set).List() {
-		if err := avereVfxt.ApplyCustomSetting(v.(string)) ; err != nil {
-			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", v.(string), err)
-		}
 	}
 
 	return resourceVfxtRead(d, m)
@@ -216,24 +217,21 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	// update the global customer settings
 	if d.HasChange("global_custom_settings") {
-		old, new := d.GetChange("global_custom_settings")
-		os := old.(*schema.Set)
-		ns := new.(*schema.Set)
-
-		removalList := os.Difference(ns)
-		for _, v := range removalList.List() {
-			if err := avereVfxt.RemoveCustomSetting(v.(string)) ; err != nil {
-				return fmt.Errorf("ERROR: failed to remove custom setting '%s': %s", v.(string), err)
-			}
+		if err := deleteGlobalSettings(d, avereVfxt); err != nil {
+			return err
 		}
+		if err := createGlobalSettings(d, avereVfxt); err != nil {
+			return err
+		}
+	}
 
-		// always apply the settings, as the operation is idempotent
-		for _, v := range ns.List() {
-			if err := avereVfxt.ApplyCustomSetting(v.(string)) ; err != nil {
-				return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", v.(string), err)
-			}
+	if d.HasChange("vserver_settings") {
+		if err := deleteVServerSettings(d, avereVfxt); err != nil {
+			return err
+		}
+		if err := createVServerSettings(d, avereVfxt); err != nil {
+			return err
 		}
 	}
 
@@ -317,6 +315,58 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		utils.ExpandStringSlice(vServerIPAddressesRaw),
 		utils.ExpandStringSlice(nodeNamesRaw),
 	), nil
+}
+
+func createGlobalSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
+	// apply the global custom settings
+	for _, v := range d.Get("global_custom_settings").(*schema.Set).List() {
+		if err := avereVfxt.CreateCustomSetting(v.(string)) ; err != nil {
+			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", v.(string), err)
+		}
+	}
+	return nil
+}
+
+func deleteGlobalSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
+	// update the global customer settings
+	if d.HasChange("global_custom_settings") {
+		old, new := d.GetChange("global_custom_settings")
+		os := old.(*schema.Set)
+		ns := new.(*schema.Set)
+
+		removalList := os.Difference(ns)
+		for _, v := range removalList.List() {
+			if err := avereVfxt.RemoveCustomSetting(v.(string)) ; err != nil {
+				return fmt.Errorf("ERROR: failed to remove custom setting '%s': %s", v.(string), err)
+			}
+		}
+	}
+	return nil
+}
+
+func createVServerSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
+	for _, v := range d.Get("vserver_settings").(*schema.Set).List() {
+		if err := avereVfxt.CreateVServerSetting(v.(string)) ; err != nil {
+			return fmt.Errorf("ERROR: failed to apply VServer setting '%s': %s", v.(string), err)
+		}
+	}
+	return nil
+}
+
+func deleteVServerSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
+	if d.HasChange("vserver_settings") {
+		old, new := d.GetChange("vserver_settings")
+		os := old.(*schema.Set)
+		ns := new.(*schema.Set)
+
+		removalList := os.Difference(ns)
+		for _, v := range removalList.List() {
+			if err := avereVfxt.RemoveVServerSetting(v.(string)) ; err != nil {
+				return fmt.Errorf("ERROR: failed to remove VServer setting '%s': %s", v.(string), err)
+			}
+		}
+	}
+	return nil
 }
 
 func createCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) error {

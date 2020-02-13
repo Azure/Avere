@@ -200,7 +200,7 @@ func (a *AvereVfxt) DestroyVfxt() error {
 	return nil
 }
 
-func (a *AvereVfxt) ApplyCustomSetting(customSetting string) error {
+func (a *AvereVfxt) CreateCustomSetting(customSetting string) error {
 	_, err := a.AvereCommand(a.getSetCustomSettingCommand(customSetting))
 	return err
 }
@@ -208,6 +208,28 @@ func (a *AvereVfxt) ApplyCustomSetting(customSetting string) error {
 func (a *AvereVfxt) RemoveCustomSetting(customSetting string) error {
 	_, err := a.AvereCommand(a.getRemoveCustomSettingCommand(customSetting))
 	return err
+}
+
+func (a *AvereVfxt) CreateVServerSetting(customSetting string) error {
+	_, err := a.AvereCommand(a.getSetVServerSettingCommand(customSetting))
+	return err
+}
+
+func (a *AvereVfxt) RemoveVServerSetting(customSetting string) error {
+	_, err := a.AvereCommand(a.getRemoveVServerSettingCommand(customSetting))
+	return err
+}
+
+func (a *AvereVfxt) GetExistingFilerNames() ([]string, error) {
+	coreFilersJson, err := a.AvereCommand(a.getListCoreFilersJsonCommand())
+	if err != nil {
+		return nil, err
+	}
+	var results []string
+	if err := json.Unmarshal([]byte(coreFilersJson), &results); err != nil {
+		return nil, err
+	}
+	return results, nil
 }
 
 func (a *AvereVfxt) GetExistingFilers() (map[string]*CoreFiler, error) {
@@ -222,18 +244,6 @@ func (a *AvereVfxt) GetExistingFilers() (map[string]*CoreFiler, error) {
 			return nil, fmt.Errorf("Error retrieving filer %s: %v", filer, err)
 		}
 		results[filer] = result
-	}
-	return results, nil
-}
-
-func (a *AvereVfxt) GetExistingFilerNames() ([]string, error) {
-	coreFilersJson, err := a.AvereCommand(a.getListCoreFilersJsonCommand())
-	if err != nil {
-		return nil, err
-	}
-	var results []string
-	if err := json.Unmarshal([]byte(coreFilersJson), &results); err != nil {
-		return nil, err
 	}
 	return results, nil
 }
@@ -440,10 +450,6 @@ func (a *AvereVfxt) getDeleteFilerCommand(filer string) string {
 	return wrapCommandForLogging(fmt.Sprintf("%s corefiler.remove %s", a.getBaseAvereCmd(), filer), AverecmdLogFile)
 }
 
-func (a *AvereVfxt) getSetCustomSettingCommand(customSetting string) string {
-	return wrapCommandForLogging(fmt.Sprintf("%s support.setCustomSetting %s", a.getBaseAvereCmd(), customSetting), AverecmdLogFile)
-}
-
 func (a *AvereVfxt) getListJunctionsJsonCommand() string {
 	return wrapCommandForLogging(fmt.Sprintf("%s --json vserver.listJunctions %s", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
 }
@@ -454,15 +460,28 @@ func (a *AvereVfxt) getCreateJunctionCommand(junction *Junction) string {
 
 func (a *AvereVfxt) getDeleteJunctionCommand(junctionNameSpacePath string) string {
 	return wrapCommandForLogging(fmt.Sprintf("%s vserver.removeJunction %s %s", a.getBaseAvereCmd(), VServerName, junctionNameSpacePath), AverecmdLogFile)
-} 
+}
+
+func (a *AvereVfxt) getSetCustomSettingCommand(customSetting string) string {
+	return wrapCommandForLogging(fmt.Sprintf("%s support.setCustomSetting %s", a.getBaseAvereCmd(), customSetting), AverecmdLogFile)
+}
 
 func (a *AvereVfxt) getRemoveCustomSettingCommand(customSetting string) string {
 	firstArgument := strings.Split(customSetting, " ")[0]
 	return wrapCommandForLogging(fmt.Sprintf("%s support.removeCustomSetting %s", a.getBaseAvereCmd(), firstArgument), AverecmdLogFile)
 }
 
+func (a *AvereVfxt) getSetVServerSettingCommand(vserverSetting string) string {
+	return wrapCommandForLogging(fmt.Sprintf("%s support.setCustomSetting %s1.%s", a.getBaseAvereCmd(), VServerName, vserverSetting), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getRemoveVServerSettingCommand(vserverSetting string) string {
+	firstArgument := strings.Split(vserverSetting, " ")[0]
+	return wrapCommandForLogging(fmt.Sprintf("%s support.removeCustomSetting %s1.%s", a.getBaseAvereCmd(), VServerName, firstArgument), AverecmdLogFile)
+}
+
 func wrapCommandForLogging(cmd string, outputfile string) string {
-	return fmt.Sprintf("echo $(date) '%s' | sed 's/--password [^ ]*/--admin-password ***/' >> %s && %s 1> >(tee -a %s) 2> >(tee -a %s >&2)", cmd, outputfile, cmd, outputfile, outputfile)
+	return fmt.Sprintf("echo $(date) '%s' | sed 's/--password [^ ]*/--password ***/' >> %s && %s 1> >(tee -a %s) 2> >(tee -a %s >&2)", cmd, outputfile, cmd, outputfile, outputfile)
 }
 
 func (a *AvereVfxt) getBaseAvereCmd() string {
