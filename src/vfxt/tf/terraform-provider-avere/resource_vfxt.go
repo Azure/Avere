@@ -195,7 +195,7 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// add the new core filers
-	if err := createCoreFilers(d, avereVfxt); err != nil {
+	if err := createOrUpdateCoreFilers(d, avereVfxt); err != nil {
 		return err
 	}
 
@@ -245,7 +245,7 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 		// create core filers before adding junctions
-		if err := createCoreFilers(d, avereVfxt); err != nil {
+		if err := createOrUpdateCoreFilers(d, avereVfxt); err != nil {
 			return err
 		}
 		// the junctions are embedded in the core filers, add the new junctions
@@ -369,7 +369,7 @@ func deleteVServerSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 	return nil
 }
 
-func createCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) error {
+func createOrUpdateCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 	new := d.Get("core_filer")
 	newFilers, err := expandCoreFilers(new.(*schema.Set).List())
 	if err != nil {
@@ -388,11 +388,19 @@ func createCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 
 	// add any new filers
 	for k, v := range newFilers {
-		if _, ok := existingFilers[k] ; ok {
-			// the filer exists
-			continue
+		if _, ok := existingFilers[k] ; !ok {
+			if err := averevfxt.CreateCoreFiler(v) ; err != nil {
+				return err
+			}
 		}
-		if err := averevfxt.CreateCoreFiler(v) ; err != nil {
+		if err != nil {
+			return err
+		}
+		// update modified settings and add new settings on the existing filers
+		if err := averevfxt.RemoveCoreFilerCustomSettings(v) ; err != nil {
+			return err
+		}
+		if err := averevfxt.AddCoreFilerCustomSettings(v) ; err != nil {
 			return err
 		}
 	}
@@ -487,7 +495,11 @@ func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 		name := input["name"].(string)
 		fqdnOrPrimaryIp := input["fqdn_or_primary_ip"].(string)
 		cachePolicy := input["cache_policy"].(string)
-		
+		customSettingsRaw := input["custom_settings"].(*schema.Set).List()
+		customSettings := make([]string, len(customSettingsRaw),len(customSettingsRaw))
+		for i, v := range customSettingsRaw {
+			customSettings[i] = v.(string)
+		}
 		// verify no duplicates
 		if _, ok := results[name] ; ok {
 			return nil, fmt.Errorf("Error: two or more core filers share the same key '%s'", name)
@@ -498,6 +510,7 @@ func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 			Name: name,
 			FqdnOrPrimaryIp: fqdnOrPrimaryIp,
 			CachePolicy: cachePolicy,
+			CustomSettings: customSettings,
 		}
 		results[name] = output
 	}
