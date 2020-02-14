@@ -7,13 +7,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
 	"golang.org/x/crypto/ssh"
 )
+
+// vfxt api documentation: https://azure.github.io/Avere/legacy/pdf/avere-os-5-1-xmlrpc-api-2019-01.pdf
 
 const (
 	AvereInstanceType = "Standard_E32s_v3"
@@ -46,6 +50,18 @@ const (
 	// filer retry 
 	FilerRetryCount = 120
 	FilerRetrySleepSeconds = 10
+
+	// cluster stable, wait 40 minutes for cluster to become healthy
+	ClusterStableRetryCount = 240
+	ClusterStableRetrySleepSeconds = 10
+
+	// status's returned from Activity
+	StatusComplete = "complete"
+	StatusCompleted = "completed"
+	StatusNodeRemoved = "node(s) removed"
+	CompletedPercent = "100"
+	NodeUp = "up"
+	AlertSeverityGreen = "green" // this means the alert is complete
 )
 
 // matching strings for the vfxt.py output
@@ -65,6 +81,24 @@ var matchMethodNotSupported = regexp.MustCompile(`(Method Not Supported)`)
 var matchMustRemoveRelatedJunction = regexp.MustCompile(`(You must remove the related junction.s. before you can remove this core filer)`)
 var matchCannotFindMass = regexp.MustCompile(`('Cannot find MASS)`)
 var matchJunctionNotFound = regexp.MustCompile(`(removeJunction failed.*'Cannot find junction)`)
+
+type Node struct {
+	Name string `json:"name"`
+	State string `json:"state"`
+}
+
+type Activity struct {
+	Id string `json:"id"`
+	Status string `json:"status"`
+	State string `json:"state"`
+	Percent string `json:"percent"`
+}
+
+type Alert struct {
+	Name string `json:"name"`
+	Severity string `json:"severity"`
+	Message string `json:"message"`
+}
 
 type CoreFiler struct {
 	Name string `json:"name"`
@@ -218,6 +252,166 @@ func (a *AvereVfxt) DestroyVfxt() error {
 	a.NodeNames = &([]string{})
 
 	return nil
+}
+
+func (a *AvereVfxt) GetLastNode() (string, error) {
+	nodes, err := a.GetNodes()
+	if err != nil {
+		return "", err
+	}
+	if len(nodes) == 0 {
+		return "", fmt.Errorf("no nodes found in the cluster")
+	}
+
+	sort.Sort(sort.Reverse(sort.StringSlice(nodes)))
+
+	return nodes[0], nil
+} 
+
+func (a *AvereVfxt) CheckNodeExists(nodeName string) (bool, error) {
+	nodes, err := a.GetNodes()
+	if err != nil {
+		return false, err
+	}
+	for _, v := range nodes {
+		if v == nodeName {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (a *AvereVfxt) GetNodes() ([]string, error) {
+	coreNodesJson, err := a.AvereCommand(a.getListNodesJsonCommand())
+	if err != nil {
+		return nil, err
+	}
+	var results []string
+	if err := json.Unmarshal([]byte(coreNodesJson), &results); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+func (a *AvereVfxt) GetExistingNodes() (map[string]*Node, error) {
+	nodes, err := a.GetNodes()
+	if err != nil {
+		return nil, err
+	}
+	results := make(map[string]*Node)
+	for _, node := range nodes {
+		result, err := a.GetNode(node)
+		if err != nil {
+			return nil, fmt.Errorf("Error retrieving node %s: %v", node, err)
+		}
+		results[node] = result
+	}
+	return results, nil
+}
+
+func (a *AvereVfxt) GetNode(node string) (*Node, error) {
+	coreNodeJson, err := a.AvereCommand(a.getNodeJsonCommand(node))
+	if err != nil {
+		return nil, err
+	}
+	var result map[string]Node
+	if err := json.Unmarshal([]byte(coreNodeJson), &result); err != nil {
+		return nil, err
+	}
+	nodeResult := result[node]
+	return &nodeResult, nil
+}
+
+func (a *AvereVfxt) GetActivities() ([]Activity, error) {
+	activitiesJson, err := a.AvereCommand(a.getClusterListActivitiesJsonCommand())
+	if err != nil {
+		return nil, err
+	}
+	var results []Activity
+	if err := json.Unmarshal([]byte(activitiesJson), &results); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+func (a *AvereVfxt) GetAlerts() ([]Alert, error) {
+	alertsJson, err := a.AvereCommand(a.getGetActiveAlertsJsonCommand())
+	if err != nil {
+		return nil, err
+	}
+	var results []Alert
+	if err := json.Unmarshal([]byte(alertsJson), &results); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+func (a *AvereVfxt) EnsureClusterStable() (error) {
+	for retries:=0 ; ; retries++ {
+
+		healthy := true
+
+		if healthy {
+			// verify no activities
+			activities, err := a.GetActivities()
+			if err != nil {
+				return err
+			}
+			for _, activity := range activities {
+				switch activity.Status {
+				case StatusComplete:
+				case StatusCompleted:
+				case StatusNodeRemoved:
+					continue
+				default:
+					if activity.Percent != CompletedPercent {
+						log.Printf("cluster still has running activity %v", activity)
+						healthy = false
+						break
+					}
+				}
+			}
+		}
+
+		if healthy {
+			// verify no active alerts
+			alerts, err := a.GetAlerts()
+			if err != nil {
+				return err
+			} 
+			for _, alert := range alerts {
+				if alert.Severity != AlertSeverityGreen {
+					log.Printf("cluster still has active alert %v", alert)
+					healthy = false
+					break
+				}
+			}
+		}
+		
+		if healthy {
+			// verify all nodes healthy
+			nodes, err := a.GetExistingNodes()
+			if err != nil {
+				return err
+			}
+			for _, node := range nodes {
+				if node.State != NodeUp {
+					healthy = false
+					break
+				}
+			}
+		}
+
+		if healthy {
+			// the cluster is stable
+			return nil
+		}
+
+		if retries > ClusterStableRetryCount {
+			return fmt.Errorf("Failure for cluster to become stable after %d retries", retries)
+		}
+		time.Sleep(ClusterStableRetrySleepSeconds * time.Second)
+	}
 }
 
 func (a *AvereVfxt) CreateCustomSetting(customSetting string) error {
@@ -573,6 +767,22 @@ func (a *AvereVfxt) getBaseVfxtCommand() string {
 	sb.WriteString(fmt.Sprintf("--cluster-name %s --admin-password '%s' ", a.AvereVfxtName, a.AvereAdminPassword))
 
 	return sb.String()
+}
+
+func (a *AvereVfxt) getListNodesJsonCommand() string {
+	return wrapCommandForLogging(fmt.Sprintf("%s --json node.list", a.getBaseAvereCmd()), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getNodeJsonCommand(node string) string {
+	return wrapCommandForLogging(fmt.Sprintf("%s --json node.get %s", a.getBaseAvereCmd(), node), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getClusterListActivitiesJsonCommand() string {
+	return wrapCommandForLogging(fmt.Sprintf("%s --json cluster.listActivities", a.getBaseAvereCmd()), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getGetActiveAlertsJsonCommand() string {
+	return wrapCommandForLogging(fmt.Sprintf("%s --json alert.getActive", a.getBaseAvereCmd()), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getListCoreFilersJsonCommand() string {
