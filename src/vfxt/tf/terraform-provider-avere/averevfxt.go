@@ -24,9 +24,8 @@ const (
 	AvereAdminUsername = "admin"
 	NodeCacheSize     = 4096
 	AverOperatorRole  = "Avere Operator"
-	MinNodesToAdd     = 1
-	// can't add more than 3 nodes at a time
-	MaxNodesToAdd         = 3
+	MinNodesCount         = 3
+	MaxNodesCount         = 16
 	VfxtLogDateFormat     = "2006-01-02.15.04.05"
 	VServerRangeSeperator = "-"
 	AverecmdRetryCount = 30 // wait 5 minutes (ex. remove core filer gets perm denied for a while)
@@ -54,6 +53,10 @@ const (
 	// cluster stable, wait 40 minutes for cluster to become healthy
 	ClusterStableRetryCount = 240
 	ClusterStableRetrySleepSeconds = 10
+
+	// node change, wait 40 minutes for node increase or decrease
+	NodeChangeRetryCount = 240
+	NodeChangeRetrySleepSeconds = 10
 
 	// status's returned from Activity
 	StatusComplete = "complete"
@@ -85,6 +88,11 @@ var matchJunctionNotFound = regexp.MustCompile(`(removeJunction failed.*'Cannot 
 type Node struct {
 	Name string `json:"name"`
 	State string `json:"state"`
+}
+
+type VServerClientIPHome struct {
+	NodeName string `json:"current"`
+	IPAddress string `json:"ip"`
 }
 
 type Activity struct {
@@ -254,6 +262,53 @@ func (a *AvereVfxt) DestroyVfxt() error {
 	return nil
 }
 
+func (a *AvereVfxt) ScaleCluster(newNodeCount int) error {
+	if newNodeCount < MinNodesCount {
+		return fmt.Errorf("Error: invalid scale size %d, cluster cannot have less than %d nodes", newNodeCount, MinNodesCount)
+	}
+	if newNodeCount > MaxNodesCount {
+		return fmt.Errorf("Error: invalid scale size %d, cluster cannot have more than %d nodes", newNodeCount, MinNodesCount)
+	}
+	var err error
+	if newNodeCount > a.NodeCount {
+		// scale up the cluster
+		log.Printf("scale up cluster %d=>%d", a.NodeCount, newNodeCount)
+		err = a.scaleUpCluster(newNodeCount)
+	} else {
+		// scale down the cluster
+		log.Printf("scale down cluster %d=>%d", a.NodeCount, newNodeCount)
+		err = a.scaleDownCluster(newNodeCount)
+	}
+	currentNodeCount, err2 := a.GetCurrentNodeCount()
+	if err2 != nil {
+		if err != nil {
+			return fmt.Errorf("two errors encountered resizing '%v', '%v'", err, err2)
+		} else {
+			return fmt.Errorf("error encountered while resizing '%v'", err2)
+		}
+	}
+	a.NodeCount = currentNodeCount
+	currentVServerIPAddresses, err2 := a.GetVServerIPAddresses()
+	if err2 != nil {
+		if err != nil {
+			return fmt.Errorf("two errors encountered resizing '%v', '%v'", err, err2)
+		} else {
+			return fmt.Errorf("error encountered while resizing '%v'", err2)
+		}
+	}
+	a.VServerIPAddresses = &currentVServerIPAddresses
+	nodeNames, err2 := a.GetNodes()
+	if err2 != nil {
+		if err != nil {
+			return fmt.Errorf("two errors encountered resizing '%v', '%v'", err, err2)
+		} else {
+			return fmt.Errorf("error encountered while resizing '%v'", err2)
+		}
+	}
+	a.NodeNames = &nodeNames
+	return err
+}
+
 func (a *AvereVfxt) GetLastNode() (string, error) {
 	nodes, err := a.GetNodes()
 	if err != nil {
@@ -279,6 +334,14 @@ func (a *AvereVfxt) CheckNodeExists(nodeName string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+func (a *AvereVfxt) GetCurrentNodeCount() (int, error) {
+	nodes, err := a.GetNodes()
+	if err != nil {
+		return 0, err
+	}
+	return len(nodes), nil
 }
 
 func (a *AvereVfxt) GetNodes() ([]string, error) {
@@ -320,6 +383,29 @@ func (a *AvereVfxt) GetNode(node string) (*Node, error) {
 	}
 	nodeResult := result[node]
 	return &nodeResult, nil
+}
+
+func (a *AvereVfxt) GetVServerIPAddresses() ([]string, error) {
+	vserverClientIPHomeJson, err := a.AvereCommand(a.getVServerClientIPHomeJsonCommand())
+	if err != nil {
+		return nil, err
+	}
+	vServerClientIPHome := make([]VServerClientIPHome, 0)
+	if err := json.Unmarshal([]byte(vserverClientIPHomeJson), &vServerClientIPHome); err != nil {
+		return nil, err
+	}
+	ipAddresses := make([]net.IP, 0, len(vServerClientIPHome))
+	for _, v := range vServerClientIPHome {
+		ipAddresses = append(ipAddresses, net.ParseIP(v.IPAddress))
+	}
+	sort.Slice(ipAddresses, func(i, j int) bool {
+		return bytes.Compare(ipAddresses[i], ipAddresses[j]) < 0
+	})
+	results := make([]string, 0, len(vServerClientIPHome))
+	for _, v := range ipAddresses {
+		results = append(results, v.String())
+	}
+	return results, nil
 }
 
 func (a *AvereVfxt) GetActivities() ([]Activity, error) {
@@ -710,39 +796,138 @@ func EnsureNoCoreAttributeChangeForExistingFilers(oldFiler map[string]*CoreFiler
 	return nil
 }
 
+// scale-up the cluster to the newNodeCount
+func (a *AvereVfxt) scaleUpCluster(newNodeCount int) error {
+	for {
+		currentNodeCount, err := a.GetCurrentNodeCount()
+		if err != nil {
+			return err
+		}
+		// check if cluster sizing is complete
+		if currentNodeCount >= newNodeCount {
+			return nil
+		}
+		log.Printf("add node to cluster %d (target %d)", currentNodeCount, newNodeCount)
+		err = a.addNodeToCluster(currentNodeCount)
+		if err != nil {
+			return err
+		}
+		log.Printf("ensure stable cluster")
+		err = a.EnsureClusterStable()
+		if err != nil {
+			return err
+		}
+	}
+}
+
+// scale-down the cluster to the newNodeCount
+func (a *AvereVfxt) scaleDownCluster(newNodeCount int) error {
+	for {
+		currentNodeCount, err := a.GetCurrentNodeCount()
+		if err != nil {
+			return err
+		}
+		// check if cluster sizing is complete
+		if currentNodeCount <= newNodeCount {
+			return nil
+		}
+		err = a.removeNodeFromCluster(currentNodeCount)
+		if err != nil {
+			return err
+		}
+		err = a.EnsureClusterStable()
+		if err != nil {
+			return err
+		}
+	}
+}
+
+// add a new node to the cluster
+func (a *AvereVfxt) addNodeToCluster(currentNodeCount int) error {
+	// we may only add a single node at a time
+	targetNodeCount := currentNodeCount + 1
+
+	cmd := a.getAddNodeToVfxtCommand()
+	_, stderrBuf, err := SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, cmd)
+	if err != nil {
+		return fmt.Errorf("Error adding node to vfxt: %v, from vfxt.py: '%s'", err, stderrBuf.String())
+	}
+	
+	for retries:=0 ; ; retries++ {
+		nodeCount, err := a.GetCurrentNodeCount()
+		if err != nil {
+			return err
+		}
+		if nodeCount >= targetNodeCount {
+			// the node has been added
+			return nil
+		}
+		if retries > NodeChangeRetryCount {
+			return fmt.Errorf("Failure to add node after %d retries trying to add node", retries)
+		}
+		time.Sleep(NodeChangeRetrySleepSeconds * time.Second)
+	}
+}
+
+// add a new node to the cluster
+func (a *AvereVfxt) removeNodeFromCluster(currentNodeCount int) error {
+	// we may only remove a single node at a time
+	targetNodeCount := currentNodeCount -1
+
+	lastNode, err := a.GetLastNode()
+	if err != nil {
+		return err
+	}
+	_, err = a.AvereCommand(a.getRemoveNodeCommand(lastNode))
+	if err != nil {
+		return err
+	}
+
+	for retries:=0 ; ; retries++ {
+		nodeCount, err := a.GetCurrentNodeCount()
+		if err != nil {
+			return err
+		}
+		if nodeCount <= targetNodeCount {
+			// the node has been removed
+			return nil
+		}
+		if retries > NodeChangeRetryCount {
+			return fmt.Errorf("Failure to delete after %d retries trying to delete node", retries)
+		}
+		time.Sleep(NodeChangeRetrySleepSeconds * time.Second)
+	}
+}
+
 func (a *AvereVfxt) getCreateVfxtCommand() string {
-	return fmt.Sprintf("%s --create --no-corefiler --nodes %d", a.getBaseVfxtCommand(), a.NodeCount)
+	return wrapCommandForLogging(fmt.Sprintf("%s --create --no-corefiler --nodes %d", a.getBaseVfxtCommand(), a.NodeCount), fmt.Sprintf("~/vfxt.%s.log", time.Now().Format("2006-01-02-15.04.05")))
 }
 
 func (a *AvereVfxt) getDestroyVfxtCommand() string {
-	return fmt.Sprintf("%s --destroy", a.getBaseVfxtCommand())
+	return wrapCommandForLogging(fmt.Sprintf("%s --destroy", a.getBaseVfxtCommand()), fmt.Sprintf("~/vfxt.%s.log", time.Now().Format("2006-01-02-15.04.05")))
 }
 
 func (a *AvereVfxt) getStartVfxtCommand() string {
-	return fmt.Sprintf("%s --start", a.getBaseVfxtCommand())
+	return wrapCommandForLogging(fmt.Sprintf("%s --start", a.getBaseVfxtCommand()), fmt.Sprintf("~/vfxt.%s.log", time.Now().Format("2006-01-02-15.04.05")))
 }
 
 func (a *AvereVfxt) getStopVfxtCommand() string {
-	return fmt.Sprintf("%s --stop", a.getBaseVfxtCommand())
+	return wrapCommandForLogging(fmt.Sprintf("%s --stop", a.getBaseVfxtCommand()), fmt.Sprintf("~/vfxt.%s.log", time.Now().Format("2006-01-02-15.04.05")))
 }
 
-// the node count must be between 1 and 3
-func (a *AvereVfxt) getAddNodesToVfxtCommand(newNodeCount int) (string, error) {
-	if newNodeCount < MinNodesToAdd || newNodeCount > MaxNodesToAdd {
-		return "", fmt.Errorf("Error: invalid nodes to add count %d.  vfxt.py requires the value to be between %d, and %d", newNodeCount, MinNodesToAdd, MaxNodesToAdd)
-	}
-	return fmt.Sprintf("%s --add-nodes --nodes %d", a.getBaseVfxtCommand(), newNodeCount), nil
+func (a *AvereVfxt) getAddNodeToVfxtCommand() string {
+	// only adding one node at a time is stable
+	return wrapCommandForLogging(fmt.Sprintf("%s --add-nodes --nodes 1", a.getBaseVfxtCommand()), fmt.Sprintf("~/vfxt.%s.log", time.Now().Format("2006-01-02-15.04.05")))
 }
 
 func (a *AvereVfxt) getBaseVfxtCommand() string {
 	var sb strings.Builder
 
 	// add the values consistent across all commands
-	sb.WriteString(fmt.Sprintf("vfxt.py --cloud-type azure --on-instance --instance-type %s --node-cache-size %d --azure-role '%s' --log ~/vfxt.%s.log --debug ",
+	sb.WriteString(fmt.Sprintf("vfxt.py --cloud-type azure --on-instance --instance-type %s --node-cache-size %d --azure-role '%s' --debug ",
 		AvereInstanceType,
 		NodeCacheSize,
-		AverOperatorRole,
-		time.Now().Format("2006-01-02-15.04.05")))
+		AverOperatorRole))
 
 	// add the resource group and location
 	sb.WriteString(fmt.Sprintf("--resource-group %s --location %s ", a.ResourceGroup, a.Location))
@@ -773,6 +958,10 @@ func (a *AvereVfxt) getListNodesJsonCommand() string {
 	return wrapCommandForLogging(fmt.Sprintf("%s --json node.list", a.getBaseAvereCmd()), AverecmdLogFile)
 }
 
+func (a *AvereVfxt) getRemoveNodeCommand(node string) string {
+	return wrapCommandForLogging(fmt.Sprintf("%s --json node.remove %s", a.getBaseAvereCmd(), node), AverecmdLogFile)
+}
+
 func (a *AvereVfxt) getNodeJsonCommand(node string) string {
 	return wrapCommandForLogging(fmt.Sprintf("%s --json node.get %s", a.getBaseAvereCmd(), node), AverecmdLogFile)
 }
@@ -799,6 +988,10 @@ func (a *AvereVfxt) getCreateFilerCommand(coreFiler *CoreFiler) string {
 
 func (a *AvereVfxt) getDeleteFilerCommand(filer string) string {
 	return wrapCommandForLogging(fmt.Sprintf("%s corefiler.remove %s", a.getBaseAvereCmd(), filer), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getVServerClientIPHomeJsonCommand() string {
+	return wrapCommandForLogging(fmt.Sprintf("%s --json vserver.listClientIPHomes %s", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getListJunctionsJsonCommand() string {
@@ -878,7 +1071,7 @@ func getCoreFilerCustomSettingName(internalName string, customSetting string) st
 }
 
 func wrapCommandForLogging(cmd string, outputfile string) string {
-	return fmt.Sprintf("echo $(date) '%s' | sed 's/--password [^ ]*/--password ***/' >> %s && %s 1> >(tee -a %s) 2> >(tee -a %s >&2)", cmd, outputfile, cmd, outputfile, outputfile)
+	return fmt.Sprintf("echo $(date) '%s' | sed 's/-password [^ ]*/-password ***/' >> %s && %s 1> >(tee -a %s) 2> >(tee -a %s >&2)", cmd, outputfile, cmd, outputfile, outputfile)
 }
 
 func (a *AvereVfxt) getBaseAvereCmd() string {
