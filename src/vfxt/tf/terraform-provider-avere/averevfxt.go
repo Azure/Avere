@@ -115,6 +115,9 @@ type AvereVfxt struct {
 	NetworkName          string
 	SubnetName           string
 
+	ProxyUri string
+	ClusterProxyUri string
+
 	// populated during creation
 	AvereOSVersion     string
 	ManagementIP       string
@@ -135,6 +138,8 @@ func NewAvereVfxt(
 	networkResourceGroup string,
 	networkName string,
 	subnetName string,
+	proxyUri string,
+	clusterProxyUri string,
 	avereOSVersion string,
 	managementIP string,
 	vServerIPAddresses *[]string,
@@ -151,6 +156,8 @@ func NewAvereVfxt(
 		NetworkResourceGroup: networkResourceGroup,
 		NetworkName:          networkName,
 		SubnetName:           subnetName,
+		ProxyUri:             proxyUri,
+		ClusterProxyUri:      clusterProxyUri,
 		AvereOSVersion: avereOSVersion,
 		ManagementIP: managementIP,
 		VServerIPAddresses: vServerIPAddresses,
@@ -553,6 +560,14 @@ func (a *AvereVfxt) getBaseVfxtCommand() string {
 
 	// add the vnet subnet
 	sb.WriteString(fmt.Sprintf("--network-resource-group %s --azure-network %s --azure-subnet %s ", a.NetworkResourceGroup, a.NetworkName, a.SubnetName))
+
+	if len(a.ProxyUri) > 0 {
+		sb.WriteString(fmt.Sprintf("--proxy-uri %s ", a.ProxyUri))
+	}
+
+	if len(a.ClusterProxyUri) > 0 {
+		sb.WriteString(fmt.Sprintf("--cluster-proxy-uri %s ", a.ClusterProxyUri))
+	}
 
 	// add the vfxt information
 	sb.WriteString(fmt.Sprintf("--cluster-name %s --admin-password '%s' ", a.AvereVfxtName, a.AvereAdminPassword))

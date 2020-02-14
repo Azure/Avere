@@ -7,6 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
+
+	"golang.org/x/crypto/ssh"
 )
 
 func resourceVfxt() *schema.Resource {
@@ -24,6 +26,12 @@ func resourceVfxt() *schema.Resource {
 			"controller_admin_username": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"controller_admin_password": {
+				Type:      schema.TypeString,
+				// the ssh key will be used if the password is not specified
+				Optional:  true,
+				Sensitive: true,
 			},
 			"resource_group": {
 				Type:     schema.TypeString,
@@ -43,6 +51,16 @@ func resourceVfxt() *schema.Resource {
 			"network_name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
+			},
+			"proxy_uri": {
+				Type: schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"cluster_proxy_uri": {
+				Type: schema.TypeString,
+				Optional: true,
 				ForceNew: true,
 			},
 			"subnet_name": {
@@ -281,9 +299,16 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	controllerAddress := d.Get("controller_address").(string)
 	controllerAdminUsername := d.Get("controller_admin_username").(string)
-	authMethod, err := GetKeyFileAuthMethod()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get key file: %s", err)
+	controllerAdminPassword := d.Get("controller_admin_password").(string)
+	var authMethod ssh.AuthMethod
+	if len(controllerAdminPassword) > 0 {
+		authMethod = GetPasswordAuthMethod(controllerAdminPassword)
+	} else {
+		var err error
+		authMethod, err = GetKeyFileAuthMethod()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get key file: %s", err)
+		}
 	}
 	
 	// get the optional fields
@@ -310,6 +335,8 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get("network_resource_group").(string),
 		d.Get("network_name").(string),
 		d.Get("subnet_name").(string),
+		d.Get("proxy_uri").(string),
+		d.Get("cluster_proxy_uri").(string),
 		avereOSVersion,
 		managementIP,
 		utils.ExpandStringSlice(vServerIPAddressesRaw),
