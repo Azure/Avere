@@ -31,6 +31,7 @@ const (
 	AverecmdRetryCount = 30 // wait 5 minutes (ex. remove core filer gets perm denied for a while)
 	AverecmdRetrySleepSeconds = 10
 	AverecmdLogFile = "~/averecmd.log"
+	AzCliLogFile = "~/azcli.log"
 	VServerName = "vserver"
 
 	// cache policies
@@ -321,7 +322,35 @@ func (a *AvereVfxt) GetLastNode() (string, error) {
 	sort.Sort(sort.Reverse(sort.StringSlice(nodes)))
 
 	return nodes[0], nil
-} 
+}
+
+func (a *AvereVfxt) DeleteVfxtIaasNode(nodeName string) error {
+	// verify logged in
+	verifyLoginCommand := a.getAzCliVerifyLoginCommand()
+	_, stderrBuf, err := SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, verifyLoginCommand)
+	if err != nil {
+		return fmt.Errorf("Error verifying login: %v, %s", err, stderrBuf.String())
+	}
+	// delete the node
+	deleteNodeCommand := a.getAzCliDeleteNodeCommand(nodeName)
+	_, stderrBuf, err = SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, deleteNodeCommand)
+	if err != nil {
+		return fmt.Errorf("Error deleting node: %v, %s", err, stderrBuf.String())
+	}
+	// delete the nic
+	deleteNicCommand := a.getAzCliDeleteNicCommand(nodeName)
+	_, stderrBuf, err = SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, deleteNicCommand)
+	if err != nil {
+		return fmt.Errorf("Error deleting nic: %v, %s", err, stderrBuf.String())
+	}
+	// delete the disks
+	deleteDisksCommand := a.getAzCliDeleteDisksCommand(nodeName)
+	_, stderrBuf, err = SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, deleteDisksCommand)
+	if err != nil {
+		return fmt.Errorf("Error deleting disks: %v, %s", err, stderrBuf.String())
+	}
+	return nil
+}
 
 func (a *AvereVfxt) CheckNodeExists(nodeName string) (bool, error) {
 	nodes, err := a.GetNodes()
@@ -831,12 +860,18 @@ func (a *AvereVfxt) scaleDownCluster(newNodeCount int) error {
 		if currentNodeCount <= newNodeCount {
 			return nil
 		}
-		err = a.removeNodeFromCluster(currentNodeCount)
+		lastNode, err := a.GetLastNode()
 		if err != nil {
 			return err
 		}
-		err = a.EnsureClusterStable()
-		if err != nil {
+		if err = a.removeNodeFromCluster(lastNode, currentNodeCount) ; err != nil {
+			return err
+		}
+		if err = a.EnsureClusterStable() ; err != nil {
+			return err
+		}
+		// only delete the IaaS Node after the cluster is stable
+		if err = a.DeleteVfxtIaasNode(lastNode) ; err != nil {
 			return err
 		}
 	}
@@ -869,16 +904,12 @@ func (a *AvereVfxt) addNodeToCluster(currentNodeCount int) error {
 	}
 }
 
-// add a new node to the cluster
-func (a *AvereVfxt) removeNodeFromCluster(currentNodeCount int) error {
+// remove a new node to the cluster
+func (a *AvereVfxt) removeNodeFromCluster(nodeName string, currentNodeCount int) error {
 	// we may only remove a single node at a time
-	targetNodeCount := currentNodeCount -1
+	targetNodeCount := currentNodeCount - 1
 
-	lastNode, err := a.GetLastNode()
-	if err != nil {
-		return err
-	}
-	_, err = a.AvereCommand(a.getRemoveNodeCommand(lastNode))
+	_, err := a.AvereCommand(a.getRemoveNodeCommand(nodeName))
 	if err != nil {
 		return err
 	}
@@ -1076,6 +1107,22 @@ func wrapCommandForLogging(cmd string, outputfile string) string {
 
 func (a *AvereVfxt) getBaseAvereCmd() string {
 	return fmt.Sprintf("averecmd --server %s --no-check-certificate --user %s --password '%s'", a.ManagementIP, AvereAdminUsername, a.AvereAdminPassword)
+}
+
+func (a *AvereVfxt) getAzCliVerifyLoginCommand() string {
+	return wrapCommandForLogging("test -f ~/.azure/azureProfile.json || az login --identity", AzCliLogFile)
+}
+
+func (a *AvereVfxt) getAzCliDeleteNodeCommand(nodeName string) string {
+	return wrapCommandForLogging(fmt.Sprintf("az vm list -g %s -o tsv --query \"[?name=='%s'].id\" | xargs az vm delete -y --ids ", a.ResourceGroup, nodeName), AzCliLogFile)
+}
+
+func (a *AvereVfxt) getAzCliDeleteNicCommand(nodeName string) string {
+	return wrapCommandForLogging(fmt.Sprintf("az network nic list -g %s -o tsv --query \"[?starts_with(name,'%s-')].id\" | xargs az network nic delete --ids ", a.ResourceGroup, nodeName), AzCliLogFile)
+}
+
+func (a *AvereVfxt) getAzCliDeleteDisksCommand(nodeName string) string {
+	return wrapCommandForLogging(fmt.Sprintf("az disk list -g %s -o tsv --query \"[?starts_with(name,'%s-')].id\"| xargs az disk delete -y --ids ", a.ResourceGroup, nodeName), AzCliLogFile)
 }
 
 func getVServerIPRange(vserverIpRange string) *[]string {
