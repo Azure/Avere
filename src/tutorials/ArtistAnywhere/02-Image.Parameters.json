@@ -2,22 +2,41 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "imageGalleryName": {
-      "value": "ArtistAnywhere"
+    "imageGallery": {
+      "value": {
+        "name": "MediaStudio",
+        "imageDefinitions": [
+          {
+            "name": "Render",
+            "type": "Linux",
+            "generation": "v1",
+            "state": "Generalized",
+            "publisher": "OpenLogic",
+            "offer": "CentOS",
+            "sku": "8.0",
+            "version": "latest",
+            "homeDirectory": "/home/az"
+          },
+          {
+            "name": "Desktop",
+            "type": "Windows",
+            "generation": "v1",
+            "state": "Generalized",
+            "publisher": "Microsoft",
+            "offer": "Windows-10",
+            "sku": "rs5-enterprise-standard-g2",
+            "version": "latest",
+            "homeDirectory": "/users/az"
+          }
+        ]
+      }
     },
-    "imageDefinitions": {
-      "value": [
-        {
-          "name": "Render",
-          "type": "Linux",
-          "generation": "v1",
-          "state": "Generalized",
-          "publisher": "OpenLogic",
-          "offer": "CentOS",
-          "sku": "7.7",
-          "version": "latest"
-        }
-      ]
+    "imageRegistry": {
+      "value": {
+        "enabled": false,
+        "name": "MediaStudio",
+        "tier": "Standard"
+      }
     }
   }
 }

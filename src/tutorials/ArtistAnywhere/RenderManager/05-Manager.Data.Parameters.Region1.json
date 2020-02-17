@@ -4,22 +4,23 @@
   "parameters": {
     "renderManager": {
       "value": {
-        "dataServerName": "ArtistAnywhere",
-        "dataServerType": "MO_Gen5_8",
+        "dataServerName": "MediaStudioEast",
+        "dataServerTier": "MO_Gen5_4",
         "dataServerSqlVersion": 11,
         "dataServerStorageMB": 5120,
         "dataServerStorageAutoGrow": "Enabled",
         "dataServerBackupRetentionDays": 7,
         "databaseName": "OpenCue",
         "databaseAdminUsername": "az",
-        "databaseAdminPassword": "P@ssword1234",
-        "keyVaultName": "ArtistAnywhere",
-        "keyVaultTier": "Standard",
-        "keyVaultAdminId": "ef54b085-8b87-4b95-b2a7-cbe762e5664f"
+        "databaseAdminPassword": "P@ssword1234"
       }
     },
-    "virtualNetworkSubnetName": {
-      "value": "Manager"
+    "virtualNetwork": {
+      "value": {
+        "resourceGroupName": "",
+        "name": "",
+        "subnetName": "Render"
+      }
     }
   }
 }

@@ -1,26 +1,67 @@
-﻿function Set-NetworkPeering ($storageNetworkResourceGroupName, $storageNetworkName, $storageNetworkId, $storageType) {
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (03.1 - Storage (" + $storageType + ") Network Peering Start)")
-	$networkPeeringName = $storageNetworkName
-	$networkPeering = az network vnet peering create --resource-group $computeNetworkResourceGroupName --vnet-name $computeNetworkName --name $networkPeeringName --remote-vnet $storageNetworkId --allow-vnet-access
-	if (!$networkPeering) { return }
-	$computeNetworkId = az network vnet show --resource-group $computeNetworkResourceGroupName --name $computeNetworkName --query id
-	$networkPeeringName = $computeNetworkName
-	$networkPeering = az network vnet peering create --resource-group $storageNetworkResourceGroupName --vnet-name $storageNetworkName --name $networkPeeringName --remote-vnet $computeNetworkId --allow-vnet-access
-	if (!$networkPeering) { return }
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (03.1 - Storage (" + $storageType + ") Network Peering End)")
+﻿function New-TraceMessage ($moduleName, $deploymentStart, $regionName) {
+	$traceMessage = [System.DateTime]::Now.ToLongTimeString()
+	if ($regionName) {
+		$traceMessage += " @ " + $regionName
+	}
+	$traceMessage += " ($moduleName Deployment "
+	if ($deploymentStart) {
+		$traceMessage += "Start)"
+	} else {
+		$traceMessage += "End)"
+	}
+	Write-Host $traceMessage
+}
+
+function New-NetworkPeering ([string[]] $computeRegionNames, [object[]] $computeNetworks, $storageNetwork, $storageType) {
+	$moduleName = "03.1 - $storageType Storage Network Peering"
+	New-TraceMessage $moduleName $true
+	$storageNetworkId = az network vnet show --resource-group $storageNetwork.resourceGroupName --name $storageNetwork.name --query id
+	for ($computeNetworkIndex = 0; $computeNetworkIndex -lt $computeNetworks.length; $computeNetworkIndex++) {
+		New-TraceMessage $moduleName $true $computeRegionNames[$computeNetworkIndex]
+		$computeNetworkResourceGroupName = $computeNetworks[$computeNetworkIndex].resourceGroupName
+		$computeNetworkName = $computeNetworks[$computeNetworkIndex].name
+		$networkPeering = az network vnet peering create --resource-group $computeNetworkResourceGroupName --vnet-name $computeNetworkName --name $storageNetwork.name --remote-vnet $storageNetworkId --allow-vnet-access
+		if (!$networkPeering) { return }
+		$computeNetworkId = az network vnet show --resource-group $computeNetworkResourceGroupName --name $computeNetworkName --query id
+		$networkPeering = az network vnet peering create --resource-group $storageNetwork.resourceGroupName --vnet-name $storageNetwork.name --name $computeNetworkName --remote-vnet $computeNetworkId --allow-vnet-access
+		if (!$networkPeering) { return }
+		New-TraceMessage $moduleName $false $computeRegionNames[$computeNetworkIndex]
+	}
+	New-TraceMessage $moduleName $false
 	return $networkPeering
 }
 
-function Get-ImageDefinition ($imageDefinitionName, $imageDefinitions) {
-	foreach ($imageDefinition in $imageDefinitions) {
+function Get-RegionNames ([string[]] $regionDisplayNames) {
+	$regionNames = @()
+	$regionLocations = az account list-locations | ConvertFrom-Json
+	foreach ($regionDisplayName in $regionDisplayNames) {
+		foreach ($regionLocation in $regionLocations) {
+			if ($regionLocation.displayName -eq $regionDisplayName) {
+				$regionNames += $regionLocation.name
+			}
+		}
+	}
+	return $regionNames
+}
+
+function Get-ResourceGroupName ([string[]] $computeRegionNames, $computeRegionIndex, $resourceGroupNamePrefix, $resourceGroupNameSuffix) {
+	$resourceGroupName = $resourceGroupNamePrefix
+	if ($computeRegionNames.length -gt 1) {
+		$resourceGroupName = "$resourceGroupName$computeRegionIndex"
+	}
+	return "$resourceGroupName-$resourceGroupNameSuffix"
+}
+
+function Get-ImageDefinition ($imageGallery, $imageDefinitionName) {
+	foreach ($imageDefinition in $imageGallery.imageDefinitions) {
 		if ($imageDefinition.name -eq $imageDefinitionName) {
 			return $imageDefinition
 		}
 	}
 }
 
-function Get-ImageVersion ($resourceGroupName, $imageGalleryName, $imageDefinitionName, $imageTemplateName) {
-	$imageVersions = (az sig image-version list --resource-group $resourceGroupName --gallery-name $imageGalleryName --gallery-image-definition $imageDefinitionName) | ConvertFrom-Json
+function Get-ImageVersion ($imageGalleryResourceGroupName, $imageGalleryName, $imageDefinitionName, $imageTemplateName) {
+	$imageVersions = az sig image-version list --resource-group $imageGalleryResourceGroupName --gallery-name $imageGalleryName --gallery-image-definition $imageDefinitionName | ConvertFrom-Json
 	foreach ($imageVersion in $imageVersions) {
 		if ($imageVersion.tags.imageTemplate -eq $imageTemplateName) {
 			return $imageVersion
@@ -28,8 +69,17 @@ function Get-ImageVersion ($resourceGroupName, $imageGalleryName, $imageDefiniti
 	}
 }
 
-function Get-MachineExtensionScript ($scriptFileName) {
-	$machineExtensionScript = Get-Content "$templateRootDirectory\$scriptFileName" -Raw
+function Get-CacheMounts ($storageCache) {
+	$cacheMounts = @()
+	foreach ($storageCacheMount in $storageCache.mounts) {
+		$cacheMount = "mount $storageCacheMount.targetHost:$storageCacheMount.namespacePath $storageCacheMount.namespacePath $storageCacheMount.mountOptions"
+		$cacheMounts += $cacheMount
+	}
+	return $cacheMounts
+}
+
+function Get-MachineExtensionScript ($scriptFilePath) {
+	$machineExtensionScript = Get-Content $scriptFilePath -Raw
 	$memoryStream = New-Object System.IO.MemoryStream
 	$compressionStream = New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode]::Compress)
 	$streamWriter = New-Object System.IO.StreamWriter($compressionStream)

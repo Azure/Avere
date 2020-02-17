@@ -1,175 +1,192 @@
 ﻿# Before running this Azure resource deployment script, make sure that the Azure CLI is installed locally.
-# You must have version 2.0.76 (or greater) of the Azure CLI installed for this script to run properly.
+# You must have version 2.0.81 (or greater) of the Azure CLI installed for this script to run properly.
 # The current Azure CLI release is available at http://docs.microsoft.com/cli/azure/install-azure-cli
 
 param (
-	# Set a naming prefix for new Azure resource groups created by this deployment script
-	[string] $resourceGroupNamePrefix = "Azure.Artist.Anywhere",
+	# Set a naming prefix for the Azure resource groups that are created by this deployment script
+	[string] $resourceGroupNamePrefix = "Azure.Media.Studio",
 
-	# Set to an Azure region location for compute (http://azure.microsoft.com/global-infrastructure/locations)
-	[string] $regionLocationCompute = "West US 2",
+	# Set to 1 or more Azure region names (http://azure.microsoft.com/global-infrastructure/regions)
+	[string[]] $computeRegionNames = @("West US 2", "East US 2"),
 
-	# Set to "" to skip Azure storage deployment (for example, if you are planning to use an on-premises storage system)
-	[string] $regionLocationStorage = "West US 2",
+	# Set to the Azure Networking resources (Virtual Network, Private DNS, etc.) for compute regions
+	[object[]] $computeNetworks = @(),
 
 	# Set to true to deploy Azure NetApp Files (http://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
 	[boolean] $storageDeployNetApp = $false,
 
-	# Set to true to deploy Azure Blob Storage (http://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview)
-	[boolean] $storageDeployBlob = $false,
-
-	# Set to the Azure resource group name for the Azure Networking resources for compute
-	[string] $computeNetworkResourceGroupName,
-
-	# Set to the Azure resource name for the Azure Virtual Network resource for compute
-	[string] $computeNetworkName,
-
-	# Set to the Azure resource name for the Azure Private DNS Zone resource
-	[string] $virtualNetworkDomainName
+	# Set to true to deploy Azure Object (Blob) Storage (http://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview)
+	[boolean] $storageDeployObject = $false
 )
 
-$templateRootDirectory = $PSScriptRoot
-if (!$templateRootDirectory) {
-	$templateRootDirectory = $using:templateRootDirectory
+$templateDirectory = $PSScriptRoot
+if (!$templateDirectory) {
+	$templateDirectory = $using:templateDirectory
 }
 
-Import-Module "$templateRootDirectory\Deploy.psm1"
+Import-Module "$templateDirectory\Deploy.psm1"
 
 # 00 - Network
-if (!$computeNetworkResourceGroupName -or !$computeNetworkName) {
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (00 - Network Deployment Start)")
-	$resourceGroupName = "$resourceGroupNamePrefix-Network"
-	$resourceGroup = az group create --resource-group $resourceGroupName --location $regionLocationCompute
-	if (!$resourceGroup) { return }
+if ($computeNetworks.length -eq 0) {
+	$moduleName = "00 - Network"
+	New-TraceMessage $moduleName $true
+	for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
+		New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+		$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Network"
+		$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
+		if (!$resourceGroup) { return }
 
-	$templateResources = "$templateRootDirectory\00-Network.json"
-	$templateParameters = "$templateRootDirectory\00-Network.Parameters.json"
-	$groupDeployment = (az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
-	if (!$groupDeployment) { return }
+		$templateResources = "$templateDirectory\00-Network.json"
+		$templateParameters = "$templateDirectory\00-Network.Parameters.Region$computeRegionIndex.json"
+		$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+		if (!$groupDeployment) { return }
 
-	$computeNetworkResourceGroupName = $resourceGroupName
-	$computeNetworkName = $groupDeployment.properties.outputs.virtualNetworkName.value
-	$virtualNetworkDomainName = $groupDeployment.properties.outputs.virtualNetworkDomainName.value
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (00 - Network Deployment End)")
+		$computeNetwork = New-Object PSObject
+		$computeNetwork | Add-Member -MemberType NoteProperty -Name "resourceGroupName" -Value $resourceGroupName
+		$computeNetwork | Add-Member -MemberType NoteProperty -Name "name" -Value $groupDeployment.properties.outputs.virtualNetworkName.value
+		$computeNetwork | Add-Member -MemberType NoteProperty -Name "domainName" -Value $groupDeployment.properties.outputs.virtualNetworkDomainName.value
+		$computeNetworks += $computeNetwork
+		New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
+	}
+	New-TraceMessage $moduleName $false
 }
 
-$templateRootDirectory = $templateRootDirectory + "\StorageCache"
+$templateDirectory += "\StorageCache"
 
 # 03.0 - Storage
 $storageTargets = @()
-if ($regionLocationStorage -ne "") {
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (03.0 - Storage Deployment Start)")
-	$resourceGroupName = "$resourceGroupNamePrefix-Storage"
-	$resourceGroup = az group create --resource-group $resourceGroupName --location $regionLocationStorage
+if ($storageDeployNetApp -or $storageDeployObject) {
+	$computeRegionIndex = 0
+	$moduleName = "03.0 - Storage"
+	New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+	$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Storage"
+	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 	if (!$resourceGroup) { return }
 
-	if ($storageDeployBlob) {
-		$templateResources = "$templateRootDirectory\03-Storage.Blob.json"
-		$templateParameters = "$templateRootDirectory\03-Storage.Blob.Parameters.json"
-
-		$groupDeployment = (az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
-		if (!$groupDeployment) { return }
-
-		$storageNetworkName = $groupDeployment.properties.outputs.virtualNetworkName.value
-		$storageTargets = $groupDeployment.properties.outputs.storageTargets.value
-
-		if ($storageNetworkName -ne "" -and $storageNetworkName -ne $computeNetworkName) {
-			$storageNetworkId = az network vnet show --resource-group $resourceGroupName --name $storageNetworkName --query id
-			$networkPeering = Set-NetworkPeering $resourceGroupName $storageNetworkName $storageNetworkId "Blob"
-			if (!$networkPeering) { return }
-		}
-	}
-
 	if ($storageDeployNetApp) {
-		$templateResources = "$templateRootDirectory\03-Storage.NetApp.json"
-		$templateParameters = "$templateRootDirectory\03-Storage.NetApp.Parameters.json"
+		$subModuleName = "$moduleName (NetApp)"
+		New-TraceMessage $subModuleName $true $computeRegionNames[$computeRegionIndex]
+		$templateResources = "$templateDirectory\03-Storage.NetApp.json"
+		$templateParameters = "$templateDirectory\03-Storage.NetApp.Parameters.json"
 
-		$groupDeployment = (az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
+		$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
 		if (!$groupDeployment) { return }
 
 		$storageNetworkName = $groupDeployment.properties.outputs.virtualNetworkName.value
 		$storageVolumes = $groupDeployment.properties.outputs.storageTargets.value
 
-		$netAppStorageTargets = @()
 		foreach ($storageVolume in $storageVolumes) {
 			$storageTargetIndex = -1
-			for ($i = 0; $i -lt $netAppStorageTargets.length; $i++) {
-				if ($netAppStorageTargets[$i].host -eq $storageVolume.host) {
+			for ($i = 0; $i -lt $storageTargets.length; $i++) {
+				if ($storageTargets[$i].host -eq $storageVolume.host) {
 					$storageTargetIndex = $i
 				}
 			}
-			if ($storageTargetIndex -gt -1) {
-				$netAppStorageTargets[$storageTargetIndex].junctions = $netAppStorageTargets[$storageTargetIndex].junctions + $storageVolume.junctions
+			if ($storageTargetIndex -ge 0) {
+				$storageTargets[$storageTargetIndex].name = "$storageNetworkName.NetApp"
+				$storageTargets[$storageTargetIndex].junctions += $storageVolume.junctions
 			} else {
-				$netAppStorageTargets = $netAppStorageTargets + $storageVolume
+				$storageTargets += $storageVolume
 			}
 		}
 
-		$storageTargets = $storageTargets + $netAppStorageTargets
+		$storageNetwork = New-Object PSObject
+		$storageNetwork | Add-Member -MemberType NoteProperty -Name "resourceGroupName" -Value $resourceGroupName
+		$storageNetwork | Add-Member -MemberType NoteProperty -Name "name" -Value $storageNetworkName
+		$networkPeering = New-NetworkPeering $computeRegionNames $computeNetworks $storageNetwork "NetApp"
+		if (!$networkPeering) { return }
+		New-TraceMessage $subModuleName $false $computeRegionNames[$computeRegionIndex]
+	}
 
-		if ($storageNetworkName -ne "" -and $storageNetworkName -ne $computeNetworkName) {
-			$storageNetworkId = az network vnet show --resource-group $resourceGroupName --name $storageNetworkName --query id
-			$networkPeering = Set-NetworkPeering $resourceGroupName $storageNetworkName $storageNetworkId "NetApp"
+	if ($storageDeployObject) {
+		$subModuleName = "$moduleName (Object)"
+		New-TraceMessage $subModuleName $true $computeRegionNames[$computeRegionIndex]
+		$templateResources = "$templateDirectory\03-Storage.Object.json"
+		$templateParameters = "$templateDirectory\03-Storage.Object.Parameters.json"
+
+		$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+		if (!$groupDeployment) { return }
+
+		$storageNetworkName = $groupDeployment.properties.outputs.virtualNetworkName.value
+		$storageTargets += $groupDeployment.properties.outputs.storageTargets.value
+
+		if ($storageNetworkName -ne "") {
+			$storageNetwork = New-Object PSObject
+			$storageNetwork | Add-Member -MemberType NoteProperty -Name "resourceGroupName" -Value $resourceGroupName
+			$storageNetwork | Add-Member -MemberType NoteProperty -Name "name" -Value $storageNetworkName
+			$networkPeering = New-NetworkPeering $computeRegionNames $computeNetworks $storageNetwork "Object"
 			if (!$networkPeering) { return }
 		}
+		New-TraceMessage $subModuleName $false $computeRegionNames[$computeRegionIndex]
 	}
-	Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (03.0 - Storage Deployment End)")
+	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 }
 
 # 04.0 - Cache
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (04.0 - Cache Deployment Start)")
-$resourceGroupName = "$resourceGroupNamePrefix-Cache"
-$resourceGroup = az group create --resource-group $resourceGroupName --location $regionLocationCompute
-if (!$resourceGroup) { return }
+$storageCaches = @()
+$moduleName = "04.0 - Cache"
+New-TraceMessage $moduleName $true
+for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
+	New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+	$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Cache"
+	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
+	if (!$resourceGroup) { return }
 
-$templateResources = "$templateRootDirectory\04-Cache.json"
-$templateParameters = (Get-Content "$templateRootDirectory\04-Cache.Parameters.json" -Raw | ConvertFrom-Json).parameters
-if ($templateParameters.storageTargets.value.length -gt 0 -and $templateParameters.storageTargets.value[0].name -ne "") {
-	$templateParameters.storageTargets.value = $templateParameters.storageTargets.value + $storageTargets
-} else {
-	$templateParameters.storageTargets.value = $storageTargets
+	$templateResources = "$templateDirectory\04-Cache.json"
+	$templateParameters = (Get-Content "$templateDirectory\04-Cache.Parameters.Region$computeRegionIndex.json" -Raw | ConvertFrom-Json).parameters
+	if ($computeRegionIndex -gt 0) {
+		$templateParameters.storageTargets.value = @()
+	} elseif ($templateParameters.storageTargets.value.length -gt 0 -and $templateParameters.storageTargets.value[0].name -ne "") {
+		$templateParameters.storageTargets.value += $storageTargets
+	} else {
+		$templateParameters.storageTargets.value = $storageTargets
+	}
+	if ($templateParameters.virtualNetwork.value.resourceGroupName -eq "") {
+		$templateParameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
+	}
+	if ($templateParameters.virtualNetwork.value.name -eq "") {
+		$templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
+	}
+	$templateParameters = ($templateParameters | ConvertTo-Json -Compress -Depth 5).Replace('"', '\"')
+	$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+	if (!$groupDeployment) { return }
+
+	$storageCache = New-Object PSObject
+	$storageCache | Add-Member -MemberType NoteProperty -Name "subnetName" -Value $groupDeployment.properties.outputs.cacheSubnetName.value
+	$storageCache | Add-Member -MemberType NoteProperty -Name "mountAddresses" -Value $groupDeployment.properties.outputs.cacheMountAddresses.value
+	$storageCaches += $storageCache
+	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 }
-$templateParameter = New-Object PSObject
-$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $computeNetworkResourceGroupName
-$templateParameters | Add-Member -MemberType NoteProperty -Name "virtualNetworkResourceGroupName" -Value $templateParameter -Force
-$templateParameter = New-Object PSObject
-$templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $computeNetworkName
-$templateParameters | Add-Member -MemberType NoteProperty -Name "virtualNetworkName" -Value $templateParameter -Force
-$templateParameters = ($templateParameters | ConvertTo-Json -Compress -Depth 5).Replace('"', '\"')
-$groupDeployment = (az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
-if (!$groupDeployment) { return }
-
-$cacheSubnetName = $groupDeployment.properties.outputs.cacheSubnetName.value
-$cacheMountAddresses = $groupDeployment.properties.outputs.cacheMountAddresses.value
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (04.0 - Cache Deployment End)")
+New-TraceMessage $moduleName $false
 
 # 04.1 - Cache DNS
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (04.1 - Cache DNS Record Set Start)")
-$cacheSubdomainName = $cacheSubnetName.ToLower()
-az network private-dns record-set a delete --resource-group $computeNetworkResourceGroupName --zone-name $virtualNetworkDomainName --name $cacheSubdomainName --yes
-foreach ($cacheMountAddress in $cacheMountAddresses) {
-	$cacheMountRecord = az network private-dns record-set a add-record --resource-group $computeNetworkResourceGroupName --zone-name $virtualNetworkDomainName --record-set-name $cacheSubdomainName --ipv4-address $cacheMountAddress
-	if (!$cacheMountRecord) { return }
-}
-$cacheDomainRecord = (az network private-dns record-set a show --resource-group $computeNetworkResourceGroupName --zone-name $virtualNetworkDomainName --name $cacheSubdomainName) | ConvertFrom-Json
-if (!$cacheDomainRecord) { return }
-$cacheMountHost = $cacheDomainRecord.fqdn
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (04.1 - Cache DNS Record Set End)")
+$moduleName = "04.1 - Cache DNS"
+New-TraceMessage $moduleName $true
+for ($cacheIndex = 0; $cacheIndex -lt $storageCaches.length; $cacheIndex++) {
+	New-TraceMessage $moduleName $true $computeNetworks[$cacheIndex].domainName
+	$cacheSubdomainName = $storageCaches[$cacheIndex].subnetName.ToLower()
+	az network private-dns record-set a delete --resource-group $computeNetworks[$cacheIndex].resourceGroupName --zone-name $computeNetworks[$cacheIndex].domainName --name $cacheSubdomainName --yes
 
-# 04.2 - Storage Mounts
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (04.2 - Storage Mounts Start)")
-$storageMounts = ""; $outerDelimiter = "|"; $innerDelimiter = ";"
-$storageMountOptions = ",hard,proto=tcp,mountproto=tcp,retry=30"
-foreach ($storageTarget in $storageTargets) {
-	foreach ($storageTargetJunction in $storageTarget.junctions) {
-		if ($storageMounts -ne "") {
-			$storageMounts = $storageMounts + $outerDelimiter
-		}
-		$storageMounts = $storageMounts + $storageTargetJunction.namespacePath + $innerDelimiter
-		$storageMounts = $storageMounts + $storageTarget.mountOptions + $storageMountOptions + $innerDelimiter
-		$storageMounts = $storageMounts + $cacheMountHost + ":" + $storageTargetJunction.namespacePath
+	foreach ($cacheMountAddress in $storageCaches[$cacheIndex].mountAddresses) {
+		$cacheMountRecord = az network private-dns record-set a add-record --resource-group $computeNetworks[$cacheIndex].resourceGroupName --zone-name $computeNetworks[$cacheIndex].domainName --record-set-name $cacheSubdomainName --ipv4-address $cacheMountAddress
+		if (!$cacheMountRecord) { return }
 	}
-}
-Write-Host ([System.DateTime]::Now.ToLongTimeString() + " (04.2 - Storage Mounts End)")
+	$cacheDomainRecord = az network private-dns record-set a show --resource-group $computeNetworks[$cacheIndex].resourceGroupName --zone-name $computeNetworks[$cacheIndex].domainName --name $cacheSubdomainName | ConvertFrom-Json
+	if (!$cacheDomainRecord) { return }
 
-Write-Output -InputObject $storageMounts
+	$cacheMounts = @() 
+	foreach ($storageTarget in $storageTargets) {
+		foreach ($storageTargetJunction in $storageTarget.junctions) {
+			$cacheMount = New-Object PSObject
+			$cacheMount | Add-Member -MemberType NoteProperty -Name "targetHost" -Value $cacheDomainRecord.fqdn
+			$cacheMount | Add-Member -MemberType NoteProperty -Name "namespacePath" -Value $storageTargetJunction.namespacePath
+			$cacheMount | Add-Member -MemberType NoteProperty -Name "mountOptions" -Value $storageTarget.mountOptions
+			$cacheMounts += $cacheMount
+		}
+	}
+	$storageCaches[$cacheIndex] | Add-Member -MemberType NoteProperty -Name "mounts" -Value $cacheMounts
+	New-TraceMessage $moduleName $false $computeNetworks[$cacheIndex].domainName
+}
+New-TraceMessage $moduleName $false
+
+Write-Output -InputObject $storageCaches -NoEnumerate

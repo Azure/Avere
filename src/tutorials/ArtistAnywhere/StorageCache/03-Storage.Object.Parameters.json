@@ -5,51 +5,18 @@
     "storageAccount": {
       "value": {
         "name": "MediaStudio",
-        "subnetName": "NetApp"
+        "type": "StorageV2",
+        "replication": "Standard_LRS",
+        "subnetName": ""
       }
     },
-    "storagePools": {
+    "storageContainers": {
       "value": [
         {
-          "name": "Storage",
-          "tier": "Standard",
-          "size": 4
-        }
-      ]
-    },
-    "storageVolumes": {
-      "value": [
-        {
-          "name": "Scenes",
-          "pool": "Storage",
-          "size": 2048,
-          "exportPolicyRules": [
-            {
-              "ruleIndex": 1,
-              "cifs": false,
-              "nfsv3": true,
-              "nfsv41": false,
-              "unixReadOnly": false,
-              "unixReadWrite": true,
-              "allowedClients": "0.0.0.0/0"
-            }            
-          ]
+          "name": "scenes"
         },
         {
-          "name": "Frames",
-          "pool": "Storage",
-          "size": 2048,
-          "exportPolicyRules": [
-            {
-              "ruleIndex": 1,
-              "cifs": false,
-              "nfsv3": true,
-              "nfsv41": false,
-              "unixReadOnly": false,
-              "unixReadWrite": true,
-              "allowedClients": "0.0.0.0/0"
-            }            
-          ]
+          "name": "frames"
         }
       ]
     },
@@ -57,29 +24,25 @@
       "value": [
         {
           "name": "Scenes",
-          "type": "nfs3",
+          "type": "clfs",
           "junctions": [
             {
-              "namespacePath": "/storage/netApp/scenes",
-              "nfsExport": "/scenes",
+              "namespacePath": "/storage/object/scenes",
               "targetPath": ""
             }
           ],
-          "mountOptions": "-fstype=nfs,vers=3",
-          "usageModel": "WRITE_AROUND"
+          "mountOptions": "-fstype=nfs,vers=3"
         },
         {
           "name": "Frames",
-          "type": "nfs3",
+          "type": "clfs",
           "junctions": [
             {
-              "namespacePath": "/storage/netApp/frames",
-              "nfsExport": "/frames",
+              "namespacePath": "/storage/object/frames",
               "targetPath": ""
             }
           ],
-          "mountOptions": "-fstype=nfs,vers=3",
-          "usageModel": "WRITE_AROUND"
+          "mountOptions": "-fstype=nfs,vers=3"
         }
       ]
     },

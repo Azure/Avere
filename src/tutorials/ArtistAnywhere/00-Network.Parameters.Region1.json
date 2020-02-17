@@ -1,0 +1,64 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualNetwork": {
+      "value": {
+        "name": "MediaStudioEast",
+        "addressSpace": "10.1.0.0/16",
+        "domainName": "east.media.studio",
+        "domainServers": [
+        ],
+        "subnets": [
+          {
+            "name": "Render",
+            "addressSpace": "10.1.0.0/17",
+            "serviceEndpoints": [
+              {
+                "service": "Microsoft.KeyVault"
+              },
+              {
+                "service": "Microsoft.Sql"
+              }
+            ]
+          },
+          {
+            "name": "Desktop",
+            "addressSpace": "10.1.128.0/18",
+            "serviceEndpoints": [
+            ]
+          },
+          {
+            "name": "Cache",
+            "addressSpace": "10.1.192.0/24",
+            "serviceEndpoints": [
+            ]
+          },
+          {
+            "name": "GatewaySubnet",
+            "addressSpace": "10.1.193.0/24",
+            "serviceEndpoints": [
+            ]
+          }
+        ]
+      }
+    },
+    "virtualNetworkGateway": {
+      "value": {
+        "enabled": false,
+        "type": "Vpn",
+        "vpnTier": "VpnGw1AZ",
+        "vpnType": "RouteBased",
+        "vpnClient": {
+          "protocols": [
+            "IkeV2",
+            "SSTP"
+          ],
+          "addressSpace": "10.11.0.0/18",
+          "rootCertificateName": "MediaStudioEast",
+          "rootCertificateData": "MIIC9TCCAd2gAwIBAgIQYBWJ/AVMGYJFWDrpgLkPZjANBgkqhkiG9w0BAQsFADAdMRswGQYDVQQDDBJBenVyZSBNZWRpYSBTdHVkaW8wHhcNMjAwMTIzMDM0NDMyWhcNMjEwMTIzMDQwNDMyWjAdMRswGQYDVQQDDBJBenVyZSBNZWRpYSBTdHVkaW8wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCyNZZXBDcnrWt9LWinVmjZ9Lnv78VTYdX8XNCJcdsGCPaWVu6k8g9zB3qWktH0CxJdDlM1PMcVAMankfgVP7+FK6qEXHUWHARSWCFRKDyBxNVJ/wZEiLuVp9/15i1Zsu7qrwLTmj8aaM5aAex2eXFkvgpp/eKPw+pzgln/AD69vaQkmBEOcteXGkTSXDxLRtg2cdUCKb5Th55UWz99Bf4ms89LN//4Sq02P3013mgiG/z16ZJ4E9KZe5SzAGHF/EeQTnQ7nF2G8fAS/krq+pgGteCs76Xu/v3BjG3QpRkyM8/a0HSTZNrPNr5kE8Lxz6OZ6yyJHZrZJ+pWN9zVBG41AgMBAAGjMTAvMA4GA1UdDwEB/wQEAwICBDAdBgNVHQ4EFgQUqPULUL0gZBbm0+LXZCRlujk6egIwDQYJKoZIhvcNAQELBQADggEBAFIuQ3L40PMEPt9qFgFQ9EK8UUFcrjjEkGnPNJjC6zopXGgcAROGVza98mGikJf1o2xgpNeJlLkOkDMoWYS+Hmxbq3LlPHRuIVAHABZ2K2Ze+1DXcqJKeyRRCzsYVs2lL0kBewFQlAe/nyPh284KNTUu+L4V23Ugd4QmV/WXFdcuQ3Dwm82p6LJvqzum5EGFE4gaQJpClblYkW7XzqVi72NhemH+KzTP0g4tE/yYwllKMV9RYaXbEJE/vrQ+gxe0kv9NGFLdONMJ2OQZtmTHCG5uH1bTCkO9naWZilRbESgQUWjwnZD9Y1A+pEgMYr227/loSH97PAtm9d4bD9Y+tRM="
+        }
+      }
+    }
+  }
+}

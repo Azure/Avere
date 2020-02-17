@@ -6,7 +6,7 @@ resource "azurerm_resource_group" "storage_cache" {
 resource "azurerm_template_deployment" "storage_cache" {
   name                = "Azure-HPC-Cache"
   resource_group_name = "${azurerm_resource_group.storage_cache.name}"
-  parameters_body     = "${file("./Azure.HPC.Cache.Parameters.json")}"
+  parameters_body     = "${file("./04-Cache.Parameters.json")}"
   deployment_mode     = "Incremental"
 
   template_body = <<DEPLOY
@@ -17,9 +17,9 @@ resource "azurerm_template_deployment" "storage_cache" {
       "cacheName": {
         "type": "string",
         "minLength": 1,
-        "maxLength": 31,
+        "maxLength": 80,
         "metadata": {
-          "description": "Name must be between 1 and 31 characters (alphanumeric, hyphen and underscore)."
+          "description": "Name must be between 1 and 80 characters (alphanumeric, hyphen and underscore)."
         }
       },
       "cacheThroughput": {
@@ -52,29 +52,35 @@ resource "azurerm_template_deployment" "storage_cache" {
           "description": "The cache storage targets."
         }
       },
-      "virtualNetworkResourceGroupName": {
-        "type": "string",
+      "virtualNetwork": {
+        "type": "object",
         "metadata": {
-          "description": "The name of the virtual network resource group."
-        }
-      },
-      "virtualNetworkName": {
-        "type": "string",
-        "metadata": {
-          "description": "The name of the virtual network resource."
-        }
-      },
-      "virtualNetworkSubnetName": {
-        "type": "string",
-        "metadata": {
-          "description": "The name of the virtual network subnet."
+          "description": "The virtual network subnet."
         }
       }
     },
     "variables": {
-      "cacheApiVersion": "2019-11-01",
-      "storageTargets": "[and(greater(length(parameters('storageTargets')), 0), not(equals(parameters('storageTargets')[0].name, '')))]"
+      "cacheApiVersion": "2019-11-01"
     },
+    "functions": [
+      {
+        "namespace": "cache",
+        "members": {
+          "hasStorageTargets": {
+            "parameters": [
+              {
+                "name": "storageTargets",
+                "type": "array"
+              }
+            ],
+            "output": {
+              "type": "bool",
+              "value": "[and(greater(length(parameters('storageTargets')), 0), not(equals(parameters('storageTargets')[0].name, '')))]"
+            }
+          }
+        }
+      }
+    ],
     "resources": [
       {
         "type": "Microsoft.StorageCache/caches",
@@ -86,15 +92,15 @@ resource "azurerm_template_deployment" "storage_cache" {
         },
         "properties": {
           "cacheSizeGB": "[parameters('cacheSize')]",
-          "subnet": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('virtualNetworkSubnetName'))]"
+          "subnet": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
         }
       },
       {
-        "condition": "[and(variables('storageTargets'), greater(length(parameters('storageTargets')[copyIndex()].junctions), 0))]",
+        "condition": "[cache.hasStorageTargets(parameters('storageTargets'))]",
         "type": "Microsoft.StorageCache/caches/storageTargets",
         "apiVersion": "[variables('cacheApiVersion')]",
         "location": "[resourceGroup().location]",
-        "name": "[concat(parameters('cacheName'), '/', if(not(variables('storageTargets')), 'storage', parameters('storageTargets')[copyIndex()].name))]",
+        "name": "[concat(parameters('cacheName'), '/', if(cache.hasStorageTargets(parameters('storageTargets')), parameters('storageTargets')[copyIndex()].name, 'storage'))]",
         "dependsOn": [
           "[resourceId('Microsoft.StorageCache/caches', parameters('cacheName'))]"
         ],
@@ -112,8 +118,8 @@ resource "azurerm_template_deployment" "storage_cache" {
     ],
     "outputs": {
       "cacheMountAddresses": {
-        "type": "string",
-        "value": "[string(reference(resourceId('Microsoft.StorageCache/caches', parameters('cacheName')), variables('cacheApiVersion')).mountAddresses)]"
+        "type": "array",
+        "value": "[reference(resourceId('Microsoft.StorageCache/caches', parameters('cacheName')), variables('cacheApiVersion')).mountAddresses]"
       }
     }
   }

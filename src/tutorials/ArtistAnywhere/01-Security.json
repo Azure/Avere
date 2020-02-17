@@ -1,0 +1,121 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "keyVault": {
+      "type": "object",
+      "metadata": {
+        "description": "The key vault."
+      }
+    },
+    "logAnalytics": {
+      "type": "object",
+      "metadata": {
+        "description": "The log analytics."
+      }
+    },
+    "virtualNetwork": {
+      "type": "object",
+      "metadata": {
+        "description": "The virtual network subnet."
+      }
+    }
+  },
+  "variables": {
+    "keyVaultApiVersion": "2019-09-01",
+    "managedIdentityApiVersion": "2018-11-30",
+    "operationalInsightsApiVersion": "2017-04-26-preview"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "[variables('managedIdentityApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('keyVault').name]",
+      "properties": {
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "[variables('keyVaultApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('keyVault').name]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('keyVault').name)]"
+      ],
+      "properties": {
+        "sku": {
+          "name": "[parameters('keyVault').tier]",
+          "family": "A"
+        },
+        "tenantId": "[subscription().tenantId]",
+        "enabledForDeployment": "true",
+        "enabledForDiskEncryption": "true",
+        "enabledForTemplateDeployment": "true",
+        "accessPolicies": [
+          {
+            "tenantId": "[subscription().tenantId]",
+            "objectId": "[parameters('keyVault').adminId]",
+            "permissions": {
+              "keys": [
+                "All"
+              ],
+              "secrets": [
+                "All"
+              ],
+              "certificates": [
+                "All"
+              ]
+            }
+          },
+          {
+            "tenantId": "[subscription().tenantId]",
+            "objectId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('keyVault').name), variables('managedIdentityApiVersion')).principalId]",
+            "permissions": {
+              "secrets": [
+                "Get"
+              ]
+            }
+          }
+        ],
+        "networkAcls": {
+          "defaultAction": "Deny",
+          "virtualNetworkRules": [
+            {
+              "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "[variables('operationalInsightsApiVersion')]",
+      "name": "[parameters('logAnalytics').name]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "sku": {
+          "name": "[parameters('logAnalytics').tier]"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "keyVaultUri": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name), variables('keyVaultApiVersion')).vaultUri]"
+    },
+    "managedIdentityId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('keyVault').name), variables('managedIdentityApiVersion')).principalId]"
+    },
+    "logAnalyticsWorkspaceId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalytics').name), variables('operationalInsightsApiVersion')).customerId]"
+    },
+    "logAnalyticsWorkspaceKey": {
+      "type": "string",
+      "value": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalytics').name), variables('operationalInsightsApiVersion')).primarySharedKey]"
+    }
+  }
+}

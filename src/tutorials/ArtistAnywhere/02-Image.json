@@ -2,65 +2,79 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "imageGalleryName": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 80,
+    "imageGallery": {
+      "type": "object",
       "metadata": {
-        "description": "Name must be between 1 and 80 characters (alphanumeric, underscore and period)."
+        "description": "The shared image gallery."
       }
     },
-    "imageDefinitions": {
-      "type": "array",
+    "imageRegistry": {
+      "type": "object",
       "metadata": {
-        "description": "The image definitions within the shared image gallery."
+        "description": "The container image registry."
       }
-    }
+    }    
   },
   "variables": {
-    "imageGalleryApiVersion": "2019-07-01"
+    "imageGalleryApiVersion": "2019-12-01",
+    "imageRegistryApiVersion": "2019-05-01"
   },
   "resources": [
-     {
+    {
+      "condition": "[not(parameters('imageRegistry').enabled)]",
       "type": "Microsoft.Compute/galleries",
       "apiVersion": "[variables('imageGalleryApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('imageGalleryName')]",
+      "name": "[parameters('imageGallery').name]",
       "properties": {
       }
     },
     {
+      "condition": "[not(parameters('imageRegistry').enabled)]",
       "type": "Microsoft.Compute/galleries/images",
       "apiVersion": "[variables('imageGalleryApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[concat(parameters('imageGalleryName'), '/', parameters('imageDefinitions')[copyIndex()].name)]",
+      "name": "[concat(parameters('imageGallery').name, '/', parameters('imageGallery').imageDefinitions[copyIndex()].name)]",
       "dependsOn": [
-        "[resourceId('Microsoft.Compute/galleries', parameters('imageGalleryName'))]"
+        "[resourceId('Microsoft.Compute/galleries', parameters('imageGallery').name)]"
       ],
       "properties": {
-        "osType": "[parameters('imageDefinitions')[copyIndex()].type]",
-        "osState": "[parameters('imageDefinitions')[copyIndex()].state]",
-        "hyperVGeneration": "[parameters('imageDefinitions')[copyIndex()].generation]",
+        "osType": "[parameters('imageGallery').imageDefinitions[copyIndex()].type]",
+        "osState": "[parameters('imageGallery').imageDefinitions[copyIndex()].state]",
+        "hyperVGeneration": "[parameters('imageGallery').imageDefinitions[copyIndex()].generation]",
         "identifier": {
-          "publisher": "[parameters('imageDefinitions')[copyIndex()].publisher]",
-          "offer": "[parameters('imageDefinitions')[copyIndex()].offer]",
-          "sku": "[parameters('imageDefinitions')[copyIndex()].sku]"
+          "publisher": "[parameters('imageGallery').imageDefinitions[copyIndex()].publisher]",
+          "offer": "[parameters('imageGallery').imageDefinitions[copyIndex()].offer]",
+          "sku": "[parameters('imageGallery').imageDefinitions[copyIndex()].sku]"
         }
       },
       "copy": {
         "name": "imageDefinitions",
-        "count": "[length(parameters('imageDefinitions'))]"
+        "count": "[length(parameters('imageGallery').imageDefinitions)]"
       }
-    }
+    },
+    {
+      "condition": "[parameters('imageRegistry').enabled]",
+      "type": "Microsoft.ContainerRegistry/registries",
+      "apiVersion": "[variables('imageRegistryApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('imageRegistry').name]",
+      "sku": {
+        "name": "[parameters('imageRegistry').tier]"
+      },
+      "properties": {
+        "adminUserEnabled": false
+      }
+    }    
   ],
   "outputs": {
-    "imageGalleryName": {
-      "type": "string",
-      "value": "[parameters('imageGalleryName')]"
+    "imageGallery": {
+      "type": "object",
+      "value": "[parameters('imageGallery')]"
     },
-    "imageDefinitions": {
-      "type": "array",
-      "value": "[parameters('imageDefinitions')]"
-    }
+    "imageRegistry": {
+      "type": "object",
+      "value": "[parameters('imageRegistry')]"
+    }    
   }
 }

@@ -1,41 +1,35 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "cacheName": {
-      "value": "ArtistAnywhere"
-    },
-    "cacheThroughput": {
-      "value": "Standard_2G"
-    },
-    "cacheSize": {
-      "value": 3072
-    },
-    "storageTargets": {
-      "value": [
-        {
-          "name": "",
-          "type": "nfs3",
-          "target": "",
-          "junctions": [
-            {
-              "namespacePath": "",
-              "nfsExport": "",
-              "targetPath": ""
-            }
-          ],
-          "usageModel": "WRITE_AROUND"
-        }
-      ]
-    },
-    "virtualNetworkResourceGroupName": {
-      "value": "Azure.Artist.Anywhere-Network"
-    },
-    "virtualNetworkName": {
-      "value": "ArtistAnywhere"
-    },
-    "virtualNetworkSubnetName": {
-      "value": "Cache"
+  "cacheName": {
+    "value": "MediaCache"
+  },
+  "cacheThroughput": {
+    "value": "Standard_2G"
+  },
+  "cacheSize": {
+    "value": 3072
+  },
+  "storageTargets": {
+    "value": [
+      {
+        "name": "",
+        "type": "nfs3",
+        "target": "",
+        "junctions": [
+          {
+            "namespacePath": "",
+            "nfsExport": "",
+            "targetPath": ""
+          }
+        ],
+        "usageModel": "WRITE_AROUND"
+      }
+    ]
+  },
+  "virtualNetwork": {
+    "value": {
+      "resourceGroupName": "",
+      "name": "",
+      "subnetName": "Cache"
     }
   }
 }

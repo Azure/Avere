@@ -5,15 +5,20 @@
     "renderWorker": {
       "value": {
         "requirementsUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/requirements.txt",
-        "softwareUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.6/rqd-0.3.6-all.tar.gz",
+        "softwareUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.33/rqd-0.3.33-all.tar.gz",
         "serviceUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/rqd/deploy/opencue-rqd.service",
         "blenderUrl": "https://mirror.clarkson.edu/blender/release/Blender2.81/blender-2.81a-linux-glibc217-x86_64.tar.bz2"
       }
     },
     "imageBuilder": {
       "value": {
-        "templateName": "RenderWorker",
-        "timeoutMinutes": 30
+        "imageGalleryName": "",
+        "imageTemplateName": "RenderWorker",
+        "imageSourceType": "PlatformImage",
+        "imageBuildTimeoutMinutes": 30,
+        "imageReplicationCount": 10,
+        "imageReplicationRegions": [
+        ]
       }
     }
   }

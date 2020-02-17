@@ -2,73 +2,40 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "netAppAccountName": {
-      "type": "string",
-      "minLength": 3,
-      "maxLength": 64,
+    "storageAccount": {
+      "type": "object",
       "metadata": {
-        "description": "Name must be between 3 and 64 characters (alphanumeric, hyphen and underscore)."
+        "description": "The Azure NetApp Files account."
       }
     },
-    "capacityPoolName": {
-      "type": "string",
-      "minLength": 4,
-      "maxLength": 64,
+    "storagePools": {
+      "type": "array",
       "metadata": {
-        "description": "Name must be between 4 and 64 characters (alphanumeric, hyphen and underscore)."
-      }
-    },
-    "capacityPoolTier": {
-      "type": "string",
-      "defaultValue": "Standard",
-      "metadata": {
-        "description": "The performance tier of the capacity pool."
-      }
-    },
-    "capacityPoolSize": {
-      "type": "int",
-      "minValue": 4,
-      "maxValue": 500,
-      "metadata": {
-        "description": "The size (Tebibytes) of the capacity pool."
+        "description": "The storage capacity pools."
       }
     },
     "storageVolumes": {
       "type": "array",
       "metadata": {
-        "description": "The storage volumes in the capacity pool."
+        "description": "The storage file volumes."
       }
     },
     "storageTargets": {
       "type": "array",
       "metadata": {
-        "description": "The storage targets for the cache."
+        "description": "The storage cache targets."
       }
     },
-    "virtualNetworkName": {
-      "type": "string",
-      "minLength": 2,
-      "maxLength": 64,
+    "virtualNetwork": {
+      "type": "object",
       "metadata": {
-        "description": "Name must be between 2 and 64 characters (alphanumeric, hyphen, underscore and period)."
-      }
-    },
-    "virtualNetworkAddressSpace": {
-      "type": "string",
-      "metadata": {
-        "description": "The address space (CIDR) of the virtual network."
-      }
-    },
-    "virtualNetworkSubnets": {
-      "type": "array",
-      "metadata": {
-        "description": "The subnets in the virtual network."
+        "description": "The virtual network subnet."
       }
     }
   },
   "variables": {
-    "virtualNetworkApiVersion": "2019-09-01",
-    "netAppApiVersion": "2019-08-01",
+    "virtualNetworkApiVersion": "2019-11-01",
+    "netAppApiVersion": "2019-11-01",
     "bytesPerTebibyte": 1099511627776,
     "bytesPerGibibyte": 1073741824
   },
@@ -77,22 +44,23 @@
       "type": "Microsoft.Network/virtualNetworks",
       "apiVersion": "[variables('virtualNetworkApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('virtualNetworkName')]",
+      "name": "[parameters('virtualNetwork').name]",
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
-            "[parameters('virtualNetworkAddressSpace')]"
+            "[parameters('virtualNetwork').addressSpace]"
           ]
         },
         "copy": [
           {
             "name": "subnets",
-            "count": "[length(parameters('virtualNetworkSubnets'))]",
+            "count": "[length(parameters('virtualNetwork').subnets)]",
             "input": {
-              "name": "[parameters('virtualNetworkSubnets')[copyIndex('subnets')].name]",
+              "name": "[parameters('virtualNetwork').subnets[copyIndex('subnets')].name]",
               "properties": {
-                "addressPrefix": "[parameters('virtualNetworkSubnets')[copyIndex('subnets')].addressSpace]",
-                "delegations": "[parameters('virtualNetworkSubnets')[copyIndex('subnets')].delegations]"
+                "addressPrefix": "[parameters('virtualNetwork').subnets[copyIndex('subnets')].addressSpace]",
+                "serviceEndpoints": "[parameters('virtualNetwork').subnets[copyIndex('subnets')].serviceEndpoints]",
+                "delegations": "[parameters('virtualNetwork').subnets[copyIndex('subnets')].delegations]"
               }
             }
           }
@@ -103,7 +71,7 @@
       "type": "Microsoft.NetApp/netAppAccounts",
       "apiVersion": "[variables('netAppApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('netAppAccountName')]",
+      "name": "[parameters('storageAccount').name]",
       "properties": {
       }
     },
@@ -111,47 +79,37 @@
       "type": "Microsoft.NetApp/netAppAccounts/capacityPools",
       "apiVersion": "[variables('netAppApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[concat(parameters('netAppAccountName'), '/', parameters('capacityPoolName'))]",
+      "name": "[concat(parameters('storageAccount').name, '/', parameters('storagePools')[copyIndex()].name)]",
       "dependsOn": [
-        "[resourceId('Microsoft.NetApp/netAppAccounts', parameters('netAppAccountName'))]"
+        "[resourceId('Microsoft.NetApp/netAppAccounts', parameters('storageAccount').name)]"
       ],
       "properties": {
-        "serviceLevel": "[parameters('capacityPoolTier')]",
-        "size": "[mul(variables('bytesPerTebibyte'), parameters('capacityPoolSize'))]"
-      }
+        "serviceLevel": "[parameters('storagePools')[copyIndex()].tier]",
+        "size": "[mul(variables('bytesPerTebibyte'), parameters('storagePools')[copyIndex()].size)]"
+      },
+      "copy": {
+        "name": "storagePools",
+        "count": "[length(parameters('storagePools'))]"
+      }      
     },
     {
       "type": "Microsoft.NetApp/netAppAccounts/capacityPools/volumes",
       "apiVersion": "[variables('netAppApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[concat(parameters('netAppAccountName'), '/', parameters('capacityPoolName'), '/', parameters('storageVolumes')[copyIndex()].name)]",
+      "name": "[concat(parameters('storageAccount').name, '/', parameters('storageVolumes')[copyIndex()].pool, '/', parameters('storageVolumes')[copyIndex()].name)]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
-        "[resourceId('Microsoft.NetApp/netAppAccounts/capacityPools', parameters('netAppAccountName'), parameters('capacityPoolName'))]"
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetwork').name)]",
+        "[resourceId('Microsoft.NetApp/netAppAccounts/capacityPools', parameters('storageAccount').name, parameters('storageVolumes')[copyIndex()].pool)]"
       ],
       "properties": {
-        "subnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('virtualNetworkSubnets')[0].name)]",
+        "subnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('storageAccount').subnetName)]",
         "usageThreshold": "[mul(variables('bytesPerGibibyte'), parameters('storageVolumes')[copyIndex()].size)]",
         "creationToken": "[toLower(parameters('storageVolumes')[copyIndex()].name)]",
-        "protocolTypes": [
-          "NFSv3"
-        ],
         "exportPolicy": {
-          "rules": [
-            {
-              "ruleIndex": 1,
-              "unixReadOnly": false,
-              "unixReadWrite": true,
-              "cifs": false,
-              "nfsv3": true,
-              "nfsv41": false,
-              "allowedClients": "0.0.0.0/0"
-            }
-          ]
+          "rules": "[parameters('storageVolumes')[copyIndex()].exportPolicyRules]"
         }
       },
       "copy": {
-        "mode": "Serial",
         "name": "storageVolumes",
         "count": "[length(parameters('storageVolumes'))]"
       }
@@ -160,17 +118,17 @@
   "outputs": {
     "virtualNetworkName": {
       "type": "string",
-      "value": "[parameters('virtualNetworkName')]"
+      "value": "[parameters('virtualNetwork').name]"
     },
     "storageTargets": {
       "type": "array",
       "copy": {
-        "count": "[length(parameters('storageTargets'))]",
+        "count": "[length(parameters('storageVolumes'))]",
         "input": {
-          "name": "[concat(parameters('virtualNetworkName'), '.', parameters('storageTargets')[copyIndex()].name)]",
-          "type": "nfs3",
-          "host": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('netAppAccountName'), parameters('capacityPoolName'), parameters('storageTargets')[copyIndex()].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
-          "target": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('netAppAccountName'), parameters('capacityPoolName'), parameters('storageTargets')[copyIndex()].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
+          "name": "[concat(parameters('virtualNetwork').name, '.NetApp.', parameters('storageTargets')[copyIndex()].name)]",
+          "type": "[parameters('storageTargets')[copyIndex()].type]",
+          "host": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('storageAccount').name, parameters('storageVolumes')[copyIndex()].pool, parameters('storageVolumes')[copyIndex()].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
+          "target": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('storageAccount').name, parameters('storageVolumes')[copyIndex()].pool, parameters('storageVolumes')[copyIndex()].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
           "junctions": "[parameters('storageTargets')[copyIndex()].junctions]",
           "mountOptions": "[parameters('storageTargets')[copyIndex()].mountOptions]",
           "usageModel": "[parameters('storageTargets')[copyIndex()].usageModel]"

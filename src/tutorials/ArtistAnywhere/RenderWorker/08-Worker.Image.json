@@ -1,39 +1,55 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
-  "parameters": {  
+  "parameters": {
     "renderWorker": {
       "type": "object",
       "metadata": {
-        "description": "The render farm worker configuration."
-      }
-    },
-    "imageDefinition": {
-      "type": "object",
-      "metadata": {
-        "description": "The definition of the shared image."
+        "description": "The render farm worker."
       }
     },
     "imageBuilder": {
       "type": "object",
       "metadata": {
-        "description": "The builder of the shared image."
+        "description": "The shared image builder."
+      }
+    },
+    "imageDefinition": {
+      "type": "object",
+      "metadata": {
+        "description": "The shared image definition."
       }
     }
   },
   "variables": {
-    "imageBuilderApiVersion": "2019-05-01-preview"
+    "roleAssignmentApiVersion": "2019-04-01-preview",
+    "roleDefinitionContributorId": "b24988ac-6180-42a0-ab88-20f7382dd24c",
+    "imageBuilderApiVersion": "2019-05-01-preview",
+    "imageBuilderPrincipalId": "ef511139-6170-438e-a6e1-763dc31bdf74"
   },
   "resources": [
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "[variables('roleAssignmentApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[guid(resourceGroup().id)]",
+      "properties": {
+        "principalId": "[variables('imageBuilderPrincipalId')]",
+        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('roleDefinitionContributorId'))]"
+      }
+    },
     {
       "type": "Microsoft.VirtualMachineImages/imageTemplates",
       "apiVersion": "[variables('imageBuilderApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('imageBuilder').templateName]",
+      "name": "[parameters('imageBuilder').imageTemplateName]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Authorization/roleAssignments', guid(resourceGroup().id))]"
+      ],
       "properties": {
-        "buildTimeoutInMinutes": "[parameters('imageBuilder').timeoutMinutes]",
+        "buildTimeoutInMinutes": "[parameters('imageBuilder').imageBuildTimeoutMinutes]",
         "source": {
-          "type": "PlatformImage",
+          "type": "[parameters('imageBuilder').imageSourceType]",
           "publisher": "[parameters('imageDefinition').publisher]",
           "offer": "[parameters('imageDefinition').offer]",
           "sku": "[parameters('imageDefinition').sku]",
@@ -45,45 +61,37 @@
             "type": "Shell",
             "inline": [
               "yum -y install gcc",
-              "yum -y install epel-release",
-              "yum -y install python-devel",
-              "yum -y install python-pip",
+              "yum -y install python3-devel",
+              "yum -y install redhat-rpm-config",
               "[concat('curl --location ', parameters('renderWorker').requirementsUrl, ' --output requirements.txt')]",
-              "pip install --upgrade pip",
-              "pip install --requirement requirements.txt --ignore-installed",
-              "[concat('useradd --system --create-home ', replace(replace(parameters('renderWorker').rootDirectory, 'home', ''), '/', ''))]",
-              "[concat('cd ', parameters('renderWorker').rootDirectory)]",
+              "pip3 install --requirement requirements.txt",
+              "[concat('useradd --system --create-home ', replace(replace(parameters('imageDefinition').homeDirectory, 'home', ''), '/', ''))]",
+              "[concat('cd ', parameters('imageDefinition').homeDirectory)]",
               "[concat('curl --location ', parameters('renderWorker').softwareUrl, ' --output opencue-rqd.jar.gz')]",
               "[concat('curl --location ', parameters('renderWorker').serviceUrl, ' --output opencue-rqd.service')]",
-              "sed --in-place '/SyslogIdentifier/a RestartSec=30' opencue-rqd.service",
-              "sed --in-place '/SyslogIdentifier/a Restart=always' opencue-rqd.service",
               "tar -xzf opencue-rqd.jar.gz",
               "cd rqd*",
-              "python setup.py install",
-              "mkdir /shots",
-              "chmod -R 0777 /shots"
+              "python3 setup.py install"
             ]
           },
           {
-            "name": "Storage",
-            "type": "Shell",
-            "inline": [
-              "yum -y install nfs-utils",
-              "yum -y install autofs"
-            ]
-          },
-          {
-            "name": "Render",
+            "name": "Blender",
             "type": "Shell",
             "inline": [
               "yum -y install libXi",
               "yum -y install libXrender",
               "yum -y install mesa-libGL",
-              "yum -y install mesa-dri-drivers",
-              "[concat('cd ', parameters('renderWorker').rootDirectory)]",
+              "[concat('cd ', parameters('imageDefinition').homeDirectory)]",
               "[concat('curl --location ', parameters('renderWorker').blenderUrl, ' --output blender.jar.bz2')]",
               "tar -xjf blender.jar.bz2",
               "mv blender-*/* /usr/local/bin"
+            ]
+          },
+          {
+            "name": "Cache",
+            "type": "Shell",
+            "inline": [
+              "yum -y install nfs-utils"
             ]
           }
         ],
@@ -92,11 +100,9 @@
             "type": "SharedImage",
             "runOutputName": "SharedImage",
             "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('imageBuilder').imageGalleryName, parameters('imageDefinition').name)]",
-            "replicationRegions": [
-              "[resourceGroup().location]"
-            ],
+            "replicationRegions": "[parameters('imageBuilder').imageReplicationRegions]",
             "artifactTags": {
-              "imageTemplate": "[parameters('imageBuilder').templateName]"
+              "imageTemplate": "[parameters('imageBuilder').imageTemplateName]"
             }
           }
         ]
@@ -104,9 +110,5 @@
     }
   ],
   "outputs": {
-    "imageTemplateName": {
-      "type": "string",
-      "value": "[parameters('imageBuilder').templateName]"
-    }
   }
 }

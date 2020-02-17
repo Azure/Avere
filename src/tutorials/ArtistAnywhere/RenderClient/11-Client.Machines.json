@@ -1,0 +1,144 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "renderClient": {
+      "type": "object",
+      "metadata": {
+        "description": "The render farm client."
+      }
+    }
+  },
+  "variables": {
+    "virtualNetworkApiVersion": "2019-11-01",
+    "virtualMachineApiVersion": "2019-12-01"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('renderClient').machines[copyIndex()].name]",
+      "properties": {
+        "primary": true,
+        "enableAcceleratedNetworking": "[parameters('renderClient').machines[copyIndex()].acceleratedNetworking]",
+        "ipConfigurations": [
+          {
+            "name": "ipConfig0",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+              }
+            }
+          }
+        ]
+      },
+      "copy": {
+        "name": "renderClients",
+        "count": "[length(parameters('renderClient').machines)]"
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "[variables('virtualMachineApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('renderClient').machines[copyIndex()].name]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', parameters('renderClient').machines[copyIndex()].name)]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('renderClient').machines[copyIndex()].machineSize]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('renderClient')/machines[copyIndex()].name)]"
+            }
+          ]
+        },
+        "storageProfile": {
+          "imageReference": {
+            "id": "[parameters('renderClient').imageVersionId]"
+          },
+          "osDisk": {
+            "caching": "ReadOnly",
+            "createOption": "FromImage"
+          }
+        },
+        "osProfile": {
+          "computerName": "[parameters('renderClient').machines[copyIndex()].name]",
+          "adminUsername": "[parameters('renderClient').machines[copyIndex()].adminUsername]",
+          "adminPassword": "[parameters('renderClient').machines[copyIndex()].adminPassword]",
+          "linuxConfiguration": {
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[concat('/home/', parameters('renderClient').machines[copyIndex()].adminUsername, '/.ssh/authorized_keys')]",
+                  "keyData": "[parameters('renderClient').machines[copyIndex()].sshPublicKeyData]"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "resources": [
+        {
+          "type": "extensions",
+          "apiVersion": "[variables('virtualMachineApiVersion')]",
+          "location": "[resourceGroup().location]",
+          "name": "[concat(parameters('renderClient').machines[copyIndex()].name, 'Extension')]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', parameters('renderClient').machines[copyIndex()].name)]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.Azure.Extensions",
+            "autoUpgradeMinorVersion": true,
+            "typeHandlerVersion": "2.0",
+            "type": "CustomScript",
+            "protectedSettings": {
+              "commandToExecute": "[concat('echo ', parameters('renderClient').machineExtensionScript, ' | certutil -decode | compact /u | HOME_DIRECTORY=\"', parameters('renderClient').homeDirectory, '\" powershell')]"
+            }
+          }
+        },
+        {
+          "type": "extensions",
+          "apiVersion": "[variables('virtualMachineApiVersion')]",
+          "location": "[resourceGroup().location]",
+          "name": "[concat(parameters('renderClient').machines[copyIndex()].name, 'Monitor')]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', parameters('renderClient').machines[copyIndex()].name)]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+            "autoUpgradeMinorVersion": true,
+            "typeHandlerVersion": "1.12",
+            "type": "OmsAgentForLinux",
+            "protectedSettings": {
+              "workspaceKey": "[parameters('renderClient').logAnalyticsWorkspaceKey]"
+            },
+            "settings": {
+              "workspaceId": "[parameters('renderClient').logAnalyticsWorkspaceId]"
+            }
+          }
+        }
+      ],
+      "copy": {
+        "name": "renderClients",
+        "count": "[length(parameters('renderClient').machines)]"
+      }
+    }
+  ],
+  "outputs": {
+    "renderClients": {
+      "type": "array",
+      "copy": {
+        "count": "[length(parameters('renderClient').machines)]",
+        "input": {
+          "name": "[parameters('renderClient').machines[copyIndex()].name]"
+        }
+      }
+    }
+  }
+}

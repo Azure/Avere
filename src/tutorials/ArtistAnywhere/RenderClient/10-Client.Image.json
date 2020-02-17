@@ -1,0 +1,82 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "renderClient": {
+      "type": "object",
+      "metadata": {
+        "description": "The render farm client."
+      }
+    },
+    "imageBuilder": {
+      "type": "object",
+      "metadata": {
+        "description": "The shared image builder."
+      }
+    },
+    "imageDefinition": {
+      "type": "object",
+      "metadata": {
+        "description": "The shared image definition."
+      }
+    }
+  },
+  "variables": {
+    "roleAssignmentApiVersion": "2019-04-01-preview",
+    "roleDefinitionContributorId": "b24988ac-6180-42a0-ab88-20f7382dd24c",
+    "imageBuilderApiVersion": "2019-05-01-preview",
+    "imageBuilderPrincipalId": "ef511139-6170-438e-a6e1-763dc31bdf74"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "[variables('roleAssignmentApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[guid(resourceGroup().id)]",
+      "properties": {
+        "principalId": "[variables('imageBuilderPrincipalId')]",
+        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('roleDefinitionContributorId'))]"
+      }
+    },
+    {
+      "type": "Microsoft.VirtualMachineImages/imageTemplates",
+      "apiVersion": "[variables('imageBuilderApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('imageBuilder').imageTemplateName]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Authorization/roleAssignments', guid(resourceGroup().id))]"
+      ],
+      "properties": {
+        "buildTimeoutInMinutes": "[parameters('imageBuilder').imageBuildTimeoutMinutes]",
+        "source": {
+          "type": "[parameters('imageBuilder').imageSourceType]",
+          "publisher": "[parameters('imageDefinition').publisher]",
+          "offer": "[parameters('imageDefinition').offer]",
+          "sku": "[parameters('imageDefinition').sku]",
+          "version": "[parameters('imageDefinition').version]"
+        },
+        "customize": [
+          {
+            "name": "OpenCue",
+            "type": "Shell",
+            "inline": [
+            ]
+          }
+        ],
+        "distribute": [
+          {
+            "type": "SharedImage",
+            "runOutputName": "SharedImage",
+            "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('imageBuilder').imageGalleryName, parameters('imageDefinition').name)]",
+            "replicationRegions": "[parameters('imageBuilder').imageReplicationRegions]",
+            "artifactTags": {
+              "imageTemplate": "[parameters('imageBuilder').imageTemplateName]"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+  }
+}
