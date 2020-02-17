@@ -10,8 +10,8 @@ data "azurerm_subnet" "vnet" {
 
 locals {
   # send the script file to custom data, adding env vars
-  script_file_b64 = base64gzip(replace(file("../installnfs.sh"),"\r",""))
-  cloud_init_file = templatefile("cloud-init.tpl", { install_script = local.script_file_b64, export_path = var.nfs_export_path, export_options = var.nfs_export_options})
+  script_file_b64 = base64gzip(replace(file("${path.module}/../installnfs.sh"),"\r",""))
+  cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { install_script = local.script_file_b64, export_path = var.nfs_export_path, export_options = var.nfs_export_options})
 }
 
 resource "azurerm_resource_group" "nfsfiler" {

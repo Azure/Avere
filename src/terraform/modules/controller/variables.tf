@@ -11,8 +11,11 @@ variable "admin_username" {
   default = "azureuser"
 }
 
+variable "addmin_password" {
+  description = "(optional) The password used for access to the controller.  If not specified, ssh_key_data needs to be set."
+}
 variable "ssh_key_data" {
-  description = "The public SSH key used for access to the controller."
+  description = "(optional) The public SSH key used for access to the controller.  If not specified, addmin_password needs to be set."
 }
 
 variable "unique_name" {
