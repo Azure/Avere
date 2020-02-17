@@ -263,7 +263,7 @@ func (a *AvereVfxt) DestroyVfxt() error {
 	return nil
 }
 
-func (a *AvereVfxt) ScaleCluster(newNodeCount int) error {
+func (a *AvereVfxt) ScaleCluster(previousNodeCount int, newNodeCount int) error {
 	if newNodeCount < MinNodesCount {
 		return fmt.Errorf("Error: invalid scale size %d, cluster cannot have less than %d nodes", newNodeCount, MinNodesCount)
 	}
@@ -271,13 +271,13 @@ func (a *AvereVfxt) ScaleCluster(newNodeCount int) error {
 		return fmt.Errorf("Error: invalid scale size %d, cluster cannot have more than %d nodes", newNodeCount, MinNodesCount)
 	}
 	var err error
-	if newNodeCount > a.NodeCount {
+	if newNodeCount > previousNodeCount {
 		// scale up the cluster
-		log.Printf("scale up cluster %d=>%d", a.NodeCount, newNodeCount)
+		log.Printf("vfxt: scale up cluster %d=>%d", previousNodeCount, newNodeCount)
 		err = a.scaleUpCluster(newNodeCount)
 	} else {
 		// scale down the cluster
-		log.Printf("scale down cluster %d=>%d", a.NodeCount, newNodeCount)
+		log.Printf("vfxt: scale down cluster %d=>%d", previousNodeCount, newNodeCount)
 		err = a.scaleDownCluster(newNodeCount)
 	}
 	currentNodeCount, err2 := a.GetCurrentNodeCount()
@@ -480,7 +480,7 @@ func (a *AvereVfxt) EnsureClusterStable() (error) {
 					continue
 				default:
 					if activity.Percent != CompletedPercent {
-						log.Printf("cluster still has running activity %v", activity)
+						log.Printf("vfxt: cluster still has running activity %v", activity)
 						healthy = false
 						break
 					}
@@ -496,7 +496,7 @@ func (a *AvereVfxt) EnsureClusterStable() (error) {
 			} 
 			for _, alert := range alerts {
 				if alert.Severity != AlertSeverityGreen {
-					log.Printf("cluster still has active alert %v", alert)
+					log.Printf("vfxt: cluster still has active alert %v", alert)
 					healthy = false
 					break
 				}
@@ -834,14 +834,15 @@ func (a *AvereVfxt) scaleUpCluster(newNodeCount int) error {
 		}
 		// check if cluster sizing is complete
 		if currentNodeCount >= newNodeCount {
+			log.Printf("vfxt: node count %d >= %d", currentNodeCount, newNodeCount)
 			return nil
 		}
-		log.Printf("add node to cluster %d (target %d)", currentNodeCount, newNodeCount)
+		log.Printf("vfxt: add node to cluster %d (target %d)", currentNodeCount, newNodeCount)
 		err = a.addNodeToCluster(currentNodeCount)
 		if err != nil {
 			return err
 		}
-		log.Printf("ensure stable cluster")
+		log.Printf("vfxt: ensure stable cluster")
 		err = a.EnsureClusterStable()
 		if err != nil {
 			return err
