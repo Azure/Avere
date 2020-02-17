@@ -272,6 +272,13 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	// scale the cluster if node changed
+	if d.HasChange("vfxt_node_count") {
+		if err := scaleCluster(d, avereVfxt); err != nil {
+			return err
+		} 
+	}
+
 	return resourceVfxtRead(d, m)
 }
 
@@ -512,6 +519,17 @@ func deleteJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 
 	return nil
 }
+
+func scaleCluster(d *schema.ResourceData, averevfxt *AvereVfxt) error {
+	oldRaw, newRaw := d.GetChange("vfxt_node_count")
+	previousCount := oldRaw.(int)
+	newCount := newRaw.(int)
+	if err := averevfxt.ScaleCluster(previousCount, newCount) ; err != nil {
+		return err
+	}
+	return nil
+}
+
 
 func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 	results := make(map[string]*CoreFiler)
