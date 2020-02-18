@@ -71,16 +71,16 @@ $logAnalyticsWorkspaceId = $groupDeployment.properties.outputs.logAnalyticsWorks
 $logAnalyticsWorkspaceKey = $groupDeployment.properties.outputs.logAnalyticsWorkspaceKey.value
 New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 
-# 02 - Image
+# 02 - Gallery
 $computeRegionIndex = 0
-$moduleName = "02 - Image"
+$moduleName = "02 - Gallery"
 New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 $resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Image"
 $resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 if (!$resourceGroup) { return }
 
-$templateResources = "$templateDirectory\02-Image.json"
-$templateParameters = "$templateDirectory\02-Image.Parameters.json"
+$templateResources = "$templateDirectory\02-Gallery.json"
+$templateParameters = "$templateDirectory\02-Gallery.Parameters.json"
 $groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
 if (!$groupDeployment) { return }
 
