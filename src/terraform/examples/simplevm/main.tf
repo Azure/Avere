@@ -88,7 +88,7 @@ resource "azurerm_virtual_machine" "vm" {
 
     // dynamic block when password is specified
     dynamic "os_profile_linux_config" {
-        for_each = (local.ssh_key_data == null || local.ssh_key_data == "") && local.admin_password != null && local.admin_password != "" ? [local.admin_password] : [null] 
+        for_each = (local.ssh_key_data == null || local.ssh_key_data == "") && local.admin_password != null && local.admin_password != "" ? [local.admin_password] : [] 
         content {
             disable_password_authentication = false
         }

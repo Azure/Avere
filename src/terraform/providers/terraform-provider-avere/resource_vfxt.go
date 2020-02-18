@@ -192,6 +192,10 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	// this only needs to be done on create since the controller's ssh 
+	// may take a while to become ready
+	VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod)
+
 	if err := avereVfxt.CreateVfxt(); err != nil {
 		return fmt.Errorf("failed to create cluster: %s\n", err)
 	}

@@ -12,8 +12,8 @@ data "azurerm_subscription" "primary" {}
 
 locals {
   # send the script file to custom data, adding env vars
-  script_file_b64 = base64gzip(replace(file("averecmd.txt"),"\r",""))
-  cloud_init_file = templatefile("cloud-init.tpl", { averecmd = local.script_file_b64 })
+  script_file_b64 = base64gzip(replace(file("${path.module}/averecmd.txt"),"\r",""))
+  cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { averecmd = local.script_file_b64 })
   # the roles assigned to the controller managed identity principal
   # the contributor role is required to create Avere clusters
   avere_create_cluster_role = "Avere Contributor"
@@ -81,17 +81,33 @@ resource "azurerm_virtual_machine" "vm" {
     product = "vfxt"
   }
 
-  os_profile {
-    computer_name  = var.unique_name
-    admin_username = var.admin_username
-    custom_data = local.cloud_init_file
+  dynamic "os_profile" {
+    for_each = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? [var.admin_password] : [null] 
+    content {
+      computer_name  = var.unique_name
+      admin_username = var.admin_username
+      admin_password = var.admin_password
+      custom_data = local.cloud_init_file
+    }
   }
 
-  os_profile_linux_config {
-    disable_password_authentication = true
-    ssh_keys {
+  // dynamic block when password is specified
+  dynamic "os_profile_linux_config" {
+    for_each = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? [var.admin_password] : [] 
+    content {
+      disable_password_authentication = false
+    }
+  }
+
+  // dynamic block when SSH key is specified
+  dynamic "os_profile_linux_config" {
+    for_each = var.ssh_key_data == null || var.ssh_key_data == "" ? [] : [var.ssh_key_data]
+    content {
+      disable_password_authentication = true
+      ssh_keys {
         path     = "/home/${var.admin_username}/.ssh/authorized_keys"
         key_data = var.ssh_key_data
+      }
     }
   }
 }

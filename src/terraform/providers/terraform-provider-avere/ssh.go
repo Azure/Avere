@@ -9,8 +9,15 @@ import (
 	"io/ioutil"
 	"os/user"
 	"sync"
+	"time"
 	
 	"golang.org/x/crypto/ssh"
+)
+
+const (
+	SSHVerifyRetryCount = 6 // wait 1 minute
+	SSHVerifyRetrySleepSeconds = 10
+	VerifyCommand = "ls"
 )
 
 func GetPasswordAuthMethod(password string) (ssh.AuthMethod) {
@@ -30,6 +37,17 @@ func GetKeyFileAuthMethod() (authMethod ssh.AuthMethod, err error) {
 	}
 	authMethod = ssh.PublicKeys(key)
     return
+}
+
+// on poor wi-fi connections it can take multiple attempts for the first connection
+func VerifySSHConnection(host string, username string, authMethod ssh.AuthMethod) {
+	for retries:=0 ; retries < SSHVerifyRetryCount ; retries++ {
+		if _, _, err := SSHCommand(host, username, authMethod, VerifyCommand) ; err == nil {
+			// success
+			break
+		}
+		time.Sleep(SSHVerifyRetrySleepSeconds * time.Second)
+	}
 }
 
 // SSHCommand runs an ssh command, and captures the stdout and stderr in two byte buffers
