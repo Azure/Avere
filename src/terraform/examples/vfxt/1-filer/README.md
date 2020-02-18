@@ -1,6 +1,10 @@
 # Avere vFXT with 1 Filer
 
-This examples configures a render network, controller, and vfxt with 1 filer.
+This examples configures a render network, controller, and vfxt with 1 filer as shown in the diagram below:
+
+![The architecture](../../../../../docs/images/rendering/1filer.png)
+
+## Deployment Instructions
 
 To run the example run through the following instructions.  This assumes use of Azure Cloud Shell, but you can use in your own environment, ensure you install the vfxt provider as described in the [build provider instructions](../../../providers/terraform-provider-avere#build-the-terraform-provider-binary).
 
@@ -34,5 +38,7 @@ git pull origin master
 8. execute `terraform apply -auto-approve` to build the vfxt cluster
 
 Once installed you will be able to login and use the vFXT cluster according to the vFXT documentation: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-cluster-gui.
+
+Try to scale up and down the cluster, adjust the customer settings, add new junctions, etc, by editing the `main.tf`, and running `terraform apply -auto-approve`.
 
 When you are done using the cluster, you can destroy it by running `terraform destroy -auto-approve` or just delete the three resource groups created.
