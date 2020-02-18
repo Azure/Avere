@@ -1,3 +1,6 @@
+ 
+
+
 resource "avere_vfxt" "vfxt" {
     controller_address = "CONTROLLER_ADDRESS"
     controller_admin_username = "azureuser"
