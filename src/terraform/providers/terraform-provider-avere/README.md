@@ -43,7 +43,7 @@ Install either a Centos or Ubuntu Virtual Machine
     # checkout Checkpoint simulator code, all dependencies and build the binaries
     cd $GOPATH
     go get -v github.com/Azure/Avere/src/terraform/providers/terraform-provider-avere
-    cd github.com/Azure/Avere/src/terraform/providers/terraform-provider-avere
+    cd src/github.com/Azure/Avere/src/terraform/providers/terraform-provider-avere
     go build
     mkdir -p ~/.terraform.d/plugins
     cp terraform-provider-avere ~/.terraform.d/plugins

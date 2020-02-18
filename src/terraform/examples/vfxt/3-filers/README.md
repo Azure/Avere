@@ -10,7 +10,7 @@ To run the example run through the following instructions.  This assumes use of 
 ```bash
 mkdir -p ~/.terraform.d/plugins
 # install the vfxt released binary from https://github.com/Azure/Avere
-wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.1.0/terraform-provider-avere
+wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.2.0/terraform-provider-avere
 chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 ```
 
@@ -25,7 +25,7 @@ echo "src/terraform/*" >> .git/info/sparse-checkout
 git pull origin master
 ```
 
-5. `cd examples/3-filers`
+5. `cd src/terraform/examples/vfxt/3-filers`
 
 6. edit the local variables section of `main.tf`, to customize to your preferences
 
