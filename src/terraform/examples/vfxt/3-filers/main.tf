@@ -35,6 +35,7 @@ module "nasfiler1" {
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     vm_size = "Standard_D2s_v3"
+    unique_name = "nasfiler1"
 
     // network details
     virtual_network_resource_group = local.network_resource_group_name
@@ -49,6 +50,7 @@ module "nasfiler2" {
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     vm_size = "Standard_D2s_v3"
+    unique_name = "nasfiler2"
 
     // network details
     virtual_network_resource_group = local.network_resource_group_name
@@ -63,6 +65,7 @@ module "nasfiler3" {
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     vm_size = "Standard_D2s_v3"
+    unique_name = "nasfiler3"
 
     // network details
     virtual_network_resource_group = local.network_resource_group_name
