@@ -25,7 +25,7 @@ resource "azurerm_network_interface" "nfsfiler" {
   location            = azurerm_resource_group.nfsfiler.location
 
   ip_configuration {
-    name                          = "ipconfig"
+    name                          = "${var.unique_name}-ipconfig"
     subnet_id                     = data.azurerm_subnet.vnet.id
     private_ip_address_allocation = "Dynamic"
   }
@@ -40,7 +40,7 @@ resource "azurerm_virtual_machine" "nfsfiler" {
   delete_os_disk_on_termination = true
 
   storage_os_disk {
-    name              = "myOsDisk"
+    name              = "${var.unique_name}-osdisk"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Premium_LRS"

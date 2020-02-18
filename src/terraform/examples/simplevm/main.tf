@@ -34,7 +34,7 @@ resource "azurerm_resource_group" "vm" {
 }
 
 resource "azurerm_public_ip" "vm" {
-    name                         = "public_ip"
+    name                         = "${local.unique_name}-publicip"
     location                     = local.location
     resource_group_name          = azurerm_resource_group.vm.name
     allocation_method            = "Static"
@@ -48,7 +48,7 @@ resource "azurerm_network_interface" "vm" {
     location            = local.location
 
     ip_configuration {
-        name                          = "ipconfig"
+        name                          = "${local.unique_name}-ipconfig"
         subnet_id                     = data.azurerm_subnet.vnet.id
         private_ip_address_allocation = "Dynamic"
         public_ip_address_id          = local.add_public_ip ? azurerm_public_ip.vm[0].id : ""
@@ -64,7 +64,7 @@ resource "azurerm_virtual_machine" "vm" {
     delete_os_disk_on_termination = true
 
     storage_os_disk {
-        name              = "os_disk"
+        name              = "${local.unique_name}-osdisk"
         caching           = "ReadWrite"
         create_option     = "FromImage"
         managed_disk_type = "Standard_LRS"
