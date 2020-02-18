@@ -2,7 +2,7 @@
 
 This examples configures a render network, controller, and vfxt with 3 filers as shown in the diagram below:
 
-![The architecture](../../../../../docs/images/rendering/3filers.png)
+![The architecture](../../../../../docs/images/terraform/3filers.png)
 
 ## Deployment Instructions
 

@@ -2,7 +2,7 @@
 
 This examples configures a render network, controller, and vfxt with 1 filer as shown in the diagram below:
 
-![The architecture](../../../../../docs/images/rendering/1filer.png)
+![The architecture](../../../../../docs/images/terraform/1filer.png)
 
 ## Deployment Instructions
 

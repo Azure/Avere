@@ -2,7 +2,7 @@
 
 This examples configures a render network, controller, and vfxt without any filers as shown in the diagram below:
 
-![The architecture with no filers](../../../../../docs/images/rendering/nofiler.png)
+![The architecture with no filers](../../../../../docs/images/terraform/nofiler.png)
 
 ## Deployment Instructions
 
