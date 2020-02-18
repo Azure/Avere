@@ -8,6 +8,9 @@ The examples show how to deploy HPC Cache and Avere vFXT from minimal configurat
 
 1. [HPC Cache](examples/HPC%20Cache)
 2. [Avere vFXT](examples/vfxt)
+   1. [no-filer example](examples/vfxt/no-filer)
+   2. [Avere vFXT against 1 IaaS NAS filer example](examples/vfxt/1-filer)
+   3. [Avere vFXT against 3 IaaS NAS filers example](examples/vfxt/3-filer)
 
 # Modules
 

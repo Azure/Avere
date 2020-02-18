@@ -1,6 +1,6 @@
-# Azure Terraform NFS based NAS Core Filer for LSv1
+# Azure Terraform NFS based IaaS NAS Filer for LSv1
 
-This is the Azure Terraform implementation of an NFS based NAS Filer using the LSv1 series SKU as described on the LS-Series page: https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-previous-gen#ls-series.
+This is the Azure Terraform implementation of an NFS based IaaS NAS Filer using the LSv1 series SKU as described on the LS-Series page: https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-previous-gen#ls-series.
 
 Here are the steps to use the terraform from cloud shell:
 
