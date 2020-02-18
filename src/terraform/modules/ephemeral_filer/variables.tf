@@ -11,8 +11,12 @@ variable "admin_username" {
   default = "azureuser"
 }
 
+variable "admin_password" {
+  description = "(optional) The password used for access to the vm.  If not specified, ssh_key_data needs to be set."
+}
+
 variable "ssh_key_data" {
-  description = "The public SSH key used for access to the VM."
+  description = "(optional) The public SSH key used for access to the vm.  If not specified, admin_password needs to be set.  The ssh_key_data takes precedence over the admin_password, and if set, the admin_password will be ignored."
 }
 
 variable "unique_name" {

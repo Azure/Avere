@@ -38,7 +38,7 @@ Install either a Centos or Ubuntu Virtual Machine
     rm go1.13.5.linux-amd64.tar.gz
     ```
 
-3. setup Checkpoint Simulator code
+3. build the provider code
     ```bash
     # checkout Checkpoint simulator code, all dependencies and build the binaries
     cd $GOPATH
@@ -50,5 +50,3 @@ Install either a Centos or Ubuntu Virtual Machine
     ```
 
 4. Install the provider `~/.terraform.d/plugins/terraform-provider-avere` to the ~/.terraform.d/plugins directory of your terraform environment.
-
-Now the checkpoint simulator is created follow the instructions in the test section to test your target POSIX filesystem.

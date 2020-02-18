@@ -54,17 +54,33 @@ resource "azurerm_virtual_machine" "nfsfiler" {
     version   = "latest"
   }
 
-  os_profile {
-    computer_name  = var.unique_name
-    admin_username = var.admin_username
-    custom_data = local.cloud_init_file
+  dynamic "os_profile" {
+    for_each = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? [var.admin_password] : [null] 
+    content {
+      computer_name  = var.unique_name
+      admin_username = var.admin_username
+      admin_password = var.admin_password
+      custom_data = local.cloud_init_file
+    }
   }
 
-  os_profile_linux_config {
-    disable_password_authentication = true
-    ssh_keys {
+  // dynamic block when password is specified
+  dynamic "os_profile_linux_config" {
+    for_each = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? [var.admin_password] : [] 
+    content {
+      disable_password_authentication = false
+    }
+  }
+
+  // dynamic block when SSH key is specified
+  dynamic "os_profile_linux_config" {
+    for_each = var.ssh_key_data == null || var.ssh_key_data == "" ? [] : [var.ssh_key_data]
+    content {
+      disable_password_authentication = true
+      ssh_keys {
         path     = "/home/${var.admin_username}/.ssh/authorized_keys"
         key_data = var.ssh_key_data
+      }
     }
   }
 }

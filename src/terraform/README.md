@@ -6,7 +6,7 @@ This folder contains Terraform Examples, Modules, and Providers for HPC Cache an
 
 The examples show how to deploy HPC Cache and Avere vFXT from minimal configurations to 3-node configurations.
 
-1. [HPC Cache](examples/hpccache)
+1. [HPC Cache](examples/HPC%20Cache)
 2. [Avere vFXT](examples/vfxt)
 
 # Modules
