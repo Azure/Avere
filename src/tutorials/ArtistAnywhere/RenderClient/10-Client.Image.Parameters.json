@@ -2,9 +2,9 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "renderManager": {
+    "renderClient": {
       "value": {
-        "homeDirectory": "",
+        "pythonUrl": "https://www.python.org/ftp/python/3.7.6/python-3.7.6-amd64.exe",
         "requirementsUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/requirements_gui.txt",
         "pyCueUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.33/pycue-0.3.33-all.tar.gz",
         "pyOutlineUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.33/pyoutline-0.3.33-all.tar.gz",

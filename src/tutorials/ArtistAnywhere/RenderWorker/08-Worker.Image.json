@@ -63,12 +63,12 @@
               "yum -y install gcc",
               "yum -y install python3-devel",
               "yum -y install redhat-rpm-config",
-              "[concat('curl --location ', parameters('renderWorker').requirementsUrl, ' --output requirements.txt')]",
+              "[concat('curl --output requirements.txt --location ', parameters('renderWorker').requirementsUrl)]",
               "pip3 install --requirement requirements.txt",
               "[concat('useradd --system --create-home ', replace(replace(parameters('imageDefinition').homeDirectory, 'home', ''), '/', ''))]",
               "[concat('cd ', parameters('imageDefinition').homeDirectory)]",
-              "[concat('curl --location ', parameters('renderWorker').softwareUrl, ' --output opencue-rqd.jar.gz')]",
-              "[concat('curl --location ', parameters('renderWorker').serviceUrl, ' --output opencue-rqd.service')]",
+              "[concat('curl --output opencue-rqd.jar.gz --location ', parameters('renderWorker').softwareUrl)]",
+              "[concat('curl --output opencue-rqd.service --location ', parameters('renderWorker').serviceUrl)]",
               "tar -xzf opencue-rqd.jar.gz",
               "cd rqd*",
               "python3 setup.py install"
@@ -82,7 +82,7 @@
               "yum -y install libXrender",
               "yum -y install mesa-libGL",
               "[concat('cd ', parameters('imageDefinition').homeDirectory)]",
-              "[concat('curl --location ', parameters('renderWorker').blenderUrl, ' --output blender.jar.bz2')]",
+              "[concat('curl --output blender.jar.bz2 --location ', parameters('renderWorker').blenderUrl)]",
               "tar -xjf blender.jar.bz2",
               "mv blender-*/* /usr/local/bin"
             ]

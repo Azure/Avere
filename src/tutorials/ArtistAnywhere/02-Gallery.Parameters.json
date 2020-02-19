@@ -22,9 +22,9 @@
             "type": "Windows",
             "generation": "v1",
             "state": "Generalized",
-            "publisher": "Microsoft",
+            "publisher": "MicrosoftWindowsDesktop",
             "offer": "Windows-10",
-            "sku": "rs5-enterprise-standard-g2",
+            "sku": "rs5-enterprise-standard",
             "version": "latest",
             "homeDirectory": "/users/az"
           }

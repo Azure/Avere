@@ -64,10 +64,10 @@
               "yum -y install postgresql-contrib",
               "[concat('useradd --system --create-home ', replace(replace(parameters('imageDefinition').homeDirectory, 'home', ''), '/', ''))]",
               "[concat('cd ', parameters('imageDefinition').homeDirectory)]",
-              "[concat('curl --location ', parameters('renderManager').databaseSchemaUrl, ' --output opencue-cuebot-schema.sql')]",
-              "[concat('curl --location ', parameters('renderManager').databaseDataUrl, ' --output opencue-cuebot-data.sql')]",
-              "[concat('curl --location ', parameters('renderManager').softwareUrl, ' --output opencue-cuebot.jar')]",
-              "[concat('curl --location ', parameters('renderManager').serviceUrl, ' --output opencue-cuebot.service')]",
+              "[concat('curl --output opencue-cuebot-schema.sql --location ', parameters('renderManager').databaseSchemaUrl)]",
+              "[concat('curl --output opencue-cuebot-data.sql --location ', parameters('renderManager').databaseDataUrl)]",
+              "[concat('curl --output opencue-cuebot.jar --location ', parameters('renderManager').softwareUrl)]",
+              "[concat('curl --output opencue-cuebot.service --location ', parameters('renderManager').serviceUrl)]",
               "[concat('sed --in-place ''/Environment=JAR_PATH/c Environment=JAR_PATH=', parameters('imageDefinition').homeDirectory, '/opencue-cuebot.jar'' opencue-cuebot.service')]"
             ]
           }

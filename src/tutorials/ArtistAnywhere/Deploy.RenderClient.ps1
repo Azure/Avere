@@ -1,5 +1,5 @@
 ﻿# Before running this Azure resource deployment script, make sure that the Azure CLI is installed locally.
-# You must have version 2.0.81 (or greater) of the Azure CLI installed for this script to run properly.
+# You must have version 2.1.0 (or greater) of the Azure CLI installed for this script to run properly.
 # The current Azure CLI release is available at http://docs.microsoft.com/cli/azure/install-azure-cli
 
 param (
