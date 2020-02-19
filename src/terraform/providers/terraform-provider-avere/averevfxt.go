@@ -28,6 +28,8 @@ const (
 	MaxNodesCount         = 16
 	VfxtLogDateFormat     = "2006-01-02.15.04.05"
 	VServerRangeSeperator = "-"
+	AzLoginRetryCount = 18 // wait 3 minutes
+	AzLoginSleepSeconds = 10
 	AverecmdRetryCount = 30 // wait 5 minutes (ex. remove core filer gets perm denied for a while)
 	AverecmdRetrySleepSeconds = 10
 	AverecmdLogFile = "~/averecmd.log"
@@ -208,7 +210,27 @@ func NewAvereVfxt(
 	}
 }
 
+// it can take a while for the IMDS roles to propagate, retry until login succeeds
+func (a *AvereVfxt) VerifyAzLogin() error {
+	verifyLoginCommand := a.getAzCliVerifyLoginCommand()
+	var err error
+	err = nil
+	for retries:=0 ; retries < AzLoginRetryCount ; retries++ {
+		if _, _, err = SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, verifyLoginCommand) ; err == nil {
+			// success
+			err = nil
+			break
+		}
+		time.Sleep(AzLoginSleepSeconds * time.Second)
+	}
+	return err
+}
+
 func (a *AvereVfxt) CreateVfxt() error {
+	// verify az logged in
+	if err := a.VerifyAzLogin(); err != nil {
+		return fmt.Errorf("Error verifying login: %v", err)
+	}
 	cmd := a.getCreateVfxtCommand()
 	_, stderrBuf, err := SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, cmd)
 	if err != nil {
@@ -325,15 +347,13 @@ func (a *AvereVfxt) GetLastNode() (string, error) {
 }
 
 func (a *AvereVfxt) DeleteVfxtIaasNode(nodeName string) error {
-	// verify logged in
-	verifyLoginCommand := a.getAzCliVerifyLoginCommand()
-	_, stderrBuf, err := SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, verifyLoginCommand)
-	if err != nil {
-		return fmt.Errorf("Error verifying login: %v, %s", err, stderrBuf.String())
+	// verify az logged in
+	if err := a.VerifyAzLogin(); err != nil {
+		return fmt.Errorf("Error verifying login: %v", err)
 	}
 	// delete the node
 	deleteNodeCommand := a.getAzCliDeleteNodeCommand(nodeName)
-	_, stderrBuf, err = SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, deleteNodeCommand)
+	_, stderrBuf, err := SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, deleteNodeCommand)
 	if err != nil {
 		return fmt.Errorf("Error deleting node: %v, %s", err, stderrBuf.String())
 	}

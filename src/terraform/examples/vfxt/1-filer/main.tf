@@ -63,6 +63,11 @@ resource "avere_vfxt" "vfxt" {
     controller_address = module.vfxtcontroller.controller_address
     controller_admin_username = module.vfxtcontroller.controller_username
     controller_admin_password = local.vm_admin_password
+    // terraform is not creating the implicit dependency on the controller module
+    // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
+    // to work around, add the explicit dependency
+    depends_on = [module.vfxtcontroller]
+    
     resource_group = local.vfxt_resource_group_name
     location = local.location
     network_resource_group = local.network_resource_group_name
