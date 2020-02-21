@@ -6,7 +6,7 @@ This examples configures a render network, controller, and vfxt with 1 filer as 
 
 ## Deployment Instructions
 
-To run the example run through the following instructions.  This assumes use of Azure Cloud Shell, but you can use in your own environment, ensure you install the vfxt provider as described in the [build provider instructions](../../../providers/terraform-provider-avere#build-the-terraform-provider-binary).
+To run the example, execute the following instructions.  This assumes use of Azure Cloud Shell, but you can use in your own environment, ensure you install the vfxt provider as described in the [build provider instructions](../../../providers/terraform-provider-avere#build-the-terraform-provider-binary).  Also if installing your own environment, you will need to [install terraform](https://www.terraform.io/downloads.html).
 
 1. browse to https://shell.azure.com
 
