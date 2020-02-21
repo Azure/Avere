@@ -40,14 +40,16 @@ func GetKeyFileAuthMethod() (authMethod ssh.AuthMethod, err error) {
 }
 
 // on poor wi-fi connections it can take multiple attempts for the first connection
-func VerifySSHConnection(host string, username string, authMethod ssh.AuthMethod) {
+func VerifySSHConnection(host string, username string, authMethod ssh.AuthMethod) error {
+	var err error
 	for retries:=0 ; retries < SSHVerifyRetryCount ; retries++ {
 		if _, _, err := SSHCommand(host, username, authMethod, VerifyCommand) ; err == nil {
 			// success
-			break
+			return nil
 		}
 		time.Sleep(SSHVerifyRetrySleepSeconds * time.Second)
 	}
+	return fmt.Errorf("Error accessing the controller: '%v'.  If using a password, please confirm the password is correct.  If using SSH, please ensure the file ~/.ssh/id_rsa exists, and has permissions 600.", err)
 }
 
 // SSHCommand runs an ssh command, and captures the stdout and stderr in two byte buffers
