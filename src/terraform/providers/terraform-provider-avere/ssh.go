@@ -10,40 +10,40 @@ import (
 	"os/user"
 	"sync"
 	"time"
-	
+
 	"golang.org/x/crypto/ssh"
 )
 
 const (
-	SSHVerifyRetryCount = 6 // wait 1 minute
+	SSHVerifyRetryCount        = 6 // wait 1 minute
 	SSHVerifyRetrySleepSeconds = 10
-	VerifyCommand = "ls"
+	VerifyCommand              = "ls"
 )
 
-func GetPasswordAuthMethod(password string) (ssh.AuthMethod) {
+func GetPasswordAuthMethod(password string) ssh.AuthMethod {
 	return ssh.Password(password)
 }
 
 func GetKeyFileAuthMethod() (authMethod ssh.AuthMethod, err error) {
-    usr, _ := user.Current()
+	usr, _ := user.Current()
 	file := usr.HomeDir + "/.ssh/id_rsa"
 	buf, err := ioutil.ReadFile(file)
-    if err != nil {
+	if err != nil {
 		return
-    }
-    key, err := ssh.ParsePrivateKey(buf)
-    if err != nil {
-        return
+	}
+	key, err := ssh.ParsePrivateKey(buf)
+	if err != nil {
+		return
 	}
 	authMethod = ssh.PublicKeys(key)
-    return
+	return
 }
 
 // on poor wi-fi connections it can take multiple attempts for the first connection
 func VerifySSHConnection(host string, username string, authMethod ssh.AuthMethod) error {
 	var err error
-	for retries:=0 ; retries < SSHVerifyRetryCount ; retries++ {
-		if _, _, err := SSHCommand(host, username, authMethod, VerifyCommand) ; err == nil {
+	for retries := 0; retries < SSHVerifyRetryCount; retries++ {
+		if _, _, err := SSHCommand(host, username, authMethod, VerifyCommand); err == nil {
 			// success
 			return nil
 		}
@@ -56,9 +56,9 @@ func VerifySSHConnection(host string, username string, authMethod ssh.AuthMethod
 func SSHCommand(host string, username string, authMethod ssh.AuthMethod, cmd string) (bytes.Buffer, bytes.Buffer, error) {
 	var stdoutBuf, stderrBuf bytes.Buffer
 
-	sshConfig := &ssh.ClientConfig {
+	sshConfig := &ssh.ClientConfig{
 		User: username,
-		Auth: []ssh.AuthMethod {
+		Auth: []ssh.AuthMethod{
 			authMethod,
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
@@ -83,7 +83,7 @@ func SSHCommand(host string, username string, authMethod ssh.AuthMethod, cmd str
 		return stdoutBuf, stderrBuf, fmt.Errorf("Unable to setup stderr for session: %s", err)
 	}
 
-	if err := session.Start(cmd) ; err != nil {
+	if err := session.Start(cmd); err != nil {
 		return stdoutBuf, stderrBuf, fmt.Errorf("failed to start the command: %s", err)
 	}
 
@@ -99,7 +99,7 @@ func SSHCommand(host string, username string, authMethod ssh.AuthMethod, cmd str
 	_, errStderr = io.Copy(&stderrBuf, stderrIn)
 	wg.Wait()
 
-	if err := session.Wait() ; err != nil {
+	if err := session.Wait(); err != nil {
 		return stdoutBuf, stderrBuf, fmt.Errorf("cmd.Run failed with %s", err)
 	}
 
@@ -110,6 +110,6 @@ func SSHCommand(host string, username string, authMethod ssh.AuthMethod, cmd str
 	if errStderr != nil {
 		return stdoutBuf, stderrBuf, fmt.Errorf("failed to capture stderr: %s", errStderr)
 	}
-	
+
 	return stdoutBuf, stderrBuf, nil
 }

@@ -28,7 +28,7 @@ func resourceVfxt() *schema.Resource {
 				Required: true,
 			},
 			"controller_admin_password": {
-				Type:      schema.TypeString,
+				Type: schema.TypeString,
 				// the ssh key will be used if the password is not specified
 				Optional:  true,
 				Sensitive: true,
@@ -54,12 +54,12 @@ func resourceVfxt() *schema.Resource {
 				ForceNew: true,
 			},
 			"proxy_uri": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
 			"cluster_proxy_uri": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
@@ -80,8 +80,8 @@ func resourceVfxt() *schema.Resource {
 				Sensitive: true,
 			},
 			"vfxt_node_count": {
-				Type:     schema.TypeInt,
-				Required: true,
+				Type:         schema.TypeInt,
+				Required:     true,
 				ValidateFunc: validation.IntBetween(3, 16),
 			},
 			"global_custom_settings": {
@@ -108,17 +108,17 @@ func resourceVfxt() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type: schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
 							ValidateFunc: validation.StringIsNotWhiteSpace,
 						},
 						"fqdn_or_primary_ip": {
-							Type: schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
 							ValidateFunc: validation.StringIsNotWhiteSpace,
 						},
 						"cache_policy": {
-							Type: schema.TypeString,
+							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								CachePolicyClientsBypass,
@@ -143,13 +143,13 @@ func resourceVfxt() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"namespace_path": {
-										Type: schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
 										ValidateFunc: validation.StringIsNotWhiteSpace,
 									},
 									"core_filer_export": {
-										Type: schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
 										ValidateFunc: validation.StringIsNotWhiteSpace,
 									},
 								},
@@ -170,7 +170,7 @@ func resourceVfxt() *schema.Resource {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
+					Type: schema.TypeString,
 				},
 				Set: schema.HashString,
 			},
@@ -178,7 +178,7 @@ func resourceVfxt() *schema.Resource {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
+					Type: schema.TypeString,
 				},
 				Set: schema.HashString,
 			},
@@ -192,7 +192,7 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	// this only needs to be done on create since the controller's ssh 
+	// this only needs to be done on create since the controller's ssh
 	// may take a while to become ready
 	if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod); err != nil {
 		return err
@@ -282,7 +282,7 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 	if d.HasChange("vfxt_node_count") {
 		if err := scaleCluster(d, avereVfxt); err != nil {
 			return err
-		} 
+		}
 	}
 
 	return resourceVfxtRead(d, m)
@@ -305,7 +305,7 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 
 	// acknowledge deletion of the vfxt
 	d.SetId("")
-	
+
 	return nil
 }
 
@@ -323,14 +323,14 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 			return nil, fmt.Errorf("failed to get key file: %s", err)
 		}
 	}
-	
+
 	// get the optional fields
 	var avereOSVersion string
-	if val, ok := d.Get("vfxt_os_version").(string) ; ok {
+	if val, ok := d.Get("vfxt_os_version").(string); ok {
 		avereOSVersion = val
 	}
 	var managementIP string
-	if val, ok := d.Get("vfxt_management_ip").(string) ; ok {
+	if val, ok := d.Get("vfxt_management_ip").(string); ok {
 		managementIP = val
 	}
 	vServerIPAddressesRaw := d.Get("vserver_ip_addresses").(*schema.Set).List()
@@ -360,7 +360,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 func createGlobalSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 	// apply the global custom settings
 	for _, v := range d.Get("global_custom_settings").(*schema.Set).List() {
-		if err := avereVfxt.CreateCustomSetting(v.(string)) ; err != nil {
+		if err := avereVfxt.CreateCustomSetting(v.(string)); err != nil {
 			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", v.(string), err)
 		}
 	}
@@ -376,7 +376,7 @@ func deleteGlobalSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 
 		removalList := os.Difference(ns)
 		for _, v := range removalList.List() {
-			if err := avereVfxt.RemoveCustomSetting(v.(string)) ; err != nil {
+			if err := avereVfxt.RemoveCustomSetting(v.(string)); err != nil {
 				return fmt.Errorf("ERROR: failed to remove custom setting '%s': %s", v.(string), err)
 			}
 		}
@@ -386,7 +386,7 @@ func deleteGlobalSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 
 func createVServerSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 	for _, v := range d.Get("vserver_settings").(*schema.Set).List() {
-		if err := avereVfxt.CreateVServerSetting(v.(string)) ; err != nil {
+		if err := avereVfxt.CreateVServerSetting(v.(string)); err != nil {
 			return fmt.Errorf("ERROR: failed to apply VServer setting '%s': %s", v.(string), err)
 		}
 	}
@@ -401,7 +401,7 @@ func deleteVServerSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 
 		removalList := os.Difference(ns)
 		for _, v := range removalList.List() {
-			if err := avereVfxt.RemoveVServerSetting(v.(string)) ; err != nil {
+			if err := avereVfxt.RemoveVServerSetting(v.(string)); err != nil {
 				return fmt.Errorf("ERROR: failed to remove VServer setting '%s': %s", v.(string), err)
 			}
 		}
@@ -422,14 +422,14 @@ func createOrUpdateCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) erro
 	}
 
 	// compare old and new core filers and raise error if any change
-	if err := EnsureNoCoreAttributeChangeForExistingFilers(existingFilers, newFilers) ; err != nil {
+	if err := EnsureNoCoreAttributeChangeForExistingFilers(existingFilers, newFilers); err != nil {
 		return err
 	}
 
 	// add any new filers
 	for k, v := range newFilers {
-		if _, ok := existingFilers[k] ; !ok {
-			if err := averevfxt.CreateCoreFiler(v) ; err != nil {
+		if _, ok := existingFilers[k]; !ok {
+			if err := averevfxt.CreateCoreFiler(v); err != nil {
 				return err
 			}
 		}
@@ -437,10 +437,10 @@ func createOrUpdateCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) erro
 			return err
 		}
 		// update modified settings and add new settings on the existing filers
-		if err := averevfxt.RemoveCoreFilerCustomSettings(v) ; err != nil {
+		if err := averevfxt.RemoveCoreFilerCustomSettings(v); err != nil {
 			return err
 		}
-		if err := averevfxt.AddCoreFilerCustomSettings(v) ; err != nil {
+		if err := averevfxt.AddCoreFilerCustomSettings(v); err != nil {
 			return err
 		}
 	}
@@ -462,11 +462,11 @@ func deleteCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 
 	// delete any removed filers
 	for k, v := range existingFilers {
-		if _, ok := newFilers[k] ; ok {
+		if _, ok := newFilers[k]; ok {
 			// the filer still exists
 			continue
 		}
-		if err := averevfxt.DeleteCoreFiler(v.Name) ; err != nil {
+		if err := averevfxt.DeleteCoreFiler(v.Name); err != nil {
 			return err
 		}
 	}
@@ -488,11 +488,11 @@ func createJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 
 	// add any new junctions
 	for k, v := range newJunctions {
-		if _, ok := existingJunctions[k] ; ok {
+		if _, ok := existingJunctions[k]; ok {
 			// the junction exists, and we know from deletion they are the same
 			continue
 		}
-		if err := averevfxt.CreateJunction(v) ; err != nil {
+		if err := averevfxt.CreateJunction(v); err != nil {
 			return err
 		}
 	}
@@ -514,11 +514,11 @@ func deleteJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 
 	// delete any removed or updated junctions
 	for k, existingJunction := range existingJunctions {
-		if newJunction, ok := newJunctions[k] ; ok && *newJunction == *existingJunction {
+		if newJunction, ok := newJunctions[k]; ok && *newJunction == *existingJunction {
 			// the junction exists, and is the same as previous
 			continue
 		}
-		if err := averevfxt.DeleteJunction(existingJunction.NameSpacePath) ; err != nil {
+		if err := averevfxt.DeleteJunction(existingJunction.NameSpacePath); err != nil {
 			return err
 		}
 	}
@@ -530,38 +530,37 @@ func scaleCluster(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 	oldRaw, newRaw := d.GetChange("vfxt_node_count")
 	previousCount := oldRaw.(int)
 	newCount := newRaw.(int)
-	if err := averevfxt.ScaleCluster(previousCount, newCount) ; err != nil {
+	if err := averevfxt.ScaleCluster(previousCount, newCount); err != nil {
 		return err
 	}
 	return nil
 }
 
-
 func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 	results := make(map[string]*CoreFiler)
 	for _, v := range l {
 		input := v.(map[string]interface{})
-		
+
 		// get the properties
 		name := input["name"].(string)
 		fqdnOrPrimaryIp := input["fqdn_or_primary_ip"].(string)
 		cachePolicy := input["cache_policy"].(string)
 		customSettingsRaw := input["custom_settings"].(*schema.Set).List()
-		customSettings := make([]string, len(customSettingsRaw),len(customSettingsRaw))
+		customSettings := make([]string, len(customSettingsRaw), len(customSettingsRaw))
 		for i, v := range customSettingsRaw {
 			customSettings[i] = v.(string)
 		}
 		// verify no duplicates
-		if _, ok := results[name] ; ok {
+		if _, ok := results[name]; ok {
 			return nil, fmt.Errorf("Error: two or more core filers share the same key '%s'", name)
 		}
 
 		// add to map
 		output := &CoreFiler{
-			Name: name,
+			Name:            name,
 			FqdnOrPrimaryIp: fqdnOrPrimaryIp,
-			CachePolicy: cachePolicy,
-			CustomSettings: customSettings,
+			CachePolicy:     cachePolicy,
+			CustomSettings:  customSettings,
 		}
 		results[name] = output
 	}
@@ -576,13 +575,13 @@ func expandJunctions(l []interface{}) (map[string]*Junction, error) {
 		junctions := input["junction"].(*schema.Set).List()
 		for _, jv := range junctions {
 			junctionRaw := jv.(map[string]interface{})
-			junction := &Junction {
-				NameSpacePath: junctionRaw["namespace_path"].(string),
-				CoreFilerName: coreFilerName,
+			junction := &Junction{
+				NameSpacePath:   junctionRaw["namespace_path"].(string),
+				CoreFilerName:   coreFilerName,
 				CoreFilerExport: junctionRaw["core_filer_export"].(string),
 			}
 			// verify no duplicates
-			if _, ok := results[junction.NameSpacePath] ; ok {
+			if _, ok := results[junction.NameSpacePath]; ok {
 				return nil, fmt.Errorf("Error: two or more junctions share the same namespace_path '%s'", junction.NameSpacePath)
 			}
 			results[junction.NameSpacePath] = junction

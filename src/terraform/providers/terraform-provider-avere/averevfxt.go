@@ -20,63 +20,64 @@ import (
 // vfxt api documentation: https://azure.github.io/Avere/legacy/pdf/avere-os-5-1-xmlrpc-api-2019-01.pdf
 
 const (
-	AvereInstanceType = "Standard_E32s_v3"
-	AvereAdminUsername = "admin"
-	NodeCacheSize     = 4096
-	AverOperatorRole  = "Avere Operator"
-	MinNodesCount         = 3
-	MaxNodesCount         = 16
-	VfxtLogDateFormat     = "2006-01-02.15.04.05"
-	VServerRangeSeperator = "-"
-	AzLoginRetryCount = 18 // wait 3 minutes
-	AzLoginSleepSeconds = 10
-	AverecmdRetryCount = 30 // wait 5 minutes (ex. remove core filer gets perm denied for a while)
+	AvereInstanceType         = "Standard_E32s_v3"
+	AvereAdminUsername        = "admin"
+	NodeCacheSize             = 4096
+	AverOperatorRole          = "Avere Operator"
+	MinNodesCount             = 3
+	MaxNodesCount             = 16
+	VfxtLogDateFormat         = "2006-01-02.15.04.05"
+	VServerRangeSeperator     = "-"
+	AzLoginRetryCount         = 18 // wait 3 minutes
+	AzLoginSleepSeconds       = 10
+	AverecmdRetryCount        = 30 // wait 5 minutes (ex. remove core filer gets perm denied for a while)
 	AverecmdRetrySleepSeconds = 10
-	AverecmdLogFile = "~/averecmd.log"
-	AzCliLogFile = "~/azcli.log"
-	VServerName = "vserver"
+	AverecmdLogFile           = "~/averecmd.log"
+	AzCliLogFile              = "~/azcli.log"
+	VServerName               = "vserver"
 
 	// cache policies
-	CachePolicyClientsBypass = "Clients Bypassing the Cluster"
-	CachePolicyReadCaching = "Read Caching"
-	CachePolicyReadWriteCaching = "Read and Write Caching"
-	CachePolicyFullCaching = "Full Caching"
+	CachePolicyClientsBypass        = "Clients Bypassing the Cluster"
+	CachePolicyReadCaching          = "Read Caching"
+	CachePolicyReadWriteCaching     = "Read and Write Caching"
+	CachePolicyFullCaching          = "Full Caching"
 	CachePolicyTransitioningClients = "Transitioning Clients Before or After a Migration"
 
 	// filer class
 	FilerClassNetappNonClustered = "NetappNonClustered"
-	FilerClassNetappClustered = "NetappClustered"
-	FilerClassEMCIsilon = "EmcIsilon"
-	FilerClassOther = "Other"
+	FilerClassNetappClustered    = "NetappClustered"
+	FilerClassEMCIsilon          = "EmcIsilon"
+	FilerClassOther              = "Other"
 
-	// filer retry 
-	FilerRetryCount = 120
+	// filer retry
+	FilerRetryCount        = 120
 	FilerRetrySleepSeconds = 10
 
 	// cluster stable, wait 40 minutes for cluster to become healthy
-	ClusterStableRetryCount = 240
+	ClusterStableRetryCount        = 240
 	ClusterStableRetrySleepSeconds = 10
 
 	// node change, wait 40 minutes for node increase or decrease
-	NodeChangeRetryCount = 240
+	NodeChangeRetryCount        = 240
 	NodeChangeRetrySleepSeconds = 10
 
 	// status's returned from Activity
-	StatusComplete = "complete"
-	StatusCompleted = "completed"
-	StatusNodeRemoved = "node(s) removed"
-	CompletedPercent = "100"
-	NodeUp = "up"
-	AlertSeverityGreen = "green" // this means the alert is complete
+	StatusComplete      = "complete"
+	StatusCompleted     = "completed"
+	StatusNodeRemoved   = "node(s) removed"
+	CompletedPercent    = "100"
+	NodeUp              = "up"
+	AlertSeverityGreen  = "green"  // this means the alert is complete
+	AlertSeverityYellow = "yellow" // this will eventually resolve itself
 )
 
 // matching strings for the vfxt.py output
-var	matchManagementIPAddressRegex = regexp.MustCompile(` management address: (\d+.\d+.\d+.\d+)`)
+var matchManagementIPAddressRegex = regexp.MustCompile(` management address: (\d+.\d+.\d+.\d+)`)
 var matchAvereOSVersionRegex = regexp.MustCompile(` version (AvereOS_V[^\s]*)`)
-var	matchNodesRegex = regexp.MustCompile(` nodes: ([^\n]*)`)
+var matchNodesRegex = regexp.MustCompile(` nodes: ([^\n]*)`)
 var matchVServerIPRangeRegex = regexp.MustCompile(` - vFXT.cluster:INFO - Creating vserver vserver \(([^-]*-[^/]*)`)
-var	matchCreateFailure = regexp.MustCompile(`^(.*vfxt:ERROR.*)$`)
-var	matchVfxtFailure = regexp.MustCompile(`^(.*vFXTCreateFailure:.*)$`)
+var matchCreateFailure = regexp.MustCompile(`^(.*vfxt:ERROR.*)$`)
+var matchVfxtFailure = regexp.MustCompile(`^(.*vFXTCreateFailure:.*)$`)
 var matchVfxtNotFound = regexp.MustCompile(`(vfxt:ERROR - Cluster not found)`)
 
 // non-retryable errors
@@ -88,56 +89,60 @@ var matchMustRemoveRelatedJunction = regexp.MustCompile(`(You must remove the re
 var matchCannotFindMass = regexp.MustCompile(`('Cannot find MASS)`)
 var matchJunctionNotFound = regexp.MustCompile(`(removeJunction failed.*'Cannot find junction)`)
 
+type NFSExport struct {
+	Path string `json:"path"`
+}
+
 type Node struct {
-	Name string `json:"name"`
+	Name  string `json:"name"`
 	State string `json:"state"`
 }
 
 type VServerClientIPHome struct {
-	NodeName string `json:"current"`
+	NodeName  string `json:"current"`
 	IPAddress string `json:"ip"`
 }
 
 type Activity struct {
-	Id string `json:"id"`
-	Status string `json:"status"`
-	State string `json:"state"`
+	Id      string `json:"id"`
+	Status  string `json:"status"`
+	State   string `json:"state"`
 	Percent string `json:"percent"`
 }
 
 type Alert struct {
-	Name string `json:"name"`
+	Name     string `json:"name"`
 	Severity string `json:"severity"`
-	Message string `json:"message"`
+	Message  string `json:"message"`
 }
 
 type CoreFiler struct {
-	Name string `json:"name"`
+	Name            string `json:"name"`
 	FqdnOrPrimaryIp string `json:"networkName"`
-	CachePolicy string `json:"policyName"`
-	InternalName string `json:"internalName"`
-	FilerClass string `json:"filerClass"`
-	AdminState string `json:"adminState"`
-	CustomSettings []string
+	CachePolicy     string `json:"policyName"`
+	InternalName    string `json:"internalName"`
+	FilerClass      string `json:"filerClass"`
+	AdminState      string `json:"adminState"`
+	CustomSettings  []string
 }
 
 type Junction struct {
-	NameSpacePath string `json:"path"`
-	CoreFilerName string `json:"mass"`
+	NameSpacePath   string `json:"path"`
+	CoreFilerName   string `json:"mass"`
 	CoreFilerExport string `json:"export"`
 }
 
 type CustomSetting struct {
-	Name string `json:"name"`
-	Value string `json:"value"`
+	Name      string `json:"name"`
+	Value     string `json:"value"`
 	CheckCode string `json:"checkCode"`
 }
 
 func initializeCustomSetting(customSettingString string) *CustomSetting {
 	return &CustomSetting{
-		Name:  getCustomSettingName(customSettingString),
+		Name:      getCustomSettingName(customSettingString),
 		CheckCode: getCustomSettingCheckCode(customSettingString),
-		Value: getCustomSettingValue(customSettingString),
+		Value:     getCustomSettingValue(customSettingString),
 	}
 }
 
@@ -160,7 +165,7 @@ type AvereVfxt struct {
 	NetworkName          string
 	SubnetName           string
 
-	ProxyUri string
+	ProxyUri        string
 	ClusterProxyUri string
 
 	// populated during creation
@@ -203,10 +208,10 @@ func NewAvereVfxt(
 		SubnetName:           subnetName,
 		ProxyUri:             proxyUri,
 		ClusterProxyUri:      clusterProxyUri,
-		AvereOSVersion: avereOSVersion,
-		ManagementIP: managementIP,
-		VServerIPAddresses: vServerIPAddresses,
-		NodeNames: nodeNames,
+		AvereOSVersion:       avereOSVersion,
+		ManagementIP:         managementIP,
+		VServerIPAddresses:   vServerIPAddresses,
+		NodeNames:            nodeNames,
 	}
 }
 
@@ -215,8 +220,8 @@ func (a *AvereVfxt) VerifyAzLogin() error {
 	verifyLoginCommand := a.getAzCliVerifyLoginCommand()
 	var err error
 	err = nil
-	for retries:=0 ; retries < AzLoginRetryCount ; retries++ {
-		if _, _, err = SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, verifyLoginCommand) ; err == nil {
+	for retries := 0; retries < AzLoginRetryCount; retries++ {
+		if _, _, err = SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, verifyLoginCommand); err == nil {
 			// success
 			err = nil
 			break
@@ -481,8 +486,8 @@ func (a *AvereVfxt) GetAlerts() ([]Alert, error) {
 	return results, nil
 }
 
-func (a *AvereVfxt) EnsureClusterStable() (error) {
-	for retries:=0 ; ; retries++ {
+func (a *AvereVfxt) EnsureClusterStable() error {
+	for retries := 0; ; retries++ {
 
 		healthy := true
 
@@ -513,16 +518,17 @@ func (a *AvereVfxt) EnsureClusterStable() (error) {
 			alerts, err := a.GetAlerts()
 			if err != nil {
 				return err
-			} 
+			}
 			for _, alert := range alerts {
-				if alert.Severity != AlertSeverityGreen {
+				// ignore green and yellow alerts
+				if alert.Severity != AlertSeverityGreen && alert.Severity != AlertSeverityYellow {
 					log.Printf("vfxt: cluster still has active alert %v", alert)
 					healthy = false
 					break
 				}
 			}
 		}
-		
+
 		if healthy {
 			// verify all nodes healthy
 			nodes, err := a.GetExistingNodes()
@@ -646,12 +652,34 @@ func (a *AvereVfxt) GetFiler(filer string) (*CoreFiler, error) {
 	return &coreFiler, nil
 }
 
-func (a* AvereVfxt) CreateCoreFiler(corefiler *CoreFiler) error {
-	_, err := a.AvereCommand(a.getCreateFilerCommand(corefiler))
-	return err
+func (a *AvereVfxt) ListExports(filer string) ([]NFSExport, error) {
+	exports, err := a.AvereCommand(a.getListCoreFilerExportsJsonCommand(filer))
+	if err != nil {
+		return nil, err
+	}
+	var resultRaw map[string][]NFSExport
+	if err := json.Unmarshal([]byte(exports), &resultRaw); err != nil {
+		return nil, err
+	}
+	result, ok := resultRaw[filer]
+	if !ok {
+		return nil, fmt.Errorf("Error: filer %s not found when listing exports", filer)
+	}
+	return result, nil
 }
 
-func (a* AvereVfxt) EnsureInternalName(corefiler *CoreFiler) error {
+func (a *AvereVfxt) CreateCoreFiler(corefiler *CoreFiler) error {
+	if _, err := a.AvereCommand(a.getCreateFilerCommand(corefiler)); err != nil {
+		return err
+	}
+	log.Printf("vfxt: ensure stable cluster after adding core filer")
+	if err := a.EnsureClusterStable(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *AvereVfxt) EnsureInternalName(corefiler *CoreFiler) error {
 	// Ensure internal name
 	if len(corefiler.InternalName) == 0 {
 		// get the internal name
@@ -665,7 +693,7 @@ func (a* AvereVfxt) EnsureInternalName(corefiler *CoreFiler) error {
 	return nil
 }
 
-func (a* AvereVfxt) AddCoreFilerCustomSettings(corefiler *CoreFiler) error {
+func (a *AvereVfxt) AddCoreFilerCustomSettings(corefiler *CoreFiler) error {
 	// ensure the internal name exists
 	a.EnsureInternalName(corefiler)
 	if len(corefiler.CustomSettings) == 0 {
@@ -682,11 +710,11 @@ func (a* AvereVfxt) AddCoreFilerCustomSettings(corefiler *CoreFiler) error {
 	// add the new settings
 	for _, v := range corefiler.CustomSettings {
 		customSettingName := getCustomSettingName(getCoreFilerCustomSettingName(corefiler.InternalName, v))
-		if _, ok := existingCustomSettings[customSettingName] ; ok {
+		if _, ok := existingCustomSettings[customSettingName]; ok {
 			// the custom setting already exists
 			continue
 		}
-		if _, err := a.AvereCommand(a.getSetCoreFilerSettingCommand(corefiler, v)) ; err != nil{
+		if _, err := a.AvereCommand(a.getSetCoreFilerSettingCommand(corefiler, v)); err != nil {
 			return err
 		}
 	}
@@ -694,33 +722,33 @@ func (a* AvereVfxt) AddCoreFilerCustomSettings(corefiler *CoreFiler) error {
 	return nil
 }
 
-func (a* AvereVfxt) RemoveCoreFilerCustomSettings(corefiler *CoreFiler) error {
+func (a *AvereVfxt) RemoveCoreFilerCustomSettings(corefiler *CoreFiler) error {
 	// ensure the internal name exists
 	a.EnsureInternalName(corefiler)
-	
+
 	// get the mass custom settings
 	existingCustomSettings, err := a.GetCoreFilerCustomSettings(corefiler.InternalName)
 	if err != nil {
 		return err
 	}
-	
+
 	newSettingsSet := make(map[string]*CustomSetting)
 	for _, v := range corefiler.CustomSettings {
 		customSettingStr := getCoreFilerCustomSettingName(corefiler.InternalName, v)
 		newSettingsSet[getCustomSettingName(customSettingStr)] = initializeCustomSetting(customSettingStr)
 	}
-	
+
 	// remove any that have changed or no longer exist
 	for k, v := range existingCustomSettings {
-		if _, ok := newSettingsSet[k] ; ok  {
+		if _, ok := newSettingsSet[k]; ok {
 			// due to the universal checkcode being different from the mass checkcode, only
 			// compare name and value
 			if (*v).Name == (*(newSettingsSet[k])).Name && (*v).Value == (*(newSettingsSet[k])).Value {
 				// the setting still exists
 				continue
-			}			
+			}
 		}
-		if _, err := a.AvereCommand(a.getRemoveCoreFilerSettingCommand(corefiler, v.Name)) ; err != nil{
+		if _, err := a.AvereCommand(a.getRemoveCoreFilerSettingCommand(corefiler, v.Name)); err != nil {
 			return err
 		}
 	}
@@ -728,12 +756,12 @@ func (a* AvereVfxt) RemoveCoreFilerCustomSettings(corefiler *CoreFiler) error {
 	return nil
 }
 
-func (a* AvereVfxt) DeleteCoreFiler(corefilerName string) error {
+func (a *AvereVfxt) DeleteCoreFiler(corefilerName string) error {
 	_, err := a.AvereCommand(a.getDeleteFilerCommand(corefilerName))
 	if err != nil {
 		return err
 	}
-	for retries:=0 ; ; retries++ {
+	for retries := 0; ; retries++ {
 		coreFilers, err := a.GetExistingFilerNames()
 		if err != nil {
 			return err
@@ -748,6 +776,10 @@ func (a* AvereVfxt) DeleteCoreFiler(corefilerName string) error {
 		}
 		if !exists {
 			// the filer has been deleted
+			log.Printf("vfxt: ensure stable cluster after deleting core filer")
+			if err := a.EnsureClusterStable(); err != nil {
+				return err
+			}
 			return nil
 		}
 
@@ -777,24 +809,39 @@ func (a *AvereVfxt) GetExistingJunctions() (map[string]*Junction, error) {
 	return results, nil
 }
 
-func (a* AvereVfxt) CreateJunction(junction *Junction) error {
-	_, err := a.AvereCommand(a.getCreateJunctionCommand(junction))
-	return err
+func (a *AvereVfxt) CreateJunction(junction *Junction) error {
+	// listExports will cause the vFXT to refresh exports
+	listExports := func() error {
+		_, err := a.ListExports(junction.CoreFilerName)
+		return err
+	}
+	if _, err := a.AvereCommandWithCorrection(a.getCreateJunctionCommand(junction), listExports); err != nil {
+		return err
+	}
+	log.Printf("vfxt: ensure stable cluster after creating a junction")
+	if err := a.EnsureClusterStable(); err != nil {
+		return err
+	}
+	return nil
 }
 
-func (a* AvereVfxt) DeleteJunction(junctionNameSpacePath string) error {
+func (a *AvereVfxt) DeleteJunction(junctionNameSpacePath string) error {
 	_, err := a.AvereCommand(a.getDeleteJunctionCommand(junctionNameSpacePath))
 	if err != nil {
 		return err
 	}
-	for retries:=0 ; ; retries++ {
+	for retries := 0; ; retries++ {
 		junctions, err := a.GetExistingJunctions()
 		if err != nil {
 			return err
 		}
 
-		if _, ok := junctions[junctionNameSpacePath] ; !ok {
+		if _, ok := junctions[junctionNameSpacePath]; !ok {
 			// the junction is gone
+			log.Printf("vfxt: ensure stable cluster after deleting junction")
+			if err := a.EnsureClusterStable(); err != nil {
+				return err
+			}
 			return nil
 		}
 
@@ -805,9 +852,9 @@ func (a* AvereVfxt) DeleteJunction(junctionNameSpacePath string) error {
 	}
 }
 
-func (a *AvereVfxt) AvereCommand(cmd string) (string, error) {
+func (a *AvereVfxt) AvereCommandWithCorrection(cmd string, correctiveAction func() error) (string, error) {
 	var result string
-	for retries:=0 ; ; retries++ {
+	for retries := 0; ; retries++ {
 		stdoutBuf, stderrBuf, err := SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, cmd)
 		if err == nil {
 			// success
@@ -816,15 +863,24 @@ func (a *AvereVfxt) AvereCommand(cmd string) (string, error) {
 		}
 		if isAverecmdNotRetryable(stdoutBuf, stderrBuf) {
 			// failure not retryable
-			return "", fmt.Errorf("Non retryable error applying command: '%s' '%s'", stdoutBuf.String(), stderrBuf.String()) 
+			return "", fmt.Errorf("Non retryable error applying command: '%s' '%s'", stdoutBuf.String(), stderrBuf.String())
+		}
+		if correctiveAction != nil {
+			if err = correctiveAction(); err != nil {
+				return "", err
+			}
 		}
 		if retries > AverecmdRetryCount {
 			// failure after exhausted retries
-			return "", fmt.Errorf("Failure after %d retries applying command: '%s' '%s'", AverecmdRetryCount, stdoutBuf.String(), stderrBuf.String()) 
+			return "", fmt.Errorf("Failure after %d retries applying command: '%s' '%s'", AverecmdRetryCount, stdoutBuf.String(), stderrBuf.String())
 		}
 		time.Sleep(AverecmdRetrySleepSeconds * time.Second)
 	}
 	return result, nil
+}
+
+func (a *AvereVfxt) AvereCommand(cmd string) (string, error) {
+	return a.AvereCommandWithCorrection(cmd, nil)
 }
 
 // no change can be made to the core parameters of the existing filers
@@ -885,14 +941,14 @@ func (a *AvereVfxt) scaleDownCluster(newNodeCount int) error {
 		if err != nil {
 			return err
 		}
-		if err = a.removeNodeFromCluster(lastNode, currentNodeCount) ; err != nil {
+		if err = a.removeNodeFromCluster(lastNode, currentNodeCount); err != nil {
 			return err
 		}
-		if err = a.EnsureClusterStable() ; err != nil {
+		if err = a.EnsureClusterStable(); err != nil {
 			return err
 		}
 		// only delete the IaaS Node after the cluster is stable
-		if err = a.DeleteVfxtIaasNode(lastNode) ; err != nil {
+		if err = a.DeleteVfxtIaasNode(lastNode); err != nil {
 			return err
 		}
 	}
@@ -908,8 +964,8 @@ func (a *AvereVfxt) addNodeToCluster(currentNodeCount int) error {
 	if err != nil {
 		return fmt.Errorf("Error adding node to vfxt: %v, from vfxt.py: '%s'", err, stderrBuf.String())
 	}
-	
-	for retries:=0 ; ; retries++ {
+
+	for retries := 0; ; retries++ {
 		nodeCount, err := a.GetCurrentNodeCount()
 		if err != nil {
 			return err
@@ -935,7 +991,7 @@ func (a *AvereVfxt) removeNodeFromCluster(nodeName string, currentNodeCount int)
 		return err
 	}
 
-	for retries:=0 ; ; retries++ {
+	for retries := 0; ; retries++ {
 		nodeCount, err := a.GetCurrentNodeCount()
 		if err != nil {
 			return err
@@ -1030,6 +1086,10 @@ func (a *AvereVfxt) getListCoreFilersJsonCommand() string {
 	return wrapCommandForLogging(fmt.Sprintf("%s --json corefiler.list", a.getBaseAvereCmd()), AverecmdLogFile)
 }
 
+func (a *AvereVfxt) getListCoreFilerExportsJsonCommand(filer string) string {
+	return wrapCommandForLogging(fmt.Sprintf("%s --json corefiler.listExports %s", a.getBaseAvereCmd(), filer), AverecmdLogFile)
+}
+
 func (a *AvereVfxt) getFilerJsonCommand(filer string) string {
 	return wrapCommandForLogging(fmt.Sprintf("%s --json corefiler.get %s", a.getBaseAvereCmd(), filer), AverecmdLogFile)
 }
@@ -1106,7 +1166,7 @@ func getCustomSettingValue(customSettingString string) string {
 	parts := strings.Split(customSettingString, " ")
 	if len(parts) > 2 {
 		var sb strings.Builder
-		for i:=2; i < len(parts) ; i++ {
+		for i := 2; i < len(parts); i++ {
 			sb.WriteString(fmt.Sprintf("%s ", parts[i]))
 		}
 		return strings.TrimSpace(sb.String())
@@ -1119,7 +1179,7 @@ func getVServerCustomSettingName(customSetting string) string {
 }
 
 func getCoreFilerCustomSettingName(internalName string, customSetting string) string {
-	return fmt.Sprintf("%s.%s", internalName, customSetting) 
+	return fmt.Sprintf("%s.%s", internalName, customSetting)
 }
 
 func wrapCommandForLogging(cmd string, outputfile string) string {
