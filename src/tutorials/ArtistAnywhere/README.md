@@ -1,6 +1,6 @@
 # Azure Artist Anywhere
 
-Azure Artist Anywhere is a series of <a href="https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview" target="_blank">Azure Resource Manager (ARM)</a> templates and <a href="https://github.com/PowerShell/PowerShell/releases/latest" target="_blank">PowerShell Core</a> scripts for the automated deployment of an end-to-end media rendering solution in Microsoft Azure. By structuring the solution as a series of modular and parameterized templates, it provides a lightweight deployment framework that can be modified and extended as needed to meet various environment requirements.
+Azure Artist Anywhere is a modular series of parameterized <a href="https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview" target="_blank">Azure Resource Manager (ARM)</a> templates and <a href="https://github.com/PowerShell/PowerShell/releases/latest" target="_blank">PowerShell Core</a> scripts for the automated deployment of an end-to-end media rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight deployment framework that can be modified and extended as needed to meet various environment requirements.
 
 Azure Artist Anywhere is composed of the following open-source software and Microsoft Azure services:
 
@@ -75,11 +75,11 @@ Azure Artist Anywhere is composed of the following open-source software and Micr
 
 The following diagram depicts the high-level solution architecture, including multiple options for networking and storage.
 
-![](./ReadMe/SolutionArchitecture.png)
+![](./README-SolutionArchitecture.png)
 
 The following diagram represents the dependencies between the solution deployment moduless.
 
-![](./ReadMe/ModuleDependency.png)
+![](./README-ModuleDependency.png)
 
 The following list describes the purpose of each deployment script file.
 
@@ -95,10 +95,10 @@ The following list describes the purpose of each deployment script file.
 
 * *Deploy.RenderDesktop.ps1* - the background job script that deploys render desktops
 
-Unlike all of the other background job scripts, the *Deploy.StorageCache.ps1* script can be executed directly for deployment of the Network, Storage and Cache service tiers only.
+Unlike each of the other background job scripts, the *Deploy.StorageCache.ps1* script can be executed directly for deployment of the Network, Storage and Cache service tiers only.
 
 The following output from a full *Deploy.ps1* orchestrated deployment captures the *start* and *end* times for each deployment step. Note that the background job processes have overlapping times as expected in relation to the main deployment process.
 
-![](./ReadMe/ModuleDeployment.png)
+![](./README-ModuleDeployment.png)
 
 For more information, contact Rick Shahid (rick.shahid@microsoft.com)
