@@ -1,8 +1,8 @@
 # Azure Artist Anywhere
 
-Azure Artist Anywhere is a set of <a href="https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview" target="_blank">Azure Resource Manager (ARM)</a> templates and <a href="https://github.com/PowerShell/PowerShell/releases/latest" target="_blank">PowerShell Core</a> scripts for the automated deployment of a media rendering solution in Azure. By structuring the solution as a set of parameterized templates, it provides a lightweight framework that can be modified and extended to meet various deployment requirements.
+Azure Artist Anywhere is a series of <a href="https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview" target="_blank">Azure Resource Manager (ARM)</a> templates and <a href="https://github.com/PowerShell/PowerShell/releases/latest" target="_blank">PowerShell Core</a> scripts for the automated deployment of an end-to-end media rendering solution in Microsoft Azure. By structuring the solution as a series of modular and parameterized templates, it provides a lightweight deployment framework that can be modified and extended as needed to meet various environment requirements.
 
-Azure Artist Anywhere is composed of the following open-source software and Azure services:
+Azure Artist Anywhere is composed of the following open-source software and Microsoft Azure services:
 
 <table>
     <tr>
@@ -62,29 +62,43 @@ Azure Artist Anywhere is composed of the following open-source software and Azur
     </tr>
     <tr>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/key-vault/key-vault-overview" target="_blank">Azure Key Vault (TBD)</a>
+            <a href="https://docs.microsoft.com/en-us/azure/active-directory/fundamentals/active-directory-whatis" target="_blank">Azure Active Directory</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/batch/batch-technical-overview" target="_blank">Azure Batch (TBD)</a>
+            <a href="https://docs.microsoft.com/en-us/azure/key-vault/key-vault-overview" target="_blank">Azure Key Vault</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/cyclecloud/overview" target="_blank">Azure CycleCloud (TBD)</a>
+            <a href="https://docs.microsoft.com/en-us/azure/virtual-desktop/overview" target="_blank">Azure Virtual Desktop</a>
         </td>
     </tr>
 </table>
 
 The following diagram depicts the high-level solution architecture, including multiple options for networking and storage.
 
-![](README-SolutionArchitecture.png)
+![](./ReadMe/SolutionArchitecture.png)
 
-The following diagram depicts the 3 parallel processes (1 main + 2 background jobs) for efficiently deploying the solution.
+The following diagram represents the dependencies between the solution deployment moduless.
 
-![](README-ParallelDeployment.png)
+![](./ReadMe/ModuleDependency.png)
 
-*Deploy.ps1* is the main orchestration script for deploying the solution. The *Deploy.StorageCache.ps1* script can be executed directly for deployment of the Network, Storage and Cache service tiers only. In contrast, the *Deploy.RenderManagers.ps1* script is *not* intended to be executed directly. Finally, *Deploy.psm1* is a shared module that is referenced by each script.
+The following list describes the purpose of each deployment script file.
 
-The following output from the *Deploy.ps1* orchestration script captures the *start* and *end* times for each deployment step. Note that the background job processes have overlapping times as expected in relation to the main deployment process.
+* *Deploy.ps1* - the main script that orchestrates the deployment process
 
-![](README-ParallelDeployment.Run.png)
+* *Deploy.psm1* - the shared module that is referenced from each deployment script
+
+* *Deploy.ImageGallery.ps1* - the background job script that deploys the image gallery
+
+* *Deploy.StorageCache.ps1* - the background job script that deploys storage and caching
+
+* *Deploy.RenderManager.ps1* - the background job script that deploys the render manager
+
+* *Deploy.RenderDesktop.ps1* - the background job script that deploys render desktops
+
+Unlike all of the other background job scripts, the *Deploy.StorageCache.ps1* script can be executed directly for deployment of the Network, Storage and Cache service tiers only.
+
+The following output from a full *Deploy.ps1* orchestrated deployment captures the *start* and *end* times for each deployment step. Note that the background job processes have overlapping times as expected in relation to the main deployment process.
+
+![](./ReadMe/ModuleDeployment.png)
 
 For more information, contact Rick Shahid (rick.shahid@microsoft.com)
