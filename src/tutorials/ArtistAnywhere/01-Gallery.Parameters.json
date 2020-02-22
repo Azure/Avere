@@ -25,8 +25,7 @@
             "publisher": "MicrosoftWindowsDesktop",
             "offer": "Windows-10",
             "sku": "rs5-enterprise-standard",
-            "version": "latest",
-            "homeDirectory": "/users/az"
+            "version": "latest"
           }
         ]
       }

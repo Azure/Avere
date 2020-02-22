@@ -1,5 +1,5 @@
 ﻿# Before running this Azure resource deployment script, make sure that the Azure CLI is installed locally.
-# You must have version 2.0.81 (or greater) of the Azure CLI installed for this script to run properly.
+# You must have version 2.1.0 (or greater) of the Azure CLI installed for this script to run properly.
 # The current Azure CLI release is available at http://docs.microsoft.com/cli/azure/install-azure-cli
 
 param (
@@ -15,13 +15,18 @@ param (
 	# Set to true to deploy Azure Object (Blob) Storage (http://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview)
 	[boolean] $storageDeployObject = $false,
 
-	# Set to true to register Azure Virtual Desktop (http://docs.microsoft.com/azure/virtual-desktop/overview) render clients
+	# Set to true to register Azure Virtual Desktop (http://docs.microsoft.com/azure/virtual-desktop/overview) machines
 	[boolean] $virtualDesktopRegister = $false
 )
 
 $templateDirectory = $PSScriptRoot
 
 Import-Module "$templateDirectory\Deploy.psm1"
+
+# * - Image Gallery Job
+$moduleName = "* - Image Gallery Job"
+New-TraceMessage $moduleName $true
+$imageGalleryJob = Start-Job -FilePath "$templateDirectory\Deploy.ImageGallery.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames
 
 # 00 - Network
 $computeNetworks = @()
@@ -47,16 +52,16 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 }
 New-TraceMessage $moduleName $false
 
-# 01 - Security
+# 02 - Security
 $computeRegionIndex = 0
-$moduleName = "01 - Security"
+$moduleName = "02 - Security"
 New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 $resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Security"
 $resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 if (!$resourceGroup) { return }
 
-$templateResources = "$templateDirectory\01-Security.json"
-$templateParameters = (Get-Content "$templateDirectory\01-Security.Parameters.json" -Raw | ConvertFrom-Json).parameters
+$templateResources = "$templateDirectory\02-Security.json"
+$templateParameters = (Get-Content "$templateDirectory\02-Security.Parameters.json" -Raw | ConvertFrom-Json).parameters
 if ($templateParameters.virtualNetwork.value.resourceGroupName -eq "") {
 	$templateParameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
 }
@@ -71,32 +76,29 @@ $logAnalyticsWorkspaceId = $groupDeployment.properties.outputs.logAnalyticsWorks
 $logAnalyticsWorkspaceKey = $groupDeployment.properties.outputs.logAnalyticsWorkspaceKey.value
 New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 
-# 02 - Gallery
-$computeRegionIndex = 0
-$moduleName = "02 - Gallery"
-New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
-$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Image"
-$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
-if (!$resourceGroup) { return }
+# * - Image Gallery Job
+$moduleName = "* - Image Gallery Job"
+$imageGallery = Receive-Job -InstanceId $imageGalleryJob.InstanceId -Wait
+New-TraceMessage $moduleName $false
 
-$templateResources = "$templateDirectory\02-Gallery.json"
-$templateParameters = "$templateDirectory\02-Gallery.Parameters.json"
-$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
-if (!$groupDeployment) { return }
-
-$imageGallery = $groupDeployment.properties.outputs.imageGallery.value
-$imageRegistry = $groupDeployment.properties.outputs.imageRegistry.value
-$imageDefinition = Get-ImageDefinition $imageGallery "Render"
-New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
-
-# * - Background Jobs
-$moduleName = "* - Background Jobs"
+# * - Storage Cache Job
+$moduleName = "* - Storage Cache Job"
 New-TraceMessage $moduleName $true
 $storageCacheJob = Start-Job -FilePath "$templateDirectory\Deploy.StorageCache.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $computeNetworks, $storageDeployNetApp, $storageDeployObject
-$renderManagerJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderManager.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $computeNetworks, $imageGallery, $imageRegistry
-$renderClientJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderClient.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $computeNetworks, $imageGallery, $imageRegistry
+
+# * - Render Manager Job
+$moduleName = "* - Render Manager Job"
+New-TraceMessage $moduleName $true
+$renderManagerJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderManager.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $computeNetworks, $imageGallery
+
+# * - Render Desktop Job
+$moduleName = "* - Render Desktop Job"
+New-TraceMessage $moduleName $true
+$renderDesktopJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderDesktop.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $computeNetworks, $imageGallery
 
 $templateDirectory += "\RenderWorker"
+
+$imageDefinition = Get-ImageDefinition $imageGallery "Render"
 
 # 08.0 - Worker Image Template
 $computeRegionIndex = 0
@@ -138,13 +140,17 @@ if (!$imageVersion) {
 }
 New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 
-# * - Background Jobs
-$moduleName = "* - Background Jobs"
+# * - Storage Cache Job
+$moduleName = "* - Storage Cache Job"
+New-TraceMessage $moduleName $false
 $storageCaches = Receive-Job -InstanceId $storageCacheJob.InstanceId -Wait
 if (!$storageCaches) { return }
+
+# * - Render Manager Job
+$moduleName = "* - Render Manager Job"
+New-TraceMessage $moduleName $false
 $renderManagers = Receive-Job -InstanceId $renderManagerJob.InstanceId -Wait
 if (!$renderManagers) { return }
-New-TraceMessage $moduleName $false
 
 # 09 - Worker Machines
 $moduleName = "09 - Worker Machines"
@@ -192,9 +198,11 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 }
 New-TraceMessage $moduleName $false
 
-$renderClients = Receive-Job -InstanceId $renderClientJob.InstanceId -Wait
-if (!$renderClients) { return }
+# * - Render Desktop Job
+$moduleName = "* - Render Desktop Job"
+$renderDesktops = Receive-Job -InstanceId $renderDesktopJob.InstanceId -Wait
+New-TraceMessage $moduleName $true
+if (!$renderDesktops) { return }
 
 if ($virtualDesktopRegister) {
-	# TODO: Enable render clients via Azure Virtual Desktop service
 }

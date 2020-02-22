@@ -2,10 +2,16 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "renderClient": {
+    "renderDesktop": {
       "type": "object",
       "metadata": {
-        "description": "The render farm client."
+        "description": "The render client desktop."
+      }
+    },
+    "virtualNetwork": {
+      "type": "object",
+      "metadata": {
+        "description": "The virtual network subnet."
       }
     }
   },
@@ -18,10 +24,10 @@
       "type": "Microsoft.Network/networkInterfaces",
       "apiVersion": "[variables('virtualNetworkApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('renderClient').machines[copyIndex()].name]",
+      "name": "[parameters('renderDesktop').machines[copyIndex()].name]",
       "properties": {
         "primary": true,
-        "enableAcceleratedNetworking": "[parameters('renderClient').machines[copyIndex()].acceleratedNetworking]",
+        "enableAcceleratedNetworking": "[parameters('renderDesktop').machines[copyIndex()].acceleratedNetworking]",
         "ipConfigurations": [
           {
             "name": "ipConfig0",
@@ -35,32 +41,32 @@
         ]
       },
       "copy": {
-        "name": "renderClients",
-        "count": "[length(parameters('renderClient').machines)]"
+        "name": "renderDesktops",
+        "count": "[length(parameters('renderDesktop').machines)]"
       }
     },
     {
       "type": "Microsoft.Compute/virtualMachines",
       "apiVersion": "[variables('virtualMachineApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('renderClient').machines[copyIndex()].name]",
+      "name": "[parameters('renderDesktop').machines[copyIndex()].name]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/networkInterfaces', parameters('renderClient').machines[copyIndex()].name)]"
+        "[resourceId('Microsoft.Network/networkInterfaces', parameters('renderDesktop').machines[copyIndex()].name)]"
       ],
       "properties": {
         "hardwareProfile": {
-          "vmSize": "[parameters('renderClient').machines[copyIndex()].machineSize]"
+          "vmSize": "[parameters('renderDesktop').machines[copyIndex()].machineSize]"
         },
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('renderClient')/machines[copyIndex()].name)]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('renderDesktop').machines[copyIndex()].name)]"
             }
           ]
         },
         "storageProfile": {
           "imageReference": {
-            "id": "[parameters('renderClient').imageVersionId]"
+            "id": "[parameters('renderDesktop').imageVersionId]"
           },
           "osDisk": {
             "caching": "ReadOnly",
@@ -68,19 +74,9 @@
           }
         },
         "osProfile": {
-          "computerName": "[parameters('renderClient').machines[copyIndex()].name]",
-          "adminUsername": "[parameters('renderClient').machines[copyIndex()].adminUsername]",
-          "adminPassword": "[parameters('renderClient').machines[copyIndex()].adminPassword]",
-          "linuxConfiguration": {
-            "ssh": {
-              "publicKeys": [
-                {
-                  "path": "[concat('/home/', parameters('renderClient').machines[copyIndex()].adminUsername, '/.ssh/authorized_keys')]",
-                  "keyData": "[parameters('renderClient').machines[copyIndex()].sshPublicKeyData]"
-                }
-              ]
-            }
-          }
+          "computerName": "[parameters('renderDesktop').machines[copyIndex()].name]",
+          "adminUsername": "[parameters('renderDesktop').machines[copyIndex()].adminUsername]",
+          "adminPassword": "[parameters('renderDesktop').machines[copyIndex()].adminPassword]"
         }
       },
       "resources": [
@@ -88,9 +84,9 @@
           "type": "extensions",
           "apiVersion": "[variables('virtualMachineApiVersion')]",
           "location": "[resourceGroup().location]",
-          "name": "[concat(parameters('renderClient').machines[copyIndex()].name, 'Extension')]",
+          "name": "[concat(parameters('renderDesktop').machines[copyIndex()].name, 'Extension')]",
           "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', parameters('renderClient').machines[copyIndex()].name)]"
+            "[resourceId('Microsoft.Compute/virtualMachines', parameters('renderDesktop').machines[copyIndex()].name)]"
           ],
           "properties": {
             "publisher": "Microsoft.Azure.Extensions",
@@ -98,7 +94,7 @@
             "typeHandlerVersion": "2.0",
             "type": "CustomScript",
             "protectedSettings": {
-              "commandToExecute": "[concat('echo ', parameters('renderClient').machineExtensionScript, ' | certutil -decode | compact /u | HOME_DIRECTORY=\"', parameters('renderClient').homeDirectory, '\" powershell')]"
+              "commandToExecute": "[concat('echo ', parameters('renderDesktop').machineExtensionScript, ' | certutil -decode | compact /u | RENDER_MANAGER_HOST=\"', parameters('renderDesktop').renderManagerHost, '\" powershell')]"
             }
           }
         },
@@ -106,9 +102,9 @@
           "type": "extensions",
           "apiVersion": "[variables('virtualMachineApiVersion')]",
           "location": "[resourceGroup().location]",
-          "name": "[concat(parameters('renderClient').machines[copyIndex()].name, 'Monitor')]",
+          "name": "[concat(parameters('renderDesktop').machines[copyIndex()].name, 'Monitor')]",
           "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', parameters('renderClient').machines[copyIndex()].name)]"
+            "[resourceId('Microsoft.Compute/virtualMachines', parameters('renderDesktop').machines[copyIndex()].name)]"
           ],
           "properties": {
             "publisher": "Microsoft.EnterpriseCloud.Monitoring",
@@ -116,27 +112,27 @@
             "typeHandlerVersion": "1.12",
             "type": "OmsAgentForLinux",
             "protectedSettings": {
-              "workspaceKey": "[parameters('renderClient').logAnalyticsWorkspaceKey]"
+              "workspaceKey": "[parameters('renderDesktop').logAnalyticsWorkspaceKey]"
             },
             "settings": {
-              "workspaceId": "[parameters('renderClient').logAnalyticsWorkspaceId]"
+              "workspaceId": "[parameters('renderDesktop').logAnalyticsWorkspaceId]"
             }
           }
         }
       ],
       "copy": {
-        "name": "renderClients",
-        "count": "[length(parameters('renderClient').machines)]"
+        "name": "renderDesktops",
+        "count": "[length(parameters('renderDesktop').machines)]"
       }
     }
   ],
   "outputs": {
-    "renderClients": {
+    "renderDesktops": {
       "type": "array",
       "copy": {
-        "count": "[length(parameters('renderClient').machines)]",
+        "count": "[length(parameters('renderDesktop').machines)]",
         "input": {
-          "name": "[parameters('renderClient').machines[copyIndex()].name]"
+          "name": "[parameters('renderDesktop').machines[copyIndex()].name]"
         }
       }
     }

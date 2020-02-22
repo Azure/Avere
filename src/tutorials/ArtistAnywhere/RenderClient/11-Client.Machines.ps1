@@ -1,1 +1,0 @@
-cd "$HOME_DIRECTORY"

@@ -26,20 +26,20 @@ if (!$templateDirectory) {
 
 Import-Module "$templateDirectory\Deploy.psm1"
 
-$templateDirectory += "\RenderClient"
+$templateDirectory += "\RenderDesktop"
 
 $imageDefinition = Get-ImageDefinition $imageGallery "Desktop"
 
-# 10.0 - Client Image Template
+# 10.0 - Desktop Image Template
 $computeRegionIndex = 0
-$moduleName = "10.0 - Client Image Template"
+$moduleName = "10.0 - Desktop Image Template"
 New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 $resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Image"
 $resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 if (!$resourceGroup) { return }
 
-$templateResources = "$templateDirectory\10-Client.Image.json"
-$templateParameters = (Get-Content "$templateDirectory\10-Client.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
+$templateResources = "$templateDirectory\10-Desktop.Image.json"
+$templateParameters = (Get-Content "$templateDirectory\10-Desktop.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
 $templateParameter = New-Object PSObject
 $templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $imageDefinition
 $templateParameters | Add-Member -MemberType NoteProperty -Name "imageDefinition" -Value $templateParameter
@@ -57,9 +57,9 @@ if ($imageTemplates.length -eq 0) {
 }
 New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 
-# 10.1 - Client Image Version
+# 10.1 - Desktop Image Version
 $computeRegionIndex = 0
-$moduleName = "10.1 - Client Image Version"
+$moduleName = "10.1 - Desktop Image Version"
 New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 $resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Image"
 $imageVersion = Get-ImageVersion $resourceGroupName $imageGallery.name $imageDefinition.name $imageTemplateName
@@ -70,36 +70,33 @@ if (!$imageVersion) {
 }
 New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 
-# 11 - Client Machines
-$renderClients = @()
-$moduleName = "11 - Client Machines"
+# 11 - Desktop Machines
+$renderDesktops = @()
+$moduleName = "11 - Desktop Machines"
 New-TraceMessage $moduleName $true
 for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
 	New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
-	$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Client"
+	$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Desktop"
 	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 	if (!$resourceGroup) { return }
 
-	$templateResources = "$templateDirectory\11-Client.Machines.json"
-	$templateParameters = (Get-Content "$templateDirectory\11-Client.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
-	$machineExtensionScript = Get-MachineExtensionScript "$templateDirectory\11-Client.Machines.ps1"
-	if ($templateParameters.renderClient.value.renderManagerHost -eq "") {
-		$templateParameters.renderClient.value.renderManagerHost = $renderManagers[$computeRegionIndex]
+	$templateResources = "$templateDirectory\11-Desktop.Machines.json"
+	$templateParameters = (Get-Content "$templateDirectory\11-Desktop.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
+	$machineExtensionScript = Get-MachineExtensionScript "$templateDirectory\11-Desktop.Machines.ps1"
+	if ($templateParameters.renderDesktop.value.renderManagerHost -eq "") {
+		$templateParameters.renderDesktop.value.renderManagerHost = $renderManagers[$computeRegionIndex]
 	}
-	if ($templateParameters.renderClient.value.homeDirectory -eq "") {
-		$templateParameters.renderClient.value.homeDirectory = $imageDefinition.homeDirectory
+	if ($templateParameters.renderDesktop.value.imageVersionId -eq "") {
+		$templateParameters.renderDesktop.value.imageVersionId = $imageVersion.id
 	}
-	if ($templateParameters.renderClient.value.imageVersionId -eq "") {
-		$templateParameters.renderClient.value.imageVersionId = $imageVersion.id
+	if ($templateParameters.renderDesktop.value.logAnalyticsWorkspaceId -eq "") {
+		$templateParameters.renderDesktop.value.logAnalyticsWorkspaceId = $using:logAnalyticsWorkspaceId
 	}
-	if ($templateParameters.renderClient.value.logAnalyticsWorkspaceId -eq "") {
-		$templateParameters.renderClient.value.logAnalyticsWorkspaceId = $using:logAnalyticsWorkspaceId
+	if ($templateParameters.renderDesktop.value.logAnalyticsWorkspaceKey -eq "") {
+		$templateParameters.renderDesktop.value.logAnalyticsWorkspaceKey = $using:logAnalyticsWorkspaceKey
 	}
-	if ($templateParameters.renderClient.value.logAnalyticsWorkspaceKey -eq "") {
-		$templateParameters.renderClient.value.logAnalyticsWorkspaceKey = $using:logAnalyticsWorkspaceKey
-	}
-	if ($templateParameters.renderClient.value.machineExtensionScript -eq "") {
-		$templateParameters.renderClient.value.machineExtensionScript = $machineExtensionScript
+	if ($templateParameters.renderDesktop.value.machineExtensionScript -eq "") {
+		$templateParameters.renderDesktop.value.machineExtensionScript = $machineExtensionScript
 	}
 	if ($templateParameters.virtualNetwork.value.resourceGroupName -eq "") {
 		$templateParameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
@@ -111,9 +108,9 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
 	if (!$groupDeployment) { return }
 
-	$renderClients += $groupDeployment.properties.outputs.renderClients.value
+	$renderDesktops += $groupDeployment.properties.outputs.renderDesktops.value
 	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 }
 New-TraceMessage $moduleName $false
 
-Write-Output -InputObject $renderClients -NoEnumerate
+Write-Output -InputObject $renderDesktops -NoEnumerate

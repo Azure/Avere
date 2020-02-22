@@ -1,10 +1,13 @@
-﻿function New-TraceMessage ($moduleName, $deploymentStart, $regionName) {
+﻿function New-TraceMessage ($moduleName, $moduleStart, $regionName) {
 	$traceMessage = [System.DateTime]::Now.ToLongTimeString()
 	if ($regionName) {
 		$traceMessage += " @ " + $regionName
 	}
-	$traceMessage += " ($moduleName Deployment "
-	if ($deploymentStart) {
+	$traceMessage += " ($moduleName "
+	if ($moduleName.Substring(0, 1) -ne "*") {
+		$traceMessage += "Deployment "
+	}
+	if ($moduleStart) {
 		$traceMessage += "Start)"
 	} else {
 		$traceMessage += "End)"

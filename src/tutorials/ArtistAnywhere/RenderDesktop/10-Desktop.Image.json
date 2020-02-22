@@ -2,10 +2,10 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "renderClient": {
+    "renderDesktop": {
       "type": "object",
       "metadata": {
-        "description": "The render farm client."
+        "description": "The render client desktop."
       }
     },
     "imageBuilder": {
@@ -60,31 +60,27 @@
             "name": "OpenCue",
             "type": "PowerShell",
             "inline": [
-              "[concat('curl -OutFile python.exe ', parameters('renderClient').pythonUrl)]",
-              "[concat('curl -OutFile requirements.txt ', parameters('renderClient').requirementsUrl)]",
-              "python /quiet InstallAllUsers=1 PrependPath=1",
+              "[concat('curl -OutFile python.exe ', parameters('renderDesktop').pythonUrl)]",
+              "[concat('curl -OutFile requirements.txt ', parameters('renderDesktop').requirementsUrl)]",
+              "[concat('curl -OutFile opencue-pycue.tar.gz ', parameters('renderDesktop').pyCueUrl)]",
+              "[concat('curl -OutFile opencue-pyoutline.tar.gz ', parameters('renderDesktop').pyOutlineUrl)]",
+              "[concat('curl -OutFile opencue-cuesubmit.tar.gz ', parameters('renderDesktop').cueSubmitUrl)]",
+              "[concat('curl -OutFile opencue-cueadmin.tar.gz ', parameters('renderDesktop').cueAdminUrl)]",
+              "[concat('curl -OutFile opencue-cuegui.tar.gz ', parameters('renderDesktop').cueGuiUrl)]",
+              "Start-Process -FilePath 'python.exe' -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1' -Wait",
               "py -m pip install --requirement requirements.txt",
-              "[concat('cd ', parameters('imageDefinition').homeDirectory)]",
-              "[concat('curl -OutFile opencue-pycue.tar.gz ', parameters('renderClient').pyCueUrl)]",
-              "[concat('curl -OutFile opencue-pyoutline.tar.gz ', parameters('renderClient').pyOutlineUrl)]",
-              "[concat('curl -OutFile opencue-cuesubmit.tar.gz ', parameters('renderClient').cueSubmitUrl)]",
-              "[concat('curl -OutFile opencue-cueadmin.tar.gz ', parameters('renderClient').cueAdminUrl)]",
-              "[concat('curl -OutFile opencue-cuegui.tar.gz ', parameters('renderClient').cueGuiUrl)]",
               "tar -xzf opencue-pycue.tar.gz",
               "tar -xzf opencue-pyoutline.tar.gz",
               "tar -xzf opencue-cuesubmit.tar.gz",
               "tar -xzf opencue-cueadmin.tar.gz",
-              "tar -xzf opencue-cuegui.tar.gz",
               "cd pycue*",
-              "python setup.py install",
+              "py setup.py install",
               "cd ../pyoutline*",
-              "python setup.py install",
+              "py setup.py install",
               "cd ../cuesubmit*",
-              "python setup.py install",
+              "py setup.py install",
               "cd ../cueadmin*",
-              "python setup.py install",
-              "cd ../cuegui*",
-              "python setup.py install"
+              "py setup.py install"
             ]
           }
         ],
