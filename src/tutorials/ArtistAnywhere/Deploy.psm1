@@ -73,8 +73,11 @@ function Get-ImageVersion ($imageGalleryResourceGroupName, $imageGalleryName, $i
 }
 
 function Get-CacheMounts ($storageCache) {
-	$cacheMounts = @()
+	$cacheMounts = ""
 	foreach ($storageCacheMount in $storageCache.mounts) {
+		if ($cacheMounts -ne "") {
+			$cacheMounts += "|"
+		}
 		$cacheMount = "mount $storageCacheMount.targetHost:$storageCacheMount.namespacePath $storageCacheMount.namespacePath $storageCacheMount.mountOptions"
 		$cacheMounts += $cacheMount
 	}

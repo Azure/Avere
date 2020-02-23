@@ -8,6 +8,12 @@
         "description": "The render client desktop."
       }
     },
+    "renderManager": {
+      "type": "object",
+      "metadata": {
+        "description": "The render farm manager."
+      }
+    },
     "virtualNetwork": {
       "type": "object",
       "metadata": {
@@ -94,7 +100,7 @@
             "typeHandlerVersion": "2.0",
             "type": "CustomScript",
             "protectedSettings": {
-              "commandToExecute": "[concat('echo ', parameters('renderDesktop').machineExtensionScript, ' | certutil -decode | compact /u | RENDER_MANAGER_HOST=\"', parameters('renderDesktop').renderManagerHost, '\" powershell')]"
+              "commandToExecute": "[concat('echo ', parameters('renderDesktop').machineExtensionScript, ' | certutil -decode | compact /u | RENDER_MANAGER_HOST=\"', parameters('renderManager').hostAddress, '\" powershell')]"
             }
           }
         },
@@ -109,8 +115,8 @@
           "properties": {
             "publisher": "Microsoft.EnterpriseCloud.Monitoring",
             "autoUpgradeMinorVersion": true,
-            "typeHandlerVersion": "1.12",
-            "type": "OmsAgentForLinux",
+            "typeHandlerVersion": "1.0",
+            "type": "MicrosoftMonitoringAgent",
             "protectedSettings": {
               "workspaceKey": "[parameters('renderDesktop').logAnalyticsWorkspaceKey]"
             },

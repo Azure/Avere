@@ -1,6 +1,6 @@
 # Azure Artist Anywhere
 
-Azure Artist Anywhere is a modular series of parameterized <a href="https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview" target="_blank">Azure Resource Manager (ARM)</a> templates and <a href="https://github.com/PowerShell/PowerShell/releases/latest" target="_blank">PowerShell Core</a> scripts for the automated deployment of an end-to-end media rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight deployment framework that can be modified and extended as needed to meet various environment requirements.
+Azure Artist Anywhere is a modular series of parameterized <a href="https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview" target="_blank">Azure Resource Manager (ARM)</a> templates and <a href="https://docs.microsoft.com/en-us/powershell/scripting/overview" target="_blank">PowerShell Core</a> scripts for the automated deployment of an end-to-end media rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight deployment framework that can be modified and extended as needed to meet various requirements.
 
 Azure Artist Anywhere is composed of the following open-source software and Microsoft Azure services:
 
@@ -13,7 +13,7 @@ Azure Artist Anywhere is composed of the following open-source software and Micr
             <a href="https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview" target="_blank">Azure HPC Cache</a>
         </td>
         <td>
-            <a href="https://www.blender.org/" target="_blank">Blender Rendering</a>
+            <a href="https://www.blender.org/" target="_blank">Blender 3D Creation Suite</a>
         </td>
     </tr>
     <tr>
@@ -32,7 +32,7 @@ Azure Artist Anywhere is composed of the following open-source software and Micr
             <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/" target="_blank">Azure Virtual Machines</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blobs-overview" target="_blank">Azure Blob Storage</a>
+            <a href="https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blobs-overview" target="_blank">Azure Object (Blob) Storage</a>
         </td>
         <td>
             <a href="https://docs.microsoft.com/en-us/azure/postgresql/overview" target="_blank">Azure Database for PostgreSQL</a>
@@ -73,32 +73,32 @@ Azure Artist Anywhere is composed of the following open-source software and Micr
     </tr>
 </table>
 
-The following diagram depicts the high-level solution architecture, including multiple options for networking and storage.
+The following diagram depicts the Azure Artist Anywhere solution architecture spanning on-premises and Microsoft Azure.
 
-![](./README-SolutionArchitecture.png)
+![](./README.SolutionArchitecture.png)
 
-The following diagram represents the dependencies between the solution deployment moduless.
+The following diagram represents the Azure Artist Anywhere deployment modules along with their dependency relationship.
 
-![](./README-ModuleDependency.png)
+![](./README.ModuleDependency.png)
 
-The following list describes the purpose of each deployment script file.
+The following list describes each of the Azure Artist Anywhere deployment script files.
 
-* *Deploy.ps1* - the main script that orchestrates the deployment process
+* *Deploy.ps1* - main script that orchestrates the overall deployment process
 
-* *Deploy.psm1* - the shared module that is referenced from each deployment script
+* *Deploy.psm1* - shared module that is referenced from each deployment script
 
-* *Deploy.ImageGallery.ps1* - the background job script that deploys the image gallery
+* *Deploy.ImageGallery.ps1* - background job script that deploys shared image gallery
 
-* *Deploy.StorageCache.ps1* - the background job script that deploys storage and caching
+* *Deploy.StorageCache.ps1* - background job script that deploys storage and cache
 
-* *Deploy.RenderManager.ps1* - the background job script that deploys the render manager
+* *Deploy.RenderManager.ps1* - background job script that deploys render managers
 
-* *Deploy.RenderDesktop.ps1* - the background job script that deploys render desktops
+* *Deploy.RenderDesktop.ps1* - background job script that deploys render desktops
 
-Unlike each of the other background job scripts, the *Deploy.StorageCache.ps1* script can be executed directly for deployment of the Network, Storage and Cache service tiers only.
+Unlike each of the other background job scripts, the *Deploy.StorageCache.ps1* script can be executed directly for deployment of the Network, Storage and Cache modules only.
 
-The following output from a full *Deploy.ps1* orchestrated deployment captures the *start* and *end* times for each deployment step. Note that the background job processes have overlapping times as expected in relation to the main deployment process.
+The following output from a *Deploy.ps1* orchestrated deployment provides the *start* and *end* times for each module deployed. Note that the background jobs have overlapping times as expected in comparison to the main deployment process.
 
-![](./README-ModuleDeployment.png)
+![](./README.ModuleDeployment.png)
 
 For more information, contact Rick Shahid (rick.shahid@microsoft.com)

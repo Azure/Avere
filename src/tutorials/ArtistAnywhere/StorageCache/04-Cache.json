@@ -105,11 +105,11 @@
     }
   ],
   "outputs": {
-    "cacheSubnetName": {
+    "subnetName": {
       "type": "string",
       "value": "[parameters('virtualNetwork').subnetName]"
     },
-    "cacheMountAddresses": {
+    "mountAddresses": {
       "type": "array",
       "value": "[reference(resourceId('Microsoft.StorageCache/caches', parameters('cacheName')), variables('cacheApiVersion')).mountAddresses]"
     }

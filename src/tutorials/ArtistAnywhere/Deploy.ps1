@@ -142,15 +142,15 @@ New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 
 # * - Storage Cache Job
 $moduleName = "* - Storage Cache Job"
-New-TraceMessage $moduleName $false
 $storageCaches = Receive-Job -InstanceId $storageCacheJob.InstanceId -Wait
 if (!$storageCaches) { return }
+New-TraceMessage $moduleName $false
 
 # * - Render Manager Job
 $moduleName = "* - Render Manager Job"
-New-TraceMessage $moduleName $false
 $renderManagers = Receive-Job -InstanceId $renderManagerJob.InstanceId -Wait
 if (!$renderManagers) { return }
+New-TraceMessage $moduleName $false
 
 # 09 - Worker Machines
 $moduleName = "09 - Worker Machines"
@@ -167,8 +167,8 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	if ($templateParameters.cacheMounts.value -eq "") {
 		$templateParameters.cacheMounts.value = Get-CacheMounts $storageCaches[$computeRegionIndex]
 	}
-	if ($templateParameters.renderWorker.value.renderManagerHost -eq "") {
-		$templateParameters.renderWorker.value.renderManagerHost = $renderManagers[$computeRegionIndex]
+	if ($templateParameters.renderManager.value.hostAddress -eq "") {
+		$templateParameters.renderManager.value.hostAddress = $renderManagers[$computeRegionIndex]
 	}
 	if ($templateParameters.renderWorker.value.homeDirectory -eq "") {
 		$templateParameters.renderWorker.value.homeDirectory = $imageDefinition.homeDirectory
@@ -177,10 +177,10 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 		$templateParameters.renderWorker.value.imageVersionId = $imageVersion.id
 	}
 	if ($templateParameters.renderWorker.value.logAnalyticsWorkspaceId -eq "") {
-		$templateParameters.renderWorker.value.logAnalyticsWorkspaceId = $using:logAnalyticsWorkspaceId
+		$templateParameters.renderWorker.value.logAnalyticsWorkspaceId = $logAnalyticsWorkspaceId
 	}
 	if ($templateParameters.renderWorker.value.logAnalyticsWorkspaceKey -eq "") {
-		$templateParameters.renderWorker.value.logAnalyticsWorkspaceKey = $using:logAnalyticsWorkspaceKey
+		$templateParameters.renderWorker.value.logAnalyticsWorkspaceKey = $logAnalyticsWorkspaceKey
 	}
 	if ($templateParameters.renderWorker.value.machineExtensionScript -eq "") {
 		$templateParameters.renderWorker.value.machineExtensionScript = $machineExtensionScript
@@ -201,8 +201,8 @@ New-TraceMessage $moduleName $false
 # * - Render Desktop Job
 $moduleName = "* - Render Desktop Job"
 $renderDesktops = Receive-Job -InstanceId $renderDesktopJob.InstanceId -Wait
-New-TraceMessage $moduleName $true
 if (!$renderDesktops) { return }
+New-TraceMessage $moduleName $false
 
 if ($virtualDesktopRegister) {
 }

@@ -5,7 +5,6 @@
     "renderDesktop": {
       "value": {
         "imageVersionId": "",
-        "renderManagerHost": "",
         "logAnalyticsWorkspaceId": "",
         "logAnalyticsWorkspaceKey": "",
         "machineExtensionScript": "",
@@ -16,9 +15,21 @@
             "adminUsername": "az",
             "adminPassword": "P@ssword1234",
             "acceleratedNetworking": false
+          },
+          {
+            "name": "renderDesktop0",
+            "machineSize": "Standard_NV6",
+            "adminUsername": "az",
+            "adminPassword": "P@ssword1234",
+            "acceleratedNetworking": false
           }
         ]
       }     
+    },
+    "renderManager": {
+      "value": {
+        "hostAddress": ""
+      }
     },
     "virtualNetwork": {
       "value": {

@@ -13,7 +13,7 @@
             "state": "Generalized",
             "publisher": "OpenLogic",
             "offer": "CentOS",
-            "sku": "8.0",
+            "sku": "7.7",
             "version": "latest",
             "homeDirectory": "/home/az"
           },

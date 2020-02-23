@@ -152,8 +152,8 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	if (!$groupDeployment) { return }
 
 	$storageCache = New-Object PSObject
-	$storageCache | Add-Member -MemberType NoteProperty -Name "subnetName" -Value $groupDeployment.properties.outputs.cacheSubnetName.value
-	$storageCache | Add-Member -MemberType NoteProperty -Name "mountAddresses" -Value $groupDeployment.properties.outputs.cacheMountAddresses.value
+	$storageCache | Add-Member -MemberType NoteProperty -Name "subnetName" -Value $groupDeployment.properties.outputs.subnetName.value
+	$storageCache | Add-Member -MemberType NoteProperty -Name "mountAddresses" -Value $groupDeployment.properties.outputs.mountAddresses.value
 	$storageCaches += $storageCache
 	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 }

@@ -69,7 +69,7 @@
               "[concat('cd ', parameters('imageDefinition').homeDirectory)]",
               "[concat('curl --output opencue-rqd.jar.gz --location ', parameters('renderWorker').softwareUrl)]",
               "[concat('curl --output opencue-rqd.service --location ', parameters('renderWorker').serviceUrl)]",
-              "tar -xzf opencue-rqd.jar.gz",
+              "tar --extract --gzip --file opencue-rqd.jar.gz",
               "cd rqd*",
               "python3 setup.py install"
             ]
@@ -82,8 +82,8 @@
               "yum -y install libXrender",
               "yum -y install mesa-libGL",
               "[concat('cd ', parameters('imageDefinition').homeDirectory)]",
-              "[concat('curl --output blender.jar.bz2 --location ', parameters('renderWorker').blenderUrl)]",
-              "tar -xjf blender.jar.bz2",
+              "[concat('curl --output blender.jar.xz --location ', parameters('renderWorker').blenderUrl)]",
+              "tar --extract --xz --file blender.jar.xz",
               "mv blender-*/* /usr/local/bin"
             ]
           },

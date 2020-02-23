@@ -9,7 +9,7 @@
       }
     },
     "renderManager": {
-      "type": "string",
+      "type": "object",
       "metadata": {
         "description": "The render farm manager."
       }
@@ -102,7 +102,7 @@
                   "typeHandlerVersion": "2.0",
                   "type": "CustomScript",
                   "protectedSettings": {
-                    "commandToExecute": "[concat('echo ', parameters('renderWorker').machineExtensionScript, ' | base64 --decode | gunzip | sed \"s|\r$||\" | HOME_DIRECTORY=\"', parameters('renderWorker').homeDirectory, '\" RENDER_MANAGER_HOST=\"', parameters('renderWorker').renderManagerHost, '\" CACHE_MOUNTS=\"', parameters('cacheMounts'), '\" /bin/bash')]"
+                    "commandToExecute": "[concat('echo ', parameters('renderWorker').machineExtensionScript, ' | base64 --decode | gunzip | sed \"s|\r$||\" | HOME_DIRECTORY=\"', parameters('renderWorker').homeDirectory, '\" RENDER_MANAGER_HOST=\"', parameters('renderManager').hostAddress, '\" CACHE_MOUNTS=\"', parameters('cacheMounts'), '\" /bin/bash')]"
                   }
                 }
               },
