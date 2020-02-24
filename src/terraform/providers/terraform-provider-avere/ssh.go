@@ -43,7 +43,7 @@ func GetKeyFileAuthMethod() (authMethod ssh.AuthMethod, err error) {
 func VerifySSHConnection(host string, username string, authMethod ssh.AuthMethod) error {
 	var err error
 	for retries := 0; retries < SSHVerifyRetryCount; retries++ {
-		if _, _, err := SSHCommand(host, username, authMethod, VerifyCommand); err == nil {
+		if _, _, err = SSHCommand(host, username, authMethod, VerifyCommand); err == nil {
 			// success
 			return nil
 		}
@@ -112,4 +112,8 @@ func SSHCommand(host string, username string, authMethod ssh.AuthMethod, cmd str
 	}
 
 	return stdoutBuf, stderrBuf, nil
+}
+
+func WrapCommandForLogging(cmd string, outputfile string) string {
+	return fmt.Sprintf("echo $(date) '%s' | sed 's/-password [^ ]*/-password ***/' >> %s && %s 1> >(tee -a %s) 2> >(tee -a %s >&2)", cmd, outputfile, cmd, outputfile, outputfile)
 }

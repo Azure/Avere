@@ -62,17 +62,18 @@ module "vfxtcontroller" {
 resource "avere_vfxt" "vfxt" {
     controller_address = module.vfxtcontroller.controller_address
     controller_admin_username = module.vfxtcontroller.controller_username
-    controller_admin_password = local.vm_admin_password
+    // ssh key takes precedence over controller password
+    controller_admin_password = local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
     // terraform is not creating the implicit dependency on the controller module
     // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
     // to work around, add the explicit dependency
     depends_on = [module.vfxtcontroller]
     
-    resource_group = local.vfxt_resource_group_name
     location = local.location
-    network_resource_group = local.network_resource_group_name
-    network_name = module.network.vnet_name
-    subnet_name = module.network.cloud_cache_subnet_name
+    azure_resource_group = local.vfxt_resource_group_name
+    azure_network_resource_group = local.network_resource_group_name
+    azure_network_name = module.network.vnet_name
+    azure_subnet_name = module.network.cloud_cache_subnet_name
     vfxt_cluster_name = local.vfxt_cluster_name
     vfxt_admin_password = local.vfxt_cluster_password
     vfxt_node_count = 3
