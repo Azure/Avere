@@ -3,7 +3,9 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
@@ -20,12 +22,14 @@ func resourceVfxt() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"controller_address": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotWhiteSpace,
 			},
 			"controller_admin_username": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotWhiteSpace,
 			},
 			"controller_admin_password": {
 				Type: schema.TypeString,
@@ -33,25 +37,42 @@ func resourceVfxt() *schema.Resource {
 				Optional:  true,
 				Sensitive: true,
 			},
-			"resource_group": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"location": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotWhiteSpace,
 			},
-			"network_resource_group": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+			"platform": {
+				Type:         schema.TypeString,
+				Default:      PlatformAzure,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotWhiteSpace,
 			},
-			"network_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+			"azure_resource_group": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotWhiteSpace,
+			},
+			"azure_network_resource_group": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotWhiteSpace,
+			},
+			"azure_network_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotWhiteSpace,
+			},
+			"azure_subnet_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotWhiteSpace,
 			},
 			"proxy_uri": {
 				Type:     schema.TypeString,
@@ -61,11 +82,6 @@ func resourceVfxt() *schema.Resource {
 			"cluster_proxy_uri": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
-			},
-			"subnet_name": {
-				Type:     schema.TypeString,
-				Required: true,
 				ForceNew: true,
 			},
 			"vfxt_cluster_name": {
@@ -157,10 +173,7 @@ func resourceVfxt() *schema.Resource {
 						},
 					},
 				},
-			},
-			"vfxt_os_version": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Set: resourceAvereVfxtCoreFilerReferenceHash,
 			},
 			"vfxt_management_ip": {
 				Type:     schema.TypeString,
@@ -198,14 +211,11 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if err := avereVfxt.CreateVfxt(); err != nil {
+	if err := avereVfxt.Platform.CreateVfxt(avereVfxt); err != nil {
 		return fmt.Errorf("failed to create cluster: %s\n", err)
 	}
 
-	d.Set("vfxt_os_version", avereVfxt.AvereOSVersion)
 	d.Set("vfxt_management_ip", avereVfxt.ManagementIP)
-	d.Set("vserver_ip_addresses", schema.NewSet(schema.HashString, utils.FlattenStringSlice(avereVfxt.VServerIPAddresses)))
-	d.Set("node_names", schema.NewSet(schema.HashString, utils.FlattenStringSlice(avereVfxt.NodeNames)))
 
 	// the management ip will uniquely identify the cluster in the VNET
 	d.SetId(avereVfxt.ManagementIP)
@@ -232,6 +242,28 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceVfxtRead(d *schema.ResourceData, m interface{}) error {
+	avereVfxt, err := fillAvereVfxt(d)
+	if err != nil {
+		return err
+	}
+
+	currentVServerIPAddresses, err := avereVfxt.GetVServerIPAddresses()
+	if err != nil {
+		return fmt.Errorf("error encountered while getting vserver addresses '%v'", err)
+	}
+	avereVfxt.VServerIPAddresses = &currentVServerIPAddresses
+	d.Set("vserver_ip_addresses", schema.NewSet(schema.HashString, utils.FlattenStringSlice(avereVfxt.VServerIPAddresses)))
+
+	nodeNames, err := avereVfxt.GetNodes()
+	if err != nil {
+		return fmt.Errorf("error encountered getting nodes '%v'", err)
+	}
+	avereVfxt.NodeNames = &nodeNames
+	d.Set("node_names", schema.NewSet(schema.HashString, utils.FlattenStringSlice(avereVfxt.NodeNames)))
+	if len(*(avereVfxt.NodeNames)) >= MinNodesCount {
+		d.Set("node_count", len(*(avereVfxt.NodeNames)))
+	}
+
 	return nil
 }
 
@@ -289,19 +321,18 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
-	averevxt, err := fillAvereVfxt(d)
+	averevfxt, err := fillAvereVfxt(d)
 	if err != nil {
 		return err
 	}
 
-	if err := averevxt.DestroyVfxt(); err != nil {
+	if err := averevfxt.Platform.DestroyVfxt(averevfxt); err != nil {
 		return fmt.Errorf("failed to destroy cluster: %s\n", err)
 	}
 
-	d.Set("vfxt_os_version", averevxt.AvereOSVersion)
-	d.Set("vfxt_management_ip", averevxt.ManagementIP)
-	d.Set("vserver_ip_addresses", averevxt.VServerIPAddresses)
-	d.Set("node_names", averevxt.NodeNames)
+	d.Set("vfxt_management_ip", averevfxt.ManagementIP)
+	d.Set("vserver_ip_addresses", averevfxt.VServerIPAddresses)
+	d.Set("node_names", averevfxt.NodeNames)
 
 	// acknowledge deletion of the vfxt
 	d.SetId("")
@@ -310,25 +341,33 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
+	var err error
+
 	controllerAddress := d.Get("controller_address").(string)
 	controllerAdminUsername := d.Get("controller_admin_username").(string)
 	controllerAdminPassword := d.Get("controller_admin_password").(string)
+
 	var authMethod ssh.AuthMethod
 	if len(controllerAdminPassword) > 0 {
 		authMethod = GetPasswordAuthMethod(controllerAdminPassword)
 	} else {
-		var err error
 		authMethod, err = GetKeyFileAuthMethod()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get key file: %s", err)
 		}
 	}
 
-	// get the optional fields
-	var avereOSVersion string
-	if val, ok := d.Get("vfxt_os_version").(string); ok {
-		avereOSVersion = val
+	var iaasPlatform IaasPlatform
+	platform := d.Get("platform").(string)
+	switch platform {
+	case PlatformAzure:
+		if iaasPlatform, err = NewAzureIaasPlatform(d); err != nil {
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("platform '%s' not supported", platform)
 	}
+
 	var managementIP string
 	if val, ok := d.Get("vfxt_management_ip").(string); ok {
 		managementIP = val
@@ -340,17 +379,12 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		controllerAddress,
 		controllerAdminUsername,
 		authMethod,
-		d.Get("resource_group").(string),
-		d.Get("location").(string),
+		iaasPlatform,
 		d.Get("vfxt_cluster_name").(string),
 		d.Get("vfxt_admin_password").(string),
 		d.Get("vfxt_node_count").(int),
-		d.Get("network_resource_group").(string),
-		d.Get("network_name").(string),
-		d.Get("subnet_name").(string),
 		d.Get("proxy_uri").(string),
 		d.Get("cluster_proxy_uri").(string),
-		avereOSVersion,
 		managementIP,
 		utils.ExpandStringSlice(vServerIPAddressesRaw),
 		utils.ExpandStringSlice(nodeNamesRaw),
@@ -358,7 +392,6 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 }
 
 func createGlobalSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
-	// apply the global custom settings
 	for _, v := range d.Get("global_custom_settings").(*schema.Set).List() {
 		if err := avereVfxt.CreateCustomSetting(v.(string)); err != nil {
 			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", v.(string), err)
@@ -368,7 +401,6 @@ func createGlobalSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 }
 
 func deleteGlobalSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
-	// update the global customer settings
 	if d.HasChange("global_custom_settings") {
 		old, new := d.GetChange("global_custom_settings")
 		os := old.(*schema.Set)
@@ -480,6 +512,7 @@ func createJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 	if err != nil {
 		return err
 	}
+
 	// get the map of existing junctions
 	existingJunctions, err := averevfxt.GetExistingJunctions()
 	if err != nil {
@@ -546,9 +579,9 @@ func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 		fqdnOrPrimaryIp := input["fqdn_or_primary_ip"].(string)
 		cachePolicy := input["cache_policy"].(string)
 		customSettingsRaw := input["custom_settings"].(*schema.Set).List()
-		customSettings := make([]string, len(customSettingsRaw), len(customSettingsRaw))
+		customSettings := make([]*CustomSetting, len(customSettingsRaw), len(customSettingsRaw))
 		for i, v := range customSettingsRaw {
-			customSettings[i] = v.(string)
+			customSettings[i] = initializeCustomSetting(v.(string))
 		}
 		// verify no duplicates
 		if _, ok := results[name]; ok {
@@ -588,4 +621,37 @@ func expandJunctions(l []interface{}) (map[string]*Junction, error) {
 		}
 	}
 	return results, nil
+}
+
+func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
+	var buf bytes.Buffer
+
+	if m, ok := v.(map[string]interface{}); ok {
+		if v, ok := m["name"]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m["fqdn_or_primary_ip"]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m["cache_policy"]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m["custom_settings"]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(*schema.Set).List()))
+		}
+		if v, ok := m["junction"].([]interface{}); ok {
+			for _, j := range v {
+				if m, ok := j.(map[string]interface{}); ok {
+					if v2, ok := m["namespace_path"]; ok {
+						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
+					}
+					if v2, ok := m["core_filer_export"]; ok {
+						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
+					}
+				}
+			}
+		}
+	}
+
+	return hashcode.String(buf.String())
 }
