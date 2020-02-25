@@ -61,7 +61,6 @@ module "vfxtcontroller" {
     virtual_network_subnet_name = module.network.cloud_cache_subnet_name
 }
 
-// the vfxt
 resource "avere_vfxt" "vfxt" {
     controller_address = module.vfxtcontroller.controller_address
     controller_admin_username = module.vfxtcontroller.controller_username
@@ -80,11 +79,25 @@ resource "avere_vfxt" "vfxt" {
     vfxt_cluster_name = local.vfxt_cluster_name
     vfxt_admin_password = local.vfxt_cluster_password
     vfxt_node_count = 3
+    global_custom_settings = [
+        "vcm.disableReadAhead AB 1",
+        "cluster.ctcConnMult CE 24",
+        "cluster.CtcBackEndTimeout KO 220000000",
+        "cluster.NfsBackEndTimeout VO 100000000",
+        "cluster.NfsFrontEndCwnd EK 1",
+    ]
 
     core_filer {
         name = "nfs1"
         fqdn_or_primary_ip = module.nasfiler1.primary_ip
         cache_policy = "Clients Bypassing the Cluster"
+        custom_settings = [
+            "client_rt_preferred FE 524288",
+            "client_wt_preferred NO 524288",
+            "nfsConnMult YW 20",
+            "autoWanOptimize YF 2",
+            "always_forward OZ 1",
+        ]
         junction {
             namespace_path = "/nfs1data"
             core_filer_export = module.nasfiler1.core_filer_export
@@ -96,4 +109,4 @@ resource "avere_vfxt" "vfxt" {
         }
         */
     }
-} 
+}

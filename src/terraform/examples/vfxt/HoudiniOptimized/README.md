@@ -1,8 +1,8 @@
-# Avere vFXT with 3 Filers
+# Avere vFXT with 1 Filer optimized for Houdini
 
-This examples configures a render network, controller, and vfxt with 3 filers as shown in the diagram below:
+This examples configures a render network, controller, and vfxt with 1 filer as shown in the diagram below.  The vFXT in this example has custom settings so that the vFXT and the core filer custom configuration is optimized for Houdini:
 
-![The architecture](../../../../../docs/images/terraform/3filers.png)
+![The architecture](../../../../../docs/images/terraform/1filer.png)
 
 ## Deployment Instructions
 
@@ -33,7 +33,7 @@ echo "src/terraform/*" >> .git/info/sparse-checkout
 git pull origin master
 ```
 
-6. `cd src/terraform/examples/vfxt/3-filers`
+6. `cd src/terraform/examples/vfxt/1-filer`
 
 7. edit the local variables section of `main.tf`, to customize to your preferences
 
