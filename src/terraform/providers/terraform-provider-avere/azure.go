@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 	"time"
@@ -145,8 +146,9 @@ func (a Azure) verifyAzLogin(avereVfxt *AvereVfxt) error {
 	for retries := 0; retries < AzLoginRetryCount; retries++ {
 		if _, _, err = SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, verifyLoginCommand); err == nil {
 			// success
-			err = nil
 			break
+		} else {
+			log.Printf("[ERROR] [%d/%d] SSH Failed with %v", retries, AzLoginRetryCount, err)
 		}
 		time.Sleep(AzLoginSleepSeconds * time.Second)
 	}
