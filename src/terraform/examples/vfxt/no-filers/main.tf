@@ -5,6 +5,8 @@ locals {
     // use either SSH Key data or admin password, if ssh_key_data is specified
     // then admin_password is ignored
     vm_admin_password = "PASSWORD"
+    // if you use SSH key, ensure you have ~/.ssh/id_rsa with permission 600
+    // populated where you are running terraform
     vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
 
     // network details
