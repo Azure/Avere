@@ -79,13 +79,13 @@ func (a *AvereVfxt) ScaleCluster(previousNodeCount int, newNodeCount int) error 
 
 	if newNodeCount > previousNodeCount {
 		// scale up the cluster
-		log.Printf("vfxt: scale up cluster %d=>%d", previousNodeCount, newNodeCount)
+		log.Printf("[INFO] vfxt: scale up cluster %d=>%d", previousNodeCount, newNodeCount)
 		if err := a.scaleUpCluster(newNodeCount); err != nil {
 			return fmt.Errorf("error encountered while scaling up '%v'", err)
 		}
 	} else {
 		// scale down the cluster
-		log.Printf("vfxt: scale down cluster %d=>%d", previousNodeCount, newNodeCount)
+		log.Printf("[INFO] vfxt: scale down cluster %d=>%d", previousNodeCount, newNodeCount)
 		if err := a.scaleDownCluster(newNodeCount); err != nil {
 			return fmt.Errorf("error encountered while scaling down '%v'", err)
 		}
@@ -234,7 +234,7 @@ func (a *AvereVfxt) EnsureClusterStable() error {
 					continue
 				default:
 					if activity.Percent != CompletedPercent {
-						log.Printf("vfxt: cluster still has running activity %v", activity)
+						log.Printf("[INFO] vfxt: cluster still has running activity %v", activity)
 						healthy = false
 						break
 					}
@@ -251,7 +251,7 @@ func (a *AvereVfxt) EnsureClusterStable() error {
 			for _, alert := range alerts {
 				// ignore green and yellow alerts
 				if alert.Severity != AlertSeverityGreen && alert.Severity != AlertSeverityYellow {
-					log.Printf("vfxt: cluster still has active alert %v", alert)
+					log.Printf("[WARN] [%d/%d] vfxt: cluster still has active alert %v", retries, ClusterStableRetryCount, alert)
 					healthy = false
 					break
 				}
@@ -266,6 +266,7 @@ func (a *AvereVfxt) EnsureClusterStable() error {
 			}
 			for _, node := range nodes {
 				if node.State != NodeUp {
+					log.Printf("[WARN] [%d/%d] node %v not up and in state %v", retries, ClusterStableRetryCount, node, node.State)
 					healthy = false
 					break
 				}
@@ -274,7 +275,7 @@ func (a *AvereVfxt) EnsureClusterStable() error {
 
 		if healthy {
 			// the cluster is stable
-			return nil
+			break
 		}
 
 		if retries > ClusterStableRetryCount {
@@ -282,6 +283,7 @@ func (a *AvereVfxt) EnsureClusterStable() error {
 		}
 		time.Sleep(ClusterStableRetrySleepSeconds * time.Second)
 	}
+	return nil
 }
 
 func (a *AvereVfxt) CreateCustomSetting(customSetting string) error {
@@ -401,7 +403,7 @@ func (a *AvereVfxt) CreateCoreFiler(corefiler *CoreFiler) error {
 	if _, err := a.AvereCommand(a.getCreateFilerCommand(corefiler)); err != nil {
 		return err
 	}
-	log.Printf("vfxt: ensure stable cluster after adding core filer")
+	log.Printf("[INFO] vfxt: ensure stable cluster after adding core filer")
 	if err := a.EnsureClusterStable(); err != nil {
 		return err
 	}
@@ -452,10 +454,10 @@ func (a *AvereVfxt) AddCoreFilerCustomSettings(corefiler *CoreFiler) error {
 }
 
 func (a *AvereVfxt) RemoveCoreFilerCustomSettings(corefiler *CoreFiler) error {
-	// ensure the internal name exists
+	// ensure the internal name (mass) exists
 	a.EnsureInternalName(corefiler)
 
-	// get the mass custom settings
+	// get the custom settings associated with the mass
 	existingCustomSettings, err := a.GetCoreFilerCustomSettings(corefiler.InternalName)
 	if err != nil {
 		return err
@@ -463,8 +465,11 @@ func (a *AvereVfxt) RemoveCoreFilerCustomSettings(corefiler *CoreFiler) error {
 
 	newSettingsSet := make(map[string]*CustomSetting)
 	for _, v := range corefiler.CustomSettings {
-		customSettingStr := getCoreFilerCustomSettingName(corefiler.InternalName, v.Name)
-		newSettingsSet[getCustomSettingName(customSettingStr)] = initializeCustomSetting(customSettingStr)
+		// fix the core filer settings by adding the mass
+		customSetting := CustomSetting{}
+		customSetting = *v
+		customSetting.Name = getCoreFilerCustomSettingName(corefiler.InternalName, customSetting.Name)
+		newSettingsSet[customSetting.Name] = &customSetting
 	}
 
 	// remove any that have changed or no longer exist
@@ -475,7 +480,11 @@ func (a *AvereVfxt) RemoveCoreFilerCustomSettings(corefiler *CoreFiler) error {
 			if (*v).Name == (*(newSettingsSet[k])).Name && (*v).Value == (*(newSettingsSet[k])).Value {
 				// the setting still exists
 				continue
+			} else {
+				log.Printf("[TRACE] Settings are different '%v' '%v'", *v, *(newSettingsSet[k]))
 			}
+		} else {
+			log.Printf("[TRACE] setting does not exist '%v'", *v)
 		}
 		if _, err := a.AvereCommand(a.getRemoveCoreFilerSettingCommand(corefiler, v.Name)); err != nil {
 			return err
@@ -505,18 +514,20 @@ func (a *AvereVfxt) DeleteCoreFiler(corefilerName string) error {
 		}
 		if !exists {
 			// the filer has been deleted
-			log.Printf("vfxt: ensure stable cluster after deleting core filer")
-			if err := a.EnsureClusterStable(); err != nil {
-				return err
-			}
-			return nil
+			break
 		}
+		log.Printf("[INFO] [%d/%d] filer %s still deleting", retries, FilerRetryCount, corefilerName)
 
 		if retries > FilerRetryCount {
 			return fmt.Errorf("Failure to delete after %d retries trying to delete filer %s", retries, corefilerName)
 		}
 		time.Sleep(FilerRetrySleepSeconds * time.Second)
 	}
+	log.Printf("[INFO] vfxt: ensure stable cluster after deleting core filer")
+	if err := a.EnsureClusterStable(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (a *AvereVfxt) GetExistingJunctions() (map[string]*Junction, error) {
@@ -547,7 +558,7 @@ func (a *AvereVfxt) CreateJunction(junction *Junction) error {
 	if _, err := a.AvereCommandWithCorrection(a.getCreateJunctionCommand(junction), listExports); err != nil {
 		return err
 	}
-	log.Printf("vfxt: ensure stable cluster after creating a junction")
+	log.Printf("[INFO] vfxt: ensure stable cluster after creating a junction")
 	if err := a.EnsureClusterStable(); err != nil {
 		return err
 	}
@@ -567,18 +578,20 @@ func (a *AvereVfxt) DeleteJunction(junctionNameSpacePath string) error {
 
 		if _, ok := junctions[junctionNameSpacePath]; !ok {
 			// the junction is gone
-			log.Printf("vfxt: ensure stable cluster after deleting junction")
-			if err := a.EnsureClusterStable(); err != nil {
-				return err
-			}
-			return nil
+			break
 		}
+		log.Printf("[INFO] [%d/%d] junction %s still deleting", retries, FilerRetryCount, junctionNameSpacePath)
 
 		if retries > FilerRetryCount {
 			return fmt.Errorf("Failure to delete after %d retries trying to delete junction %s", retries, junctionNameSpacePath)
 		}
 		time.Sleep(FilerRetrySleepSeconds * time.Second)
 	}
+	log.Printf("[INFO] vfxt: ensure stable cluster after deleting junction")
+	if err := a.EnsureClusterStable(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (a *AvereVfxt) AvereCommandWithCorrection(cmd string, correctiveAction func() error) (string, error) {
@@ -590,6 +603,7 @@ func (a *AvereVfxt) AvereCommandWithCorrection(cmd string, correctiveAction func
 			result = stdoutBuf.String()
 			break
 		}
+		log.Printf("[WARN] [%d/%d] SSH Command to %s failed with '%v' ", retries, AverecmdRetryCount, a.ControllerAddress, err)
 		if isAverecmdNotRetryable(stdoutBuf, stderrBuf) {
 			// failure not retryable
 			return "", fmt.Errorf("Non retryable error applying command: '%s' '%s'", stdoutBuf.String(), stderrBuf.String())
@@ -639,15 +653,22 @@ func (a *AvereVfxt) scaleUpCluster(newNodeCount int) error {
 		}
 		// check if cluster sizing is complete
 		if currentNodeCount >= newNodeCount {
-			log.Printf("vfxt: node count %d >= %d", currentNodeCount, newNodeCount)
+			log.Printf("[INFO] vfxt: node count %d >= %d", currentNodeCount, newNodeCount)
 			return nil
 		}
-		log.Printf("vfxt: add node to cluster %d (target %d)", currentNodeCount, newNodeCount)
+		log.Printf("[INFO] vfxt: add node to cluster %d (target %d)", currentNodeCount, newNodeCount)
+
+		// the cluster should be stable before and after the addition of the cluster node
+		if err = a.EnsureClusterStable(); err != nil {
+			return err
+		}
+
 		// only add a single node at a time
 		err = a.Platform.AddIaasNodeToCluster(a)
 		if err != nil {
 			return err
 		}
+
 		// wait until the node is added
 		targetNodeCount := currentNodeCount + 1
 		for retries := 0; ; retries++ {
@@ -663,7 +684,7 @@ func (a *AvereVfxt) scaleUpCluster(newNodeCount int) error {
 			}
 			time.Sleep(NodeChangeRetrySleepSeconds * time.Second)
 		}
-		log.Printf("vfxt: ensure stable cluster")
+		log.Printf("[INFO] vfxt: ensure stable cluster")
 		err = a.EnsureClusterStable()
 		if err != nil {
 			return err
@@ -689,6 +710,12 @@ func (a *AvereVfxt) scaleDownCluster(newNodeCount int) error {
 		if err != nil {
 			return err
 		}
+
+		// the cluster should be stable before and after the removal of the cluster node
+		if err = a.EnsureClusterStable(); err != nil {
+			return err
+		}
+
 		if err = a.removeNodeFromCluster(lastNode); err != nil {
 			return err
 		}

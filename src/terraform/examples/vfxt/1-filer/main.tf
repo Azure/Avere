@@ -1,6 +1,6 @@
 // customize the simple VM by adjusting the following local variables
 locals {
-    // region
+    // the region of the deployment
     location = "eastus"
     // use either SSH Key data or admin password, if ssh_key_data is specified
     // then admin_password is ignored
@@ -15,6 +15,7 @@ locals {
     
     // vfxt details
     vfxt_resource_group_name = "vfxt_resource_group"
+    // if you are running a locked down network, set controller_add_public_ip to false
     controller_add_public_ip = true
     vfxt_cluster_name = "vfxt"
     vfxt_cluster_password = "VFXT_PASSWORD"
@@ -63,7 +64,7 @@ resource "avere_vfxt" "vfxt" {
     controller_address = module.vfxtcontroller.controller_address
     controller_admin_username = module.vfxtcontroller.controller_username
     // ssh key takes precedence over controller password
-    controller_admin_password = local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
+    controller_admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
     // terraform is not creating the implicit dependency on the controller module
     // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
     // to work around, add the explicit dependency

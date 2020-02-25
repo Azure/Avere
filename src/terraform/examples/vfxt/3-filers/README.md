@@ -12,7 +12,9 @@ To run the example, execute the following instructions.  This assumes use of Azu
 
 2. Specify your subscription by running this command with your subscription ID:  ```az account set --subscription YOUR_SUBSCRIPTION_ID```
 
-2. If not already installed, run the following commands to install the Avere vFXT provider for Azure:
+3. double check your Avere vFXT pre-requistes, including running `az vm image accept-terms --urn microsoft-avere:vfxt:avere-vfxt-controller:latest`: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs
+
+4. If not already installed, run the following commands to install the Avere vFXT provider for Azure:
 ```bash
 mkdir -p ~/.terraform.d/plugins
 # install the vfxt released binary from https://github.com/Azure/Avere
@@ -20,7 +22,7 @@ wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure
 chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 ```
 
-3. get the terraform examples
+5. get the terraform examples
 ```bash
 mkdir tf
 cd tf
@@ -31,13 +33,13 @@ echo "src/terraform/*" >> .git/info/sparse-checkout
 git pull origin master
 ```
 
-5. `cd src/terraform/examples/vfxt/3-filers`
+6. `cd src/terraform/examples/vfxt/3-filers`
 
-6. edit the local variables section of `main.tf`, to customize to your preferences
+7. edit the local variables section of `main.tf`, to customize to your preferences
 
-7. execute `terraform init` in the directory of `main.tf`.
+8. execute `terraform init` in the directory of `main.tf`.
 
-8. execute `terraform apply -auto-approve` to build the vfxt cluster
+9. execute `terraform apply -auto-approve` to build the vfxt cluster
 
 Once installed you will be able to login and use the vFXT cluster according to the vFXT documentation: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-cluster-gui.
 
