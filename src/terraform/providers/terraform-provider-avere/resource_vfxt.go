@@ -21,86 +21,86 @@ func resourceVfxt() *schema.Resource {
 		Delete: resourceVfxtDelete,
 
 		Schema: map[string]*schema.Schema{
-			"controller_address": {
+			controller_address: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotWhiteSpace,
 			},
-			"controller_admin_username": {
+			controller_admin_username: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotWhiteSpace,
 			},
-			"controller_admin_password": {
+			controller_admin_password: {
 				Type: schema.TypeString,
 				// the ssh key will be used if the password is not specified
 				Optional:  true,
 				Sensitive: true,
 			},
-			"location": {
+			location: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotWhiteSpace,
 			},
-			"platform": {
+			platform: {
 				Type:         schema.TypeString,
 				Default:      PlatformAzure,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotWhiteSpace,
 			},
-			"azure_resource_group": {
+			azure_resource_group: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotWhiteSpace,
 			},
-			"azure_network_resource_group": {
+			azure_network_resource_group: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotWhiteSpace,
 			},
-			"azure_network_name": {
+			azure_network_name: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotWhiteSpace,
 			},
-			"azure_subnet_name": {
+			azure_subnet_name: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotWhiteSpace,
 			},
-			"proxy_uri": {
+			proxy_uri: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"cluster_proxy_uri": {
+			cluster_proxy_uri: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"vfxt_cluster_name": {
+			vfxt_cluster_name: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"vfxt_admin_password": {
+			vfxt_admin_password: {
 				Type:      schema.TypeString,
 				Required:  true,
 				ForceNew:  true,
 				Sensitive: true,
 			},
-			"vfxt_node_count": {
+			vfxt_node_count: {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ValidateFunc: validation.IntBetween(3, 16),
 			},
-			"global_custom_settings": {
+			global_custom_settings: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -109,7 +109,7 @@ func resourceVfxt() *schema.Resource {
 				},
 				Set: schema.HashString,
 			},
-			"vserver_settings": {
+			vserver_settings: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -118,22 +118,22 @@ func resourceVfxt() *schema.Resource {
 				},
 				Set: schema.HashString,
 			},
-			"core_filer": {
+			core_filer: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						core_filer_name: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringIsNotWhiteSpace,
 						},
-						"fqdn_or_primary_ip": {
+						fqdn_or_primary_ip: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringIsNotWhiteSpace,
 						},
-						"cache_policy": {
+						cache_policy: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -144,7 +144,7 @@ func resourceVfxt() *schema.Resource {
 								CachePolicyTransitioningClients,
 							}, false),
 						},
-						"custom_settings": {
+						custom_settings: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Schema{
@@ -153,17 +153,17 @@ func resourceVfxt() *schema.Resource {
 							},
 							Set: schema.HashString,
 						},
-						"junction": {
+						junction: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"namespace_path": {
+									namespace_path: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringIsNotWhiteSpace,
 									},
-									"core_filer_export": {
+									core_filer_export: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringIsNotWhiteSpace,
@@ -175,11 +175,11 @@ func resourceVfxt() *schema.Resource {
 				},
 				Set: resourceAvereVfxtCoreFilerReferenceHash,
 			},
-			"vfxt_management_ip": {
+			vfxt_management_ip: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vserver_ip_addresses": {
+			vserver_ip_addresses: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -187,7 +187,7 @@ func resourceVfxt() *schema.Resource {
 				},
 				Set: schema.HashString,
 			},
-			"node_names": {
+			node_names: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -215,7 +215,7 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("failed to create cluster: %s\n", err)
 	}
 
-	d.Set("vfxt_management_ip", avereVfxt.ManagementIP)
+	d.Set(vfxt_management_ip, avereVfxt.ManagementIP)
 
 	// the management ip will uniquely identify the cluster in the VNET
 	d.SetId(avereVfxt.ManagementIP)
@@ -252,16 +252,16 @@ func resourceVfxtRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("error encountered while getting vserver addresses '%v'", err)
 	}
 	avereVfxt.VServerIPAddresses = &currentVServerIPAddresses
-	d.Set("vserver_ip_addresses", schema.NewSet(schema.HashString, utils.FlattenStringSlice(avereVfxt.VServerIPAddresses)))
+	d.Set(vserver_ip_addresses, schema.NewSet(schema.HashString, utils.FlattenStringSlice(avereVfxt.VServerIPAddresses)))
 
 	nodeNames, err := avereVfxt.GetNodes()
 	if err != nil {
 		return fmt.Errorf("error encountered getting nodes '%v'", err)
 	}
 	avereVfxt.NodeNames = &nodeNames
-	d.Set("node_names", schema.NewSet(schema.HashString, utils.FlattenStringSlice(avereVfxt.NodeNames)))
+	d.Set(node_names, schema.NewSet(schema.HashString, utils.FlattenStringSlice(avereVfxt.NodeNames)))
 	if len(*(avereVfxt.NodeNames)) >= MinNodesCount {
-		d.Set("node_count", len(*(avereVfxt.NodeNames)))
+		d.Set(vfxt_node_count, len(*(avereVfxt.NodeNames)))
 	}
 
 	return nil
@@ -273,7 +273,7 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if d.HasChange("global_custom_settings") {
+	if d.HasChange(global_custom_settings) {
 		if err := deleteGlobalSettings(d, avereVfxt); err != nil {
 			return err
 		}
@@ -282,7 +282,7 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	if d.HasChange("vserver_settings") {
+	if d.HasChange(vserver_settings) {
 		if err := deleteVServerSettings(d, avereVfxt); err != nil {
 			return err
 		}
@@ -292,7 +292,7 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// update the core filers
-	if d.HasChange("core_filer") {
+	if d.HasChange(core_filer) {
 		// delete junctions before delete core filers
 		if err := deleteJunctions(d, avereVfxt); err != nil {
 			return err
@@ -311,7 +311,7 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// scale the cluster if node changed
-	if d.HasChange("vfxt_node_count") {
+	if d.HasChange(vfxt_node_count) {
 		if err := scaleCluster(d, avereVfxt); err != nil {
 			return err
 		}
@@ -330,9 +330,9 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("failed to destroy cluster: %s\n", err)
 	}
 
-	d.Set("vfxt_management_ip", averevfxt.ManagementIP)
-	d.Set("vserver_ip_addresses", averevfxt.VServerIPAddresses)
-	d.Set("node_names", averevfxt.NodeNames)
+	d.Set(vfxt_management_ip, averevfxt.ManagementIP)
+	d.Set(vserver_ip_addresses, averevfxt.VServerIPAddresses)
+	d.Set(node_names, averevfxt.NodeNames)
 
 	// acknowledge deletion of the vfxt
 	d.SetId("")
@@ -343,9 +343,9 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	var err error
 
-	controllerAddress := d.Get("controller_address").(string)
-	controllerAdminUsername := d.Get("controller_admin_username").(string)
-	controllerAdminPassword := d.Get("controller_admin_password").(string)
+	controllerAddress := d.Get(controller_address).(string)
+	controllerAdminUsername := d.Get(controller_admin_username).(string)
+	controllerAdminPassword := d.Get(controller_admin_password).(string)
 
 	var authMethod ssh.AuthMethod
 	if len(controllerAdminPassword) > 0 {
@@ -358,7 +358,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	}
 
 	var iaasPlatform IaasPlatform
-	platform := d.Get("platform").(string)
+	platform := d.Get(platform).(string)
 	switch platform {
 	case PlatformAzure:
 		if iaasPlatform, err = NewAzureIaasPlatform(d); err != nil {
@@ -369,22 +369,22 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	}
 
 	var managementIP string
-	if val, ok := d.Get("vfxt_management_ip").(string); ok {
+	if val, ok := d.Get(vfxt_management_ip).(string); ok {
 		managementIP = val
 	}
-	vServerIPAddressesRaw := d.Get("vserver_ip_addresses").(*schema.Set).List()
-	nodeNamesRaw := d.Get("node_names").(*schema.Set).List()
+	vServerIPAddressesRaw := d.Get(vserver_ip_addresses).(*schema.Set).List()
+	nodeNamesRaw := d.Get(node_names).(*schema.Set).List()
 
 	return NewAvereVfxt(
 		controllerAddress,
 		controllerAdminUsername,
 		authMethod,
 		iaasPlatform,
-		d.Get("vfxt_cluster_name").(string),
-		d.Get("vfxt_admin_password").(string),
-		d.Get("vfxt_node_count").(int),
-		d.Get("proxy_uri").(string),
-		d.Get("cluster_proxy_uri").(string),
+		d.Get(vfxt_cluster_name).(string),
+		d.Get(vfxt_admin_password).(string),
+		d.Get(vfxt_node_count).(int),
+		d.Get(proxy_uri).(string),
+		d.Get(cluster_proxy_uri).(string),
 		managementIP,
 		utils.ExpandStringSlice(vServerIPAddressesRaw),
 		utils.ExpandStringSlice(nodeNamesRaw),
@@ -392,7 +392,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 }
 
 func createGlobalSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
-	for _, v := range d.Get("global_custom_settings").(*schema.Set).List() {
+	for _, v := range d.Get(global_custom_settings).(*schema.Set).List() {
 		if err := avereVfxt.CreateCustomSetting(v.(string)); err != nil {
 			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", v.(string), err)
 		}
@@ -401,8 +401,8 @@ func createGlobalSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 }
 
 func deleteGlobalSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
-	if d.HasChange("global_custom_settings") {
-		old, new := d.GetChange("global_custom_settings")
+	if d.HasChange(global_custom_settings) {
+		old, new := d.GetChange(global_custom_settings)
 		os := old.(*schema.Set)
 		ns := new.(*schema.Set)
 
@@ -417,7 +417,7 @@ func deleteGlobalSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 }
 
 func createVServerSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
-	for _, v := range d.Get("vserver_settings").(*schema.Set).List() {
+	for _, v := range d.Get(vserver_settings).(*schema.Set).List() {
 		if err := avereVfxt.CreateVServerSetting(v.(string)); err != nil {
 			return fmt.Errorf("ERROR: failed to apply VServer setting '%s': %s", v.(string), err)
 		}
@@ -426,8 +426,8 @@ func createVServerSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 }
 
 func deleteVServerSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
-	if d.HasChange("vserver_settings") {
-		old, new := d.GetChange("vserver_settings")
+	if d.HasChange(vserver_settings) {
+		old, new := d.GetChange(vserver_settings)
 		os := old.(*schema.Set)
 		ns := new.(*schema.Set)
 
@@ -442,7 +442,7 @@ func deleteVServerSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 }
 
 func createOrUpdateCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) error {
-	new := d.Get("core_filer")
+	new := d.Get(core_filer)
 	newFilers, err := expandCoreFilers(new.(*schema.Set).List())
 	if err != nil {
 		return err
@@ -481,7 +481,7 @@ func createOrUpdateCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) erro
 }
 
 func deleteCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) error {
-	new := d.Get("core_filer")
+	new := d.Get(core_filer)
 	newFilers, err := expandCoreFilers(new.(*schema.Set).List())
 	if err != nil {
 		return err
@@ -507,7 +507,7 @@ func deleteCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 }
 
 func createJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
-	new := d.Get("core_filer")
+	new := d.Get(core_filer)
 	newJunctions, err := expandJunctions(new.(*schema.Set).List())
 	if err != nil {
 		return err
@@ -534,7 +534,7 @@ func createJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 }
 
 func deleteJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
-	new := d.Get("core_filer")
+	new := d.Get(core_filer)
 	newJunctions, err := expandJunctions(new.(*schema.Set).List())
 	if err != nil {
 		return err
@@ -560,7 +560,7 @@ func deleteJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 }
 
 func scaleCluster(d *schema.ResourceData, averevfxt *AvereVfxt) error {
-	oldRaw, newRaw := d.GetChange("vfxt_node_count")
+	oldRaw, newRaw := d.GetChange(vfxt_node_count)
 	previousCount := oldRaw.(int)
 	newCount := newRaw.(int)
 	if err := averevfxt.ScaleCluster(previousCount, newCount); err != nil {
@@ -575,10 +575,10 @@ func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 		input := v.(map[string]interface{})
 
 		// get the properties
-		name := input["name"].(string)
-		fqdnOrPrimaryIp := input["fqdn_or_primary_ip"].(string)
-		cachePolicy := input["cache_policy"].(string)
-		customSettingsRaw := input["custom_settings"].(*schema.Set).List()
+		name := input[core_filer_name].(string)
+		fqdnOrPrimaryIp := input[fqdn_or_primary_ip].(string)
+		cachePolicy := input[cache_policy].(string)
+		customSettingsRaw := input[custom_settings].(*schema.Set).List()
 		customSettings := make([]*CustomSetting, len(customSettingsRaw), len(customSettingsRaw))
 		for i, v := range customSettingsRaw {
 			customSettings[i] = initializeCustomSetting(v.(string))
@@ -604,14 +604,14 @@ func expandJunctions(l []interface{}) (map[string]*Junction, error) {
 	results := make(map[string]*Junction)
 	for _, v := range l {
 		input := v.(map[string]interface{})
-		coreFilerName := input["name"].(string)
-		junctions := input["junction"].(*schema.Set).List()
+		coreFilerName := input[core_filer_name].(string)
+		junctions := input[junction].(*schema.Set).List()
 		for _, jv := range junctions {
 			junctionRaw := jv.(map[string]interface{})
 			junction := &Junction{
-				NameSpacePath:   junctionRaw["namespace_path"].(string),
+				NameSpacePath:   junctionRaw[namespace_path].(string),
 				CoreFilerName:   coreFilerName,
-				CoreFilerExport: junctionRaw["core_filer_export"].(string),
+				CoreFilerExport: junctionRaw[core_filer_export].(string),
 			}
 			// verify no duplicates
 			if _, ok := results[junction.NameSpacePath]; ok {
@@ -627,25 +627,25 @@ func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
 	var buf bytes.Buffer
 
 	if m, ok := v.(map[string]interface{}); ok {
-		if v, ok := m["name"]; ok {
+		if v, ok := m[core_filer_name]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
-		if v, ok := m["fqdn_or_primary_ip"]; ok {
+		if v, ok := m[fqdn_or_primary_ip]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
-		if v, ok := m["cache_policy"]; ok {
+		if v, ok := m[cache_policy]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
-		if v, ok := m["custom_settings"]; ok {
+		if v, ok := m[custom_settings]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(*schema.Set).List()))
 		}
-		if v, ok := m["junction"].([]interface{}); ok {
+		if v, ok := m[junction].([]interface{}); ok {
 			for _, j := range v {
 				if m, ok := j.(map[string]interface{}); ok {
-					if v2, ok := m["namespace_path"]; ok {
+					if v2, ok := m[namespace_path]; ok {
 						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
 					}
-					if v2, ok := m["core_filer_export"]; ok {
+					if v2, ok := m[core_filer_export]; ok {
 						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
 					}
 				}

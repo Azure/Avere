@@ -41,24 +41,24 @@ var matchVfxtNotFound = regexp.MustCompile(`(vfxt:ERROR - Cluster not found)`)
 func NewAzureIaasPlatform(d *schema.ResourceData) (IaasPlatform, error) {
 	// confirm rg and vnet subnet values were set as these are specified
 	// as optional
-	if _, ok := d.GetOk("azure_resource_group"); !ok {
-		return nil, fmt.Errorf("Error: 'azure_resource_group is not set")
+	if _, ok := d.GetOk(azure_resource_group); !ok {
+		return nil, fmt.Errorf("Error: '%s is not set", azure_resource_group)
 	}
-	if _, ok := d.GetOk("azure_network_resource_group"); !ok {
-		return nil, fmt.Errorf("Error: 'azure_network_resource_group is not set")
+	if _, ok := d.GetOk(azure_network_resource_group); !ok {
+		return nil, fmt.Errorf("Error: '%s is not set", azure_network_resource_group)
 	}
-	if _, ok := d.GetOk("azure_network_name"); !ok {
-		return nil, fmt.Errorf("Error: 'azure_network_name is not set")
+	if _, ok := d.GetOk(azure_network_name); !ok {
+		return nil, fmt.Errorf("Error: '%s is not set", azure_network_name)
 	}
-	if _, ok := d.GetOk("azure_subnet_name"); !ok {
-		return nil, fmt.Errorf("Error: 'azure_subnet_name is not set")
+	if _, ok := d.GetOk(azure_subnet_name); !ok {
+		return nil, fmt.Errorf("Error: '%s is not set", azure_subnet_name)
 	}
 	return Azure{
-		ResourceGroup:        d.Get("azure_resource_group").(string),
-		Location:             d.Get("location").(string),
-		NetworkResourceGroup: d.Get("azure_network_resource_group").(string),
-		NetworkName:          d.Get("azure_network_name").(string),
-		SubnetName:           d.Get("azure_subnet_name").(string),
+		ResourceGroup:        d.Get(azure_resource_group).(string),
+		Location:             d.Get(location).(string),
+		NetworkResourceGroup: d.Get(azure_network_resource_group).(string),
+		NetworkName:          d.Get(azure_network_name).(string),
+		SubnetName:           d.Get(azure_subnet_name).(string),
 	}, nil
 }
 
