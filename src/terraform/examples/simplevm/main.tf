@@ -22,6 +22,11 @@ module "network" {
     location = local.location
 }
 
+provider "azurerm" {
+    version = "~>2.0.0"
+    features {}
+}
+
 data "azurerm_subnet" "vnet" {
     name                 = module.network.cloud_cache_subnet_name
     virtual_network_name = module.network.vnet_name
@@ -44,8 +49,8 @@ resource "azurerm_public_ip" "vm" {
 
 resource "azurerm_network_interface" "vm" {
     name                = "${local.unique_name}-nic"
-    resource_group_name = azurerm_resource_group.vm.name
     location            = local.location
+    resource_group_name = azurerm_resource_group.vm.name
 
     ip_configuration {
         name                          = "${local.unique_name}-ipconfig"
@@ -55,54 +60,45 @@ resource "azurerm_network_interface" "vm" {
     }
 }
 
-resource "azurerm_virtual_machine" "vm" {
+resource "azurerm_linux_virtual_machine" "vm" {
     name = "${local.unique_name}-vm"
     location = local.location
     resource_group_name = azurerm_resource_group.vm.name
     network_interface_ids = [azurerm_network_interface.vm.id]
-    vm_size = local.vm_size
-    delete_os_disk_on_termination = true
-
-    storage_os_disk {
+    computer_name = local.unique_name
+    size = local.vm_size
+    
+    os_disk {
         name              = "${local.unique_name}-osdisk"
         caching           = "ReadWrite"
-        create_option     = "FromImage"
-        managed_disk_type = "Standard_LRS"
+        storage_account_type  = "Standard_LRS"
     }
 
-    storage_image_reference {
+    source_image_reference {
         publisher = "OpenLogic"
         offer     = "CentOS"
         sku       = "7-CI"
         version   = "latest"
     }
 
-    dynamic "os_profile" {
-        for_each = (local.ssh_key_data == null || local.ssh_key_data == "") && local.admin_password != null && local.admin_password != "" ? [local.admin_password] : [null] 
-        content {
-            computer_name  = local.unique_name
-            admin_username = local.admin_username
-            admin_password = os_profile.value
-        }
-    }
-
-    // dynamic block when password is specified
-    dynamic "os_profile_linux_config" {
-        for_each = (local.ssh_key_data == null || local.ssh_key_data == "") && local.admin_password != null && local.admin_password != "" ? [local.admin_password] : [] 
-        content {
-            disable_password_authentication = false
-        }
-    }
-
-    // dynamic block when SSH key is specified
-    dynamic "os_profile_linux_config" {
+    admin_username = local.admin_username
+    admin_password = (local.ssh_key_data == null || local.ssh_key_data == "") && local.admin_password != null && local.admin_password != "" ? local.admin_password : null
+    disable_password_authentication = (local.ssh_key_data == null || local.ssh_key_data == "") && local.admin_password != null && local.admin_password != "" ? false : true
+    dynamic "admin_ssh_key" {
         for_each = local.ssh_key_data == null || local.ssh_key_data == "" ? [] : [local.ssh_key_data]
         content {
-            disable_password_authentication = true
-            ssh_keys {
-                path     = "/home/${local.admin_username}/.ssh/authorized_keys"
-                key_data = os_profile_linux_config.value
-            }
+            username   = local.admin_username
+            public_key = admin_ssh_key.value
         }
     }
 }
+
+output "controller_username" {
+  value = "${local.admin_username}"
+}
+
+output "controller_address" {
+  value = "${local.add_public_ip ? azurerm_public_ip.vm[0].ip_address : azurerm_network_interface.vm.ip_configuration[0].private_ip_address}"
+}
+
+
