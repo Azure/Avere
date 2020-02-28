@@ -43,7 +43,7 @@ resource "azurerm_resource_group" "nfsfiler" {
 
 // the ephemeral filer
 module "nasfiler1" {
-    source = "../../../modules/ephemeral_filer"
+    source = "../../../modules/nfs_filer"
     resource_group_name = azurerm_resource_group.nfsfiler.name
     location = azurerm_resource_group.nfsfiler.location
     admin_username = local.vm_admin_username
