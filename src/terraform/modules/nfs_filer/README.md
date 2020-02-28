@@ -17,12 +17,12 @@ az account set --subscription AZURE_SUBSCRIPTION_ID
 # create nasfiler directory
 mkdir -p nasfiler
 cd nasfiler
-curl -o cloud-init.tpl https://raw.githubusercontent.com/Azure/Avere/master/src/terraform/modules/ephemeral_filer/installnfs.sh
-curl -o cloud-init.tpl https://raw.githubusercontent.com/Azure/Avere/master/src/terraform/modules/ephemeral_filer/cloud-init.tpl
-curl -o main.tf https://raw.githubusercontent.com/Azure/Avere/master/src/terraform/modules/ephemeral_filer/main.tf
-curl -o outputs.tf https://raw.githubusercontent.com/Azure/Avere/master/src/terraform/modules/ephemeral_filer/outputs.tf
-curl -o terraform.tfvars https://raw.githubusercontent.com/Azure/Avere/master/src/terraform/modules/ephemeral_filer/terraform.tfvars
-curl -o variables.tf https://raw.githubusercontent.com/Azure/Avere/master/src/terraform/modules/ephemeral_filer/variables.tf
+curl -o cloud-init.tpl https://raw.githubusercontent.com/Azure/Avere/master/src/terraform/modules/nfs_filer/installnfs.sh
+curl -o cloud-init.tpl https://raw.githubusercontent.com/Azure/Avere/master/src/terraform/modules/nfs_filer/cloud-init.tpl
+curl -o main.tf https://raw.githubusercontent.com/Azure/Avere/master/src/terraform/modules/nfs_filer/main.tf
+curl -o outputs.tf https://raw.githubusercontent.com/Azure/Avere/master/src/terraform/modules/nfs_filer/outputs.tf
+curl -o terraform.tfvars https://raw.githubusercontent.com/Azure/Avere/master/src/terraform/modules/nfs_filer/terraform.tfvars
+curl -o variables.tf https://raw.githubusercontent.com/Azure/Avere/master/src/terraform/modules/nfs_filer/variables.tf
 ```
 
 4. edit file `terraform.tfvars`, and set the correct values

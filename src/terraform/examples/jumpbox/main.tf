@@ -16,15 +16,15 @@ locals {
     ssh_key_data = null //"ssh-rsa AAAAB3...."
 }
 
+provider "azurerm" {
+    version = "~>2.0.0"
+    features {}
+}
+
 module "network" {
     source = "../../modules/render_network"
     resource_group_name = local.network_resource_group_name
     location = local.location
-}
-
-provider "azurerm" {
-    version = "~>2.0.0"
-    features {}
 }
 
 data "azurerm_subnet" "vnet" {
