@@ -2,6 +2,7 @@
 locals {
     // the region of the deployment
     location = "eastus"
+    vm_admin_username = "azureuser"
     // use either SSH Key data or admin password, if ssh_key_data is specified
     // then admin_password is ignored
     vm_admin_password = "PASSWORD"
@@ -23,6 +24,11 @@ locals {
     vfxt_cluster_password = "VFXT_PASSWORD"
 }
 
+provider "azurerm" {
+    version = "~>2.0.0"
+    features {}
+}
+
 // the render network
 module "network" {
     source = "../../../modules/render_network"
@@ -30,11 +36,17 @@ module "network" {
     location = local.location
 }
 
+resource "azurerm_resource_group" "nfsfiler" {
+  name     = local.filer_resource_group_name
+  location = local.location
+}
+
 // the ephemeral filer
 module "nasfiler1" {
     source = "../../../modules/ephemeral_filer"
-    resource_group_name = local.filer_resource_group_name
-    location = local.location
+    resource_group_name = azurerm_resource_group.nfsfiler.name
+    location = azurerm_resource_group.nfsfiler.location
+    admin_username = local.vm_admin_username
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     vm_size = "Standard_D2s_v3"
@@ -48,8 +60,9 @@ module "nasfiler1" {
 
 module "nasfiler2" {
     source = "../../../modules/ephemeral_filer"
-    resource_group_name = local.filer_resource_group_name
-    location = local.location
+    resource_group_name = azurerm_resource_group.nfsfiler.name
+    location = azurerm_resource_group.nfsfiler.location
+    admin_username = local.vm_admin_username
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     vm_size = "Standard_D2s_v3"
@@ -63,8 +76,9 @@ module "nasfiler2" {
 
 module "nasfiler3" {
     source = "../../../modules/ephemeral_filer"
-    resource_group_name = local.filer_resource_group_name
-    location = local.location
+    resource_group_name = azurerm_resource_group.nfsfiler.name
+    location = azurerm_resource_group.nfsfiler.location
+    admin_username = local.vm_admin_username
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     vm_size = "Standard_D2s_v3"
@@ -81,6 +95,7 @@ module "vfxtcontroller" {
     source = "../../../modules/controller"
     resource_group_name = local.vfxt_resource_group_name
     location = local.location
+    admin_username = local.vm_admin_username
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.controller_add_public_ip
@@ -175,4 +190,20 @@ resource "avere_vfxt" "vfxt" {
             core_filer_export = module.nasfiler3.core_filer_export
         }
     }
+}
+
+output "controller_username" {
+  value = module.vfxtcontroller.controller_username
+}
+
+output "controller_address" {
+  value = module.vfxtcontroller.controller_address
+}
+
+output "management_ip" {
+    value = avere_vfxt.vfxt.vfxt_management_ip
+}
+
+output "ssh_command_with_avere_tunnel" {
+    value = "ssh -L443:${avere_vfxt.vfxt.vfxt_management_ip}:443 ${module.vfxtcontroller.controller_username}@${module.vfxtcontroller.controller_address}"
 }

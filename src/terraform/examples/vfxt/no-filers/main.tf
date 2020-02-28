@@ -2,6 +2,7 @@
 locals {
     // the region of the deployment
     location = "eastus"
+    vm_admin_username = "azureuser"
     // use either SSH Key data or admin password, if ssh_key_data is specified
     // then admin_password is ignored
     vm_admin_password = "PASSWORD"
@@ -20,6 +21,11 @@ locals {
     vfxt_cluster_password = "VFXT_PASSWORD"
 }
 
+provider "azurerm" {
+    version = "~>2.0.0"
+    features {}
+}
+
 // the render network
 module "network" {
     source = "../../../modules/render_network"
@@ -32,6 +38,7 @@ module "vfxtcontroller" {
     source = "../../../modules/controller"
     resource_group_name = local.vfxt_resource_group_name
     location = local.location
+    admin_username = local.vm_admin_username
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.controller_add_public_ip
@@ -62,3 +69,19 @@ resource "avere_vfxt" "vfxt" {
     vfxt_admin_password = local.vfxt_cluster_password
     vfxt_node_count = 3
 } 
+
+output "controller_username" {
+  value = module.vfxtcontroller.controller_username
+}
+
+output "controller_address" {
+  value = module.vfxtcontroller.controller_address
+}
+
+output "management_ip" {
+    value = avere_vfxt.vfxt.vfxt_management_ip
+}
+
+output "ssh_command_with_avere_tunnel" {
+    value = "ssh -L443:${avere_vfxt.vfxt.vfxt_management_ip}:443 ${module.vfxtcontroller.controller_username}@${module.vfxtcontroller.controller_address}"
+}

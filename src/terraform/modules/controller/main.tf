@@ -1,7 +1,3 @@
-provider "azurerm" {
-    version = "~>1.43.0"
-}
-
 data "azurerm_subnet" "vnet" {
   name                 = var.virtual_network_subnet_name
   virtual_network_name = var.virtual_network_name
@@ -49,26 +45,26 @@ resource "azurerm_network_interface" "vm" {
   }
 }
 
-resource "azurerm_virtual_machine" "vm" {
+resource "azurerm_linux_virtual_machine" "vm" {
   name = "${var.unique_name}-vm"
   location = azurerm_resource_group.vm.location
   resource_group_name = azurerm_resource_group.vm.name
   network_interface_ids = [azurerm_network_interface.vm.id]
-  vm_size = var.vm_size
-  delete_os_disk_on_termination = true
-
+  computer_name  = var.unique_name
+  custom_data = base64encode(local.cloud_init_file)
+  size = var.vm_size
+  
   identity {
     type = "SystemAssigned"
   }
 
-  storage_os_disk {
+  os_disk {
     name              = "${var.unique_name}-osdisk"
     caching           = "ReadWrite"
-    create_option     = "FromImage"
-    managed_disk_type = "Standard_LRS"
+    storage_account_type = "Standard_LRS"
   }
 
-  storage_image_reference {
+  source_image_reference {
     publisher = "microsoft-avere"
     offer     = "vfxt"
     sku       = "avere-vfxt-controller"
@@ -81,47 +77,28 @@ resource "azurerm_virtual_machine" "vm" {
     product = "vfxt"
   }
 
-  dynamic "os_profile" {
-    for_each = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? [var.admin_password] : [null] 
-    content {
-      computer_name  = var.unique_name
-      admin_username = var.admin_username
-      admin_password = var.admin_password
-      custom_data = local.cloud_init_file
-    }
-  }
-
-  // dynamic block when password is specified
-  dynamic "os_profile_linux_config" {
-    for_each = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? [var.admin_password] : [] 
-    content {
-      disable_password_authentication = false
-    }
-  }
-
-  // dynamic block when SSH key is specified
-  dynamic "os_profile_linux_config" {
-    for_each = var.ssh_key_data == null || var.ssh_key_data == "" ? [] : [var.ssh_key_data]
-    content {
-      disable_password_authentication = true
-      ssh_keys {
-        path     = "/home/${var.admin_username}/.ssh/authorized_keys"
-        key_data = var.ssh_key_data
+  admin_username = var.admin_username
+  admin_password = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? var.admin_password : null
+  disable_password_authentication = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? false : true
+  dynamic "admin_ssh_key" {
+      for_each = var.ssh_key_data == null || var.ssh_key_data == "" ? [] : [var.ssh_key_data]
+      content {
+          username   = var.admin_username
+          public_key = var.ssh_key_data
       }
-    }
   }
 }
 
 resource "azurerm_role_assignment" "create_vfxt_cluster" {
   scope              = data.azurerm_subscription.primary.id
   role_definition_name = local.avere_create_cluster_role
-  principal_id       = azurerm_virtual_machine.vm.identity[0].principal_id
+  principal_id       = azurerm_linux_virtual_machine.vm.identity[0].principal_id
   skip_service_principal_aad_check = true
 }
 
 resource "azurerm_role_assignment" "user_access_admin" {
   scope              = data.azurerm_subscription.primary.id
   role_definition_name = local.user_access_administrator_role
-  principal_id       = azurerm_virtual_machine.vm.identity[0].principal_id
+  principal_id       = azurerm_linux_virtual_machine.vm.identity[0].principal_id
   skip_service_principal_aad_check = true
 }
