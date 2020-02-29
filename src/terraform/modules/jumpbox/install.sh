@@ -38,13 +38,16 @@ function install_golang() {
     mkdir -p $AZURE_HOME_DIR/gopath
     echo "export GOPATH=$AZURE_HOME_DIR/gopath" >> $AZURE_HOME_DIR/.bashrc
     echo "export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin" >> $AZURE_HOME_DIR/.bashrc
-    source $AZURE_HOME_DIR/.bashrc
     rm $GO_DL_FILE
 }
 
 function pull_avere_github() {
     # best effort to build the github content
     set +e
+    # setup the environment
+    source $AZURE_HOME_DIR/.bashrc
+    OLD_HOME=$HOME
+    export HOME=$AZURE_HOME_DIR
     # checkout Checkpoint simulator code, all dependencies and build the binaries
     cd $GOPATH
     go get -v github.com/Azure/Avere/src/terraform/providers/terraform-provider-avere
@@ -52,8 +55,10 @@ function pull_avere_github() {
     go build
     mkdir -p $AZURE_HOME_DIR/.terraform.d/plugins
     cp terraform-provider-avere $AZURE_HOME_DIR/.terraform.d/plugins
+    export HOME=$OLD_HOME
     # re-enable exit on error
     set -e
+
 }
 
 function install_az_cli() {
