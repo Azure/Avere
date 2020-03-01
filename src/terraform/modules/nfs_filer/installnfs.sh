@@ -35,16 +35,28 @@ function config_linux() {
 	yum_install 20 10 180 nfs-utils
 }
 
-# export the ephemeral disk as specified by $EXPORT_PATH
-function configure_nfs() {
-    # enable the nfs service
-    systemctl enable nfs-server rpcbind
+function config_ephemeral_nvme {
+    RAIDDISK=/dev/md0
+    DISKS=($(ls /dev/nvme*n*))
+    DISKCOUNT=${#DISKS[@]}
+    udevadm control --stop-exec-queue
+    echo "yes" | mdadm --create $RAIDDISK --level=0 --raid-devices=$DISKCOUNT ${DISKS[@]}
+    udevadm control --start-exec-queue
+    mkdir -p /etc/mdadm
+    mdadm --detail --verbose --scan > /etc/mdadm/mdadm.conf
+    # log the details of the mount to STDOUT
+    mdadm --detail --verbose --scan
+    cat /proc/mdstat
 
-    # stop the nfs service
-    systemctl stop nfs-server rpcbind
+    # add the ext4 filesystem
+    mkfs.ext4 -F $RAIDDISK
 
-    mkdir -p $EXPORT_PATH
+    read UUID FS_TYPE < <(blkid -u filesystem $RAIDDISK|awk -F "[= ]" '{print $3" "$5}'|tr -d "\"")
+    echo -e "UUID=\"${UUID}\"\t$EXPORT_PATH\t$FS_TYPE\tnoatime,nodiratime,nodev,noexec,nosuid,nofail\t1 2" >> /etc/fstab
+    mount $EXPORT_PATH
+}
 
+function config_ephemeral_ssd {
     grep -e "/mnt\s" /etc/fstab > /dev/null 2>&1
     if [ $? = "0" ]; then
         # this is managed by the new cloud init
@@ -66,7 +78,34 @@ function configure_nfs() {
         # restart waagent to mount the new share
         systemctl restart waagent
     fi
-    
+}
+
+function config_ephemeral_disk {
+    mkdir -p $EXPORT_PATH
+    grep nfsnobody /etc/passwd > /dev/null 2>&1
+    if [ $? = "0" ]; then
+        chown nfsnobody:nfsnobody $EXPORT_PATH
+    else
+        chown nobody:nogroup $EXPORT_PATH
+    fi
+    chmod 777 $EXPORT_PATH
+
+    ls -1 /dev/nvme*
+    if [ $? = "0" ]; then
+        config_ephemeral_nvme
+    else
+        config_ephemeral_ssd
+    fi
+}
+
+# export the ephemeral disk as specified by $EXPORT_PATH
+function configure_nfs() {
+    # enable the nfs service
+    systemctl enable nfs-server rpcbind
+
+    # stop the nfs service
+    systemctl stop nfs-server rpcbind
+
     # configure NFS export for the export path
     grep "^${EXPORT_PATH}" /etc/exports > /dev/null 2>&1
     if [ $? = "0" ]; then
@@ -99,6 +138,9 @@ function main() {
 
     echo "config Linux"
     config_linux
+
+    echo "config Ephemeral Disk"
+    config_ephemeral_disk
 
     echo "setup NFS Server"
     configure_nfs
