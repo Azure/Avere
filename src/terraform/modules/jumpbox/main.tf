@@ -18,7 +18,7 @@ data "azurerm_resource_group" "vm" {
 
 resource "azurerm_public_ip" "vm" {
     name                         = "${var.unique_name}-publicip"
-    location                     = "eastus"
+    location                     = var.location
     resource_group_name          = data.azurerm_resource_group.vm.name
     allocation_method            = "Static"
 
@@ -46,10 +46,6 @@ resource "azurerm_linux_virtual_machine" "vm" {
   computer_name  = var.unique_name
   custom_data = base64encode(local.cloud_init_file)
   size = var.vm_size
-  
-  identity {
-    type = "SystemAssigned"
-  }
 
   os_disk {
     name              = "${var.unique_name}-osdisk"

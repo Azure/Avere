@@ -3,9 +3,9 @@
 This is the Azure Terraform implementation of an NFS based IaaS NAS Filer using ephemeral storage.
 
 The following examples show how to use this module:
-* [Deploy IaaS NAS filer](../../examples/)
-* [Deploy IaaS NAS filer and mount with an HPC cache](../../examples/HPC%20Cache/1-filer)
-* [Deploy IaaS NAS filer and mount with an Avere vFXT cache](../../examples/vfxt/1-filer)
+* [Deploy IaaS NFS NAS filer](../../examples/nfsfiler)
+* [Deploy IaaS NFS NAS filer and mount with an HPC cache](../../examples/HPC%20Cache/1-filer)
+* [Deploy IaaS NFS NAS filer and mount with an Avere vFXT cache](../../examples/vfxt/1-filer)
 
 The following table shows the performance characteristics of various Azure SKUs:
 

@@ -26,7 +26,7 @@ provider "azurerm" {
 
 // the render network
 module "network" {
-    source = "../../../modules/render_network"
+    source = "../../modules/render_network"
     resource_group_name = local.network_resource_group_name
     location = local.location
 }
@@ -37,7 +37,7 @@ resource "azurerm_resource_group" "jumpboxrg" {
 }
 
 module "jumpbox" {
-    source = "../../../modules/jumpbox"
+    source = "../../modules/jumpbox"
     resource_group_name = azurerm_resource_group.jumpboxrg.name
     location = local.location
     admin_username = local.vm_admin_username
