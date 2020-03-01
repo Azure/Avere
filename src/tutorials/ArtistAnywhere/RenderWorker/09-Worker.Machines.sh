@@ -16,7 +16,6 @@ for cacheMount in "${cacheMounts[@]}"
 do
 	localPath="$(cut --delimiter ' ' --fields 2 <<< $cacheMount)"
 	mkdir --parents $localPath
-	$cacheMount
+	echo $cacheMount >> /etc/fstab
 done
-
-#chmod -R 0777 /storage
+mount --all

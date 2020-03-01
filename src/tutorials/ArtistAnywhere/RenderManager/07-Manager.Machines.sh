@@ -5,8 +5,8 @@ set -x # Displays executed commands
 
 cd "$HOME_DIRECTORY"
 
-tableCount=$(psql "$DB_DEPLOY_SQL" --command="select count(*) from information_schema.tables" --tuples-only)
-if [ $tableCount -eq 0 ]
+tableExists=$(psql "$DB_DEPLOY_SQL" --command="select to_regclass('public.show')" --tuples-only)
+if [ !$tableExists ]
 then
     psql "$DB_DEPLOY_SQL" --file=opencue-cuebot-schema.sql
     psql "$DB_DEPLOY_SQL" --file=opencue-cuebot-data.sql

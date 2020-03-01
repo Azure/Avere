@@ -64,9 +64,7 @@
               }
             ]
           },
-          "billingProfile": {
-            "maxPrice": "[parameters('renderWorker').machineScaleSets[copyIndex()].maxBillingPrice]"
-          },
+          "billingProfile": "[if(not(equals(parameters('renderWorker').machineScaleSets[copyIndex()].maxBillingPrice, '')), json(concat('{\"maxPrice\": \"', parameters('renderWorker').machineScaleSets[copyIndex()].maxBillingPrice, '\"}')), json('null'))]",
           "storageProfile": {
             "imageReference": {
               "id": "[parameters('renderWorker').imageVersionId]"
@@ -99,25 +97,10 @@
                 "properties": {
                   "publisher": "Microsoft.Azure.Extensions",
                   "autoUpgradeMinorVersion": true,
-                  "typeHandlerVersion": "2.0",
+                  "typeHandlerVersion": "2.1",
                   "type": "CustomScript",
                   "protectedSettings": {
-                    "commandToExecute": "[concat('echo ', parameters('renderWorker').machineExtensionScript, ' | base64 --decode | gunzip | sed \"s|\r$||\" | HOME_DIRECTORY=\"', parameters('renderWorker').homeDirectory, '\" RENDER_MANAGER_HOST=\"', parameters('renderManager').hostAddress, '\" CACHE_MOUNTS=\"', parameters('cacheMounts'), '\" /bin/bash')]"
-                  }
-                }
-              },
-              {
-                "name": "[concat(parameters('renderWorker').machineScaleSets[copyIndex()].name, 'Monitor')]",
-                "properties": {
-                  "publisher": "Microsoft.EnterpriseCloud.Monitoring",
-                  "autoUpgradeMinorVersion": true,
-                  "typeHandlerVersion": "1.12",
-                  "type": "OmsAgentForLinux",
-                  "protectedSettings": {
-                    "workspaceKey": "[parameters('renderWorker').logAnalyticsWorkspaceKey]"
-                  },
-                  "settings": {
-                    "workspaceId": "[parameters('renderWorker').logAnalyticsWorkspaceId]"
+                    "commandToExecute": "[concat('echo ', parameters('renderWorker').machineExtensionScript, ' | base64 --decode | gunzip | sed \"s|\r$||\" | HOME_DIRECTORY=\"', parameters('renderWorker').homeDirectory, '\" RENDER_MANAGER_HOST=\"', parameters('renderManager').hostAddress, '\" CACHE_MOUNTS=\"', base64ToString(parameters('cacheMounts')), '\" /bin/bash')]"
                   }
                 }
               }

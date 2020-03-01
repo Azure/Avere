@@ -8,12 +8,6 @@
         "description": "The render client desktop."
       }
     },
-    "renderManager": {
-      "type": "object",
-      "metadata": {
-        "description": "The render farm manager."
-      }
-    },
     "virtualNetwork": {
       "type": "object",
       "metadata": {
@@ -95,12 +89,12 @@
             "[resourceId('Microsoft.Compute/virtualMachines', parameters('renderDesktop').machines[copyIndex()].name)]"
           ],
           "properties": {
-            "publisher": "Microsoft.Azure.Extensions",
+            "publisher": "Microsoft.Compute",
             "autoUpgradeMinorVersion": true,
-            "typeHandlerVersion": "2.0",
-            "type": "CustomScript",
+            "typeHandlerVersion": "1.9",
+            "type": "CustomScriptExtension",
             "protectedSettings": {
-              "commandToExecute": "[concat('echo ', parameters('renderDesktop').machineExtensionScript, ' | certutil -decode | compact /u | RENDER_MANAGER_HOST=\"', parameters('renderManager').hostAddress, '\" powershell')]"
+              "commandToExecute": "[concat('PowerShell.exe -EncodedCommand ', parameters('renderDesktop').machineExtensionScript)]"
             }
           }
         },

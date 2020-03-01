@@ -87,17 +87,19 @@ The following list describes each of the Azure Artist Anywhere deployment script
 
 * *Deploy.psm1* - shared module that is referenced from each deployment script
 
-* *Deploy.ImageGallery.ps1* - background job script that deploys shared image gallery
+* *Deploy.ImageGallery.ps1* - background job script that deploys the shared image gallery
 
-* *Deploy.StorageCache.ps1* - background job script that deploys storage and cache
+* *Deploy.StorageCache.ps1* - background job script that deploys storage and cache services
 
-* *Deploy.RenderManager.ps1* - background job script that deploys render managers
+* *Deploy.RenderManager.ps1* - background job script that deploys render manager services
 
-* *Deploy.RenderDesktop.ps1* - background job script that deploys render desktops
+* *Deploy.RenderDesktop.Image.ps1* - background job script that deploys the render desktop image
 
-Unlike each of the other background job scripts, the *Deploy.StorageCache.ps1* script can be executed directly for deployment of the Network, Storage and Cache modules only.
+* *Deploy.RenderDesktop.Machines.ps1* - background job script that deploys render desktop machines
 
-The following output from a *Deploy.ps1* orchestrated deployment provides the *start* and *end* times for each module deployed. Note that the background jobs have overlapping times as expected in comparison to the main deployment process.
+Unlike each of the other background job scripts, the *Deploy.StorageCache.ps1* script can be executed directly for deployment of the Network, Storage and Cache modules only. All of the other background job scripts must be initiated via *Deploy.ps1*.
+
+The following sample terminal output is from a *Deploy.ps1* orchestrated deployment across 2 paired Microsoft Azure regions. Note that the background jobs have overlapping *start* and *end* times as expected from the parallel deployment process.
 
 ![](./README.ModuleDeployment.png)
 

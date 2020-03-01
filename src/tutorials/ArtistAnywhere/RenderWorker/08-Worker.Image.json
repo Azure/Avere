@@ -69,6 +69,7 @@
               "[concat('cd ', parameters('imageDefinition').homeDirectory)]",
               "[concat('curl --output opencue-rqd.jar.gz --location ', parameters('renderWorker').softwareUrl)]",
               "[concat('curl --output opencue-rqd.service --location ', parameters('renderWorker').serviceUrl)]",
+              "[concat('sed --in-place \"/Environment=BIN/c Environment=BIN=/usr/local/bin\" opencue-rqd.service')]",
               "tar --extract --gzip --file opencue-rqd.jar.gz",
               "cd rqd*",
               "python3 setup.py install"

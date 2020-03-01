@@ -31,7 +31,7 @@
               "targetPath": ""
             }
           ],
-          "mountOptions": "-fstype=nfs,vers=3"
+          "mountOptions": "nfs vers=3,hard,proto=tcp,mountproto=tcp,retry=30 0 0"
         },
         {
           "name": "Frames",
@@ -42,7 +42,7 @@
               "targetPath": ""
             }
           ],
-          "mountOptions": "-fstype=nfs,vers=3"
+          "mountOptions": "nfs vers=3,hard,proto=tcp,mountproto=tcp,retry=30 0 0"
         }
       ]
     },

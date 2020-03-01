@@ -26,7 +26,7 @@ if (!$templateDirectory) {
 
 Import-Module "$templateDirectory\Deploy.psm1"
 
-$templateDirectory += "\RenderDesktop"
+$moduleDirectory = "RenderDesktop"
 
 $imageDefinition = Get-ImageDefinition $imageGallery "Desktop"
 
@@ -38,8 +38,8 @@ $resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionInd
 $resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 if (!$resourceGroup) { return }
 
-$templateResources = "$templateDirectory\10-Desktop.Image.json"
-$templateParameters = (Get-Content "$templateDirectory\10-Desktop.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
+$templateResources = "$templateDirectory\$moduleDirectory\10-Desktop.Image.json"
+$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\10-Desktop.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
 $templateParameter = New-Object PSObject
 $templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $imageDefinition
 $templateParameters | Add-Member -MemberType NoteProperty -Name "imageDefinition" -Value $templateParameter
@@ -70,47 +70,4 @@ if (!$imageVersion) {
 }
 New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 
-# 11 - Desktop Machines
-$renderDesktops = @()
-$moduleName = "11 - Desktop Machines"
-New-TraceMessage $moduleName $true
-for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
-	New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
-	$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Desktop"
-	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
-	if (!$resourceGroup) { return }
-
-	$templateResources = "$templateDirectory\11-Desktop.Machines.json"
-	$templateParameters = (Get-Content "$templateDirectory\11-Desktop.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
-	$machineExtensionScript = Get-MachineExtensionScript "$templateDirectory\11-Desktop.Machines.ps1"
-	if ($templateParameters.renderManager.value.hostAddress -eq "") {
-		$templateParameters.renderManager.value.hostAddress = $renderManagers[$computeRegionIndex]
-	}
-	if ($templateParameters.renderDesktop.value.imageVersionId -eq "") {
-		$templateParameters.renderDesktop.value.imageVersionId = $imageVersion.id
-	}
-	if ($templateParameters.renderDesktop.value.logAnalyticsWorkspaceId -eq "") {
-		$templateParameters.renderDesktop.value.logAnalyticsWorkspaceId = $using:logAnalyticsWorkspaceId
-	}
-	if ($templateParameters.renderDesktop.value.logAnalyticsWorkspaceKey -eq "") {
-		$templateParameters.renderDesktop.value.logAnalyticsWorkspaceKey = $using:logAnalyticsWorkspaceKey
-	}
-	if ($templateParameters.renderDesktop.value.machineExtensionScript -eq "") {
-		$templateParameters.renderDesktop.value.machineExtensionScript = $machineExtensionScript
-	}
-	if ($templateParameters.virtualNetwork.value.resourceGroupName -eq "") {
-		$templateParameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
-	}
-	if ($templateParameters.virtualNetwork.value.name -eq "") {
-		$templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
-	}
-	$templateParameters = ($templateParameters | ConvertTo-Json -Compress -Depth 4).Replace('"', '\"')
-	$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
-	if (!$groupDeployment) { return }
-
-	$renderDesktops += $groupDeployment.properties.outputs.renderDesktops.value
-	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
-}
-New-TraceMessage $moduleName $false
-
-Write-Output -InputObject $renderDesktops -NoEnumerate
+Write-Output -InputObject $imageVersion -NoEnumerate

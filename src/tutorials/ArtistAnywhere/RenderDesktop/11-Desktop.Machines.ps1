@@ -1,1 +1,1 @@
-[System.Environment]::SetEnvironmentVariable('CUEBOT_HOSTNAME', $RENDER_MANAGER_HOST, [System.EnvironmentVariableTarget]::Machine)
+[System.Environment]::SetEnvironmentVariable("CUEBOT_HOSTNAME_OR_IP", $args[0], [System.EnvironmentVariableTarget]::Machine)

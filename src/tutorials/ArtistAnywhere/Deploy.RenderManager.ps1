@@ -26,7 +26,7 @@ if (!$templateDirectory) {
 
 Import-Module "$templateDirectory\Deploy.psm1"
 
-$templateDirectory += "\RenderManager"
+$moduleDirectory = "RenderManager"
 
 # 05 - Manager Data
 $managerDatabaseDeploySql = @()
@@ -41,8 +41,8 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 	if (!$resourceGroup) { return }
 	
-	$templateResources = "$templateDirectory\05-Manager.Data.json"
-	$templateParameters = (Get-Content "$templateDirectory\05-Manager.Data.Parameters.Region$computeRegionIndex.json" -Raw | ConvertFrom-Json).parameters
+	$templateResources = "$templateDirectory\$moduleDirectory\05-Manager.Data.json"
+	$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\05-Manager.Data.Parameters.Region$computeRegionIndex.json" -Raw | ConvertFrom-Json).parameters
 	if ($templateParameters.virtualNetwork.value.resourceGroupName -eq "") {
 		$templateParameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
 	}
@@ -71,8 +71,8 @@ $resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionInd
 $resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 if (!$resourceGroup) { return }
 
-$templateResources = "$templateDirectory\06-Manager.Image.json"
-$templateParameters = (Get-Content "$templateDirectory\06-Manager.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
+$templateResources = "$templateDirectory\$moduleDirectory\06-Manager.Image.json"
+$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\06-Manager.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
 $templateParameter = New-Object PSObject
 $templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $imageDefinition
 $templateParameters | Add-Member -MemberType NoteProperty -Name "imageDefinition" -Value $templateParameter
@@ -113,9 +113,9 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 	if (!$resourceGroup) { return }
 
-	$templateResources = "$templateDirectory\07-Manager.Machines.json"
-	$templateParameters = (Get-Content "$templateDirectory\07-Manager.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
-	$machineExtensionScript = Get-MachineExtensionScript "$templateDirectory\07-Manager.Machines.sh"
+	$templateResources = "$templateDirectory\$moduleDirectory\07-Manager.Machines.json"
+	$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\07-Manager.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
+	$machineExtensionScript = Get-MachineExtensionScript "$templateDirectory\$moduleDirectory\07-Manager.Machines.sh"
 	if ($templateParameters.renderManager.value.homeDirectory -eq "") {
 		$templateParameters.renderManager.value.homeDirectory = $imageDefinition.homeDirectory
 	}

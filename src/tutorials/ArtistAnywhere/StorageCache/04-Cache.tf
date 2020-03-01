@@ -117,6 +117,10 @@ resource "azurerm_template_deployment" "storage_cache" {
       }
     ],
     "outputs": {
+      "storageTargets": {
+        "type": "array",
+        "value": "[parameters('storageTargets')]"
+      },
       "mountAddresses": {
         "type": "array",
         "value": "[reference(resourceId('Microsoft.StorageCache/caches', parameters('cacheName')), variables('cacheApiVersion')).mountAddresses]"
@@ -124,6 +128,10 @@ resource "azurerm_template_deployment" "storage_cache" {
     }
   }
   DEPLOY
+}
+
+output "storageTargets" {
+  value = "${lookup(azurerm_template_deployment.storage_cache.outputs, "storageTargets")}"
 }
 
 output "mountAddresses" {

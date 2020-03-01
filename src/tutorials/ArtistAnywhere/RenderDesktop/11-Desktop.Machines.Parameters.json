@@ -17,7 +17,7 @@
             "acceleratedNetworking": false
           },
           {
-            "name": "renderDesktop0",
+            "name": "renderDesktop1",
             "machineSize": "Standard_NV6",
             "adminUsername": "az",
             "adminPassword": "P@ssword1234",
@@ -25,11 +25,6 @@
           }
         ]
       }     
-    },
-    "renderManager": {
-      "value": {
-        "hostAddress": ""
-      }
     },
     "virtualNetwork": {
       "value": {

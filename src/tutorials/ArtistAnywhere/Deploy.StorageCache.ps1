@@ -51,10 +51,11 @@ if ($computeNetworks.length -eq 0) {
 	New-TraceMessage $moduleName $false
 }
 
-$templateDirectory += "\StorageCache"
+$moduleDirectory = "StorageCache"
 
 # 03.0 - Storage
-$storageTargets = @()
+$storageTargetsNetApp = @()
+$storageTargetsObject = @()
 if ($storageDeployNetApp -or $storageDeployObject) {
 	$computeRegionIndex = 0
 	$moduleName = "03.0 - Storage"
@@ -66,27 +67,27 @@ if ($storageDeployNetApp -or $storageDeployObject) {
 	if ($storageDeployNetApp) {
 		$subModuleName = "$moduleName (NetApp)"
 		New-TraceMessage $subModuleName $true $computeRegionNames[$computeRegionIndex]
-		$templateResources = "$templateDirectory\03-Storage.NetApp.json"
-		$templateParameters = "$templateDirectory\03-Storage.NetApp.Parameters.json"
+		$templateResources = "$templateDirectory\$moduleDirectory\03-Storage.NetApp.json"
+		$templateParameters = "$templateDirectory\$moduleDirectory\03-Storage.NetApp.Parameters.json"
 
 		$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
 		if (!$groupDeployment) { return }
 
 		$storageNetworkName = $groupDeployment.properties.outputs.virtualNetworkName.value
-		$storageVolumes = $groupDeployment.properties.outputs.storageTargets.value
+		$storageTargets = $groupDeployment.properties.outputs.storageTargets.value
 
-		foreach ($storageVolume in $storageVolumes) {
+		foreach ($storageTarget in $storageTargets) {
 			$storageTargetIndex = -1
-			for ($i = 0; $i -lt $storageTargets.length; $i++) {
-				if ($storageTargets[$i].host -eq $storageVolume.host) {
+			for ($i = 0; $i -lt $storageTargetsNetApp.length; $i++) {
+				if ($storageTargetsNetApp[$i].host -eq $storageTarget.host) {
 					$storageTargetIndex = $i
 				}
 			}
 			if ($storageTargetIndex -ge 0) {
-				$storageTargets[$storageTargetIndex].name = "$storageNetworkName.NetApp"
-				$storageTargets[$storageTargetIndex].junctions += $storageVolume.junctions
+				$storageTargetsNetApp[$storageTargetIndex].name = "$storageNetworkName.NetApp"
+				$storageTargetsNetApp[$storageTargetIndex].junctions += $storageTarget.junctions
 			} else {
-				$storageTargets += $storageVolume
+				$storageTargetsNetApp += $storageTarget
 			}
 		}
 
@@ -101,14 +102,14 @@ if ($storageDeployNetApp -or $storageDeployObject) {
 	if ($storageDeployObject) {
 		$subModuleName = "$moduleName (Object)"
 		New-TraceMessage $subModuleName $true $computeRegionNames[$computeRegionIndex]
-		$templateResources = "$templateDirectory\03-Storage.Object.json"
-		$templateParameters = "$templateDirectory\03-Storage.Object.Parameters.json"
+		$templateResources = "$templateDirectory\$moduleDirectory\03-Storage.Object.json"
+		$templateParameters = "$templateDirectory\$moduleDirectory\03-Storage.Object.Parameters.json"
 
 		$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
 		if (!$groupDeployment) { return }
 
 		$storageNetworkName = $groupDeployment.properties.outputs.virtualNetworkName.value
-		$storageTargets += $groupDeployment.properties.outputs.storageTargets.value
+		$storageTargetsObject = $groupDeployment.properties.outputs.storageTargets.value
 
 		if ($storageNetworkName -ne "") {
 			$storageNetwork = New-Object PSObject
@@ -132,11 +133,14 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 	if (!$resourceGroup) { return }
 
-	$templateResources = "$templateDirectory\04-Cache.json"
-	$templateParameters = (Get-Content "$templateDirectory\04-Cache.Parameters.Region$computeRegionIndex.json" -Raw | ConvertFrom-Json).parameters
-	if ($computeRegionIndex -gt 0) {
-		$templateParameters.storageTargets.value = @()
-	} elseif ($templateParameters.storageTargets.value.length -gt 0 -and $templateParameters.storageTargets.value[0].name -ne "") {
+	$templateResources = "$templateDirectory\$moduleDirectory\04-Cache.json"
+	$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\04-Cache.Parameters.Region$computeRegionIndex.json" -Raw | ConvertFrom-Json).parameters
+	if ($computeRegionIndex -eq 0) {
+		$storageTargets = $storageTargetsNetApp + $storageTargetsObject
+	} else {
+		$storageTargets = $storageTargetsObject
+	}
+	if ($templateParameters.storageTargets.value.length -gt 0 -and $templateParameters.storageTargets.value[0].name -ne "") {
 		$templateParameters.storageTargets.value += $storageTargets
 	} else {
 		$templateParameters.storageTargets.value = $storageTargets
@@ -152,8 +156,9 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	if (!$groupDeployment) { return }
 
 	$storageCache = New-Object PSObject
-	$storageCache | Add-Member -MemberType NoteProperty -Name "subnetName" -Value $groupDeployment.properties.outputs.subnetName.value
+	$storageCache | Add-Member -MemberType NoteProperty -Name "storageTargets" -Value $groupDeployment.properties.outputs.storageTargets.value
 	$storageCache | Add-Member -MemberType NoteProperty -Name "mountAddresses" -Value $groupDeployment.properties.outputs.mountAddresses.value
+	$storageCache | Add-Member -MemberType NoteProperty -Name "subnetName" -Value $groupDeployment.properties.outputs.subnetName.value
 	$storageCaches += $storageCache
 	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 }
@@ -175,7 +180,7 @@ for ($cacheIndex = 0; $cacheIndex -lt $storageCaches.length; $cacheIndex++) {
 	if (!$cacheDomainRecord) { return }
 
 	$cacheMounts = @() 
-	foreach ($storageTarget in $storageTargets) {
+	foreach ($storageTarget in $storageCaches[$cacheIndex].storageTargets) {
 		foreach ($storageTargetJunction in $storageTarget.junctions) {
 			$cacheMount = New-Object PSObject
 			$cacheMount | Add-Member -MemberType NoteProperty -Name "targetHost" -Value $cacheDomainRecord.fqdn

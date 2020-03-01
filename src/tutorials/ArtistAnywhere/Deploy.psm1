@@ -78,18 +78,30 @@ function Get-CacheMounts ($storageCache) {
 		if ($cacheMounts -ne "") {
 			$cacheMounts += "|"
 		}
-		$cacheMount = "mount $storageCacheMount.targetHost:$storageCacheMount.namespacePath $storageCacheMount.namespacePath $storageCacheMount.mountOptions"
+		$cacheMount = $storageCacheMount.targetHost + ":" + $storageCacheMount.namespacePath
+		$cacheMount += " " + $storageCacheMount.namespacePath
+		$cacheMount += " " + $storageCacheMount.mountOptions
 		$cacheMounts += $cacheMount
 	}
-	return $cacheMounts
-}
-
-function Get-MachineExtensionScript ($scriptFilePath) {
-	$machineExtensionScript = Get-Content $scriptFilePath -Raw
 	$memoryStream = New-Object System.IO.MemoryStream
-	$compressionStream = New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode]::Compress)
-	$streamWriter = New-Object System.IO.StreamWriter($compressionStream)
-	$streamWriter.Write($machineExtensionScript)
+	$streamWriter = New-Object System.IO.StreamWriter($memoryStream)
+	$streamWriter.Write($cacheMounts)
 	$streamWriter.Close();
 	return [System.Convert]::ToBase64String($memoryStream.ToArray())	
+}
+
+function Get-MachineExtensionScript ($scriptFilePath, $scriptParameters) {
+	$machineExtensionScript = Get-Content $scriptFilePath -Raw
+	if ($scriptParameters) {
+		$machineExtensionScript = "& {" + $machineExtensionScript + "} " + $scriptParameters
+		$machineExtensionScriptBytes = [System.Text.Encoding]::Unicode.GetBytes($machineExtensionScript)
+	} else {
+		$memoryStream = New-Object System.IO.MemoryStream
+		$compressionStream = New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode]::Compress)
+		$streamWriter = New-Object System.IO.StreamWriter($compressionStream)
+		$streamWriter.Write($machineExtensionScript)
+		$streamWriter.Close();
+		$machineExtensionScriptBytes = $memoryStream.ToArray()	
+	}
+	return [Convert]::ToBase64String($machineExtensionScriptBytes)
 }

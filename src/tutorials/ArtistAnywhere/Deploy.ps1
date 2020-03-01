@@ -15,8 +15,8 @@ param (
 	# Set to true to deploy Azure Object (Blob) Storage (http://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview)
 	[boolean] $storageDeployObject = $false,
 
-	# Set to true to register Azure Virtual Desktop (http://docs.microsoft.com/azure/virtual-desktop/overview) machines
-	[boolean] $virtualDesktopRegister = $false
+	# Set to true to deploy Azure Virtual Desktop (http://docs.microsoft.com/azure/virtual-desktop/overview) host pool
+	[boolean] $virtualDesktopDeploy = $false
 )
 
 $templateDirectory = $PSScriptRoot
@@ -91,12 +91,12 @@ $moduleName = "* - Render Manager Job"
 New-TraceMessage $moduleName $true
 $renderManagerJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderManager.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $computeNetworks, $imageGallery
 
-# * - Render Desktop Job
-$moduleName = "* - Render Desktop Job"
+# * - Render Desktop Image Job
+$moduleName = "* - Render Desktop Image Job"
 New-TraceMessage $moduleName $true
-$renderDesktopJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderDesktop.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $computeNetworks, $imageGallery
+$renderDesktopImageJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderDesktop.Image.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $computeNetworks, $imageGallery
 
-$templateDirectory += "\RenderWorker"
+$moduleDirectory = "RenderWorker"
 
 $imageDefinition = Get-ImageDefinition $imageGallery "Render"
 
@@ -108,8 +108,8 @@ $resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionInd
 $resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 if (!$resourceGroup) { return }
 
-$templateResources = "$templateDirectory\08-Worker.Image.json"
-$templateParameters = (Get-Content "$templateDirectory\08-Worker.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
+$templateResources = "$templateDirectory\$moduleDirectory\08-Worker.Image.json"
+$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\08-Worker.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
 $templateParameter = New-Object PSObject
 $templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $imageDefinition
 $templateParameters | Add-Member -MemberType NoteProperty -Name "imageDefinition" -Value $templateParameter
@@ -152,6 +152,17 @@ $renderManagers = Receive-Job -InstanceId $renderManagerJob.InstanceId -Wait
 if (!$renderManagers) { return }
 New-TraceMessage $moduleName $false
 
+# * - Render Desktop Image Job
+$moduleName = "* - Render Desktop Image Job"
+$renderDesktopImage = Receive-Job -InstanceId $renderDesktopImageJob.InstanceId -Wait
+if (!$renderDesktopImage) { return }
+New-TraceMessage $moduleName $false
+
+# * - Render Desktop Machines Job
+$moduleName = "* - Render Desktop Machines Job"
+New-TraceMessage $moduleName $true
+$renderDesktopMachinesJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $computeNetworks, $renderManagers, $renderDesktopImage
+
 # 09 - Worker Machines
 $moduleName = "09 - Worker Machines"
 New-TraceMessage $moduleName $true
@@ -161,9 +172,9 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 	if (!$resourceGroup) { return }
 
-	$templateResources = "$templateDirectory\09-Worker.Machines.json"
-	$templateParameters = (Get-Content "$templateDirectory\09-Worker.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
-	$machineExtensionScript = Get-MachineExtensionScript "$templateDirectory\09-Worker.Machines.sh"
+	$templateResources = "$templateDirectory\$moduleDirectory\09-Worker.Machines.json"
+	$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\09-Worker.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
+	$machineExtensionScript = Get-MachineExtensionScript "$templateDirectory\$moduleDirectory\09-Worker.Machines.sh"
 	if ($templateParameters.cacheMounts.value -eq "") {
 		$templateParameters.cacheMounts.value = Get-CacheMounts $storageCaches[$computeRegionIndex]
 	}
@@ -198,11 +209,13 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 }
 New-TraceMessage $moduleName $false
 
-# * - Render Desktop Job
-$moduleName = "* - Render Desktop Job"
-$renderDesktops = Receive-Job -InstanceId $renderDesktopJob.InstanceId -Wait
-if (!$renderDesktops) { return }
+# * - Render Desktop Machines Job
+$moduleName = "* - Render Desktop Machines Job"
+$renderDesktopMachines = Receive-Job -InstanceId $renderDesktopMachinesJob.InstanceId -Wait
+if (!$renderDesktopMachines) { return }
 New-TraceMessage $moduleName $false
 
-if ($virtualDesktopRegister) {
+# 12 - Virtual Desktop Pool
+if ($virtualDesktopDeploy) {
+	$moduleName = "12 - Virtual Desktop Pool"
 }
