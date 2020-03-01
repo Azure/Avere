@@ -7,11 +7,18 @@ This folder contains Terraform Examples, Modules, and Providers for HPC Cache an
 The examples show how to deploy HPC Cache and Avere vFXT from minimal configurations to 3-node configurations.
 
 1. [HPC Cache](examples/HPC%20Cache)
+   1. [no-filer example](examples/HPC%20Cache/no-filers)
+   2. [HPC Cache mounting 1 IaaS NAS filer example](examples/HPC%20Cache/1-filer)
+   3. [HPC Cache mounting 3 IaaS NAS filers example](examples/HPC%20Cache/3-filers)
 2. [Avere vFXT](examples/vfxt)
    1. [no-filer example](examples/vfxt/no-filers)
-   2. [Avere vFXT against 1 IaaS NAS filer example](examples/vfxt/1-filer)
-   3. [Avere vFXT against 3 IaaS NAS filers example](examples/vfxt/3-filers)
+   2. [Avere vFXT mounting 1 IaaS NAS filer example](examples/vfxt/1-filer)
+   3. [Avere vFXT mounting 3 IaaS NAS filers example](examples/vfxt/3-filers)
    4. [Avere vFXT optimized for Houdini](examples/vfxt/HoudiniOptimized)
+3. [NFS Filers](examples/nfsfilers)
+   1. [L32sv1](examples/nfsfilers/L32sv1)
+   2. [L32sv2](examples/nfsfilers/L32sv2)
+
 
 # Modules
 

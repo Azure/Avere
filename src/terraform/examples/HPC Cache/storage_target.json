@@ -1,0 +1,26 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "resources": [
+      {
+        "name": "${uniquename}/${uniquestoragetargetname}",
+        "type": "Microsoft.StorageCache/caches/storageTargets",
+        "apiVersion": "2019-11-01",
+        "location": "${location}",
+        "properties": {
+          "targetType": "nfs3",
+          "nfs3": {
+            "target": "${nfsaddress}",
+            "usageModel": "${usagemodel}"
+          },
+          "junctions": [
+            {
+              "namespacePath": "${namespacepath_j1}",
+              "nfsExport": "${nfsexport_j1}",
+              "targetPath": "${targetpath_j1}"
+            }
+          ]
+        }
+      }
+    ]
+}
