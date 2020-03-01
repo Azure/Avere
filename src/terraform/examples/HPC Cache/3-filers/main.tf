@@ -123,13 +123,13 @@ locals {
     storage_target_1_template = templatefile("${path.module}/../storage_target.json",
     {
         uniquename              = local.cache_name,
-        uniquestoragetargetname = "storage_target_1"
+        uniquestoragetargetname = "storage_target_1",
         location                = local.location,
         nfsaddress              = module.nasfiler1.primary_ip,
         usagemodel              = local.usage_model,
         namespacepath_j1        = "/nfs1data",
-        nfsexport_j1            = module.nasfiler1.core_filer_export
-        targetPath_j1           = ""
+        nfsexport_j1            = module.nasfiler1.core_filer_export,
+        targetpath_j1           = ""
     })
 }
 
@@ -167,13 +167,13 @@ locals {
     storage_target_2_template = templatefile("${path.module}/../storage_target.json",
     {
         uniquename              = local.cache_name,
-        uniquestoragetargetname = "storage_target_2"
+        uniquestoragetargetname = "storage_target_2",
         location                = local.location,
         nfsaddress              = module.nasfiler2.primary_ip,
         usagemodel              = local.usage_model,
         namespacepath_j1        = "/nfs2data",
-        nfsexport_j1            = module.nasfiler2.core_filer_export
-        targetPath_j1           = ""
+        nfsexport_j1            = module.nasfiler2.core_filer_export,
+        targetpath_j1           = ""
     })
 }
 
@@ -211,13 +211,13 @@ locals {
     storage_target_3_template = templatefile("${path.module}/../storage_target.json",
     {
         uniquename              = local.cache_name,
-        uniquestoragetargetname = "storage_target_3"
+        uniquestoragetargetname = "storage_target_3",
         location                = local.location,
         nfsaddress              = module.nasfiler3.primary_ip,
         usagemodel              = local.usage_model,
         namespacepath_j1        = "/nfs3data",
-        nfsexport_j1            = module.nasfiler3.core_filer_export
-        targetPath_j1           = ""
+        nfsexport_j1            = module.nasfiler3.core_filer_export,
+        targetpath_j1           = ""
     })
 }
 

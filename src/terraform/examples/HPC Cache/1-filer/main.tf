@@ -123,13 +123,13 @@ locals {
     storage_target_1_template = templatefile("${path.module}/../storage_target.json",
     {
         uniquename              = local.cache_name,
-        uniquestoragetargetname = "storage_target_1"
+        uniquestoragetargetname = "storage_target_1",
         location                = local.location,
         nfsaddress              = module.nasfiler1.primary_ip,
         usagemodel              = local.usage_model,
         namespacepath_j1        = "/nfs1data",
-        nfsexport_j1            = module.nasfiler1.core_filer_export
-        targetPath_j1           = ""
+        nfsexport_j1            = module.nasfiler1.core_filer_export,
+        targetpath_j1           = ""
     })
 }
 
