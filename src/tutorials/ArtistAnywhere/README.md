@@ -75,11 +75,11 @@ Azure Artist Anywhere is composed of the following open-source software and Micr
 
 The following diagram depicts the Azure Artist Anywhere solution architecture spanning on-premises and Microsoft Azure.
 
-![](./README.SolutionArchitecture.png)
+![](./README-SolutionArchitecture.png)
 
 The following diagram represents the Azure Artist Anywhere deployment modules along with their dependency relationship.
 
-![](./README.ModuleDependency.png)
+![](./README-ModuleDependency.png)
 
 The following list describes each of the Azure Artist Anywhere deployment script files.
 
@@ -101,6 +101,6 @@ Unlike each of the other background job scripts, the *Deploy.StorageCache.ps1* s
 
 The following sample terminal output is from a *Deploy.ps1* orchestrated deployment across 2 paired Microsoft Azure regions. Note that the background jobs have overlapping *start* and *end* times as expected from the parallel deployment process.
 
-![](./README.ModuleDeployment.png)
+![](./README-ModuleDeployment.png)
 
 For more information, contact Rick Shahid (rick.shahid@microsoft.com)
