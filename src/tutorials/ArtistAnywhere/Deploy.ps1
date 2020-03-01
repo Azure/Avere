@@ -218,4 +218,20 @@ New-TraceMessage $moduleName $false
 # 12 - Virtual Desktop Pool
 if ($virtualDesktopDeploy) {
 	$moduleName = "12 - Virtual Desktop Pool"
+	New-TraceMessage $moduleName $true
+	for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
+		New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+		$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Desktop"
+		$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
+		if (!$resourceGroup) { return }
+	
+		$templateResources = "$templateDirectory\$moduleDirectory\12-Desktop.Pool.json"
+		$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\12-Desktop.Pool.Parameters.json" -Raw | ConvertFrom-Json).parameters
+
+		$templateParameters = ($templateParameters | ConvertTo-Json -Compress).Replace('"', '\"')
+		$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+		if (!$groupDeployment) { return }
+		New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
+	}
+	New-TraceMessage $moduleName $false
 }
