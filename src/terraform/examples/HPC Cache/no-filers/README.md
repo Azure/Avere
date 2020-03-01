@@ -37,6 +37,6 @@ git pull origin master
 
 9. execute `terraform apply -auto-approve` to build the HPC Cache cluster
 
-Once installed you will be able to mount the HPC Cache cluster login according to the [documentation](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-mount).
+Once installed you will be able to mount the HPC Cache cluster, using the according to the `mount_addresses` output and following the [documentation](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-mount).
 
 When you are done using the cluster, you can destroy it by running `terraform destroy -auto-approve` or just delete the three resource groups created.
