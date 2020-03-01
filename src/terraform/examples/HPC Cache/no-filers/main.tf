@@ -1,4 +1,4 @@
-// customize the HPC Cache by adjusting the following local variables
+// customize the HPC Cache by editing the following local variables
 locals {
     // the region of the deployment
     location = "eastus"
