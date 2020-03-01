@@ -25,7 +25,7 @@ resource "azurerm_resource_group" "vm" {
 
 resource "azurerm_public_ip" "vm" {
     name                         = "${var.unique_name}-publicip"
-    location                     = "eastus"
+    location                     = var.location
     resource_group_name          = azurerm_resource_group.vm.name
     allocation_method            = "Static"
 
