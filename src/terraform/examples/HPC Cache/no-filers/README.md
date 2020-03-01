@@ -29,7 +29,7 @@ echo "src/terraform/*" >> .git/info/sparse-checkout
 git pull origin master
 ```
 
-6. `cd src/terraform/examples/HPC\ Cache/1-filer`
+6. `cd src/terraform/examples/HPC\ Cache/no-filers`
 
 7. edit the local variables section at the top of the file `main.tf`, to customize to your preferences
 
