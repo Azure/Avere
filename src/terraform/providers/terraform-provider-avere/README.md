@@ -18,7 +18,7 @@ This provider requires a controller to be installed that is used to create and m
 
 ## Build the Terraform Provider binary
 
-Install either a Centos or Ubuntu Virtual Machine
+The following build instructions work in https://shell.azure.com, Centos, or Ubuntu:
 
 1. if this is centos, install git
 
@@ -29,15 +29,14 @@ Install either a Centos or Ubuntu Virtual Machine
 2. If not already installed go, install golang:
 
     ```bash
-    wget https://dl.google.com/go/go1.13.5.linux-amd64.tar.gz
-    tar xvf go1.13.5.linux-amd64.tar.gz
-    sudo chown -R root:root ./go
-    sudo mv go /usr/local
+    wget https://dl.google.com/go/go1.14.linux-amd64.tar.gz
+    tar xvf go1.14.linux-amd64.tar.gz
     mkdir ~/gopath
     echo "export GOPATH=$HOME/gopath" >> ~/.profile
-    echo "export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin" >> ~/.profile
+    echo "export PATH=\$GOPATH/bin:$HOME/go/bin:$PATH" >> ~/.profile
+    echo "export GOROOT=$HOME/go" >> ~/.profile
     source ~/.profile
-    rm go1.13.5.linux-amd64.tar.gz
+    rm go1.14.linux-amd64.tar.gz
     ```
 
 3. build the provider code
@@ -46,6 +45,8 @@ Install either a Centos or Ubuntu Virtual Machine
     cd $GOPATH
     go get -v github.com/Azure/Avere/src/terraform/providers/terraform-provider-avere
     cd src/github.com/Azure/Avere/src/terraform/providers/terraform-provider-avere
+    go mod download
+    go mod tidy
     go build
     mkdir -p ~/.terraform.d/plugins
     cp terraform-provider-avere ~/.terraform.d/plugins

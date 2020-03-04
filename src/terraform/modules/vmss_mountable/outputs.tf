@@ -1,0 +1,1 @@
+// send back the ip addresses of the VMSS nodes

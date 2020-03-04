@@ -18,7 +18,7 @@ To run the example, execute the following instructions.  This assumes use of Azu
 ```bash
 mkdir -p ~/.terraform.d/plugins
 # install the vfxt released binary from https://github.com/Azure/Avere
-wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.4.1/terraform-provider-avere
+wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.4.2/terraform-provider-avere
 chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 ```
 
@@ -35,7 +35,7 @@ git pull origin master
 
 6. `cd src/terraform/examples/vfxt/1-filer`
 
-7. edit the local variables section of `main.tf`, to customize to your preferences
+7. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences
 
 8. execute `terraform init` in the directory of `main.tf`.
 
