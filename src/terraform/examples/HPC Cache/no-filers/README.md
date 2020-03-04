@@ -31,7 +31,7 @@ git pull origin master
 
 6. `cd src/terraform/examples/HPC\ Cache/no-filers`
 
-7. edit the local variables section at the top of the file `main.tf`, to customize to your preferences
+7. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences
 
 8. execute `terraform init` in the directory of `main.tf`.
 

@@ -33,11 +33,12 @@ function install_golang() {
     GO_DL_FILE=go1.14.linux-amd64.tar.gz
     retrycmd_if_failure 12 5 wget https://dl.google.com/go/$GO_DL_FILE
     tar xvf $GO_DL_FILE
-    chown -R root:root ./go
-    mv go /usr/local
+    chown -R $ADMIN_USER_NAME:$ADMIN_USER_NAME ./go
     mkdir -p $AZURE_HOME_DIR/gopath
+    chown -R $ADMIN_USER_NAME:$ADMIN_USER_NAME $AZURE_HOME_DIR/gopath
     echo "export GOPATH=$AZURE_HOME_DIR/gopath" >> $AZURE_HOME_DIR/.bashrc
-    echo "export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin" >> $AZURE_HOME_DIR/.bashrc
+    echo "export PATH=\$GOPATH/bin:$AZURE_HOME_DIR/go/bin:$PATH" >> $AZURE_HOME_DIR/.bashrc
+    echo "export GOROOT=$AZURE_HOME_DIR/go" >> $AZURE_HOME_DIR/.bashrc
     rm $GO_DL_FILE
 }
 
@@ -52,13 +53,14 @@ function pull_avere_github() {
     cd $GOPATH
     go get -v github.com/Azure/Avere/src/terraform/providers/terraform-provider-avere
     cd src/github.com/Azure/Avere/src/terraform/providers/terraform-provider-avere
+    go mod download
+    go mod tidy
     go build
     mkdir -p $AZURE_HOME_DIR/.terraform.d/plugins
     cp terraform-provider-avere $AZURE_HOME_DIR/.terraform.d/plugins
     export HOME=$OLD_HOME
     # re-enable exit on error
     set -e
-
 }
 
 function install_az_cli() {
