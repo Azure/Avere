@@ -78,4 +78,4 @@ git pull origin master
 
 2. Log in to the Avere Control Panel ([instructions](https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-cluster-gui)) to watch the performance metrics. You will see a performance chart similar to the following one:
 
-   <img src="../../../../../images/vdbench_ondisk.png">
+   <img src="../../../../../docs/images/vdbench_ondisk.png">
