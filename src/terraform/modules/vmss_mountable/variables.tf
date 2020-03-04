@@ -58,10 +58,6 @@ variable "nfs_export_path" {
   description = "the nfs export to mount to the mount target on the VMSS node"
 }
 
-variable "nfs_export_path" {
-  description = "the nfs export to mount to the mount target on the VMSS node"
-}
-
 variable "bootstrap_script_path" {
   description = "The script path on the NFS share to execute during deployment."
 }

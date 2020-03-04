@@ -1,6 +1,6 @@
 // customize the simple VM by editing the following local variables
 locals {
-    vm_name = "vm-${unique_name}"
+    vm_name = "vm-${var.unique_name}"
 }
 
 data "azurerm_subnet" "vnet" {
@@ -42,7 +42,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   }
 
   network_interface {
-    name    = "vminic-${var.unique}"
+    name    = "vminic-${var.unique_name}"
     primary = true
 
     ip_configuration {
@@ -54,7 +54,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
 }
 
 locals {
-    env_vars = " LINUX_USER=${var.admin_username} NODE_PREFIX=${local.vm_name} NODE_COUNT=${var.vm_count} BASE_DIR=${var.mount_target} BOOTSTRAP_SCRIPT_PATH=${var.bootstrap_script_path} NFS_IP_CSV=\"${join(var.mount_addresses)}\" NFS_PATH=${var.nfs_export_path}"
+    env_vars = " LINUX_USER=${var.admin_username} NODE_PREFIX=${local.vm_name} NODE_COUNT=${var.vm_count} BASE_DIR=${var.mount_target} BOOTSTRAP_SCRIPT_PATH=${var.bootstrap_script_path} NFS_IP_CSV='${join(",",var.nfs_export_addresses)}' NFS_PATH=${var.nfs_export_path}"
 
     bootstrap_path = "/b"
 }
@@ -72,7 +72,7 @@ resource "azurerm_virtual_machine_scale_set_extension" "vmss" {
   # 4. unmount the nfs server the bootstrap directory 
   settings = <<SETTINGS
     {
-        "commandToExecute": "apt-get update && apt-get install -y nfs-common && mkdir -p ${local.bootstrap_path} && r=5 && for i in $(seq 1 $r); do mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' ${var.mount_addresses[0]}:${var.nfs_export_path} ${local.bootstrap_path} && break || [ $i == $r ] && break 0 || sleep 1; done && ${local.env_vars} /bin/bash ${local.bootstrap_path}${var.bootstrap_script_path} 2>&1 | tee -a /var/log/bootstrap.log && umount ${local.bootstrap_path} && rmdir ${local.bootstrap_path}"
+        "commandToExecute": "apt-get update && apt-get install -y nfs-common && mkdir -p ${local.bootstrap_path} && r=5 && for i in $(seq 1 $r); do mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' ${var.nfs_export_addresses[0]}:${var.nfs_export_path} ${local.bootstrap_path} && break || [ $i == $r ] && break 0 || sleep 1; done && ${local.env_vars} /bin/bash ${local.bootstrap_path}${var.bootstrap_script_path} 2>&1 | tee -a /var/log/bootstrap.log && umount ${local.bootstrap_path} && rmdir ${local.bootstrap_path}"
     }
 SETTINGS
 }

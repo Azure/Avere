@@ -30,23 +30,28 @@ locals {
     virtual_network_subnet_name = "render_clients1"
 }
 
+provider "azurerm" {
+    version = "~>2.0.0"
+    features {}
+}
+
 // TODO: test and then add the vFXT or HPC Cache above
 
 // the vmss config module to install the round robin mount
 module "vmss_configure" {
     source = "../../../modules/vmss_config"
 
-    node_address = controller_address
-    admin_username = local.admin_username
-    admin_password = local.admin_password
-    ssh_key_data = local.ssh_key_data
+    node_address = local.controller_address
+    admin_username = local.controller_username
+    admin_password = local.controller_admin_password
+    ssh_key_data = local.controller_key_data
     nfs_address = local.mount_addresses[0]
     nfs_export_path = local.nfs_export_path
 }
 
 // the VMSS module
 module "vmss" {
-    source = "../../../modules/vmss_moutable"
+    source = "../../../modules/vmss_mountable"
 
     resource_group_name = local.vmss_resource_group_name
     location = local.location
@@ -62,5 +67,5 @@ module "vmss" {
     mount_target = local.mount_target
     nfs_export_addresses = local.mount_addresses
     nfs_export_path = local.nfs_export_path
-    bootstrap_script_path = module.vdbench_configure.bootstrap_script_path
+    bootstrap_script_path = module.vmss_configure.bootstrap_script_path
 }
