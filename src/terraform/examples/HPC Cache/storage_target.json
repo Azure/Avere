@@ -22,5 +22,11 @@
           ]
         }
       }
-    ]
+    ],
+    "outputs": {
+      "namespacePath": {
+        "type": "string",
+        "value": "${namespacepath_j1}"
+      }
+    }
 }

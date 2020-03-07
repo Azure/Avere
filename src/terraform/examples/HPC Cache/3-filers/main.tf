@@ -232,6 +232,10 @@ resource "azurerm_template_deployment" "storage_target3" {
   ]
 }
 
+locals {
+  mount_addresses = split(",", replace(trim(azurerm_template_deployment.storage_cache.outputs["mountAddresses"],"]["),"\"",""))
+}
+
 output "mount_addresses" {
-  value = azurerm_template_deployment.storage_cache.outputs["mountAddresses"]
+  value = local.mount_addresses
 }
