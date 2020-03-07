@@ -33,6 +33,16 @@ variable "vm_size" {
   default = "Standard_DS2_v2"
 }
 
+variable "vmss_priority" {
+  description = "Specify to use 'Regular' or 'Spot'"
+  default = "Regular"
+}
+
+variable "use_ephemeral_os_disk" {
+  description = "specify to use ephemeral OS disks"
+  default = false
+}
+
 variable "virtual_network_resource_group" {
   description = "The resource group name for the VNET."
 }
