@@ -25,7 +25,7 @@ locals {
 }
 
 provider "azurerm" {
-    version = "~>2.0.0"
+    version = "~>2.1.0"
     features {}
 }
 
@@ -206,4 +206,12 @@ output "management_ip" {
 
 output "ssh_command_with_avere_tunnel" {
     value = "ssh -L443:${avere_vfxt.vfxt.vfxt_management_ip}:443 ${module.vfxtcontroller.controller_username}@${module.vfxtcontroller.controller_address}"
+}
+
+output "management_ip" {
+    value = avere_vfxt.vfxt.vfxt_management_ip
+}
+
+output "mount_addresses" {
+    value = tolist(avere_vfxt.vfxt.vserver_ip_addresses)
 }
