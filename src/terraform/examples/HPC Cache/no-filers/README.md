@@ -6,7 +6,7 @@ This example currently uses `azurerm_template_deployment` to deploy a template, 
 
 This examples configures a render network, controller, and HPC Cache without any filers as shown in the diagram below:
 
-![The architecture](../../../../../docs/images/terraform/nofiler.png)
+![The architecture](../../../../../docs/images/terraform/nofiler-hpcc.png)
 
 ## Deployment Instructions
 
