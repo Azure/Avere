@@ -36,18 +36,37 @@ ensureAzureNetwork()
   networkHealthy=1
   for i in {1..240}; do
     COUNTER=0
-    while [ $COUNTER -lt $NODE_COUNT ]; do
-        HOST_NUMBER=$(($COUNTER + 1))
-        HOST_NUMBER_HEX=$( printf '%x' $HOST_NUMBER )
-        NODE_NAME="${NODE_PREFIX}-${COUNTER}"
-        host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER}
-        if [ $? -ne 0 ]
-        then
-            echo "command 'host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER}' failed"
-            break
-        fi
-        COUNTER=$[$COUNTER+1]
-    done
+    if hostname -s | grep -E "00[0-9]{4}$" > /dev/null ; then
+        # these are VMSS nodes, count the VMSS nodes
+        FAILURE_COUNTER=0
+        FAILURE_MAX=255
+        while (( (COUNTER-FAILURE_COUNTER) < NODE_COUNT && FAILURE_COUNTER < $FAILURE_MAX )); do
+            VMSS_INDEX=$COUNTER
+            VMSS_INDEX_HEX=$( printf '%06x' $VMSS_INDEX )
+            NODE_NAME="${NODE_PREFIX}${VMSS_INDEX_HEX}"
+            IP=$( host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER} | grep ${NODE_NAME} | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
+
+            if [ $? -ne 0 ] ; then
+                FAILURE_COUNTER=$[$FAILURE_COUNTER+1]
+            fi
+            COUNTER=$[$COUNTER+1]
+        done
+        COUNTER=$[$COUNTER-$FAILURE_COUNTER]
+    else    
+        # these are VM nodes, count the VMs
+        while [ $COUNTER -lt $NODE_COUNT ]; do
+            HOST_NUMBER=$(($COUNTER + 1))
+            HOST_NUMBER_HEX=$( printf '%x' $HOST_NUMBER )
+            NODE_NAME="${NODE_PREFIX}-${COUNTER}"
+            host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER}
+            if [ $? -ne 0 ]
+            then
+                echo "command 'host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER}' failed"
+                break
+            fi
+            COUNTER=$[$COUNTER+1]
+        done
+    fi
     if [ $COUNTER -eq $NODE_COUNT ]
     then
         # hostname has been found continue
@@ -220,6 +239,57 @@ EOM
         IP=$( host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER} | grep ${NODE_NAME} | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
         echo "NODE NAME ${NODE_NAME}, $IP"
         echo "hd=host${HOST_NUMBER_HEX},system=${IP}">>$FILENAME
+        COUNTER=$[$COUNTER+1]
+    done
+    chown $LINUX_USER:$LINUX_USER $FILENAME
+}
+
+function write_vmss_copy_idrsa() {
+    FILENAME=/home/$LINUX_USER/copy_idrsa.sh
+    echo "#!/usr/bin/env bash" > "copy_idrsa.sh"
+    COUNTER=0
+    FAILURE_COUNTER=0
+    FAILURE_MAX=255
+    while (( (COUNTER-FAILURE_COUNTER) < NODE_COUNT && FAILURE_COUNTER < $FAILURE_MAX )); do
+        VMSS_INDEX=$COUNTER
+        VMSS_INDEX_HEX=$( printf '%06x' $VMSS_INDEX )
+        NODE_NAME="${NODE_PREFIX}${VMSS_INDEX_HEX}"
+        IP=$( host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER} | grep ${NODE_NAME} | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
+
+        if [ $? -ne 0 ] ; then
+                FAILURE_COUNTER=$[$FAILURE_COUNTER+1]
+        else
+                echo "scp -o \"StrictHostKeyChecking no\" /home/$LINUX_USER/.ssh/id_rsa ${IP}:.ssh/id_rsa" >> $FILENAME
+        fi
+        COUNTER=$[$COUNTER+1]
+    done
+    chown $LINUX_USER:$LINUX_USER $FILENAME
+    chmod +x $FILENAME
+}
+
+function write_vmss_azure_clients() {
+    FILENAME=/home/$LINUX_USER/azure-clients.conf
+/bin/cat <<EOM >$FILENAME
+hd=default,user=${LINUX_USER},shell=ssh
+EOM
+    # add each of the clients
+    COUNTER=0
+    FAILURE_COUNTER=0
+    FAILURE_MAX=255
+    while (( (COUNTER-FAILURE_COUNTER) < NODE_COUNT && FAILURE_COUNTER < $FAILURE_MAX )); do
+        HOST_NUMBER=$[1+($COUNTER-$FAILURE_COUNTER)]
+        HOST_NUMBER_HEX=$( printf '%x' $HOST_NUMBER )
+        VMSS_INDEX=$COUNTER
+        VMSS_INDEX_HEX=$( printf '%06x' $VMSS_INDEX )
+        NODE_NAME="${NODE_PREFIX}${VMSS_INDEX_HEX}"
+        IP=$( host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER} | grep ${NODE_NAME} | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
+
+        if [ $? -ne 0 ] ; then
+                FAILURE_COUNTER=$[$FAILURE_COUNTER+1]
+        else
+                echo "NODE NAME ${NODE_NAME}, $IP"
+                echo "hd=host${HOST_NUMBER_HEX},system=${IP}">>$FILENAME
+        fi
         COUNTER=$[$COUNTER+1]
     done
     chown $LINUX_USER:$LINUX_USER $FILENAME
@@ -612,8 +682,6 @@ EOM
 
 function write_vdbench_files() {
     write_run_vdbench
-    write_copy_idrsa
-    write_azure_clients
     write_inmem
     write_3node_inmem32
     write_6node_inmem32
@@ -622,6 +690,14 @@ function write_vdbench_files() {
     write_6node_32_ondisk
     write_throughput
     write_smallfileIO
+    # choose how to write the files based on node type
+    if hostname -s | grep -E "00[0-9]{4}$" > /dev/null ; then
+        write_vmss_copy_idrsa
+        write_vmss_azure_clients
+    else
+        write_copy_idrsa
+        write_azure_clients
+    fi
 }
 
 function main() {
