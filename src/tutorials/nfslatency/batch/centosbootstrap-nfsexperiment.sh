@@ -46,7 +46,7 @@ function mount_round_robin_e32() {
     # to ensure the nodes are spread out somewhat evenly the default
     # mount point is based on this node's IP octet4 % vFXT node count.
     declare -a AVEREVFXT_NODES="($(echo ${NFS_IP_CSV} | sed "s/,/ /g"))"
-    OCTET4=$((`hostname -i | sed -e 's/^.*\.\([0-9]*\)/\1/'`))
+    OCTET4=$((`hostname -i | sed -e 's/^.*\.\([0-9]*\)/\1/'  | sed 's/[^0-9]*//g'`))
     DEFAULT_MOUNT_INDEX=$((${OCTET4} % ${#AVEREVFXT_NODES[@]}))
     ROUND_ROBIN_IP=${AVEREVFXT_NODES[${DEFAULT_MOUNT_INDEX}]}
 
