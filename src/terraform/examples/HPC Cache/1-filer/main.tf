@@ -150,3 +150,7 @@ locals {
 output "mount_addresses" {
   value = local.mount_addresses
 }
+
+output "export_namespace" {
+  value = azurerm_template_deployment.storage_target1.outputs["namespacePath"]
+}

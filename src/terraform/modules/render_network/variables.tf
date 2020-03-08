@@ -31,6 +31,16 @@ variable "subnet_cloud_filers_address_prefix" {
     default = "10.0.2.0/24"
 }
 
+variable "subnet_jumpbox_subnet_name" {
+    description = "The name for the jumpbox subnet."
+    default = "jumpbox"
+}
+
+variable "subnet_jumpbox_address_prefix" {
+    description = "The address prefix used for the jumpbox subnet."
+    default = "10.0.3.0/24"
+}
+
 variable "subnet_render_clients1_subnet_name" {
     description = "The name for the first render clients subnet."
    default = "render_clients1"

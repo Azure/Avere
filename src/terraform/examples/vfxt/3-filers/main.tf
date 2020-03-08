@@ -103,7 +103,7 @@ module "vfxtcontroller" {
     // network details
     virtual_network_resource_group = local.network_resource_group_name
     virtual_network_name = module.network.vnet_name
-    virtual_network_subnet_name = module.network.cloud_cache_subnet_name
+    virtual_network_subnet_name = module.network.jumpbox_subnet_name
 }
 
 resource "avere_vfxt" "vfxt" {
