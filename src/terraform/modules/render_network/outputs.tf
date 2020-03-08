@@ -13,6 +13,11 @@ output "cloud_filers_subnet_name" {
   value       = var.subnet_cloud_filers_subnet_name
 }
 
+output "jumpbox_subnet_name" {
+  description = "The name of the jumpbox subnet."
+  value       = var.subnet_jumpbox_subnet_name
+}
+
 output "render_clients1_subnet_name" {
   description = "The name of the render clients 1 subnet."
   value       = var.subnet_render_clients1_subnet_name

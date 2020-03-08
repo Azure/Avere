@@ -28,13 +28,13 @@ resource "azurerm_network_security_group" "no_internet_nsg" {
     resource_group_name = azurerm_resource_group.render_rg.name
     
     security_rule {
-        name                       = "SSH"
+        name                       = "nointernet"
         priority                   = 4000
         direction                  = "Inbound"
         access                     = "Deny"
         protocol                   = "*"
         source_port_range          = "*"
-        destination_port_range     = "22"
+        destination_port_range     = "*"
         source_address_prefix      = "Internet"
         destination_address_prefix = "*"
     }
@@ -50,7 +50,7 @@ resource "azurerm_virtual_network" "vnet" {
     subnet {
         name           = var.subnet_cloud_cache_subnet_name
         address_prefix = var.subnet_cloud_cache_address_prefix
-        security_group = azurerm_network_security_group.ssh_nsg.id
+        security_group = azurerm_network_security_group.no_internet_nsg.id
     }
 
     // this subnet holds the cloud filers
@@ -58,6 +58,13 @@ resource "azurerm_virtual_network" "vnet" {
         name           = var.subnet_cloud_filers_subnet_name
         address_prefix = var.subnet_cloud_filers_address_prefix
         security_group = azurerm_network_security_group.no_internet_nsg.id
+    }
+
+    // this subnet holds the jumpbox or controller, there should be one cloud cache per subnet
+    subnet {
+        name           = var.subnet_jumpbox_subnet_name
+        address_prefix = var.subnet_jumpbox_address_prefix
+        security_group = azurerm_network_security_group.ssh_nsg.id
     }
 
     // partition the render clients in groups of roughly 500 nodes (max 507, and azure takes 5 reserved)

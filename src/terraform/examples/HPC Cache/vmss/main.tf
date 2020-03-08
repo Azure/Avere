@@ -166,7 +166,7 @@ module "jumpbox" {
     // network details
     virtual_network_resource_group = local.network_resource_group_name
     virtual_network_name = module.network.vnet_name
-    virtual_network_subnet_name = module.network.render_clients1_subnet_name
+    virtual_network_subnet_name = module.network.jumpbox_subnet_name
 }
 
 locals {
@@ -206,6 +206,18 @@ module "vmss" {
     bootstrap_script_path = module.vmss_configure.bootstrap_script_path
 }
 
+output "jumpbox_username" {
+  value = module.jumpbox.jumpbox_username
+}
+
+output "jumpbox_address" {
+  value = module.jumpbox.jumpbox_address
+}
+
 output "mount_addresses" {
   value = local.mount_addresses
+}
+
+output "export_namespace" {
+  value = azurerm_template_deployment.storage_target1.outputs["namespacePath"]
 }
