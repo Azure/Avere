@@ -33,7 +33,7 @@ locals {
 
     # download the latest vdbench from https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html
     # and upload to an azure storage blob and put the URL below
-    vdbench_url = "https://avereimageswestus.blob.core.windows.net/vdbench/vdbench50407.zip?st=2019-07-12T16%3A14%3A19Z&se=2099-07-13T16%3A14%3A00Z&sp=rl&sv=2018-03-28&sr=b&sig=d9wilix3MqXfevNN4fsMaXUdypjN0I9JDcpuIYyDk7Q%3D"
+    vdbench_url = ""
 
     // vmss details
     vmss_resource_group_name = "vmss_rg"
