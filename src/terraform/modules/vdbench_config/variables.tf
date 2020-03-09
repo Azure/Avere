@@ -18,7 +18,7 @@ variable "nfs_address" {
     description = "the private name or ip address of the nfs server"
 }
 
-varaible "nfs_export_path" {
+variable "nfs_export_path" {
     description = "The writeable path exported on the nfs server that will host the boostrap scripts"
 }
 

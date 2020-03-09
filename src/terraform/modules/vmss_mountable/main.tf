@@ -1,6 +1,6 @@
 // customize the simple VM by editing the following local variables
 locals {
-    vm_name = "vm-${var.unique_name}"
+    vm_name = "${var.unique_name}"
 }
 
 data "azurerm_subnet" "vnet" {
@@ -29,6 +29,7 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
   upgrade_policy_mode = "Manual"
   priority            = var.vmss_priority
   eviction_policy     = var.vmss_priority == "Spot" ? "Delete" : null
+  overprovision       = var.overprovision
 
   dynamic "os_profile" {
     for_each = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? [var.admin_password] : [null] 
