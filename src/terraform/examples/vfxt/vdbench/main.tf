@@ -23,6 +23,13 @@ locals {
     controller_add_public_ip = true
     vfxt_cluster_name = "vfxt"
     vfxt_cluster_password = "VFXT_PASSWORD"
+    // vfxt cache polies
+    //  "Clients Bypassing the Cluster"
+    //  "Read Caching"
+    //  "Read and Write Caching"
+    //  "Full Caching"
+    //  "Transitioning Clients Before or After a Migration"
+    cache_policy = "Full Caching"
 
     # download the latest vdbench from https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html
     # and upload to an azure storage blob and put the URL below
@@ -31,7 +38,7 @@ locals {
     // vmss details
     vmss_resource_group_name = "vmss_rg"
     unique_name = "uniquename"
-    vm_count = 3
+    vm_count = 12
     vmss_size = "Standard_DS2_v2"
     mount_target = "/data"
 }
@@ -109,7 +116,7 @@ resource "avere_vfxt" "vfxt" {
     core_filer {
         name = "nfs1"
         fqdn_or_primary_ip = module.nasfiler1.primary_ip
-        cache_policy = "Clients Bypassing the Cluster"
+        cache_policy = local.cache_policy
         junction {
             namespace_path = local.nfs_export_path
             core_filer_export = module.nasfiler1.core_filer_export
