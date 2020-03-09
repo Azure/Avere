@@ -22,6 +22,13 @@ locals {
     controller_add_public_ip = true
     vfxt_cluster_name = "vfxt"
     vfxt_cluster_password = "VFXT_PASSWORD"
+    // vfxt cache polies
+    //  "Clients Bypassing the Cluster"
+    //  "Read Caching"
+    //  "Read and Write Caching"
+    //  "Full Caching"
+    //  "Transitioning Clients Before or After a Migration"
+    cache_policy = "Clients Bypassing the Cluster"
 }
 
 provider "azurerm" {
@@ -103,7 +110,7 @@ resource "avere_vfxt" "vfxt" {
     core_filer {
         name = "nfs1"
         fqdn_or_primary_ip = module.nasfiler1.primary_ip
-        cache_policy = "Clients Bypassing the Cluster"
+        cache_policy = local.cache_policy
         custom_settings = [
             "client_rt_preferred FE 524288",
             "client_wt_preferred NO 524288",

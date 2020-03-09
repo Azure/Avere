@@ -30,6 +30,13 @@ locals {
     vm_count = 2
     vmss_size = "Standard_DS2_v2"
     mount_target = "/data"
+    // vfxt cache polies
+    //  "Clients Bypassing the Cluster"
+    //  "Read Caching"
+    //  "Read and Write Caching"
+    //  "Full Caching"
+    //  "Transitioning Clients Before or After a Migration"
+    cache_policy = "Clients Bypassing the Cluster"
 }
 
 provider "azurerm" {
@@ -105,7 +112,7 @@ resource "avere_vfxt" "vfxt" {
     core_filer {
         name = "nfs1"
         fqdn_or_primary_ip = module.nasfiler1.primary_ip
-        cache_policy = "Clients Bypassing the Cluster"
+        cache_policy = local.cache_policy
         junction {
             namespace_path = local.nfs_export_path
             core_filer_export = module.nasfiler1.core_filer_export
