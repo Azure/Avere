@@ -39,11 +39,11 @@ git pull origin master
 
 8. execute `terraform init` in the directory of `main.tf`.
 
-9. execute `terraform apply -auto-approve` to build the vfxt cluster
+9. execute `terraform apply -auto-approve` to build the vfxt cluster, and configure vmss clients with VDBench
 
 ## Using vdbench
 
-1. After deployment is complete, find the IP of one of the VDBench clients from the [portal](https://portal.azure.com) or https://resources.azure.com, and login from the controller and run the following commands to set your private SSH secret:
+1. After deployment is complete, find the IP by running the command provided in the terraform `vmss_addresses_command` output parameter.  Login from the controller using the controller values returned in the terraform output parameters and run the following commands to set your private SSH secret:
 
    ```bash
    touch ~/.ssh/id_rsa
