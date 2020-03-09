@@ -71,3 +71,9 @@ variable "nfs_export_path" {
 variable "bootstrap_script_path" {
   description = "The script path on the NFS share to execute during deployment."
 }
+
+variable "overprovision" {
+  description = "specifies to use overprovisioning, by default is false"
+  default = "false"
+}
+
