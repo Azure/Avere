@@ -169,6 +169,7 @@ function mount_avere() {
         else
             echo "${VFXT}:${NFS_PATH}    ${MOUNT_POINT}    nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0" >> /etc/fstab
             mount ${MOUNT_POINT}
+            chmod 777 ${MOUNT_POINT}
         fi
         COUNTER=$(($COUNTER + 1))
     done
