@@ -106,6 +106,8 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
     }
 SETTINGS
   }
+
+  depends_on = [var.vmss_depends_on]
 }
 
 /*
