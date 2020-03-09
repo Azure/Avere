@@ -36,7 +36,7 @@ ensureAzureNetwork()
   networkHealthy=1
   for i in {1..240}; do
     COUNTER=0
-    if hostname -s | grep -E "00[0-9]{4}$" > /dev/null ; then
+    if hostname -s | grep -E "000[0-9A-Fa-f]{3}$" > /dev/null ; then
         # these are VMSS nodes, count the VMSS nodes
         FAILURE_COUNTER=0
         FAILURE_MAX=255
@@ -692,7 +692,7 @@ function write_vdbench_files() {
     write_throughput
     write_smallfileIO
     # choose how to write the files based on node type
-    if hostname -s | grep -E "00[0-9]{4}$" > /dev/null ; then
+    if hostname -s | grep -E "000[0-9A-Fa-f]{3}$" > /dev/null ; then
         write_vmss_copy_idrsa
         write_vmss_azure_clients
     else
