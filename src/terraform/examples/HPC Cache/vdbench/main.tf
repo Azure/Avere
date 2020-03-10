@@ -208,8 +208,8 @@ module "vmss" {
     mount_target = local.mount_target
     nfs_export_addresses = local.mount_addresses
     nfs_export_path = local.nfs_export_path
-    bootstrap_script_path = module.vmss_configure.bootstrap_script_path
-    vmss_depends_on = module.vmss_configure.bootstrap_script_path
+    bootstrap_script_path = module.vdbench_configure.bootstrap_script_path
+    vmss_depends_on = module.vdbench_configure.bootstrap_script_path
 }
 
 output "jumpbox_username" {

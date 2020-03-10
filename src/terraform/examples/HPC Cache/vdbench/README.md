@@ -33,7 +33,7 @@ echo "src/terraform/*" >> .git/info/sparse-checkout
 git pull origin master
 ```
 
-6. `cd src/terraform/examples/vfxt/vdbench`
+6. `cd src/terraform/examples/HPC\ Cache/vdbench`
 
 7. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences
 
