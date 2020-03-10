@@ -133,13 +133,13 @@ resource "avere_vfxt" "vfxt" {
     vfxt_node_count = 3
     global_custom_settings = [
         "cluster.CtcBackEndTimeout KO 110000000",
-		"cluster.HaBackEndTimeout II 120000000",
-		"cluster.NfsBackEndTimeout VO 100000000",
-		"cluster.NfsFrontEndCwnd EK 1",
-		"cluster.ctcConnMult CE 25",
-		"vcm.alwaysForwardReadSize DL 134217728",
+        "cluster.HaBackEndTimeout II 120000000",
+        "cluster.NfsBackEndTimeout VO 100000000",
+        "cluster.NfsFrontEndCwnd EK 1",
+        "cluster.ctcConnMult CE 25",
+        "vcm.alwaysForwardReadSize DL 134217728",
         "vcm.disableReadAhead AB 1",
-		"vcm.vcm_waWriteBlocksValid GN 0",
+        "vcm.vcm_waWriteBlocksValid GN 0",
     ]
 
     vserver_settings = [
