@@ -7,6 +7,7 @@ The following table shows the performance characteristics of various Azure SKUs:
 | Azure SKU | Ephemeral Disk Type | Capacity (TiB) | Storage Throughput (GB/s) | IOPs |
 | --- | --- | --- | --- | --- |
 | Standard_D2s_v3 (good for POC) | ssd | 0.04 TiB | 0.04 Read GB/s, 0.02 Write GB/s  | 3000 |
+| Standard_D32_v3 (good for POC) | ssd | 0.78 TiB | 0.73 Read GB/s, 0.37 Write GB/s  | 48000 |
 | Standard_L4s | ssd | 0.56 TiB | 0.20 GB/s | 20000 |
 | Standard_L8s | ssd | 1.15 TiB | 0.39 GB/s | 40000 |
 | Standard_L16s | ssd | 2.33 TiB | 0.78 GB/s | 80000 |
