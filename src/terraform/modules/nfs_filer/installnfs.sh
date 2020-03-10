@@ -32,7 +32,7 @@ function yum_install() {
 }
 
 function config_linux() {
-	yum_install 20 10 180 nfs-utils
+    yum_install 20 10 180 nfs-utils
 }
 
 function config_ephemeral_nvme {
