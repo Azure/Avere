@@ -20,6 +20,7 @@ The examples show how to deploy HPC Cache, Avere vFXT, and an NFS Filer from min
    5. [Avere vFXT and VDBench example](examples/vfxt/vdbench)
    6. [Avere vFXT and VMSS example](examples/vfxt/vmss)
 3. [NFS Ephemeral Filer](examples/nfsfiler)
+4. [Jumpbox](examples/jumpbox) - this deploys a VM pre-installed with pre-installed with az cli, terraform, golang, and the built avere provider
 
 # Modules
 
