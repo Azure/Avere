@@ -25,7 +25,7 @@ To run the example, execute the following instructions.  This assumes use of Azu
 
 1. browse to https://shell.azure.com
 
-2. Specify your subscription by running this command with your subscription ID:  ```az account set --subscription YOUR_SUBSCRIPTION_ID```.  You will need to run this everytime after restarting your shell, otherwise it may default you to the wrong subscription, and you will see an error similar to `azurerm_public_ip.vm is empty tuple`.
+2. Specify your subscription by running this command with your subscription ID:  ```az account set --subscription YOUR_SUBSCRIPTION_ID```.  You will need to run this every time after restarting your shell, otherwise it may default you to the wrong subscription, and you will see an error similar to `azurerm_public_ip.vm is empty tuple`.
 
 3. As a pre-requisite ensure you have a network and the ability to ssh to a private ip address.  If not deploy the [jumpbox example](../jumpbox/).
 

@@ -34,6 +34,7 @@ type Azure struct {
 
 // matching strings for the vfxt.py output
 var matchManagementIPAddressRegex = regexp.MustCompile(` management address: (\d+.\d+.\d+.\d+)`)
+var matchManagementIPAddressRegex2 = regexp.MustCompile(`^address=(.*)$`)
 var matchCreateFailure = regexp.MustCompile(`^(.*vfxt:ERROR.*)$`)
 var matchVfxtFailure = regexp.MustCompile(`^(.*vFXTCreateFailure:.*)$`)
 var matchVfxtNotFound = regexp.MustCompile(`(vfxt:ERROR - Cluster not found)`)
@@ -237,7 +238,10 @@ func getAllVfxtErrors(stdoutBuf bytes.Buffer, stderrBuf bytes.Buffer) string {
 func getLastManagementIPAddress(stderrBuf bytes.Buffer) (string, error) {
 	lastManagementIPAddr := getLastVfxtValue(stderrBuf, matchManagementIPAddressRegex)
 	if len(lastManagementIPAddr) == 0 {
-		return "", fmt.Errorf("ERROR: management ip address not found in vfxt.py output")
+		lastManagementIPAddr = getLastVfxtValue(stderrBuf, matchManagementIPAddressRegex2)
+		if len(lastManagementIPAddr) == 0 {
+			return "", fmt.Errorf("ERROR: management ip address not found in vfxt.py output")
+		}
 	}
 	return lastManagementIPAddr, nil
 }
