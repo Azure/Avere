@@ -21,7 +21,8 @@ resource "null_resource" "install_vdbench_bootstrap" {
       "sudo mkdir -p ${local.mount_dir}/${local.bootstrap_dir}",
       "sudo curl --retry 5 --retry-delay 5 -o ${local.mount_dir}/${local.bootstrap_dir}/vdbench50407.zip '${var.vdbench_url}'",
       # download the vdbench script last
-      "sudo curl --retry 5 --retry-delay 5 -o ${local.mount_dir}/${local.bootstrap_dir}/bootstrap.vdbench.sh ${local.bootstrap_script}",
+      "sudo curl --retry 5 --retry-delay 5 -o ${local.mount_dir}/${local.bootstrap_dir}/.bootstrap.vdbench.sh ${local.bootstrap_script}",
+      "sudo mv ${local.mount_dir}/${local.bootstrap_dir}/.bootstrap.vdbench.sh ${local.mount_dir}/${local.bootstrap_dir}/bootstrap.vdbench.sh"
       "sudo umount ${local.mount_dir}",
       "sudo rmdir ${local.mount_dir}",
     ]
