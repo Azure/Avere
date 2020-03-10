@@ -68,7 +68,7 @@ module "nasfiler1" {
     admin_username = local.vm_admin_username
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
-    vm_size = "Standard_D2s_v3"
+    vm_size = "Standard_D32_v3"
     unique_name = "nasfiler1"
 
     // network details
