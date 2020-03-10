@@ -35,16 +35,22 @@ git pull origin master
 
 ## Using vdbench
 
-1. After deployment is complete, find the IP of one of the VDBench clients from the [portal](https://portal.azure.com) or https://resources.azure.com, and login from the controller and run the following commands to set your private SSH secret:
+1. After deployment is complete, login to the jumpbox as specified by the `jumpbox_username` and `jumpbox_address` terraform output variables, and create the [ssh key](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys) to be used by vdbench on the jumpbox:
 
    ```bash
    touch ~/.ssh/id_rsa
    chmod 600 ~/.ssh/id_rsa
    vi ~/.ssh/id_rsa
    ```
-    
-2. During installation, `copy_dirsa.sh` was installed to `~/.` on the vdbench client machine, to enable easy copying of your private key to all vdbench clients.  Run `~/copy_idrsa.sh` to copy your private key to all vdbench clients, and to add all clients to the "known hosts" list. (**Note** if your ssh key requires a passphrase, some extra steps are needed to make this work. Consider creating a key that does not require a passphrase for ease of use.)
+2. run `az login` and execute the command from the `vmss_addresses_command` terraform output variable to get one ip address of a VMSS node, and run the following commands to copy the `id_rsa` file, and login to the node, replace USERNAME with the jumpbox username and IP_ADDRESS with ip address of a VMSS node:
 
+   ```bash
+   scp ~/.ssh/id_rsa USERNAME@IP_ADDRESS:.ssh/.
+   ssh USERNAME@IP_ADDRESS
+   vi ~/.ssh/id_rsa
+   ```
+
+3. During installation, `copy_dirsa.sh` was installed to `~/.` on the vdbench client machine, to enable easy copying of your private key to all vdbench clients.  Run `~/copy_idrsa.sh` to copy your private key to all vdbench clients, and to add all clients to the "known hosts" list. (**Note** if your ssh key requires a passphrase, some extra steps are needed to make this work. Consider creating a key that does not require a passphrase for ease of use.)
 
 ### Memory test 
 
@@ -55,7 +61,7 @@ git pull origin master
    ./run_vdbench.sh inmem.conf uniquestring1
    ```
 
-2. Browse to the Azure HPC Cache resource in the portal or log in to Avere vFXT cluster GUI (Avere Control Panel - instructions [here](https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-cluster-gui)) to watch the performance metrics. You will see a similar performance chart to the following:
+2. Browse to the Azure HPC Cache resource in the portal to watch the performance metrics. You will see a similar performance chart to the following:
 
    <img src="../../../../../docs/images/vdbench_inmem_hpc_cache.png">
 
@@ -68,6 +74,6 @@ git pull origin master
    ./run_vdbench.sh ondisk.conf uniquestring2
    ```
 
-2. Log in to the Avere Control Panel ([instructions](https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-cluster-gui)) to watch the performance metrics. You will see a performance chart similar to the following one:
+2. Browse to the Azure HPC Cache resource in the portal to watch the performance metrics. You will see a performance chart similar to the following one:
 
-   <img src="../../../../../docs/images/vdbench_ondisk.png">
+   <img src="../../../../../docs/images/vdbench_ondisk_hpc_cache.png">

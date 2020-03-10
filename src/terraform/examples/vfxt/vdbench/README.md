@@ -43,15 +43,22 @@ git pull origin master
 
 ## Using vdbench
 
-1. After deployment is complete, find the IP by running the command provided in the terraform `vmss_addresses_command` output parameter.  Login from the controller using the controller values returned in the terraform output parameters and run the following commands to set your private SSH secret:
+1. After deployment is complete, login to the controller as specified by the `ssh_command_with_avere_tunnel` terraform output variable, and create the [ssh key](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys) to be used by vdbench on the jumpbox:
 
    ```bash
    touch ~/.ssh/id_rsa
    chmod 600 ~/.ssh/id_rsa
    vi ~/.ssh/id_rsa
    ```
-    
-2. During installation, `copy_dirsa.sh` was installed to `~/.` on the vdbench client machine, to enable easy copying of your private key to all vdbench clients.  Run `~/copy_idrsa.sh` to copy your private key to all vdbench clients, and to add all clients to the "known hosts" list. (**Note** if your ssh key requires a passphrase, some extra steps are needed to make this work. Consider creating a key that does not require a passphrase for ease of use.)
+2. execute the command from the `vmss_addresses_command` terraform output variable to get one ip address of a VMSS node, and run the following commands to copy the `id_rsa` file, and login to the node, replace USERNAME with the controller username and IP_ADDRESS with ip address of a VMSS node:
+
+   ```bash
+   scp ~/.ssh/id_rsa USERNAME@IP_ADDRESS:.ssh/.
+   ssh USERNAME@IP_ADDRESS
+   vi ~/.ssh/id_rsa
+   ```
+
+3. During installation, `copy_dirsa.sh` was installed to `~/.` on the vdbench client machine, to enable easy copying of your private key to all vdbench clients.  Run `~/copy_idrsa.sh` to copy your private key to all vdbench clients, and to add all clients to the "known hosts" list. (**Note** if your ssh key requires a passphrase, some extra steps are needed to make this work. Consider creating a key that does not require a passphrase for ease of use.)
 
 
 ### Memory test 
