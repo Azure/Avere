@@ -20,7 +20,7 @@ resource "null_resource" "install_bootstrap" {
       "sudo mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' ${var.nfs_address}:${var.nfs_export_path} ${local.mount_dir}",
       "sudo mkdir -p ${local.mount_dir}/${local.bootstrap_dir}",
       "sudo curl --retry 5 --retry-delay 5 -o ${local.mount_dir}/${local.bootstrap_dir}/.bootstrap.sh ${local.bootstrap_script}",
-      "sudo mv ${local.mount_dir}/${local.bootstrap_dir}/.bootstrap.sh ${local.mount_dir}/${local.bootstrap_dir}/bootstrap.sh"
+      "sudo mv ${local.mount_dir}/${local.bootstrap_dir}/.bootstrap.sh ${local.mount_dir}/${local.bootstrap_dir}/bootstrap.sh",
       "sudo umount ${local.mount_dir}",
       "sudo rmdir ${local.mount_dir}",
     ]
