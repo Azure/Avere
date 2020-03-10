@@ -1,3 +1,11 @@
+# Mar 2020 - Update
+
+We have added new terraform VDBench examples for a more automatic install:
+1. [HPC Cache and VDBench example](../src/terraform/examples/HPC%20Cache/vdbench)
+2. [Avere vFXT and VDBench example](../src/terraform/examples/vfxt/vdbench)
+
+The below instructions will still work, if you do not wish to use the Terraform examples.
+
 # Vdbench - measuring HPC cache or vFXT performance
 
 This is a basic setup to generate small and medium sized workloads to test the [Azure HPC Cache](https://azure.microsoft.com/services/hpc-cache/) or [Avere vFXT for Azure](https://azure.microsoft.com/services/storage/avere-vfxt/) memory and disk subsystems.  The suggested configuration is 12 x Standard_D2s_v3 clients for each group of 3 vFXT nodes or for each 2 GB/s of throughput capacity in an HPC cache.
@@ -27,9 +35,9 @@ These deployment instructions describe the installation of all components requir
 
     2. Edit `/etc/fstab` to add the following lines but *using your HPC cache or vFXT node IP addresses*. Add more lines if your cluster has more than three nodes.
         ```bash
-        10.0.0.12:/msazure	/nfs/node0	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
-        10.0.0.13:/msazure	/nfs/node1	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
-        10.0.0.14:/msazure	/nfs/node2	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
+        10.0.0.12:/msazure    /nfs/node0    nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
+        10.0.0.13:/msazure    /nfs/node1    nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
+        10.0.0.14:/msazure    /nfs/node2    nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
         ```
 
     3. To mount all shares, type `mount -a`
@@ -66,7 +74,7 @@ These deployment instructions describe the installation of all components requir
    chmod 600 ~/.ssh/id_rsa
    vi ~/.ssh/id_rsa
    ```
-	
+    
 2. During installation, `copy_dirsa.sh` was installed to `~/.` on the vdbench client machine, to enable easy copying of your private key to all vdbench clients.  Run `~/copy_idrsa.sh` to copy your private key to all vdbench clients, and to add all clients to the "known hosts" list. (**Note** if your ssh key requires a passphrase, some extra steps are needed to make this work. Consider creating a key that does not require a passphrase for ease of use.)
 
 
