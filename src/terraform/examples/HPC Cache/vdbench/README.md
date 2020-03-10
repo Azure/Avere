@@ -57,7 +57,7 @@ git pull origin master
 
 2. Browse to the Azure HPC Cache resource in the portal or log in to Avere vFXT cluster GUI (Avere Control Panel - instructions [here](https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-cluster-gui)) to watch the performance metrics. You will see a similar performance chart to the following:
 
-   <img src="../../../../../docs/images/vdbench_inmem.png">
+   <img src="../../../../../docs/images/vdbench_inmem_hpc_cache.png">
 
 ### On-disk test
 
