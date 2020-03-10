@@ -10,7 +10,7 @@ Before starting, download the latest vdbench from https://www.oracle.com/technet
 
 1. browse to https://shell.azure.com
 
-2. Specify your subscription by running this command with your subscription ID:  ```az account set --subscription YOUR_SUBSCRIPTION_ID```.  You will need to run this everytime after restarting your shell, otherwise it may default you to the wrong subscription, and you will see an error similar to `azurerm_public_ip.vm is empty tuple`.
+2. Specify your subscription by running this command with your subscription ID:  ```az account set --subscription YOUR_SUBSCRIPTION_ID```.  You will need to run this every time after restarting your shell, otherwise it may default you to the wrong subscription, and you will see an error similar to `azurerm_public_ip.vm is empty tuple`.
 
 3. double check your Avere vFXT pre-requistes, including running `az vm image accept-terms --urn microsoft-avere:vfxt:avere-vfxt-controller:latest`: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs
 
@@ -35,11 +35,11 @@ git pull origin master
 
 6. `cd src/terraform/examples/vfxt/vdbench`
 
-7. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences
+7. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  If you are using an [ssk key](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys), ensure that ~/.ssh/id_rsa is populated.
 
 8. execute `terraform init` in the directory of `main.tf`.
 
-9. execute `terraform apply -auto-approve` to build the vfxt cluster, and configure vmss clients with VDBench
+9. execute `terraform apply -auto-approve` to build the vfxt cluster with a 12 node VMSS configured to run VDBench.
 
 ## Using vdbench
 

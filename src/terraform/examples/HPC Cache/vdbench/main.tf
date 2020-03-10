@@ -52,7 +52,7 @@ locals {
     // vmss details
     vmss_resource_group_name = "vmss_rg"
     unique_name = "uniquename"
-    vm_count = 2
+    vm_count = 12
     vmss_size = "Standard_DS2_v2"
     mount_target = "/data"
 }
@@ -226,4 +226,24 @@ output "mount_addresses" {
 
 output "export_namespace" {
   value = azurerm_template_deployment.storage_target1.outputs["namespacePath"]
+}
+
+output "vmss_id" {
+  value = module.vmss.vmss_id
+}
+
+output "vmss_resource_group" {
+  value = module.vmss.vmss_resource_group
+}
+
+output "vmss_name" {
+  value = module.vmss.vmss_name
+}
+
+output "vmss_addresses_command" {
+    // local-exec doesn't return output, and the only way to 
+    // try to get the output is follow advice from https://stackoverflow.com/questions/49136537/obtain-ip-of-internal-load-balancer-in-app-service-environment/49436100#49436100
+    // in the meantime just provide the az cli command to
+    // the customer
+    value = "az vmss nic list -g ${module.vmss.vmss_resource_group} --vmss-name ${module.vmss.vmss_name} --query \"[].ipConfigurations[].privateIpAddress\""
 }

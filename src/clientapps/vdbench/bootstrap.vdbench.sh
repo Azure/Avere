@@ -168,7 +168,7 @@ function mount_avere() {
             echo "not updating file, already there"
         else
             echo "${VFXT}:${NFS_PATH}    ${MOUNT_POINT}    nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0" >> /etc/fstab
-            mount ${MOUNT_POINT}
+            retrycmd_if_failure 60 5 mount ${MOUNT_POINT}
             chmod 777 ${MOUNT_POINT}
         fi
         COUNTER=$(($COUNTER + 1))
