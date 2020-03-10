@@ -15,7 +15,7 @@
         "machineExtensionScript": "",
         "machines": [
           {
-            "name": "RenderManager0",
+            "name": "renderManager0",
             "machineSize": "Standard_D4s_v3",
             "adminUsername": "az",
             "adminPassword": "P@ssword1234",
