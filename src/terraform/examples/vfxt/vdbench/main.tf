@@ -29,7 +29,7 @@ locals {
     //  "Read and Write Caching"
     //  "Full Caching"
     //  "Transitioning Clients Before or After a Migration"
-    cache_policy = "Full Caching"
+    cache_policy = "Read and Write Caching" // "Read and Write Caching" is more performant than "Full Caching"
 
     # download the latest vdbench from https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html
     # and upload to an azure storage blob and put the URL below
