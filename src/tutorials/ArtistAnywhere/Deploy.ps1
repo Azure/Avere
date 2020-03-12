@@ -1,5 +1,5 @@
 ﻿# Before running this Azure resource deployment script, make sure that the Azure CLI is installed locally.
-# You must have version 2.1.0 (or greater) of the Azure CLI installed for this script to run properly.
+# You must have version 2.2.0 (or greater) of the Azure CLI installed for this script to run properly.
 # The current Azure CLI release is available at http://docs.microsoft.com/cli/azure/install-azure-cli
 
 param (
@@ -15,7 +15,7 @@ param (
 	# Set to true to deploy Azure Object (Blob) Storage (http://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview)
 	[boolean] $storageDeployObject = $false,
 
-	# Set to true to deploy Azure Virtual Desktop (http://docs.microsoft.com/azure/virtual-desktop/overview) host pool
+	# Set to true to deploy Azure Virtual Desktop (http://docs.microsoft.com/azure/virtual-desktop/overview)
 	[boolean] $virtualDesktopDeploy = $false
 )
 
@@ -23,63 +23,10 @@ $templateDirectory = $PSScriptRoot
 
 Import-Module "$templateDirectory\Deploy.psm1"
 
-# * - Image Gallery Job
-$moduleName = "* - Image Gallery Job"
-New-TraceMessage $moduleName $true
-$imageGalleryJob = Start-Job -FilePath "$templateDirectory\Deploy.ImageGallery.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames
-
-# 00 - Network
-$computeNetworks = @()
-$moduleName = "00 - Network"
-New-TraceMessage $moduleName $true
-for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
-	New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
-	$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Network"
-	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
-	if (!$resourceGroup) { return }
-
-	$templateResources = "$templateDirectory\00-Network.json"
-	$templateParameters = "$templateDirectory\00-Network.Parameters.Region$computeRegionIndex.json"
-	$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
-	if (!$groupDeployment) { return }
-
-	$computeNetwork = New-Object PSObject
-	$computeNetwork | Add-Member -MemberType NoteProperty -Name "resourceGroupName" -Value $resourceGroupName
-	$computeNetwork | Add-Member -MemberType NoteProperty -Name "name" -Value $groupDeployment.properties.outputs.virtualNetworkName.value
-	$computeNetwork | Add-Member -MemberType NoteProperty -Name "domainName" -Value $groupDeployment.properties.outputs.virtualNetworkDomainName.value
-	$computeNetworks += $computeNetwork
-	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
-}
-New-TraceMessage $moduleName $false
-
-# 02 - Security
-$computeRegionIndex = 0
-$moduleName = "02 - Security"
-New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
-$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Security"
-$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
-if (!$resourceGroup) { return }
-
-$templateResources = "$templateDirectory\02-Security.json"
-$templateParameters = (Get-Content "$templateDirectory\02-Security.Parameters.json" -Raw | ConvertFrom-Json).parameters
-if ($templateParameters.virtualNetwork.value.resourceGroupName -eq "") {
-	$templateParameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
-}
-if ($templateParameters.virtualNetwork.value.name -eq "") {
-	$templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
-}
-$templateParameters = ($templateParameters | ConvertTo-Json -Compress).Replace('"', '\"')
-$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
-if (!$groupDeployment) { return }
-
-$logAnalyticsWorkspaceId = $groupDeployment.properties.outputs.logAnalyticsWorkspaceId.value
-$logAnalyticsWorkspaceKey = $groupDeployment.properties.outputs.logAnalyticsWorkspaceKey.value
-New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
-
-# * - Image Gallery Job
-$moduleName = "* - Image Gallery Job"
-$imageGallery = Receive-Job -InstanceId $imageGalleryJob.InstanceId -Wait
-New-TraceMessage $moduleName $false
+$sharedServices = New-SharedServices $false
+$computeNetworks = $sharedServices.computeNetworks
+$imageGallery = $sharedServices.imageGallery
+$logAnalytics = $sharedServices.logAnalytics
 
 # * - Storage Cache Job
 $moduleName = "* - Storage Cache Job"
@@ -94,7 +41,7 @@ $renderManagerJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderManager
 # * - Render Desktop Image Job
 $moduleName = "* - Render Desktop Image Job"
 New-TraceMessage $moduleName $true
-$renderDesktopImageJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderDesktop.Image.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $computeNetworks, $imageGallery
+$renderDesktopImageJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderDesktop.Image.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $imageGallery
 
 $moduleDirectory = "RenderWorker"
 
@@ -118,11 +65,10 @@ if ($templateParameters.imageBuilder.value.imageGalleryName -eq "") {
 }
 $templateParameters.imageBuilder.value.imageReplicationRegions += Get-RegionNames $computeRegionNames
 $imageTemplateName = $templateParameters.imageBuilder.value.imageTemplateName
-$imageTemplateResourceType = "Microsoft.VirtualMachineImages/imageTemplates"
-$imageTemplates = az resource list --resource-group $resourceGroupName --resource-type $imageTemplateResourceType --name $imageTemplateName | ConvertFrom-Json
+$imageTemplates = az resource list --resource-group $resourceGroupName --resource-type "Microsoft.VirtualMachineImages/imageTemplates" --name $imageTemplateName | ConvertFrom-Json
 if ($imageTemplates.length -eq 0) {	
 	$templateParameters = ($templateParameters | ConvertTo-Json -Compress -Depth 3).Replace('"', '\"')
-	$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+	$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
 	if (!$groupDeployment) { return }
 }
 New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
@@ -132,11 +78,11 @@ $computeRegionIndex = 0
 $moduleName = "08.1 - Worker Image Version"
 New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 $resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Image"
-$imageVersion = Get-ImageVersion $resourceGroupName $imageGallery.name $imageDefinition.name $imageTemplateName
-if (!$imageVersion) {
-	$imageVersion = az resource invoke-action --resource-group $resourceGroupName --resource-type $imageTemplateResourceType --name $imageTemplateName --action Run | ConvertFrom-Json
-	if (!$imageVersion) { return }
-	$imageVersion = Get-ImageVersion $resourceGroupName $imageGallery.name $imageDefinition.name $imageTemplateName
+$imageVersionId = Get-ImageVersionId $resourceGroupName $imageGallery.name $imageDefinition.name $imageTemplateName
+if (!$imageVersionId) {
+	az image builder run --resource-group $resourceGroupName --name $imageTemplateName
+	$imageVersionId = Get-ImageVersionId $resourceGroupName $imageGallery.name $imageDefinition.name $imageTemplateName
+	if (!$imageVersionId) { return }
 }
 New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 
@@ -185,13 +131,13 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 		$templateParameters.renderWorker.value.homeDirectory = $imageDefinition.homeDirectory
 	}
 	if ($templateParameters.renderWorker.value.imageVersionId -eq "") {
-		$templateParameters.renderWorker.value.imageVersionId = $imageVersion.id
+		$templateParameters.renderWorker.value.imageVersionId = $imageVersionId
 	}
 	if ($templateParameters.renderWorker.value.logAnalyticsWorkspaceId -eq "") {
-		$templateParameters.renderWorker.value.logAnalyticsWorkspaceId = $logAnalyticsWorkspaceId
+		$templateParameters.renderWorker.value.logAnalyticsWorkspaceId = $logAnalytics.workspaceId
 	}
 	if ($templateParameters.renderWorker.value.logAnalyticsWorkspaceKey -eq "") {
-		$templateParameters.renderWorker.value.logAnalyticsWorkspaceKey = $logAnalyticsWorkspaceKey
+		$templateParameters.renderWorker.value.logAnalyticsWorkspaceKey = $logAnalytics.workspaceKey
 	}
 	if ($templateParameters.renderWorker.value.machineExtensionScript -eq "") {
 		$templateParameters.renderWorker.value.machineExtensionScript = $machineExtensionScript
@@ -203,7 +149,7 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 		$templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
 	}
 	$templateParameters = ($templateParameters | ConvertTo-Json -Compress -Depth 4).Replace('"', '\"')
-	$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+	$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
 	if (!$groupDeployment) { return }
 	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 }
@@ -214,24 +160,3 @@ $moduleName = "* - Render Desktop Machines Job"
 $renderDesktopMachines = Receive-Job -InstanceId $renderDesktopMachinesJob.InstanceId -Wait
 if (!$renderDesktopMachines) { return }
 New-TraceMessage $moduleName $false
-
-# 12 - Virtual Desktop Pool
-if ($virtualDesktopDeploy) {
-	$moduleName = "12 - Virtual Desktop Pool"
-	New-TraceMessage $moduleName $true
-	for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
-		New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
-		$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Desktop"
-		$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
-		if (!$resourceGroup) { return }
-	
-		$templateResources = "$templateDirectory\$moduleDirectory\12-Desktop.Pool.json"
-		$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\12-Desktop.Pool.Parameters.json" -Raw | ConvertFrom-Json).parameters
-
-		$templateParameters = ($templateParameters | ConvertTo-Json -Compress).Replace('"', '\"')
-		$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
-		if (!$groupDeployment) { return }
-		New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
-	}
-	New-TraceMessage $moduleName $false
-}

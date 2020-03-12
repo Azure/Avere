@@ -1,5 +1,5 @@
 ﻿# Before running this Azure resource deployment script, make sure that the Azure CLI is installed locally.
-# You must have version 2.1.0 (or greater) of the Azure CLI installed for this script to run properly.
+# You must have version 2.2.0 (or greater) of the Azure CLI installed for this script to run properly.
 # The current Azure CLI release is available at http://docs.microsoft.com/cli/azure/install-azure-cli
 
 param (
@@ -15,8 +15,8 @@ param (
 	# Set to the Azure Shared Image Gallery (SIG) resource that is shared across the compute regions
 	[object] $imageGallery,
 
-	# Set to the Azure Contrainer Registry (ACR) resource that is shared across the compute regions
-	[object] $imageRegistry
+	# Set to the Azure Monitor Log Analytics resource that is shared across the compute regions
+	[object] $logAnalytics
 )
 
 $templateDirectory = $PSScriptRoot
@@ -50,7 +50,7 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 		$templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
 	}
 	$templateParameters = ($templateParameters | ConvertTo-Json -Compress).Replace('"', '\"')
-	$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+	$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
 	if (!$groupDeployment) { return }
 
 	$managerDatabaseDeploySql += $groupDeployment.properties.outputs.managerDatabaseDeploySql.value
@@ -81,11 +81,10 @@ if ($templateParameters.imageBuilder.value.imageGalleryName -eq "") {
 }
 $templateParameters.imageBuilder.value.imageReplicationRegions += Get-RegionNames $computeRegionNames
 $imageTemplateName = $templateParameters.imageBuilder.value.imageTemplateName
-$imageTemplateResourceType = "Microsoft.VirtualMachineImages/imageTemplates"
-$imageTemplates = az resource list --resource-group $resourceGroupName --resource-type $imageTemplateResourceType --name $imageTemplateName | ConvertFrom-Json
+$imageTemplates = az resource list --resource-group $resourceGroupName --resource-type "Microsoft.VirtualMachineImages/imageTemplates" --name $imageTemplateName | ConvertFrom-Json
 if ($imageTemplates.length -eq 0) {	
 	$templateParameters = ($templateParameters | ConvertTo-Json -Compress -Depth 3).Replace('"', '\"')
-	$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+	$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
 	if (!$groupDeployment) { return }
 }
 New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
@@ -95,11 +94,11 @@ $computeRegionIndex = 0
 $moduleName = "06.1 - Manager Image Version"
 New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 $resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Image"
-$imageVersion = Get-ImageVersion $resourceGroupName $imageGallery.name $imageDefinition.name $imageTemplateName
-if (!$imageVersion) {
-	$imageVersion = az resource invoke-action --resource-group $resourceGroupName --resource-type $imageTemplateResourceType --name $imageTemplateName --action Run | ConvertFrom-Json
-	if (!$imageVersion) { return }
-	$imageVersion = Get-ImageVersion $resourceGroupName $imageGallery.name $imageDefinition.name $imageTemplateName
+$imageVersionId = Get-ImageVersionId $resourceGroupName $imageGallery.name $imageDefinition.name $imageTemplateName
+if (!$imageVersionId) {
+	az image builder run --resource-group $resourceGroupName --name $imageTemplateName
+	$imageVersionId = Get-ImageVersionId $resourceGroupName $imageGallery.name $imageDefinition.name $imageTemplateName
+	if (!$imageVersionId) { return }
 }
 New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 
@@ -120,7 +119,7 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 		$templateParameters.renderManager.value.homeDirectory = $imageDefinition.homeDirectory
 	}
 	if ($templateParameters.renderManager.value.imageVersionId -eq "") {
-		$templateParameters.renderManager.value.imageVersionId = $imageVersion.id
+		$templateParameters.renderManager.value.imageVersionId = $imageVersionId
 	}
 	if ($templateParameters.renderManager.value.databaseDeploySql -eq "") {
 		$templateParameters.renderManager.value.databaseDeploySql = $managerDatabaseDeploySql[$computeRegionIndex]
@@ -135,10 +134,10 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 		$templateParameters.renderManager.value.databaseClientPassword = $managerDatabaseClientPassword[$computeRegionIndex]
 	}
 	if ($templateParameters.renderManager.value.logAnalyticsWorkspaceId -eq "") {
-		$templateParameters.renderManager.value.logAnalyticsWorkspaceId = $using:logAnalyticsWorkspaceId
+		$templateParameters.renderManager.value.logAnalyticsWorkspaceId = $logAnalytics.workspaceId
 	}
 	if ($templateParameters.renderManager.value.logAnalyticsWorkspaceKey -eq "") {
-		$templateParameters.renderManager.value.logAnalyticsWorkspaceKey = $using:logAnalyticsWorkspaceKey
+		$templateParameters.renderManager.value.logAnalyticsWorkspaceKey = $logAnalytics.workspaceKey
 	}
 	if ($templateParameters.renderManager.value.machineExtensionScript -eq "") {
 		$templateParameters.renderManager.value.machineExtensionScript = $machineExtensionScript
@@ -150,7 +149,7 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 		$templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
 	}
 	$templateParameters = ($templateParameters | ConvertTo-Json -Compress -Depth 4).Replace('"', '\"')
-	$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+	$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
 	if (!$groupDeployment) { return }
 	
 	$renderManagers += $groupDeployment.properties.outputs.renderManager.value

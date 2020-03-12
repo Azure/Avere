@@ -1,5 +1,5 @@
 ﻿# Before running this Azure resource deployment script, make sure that the Azure CLI is installed locally.
-# You must have version 2.1.0 (or greater) of the Azure CLI installed for this script to run properly.
+# You must have version 2.2.0 (or greater) of the Azure CLI installed for this script to run properly.
 # The current Azure CLI release is available at http://docs.microsoft.com/cli/azure/install-azure-cli
 
 param (
@@ -26,30 +26,8 @@ if (!$templateDirectory) {
 
 Import-Module "$templateDirectory\Deploy.psm1"
 
-# 00 - Network
-if ($computeNetworks.length -eq 0) {
-	$moduleName = "00 - Network"
-	New-TraceMessage $moduleName $true
-	for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
-		New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
-		$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Network"
-		$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
-		if (!$resourceGroup) { return }
-
-		$templateResources = "$templateDirectory\00-Network.json"
-		$templateParameters = "$templateDirectory\00-Network.Parameters.Region$computeRegionIndex.json"
-		$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
-		if (!$groupDeployment) { return }
-
-		$computeNetwork = New-Object PSObject
-		$computeNetwork | Add-Member -MemberType NoteProperty -Name "resourceGroupName" -Value $resourceGroupName
-		$computeNetwork | Add-Member -MemberType NoteProperty -Name "name" -Value $groupDeployment.properties.outputs.virtualNetworkName.value
-		$computeNetwork | Add-Member -MemberType NoteProperty -Name "domainName" -Value $groupDeployment.properties.outputs.virtualNetworkDomainName.value
-		$computeNetworks += $computeNetwork
-		New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
-	}
-	New-TraceMessage $moduleName $false
-}
+$sharedServices = New-SharedServices $true $computeNetworks
+$computeNetworks = $sharedServices.computeNetworks
 
 $moduleDirectory = "StorageCache"
 
@@ -70,7 +48,7 @@ if ($storageDeployNetApp -or $storageDeployObject) {
 		$templateResources = "$templateDirectory\$moduleDirectory\03-Storage.NetApp.json"
 		$templateParameters = "$templateDirectory\$moduleDirectory\03-Storage.NetApp.Parameters.json"
 
-		$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+		$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
 		if (!$groupDeployment) { return }
 
 		$storageNetworkName = $groupDeployment.properties.outputs.virtualNetworkName.value
@@ -105,7 +83,7 @@ if ($storageDeployNetApp -or $storageDeployObject) {
 		$templateResources = "$templateDirectory\$moduleDirectory\03-Storage.Object.json"
 		$templateParameters = "$templateDirectory\$moduleDirectory\03-Storage.Object.Parameters.json"
 
-		$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+		$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
 		if (!$groupDeployment) { return }
 
 		$storageNetworkName = $groupDeployment.properties.outputs.virtualNetworkName.value
@@ -152,7 +130,7 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 		$templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
 	}
 	$templateParameters = ($templateParameters | ConvertTo-Json -Compress -Depth 5).Replace('"', '\"')
-	$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+	$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
 	if (!$groupDeployment) { return }
 
 	$storageCache = New-Object PSObject

@@ -34,6 +34,83 @@ function New-NetworkPeering ([string[]] $computeRegionNames, [object[]] $compute
 	return $networkPeering
 }
 
+function New-SharedServices ($networkOnly, $computeNetworks) {
+	if (!$networkOnly) {
+		# * - Image Gallery Job
+		$moduleName = "* - Image Gallery Job"
+		New-TraceMessage $moduleName $true
+		$imageGalleryJob = Start-Job -FilePath "$templateDirectory\Deploy.ImageGallery.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames
+	}
+
+	if (!$computeNetworks -or $computeNetworks.length -eq 0) {
+		# 00 - Network
+		$computeNetworks = @()
+		$moduleName = "00 - Network"
+		New-TraceMessage $moduleName $true
+		for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
+			New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+			$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Network"
+			$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
+			if (!$resourceGroup) { return }
+
+			$templateResources = "$templateDirectory\00-Network.json"
+			$templateParameters = "$templateDirectory\00-Network.Parameters.Region$computeRegionIndex.json"
+			$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+			if (!$groupDeployment) { return }
+
+			$computeNetwork = New-Object PSObject
+			$computeNetwork | Add-Member -MemberType NoteProperty -Name "resourceGroupName" -Value $resourceGroupName
+			$computeNetwork | Add-Member -MemberType NoteProperty -Name "name" -Value $groupDeployment.properties.outputs.virtualNetworkName.value
+			$computeNetwork | Add-Member -MemberType NoteProperty -Name "domainName" -Value $groupDeployment.properties.outputs.virtualNetworkDomainName.value
+			$computeNetworks += $computeNetwork
+			New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
+		}
+		New-TraceMessage $moduleName $false
+	}
+
+	if (!$networkOnly) {
+		# 02 - Security
+		$computeRegionIndex = 0
+		$moduleName = "02 - Security"
+		New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+		$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Security"
+		$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
+		if (!$resourceGroup) { return }
+
+		$templateResources = "$templateDirectory\02-Security.json"
+		$templateParameters = (Get-Content "$templateDirectory\02-Security.Parameters.json" -Raw | ConvertFrom-Json).parameters
+		if ($templateParameters.virtualNetwork.value.resourceGroupName -eq "") {
+			$templateParameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
+		}
+		if ($templateParameters.virtualNetwork.value.name -eq "") {
+			$templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
+		}
+		$templateParameters = ($templateParameters | ConvertTo-Json -Compress).Replace('"', '\"')
+		$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+		if (!$groupDeployment) { return }
+
+		$logAnalyticsWorkspaceId = $groupDeployment.properties.outputs.logAnalyticsWorkspaceId.value
+		$logAnalyticsWorkspaceKey = $groupDeployment.properties.outputs.logAnalyticsWorkspaceKey.value
+		New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
+
+		# * - Image Gallery Job
+		$moduleName = "* - Image Gallery Job"
+		$imageGallery = Receive-Job -InstanceId $imageGalleryJob.InstanceId -Wait
+		New-TraceMessage $moduleName $false
+	}
+
+	$logAnalytics = New-Object PSObject
+	$logAnalytics | Add-Member -MemberType NoteProperty -Name "workspaceId" -Value $logAnalyticsWorkspaceId
+	$logAnalytics | Add-Member -MemberType NoteProperty -Name "workspaceKey" -Value $logAnalyticsWorkspaceKey
+
+	$sharedServices = New-Object PSObject
+	$sharedServices | Add-Member -MemberType NoteProperty -Name "computeNetworks" -Value $computeNetworks
+	$sharedServices | Add-Member -MemberType NoteProperty -Name "imageGallery" -Value $imageGallery
+	$sharedServices | Add-Member -MemberType NoteProperty -Name "logAnalytics" -Value $logAnalytics
+
+	return $sharedServices
+}
+
 function Get-RegionNames ([string[]] $regionDisplayNames) {
 	$regionNames = @()
 	$regionLocations = az account list-locations | ConvertFrom-Json
@@ -63,11 +140,11 @@ function Get-ImageDefinition ($imageGallery, $imageDefinitionName) {
 	}
 }
 
-function Get-ImageVersion ($imageGalleryResourceGroupName, $imageGalleryName, $imageDefinitionName, $imageTemplateName) {
+function Get-ImageVersionId ($imageGalleryResourceGroupName, $imageGalleryName, $imageDefinitionName, $imageTemplateName) {
 	$imageVersions = az sig image-version list --resource-group $imageGalleryResourceGroupName --gallery-name $imageGalleryName --gallery-image-definition $imageDefinitionName | ConvertFrom-Json
 	foreach ($imageVersion in $imageVersions) {
 		if ($imageVersion.tags.imageTemplate -eq $imageTemplateName) {
-			return $imageVersion
+			return $imageVersion.id
 		}
 	}
 }

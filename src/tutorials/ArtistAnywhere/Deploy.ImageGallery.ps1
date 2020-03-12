@@ -1,5 +1,5 @@
 ﻿# Before running this Azure resource deployment script, make sure that the Azure CLI is installed locally.
-# You must have version 2.1.0 (or greater) of the Azure CLI installed for this script to run properly.
+# You must have version 2.2.0 (or greater) of the Azure CLI installed for this script to run properly.
 # The current Azure CLI release is available at http://docs.microsoft.com/cli/azure/install-azure-cli
 
 param (
@@ -27,7 +27,7 @@ if (!$resourceGroup) { return }
 
 $templateResources = "$templateDirectory\01-Gallery.json"
 $templateParameters = "$templateDirectory\01-Gallery.Parameters.json"
-$groupDeployment = az group deployment create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
 if (!$groupDeployment) { return }
 
 $imageGallery = $groupDeployment.properties.outputs.imageGallery.value
