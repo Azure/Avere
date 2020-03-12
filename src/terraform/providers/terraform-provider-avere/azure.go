@@ -204,7 +204,7 @@ func (a Azure) getBaseVfxtCommand(avereVfxt *AvereVfxt) string {
 }
 
 func getAzCliVerifyLoginCommand() string {
-	return WrapCommandForLogging("test -f ~/.azure/azureProfile.json || az login --identity", AzCliLogFile)
+	return WrapCommandForLogging("test -f ~/.azure/azureProfile.json || (export NO_PROXY=169.254.169.254 && az login --identity)", AzCliLogFile)
 }
 
 func (a Azure) getAzCliDeleteNodeCommand(nodeName string) string {
