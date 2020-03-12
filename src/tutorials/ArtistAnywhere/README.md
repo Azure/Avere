@@ -93,11 +93,13 @@ The following list describes each of the Azure Artist Anywhere deployment script
 
 * *Deploy.RenderManager.ps1* - background job script that deploys render manager services
 
+* *Deploy.RenderDesktop.ps1* - foreground job script that deploys the render desktop services
+
 * *Deploy.RenderDesktop.Image.ps1* - background job script that deploys the render desktop image
 
 * *Deploy.RenderDesktop.Machines.ps1* - background job script that deploys render desktop machines
 
-Unlike each of the other background job scripts, the *Deploy.StorageCache.ps1* script can be executed directly for deployment of the Network, Storage and Cache modules only. All of the other background job scripts must be initiated via *Deploy.ps1*.
+Unlike the other background job scripts, the *Deploy.StorageCache.ps1* script can be executed directly for deployment of the Network, Storage and Cache modules only. The other background job scripts must be initiated via *Deploy.ps1* or *Deploy.RenderDesktop.ps1*
 
 The following sample terminal output is from a *Deploy.ps1* orchestrated deployment across 2 paired Microsoft Azure regions. Note that the background jobs have overlapping *start* and *end* times as expected from the parallel deployment process.
 
