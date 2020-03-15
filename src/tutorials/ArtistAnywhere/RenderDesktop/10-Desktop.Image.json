@@ -84,6 +84,15 @@
               "cd ../cueadmin*",
               "py setup.py install"
             ]
+          },
+          {
+            "name": "Blender",
+            "type": "PowerShell",
+            "inline": [
+              "[concat('curl -OutFile blender.msi -Uri ', parameters('renderDesktop').blenderUrl)]",
+              "Start-Process -FilePath 'blender.msi' -ArgumentList '/quiet /log blender.log' -Wait",
+              "[concat('[System.Environment]::SetEnvironmentVariable(\"Path\", $env:Path + \";', parameters('renderDesktop').blenderPath, '\", [System.EnvironmentVariableTarget]::Machine)')]"
+            ]
           }
         ],
         "distribute": [

@@ -7,7 +7,7 @@
         "requirementsUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/requirements.txt",
         "softwareUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.43/rqd-0.3.43-all.tar.gz",
         "serviceUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/rqd/deploy/opencue-rqd.service",
-        "blenderUrl": "https://mirror.clarkson.edu/blender/release/Blender2.82/blender-2.82-linux64.tar.xz"
+        "blenderUrl": "https://mirror.clarkson.edu/blender/release/Blender2.82/blender-2.82a-linux64.tar.xz"
       }
     },
     "imageBuilder": {

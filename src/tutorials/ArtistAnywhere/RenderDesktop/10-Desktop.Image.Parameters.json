@@ -11,7 +11,9 @@
         "pyOutlineUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.43/pyoutline-0.3.43-all.tar.gz",
         "cueSubmitUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.43/cuesubmit-0.3.43-all.tar.gz",
         "cueAdminUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.43/cueadmin-0.3.43-all.tar.gz",
-        "cueGuiUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.43/cuegui-0.3.43-all.tar.gz"
+        "cueGuiUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.43/cuegui-0.3.43-all.tar.gz",
+        "blenderUrl": "https://mirror.clarkson.edu/blender/release/Blender2.82/blender-2.82a-windows64.msi",
+        "blenderPath": "C:\\Program Files\\Blender Foundation\\Blender 2.82"
       }
     },
     "imageBuilder": {
