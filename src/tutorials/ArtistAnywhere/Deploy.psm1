@@ -42,7 +42,7 @@ function New-SharedServices ($networkOnly, $computeNetworks) {
 		$imageGalleryJob = Start-Job -FilePath "$templateDirectory\Deploy.ImageGallery.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames
 	}
 
-	if (!$computeNetworks -or $computeNetworks.length -eq 0) {
+	if (!$computeNetworks || $computeNetworks.length -eq 0) {
 		# 00 - Network
 		$computeNetworks = @()
 		$moduleName = "00 - Network"

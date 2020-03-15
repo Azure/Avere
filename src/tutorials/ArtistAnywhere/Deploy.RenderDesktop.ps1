@@ -26,9 +26,6 @@ $logAnalytics = $sharedServices.logAnalytics
 $moduleName = "* - Render Desktop Image Job"
 New-TraceMessage $moduleName $true
 $renderDesktopImageJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderDesktop.Image.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $imageGallery
-
-# * - Render Desktop Image Job
-$moduleName = "* - Render Desktop Image Job"
 $renderDesktopImageId = Receive-Job -InstanceId $renderDesktopImageJob.InstanceId -Wait
 if (!$renderDesktopImageId) { return }
 New-TraceMessage $moduleName $false
@@ -37,9 +34,6 @@ New-TraceMessage $moduleName $false
 $moduleName = "* - Render Desktop Machines Job"
 New-TraceMessage $moduleName $true
 $renderDesktopMachinesJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $computeNetworks, $renderDesktopImageId, $renderManagers, $logAnalytics
-
-# * - Render Desktop Machines Job
-$moduleName = "* - Render Desktop Machines Job"
 $renderDesktopMachines = Receive-Job -InstanceId $renderDesktopMachinesJob.InstanceId -Wait
 if (!$renderDesktopMachines) { return }
 New-TraceMessage $moduleName $false

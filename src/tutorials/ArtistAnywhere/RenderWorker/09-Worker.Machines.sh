@@ -1,7 +1,4 @@
-#!/bin/bash
-
-set -e # Stops execution upon error
-set -x # Displays executed commands
+#!/bin/bash -xe
 
 cd "$HOME_DIRECTORY"
 

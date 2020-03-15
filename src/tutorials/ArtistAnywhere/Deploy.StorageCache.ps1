@@ -34,7 +34,7 @@ $moduleDirectory = "StorageCache"
 # 03.0 - Storage
 $storageTargetsNetApp = @()
 $storageTargetsObject = @()
-if ($storageDeployNetApp -or $storageDeployObject) {
+if ($storageDeployNetApp || $storageDeployObject) {
 	$computeRegionIndex = 0
 	$moduleName = "03.0 - Storage"
 	New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
@@ -118,7 +118,7 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	} else {
 		$storageTargets = $storageTargetsObject
 	}
-	if ($templateParameters.storageTargets.value.length -gt 0 -and $templateParameters.storageTargets.value[0].name -ne "") {
+	if ($templateParameters.storageTargets.value.length -gt 0 && $templateParameters.storageTargets.value[0].name -ne "") {
 		$templateParameters.storageTargets.value += $storageTargets
 	} else {
 		$templateParameters.storageTargets.value = $storageTargets

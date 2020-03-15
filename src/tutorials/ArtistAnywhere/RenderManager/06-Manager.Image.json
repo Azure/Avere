@@ -68,7 +68,7 @@
               "[concat('curl --output opencue-cuebot-data.sql --location --url ', parameters('renderManager').databaseDataUrl)]",
               "[concat('curl --output opencue-cuebot.jar --location --url ', parameters('renderManager').softwareUrl)]",
               "[concat('curl --output opencue-cuebot.service --location --url ', parameters('renderManager').serviceUrl)]",
-              "[concat('sed --in-place ''/Environment=JAR_PATH/c Environment=JAR_PATH=', parameters('imageDefinition').homeDirectory, '/opencue-cuebot.jar'' opencue-cuebot.service')]"
+              "[concat('sed --in-place ''/Environment=JAR_PATH/c Environment=JAR_PATH=', parameters('imageDefinition').homeDirectory, 'opencue-cuebot.jar'' opencue-cuebot.service')]"
             ]
           }
         ],

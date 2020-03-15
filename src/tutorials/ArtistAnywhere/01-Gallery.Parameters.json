@@ -15,7 +15,7 @@
             "offer": "CentOS",
             "sku": "8.0",
             "version": "latest",
-            "homeDirectory": "/home/az"
+            "homeDirectory": "/home/az/"
           },
           {
             "name": "Desktop",
@@ -25,7 +25,8 @@
             "publisher": "MicrosoftWindowsDesktop",
             "offer": "Windows-10",
             "sku": "rs5-enterprise-standard",
-            "version": "latest"
+            "version": "latest",
+            "homeDirectory": "/users/az/"
           }
         ]
       }
