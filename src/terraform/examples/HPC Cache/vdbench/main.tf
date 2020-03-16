@@ -58,13 +58,13 @@ locals {
 }
 
 provider "azurerm" {
-    version = "~>2.0.0"
+    version = "~>2.1.0"
     features {}
 }
 
 // the render network
 module "network" {
-    source              = "../../../modules/render_network"
+    source              = "github.com/Azure/Avere/src/terraform/modules/render_network"
     resource_group_name = local.network_resource_group_name
     location            = local.location
 }
@@ -115,7 +115,7 @@ resource "azurerm_resource_group" "nfsfiler" {
 
 // the ephemeral filer
 module "nasfiler1" {
-    source = "../../../modules/nfs_filer"
+    source = "github.com/Azure/Avere/src/terraform/modules/nfs_filer"
     resource_group_name = azurerm_resource_group.nfsfiler.name
     location = azurerm_resource_group.nfsfiler.location
     admin_username = local.vm_admin_username
@@ -159,7 +159,7 @@ resource "azurerm_template_deployment" "storage_target1" {
 }
 
 module "jumpbox" {
-    source = "../../../modules/jumpbox"
+    source = "github.com/Azure/Avere/src/terraform/modules/jumpbox"
     resource_group_name = azurerm_resource_group.hpc_cache_rg.name
     location = local.location
     admin_username = local.vm_admin_username
@@ -179,7 +179,7 @@ locals {
 
 // the vdbench module
 module "vdbench_configure" {
-    source = "../../../modules/vdbench_config"
+    source = "github.com/Azure/Avere/src/terraform/modules/vdbench_config"
 
     node_address = module.jumpbox.jumpbox_address
     admin_username = module.jumpbox.jumpbox_username
@@ -192,7 +192,7 @@ module "vdbench_configure" {
 
 // the VMSS module
 module "vmss" {
-    source = "../../../modules/vmss_mountable"
+    source = "github.com/Azure/Avere/src/terraform/modules/vmss_mountable"
 
     resource_group_name = local.vmss_resource_group_name
     location = local.location

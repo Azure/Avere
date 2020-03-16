@@ -28,13 +28,13 @@ locals {
 }
 
 provider "azurerm" {
-    version = "~>2.0.0"
+    version = "~>2.1.0"
     features {}
 }
 
 // the render network
 module "network" {
-    source              = "../../../modules/render_network"
+    source              = "github.com/Azure/Avere/src/terraform/modules/render_network"
     resource_group_name = local.network_resource_group_name
     location            = local.location
 }
