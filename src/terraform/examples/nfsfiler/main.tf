@@ -35,7 +35,7 @@ locals {
 }
 
 provider "azurerm" {
-    version = "~>2.0.0"
+    version = "~>2.1.0"
     features {}
 }
 
@@ -46,7 +46,7 @@ resource "azurerm_resource_group" "nfsfiler" {
 
 // the ephemeral filer
 module "nfsfiler" {
-    source = "../../modules/nfs_filer"
+    source = "github.com/Azure/Avere/src/terraform/modules/nfs_filer"
     resource_group_name = azurerm_resource_group.nfsfiler.name
     location = azurerm_resource_group.nfsfiler.location
     admin_username = local.vm_admin_username

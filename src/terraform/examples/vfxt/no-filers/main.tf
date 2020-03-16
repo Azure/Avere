@@ -22,20 +22,20 @@ locals {
 }
 
 provider "azurerm" {
-    version = "~>2.0.0"
+    version = "~>2.1.0"
     features {}
 }
 
 // the render network
 module "network" {
-    source = "../../../modules/render_network"
+    source = "github.com/Azure/Avere/src/terraform/modules/render_network"
     resource_group_name = local.network_resource_group_name
     location = local.location
 }
 
 // the vfxt controller
 module "vfxtcontroller" {
-    source = "../../../modules/controller"
+    source = "github.com/Azure/Avere/src/terraform/modules/controller"
     resource_group_name = local.vfxt_resource_group_name
     location = local.location
     admin_username = local.vm_admin_username
