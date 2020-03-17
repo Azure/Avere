@@ -1,7 +1,7 @@
 # Secured Image
 
 This module deploys a vhd with ssh from a single external IP address only.  This is useful for testing a custom image before the VPN or express route is ready.  Follow the instructions to build a custom image:
-* Create Ubuntu from disk: https://docs.microsoft.com/en-us/azure/virtual-machines/linux/create-upload-ubuntu
+* Create Ubuntu from disk: https://docs.microsoft.com/en-us/azure/virtual-machines/linux/create-upload-ubuntu
 * Upload to a managed disk: https://docs.microsoft.com/en-us/azure/virtual-machines/linux/disks-upload-vhd-to-managed-disk-cli
 
 ## Deployment Instructions
