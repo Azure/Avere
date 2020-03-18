@@ -1,12 +1,14 @@
-// customize the simple VM by adjusting the following local variables
+// customize the secured VM by adjusting the following local variables
 locals {
-
-    // get your IP address from http://www.myipaddress.com/
+    // This script only allows SSH from a single source IP Address.
+    // Get your IP address from http://www.myipaddress.com/
     source_ssh_ip_address = "169.254.169.254"
 
     // the region of the deployment
     location = "eastus"
     vm_admin_username = "azureuser"
+
+    // the 
     vm_ssh_key_data = "ssh-rsa AAAAB3...."
     resource_group_name = "resource_group"
     vm_size = "Standard_D2s_v3"
@@ -36,9 +38,15 @@ resource "azurerm_network_security_group" "ssh_nsg" {
     location            = azurerm_resource_group.main.location
     resource_group_name = azurerm_resource_group.main.name
     
+    // the following security rule only allows incoming traffic from the source ip
+    // address.
+    // As machines are added to this VNET, a rule that allows VNET to VNET
+    // could be added for VMs to communicate with each other.
     security_rule {
         name                       = "SSH"
-        priority                   = 1001
+        // priorities are between 100 and 4096 an may not overlap.
+        // A priority of 100 ensures this rule is hit first.
+        priority                   = 100 // priorities are between 100 and 4096
         direction                  = "Inbound"
         access                     = "Allow"
         protocol                   = "Tcp"
@@ -49,8 +57,26 @@ resource "azurerm_network_security_group" "ssh_nsg" {
     }
 
     security_rule {
+        name                       = "noinbound"
+        priority                   = 101 // priorities are between 100 and 4096
+        direction                  = "Inbound"
+        access                     = "Deny"
+        protocol                   = "*"
+        source_port_range          = "*"
+        destination_port_range     = "*"
+        source_address_prefix      = "*"
+        destination_address_prefix = "*"
+    }
+
+    // the following security rule deny's all outbound traffic from any IP
+    // within the VNET.
+    // As machines are added to this VNET, a rule that allows VNET to VNET
+    // could be added for VMs to communicate with each other.
+    security_rule {
         name                       = "notrafficout"
-        priority                   = 2000
+        // priorities are between 100 and 4096 an may not overlap.
+        // A priority of 100 ensures this rule is hit first.
+        priority                   = 100 
         direction                  = "Outbound"
         access                     = "Deny"
         protocol                   = "*"
@@ -63,6 +89,8 @@ resource "azurerm_network_security_group" "ssh_nsg" {
 
 resource "azurerm_virtual_network" "main" {
   name                = "virtualnetwork"
+  // The /29 is the smallest possible VNET in Azure, 5 addresses are reserved for Azure
+  // and 3 are available for use.
   address_space       = ["10.0.0.0/29"]
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
@@ -99,17 +127,19 @@ resource "azurerm_linux_virtual_machine" "main" {
   resource_group_name   = azurerm_resource_group.main.name
   location              = azurerm_resource_group.main.location
   network_interface_ids = [azurerm_network_interface.main.id]
-  computer_name          = "vm"
+  computer_name         = "vm"
   size                  = local.vm_size
   admin_username        = local.vm_admin_username
   source_image_id       = data.azurerm_image.custom_image.id
   
+  // by default the OS has encryption at rest
   os_disk {
     name = "osdisk"
     storage_account_type = "Standard_LRS"
     caching              = "ReadWrite"
   }
 
+  // per ISE, only SSH keys and not passwords may be used
   admin_ssh_key {
     username = local.vm_admin_username
     public_key = local.vm_ssh_key_data
