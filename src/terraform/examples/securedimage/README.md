@@ -117,32 +117,23 @@ az storage account delete --name STORAGE_ACCOUNT_NAME
 
 ## Create the access for the Contributor By Administrator
 
-<!--
-TODO - fix the below
--->
-
-Here are the steps to lock down the contributor to specific resource groups:
-
-Here are the CLI instructions that can be used from the [Azure Cloud Shell](http://shell.azure.com) to create a service principal with the strictest possible scope for a Bring your own VNET administrator.  This assumes you have ownership rights to the subscription:
+Here are the steps to lock down the contributor to the resource groups holding the VM and the custom image.
 
 ```bash
 export SUBSCRIPTION=#YOUR SUBSCRIPTION
-export VFXT_RESOURCE_GROUP=#the target VFXT resource group
-export TARGET_LOCATION=#the resource group location
-export VNET_RESOURCE_GROUP=#the target VNET resource group
+export TARGET_LOCATION=eastus # your target location
+export VM_RESOURCE_GROUP=#the target VFXT resource group
+export VHD_RESOURCE_GROUP=#the target VNET resource group
 az account set --subscription $SUBSCRIPTION
 az group create --location $TARGET_LOCATION --name $VFXT_RESOURCE_GROUP
 # create the SP
-az ad sp create-for-rbac --role "Contributor" --scopes /subscriptions/$SUBSCRIPTION/resourceGroups/$VFXT_RESOURCE_GROUP
+az ad sp create-for-rbac --role "Virtual Machine Contributor" --scopes /subscriptions/$SUBSCRIPTION/resourceGroups/$VM_RESOURCE_GROUP
 # save the output somewhere safe
 export SP_APP_ID=#the appId of the Service Principal from the previous command
-az role assignment create --role "User Access Administrator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VFXT_RESOURCE_GROUP --assignee $SP_APP_ID
 # assign the "Virtual Machine Contributor" and the "Avere Contributor" to the scope of the VNET resource group
-az role assignment create --role "Virtual Machine Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VNET_RESOURCE_GROUP --assignee $SP_APP_ID
-az role assignment create --role "Avere Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VNET_RESOURCE_GROUP --assignee $SP_APP_ID
-az role assignment create --role "User Access Administrator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VNET_RESOURCE_GROUP --assignee $SP_APP_ID
+az role assignment create --role "Virtual Machine Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VHD_RESOURCE_GROUP --assignee $SP_APP_ID
 ###########################################################
-# pass the SP details to the person installing the vFXT
+# pass the SP details to the person installing the VM
 # once complete, delete the SP with the following command:
 #    az ad sp delete --id $SP_APP_ID
 ###########################################################
