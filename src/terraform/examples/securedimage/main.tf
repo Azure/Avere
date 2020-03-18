@@ -12,6 +12,7 @@ locals {
     vm_ssh_key_data = "ssh-rsa AAAAB3...."
     resource_group_name = "resource_group"
     vm_size = "Standard_D2s_v3"
+    os_disk_size_gb = 128 // resize the os disk up to 1093 GB, after this you will need to repartition the disk
 
     // the below is the resource group and name of the image
     image_resource_group = "image_resource_group"
@@ -137,6 +138,7 @@ resource "azurerm_linux_virtual_machine" "main" {
     name = "osdisk"
     storage_account_type = "Standard_LRS"
     caching              = "ReadWrite"
+    disk_size_gb         = local.os_disk_size_gb
   }
 
   // per ISE, only SSH keys and not passwords may be used
