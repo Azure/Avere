@@ -13,7 +13,7 @@
       "metadata": {
         "description": "The container image registry."
       }
-    }    
+    }
   },
   "variables": {
     "imageGalleryApiVersion": "2019-12-01",
@@ -23,18 +23,18 @@
     {
       "condition": "[not(parameters('imageRegistry').enabled)]",
       "type": "Microsoft.Compute/galleries",
+      "name": "[parameters('imageGallery').name]",
       "apiVersion": "[variables('imageGalleryApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('imageGallery').name]",
       "properties": {
       }
     },
     {
       "condition": "[not(parameters('imageRegistry').enabled)]",
       "type": "Microsoft.Compute/galleries/images",
+      "name": "[concat(parameters('imageGallery').name, '/', parameters('imageGallery').imageDefinitions[copyIndex()].name)]",
       "apiVersion": "[variables('imageGalleryApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[concat(parameters('imageGallery').name, '/', parameters('imageGallery').imageDefinitions[copyIndex()].name)]",
       "dependsOn": [
         "[resourceId('Microsoft.Compute/galleries', parameters('imageGallery').name)]"
       ],
@@ -56,16 +56,16 @@
     {
       "condition": "[parameters('imageRegistry').enabled]",
       "type": "Microsoft.ContainerRegistry/registries",
+      "name": "[parameters('imageRegistry').name]",
       "apiVersion": "[variables('imageRegistryApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('imageRegistry').name]",
       "sku": {
         "name": "[parameters('imageRegistry').tier]"
       },
       "properties": {
         "adminUserEnabled": false
       }
-    }    
+    }
   ],
   "outputs": {
     "imageGallery": {
@@ -75,6 +75,6 @@
     "imageRegistry": {
       "type": "object",
       "value": "[parameters('imageRegistry')]"
-    }    
+    }
   }
 }

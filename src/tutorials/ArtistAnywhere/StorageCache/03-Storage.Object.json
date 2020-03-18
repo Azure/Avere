@@ -43,9 +43,9 @@
     {
       "condition": "[variables('storageAccountNetworked')]",
       "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('virtualNetwork').name]",
       "apiVersion": "[variables('virtualNetworkApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('virtualNetwork').name]",
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
@@ -70,9 +70,9 @@
     },
     {
       "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountName')]",
       "apiVersion": "[variables('storageApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[variables('storageAccountName')]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetwork').name)]"
       ],
@@ -87,9 +87,9 @@
     },
     {
       "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "name": "[concat(variables('storageAccountName'), '/default/', parameters('storageContainers')[copyIndex()].name)]",
       "apiVersion": "[variables('storageApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[concat(variables('storageAccountName'), '/default/', parameters('storageContainers')[copyIndex()].name)]",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
       ],
@@ -103,8 +103,9 @@
     },
     {
       "type": "Microsoft.Storage/storageAccounts/providers/roleAssignments",
-      "apiVersion": "[variables('roleAssignmentApiVersion')]",
       "name": "[concat(variables('storageAccountName'), '/Microsoft.Authorization/', guid(variables('storageContributorRoleIds')[copyIndex()]))]",
+      "apiVersion": "[variables('roleAssignmentApiVersion')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
       ],
@@ -128,7 +129,7 @@
       "copy": {
         "count": "[length(parameters('storageTargets'))]",
         "input": {
-          "name": "[if(variables('storageAccountNetworked'), concat(parameters('virtualNetwork').name, '.Object.', parameters('storageTargets')[copyIndex()].name), concat('Object.', parameters('storageTargets')[copyIndex()].name))]",
+          "name": "[if(variables('storageAccountNetworked'), concat(parameters('virtualNetwork').name, '-Object-', parameters('storageTargets')[copyIndex()].name), concat('Object-', parameters('storageTargets')[copyIndex()].name))]",
           "type": "[parameters('storageTargets')[copyIndex()].type]",
           "host": "[split(reference(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))).primaryEndpoints.blob, '/')[2]]",
           "target": "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('storageAccountName'), 'default', toLower(parameters('storageTargets')[copyIndex()].name))]",

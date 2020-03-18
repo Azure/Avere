@@ -29,17 +29,17 @@
   "resources": [
     {
       "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "name": "[parameters('keyVault').name]",
       "apiVersion": "[variables('managedIdentityApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('keyVault').name]",
       "properties": {
       }
     },
     {
       "type": "Microsoft.KeyVault/vaults",
+      "name": "[parameters('keyVault').name]",
       "apiVersion": "[variables('keyVaultApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('keyVault').name]",
       "dependsOn": [
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('keyVault').name)]"
       ],
@@ -90,8 +90,8 @@
     },
     {
       "type": "Microsoft.OperationalInsights/workspaces",
-      "apiVersion": "[variables('operationalInsightsApiVersion')]",
       "name": "[parameters('logAnalytics').name]",
+      "apiVersion": "[variables('operationalInsightsApiVersion')]",
       "location": "[resourceGroup().location]",
       "properties": {
         "sku": {

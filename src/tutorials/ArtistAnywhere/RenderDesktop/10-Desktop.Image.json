@@ -30,9 +30,9 @@
   "resources": [
     {
       "type": "Microsoft.Authorization/roleAssignments",
+      "name": "[guid(resourceGroup().id)]",
       "apiVersion": "[variables('roleAssignmentApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[guid(resourceGroup().id)]",
       "properties": {
         "principalId": "[variables('imageBuilderPrincipalId')]",
         "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('roleDefinitionContributorId'))]"
@@ -40,9 +40,9 @@
     },
     {
       "type": "Microsoft.VirtualMachineImages/imageTemplates",
+      "name": "[parameters('imageBuilder').imageTemplateName]",
       "apiVersion": "[variables('imageBuilderApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('imageBuilder').imageTemplateName]",
       "dependsOn": [
         "[resourceId('Microsoft.Authorization/roleAssignments', guid(resourceGroup().id))]"
       ],

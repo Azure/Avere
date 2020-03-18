@@ -24,9 +24,9 @@
   "resources": [
     {
       "type": "Microsoft.DBforPostgreSQL/servers",
+      "name": "[variables('dataServerName')]",
       "apiVersion": "[variables('dataServerApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[variables('dataServerName')]",
       "sku": {
         "name": "[parameters('renderManager').dataServerTier]"
       },
@@ -43,9 +43,9 @@
     },
     {
       "type": "Microsoft.DBforPostgreSQL/servers/virtualNetworkRules",
+      "name": "[concat(variables('dataServerName'), '/virtualNetwork')]",
       "apiVersion": "[variables('dataServerApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[concat(variables('dataServerName'), '/virtualNetwork')]",
       "dependsOn": [
         "[resourceId('Microsoft.DBforPostgreSQL/servers', variables('dataServerName'))]"
       ],
@@ -55,9 +55,9 @@
     },
     {
       "type": "Microsoft.DBforPostgreSQL/servers/databases",
+      "name": "[concat(variables('dataServerName'), '/', parameters('renderManager').databaseName)]",
       "apiVersion": "[variables('dataServerApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[concat(variables('dataServerName'), '/', parameters('renderManager').databaseName)]",
       "dependsOn": [
         "[resourceId('Microsoft.DBforPostgreSQL/servers', variables('dataServerName'))]"
       ],

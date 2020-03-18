@@ -22,9 +22,9 @@
   "resources": [
     {
       "type": "Microsoft.Network/networkInterfaces",
+      "name": "[parameters('renderDesktop').machines[copyIndex()].name]",
       "apiVersion": "[variables('virtualNetworkApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('renderDesktop').machines[copyIndex()].name]",
       "properties": {
         "primary": true,
         "enableAcceleratedNetworking": "[parameters('renderDesktop').machines[copyIndex()].acceleratedNetworking]",
@@ -47,9 +47,9 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachines",
+      "name": "[parameters('renderDesktop').machines[copyIndex()].name]",
       "apiVersion": "[variables('virtualMachineApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('renderDesktop').machines[copyIndex()].name]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces', parameters('renderDesktop').machines[copyIndex()].name)]"
       ],
@@ -90,9 +90,9 @@
           ],
           "properties": {
             "publisher": "Microsoft.Compute",
-            "autoUpgradeMinorVersion": true,
-            "typeHandlerVersion": "1.9",
             "type": "CustomScriptExtension",
+            "typeHandlerVersion": "1.9",
+            "autoUpgradeMinorVersion": true,
             "protectedSettings": {
               "commandToExecute": "[concat('PowerShell.exe -EncodedCommand ', parameters('renderDesktop').machineExtensionScript)]"
             }
@@ -108,15 +108,30 @@
           ],
           "properties": {
             "publisher": "Microsoft.EnterpriseCloud.Monitoring",
-            "autoUpgradeMinorVersion": true,
-            "typeHandlerVersion": "1.0",
             "type": "MicrosoftMonitoringAgent",
+            "typeHandlerVersion": "1.0",
+            "autoUpgradeMinorVersion": true,
             "protectedSettings": {
               "workspaceKey": "[parameters('renderDesktop').logAnalyticsWorkspaceKey]"
             },
             "settings": {
               "workspaceId": "[parameters('renderDesktop').logAnalyticsWorkspaceId]"
             }
+          }
+        },
+        {
+          "type": "extensions",
+          "apiVersion": "[variables('virtualMachineApiVersion')]",
+          "location": "[resourceGroup().location]",
+          "name": "[concat(parameters('renderDesktop').machines[copyIndex()].name, 'Graphics')]",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', parameters('renderDesktop').machines[copyIndex()].name)]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.HpcCompute",
+            "type": "NvidiaGpuDriverWindows",
+            "typeHandlerVersion": "1.2",
+            "autoUpgradeMinorVersion": true
           }
         }
       ],

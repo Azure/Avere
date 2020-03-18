@@ -25,7 +25,7 @@
         ],
         "clientNetworkProtocol": "Tcp",
         "clientNetworkPort": 8443
-      }     
+      }
     },
     "virtualNetwork": {
       "value": {

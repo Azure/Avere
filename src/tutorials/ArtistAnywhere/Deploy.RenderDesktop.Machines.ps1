@@ -43,7 +43,7 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 
 	$templateResources = "$templateDirectory\$moduleDirectory\11-Desktop.Machines.json"
 	$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\11-Desktop.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
-	$renderManager = $renderManagers && $renderManagers.length -gt $computeRegionIndex ? $renderManagers[$computeRegionIndex] : ""
+	$renderManager = $renderManagers -and $renderManagers.length -gt $computeRegionIndex ? $renderManagers[$computeRegionIndex] : ""
 	$machineExtensionScript = Get-MachineExtensionScript "$templateDirectory\$moduleDirectory\11-Desktop.Machines.ps1" $renderManager
 	if ($templateParameters.renderDesktop.value.imageVersionId -eq "") {
 		$templateParameters.renderDesktop.value.imageVersionId = $imageVersionId

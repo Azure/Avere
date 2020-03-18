@@ -84,9 +84,9 @@ resource "azurerm_template_deployment" "storage_cache" {
     "resources": [
       {
         "type": "Microsoft.StorageCache/caches",
+        "name": "[parameters('cacheName')]",
         "apiVersion": "[variables('cacheApiVersion')]",
         "location": "[resourceGroup().location]",
-        "name": "[parameters('cacheName')]",
         "sku": {
           "name": "[parameters('cacheThroughput')]"
         },
@@ -98,9 +98,9 @@ resource "azurerm_template_deployment" "storage_cache" {
       {
         "condition": "[cache.hasStorageTargets(parameters('storageTargets'))]",
         "type": "Microsoft.StorageCache/caches/storageTargets",
+        "name": "[concat(parameters('cacheName'), '/', if(cache.hasStorageTargets(parameters('storageTargets')), parameters('storageTargets')[copyIndex()].name, 'storage'))]",
         "apiVersion": "[variables('cacheApiVersion')]",
         "location": "[resourceGroup().location]",
-        "name": "[concat(parameters('cacheName'), '/', if(cache.hasStorageTargets(parameters('storageTargets')), parameters('storageTargets')[copyIndex()].name, 'storage'))]",
         "dependsOn": [
           "[resourceId('Microsoft.StorageCache/caches', parameters('cacheName'))]"
         ],

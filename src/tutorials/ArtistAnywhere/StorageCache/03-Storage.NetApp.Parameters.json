@@ -32,7 +32,7 @@
               "unixReadOnly": false,
               "unixReadWrite": true,
               "allowedClients": "0.0.0.0/0"
-            }            
+            }
           ]
         },
         {
@@ -48,7 +48,7 @@
               "unixReadOnly": false,
               "unixReadWrite": true,
               "allowedClients": "0.0.0.0/0"
-            }            
+            }
           ]
         }
       ]

@@ -42,9 +42,9 @@
   "resources": [
     {
       "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('virtualNetwork').name]",
       "apiVersion": "[variables('virtualNetworkApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('virtualNetwork').name]",
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
@@ -69,17 +69,17 @@
     },
     {
       "type": "Microsoft.NetApp/netAppAccounts",
+      "name": "[parameters('storageAccount').name]",
       "apiVersion": "[variables('netAppApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('storageAccount').name]",
       "properties": {
       }
     },
     {
       "type": "Microsoft.NetApp/netAppAccounts/capacityPools",
+      "name": "[concat(parameters('storageAccount').name, '/', parameters('storagePools')[copyIndex()].name)]",
       "apiVersion": "[variables('netAppApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[concat(parameters('storageAccount').name, '/', parameters('storagePools')[copyIndex()].name)]",
       "dependsOn": [
         "[resourceId('Microsoft.NetApp/netAppAccounts', parameters('storageAccount').name)]"
       ],
@@ -90,13 +90,13 @@
       "copy": {
         "name": "storagePools",
         "count": "[length(parameters('storagePools'))]"
-      }      
+      }
     },
     {
       "type": "Microsoft.NetApp/netAppAccounts/capacityPools/volumes",
+      "name": "[concat(parameters('storageAccount').name, '/', parameters('storageVolumes')[copyIndex()].pool, '/', parameters('storageVolumes')[copyIndex()].name)]",
       "apiVersion": "[variables('netAppApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[concat(parameters('storageAccount').name, '/', parameters('storageVolumes')[copyIndex()].pool, '/', parameters('storageVolumes')[copyIndex()].name)]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetwork').name)]",
         "[resourceId('Microsoft.NetApp/netAppAccounts/capacityPools', parameters('storageAccount').name, parameters('storageVolumes')[copyIndex()].pool)]"
@@ -125,7 +125,7 @@
       "copy": {
         "count": "[length(parameters('storageVolumes'))]",
         "input": {
-          "name": "[concat(parameters('virtualNetwork').name, '.NetApp.', parameters('storageTargets')[copyIndex()].name)]",
+          "name": "[concat(parameters('virtualNetwork').name, '-NetApp-', parameters('storageTargets')[copyIndex()].name)]",
           "type": "[parameters('storageTargets')[copyIndex()].type]",
           "host": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('storageAccount').name, parameters('storageVolumes')[copyIndex()].pool, parameters('storageVolumes')[copyIndex()].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
           "target": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('storageAccount').name, parameters('storageVolumes')[copyIndex()].pool, parameters('storageVolumes')[copyIndex()].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",

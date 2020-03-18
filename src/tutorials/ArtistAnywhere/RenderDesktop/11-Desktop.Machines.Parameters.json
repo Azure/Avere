@@ -24,7 +24,7 @@
             "acceleratedNetworking": false
           }
         ]
-      }     
+      }
     },
     "virtualNetwork": {
       "value": {

@@ -23,9 +23,9 @@
   "resources": [
     {
       "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('virtualNetwork').name]",
       "apiVersion": "[variables('virtualNetworkApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('virtualNetwork').name]",
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
@@ -52,17 +52,17 @@
     },
     {
       "type": "Microsoft.Network/privateDnsZones",
+      "name": "[parameters('virtualNetwork').domainName]",
       "apiVersion": "[variables('virtualNetworkDomainApiVersion')]",
       "location": "global",
-      "name": "[parameters('virtualNetwork').domainName]",
       "properties": {
       }
     },
     {
       "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+      "name": "[concat(parameters('virtualNetwork').domainName, '/', parameters('virtualNetwork').name)]",
       "apiVersion": "[variables('virtualNetworkDomainApiVersion')]",
       "location": "global",
-      "name": "[concat(parameters('virtualNetwork').domainName, '/', parameters('virtualNetwork').name)]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetwork').name)]",
         "[resourceId('Microsoft.Network/privateDnsZones', parameters('virtualNetwork').domainName)]"
@@ -77,9 +77,9 @@
     {
       "condition": "[parameters('virtualNetworkGateway').enabled]",
       "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[parameters('virtualNetwork').name]",
       "apiVersion": "[variables('virtualNetworkApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('virtualNetwork').name]",
       "sku": {
         "name": "[if(variables('virtualNetworkGatewayZoned'), 'Standard', 'Basic')]"
       },
@@ -90,9 +90,9 @@
     {
       "condition": "[parameters('virtualNetworkGateway').enabled]",
       "type": "Microsoft.Network/virtualNetworkGateways",
+      "name": "[parameters('virtualNetwork').name]",
       "apiVersion": "[variables('virtualNetworkApiVersion')]",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('virtualNetwork').name]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetwork').name)]",
         "[resourceId('Microsoft.Network/publicIPAddresses', parameters('virtualNetwork').name)]"
