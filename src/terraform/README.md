@@ -21,6 +21,7 @@ The examples show how to deploy HPC Cache, Avere vFXT, and an NFS Filer from min
    6. [Avere vFXT and VMSS example](examples/vfxt/vmss)
 3. [NFS Ephemeral Filer](examples/nfsfiler)
 4. [Jumpbox](examples/jumpbox) - this deploys a VM pre-installed with pre-installed with az cli, terraform, golang, and the built avere provider
+5. [SecuredImage](examples/securedimage) - shows how to create, upload, and deploy a custom image with an introduction to RBAC, Azure Governance, and Network Security.
 
 # Modules
 
