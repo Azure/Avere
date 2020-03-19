@@ -1,119 +1,16 @@
 # Secured Image
 
-This example shows an Azure administrator how to take an on-prem Ubuntu image, upload it to Azure, and then create a virtual machine with it.
+This example shows an Azure administrator how to take an on-prem Ubuntu 18.04 image, upload it to Azure, and then provide access to a Contributor to create a virtual machine with it.
 
-Once the image is created, this shows how to provide minimal RBAC access for an Azure User to deploy and use the image.
-
-These instructions are useful for understanding the security mechanisms of Azure and useful for testing a custom image before the VPN or express route is ready.
+These instructions are useful for understanding the security mechanisms of Azure including [RBAC](https://docs.microsoft.com/en-us/azure/role-based-access-control/overview), [governance enablement via Azure Policy](https://azure.microsoft.com/en-us/solutions/governance/), and [network security](https://docs.microsoft.com/en-us/azure/security/fundamentals/network-overview).  These instructions are useful for testing a custom image before the VPN or express route is ready.
 
 ![The architecture](architecture.png)
 
-## Build the custom image By Administrator
-
-Follow the instructions to build a custom image:
-* Create Ubuntu from disk: https://docs.microsoft.com/en-us/azure/virtual-machines/linux/create-upload-ubuntu.  Please note that it is highly recommended to start from the ubuntu Azure images provided on the [create-upload-ubuntu page](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/create-upload-ubuntu).
-* before running `waagent -force -deprovision`, as root run the script `fixubuntuimage.sh`  to correctly setup grub and cloud-init.  Without running this, the VM will not get to Running state.
-
-Tips:
-* it is highly recommended to start from the ubuntu Azure images provided on the [create-upload-ubuntu page](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/create-upload-ubuntu).
-* If using vmdk images, you will need to convert to a fixed VHD.  One way to do this is with [MVMC](https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-R2-and-2012/dn873998(v=ws.11)?redirectedfrom=MSDN) and here is the [MVMC download page](https://www.microsoft.com/en-us/download/details.aspx?id=42497).  Alternatively, you can convert using [qemu as described here](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/create-upload-generic#resizing-vhds).
-* start with a small vhd to make upload easy, and it can be resized on the cloud.
-
-## Upload the Custom Image via a managed disk By Administrator
-
-These instructions are based on https://docs.microsoft.com/en-us/azure/virtual-machines/linux/disks-upload-vhd-to-managed-disk-cli.
-
-First prepare the disk and get a write SAS (steps 1 and 2, can be replaced with browse to https://shell.azure.com):
-
-1. install [az cli](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest)
-2. login to az cli with
-```bash
-az --login
-```
-3. if you have more than one subscription, set your subscription with:
-```bash
-az account set --subscription SUBSCRIPTIONID
-```
-4. create a resource group to hold the managed disk and images:
-```bash
-az group create --location LOCATION --name RESOURCE_GROUP_NAME
-```
-5. get the size of your VHD via `ls -l` or `dir` commands, and run the following command to create the vhd:
-```bash
-az disk create -n DISK_NAME --location LOCATION --resource-group RESOURCE_GROUP_NAME --for-upload --upload-size-bytes SIZE_IN_BYTES --sku standard_lrs
-```
-6. get a 1 hour SAS uri for upload
-```bash
-az disk grant-access -n DISK_NAME --resource-group RESOURCE_GROUP_NAME --access-level Write --duration-in-seconds 3600
-```
-
-With the SAS uri, you can now copy your VHD:
-1. install [azcopy](https://docs.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-v10)
-2. upload the vhd:
-```bash
-# quote the SAS URI so the special characters do not get interpreted by the shell
-azcopy copy ubuntu.vhd "SAS_URI"
-```
-3. revoke access
-```bash
-
-```
-
-With the managed disk you can now create the image, and delete the managed disk:
-<!--
-TODO - add remaining instructions
--->
-
-## Upload the Custom Image via a storage account By Administrator
-
-<!--
-TODO - update with no storage account
--->
-
-Once the VM is created and shutdown, ensure you convert the image to a fixed VHD using [the hyper-v instructions](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/prepare-for-upload-vhd-image) or [qemu](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/create-upload-generic#resizing-vhds). Once you have a fixed VHD it is ready for upload.
-
-First prepare the storage account and container:
-
-1. install [az cli](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest)
-2. login to az cli with
-```bash
-az --login
-```
-3. if you have more than one subscription, set your subscription with:
-```bash
-az account set --subscription SUBSCRIPTIONID
-```
-4. create a resource group to hold the storage account and images:
-```bash
-az group create --location LOCATION --name RESOURCE_GROUP_NAME
-```
-5. create a storage account to hold the vhd:
-```bash
-az storage account create --location LOCATION --resource-group RESOURCE_GROUP_NAME --name STORAGE_ACCOUNT_NAME --sku Standard_LRS
-```
-6. create a container to hold the vhds:
-```bash
---location LOCATION --resource-group RESOURCE_GROUP_NAME
-az storage container create --account-name STORAGE_ACCOUNT_NAME --name vhd
-```
-
-Next upload the image:
-1. install [azcopy](https://docs.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-v10)
-2. login to [azcopy] with `azcopy login` command
-3. execute the following command to upload to the storage account:
-```bash
-azcopy copy ubuntu.vhd https://anhowevhd.blob.core.windows.net/vhd/ubuntu.vhd
-```
-
-Once uploaded create the image using the following command:
-```bash
-az image create --location LOCATION --resource-group RESOURCE_GROUP_NAME --name IMAGE_NAME --os-type Linux --source https://STORAGE_ACCOUNT_NAME.blob.core.windows.net/vhd/ubuntu.vhd
-```
-
-Once the image is created, you can now delete the storage account:
-```bash
-az storage account delete --name STORAGE_ACCOUNT_NAME
-```
+The steps to for creation to deployment are the following:
+1. Build the custom image By Administrator
+2. Upload the Custom Image via a managed disk By Administrator
+3. Create the access for the Contributor By Administrator
+4. Deployment Custom Image By Contributor
 
 ## Create the access for the Contributor By Administrator
 
@@ -139,7 +36,7 @@ az role assignment create --role "Virtual Machine Contributor" --scope /subscrip
 ###########################################################
 ```
 
-## Deployment Instructions By Contributor
+## Deployment Custom Image By Contributor
 
 <!--
 TODO - add comments to main.tf
