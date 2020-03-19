@@ -7,10 +7,10 @@ These instructions are useful for understanding the security mechanisms of Azure
 ![The architecture](architecture.png)
 
 The steps to for creation to deployment are the following:
-1. Build the custom image By Administrator
-2. Upload the Custom Image via a managed disk By Administrator
-3. Create the access for the Contributor By Administrator
-4. Deployment Custom Image By Contributor
+1. [Build the custom image By Administrator](CreateUploadUbuntu.md#build-the-custom-image-by-administrator)
+2. [Upload the Custom Image via a managed disk By Administrator](CreateUploadUbuntu.md#upload-the-custom-image-via-a-managed-disk-by-administrator)
+3. [Create the access for the Contributor By Administrator](#create-the-access-for-the-contributor-by-administrator)
+4. [Deployment Custom Image By Contributor](#deployment-custom-image-by-contributor)
 
 ## Create the access for the Contributor By Administrator
 
