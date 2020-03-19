@@ -6,7 +6,7 @@ These instructions supplement Azure documentation to create and upload an Ubuntu
 
 Follow the instructions to build a custom image:
 1. Create Ubuntu from disk and stop at instruction `waagent -force -deprovision`: https://docs.microsoft.com/en-us/azure/virtual-machines/linux/create-upload-ubuntu.  Please note that it is highly recommended to start from the ubuntu Azure images provided on the [create-upload-ubuntu page](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/create-upload-ubuntu).
-2. before running `waagent -force -deprovision`, as root run the script `fixubuntuimage.sh`  to correctly setup grub and cloud-init.  Without running this, the VM will not get to Running state.
+2. before running `waagent -force -deprovision`, as root run the script [fixubuntuimage.sh](fixubuntuimage.sh)  to correctly setup grub and cloud-init.  Without running this, the VM will not get to Running state.
 3. Complete process by running the remaining steps.
 
 Tips:
@@ -14,6 +14,10 @@ Tips:
 * it is highly recommended to start from the ubuntu Azure images provided on the [create-upload-ubuntu page](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/create-upload-ubuntu).
 * If using vmdk images, you will need to convert to a fixed VHD.  One way to do this is with [MVMC](https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-R2-and-2012/dn873998(v=ws.11)?redirectedfrom=MSDN) and here is the [MVMC download page](https://www.microsoft.com/en-us/download/details.aspx?id=42497).  Alternatively, you can convert using [qemu as described here](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/create-upload-generic#resizing-vhds).
 * start with a small vhd to make upload easy, and it can be resized on the cloud using the [disk_size_gb](https://www.terraform.io/docs/providers/azurerm/r/linux_virtual_machine.html#disk_size_gb) property in terraform.
+
+Once you have prepared the VHD there are two choices for upload:
+1. [Upload via a Managed Disk](#upload-the-custom-image-via-a-managed-disk-by-administrator) - this is the recommended way to upload as it does not require a storage account which can be another point of data exfiltration.
+2. [Upload via Azure Storage Account](#upload-the-custom-image-via-a-storage-account-by-administrator) - this approach is useful from low bandwidth, low latency connections, where you are having trouble uploading to the Managed disk URL.
 
 ## Upload the Custom Image via a managed disk By Administrator
 
@@ -86,7 +90,6 @@ az storage account create --location LOCATION --resource-group RESOURCE_GROUP_NA
 ```
 6. create a container to hold the vhds:
 ```bash
---location LOCATION --resource-group RESOURCE_GROUP_NAME
 az storage container create --account-name STORAGE_ACCOUNT_NAME --name vhd
 ```
 
