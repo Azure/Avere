@@ -1,18 +1,21 @@
-// customize the secured VM by adjusting the following local variables
+// customize the Secured VM by adjusting the following local variables
 locals {
-    // This script only allows SSH from a single source IP Address.
-    // Get your IP address from http://www.myipaddress.com/
+    // The secure channel consists of SSH from a single Source IP Address
+    // If you do not have VPN or express route, get your external IP address 
+    // from http://www.myipaddress.com/
     source_ssh_ip_address = "169.254.169.254"
 
     // the region of the deployment
     location = "eastus"
     vm_admin_username = "azureuser"
 
-    // the 
+    // per ISE, only SSH keys and not passwords may be used
     vm_ssh_key_data = "ssh-rsa AAAAB3...."
     resource_group_name = "resource_group"
     vm_size = "Standard_D2s_v3"
-    os_disk_size_gb = 128 // resize the os disk up to 1093 GB, after this you will need to repartition the disk
+    // this value for OS Disk resize must be between 20GB and 1023GB,
+    // after this you will need to repartition the disk
+    os_disk_size_gb = 128 
 
     // the below is the resource group and name of the image
     image_resource_group = "image_resource_group"
