@@ -19,6 +19,7 @@ The contributor will get the following roles from the [Azure built-in roles](htt
    | Resource Group | Role Required | Details |
    | --- | --- | --- |
    | Sandbox | [Virtual Machine Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#virtual-machine-contributor) | the sandbox holds the Virtual Network and Virtual Machine created from the  |
+   | Sandbox | [Network Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#network-contributor) | need to create network resources |
    | CustomImage | [Reader](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#reader) | the custom image resource groups holds the managed image |
 
 Here are the steps to lock down the contributor to the resource groups holding the VM and the custom image.
@@ -31,20 +32,23 @@ az ad user list --display-name "FIRSTNAME LASTNAME" --query "[].objectId"
 ```bash
 export SUBSCRIPTION=#YOUR SUBSCRIPTION
 export TARGET_LOCATION=eastus # your target location
-export VM_RESOURCE_GROUP=#the target VM resource group
-export VHD_RESOURCE_GROUP=#the VNET resource group
+export AZURE_SANDBOX_GROUP=#the target VM resource group
+export AZURE_CUSTOM_IMAGE_GROUP=#the resource group containing the custom image
 export SP_APP_ID=# the object ID from above
 ```
 3. Create the sandbox resource group
 ```bash
 az account set --subscription $SUBSCRIPTION
-az group create --location $TARGET_LOCATION --name $VFXT_RESOURCE_GROUP
+az group create --location $TARGET_LOCATION --name $AZURE_SANDBOX_GROUP
 ```
 4. Set the Subscription and Create the sandbox resource group
 ```bash
-az role assignment create --role "Virtual Machine Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VHD_RESOURCE_GROUP --assignee $SP_APP_ID
-az role assignment create --role "Reader" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VHD_RESOURCE_GROUP --assignee $SP_APP_ID
+az role assignment create --role "Virtual Machine Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$AZURE_SANDBOX_GROUP --assignee $SP_APP_ID
+az role assignment create --role "Network Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$AZURE_SANDBOX_GROUP --assignee $SP_APP_ID
+az role assignment create --role "Reader" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$AZURE_CUSTOM_IMAGE_GROUP --assignee $SP_APP_ID
 ```
+
+Please wait a few minutes for the RBAC assignments to propagate globally.
 
 ## Deployment Custom Image By Contributor
 

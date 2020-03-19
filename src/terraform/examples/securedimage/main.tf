@@ -3,23 +3,24 @@ locals {
     // The secure channel consists of SSH from a single Source IP Address
     // If you do not have VPN or express route, get your external IP address 
     // from http://www.myipaddress.com/
-    source_ssh_ip_address = "169.254.169.254"
+    source_ssh_ip_address = "24.154.117.198"
 
     // the region of the deployment
     location = "eastus"
     vm_admin_username = "azureuser"
 
     // per ISE, only SSH keys and not passwords may be used
-    vm_ssh_key_data = "ssh-rsa AAAAB3...."
-    resource_group_name = "resource_group"
+    // article to create SSH Keys: https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys
+    vm_ssh_key_data = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8fhkh3jpHUQsrUIezFB5k4Rq9giJM8G1Cr0u2IRMiqG++nat5hbOr3gODpTA0h11q9bzb6nJtK7NtDzIHx+w3YNIVpcTGLiUEsfUbY53IHg7Nl/p3/gkST3g0R6BSL7Hg45SfyvpH7kwY30MoVHG/6P3go4SKlYoHXlgaaNr3fMwUTIeE9ofvyS3fcr6xxlsoB6luKuEs50h0NGsE4QEnbfSY4Yd/C1ucc3mEw+QFXBIsENHfHfZYrLNHm2L8MXYVmAH8k//5sFs4Migln9GiUgEQUT6uOjowsZyXBbXwfT11og+syPkAq4eqjiC76r0w6faVihdBYVoc/UcyupgH azureuser@linuxvm"
+    resource_group_name = "azuresandbox"
     vm_size = "Standard_D2s_v3"
     // this value for OS Disk resize must be between 20GB and 1023GB,
     // after this you will need to repartition the disk
     os_disk_size_gb = 128 
 
     // the below is the resource group and name of the previously created custom image
-    image_resource_group = "image_resource_group"
-    image_name = "image_name"
+    image_resource_group = "azurecustomimage"
+    image_name = "ubuntu1804"
 }
 
 provider "azurerm" {
@@ -27,9 +28,8 @@ provider "azurerm" {
     features {}
 }
 
-resource "azurerm_resource_group" "main" {
+data "azurerm_resource_group" "main" {
   name     = local.resource_group_name
-  location = local.location
 }
 
 data "azurerm_image" "custom_image" {
@@ -39,8 +39,8 @@ data "azurerm_image" "custom_image" {
 
 resource "azurerm_network_security_group" "ssh_nsg" {
     name                = "ssh_nsg"
-    location            = azurerm_resource_group.main.location
-    resource_group_name = azurerm_resource_group.main.name
+    location            = data.azurerm_resource_group.main.location
+    resource_group_name = data.azurerm_resource_group.main.name
     
     // the following security rule only allows incoming traffic from the source ip
     // address.
@@ -96,8 +96,8 @@ resource "azurerm_virtual_network" "main" {
   // The /29 is the smallest possible VNET in Azure, 5 addresses are reserved for Azure
   // and 3 are available for use.
   address_space       = ["10.0.0.0/29"]
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
+  location            = data.azurerm_resource_group.main.location
+  resource_group_name = data.azurerm_resource_group.main.name
 
   subnet {
     name           = "internal"
@@ -108,15 +108,15 @@ resource "azurerm_virtual_network" "main" {
 
 resource "azurerm_public_ip" "vm" {
     name                         = "publicip"
-    location                     = azurerm_resource_group.main.location
-    resource_group_name          = azurerm_resource_group.main.name
+    location                     = data.azurerm_resource_group.main.location
+    resource_group_name          = data.azurerm_resource_group.main.name
     allocation_method            = "Static"
 }
 
 resource "azurerm_network_interface" "main" {
   name                = "nic"
-  resource_group_name = azurerm_resource_group.main.name
-  location            = azurerm_resource_group.main.location
+  resource_group_name = data.azurerm_resource_group.main.name
+  location            = data.azurerm_resource_group.main.location
 
   ip_configuration {
     name                          = "internal"
@@ -128,8 +128,8 @@ resource "azurerm_network_interface" "main" {
 
 resource "azurerm_linux_virtual_machine" "main" {
   name                  = "vm"
-  resource_group_name   = azurerm_resource_group.main.name
-  location              = azurerm_resource_group.main.location
+  resource_group_name   = data.azurerm_resource_group.main.name
+  location              = data.azurerm_resource_group.main.location
   network_interface_ids = [azurerm_network_interface.main.id]
   computer_name         = "vm"
   size                  = local.vm_size
