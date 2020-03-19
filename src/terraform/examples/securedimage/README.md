@@ -14,34 +14,39 @@ The steps to for creation to deployment are the following:
 
 ## Create the access for the Contributor By Administrator
 
+The contributor will get the following roles from the [Azure built-in roles](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles):
+
+   | Resource Group | Role Required | Details |
+   | --- | --- | --- |
+   | Sandbox | [Virtual Machine Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#virtual-machine-contributor) | the sandbox holds the Virtual Network and Virtual Machine created from the  |
+   | CustomImage | [Reader](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#reader) | the custom image resource groups holds the managed image |
+
 Here are the steps to lock down the contributor to the resource groups holding the VM and the custom image.
 
+1. Find the object ID of the user:
+```bash
+az ad user list --display-name "FIRSTNAME LASTNAME" --query "[].objectId"
+```
+2. Set the environment variables:
 ```bash
 export SUBSCRIPTION=#YOUR SUBSCRIPTION
 export TARGET_LOCATION=eastus # your target location
-export VM_RESOURCE_GROUP=#the target VFXT resource group
-export VHD_RESOURCE_GROUP=#the target VNET resource group
+export VM_RESOURCE_GROUP=#the target VM resource group
+export VHD_RESOURCE_GROUP=#the VNET resource group
+export SP_APP_ID=# the object ID from above
+```
+3. Create the sandbox resource group
+```bash
 az account set --subscription $SUBSCRIPTION
 az group create --location $TARGET_LOCATION --name $VFXT_RESOURCE_GROUP
-# create the SP
-az ad sp create-for-rbac --role "Virtual Machine Contributor" --scopes /subscriptions/$SUBSCRIPTION/resourceGroups/$VM_RESOURCE_GROUP
-# save the output somewhere safe
-export SP_APP_ID=#the appId of the Service Principal from the previous command
-# assign the "Virtual Machine Contributor" and the "Avere Contributor" to the scope of the VNET resource group
+```
+4. Set the Subscription and Create the sandbox resource group
+```bash
 az role assignment create --role "Virtual Machine Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VHD_RESOURCE_GROUP --assignee $SP_APP_ID
-###########################################################
-# pass the SP details to the person installing the VM
-# once complete, delete the SP with the following command:
-#    az ad sp delete --id $SP_APP_ID
-###########################################################
+az role assignment create --role "Reader" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/$VHD_RESOURCE_GROUP --assignee $SP_APP_ID
 ```
 
 ## Deployment Custom Image By Contributor
-
-<!--
-TODO - add comments to main.tf
-TODO - add "resize" logic for OS disk
--->
 
 To run the example, execute the following instructions.  This assumes use of Azure Cloud Shell.  If you are installing into your own environment, you will need to follow the [instructions to setup terraform for the Azure environment](https://docs.microsoft.com/en-us/azure/terraform/terraform-install-configure).
 

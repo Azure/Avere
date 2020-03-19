@@ -17,7 +17,7 @@ locals {
     // after this you will need to repartition the disk
     os_disk_size_gb = 128 
 
-    // the below is the resource group and name of the image
+    // the below is the resource group and name of the previously created custom image
     image_resource_group = "image_resource_group"
     image_name = "image_name"
 }
