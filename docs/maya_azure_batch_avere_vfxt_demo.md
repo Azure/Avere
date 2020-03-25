@@ -4,11 +4,11 @@
 
 Azure Batch enables you to seamlessly parallelize rendering workloads onto Azure virtual machines.  Azure Batch allows you to use your own virtual machine images, and provides pre-built render images with software like Maya and Arnold.  More information on Azure Batch and rendering including [reference rendering architectures](https://docs.microsoft.com/en-us/azure/batch/batch-rendering-architectures) can be found in the article ["Rendering using Azure"](https://docs.microsoft.com/en-us/azure/batch/batch-rendering-service).
 
-The [Avere vFXT](https://aka.ms/averedocs) is a natural fit with Azure Batch Rendering because it hides [storage latency](why_avere_for_rendering.md), by bringing the storage close to Azure Batch.
-
-This 60-minute demo takes you through rendering an animated movie using Azure Batch, Maya, and the Avere vFXT cluster.  The Avere vFXT is added to hide latency as shown in the following video:
+HPC Cache or the [Avere vFXT](https://aka.ms/averedocs) is a natural fit with Azure Batch Rendering because it hides [storage latency](why_avere_for_rendering.md), by bringing the storage close to Azure Batch.  HPC Cache or the Avere vFXT is added to hide latency as shown in the following video:
 
 [![Tutorial Video](images/nfs_latency/rendercomparison.png)](https://youtu.be/V9bdSXgOfWQ)
+
+This 60-minute demo takes you through rendering an animated movie using Azure Batch, Maya, and the Avere vFXT cluster.
 
 > The source code to produce the template is located [here](../src/tutorials/mayabatch).
 
