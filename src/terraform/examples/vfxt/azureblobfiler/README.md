@@ -1,6 +1,8 @@
-# VMSS Round Robin mount Avere vFXT for Azure
+# Avere vFXT mounting Azure Blob Storage cloud core filer example
 
-This is a basic setup to start VMSS and round robin mount [Avere vFXT for Azure](https://azure.microsoft.com/services/storage/avere-vfxt/).
+This examples configures a render network, controller, and vfxt with an Azure Blob Storage cloud core filer as shown in the diagram below:
+
+![The architecture](../../../../../docs/images/terraform/cloudfiler.png)
 
 ## Deployment Instructions
 
@@ -31,10 +33,16 @@ echo "src/terraform/*" >> .git/info/sparse-checkout
 git pull origin master
 ```
 
-6. `cd src/terraform/examples/vfxt/vmss`
+6. `cd src/terraform/examples/vfxt/azureblobfiler`
 
 7. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  If you are using an [ssk key](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys), ensure that ~/.ssh/id_rsa is populated.
 
 8. execute `terraform init` in the directory of `main.tf`.
 
 9. execute `terraform apply -auto-approve` to build the vfxt cluster
+
+Once installed you will be able to login and use the vFXT cluster according to the vFXT documentation: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-cluster-gui.
+
+Try to scale up and down the cluster, adjust the customer settings, add new junctions, etc, by editing the `main.tf`, and running `terraform apply -auto-approve`.
+
+When you are done using the cluster, you can destroy it by running `terraform destroy -auto-approve` or just delete the three resource groups created.

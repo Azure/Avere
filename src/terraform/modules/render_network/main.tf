@@ -30,7 +30,7 @@ resource "azurerm_network_security_group" "no_internet_nsg" {
     security_rule {
         name                       = "nointernet"
         priority                   = 4000
-        direction                  = "Inbound"
+        direction                  = "Outbound"
         access                     = "Deny"
         protocol                   = "*"
         source_port_range          = "*"
@@ -45,38 +45,68 @@ resource "azurerm_virtual_network" "vnet" {
     address_space       = [var.vnet_address_space]
     location            = var.location
     resource_group_name = azurerm_resource_group.render_rg.name
+}
 
-    // this subnet holds the cloud cache, there should be one cloud cache per subnet
-    subnet {
-        name           = var.subnet_cloud_cache_subnet_name
-        address_prefix = var.subnet_cloud_cache_address_prefix
-        security_group = azurerm_network_security_group.no_internet_nsg.id
-    }
+resource "azurerm_subnet" "cloud_cache" {
+    name                 = var.subnet_cloud_cache_subnet_name
+    virtual_network_name = azurerm_virtual_network.vnet.name
+    resource_group_name  = azurerm_resource_group.render_rg.name
+    address_prefix       = var.subnet_cloud_cache_address_prefix
+    service_endpoints    = ["Microsoft.Storage"]
+}
 
-    // this subnet holds the cloud filers
-    subnet {
-        name           = var.subnet_cloud_filers_subnet_name
-        address_prefix = var.subnet_cloud_filers_address_prefix
-        security_group = azurerm_network_security_group.no_internet_nsg.id
-    }
+resource "azurerm_subnet_network_security_group_association" "cloud_cache" {
+    subnet_id                 = azurerm_subnet.cloud_cache.id
+    network_security_group_id = azurerm_network_security_group.no_internet_nsg.id
+}
 
-    // this subnet holds the jumpbox or controller, there should be one cloud cache per subnet
-    subnet {
-        name           = var.subnet_jumpbox_subnet_name
-        address_prefix = var.subnet_jumpbox_address_prefix
-        security_group = azurerm_network_security_group.ssh_nsg.id
-    }
+resource "azurerm_subnet" "cloud_filers" {
+    name           = var.subnet_cloud_filers_subnet_name
+    virtual_network_name = azurerm_virtual_network.vnet.name
+    resource_group_name  = azurerm_resource_group.render_rg.name
+    address_prefix = var.subnet_cloud_filers_address_prefix
+}
 
-    // partition the render clients in groups of roughly 500 nodes (max 507, and azure takes 5 reserved)
-    subnet {
-        name           = var.subnet_render_clients1_subnet_name
-        address_prefix = var.subnet_render_clients1_address_prefix
-        security_group = azurerm_network_security_group.no_internet_nsg.id
-    }
+resource "azurerm_subnet_network_security_group_association" "cloud_filers" {
+  subnet_id                 = azurerm_subnet.cloud_filers.id
+  network_security_group_id = azurerm_network_security_group.no_internet_nsg.id
+}
 
-    subnet {
-        name           = var.subnet_render_clients2_subnet_name
-        address_prefix = var.subnet_render_clients2_address_prefix
-        security_group = azurerm_network_security_group.no_internet_nsg.id
-    }
+resource "azurerm_subnet" "jumpbox" {
+    name                 = var.subnet_jumpbox_subnet_name
+    virtual_network_name = azurerm_virtual_network.vnet.name
+    resource_group_name  = azurerm_resource_group.render_rg.name
+    address_prefix       = var.subnet_jumpbox_address_prefix
+    # needed for the controller to add storage containers
+    service_endpoints    = ["Microsoft.Storage"]
+}
+
+resource "azurerm_subnet_network_security_group_association" "jumpbox" {
+  subnet_id                 = azurerm_subnet.jumpbox.id
+  network_security_group_id = azurerm_network_security_group.ssh_nsg.id
+}
+
+resource "azurerm_subnet" "render_clients1" {
+    name                 = var.subnet_render_clients1_subnet_name
+    virtual_network_name = azurerm_virtual_network.vnet.name
+    resource_group_name  = azurerm_resource_group.render_rg.name
+    address_prefix       = var.subnet_render_clients1_address_prefix
+}
+
+// partition the render clients in groups of roughly 500 nodes (max 507, and azure takes 5 reserved)
+resource "azurerm_subnet_network_security_group_association" "render_clients1" {
+  subnet_id                 = azurerm_subnet.render_clients1.id
+  network_security_group_id = azurerm_network_security_group.no_internet_nsg.id
+}
+
+resource "azurerm_subnet" "render_clients2" {
+    name                 = var.subnet_render_clients2_subnet_name
+    virtual_network_name = azurerm_virtual_network.vnet.name
+    resource_group_name  = azurerm_resource_group.render_rg.name
+    address_prefix       = var.subnet_render_clients2_address_prefix
+}
+
+resource "azurerm_subnet_network_security_group_association" "render_clients2" {
+  subnet_id                 = azurerm_subnet.render_clients2.id
+  network_security_group_id = azurerm_network_security_group.no_internet_nsg.id
 }

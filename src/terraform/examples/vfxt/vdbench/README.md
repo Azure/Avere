@@ -1,4 +1,4 @@
-# Vdbench - measuring Avere vFXT for Azure performance
+# Vdbench - measuring Avere vFXT for Azure performance against Azure Blob filers or NFS filers
 
 This is a basic setup to generate small and medium sized workloads to test the performance of [Avere vFXT for Azure](https://azure.microsoft.com/services/storage/avere-vfxt/) memory and disk subsystems.  The suggested configuration is 12 x Standard_D2s_v3 clients for each group of 3 vFXT nodes or for each 2 GB/s of throughput capacity in an HPC cache.
 
@@ -12,7 +12,7 @@ Before starting, download the latest vdbench from https://www.oracle.com/technet
 
 2. Specify your subscription by running this command with your subscription ID:  ```az account set --subscription YOUR_SUBSCRIPTION_ID```.  You will need to run this every time after restarting your shell, otherwise it may default you to the wrong subscription, and you will see an error similar to `azurerm_public_ip.vm is empty tuple`.
 
-3. double check your Avere vFXT pre-requistes, including running `az vm image accept-terms --urn microsoft-avere:vfxt:avere-vfxt-controller:latest`: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs
+3. double check your Avere vFXT prerequisites, including running `az vm image accept-terms --urn microsoft-avere:vfxt:avere-vfxt-controller:latest`: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs
 
 4. If not already installed, run the following commands to install the Avere vFXT provider for Azure:
 ```bash
@@ -33,7 +33,9 @@ echo "src/terraform/*" >> .git/info/sparse-checkout
 git pull origin master
 ```
 
-6. `cd src/terraform/examples/vfxt/vdbench`
+6. Decide to use either the NFS filer or Azure storage blob test and cd to the directory:
+    1. for Azure Storage Blob testing: `cd src/terraform/examples/vfxt/vdbench/azureblobfiler`
+    2. for NFS filer testing: `cd src/terraform/examples/vfxt/vdbench/nfsfiler`
 
 7. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  If you are using an [ssk key](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys), ensure that ~/.ssh/id_rsa is populated.
 
@@ -55,7 +57,6 @@ git pull origin master
    ```bash
    scp ~/.ssh/id_rsa USERNAME@IP_ADDRESS:.ssh/.
    ssh USERNAME@IP_ADDRESS
-   vi ~/.ssh/id_rsa
    ```
 
 3. During installation, `copy_dirsa.sh` was installed to `~/.` on the vdbench client machine, to enable easy copying of your private key to all vdbench clients.  Run `~/copy_idrsa.sh` to copy your private key to all vdbench clients, and to add all clients to the "known hosts" list. (**Note** if your ssh key requires a passphrase, some extra steps are needed to make this work. Consider creating a key that does not require a passphrase for ease of use.)
