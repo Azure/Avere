@@ -3,24 +3,23 @@ locals {
     // The secure channel consists of SSH from a single Source IP Address
     // If you do not have VPN or express route, get your external IP address 
     // from http://www.myipaddress.com/
-    source_ssh_ip_address = "24.154.117.198"
+    source_ssh_ip_address = "169.254.169.254"
 
     // the region of the deployment
     location = "eastus"
     vm_admin_username = "azureuser"
 
     // per ISE, only SSH keys and not passwords may be used
-    // article to create SSH Keys: https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys
-    vm_ssh_key_data = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8fhkh3jpHUQsrUIezFB5k4Rq9giJM8G1Cr0u2IRMiqG++nat5hbOr3gODpTA0h11q9bzb6nJtK7NtDzIHx+w3YNIVpcTGLiUEsfUbY53IHg7Nl/p3/gkST3g0R6BSL7Hg45SfyvpH7kwY30MoVHG/6P3go4SKlYoHXlgaaNr3fMwUTIeE9ofvyS3fcr6xxlsoB6luKuEs50h0NGsE4QEnbfSY4Yd/C1ucc3mEw+QFXBIsENHfHfZYrLNHm2L8MXYVmAH8k//5sFs4Migln9GiUgEQUT6uOjowsZyXBbXwfT11og+syPkAq4eqjiC76r0w6faVihdBYVoc/UcyupgH azureuser@linuxvm"
-    resource_group_name = "azuresandbox"
+    vm_ssh_key_data = "ssh-rsa AAAAB3...."
+    resource_group_name = "resource_group"
     vm_size = "Standard_D2s_v3"
     // this value for OS Disk resize must be between 20GB and 1023GB,
     // after this you will need to repartition the disk
     os_disk_size_gb = 128 
 
     // the below is the resource group and name of the previously created custom image
-    image_resource_group = "azurecustomimage"
-    image_name = "ubuntu1804"
+    image_resource_group = "image_resource_group"
+    image_name = "image_name"
 }
 
 provider "azurerm" {
