@@ -1,8 +1,10 @@
 # Secured Image
 
-This example shows an Azure administrator how to take an on-prem Ubuntu 18.04 image, upload it to Azure, and then provide access to a Contributor to create a virtual machine with it.
+This example provides a concrete implementation of the first phase of the [Azure Rendering POC](AzureRenderingPOCMar2020.pdf).  The goal is the achieve the first frame render and maximize security using Azure primitives of Role Based Access Control ([RBAC](https://docs.microsoft.com/en-us/azure/role-based-access-control/overview)), [network security](https://docs.microsoft.com/en-us/azure/security/fundamentals/network-overview), and [governance enablement via Azure Policy](https://azure.microsoft.com/en-us/solutions/governance/). 
 
-These instructions are useful for understanding the security mechanisms of Azure including [RBAC](https://docs.microsoft.com/en-us/azure/role-based-access-control/overview), [governance enablement via Azure Policy](https://azure.microsoft.com/en-us/solutions/governance/), and [network security](https://docs.microsoft.com/en-us/azure/security/fundamentals/network-overview).  These instructions are useful for testing a custom image before the VPN or express route is ready.
+[![Tutorial Video](renderpilot.png)](https://youtu.be/CNiQU9qbMDk)
+
+This example shows an Azure administrator how to take an on-prem Ubuntu 18.04 image, upload it to Azure, and then provide access to a Contributor to create the virtual network and a virtual machine as shown in the following architecture:
 
 ![The architecture](architecture.png)
 
@@ -18,8 +20,8 @@ The contributor will get the following roles from the [Azure built-in roles](htt
 
    | Resource Group | Role Required | Details |
    | --- | --- | --- |
-   | Sandbox | [Virtual Machine Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#virtual-machine-contributor) | the sandbox holds the Virtual Network and Virtual Machine created from the  |
-   | Sandbox | [Network Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#network-contributor) | need to create network resources |
+   | Sandbox | [Virtual Machine Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#virtual-machine-contributor) | needed to create the virtual machine  |
+   | Sandbox | [Network Contributor](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#network-contributor) | needed to create network resources |
    | CustomImage | [Reader](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#reader) | the custom image resource groups holds the managed image |
 
 Here are the steps to lock down the contributor to the resource groups holding the VM and the custom image.
