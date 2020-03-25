@@ -6,7 +6,9 @@ Azure Batch enables you to seamlessly parallelize rendering workloads onto Azure
 
 The [Avere vFXT](https://aka.ms/averedocs) is a natural fit with Azure Batch Rendering because it hides [storage latency](why_avere_for_rendering.md), by bringing the storage close to Azure Batch.
 
-This 60-minute demo takes you through rendering an animated movie using Azure Batch, Maya, and the Avere vFXT cluster.
+This 60-minute demo takes you through rendering an animated movie using Azure Batch, Maya, and the Avere vFXT cluster.  The Avere vFXT is added to hide latency as shown in the following video:
+
+[![Tutorial Video](images/nfs_latency/rendercomparison.png)](https://youtu.be/V9bdSXgOfWQ)
 
 > The source code to produce the template is located [here](../src/tutorials/mayabatch).
 
@@ -34,9 +36,9 @@ This 60-minute demo takes you through rendering an animated movie using Azure Ba
 
     2. Edit `/etc/fstab` to add the following lines but *using your vFXT node IP addresses*. Add more lines if your cluster has more than three nodes. 
         ```bash
-        10.0.0.12:/msazure	/nfs/node0	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
-        10.0.0.13:/msazure	/nfs/node1	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
-        10.0.0.14:/msazure	/nfs/node2	nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
+        10.0.0.12:/msazure    /nfs/node0    nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
+        10.0.0.13:/msazure    /nfs/node1    nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
+        10.0.0.14:/msazure    /nfs/node2    nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0
         ```
 
     3. To mount all shares, type `mount -a` from the cluster controller. 
@@ -56,7 +58,7 @@ This step downloads the frames to render, the client mounting script, and the re
    ```
    https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/mayabatch/centosbootstrap.sh
    ```
-	
+    
 4. Copy the following file, keeping the same name, to the Avere vFXT volume. Store it in a folder named ``/nfs/node1/src``:
 
    ```
