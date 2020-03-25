@@ -14,11 +14,12 @@ The examples show how to deploy HPC Cache, Avere vFXT, and an NFS Filer from min
    5. [HPC Cache and VMSS example](examples/HPC%20Cache/vmss)
 2. [Avere vFXT](examples/vfxt)
    1. [no-filer example](examples/vfxt/no-filers)
-   2. [Avere vFXT mounting 1 IaaS NAS filer example](examples/vfxt/1-filer)
-   3. [Avere vFXT mounting 3 IaaS NAS filers example](examples/vfxt/3-filers)
-   4. [Avere vFXT optimized for Houdini](examples/vfxt/HoudiniOptimized)
-   5. [Avere vFXT and VDBench example](examples/vfxt/vdbench)
-   6. [Avere vFXT and VMSS example](examples/vfxt/vmss)
+   2. [Avere vFXT mounting Azure Blob Storage cloud core filer example](examples/vfxt/azureblobfiler)
+   3. [Avere vFXT mounting 1 IaaS NAS filer example](examples/vfxt/1-filer)
+   4. [Avere vFXT mounting 3 IaaS NAS filers example](examples/vfxt/3-filers)
+   5. [Avere vFXT optimized for Houdini](examples/vfxt/HoudiniOptimized)
+   6. [Avere vFXT and VDBench example](examples/vfxt/vdbench)
+   7. [Avere vFXT and VMSS example](examples/vfxt/vmss)
 3. [NFS Ephemeral Filer](examples/nfsfiler)
 4. [Jumpbox](examples/jumpbox) - this deploys a VM pre-installed with pre-installed with az cli, terraform, golang, and the built avere provider
 5. [SecuredImage](examples/securedimage) - shows how to create, upload, and deploy a custom image with an introduction to RBAC, Azure Governance, and Network Security.

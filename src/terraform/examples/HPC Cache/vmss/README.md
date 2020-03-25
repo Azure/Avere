@@ -10,7 +10,7 @@ To run the example, execute the following instructions.  This assumes use of Azu
 
 2. Specify your subscription by running this command with your subscription ID:  ```az account set --subscription YOUR_SUBSCRIPTION_ID```.  You will need to run this every time after restarting your shell, otherwise it may default you to the wrong subscription, and you will see an error similar to `azurerm_public_ip.vm is empty tuple`.
 
-3. double check your [HPC Cache pre-requistes](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-prereqs)
+3. double check your [HPC Cache prerequisites](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-prereqs)
 
 4. get the terraform examples
 ```bash

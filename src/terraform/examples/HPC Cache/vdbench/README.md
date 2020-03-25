@@ -12,7 +12,7 @@ Before starting, download the latest vdbench from https://www.oracle.com/technet
 
 2. Specify your subscription by running this command with your subscription ID:  ```az account set --subscription YOUR_SUBSCRIPTION_ID```.  You will need to run this every time after restarting your shell, otherwise it may default you to the wrong subscription, and you will see an error similar to `azurerm_public_ip.vm is empty tuple`.
 
-3. double check your [HPC Cache pre-requistes](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-prereqs)
+3. double check your [HPC Cache prerequisites](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-prereqs)
 
 4. get the terraform examples
 ```bash
@@ -47,7 +47,6 @@ git pull origin master
    ```bash
    scp ~/.ssh/id_rsa USERNAME@IP_ADDRESS:.ssh/.
    ssh USERNAME@IP_ADDRESS
-   vi ~/.ssh/id_rsa
    ```
 
 3. During installation, `copy_dirsa.sh` was installed to `~/.` on the vdbench client machine, to enable easy copying of your private key to all vdbench clients.  Run `~/copy_idrsa.sh` to copy your private key to all vdbench clients, and to add all clients to the "known hosts" list. (**Note** if your ssh key requires a passphrase, some extra steps are needed to make this work. Consider creating a key that does not require a passphrase for ease of use.)
