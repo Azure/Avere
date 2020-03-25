@@ -6,7 +6,11 @@ Avere Virtual FXT (vFXT) Edge filers allow you to run compute workflows in Azure
   * Hiding latency to cloud compute resources with cloud caching
   * Avoids having to copy any of your data into the cloud
 
-A key question is how much of a difference does the Avere vFXT make to a local NFS filer and remote NFS filers at varying distances and latencies.  This study reviews the setup of the experiment, shows the results, and makes conclusions based on results.
+A key question is how much of a difference does the Avere vFXT make to a local NFS filer and remote NFS filers at varying distances and latencies.  The following video demonstrates how much difference an Avere vFXT can make at high latency:
+
+[![Tutorial Video](images/nfs_latency/rendercomparison.png)](https://youtu.be/V9bdSXgOfWQ)
+
+For more detail this study reviews the setup of the experiment, shows the results, and makes conclusions based on results.
 
 # Setup
 
