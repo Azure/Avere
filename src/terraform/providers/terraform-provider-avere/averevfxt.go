@@ -234,7 +234,7 @@ func (a *AvereVfxt) EnsureClusterStable() error {
 					continue
 				default:
 					if activity.Percent != CompletedPercent {
-						log.Printf("[INFO] vfxt: cluster still has running activity %v", activity)
+						log.Printf("[WARN] vfxt: cluster still has running activity %v", activity)
 						healthy = false
 						break
 					}
@@ -307,7 +307,7 @@ func (a *AvereVfxt) RemoveVServerSetting(customSetting string) error {
 }
 
 func (a *AvereVfxt) GetExistingFilerNames() ([]string, error) {
-	coreFilersJson, err := a.AvereCommand(a.getListCoreFilersJsonCommand())
+	coreFilersJson, err := a.AvereCommand(a.getListFilersJsonCommand())
 	if err != nil {
 		return nil, err
 	}
@@ -318,13 +318,25 @@ func (a *AvereVfxt) GetExistingFilerNames() ([]string, error) {
 	return results, nil
 }
 
-func (a *AvereVfxt) GetCoreFilerCustomSettings(coreFileInternalName string) (map[string]*CustomSetting, error) {
+func (a *AvereVfxt) GetGenericFilers() (map[string]*CoreFilerGeneric, error) {
+	coreFilersVerboseJson, err := a.AvereCommand(a.getListCoreFilersVerboseJsonCommand())
+	if err != nil {
+		return nil, err
+	}
+	var results map[string]*CoreFilerGeneric
+	if err := json.Unmarshal([]byte(coreFilersVerboseJson), &results); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+func (a *AvereVfxt) GetFilerCustomSettings(filerInternalName string) (map[string]*CustomSetting, error) {
 	customSettings, err := a.GetCustomSettings()
 	if err != nil {
 		return nil, err
 	}
 	results := make(map[string]*CustomSetting, 0)
-	prefix := fmt.Sprintf("%s.", coreFileInternalName)
+	prefix := fmt.Sprintf("%s.", filerInternalName)
 	for _, v := range customSettings {
 		customSetting := CustomSetting{}
 		customSetting = *v
@@ -354,33 +366,35 @@ func (a *AvereVfxt) GetCustomSettings() (map[string]*CustomSetting, error) {
 	return results, nil
 }
 
-func (a *AvereVfxt) GetExistingFilers() (map[string]*CoreFiler, error) {
-	coreFilers, err := a.GetExistingFilerNames()
+func (a *AvereVfxt) GetExistingFilers() (map[string]*CoreFiler, map[string]*AzureStorageFiler, error) {
+	coreFilers, err := a.GetGenericFilers()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	results := make(map[string]*CoreFiler)
-	for _, filer := range coreFilers {
-		result, err := a.GetFiler(filer)
-		if err != nil {
-			return nil, fmt.Errorf("Error retrieving filer %s: %v", filer, err)
+	resultsCoreFiler := make(map[string]*CoreFiler)
+	resultsAzureStorageFiler := make(map[string]*AzureStorageFiler)
+	for filername, filer := range coreFilers {
+		switch filer.FilerClass {
+		case FilerClassAvereCloud:
+			resultsAzureStorageFiler[filername] = filer.CreateAzureStorageFiler()
+		default:
+			resultsCoreFiler[filername] = filer.CreateCoreFiler()
 		}
-		results[filer] = result
 	}
-	return results, nil
+	return resultsCoreFiler, resultsAzureStorageFiler, nil
 }
 
-func (a *AvereVfxt) GetFiler(filer string) (*CoreFiler, error) {
+func (a *AvereVfxt) GetGenericFiler(filer string) (*CoreFilerGeneric, error) {
 	coreFilerJson, err := a.AvereCommand(a.getFilerJsonCommand(filer))
 	if err != nil {
 		return nil, err
 	}
-	var result map[string]CoreFiler
+	var result map[string]CoreFilerGeneric
 	if err := json.Unmarshal([]byte(coreFilerJson), &result); err != nil {
 		return nil, err
 	}
-	coreFiler := result[filer]
-	return &coreFiler, nil
+	coreFilerGeneric := result[filer]
+	return &coreFilerGeneric, nil
 }
 
 func (a *AvereVfxt) ListExports(filer string) ([]NFSExport, error) {
@@ -399,8 +413,9 @@ func (a *AvereVfxt) ListExports(filer string) ([]NFSExport, error) {
 	return result, nil
 }
 
+// Create an NFS filer
 func (a *AvereVfxt) CreateCoreFiler(corefiler *CoreFiler) error {
-	if _, err := a.AvereCommand(a.getCreateFilerCommand(corefiler)); err != nil {
+	if _, err := a.AvereCommand(a.getCreateCoreFilerCommand(corefiler)); err != nil {
 		return err
 	}
 	log.Printf("[INFO] vfxt: ensure stable cluster after adding core filer")
@@ -410,42 +425,88 @@ func (a *AvereVfxt) CreateCoreFiler(corefiler *CoreFiler) error {
 	return nil
 }
 
-func (a *AvereVfxt) EnsureInternalName(corefiler *CoreFiler) error {
-	// Ensure internal name
-	if len(corefiler.InternalName) == 0 {
-		// get the internal name
-		newfiler, err := a.GetFiler(corefiler.Name)
+// Create storage filer
+func (a *AvereVfxt) CreateAzureStorageFiler(azureStorageFiler *AzureStorageFiler) error {
+	credentials, err := a.AvereCommand(a.getListCredentialsCommand())
+	if err != nil {
+		return err
+	}
+	type Credentials struct {
+		Name string `json:"name"`
+	}
+	var resultsRaw []Credentials
+	if err := json.Unmarshal([]byte(credentials), &resultsRaw); err != nil {
+		return err
+	}
+	credentialsFound := false
+	for _, credential := range resultsRaw {
+		if credential.Name == azureStorageFiler.GetCloudFilerName() {
+			credentialsFound = true
+			break
+		}
+	}
+	if !credentialsFound {
+		createCredentialsCommand, err := a.getCreateAzureStorageCredentialsCommand(azureStorageFiler)
 		if err != nil {
 			return err
 		}
-		// add the settings
-		corefiler.InternalName = newfiler.InternalName
+		if _, err := a.AvereCommand(createCredentialsCommand); err != nil {
+			return err
+		}
+	}
+	// ensure the filer has a container
+	if err = azureStorageFiler.PrepareForFilerCreation(a); err != nil {
+		return err
+	}
+	// create the storage core filer
+	createAzureStorageFilerCommand, err := a.getCreateAzureStorageFilerCommand(azureStorageFiler)
+	if err != nil {
+		return err
+	}
+	if _, err := a.AvereCommand(createAzureStorageFilerCommand); err != nil {
+		return err
+	}
+	log.Printf("[INFO] vfxt: ensure stable cluster after adding storage filer")
+	if err := a.EnsureClusterStable(); err != nil {
+		return err
 	}
 	return nil
 }
 
-func (a *AvereVfxt) AddCoreFilerCustomSettings(corefiler *CoreFiler) error {
-	// ensure the internal name exists
-	a.EnsureInternalName(corefiler)
-	if len(corefiler.CustomSettings) == 0 {
+func (a *AvereVfxt) GetInternalName(filerName string) (string, error) {
+	// get the internal name
+	newfiler, err := a.GetGenericFiler(filerName)
+	if err != nil {
+		return "", err
+	}
+	return newfiler.InternalName, nil
+}
+
+func (a *AvereVfxt) AddFilerCustomSettings(corefilerName string, customSettings []*CustomSetting) error {
+	if len(customSettings) == 0 {
 		// no custom settings to add
 		return nil
 	}
 
+	internalName, err := a.GetInternalName(corefilerName)
+	if err != nil {
+		return err
+	}
+
 	// get the mass custom settings
-	existingCustomSettings, err := a.GetCoreFilerCustomSettings(corefiler.InternalName)
+	existingCustomSettings, err := a.GetFilerCustomSettings(internalName)
 	if err != nil {
 		return err
 	}
 
 	// add the new settings
-	for _, v := range corefiler.CustomSettings {
-		customSettingName := getCoreFilerCustomSettingName(corefiler.InternalName, v.Name)
+	for _, v := range customSettings {
+		customSettingName := getFilerCustomSettingName(internalName, v.Name)
 		if _, ok := existingCustomSettings[customSettingName]; ok {
 			// the custom setting already exists
 			continue
 		}
-		if _, err := a.AvereCommand(a.getSetCoreFilerSettingCommand(corefiler, v)); err != nil {
+		if _, err := a.AvereCommand(a.getSetFilerSettingCommand(internalName, v)); err != nil {
 			return err
 		}
 	}
@@ -453,22 +514,24 @@ func (a *AvereVfxt) AddCoreFilerCustomSettings(corefiler *CoreFiler) error {
 	return nil
 }
 
-func (a *AvereVfxt) RemoveCoreFilerCustomSettings(corefiler *CoreFiler) error {
-	// ensure the internal name (mass) exists
-	a.EnsureInternalName(corefiler)
+func (a *AvereVfxt) RemoveFilerCustomSettings(corefilerName string, customSettings []*CustomSetting) error {
+	internalName, err := a.GetInternalName(corefilerName)
+	if err != nil {
+		return err
+	}
 
 	// get the custom settings associated with the mass
-	existingCustomSettings, err := a.GetCoreFilerCustomSettings(corefiler.InternalName)
+	existingCustomSettings, err := a.GetFilerCustomSettings(internalName)
 	if err != nil {
 		return err
 	}
 
 	newSettingsSet := make(map[string]*CustomSetting)
-	for _, v := range corefiler.CustomSettings {
+	for _, v := range customSettings {
 		// fix the core filer settings by adding the mass
 		customSetting := CustomSetting{}
 		customSetting = *v
-		customSetting.Name = getCoreFilerCustomSettingName(corefiler.InternalName, customSetting.Name)
+		customSetting.Name = getFilerCustomSettingName(internalName, customSetting.Name)
 		newSettingsSet[customSetting.Name] = &customSetting
 	}
 
@@ -486,7 +549,7 @@ func (a *AvereVfxt) RemoveCoreFilerCustomSettings(corefiler *CoreFiler) error {
 		} else {
 			log.Printf("[TRACE] setting does not exist '%v'", *v)
 		}
-		if _, err := a.AvereCommand(a.getRemoveCoreFilerSettingCommand(corefiler, v.Name)); err != nil {
+		if _, err := a.AvereCommand(a.getRemoveFilerSettingCommand(v.Name)); err != nil {
 			return err
 		}
 	}
@@ -494,7 +557,7 @@ func (a *AvereVfxt) RemoveCoreFilerCustomSettings(corefiler *CoreFiler) error {
 	return nil
 }
 
-func (a *AvereVfxt) DeleteCoreFiler(corefilerName string) error {
+func (a *AvereVfxt) DeleteFiler(corefilerName string) error {
 	_, err := a.AvereCommand(a.getDeleteFilerCommand(corefilerName))
 	if err != nil {
 		return err
@@ -525,6 +588,14 @@ func (a *AvereVfxt) DeleteCoreFiler(corefilerName string) error {
 	}
 	log.Printf("[INFO] vfxt: ensure stable cluster after deleting core filer")
 	if err := a.EnsureClusterStable(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *AvereVfxt) DeleteAzureStorageCredentials(azureStorageFiler *AzureStorageFiler) error {
+	_, err := a.AvereCommand(a.getDeleteAzureStorageCredentialsCommand(azureStorageFiler))
+	if err != nil {
 		return err
 	}
 	return nil
@@ -776,8 +847,17 @@ func (a *AvereVfxt) getGetActiveAlertsJsonCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json alert.getActive", a.getBaseAvereCmd()), AverecmdLogFile)
 }
 
-func (a *AvereVfxt) getListCoreFilersJsonCommand() string {
-	return WrapCommandForLogging(fmt.Sprintf("%s --json corefiler.list", a.getBaseAvereCmd()), AverecmdLogFile)
+func (a *AvereVfxt) getUnwrappedFilersJsonCommand() string {
+	return fmt.Sprintf("%s --json corefiler.list", a.getBaseAvereCmd())
+}
+
+func (a *AvereVfxt) getListFilersJsonCommand() string {
+	return WrapCommandForLogging(a.getUnwrappedFilersJsonCommand(), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getListCoreFilersVerboseJsonCommand() string {
+	filerArray := fmt.Sprintf("\"$(%s)\"", a.getUnwrappedFilersJsonCommand())
+	return a.getFilerJsonCommand(filerArray)
 }
 
 func (a *AvereVfxt) getListCoreFilerExportsJsonCommand(filer string) string {
@@ -788,12 +868,42 @@ func (a *AvereVfxt) getFilerJsonCommand(filer string) string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json corefiler.get %s", a.getBaseAvereCmd(), filer), AverecmdLogFile)
 }
 
-func (a *AvereVfxt) getCreateFilerCommand(coreFiler *CoreFiler) string {
+func (a *AvereVfxt) getCreateCoreFilerCommand(coreFiler *CoreFiler) string {
 	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.create %s %s true \"{'filerNetwork':'cluster','filerClass':'Other','cachePolicy':'%s',}\"", a.getBaseAvereCmd(), coreFiler.Name, coreFiler.FqdnOrPrimaryIp, coreFiler.CachePolicy), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getCreateAzureStorageFilerCommand(azureStorageFiler *AzureStorageFiler) (string, error) {
+	// get the value for the "bucketContents" field
+	bucketContents, err := azureStorageFiler.GetBucketContents(a)
+	if err != nil {
+		return "", err
+	}
+	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.createCloudFiler %s \"{'cryptoMode':'DISABLED','maxCallsBeforeResetHTTPS':'9999','bucketContents':'%s','connectionFailoverMode':'skipBad','force':'false','connectionMode':'2','compressMode':'DISABLED','serverName':'%s.blob.core.windows.net','filerNetwork':'cluster','bucket':'%s/%s','sslVerifyMode':'DISABLED','sslMethod':'autonegotiate','cachePolicyName':'Full Caching','cloudCredential':'%s','https':'yes','nearline':'no','cloudType':'azure','type':'cloud','port': '443'}\"", a.getBaseAvereCmd(), azureStorageFiler.GetCloudFilerName(), bucketContents, azureStorageFiler.AccountName, azureStorageFiler.AccountName, azureStorageFiler.Container, azureStorageFiler.GetCloudFilerName()), AverecmdLogFile), nil
 }
 
 func (a *AvereVfxt) getDeleteFilerCommand(filer string) string {
 	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.remove %s", a.getBaseAvereCmd(), filer), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getListCredentialsCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json corefiler.listCredentials", a.getBaseAvereCmd()), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getCreateAzureStorageCredentialsCommand(azureStorageFiler *AzureStorageFiler) (string, error) {
+	key, err := GetKey(a, azureStorageFiler.AccountName)
+	if err != nil {
+		return "", err
+	}
+	subscriptionId, err := GetSubscriptionId(a)
+	if err != nil {
+		return "", err
+	}
+
+	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.createCredential %s azure-storage \"{'note':'Automatically created from Terraform','storageKey':'BASE64:%s','tenant':'%s','subscription':'%s',}\"", a.getBaseAvereCmd(), azureStorageFiler.GetCloudFilerName(), key, azureStorageFiler.AccountName, subscriptionId), AverecmdLogFile), nil
+}
+
+func (a *AvereVfxt) getDeleteAzureStorageCredentialsCommand(azureStorageFiler *AzureStorageFiler) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.removeCredential %s", a.getBaseAvereCmd(), azureStorageFiler.GetCloudFilerName()), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getVServerClientIPHomeJsonCommand() string {
@@ -805,7 +915,7 @@ func (a *AvereVfxt) getListJunctionsJsonCommand() string {
 }
 
 func (a *AvereVfxt) getCreateJunctionCommand(junction *Junction) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s vserver.addJunction %s %s %s %s \"{'sharesubdir':'','inheritPolicy':'yes','sharename':'','access':'posix','createSubdirs':'yes','subdir':'','policy':''}\"", a.getBaseAvereCmd(), VServerName, junction.NameSpacePath, junction.CoreFilerName, junction.CoreFilerExport), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s vserver.addJunction %s %s %s %s \"{'sharesubdir':'','inheritPolicy':'yes','sharename':'','access':'posix','createSubdirs':'yes','subdir':'','policy':'','permissions':'%s'}\"", a.getBaseAvereCmd(), VServerName, junction.NameSpacePath, junction.CoreFilerName, junction.CoreFilerExport, junction.SharePermissions), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getDeleteJunctionCommand(junctionNameSpacePath string) string {
@@ -817,7 +927,7 @@ func (a *AvereVfxt) getListCustomSettingsJsonCommand() string {
 }
 
 func (a *AvereVfxt) getSetCustomSettingCommand(customSetting string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s support.setCustomSetting %s", a.getBaseAvereCmd(), customSetting), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s support.setCustomSetting %s \"Automatically created from Terraform\"", a.getBaseAvereCmd(), customSetting), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getRemoveCustomSettingCommand(customSetting string) string {
@@ -835,12 +945,12 @@ func (a *AvereVfxt) getRemoveVServerSettingCommand(customSetting string) string 
 	return a.getRemoveCustomSettingCommand(vServerCustomSetting)
 }
 
-func (a *AvereVfxt) getSetCoreFilerSettingCommand(corefiler *CoreFiler, customSetting *CustomSetting) string {
-	coreFilerCustomSetting := getCoreFilerCustomSettingName(corefiler.InternalName, customSetting.GetCustomSettingCommand())
+func (a *AvereVfxt) getSetFilerSettingCommand(internalName string, customSetting *CustomSetting) string {
+	coreFilerCustomSetting := getFilerCustomSettingName(internalName, customSetting.GetCustomSettingCommand())
 	return a.getSetCustomSettingCommand(coreFilerCustomSetting)
 }
 
-func (a *AvereVfxt) getRemoveCoreFilerSettingCommand(corefiler *CoreFiler, customSettingName string) string {
+func (a *AvereVfxt) getRemoveFilerSettingCommand(customSettingName string) string {
 	return a.getRemoveCustomSettingCommand(customSettingName)
 }
 
@@ -872,7 +982,7 @@ func getVServerCustomSettingName(customSetting string) string {
 	return fmt.Sprintf("%s1.%s", VServerName, customSetting)
 }
 
-func getCoreFilerCustomSettingName(internalName string, customSetting string) string {
+func getFilerCustomSettingName(internalName string, customSetting string) string {
 	return fmt.Sprintf("%s.%s", internalName, customSetting)
 }
 

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
+	"log"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -175,6 +176,48 @@ func resourceVfxt() *schema.Resource {
 				},
 				Set: resourceAvereVfxtCoreFilerReferenceHash,
 			},
+			azure_storage_filer: {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						account_name: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringIsNotWhiteSpace,
+						},
+						container_name: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringIsNotWhiteSpace,
+						},
+						custom_settings: {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringIsNotWhiteSpace,
+							},
+							Set: schema.HashString,
+						},
+						junction: {
+							Type:     schema.TypeSet,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									namespace_path: {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringIsNotWhiteSpace,
+									},
+								},
+							},
+						},
+					},
+				},
+				Set: resourceAvereVfxtAzureStorageCoreFilerReferenceHash,
+			},
 			vfxt_management_ip: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -200,6 +243,9 @@ func resourceVfxt() *schema.Resource {
 }
 
 func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
+	log.Printf("[INFO] [resourceVfxtCreate")
+	defer log.Printf("[INFO] resourceVfxtCreate]")
+
 	avereVfxt, err := fillAvereVfxt(d)
 	if err != nil {
 		return err
@@ -228,8 +274,14 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	// add the new core filers
-	if err := createOrUpdateCoreFilers(d, avereVfxt); err != nil {
+	// add the new filers
+	existingCoreFilers := make(map[string]*CoreFiler)
+	if err := createOrUpdateCoreFilers(d, existingCoreFilers, avereVfxt); err != nil {
+		return err
+	}
+
+	existingAzureStorageFilers := make(map[string]*AzureStorageFiler)
+	if err := createOrUpdateAzureStorageFilers(d, existingAzureStorageFilers, avereVfxt); err != nil {
 		return err
 	}
 
@@ -242,6 +294,9 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceVfxtRead(d *schema.ResourceData, m interface{}) error {
+	log.Printf("[INFO] [resourceVfxtRead")
+	defer log.Printf("[INFO] resourceVfxtRead]")
+
 	avereVfxt, err := fillAvereVfxt(d)
 	if err != nil {
 		return err
@@ -268,6 +323,9 @@ func resourceVfxtRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
+	log.Printf("[INFO] [resourceVfxtUpdate")
+	defer log.Printf("[INFO] resourceVfxtUpdate]")
+
 	avereVfxt, err := fillAvereVfxt(d)
 	if err != nil {
 		return err
@@ -292,16 +350,28 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// update the core filers
-	if d.HasChange(core_filer) {
-		// delete junctions before delete core filers
+	if d.HasChange(core_filer) || d.HasChange(azure_storage_filer) {
+		// delete junctions before deleting core filers and Azure storage filers
 		if err := deleteJunctions(d, avereVfxt); err != nil {
 			return err
 		}
-		if err := deleteCoreFilers(d, avereVfxt); err != nil {
+		existingCoreFilers, existingAzureStorageFilers, err := avereVfxt.GetExistingFilers()
+		if err != nil {
 			return err
 		}
+		if err := deleteCoreFilers(d, existingCoreFilers, avereVfxt); err != nil {
+			return err
+		}
+		if err := deleteAzureStorageFilers(d, existingAzureStorageFilers, avereVfxt); err != nil {
+			return err
+		}
+		// refresh the known filers
+		existingCoreFilers, existingAzureStorageFilers, err = avereVfxt.GetExistingFilers()
 		// create core filers before adding junctions
-		if err := createOrUpdateCoreFilers(d, avereVfxt); err != nil {
+		if err := createOrUpdateCoreFilers(d, existingCoreFilers, avereVfxt); err != nil {
+			return err
+		}
+		if err := createOrUpdateAzureStorageFilers(d, existingAzureStorageFilers, avereVfxt); err != nil {
 			return err
 		}
 		// the junctions are embedded in the core filers, add the new junctions
@@ -321,6 +391,9 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
+	log.Printf("[INFO] [resourceVfxtDelete")
+	defer log.Printf("[INFO] resourceVfxtDelete]")
+
 	averevfxt, err := fillAvereVfxt(d)
 	if err != nil {
 		return err
@@ -441,26 +514,22 @@ func deleteVServerSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 	return nil
 }
 
-func createOrUpdateCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) error {
+func createOrUpdateCoreFilers(d *schema.ResourceData, existingCoreFilers map[string]*CoreFiler, averevfxt *AvereVfxt) error {
+	// get the core filers from the model
 	new := d.Get(core_filer)
 	newFilers, err := expandCoreFilers(new.(*schema.Set).List())
 	if err != nil {
 		return err
 	}
-	// get the list of existing core filers
-	existingFilers, err := averevfxt.GetExistingFilers()
-	if err != nil {
-		return err
-	}
 
-	// compare old and new core filers and raise error if any change
-	if err := EnsureNoCoreAttributeChangeForExistingFilers(existingFilers, newFilers); err != nil {
+	// compare old and new core filers and raise error if any change to fqdn or cache policy
+	if err := EnsureNoCoreAttributeChangeForExistingFilers(existingCoreFilers, newFilers); err != nil {
 		return err
 	}
 
 	// add any new filers
 	for k, v := range newFilers {
-		if _, ok := existingFilers[k]; !ok {
+		if _, ok := existingCoreFilers[k]; !ok {
 			if err := averevfxt.CreateCoreFiler(v); err != nil {
 				return err
 			}
@@ -469,10 +538,10 @@ func createOrUpdateCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) erro
 			return err
 		}
 		// update modified settings and add new settings on the existing filers
-		if err := averevfxt.RemoveCoreFilerCustomSettings(v); err != nil {
+		if err := averevfxt.RemoveFilerCustomSettings(v.Name, v.CustomSettings); err != nil {
 			return err
 		}
-		if err := averevfxt.AddCoreFilerCustomSettings(v); err != nil {
+		if err := averevfxt.AddFilerCustomSettings(v.Name, v.CustomSettings); err != nil {
 			return err
 		}
 	}
@@ -480,25 +549,74 @@ func createOrUpdateCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) erro
 	return nil
 }
 
-func deleteCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) error {
+func createOrUpdateAzureStorageFilers(d *schema.ResourceData, existingAzureStorageFilers map[string]*AzureStorageFiler, averevfxt *AvereVfxt) error {
+	// get the storage filers from the model
+	new := d.Get(azure_storage_filer)
+	newAzureStorageFilers, err := expandAzureStorageFilers(new.(*schema.Set).List())
+	if err != nil {
+		return err
+	}
+
+	// add any new filers
+	for k, v := range newAzureStorageFilers {
+		if _, ok := existingAzureStorageFilers[k]; !ok {
+			if err := averevfxt.CreateAzureStorageFiler(v); err != nil {
+				return err
+			}
+		}
+		if err != nil {
+			return err
+		}
+		// update modified settings and add new settings on the existing filers
+		if err := averevfxt.RemoveFilerCustomSettings(v.GetCloudFilerName(), v.CustomSettings); err != nil {
+			return err
+		}
+		if err := averevfxt.AddFilerCustomSettings(v.GetCloudFilerName(), v.CustomSettings); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func deleteCoreFilers(d *schema.ResourceData, existingCoreFilers map[string]*CoreFiler, averevfxt *AvereVfxt) error {
 	new := d.Get(core_filer)
 	newFilers, err := expandCoreFilers(new.(*schema.Set).List())
 	if err != nil {
 		return err
 	}
-	// get the list of existing core filers
-	existingFilers, err := averevfxt.GetExistingFilers()
-	if err != nil {
-		return err
-	}
 
 	// delete any removed filers
-	for k, v := range existingFilers {
+	for k := range existingCoreFilers {
 		if _, ok := newFilers[k]; ok {
 			// the filer still exists
 			continue
 		}
-		if err := averevfxt.DeleteCoreFiler(v.Name); err != nil {
+		if err := averevfxt.DeleteFiler(k); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func deleteAzureStorageFilers(d *schema.ResourceData, existingAzureStorageFilers map[string]*AzureStorageFiler, averevfxt *AvereVfxt) error {
+	new := d.Get(azure_storage_filer)
+	newAzureStorageFilers, err := expandAzureStorageFilers(new.(*schema.Set).List())
+	if err != nil {
+		return err
+	}
+
+	// delete any removed azure storage filers
+	for k, v := range existingAzureStorageFilers {
+		if _, ok := newAzureStorageFilers[k]; ok {
+			// the filer still exists
+			continue
+		}
+		if err := averevfxt.DeleteFiler(k); err != nil {
+			return err
+		}
+		if err := averevfxt.DeleteAzureStorageCredentials(v); err != nil {
 			return err
 		}
 	}
@@ -507,8 +625,7 @@ func deleteCoreFilers(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 }
 
 func createJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
-	new := d.Get(core_filer)
-	newJunctions, err := expandJunctions(new.(*schema.Set).List())
+	newJunctions, err := expandAllJunctions(d)
 	if err != nil {
 		return err
 	}
@@ -534,11 +651,11 @@ func createJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 }
 
 func deleteJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
-	new := d.Get(core_filer)
-	newJunctions, err := expandJunctions(new.(*schema.Set).List())
+	newJunctions, err := expandAllJunctions(d)
 	if err != nil {
 		return err
 	}
+
 	// get the map of existing junctions
 	existingJunctions, err := averevfxt.GetExistingJunctions()
 	if err != nil {
@@ -547,10 +664,11 @@ func deleteJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 
 	// delete any removed or updated junctions
 	for k, existingJunction := range existingJunctions {
-		if newJunction, ok := newJunctions[k]; ok && *newJunction == *existingJunction {
+		if newJunction, ok := newJunctions[k]; ok && newJunction.IsEqual(existingJunction) {
 			// the junction exists, and is the same as previous
 			continue
 		}
+
 		if err := averevfxt.DeleteJunction(existingJunction.NameSpacePath); err != nil {
 			return err
 		}
@@ -600,8 +718,52 @@ func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 	return results, nil
 }
 
-func expandJunctions(l []interface{}) (map[string]*Junction, error) {
-	results := make(map[string]*Junction)
+func expandAzureStorageFilers(l []interface{}) (map[string]*AzureStorageFiler, error) {
+	results := make(map[string]*AzureStorageFiler)
+	for _, v := range l {
+		input := v.(map[string]interface{})
+
+		// get the properties
+		name := input[account_name].(string)
+		container := input[container_name].(string)
+		customSettingsRaw := input[custom_settings].(*schema.Set).List()
+		customSettings := make([]*CustomSetting, len(customSettingsRaw), len(customSettingsRaw))
+		for i, v := range customSettingsRaw {
+			customSettings[i] = initializeCustomSetting(v.(string))
+		}
+
+		// add to map
+		output := &AzureStorageFiler{
+			AccountName:    name,
+			Container:      container,
+			CustomSettings: customSettings,
+		}
+		// verify no duplicates
+		if _, ok := results[output.GetCloudFilerName()]; ok {
+			return nil, fmt.Errorf("Error: two or more azure storage filers share the same key '%s'", name)
+		}
+		results[output.GetCloudFilerName()] = output
+	}
+	return results, nil
+}
+
+func expandAllJunctions(d *schema.ResourceData) (map[string]*Junction, error) {
+	newJunctions := make(map[string]*Junction)
+
+	coreFilers := d.Get(core_filer)
+	if err := expandCoreFilerJunctions(coreFilers.(*schema.Set).List(), newJunctions); err != nil {
+		return nil, err
+	}
+
+	storageCoreFilers := d.Get(azure_storage_filer)
+	if err := expandAzureStorageFilerJunctions(storageCoreFilers.(*schema.Set).List(), newJunctions); err != nil {
+		return nil, err
+	}
+
+	return newJunctions, nil
+}
+
+func expandCoreFilerJunctions(l []interface{}, results map[string]*Junction) error {
 	for _, v := range l {
 		input := v.(map[string]interface{})
 		coreFilerName := input[core_filer_name].(string)
@@ -609,18 +771,44 @@ func expandJunctions(l []interface{}) (map[string]*Junction, error) {
 		for _, jv := range junctions {
 			junctionRaw := jv.(map[string]interface{})
 			junction := &Junction{
-				NameSpacePath:   junctionRaw[namespace_path].(string),
-				CoreFilerName:   coreFilerName,
-				CoreFilerExport: junctionRaw[core_filer_export].(string),
+				NameSpacePath:    junctionRaw[namespace_path].(string),
+				CoreFilerName:    coreFilerName,
+				CoreFilerExport:  junctionRaw[core_filer_export].(string),
+				SharePermissions: PermissionsPreserve,
 			}
 			// verify no duplicates
 			if _, ok := results[junction.NameSpacePath]; ok {
-				return nil, fmt.Errorf("Error: two or more junctions share the same namespace_path '%s'", junction.NameSpacePath)
+				return fmt.Errorf("Error: two or more junctions share the same namespace_path '%s'", junction.NameSpacePath)
 			}
 			results[junction.NameSpacePath] = junction
 		}
 	}
-	return results, nil
+	return nil
+}
+
+func expandAzureStorageFilerJunctions(l []interface{}, results map[string]*Junction) error {
+	for _, v := range l {
+		input := v.(map[string]interface{})
+		storageName := input[account_name].(string)
+		containerName := input[container_name].(string)
+		cloudFilerName := GetCloudFilerName(storageName, containerName)
+		junctions := input[junction].(*schema.Set).List()
+		for _, jv := range junctions {
+			junctionRaw := jv.(map[string]interface{})
+			junction := &Junction{
+				NameSpacePath:    junctionRaw[namespace_path].(string),
+				CoreFilerName:    cloudFilerName,
+				CoreFilerExport:  CloudFilerExport,
+				SharePermissions: PermissionsModebits,
+			}
+			// verify no duplicates
+			if _, ok := results[junction.NameSpacePath]; ok {
+				return fmt.Errorf("Error: two or more junctions share the same namespace_path '%s'", junction.NameSpacePath)
+			}
+			results[junction.NameSpacePath] = junction
+		}
+	}
+	return nil
 }
 
 func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
@@ -639,8 +827,8 @@ func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
 		if v, ok := m[custom_settings]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(*schema.Set).List()))
 		}
-		if v, ok := m[junction].([]interface{}); ok {
-			for _, j := range v {
+		if v, ok := m[junction].(*schema.Set); ok {
+			for _, j := range v.List() {
 				if m, ok := j.(map[string]interface{}); ok {
 					if v2, ok := m[namespace_path]; ok {
 						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
@@ -652,6 +840,31 @@ func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
 			}
 		}
 	}
+	return hashcode.String(buf.String())
+}
 
+func resourceAvereVfxtAzureStorageCoreFilerReferenceHash(v interface{}) int {
+	var buf bytes.Buffer
+
+	if m, ok := v.(map[string]interface{}); ok {
+		if v, ok := m[account_name]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m[container_name]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m[custom_settings]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(*schema.Set).List()))
+		}
+		if v, ok := m[junction].(*schema.Set); ok {
+			for _, j := range v.List() {
+				if m, ok := j.(map[string]interface{}); ok {
+					if v2, ok := m[namespace_path]; ok {
+						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
+					}
+				}
+			}
+		}
+	}
 	return hashcode.String(buf.String())
 }

@@ -28,6 +28,7 @@ const (
 	FilerClassNetappClustered    = "NetappClustered"
 	FilerClassEMCIsilon          = "EmcIsilon"
 	FilerClassOther              = "Other"
+	FilerClassAvereCloud         = "AvereCloud"
 
 	// filer retry
 	FilerRetryCount        = 120
@@ -49,37 +50,45 @@ const (
 	NodeUp              = "up"
 	AlertSeverityGreen  = "green"  // this means the alert is complete
 	AlertSeverityYellow = "yellow" // this will eventually resolve itself
+
+	// the cloud filer export
+	CloudFilerExport = "/"
+
+	// the share permssions
+	PermissionsPreserve = "preserve" // this is the default for NFS shares
+	PermissionsModebits = "modebits" // this is the default for the Azure Storage Share
 )
 
-
 // terraform schema constants - avoids bugs on schema name changes
-const
-(
-	controller_address= "controller_address"
-	controller_admin_username = "controller_admin_username"
-	controller_admin_password = "controller_admin_password"
-	location = "location"
-	platform = "platform"
-	azure_resource_group = "azure_resource_group"
+const (
+	controller_address           = "controller_address"
+	controller_admin_username    = "controller_admin_username"
+	controller_admin_password    = "controller_admin_password"
+	location                     = "location"
+	platform                     = "platform"
+	azure_resource_group         = "azure_resource_group"
 	azure_network_resource_group = "azure_network_resource_group"
-	azure_network_name = "azure_network_name"
-	azure_subnet_name = "azure_subnet_name"
-	proxy_uri = "proxy_uri"
-	cluster_proxy_uri = "cluster_proxy_uri"
-	vfxt_cluster_name = "vfxt_cluster_name"
-	vfxt_admin_password = "vfxt_admin_password"
-	vfxt_node_count = "vfxt_node_count"
-	global_custom_settings = "global_custom_settings"
-	vserver_settings = "vserver_settings"
-	core_filer = "core_filer"
-	core_filer_name = "name"
-	fqdn_or_primary_ip = "fqdn_or_primary_ip"
-	cache_policy = "cache_policy"
-	custom_settings = "custom_settings"
-	junction = "junction"
-	namespace_path = "namespace_path"
-	core_filer_export = "core_filer_export"
-	vfxt_management_ip = "vfxt_management_ip"
-	vserver_ip_addresses = "vserver_ip_addresses"
-	node_names = "node_names"
+	azure_network_name           = "azure_network_name"
+	azure_subnet_name            = "azure_subnet_name"
+	proxy_uri                    = "proxy_uri"
+	cluster_proxy_uri            = "cluster_proxy_uri"
+	vfxt_cluster_name            = "vfxt_cluster_name"
+	vfxt_admin_password          = "vfxt_admin_password"
+	vfxt_node_count              = "vfxt_node_count"
+	global_custom_settings       = "global_custom_settings"
+	vserver_settings             = "vserver_settings"
+	core_filer                   = "core_filer"
+	core_filer_name              = "name"
+	fqdn_or_primary_ip           = "fqdn_or_primary_ip"
+	cache_policy                 = "cache_policy"
+	custom_settings              = "custom_settings"
+	junction                     = "junction"
+	namespace_path               = "namespace_path"
+	core_filer_export            = "core_filer_export"
+	vfxt_management_ip           = "vfxt_management_ip"
+	vserver_ip_addresses         = "vserver_ip_addresses"
+	node_names                   = "node_names"
+	azure_storage_filer          = "azure_storage_filer"
+	account_name                 = "account_name"
+	container_name               = "container_name"
 )

@@ -65,20 +65,35 @@ type Alert struct {
 	Message  string `json:"message"`
 }
 
+type CoreFilerGeneric struct {
+	Name         string `json:"name"`
+	NetworkName  string `json:"networkName"`
+	PolicyName   string `json:"policyName"`
+	InternalName string `json:"internalName"`
+	FilerClass   string `json:"filerClass"`
+	Bucket       string `json:"bucket"`
+}
+
 type CoreFiler struct {
 	Name            string `json:"name"`
 	FqdnOrPrimaryIp string `json:"networkName"`
 	CachePolicy     string `json:"policyName"`
-	InternalName    string `json:"internalName"`
-	FilerClass      string `json:"filerClass"`
-	AdminState      string `json:"adminState"`
 	CustomSettings  []*CustomSetting
 }
 
+// an Azure Storage Account Filer can be used from a vFXT running in
+// any platform
+type AzureStorageFiler struct {
+	AccountName    string
+	Container      string
+	CustomSettings []*CustomSetting
+}
+
 type Junction struct {
-	NameSpacePath   string `json:"path"`
-	CoreFilerName   string `json:"mass"`
-	CoreFilerExport string `json:"export"`
+	NameSpacePath    string `json:"path"`
+	CoreFilerName    string `json:"mass"`
+	CoreFilerExport  string `json:"export"`
+	SharePermissions string
 }
 
 type CustomSetting struct {

@@ -115,5 +115,14 @@ func SSHCommand(host string, username string, authMethod ssh.AuthMethod, cmd str
 }
 
 func WrapCommandForLogging(cmd string, outputfile string) string {
-	return fmt.Sprintf("echo $(date) '%s' | sed 's/-password [^ ]*/-password ***/' >> %s && %s 1> >(tee -a %s) 2> >(tee -a %s >&2)", cmd, outputfile, cmd, outputfile, outputfile)
+	return fmt.Sprintf("echo $(date) '%s' %s >> %s && %s 1> >(tee -a %s) 2> >(tee -a %s >&2)", cmd, GetScrubPasswordCommand(), outputfile, cmd, outputfile, outputfile)
+}
+
+// do not log output if secrets are present
+func WrapCommandForLoggingSecret(cmd string, outputfile string) string {
+	return fmt.Sprintf("echo $(date) '%s' %s >> %s && %s 2> >(tee -a %s >&2)", cmd, GetScrubPasswordCommand(), outputfile, cmd, outputfile)
+}
+
+func GetScrubPasswordCommand() string {
+	return "| sed 's/-password [^ ]*/-password ***/g' | sed 's/BASE64:[^\\x27]*/BASE64:***/g'"
 }
