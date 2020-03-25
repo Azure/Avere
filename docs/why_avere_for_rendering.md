@@ -1,12 +1,12 @@
-# Why use Avere vFXT Edge Filer? - A study to illustrate the benefits of the Avere vFXT for rendering
+# Why use HPC Cache or the Avere vFXT Edge Filer? - A study to illustrate the benefits of the HPC Cache or Avere vFXT for rendering
 
-Avere Virtual FXT (vFXT) Edge filers allow you to run compute workflows in Azure Compute without having to worry about moving your NAS.  The vFXT accomplishes this by performing read-ahead caching, which aids in hiding latency when trying to use cloud computing against on-premises storage. The benefits of this technology include:
+HPC Cache or Avere Virtual FXT (vFXT) Edge filers allow you to run compute workflows in Azure Compute without having to worry about moving your NAS.  These Avere solutions accomplish this by performing read-ahead caching, which aids in hiding latency when trying to use cloud computing against on-premises storage. The benefits of this technology include:
 
   * Leveraging your current on-premises NAS environment alongside Azure Compute
   * Hiding latency to cloud compute resources with cloud caching
   * Avoids having to copy any of your data into the cloud
 
-A key question is how much of a difference does the Avere vFXT make to a local NFS filer and remote NFS filers at varying distances and latencies.  The following video demonstrates how much difference an Avere vFXT can make at high latency:
+A key question is how much of a difference does the HPC Cache or Avere vFXT make to a local NFS filer and remote NFS filers at varying distances and latencies.  The following video demonstrates how much difference an HPC Cache or Avere vFXT can make at high latency:
 
 [![Tutorial Video](images/nfs_latency/rendercomparison.png)](https://youtu.be/V9bdSXgOfWQ)
 
