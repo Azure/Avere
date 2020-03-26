@@ -9,3 +9,4 @@ The examples in this folder build various configurations of the Avere vFXT with 
 5. [Avere vFXT optimized for Houdini](HoudiniOptimized/)
 6. [Avere vFXT and VDBench example](vdbench/)
 7. [Avere vFXT and VMSS example](vmss/)
+8. [Avere vFXT and Cloud Workstations](cloudworkstation/)
