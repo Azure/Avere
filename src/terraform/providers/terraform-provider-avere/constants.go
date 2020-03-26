@@ -17,11 +17,16 @@ const (
 	PlatformAzure = "azure"
 
 	// cache policies
-	CachePolicyClientsBypass        = "Clients Bypassing the Cluster"
-	CachePolicyReadCaching          = "Read Caching"
-	CachePolicyReadWriteCaching     = "Read and Write Caching"
-	CachePolicyFullCaching          = "Full Caching"
-	CachePolicyTransitioningClients = "Transitioning Clients Before or After a Migration"
+	CachePolicyClientsBypass                 = "Clients Bypassing the Cluster"
+	CachePolicyReadCaching                   = "Read Caching"
+	CachePolicyReadWriteCaching              = "Read and Write Caching"
+	CachePolicyFullCaching                   = "Full Caching"
+	CachePolicyTransitioningClients          = "Transitioning Clients Before or After a Migration"
+	CachePolicyIsolatedCloudWorkstation      = "Isolated Cloud Workstation"
+	CachePolicyCollaboratingCloudWorkstation = "Collaborating Cloud Workstation"
+
+	CachePolicyIsolatedCloudWorkstationCheckAttributes      = "{}"
+	CachePolicyCollaboratingCloudWorkstationCheckAttributes = "{'checkAttrPeriod':30,'checkDirAttrPeriod':30}"
 
 	// filer class
 	FilerClassNetappNonClustered = "NetappNonClustered"

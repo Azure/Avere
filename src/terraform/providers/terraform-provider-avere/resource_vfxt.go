@@ -143,6 +143,8 @@ func resourceVfxt() *schema.Resource {
 								CachePolicyReadWriteCaching,
 								CachePolicyFullCaching,
 								CachePolicyTransitioningClients,
+								CachePolicyIsolatedCloudWorkstation,
+								CachePolicyCollaboratingCloudWorkstation,
 							}, false),
 						},
 						custom_settings: {
