@@ -413,8 +413,66 @@ func (a *AvereVfxt) ListExports(filer string) ([]NFSExport, error) {
 	return result, nil
 }
 
+func (a *AvereVfxt) EnsureCachePolicyExists(cachePolicy string, checkAttributes string) error {
+	// list the cache policies
+	cachePoliciesJson, err := a.AvereCommand(a.getListCachePoliciesJsonCommand())
+	if err != nil {
+		return err
+	}
+	type CachePolicy struct {
+		Name string `json:"name"`
+	}
+	var results []CachePolicy
+	if err := json.Unmarshal([]byte(cachePoliciesJson), &results); err != nil {
+		return err
+	}
+	for _, c := range results {
+		if c.Name == cachePolicy {
+			// cache policy found
+			return nil
+		}
+	}
+
+	// if not exists, create the new policy
+	log.Printf("[WARN] ***** Ensure Cache Policy '%s' with '%s' check Attributes", cachePolicy, checkAttributes)
+	if _, err := a.AvereCommand(a.getCreateCachePolicyCommand(cachePolicy, checkAttributes)); err != nil {
+		return err
+	}
+	log.Printf("[INFO] vfxt: ensure stable cluster after creating cache policy")
+	if err := a.EnsureClusterStable(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *AvereVfxt) EnsureCachePolicy(corefiler *CoreFiler) error {
+	log.Printf("[WARN] ***** Ensure Cache Policy %v", corefiler)
+	switch corefiler.CachePolicy {
+	case CachePolicyClientsBypass:
+		return nil
+	case CachePolicyReadCaching:
+		return nil
+	case CachePolicyReadWriteCaching:
+		return nil
+	case CachePolicyFullCaching:
+		return nil
+	case CachePolicyTransitioningClients:
+		return nil
+	case CachePolicyIsolatedCloudWorkstation:
+		return a.EnsureCachePolicyExists(CachePolicyIsolatedCloudWorkstation, CachePolicyIsolatedCloudWorkstationCheckAttributes)
+	case CachePolicyCollaboratingCloudWorkstation:
+		return a.EnsureCachePolicyExists(CachePolicyCollaboratingCloudWorkstation, CachePolicyCollaboratingCloudWorkstationCheckAttributes)
+	default:
+		return fmt.Errorf("Error: core filer '%s' specifies unknown cache policy '%s'", corefiler.Name, corefiler.CachePolicy)
+	}
+}
+
 // Create an NFS filer
 func (a *AvereVfxt) CreateCoreFiler(corefiler *CoreFiler) error {
+	if err := a.EnsureCachePolicy(corefiler); err != nil {
+		return err
+	}
+
 	if _, err := a.AvereCommand(a.getCreateCoreFilerCommand(corefiler)); err != nil {
 		return err
 	}
@@ -908,6 +966,14 @@ func (a *AvereVfxt) getDeleteAzureStorageCredentialsCommand(azureStorageFiler *A
 
 func (a *AvereVfxt) getVServerClientIPHomeJsonCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json vserver.listClientIPHomes %s", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getListCachePoliciesJsonCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json cachePolicy.list", a.getBaseAvereCmd()), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getCreateCachePolicyCommand(cachePolicy string, checkAttributes string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cachePolicy.create \"%s\" read-write 30 \"%s\" False", a.getBaseAvereCmd(), cachePolicy, checkAttributes), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getListJunctionsJsonCommand() string {
