@@ -1,24 +1,28 @@
 # Experimental: Reducing Latency for Cloud Workstations Connected to On-premises NFS Filers
 
-After the remote cloud workstations have been deployed, users discover that creation, deletion, and listing of files on remote NFS shares are slow due to high latency back to on-premises NFS Filers.  This guide shows how to use Avere vFXT to reduce latency to for cloud workstations connected to an on-premises NFS Filer.  The following table shows where the Avere vFXT edge cache fits within the cloud workstation architecture:
+Once remote cloud workstations have been deployed, users discover that creation, deletion, and listing of files on remote NFS shares are slow due to high latency back to on-premises NFS Filers.  This guide shows how to use Avere vFXT to reduce latency to for cloud workstations connected to an on-premises NFS Filer.  The following table shows where the Avere vFXT edge cache fits within the cloud workstation architecture:
 
 | Cloud Workstations Without Avere | Cloud Workstations With Avere |
 | --- | --- |
 | <img src="withoutavere.png"> | <img src="withavere.png"> |
 
-Please note the cloud workstation feature is experimental: the Avere vFXT performs best for read workloads, but the two modes outlined here should improve the artist or user experience over not using Avere.
+**Important Note:** The cloud workstation feature is experimental: the Avere vFXT performs best for read workloads, but the two cache policies outlined here should improve the artist or user experience over not using Avere.
 
-The first and most performant mode to consider is named "Isolated Cloud Workstation".  This mode is used when users are isolated and not collaborating on the same workload.  The following image shows a concrete example where artists are independently working on scenes.  They may have shared read access to a tools directory, and this works in isolated mode.  The following diagram illustrates the "Collaborating Cloud Workstation" mode.
+## Cache Policy "Isolated Cloud Workstation"
 
-<img src="isolatedcloudworkstation.png"> 
+The first and most performant cache policy to consider is named "Isolated Cloud Workstation".  This cache policy is used when users are isolated and not collaborating on the same workload.  The following image shows a concrete example where artists are independently working on scenes.  They may have shared read access to a tools directory, and this also works for the isolated cache policy.  The following diagram illustrates the "Isolated Cloud Workstation" cache policy.
 
-The second mode is named "Collaborating Cloud Workstation".  This mode is used when users are collaborating on the same workload. The following image shows a concrete example where artists are working together on the same scene.  There may also be an artist on-premises also working on the same workload.  The following diagram illustrates the "Isolated Cloud Workstation" mode. 
+<div style="text-align:center"><img src="isolatedcloudworkstation.png"></div>
 
-<img src="collaboratingcloudworkstation.png"> 
+## Cache Policy "Collaborating Cloud Workstation"
+
+The second cache policy is named "Collaborating Cloud Workstation".  This policy is used when users are collaborating on the same workload. The following image shows a concrete example where artists are working together on the same scene.  There may also be an artist on-premises also working on the same workload.  The following diagram illustrates the "Collaborating Cloud Workstation" cache policy. 
+
+<div style="text-align:center"><img src="collaboratingcloudworkstation.png"></div>
 
 ## Deployment Instructions of Avere vFXT
 
-This examples configures a render network, controller, and vfxt with 1 filer as shown in the diagram below, and let's you choose between Isolated or Shared workstation modes:
+This examples configures a render network, controller, and vfxt with 1 filer as shown in the diagram below, and let's you choose between Isolated or Shared workstation cache policies:
 
 ![The architecture](../../../../../docs/images/terraform/1filer.png)
 
@@ -49,7 +53,7 @@ echo "src/terraform/*" >> .git/info/sparse-checkout
 git pull origin master
 ```
 
-6. Determine your workstation usage and determine which mode you can use as discussed in [reducing latency for cloud workstations](README.md):
+6. Determine your workstation usage and determine which cache policy you can use as discussed in [reducing latency for cloud workstations](README.md):
     1. If using isolated cloud workstations `cd src/terraform/examples/vfxt/cloudworkstation/isolatedcloudworkstation`
     2. If using collaborating cloud workstations `cd src/terraform/examples/vfxt/cloudworkstation/collaboratingcloudworkstation`
 
