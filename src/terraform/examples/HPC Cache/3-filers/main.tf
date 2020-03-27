@@ -75,6 +75,28 @@ resource "azurerm_hpc_cache" "hpc_cache" {
   sku_name            = "Standard_2G"
 }
 
+resource "azurerm_resource_group" "nfsfiler" {
+  name     = local.filer_resource_group_name
+  location = local.location
+}
+
+// the ephemeral filer
+module "nasfiler1" {
+    source = "github.com/Azure/Avere/src/terraform/modules/nfs_filer"
+    resource_group_name = azurerm_resource_group.nfsfiler.name
+    location = azurerm_resource_group.nfsfiler.location
+    admin_username = local.vm_admin_username
+    admin_password = local.vm_admin_password
+    ssh_key_data = local.vm_ssh_key_data
+    vm_size = "Standard_D2s_v3"
+    unique_name = "nasfiler1"
+
+    // network details
+    virtual_network_resource_group = local.network_resource_group_name
+    virtual_network_name = module.network.vnet_name
+    virtual_network_subnet_name = module.network.cloud_filers_subnet_name
+}
+
 // load the Storage Target Template, with the necessary variables
 locals {
     storage_target_1_template = templatefile("${path.module}/../storage_target.json",
@@ -97,7 +119,7 @@ resource "azurerm_template_deployment" "storage_target1" {
   template_body       = local.storage_target_1_template
 
   depends_on = [
-    azurerm_hpc_cache.hpc_cache,, // add after cache created
+    azurerm_hpc_cache.hpc_cache, // add after cache created
     module.nasfiler1
   ]
 }
