@@ -4,10 +4,10 @@ locals {
     location = "eastus"
     
     // network details
-    network_resource_group_name = "abanhowenetwork_resource_group"
+    network_resource_group_name = "network_resource_group"
     
     // hpc cache details
-    hpc_cache_resource_group_name = "abanhowehpc_cache_resource_group"
+    hpc_cache_resource_group_name = "hpc_cache_resource_group"
 
     // HPC Cache Throughput SKU - 3 allowed values for throughput (GB/s) of the cache
     //    Standard_2G
@@ -24,7 +24,7 @@ locals {
     cache_size = 12288
 
     // unique name for cache
-    cache_name = "abanhoweuniquename"
+    cache_name = "uniquename"
 
     // usage model
     //    WRITE_AROUND
@@ -33,9 +33,9 @@ locals {
     usage_model = "WRITE_WORKLOAD_15"
 
     // storage details
-    storage_resource_group_name = "abanhowestorage_resource_group"
+    storage_resource_group_name = "storage_resource_group"
     // create a globally unique name for the storage account
-    storage_account_name = "abanhowe"
+    storage_account_name = ""
     avere_storage_container_name = "hpccache"
     nfs_export_path = "/blob_storage"
 
@@ -56,16 +56,15 @@ locals {
     vm_admin_password = "ReplacePassword$"
     // if you use SSH key, ensure you have ~/.ssh/id_rsa with permission 600
     // populated where you are running terraform
-    //vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
-    vm_ssh_key_data = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8fhkh3jpHUQsrUIezFB5k4Rq9giJM8G1Cr0u2IRMiqG++nat5hbOr3gODpTA0h11q9bzb6nJtK7NtDzIHx+w3YNIVpcTGLiUEsfUbY53IHg7Nl/p3/gkST3g0R6BSL7Hg45SfyvpH7kwY30MoVHG/6P3go4SKlYoHXlgaaNr3fMwUTIeE9ofvyS3fcr6xxlsoB6luKuEs50h0NGsE4QEnbfSY4Yd/C1ucc3mEw+QFXBIsENHfHfZYrLNHm2L8MXYVmAH8k//5sFs4Migln9GiUgEQUT6uOjowsZyXBbXwfT11og+syPkAq4eqjiC76r0w6faVihdBYVoc/UcyupgH azureuser@linuxvm"
-
+    vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
+  
     # download the latest vdbench from https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html
     # and upload to an azure storage blob and put the URL below
-    vdbench_url = "https://vdbench.blob.core.windows.net/vdbench/vdbench50407.zip?st=2020-03-25T10%3A03%3A55Z&se=2041-03-26T10%3A03%3A00Z&sp=rl&sv=2018-03-28&sr=b&sig=vjbkX3VtSj8dVxJG0CRE8RK6nEHwqf7nXr0oe8KHqGM%3D"
+    vdbench_url = ""
     
     // vmss details
-    vmss_resource_group_name = "abanhowevmss_rg"
-    unique_name = "abanhoweuniquename"
+    vmss_resource_group_name = "vmss_rg"
+    unique_name = "uniquename"
     vm_count = 12
     vmss_size = "Standard_DS2_v2"
     mount_target = "/data"
