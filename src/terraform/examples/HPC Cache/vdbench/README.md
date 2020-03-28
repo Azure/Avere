@@ -25,7 +25,9 @@ echo "src/terraform/*" >> .git/info/sparse-checkout
 git pull origin master
 ```
 
-6. `cd src/terraform/examples/HPC\ Cache/vdbench`
+6. Decide to use either the NFS filer or Azure storage blob test and cd to the directory:
+    1. for Azure Storage Blob testing: `cd src/terraform/examples/HPC\ Cache/vdbench/azureblobfiler`
+    2. for NFS filer testing: `cd src/terraform/examples/HPC\ Cache/vdbench/nfsfiler`
 
 7. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences
 
