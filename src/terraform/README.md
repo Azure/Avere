@@ -6,6 +6,8 @@ This folder contains Terraform Examples, Modules, and Providers for HPC Cache an
 
 The examples show how to deploy HPC Cache, Avere vFXT, and an NFS Filer from minimal configurations to 3-node configurations.
 
+Both HPC Cache and Avere vFXT for Azure provide file caching for high-performance computing (HPC).  We recommend to always choose HPC Cache for greater user manageability and only choose Avere vFXT for Azure for custom scenarios where HPC is unable to fit.  If you need to use Avere vFXT for Azure because of a missing feature in HPC Cache, please submit an issue so we can track and add to HPC Cache.
+
 1. [HPC Cache](examples/HPC%20Cache)
    1. [no-filer example](examples/HPC%20Cache/no-filers)
    2. [HPC Cache mounting Azure Blob Storage cloud core filer example](examples/HPC%20Cache/azureblobfiler)
@@ -13,19 +15,20 @@ The examples show how to deploy HPC Cache, Avere vFXT, and an NFS Filer from min
    4. [HPC Cache mounting 3 IaaS NAS filers example](examples/HPC%20Cache/3-filers)
    5. [HPC Cache and VDBench example](examples/HPC%20Cache/vdbench)
    6. [HPC Cache and VMSS example](examples/HPC%20Cache/vmss)
-2. [Avere vFXT](examples/vfxt)
+2. [Avere vFXT for Azure](examples/vfxt)
    1. [no-filer example](examples/vfxt/no-filers)
    2. [Avere vFXT mounting Azure Blob Storage cloud core filer example](examples/vfxt/azureblobfiler)
    3. [Avere vFXT mounting 1 IaaS NAS filer example](examples/vfxt/1-filer)
    4. [Avere vFXT mounting 3 IaaS NAS filers example](examples/vfxt/3-filers)
    5. [Avere vFXT and VDBench example](examples/vfxt/vdbench)
    6. [Avere vFXT and VMSS example](examples/vfxt/vmss)
-3. [NFS Ephemeral Filer](examples/nfsfiler)
-4. [Jumpbox](examples/jumpbox) - this deploys a VM pre-installed with pre-installed with az cli, terraform, golang, and the built avere provider
-5. [SecuredImage](examples/securedimage) - shows how to create, upload, and deploy a custom image with an introduction to RBAC, Azure Governance, and Network Security.
-6. [Specialized Avere vFXT for Rendering and Artists](examples/vfxt)
+3. [Specialized Avere vFXT for Rendering and Artists](examples/vfxt)
    1. [Avere vFXT optimized for Houdini](examples/vfxt/HoudiniOptimized)
    2. [Avere vFXT and Cloud Workstations](examples/vfxt/cloudworkstation)
+4. [SecuredImage](examples/securedimage) - shows how to create, upload, and deploy a custom image with an introduction to RBAC, Azure Governance, and Network 
+5. [NFS Ephemeral Filer](examples/nfsfiler) - builds high performance NFS filers.
+6. [Jumpbox](examples/jumpbox) - this deploys a VM pre-installed with pre-installed with az cli, terraform, golang, and the built avere provider
+Security.
 
 # Modules
 
@@ -37,7 +40,7 @@ These modules provide core components for use with HPC Cache or Avere vFXT for A
 4. [Render Network](modules/render_network) - the render network module creates a sample render network complete with four subnets: cloud cache, filer, and two render node subnets
 5. [VD Bench Config](modules/vdbench_config) - this module configures an NFS share with the VDBench install tools.
 6. [VMSS Config](modules/vmss_config) - this module configures an NFS share with a round robin mount script.
-7. [Mountable VMSS](modules/) - this deploys a Linux based VMSS and runs a script off an NFS share.
+7. [Mountable VMSS](modules/vmss_mountable) - this deploys a Linux based VMSS and runs a script off an NFS share.
 
 # Provider
 
