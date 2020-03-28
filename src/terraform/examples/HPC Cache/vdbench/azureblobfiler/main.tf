@@ -45,8 +45,8 @@ locals {
     // error:
     //       Error: A Service Principal with the Display Name "HPC Cache Resource Provider" was not found
     //
-    hpc_cache_principal_name = "StorageCache Resource Provider"
-    //hpc_cache_principal_name = "HPC Cache Resource Provider"
+    //hpc_cache_principal_name = "StorageCache Resource Provider"
+    hpc_cache_principal_name = "HPC Cache Resource Provider"
 
     // jumpbox related variables
     jumpbox_add_public_ip = true
