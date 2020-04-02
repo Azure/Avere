@@ -18,7 +18,7 @@ locals {
     // vfxt details
     vfxt_resource_group_name = "vfxt_resource_group"
     // if you are running a locked down network, set controller_add_public_ip to false
-    controller_add_public_ip = true
+    controller_add_public_ip = false
     vfxt_cluster_name = "vfxt"
     vfxt_cluster_password = "AvereNumber1$"
     // vfxt cache polies
