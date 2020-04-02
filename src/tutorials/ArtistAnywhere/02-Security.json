@@ -24,7 +24,7 @@
   "variables": {
     "keyVaultApiVersion": "2019-09-01",
     "managedIdentityApiVersion": "2018-11-30",
-    "operationalInsightsApiVersion": "2017-04-26-preview"
+    "operationalInsightsApiVersion": "2020-03-01-preview"
   },
   "resources": [
     {

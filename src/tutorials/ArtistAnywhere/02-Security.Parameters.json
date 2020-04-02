@@ -12,7 +12,7 @@
     "logAnalytics": {
       "value": {
         "name": "MediaStudio",
-        "tier": "PerGB2018"
+        "tier": "Standard"
       }
     },
     "virtualNetwork": {
