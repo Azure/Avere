@@ -27,6 +27,7 @@ Both HPC Cache and Avere vFXT for Azure provide file caching for high-performanc
 3. [Specialized Avere vFXT for Rendering and Artists](examples/vfxt)
    1. [Avere vFXT optimized for Houdini](examples/vfxt/HoudiniOptimized)
    2. [Avere vFXT and Cloud Workstations](examples/vfxt/cloudworkstation)
+   3. [Avere vFXT only](examples/vfxt/vfxt-only) - this example is useful for when the cloud environment is already configured.
 4. [SecuredImage](examples/securedimage) - shows how to create, upload, and deploy a custom image with an introduction to RBAC, Azure Governance, and Network 
 5. [NFS Ephemeral Filer](examples/nfsfiler) - builds high performance NFS filers.
 6. [Jumpbox](examples/jumpbox) - this deploys a VM pre-installed with pre-installed with az cli, terraform, golang, and the built avere provider

@@ -36,7 +36,7 @@ echo "src/terraform/*" >> .git/info/sparse-checkout
 git pull origin master
 ```
 
-7. `cd src/terraform/examples/vfxt/3-filers`
+7. `cd src/terraform/examples/vfxt/vfxt-only`
 
 8. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  If you are using an [ssk key](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys), ensure that ~/.ssh/id_rsa is populated.
 

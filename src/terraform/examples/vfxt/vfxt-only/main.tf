@@ -28,6 +28,11 @@ locals {
     //  "Full Caching"
     //  "Transitioning Clients Before or After a Migration"
     cache_policy = "Clients Bypassing the Cluster"
+
+    // the proxy used by vfxt.py for cluster stand-up and scale-up / scale-down
+    proxy_uri = null
+    // the proxy used by the running vfxt cluster
+    cluster_proxy_uri = null
 }
 
 provider "azurerm" {
@@ -61,6 +66,9 @@ resource "avere_vfxt" "vfxt" {
     // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
     // to work around, add the explicit dependency
     depends_on = [module.vfxtcontroller]
+
+    proxy_uri = local.proxy_uri
+    cluster_proxy_uri = local.cluster_proxy_uri
     
     location = local.location
     azure_resource_group = local.vfxt_resource_group_name
