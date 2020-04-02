@@ -1,5 +1,5 @@
 ﻿# Before running this Azure resource deployment script, make sure that the Azure CLI is installed locally.
-# You must have version 2.2.0 (or greater) of the Azure CLI installed for this script to run properly.
+# You must have version 2.3.1 (or greater) of the Azure CLI installed for this script to run properly.
 # The current Azure CLI release is available at http://docs.microsoft.com/cli/azure/install-azure-cli
 
 param (
@@ -13,10 +13,7 @@ param (
 	[boolean] $storageDeployNetApp = $false,
 
 	# Set to true to deploy Azure Object (Blob) Storage (http://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview)
-	[boolean] $storageDeployObject = $false,
-
-	# Set to true to deploy Azure Virtual Desktop (http://docs.microsoft.com/azure/virtual-desktop/overview)
-	[boolean] $virtualDesktopDeploy = $false
+	[boolean] $storageDeployObject = $false
 )
 
 $templateDirectory = $PSScriptRoot
@@ -30,27 +27,27 @@ $logAnalytics = $sharedServices.logAnalytics
 
 # * - Storage Cache Job
 $moduleName = "* - Storage Cache Job"
-New-TraceMessage $moduleName $true
+New-TraceMessage $moduleName $false
 $storageCacheJob = Start-Job -FilePath "$templateDirectory\Deploy.StorageCache.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $computeNetworks, $storageDeployNetApp, $storageDeployObject
 
 # * - Render Manager Job
 $moduleName = "* - Render Manager Job"
-New-TraceMessage $moduleName $true
+New-TraceMessage $moduleName $false
 $renderManagerJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderManager.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $computeNetworks, $imageGallery
 
 # * - Render Desktop Image Job
 $moduleName = "* - Render Desktop Image Job"
-New-TraceMessage $moduleName $true
+New-TraceMessage $moduleName $false
 $renderDesktopImageJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderDesktop.Image.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $imageGallery
 
 $moduleDirectory = "RenderWorker"
 
-$imageDefinition = Get-ImageDefinition $imageGallery "Render"
+$imageDefinition = Get-ImageDefinition $imageGallery "LinuxServer"
 
 # 08.0 - Worker Image Template
 $computeRegionIndex = 0
 $moduleName = "08.0 - Worker Image Template"
-New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 $resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Image"
 $resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 if (!$resourceGroup) { return }
@@ -71,12 +68,12 @@ if ($imageTemplates.length -eq 0) {
 	$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
 	if (!$groupDeployment) { return }
 }
-New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
+New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 
 # 08.1 - Worker Image Version
 $computeRegionIndex = 0
 $moduleName = "08.1 - Worker Image Version"
-New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 $resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Image"
 $imageVersionId = Get-ImageVersionId $resourceGroupName $imageGallery.name $imageDefinition.name $imageTemplateName
 if (!$imageVersionId) {
@@ -84,36 +81,36 @@ if (!$imageVersionId) {
 	$imageVersionId = Get-ImageVersionId $resourceGroupName $imageGallery.name $imageDefinition.name $imageTemplateName
 	if (!$imageVersionId) { return }
 }
-New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
+New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 
 # * - Storage Cache Job
 $moduleName = "* - Storage Cache Job"
 $storageCaches = Receive-Job -InstanceId $storageCacheJob.InstanceId -Wait
 if (!$storageCaches) { return }
-New-TraceMessage $moduleName $false
+New-TraceMessage $moduleName $true
 
 # * - Render Manager Job
 $moduleName = "* - Render Manager Job"
 $renderManagers = Receive-Job -InstanceId $renderManagerJob.InstanceId -Wait
 if (!$renderManagers) { return }
-New-TraceMessage $moduleName $false
+New-TraceMessage $moduleName $true
 
 # * - Render Desktop Image Job
 $moduleName = "* - Render Desktop Image Job"
-$renderDesktopImage = Receive-Job -InstanceId $renderDesktopImageJob.InstanceId -Wait
-if (!$renderDesktopImage) { return }
-New-TraceMessage $moduleName $false
+$renderDesktopImages = Receive-Job -InstanceId $renderDesktopImageJob.InstanceId -Wait
+if (!$renderDesktopImages) { return }
+New-TraceMessage $moduleName $true
 
 # * - Render Desktop Machines Job
 $moduleName = "* - Render Desktop Machines Job"
-New-TraceMessage $moduleName $true
-$renderDesktopMachinesJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $computeNetworks, $renderManagers, $renderDesktopImage
+New-TraceMessage $moduleName $false
+$renderDesktopMachinesJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $computeNetworks, $renderManagers, $logAnalytics
 
 # 09 - Worker Machines
 $moduleName = "09 - Worker Machines"
-New-TraceMessage $moduleName $true
+New-TraceMessage $moduleName $false
 for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
-	New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 	$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Worker"
 	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 	if (!$resourceGroup) { return }
@@ -151,12 +148,12 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	$templateParameters = ($templateParameters | ConvertTo-Json -Compress -Depth 4).Replace('"', '\"')
 	$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
 	if (!$groupDeployment) { return }
-	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
+	New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 }
-New-TraceMessage $moduleName $false
+New-TraceMessage $moduleName $true
 
 # * - Render Desktop Machines Job
 $moduleName = "* - Render Desktop Machines Job"
 $renderDesktopMachines = Receive-Job -InstanceId $renderDesktopMachinesJob.InstanceId -Wait
 if (!$renderDesktopMachines) { return }
-New-TraceMessage $moduleName $false
+New-TraceMessage $moduleName $true

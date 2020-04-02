@@ -1,4 +1,4 @@
-﻿function New-TraceMessage ($moduleName, $moduleStart, $regionName) {
+﻿function New-TraceMessage ($moduleName, $moduleEnd, $regionName) {
 	$traceMessage = [System.DateTime]::Now.ToLongTimeString()
 	if ($regionName) {
 		$traceMessage += " @ " + $regionName
@@ -7,20 +7,20 @@
 	if ($moduleName.Substring(0, 1) -ne "*") {
 		$traceMessage += "Deployment "
 	}
-	if ($moduleStart) {
-		$traceMessage += "Start)"
-	} else {
+	if ($moduleEnd) {
 		$traceMessage += "End)"
+	} else {
+		$traceMessage += "Start)"
 	}
 	Write-Host $traceMessage
 }
 
 function New-NetworkPeering ([string[]] $computeRegionNames, [object[]] $computeNetworks, $storageNetwork, $storageType) {
 	$moduleName = "03.1 - $storageType Storage Network Peering"
-	New-TraceMessage $moduleName $true
+	New-TraceMessage $moduleName $false
 	$storageNetworkId = az network vnet show --resource-group $storageNetwork.resourceGroupName --name $storageNetwork.name --query id
 	for ($computeNetworkIndex = 0; $computeNetworkIndex -lt $computeNetworks.length; $computeNetworkIndex++) {
-		New-TraceMessage $moduleName $true $computeRegionNames[$computeNetworkIndex]
+		New-TraceMessage $moduleName $false $computeRegionNames[$computeNetworkIndex]
 		$computeNetworkResourceGroupName = $computeNetworks[$computeNetworkIndex].resourceGroupName
 		$computeNetworkName = $computeNetworks[$computeNetworkIndex].name
 		$networkPeering = az network vnet peering create --resource-group $computeNetworkResourceGroupName --vnet-name $computeNetworkName --name $storageNetwork.name --remote-vnet $storageNetworkId --allow-vnet-access
@@ -28,9 +28,9 @@ function New-NetworkPeering ([string[]] $computeRegionNames, [object[]] $compute
 		$computeNetworkId = az network vnet show --resource-group $computeNetworkResourceGroupName --name $computeNetworkName --query id
 		$networkPeering = az network vnet peering create --resource-group $storageNetwork.resourceGroupName --vnet-name $storageNetwork.name --name $computeNetworkName --remote-vnet $computeNetworkId --allow-vnet-access
 		if (!$networkPeering) { return }
-		New-TraceMessage $moduleName $false $computeRegionNames[$computeNetworkIndex]
+		New-TraceMessage $moduleName $true $computeRegionNames[$computeNetworkIndex]
 	}
-	New-TraceMessage $moduleName $false
+	New-TraceMessage $moduleName $true
 	return $networkPeering
 }
 
@@ -38,7 +38,7 @@ function New-SharedServices ($networkOnly, $computeNetworks) {
 	if (!$networkOnly) {
 		# * - Image Gallery Job
 		$moduleName = "* - Image Gallery Job"
-		New-TraceMessage $moduleName $true
+		New-TraceMessage $moduleName $false
 		$imageGalleryJob = Start-Job -FilePath "$templateDirectory\Deploy.ImageGallery.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames
 	}
 
@@ -46,9 +46,9 @@ function New-SharedServices ($networkOnly, $computeNetworks) {
 		# 00 - Network
 		$computeNetworks = @()
 		$moduleName = "00 - Network"
-		New-TraceMessage $moduleName $true
+		New-TraceMessage $moduleName $false
 		for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
-			New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+			New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 			$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Network"
 			$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 			if (!$resourceGroup) { return }
@@ -63,16 +63,16 @@ function New-SharedServices ($networkOnly, $computeNetworks) {
 			$computeNetwork | Add-Member -MemberType NoteProperty -Name "name" -Value $groupDeployment.properties.outputs.virtualNetworkName.value
 			$computeNetwork | Add-Member -MemberType NoteProperty -Name "domainName" -Value $groupDeployment.properties.outputs.virtualNetworkDomainName.value
 			$computeNetworks += $computeNetwork
-			New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
+			New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 		}
-		New-TraceMessage $moduleName $false
+		New-TraceMessage $moduleName $true
 	}
 
 	if (!$networkOnly) {
 		# 02 - Security
 		$computeRegionIndex = 0
 		$moduleName = "02 - Security"
-		New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+		New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 		$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Security"
 		$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 		if (!$resourceGroup) { return }
@@ -91,12 +91,12 @@ function New-SharedServices ($networkOnly, $computeNetworks) {
 
 		$logAnalyticsWorkspaceId = $groupDeployment.properties.outputs.logAnalyticsWorkspaceId.value
 		$logAnalyticsWorkspaceKey = $groupDeployment.properties.outputs.logAnalyticsWorkspaceKey.value
-		New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
+		New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 
 		# * - Image Gallery Job
 		$moduleName = "* - Image Gallery Job"
 		$imageGallery = Receive-Job -InstanceId $imageGalleryJob.InstanceId -Wait
-		New-TraceMessage $moduleName $false
+		New-TraceMessage $moduleName $true
 	}
 
 	$logAnalytics = New-Object PSObject
@@ -167,18 +167,18 @@ function Get-CacheMounts ($storageCache) {
 	return [System.Convert]::ToBase64String($memoryStream.ToArray())	
 }
 
-function Get-MachineExtensionScript ($scriptFilePath, $scriptParameters) {
-	$machineExtensionScript = Get-Content $scriptFilePath -Raw
+function Get-ScriptData ($scriptFilePath, $scriptParameters) {
+	$scriptData = Get-Content $scriptFilePath -Raw
 	if ($scriptParameters) {
-		$machineExtensionScript = "& {" + $machineExtensionScript + "} " + $scriptParameters
-		$machineExtensionScriptBytes = [System.Text.Encoding]::Unicode.GetBytes($machineExtensionScript)
+		$scriptData = "& {" + $scriptData + "} " + $scriptParameters
+		$scriptDataBytes = [System.Text.Encoding]::Unicode.GetBytes($scriptData)
 	} else {
 		$memoryStream = New-Object System.IO.MemoryStream
 		$compressionStream = New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode]::Compress)
 		$streamWriter = New-Object System.IO.StreamWriter($compressionStream)
-		$streamWriter.Write($machineExtensionScript)
+		$streamWriter.Write($scriptData)
 		$streamWriter.Close();
-		$machineExtensionScriptBytes = $memoryStream.ToArray()	
+		$scriptDataBytes = $memoryStream.ToArray()	
 	}
-	return [Convert]::ToBase64String($machineExtensionScriptBytes)
+	return [Convert]::ToBase64String($scriptDataBytes)
 }

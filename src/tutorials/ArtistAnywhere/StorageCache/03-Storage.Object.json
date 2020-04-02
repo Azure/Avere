@@ -28,7 +28,7 @@
     }
   },
   "variables": {
-    "virtualNetworkApiVersion": "2019-11-01",
+    "virtualNetworkApiVersion": "2020-03-01",
     "storageApiVersion": "2019-06-01",
     "storageAccountName": "[toLower(parameters('storageAccount').name)]",
     "storageAccountNetworked": "[not(equals(parameters('storageAccount').subnetName, ''))]",

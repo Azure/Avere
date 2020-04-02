@@ -16,8 +16,8 @@
     }
   },
   "variables": {
-    "virtualNetworkApiVersion": "2019-11-01",
-    "virtualNetworkDomainApiVersion": "2018-09-01",
+    "virtualNetworkApiVersion": "2020-03-01",
+    "virtualNetworkDomainApiVersion": "2020-01-01",
     "virtualNetworkGatewayZoned": "[endsWith(parameters('virtualNetworkGateway').vpnTier, 'AZ')]"
   },
   "resources": [

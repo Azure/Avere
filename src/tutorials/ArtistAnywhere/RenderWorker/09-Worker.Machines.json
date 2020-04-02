@@ -28,7 +28,7 @@
     }
   },
   "variables": {
-    "virtualNetworkApiVersion": "2019-11-01",
+    "virtualNetworkApiVersion": "2020-03-01",
     "virtualMachineApiVersion": "2019-12-01"
   },
   "resources": [
@@ -93,7 +93,7 @@
           "extensionProfile": {
             "extensions": [
               {
-                "name": "[concat(parameters('renderWorker').machineScaleSets[copyIndex()].name, 'Extension')]",
+                "name": "[concat(parameters('renderWorker').machineScaleSets[copyIndex()].name, 'Render')]",
                 "properties": {
                   "publisher": "Microsoft.Azure.Extensions",
                   "type": "CustomScript",

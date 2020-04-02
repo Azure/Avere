@@ -4,24 +4,31 @@
   "parameters": {
     "renderDesktop": {
       "value": {
-        "pythonUrl": "https://www.python.org/ftp/python/3.7.6/python-3.7.6-amd64.exe",
-        "requirementsUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/requirements.txt",
-        "requirementsGuiUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/requirements_gui.txt",
-        "pyCueUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.43/pycue-0.3.43-all.tar.gz",
-        "pyOutlineUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.43/pyoutline-0.3.43-all.tar.gz",
-        "cueSubmitUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.43/cuesubmit-0.3.43-all.tar.gz",
-        "cueAdminUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.43/cueadmin-0.3.43-all.tar.gz",
-        "cueGuiUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.43/cuegui-0.3.43-all.tar.gz",
-        "blenderUrl": "https://mirror.clarkson.edu/blender/release/Blender2.82/blender-2.82a-windows64.msi",
-        "blenderPath": "C:\\Program Files\\Blender Foundation\\Blender 2.82"
+        "machineImages": [
+          {
+            "templateName": "LinuxDesktop",
+            "definitionName": "LinuxDesktop",
+            "sourceType": "PlatformImage",
+            "sourceVersion": "latest",
+            "customizeCommands": [
+            ],
+            "buildTimeoutMinutes": 60
+          },
+          {
+            "templateName": "WindowsDesktop",
+            "definitionName": "WindowsDesktop",
+            "sourceType": "PlatformImage",
+            "sourceVersion": "latest",
+            "customizeCommands": [
+            ],
+            "buildTimeoutMinutes": 60
+          }
+        ]
       }
     },
     "imageBuilder": {
       "value": {
         "imageGalleryName": "",
-        "imageTemplateName": "RenderDesktop",
-        "imageSourceType": "PlatformImage",
-        "imageBuildTimeoutMinutes": 60,
         "imageReplicationCount": 1,
         "imageReplicationRegions": [
         ]

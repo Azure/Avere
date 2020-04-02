@@ -1,5 +1,5 @@
 ﻿# Before running this Azure resource deployment script, make sure that the Azure CLI is installed locally.
-# You must have version 2.2.0 (or greater) of the Azure CLI installed for this script to run properly.
+# You must have version 2.3.1 (or greater) of the Azure CLI installed for this script to run properly.
 # The current Azure CLI release is available at http://docs.microsoft.com/cli/azure/install-azure-cli
 
 param (
@@ -37,14 +37,14 @@ $storageTargetsObject = @()
 if ($storageDeployNetApp -or $storageDeployObject) {
 	$computeRegionIndex = 0
 	$moduleName = "03.0 - Storage"
-	New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 	$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Storage"
 	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 	if (!$resourceGroup) { return }
 
 	if ($storageDeployNetApp) {
 		$subModuleName = "$moduleName (NetApp)"
-		New-TraceMessage $subModuleName $true $computeRegionNames[$computeRegionIndex]
+		New-TraceMessage $subModuleName $false $computeRegionNames[$computeRegionIndex]
 		$templateResources = "$templateDirectory\$moduleDirectory\03-Storage.NetApp.json"
 		$templateParameters = "$templateDirectory\$moduleDirectory\03-Storage.NetApp.Parameters.json"
 
@@ -74,12 +74,12 @@ if ($storageDeployNetApp -or $storageDeployObject) {
 		$storageNetwork | Add-Member -MemberType NoteProperty -Name "name" -Value $storageNetworkName
 		$networkPeering = New-NetworkPeering $computeRegionNames $computeNetworks $storageNetwork "NetApp"
 		if (!$networkPeering) { return }
-		New-TraceMessage $subModuleName $false $computeRegionNames[$computeRegionIndex]
+		New-TraceMessage $subModuleName $true $computeRegionNames[$computeRegionIndex]
 	}
 
 	if ($storageDeployObject) {
 		$subModuleName = "$moduleName (Object)"
-		New-TraceMessage $subModuleName $true $computeRegionNames[$computeRegionIndex]
+		New-TraceMessage $subModuleName $false $computeRegionNames[$computeRegionIndex]
 		$templateResources = "$templateDirectory\$moduleDirectory\03-Storage.Object.json"
 		$templateParameters = "$templateDirectory\$moduleDirectory\03-Storage.Object.Parameters.json"
 
@@ -96,17 +96,17 @@ if ($storageDeployNetApp -or $storageDeployObject) {
 			$networkPeering = New-NetworkPeering $computeRegionNames $computeNetworks $storageNetwork "Object"
 			if (!$networkPeering) { return }
 		}
-		New-TraceMessage $subModuleName $false $computeRegionNames[$computeRegionIndex]
+		New-TraceMessage $subModuleName $true $computeRegionNames[$computeRegionIndex]
 	}
-	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
+	New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 }
 
 # 04.0 - Cache
 $storageCaches = @()
 $moduleName = "04.0 - Cache"
-New-TraceMessage $moduleName $true
+New-TraceMessage $moduleName $false
 for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
-	New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 	$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Cache"
 	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 	if (!$resourceGroup) { return }
@@ -138,15 +138,15 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	$storageCache | Add-Member -MemberType NoteProperty -Name "mountAddresses" -Value $groupDeployment.properties.outputs.mountAddresses.value
 	$storageCache | Add-Member -MemberType NoteProperty -Name "subnetName" -Value $groupDeployment.properties.outputs.subnetName.value
 	$storageCaches += $storageCache
-	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
+	New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 }
-New-TraceMessage $moduleName $false
+New-TraceMessage $moduleName $true
 
 # 04.1 - Cache DNS
 $moduleName = "04.1 - Cache DNS"
-New-TraceMessage $moduleName $true
+New-TraceMessage $moduleName $false
 for ($cacheIndex = 0; $cacheIndex -lt $storageCaches.length; $cacheIndex++) {
-	New-TraceMessage $moduleName $true $computeNetworks[$cacheIndex].domainName
+	New-TraceMessage $moduleName $false $computeNetworks[$cacheIndex].domainName
 	$cacheSubdomainName = $storageCaches[$cacheIndex].subnetName.ToLower()
 	az network private-dns record-set a delete --resource-group $computeNetworks[$cacheIndex].resourceGroupName --zone-name $computeNetworks[$cacheIndex].domainName --name $cacheSubdomainName --yes
 
@@ -168,8 +168,8 @@ for ($cacheIndex = 0; $cacheIndex -lt $storageCaches.length; $cacheIndex++) {
 		}
 	}
 	$storageCaches[$cacheIndex] | Add-Member -MemberType NoteProperty -Name "mounts" -Value $cacheMounts
-	New-TraceMessage $moduleName $false $computeNetworks[$cacheIndex].domainName
+	New-TraceMessage $moduleName $true $computeNetworks[$cacheIndex].domainName
 }
-New-TraceMessage $moduleName $false
+New-TraceMessage $moduleName $true
 
 Write-Output -InputObject $storageCaches -NoEnumerate

@@ -16,7 +16,7 @@
     }
   },
   "variables": {
-    "virtualNetworkApiVersion": "2019-11-01",
+    "virtualNetworkApiVersion": "2020-03-01",
     "virtualMachineApiVersion": "2019-12-01",
     "availabilitySetName": "RenderManagers",
     "loadBalancerNameInternal": "[concat(variables('availabilitySetName'), 'Internal')]",
@@ -246,7 +246,7 @@
           "type": "extensions",
           "apiVersion": "[variables('virtualMachineApiVersion')]",
           "location": "[resourceGroup().location]",
-          "name": "[concat(parameters('renderManager').machines[copyIndex()].name, 'Extension')]",
+          "name": "[concat(parameters('renderManager').machines[copyIndex()].name, 'Render')]",
           "dependsOn": [
             "[resourceId('Microsoft.Compute/virtualMachines', parameters('renderManager').machines[copyIndex()].name)]"
           ],

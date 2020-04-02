@@ -13,17 +13,12 @@
       "metadata": {
         "description": "The shared image builder."
       }
-    },
-    "imageDefinition": {
-      "type": "object",
-      "metadata": {
-        "description": "The shared image definition."
-      }
     }
   },
   "variables": {
     "roleAssignmentApiVersion": "2019-04-01-preview",
     "roleDefinitionContributorId": "b24988ac-6180-42a0-ab88-20f7382dd24c",
+    "imageGalleryApiVersion": "2019-12-01",
     "imageBuilderApiVersion": "2019-05-01-preview",
     "imageBuilderPrincipalId": "ef511139-6170-438e-a6e1-763dc31bdf74"
   },
@@ -40,72 +35,37 @@
     },
     {
       "type": "Microsoft.VirtualMachineImages/imageTemplates",
-      "name": "[parameters('imageBuilder').imageTemplateName]",
+      "name": "[parameters('renderDesktop').machineImages[copyIndex()].templateName]",
       "apiVersion": "[variables('imageBuilderApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Authorization/roleAssignments', guid(resourceGroup().id))]"
       ],
       "properties": {
-        "buildTimeoutInMinutes": "[parameters('imageBuilder').imageBuildTimeoutMinutes]",
+        "buildTimeoutInMinutes": "[parameters('renderDesktop').machineImages[copyIndex()].buildTimeoutMinutes]",
         "source": {
-          "type": "[parameters('imageBuilder').imageSourceType]",
-          "publisher": "[parameters('imageDefinition').publisher]",
-          "offer": "[parameters('imageDefinition').offer]",
-          "sku": "[parameters('imageDefinition').sku]",
-          "version": "[parameters('imageDefinition').version]"
+          "type": "[parameters('renderDesktop').machineImages[copyIndex()].sourceType]",
+          "version": "[parameters('renderDesktop').machineImages[copyIndex()].sourceVersion]",
+          "publisher": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageBuilder').imageGalleryName, parameters('renderDesktop').machineImages[copyIndex()].definitionName), variables('imageGalleryApiVersion')).identifier.publisher]",
+          "offer": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageBuilder').imageGalleryName, parameters('renderDesktop').machineImages[copyIndex()].definitionName), variables('imageGalleryApiVersion')).identifier.offer]",
+          "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageBuilder').imageGalleryName, parameters('renderDesktop').machineImages[copyIndex()].definitionName), variables('imageGalleryApiVersion')).identifier.sku]"
         },
-        "customize": [
-          {
-            "name": "OpenCue",
-            "type": "PowerShell",
-            "inline": [
-              "[concat('curl -OutFile python.exe -Uri ', parameters('renderDesktop').pythonUrl)]",
-              "[concat('curl -OutFile requirements.txt -Uri ', parameters('renderDesktop').requirementsUrl)]",
-              "[concat('curl -OutFile requirements-gui.txt -Uri ', parameters('renderDesktop').requirementsGuiUrl)]",
-              "[concat('curl -OutFile opencue-pycue.tar.gz -Uri ', parameters('renderDesktop').pyCueUrl)]",
-              "[concat('curl -OutFile opencue-pyoutline.tar.gz -Uri ', parameters('renderDesktop').pyOutlineUrl)]",
-              "[concat('curl -OutFile opencue-cuesubmit.tar.gz -Uri ', parameters('renderDesktop').cueSubmitUrl)]",
-              "[concat('curl -OutFile opencue-cueadmin.tar.gz -Uri ', parameters('renderDesktop').cueAdminUrl)]",
-              "[concat('curl -OutFile opencue-cuegui.tar.gz -Uri ', parameters('renderDesktop').cueGuiUrl)]",
-              "Start-Process -FilePath 'python.exe' -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1' -Wait",
-              "py -m pip install --requirement requirements.txt",
-              "py -m pip install --requirement requirements-gui.txt",
-              "tar --extract --gzip --file opencue-pycue.tar.gz",
-              "tar --extract --gzip --file opencue-pyoutline.tar.gz",
-              "tar --extract --gzip --file opencue-cuesubmit.tar.gz",
-              "tar --extract --gzip --file opencue-cueadmin.tar.gz",
-              "cd pycue*",
-              "py setup.py install",
-              "cd ../pyoutline*",
-              "py setup.py install",
-              "cd ../cuesubmit*",
-              "py setup.py install",
-              "cd ../cueadmin*",
-              "py setup.py install"
-            ]
-          },
-          {
-            "name": "Blender",
-            "type": "PowerShell",
-            "inline": [
-              "[concat('curl -OutFile blender.msi -Uri ', parameters('renderDesktop').blenderUrl)]",
-              "Start-Process -FilePath 'blender.msi' -ArgumentList '/quiet /log blender.log' -Wait",
-              "[concat('[System.Environment]::SetEnvironmentVariable(\"Path\", $env:Path + \";', parameters('renderDesktop').blenderPath, '\", [System.EnvironmentVariableTarget]::Machine)')]"
-            ]
-          }
-        ],
+        "customize": "[if(equals(length(parameters('renderDesktop').machineImages[copyIndex()].customizeCommands), 0), json('null'), parameters('renderDesktop').machineImages[copyIndex()].customizeCommands)]",
         "distribute": [
           {
             "type": "SharedImage",
             "runOutputName": "SharedImage",
-            "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('imageBuilder').imageGalleryName, parameters('imageDefinition').name)]",
+            "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('imageBuilder').imageGalleryName, parameters('renderDesktop').machineImages[copyIndex()].definitionName)]",
             "replicationRegions": "[parameters('imageBuilder').imageReplicationRegions]",
             "artifactTags": {
-              "imageTemplate": "[parameters('imageBuilder').imageTemplateName]"
+              "imageTemplate": "[parameters('renderDesktop').machineImages[copyIndex()].templateName]"
             }
           }
         ]
+      },
+      "copy": {
+        "name": "renderDesktops",
+        "count": "[length(parameters('renderDesktop').machineImages)]"
       }
     }
   ],

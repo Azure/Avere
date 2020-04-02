@@ -4,26 +4,75 @@
   "parameters": {
     "renderDesktop": {
       "value": {
-        "imageVersionId": "",
-        "logAnalyticsWorkspaceId": "",
-        "logAnalyticsWorkspaceKey": "",
-        "machineExtensionScript": "",
-        "machines": [
+        "machineCountPerType": 1,
+        "machineTypes": [
           {
-            "name": "renderDesktop0",
-            "machineSize": "Standard_NV6",
-            "adminUsername": "az",
-            "adminPassword": "P@ssword1234",
-            "acceleratedNetworking": false
+            "enabled": true,
+            "namePrefix": "renderHostWD",
+            "machineSize": "Standard_D4s_v3",
+            "acceleratedNetworking": true,
+            "image": {
+              "templateName": "WindowsDesktop",
+              "definitionName": "WindowsDesktop",
+              "referenceId": ""
+             },
+            "gpuDriver": {
+              "publisher": "",
+              "type": "",
+              "typeVersion": ""
+             },
+             "login": {
+              "adminUsername": "az",
+              "adminPassword": "P@ssword1234",
+              "sshPublicKeyData": ""
+             },
+             "extension": {
+              "scriptFile": "11-Desktop.Machines.ps1",
+              "scriptParameters": "https://mediastudio.blob.core.windows.net/bin/pcoip-agent-standard_20.01.1.exe",
+              "scriptCommand": "PowerShell.exe -ExecutionPolicy Unrestricted -EncodedCommand {0}",
+              "commandToExecute": ""
+             }
           },
           {
-            "name": "renderDesktop1",
+            "enabled": true,
+            "namePrefix": "renderHostWNV",
             "machineSize": "Standard_NV6",
-            "adminUsername": "az",
-            "adminPassword": "P@ssword1234",
-            "acceleratedNetworking": false
+            "acceleratedNetworking": false,
+            "image": {
+              "templateName": "WindowsDesktop",
+              "definitionName": "WindowsDesktop",
+              "referenceId": ""
+             },
+            "gpuDriver": {
+              "publisher": "Microsoft.HpcCompute",
+              "type": "NvidiaGpuDriverWindows",
+              "typeVersion": "1.3"
+             },
+             "login": {
+              "adminUsername": "az",
+              "adminPassword": "P@ssword1234",
+              "sshPublicKeyData": ""
+             },
+             "extension": {
+              "scriptFile": "11-Desktop.Machines.ps1",
+              "scriptParameters": "https://mediastudio.blob.core.windows.net/bin/pcoip-agent-graphics_20.01.1.exe",
+              "scriptCommand": "PowerShell.exe -ExecutionPolicy Unrestricted -EncodedCommand {0}",
+              "commandToExecute": ""
+             }
           }
         ]
+      }
+    },
+    "imageGallery": {
+      "value": {
+        "resourceGroupName": "Azure.Media.Studio0-Image",
+        "name": "MediaStudio"
+      }
+    },
+    "logAnalytics": {
+      "value" : {
+        "workspaceId": "",
+        "workspaceKey": ""
       }
     },
     "virtualNetwork": {

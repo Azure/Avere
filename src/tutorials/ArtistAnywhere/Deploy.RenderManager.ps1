@@ -1,5 +1,5 @@
 ﻿# Before running this Azure resource deployment script, make sure that the Azure CLI is installed locally.
-# You must have version 2.2.0 (or greater) of the Azure CLI installed for this script to run properly.
+# You must have version 2.3.1 (or greater) of the Azure CLI installed for this script to run properly.
 # The current Azure CLI release is available at http://docs.microsoft.com/cli/azure/install-azure-cli
 
 param (
@@ -34,9 +34,9 @@ $managerDatabaseClientUrl = @()
 $managerDatabaseClientUsername = @()
 $managerDatabaseClientPassword = @()
 $moduleName = "05 - Manager Data"
-New-TraceMessage $moduleName $true
+New-TraceMessage $moduleName $false
 for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
-	New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 	$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Manager"
 	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 	if (!$resourceGroup) { return }
@@ -57,16 +57,16 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	$managerDatabaseClientUrl += $groupDeployment.properties.outputs.managerDatabaseClientUrl.value
 	$managerDatabaseClientUsername += $groupDeployment.properties.outputs.managerDatabaseClientUsername.value
 	$managerDatabaseClientPassword += $groupDeployment.properties.outputs.managerDatabaseClientPassword.value
-	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
+	New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 }
-New-TraceMessage $moduleName $false
+New-TraceMessage $moduleName $true
 
-$imageDefinition = Get-ImageDefinition $imageGallery "Render"
+$imageDefinition = Get-ImageDefinition $imageGallery "LinuxServer"
 
 # 06.0 - Manager Image Template
 $computeRegionIndex = 0
 $moduleName = "06.0 - Manager Image Template"
-New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 $resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Image"
 $resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 if (!$resourceGroup) { return }
@@ -87,12 +87,12 @@ if ($imageTemplates.length -eq 0) {
 	$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
 	if (!$groupDeployment) { return }
 }
-New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
+New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 
 # 06.1 - Manager Image Version
 $computeRegionIndex = 0
 $moduleName = "06.1 - Manager Image Version"
-New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 $resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Image"
 $imageVersionId = Get-ImageVersionId $resourceGroupName $imageGallery.name $imageDefinition.name $imageTemplateName
 if (!$imageVersionId) {
@@ -100,14 +100,14 @@ if (!$imageVersionId) {
 	$imageVersionId = Get-ImageVersionId $resourceGroupName $imageGallery.name $imageDefinition.name $imageTemplateName
 	if (!$imageVersionId) { return }
 }
-New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
+New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 
 # 07 - Manager Machines
 $renderManagers = @()
 $moduleName = "07 - Manager Machines"
-New-TraceMessage $moduleName $true
+New-TraceMessage $moduleName $false
 for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
-	New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 	$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Manager"
 	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 	if (!$resourceGroup) { return }
@@ -153,8 +153,8 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	if (!$groupDeployment) { return }
 	
 	$renderManagers += $groupDeployment.properties.outputs.renderManager.value
-	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
+	New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 }
-New-TraceMessage $moduleName $false
+New-TraceMessage $moduleName $true
 
 Write-Output -InputObject $renderManagers -NoEnumerate
