@@ -13,14 +13,16 @@ locals {
     // network details
     virtual_network_resource_group = "network_resource_group"
     virtual_network_name = "rendervnet"
-    virtual_network_subnet_name = "cloud_cache"
+    controller_network_subnet_name = "jumpbox"
+    vfxt_network_subnet_name = "cloud_cache"
     
     // vfxt details
     vfxt_resource_group_name = "vfxt_resource_group"
-    // if you are running a locked down network, set controller_add_public_ip to false
-    controller_add_public_ip = false
+    // if you are running a locked down network, set controller_add_public_ip to false, but ensure
+    // you have access to the subnet
+    controller_add_public_ip = true
     vfxt_cluster_name = "vfxt"
-    vfxt_cluster_password = "AvereNumber1$"
+    vfxt_cluster_password = "ReplacePassword$"
     // vfxt cache polies
     //  "Clients Bypassing the Cluster"
     //  "Read Caching"
@@ -52,9 +54,9 @@ module "vfxtcontroller" {
     add_public_ip = local.controller_add_public_ip
 
     // network details
-    virtual_network_resource_group = local.network_resource_group_name
+    virtual_network_resource_group = local.virtual_network_resource_group
     virtual_network_name = local.virtual_network_name
-    virtual_network_subnet_name = local.virtual_network_subnet_name
+    virtual_network_subnet_name = local.controller_network_subnet_name
 }
 
 resource "avere_vfxt" "vfxt" {
@@ -72,9 +74,9 @@ resource "avere_vfxt" "vfxt" {
     
     location = local.location
     azure_resource_group = local.vfxt_resource_group_name
-    azure_network_resource_group = local.network_resource_group_name
+    azure_network_resource_group = local.virtual_network_resource_group
     azure_network_name = local.virtual_network_name
-    azure_subnet_name = local.virtual_network_subnet_name
+    azure_subnet_name = local.vfxt_network_subnet_name
     vfxt_cluster_name = local.vfxt_cluster_name
     vfxt_admin_password = local.vfxt_cluster_password
     vfxt_node_count = 3
