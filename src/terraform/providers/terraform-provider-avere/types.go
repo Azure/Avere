@@ -28,6 +28,8 @@ type AvereVfxt struct {
 	ProxyUri        string
 	ClusterProxyUri string
 
+	ImageId string
+
 	ManagementIP       string
 	VServerIPAddresses *[]string
 	NodeNames          *[]string

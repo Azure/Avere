@@ -77,6 +77,7 @@ const (
 	azure_subnet_name            = "azure_subnet_name"
 	proxy_uri                    = "proxy_uri"
 	cluster_proxy_uri            = "cluster_proxy_uri"
+	image_id                     = "image_id"
 	vfxt_cluster_name            = "vfxt_cluster_name"
 	vfxt_admin_password          = "vfxt_admin_password"
 	vfxt_node_count              = "vfxt_node_count"
