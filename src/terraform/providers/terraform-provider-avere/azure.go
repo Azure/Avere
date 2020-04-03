@@ -280,6 +280,10 @@ func (a Azure) getBaseVfxtCommand(avereVfxt *AvereVfxt) string {
 		sb.WriteString(fmt.Sprintf("--cluster-proxy-uri %s ", avereVfxt.ClusterProxyUri))
 	}
 
+	if len(avereVfxt.ImageId) > 0 {
+		sb.WriteString(fmt.Sprintf("--image-id \"%s\" ", avereVfxt.ImageId))
+	}
+
 	// add the vfxt information
 	sb.WriteString(fmt.Sprintf("--cluster-name %s --admin-password '%s' ", avereVfxt.AvereVfxtName, avereVfxt.AvereAdminPassword))
 

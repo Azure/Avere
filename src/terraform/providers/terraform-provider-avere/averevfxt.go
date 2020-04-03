@@ -50,6 +50,7 @@ func NewAvereVfxt(
 	nodeCount int,
 	proxyUri string,
 	clusterProxyUri string,
+	imageId string,
 	managementIP string,
 	vServerIPAddresses *[]string,
 	nodeNames *[]string) *AvereVfxt {
@@ -63,6 +64,7 @@ func NewAvereVfxt(
 		NodeCount:          nodeCount,
 		ProxyUri:           proxyUri,
 		ClusterProxyUri:    clusterProxyUri,
+		ImageId:            imageId,
 		ManagementIP:       managementIP,
 		VServerIPAddresses: vServerIPAddresses,
 		NodeNames:          nodeNames,

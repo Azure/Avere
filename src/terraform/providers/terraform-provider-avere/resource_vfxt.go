@@ -85,6 +85,11 @@ func resourceVfxt() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			image_id: {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			vfxt_cluster_name: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -460,6 +465,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(vfxt_node_count).(int),
 		d.Get(proxy_uri).(string),
 		d.Get(cluster_proxy_uri).(string),
+		d.Get(image_id).(string),
 		managementIP,
 		utils.ExpandStringSlice(vServerIPAddressesRaw),
 		utils.ExpandStringSlice(nodeNamesRaw),
