@@ -115,19 +115,19 @@ func (a Azure) DeleteVfxtIaasNode(avereVfxt *AvereVfxt, nodeName string) error {
 		return fmt.Errorf("Error verifying login: %v", err)
 	}
 	// delete the node
-	deleteNodeCommand := a.getAzCliDeleteNodeCommand(nodeName)
+	deleteNodeCommand := a.getAzCliDeleteNodeCommand(avereVfxt, nodeName)
 	_, stderrBuf, err := SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, deleteNodeCommand)
 	if err != nil {
 		return fmt.Errorf("Error deleting node: %v, %s", err, stderrBuf.String())
 	}
 	// delete the nic
-	deleteNicCommand := a.getAzCliDeleteNicCommand(nodeName)
+	deleteNicCommand := a.getAzCliDeleteNicCommand(avereVfxt, nodeName)
 	_, stderrBuf, err = SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, deleteNicCommand)
 	if err != nil {
 		return fmt.Errorf("Error deleting nic: %v, %s", err, stderrBuf.String())
 	}
 	// delete the disks
-	deleteDisksCommand := a.getAzCliDeleteDisksCommand(nodeName)
+	deleteDisksCommand := a.getAzCliDeleteDisksCommand(avereVfxt, nodeName)
 	_, stderrBuf, err = SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, deleteDisksCommand)
 	if err != nil {
 		return fmt.Errorf("Error deleting disks: %v, %s", err, stderrBuf.String())
@@ -139,7 +139,7 @@ func CreateBucket(avereVfxt *AvereVfxt, storageAccountName string, bucket string
 	if err := VerifyAzLogin(avereVfxt); err != nil {
 		return fmt.Errorf("Error verifying login: %v", err)
 	}
-	createContainerCommand := getAzCliCreateStorageContainerCommand(storageAccountName, bucket)
+	createContainerCommand := getAzCliCreateStorageContainerCommand(avereVfxt, storageAccountName, bucket)
 	_, stderrBuf, err := SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, createContainerCommand)
 	if err != nil {
 		return fmt.Errorf("Error create container '%s' in storage account '%s' if container exists: %v, %s", bucket, storageAccountName, err, stderrBuf.String())
@@ -151,7 +151,7 @@ func BucketExists(avereVfxt *AvereVfxt, storageAccountName string, bucket string
 	if err := VerifyAzLogin(avereVfxt); err != nil {
 		return false, fmt.Errorf("Error verifying login: %v", err)
 	}
-	containerExistsCommand := getAzCliContainerExistsCommand(storageAccountName, bucket)
+	containerExistsCommand := getAzCliContainerExistsCommand(avereVfxt, storageAccountName, bucket)
 	stdinBuf, stderrBuf, err := SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, containerExistsCommand)
 	if err != nil {
 		return false, fmt.Errorf("Error checking if container '%s' in storage account '%s': %v, %s", bucket, storageAccountName, err, stderrBuf.String())
@@ -170,7 +170,7 @@ func BucketEmpty(avereVfxt *AvereVfxt, storageAccountName string, bucket string)
 	if err := VerifyAzLogin(avereVfxt); err != nil {
 		return false, fmt.Errorf("Error verifying login: %v", err)
 	}
-	containerExistsCommand := getAzCliListFirstBlobCommand(storageAccountName, bucket)
+	containerExistsCommand := getAzCliListFirstBlobCommand(avereVfxt, storageAccountName, bucket)
 	stdinBuf, stderrBuf, err := SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, containerExistsCommand)
 	if err != nil {
 		return false, fmt.Errorf("Error listing first blob of container '%s' in storage account '%s': %v, %s", bucket, storageAccountName, err, stderrBuf.String())
@@ -187,7 +187,7 @@ func GetKey(avereVfxt *AvereVfxt, storageAccountName string) (string, error) {
 	if err := VerifyAzLogin(avereVfxt); err != nil {
 		return "", fmt.Errorf("Error verifying login: %v", err)
 	}
-	getStorageKeyCommand := getAzCliGetStorageKeyCommand(storageAccountName)
+	getStorageKeyCommand := getAzCliGetStorageKeyCommand(avereVfxt, storageAccountName)
 	stdinBuf, stderrBuf, err := SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, getStorageKeyCommand)
 	if err != nil {
 		return "", fmt.Errorf("Error getting the storage account key for account '%s': %s %s", storageAccountName, err, stderrBuf.String())
@@ -204,7 +204,7 @@ func GetSubscriptionId(avereVfxt *AvereVfxt) (string, error) {
 	if err := VerifyAzLogin(avereVfxt); err != nil {
 		return "", fmt.Errorf("Error verifying login: %v", err)
 	}
-	getSubscriptionIdCommand := getAzCliGetSubscriptionIdCommand()
+	getSubscriptionIdCommand := getAzCliGetSubscriptionIdCommand(avereVfxt)
 	stdinBuf, stderrBuf, err := SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, getSubscriptionIdCommand)
 	if err != nil {
 		return "", fmt.Errorf("Error getting the subscription id: %s %s", err, stderrBuf.String())
@@ -220,7 +220,7 @@ func GetSubscriptionId(avereVfxt *AvereVfxt) (string, error) {
 // Azure uses the managed identity of the controller to run Azure cli commands.
 func VerifyAzLogin(avereVfxt *AvereVfxt) error {
 	// it can take a while for the IMDS roles to propagate, retry until login succeeds
-	verifyLoginCommand := getAzCliVerifyLoginCommand()
+	verifyLoginCommand := getAzCliVerifyLoginCommand(avereVfxt)
 	var err error
 	err = nil
 	for retries := 0; retries < AzLoginRetryCount; retries++ {
@@ -233,10 +233,6 @@ func VerifyAzLogin(avereVfxt *AvereVfxt) error {
 		time.Sleep(AzLoginSleepSeconds * time.Second)
 	}
 	return err
-}
-
-func getAzCliVerifyLoginCommand() string {
-	return WrapCommandForLogging("test -f ~/.azure/azureProfile.json || (export NO_PROXY=169.254.169.254 && az login --identity)", AzCliLogFile)
 }
 
 func (a Azure) getCreateVfxtCommand(avereVfxt *AvereVfxt) string {
@@ -290,36 +286,47 @@ func (a Azure) getBaseVfxtCommand(avereVfxt *AvereVfxt) string {
 	return sb.String()
 }
 
-func (a Azure) getAzCliDeleteNodeCommand(nodeName string) string {
-	return WrapCommandForLogging(fmt.Sprintf("az vm list -g %s -o tsv --query \"[?name=='%s'].id\" | xargs az vm delete -y --ids ", a.ResourceGroup, nodeName), AzCliLogFile)
+func getAzCliProxyExports(proxyUri string) string {
+	if len(proxyUri) > 0 {
+		return fmt.Sprintf(" export HTTPS_PROXY=\"%s\" && export NO_PROXY=\"169.254.169.254\" && ", proxyUri)
+	}
+	return ""
 }
 
-func (a Azure) getAzCliDeleteNicCommand(nodeName string) string {
-	return WrapCommandForLogging(fmt.Sprintf("az network nic list -g %s -o tsv --query \"[?starts_with(name,'%s-')].id\" | xargs az network nic delete --ids ", a.ResourceGroup, nodeName), AzCliLogFile)
+func getAzCliVerifyLoginCommand(avereVfxt *AvereVfxt) string {
+	return WrapCommandForLogging(fmt.Sprintf("test -f ~/.azure/azureProfile.json || (%s az login --identity)", getAzCliProxyExports(avereVfxt.ProxyUri)), AzCliLogFile)
 }
 
-func (a Azure) getAzCliDeleteDisksCommand(nodeName string) string {
-	return WrapCommandForLogging(fmt.Sprintf("az disk list -g %s -o tsv --query \"[?starts_with(name,'%s-')].id\"| xargs az disk delete -y --ids ", a.ResourceGroup, nodeName), AzCliLogFile)
+func (a Azure) getAzCliDeleteNodeCommand(avereVfxt *AvereVfxt, nodeName string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s az vm list -g %s -o tsv --query \"[?name=='%s'].id\" | xargs az vm delete -y --ids ", getAzCliProxyExports(avereVfxt.ProxyUri), a.ResourceGroup, nodeName), AzCliLogFile)
 }
 
-func getAzCliGetSubscriptionIdCommand() string {
-	return WrapCommandForLogging(fmt.Sprintf("az account show --query \"id\""), AzCliLogFile)
+func (a Azure) getAzCliDeleteNicCommand(avereVfxt *AvereVfxt, nodeName string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s az network nic list -g %s -o tsv --query \"[?starts_with(name,'%s-')].id\" | xargs az network nic delete --ids ", getAzCliProxyExports(avereVfxt.ProxyUri), a.ResourceGroup, nodeName), AzCliLogFile)
 }
 
-func getAzCliGetStorageKeyCommand(accountName string) string {
-	return WrapCommandForLoggingSecret(fmt.Sprintf("az storage account keys list --account-name %s --query \"[0].value\"", accountName), AzCliLogFile)
+func (a Azure) getAzCliDeleteDisksCommand(avereVfxt *AvereVfxt, nodeName string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s az disk list -g %s -o tsv --query \"[?starts_with(name,'%s-')].id\"| xargs az disk delete -y --ids ", getAzCliProxyExports(avereVfxt.ProxyUri), a.ResourceGroup, nodeName), AzCliLogFile)
 }
 
-func getAzCliCreateStorageContainerCommand(accountName string, container string) string {
-	return WrapCommandForLogging(fmt.Sprintf("az storage container create --account-name %s --name %s", accountName, container), AzCliLogFile)
+func getAzCliGetSubscriptionIdCommand(avereVfxt *AvereVfxt) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s az account show --query \"id\"", getAzCliProxyExports(avereVfxt.ProxyUri)), AzCliLogFile)
 }
 
-func getAzCliContainerExistsCommand(accountName string, container string) string {
-	return WrapCommandForLogging(fmt.Sprintf("az storage container exists --account-name %s --name %s", accountName, container), AzCliLogFile)
+func getAzCliGetStorageKeyCommand(avereVfxt *AvereVfxt, accountName string) string {
+	return WrapCommandForLoggingSecret(fmt.Sprintf("%s az storage account keys list --account-name %s --query \"[0].value\"", getAzCliProxyExports(avereVfxt.ProxyUri), accountName), AzCliLogFile)
 }
 
-func getAzCliListFirstBlobCommand(accountName string, container string) string {
-	return WrapCommandForLogging(fmt.Sprintf("az storage blob list --account-name %s --container-name %s --num-results 1 --query \"[].name\"", accountName, container), AzCliLogFile)
+func getAzCliCreateStorageContainerCommand(avereVfxt *AvereVfxt, accountName string, container string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s az storage container create --account-name %s --name %s", getAzCliProxyExports(avereVfxt.ProxyUri), accountName, container), AzCliLogFile)
+}
+
+func getAzCliContainerExistsCommand(avereVfxt *AvereVfxt, accountName string, container string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s az storage container exists --account-name %s --name %s", getAzCliProxyExports(avereVfxt.ProxyUri), accountName, container), AzCliLogFile)
+}
+
+func getAzCliListFirstBlobCommand(avereVfxt *AvereVfxt, accountName string, container string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s az storage blob list --account-name %s --container-name %s --num-results 1 --query \"[].name\"", getAzCliProxyExports(avereVfxt.ProxyUri), accountName, container), AzCliLogFile)
 }
 
 // isVfxtNotFoundReported returns true if vfxt.py reports vfxt no found

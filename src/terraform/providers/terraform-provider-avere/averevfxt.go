@@ -436,7 +436,6 @@ func (a *AvereVfxt) EnsureCachePolicyExists(cachePolicy string, checkAttributes 
 	}
 
 	// if not exists, create the new policy
-	log.Printf("[WARN] ***** Ensure Cache Policy '%s' with '%s' check Attributes", cachePolicy, checkAttributes)
 	if _, err := a.AvereCommand(a.getCreateCachePolicyCommand(cachePolicy, checkAttributes)); err != nil {
 		return err
 	}
@@ -448,7 +447,6 @@ func (a *AvereVfxt) EnsureCachePolicyExists(cachePolicy string, checkAttributes 
 }
 
 func (a *AvereVfxt) EnsureCachePolicy(corefiler *CoreFiler) error {
-	log.Printf("[WARN] ***** Ensure Cache Policy %v", corefiler)
 	switch corefiler.CachePolicy {
 	case CachePolicyClientsBypass:
 		return nil
