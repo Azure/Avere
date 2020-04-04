@@ -75,6 +75,15 @@ func resourceVfxt() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotWhiteSpace,
 			},
+			ntp_servers: {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 3,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+			},
 			proxy_uri: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -273,6 +282,10 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 	// the management ip will uniquely identify the cluster in the VNET
 	d.SetId(avereVfxt.ManagementIP)
 
+	if err := updateNtpServers(d, avereVfxt); err != nil {
+		return err
+	}
+
 	if err := createGlobalSettings(d, avereVfxt); err != nil {
 		return err
 	}
@@ -336,6 +349,12 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 	avereVfxt, err := fillAvereVfxt(d)
 	if err != nil {
 		return err
+	}
+
+	if d.HasChange(ntp_servers) {
+		if err := updateNtpServers(d, avereVfxt); err != nil {
+			return err
+		}
 	}
 
 	if d.HasChange(global_custom_settings) {
@@ -463,6 +482,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(vfxt_cluster_name).(string),
 		d.Get(vfxt_admin_password).(string),
 		d.Get(vfxt_node_count).(int),
+		utils.ExpandStringSlice(d.Get(ntp_servers).([]interface{})),
 		d.Get(proxy_uri).(string),
 		d.Get(cluster_proxy_uri).(string),
 		d.Get(image_id).(string),
@@ -470,6 +490,14 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		utils.ExpandStringSlice(vServerIPAddressesRaw),
 		utils.ExpandStringSlice(nodeNamesRaw),
 	), nil
+}
+
+func updateNtpServers(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
+	ntpServers := utils.ExpandStringSlice(d.Get(ntp_servers).([]interface{}))
+	if len(*ntpServers) == 0 {
+		return nil
+	}
+	return avereVfxt.SetNtpServers(ntpServers)
 }
 
 func createGlobalSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
