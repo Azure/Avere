@@ -48,6 +48,7 @@ func NewAvereVfxt(
 	avereVfxtName string,
 	avereAdminPassword string,
 	nodeCount int,
+	ntpServers *[]string,
 	proxyUri string,
 	clusterProxyUri string,
 	imageId string,
@@ -62,6 +63,7 @@ func NewAvereVfxt(
 		AvereVfxtName:      avereVfxtName,
 		AvereAdminPassword: avereAdminPassword,
 		NodeCount:          nodeCount,
+		NtpServers:         ntpServers,
 		ProxyUri:           proxyUri,
 		ClusterProxyUri:    clusterProxyUri,
 		ImageId:            imageId,
@@ -286,6 +288,27 @@ func (a *AvereVfxt) EnsureClusterStable() error {
 		time.Sleep(ClusterStableRetrySleepSeconds * time.Second)
 	}
 	return nil
+}
+
+func (a *AvereVfxt) SetNtpServers(ntpServers *[]string) error {
+	if len(*ntpServers) == 0 {
+		return fmt.Errorf("ntp servers are empty, this is a bug, and validation should have blocked setting of empty NTP servers")
+	}
+
+	ntpServer1 := (*ntpServers)[0]
+	
+	ntpServer2 := ""
+	if len(*ntpServers) > 1 {
+		ntpServer2 = (*ntpServers)[1]
+	}
+
+	ntpServer3 := ""
+	if len(*ntpServers) > 2 {
+		ntpServer3 = (*ntpServers)[2]
+	}
+
+	_, err := a.AvereCommand(a.getSetNtpServersCommand(ntpServer1, ntpServer2, ntpServer3))
+	return err
 }
 
 func (a *AvereVfxt) CreateCustomSetting(customSetting string) error {
@@ -986,6 +1009,10 @@ func (a *AvereVfxt) getCreateJunctionCommand(junction *Junction) string {
 
 func (a *AvereVfxt) getDeleteJunctionCommand(junctionNameSpacePath string) string {
 	return WrapCommandForLogging(fmt.Sprintf("%s vserver.removeJunction %s %s", a.getBaseAvereCmd(), VServerName, junctionNameSpacePath), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getSetNtpServersCommand(ntpServer1 string, ntpServer2 string, ntpServer3 string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cluster.modifyNTP \"%s\" \"%s\" \"%s\"", a.getBaseAvereCmd(), ntpServer1, ntpServer2, ntpServer3), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getListCustomSettingsJsonCommand() string {

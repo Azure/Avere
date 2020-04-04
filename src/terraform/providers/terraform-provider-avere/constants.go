@@ -75,6 +75,7 @@ const (
 	azure_network_resource_group = "azure_network_resource_group"
 	azure_network_name           = "azure_network_name"
 	azure_subnet_name            = "azure_subnet_name"
+	ntp_servers                  = "ntp_servers"
 	proxy_uri                    = "proxy_uri"
 	cluster_proxy_uri            = "cluster_proxy_uri"
 	image_id                     = "image_id"
