@@ -57,3 +57,13 @@ output "render_clients2_subnet_id" {
   description = "The full id of the render clients 2 subnet."
   value       = azurerm_subnet.render_clients2.id
 }
+
+output "proxy_subnet_name" {
+  description = "The name of the proxy subnet."
+  value       = azurerm_subnet.proxy.name
+}
+
+output "proxy_subnet_id" {
+  description = "The full id of the proxy subnet."
+  value       = azurerm_subnet.proxy.id
+}
