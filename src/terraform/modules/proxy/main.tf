@@ -1,24 +1,25 @@
+locals {
+  # send the script file to custom data, adding env vars
+  script_file_b64 = base64gzip(replace(file("${path.module}/install.sh"),"\r",""))
+  cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { installcmd = local.script_file_b64 })
+}
+
 data "azurerm_subnet" "vnet" {
   name                 = var.virtual_network_subnet_name
   virtual_network_name = var.virtual_network_name
   resource_group_name  = var.virtual_network_resource_group
 }
 
-data "azurerm_resource_group" "nfsfiler" {
+data "azurerm_subscription" "primary" {}
+
+data "azurerm_resource_group" "vm" {
   name     = var.resource_group_name
 }
 
-locals {
-  # send the script file to custom data, adding env vars
-  script_file_b64 = base64gzip(replace(file("${path.module}/installnfs.sh"),"\r",""))
-  proxy_env = (var.proxy == null || var.proxy == "") ? "" : "http_proxy=${var.proxy} https_proxy=${var.proxy} no_proxy=169.254.169.254"
-  cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { install_script = local.script_file_b64, export_path = var.nfs_export_path, export_options = var.nfs_export_options, proxy_env = local.proxy_env})
-}
-
-resource "azurerm_network_interface" "nfsfiler" {
+resource "azurerm_network_interface" "vm" {
   name                = "${var.unique_name}-nic"
-  resource_group_name = data.azurerm_resource_group.nfsfiler.name
-  location            = data.azurerm_resource_group.nfsfiler.location
+  resource_group_name = data.azurerm_resource_group.vm.name
+  location            = var.location
 
   ip_configuration {
     name                          = "${var.unique_name}-ipconfig"
@@ -27,27 +28,26 @@ resource "azurerm_network_interface" "nfsfiler" {
   }
 }
 
-resource "azurerm_linux_virtual_machine" "nfsfiler" {
+resource "azurerm_linux_virtual_machine" "vm" {
   name = "${var.unique_name}-vm"
-  location = data.azurerm_resource_group.nfsfiler.location
-  resource_group_name = data.azurerm_resource_group.nfsfiler.name
-  network_interface_ids = [azurerm_network_interface.nfsfiler.id]
+  location = var.location
+  resource_group_name = data.azurerm_resource_group.vm.name
+  network_interface_ids = [azurerm_network_interface.vm.id]
   computer_name  = var.unique_name
   custom_data = base64encode(local.cloud_init_file)
   size = var.vm_size
-  
+
   os_disk {
     name              = "${var.unique_name}-osdisk"
     caching           = "ReadWrite"
-    storage_account_type = "Premium_LRS"
+    storage_account_type = "Standard_LRS"
   }
 
   source_image_reference {
-    publisher = "OpenLogic"
-    offer     = "CentOS"
-    # only 7-CI supports cloud-init https://docs.microsoft.com/en-us/azure/virtual-machines/linux/using-cloud-init
-    sku       = "7-CI"
-    version   = "latest"
+        publisher = "OpenLogic"
+        offer     = "CentOS"
+        sku       = "7-CI"
+        version   = "latest"
   }
 
   admin_username = var.admin_username
@@ -61,3 +61,18 @@ resource "azurerm_linux_virtual_machine" "nfsfiler" {
       }
   }
 }
+
+resource "azurerm_virtual_machine_extension" "cse" {
+  name = "${var.unique_name}-cse"
+  virtual_machine_id   = azurerm_linux_virtual_machine.vm.id
+  publisher            = "Microsoft.Azure.Extensions"
+  type                 = "CustomScript"
+  type_handler_version = "2.0"
+
+  settings = <<SETTINGS
+    {
+        "commandToExecute": " ADMIN_USER_NAME=${var.admin_username} /bin/bash /opt/install.sh"
+    }
+SETTINGS
+}
+

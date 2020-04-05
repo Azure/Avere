@@ -9,4 +9,4 @@ write_files:
     permissions: '0644'
 
 runcmd:
- - EXPORT_PATH=${export_path} EXPORT_OPTIONS="${export_options}" /bin/bash /opt/installnfs.sh 2>&1 | tee -a /var/log/installnfs.log
+ - EXPORT_PATH=${export_path} EXPORT_OPTIONS="${export_options}" ${proxy_env} /bin/bash /opt/installnfs.sh 2>&1 | tee -a /var/log/installnfs.log

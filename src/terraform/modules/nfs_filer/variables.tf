@@ -50,3 +50,8 @@ variable "nfs_export_options" {
   description = "The mount options used in /etc/exports."
   default = "*(rw,sync,no_root_squash)"
 }
+
+variable "proxy" {
+  description = "specify a proxy address if one exists in the format of http://PROXY_SERVER:PORT"
+  default = null
+}

@@ -27,7 +27,8 @@ Both HPC Cache and Avere vFXT for Azure provide file caching for high-performanc
 3. [Specialized Avere vFXT for Rendering and Artists](examples/vfxt)
    1. [Avere vFXT optimized for Houdini](examples/vfxt/HoudiniOptimized)
    2. [Avere vFXT and Cloud Workstations](examples/vfxt/cloudworkstation)
-   3. [Avere vFXT only](examples/vfxt/vfxt-only) - this example is useful for when the cloud environment is already configured.
+   3. [Avere vFXT only](examples/vfxt/vfxt-only) - this example is useful for when the cloud environment is already configured.\
+   4. [Avere vFXT in a Proxy Environment](examples/vfxt/proxy) - this example shows how to deploy the Avere in a locked down internet environment, with a proxy.
 4. [SecuredImage](examples/securedimage) - shows how to create, upload, and deploy a custom image with an introduction to RBAC, Azure Governance, and Network 
 5. [NFS Ephemeral Filer](examples/nfsfiler) - builds high performance NFS filers.
 6. [Jumpbox](examples/jumpbox) - this deploys a VM pre-installed with pre-installed with az cli, terraform, golang, and the built avere provider
@@ -40,10 +41,12 @@ These modules provide core components for use with HPC Cache or Avere vFXT for A
 1. [Controller](modules/controller) - the controller deploys a controller that is used to create and manage an Avere vFXT for Azure
 2. [Jumpbox](modules/jumpbox) - the jumpbox has the necessary environment for building the [terraform-provider-avere](providers/terraform-provider-avere).  It is also useful for when experimenting in virtual networks where there is no controller.
 3. [Ephemeral Filer](modules/nfs_filer) - the ephemeral filer provides a high IOPs, high throughput filer that can be used for scratch data.
-4. [Render Network](modules/render_network) - the render network module creates a sample render network complete with four subnets: cloud cache, filer, and two render node subnets
-5. [VD Bench Config](modules/vdbench_config) - this module configures an NFS share with the VDBench install tools.
-6. [VMSS Config](modules/vmss_config) - this module configures an NFS share with a round robin mount script.
-7. [Mountable VMSS](modules/vmss_mountable) - this deploys a Linux based VMSS and runs a script off an NFS share.
+4. [Render Network](modules/render_network) - the render network module creates a sample render network complete with five subnets: cloud cache, filer, jumpbox, and two render node subnets
+5. [Secure Render Network](modules/render_network_secure) - the secure render network module where the internet is locked down to all subnets but the proxy subnet.  This module creates a sample render network complete with six subnets: cloud cache, filer, jumpbox, two render node subnets, and a proxy subnet.
+6. [Proxy](modules/proxy) - this installs a proxy VM running the Squid Proxy.
+7. [VD Bench Config](modules/vdbench_config) - this module configures an NFS share with the VDBench install tools.
+8. [VMSS Config](modules/vmss_config) - this module configures an NFS share with a round robin mount script.
+9. [Mountable VMSS](modules/vmss_mountable) - this deploys a Linux based VMSS and runs a script off an NFS share.
 
 # Provider
 

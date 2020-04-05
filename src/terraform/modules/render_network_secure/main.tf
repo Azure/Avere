@@ -8,16 +8,40 @@ resource "azurerm_network_security_group" "ssh_nsg" {
     name                = "ssh_nsg"
     location            = var.location
     resource_group_name = azurerm_resource_group.render_rg.name
-    
+
     security_rule {
         name                       = "SSH"
-        priority                   = 1001
+        priority                   = 1000
         direction                  = "Inbound"
         access                     = "Allow"
         protocol                   = "Tcp"
         source_port_range          = "*"
         destination_port_range     = "22"
         source_address_prefix      = "*"
+        destination_address_prefix = "*"
+    }
+
+    security_rule {
+        name                       = "denyinternet"
+        priority                   = 3000
+        direction                  = "Outbound"
+        access                     = "Deny"
+        protocol                   = "*"
+        source_port_range          = "*"
+        destination_port_range     = "*"
+        source_address_prefix      = "*"
+        destination_address_prefix = "Internet"
+    }
+
+    security_rule {
+        name                       = "denyinternetinbound"
+        priority                   = 3000
+        direction                  = "Inbound"
+        access                     = "Deny"
+        protocol                   = "*"
+        source_port_range          = "*"
+        destination_port_range     = "*"
+        source_address_prefix      = "Internet"
         destination_address_prefix = "*"
     }
 }
@@ -27,10 +51,45 @@ resource "azurerm_network_security_group" "no_internet_nsg" {
     location            = var.location
     resource_group_name = azurerm_resource_group.render_rg.name
     
-    // block all inbound from lb, etc
     security_rule {
-        name                       = "nointernetinbound"
-        priority                   = 4000
+        name                       = "allowproxy"
+        priority                   = 2000
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "*"
+        source_port_range          = "*"
+        destination_port_range     = "*"
+        source_address_prefix      = var.subnet_proxy_address_prefix
+        destination_address_prefix = "*"
+    }
+
+    security_rule {
+        name                       = "allowazurestorage"
+        priority                   = 2010
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "443"
+        source_address_prefix      = "VirtualNetwork"
+        destination_address_prefix = "Storage.${var.location}"
+    }
+
+    security_rule {
+        name                       = "denyinternetoutbound"
+        priority                   = 3000
+        direction                  = "Outbound"
+        access                     = "Deny"
+        protocol                   = "*"
+        source_port_range          = "*"
+        destination_port_range     = "*"
+        source_address_prefix      = "*"
+        destination_address_prefix = "Internet"
+    }
+
+    security_rule {
+        name                       = "denyinternetinbound"
+        priority                   = 3000
         direction                  = "Inbound"
         access                     = "Deny"
         protocol                   = "*"
@@ -109,5 +168,18 @@ resource "azurerm_subnet" "render_clients2" {
 
 resource "azurerm_subnet_network_security_group_association" "render_clients2" {
   subnet_id                 = azurerm_subnet.render_clients2.id
+  network_security_group_id = azurerm_network_security_group.no_internet_nsg.id
+}
+
+resource "azurerm_subnet" "proxy" {
+    name                 = var.subnet_proxy_subnet_name
+    virtual_network_name = azurerm_virtual_network.vnet.name
+    resource_group_name  = azurerm_resource_group.render_rg.name
+    address_prefix       = var.subnet_proxy_address_prefix
+    service_endpoints    = ["Microsoft.Storage"]
+}
+
+resource "azurerm_subnet_network_security_group_association" "proxy" {
+  subnet_id                 = azurerm_subnet.proxy.id
   network_security_group_id = azurerm_network_security_group.no_internet_nsg.id
 }
