@@ -50,8 +50,7 @@ provider "azurerm" {
 
 // the render network
 module "network" {
-    //source = "github.com/Azure/Avere/src/terraform/modules/render_network_secure"
-    source = "../../../modules/render_network_secure"
+    source = "github.com/Azure/Avere/src/terraform/modules/render_network_secure"
     resource_group_name = local.network_resource_group_name
     location = local.location
     ssh_source_address_prefix = local.ssh_source_ip
