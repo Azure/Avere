@@ -58,11 +58,6 @@ module "network" {
 resource "azurerm_resource_group" "hpc_cache_rg" {
   name     = local.hpc_cache_resource_group_name
   location = local.location
-  // the depends on is necessary for destroy.  Due to the
-  // limitation of the template deployment, the only
-  // way to destroy template resources is to destroy
-  // the resource group
-  depends_on = [module.network]
 }
 
 resource "azurerm_hpc_cache" "hpc_cache" {
@@ -96,31 +91,17 @@ module "nasfiler1" {
     virtual_network_subnet_name = module.network.cloud_filers_subnet_name
 }
 
-// load the Storage Target Template, with the necessary variables
-locals {
-    storage_target_1_template = templatefile("${path.module}/../storage_target.json",
-    {
-        uniquename              = local.cache_name,
-        uniquestoragetargetname = "storage_target_1",
-        location                = azurerm_resource_group.hpc_cache_rg.location,
-        nfsaddress              = module.nasfiler1.primary_ip,
-        usagemodel              = local.usage_model,
-        namespacepath_j1        = "/nfs1data",
-        nfsexport_j1            = module.nasfiler1.core_filer_export,
-        targetpath_j1           = ""
-    })
-}
-
-resource "azurerm_template_deployment" "storage_target1" {
-  name                = "storage_target_1"
+resource "azurerm_hpc_cache_nfs_target" "nfs_targets" {
+  name                = "nfs_targets"
   resource_group_name = azurerm_resource_group.hpc_cache_rg.name
-  deployment_mode     = "Incremental"
-  template_body       = local.storage_target_1_template
-
-  depends_on = [
-    azurerm_hpc_cache.hpc_cache,
-    module.nasfiler1
-  ]
+  cache_name          = azurerm_hpc_cache.hpc_cache.name
+  target_host_name    = module.nasfiler1.primary_ip
+  usage_model         = local.usage_model
+  namespace_junction {
+    namespace_path = "/nfs1data"
+    nfs_export     = module.nasfiler1.core_filer_export
+    target_path    = ""
+  }
 }
 
 output "mount_addresses" {
@@ -128,5 +109,5 @@ output "mount_addresses" {
 }
 
 output "export_namespace" {
-  value = azurerm_template_deployment.storage_target1.outputs["namespacePath"]
+  value = tolist(azurerm_hpc_cache_nfs_target.nfs_targets.namespace_junction)[0].namespace_path
 }
