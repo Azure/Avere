@@ -160,31 +160,17 @@ resource "azurerm_hpc_cache" "hpc_cache" {
   sku_name            = "Standard_2G"
 }
 
-// load the Storage Target Template, with the necessary variables
-locals {
-    storage_target_1_template = templatefile("${path.module}/../storage_target.json",
-    {
-        uniquename              = local.cache_name,
-        uniquestoragetargetname = "storage_target_1",
-        location                = azurerm_resource_group.hpc_cache_rg.location,
-        nfsaddress              = azurerm_template_deployment.netappvolume.outputs["mountIpAddress"],
-        usagemodel              = local.usage_model,
-        namespacepath_j1        = "/datacache",
-        nfsexport_j1            = "/${local.export_path}",
-        targetpath_j1           = ""
-    })
-}
-
-resource "azurerm_template_deployment" "storage_target1" {
-  name                = "storage_target_1"
+resource "azurerm_hpc_cache_nfs_target" "nfs_targets" {
+  name                = "nfs_targets"
   resource_group_name = azurerm_resource_group.hpc_cache_rg.name
-  deployment_mode     = "Incremental"
-  template_body       = local.storage_target_1_template
-
-  depends_on = [
-    azurerm_hpc_cache.hpc_cache,
-   azurerm_template_deployment.netappvolume
-  ]
+  cache_name          = azurerm_hpc_cache.hpc_cache.name
+  target_host_name    = azurerm_template_deployment.netappvolume.outputs["mountIpAddress"]
+  usage_model         = local.usage_model
+  namespace_junction {
+    namespace_path = "/datacache"
+    nfs_export     = "/${local.export_path}"
+    target_path    = ""
+  }
 }
 
 output "netapp_export_path" {
@@ -200,5 +186,5 @@ output "mount_addresses" {
 }
 
 output "export_namespace" {
-  value = azurerm_template_deployment.storage_target1.outputs["namespacePath"]
+  value = tolist(azurerm_hpc_cache_nfs_target.nfs_targets.namespace_junction)[0].namespace_path
 }

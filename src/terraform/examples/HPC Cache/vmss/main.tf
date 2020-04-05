@@ -34,6 +34,7 @@ locals {
 
     // nfs filer related variables
     filer_resource_group_name = "filer_resource_group"
+    nfs_export_path = "/nfs1data"
     vm_admin_username = "azureuser"
     // use either SSH Key data or admin password, if ssh_key_data is specified
     // then admin_password is ignored
@@ -106,32 +107,17 @@ module "nasfiler1" {
     virtual_network_subnet_name = module.network.cloud_filers_subnet_name
 }
 
-// load the Storage Target Template, with the necessary variables
-locals {
-    nfs_export_path = "/nfs1data"
-    storage_target_1_template = templatefile("${path.module}/../storage_target.json",
-    {
-        uniquename              = local.cache_name,
-        uniquestoragetargetname = "storage_target_1",
-        location                = azurerm_resource_group.hpc_cache_rg.location,
-        nfsaddress              = module.nasfiler1.primary_ip,
-        usagemodel              = local.usage_model,
-        namespacepath_j1        = local.nfs_export_path,
-        nfsexport_j1            = module.nasfiler1.core_filer_export,
-        targetpath_j1           = ""
-    })
-}
-
-resource "azurerm_template_deployment" "storage_target1" {
-  name                = "storage_target_1"
+resource "azurerm_hpc_cache_nfs_target" "nfs_targets" {
+  name                = "nfs_targets"
   resource_group_name = azurerm_resource_group.hpc_cache_rg.name
-  deployment_mode     = "Incremental"
-  template_body       = local.storage_target_1_template
-
-  depends_on = [
-    azurerm_hpc_cache.hpc_cache, // add after cache created
-    module.nasfiler1
-  ]
+  cache_name          = azurerm_hpc_cache.hpc_cache.name
+  target_host_name    = module.nasfiler1.primary_ip
+  usage_model         = local.usage_model
+  namespace_junction {
+    namespace_path = local.nfs_export_path
+    nfs_export     = module.nasfiler1.core_filer_export
+    target_path    = ""
+  }
 }
 
 module "jumpbox" {
@@ -158,7 +144,7 @@ module "vmss_configure" {
     admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     nfs_address = azurerm_hpc_cache.hpc_cache.mount_addresses[0]
-    nfs_export_path = azurerm_template_deployment.storage_target1.outputs["namespacePath"]
+    nfs_export_path = tolist(azurerm_hpc_cache_nfs_target.nfs_targets.namespace_junction)[0].namespace_path
 }
 
 // the VMSS module
@@ -196,5 +182,5 @@ output "mount_addresses" {
 }
 
 output "export_namespace" {
-  value = azurerm_template_deployment.storage_target1.outputs["namespacePath"]
+  value = tolist(azurerm_hpc_cache_nfs_target.nfs_targets.namespace_junction)[0].namespace_path
 }

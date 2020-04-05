@@ -59,11 +59,6 @@ module "network" {
 resource "azurerm_resource_group" "hpc_cache_rg" {
   name     = local.hpc_cache_resource_group_name
   location = local.location
-  // the depends on is necessary for destroy.  Due to the
-  // limitation of the template deployment, the only
-  // way to destroy template resources is to destroy
-  // the resource group
-  depends_on = [module.network]
 }
 
 resource "azurerm_hpc_cache" "hpc_cache" {
@@ -97,31 +92,17 @@ module "nasfiler1" {
     virtual_network_subnet_name = module.network.cloud_filers_subnet_name
 }
 
-// load the Storage Target Template, with the necessary variables
-locals {
-    storage_target_1_template = templatefile("${path.module}/../storage_target.json",
-    {
-        uniquename              = local.cache_name,
-        uniquestoragetargetname = "storage_target_1",
-        location                = local.location,
-        nfsaddress              = module.nasfiler1.primary_ip,
-        usagemodel              = local.usage_model,
-        namespacepath_j1        = "/nfs1data",
-        nfsexport_j1            = module.nasfiler1.core_filer_export,
-        targetpath_j1           = ""
-    })
-}
-
-resource "azurerm_template_deployment" "storage_target1" {
-  name                = "storage_target_1"
+resource "azurerm_hpc_cache_nfs_target" "nfs_targets1" {
+  name                = "nfs_targets1"
   resource_group_name = azurerm_resource_group.hpc_cache_rg.name
-  deployment_mode     = "Incremental"
-  template_body       = local.storage_target_1_template
-
-  depends_on = [
-    azurerm_hpc_cache.hpc_cache, // add after cache created
-    module.nasfiler1
-  ]
+  cache_name          = azurerm_hpc_cache.hpc_cache.name
+  target_host_name    = module.nasfiler1.primary_ip
+  usage_model         = local.usage_model
+  namespace_junction {
+    namespace_path = "/nfs1data"
+    nfs_export     = module.nasfiler1.core_filer_export
+    target_path    = ""
+  }
 }
 
 // the ephemeral filer
@@ -141,31 +122,17 @@ module "nasfiler2" {
     virtual_network_subnet_name = module.network.cloud_filers_subnet_name
 }
 
-// load the Storage Target Template, with the necessary variables
-locals {
-    storage_target_2_template = templatefile("${path.module}/../storage_target.json",
-    {
-        uniquename              = local.cache_name,
-        uniquestoragetargetname = "storage_target_2",
-        location                = azurerm_resource_group.hpc_cache_rg.location,
-        nfsaddress              = module.nasfiler2.primary_ip,
-        usagemodel              = local.usage_model,
-        namespacepath_j1        = "/nfs2data",
-        nfsexport_j1            = module.nasfiler2.core_filer_export,
-        targetpath_j1           = ""
-    })
-}
-
-resource "azurerm_template_deployment" "storage_target2" {
-  name                = "storage_target_2"
+resource "azurerm_hpc_cache_nfs_target" "nfs_targets2" {
+  name                = "nfs_targets2"
   resource_group_name = azurerm_resource_group.hpc_cache_rg.name
-  deployment_mode     = "Incremental"
-  template_body       = local.storage_target_2_template
-
-  depends_on = [
-    azurerm_template_deployment.storage_target1, // add after storage target1
-    module.nasfiler2
-  ]
+  cache_name          = azurerm_hpc_cache.hpc_cache.name
+  target_host_name    = module.nasfiler2.primary_ip
+  usage_model         = local.usage_model
+  namespace_junction {
+    namespace_path = "/nfs2data"
+    nfs_export     = module.nasfiler2.core_filer_export
+    target_path    = ""
+  }
 }
 
 // the ephemeral filer
@@ -185,31 +152,17 @@ module "nasfiler3" {
     virtual_network_subnet_name = module.network.cloud_filers_subnet_name
 }
 
-// load the Storage Target Template, with the necessary variables
-locals {
-    storage_target_3_template = templatefile("${path.module}/../storage_target.json",
-    {
-        uniquename              = local.cache_name,
-        uniquestoragetargetname = "storage_target_3",
-        location                = azurerm_resource_group.hpc_cache_rg.location,
-        nfsaddress              = module.nasfiler3.primary_ip,
-        usagemodel              = local.usage_model,
-        namespacepath_j1        = "/nfs3data",
-        nfsexport_j1            = module.nasfiler3.core_filer_export,
-        targetpath_j1           = ""
-    })
-}
-
-resource "azurerm_template_deployment" "storage_target3" {
-  name                = "storage_target_3"
+resource "azurerm_hpc_cache_nfs_target" "nfs_targets3" {
+  name                = "nfs_targets3"
   resource_group_name = azurerm_resource_group.hpc_cache_rg.name
-  deployment_mode     = "Incremental"
-  template_body       = local.storage_target_3_template
-
-  depends_on = [
-    azurerm_template_deployment.storage_target2, // add after storage target2
-    module.nasfiler3
-  ]
+  cache_name          = azurerm_hpc_cache.hpc_cache.name
+  target_host_name    = module.nasfiler3.primary_ip
+  usage_model         = local.usage_model
+  namespace_junction {
+    namespace_path = "/nfs3data"
+    nfs_export     = module.nasfiler3.core_filer_export
+    target_path    = ""
+  }
 }
 
 output "mount_addresses" {
@@ -217,13 +170,13 @@ output "mount_addresses" {
 }
 
 output "export_namespace_1" {
-  value = azurerm_template_deployment.storage_target1.outputs["namespacePath"]
+  value = tolist(azurerm_hpc_cache_nfs_target.nfs_targets1.namespace_junction)[0].namespace_path
 }
 
 output "export_namespace_2" {
-  value = azurerm_template_deployment.storage_target2.outputs["namespacePath"]
+  value = tolist(azurerm_hpc_cache_nfs_target.nfs_targets2.namespace_junction)[0].namespace_path
 }
 
 output "export_namespace_3" {
-  value = azurerm_template_deployment.storage_target3.outputs["namespacePath"]
+  value = tolist(azurerm_hpc_cache_nfs_target.nfs_targets3.namespace_junction)[0].namespace_path
 }
