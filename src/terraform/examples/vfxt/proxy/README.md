@@ -1,4 +1,4 @@
-# Avere vFXT with 1 Filer
+# Avere vFXT in a Proxy Environment
 
 This examples shows how to configure the vfxt in a secured locked down internet environment.  It configures a render network, controller, and vfxt with 1 filer and an Azure Blob Storage cloud core filer as shown in the diagram below:
 
