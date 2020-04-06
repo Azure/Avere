@@ -32,7 +32,12 @@ git pull origin master
 7. once, run the az commands from the output to get your SAS URL (copy and paste it somewhere):
 
 ```bash
-export SAS_URL="${SAS_PREFIX}${SAS_POSTFIX}"
+### begin output commands (copy paste from the terraform output commands)
+export SAS_PREFIX=https://abanhowestorageaccount.blob.core.windows.net/previz?
+export SAS_SUFFIX=$(az storage container generate-sas --account-name abanhowestorageaccount --https-only --permissions acdlrw --start 2020-04-06T00:00:00Z --expiry 2021-01-01T00:00:00Z --name previz --output tsv)
+#### end output commands
+
+export SAS_URL="${SAS_PREFIX}${SAS_SUFFIX}"
 echo $SAS_URL
 ```
 
@@ -49,7 +54,7 @@ azcopy sync ~/tf $SAS_URL
 mkdir \azcopy
 cd \azcopy
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-Invoke-WebRequest -Uri https://aka.ms/downloadazcopy-v10-windows
+Invoke-WebRequest -Uri https://aka.ms/downloadazcopy-v10-windows -OutFile azcopy.zip
 Expand-Archive azcopy.zip
 copy .\azcopy\azcopy_windows_amd64_10.3.4\azcopy.exe c:\windows\system32\.
 ```
@@ -60,17 +65,18 @@ mkdir c:\data
 subst v: c:\data
 ```
 
-10. create the sync files, and run the syncfrom
+10. using the SAS URL you created earlier create the sync files, and run the `syncfrom.ps1`
 
 ```powershell
-echo "azcopy sync 'SASURL' c:\data" > c:\azcopy\syncfrom.ps1
-echo "azcopy sync c:\data 'SASURL' " > c:\azcopy\syncwork.ps1
+$env:SAS_URL=# copy the SAS_URL value from the cloudshell you generated earlier
+"azcopy sync '$env:SAS_URL' c:\data" > c:\azcopy\syncfrom.ps1
+"azcopy sync c:\data '$env:SAS_URL'" > c:\azcopy\syncto.ps1
 c:\azcopy\syncfrom.ps1
 ```
 
-11. Try creating some files and observe that `syncfrom.ps1` doesn't clobber the files.  Observe that `syncwork.ps1` uploads the new files correctly
+11. Try creating some files and observe that `c:\azcopy\syncfrom.ps1` doesn't clobber the files.  Observe that `c:\azcopy\syncto.ps1` uploads the new files correctly.  In explorer browse to `V:\` drive.
 
-The end result is that you now have a "V:\" drive containing the files of the original tf folder:
+The end result is that you now have a `V:\` drive containing the files of the original tf folder:
 
 ![shows the vdrive](vdrive.png)
 
