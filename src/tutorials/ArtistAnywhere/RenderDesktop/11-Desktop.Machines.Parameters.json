@@ -7,34 +7,6 @@
         "machineCountPerType": 1,
         "machineTypes": [
           {
-            "enabled": true,
-            "namePrefix": "renderHostWD",
-            "machineSize": "Standard_D4s_v3",
-            "acceleratedNetworking": true,
-            "image": {
-              "templateName": "WindowsDesktop",
-              "definitionName": "WindowsDesktop",
-              "referenceId": ""
-             },
-            "gpuDriver": {
-              "publisher": "",
-              "type": "",
-              "typeVersion": ""
-             },
-             "login": {
-              "adminUsername": "az",
-              "adminPassword": "P@ssword1234",
-              "sshPublicKeyData": ""
-             },
-             "extension": {
-              "scriptFile": "11-Desktop.Machines.ps1",
-              "scriptParameters": "https://mediastudio.blob.core.windows.net/bin/pcoip-agent-standard_20.01.1.exe",
-              "scriptCommand": "PowerShell.exe -ExecutionPolicy Unrestricted -EncodedCommand {0}",
-              "commandToExecute": ""
-             }
-          },
-          {
-            "enabled": true,
             "namePrefix": "renderHostWNV",
             "machineSize": "Standard_NV6",
             "acceleratedNetworking": false,
@@ -43,30 +15,66 @@
               "definitionName": "WindowsDesktop",
               "referenceId": ""
              },
+            "login": {
+              "adminUsername": "az",
+              "adminPassword": "P@ssword1234",
+              "sshPublicKeyData": ""
+            },
             "gpuDriver": {
               "publisher": "Microsoft.HpcCompute",
               "type": "NvidiaGpuDriverWindows",
               "typeVersion": "1.3"
              },
-             "login": {
+            "customExtension": {
+              "publisher": "Microsoft.Compute",
+              "type": "CustomScriptExtension",
+              "typeVersion": "1.10",
+              "scriptFile": "11-Desktop.Machines.ps1",
+              "scriptParameters": "-teradiciHostAgentKey '' -teradiciHostAgentUrl https://mediastudio.blob.core.windows.net/bin/pcoip-agent-graphics_20.01.2.exe -teradiciSessionViewerUrl https://mediastudio.blob.core.windows.net/bin/SSV_2.0.exe",
+              "scriptCommand": "PowerShell.exe -ExecutionPolicy Unrestricted -EncodedCommand {0}",
+              "scriptData": ""
+            },
+            "monitorAgent": {
+              "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+              "type": "MicrosoftMonitoringAgent",
+              "typeVersion": "1.0"
+            }
+          },
+          {
+            "namePrefix": "renderHostLNV",
+            "machineSize": "Standard_NV6",
+            "acceleratedNetworking": false,
+            "image": {
+              "templateName": "LinuxDesktop",
+              "definitionName": "LinuxDesktop",
+              "referenceId": ""
+             },
+            "login": {
               "adminUsername": "az",
               "adminPassword": "P@ssword1234",
-              "sshPublicKeyData": ""
+              "sshPublicKeyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0rSgH3dwDtBI5U2WBqpYkO7KZadaN34qpgl0IpYSui+ctFYG7bH0QHAz1p2Taznbf/5Qsh8/exmcoEcWHQzURLmqr0llVarbnqQykCp2cpGBH6adPWHMBh/OsR5ZCPL2IMr6eCdKj6mpf9dALB/ieUgCYNGNv20RwK1fBBicQN9oBE6N+KI7ko4cdFRGE66DX9m8DhlPdOO03Zd40e0ZiDdyxpxp2+aI087pXtDkO2tJbanDYToJhrA4hXx+z8qSS1pfaTSXZvTQ83uHClTmxCs8TGLw3l2K7vUf0v8E/7jGFtmHxeNCXBZuSw27M7PoT8EeHbq876pSzgEQvNzgj"
+            },
+            "gpuDriver": {
+              "publisher": "Microsoft.HpcCompute.Edp",
+              "type": "NvidiaGpuDriverLinux",
+              "typeVersion": "1.4"
              },
-             "extension": {
-              "scriptFile": "11-Desktop.Machines.ps1",
-              "scriptParameters": "https://mediastudio.blob.core.windows.net/bin/pcoip-agent-graphics_20.01.1.exe",
-              "scriptCommand": "PowerShell.exe -ExecutionPolicy Unrestricted -EncodedCommand {0}",
-              "commandToExecute": ""
-             }
+            "customExtension": {
+              "publisher": "Microsoft.Azure.Extensions",
+              "type": "CustomScript",
+              "typeVersion": "2.1",
+              "scriptFile": "11-Desktop.Machines.sh",
+              "scriptParameters": "TERADICI_HOST_AGENT_KEY=''",
+              "scriptCommand": "",
+              "scriptData": ""
+            },
+            "monitorAgent": {
+              "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+              "type": "OmsAgentForLinux",
+              "typeVersion": "1.12"
+            }
           }
         ]
-      }
-    },
-    "imageGallery": {
-      "value": {
-        "resourceGroupName": "Azure.Media.Studio0-Image",
-        "name": "MediaStudio"
       }
     },
     "logAnalytics": {

@@ -31,6 +31,7 @@ $groupDeployment = az deployment group create --resource-group $resourceGroupNam
 if (!$groupDeployment) { return }
 
 $imageGallery = $groupDeployment.properties.outputs.imageGallery.value
+$imageGallery | Add-Member -MemberType NoteProperty -Name "resourceGroupName" -Value $resourceGroupName
 New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 
 Write-Output -InputObject $imageGallery -NoEnumerate

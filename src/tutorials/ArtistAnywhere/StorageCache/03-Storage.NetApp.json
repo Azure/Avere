@@ -35,7 +35,7 @@
   },
   "variables": {
     "virtualNetworkApiVersion": "2020-03-01",
-    "netAppApiVersion": "2019-11-01",
+    "netAppApiVersion": "2020-02-01",
     "bytesPerTebibyte": 1099511627776,
     "bytesPerGibibyte": 1073741824
   },

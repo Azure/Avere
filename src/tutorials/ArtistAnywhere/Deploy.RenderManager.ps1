@@ -114,7 +114,7 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 
 	$templateResources = "$templateDirectory\$moduleDirectory\07-Manager.Machines.json"
 	$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\07-Manager.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
-	$machineExtensionScript = Get-MachineExtensionScript "$templateDirectory\$moduleDirectory\07-Manager.Machines.sh"
+	$machineExtensionScript = Get-ScriptData "$templateDirectory\$moduleDirectory\07-Manager.Machines.sh"
 	if ($templateParameters.renderManager.value.homeDirectory -eq "") {
 		$templateParameters.renderManager.value.homeDirectory = $imageDefinition.homeDirectory
 	}

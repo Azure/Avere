@@ -30,7 +30,7 @@ New-TraceMessage $moduleName $true
 # * - Render Desktop Machines Job
 $moduleName = "* - Render Desktop Machines Job"
 New-TraceMessage $moduleName $false
-$renderDesktopMachinesJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $computeNetworks, $renderManagers, $logAnalytics
+$renderDesktopMachinesJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $computeNetworks, $renderManagers, $imageGallery, $logAnalytics
 $renderDesktopMachines = Receive-Job -InstanceId $renderDesktopMachinesJob.InstanceId -Wait
 if (!$renderDesktopMachines) { return }
 New-TraceMessage $moduleName $true

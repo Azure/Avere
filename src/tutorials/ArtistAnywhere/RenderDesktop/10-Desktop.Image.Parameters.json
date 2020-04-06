@@ -10,18 +10,18 @@
             "definitionName": "LinuxDesktop",
             "sourceType": "PlatformImage",
             "sourceVersion": "latest",
-            "customizeCommands": [
+            "buildCustomization": [
             ],
-            "buildTimeoutMinutes": 60
+            "buildTimeoutMinutes": 120
           },
           {
             "templateName": "WindowsDesktop",
             "definitionName": "WindowsDesktop",
             "sourceType": "PlatformImage",
             "sourceVersion": "latest",
-            "customizeCommands": [
+            "buildCustomization": [
             ],
-            "buildTimeoutMinutes": 60
+            "buildTimeoutMinutes": 120
           }
         ]
       }

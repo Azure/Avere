@@ -167,18 +167,18 @@ function Get-CacheMounts ($storageCache) {
 	return [System.Convert]::ToBase64String($memoryStream.ToArray())	
 }
 
-function Get-ScriptData ($scriptFilePath, $scriptParameters) {
-	$scriptData = Get-Content $scriptFilePath -Raw
-	if ($scriptParameters) {
-		$scriptData = "& {" + $scriptData + "} " + $scriptParameters
-		$scriptDataBytes = [System.Text.Encoding]::Unicode.GetBytes($scriptData)
-	} else {
+function Get-ScriptData ($scriptFile, $scriptParameters) {
+	$script = Get-Content $scriptFile -Raw
+	if ($scriptParameters) { # Windows PowerShell
+		$script = "& {" + $script + "} " + $scriptParameters
+		$scriptBytes = [System.Text.Encoding]::Unicode.GetBytes($script)
+	} else { # Linux Bash
 		$memoryStream = New-Object System.IO.MemoryStream
 		$compressionStream = New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode]::Compress)
 		$streamWriter = New-Object System.IO.StreamWriter($compressionStream)
-		$streamWriter.Write($scriptData)
+		$streamWriter.Write($script)
 		$streamWriter.Close();
-		$scriptDataBytes = $memoryStream.ToArray()	
+		$scriptBytes = $memoryStream.ToArray()	
 	}
-	return [Convert]::ToBase64String($scriptDataBytes)
+	return [Convert]::ToBase64String($scriptBytes)
 }

@@ -50,7 +50,7 @@
           "offer": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageBuilder').imageGalleryName, parameters('renderDesktop').machineImages[copyIndex()].definitionName), variables('imageGalleryApiVersion')).identifier.offer]",
           "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageBuilder').imageGalleryName, parameters('renderDesktop').machineImages[copyIndex()].definitionName), variables('imageGalleryApiVersion')).identifier.sku]"
         },
-        "customize": "[if(equals(length(parameters('renderDesktop').machineImages[copyIndex()].customizeCommands), 0), json('null'), parameters('renderDesktop').machineImages[copyIndex()].customizeCommands)]",
+        "customize": "[if(equals(length(parameters('renderDesktop').machineImages[copyIndex()].buildCustomization), 0), json('null'), parameters('renderDesktop').machineImages[copyIndex()].buildCustomization)]",
         "distribute": [
           {
             "type": "SharedImage",

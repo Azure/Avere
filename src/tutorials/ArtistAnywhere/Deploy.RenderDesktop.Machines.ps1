@@ -12,8 +12,11 @@ param (
 	# Set to the Azure Networking resources (Virtual Network, Private DNS, etc.) for compute regions
 	[object[]] $computeNetworks,
 
-	# Set to the Azure Render Manager hosts (names or addresses) in each of the compute regions
+	# Set to the Azure Render Manager farm host (name or IP address) for each of the compute regions
 	[string[]] $renderManagers,
+
+	# Set to the Azure Shared Image Gallery (SIG) resource that is shared across the compute regions
+	[object] $imageGallery,
 
 	# Set to the Azure Monitor Log Analytics resource that is shared across the compute regions
 	[object] $logAnalytics
@@ -40,26 +43,33 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 
 	$templateResources = "$templateDirectory\$moduleDirectory\11-Desktop.Machines.json"
 	$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\11-Desktop.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
-
-	$imageGalleryResourceGroupName = $templateParameters.imageGallery.value.resourceGroupName
-	$imageGalleryName = $templateParameters.imageGallery.value.name
-	$renderManager = $renderManagers -and $renderManagers.length -gt $computeRegionIndex ? $renderManagers[$computeRegionIndex] : ""
 	for ($machineTypeIndex = 0; $machineTypeIndex -lt $templateParameters.renderDesktop.value.machineTypes.length; $machineTypeIndex++) {
 		if ($templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].image.referenceId -eq "") {
 			$imageTemplateName = $templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].image.templateName
 			$imageDefinitionName = $templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].image.definitionName
-			$imageVersionId = Get-ImageVersionId $imageGalleryResourceGroupName $imageGalleryName $imageDefinitionName $imageTemplateName
+			$imageVersionId = Get-ImageVersionId $imageGallery.resourceGroupName $imageGallery.name $imageDefinitionName $imageTemplateName
 			$templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].image.referenceId = $imageVersionId
 		}
-		if ($templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].extension.commandToExecute -eq "") {
-			$scriptFileName = $templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].extension.scriptFile
-			$scriptFilePath = "$templateDirectory\$moduleDirectory\$scriptFileName"
-			$scriptParameters = $templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].extension.scriptParameters
-			$scriptParameters += " " + $renderManager
-			$extensionScriptData = Get-ScriptData $scriptFilePath $scriptParameters
-			$extensionScriptCommand = $templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].extension.scriptCommand
-			$extensionCommandToExecute = [string]::Format($extensionScriptCommand, $extensionScriptData)
-			$templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].extension.commandToExecute = $extensionCommandToExecute
+		if ($templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptData -eq "") {
+			$scriptFile = $templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptFile
+			$scriptFile = "$templateDirectory\$moduleDirectory\$scriptFile"
+			$scriptParameters = $templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptParameters
+			$scriptCommand = $templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptCommand
+			$imageDefinition = az sig image-definition show --resource-group $imageGallery.resourceGroupName --gallery-name $imageGallery.name --gallery-image-definition $imageDefinitionName | ConvertFrom-Json
+			if ($imageDefinition.osType -eq "Windows") {
+				if ($renderManagers.length -gt $computeRegionIndex) {
+					$scriptParameters += " -renderManagerHost '" + $renderManagers[$computeRegionIndex] + "'"
+				}
+				$scriptData = Get-ScriptData $scriptFile $scriptParameters
+				$scriptCommand = $scriptCommand -f $scriptData
+				$templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptCommand = $scriptCommand
+			} else {
+				if ($renderManagers.length -gt $computeRegionIndex) {
+					$scriptParameters += " RENDER_MANAGER_HOST='" + $renderManagers[$computeRegionIndex] + "'"
+				}
+				$scriptData = Get-ScriptData $scriptFile
+				$templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptData = $scriptData
+			}
 		}
 	}
 	if ($templateParameters.logAnalytics.value.workspaceId -eq "") {

@@ -8,12 +8,6 @@
         "description": "The render client desktop."
       }
     },
-    "imageGallery": {
-      "type": "object",
-      "metadata": {
-        "description": "The shared image gallery."
-      }
-    },
     "logAnalytics": {
       "type": "object",
       "metadata": {
@@ -35,6 +29,38 @@
     {
       "namespace": "desktop",
       "members": {
+        "getMachineCount": {
+          "parameters": [
+            {
+              "name": "machineTypes",
+              "type": "array"
+            },
+            {
+              "name": "machineCountPerType",
+              "type": "int"
+            }
+          ],
+          "output": {
+            "type": "int",
+            "value": "[mul(length(parameters('machineTypes')), parameters('machineCountPerType'))]"
+          }
+        },
+        "getMachineIndex": {
+          "parameters": [
+            {
+              "name": "machineTypes",
+              "type": "array"
+            },
+            {
+              "name": "copyIndex",
+              "type": "int"
+            }
+          ],
+          "output": {
+            "type": "int",
+            "value": "[mod(parameters('copyIndex'), length(parameters('machineTypes')))]"
+          }
+        },
         "getMachineName": {
           "parameters": [
             {
@@ -42,17 +68,49 @@
               "type": "array"
             },
             {
-              "name": "countPerType",
+              "name": "machineCountPerType",
               "type": "int"
             },
             {
-              "name": "instanceIndex",
+              "name": "copyIndex",
               "type": "int"
             }
           ],
           "output": {
             "type": "string",
-            "value": "[concat(parameters('machineTypes')[mod(parameters('instanceIndex'), length(parameters('machineTypes')))].namePrefix, mod(parameters('instanceIndex'), parameters('countPerType')))]"
+            "value": "[concat(parameters('machineTypes')[mod(parameters('copyIndex'), length(parameters('machineTypes')))].namePrefix, mod(parameters('copyIndex'), parameters('machineCountPerType')))]"
+          }
+        },
+        "getLinuxConfig": {
+          "parameters": [
+            {
+              "name": "sshPublicKeyData",
+              "type": "string"
+            },
+            {
+              "name": "adminUserName",
+              "type": "string"
+            }
+          ],
+          "output": {
+            "type": "object",
+            "value": "[if(equals(parameters('sshPublicKeyData'), ''), json('null'), json(concat('{\"ssh\": {\"publicKeys\": [{\"path\": \"/home/', parameters('adminUsername'), '/.ssh/authorized_keys\", \"keyData\": \"', parameters('sshPublicKeyData'), '\"}]}}')))]"
+          }
+        },
+        "getScriptSettings": {
+          "parameters": [
+            {
+              "name": "scriptCommand",
+              "type": "string"
+            },
+            {
+              "name": "scriptData",
+              "type": "string"
+            }
+          ],
+          "output": {
+            "type": "object",
+            "value": "[if(equals(parameters('scriptCommand'), ''), json(concat('{\"script\": \"', parameters('scriptData'), '\"}')), json(concat('{\"commandToExecute\": \"', parameters('scriptCommand'), '\"}')))]"
           }
         }
       }
@@ -60,14 +118,13 @@
   ],
   "resources": [
     {
-      "condition": "[parameters('renderDesktop').machineTypes[copyIndex()].enabled]",
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[desktop.getMachineName(parameters('renderDesktop').machineTypes, parameters('renderDesktop').machineCountPerType, copyIndex())]",
       "apiVersion": "[variables('virtualNetworkApiVersion')]",
       "location": "[resourceGroup().location]",
       "properties": {
         "primary": true,
-        "enableAcceleratedNetworking": "[parameters('renderDesktop').machineTypes[copyIndex()].acceleratedNetworking]",
+        "enableAcceleratedNetworking": "[parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].acceleratedNetworking]",
         "ipConfigurations": [
           {
             "name": "ipConfig0",
@@ -82,11 +139,10 @@
       },
       "copy": {
         "name": "renderDesktops",
-        "count": "[mul(length(parameters('renderDesktop').machineTypes), parameters('renderDesktop').machineCountPerType)]"
+        "count": "[desktop.getMachineCount(parameters('renderDesktop').machineTypes, parameters('renderDesktop').machineCountPerType)]"
       }
     },
     {
-      "condition": "[parameters('renderDesktop').machineTypes[copyIndex()].enabled]",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[desktop.getMachineName(parameters('renderDesktop').machineTypes, parameters('renderDesktop').machineCountPerType, copyIndex())]",
       "apiVersion": "[variables('virtualMachineApiVersion')]",
@@ -96,7 +152,7 @@
       ],
       "properties": {
         "hardwareProfile": {
-          "vmSize": "[parameters('renderDesktop').machineTypes[copyIndex()].machineSize]"
+          "vmSize": "[parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].machineSize]"
         },
         "networkProfile": {
           "networkInterfaces": [
@@ -107,7 +163,7 @@
         },
         "storageProfile": {
           "imageReference": {
-            "id": "[parameters('renderDesktop').machineTypes[copyIndex()].image.referenceId]"
+            "id": "[parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].image.referenceId]"
           },
           "osDisk": {
             "caching": "ReadOnly",
@@ -115,74 +171,82 @@
           }
         },
         "osProfile": {
-          "computerName": "[concat(parameters('renderDesktop').machineTypes[copyIndex()].namePrefix, copyIndex())]",
-          "adminUsername": "[parameters('renderDesktop').machineTypes[copyIndex()].login.adminUsername]",
-          "adminPassword": "[parameters('renderDesktop').machineTypes[copyIndex()].login.adminPassword]"
+          "computerName": "[concat(parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].namePrefix, copyIndex())]",
+          "adminUsername": "[parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].login.adminUsername]",
+          "adminPassword": "[parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].login.adminPassword]",
+          "linuxConfiguration": "[desktop.getLinuxConfig(parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].login.sshPublicKeyData, parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].login.adminUsername)]"
         }
       },
-      "resources": [
-        {
-          "condition": "[not(equals(parameters('renderDesktop').machineTypes[mod(copyIndex(), length(parameters('renderDesktop').machineTypes))].gpuDriver.type, ''))]",
-          "type": "extensions",
-          "apiVersion": "[variables('virtualMachineApiVersion')]",
-          "location": "[resourceGroup().location]",
-          "name": "Graphics",
-          "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', desktop.getMachineName(parameters('renderDesktop').machineTypes, parameters('renderDesktop').machineCountPerType, copyIndex()))]"
-          ],
-          "properties": {
-            "publisher": "[parameters('renderDesktop').machineTypes[mod(copyIndex(), length(parameters('renderDesktop').machineTypes))].gpuDriver.publisher]",
-            "type": "[parameters('renderDesktop').machineTypes[mod(copyIndex(), length(parameters('renderDesktop').machineTypes))].gpuDriver.type]",
-            "typeHandlerVersion": "[parameters('renderDesktop').machineTypes[mod(copyIndex(), length(parameters('renderDesktop').machineTypes))].gpuDriver.typeVersion]",
-            "autoUpgradeMinorVersion": true
-          }
-        },
-        {
-          "type": "extensions",
-          "apiVersion": "[variables('virtualMachineApiVersion')]",
-          "location": "[resourceGroup().location]",
-          "name": "Custom",
-          "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', desktop.getMachineName(parameters('renderDesktop').machineTypes, parameters('renderDesktop').machineCountPerType, copyIndex()))]",
-            "[resourceId('Microsoft.Compute/virtualMachines/extensions', desktop.getMachineName(parameters('renderDesktop').machineTypes, parameters('renderDesktop').machineCountPerType, copyIndex()), 'Graphics')]"
-          ],
-          "properties": {
-            "publisher": "Microsoft.Compute",
-            "type": "CustomScriptExtension",
-            "typeHandlerVersion": "1.10",
-            "autoUpgradeMinorVersion": true,
-            "protectedSettings": {
-              "commandToExecute": "[parameters('renderDesktop').machineTypes[copyIndex()].extension.commandToExecute]"
-            }
-          }
-        },
-        {
-          "condition": "[not(equals(parameters('logAnalytics').workspaceId, ''))]",
-          "type": "extensions",
-          "apiVersion": "[variables('virtualMachineApiVersion')]",
-          "location": "[resourceGroup().location]",
-          "name": "Monitor",
-          "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', desktop.getMachineName(parameters('renderDesktop').machineTypes, parameters('renderDesktop').machineCountPerType, copyIndex()))]",
-            "[resourceId('Microsoft.Compute/virtualMachines/extensions', desktop.getMachineName(parameters('renderDesktop').machineTypes, parameters('renderDesktop').machineCountPerType, copyIndex()), 'Custom')]"
-          ],
-          "properties": {
-            "publisher": "Microsoft.EnterpriseCloud.Monitoring",
-            "type": "MicrosoftMonitoringAgent",
-            "typeHandlerVersion": "1.0",
-            "autoUpgradeMinorVersion": true,
-            "protectedSettings": {
-              "workspaceKey": "[parameters('logAnalytics').workspaceKey]"
-            },
-            "settings": {
-              "workspaceId": "[parameters('logAnalytics').workspaceId]"
-            }
-          }
-        }
-      ],
       "copy": {
         "name": "renderDesktops",
-        "count": "[mul(length(parameters('renderDesktop').machineTypes), parameters('renderDesktop').machineCountPerType)]"
+        "count": "[desktop.getMachineCount(parameters('renderDesktop').machineTypes, parameters('renderDesktop').machineCountPerType)]"
+      }
+    },
+    {
+      "condition": "[not(equals(parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].gpuDriver.type, ''))]",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(desktop.getMachineName(parameters('renderDesktop').machineTypes, parameters('renderDesktop').machineCountPerType, copyIndex()), '/Graphics')]",
+      "apiVersion": "[variables('virtualMachineApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', desktop.getMachineName(parameters('renderDesktop').machineTypes, parameters('renderDesktop').machineCountPerType, copyIndex()))]"
+      ],
+      "properties": {
+        "publisher": "[parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].gpuDriver.publisher]",
+        "type": "[parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].gpuDriver.type]",
+        "typeHandlerVersion": "[parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].gpuDriver.typeVersion]",
+        "autoUpgradeMinorVersion": true
+      },
+      "copy": {
+        "name": "renderDesktops",
+        "count": "[desktop.getMachineCount(parameters('renderDesktop').machineTypes, parameters('renderDesktop').machineCountPerType)]"
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(desktop.getMachineName(parameters('renderDesktop').machineTypes, parameters('renderDesktop').machineCountPerType, copyIndex()), '/Custom')]",
+      "apiVersion": "[variables('virtualMachineApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', desktop.getMachineName(parameters('renderDesktop').machineTypes, parameters('renderDesktop').machineCountPerType, copyIndex()))]",
+        "[resourceId('Microsoft.Compute/virtualMachines/extensions', desktop.getMachineName(parameters('renderDesktop').machineTypes, parameters('renderDesktop').machineCountPerType, copyIndex()), 'Graphics')]"
+      ],
+      "properties": {
+        "publisher": "[parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].customExtension.publisher]",
+        "type": "[parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].customExtension.type]",
+        "typeHandlerVersion": "[parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].customExtension.typeVersion]",
+        "autoUpgradeMinorVersion": true,
+        "protectedSettings": "[desktop.getScriptSettings(parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].customExtension.scriptCommand, parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].customExtension.scriptData)]"
+      },
+      "copy": {
+        "name": "renderDesktops",
+        "count": "[desktop.getMachineCount(parameters('renderDesktop').machineTypes, parameters('renderDesktop').machineCountPerType)]"
+      }
+    },
+    {
+      "condition": "[not(equals(parameters('logAnalytics').workspaceId, ''))]",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(desktop.getMachineName(parameters('renderDesktop').machineTypes, parameters('renderDesktop').machineCountPerType, copyIndex()), '/Monitor')]",
+      "apiVersion": "[variables('virtualMachineApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', desktop.getMachineName(parameters('renderDesktop').machineTypes, parameters('renderDesktop').machineCountPerType, copyIndex()))]"
+      ],
+      "properties": {
+        "publisher": "[parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].monitorAgent.publisher]",
+        "type": "[parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].monitorAgent.type]",
+        "typeHandlerVersion": "[parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].monitorAgent.typeVersion]",
+        "autoUpgradeMinorVersion": true,
+        "protectedSettings": {
+          "workspaceKey": "[parameters('logAnalytics').workspaceKey]"
+        },
+        "settings": {
+          "workspaceId": "[parameters('logAnalytics').workspaceId]"
+        }
+      },
+      "copy": {
+        "name": "renderDesktops",
+        "count": "[desktop.getMachineCount(parameters('renderDesktop').machineTypes, parameters('renderDesktop').machineCountPerType)]"
       }
     }
   ],

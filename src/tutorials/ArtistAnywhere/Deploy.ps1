@@ -104,7 +104,7 @@ New-TraceMessage $moduleName $true
 # * - Render Desktop Machines Job
 $moduleName = "* - Render Desktop Machines Job"
 New-TraceMessage $moduleName $false
-$renderDesktopMachinesJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $computeNetworks, $renderManagers, $logAnalytics
+$renderDesktopMachinesJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $computeNetworks, $renderManagers, $imageGallery, $logAnalytics
 
 # 09 - Worker Machines
 $moduleName = "09 - Worker Machines"
@@ -117,7 +117,7 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 
 	$templateResources = "$templateDirectory\$moduleDirectory\09-Worker.Machines.json"
 	$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\09-Worker.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
-	$machineExtensionScript = Get-MachineExtensionScript "$templateDirectory\$moduleDirectory\09-Worker.Machines.sh"
+	$machineExtensionScript = Get-ScriptData "$templateDirectory\$moduleDirectory\09-Worker.Machines.sh"
 	if ($templateParameters.cacheMounts.value -eq "") {
 		$templateParameters.cacheMounts.value = Get-CacheMounts $storageCaches[$computeRegionIndex]
 	}
