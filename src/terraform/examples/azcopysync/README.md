@@ -2,7 +2,7 @@
 
 This examples creates a windows VM, and storage account for purpose of showing the azcopy sync command, where filer is directory in your cloudshell.
 
-![The architecture](../../../../../docs/images/terraform/azcopysyncscenario.png)
+![The architecture](../../../../docs/images/terraform/azcopysyncscenario.png)
 
 ## Deployment Instructions
 
