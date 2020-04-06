@@ -41,7 +41,7 @@ resource "azurerm_network_security_group" "ssh_nsg" {
         protocol                   = "Tcp"
         source_port_range          = "*"
         destination_port_range     = "22"
-        source_address_prefix      = "var.ssh_source_address_prefix"
+        source_address_prefix      = var.ssh_source_address_prefix
         destination_address_prefix = "*"
     }
 
@@ -77,7 +77,7 @@ resource "azurerm_network_security_group" "no_internet_nsg" {
     
     security_rule {
         name                       = "allowvnetin"
-        priority                   = 1000
+        priority                   = 500
         direction                  = "Inbound"
         access                     = "Allow"
         protocol                   = "*"
@@ -89,7 +89,7 @@ resource "azurerm_network_security_group" "no_internet_nsg" {
 
     security_rule {
         name                       = "allowvnetout"
-        priority                   = 1000
+        priority                   = 500
         direction                  = "Outbound"
         access                     = "Allow"
         protocol                   = "*"
@@ -118,7 +118,7 @@ resource "azurerm_network_security_group" "no_internet_nsg" {
         access                     = "Allow"
         protocol                   = "Tcp"
         source_port_range          = "*"
-        destination_port_range     = "443"
+        destination_port_range     = "80,443"
         source_address_prefix      = "VirtualNetwork"
         destination_address_prefix = "Storage.${var.location}"
     }
@@ -185,8 +185,6 @@ resource "azurerm_subnet" "jumpbox" {
     virtual_network_name = azurerm_virtual_network.vnet.name
     resource_group_name  = azurerm_resource_group.render_rg.name
     address_prefix       = var.subnet_jumpbox_address_prefix
-    # needed for the controller to add storage containers
-    service_endpoints    = ["Microsoft.Storage"]
 }
 
 resource "azurerm_subnet_network_security_group_association" "jumpbox" {
