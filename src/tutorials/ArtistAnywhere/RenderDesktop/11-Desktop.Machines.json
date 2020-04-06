@@ -93,8 +93,8 @@
             }
           ],
           "output": {
-            "type": "object",
-            "value": "[if(equals(parameters('sshPublicKeyData'), ''), json('null'), json(concat('{\"ssh\": {\"publicKeys\": [{\"path\": \"/home/', parameters('adminUsername'), '/.ssh/authorized_keys\", \"keyData\": \"', parameters('sshPublicKeyData'), '\"}]}}')))]"
+            "type": "string",
+            "value": "[if(equals(parameters('sshPublicKeyData'), ''), 'null', concat('{\"ssh\": {\"publicKeys\": [{\"path\": \"/home/', parameters('adminUsername'), '/.ssh/authorized_keys\", \"keyData\": \"', parameters('sshPublicKeyData'), '\"}]}}'))]"
           }
         },
         "getScriptSettings": {
@@ -174,7 +174,7 @@
           "computerName": "[concat(parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].namePrefix, copyIndex())]",
           "adminUsername": "[parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].login.adminUsername]",
           "adminPassword": "[parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].login.adminPassword]",
-          "linuxConfiguration": "[desktop.getLinuxConfig(parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].login.sshPublicKeyData, parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].login.adminUsername)]"
+          "linuxConfiguration": "[json(desktop.getLinuxConfig(parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].login.sshPublicKeyData, parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].login.adminUsername))]"
         }
       },
       "copy": {
