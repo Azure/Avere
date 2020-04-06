@@ -112,5 +112,5 @@ output "storage_account_container_sas_command_prefix" {
 }
 
 output "storage_account_container_sas_command_suffix" {
-    value = "export SAS_SUFFIX=$(az storage container generate-sas --account-name ${local.storage_account_name} --https-only --permissions acdlrw --start 2020-04-06T00:00:00Z --expiry 2021-01-01T00:00:00Z --name ${local.container_name})"
+    value = "export SAS_SUFFIX=$(az storage container generate-sas --account-name ${local.storage_account_name} --https-only --permissions acdlrw --start 2020-04-06T00:00:00Z --expiry 2021-01-01T00:00:00Z --name ${local.container_name}  --output tsv)"
 }
