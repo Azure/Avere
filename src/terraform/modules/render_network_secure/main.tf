@@ -10,6 +10,30 @@ resource "azurerm_network_security_group" "ssh_nsg" {
     resource_group_name = azurerm_resource_group.render_rg.name
 
     security_rule {
+        name                       = "allowvnetin"
+        priority                   = 500
+        direction                  = "Inbound"
+        access                     = "Allow"
+        protocol                   = "*"
+        source_port_range          = "*"
+        destination_port_range     = "*"
+        source_address_prefix      = "VirtualNetwork"
+        destination_address_prefix = "VirtualNetwork"
+    }
+
+    security_rule {
+        name                       = "allowvnetout"
+        priority                   = 500
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "*"
+        source_port_range          = "*"
+        destination_port_range     = "*"
+        source_address_prefix      = "VirtualNetwork"
+        destination_address_prefix = "VirtualNetwork"
+    }
+
+    security_rule {
         name                       = "SSH"
         priority                   = 1000
         direction                  = "Inbound"
@@ -17,12 +41,24 @@ resource "azurerm_network_security_group" "ssh_nsg" {
         protocol                   = "Tcp"
         source_port_range          = "*"
         destination_port_range     = "22"
+        source_address_prefix      = "var.ssh_source_address_prefix"
+        destination_address_prefix = "*"
+    }
+
+    security_rule {
+        name                       = "denyallin"
+        priority                   = 3000
+        direction                  = "Inbound"
+        access                     = "Deny"
+        protocol                   = "*"
+        source_port_range          = "*"
+        destination_port_range     = "*"
         source_address_prefix      = "*"
         destination_address_prefix = "*"
     }
 
     security_rule {
-        name                       = "denyinternet"
+        name                       = "denyallout"
         priority                   = 3000
         direction                  = "Outbound"
         access                     = "Deny"
@@ -30,18 +66,6 @@ resource "azurerm_network_security_group" "ssh_nsg" {
         source_port_range          = "*"
         destination_port_range     = "*"
         source_address_prefix      = "*"
-        destination_address_prefix = "Internet"
-    }
-
-    security_rule {
-        name                       = "denyinternetinbound"
-        priority                   = 3000
-        direction                  = "Inbound"
-        access                     = "Deny"
-        protocol                   = "*"
-        source_port_range          = "*"
-        destination_port_range     = "*"
-        source_address_prefix      = "Internet"
         destination_address_prefix = "*"
     }
 }
@@ -52,13 +76,37 @@ resource "azurerm_network_security_group" "no_internet_nsg" {
     resource_group_name = azurerm_resource_group.render_rg.name
     
     security_rule {
-        name                       = "allowproxy"
-        priority                   = 2000
+        name                       = "allowvnetin"
+        priority                   = 1000
+        direction                  = "Inbound"
+        access                     = "Allow"
+        protocol                   = "*"
+        source_port_range          = "*"
+        destination_port_range     = "*"
+        source_address_prefix      = "VirtualNetwork"
+        destination_address_prefix = "VirtualNetwork"
+    }
+
+    security_rule {
+        name                       = "allowvnetout"
+        priority                   = 1000
         direction                  = "Outbound"
         access                     = "Allow"
         protocol                   = "*"
         source_port_range          = "*"
         destination_port_range     = "*"
+        source_address_prefix      = "VirtualNetwork"
+        destination_address_prefix = "VirtualNetwork"
+    }
+
+    security_rule {
+        name                       = "allowproxy"
+        priority                   = 2000
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "443"
         source_address_prefix      = var.subnet_proxy_address_prefix
         destination_address_prefix = "*"
     }
@@ -76,7 +124,19 @@ resource "azurerm_network_security_group" "no_internet_nsg" {
     }
 
     security_rule {
-        name                       = "denyinternetoutbound"
+        name                       = "denyallin"
+        priority                   = 3000
+        direction                  = "Inbound"
+        access                     = "Deny"
+        protocol                   = "*"
+        source_port_range          = "*"
+        destination_port_range     = "*"
+        source_address_prefix      = "*"
+        destination_address_prefix = "*"
+    }
+
+    security_rule {
+        name                       = "denyallout"
         priority                   = 3000
         direction                  = "Outbound"
         access                     = "Deny"
@@ -84,18 +144,6 @@ resource "azurerm_network_security_group" "no_internet_nsg" {
         source_port_range          = "*"
         destination_port_range     = "*"
         source_address_prefix      = "*"
-        destination_address_prefix = "Internet"
-    }
-
-    security_rule {
-        name                       = "denyinternetinbound"
-        priority                   = 3000
-        direction                  = "Inbound"
-        access                     = "Deny"
-        protocol                   = "*"
-        source_port_range          = "*"
-        destination_port_range     = "*"
-        source_address_prefix      = "Internet"
         destination_address_prefix = "*"
     }
 }
