@@ -100,8 +100,20 @@ resource "azurerm_network_security_group" "no_internet_nsg" {
     }
 
     security_rule {
-        name                       = "allowproxy"
+        name                       = "allowproxy80"
         priority                   = 2000
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "80"
+        source_address_prefix      = var.subnet_proxy_address_prefix
+        destination_address_prefix = "*"
+    }
+
+    security_rule {
+        name                       = "allowproxy443"
+        priority                   = 2001
         direction                  = "Outbound"
         access                     = "Allow"
         protocol                   = "Tcp"
@@ -118,7 +130,7 @@ resource "azurerm_network_security_group" "no_internet_nsg" {
         access                     = "Allow"
         protocol                   = "Tcp"
         source_port_range          = "*"
-        destination_port_range     = "80,443"
+        destination_port_range     = "443"
         source_address_prefix      = "VirtualNetwork"
         destination_address_prefix = "Storage.${var.location}"
     }
