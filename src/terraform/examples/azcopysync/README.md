@@ -1,6 +1,8 @@
 # Testing azcopy sync command
 
-This examples creates a windows VM, and storage account for purpose of showing the azcopy sync command, where filer is directory in your cloudshell.
+The purpose of this example is to show how the `azcopy sync` command can be used to keep remote artists in sync with a central source of data.  This example creates a storage account with a 7 day deletion retention policy, meaning if there are deletes or overwrites of files between artists, these can be recovered.
+
+This examples creates a windows VM, and an storage account, where the on-prem filer is a directory in your cloudshell.
 
 ![The architecture](../../../../docs/images/terraform/azcopysyncscenario.png)
 
@@ -46,9 +48,9 @@ echo $SAS_URL
 azcopy sync ~/tf $SAS_URL
 ```
 
-9. RDP to the windows machine using the username and address from the output variables
+9. using the `rdp_address` and `rdp_username` from the terraform output variables, RDP to the windows machine using the username and address from the output variables
 
-10. Install azcopy from https://aka.ms/downloadazcopy-v10-windows.  Open powershell as administrator and type:
+10. Open powershell as administrator and use the following commands to install azcopy from https://aka.ms/downloadazcopy-v10-windows:
 
 ```powershell
 mkdir \azcopy
@@ -68,13 +70,13 @@ subst v: c:\data
 10. using the SAS URL you created earlier create the sync files, and run the `syncfrom.ps1`
 
 ```powershell
-$env:SAS_URL=# copy the SAS_URL value from the cloudshell you generated earlier
+$env:SAS_URL='' # paste the SAS_URL value from the cloudshell in the single quotes
 "azcopy sync '$env:SAS_URL' c:\data" > c:\azcopy\syncfrom.ps1
 "azcopy sync c:\data '$env:SAS_URL'" > c:\azcopy\syncto.ps1
 c:\azcopy\syncfrom.ps1
 ```
 
-11. Try creating some files and observe that `c:\azcopy\syncfrom.ps1` doesn't clobber the files.  Observe that `c:\azcopy\syncto.ps1` uploads the new files correctly.  In explorer browse to `V:\` drive.
+11. Try creating some files and observe that `c:\azcopy\syncfrom.ps1` doesn't clobber the files.  Observe that `c:\azcopy\syncto.ps1` uploads the new files correctly, by adjusting the order of path from your previous cloud shell.  In explorer browse to `V:\` drive.
 
 The end result is that you now have a `V:\` drive containing the files of the original tf folder:
 
