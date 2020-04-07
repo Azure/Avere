@@ -75,7 +75,7 @@ subst v: c:\data
 $env:SAS_URL='' # paste the SAS_URL value from the cloudshell in the single quotes
 "azcopy sync '$env:SAS_URL' c:\data" > c:\azcopy\syncfrom.ps1
 "azcopy sync c:\data '$env:SAS_URL'" > c:\azcopy\syncto.ps1
-# uncomment below for Windows 10
+# the following line is needed for Windows 10
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force
 c:\azcopy\syncfrom.ps1
 ```
@@ -96,7 +96,7 @@ The SAS URI generated above can be used from anywhere.  However, you can generat
 
 Additionally, you can enable logging on the account enabling the "Logging" flags in this [article](https://docs.microsoft.com/en-us/azure/storage/common/storage-monitor-storage-account).
 
-One the logging is enabled you access the logs via the `$logs` container as shown in the following example:
+One the logging is enabled you access the logs via the `$logs` container as shown in the screen shot of [Azure Storage Explorer](https://azure.microsoft.com/en-us/features/storage-explorer/):
 
 ![shows the logs](logs.png)
 
