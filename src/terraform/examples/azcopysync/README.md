@@ -92,7 +92,7 @@ When you are done with the example, you can destroy it by running `terraform des
 
 ## Audit access
 
-The SAS URI generated above can be used from anywhere.  However, you can generate a SAS for each artist and their source IP by using the `--ip` parameter on the [generate-sas](https://docs.microsoft.com/en-us/cli/azure/storage/container?view=azure-cli-latest#az-storage-container-generate-sas) above in the cloud shell.
+The SAS URI generated above can be used from anywhere.  However, you can generate a SAS for each artist and their source IP by using the `--ip` parameter on the [az storage container generate-sas](https://docs.microsoft.com/en-us/cli/azure/storage/container?view=azure-cli-latest#az-storage-container-generate-sas) command line as shown above.
 
 Additionally, you can enable logging on the account enabling the "Logging" flags in this [article](https://docs.microsoft.com/en-us/azure/storage/common/storage-monitor-storage-account).
 
