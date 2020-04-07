@@ -5,6 +5,8 @@ locals {
     vm_admin_username = "azureuser"
     vm_admin_password = "PASSWORD"
     resource_group_name = "resource_group"
+    // set the following to true, otherwise use windows server
+    use_windows_desktop = false
 
     // provide a globally unique name
     storage_account_name = "storageaccount"
@@ -91,11 +93,24 @@ resource "azurerm_windows_virtual_machine" "vm" {
     storage_account_type = "Standard_LRS"
   }
 
-  source_image_reference {
-    publisher = "MicrosoftWindowsServer"
-    offer     = "WindowsServer"
-    sku       = "2016-Datacenter"
-    version   = "latest"
+  dynamic "source_image_reference" {
+      for_each = local.use_windows_desktop == false ? ["MicrosoftWindowsServer"] : []
+      content {
+         publisher = "MicrosoftWindowsServer"
+         offer     = "WindowsServer"
+         sku       = "2016-Datacenter"
+         version   = "latest"
+      }
+  }
+
+  dynamic "source_image_reference" {
+      for_each = local.use_windows_desktop == true ? ["MicrosoftWindowsDesktop"] : []
+      content {
+          publisher = "MicrosoftWindowsDesktop"
+          offer     = "Windows-10"
+          sku       = "19h2-pro"
+          version   = "latest"
+      }
   }
 }
 
