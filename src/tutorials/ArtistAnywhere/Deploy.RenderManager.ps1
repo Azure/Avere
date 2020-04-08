@@ -49,8 +49,8 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	if ($templateParameters.virtualNetwork.value.name -eq "") {
 		$templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
 	}
-	$templateParameters = ($templateParameters | ConvertTo-Json -Compress).Replace('"', '\"')
-	$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+	$templateParameters = '"{0}"' -f ($templateParameters | ConvertTo-Json -Compress).Replace('"', '\"')
+	$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 	if (!$groupDeployment) { return }
 
 	$managerDatabaseDeploySql += $groupDeployment.properties.outputs.managerDatabaseDeploySql.value
@@ -81,10 +81,10 @@ if ($templateParameters.imageBuilder.value.imageGalleryName -eq "") {
 }
 $templateParameters.imageBuilder.value.imageReplicationRegions += Get-RegionNames $computeRegionNames
 $imageTemplateName = $templateParameters.imageBuilder.value.imageTemplateName
-$imageTemplates = az resource list --resource-group $resourceGroupName --resource-type "Microsoft.VirtualMachineImages/imageTemplates" --name $imageTemplateName | ConvertFrom-Json
+$imageTemplates = (az resource list --resource-group $resourceGroupName --resource-type "Microsoft.VirtualMachineImages/imageTemplates" --name $imageTemplateName) | ConvertFrom-Json
 if ($imageTemplates.length -eq 0) {	
-	$templateParameters = ($templateParameters | ConvertTo-Json -Compress -Depth 3).Replace('"', '\"')
-	$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+	$templateParameters = '"{0}"' -f ($templateParameters | ConvertTo-Json -Compress -Depth 3).Replace('"', '\"')
+	$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 	if (!$groupDeployment) { return }
 }
 New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
@@ -114,7 +114,7 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 
 	$templateResources = "$templateDirectory\$moduleDirectory\07-Manager.Machines.json"
 	$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\07-Manager.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
-	$machineExtensionScript = Get-ScriptData "$templateDirectory\$moduleDirectory\07-Manager.Machines.sh"
+	$extensionScriptCommands = Get-ScriptCommands "$templateDirectory\$moduleDirectory\07-Manager.Machines.sh"
 	if ($templateParameters.renderManager.value.homeDirectory -eq "") {
 		$templateParameters.renderManager.value.homeDirectory = $imageDefinition.homeDirectory
 	}
@@ -139,8 +139,8 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	if ($templateParameters.renderManager.value.logAnalyticsWorkspaceKey -eq "") {
 		$templateParameters.renderManager.value.logAnalyticsWorkspaceKey = $logAnalytics.workspaceKey
 	}
-	if ($templateParameters.renderManager.value.machineExtensionScript -eq "") {
-		$templateParameters.renderManager.value.machineExtensionScript = $machineExtensionScript
+	if ($templateParameters.renderManager.value.extensionScriptCommands -eq "") {
+		$templateParameters.renderManager.value.extensionScriptCommands = $extensionScriptCommands
 	}
 	if ($templateParameters.virtualNetwork.value.resourceGroupName -eq "") {
 		$templateParameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
@@ -148,8 +148,8 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	if ($templateParameters.virtualNetwork.value.name -eq "") {
 		$templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
 	}
-	$templateParameters = ($templateParameters | ConvertTo-Json -Compress -Depth 4).Replace('"', '\"')
-	$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+	$templateParameters = '"{0}"' -f ($templateParameters | ConvertTo-Json -Compress -Depth 4).Replace('"', '\"')
+	$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 	if (!$groupDeployment) { return }
 	
 	$renderManagers += $groupDeployment.properties.outputs.renderManager.value

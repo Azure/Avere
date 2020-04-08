@@ -55,7 +55,7 @@ function New-SharedServices ($networkOnly, $computeNetworks) {
 
 			$templateResources = "$templateDirectory\00-Network.json"
 			$templateParameters = "$templateDirectory\00-Network.Parameters.Region$computeRegionIndex.json"
-			$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+			$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 			if (!$groupDeployment) { return }
 
 			$computeNetwork = New-Object PSObject
@@ -85,8 +85,8 @@ function New-SharedServices ($networkOnly, $computeNetworks) {
 		if ($templateParameters.virtualNetwork.value.name -eq "") {
 			$templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
 		}
-		$templateParameters = ($templateParameters | ConvertTo-Json -Compress).Replace('"', '\"')
-		$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+		$templateParameters = '"{0}"' -f ($templateParameters | ConvertTo-Json -Compress).Replace('"', '\"')
+		$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 		if (!$groupDeployment) { return }
 
 		$logAnalyticsWorkspaceId = $groupDeployment.properties.outputs.logAnalyticsWorkspaceId.value
@@ -113,7 +113,7 @@ function New-SharedServices ($networkOnly, $computeNetworks) {
 
 function Get-RegionNames ([string[]] $regionDisplayNames) {
 	$regionNames = @()
-	$regionLocations = az account list-locations | ConvertFrom-Json
+	$regionLocations = (az account list-locations) | ConvertFrom-Json
 	foreach ($regionDisplayName in $regionDisplayNames) {
 		foreach ($regionLocation in $regionLocations) {
 			if ($regionLocation.displayName -eq $regionDisplayName) {
@@ -141,7 +141,7 @@ function Get-ImageDefinition ($imageGallery, $imageDefinitionName) {
 }
 
 function Get-ImageVersionId ($imageGalleryResourceGroupName, $imageGalleryName, $imageDefinitionName, $imageTemplateName) {
-	$imageVersions = az sig image-version list --resource-group $imageGalleryResourceGroupName --gallery-name $imageGalleryName --gallery-image-definition $imageDefinitionName | ConvertFrom-Json
+	$imageVersions = (az sig image-version list --resource-group $imageGalleryResourceGroupName --gallery-name $imageGalleryName --gallery-image-definition $imageDefinitionName) | ConvertFrom-Json
 	foreach ($imageVersion in $imageVersions) {
 		if ($imageVersion.tags.imageTemplate -eq $imageTemplateName) {
 			return $imageVersion.id
@@ -167,18 +167,18 @@ function Get-CacheMounts ($storageCache) {
 	return [System.Convert]::ToBase64String($memoryStream.ToArray())	
 }
 
-function Get-ScriptData ($scriptFile, $scriptParameters) {
+function Get-ScriptCommands ($scriptFile, $scriptParameters) {
 	$script = Get-Content $scriptFile -Raw
 	if ($scriptParameters) { # Windows PowerShell
 		$script = "& {" + $script + "} " + $scriptParameters
-		$scriptBytes = [System.Text.Encoding]::Unicode.GetBytes($script)
+		$scriptCommands = [System.Text.Encoding]::Unicode.GetBytes($script)
 	} else { # Linux Bash
 		$memoryStream = New-Object System.IO.MemoryStream
 		$compressionStream = New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode]::Compress)
 		$streamWriter = New-Object System.IO.StreamWriter($compressionStream)
 		$streamWriter.Write($script)
 		$streamWriter.Close();
-		$scriptBytes = $memoryStream.ToArray()	
+		$scriptCommands = $memoryStream.ToArray()	
 	}
-	return [Convert]::ToBase64String($scriptBytes)
+	return [Convert]::ToBase64String($scriptCommands)
 }

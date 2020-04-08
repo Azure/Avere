@@ -48,7 +48,7 @@ if ($storageDeployNetApp -or $storageDeployObject) {
 		$templateResources = "$templateDirectory\$moduleDirectory\03-Storage.NetApp.json"
 		$templateParameters = "$templateDirectory\$moduleDirectory\03-Storage.NetApp.Parameters.json"
 
-		$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+		$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 		if (!$groupDeployment) { return }
 
 		$storageNetworkName = $groupDeployment.properties.outputs.virtualNetworkName.value
@@ -83,7 +83,7 @@ if ($storageDeployNetApp -or $storageDeployObject) {
 		$templateResources = "$templateDirectory\$moduleDirectory\03-Storage.Object.json"
 		$templateParameters = "$templateDirectory\$moduleDirectory\03-Storage.Object.Parameters.json"
 
-		$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+		$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 		if (!$groupDeployment) { return }
 
 		$storageNetworkName = $groupDeployment.properties.outputs.virtualNetworkName.value
@@ -129,8 +129,8 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	if ($templateParameters.virtualNetwork.value.name -eq "") {
 		$templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
 	}
-	$templateParameters = ($templateParameters | ConvertTo-Json -Compress -Depth 5).Replace('"', '\"')
-	$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+	$templateParameters = '"{0}"' -f ($templateParameters | ConvertTo-Json -Compress -Depth 5).Replace('"', '\"')
+	$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 	if (!$groupDeployment) { return }
 
 	$storageCache = New-Object PSObject
@@ -154,7 +154,7 @@ for ($cacheIndex = 0; $cacheIndex -lt $storageCaches.length; $cacheIndex++) {
 		$cacheMountRecord = az network private-dns record-set a add-record --resource-group $computeNetworks[$cacheIndex].resourceGroupName --zone-name $computeNetworks[$cacheIndex].domainName --record-set-name $cacheSubdomainName --ipv4-address $cacheMountAddress
 		if (!$cacheMountRecord) { return }
 	}
-	$cacheDomainRecord = az network private-dns record-set a show --resource-group $computeNetworks[$cacheIndex].resourceGroupName --zone-name $computeNetworks[$cacheIndex].domainName --name $cacheSubdomainName | ConvertFrom-Json
+	$cacheDomainRecord = (az network private-dns record-set a show --resource-group $computeNetworks[$cacheIndex].resourceGroupName --zone-name $computeNetworks[$cacheIndex].domainName --name $cacheSubdomainName) | ConvertFrom-Json
 	if (!$cacheDomainRecord) { return }
 
 	$cacheMounts = @() 

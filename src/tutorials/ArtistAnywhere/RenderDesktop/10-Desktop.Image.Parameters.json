@@ -6,15 +6,24 @@
       "value": {
         "machineImages": [
           {
+            "enabled": true,
             "templateName": "LinuxDesktop",
             "definitionName": "LinuxDesktop",
             "sourceType": "PlatformImage",
             "sourceVersion": "latest",
             "buildCustomization": [
+              {
+                "name": "Teradici",
+                "type": "Shell",
+                "inline": [
+                  "yum -y groups install 'GNOME Desktop'"
+                ]
+              }              
             ],
             "buildTimeoutMinutes": 120
           },
           {
+            "enabled": false,
             "templateName": "WindowsDesktop",
             "definitionName": "WindowsDesktop",
             "sourceType": "PlatformImage",

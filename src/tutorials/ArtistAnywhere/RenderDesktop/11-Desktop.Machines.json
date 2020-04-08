@@ -97,20 +97,20 @@
             "value": "[if(equals(parameters('sshPublicKeyData'), ''), 'null', concat('{\"ssh\": {\"publicKeys\": [{\"path\": \"/home/', parameters('adminUsername'), '/.ssh/authorized_keys\", \"keyData\": \"', parameters('sshPublicKeyData'), '\"}]}}'))]"
           }
         },
-        "getScriptSettings": {
+        "GetExtensionCommand": {
           "parameters": [
             {
-              "name": "scriptCommand",
+              "name": "scriptCommands",
               "type": "string"
             },
             {
-              "name": "scriptData",
+              "name": "scriptParameters",
               "type": "string"
             }
           ],
           "output": {
-            "type": "object",
-            "value": "[if(equals(parameters('scriptCommand'), ''), json(concat('{\"script\": \"', parameters('scriptData'), '\"}')), json(concat('{\"commandToExecute\": \"', parameters('scriptCommand'), '\"}')))]"
+            "type": "string",
+            "value": "[if(equals(parameters('scriptParameters'), ''), format('PowerShell.exe -ExecutionPolicy Unrestricted -EncodedCommand {0}', parameters('scriptCommands')), format('echo {0} | base64 -d | gunzip | tr -d \r | {1} /bin/bash', parameters('scriptCommands'), parameters('scriptParameters')))]"
           }
         }
       }
@@ -219,7 +219,9 @@
         "type": "[parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].customExtension.type]",
         "typeHandlerVersion": "[parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].customExtension.typeVersion]",
         "autoUpgradeMinorVersion": true,
-        "protectedSettings": "[desktop.getScriptSettings(parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].customExtension.scriptCommand, parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].customExtension.scriptData)]"
+        "protectedSettings": {
+          "commandToExecute": "[desktop.GetExtensionCommand(parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].customExtension.scriptCommands, parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].customExtension.scriptParameters)]"
+        }
       },
       "copy": {
         "name": "renderDesktops",

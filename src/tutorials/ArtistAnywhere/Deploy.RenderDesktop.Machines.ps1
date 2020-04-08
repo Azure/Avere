@@ -50,26 +50,24 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 			$imageVersionId = Get-ImageVersionId $imageGallery.resourceGroupName $imageGallery.name $imageDefinitionName $imageTemplateName
 			$templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].image.referenceId = $imageVersionId
 		}
-		if ($templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptData -eq "") {
+		if ($templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptCommands -eq "") {
 			$scriptFile = $templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptFile
 			$scriptFile = "$templateDirectory\$moduleDirectory\$scriptFile"
-			$scriptParameters = $templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptParameters
-			$scriptCommand = $templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptCommand
-			$imageDefinition = az sig image-definition show --resource-group $imageGallery.resourceGroupName --gallery-name $imageGallery.name --gallery-image-definition $imageDefinitionName | ConvertFrom-Json
+			$imageDefinition = (az sig image-definition show --resource-group $imageGallery.resourceGroupName --gallery-name $imageGallery.name --gallery-image-definition $imageDefinitionName) | ConvertFrom-Json
 			if ($imageDefinition.osType -eq "Windows") {
+				$scriptParameters = $templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptParameters
 				if ($renderManagers.length -gt $computeRegionIndex) {
-					$scriptParameters += " -renderManagerHost '" + $renderManagers[$computeRegionIndex] + "'"
+					$scriptParameters += " -openCueRenderManagerHost " + $renderManagers[$computeRegionIndex]
 				}
-				$scriptData = Get-ScriptData $scriptFile $scriptParameters
-				$scriptCommand = $scriptCommand -f $scriptData
-				$templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptCommand = $scriptCommand
+				$scriptCommands = Get-ScriptCommands $scriptFile $scriptParameters
+				$templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptParameters = ""
 			} else {
 				if ($renderManagers.length -gt $computeRegionIndex) {
-					$scriptParameters += " RENDER_MANAGER_HOST='" + $renderManagers[$computeRegionIndex] + "'"
+					$templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptParameters += " OPENCUE_RENDER_MANAGER_HOST=" + $renderManagers[$computeRegionIndex]
 				}
-				$scriptData = Get-ScriptData $scriptFile
-				$templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptData = $scriptData
+				$scriptCommands = Get-ScriptCommands $scriptFile
 			}
+			$templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptCommands = $scriptCommands
 		}
 	}
 	if ($templateParameters.logAnalytics.value.workspaceId -eq "") {
@@ -84,8 +82,8 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	if ($templateParameters.virtualNetwork.value.name -eq "") {
 		$templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
 	}
-	$templateParameters = ($templateParameters | ConvertTo-Json -Compress -Depth 5).Replace('"', '\"')
-	$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+	$templateParameters = '"{0}"' -f ($templateParameters | ConvertTo-Json -Compress -Depth 5).Replace('"', '\"')
+	$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 	if (!$groupDeployment) { return }
 
 	$renderDesktops += $groupDeployment.properties.outputs.renderDesktops.value

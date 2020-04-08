@@ -27,7 +27,7 @@ if (!$resourceGroup) { return }
 
 $templateResources = "$templateDirectory\01-Gallery.json"
 $templateParameters = "$templateDirectory\01-Gallery.Parameters.json"
-$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
+$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 if (!$groupDeployment) { return }
 
 $imageGallery = $groupDeployment.properties.outputs.imageGallery.value

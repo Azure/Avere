@@ -36,16 +36,11 @@ if ($templateParameters.imageBuilder.value.imageGalleryName -eq "") {
 	$templateParameters.imageBuilder.value.imageGalleryName = $imageGallery.name
 }
 $templateParameters.imageBuilder.value.imageReplicationRegions += Get-RegionNames $computeRegionNames
-foreach ($machineImage in $templateParameters.renderDesktop.value.machineImages) {
-	New-TraceMessage "$moduleName [$($machineImage.templateName)]" $false $computeRegionNames[$computeRegionIndex]
-	$imageTemplates = az resource list --resource-group $resourceGroupName --resource-type "Microsoft.VirtualMachineImages/imageTemplates" --name $machineImage.templateName | ConvertFrom-Json
-	if ($imageTemplates.length -eq 0) {	
-		$templateParameters = ($templateParameters | ConvertTo-Json -Compress -Depth 4).Replace('"', '\"')
-		$groupDeployment = az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters | ConvertFrom-Json
-		if (!$groupDeployment) { return }
-	}
-	New-TraceMessage "$moduleName [$($machineImage.templateName)]" $true $computeRegionNames[$computeRegionIndex]
-}
+
+$templateParameters = '"{0}"' -f ($templateParameters | ConvertTo-Json -Compress -Depth 7).Replace('"', '\"')
+$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
+#if (!$groupDeployment) { return } // TODO: After AIB GA, test image template update/upgrade support!
+
 New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 
 # 10.1 - Desktop Image Version
@@ -58,7 +53,7 @@ foreach ($machineImage in $templateParameters.renderDesktop.value.machineImages)
 	New-TraceMessage "$moduleName [$($machineImage.templateName)]" $false $computeRegionNames[$computeRegionIndex]
 	$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Image"
 	$imageVersionId = Get-ImageVersionId $resourceGroupName $imageGallery.name $machineImage.definitionName $machineImage.templateName
-	if (!$imageVersionId) {
+	if (!$imageVersionId -and $machineImage.enabled) {
 		az image builder run --resource-group $resourceGroupName --name $machineImage.templateName
 		$imageVersionId = Get-ImageVersionId $resourceGroupName $imageGallery.name $machineImage.definitionName $machineImage.templateName
 		if (!$imageVersionId) { return }

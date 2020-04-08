@@ -1,11 +1,9 @@
 param (
-    [string] $renderManagerHost,
     [string] $teradiciHostAgentUrl,
     [string] $teradiciHostAgentKey,
-    [string] $teradiciSessionViewerUrl
+    [string] $teradiciSessionViewerUrl,
+    [string] $openCueRenderManagerHost
 )
-
-[System.Environment]::SetEnvironmentVariable('CUEBOT_HOSTS', $renderManagerHost, [System.EnvironmentVariableTarget]::Machine)
 
 curl -OutFile 'teradici-host-agent.exe' -Uri $teradiciHostAgentUrl
 curl -OutFile 'teradici-session-viewer.exe' -Uri $teradiciSessionViewerUrl
@@ -18,3 +16,5 @@ if ($agentInstall.ExitCode -eq 0 -or $agentInstall.ExitCode -eq 1641) {
     }
     Restart-Service -Name 'PCoIPAgent'
 }
+
+[System.Environment]::SetEnvironmentVariable('CUEBOT_HOSTS', $openCueRenderManagerHost, [System.EnvironmentVariableTarget]::Machine)

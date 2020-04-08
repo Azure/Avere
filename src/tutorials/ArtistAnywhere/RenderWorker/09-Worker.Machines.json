@@ -100,7 +100,7 @@
                   "typeHandlerVersion": "2.1",
                   "autoUpgradeMinorVersion": true,
                   "protectedSettings": {
-                    "commandToExecute": "[concat('echo ', parameters('renderWorker').machineExtensionScript, ' | base64 --decode | gunzip | sed \"s|\r$||\" | HOME_DIRECTORY=\"', parameters('renderWorker').homeDirectory, '\" RENDER_MANAGER_HOST=\"', parameters('renderManager').hostAddress, '\" CACHE_MOUNTS=\"', base64ToString(parameters('cacheMounts')), '\" /bin/bash')]"
+                    "commandToExecute": "[concat('echo ', parameters('renderWorker').extensionScriptCommands, ' | base64 --decode | gunzip | sed \"s|\r$||\" | HOME_DIRECTORY=\"', parameters('renderWorker').homeDirectory, '\" RENDER_MANAGER_HOST=\"', parameters('renderManager').hostAddress, '\" CACHE_MOUNTS=\"', base64ToString(parameters('cacheMounts')), '\" /bin/bash')]"
                   }
                 }
               },

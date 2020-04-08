@@ -256,7 +256,7 @@
             "typeHandlerVersion": "2.1",
             "autoUpgradeMinorVersion": true,
             "protectedSettings": {
-              "commandToExecute": "[concat('echo ', parameters('renderManager').machineExtensionScript, ' | base64 --decode | gunzip | sed \"s|\r$||\" | HOME_DIRECTORY=\"', parameters('renderManager').homeDirectory, '\" MANAGER_INDEX=', copyIndex() ,' DB_DEPLOY_SQL=\"', parameters('renderManager').databaseDeploySql, '\" DB_CLIENT_URL=\"', parameters('renderManager').databaseClientUrl, '\" DB_CLIENT_USERNAME=\"', parameters('renderManager').databaseClientUsername, '\" DB_CLIENT_PASSWORD=\"', parameters('renderManager').databaseClientPassword, '\" /bin/bash')]"
+              "commandToExecute": "[concat('echo ', parameters('renderManager').extensionScriptCommands, ' | base64 --decode | gunzip | sed \"s|\r$||\" | HOME_DIRECTORY=\"', parameters('renderManager').homeDirectory, '\" MANAGER_INDEX=', copyIndex() ,' DB_DEPLOY_SQL=\"', parameters('renderManager').databaseDeploySql, '\" DB_CLIENT_URL=\"', parameters('renderManager').databaseClientUrl, '\" DB_CLIENT_USERNAME=\"', parameters('renderManager').databaseClientUsername, '\" DB_CLIENT_PASSWORD=\"', parameters('renderManager').databaseClientPassword, '\" /bin/bash')]"
             }
           }
         },
