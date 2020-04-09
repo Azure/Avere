@@ -39,19 +39,24 @@ function config_ephemeral_nvme {
     RAIDDISK=/dev/md0
     DISKS=($(ls /dev/nvme*n*))
     DISKCOUNT=${#DISKS[@]}
-    udevadm control --stop-exec-queue
-    echo "yes" | mdadm --create $RAIDDISK --level=0 --raid-devices=$DISKCOUNT ${DISKS[@]}
-    udevadm control --start-exec-queue
-    mkdir -p /etc/mdadm
-    mdadm --detail --verbose --scan > /etc/mdadm/mdadm.conf
-    # log the details of the mount to STDOUT
-    mdadm --detail --verbose --scan
-    cat /proc/mdstat
+    if [ "$DISKCOUNT" -eq "1" ] ; then
+        DISK_DEVICE=${DISKS[0]}
+    else
+        udevadm control --stop-exec-queue
+        echo "yes" | mdadm --create $RAIDDISK --level=0 --raid-devices=$DISKCOUNT ${DISKS[@]}
+        udevadm control --start-exec-queue
+        mkdir -p /etc/mdadm
+        mdadm --detail --verbose --scan > /etc/mdadm/mdadm.conf
+        # log the details of the mount to STDOUT
+        mdadm --detail --verbose --scan
+        cat /proc/mdstat
+        DISK_DEVICE=$RAIDDISK
+    fi
 
     # add the ext4 filesystem
-    mkfs.ext4 -F $RAIDDISK
+    mkfs.ext4 -F $DISK_DEVICE
 
-    read UUID FS_TYPE < <(blkid -u filesystem $RAIDDISK|awk -F "[= ]" '{print $3" "$5}'|tr -d "\"")
+    read UUID FS_TYPE < <(blkid -u filesystem $DISK_DEVICE|awk -F "[= ]" '{print $3" "$5}'|tr -d "\"")
     echo -e "UUID=\"${UUID}\"\t$EXPORT_PATH\t$FS_TYPE\tnoatime,nodiratime,nodev,noexec,nosuid,nofail\t1 2" >> /etc/fstab
     mount $EXPORT_PATH
 }
