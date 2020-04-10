@@ -14,6 +14,7 @@
 #     BASE_DIR=/nfs
 #
 set -x
+NODE_MOUNT_PREFIX="/node"
 
 function retrycmd_if_failure() {
     retries=$1; max_wait_sleep=$2; shift && shift
@@ -51,9 +52,32 @@ function mount_round_robin() {
     fi
 }
 
+function mount_all() {
+    COUNTER=0
+    for VFXT in $(echo $NFS_IP_CSV | sed "s/,/ /g")
+    do
+        MOUNT_POINT="${BASE_DIR}${NODE_MOUNT_PREFIX}${COUNTER}"
+        echo "Mounting to ${VFXT}:${NFS_PATH} to ${MOUNT_POINT}"
+        mkdir -p $MOUNT_POINT
+        # no need to write again if it is already there
+        if grep -F --quiet "${VFXT}:${NFS_PATH}    ${MOUNT_POINT}" /etc/fstab; then
+            echo "not updating file, already there"
+        else
+            echo "${VFXT}:${NFS_PATH}    ${MOUNT_POINT}    nfs hard,nointr,proto=tcp,mountproto=tcp,retry=30 0 0" >> /etc/fstab
+            retrycmd_if_failure 60 5 mount ${MOUNT_POINT}
+            chmod 777 ${MOUNT_POINT}
+        fi
+        COUNTER=$(($COUNTER + 1))
+    done
+}
+
 function main() {
     echo "mount round robin default path"
-    mount_round_robin
+    if [ -z $MOUNT_ALL ]; then
+        mount_all
+    else
+        mount_round_robin
+    fi
 
     # add extra bootstrap and installation code here
     # this could be:
