@@ -1,6 +1,10 @@
 # Avere vFXT in a Proxy Environment
 
-This examples shows how to configure the vfxt in a secured locked down internet environment.  It configures a render network, controller, and vfxt with 1 filer and an Azure Blob Storage cloud core filer as shown in the diagram below:
+This example shows how to configure the vfxt in a secured locked down internet environment where access to outside resources is via a proxy.  The following tutorial video walks you through this full example:
+
+[![Tutorial Video](proxyyoutube.png)](https://youtu.be/lxDDwu44OHM)
+
+It configures a render network, controller, and vfxt with 1 filer and an Azure Blob Storage cloud core filer as shown in the diagram below:
 
 ![The architecture](../../../../../docs/images/terraform/proxy.png)
 
