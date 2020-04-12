@@ -7,7 +7,7 @@ param (
 	[string] $resourceGroupNamePrefix = "Azure.Media.Studio",
 
 	# Set to 1 or more Azure region names (http://azure.microsoft.com/global-infrastructure/regions)
-	[string[]] $computeRegionNames = @("West US 2", "East US 2")
+	[string[]] $computeRegionNames = @("West US 2")
 )
 
 $templateDirectory = $PSScriptRoot

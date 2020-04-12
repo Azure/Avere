@@ -7,7 +7,7 @@ param (
 	[string] $resourceGroupNamePrefix = "Azure.Media.Studio",
 
 	# Set to 1 or more Azure region names (http://azure.microsoft.com/global-infrastructure/regions)
-	[string[]] $computeRegionNames = @("West US 2", "East US 2"),
+	[string[]] $computeRegionNames = @("West US 2"),
 
 	# Set to true to deploy Azure NetApp Files (http://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
 	[boolean] $storageDeployNetApp = $false,
