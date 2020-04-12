@@ -13,7 +13,7 @@ Azure Artist Anywhere is composed of the following open-source software and Micr
             <a href="https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview" target="_blank">Azure HPC Cache</a>
         </td>
         <td>
-            <a href="https://www.blender.org/" target="_blank">Blender 3D Creation Suite</a>
+            <a href="https://docs.teradici.com/find/product/cloud-access-software" target="_blank">Teradici PCoIP Remote Access</a>
         </td>
     </tr>
     <tr>
@@ -24,7 +24,7 @@ Azure Artist Anywhere is composed of the following open-source software and Micr
             <a href="https://docs.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-introduction" target="_blank">Azure NetApp Files</a>
         </td>
         <td>
-            <a href="https://www.opencue.io/" target="_blank">OpenCue Render Farm Manager</a>
+            <a href="https://www.blender.org/" target="_blank">Blender Artist 3D Creation Suite</a>
         </td>
     </tr>
     <tr>
@@ -35,7 +35,7 @@ Azure Artist Anywhere is composed of the following open-source software and Micr
             <a href="https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blobs-overview" target="_blank">Azure Object (Blob) Storage</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/postgresql/overview" target="_blank">Azure Database for PostgreSQL</a>
+            <a href="https://www.opencue.io/" target="_blank">OpenCue Render Farm Manager</a>
         </td>
     </tr>
     <tr>
@@ -46,7 +46,7 @@ Azure Artist Anywhere is composed of the following open-source software and Micr
             <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-overview" target="_blank">Azure Image Builder</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-overview" target="_blank">Azure Load Balancer</a>
+            <a href="https://docs.microsoft.com/en-us/azure/postgresql/overview" target="_blank">Azure Database for PostgreSQL</a>
         </td>
     </tr>
     <tr>
@@ -57,7 +57,7 @@ Azure Artist Anywhere is composed of the following open-source software and Micr
             <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/linux/shared-image-galleries" target="_blank">Azure Shared Image Gallery</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/azure-monitor/" target="_blank">Azure Monitor</a>
+            <a href="https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-overview" target="_blank">Azure Load Balancer</a>
         </td>
     </tr>
     <tr>
@@ -68,7 +68,7 @@ Azure Artist Anywhere is composed of the following open-source software and Micr
             <a href="https://docs.microsoft.com/en-us/azure/key-vault/key-vault-overview" target="_blank">Azure Key Vault</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/virtual-desktop/overview" target="_blank">Azure Virtual Desktop</a>
+            <a href="https://docs.microsoft.com/en-us/azure/azure-monitor/" target="_blank">Azure Monitor</a>
         </td>
     </tr>
 </table>
