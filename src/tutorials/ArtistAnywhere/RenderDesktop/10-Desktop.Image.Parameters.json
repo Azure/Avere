@@ -23,7 +23,7 @@
             "buildTimeoutMinutes": 120
           },
           {
-            "enabled": false,
+            "enabled": true,
             "templateName": "WindowsDesktop",
             "definitionName": "WindowsDesktop",
             "sourceType": "PlatformImage",

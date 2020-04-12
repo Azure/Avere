@@ -7,7 +7,7 @@
         "machineCountPerType": 1,
         "machineTypes": [
           {
-            "enabled": false,
+            "enabled": true,
             "namePrefix": "renderHostLNV",
             "machineSize": "Standard_NV6",
             "acceleratedNetworking": false,
@@ -22,7 +22,7 @@
               "sshPublicKeyData": ""
             },
             "gpuDriver": {
-              "publisher": "Microsoft.HpcCompute.Edp",
+              "publisher": "Microsoft.HpcCompute",
               "type": "NvidiaGpuDriverLinux",
               "typeVersion": "1.4"
              },
@@ -41,7 +41,7 @@
             }
           },
           {
-            "enabled": false,
+            "enabled": true,
             "namePrefix": "renderHostWNV",
             "machineSize": "Standard_NV6",
             "acceleratedNetworking": false,
