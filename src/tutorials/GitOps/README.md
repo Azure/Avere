@@ -1,14 +1,14 @@
 # Azure Media Studio GitOps
 
-![](./doc/Solution%20Architecture%2004-10.png)
+![](https://mediastudio.blob.core.windows.net/bin/(GitOps)-Solution-Architecture-(04-17-2020).png)
 
 ## GitHub App Pull Request Check Run (Terraform Init)
 
-![](./doc/GitHub%20App%20Pull%20Request%20Check%20Run%20(Terraform%20Init)%2004-10.png)
+![](https://mediastudio.blob.core.windows.net/bin/(GitOps)-GitHub-Pull-Request-Check-Run-Terraform-Init-(04-17-2020).png)
 
 ## GitHub App Pull Request Check Run (Terraform Plan)
 
-![](./doc/GitHub%20App%20Pull%20Request%20Check%20Run%20(Terraform%20Plan)%2004-10.png)
+![](https://mediastudio.blob.core.windows.net/bin/(GitOps)-GitHub-Pull-Request-Check-Run-Terraform-Plan-(04-17-2020).png)
 
 ### GitHub App Dev - https://developer.github.com/apps/
 

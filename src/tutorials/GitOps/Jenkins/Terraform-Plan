@@ -26,20 +26,28 @@ pipeline {
         [key: 'GITHUB_CHECK_RUN_REPOSITORY_URL', value: '$.repository.url'],
         [key: 'GITHUB_CHECK_RUN_REPOSITORY_HOST', value: '$.repository.url', regexpFilter: '(/repos)(.*)']
       ],
-      causeString: 'GitHub $x_github_event $GITHUB_EVENT_ACTION on app installation $GITHUB_APP_INSTALLATION_ID',
+      causeString: '$x_github_event $GITHUB_EVENT_ACTION on app installation $GITHUB_APP_INSTALLATION_ID',
       regexpFilterExpression: '(pull_request).(opened|reopened|synchronize)|(check_run).(rerequested)',
       regexpFilterText: '$x_github_event.$GITHUB_EVENT_ACTION'
     )
   }
   environment {
-    GITHUB_PULL_REQUEST_HASH = sh(script: "if [ $x_github_event = 'check_run' ]; then echo -n \"$GITHUB_CHECK_RUN_HASH\"; else echo -n \"$GITHUB_PULL_REQUEST_HASH\"; fi", returnStdout: true)
-    GITHUB_PULL_REQUEST_REPOSITORY_URL = sh(script: "if [ $x_github_event = 'check_run' ]; then echo -n \"$GITHUB_CHECK_RUN_REPOSITORY_URL\"; else echo -n \"$GITHUB_PULL_REQUEST_REPOSITORY_URL\"; fi", returnStdout: true)
-    GITHUB_PULL_REQUEST_REPOSITORY_HOST = sh(script: "if [ $x_github_event = 'check_run' ]; then echo -n \"$GITHUB_CHECK_RUN_REPOSITORY_HOST\"; else echo -n \"$GITHUB_PULL_REQUEST_REPOSITORY_HOST\"; fi", returnStdout: true)
+    GITHUB_PULL_REQUEST_HASH = "${env.x_github_event == 'check_run' ? "$GITHUB_CHECK_RUN_HASH" : "$GITHUB_PULL_REQUEST_HASH"}"
+    GITHUB_PULL_REQUEST_REPOSITORY_URL = "${env.x_github_event == 'check_run' ? "$GITHUB_CHECK_RUN_REPOSITORY_URL" : "$GITHUB_PULL_REQUEST_REPOSITORY_URL"}"
+    GITHUB_PULL_REQUEST_REPOSITORY_HOST = "${env.x_github_event == 'check_run' ? "$GITHUB_CHECK_RUN_REPOSITORY_HOST" : "$GITHUB_PULL_REQUEST_REPOSITORY_HOST"}"
   }
   stages {
     stage('GitHub Pull Request') {
+      when {
+        expression {
+          env.GITHUB_PULL_REQUEST_HASH.length() == 40
+        }
+      }
       steps {
-        sh '''#!/bin/bash -ex
+        script {
+          currentBuild.displayName = "$GITHUB_PULL_REQUEST_HASH"
+        }
+        sh script: '''#!/bin/bash -ex
           git clean -dff
           for changedFile in $(git diff --name-only $GIT_COMMIT $GITHUB_PULL_REQUEST_HASH)
           do
@@ -175,6 +183,13 @@ pipeline {
           archiveArtifacts artifacts: '**'
         }
       }
+    }
+  }
+  post {
+    always {
+      sh script: '''#!/bin/bash -ex
+        git clean -dff
+      '''
     }
   }
 }

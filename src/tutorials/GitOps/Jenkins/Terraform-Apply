@@ -1,0 +1,51 @@
+pipeline {
+  agent any
+  parameters {
+    string(name: 'BUILD_ARTIFACTS_PROJECT_NAME', defaultValue: 'Terraform-Plan')
+    booleanParam(name: 'TF_IN_AUTOMATION', defaultValue: true)
+  }
+  options {
+    disableConcurrentBuilds()
+  }
+  triggers {
+    GenericTrigger(
+      genericHeaderVariables: [
+        [key: 'x-github-event']
+      ],
+      genericVariables: [
+        [key: 'GITHUB_EVENT_ACTION', value: '$.action'],
+        [key: 'GITHUB_APP_INSTALLATION_ID', value: '$.installation.id'],
+        [key: 'GITHUB_PULL_REQUEST_HASH', value: '$.pull_request.head.sha'],
+        [key: 'GITHUB_PULL_REQUEST_NUMBER', value: '$.pull_request.number'],
+        [key: 'GITHUB_PULL_REQUEST_MERGED', value: '$.pull_request.merged']
+      ],
+      causeString: '$x_github_event $GITHUB_PULL_REQUEST_NUMBER $GITHUB_EVENT_ACTION (merged: $GITHUB_PULL_REQUEST_MERGED) on app installation $GITHUB_APP_INSTALLATION_ID',
+      regexpFilterExpression: '(pull_request).(closed).(true)',
+      regexpFilterText: '$x_github_event.$GITHUB_EVENT_ACTION.$GITHUB_PULL_REQUEST_MERGED'
+    )
+  }
+  stages {
+    stage('Build Artifacts Storage') {
+      when {
+        expression {
+          env.GITHUB_PULL_REQUEST_HASH != null && env.GITHUB_PULL_REQUEST_HASH.length() == 40
+        }
+      }
+      steps {
+        copyArtifacts projectName: "$BUILD_ARTIFACTS_PROJECT_NAME", selector: specific("$GITHUB_PULL_REQUEST_HASH")
+      }
+    }
+    stage('Terraform Apply') {
+      when {
+        expression {
+          fileExists('tfPlan.bin')
+        }
+      }
+      steps {
+        sh script: '''#!/bin/bash -xe
+          terraform apply -input=false tfPlan.bin
+        '''
+      }
+    }
+  }
+}
