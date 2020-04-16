@@ -6,9 +6,15 @@ pipeline {
     string(name: 'GITHUB_API_HEADER_ACCEPT_AUTH', defaultValue: 'application/vnd.github.machine-man-preview+json')
     string(name: 'GITHUB_API_HEADER_ACCEPT_CHECK', defaultValue: 'application/vnd.github.antiope-preview+json')
     string(name: 'TF_BACKEND_CONFIG_FILE', defaultValue: '/TerraformBackend.config')
+    string(name: 'TF_APPLY_PIPELINE_NAME', defaultValue: 'Terraform-Apply')
+    string(name: 'TF_PLAN_FILE_NAME', defaultValue: 'tfPlan.bin')
     booleanParam(name: 'TF_IN_AUTOMATION', defaultValue: true)
+    string(name: 'ARM_TENANT_ID', defaultValue: '72f988bf-86f1-41af-91ab-2d7cd011db47')
+    string(name: 'ARM_SUBSCRIPTION_ID', defaultValue: '3d07cfbc-17aa-41b4-baa1-488fef85a1d3')
+    booleanParam(name: 'ARM_USE_MSI', defaultValue: true)
   }
   options {
+    copyArtifactPermission params.TF_APPLY_PIPELINE_NAME
     disableConcurrentBuilds()
   }
   triggers {
@@ -19,37 +25,34 @@ pipeline {
       genericVariables: [
         [key: 'GITHUB_EVENT_ACTION', value: '$.action'],
         [key: 'GITHUB_APP_INSTALLATION_ID', value: '$.installation.id'],
-        [key: 'GITHUB_PULL_REQUEST_HASH', value: '$.pull_request.head.sha'],
-        [key: 'GITHUB_PULL_REQUEST_REPOSITORY_URL', value: '$.pull_request.head.repo.url'],
-        [key: 'GITHUB_PULL_REQUEST_REPOSITORY_HOST', value: '$.pull_request.head.repo.url', regexpFilter: '(/repos)(.*)'],
-        [key: 'GITHUB_CHECK_RUN_HASH', value: '$.check_run.head_sha'],
-        [key: 'GITHUB_CHECK_RUN_REPOSITORY_URL', value: '$.repository.url'],
-        [key: 'GITHUB_CHECK_RUN_REPOSITORY_HOST', value: '$.repository.url', regexpFilter: '(/repos)(.*)']
+        [key: 'GITHUB_PULL_REQUEST_NUMBER', value: '$.pull_request.number'],
+        [key: 'GITHUB_PULL_REQUEST_COMMIT_HASH', value: '$.pull_request.head.sha'],
+        [key: 'GITHUB_CHECK_RUN_NUMBER', value: '$.check_run.pull_requests[0].number'],
+        [key: 'GITHUB_CHECK_RUN_COMMIT_HASH', value: '$.check_run.head_sha'],
+        [key: 'GITHUB_REPOSITORY_URL', value: '$.repository.url'],
+        [key: 'GITHUB_REPOSITORY_NAME', value: '$.repository.full_name'],
+        [key: 'GITHUB_REPOSITORY_HOST', value: '$.repository.url', regexpFilter: '(/repos)(.*)']
       ],
-      causeString: '$x_github_event $GITHUB_EVENT_ACTION on app installation $GITHUB_APP_INSTALLATION_ID',
+      causeString: '$x_github_event $GITHUB_EVENT_ACTION in repository $GITHUB_REPOSITORY_NAME',
       regexpFilterExpression: '(pull_request).(opened|reopened|synchronize)|(check_run).(rerequested)',
       regexpFilterText: '$x_github_event.$GITHUB_EVENT_ACTION'
     )
   }
   environment {
-    GITHUB_PULL_REQUEST_HASH = "${env.x_github_event == 'check_run' ? "$GITHUB_CHECK_RUN_HASH" : "$GITHUB_PULL_REQUEST_HASH"}"
-    GITHUB_PULL_REQUEST_REPOSITORY_URL = "${env.x_github_event == 'check_run' ? "$GITHUB_CHECK_RUN_REPOSITORY_URL" : "$GITHUB_PULL_REQUEST_REPOSITORY_URL"}"
-    GITHUB_PULL_REQUEST_REPOSITORY_HOST = "${env.x_github_event == 'check_run' ? "$GITHUB_CHECK_RUN_REPOSITORY_HOST" : "$GITHUB_PULL_REQUEST_REPOSITORY_HOST"}"
+    GITHUB_PULL_REQUEST_NUMBER = "${env.x_github_event == 'check_run' ? "$GITHUB_CHECK_RUN_NUMBER" : "$GITHUB_PULL_REQUEST_NUMBER"}"
+    GITHUB_PULL_REQUEST_COMMIT_HASH = "${env.x_github_event == 'check_run' ? "$GITHUB_CHECK_RUN_COMMIT_HASH" : "$GITHUB_PULL_REQUEST_COMMIT_HASH"}"
   }
   stages {
     stage('GitHub Pull Request') {
       when {
         expression {
-          env.GITHUB_PULL_REQUEST_HASH.length() == 40
+          env.GITHUB_PULL_REQUEST_NUMBER.isInteger()
         }
       }
       steps {
-        script {
-          currentBuild.displayName = "$GITHUB_PULL_REQUEST_HASH"
-        }
         sh script: '''#!/bin/bash -ex
           git clean -dff
-          for changedFile in $(git diff --name-only $GIT_COMMIT $GITHUB_PULL_REQUEST_HASH)
+          for changedFile in $(git diff --name-only $GIT_COMMIT $GITHUB_PULL_REQUEST_COMMIT_HASH)
           do
             if [ ${changedFile: -3} = ".tf" ]
             then
@@ -73,7 +76,7 @@ pipeline {
       }
       steps {
         script {
-          def appInstallationAccessResponse = httpRequest url: "$GITHUB_PULL_REQUEST_REPOSITORY_HOST/installations/$GITHUB_APP_INSTALLATION_ID/access_tokens", httpMode: 'POST', customHeaders: [[name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT_AUTH"], [name: 'Authorization', value: "Bearer $GITHUB_APP_WEB_TOKEN"]]
+          def appInstallationAccessResponse = httpRequest url: "$GITHUB_REPOSITORY_HOST/installations/$GITHUB_APP_INSTALLATION_ID/access_tokens", httpMode: 'POST', customHeaders: [[name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT_AUTH"], [name: 'Authorization', value: "Bearer $GITHUB_APP_WEB_TOKEN"]]
           def appInstallationAccess = readJSON text: appInstallationAccessResponse.content
           writeFile file: 'appInstallationToken.txt', text: appInstallationAccess.token
         }
@@ -90,11 +93,10 @@ pipeline {
           def checkRunConclusion
           def checkRunOutputSummary
           def appInstallationToken = readFile file: 'appInstallationToken.txt'
-          def checkRunResponse = httpRequest url: "$GITHUB_PULL_REQUEST_REPOSITORY_URL/check-runs", httpMode: 'POST', customHeaders: [[name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT_CHECK"], [name: 'Authorization', value: "token $appInstallationToken"]], requestBody: "{\"name\":\"Terraform Init\", \"head_sha\":\"$GITHUB_PULL_REQUEST_HASH\", \"status\":\"in_progress\"}"
+          def checkRunResponse = httpRequest url: "$GITHUB_REPOSITORY_URL/check-runs", httpMode: 'POST', customHeaders: [[name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT_CHECK"], [name: 'Authorization', value: "token $appInstallationToken"]], requestBody: "{\"name\":\"Terraform Init\", \"head_sha\":\"$GITHUB_PULL_REQUEST_COMMIT_HASH\", \"status\":\"in_progress\"}"
           def checkRun = readJSON text: checkRunResponse.content
-          def checkRunId = checkRun.id
           try {
-            sh script: '''#!/bin/bash -ex
+            def exitCode = sh returnStatus: true, script: '''#!/bin/bash -ex
               tfStateFile="$(sed 's|/|-|g' tfFilePath.txt)state"
               cd $(cat tfFileDirectory.txt)
               echo 'terraform {' > backend.tf
@@ -109,7 +111,12 @@ pipeline {
               tfInit = tfInit.replaceAll('\n', '<br>')
               checkRunOutputSummary = tfInit
             }
-            checkRunConclusion = 'success'
+            if (exitCode != 0) {
+              checkRunConclusion = 'failure'
+              currentBuild.result = 'FAILURE'
+            } else {
+              checkRunConclusion = 'success'
+            }
           }
           catch (exception) {
             checkRunOutputSummary = exception
@@ -120,7 +127,7 @@ pipeline {
             def tfFilePath = readFile file: 'tfFilePath.txt'
             def checkRunName = 'Terraform Init'
             def checkRunOutputTitle = "$checkRunName ($tfFilePath)"
-            httpRequest url: "$GITHUB_PULL_REQUEST_REPOSITORY_URL/check-runs/$checkRunId", httpMode: 'PATCH', customHeaders: [[name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT_CHECK"], [name: 'Authorization', value: "token $appInstallationToken"]], requestBody: "{\"name\":\"$checkRunName\", \"conclusion\":\"$checkRunConclusion\", \"output\":{\"title\":\"$checkRunOutputTitle\", \"summary\":\"$checkRunOutputSummary\"}}"
+            httpRequest url: "$GITHUB_REPOSITORY_URL/check-runs/$checkRun.id", httpMode: 'PATCH', customHeaders: [[name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT_CHECK"], [name: 'Authorization', value: "token $appInstallationToken"]], requestBody: "{\"name\":\"$checkRunName\", \"conclusion\":\"$checkRunConclusion\", \"output\":{\"title\":\"$checkRunOutputTitle\", \"summary\":\"$checkRunOutputSummary\"}}"
           }
         }
       }
@@ -136,13 +143,12 @@ pipeline {
           def checkRunConclusion
           def checkRunOutputSummary
           def appInstallationToken = readFile file: 'appInstallationToken.txt'
-          def checkRunResponse = httpRequest url: "$GITHUB_PULL_REQUEST_REPOSITORY_URL/check-runs", httpMode: 'POST', customHeaders: [[name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT_CHECK"], [name: 'Authorization', value: "token $appInstallationToken"]], requestBody: "{\"name\":\"Terraform Init\", \"head_sha\":\"$GITHUB_PULL_REQUEST_HASH\", \"status\":\"in_progress\"}"
+          def checkRunResponse = httpRequest url: "$GITHUB_REPOSITORY_URL/check-runs", httpMode: 'POST', customHeaders: [[name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT_CHECK"], [name: 'Authorization', value: "token $appInstallationToken"]], requestBody: "{\"name\":\"Terraform Init\", \"head_sha\":\"$GITHUB_PULL_REQUEST_COMMIT_HASH\", \"status\":\"in_progress\"}"
           def checkRun = readJSON text: checkRunResponse.content
-          def checkRunId = checkRun.id
           try {
-            sh script: '''#!/bin/bash -ex
+            def exitCode = sh returnStatus: true, script: '''#!/bin/bash -ex
               cd $(cat tfFileDirectory.txt)
-              terraform plan -input=false -out=tfPlan.bin -no-color &> tfPlan.txt
+              terraform plan -input=false -out="$TF_PLAN_FILE_NAME" -no-color &> tfPlan.txt
             '''
             def tfFileDirectory = readFile file: 'tfFileDirectory.txt'
             dir(tfFileDirectory) {
@@ -151,7 +157,12 @@ pipeline {
               tfPlan = tfPlan.replaceAll('\n', '<br>')
               checkRunOutputSummary = tfPlan
             }
-            checkRunConclusion = 'success'
+            if (exitCode != 0) {
+              checkRunConclusion = 'failure'
+              currentBuild.result = 'FAILURE'
+            } else {
+              checkRunConclusion = 'success'
+            }
           }
           catch (exception) {
             checkRunOutputSummary = exception
@@ -162,19 +173,19 @@ pipeline {
             def tfFilePath = readFile file: 'tfFilePath.txt'
             def checkRunName = 'Terraform Plan'
             def checkRunOutputTitle = "$checkRunName ($tfFilePath)"
-            httpRequest url: "$GITHUB_PULL_REQUEST_REPOSITORY_URL/check-runs/$checkRunId", httpMode: 'PATCH', customHeaders: [[name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT_CHECK"], [name: 'Authorization', value: "token $appInstallationToken"]], requestBody: "{\"name\":\"$checkRunName\", \"conclusion\":\"$checkRunConclusion\", \"output\":{\"title\":\"$checkRunOutputTitle\", \"summary\":\"$checkRunOutputSummary\"}}"
+            httpRequest url: "$GITHUB_REPOSITORY_URL/check-runs/$checkRun.id", httpMode: 'PATCH', customHeaders: [[name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT_CHECK"], [name: 'Authorization', value: "token $appInstallationToken"]], requestBody: "{\"name\":\"$checkRunName\", \"conclusion\":\"$checkRunConclusion\", \"output\":{\"title\":\"$checkRunOutputTitle\", \"summary\":\"$checkRunOutputSummary\"}}"
           }
         }
       }
     }
-    stage('Build Artifacts Storage') {
+    stage('Build Artifacts') {
       when {
         expression {
           fileExists('tfFileDirectory.txt')
         }
         expression {
           dir(readFile('tfFileDirectory.txt')) {
-            fileExists('tfPlan.bin')
+            fileExists("$TF_PLAN_FILE_NAME")
           }
         }
       }
