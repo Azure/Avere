@@ -81,6 +81,10 @@ func (a Azure) CreateVfxt(avereVfxt *AvereVfxt) error {
 	}
 	avereVfxt.ManagementIP = mgmtIP
 
+	if err = avereVfxt.EnsureClusterStable(); err != nil {
+		return err
+	}
+
 	return nil
 }
 

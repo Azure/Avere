@@ -173,26 +173,34 @@ func (a *AvereVfxt) GetNode(node string) (*Node, error) {
 }
 
 func (a *AvereVfxt) GetVServerIPAddresses() ([]string, error) {
-	vserverClientIPHomeJson, err := a.AvereCommand(a.getVServerClientIPHomeJsonCommand())
-	if err != nil {
-		return nil, err
+	for retries := 0; ; retries++ {
+		vserverClientIPHomeJson, err := a.AvereCommand(a.getVServerClientIPHomeJsonCommand())
+		if err != nil {
+			return nil, err
+		}
+		vServerClientIPHome := make([]VServerClientIPHome, 0)
+		if err := json.Unmarshal([]byte(vserverClientIPHomeJson), &vServerClientIPHome); err != nil {
+			return nil, err
+		}
+		ipAddresses := make([]net.IP, 0, len(vServerClientIPHome))
+		for _, v := range vServerClientIPHome {
+			ipAddresses = append(ipAddresses, net.ParseIP(v.IPAddress))
+		}
+		sort.Slice(ipAddresses, func(i, j int) bool {
+			return bytes.Compare(ipAddresses[i], ipAddresses[j]) < 0
+		})
+		results := make([]string, 0, len(vServerClientIPHome))
+		for _, v := range ipAddresses {
+			results = append(results, v.String())
+		}
+		if len(results) > 0 {
+			return results, nil
+		}
+		if retries > VServerRetryCount {
+			return nil, fmt.Errorf("Failure to get VServer IP Addresses after %d retries", retries)
+		}
+		time.Sleep(VServerRetrySleepSeconds * time.Second)
 	}
-	vServerClientIPHome := make([]VServerClientIPHome, 0)
-	if err := json.Unmarshal([]byte(vserverClientIPHomeJson), &vServerClientIPHome); err != nil {
-		return nil, err
-	}
-	ipAddresses := make([]net.IP, 0, len(vServerClientIPHome))
-	for _, v := range vServerClientIPHome {
-		ipAddresses = append(ipAddresses, net.ParseIP(v.IPAddress))
-	}
-	sort.Slice(ipAddresses, func(i, j int) bool {
-		return bytes.Compare(ipAddresses[i], ipAddresses[j]) < 0
-	})
-	results := make([]string, 0, len(vServerClientIPHome))
-	for _, v := range ipAddresses {
-		results = append(results, v.String())
-	}
-	return results, nil
 }
 
 func (a *AvereVfxt) GetActivities() ([]Activity, error) {

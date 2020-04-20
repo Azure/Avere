@@ -35,6 +35,10 @@ const (
 	FilerClassOther              = "Other"
 	FilerClassAvereCloud         = "AvereCloud"
 
+	// VServer retry
+	VServerRetryCount        = 60
+	VServerRetrySleepSeconds = 10
+
 	// filer retry
 	FilerRetryCount        = 120
 	FilerRetrySleepSeconds = 10
