@@ -9,6 +9,7 @@ pipeline {
     string(name: 'GITHUB_API_HEADER_ACCEPT', defaultValue: 'application/vnd.github.v3+json')
     string(name: 'GITHUB_API_HEADER_ACCEPT_AUTH', defaultValue: 'application/vnd.github.machine-man-preview+json')
     string(name: 'GITHUB_API_HEADER_ACCEPT_CHECK', defaultValue: 'application/vnd.github.antiope-preview+json')
+    string(name: 'TF_ENVIRONMENT_VARIABLES_CONFIG_FILE', defaultValue: '/AzureEnvironment.Development.Variables.config')
     string(name: 'TF_PLAN_PIPELINE_NAME', defaultValue: 'Terraform Plan')
     string(name: 'TF_PLAN_OUTPUT_FILE', defaultValue: 'tfPlan.bin')
     booleanParam(name: 'TF_IN_AUTOMATION', defaultValue: true)
@@ -103,7 +104,11 @@ pipeline {
       steps {
         script {
           def exitCode = sh returnStatus: true, script: '''#!/bin/bash -xe
-            terraform apply -input=false -no-color "$TF_PLAN_OUTPUT_FILE" &> tfApply.txt
+            while IFS=$'\n\r' read environmentVariable
+            do
+              export "$environmentVariable"
+            done < "$WORKSPACE$TF_ENVIRONMENT_VARIABLES_CONFIG_FILE"
+            terraform apply -lock=true -input=false -no-color "$TF_PLAN_OUTPUT_FILE" &> tfApply.txt
           '''
           if (exitCode != 0) {
             sh script: '''#!/bin/bash -xe
@@ -119,6 +124,7 @@ pipeline {
             def pullRequestBranchHead = "$GITHUB_PULL_REQUEST_HEAD_BRANCH"
             def pullRequestBranchBase = 'master'
             httpRequest url: "$GITHUB_REPOSITORY_URL/pulls", httpMode: 'POST', contentType: 'APPLICATION_JSON', customHeaders: [[name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT"], [name: 'Authorization', value: "token $GITHUB_APP_AUTH_TOKEN"]], requestBody: "{\"title\":\"$pullRequestTitle\", \"body\":\"$pullRequestBody\", \"head\":\"$pullRequestBranchHead\", \"base\":\"$pullRequestBranchBase\"}"
+            error message: tfApply
           }
         }
       }

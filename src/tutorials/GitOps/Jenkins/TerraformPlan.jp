@@ -9,7 +9,8 @@ pipeline {
     string(name: 'GITHUB_API_HEADER_ACCEPT', defaultValue: 'application/vnd.github.v3+json')
     string(name: 'GITHUB_API_HEADER_ACCEPT_AUTH', defaultValue: 'application/vnd.github.machine-man-preview+json')
     string(name: 'GITHUB_API_HEADER_ACCEPT_CHECK', defaultValue: 'application/vnd.github.antiope-preview+json')
-    string(name: 'TF_BACKEND_CONFIG_FILE', defaultValue: '/TerraformBackend.config')
+    string(name: 'TF_ENVIRONMENT_BACKEND_CONFIG_FILE', defaultValue: '/AzureEnvironment.Development.Backend.config')
+    string(name: 'TF_ENVIRONMENT_VARIABLES_CONFIG_FILE', defaultValue: '/AzureEnvironment.Development.Variables.config')
     string(name: 'TF_PLAN_OUTPUT_FILE', defaultValue: 'tfPlan.bin')
     string(name: 'TF_APPLY_PIPELINE_NAME', defaultValue: 'Terraform Apply')
     booleanParam(name: 'TF_IN_AUTOMATION', defaultValue: true)
@@ -88,7 +89,7 @@ pipeline {
               def tfFileDirectory = tfFilePath.substring(0, tfFileDirectoryIndex)
               env.TF_FILE_DIRECTORY = tfFileDirectory
               env.TF_FILE_PATH = tfFilePath
-              env.TF_FILE_STATE = tfFilePath.replaceAll('/', '-') + 'state'
+              env.TF_STATE_FILE = tfFilePath.replaceAll('/', '-') + 'state'
               break
             }
           }
@@ -115,7 +116,7 @@ pipeline {
               echo 'terraform {' > backend.tf
               echo 'backend "azurerm" {}' >> backend.tf
               echo '}' >> backend.tf
-              terraform init -input=false -backend-config="$WORKSPACE$TF_BACKEND_CONFIG_FILE" -backend-config="key=$TF_FILE_STATE" -no-color &> tfInit.txt
+              terraform init -backend-config="$WORKSPACE$TF_ENVIRONMENT_BACKEND_CONFIG_FILE" -backend-config="key=$TF_STATE_FILE" -lock=true -input=false -no-color &> tfInit.txt
             '''
             dir(env.TF_FILE_DIRECTORY) {
               def tfInit = readFile file: 'tfInit.txt'
@@ -158,8 +159,12 @@ pipeline {
           def checkRun = readJSON text: checkRunCreate.content
           try {
             def exitCode = sh returnStatus: true, script: '''#!/bin/bash -ex
+              while IFS=$'\n\r' read environmentVariable
+              do
+                export "$environmentVariable"
+              done < "$WORKSPACE$TF_ENVIRONMENT_VARIABLES_CONFIG_FILE"
               cd "$TF_FILE_DIRECTORY"
-              terraform plan -input=false -out="$TF_PLAN_OUTPUT_FILE" -no-color &> tfPlan.txt
+              terraform plan -state="$TF_STATE_FILE" -out="$TF_PLAN_OUTPUT_FILE" -lock=true -input=false -no-color &> tfPlan.txt
             '''
             dir(env.TF_FILE_DIRECTORY) {
               def tfPlan = readFile file: 'tfPlan.txt'
