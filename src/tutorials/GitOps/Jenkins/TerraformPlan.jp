@@ -16,8 +16,8 @@ pipeline {
     booleanParam(name: 'TF_IN_AUTOMATION', defaultValue: true)
   }
   options {
-    copyArtifactPermission params.TF_APPLY_PIPELINE_NAME
     disableConcurrentBuilds()
+    copyArtifactPermission params.TF_APPLY_PIPELINE_NAME
   }
   triggers {
     GenericTrigger(
