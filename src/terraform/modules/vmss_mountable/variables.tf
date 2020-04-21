@@ -74,7 +74,7 @@ variable "bootstrap_script_path" {
 
 variable "overprovision" {
   description = "specifies to use overprovisioning, by default is false"
-  default = "false"
+  default = false
 }
 
 // depends on technique described here: https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2
@@ -82,4 +82,9 @@ variable "vmss_depends_on" {
   description = "used to establish dependency between objects"
   type = any
   default = null
+}
+
+variable "mount_all" {
+  description = "if true mount all Avere endpoints, otherwise round-robin mount"
+  default = false
 }

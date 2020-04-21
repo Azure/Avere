@@ -74,9 +74,9 @@ function mount_all() {
 function main() {
     echo "mount round robin default path"
     if [ -z $MOUNT_ALL ]; then
-        mount_all
-    else
         mount_round_robin
+    else
+        mount_all
     fi
 
     # add extra bootstrap and installation code here
