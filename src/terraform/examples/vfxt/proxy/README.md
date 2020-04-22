@@ -50,3 +50,18 @@ Once installed you will be able to login and use the vFXT cluster according to t
 Try to scale up and down the cluster, adjust the customer settings, add new junctions, etc, by editing the `main.tf`, and running `terraform apply -auto-approve`.
 
 When you are done using the cluster, you can destroy it by running `terraform destroy -auto-approve` or just delete the three resource groups created.
+
+## Safelist Urls
+
+This proxy environment can be used to discover safe urls.  Run your tools, using the proxy address `https://proxy_ip:3128`, and then run the following on the proxy after you are complete:
+
+```bash
+sudo awk '{print $3 " " $7}' /var/log/squid/access.log | sort | uniq
+```
+
+The following table shows the safe urls required for Avere vFXT and az cli:
+
+| Azure Service | Role | Safe Urls |
+| --- | --- | --- |
+| Azure Avere vFXTs | Render burst fast caching / performance caching | download.averesystems.com:443<BR>management.azure.com:443<BR>ACCOUNTNAME.blob.core.windows.net(if using blob storage for filer) |
+| az cli | command line tool to create and manage azure resources | management.azure.com:443 |
