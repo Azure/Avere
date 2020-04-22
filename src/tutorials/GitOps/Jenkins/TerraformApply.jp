@@ -48,30 +48,10 @@ pipeline {
         '''
       }
     }
-    stage('Build Artifacts') {
+    stage('GitHub App Auth Token') {
       when {
         not {
           environment name: 'GITHUB_PULL_REQUEST_NUMBER', value: null
-        }
-      }
-      steps {
-        script {
-          def pullRequestTitle = "$GITHUB_PULL_REQUEST_TITLE"
-          def buildNumberPrefix = ' Build '
-          def buildNumberIndexStart = pullRequestTitle.indexOf(buildNumberPrefix)
-          if (buildNumberIndexStart > 1) {
-            buildNumberIndexStart += buildNumberPrefix.length()
-            def buildNumberIndexEnd = pullRequestTitle.indexOf(')', buildNumberIndexStart)
-            def tfPlanBuildNumber = pullRequestTitle.substring(buildNumberIndexStart, buildNumberIndexEnd)
-            copyArtifacts projectName: "$TF_PLAN_PIPELINE_NAME", selector: specific(tfPlanBuildNumber)
-          }
-        }
-      }
-    }
-    stage('GitHub App Auth Token') {
-      when {
-        expression {
-          fileExists(params.TF_PLAN_OUTPUT_FILE)
         }
       }
       environment {
@@ -95,12 +75,32 @@ pipeline {
         }
       }
     }
-    stage('Terraform Apply') {
+    stage('Build Artifacts') {
       when {
         not {
           environment name: 'GITHUB_APP_AUTH_TOKEN', value: null
         }
       }
+      steps {
+        script {
+          def pullRequestTitle = "$GITHUB_PULL_REQUEST_TITLE"
+          def buildNumberPrefix = ' Build '
+          def buildNumberIndexStart = pullRequestTitle.indexOf(buildNumberPrefix)
+          if (buildNumberIndexStart > 1) {
+            buildNumberIndexStart += buildNumberPrefix.length()
+            def buildNumberIndexEnd = pullRequestTitle.indexOf(')', buildNumberIndexStart)
+            def tfPlanBuildNumber = pullRequestTitle.substring(buildNumberIndexStart, buildNumberIndexEnd)
+            copyArtifacts projectName: "$TF_PLAN_PIPELINE_NAME", selector: specific(tfPlanBuildNumber)
+          }
+        }
+      }
+    }
+    stage('Terraform Apply') {
+      when {
+        expression {
+          fileExists(params.TF_PLAN_OUTPUT_FILE)
+        }
+      }      
       steps {
         script {
           def exitCode = sh returnStatus: true, script: '''#!/bin/bash -xe
@@ -111,22 +111,29 @@ pipeline {
             terraform apply -lock=true -input=false -no-color "$TF_PLAN_OUTPUT_FILE" &> tfApply.txt
           '''
           if (exitCode != 0) {
-            sh script: '''#!/bin/bash -xe
-              git revert -m 1 "$GITHUB_PULL_REQUEST_MERGE_HASH"
-              git remote set-url origin "$GITHUB_REMOTE_ORIGIN_URL"
-              git push origin HEAD:"$GITHUB_PULL_REQUEST_HEAD_BRANCH"
-            '''
             def tfApply = readFile file: 'tfApply.txt'
             tfApply = tfApply.replaceAll('"', "'")
             tfApply = tfApply.replaceAll('\n', '<br>')
-            def pullRequestTitle = "Revert Pull Request $GITHUB_PULL_REQUEST_NUMBER"
-            def pullRequestBody = tfApply
-            def pullRequestBranchHead = "$GITHUB_PULL_REQUEST_HEAD_BRANCH"
-            def pullRequestBranchBase = 'master'
-            httpRequest url: "$GITHUB_REPOSITORY_URL/pulls", httpMode: 'POST', contentType: 'APPLICATION_JSON', customHeaders: [[name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT"], [name: 'Authorization', value: "token $GITHUB_APP_AUTH_TOKEN"]], requestBody: "{\"title\":\"$pullRequestTitle\", \"body\":\"$pullRequestBody\", \"head\":\"$pullRequestBranchHead\", \"base\":\"$pullRequestBranchBase\"}"
+            env.TF_APPLY_OUTPUT = tfApply
             error message: tfApply
           }
         }
+      }
+    }
+  }
+  post {
+    failure {
+      sh script: '''#!/bin/bash -xe
+        git revert -m 1 "$GITHUB_PULL_REQUEST_MERGE_HASH"
+        git remote set-url origin "$GITHUB_REMOTE_ORIGIN_URL"
+        git push origin HEAD:"$GITHUB_PULL_REQUEST_HEAD_BRANCH"
+      '''
+      script {
+        def pullRequestTitle = "Revert Pull Request $GITHUB_PULL_REQUEST_NUMBER"
+        def pullRequestBody = env.TF_APPLY_OUTPUT
+        def pullRequestBranchHead = "$GITHUB_PULL_REQUEST_HEAD_BRANCH"
+        def pullRequestBranchBase = 'master'
+        httpRequest url: "$GITHUB_REPOSITORY_URL/pulls", httpMode: 'POST', contentType: 'APPLICATION_JSON', customHeaders: [[name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT"], [name: 'Authorization', value: "token $GITHUB_APP_AUTH_TOKEN"]], requestBody: "{\"title\":\"$pullRequestTitle\", \"body\":\"$pullRequestBody\", \"head\":\"$pullRequestBranchHead\", \"base\":\"$pullRequestBranchBase\"}"
       }
     }
   }
