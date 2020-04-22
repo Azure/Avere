@@ -35,6 +35,10 @@ locals {
     proxy_uri = null
     // the proxy used by the running vfxt cluster
     cluster_proxy_uri = null
+
+    // vfxt and controller image ids, leave this null, unless not using default marketplace
+    controller_image_id = null
+    vfxt_image_id       = null
 }
 
 provider "azurerm" {
@@ -52,6 +56,7 @@ module "vfxtcontroller" {
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.controller_add_public_ip
+    image_id = local.controller_image_id
 
     // network details
     virtual_network_resource_group = local.virtual_network_resource_group
@@ -71,6 +76,7 @@ resource "avere_vfxt" "vfxt" {
 
     proxy_uri = local.proxy_uri
     cluster_proxy_uri = local.cluster_proxy_uri
+    image_id = local.vfxt_image_id
     
     location = local.location
     azure_resource_group = local.vfxt_resource_group_name

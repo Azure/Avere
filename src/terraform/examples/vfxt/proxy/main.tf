@@ -41,6 +41,10 @@ locals {
     //  "Full Caching"
     //  "Transitioning Clients Before or After a Migration"
     cache_policy = "Clients Bypassing the Cluster"
+
+    // vfxt and controller image ids, leave this null, unless not using default marketplace
+    controller_image_id = null
+    vfxt_image_id       = null
 }
 
 provider "azurerm" {
@@ -130,6 +134,7 @@ module "vfxtcontroller" {
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.controller_add_public_ip
+    image_id = local.controller_image_id
     
     // network details
     virtual_network_resource_group = local.network_resource_group_name
@@ -160,6 +165,7 @@ resource "avere_vfxt" "vfxt" {
     ntp_servers = ["169.254.169.254"]
     proxy_uri = "http://${module.proxy.address}:3128"
     cluster_proxy_uri = "http://${module.proxy.address}:3128"
+    image_id = local.vfxt_image_id
 
     azure_storage_filer {
         account_name = azurerm_storage_account.storage.name
