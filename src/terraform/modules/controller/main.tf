@@ -62,6 +62,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   computer_name  = var.unique_name
   custom_data = base64encode(local.cloud_init_file)
   size = var.vm_size
+  source_image_id = var.image_id
   
   identity {
     type = "SystemAssigned"
@@ -73,17 +74,23 @@ resource "azurerm_linux_virtual_machine" "vm" {
     storage_account_type = "Standard_LRS"
   }
 
-  source_image_reference {
-    publisher = "microsoft-avere"
-    offer     = "vfxt"
-    sku       = "avere-vfxt-controller"
-    version   = "latest"
+  dynamic "source_image_reference" {
+    for_each = var.image_id == null ? ["microsoft-avere"] : []
+    content {
+      publisher = "microsoft-avere"
+      offer     = "vfxt"
+      sku       = "avere-vfxt-controller"
+      version   = "latest"
+    }
   }
 
-  plan {
-    name = "avere-vfxt-controller"
-    publisher = "microsoft-avere"
-    product = "vfxt"
+  dynamic "plan" {
+    for_each = var.image_id == null ? ["microsoft-avere"] : []
+    content {
+      name = "avere-vfxt-controller"
+      publisher = "microsoft-avere"
+      product = "vfxt"
+    }
   }
 
   admin_username = var.admin_username

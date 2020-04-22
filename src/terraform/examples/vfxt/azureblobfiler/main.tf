@@ -24,6 +24,10 @@ locals {
     controller_add_public_ip = true
     vfxt_cluster_name = "vfxt"
     vfxt_cluster_password = "VFXT_PASSWORD"
+
+    // vfxt and controller image ids, leave this null, unless not using default marketplace
+    controller_image_id = null
+    vfxt_image_id       = null
 }
 
 provider "azurerm" {
@@ -71,6 +75,7 @@ module "vfxtcontroller" {
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.controller_add_public_ip
+    image_id = local.controller_image_id
 
     // network details
     virtual_network_resource_group = local.network_resource_group_name
@@ -97,6 +102,7 @@ resource "avere_vfxt" "vfxt" {
     vfxt_cluster_name = local.vfxt_cluster_name
     vfxt_admin_password = local.vfxt_cluster_password
     vfxt_node_count = 3
+    image_id = local.vfxt_image_id
     global_custom_settings = []
 
     azure_storage_filer {

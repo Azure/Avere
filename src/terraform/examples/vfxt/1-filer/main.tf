@@ -29,6 +29,10 @@ locals {
     //  "Full Caching"
     //  "Transitioning Clients Before or After a Migration"
     cache_policy = "Clients Bypassing the Cluster"
+
+    // vfxt and controller image ids, leave this null, unless not using default marketplace
+    controller_image_id = null
+    vfxt_image_id       = null
 }
 
 provider "azurerm" {
