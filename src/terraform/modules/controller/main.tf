@@ -106,15 +106,37 @@ resource "azurerm_linux_virtual_machine" "vm" {
 }
 
 resource "azurerm_role_assignment" "create_vfxt_cluster" {
-  scope              = data.azurerm_subscription.primary.id
-  role_definition_name = local.avere_create_cluster_role
-  principal_id       = azurerm_linux_virtual_machine.vm.identity[0].principal_id
+  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${var.resource_group_name}"
+  role_definition_name             = local.avere_create_cluster_role
+  principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
   skip_service_principal_aad_check = true
 }
 
 resource "azurerm_role_assignment" "user_access_admin" {
-  scope              = data.azurerm_subscription.primary.id
-  role_definition_name = local.user_access_administrator_role
-  principal_id       = azurerm_linux_virtual_machine.vm.identity[0].principal_id
+  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${var.resource_group_name}"
+  role_definition_name             = local.user_access_administrator_role
+  principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
+  skip_service_principal_aad_check = true
+}
+
+resource "azurerm_role_assignment" "create_vfxt_cluster_vnetrg" {
+  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${var.virtual_network_resource_group}"
+  role_definition_name             = local.avere_create_cluster_role
+  principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
+  skip_service_principal_aad_check = true
+}
+
+resource "azurerm_role_assignment" "user_access_admin_vnetrg" {
+  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${var.virtual_network_resource_group}"
+  role_definition_name             = local.user_access_administrator_role
+  principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
+  skip_service_principal_aad_check = true
+}
+
+resource "azurerm_role_assignment" "read_custom_imagerg" {
+  count                            = var.custom_image_resource_group == null ? 0 : 1
+  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${var.custom_image_resource_group}"
+  role_definition_name             = local.avere_create_cluster_role
+  principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
   skip_service_principal_aad_check = true
 }
