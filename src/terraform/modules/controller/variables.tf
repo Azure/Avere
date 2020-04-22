@@ -54,3 +54,8 @@ variable "image_id" {
   description = "specifies a custom image id if not use marketplace"
   default = null
 }
+
+variable "custom_image_resource_group" {
+  description = "specifies a custom image resource group"
+  default = null
+}
