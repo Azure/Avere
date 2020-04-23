@@ -19,6 +19,8 @@ type AvereVfxt struct {
 
 	SshAuthMethod ssh.AuthMethod
 
+	RunLocal bool
+
 	Platform IaasPlatform
 
 	AvereVfxtName      string

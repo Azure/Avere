@@ -44,6 +44,7 @@ func NewAvereVfxt(
 	controllerAddress string,
 	controllerUsername string,
 	sshAuthMethod ssh.AuthMethod,
+	runLocal bool,
 	platform IaasPlatform,
 	avereVfxtName string,
 	avereAdminPassword string,
@@ -59,6 +60,7 @@ func NewAvereVfxt(
 		ControllerAddress:  controllerAddress,
 		ControllerUsename:  controllerUsername,
 		SshAuthMethod:      sshAuthMethod,
+		RunLocal:           runLocal,
 		Platform:           platform,
 		AvereVfxtName:      avereVfxtName,
 		AvereAdminPassword: avereAdminPassword,
@@ -70,6 +72,14 @@ func NewAvereVfxt(
 		ManagementIP:       managementIP,
 		VServerIPAddresses: vServerIPAddresses,
 		NodeNames:          nodeNames,
+	}
+}
+
+func (a *AvereVfxt) RunCommand(cmd string) (bytes.Buffer, bytes.Buffer, error) {
+	if a.RunLocal {
+		return BashCommand(cmd)
+	} else {
+		return SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, cmd)
 	}
 }
 
@@ -757,13 +767,13 @@ func (a *AvereVfxt) DeleteJunction(junctionNameSpacePath string) error {
 func (a *AvereVfxt) AvereCommandWithCorrection(cmd string, correctiveAction func() error) (string, error) {
 	var result string
 	for retries := 0; ; retries++ {
-		stdoutBuf, stderrBuf, err := SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, cmd)
+		stdoutBuf, stderrBuf, err := a.RunCommand(cmd)
 		if err == nil {
 			// success
 			result = stdoutBuf.String()
 			break
 		}
-		log.Printf("[WARN] [%d/%d] SSH Command to %s failed with '%v' ", retries, AverecmdRetryCount, a.ControllerAddress, err)
+		log.Printf("[WARN] [%d/%d] command to %s failed with '%v' ", retries, AverecmdRetryCount, a.ControllerAddress, err)
 		if isAverecmdNotRetryable(stdoutBuf, stderrBuf) {
 			// failure not retryable
 			return "", fmt.Errorf("Non retryable error applying command: '%s' '%s'", stdoutBuf.String(), stderrBuf.String())

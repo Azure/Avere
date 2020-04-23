@@ -38,6 +38,11 @@ func resourceVfxt() *schema.Resource {
 				Optional:  true,
 				Sensitive: true,
 			},
+			run_local: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			location: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -446,6 +451,8 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	controllerAdminUsername := d.Get(controller_admin_username).(string)
 	controllerAdminPassword := d.Get(controller_admin_password).(string)
 
+	runLocal := d.Get(run_local).(bool)
+
 	var authMethod ssh.AuthMethod
 	if len(controllerAdminPassword) > 0 {
 		authMethod = GetPasswordAuthMethod(controllerAdminPassword)
@@ -478,6 +485,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		controllerAddress,
 		controllerAdminUsername,
 		authMethod,
+		runLocal,
 		iaasPlatform,
 		d.Get(vfxt_cluster_name).(string),
 		d.Get(vfxt_admin_password).(string),
