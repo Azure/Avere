@@ -314,7 +314,7 @@ func (a *AvereVfxt) SetNtpServers(ntpServers *[]string) error {
 	}
 
 	ntpServer1 := (*ntpServers)[0]
-	
+
 	ntpServer2 := ""
 	if len(*ntpServers) > 1 {
 		ntpServer2 = (*ntpServers)[1]
