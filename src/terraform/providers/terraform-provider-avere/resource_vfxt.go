@@ -272,10 +272,12 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	// this only needs to be done on create since the controller's ssh
-	// may take a while to become ready
-	if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod); err != nil {
-		return err
+	if avereVfxt.RunLocal == false {
+		// this only needs to be done on create since the controller's ssh
+		// may take a while to become ready
+		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod); err != nil {
+			return err
+		}
 	}
 
 	if err := avereVfxt.Platform.CreateVfxt(avereVfxt); err != nil {
