@@ -85,7 +85,7 @@ func resourceVfxt() *schema.Resource {
 				Optional: true,
 				MaxItems: 3,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
+					Type:         schema.TypeString,
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
 			},

@@ -113,4 +113,3 @@ func SSHCommand(host string, username string, authMethod ssh.AuthMethod, cmd str
 
 	return stdoutBuf, stderrBuf, nil
 }
-
