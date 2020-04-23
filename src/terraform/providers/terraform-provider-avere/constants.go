@@ -73,6 +73,7 @@ const (
 	controller_address           = "controller_address"
 	controller_admin_username    = "controller_admin_username"
 	controller_admin_password    = "controller_admin_password"
+	run_local                    = "run_local"
 	location                     = "location"
 	platform                     = "platform"
 	azure_resource_group         = "azure_resource_group"

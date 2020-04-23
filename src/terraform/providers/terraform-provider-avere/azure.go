@@ -69,7 +69,7 @@ func (a Azure) CreateVfxt(avereVfxt *AvereVfxt) error {
 		return fmt.Errorf("Error verifying az cli login: %v", err)
 	}
 	cmd := a.getCreateVfxtCommand(avereVfxt)
-	stdoutBuf, stderrBuf, err := SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, cmd)
+	stdoutBuf, stderrBuf, err := avereVfxt.RunCommand(cmd)
 	if err != nil {
 		allErrors := getAllVfxtErrors(stdoutBuf, stderrBuf)
 		return fmt.Errorf("Error creating vfxt: %v, from vfxt.py: '%s'", err, allErrors)
@@ -90,7 +90,7 @@ func (a Azure) CreateVfxt(avereVfxt *AvereVfxt) error {
 
 func (a Azure) AddIaasNodeToCluster(avereVfxt *AvereVfxt) error {
 	cmd := a.getAddNodeToVfxtCommand(avereVfxt)
-	if _, stderrBuf, err := SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, cmd); err != nil {
+	if _, stderrBuf, err := avereVfxt.RunCommand(cmd); err != nil {
 		return fmt.Errorf("Error adding node to vfxt: %v, from vfxt.py: '%s'", err, stderrBuf.String())
 	}
 
@@ -102,7 +102,7 @@ func (a Azure) DestroyVfxt(avereVfxt *AvereVfxt) error {
 		return nil
 	}
 	cmd := a.getDestroyVfxtCommand(avereVfxt)
-	stdoutBuf, stderrBuf, err := SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, cmd)
+	stdoutBuf, stderrBuf, err := avereVfxt.RunCommand(cmd)
 	if err != nil && !isVfxtNotFoundReported(stdoutBuf, stderrBuf) {
 		allErrors := getAllVfxtErrors(stdoutBuf, stderrBuf)
 		return fmt.Errorf("Error destroying vfxt: %v, from vfxt.py: '%s'", err, allErrors)
@@ -120,19 +120,19 @@ func (a Azure) DeleteVfxtIaasNode(avereVfxt *AvereVfxt, nodeName string) error {
 	}
 	// delete the node
 	deleteNodeCommand := a.getAzCliDeleteNodeCommand(avereVfxt, nodeName)
-	_, stderrBuf, err := SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, deleteNodeCommand)
+	_, stderrBuf, err := avereVfxt.RunCommand(deleteNodeCommand)
 	if err != nil {
 		return fmt.Errorf("Error deleting node: %v, %s", err, stderrBuf.String())
 	}
 	// delete the nic
 	deleteNicCommand := a.getAzCliDeleteNicCommand(avereVfxt, nodeName)
-	_, stderrBuf, err = SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, deleteNicCommand)
+	_, stderrBuf, err = avereVfxt.RunCommand(deleteNicCommand)
 	if err != nil {
 		return fmt.Errorf("Error deleting nic: %v, %s", err, stderrBuf.String())
 	}
 	// delete the disks
 	deleteDisksCommand := a.getAzCliDeleteDisksCommand(avereVfxt, nodeName)
-	_, stderrBuf, err = SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, deleteDisksCommand)
+	_, stderrBuf, err = avereVfxt.RunCommand(deleteDisksCommand)
 	if err != nil {
 		return fmt.Errorf("Error deleting disks: %v, %s", err, stderrBuf.String())
 	}
@@ -144,7 +144,7 @@ func CreateBucket(avereVfxt *AvereVfxt, storageAccountName string, bucket string
 		return fmt.Errorf("Error verifying login: %v", err)
 	}
 	createContainerCommand := getAzCliCreateStorageContainerCommand(avereVfxt, storageAccountName, bucket)
-	_, stderrBuf, err := SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, createContainerCommand)
+	_, stderrBuf, err := avereVfxt.RunCommand(createContainerCommand)
 	if err != nil {
 		return fmt.Errorf("Error create container '%s' in storage account '%s' if container exists: %v, %s", bucket, storageAccountName, err, stderrBuf.String())
 	}
@@ -156,7 +156,7 @@ func BucketExists(avereVfxt *AvereVfxt, storageAccountName string, bucket string
 		return false, fmt.Errorf("Error verifying login: %v", err)
 	}
 	containerExistsCommand := getAzCliContainerExistsCommand(avereVfxt, storageAccountName, bucket)
-	stdinBuf, stderrBuf, err := SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, containerExistsCommand)
+	stdinBuf, stderrBuf, err := avereVfxt.RunCommand(containerExistsCommand)
 	if err != nil {
 		return false, fmt.Errorf("Error checking if container '%s' in storage account '%s': %v, %s", bucket, storageAccountName, err, stderrBuf.String())
 	}
@@ -175,7 +175,7 @@ func BucketEmpty(avereVfxt *AvereVfxt, storageAccountName string, bucket string)
 		return false, fmt.Errorf("Error verifying login: %v", err)
 	}
 	containerExistsCommand := getAzCliListFirstBlobCommand(avereVfxt, storageAccountName, bucket)
-	stdinBuf, stderrBuf, err := SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, containerExistsCommand)
+	stdinBuf, stderrBuf, err := avereVfxt.RunCommand(containerExistsCommand)
 	if err != nil {
 		return false, fmt.Errorf("Error listing first blob of container '%s' in storage account '%s': %v, %s", bucket, storageAccountName, err, stderrBuf.String())
 	}
@@ -192,7 +192,7 @@ func GetKey(avereVfxt *AvereVfxt, storageAccountName string) (string, error) {
 		return "", fmt.Errorf("Error verifying login: %v", err)
 	}
 	getStorageKeyCommand := getAzCliGetStorageKeyCommand(avereVfxt, storageAccountName)
-	stdinBuf, stderrBuf, err := SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, getStorageKeyCommand)
+	stdinBuf, stderrBuf, err := avereVfxt.RunCommand(getStorageKeyCommand)
 	if err != nil {
 		return "", fmt.Errorf("Error getting the storage account key for account '%s': %s %s", storageAccountName, err, stderrBuf.String())
 	}
@@ -209,7 +209,7 @@ func GetSubscriptionId(avereVfxt *AvereVfxt) (string, error) {
 		return "", fmt.Errorf("Error verifying login: %v", err)
 	}
 	getSubscriptionIdCommand := getAzCliGetSubscriptionIdCommand(avereVfxt)
-	stdinBuf, stderrBuf, err := SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, getSubscriptionIdCommand)
+	stdinBuf, stderrBuf, err := avereVfxt.RunCommand(getSubscriptionIdCommand)
 	if err != nil {
 		return "", fmt.Errorf("Error getting the subscription id: %s %s", err, stderrBuf.String())
 	}
@@ -228,7 +228,7 @@ func VerifyAzLogin(avereVfxt *AvereVfxt) error {
 	var err error
 	err = nil
 	for retries := 0; retries < AzLoginRetryCount; retries++ {
-		if _, _, err = SSHCommand(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, verifyLoginCommand); err == nil {
+		if _, _, err = avereVfxt.RunCommand(verifyLoginCommand); err == nil {
 			// success
 			break
 		} else {
