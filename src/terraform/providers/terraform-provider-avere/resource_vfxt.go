@@ -456,12 +456,14 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	runLocal := d.Get(run_local).(bool)
 
 	var authMethod ssh.AuthMethod
-	if len(controllerAdminPassword) > 0 {
-		authMethod = GetPasswordAuthMethod(controllerAdminPassword)
-	} else {
-		authMethod, err = GetKeyFileAuthMethod()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get key file: %s", err)
+	if runLocal == false {
+		if len(controllerAdminPassword) > 0 {
+			authMethod = GetPasswordAuthMethod(controllerAdminPassword)
+		} else {
+			authMethod, err = GetKeyFileAuthMethod()
+			if err != nil {
+				return nil, fmt.Errorf("failed to get key file: %s", err)
+			}
 		}
 	}
 
