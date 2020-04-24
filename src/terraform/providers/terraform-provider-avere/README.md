@@ -96,7 +96,7 @@ The following arguments are supported:
 * <a name="ntp_servers"></a>[ntp_servers](#ntp_servers) - (Optional) specify up to 3 NTP servers for the Avere to use, otherwise Avere defaults to time.windows.com.
 * <a name="proxy_uri"></a>[proxy_uri](#proxy_uri) - specify the proxy used by `vfxt.py` for the cluster deployment.  The format is usually `https://PROXY_ADDRESS:3128`.  A working example that uses the proxy is described in the [Avere vFXT in a Proxy Environment Example](../../examples/vfxt/proxy).
 * <a name="cluster_proxy_uri"></a>[cluster_proxy_uri](#cluster_proxy_uri) - (Optional) specify the proxy used be used by the Avere vFXT cluster.  The format is usually `https://PROXY_ADDRESS:3128`.  A working example that uses the proxy is described in the [Avere vFXT in a Proxy Environment Example](../../examples/vfxt/proxy).
-* <a name="image_id"></a>[image_id](#image_id) - (Optional) specify a custom image id for the vFXT.  This is useful when needing to use a bug fix or there is a marketplace outage.  For more information see the [docs on how to create a custom image for the conroller and vfxt](../../examples/vfxt/vfxt#create-vfxt-controller-from-custom-images).
+* <a name="image_id"></a>[image_id](#image_id) - (Optional) specify a custom image id for the vFXT.  This is useful when needing to use a bug fix or there is a marketplace outage.  For more information see the [docs on how to create a custom image for the conroller and vfxt](../../examples/vfxt#create-vfxt-controller-from-custom-images).
 * <a name="vfxt_cluster_name"></a>[vfxt_cluster_name](#vfxt_cluster_name) - (Required) this is the name of the vFXT cluster that is shown when you browse to the management ip.  To help Avere support, choose a name that matches the Avere's purpose.
 * <a name="vfxt_admin_password"></a>[vfxt_admin_password](#vfxt_admin_password) - (Required) the password for the vFXT cluster.
 * <a name="vfxt_node_count"></a>[vfxt_node_count](#vfxt_node_count) - (Required) the number of nodes to deploy for the Avere cluster.  The count may be a minimum of 3 and a maximum of 16.  If the cluster is already deployed, this will result in scaling up or down to the node count.  It requires about 15 minutes to delete and add each node in a scale-up or scale-down scenario.  
@@ -140,8 +140,8 @@ A <a name="junction"></a>`junction` block supports the following:
 
 In addition to all arguments above, the following attributes are exported:
 * <a name="vfxt_management_ip"></a>[vfxt_management_ip](#vfxt_management_ip) - this is the Avere vFXT management ip address.
-* <a name="vserver_ip_addresses"></a>[name](#vserver_ip_addresses) - these are the list of vserver ip addresses.  Clients will mount to these addresses.
-* <a name="name"></a>[name](#name)node_names - these are the node names of the cluster.
+* <a name="vserver_ip_addresses"></a>[vserver_ip_addresses](#vserver_ip_addresses) - these are the list of vserver ip addresses.  Clients will mount to these addresses.
+* <a name="node_names"></a>[node_names](#node_names) - these are the node names of the cluster.
 
 # Build the Terraform Provider binary
 
