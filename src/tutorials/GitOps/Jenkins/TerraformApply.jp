@@ -150,8 +150,7 @@ pipeline {
       '''
       script {
         def pullRequestTitle = "Revert Pull Request $GITHUB_PULL_REQUEST_NUMBER"
-        def pullRequestBody = env.TF_APPLY_OUTPUT
-        httpRequest url: "$GITHUB_REPOSITORY_URL/pulls", httpMode: 'POST', contentType: 'APPLICATION_JSON', customHeaders: [[name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT"], [name: 'Authorization', value: "token $GITHUB_APP_AUTH_TOKEN"]], requestBody: "{\"title\":\"$pullRequestTitle\", \"base\":\"$GITHUB_PULL_REQUEST_REFERENCE_BASE\", \"head\":\"$GITHUB_PULL_REQUEST_REFERENCE_HEAD\", \"body\":\"$pullRequestBody\"}"
+        httpRequest url: "$GITHUB_REPOSITORY_URL/pulls", httpMode: 'POST', contentType: 'APPLICATION_JSON', customHeaders: [[name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT"], [name: 'Authorization', value: "token $GITHUB_APP_AUTH_TOKEN"]], requestBody: "{\"title\":\"$pullRequestTitle\", \"base\":\"$GITHUB_PULL_REQUEST_REFERENCE_BASE\", \"head\":\"$GITHUB_PULL_REQUEST_REFERENCE_HEAD\"}"
       }
     }
   }
