@@ -97,10 +97,10 @@ const (
 	junction                     = "junction"
 	namespace_path               = "namespace_path"
 	core_filer_export            = "core_filer_export"
-	vfxt_management_ip           = "vfxt_management_ip"
-	vserver_ip_addresses         = "vserver_ip_addresses"
-	node_names                   = "node_names"
 	azure_storage_filer          = "azure_storage_filer"
 	account_name                 = "account_name"
 	container_name               = "container_name"
+	vfxt_management_ip           = "vfxt_management_ip"
+	vserver_ip_addresses         = "vserver_ip_addresses"
+	node_names                   = "node_names"
 )

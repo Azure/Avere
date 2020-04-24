@@ -24,12 +24,12 @@ func resourceVfxt() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			controller_address: {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: validation.StringIsNotWhiteSpace,
 			},
 			controller_admin_username: {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: validation.StringIsNotWhiteSpace,
 			},
 			controller_admin_password: {
@@ -448,15 +448,26 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 
 func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	var err error
-
-	controllerAddress := d.Get(controller_address).(string)
-	controllerAdminUsername := d.Get(controller_admin_username).(string)
-	controllerAdminPassword := d.Get(controller_admin_password).(string)
-
+	var controllerAddress, controllerAdminUsername, controllerAdminPassword string
+	
 	runLocal := d.Get(run_local).(bool)
 
 	var authMethod ssh.AuthMethod
 	if runLocal == false {
+		if v, exists := d.GetOk(controller_address) ; exists {
+			controllerAddress = v.(string)
+		} else {
+			return nil, fmt.Errorf("missing argument '%s'", controller_address)
+		}
+		if v, exists := d.GetOk(controller_admin_username) ; exists {
+			controllerAdminUsername = v.(string)
+		} else {
+			return nil, fmt.Errorf("missing argument '%s'", controller_admin_username)
+		}
+		if v, exists := d.GetOk(controller_admin_password) ; exists {
+			controllerAdminPassword = v.(string)
+		}
+
 		if len(controllerAdminPassword) > 0 {
 			authMethod = GetPasswordAuthMethod(controllerAdminPassword)
 		} else {
