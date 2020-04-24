@@ -120,9 +120,7 @@ resource "avere_vfxt" "vfxt" {
         account_name = azurerm_storage_account.storage.name
         container_name = local.avere_storage_container_name
         custom_settings = []
-        junction {
-            namespace_path = local.nfs_export_path
-        }
+        junction_namespace_path = local.nfs_export_path
     }
 } 
 
