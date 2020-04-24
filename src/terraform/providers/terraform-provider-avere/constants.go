@@ -103,4 +103,5 @@ const (
 	vfxt_management_ip           = "vfxt_management_ip"
 	vserver_ip_addresses         = "vserver_ip_addresses"
 	node_names                   = "node_names"
+	junction_namespace_path      = "junction_namespace_path"
 )

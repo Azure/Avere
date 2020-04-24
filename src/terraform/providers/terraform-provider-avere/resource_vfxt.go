@@ -221,19 +221,10 @@ func resourceVfxt() *schema.Resource {
 							},
 							Set: schema.HashString,
 						},
-						junction: {
-							Type:     schema.TypeSet,
-							MaxItems: 1,
+						junction_namespace_path: {
+							Type:         schema.TypeString,
 							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									namespace_path: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringIsNotWhiteSpace,
-									},
-								},
-							},
+							ValidateFunc: validation.StringIsNotWhiteSpace,
 						},
 					},
 				},
@@ -851,21 +842,19 @@ func expandAzureStorageFilerJunctions(l []interface{}, results map[string]*Junct
 		storageName := input[account_name].(string)
 		containerName := input[container_name].(string)
 		cloudFilerName := GetCloudFilerName(storageName, containerName)
-		junctions := input[junction].(*schema.Set).List()
-		for _, jv := range junctions {
-			junctionRaw := jv.(map[string]interface{})
-			junction := &Junction{
-				NameSpacePath:    junctionRaw[namespace_path].(string),
-				CoreFilerName:    cloudFilerName,
-				CoreFilerExport:  CloudFilerExport,
-				SharePermissions: PermissionsModebits,
-			}
-			// verify no duplicates
-			if _, ok := results[junction.NameSpacePath]; ok {
-				return fmt.Errorf("Error: two or more junctions share the same namespace_path '%s'", junction.NameSpacePath)
-			}
-			results[junction.NameSpacePath] = junction
+		namespacePath := input[junction_namespace_path].(string)
+
+		junction := &Junction{
+			NameSpacePath:    namespacePath,
+			CoreFilerName:    cloudFilerName,
+			CoreFilerExport:  CloudFilerExport,
+			SharePermissions: PermissionsModebits,
 		}
+		// verify no duplicates
+		if _, ok := results[junction.NameSpacePath]; ok {
+			return fmt.Errorf("Error: two or more junctions share the same namespace_path '%s'", junction.NameSpacePath)
+		}
+		results[junction.NameSpacePath] = junction
 	}
 	return nil
 }
@@ -915,14 +904,8 @@ func resourceAvereVfxtAzureStorageCoreFilerReferenceHash(v interface{}) int {
 		if v, ok := m[custom_settings]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(*schema.Set).List()))
 		}
-		if v, ok := m[junction].(*schema.Set); ok {
-			for _, j := range v.List() {
-				if m, ok := j.(map[string]interface{}); ok {
-					if v2, ok := m[namespace_path]; ok {
-						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
-					}
-				}
-			}
+		if v, ok := m[junction_namespace_path]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
 	}
 	return hashcode.String(buf.String())
