@@ -14,7 +14,11 @@ Here are the requirements for a locked down network security group:
   ![Network Security group outbound rules showing opening up TCP port `443` to 'AzureConnectors' and 'AzureCloud'](../../docs/images/outboundrules.png)
 
 If you have a proxy, see the proxy section below.
- 
+
+## Required Ports on an NSG
+
+The following are the required ports to be open for the Avere vFXT: https://azure.github.io/Avere/legacy/ops_guide/4_7/html/required_ports.html.
+
 ## Scenario: Bring your own DNS Server
 
 Here are the requirements for a "Bring your own DNS Server" scenario:
