@@ -12,7 +12,7 @@ To run the example, execute the [1-filer example](../1-filer), but comment out t
 ```bash
 cd
 mkdir -p ~/.terraform.d/plugins
-wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.6.1/terraform-provider-avere
+wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.7.3/terraform-provider-avere
 sudo apt-get install unzip
 wget https://releases.hashicorp.com/terraform/0.12.24/terraform_0.12.24_linux_amd64.zip
 unzip terraform_0.12.24_linux_amd64.zip
