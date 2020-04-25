@@ -406,12 +406,12 @@ jobs:
       PIPELINES_DATA_STORAGE_ACCOUNT_KEY: $(PIPELINES-DATA-STORAGE-ACCOUNT-KEY)
       PIPELINES_DATA_TABLE_NAME: $(PIPELINES-DATA-TABLE-NAME)
 
-  - task: PublishPipelineArtifact@0
-    displayName: 'PUBLISH: Deployment artifacts, log files'
-    inputs:
-      artifactName: 'testArtifacts'
-      targetPath: 'test_artifacts'
-    condition: always()
+  # - task: PublishPipelineArtifact@0
+  #   displayName: 'PUBLISH: Deployment artifacts, log files'
+  #   inputs:
+  #     artifactName: 'testArtifacts'
+  #     targetPath: 'test_artifacts'
+  #   condition: always()
 
   - script: |
       az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
