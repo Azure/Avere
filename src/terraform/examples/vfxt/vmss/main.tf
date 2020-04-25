@@ -38,9 +38,11 @@ locals {
     //  "Transitioning Clients Before or After a Migration"
     cache_policy = "Clients Bypassing the Cluster"
 
-    // vfxt and controller image ids, leave this null, unless not using default marketplace
+    // advance scenario: advance scenario: vfxt and controller image ids, leave this null, unless not using default marketplace
     controller_image_id = null
     vfxt_image_id       = null
+    // advance scenario: advance scenario: put the custom image resource group here
+    alternative_resource_groups = []
 }
 
 provider "azurerm" {
@@ -87,6 +89,7 @@ module "vfxtcontroller" {
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.controller_add_public_ip
     image_id = local.controller_image_id
+    alternative_resource_groups = local.alternative_resource_groups
 
     // network details
     virtual_network_resource_group = local.network_resource_group_name
