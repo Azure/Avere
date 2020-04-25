@@ -12,8 +12,8 @@ The examples in this folder build various configurations of the Avere vFXT with 
 8. [Avere vFXT and VMSS example](vmss/)
 9. [Avere vFXT and Cloud Workstations](cloudworkstation/)
 10. [Avere vFXT only](vfxt-only/) - this example is useful for when the cloud environment is already configured.
-11. [Avere vFXT in a Proxy Environment](examples/vfxt/proxy) - this example shows how to deploy the Avere in a locked down internet environment, with a proxy.
-
+11. [Avere vFXT in a Proxy Environment](proxy/) - this example shows how to deploy the Avere in a locked down internet environment, with a proxy.
+12. [Deploy Avere vFXT directly from the controller](run-local/) - this example shows how to deploy the Avere directly from the controller.
 
 # Create vFXT Controller from Custom Images
 
