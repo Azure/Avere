@@ -133,9 +133,9 @@ resource "azurerm_role_assignment" "user_access_admin_vnetrg" {
   skip_service_principal_aad_check = true
 }
 
-resource "azurerm_role_assignment" "read_custom_imagerg" {
-  count                            = var.custom_image_resource_group == null ? 0 : 1
-  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${var.custom_image_resource_group}"
+resource "azurerm_role_assignment" "alternative" {
+  count                            = length(var.alternative_resource_groups)
+  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${var.alternative_resource_groups[count.index]}"
   role_definition_name             = local.avere_create_cluster_role
   principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
   skip_service_principal_aad_check = true

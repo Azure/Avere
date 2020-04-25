@@ -20,9 +20,11 @@ locals {
     vfxt_cluster_name = "vfxt"
     vfxt_cluster_password = "VFXT_PASSWORD"
 
-    // vfxt and controller image ids, leave this null, unless not using default marketplace
+    // advance scenario: vfxt and controller image ids, leave this null, unless not using default marketplace
     controller_image_id = null
     vfxt_image_id       = null
+    // advance scenario: put the custom image resource group here
+    alternative_resource_groups = []
 }
 
 provider "azurerm" {
@@ -74,6 +76,7 @@ resource "avere_vfxt" "vfxt" {
     vfxt_admin_password = local.vfxt_cluster_password
     vfxt_node_count = 3
     image_id = local.vfxt_image_id
+    alternative_resource_groups = local.alternative_resource_groups
 } 
 
 output "controller_username" {

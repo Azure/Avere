@@ -31,9 +31,11 @@ locals {
     //  "Transitioning Clients Before or After a Migration"
     cache_policy = "Read and Write Caching" // "Read and Write Caching" is more performant than "Full Caching"
 
-    // vfxt and controller image ids, leave this null, unless not using default marketplace
+    // advance scenario: vfxt and controller image ids, leave this null, unless not using default marketplace
     controller_image_id = null
     vfxt_image_id       = null
+    // advance scenario: put the custom image resource group here
+    alternative_resource_groups = []
 
     # download the latest vdbench from https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html
     # and upload to an azure storage blob and put the URL below
@@ -91,6 +93,7 @@ module "vfxtcontroller" {
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.controller_add_public_ip
     image_id = local.controller_image_id
+    alternative_resource_groups = local.alternative_resource_groups
 
     // network details
     virtual_network_resource_group = local.network_resource_group_name

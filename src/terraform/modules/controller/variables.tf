@@ -55,7 +55,7 @@ variable "image_id" {
   default = null
 }
 
-variable "custom_image_resource_group" {
-  description = "specifies a custom image resource group"
-  default = null
+variable "alternative_resource_groups" {
+  description = "specifies alternative resource groups including those containing custom images or storage accounts"
+  default = []
 }
