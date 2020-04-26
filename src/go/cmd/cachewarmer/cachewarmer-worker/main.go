@@ -25,9 +25,8 @@ func usage(errs ...error) {
 	flag.PrintDefaults()
 }
 
-func initializeApplicationVariables() (*cachewarmer.Worker, bool) {
+func initializeApplicationVariables() *cachewarmer.Worker {
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
-	var runAsService = flag.Bool("runAsService", false, "enable running as service")
 	var jobMountAddress = flag.String("jobMountAddress", "", "the mount address for warm job processing")
 	var jobExportPath = flag.String("jobExportPath", "", "the export path for warm job processing")
 	var jobBasePath = flag.String("jobBasePath", "", "the warm job processing path")
@@ -62,7 +61,7 @@ func initializeApplicationVariables() (*cachewarmer.Worker, bool) {
 		os.Exit(1)
 	}
 
-	return cachewarmer.InitializeWorker(jobWorkerPath), *runAsService
+	return cachewarmer.InitializeWorker(jobWorkerPath)
 }
 
 func main() {
@@ -70,7 +69,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// initialize the variables
-	warmPathManager, runAsService := initializeApplicationVariables()
+	warmPathManager := initializeApplicationVariables()
 
 	// initialize the sync wait group
 	syncWaitGroup := sync.WaitGroup{}
@@ -82,12 +81,10 @@ func main() {
 	log.Info.Printf("wait for ctrl-c")
 	// wait on ctrl-c
 	sigchan := make(chan os.Signal, 10)
-	if runAsService {
-		// catch all signals since this is to run as daemon
-		signal.Notify(sigchan)
-	} else {
-		signal.Notify(sigchan, os.Interrupt)
-	}
+	// catch all signals will cause cancellation when mounted, we need to
+	// filter out better
+	// signal.Notify(sigchan)
+	signal.Notify(sigchan, os.Interrupt)
 	<-sigchan
 	log.Info.Printf("Received ctrl-c, stopping services...")
 	cancel()
