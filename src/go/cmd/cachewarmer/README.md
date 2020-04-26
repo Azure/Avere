@@ -62,17 +62,17 @@ These deployment instructions describe the installation of all components requir
 
 2. On the controller, setup all CacheWarmer binaries (using instructions to build above), bootstrap scripts, and service configuration files:
     ```bash
-    # login as root
+    # copy in the built binaries
+    sudo mkdir -p /nfs/node0/bootstrap/cachewarmerbin
+    sudo cp $GOPATH/bin/cachewarmer-* /nfs/node0/bootstrap/cachewarmerbin
+
+    # login as root for the rest of the install
     sudo -s
     # download the bootstrap files
     mkdir -p /nfs/node0/bootstrap
     cd /nfs/node0/bootstrap
     curl --retry 5 --retry-delay 5 -o bootstrap.cachewarmer-manager.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/bootstrap.cachewarmer-manager.sh
     curl --retry 5 --retry-delay 5 -o bootstrap.cachewarmer-worker.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/bootstrap.cachewarmer-worker.sh
-
-    # copy in the built binaries
-    mkdir -p /nfs/node0/bootstrap/cachewarmerbin
-    cp $GOPATH/bin/cachewarmer-* /nfs/node0/bootstrap/cachewarmerbin
 
     # download the rsyslog scripts
     mkdir /nfs/node0/bootstrap/rsyslog
@@ -101,7 +101,7 @@ export JOB_BASE_PATH=/
 ```
 2. Run the following script:
 ```bash
-/nfs/node0/bootstrap/bootstrap.cachewarmer-manager.sh
+bash /nfs/node0/bootstrap/bootstrap.cachewarmer-manager.sh
 ```
 
 ### Install the cachewarmer worker on the Controller or Jumpbox
@@ -118,7 +118,7 @@ export JOB_BASE_PATH=/
 ```
 2. Run the following script:
 ```bash
-/nfs/node0/bootstrap/bootstrap.cachewarmer-worker.sh
+bash /nfs/node0/bootstrap/bootstrap.cachewarmer-worker.sh
 ```
 
 ## Running the CacheWarmer
