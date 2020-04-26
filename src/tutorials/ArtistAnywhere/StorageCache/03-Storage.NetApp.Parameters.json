@@ -20,6 +20,22 @@
     "storageVolumes": {
       "value": [
         {
+          "name": "Frames",
+          "pool": "Storage",
+          "size": 1024,
+          "exportPolicyRules": [
+            {
+              "ruleIndex": 1,
+              "cifs": false,
+              "nfsv3": true,
+              "nfsv41": false,
+              "unixReadOnly": false,
+              "unixReadWrite": true,
+              "allowedClients": "0.0.0.0/0"
+            }
+          ]
+        },
+        {
           "name": "Scenes",
           "pool": "Storage",
           "size": 2048,
@@ -36,9 +52,9 @@
           ]
         },
         {
-          "name": "Frames",
+          "name": "Tools",
           "pool": "Storage",
-          "size": 2048,
+          "size": 1024,
           "exportPolicyRules": [
             {
               "ruleIndex": 1,
@@ -56,6 +72,19 @@
     "storageTargets": {
       "value": [
         {
+          "name": "Frames",
+          "type": "nfs3",
+          "junctions": [
+            {
+              "namespacePath": "/storage/netApp/frames",
+              "nfsExport": "/frames",
+              "targetPath": ""
+            }
+          ],
+          "mountOptions": "nfs vers=3,hard,proto=tcp,mountproto=tcp,retry=30 0 0",
+          "usageModel": "WRITE_AROUND"
+        },
+        {
           "name": "Scenes",
           "type": "nfs3",
           "junctions": [
@@ -69,12 +98,12 @@
           "usageModel": "WRITE_AROUND"
         },
         {
-          "name": "Frames",
+          "name": "Tools",
           "type": "nfs3",
           "junctions": [
             {
-              "namespacePath": "/storage/netApp/frames",
-              "nfsExport": "/frames",
+              "namespacePath": "/storage/netApp/tools",
+              "nfsExport": "/tools",
               "targetPath": ""
             }
           ],

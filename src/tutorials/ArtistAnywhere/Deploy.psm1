@@ -34,7 +34,7 @@ function New-NetworkPeering ([string[]] $computeRegionNames, [object[]] $compute
 	return $networkPeering
 }
 
-function New-SharedServices ($networkOnly, $computeNetworks) {
+function New-SharedServices ($networkOnly, $computeRegionNames, $computeNetworks) {
 	if (!$networkOnly) {
 		# * - Image Gallery Job
 		$moduleName = "* - Image Gallery Job"
@@ -48,13 +48,14 @@ function New-SharedServices ($networkOnly, $computeNetworks) {
 		$moduleName = "00 - Network"
 		New-TraceMessage $moduleName $false
 		for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
-			New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
+			$computeRegionName = $computeRegionNames[$computeRegionIndex]
+			New-TraceMessage $moduleName $false $computeRegionName
 			$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Network"
-			$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
+			$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionName
 			if (!$resourceGroup) { return }
 
 			$templateResources = "$templateDirectory\00-Network.json"
-			$templateParameters = "$templateDirectory\00-Network.Parameters.Region$computeRegionIndex.json"
+			$templateParameters = "$templateDirectory\00-Network.Parameters.$computeRegionName.json"
 			$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 			if (!$groupDeployment) { return }
 
@@ -63,7 +64,7 @@ function New-SharedServices ($networkOnly, $computeNetworks) {
 			$computeNetwork | Add-Member -MemberType NoteProperty -Name "name" -Value $groupDeployment.properties.outputs.virtualNetworkName.value
 			$computeNetwork | Add-Member -MemberType NoteProperty -Name "domainName" -Value $groupDeployment.properties.outputs.virtualNetworkDomainName.value
 			$computeNetworks += $computeNetwork
-			New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+			New-TraceMessage $moduleName $true $computeRegionName
 		}
 		New-TraceMessage $moduleName $true
 	}
@@ -125,10 +126,8 @@ function Get-RegionNames ([string[]] $regionDisplayNames) {
 }
 
 function Get-ResourceGroupName ([string[]] $computeRegionNames, $computeRegionIndex, $resourceGroupNamePrefix, $resourceGroupNameSuffix) {
-	$resourceGroupName = $resourceGroupNamePrefix
-	if ($computeRegionNames.length -gt 1) {
-		$resourceGroupName = "$resourceGroupName$computeRegionIndex"
-	}
+	$computeRegionId = $computeRegionIndex + 1
+	$resourceGroupName = "$resourceGroupNamePrefix$computeRegionId"
 	return "$resourceGroupName-$resourceGroupNameSuffix"
 }
 

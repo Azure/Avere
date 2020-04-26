@@ -16,7 +16,7 @@
     }
   },
   "variables": {
-    "roleAssignmentApiVersion": "2019-04-01-preview",
+    "roleAssignmentApiVersion": "2020-03-01-preview",
     "roleDefinitionContributorId": "b24988ac-6180-42a0-ab88-20f7382dd24c",
     "imageGalleryApiVersion": "2019-12-01",
     "imageBuilderApiVersion": "2019-05-01-preview",

@@ -1,5 +1,5 @@
 ﻿# Before running this Azure resource deployment script, make sure that the Azure CLI is installed locally.
-# You must have version 2.3.1 (or greater) of the Azure CLI installed for this script to run properly.
+# You must have version 2.4.0 (or greater) of the Azure CLI installed for this script to run properly.
 # The current Azure CLI release is available at http://docs.microsoft.com/cli/azure/install-azure-cli
 
 param (
@@ -36,13 +36,14 @@ $managerDatabaseClientPassword = @()
 $moduleName = "05 - Manager Data"
 New-TraceMessage $moduleName $false
 for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
-	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
+	$computeRegionName = $computeRegionNames[$computeRegionIndex]
+	New-TraceMessage $moduleName $false $computeRegionName
 	$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Manager"
-	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
+	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionName
 	if (!$resourceGroup) { return }
 	
 	$templateResources = "$templateDirectory\$moduleDirectory\05-Manager.Data.json"
-	$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\05-Manager.Data.Parameters.Region$computeRegionIndex.json" -Raw | ConvertFrom-Json).parameters
+	$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\05-Manager.Data.Parameters.$computeRegionName.json" -Raw | ConvertFrom-Json).parameters
 	if ($templateParameters.virtualNetwork.value.resourceGroupName -eq "") {
 		$templateParameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
 	}
@@ -57,7 +58,7 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	$managerDatabaseClientUrl += $groupDeployment.properties.outputs.managerDatabaseClientUrl.value
 	$managerDatabaseClientUsername += $groupDeployment.properties.outputs.managerDatabaseClientUsername.value
 	$managerDatabaseClientPassword += $groupDeployment.properties.outputs.managerDatabaseClientPassword.value
-	New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+	New-TraceMessage $moduleName $true $computeRegionName
 }
 New-TraceMessage $moduleName $true
 
@@ -71,8 +72,8 @@ $resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionInd
 $resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 if (!$resourceGroup) { return }
 
-$templateResources = "$templateDirectory\$moduleDirectory\06-Manager.Image.json"
-$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\06-Manager.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
+$templateResources = "$templateDirectory\$moduleDirectory\06-Manager.Images.json"
+$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\06-Manager.Images.Parameters.json" -Raw | ConvertFrom-Json).parameters
 $templateParameter = New-Object PSObject
 $templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $imageDefinition
 $templateParameters | Add-Member -MemberType NoteProperty -Name "imageDefinition" -Value $templateParameter

@@ -1,5 +1,5 @@
 ﻿# Before running this Azure resource deployment script, make sure that the Azure CLI is installed locally.
-# You must have version 2.3.1 (or greater) of the Azure CLI installed for this script to run properly.
+# You must have version 2.4.0 (or greater) of the Azure CLI installed for this script to run properly.
 # The current Azure CLI release is available at http://docs.microsoft.com/cli/azure/install-azure-cli
 
 param (
@@ -7,7 +7,7 @@ param (
 	[string] $resourceGroupNamePrefix = "Azure.Media.Studio",
 
 	# Set to 1 or more Azure region names (http://azure.microsoft.com/global-infrastructure/regions)
-	[string[]] $computeRegionNames = @("West US 2"),
+	[string[]] $computeRegionNames = @("WestUS2"),
 
 	# Set to true to deploy Azure NetApp Files (http://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
 	[boolean] $storageDeployNetApp = $false,
@@ -20,7 +20,7 @@ $templateDirectory = $PSScriptRoot
 
 Import-Module "$templateDirectory\Deploy.psm1"
 
-$sharedServices = New-SharedServices $false
+$sharedServices = New-SharedServices $false $computeRegionNames
 $computeNetworks = $sharedServices.computeNetworks
 $imageGallery = $sharedServices.imageGallery
 $logAnalytics = $sharedServices.logAnalytics
@@ -38,7 +38,7 @@ $renderManagerJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderManager
 # * - Render Desktop Image Job
 $moduleName = "* - Render Desktop Image Job"
 New-TraceMessage $moduleName $false
-$renderDesktopImageJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderDesktop.Image.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $imageGallery
+$renderDesktopImagesJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderDesktop.Images.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $imageGallery
 
 $moduleDirectory = "RenderWorker"
 
@@ -52,8 +52,8 @@ $resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionInd
 $resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 if (!$resourceGroup) { return }
 
-$templateResources = "$templateDirectory\$moduleDirectory\08-Worker.Image.json"
-$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\08-Worker.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
+$templateResources = "$templateDirectory\$moduleDirectory\08-Worker.Images.json"
+$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\08-Worker.Images.Parameters.json" -Raw | ConvertFrom-Json).parameters
 $templateParameter = New-Object PSObject
 $templateParameter | Add-Member -MemberType NoteProperty -Name "value" -Value $imageDefinition
 $templateParameters | Add-Member -MemberType NoteProperty -Name "imageDefinition" -Value $templateParameter
@@ -97,7 +97,7 @@ New-TraceMessage $moduleName $true
 
 # * - Render Desktop Image Job
 $moduleName = "* - Render Desktop Image Job"
-$renderDesktopImages = Receive-Job -InstanceId $renderDesktopImageJob.InstanceId -Wait
+$renderDesktopImages = Receive-Job -InstanceId $renderDesktopImagesJob.InstanceId -Wait
 if (!$renderDesktopImages) { return }
 New-TraceMessage $moduleName $true
 

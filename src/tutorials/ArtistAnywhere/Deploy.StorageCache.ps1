@@ -1,5 +1,5 @@
 ﻿# Before running this Azure resource deployment script, make sure that the Azure CLI is installed locally.
-# You must have version 2.3.1 (or greater) of the Azure CLI installed for this script to run properly.
+# You must have version 2.4.0 (or greater) of the Azure CLI installed for this script to run properly.
 # The current Azure CLI release is available at http://docs.microsoft.com/cli/azure/install-azure-cli
 
 param (
@@ -7,7 +7,7 @@ param (
 	[string] $resourceGroupNamePrefix = "Azure.Media.Studio",
 
 	# Set to 1 or more Azure region names (http://azure.microsoft.com/global-infrastructure/regions)
-	[string[]] $computeRegionNames = @("West US 2"),
+	[string[]] $computeRegionNames = @("WestUS2", "EastUS2"),
 
 	# Set to the Azure Networking resources (Virtual Network, Private DNS, etc.) for compute regions
 	[object[]] $computeNetworks = @(),
@@ -26,7 +26,7 @@ if (!$templateDirectory) {
 
 Import-Module "$templateDirectory\Deploy.psm1"
 
-$sharedServices = New-SharedServices $true $computeNetworks
+$sharedServices = New-SharedServices $true $computeRegionNames $computeNetworks
 $computeNetworks = $sharedServices.computeNetworks
 
 $moduleDirectory = "StorageCache"
@@ -106,13 +106,14 @@ $storageCaches = @()
 $moduleName = "04.0 - Cache"
 New-TraceMessage $moduleName $false
 for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
-	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
+	$computeRegionName = $computeRegionNames[$computeRegionIndex]
+	New-TraceMessage $moduleName $false $computeRegionName
 	$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Cache"
-	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
+	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionName
 	if (!$resourceGroup) { return }
 
 	$templateResources = "$templateDirectory\$moduleDirectory\04-Cache.json"
-	$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\04-Cache.Parameters.Region$computeRegionIndex.json" -Raw | ConvertFrom-Json).parameters
+	$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\04-Cache.Parameters.$computeRegionName.json" -Raw | ConvertFrom-Json).parameters
 	if ($computeRegionIndex -eq 0) {
 		$storageTargets = $storageTargetsNetApp + $storageTargetsObject
 	} else {
@@ -138,7 +139,7 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	$storageCache | Add-Member -MemberType NoteProperty -Name "mountAddresses" -Value $groupDeployment.properties.outputs.mountAddresses.value
 	$storageCache | Add-Member -MemberType NoteProperty -Name "subnetName" -Value $groupDeployment.properties.outputs.subnetName.value
 	$storageCaches += $storageCache
-	New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+	New-TraceMessage $moduleName $true $computeRegionName
 }
 New-TraceMessage $moduleName $true
 

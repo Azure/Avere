@@ -2,10 +2,10 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "renderManager": {
+    "renderWorker": {
       "type": "object",
       "metadata": {
-        "description": "The render farm manager."
+        "description": "The render farm worker."
       }
     },
     "imageBuilder": {
@@ -22,7 +22,7 @@
     }
   },
   "variables": {
-    "roleAssignmentApiVersion": "2019-04-01-preview",
+    "roleAssignmentApiVersion": "2020-03-01-preview",
     "roleDefinitionContributorId": "b24988ac-6180-42a0-ab88-20f7382dd24c",
     "imageBuilderApiVersion": "2019-05-01-preview",
     "imageBuilderPrincipalId": "ef511139-6170-438e-a6e1-763dc31bdf74"
@@ -60,15 +60,39 @@
             "name": "OpenCue",
             "type": "Shell",
             "inline": [
-              "yum -y install java-11-openjdk",
-              "yum -y install postgresql-contrib",
+              "yum -y install gcc",
+              "yum -y install python3-devel",
+              "yum -y install redhat-rpm-config",
+              "[concat('curl --output requirements.txt --location --url ', parameters('renderWorker').requirementsUrl)]",
+              "pip3 install --requirement requirements.txt",
               "[concat('useradd --system --create-home ', replace(replace(parameters('imageDefinition').homeDirectory, 'home', ''), '/', ''))]",
               "[concat('cd ', parameters('imageDefinition').homeDirectory)]",
-              "[concat('curl --output opencue-cuebot-schema.sql --location --url ', parameters('renderManager').databaseSchemaUrl)]",
-              "[concat('curl --output opencue-cuebot-data.sql --location --url ', parameters('renderManager').databaseDataUrl)]",
-              "[concat('curl --output opencue-cuebot.jar --location --url ', parameters('renderManager').softwareUrl)]",
-              "[concat('curl --output opencue-cuebot.service --location --url ', parameters('renderManager').serviceUrl)]",
-              "[concat('sed --in-place ''/Environment=JAR_PATH/c Environment=JAR_PATH=', parameters('imageDefinition').homeDirectory, 'opencue-cuebot.jar'' opencue-cuebot.service')]"
+              "[concat('curl --output opencue-rqd.jar.gz --location --url ', parameters('renderWorker').softwareUrl)]",
+              "[concat('curl --output opencue-rqd.service --location --url ', parameters('renderWorker').serviceUrl)]",
+              "[concat('sed --in-place \"/Environment=BIN/c Environment=BIN=/usr/local/bin\" opencue-rqd.service')]",
+              "tar --extract --gzip --file opencue-rqd.jar.gz",
+              "cd rqd*",
+              "python3 setup.py install"
+            ]
+          },
+          {
+            "name": "Blender",
+            "type": "Shell",
+            "inline": [
+              "yum -y install libXi",
+              "yum -y install libXrender",
+              "yum -y install mesa-libGL",
+              "[concat('cd ', parameters('imageDefinition').homeDirectory)]",
+              "[concat('curl --output blender.jar.xz --location --url ', parameters('renderWorker').blenderUrl)]",
+              "tar --extract --xz --file blender.jar.xz",
+              "mv blender-*/* /usr/local/bin"
+            ]
+          },
+          {
+            "name": "Cache",
+            "type": "Shell",
+            "inline": [
+              "yum -y install nfs-utils"
             ]
           }
         ],

@@ -4,9 +4,9 @@
   "parameters": {
     "renderManager": {
       "value": {
-        "databaseSchemaUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.43/schema-0.3.43.sql",
-        "databaseDataUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.43/demo_data-0.3.43.sql",
-        "softwareUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.43/cuebot-0.3.43-all.jar",
+        "databaseSchemaUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.0/schema-0.4.0.sql",
+        "databaseDataUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.0/demo_data-0.4.0.sql",
+        "softwareUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.0/cuebot-0.4.0-all.jar",
         "serviceUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/cuebot/deploy/systemd/opencue-cuebot.service"
       }
     },
@@ -15,7 +15,7 @@
         "imageGalleryName": "",
         "imageTemplateName": "RenderManager",
         "imageSourceType": "PlatformImage",
-        "imageBuildTimeoutMinutes": 60,
+        "imageBuildTimeoutMinutes": 120,
         "imageReplicationCount": 1,
         "imageReplicationRegions": [
         ]

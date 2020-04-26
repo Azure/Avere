@@ -5,7 +5,7 @@
     "renderWorker": {
       "value": {
         "requirementsUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/requirements.txt",
-        "softwareUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.3.43/rqd-0.3.43-all.tar.gz",
+        "softwareUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.0/rqd-0.4.0-all.tar.gz",
         "serviceUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/rqd/deploy/opencue-rqd.service",
         "blenderUrl": "https://mirror.clarkson.edu/blender/release/Blender2.82/blender-2.82a-linux64.tar.xz"
       }
@@ -15,7 +15,7 @@
         "imageGalleryName": "",
         "imageTemplateName": "RenderWorker",
         "imageSourceType": "PlatformImage",
-        "imageBuildTimeoutMinutes": 60,
+        "imageBuildTimeoutMinutes": 120,
         "imageReplicationCount": 10,
         "imageReplicationRegions": [
         ]

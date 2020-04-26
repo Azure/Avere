@@ -1,5 +1,5 @@
 ﻿# Before running this Azure resource deployment script, make sure that the Azure CLI is installed locally.
-# You must have version 2.3.1 (or greater) of the Azure CLI installed for this script to run properly.
+# You must have version 2.4.0 (or greater) of the Azure CLI installed for this script to run properly.
 # The current Azure CLI release is available at http://docs.microsoft.com/cli/azure/install-azure-cli
 
 param (
@@ -7,14 +7,14 @@ param (
 	[string] $resourceGroupNamePrefix = "Azure.Media.Studio",
 
 	# Set to 1 or more Azure region names (http://azure.microsoft.com/global-infrastructure/regions)
-	[string[]] $computeRegionNames = @("West US 2")
+	[string[]] $computeRegionNames = @("WestUS2")
 )
 
 $templateDirectory = $PSScriptRoot
 
 Import-Module "$templateDirectory\Deploy.psm1"
 
-$sharedServices = New-SharedServices $false
+$sharedServices = New-SharedServices $false $computeRegionNames
 $computeNetworks = $sharedServices.computeNetworks
 $imageGallery = $sharedServices.imageGallery
 $logAnalytics = $sharedServices.logAnalytics
@@ -22,8 +22,8 @@ $logAnalytics = $sharedServices.logAnalytics
 # * - Render Desktop Image Job
 $moduleName = "* - Render Desktop Image Job"
 New-TraceMessage $moduleName $false
-$renderDesktopImageJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderDesktop.Image.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $imageGallery
-$renderDesktopImages = Receive-Job -InstanceId $renderDesktopImageJob.InstanceId -Wait
+$renderDesktopImagesJob = Start-Job -FilePath "$templateDirectory\Deploy.RenderDesktop.Images.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $imageGallery
+$renderDesktopImages = Receive-Job -InstanceId $renderDesktopImagesJob.InstanceId -Wait
 if (!$renderDesktopImages) { return }
 New-TraceMessage $moduleName $true
 

@@ -13,15 +13,29 @@
     "storageContainers": {
       "value": [
         {
+          "name": "frames"
+        },
+        {
           "name": "scenes"
         },
         {
-          "name": "frames"
+          "name": "tools"
         }
       ]
     },
     "storageTargets": {
       "value": [
+        {
+          "name": "Frames",
+          "type": "clfs",
+          "junctions": [
+            {
+              "namespacePath": "/storage/object/frames",
+              "targetPath": ""
+            }
+          ],
+          "mountOptions": "nfs vers=3,hard,proto=tcp,mountproto=tcp,retry=30 0 0"
+        },
         {
           "name": "Scenes",
           "type": "clfs",
@@ -34,11 +48,11 @@
           "mountOptions": "nfs vers=3,hard,proto=tcp,mountproto=tcp,retry=30 0 0"
         },
         {
-          "name": "Frames",
+          "name": "Tools",
           "type": "clfs",
           "junctions": [
             {
-              "namespacePath": "/storage/object/frames",
+              "namespacePath": "/storage/object/tools",
               "targetPath": ""
             }
           ],

@@ -75,11 +75,11 @@ Azure Artist Anywhere is composed of the following open-source software and Micr
 
 The following diagram depicts the Azure Artist Anywhere solution architecture spanning on-premises and Microsoft Azure.
 
-![](./README-SolutionArchitecture-03-01.png)
+![](https://mediastudio.blob.core.windows.net/bin/ArtistAnywhere-Solution-Architecture-(05.01.2020).png)
 
 The following diagram represents the Azure Artist Anywhere deployment modules along with their dependency relationship.
 
-![](./README-ModuleDependency-03-01.png)
+![](https://mediastudio.blob.core.windows.net/bin/ArtistAnywhere-Module-Dependency-(05.01.2020).png)
 
 The following list describes each of the Azure Artist Anywhere deployment script files.
 
@@ -95,7 +95,7 @@ The following list describes each of the Azure Artist Anywhere deployment script
 
 * *Deploy.RenderDesktop.ps1* - foreground job script that deploys the render desktop services
 
-* *Deploy.RenderDesktop.Image.ps1* - background job script that deploys the render desktop image
+* *Deploy.RenderDesktop.Images.ps1* - background job script that deploys the render desktop images
 
 * *Deploy.RenderDesktop.Machines.ps1* - background job script that deploys render desktop machines
 
@@ -103,6 +103,6 @@ Unlike other background job scripts, the *Deploy.StorageCache.ps1* script can be
 
 The following sample terminal output is from a *Deploy.ps1* orchestrated deployment across 2 paired Microsoft Azure regions. Note that the background jobs have overlapping *start* and *end* times as expected from the parallel deployment process.
 
-![](./README-ModuleDeployment-03-01.png)
+![](https://mediastudio.blob.core.windows.net/bin/ArtistAnywhere-Module-Deployment-(05.01.2020).png)
 
 For more information, contact Rick Shahid (rick.shahid@microsoft.com)
