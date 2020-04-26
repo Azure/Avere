@@ -33,8 +33,8 @@ function write_system_files() {
     sed -i "s/USERREPLACE/$SERVICE_USER/g" $DST_FILE
     sed -i "s/GROUPREPLACE/$SERVICE_USER/g" $DST_FILE
     sed -i "s/JOBMOUNTADDRESSREPLACE/$JOB_MOUNT_ADDRESS/g" $DST_FILE
-    sed -i "s/JOBEXPORTREPLACE/$JOB_EXPORT_PATH/g" $DST_FILE
-    sed -i "s/JOBBASEREPLACE/$JOB_BASE_PATH/g" $DST_FILE
+    sed -i "s:JOBEXPORTREPLACE:$JOB_EXPORT_PATH:g" $DST_FILE
+    sed -i "s:JOBBASEREPLACE:$JOB_BASE_PATH:g" $DST_FILE
 
     # copy the rsyslog file
     cp $BOOTSTRAP_BASE_PATH/rsyslog/$RSYSLOG_FILE /etc/rsyslog.d/.

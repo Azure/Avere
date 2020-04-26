@@ -26,15 +26,15 @@ function write_system_files() {
     BOOTSTRAP_BASE_PATH="$(dirname ${BOOTSTRAP_PATH}${BOOTSTRAP_SCRIPT})"
 
     # copy the systemd file and search replace users/groups/workdircsv
-    SRC_FILE=$BOOTSTRAP_BASE_PATH/systemd/${CACHEWARMER_MANAGER_SERVICE_FILE}
-    DST_FILE=/lib/systemd/system/${CACHEWARMER_MANAGER_SERVICE_FILE}
+    SRC_FILE=$BOOTSTRAP_BASE_PATH/systemd/${CACHEWARMER_WORKER_SERVICE_FILE}
+    DST_FILE=/lib/systemd/system/${CACHEWARMER_WORKER_SERVICE_FILE}
 
     cp $SRC_FILE $DST_FILE
     sed -i "s/USERREPLACE/$SERVICE_USER/g" $DST_FILE
     sed -i "s/GROUPREPLACE/$SERVICE_USER/g" $DST_FILE
     sed -i "s/JOBMOUNTADDRESSREPLACE/$JOB_MOUNT_ADDRESS/g" $DST_FILE
-    sed -i "s/JOBEXPORTREPLACE/$JOB_EXPORT_PATH/g" $DST_FILE
-    sed -i "s/JOBBASEREPLACE/$JOB_BASE_PATH/g" $DST_FILE
+    sed -i "s:JOBEXPORTREPLACE:$JOB_EXPORT_PATH:g" $DST_FILE
+    sed -i "s:JOBBASEREPLACE:$JOB_BASE_PATH:g" $DST_FILE
 
     # copy the rsyslog file
     cp $BOOTSTRAP_BASE_PATH/rsyslog/$RSYSLOG_FILE /etc/rsyslog.d/.
@@ -48,8 +48,8 @@ function configure_rsyslog() {
 }
 
 function configure_service() {
-    systemctl enable ${CACHEWARMER_MANAGER_SERVICE_FILE}
-    sudo systemctl start ${CACHEWARMER_MANAGER_SERVICE}
+    systemctl enable ${CACHEWARMER_WORKER_SERVICE_FILE}
+    sudo systemctl start ${CACHEWARMER_WORKER_SERVICE}
 }
 
 function main() {
