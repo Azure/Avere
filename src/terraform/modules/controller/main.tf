@@ -17,6 +17,8 @@ locals {
   # the user access administrator is required to assign roles.
   # the authorization team asked us to split this from Avere Contributor
   user_access_administrator_role = "User Access Administrator"
+  # needed for creating various compute resources
+  create_compute_role = "Virtual Machine Contributor"
 }
 
 resource "azurerm_resource_group" "vm" {
@@ -105,38 +107,46 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 }
 
-resource "azurerm_role_assignment" "create_vfxt_cluster" {
-  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${var.resource_group_name}"
+// assign roles per the the following article: https://github.com/Azure/Avere/tree/master/src/vfxt#managed-identity-and-roles
+// also allow other roles for storage accounts in other rgs or custom image ids in other rgs
+locals {
+  avere_contributor_rgs = distinct(concat(
+    [
+      var.resource_group_name,
+      var.virtual_network_resource_group,
+    ],
+    var.alternative_resource_groups))
+  
+  user_access_rgs = distinct(
+    [
+      var.resource_group_name,
+      var.virtual_network_resource_group,
+    ]
+  )
+}
+
+resource "azurerm_role_assignment" "avere_create_cluster_role" {
+  count                            = length(local.avere_contributor_rgs)
+  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${local.avere_contributor_rgs[count.index]}"
   role_definition_name             = local.avere_create_cluster_role
   principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
   skip_service_principal_aad_check = true
 }
 
-resource "azurerm_role_assignment" "user_access_admin" {
-  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${var.resource_group_name}"
+resource "azurerm_role_assignment" "user_access_administrator_role" {
+  count                            = length(local.user_access_rgs)
+  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${local.user_access_rgs[count.index]}"
   role_definition_name             = local.user_access_administrator_role
   principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
   skip_service_principal_aad_check = true
 }
 
-resource "azurerm_role_assignment" "create_vfxt_cluster_vnetrg" {
-  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${var.virtual_network_resource_group}"
-  role_definition_name             = local.avere_create_cluster_role
+// ensure controller rg is a VM contributor to enable cache warming
+resource "azurerm_role_assignment" "create_compute" {
+  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${var.resource_group_name}"
+  role_definition_name             = local.create_compute_role
   principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
   skip_service_principal_aad_check = true
 }
 
-resource "azurerm_role_assignment" "user_access_admin_vnetrg" {
-  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${var.virtual_network_resource_group}"
-  role_definition_name             = local.user_access_administrator_role
-  principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
-  skip_service_principal_aad_check = true
-}
 
-resource "azurerm_role_assignment" "alternative" {
-  count                            = length(var.alternative_resource_groups)
-  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${var.alternative_resource_groups[count.index]}"
-  role_definition_name             = local.avere_create_cluster_role
-  principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
-  skip_service_principal_aad_check = true
-}
