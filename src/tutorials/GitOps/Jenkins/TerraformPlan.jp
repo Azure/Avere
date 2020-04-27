@@ -5,8 +5,8 @@ pipeline {
   parameters {
     string(name: 'GITHUB_APP_KEY_ID', defaultValue: 'GitHubAppKey')
     string(name: 'GITHUB_APP_SECRET_ID', defaultValue: 'GitHubAppSecret')
-    string(name: 'GITHUB_APP_AUTH_TOKEN_FILE', defaultValue: '/GetGitHubWebToken.py')
     string(name: 'GITHUB_APP_AUTH_TOKEN_SECONDS', defaultValue: '600')
+    string(name: 'GITHUB_APP_AUTH_TOKEN_GENERATOR', defaultValue: '/GetGitHubWebToken.py')
     string(name: 'GITHUB_API_HEADER_ACCEPT', defaultValue: 'application/vnd.github.v3+json')
     string(name: 'GITHUB_API_HEADER_ACCEPT_AUTH', defaultValue: 'application/vnd.github.machine-man-preview+json')
     string(name: 'GITHUB_API_HEADER_ACCEPT_CHECK', defaultValue: 'application/vnd.github.antiope-preview+json')
@@ -66,7 +66,7 @@ pipeline {
       steps {
         script {
           def appWebToken = sh returnStdout: true, script: '''#!/bin/bash -ex
-            python3 "$WORKSPACE$GITHUB_APP_AUTH_TOKEN_FILE" "$GITHUB_APP_KEY_FILE_USR" "$GITHUB_APP_KEY_FILE" "$GITHUB_APP_AUTH_TOKEN_SECONDS" 'RS256'
+            python3 "$WORKSPACE$GITHUB_APP_AUTH_TOKEN_GENERATOR" "$GITHUB_APP_KEY_FILE_USR" "$GITHUB_APP_KEY_FILE" "$GITHUB_APP_AUTH_TOKEN_SECONDS" 'RS256'
           '''
           def appAuthTokenCreate = httpRequest url: "$GITHUB_REPOSITORY_HOST/installations/$GITHUB_APP_INSTALLATION_ID/access_tokens", httpMode: 'POST', customHeaders: [[name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT"], [name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT_AUTH"], [name: 'Authorization', value: "Bearer $appWebToken"]]
           def appAuthToken = readJSON text: appAuthTokenCreate.content

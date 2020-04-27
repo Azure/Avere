@@ -1,3 +1,5 @@
+# GetGitHubWebToken.py - Generates a JSON Web Token (JWT) for GitHub App API authorization
+
 import sys
 import jwt
 import time
