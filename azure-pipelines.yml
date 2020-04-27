@@ -186,7 +186,7 @@ jobs:
 
       set -x
       pytest test/test_vfxt_cluster_status.py $PYTEST_OPTIONS \
-        -k TestVfxtClusterStatus \
+        -k 'TestVfxtClusterStatus and not ping' \
         --doctest-modules --junitxml=junit/test-results02.xml | tee /tmp/test_output.log
       rc=${PIPESTATUS[0]}
       set +x
