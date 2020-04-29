@@ -21,6 +21,7 @@ import (
 type Worker struct {
 	JobWorkerPath      string
 	workQueue          *WorkQueue
+	readerCounter      *ReaderCounter
 	currentWorkingFile string
 	currentWorkJob     *WorkerJob
 }
@@ -30,6 +31,7 @@ func InitializeWorker(jobWorkerPath string) *Worker {
 	return &Worker{
 		JobWorkerPath: jobWorkerPath,
 		workQueue:     InitializeWorkQueue(),
+		readerCounter: InitializeReaderCounter(),
 	}
 }
 
@@ -58,17 +60,18 @@ func (w *Worker) RunWorkerManager(ctx context.Context, syncWaitGroup *sync.WaitG
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if (time.Since(lastJobCheckTime) > timeBetweenWorkerJobCheck) || (w.workQueue.IsEmpty() && w.ProcessingFile()) {
+			if (time.Since(lastJobCheckTime) > timeBetweenWorkerJobCheck) || (w.workQueue.IsEmpty() && w.readerCounter.ReadersEmpty() && w.ProcessingFile()) {
 				lastJobCheckTime = time.Now()
-				if w.workQueue.IsEmpty() {
+				if w.workQueue.IsEmpty() && w.readerCounter.ReadersEmpty() {
 					if w.ProcessingFile() {
 						w.CompleteProcessingFile()
 					}
 					w.GetNextWorkItem()
 					if w.ProcessingFile() {
+						TouchFile(w.currentWorkingFile)
 						w.fillWorkQueue(ctx)
 					}
-				} else {
+				} else if w.ProcessingFile() {
 					TouchFile(w.currentWorkingFile)
 				}
 			}
@@ -195,42 +198,63 @@ func (w *Worker) fillWorkQueue(ctx context.Context) {
 	// randomly choose a mount path
 	readPath := localPaths[rand.Intn(len(localPaths))]
 
-	f, err := os.Open(readPath)
+	// is the workitem a file or directory
+	isDirectory, err := IsDirectory(readPath)
 	if err != nil {
-		log.Error.Printf("error reading files from directory '%s': '%v'", readPath, err)
+		log.Error.Printf("error determining type of path '%s': '%v'", readPath, err)
 		return
 	}
-	defer f.Close()
-	for {
-		files, err := f.Readdir(WorkerReadFilesAtOnce)
 
-		if len(files) == 0 && err == io.EOF {
-			log.Info.Printf("finished reading directory '%s'", readPath)
+	if isDirectory {
+		log.Info.Printf("Queueing work items for directory %s", readPath)
+		f, err := os.Open(readPath)
+		if err != nil {
+			log.Error.Printf("error reading files from directory '%s': '%v'", readPath, err)
 			return
 		}
+		defer f.Close()
+		for {
+			files, err := f.Readdir(WorkerReadFilesAtOnce)
+			// touch file between reads
+			TouchFile(w.currentWorkingFile)
 
-		if err != nil && err != io.EOF {
-			log.Error.Printf("error reading dirnames from directory '%s': '%v'", readPath, err)
-			return
+			if len(files) == 0 && err == io.EOF {
+				log.Info.Printf("finished reading directory '%s'", readPath)
+				return
+			}
+
+			if err != nil && err != io.EOF {
+				log.Error.Printf("error reading dirnames from directory '%s': '%v'", readPath, err)
+				return
+			}
+
+			w.QueueWork(localPaths, files)
+
+			// verify that cancellation has not occurred
+			if isCancelled(ctx) {
+				return
+			}
 		}
-
-		w.QueueWork(localPaths, files)
-
-		// verify that cancellation has not occurred
-		if isCancelled(ctx) {
-			return
-		}
+	} else {
+		// queue the file for read
+		log.Info.Printf("Queueing work items for file %s", readPath)
+		filePaths := []string{readPath}
+		w.workQueue.AddWork(filePaths)
 	}
 }
 
 func (w *Worker) QueueWork(localPaths []string, fileInfos []os.FileInfo) {
 	filePaths := make([]string, 0, len(fileInfos)*len(localPaths))
 	for _, fileInfo := range fileInfos {
-		if !fileInfo.IsDir() {
+		if !fileInfo.IsDir() && fileInfo.Size() < MinimumSingleFileSize {
+			randomPath := localPaths[rand.Intn(len(localPaths))]
+			filePaths = append(filePaths, path.Join(randomPath, fileInfo.Name()))
+
+			/* the below is only useful if always_forwad is turned off
 			// add a filepath for each mount path
 			for _, localPath := range localPaths {
 				filePaths = append(filePaths, path.Join(localPath, fileInfo.Name()))
-			}
+			}*/
 		}
 	}
 	log.Info.Printf("add %d jobs to the work queue [%d mounts]", len(filePaths), len(localPaths))
@@ -251,17 +275,27 @@ func (w *Worker) worker(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
 			return
 		case <-ticker.C:
 			for {
-				workItem, workExists := w.workQueue.GetNextWorkItem()
-				if !workExists {
-					break
+				if w.workQueue.IsEmpty() {
+					continue
 				}
-				w.readFile(ctx, workItem)
+				w.processWorkItem(ctx)
 				if isCancelled(ctx) {
 					return
 				}
 			}
 		}
 	}
+}
+
+func (w *Worker) processWorkItem(ctx context.Context) {
+	// try to grab the work item, counting self as reader
+	w.readerCounter.AddReader()
+	defer w.readerCounter.RemoveReader()
+	workItem, workExists := w.workQueue.GetNextWorkItem()
+	if !workExists {
+		return
+	}
+	w.readFile(ctx, workItem)
 }
 
 func (w *Worker) readFile(ctx context.Context, filepath string) {

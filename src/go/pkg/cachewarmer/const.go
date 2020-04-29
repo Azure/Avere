@@ -15,6 +15,8 @@ const (
 )
 
 const (
+	MinimumSingleFileSize = int64(100 * MB)
+
 	// a warm job specifies a full path warm job
 	DefaultCacheJobSubmitterDir = ".cachewarmjob"
 	// a warm worker job describes the files to warm in a path
@@ -38,21 +40,22 @@ const (
 	// this size is the most common, and will stand up the fastest
 	VMSSNodeSize            = "Standard_D2s_v3"
 	VmssName                = "cwvmss"
-	NodesPerNFSMountAddress = 2
+	NodesPerNFSMountAddress = 6
 	MarketPlacePublisher    = "Canonical"
 	MarketPlaceOffer        = "UbuntuServer"
 	MarketPlaceSku          = "18.04-LTS"
 
-	tick                      = time.Duration(10) * time.Millisecond // 10ms
-	timeBetweenJobCheck       = time.Duration(5) * time.Second       // 5 second between checking for jobs
-	timeBetweenWorkerJobCheck = time.Duration(5) * time.Second       // 5 second between checking for jobs
-	failureTimeToDeleteVMSS   = time.Duration(15) * time.Minute      // after 15 minutes of failure, ensure vmss deleted
+	tick                        = time.Duration(10) * time.Millisecond // 10ms
+	timeBetweenJobCheck         = time.Duration(5) * time.Second       // 5 second between checking for jobs
+	timeBetweenWorkerJobCheck   = time.Duration(5) * time.Second       // 5 second between checking for jobs
+	timeToDeleteVMSSAfterNoJobs = time.Duration(20) * time.Second      // 20 seconds before deleting the VMSS
+	failureTimeToDeleteVMSS     = time.Duration(15) * time.Minute      // after 15 minutes of failure, ensure vmss deleted
 
 	// file read settings
 	ReadPageSize           = MB
 	timeBetweenCancelCheck = time.Duration(100) * time.Millisecond // 100ms
 
-	WorkerMultiplier          = 3
+	WorkerMultiplier          = 2
 	WorkerReadWorkItemsAtOnce = 50
 	WorkerReadFilesAtOnce     = 1000
 

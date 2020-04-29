@@ -23,8 +23,8 @@ type WorkerJob struct {
 }
 
 func JobsExist(jobFolder string) (exists bool, mountCount int, err error) {
-	log.Debug.Printf("[JobsExist %s\n", jobFolder)
-	log.Debug.Printf("JobsExist %s\n]", jobFolder)
+	log.Debug.Printf("[JobsExist %s", jobFolder)
+	log.Debug.Printf("JobsExist %s]", jobFolder)
 	f, err := os.Open(jobFolder)
 	if err != nil {
 		return exists, mountCount, fmt.Errorf("error reading files from directory '%s': '%v'\n", jobFolder, err)

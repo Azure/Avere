@@ -148,9 +148,11 @@ func (m *WarmPathManager) processJobFile(ctx context.Context, filename string) e
 		folderSlice[len(folderSlice)-1] = ""
 		folderSlice = folderSlice[:len(folderSlice)-1]
 
-		// write worker file
+		// write worker file for this path
 		workerJob := InitializeWorkerJob(warmPathJob.WarmTargetMountAddresses, warmPathJob.WarmTargetExportPath, warmFolder)
-		workerJob.WriteJob(m.JobWorkerPath)
+		if err := workerJob.WriteJob(m.JobWorkerPath); err != nil {
+			log.Error.Printf("error writing worker job to %s: %v", m.JobWorkerPath, err)
+		}
 
 		// queue up additional folders
 		fullWarmPath := path.Join(localMountPath, warmFolder)
@@ -163,6 +165,13 @@ func (m *WarmPathManager) processJobFile(ctx context.Context, filename string) e
 			if file.IsDir() {
 				if !isCacheWarmerFolder(file.Name()) {
 					folderSlice = append(folderSlice, path.Join(warmFolder, file.Name()))
+				}
+			} else if file.Size() >= MinimumSingleFileSize {
+				fullPath := path.Join(warmFolder, file.Name())
+				log.Info.Printf("queuing separate job for %v byte file %s", file.Size(), fullPath)
+				workerJob := InitializeWorkerJob(warmPathJob.WarmTargetMountAddresses, warmPathJob.WarmTargetExportPath, fullPath)
+				if err := workerJob.WriteJob(m.JobWorkerPath); err != nil {
+					log.Error.Printf("error writing worker job to %s: %v", m.JobWorkerPath, err)
 				}
 			}
 		}
@@ -187,6 +196,7 @@ func (m *WarmPathManager) RunVMSSManager(ctx context.Context, syncWaitGroup *syn
 
 	lastWorkerJobCheckTime := time.Now().Add(-timeBetweenWorkerJobCheck)
 	lastReadDirSuccess := time.Now()
+	lastJobSeen := time.Now()
 	ticker := time.NewTicker(tick)
 	defer ticker.Stop()
 
@@ -215,8 +225,11 @@ func (m *WarmPathManager) RunVMSSManager(ctx context.Context, syncWaitGroup *syn
 
 				if jobsExist {
 					m.EnsureVmssRunning(ctx, mountCount)
+					lastJobSeen = time.Now()
 				} else {
-					m.EnsureVmssDeleted(ctx)
+					if time.Since(lastJobSeen) > timeToDeleteVMSSAfterNoJobs {
+						m.EnsureVmssDeleted(ctx)
+					}
 				}
 			}
 		}

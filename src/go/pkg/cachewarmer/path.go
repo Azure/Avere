@@ -87,7 +87,7 @@ func MountPath(address string, exportPath string, localPath string) error {
 func IsStale(filePath string) bool {
 	info, err := os.Stat(filePath)
 	if err != nil {
-		log.Error.Printf("error checking for file stale '%s': '%v'", filePath, err)
+		log.Error.Printf("expected error checking for file stale '%s': '%v'", filePath, err)
 		return false
 	}
 	return time.Since(info.ModTime()) > staleFileAge
@@ -121,7 +121,7 @@ func LockPath(filePath string) (string, bool) {
 	}
 	newFilePath := path.Join(dirName, newFileName)
 	if err := os.Rename(filePath, newFilePath); err != nil {
-		log.Error.Printf("error renaming file '%s'=>'%s': '%v'", filePath, newFilePath, err)
+		log.Error.Printf("expected error renaming file '%s'=>'%s': '%v'", filePath, newFilePath, err)
 		return "", false
 	}
 	return newFilePath, true
@@ -202,4 +202,12 @@ func WriteFile(filename string, data string) error {
 	}
 
 	return f.Close()
+}
+
+func IsDirectory(path string) (bool, error) {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return false, err
+	}
+	return fileInfo.IsDir(), err
 }
