@@ -33,13 +33,20 @@ const (
 	MountRetryCount        = 60
 	MountRetrySleepSeconds = 10
 
+	MinimumAvereNodesPerCluster = 3
+
 	// this size is the most common, and will stand up the fastest
 	VMSSNodeSize            = "Standard_D2s_v3"
-	NodesPerNFSMountAddress = 6
+	VmssName                = "cwvmss"
+	NodesPerNFSMountAddress = 1
+	MarketPlacePublisher    = "Canonical"
+	MarketPlaceOffer        = "UbuntuServer"
+	MarketPlaceSku          = "18.04-LTS"
 
 	tick                      = time.Duration(10) * time.Millisecond // 10ms
 	timeBetweenJobCheck       = time.Duration(5) * time.Second       // 5 second between checking for jobs
 	timeBetweenWorkerJobCheck = time.Duration(5) * time.Second       // 5 second between checking for jobs
+	failureTimeToDeleteVMSS   = time.Duration(15) * time.Minute      // after 15 minutes of failure, ensure vmss deleted
 
 	// file read settings
 	ReadPageSize           = MB

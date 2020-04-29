@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"hash/fnv"
+	"io"
+	"io/ioutil"
+	"os"
 	"path"
 	"time"
 
@@ -17,6 +20,42 @@ type WorkerJob struct {
 	WarmTargetMountAddresses []string
 	WarmTargetExportPath     string
 	WarmTargetPath           string
+}
+
+func JobsExist(jobFolder string) (exists bool, mountCount int, err error) {
+	log.Debug.Printf("[JobsExist %s\n", jobFolder)
+	log.Debug.Printf("JobsExist %s\n]", jobFolder)
+	f, err := os.Open(jobFolder)
+	if err != nil {
+		return exists, mountCount, fmt.Errorf("error reading files from directory '%s': '%v'\n", jobFolder, err)
+	}
+	defer f.Close()
+
+	for {
+		files, err := f.Readdir(2)
+		if len(files) == 0 && err == io.EOF {
+			return false, mountCount, nil
+		}
+		if err != nil && err != io.EOF {
+			return exists, mountCount, err
+		}
+		for _, f := range files {
+			if !f.IsDir() {
+				fullpath := path.Join(jobFolder, f.Name())
+				byteContent, err := ioutil.ReadFile(fullpath)
+				if err != nil {
+					log.Error.Printf("error readingfile '%s'", fullpath)
+					return true, MinimumAvereNodesPerCluster, nil
+				}
+				warmPathJob, err := InitializeWorkerJobFromString(string(byteContent))
+				if err != nil {
+					log.Error.Printf("error readingfile '%s'", fullpath)
+					return true, MinimumAvereNodesPerCluster, nil
+				}
+				return true, len(warmPathJob.WarmTargetMountAddresses), nil
+			}
+		}
+	}
 }
 
 // InitializeWorkerJob initializes the worker job structure
