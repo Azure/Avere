@@ -38,7 +38,7 @@ const (
 	// this size is the most common, and will stand up the fastest
 	VMSSNodeSize            = "Standard_D2s_v3"
 	VmssName                = "cwvmss"
-	NodesPerNFSMountAddress = 1
+	NodesPerNFSMountAddress = 2
 	MarketPlacePublisher    = "Canonical"
 	MarketPlaceOffer        = "UbuntuServer"
 	MarketPlaceSku          = "18.04-LTS"
@@ -52,7 +52,7 @@ const (
 	ReadPageSize           = MB
 	timeBetweenCancelCheck = time.Duration(100) * time.Millisecond // 100ms
 
-	WorkerMultiplier          = 2
+	WorkerMultiplier          = 3
 	WorkerReadWorkItemsAtOnce = 50
 	WorkerReadFilesAtOnce     = 1000
 
