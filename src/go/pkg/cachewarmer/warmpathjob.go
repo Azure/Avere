@@ -15,11 +15,11 @@ import (
 // WarmPathJob contains the information for a new job item
 type WarmPathJob struct {
 	WarmTargetMountAddresses []string
-	WarmTargetExportPath string
-	WarmTargetPath string
-	JobMountAddress string
-	JobExportPath string
-	JobBasePath string
+	WarmTargetExportPath     string
+	WarmTargetPath           string
+	jobMountAddress          string
+	jobExportPath            string
+	jobBasePath              string
 }
 
 // InitializeWarmPathJob initializes the job submitter structure
@@ -32,11 +32,11 @@ func InitializeWarmPathJob(
 	jobBasePath string) *WarmPathJob {
 	return &WarmPathJob{
 		WarmTargetMountAddresses: warmTargetMountAddresses,
-		WarmTargetExportPath: warmTargetExportPath,
-		WarmTargetPath: warmTargetPath,
-		JobMountAddress: jobMountAddress,
-		JobExportPath: jobExportPath,
-		JobBasePath: jobBasePath,
+		WarmTargetExportPath:     warmTargetExportPath,
+		WarmTargetPath:           warmTargetPath,
+		jobMountAddress:          jobMountAddress,
+		jobExportPath:            jobExportPath,
+		jobBasePath:              jobBasePath,
 	}
 }
 
@@ -53,7 +53,7 @@ func InitializeWarmPathJobFromString(warmPathJobContents string) (*WarmPathJob, 
 // WriteJob outputs a JSON file
 func (j *WarmPathJob) WriteJob() error {
 	// create the job path if not exists
-	jobSubmitterPath, err := EnsureJobSubmitterPath(j.JobMountAddress, j.JobExportPath, j.JobBasePath)
+	jobSubmitterPath, err := EnsureJobSubmitterPath(j.jobMountAddress, j.jobExportPath, j.jobBasePath)
 	if err != nil {
 		return fmt.Errorf("encountered error while ensuring path %s: %v", jobSubmitterPath, err)
 	}
@@ -67,7 +67,7 @@ func (j *WarmPathJob) WriteJob() error {
 	// write the file
 	jobFile := j.GenerateWarmPathJobFilename(jobSubmitterPath)
 	log.Debug.Printf("write warm job file %s", jobFile)
-	if err := WriteFile(jobFile, fileContents) ; err != nil {
+	if err := WriteFile(jobFile, fileContents); err != nil {
 		return err
 	}
 
@@ -84,7 +84,7 @@ func (j *WarmPathJob) GetWarmPathJobFileContents() (string, error) {
 }
 
 // GenerateJobFilename generates a file name based on time, and the warm path
-func  (j *WarmPathJob) GenerateWarmPathJobFilename(jobSubmitterPath string) string {
+func (j *WarmPathJob) GenerateWarmPathJobFilename(jobSubmitterPath string) string {
 	// generate a hashcode of the string
 	h := fnv.New32a()
 	h.Write([]byte(j.WarmTargetPath))
@@ -92,4 +92,3 @@ func  (j *WarmPathJob) GenerateWarmPathJobFilename(jobSubmitterPath string) stri
 	t := time.Now()
 	return path.Join(jobSubmitterPath, fmt.Sprintf("%02d-%02d-%02d-%02d%02d%02d-%d.job", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), h.Sum32()))
 }
-

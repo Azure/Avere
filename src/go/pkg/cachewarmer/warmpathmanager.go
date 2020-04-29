@@ -233,12 +233,17 @@ func (m *WarmPathManager) EnsureVmssRunning(ctx context.Context, mountCount int)
 		log.Debug.Printf("vmss is already running")
 		return
 	}
+	// get the controller subnet id
 	localVMSubnetId, err := GetSubnetId(ctx, m.AzureClients)
 	if err != nil {
 		log.Error.Printf("ERROR: failed to initialize Azure Clients: %s", err)
 		return
 	}
-	vmssSubnetId := SwapResourceName(localVMSubnetId, m.vmssSubnet)
+	vmssSubnetId := localVMSubnetId
+	if len(m.vmssSubnet) > 0 {
+		// swap the subnet if the customer requested an alternative subnet
+		SwapResourceName(localVMSubnetId, m.vmssSubnet)
+	}
 
 	cacheWarmerCloudInit := InitializeCloutInit(
 		m.bootstrapMountAddress, // bootstrapAddress string,
@@ -274,6 +279,7 @@ func (m *WarmPathManager) EnsureVmssRunning(ctx context.Context, mountCount int)
 		customData,
 	)
 
+	log.Info.Printf("create VMSS with %d workers", vmssCount)
 	if _, err := CreateVmss(ctx, m.AzureClients, cacheWarmerVmss); err != nil {
 		log.Error.Printf("error creating vmss: %v", err)
 		return
