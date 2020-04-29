@@ -1,6 +1,6 @@
 // Copyright (C) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE-CODE in the project root for license information.
-package main
+package cachewarmer
 
 import (
 	"bytes"
@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 	"text/template"
 	"time"
@@ -349,79 +348,4 @@ func DeleteVmss(ctx context.Context, azureClients *AzureClients, name string) er
 
 	log.Info.Printf("DeleteVmss(%s, %s) took %.2f seconds", azureClients.LocalMetadata.ResourceGroup, name, time.Now().Sub(start).Seconds())
 	return nil
-}
-
-func ToggleVmss(ctx context.Context, azureClients *AzureClients) error {
-	vmssName := "cwvmss"
-	vmssExists, err := VmssExists(ctx, azureClients, vmssName)
-	if err != nil {
-		return err
-	}
-	if !vmssExists {
-
-		localVMSubnetId, err := GetSubnetId(ctx, azureClients)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "ERROR: failed to initialize Azure Clients: %s", err)
-			os.Exit(1)
-		}
-		renderClientsSubnet := SwapResourceName(localVMSubnetId, "render_clients1")
-
-		cacheWarmerCloudInit := InitializeCloutInit(
-			"10.0.1.11", // bootstrapAddress string,
-			"/nfs1data", // exportPath string,
-			"/bootstrap/bootstrap.cachewarmer-worker.sh", // bootstrapScriptPath string,
-			"10.0.1.11", // jobMountAddress string,
-			"/nfs1data", // jobExportPath string,
-			"/",         //jobBasePath string
-		)
-
-		customData, err := cacheWarmerCloudInit.GetCacheWarmerCloudInit()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "BUG BUG: customData retrieval hits the following error: %v", err)
-			os.Exit(1)
-		}
-		log.Info.Printf("customData: '%s'", customData)
-
-		cacheWarmerVmss := createCacheWarmerVmssModel(
-			vmssName,                            // vmssName string,
-			azureClients.LocalMetadata.Location, // location string,
-			"Standard_D2s_v3",                   // vmssSKU string,
-			1,                                   // nodeCount int64,
-			"azureuser",                         // userName string,
-			"TestPassword$",                     // password string,
-			"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8fhkh3jpHUQsrUIezFB5k4Rq9giJM8G1Cr0u2IRMiqG++nat5hbOr3gODpTA0h11q9bzb6nJtK7NtDzIHx+w3YNIVpcTGLiUEsfUbY53IHg7Nl/p3/gkST3g0R6BSL7Hg45SfyvpH7kwY30MoVHG/6P3go4SKlYoHXlgaaNr3fMwUTIeE9ofvyS3fcr6xxlsoB6luKuEs50h0NGsE4QEnbfSY4Yd/C1ucc3mEw+QFXBIsENHfHfZYrLNHm2L8MXYVmAH8k//5sFs4Migln9GiUgEQUT6uOjowsZyXBbXwfT11og+syPkAq4eqjiC76r0w6faVihdBYVoc/UcyupgH azureuser@linuxvm", // sshKeyData string,
-			"Canonical",         // publisher string,
-			"UbuntuServer",      // offer string,
-			"18.04-LTS",         // sku string,
-			compute.Spot,        // priority compute.VirtualMachinePriorityTypes,
-			compute.Delete,      // evictionPolicy compute.VirtualMachineEvictionPolicyTypes
-			renderClientsSubnet, // subnetId string
-			customData,
-		)
-
-		if _, err := CreateVmss(ctx, azureClients, cacheWarmerVmss); err != nil {
-			return err
-		}
-	} else {
-		if err := DeleteVmss(ctx, azureClients, vmssName); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func main() {
-	// setup the shared context
-	ctx := context.Background()
-	azureClients, err := InitializeAzureClients()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: failed to initialize Azure Clients: %s", err)
-		os.Exit(1)
-	}
-
-	if err := ToggleVmss(ctx, azureClients); err != nil {
-		fmt.Fprintf(os.Stderr, "error toggling vmss: %v", err)
-		os.Exit(1)
-	}
-	log.Info.Printf("finished")
 }

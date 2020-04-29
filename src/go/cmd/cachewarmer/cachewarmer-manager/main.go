@@ -13,8 +13,6 @@ import (
 	"github.com/Azure/Avere/src/go/pkg/azure"
 	"github.com/Azure/Avere/src/go/pkg/cachewarmer"
 	"github.com/Azure/Avere/src/go/pkg/log"
-
-	"github.com/Azure/go-autorest/autorest/azure/auth"
 )
 
 func usage(errs ...error) {
@@ -22,8 +20,7 @@ func usage(errs ...error) {
 		fmt.Fprintf(os.Stderr, "error: %s\n\n", err.Error())
 	}
 	fmt.Fprintf(os.Stderr, "usage: %s [OPTIONS]\n", os.Args[0])
-	fmt.Fprintf(os.Stderr, "       the manager that watches for warm jobs, and")
-	fmt.Fprintf(os.Stderr, "       starts VMSS to handle the warm path worker jobs\n")
+	fmt.Fprintf(os.Stderr, "       the manager that watches for warm jobs, and starts VMSS to handle the warm path worker jobs\n")
 	fmt.Fprintf(os.Stderr, "\n")
 	fmt.Fprintf(os.Stderr, "optional env vars (alternatively comes from IMDS):\n")
 	fmt.Fprintf(os.Stderr, "\t%s - Account AD Tenant ID\n", azure.AZURE_TENANT_ID)
@@ -36,14 +33,39 @@ func usage(errs ...error) {
 
 func initializeApplicationVariables() *cachewarmer.WarmPathManager {
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
+	var bootstrapMountAddress = flag.String("bootstrapMountAddress", "", "the mount address that hosts the worker bootstrap script")
+	var bootstrapExportPath = flag.String("bootstrapExportPath", "", "the export path that hosts the worker bootstrap script")
+	var bootstrapScriptPath = flag.String("bootstrapScriptPath", "", "the path to the worker bootstrap script")
 	var jobMountAddress = flag.String("jobMountAddress", "", "the mount address for warm job processing")
 	var jobExportPath = flag.String("jobExportPath", "", "the export path for warm job processing")
 	var jobBasePath = flag.String("jobBasePath", "", "the warm job processing path")
+	var vmssUserName = flag.String("vmssUserName", "", "the username for the vmss vms")
+	var vmssPassword = flag.String("vmssPassword", "", "the password for the vmss vms, this is unused if the public key is specified")
+	var vmssSshPublicKey = flag.String("vmssSshPublicKey", "", "the ssh public key for the vmss vms, this will be used by default, however if this is blank, the password will be used")
+	var vmssSubnetName = flag.String("vmssSubnetName", "", "the subnet to use for the VMSS, if blank, the same subnet as the controller will be used")
 
 	flag.Parse()
 
 	if *enableDebugging {
 		log.EnableDebugging()
+	}
+
+	if len(*bootstrapMountAddress) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: bootstrapMountAddress is not specified\n")
+		usage()
+		os.Exit(1)
+	}
+
+	if len(*bootstrapExportPath) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: bootstrapExportPath is not specified\n")
+		usage()
+		os.Exit(1)
+	}
+
+	if len(*bootstrapScriptPath) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: bootstrapScriptPath is not specified\n")
+		usage()
+		os.Exit(1)
 	}
 
 	if len(*jobMountAddress) == 0 {
@@ -64,9 +86,21 @@ func initializeApplicationVariables() *cachewarmer.WarmPathManager {
 		os.Exit(1)
 	}
 
-	authorizer, err := auth.NewAuthorizerFromEnvironment()
+	if len(*vmssUserName) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: userName for the VMSS is not specified\n")
+		usage()
+		os.Exit(1)
+	}
+
+	if len(*vmssPassword) == 0 && len(*vmssSshPublicKey) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: either password or sshPublicKey must be specified\n")
+		usage()
+		os.Exit(1)
+	}
+
+	azureClients, err := cachewarmer.InitializeAzureClients()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: authorizer from environment failed: %s", err)
+		fmt.Fprintf(os.Stderr, "ERROR: unable to initialize Azure Clients: %s", err)
 		os.Exit(1)
 	}
 
@@ -83,9 +117,20 @@ func initializeApplicationVariables() *cachewarmer.WarmPathManager {
 	}
 
 	return cachewarmer.InitializeWarmPathManager(
-		authorizer,
+		azureClients,
 		jobSubmitterPath,
-		jobWorkerPath)
+		jobWorkerPath,
+		*bootstrapMountAddress,
+		*bootstrapExportPath,
+		*bootstrapScriptPath,
+		*jobMountAddress,
+		*jobExportPath,
+		*jobBasePath,
+		*vmssUserName,
+		*vmssPassword,
+		*vmssSshPublicKey,
+		*vmssSubnetName,
+	)
 }
 
 func main() {
