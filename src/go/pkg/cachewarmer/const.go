@@ -28,7 +28,7 @@ const (
 	DefaultWarmMountPath        = "warm"
 
 	jobCheckInterval    = time.Duration(5) * time.Second  // check for jobs every 5 seconds
-	refreshWorkInterval = time.Duration(30) * time.Second // update job timestamp every 30s
+	refreshWorkInterval = time.Duration(10) * time.Second // update job timestamp every 30s
 	staleFileAge        = time.Duration(60) * time.Second // take a work file if not updated for 60s
 
 	// retry mounting for 10 minutes
@@ -52,12 +52,12 @@ const (
 	failureTimeToDeleteVMSS     = time.Duration(15) * time.Minute      // after 15 minutes of failure, ensure vmss deleted
 
 	// file read settings
-	ReadPageSize           = MB
+	ReadPageSize           = 10 * MB
 	timeBetweenCancelCheck = time.Duration(100) * time.Millisecond // 100ms
 
 	WorkerMultiplier          = 2
-	WorkerReadWorkItemsAtOnce = 50
-	WorkerReadFilesAtOnce     = 1000
+	WorkerReadWorkItemsAtOnce = 30
+	WorkerReadFilesAtOnce     = 100
 
 	// size of slice for the locked paths
 	LockedWorkItemStartSliceSize = 1024
