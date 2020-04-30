@@ -6,20 +6,27 @@ import (
 	"sync"
 )
 
+type FileToWarm struct {
+	WarmFileFullPath string
+	ParentJobFile    *WorkingFile
+}
+
+func InitializeFileToWarm(warmFilePath string, parentJobFile *WorkingFile) FileToWarm {
+	parentJobFile.IncrementFileToProcess()
+	return FileToWarm{
+		WarmFileFullPath: warmFilePath,
+		ParentJobFile:    parentJobFile,
+	}
+}
+
 // RoundRobinPathManager round robins among the available paths
 type WorkQueue struct {
 	mux       sync.Mutex
-	workItems []string
+	workItems []FileToWarm
 }
 
-const (
-	WorkItemStartSize = 1024
-)
-
 func InitializeWorkQueue() *WorkQueue {
-	return &WorkQueue{
-		workItems: make([]string, 0, WorkItemStartSize),
-	}
+	return &WorkQueue{}
 }
 
 func (q *WorkQueue) IsEmpty() bool {
@@ -29,21 +36,21 @@ func (q *WorkQueue) IsEmpty() bool {
 }
 
 // GetNextWorkItem retrieves the next workItem
-func (q *WorkQueue) GetNextWorkItem() (string, bool) {
+func (q *WorkQueue) GetNextWorkItem() (FileToWarm, bool) {
 	q.mux.Lock()
 	defer q.mux.Unlock()
 	if len(q.workItems) > 0 {
 		result := q.workItems[len(q.workItems)-1]
-		q.workItems[len(q.workItems)-1] = ""
+		q.workItems[len(q.workItems)-1] = FileToWarm{}
 		q.workItems = q.workItems[:len(q.workItems)-1]
 		return result, true
 	} else {
-		return "", false
+		return FileToWarm{}, false
 	}
 }
 
-func (q *WorkQueue) AddWork(filepaths []string) {
+func (q *WorkQueue) AddWork(filesToWarm []FileToWarm) {
 	q.mux.Lock()
 	defer q.mux.Unlock()
-	q.workItems = append(q.workItems, filepaths...)
+	q.workItems = append(q.workItems, filesToWarm...)
 }

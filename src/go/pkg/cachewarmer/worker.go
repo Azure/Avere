@@ -19,11 +19,9 @@ import (
 
 // Worker contains the information for the worker
 type Worker struct {
-	JobWorkerPath      string
-	workQueue          *WorkQueue
-	readerCounter      *ReaderCounter
-	currentWorkingFile string
-	currentWorkJob     *WorkerJob
+	JobWorkerPath string
+	workQueue     *WorkQueue
+	workAvailable bool
 }
 
 // InitializeWorker initializes the job submitter structure
@@ -31,7 +29,6 @@ func InitializeWorker(jobWorkerPath string) *Worker {
 	return &Worker{
 		JobWorkerPath: jobWorkerPath,
 		workQueue:     InitializeWorkQueue(),
-		readerCounter: InitializeReaderCounter(),
 	}
 }
 
@@ -60,65 +57,47 @@ func (w *Worker) RunWorkerManager(ctx context.Context, syncWaitGroup *sync.WaitG
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if (time.Since(lastJobCheckTime) > timeBetweenWorkerJobCheck) || (w.workQueue.IsEmpty() && w.readerCounter.ReadersEmpty() && w.ProcessingFile()) {
+			if time.Since(lastJobCheckTime) > timeBetweenWorkerJobCheck || w.workAvailable {
 				lastJobCheckTime = time.Now()
-				if w.workQueue.IsEmpty() && w.readerCounter.ReadersEmpty() {
-					if w.ProcessingFile() {
-						w.CompleteProcessingFile()
+				if w.workQueue.IsEmpty() {
+					workingFile := w.GetNextWorkItem()
+					if workingFile != nil {
+						w.workAvailable = true
+						w.fillWorkQueue(ctx, workingFile)
+					} else {
+						w.workAvailable = false
 					}
-					w.GetNextWorkItem()
-					if w.ProcessingFile() {
-						TouchFile(w.currentWorkingFile)
-						w.fillWorkQueue(ctx)
-					}
-				} else if w.ProcessingFile() {
-					TouchFile(w.currentWorkingFile)
+
 				}
 			}
 		}
 	}
 }
 
-func (w *Worker) ProcessingFile() bool {
-	return w.currentWorkingFile != ""
-}
-
-func (w *Worker) CompleteProcessingFile() {
-	if w.currentWorkingFile != "" && w.currentWorkJob != nil {
-		log.Info.Printf("finished processing directory '%s'", w.currentWorkJob.WarmTargetPath)
-		if err := os.Remove(w.currentWorkingFile); err != nil {
-			log.Error.Printf("error removing working file '%s': '%v'", w.currentWorkingFile, err)
-		}
-	}
-
-	w.currentWorkingFile = ""
-	w.currentWorkJob = nil
-}
-
-func (w *Worker) GetNextWorkItem() {
+func (w *Worker) GetNextWorkItem() *WorkingFile {
 	log.Debug.Printf("[Worker.getNextWorkItem")
 	defer log.Debug.Printf("Worker.getNextWorkItem]")
 	f, err := os.Open(w.JobWorkerPath)
 	if err != nil {
 		log.Error.Printf("error reading files from directory '%s': '%v'", w.JobWorkerPath, err)
-		return
+		return nil
 	}
 	defer f.Close()
 	lockedPaths := make([]string, 0, LockedWorkItemStartSliceSize)
-	for {
-		files, err := f.Readdir(WorkerReadFilesAtOnce)
-		if len(files) == 0 && err == io.EOF {
-			break
-		}
+
+	for files, err := f.Readdir(WorkerReadFilesAtOnce); len(files) > 0 || (err != nil && err != io.EOF); files, err = f.Readdir(WorkerReadFilesAtOnce) {
 		if err != nil && err != io.EOF {
 			log.Error.Printf("error reading dirnames from directory '%s': '%v'", w.JobWorkerPath, err)
-			return
+			return nil
 		}
-		for _, f := range files {
+		// to avoid collisions randomly choose a startIndex
+		startIndex := rand.Intn(len(files))
+		for i := 0; i < len(files); i++ {
+			f := files[(startIndex+i)%len(files)]
 			filepath := path.Join(w.JobWorkerPath, f.Name())
 			if !Locked(filepath) {
-				if filelocked := w.TrySetCurrentWorkingFile(filepath); filelocked {
-					return
+				if workingFile := w.TrySetCurrentWorkingFile(filepath); workingFile != nil {
+					return workingFile
 				}
 			} else {
 				lockedPaths = append(lockedPaths, filepath)
@@ -129,27 +108,26 @@ func (w *Worker) GetNextWorkItem() {
 	for _, lockedPath := range lockedPaths {
 		// if age of locked Path > 2 minutes, steal the file
 		if IsStale(lockedPath) {
-			if filelocked := w.TrySetCurrentWorkingFile(lockedPath); filelocked {
-				return
+			if workingFile := w.TrySetCurrentWorkingFile(lockedPath); workingFile != nil {
+				return workingFile
 			}
 		}
 	}
+	return nil
 }
 
-// TrySetCurrentWorkingFile will try to lock the path and then set the current working job
-func (w *Worker) TrySetCurrentWorkingFile(filepath string) bool {
+// TrySetCurrentWorkingFile will try to lock the path and return the locked path
+func (w *Worker) TrySetCurrentWorkingFile(filepath string) *WorkingFile {
 	lockedFilePath, isLocked := LockPath(filepath)
 	if isLocked {
 		workerJob, err := ReadJobWorkerFile(lockedFilePath)
 		if err != nil {
 			log.Error.Printf("error reading file '%s': '%v'", lockedFilePath, err)
-			return false
+			return nil
 		}
-		w.currentWorkingFile = lockedFilePath
-		w.currentWorkJob = workerJob
-		return true
+		return InitializeWorkingFile(lockedFilePath, workerJob)
 	}
-	return false
+	return nil
 }
 
 func ReadJobWorkerFile(lockedFilePath string) (*WorkerJob, error) {
@@ -173,23 +151,23 @@ func ReadJobWorkerFile(lockedFilePath string) (*WorkerJob, error) {
 	return warmPathJob, nil
 }
 
-func (w *Worker) mountAllWorkingPaths() ([]string, error) {
-	localPaths := make([]string, 0, len(w.currentWorkJob.WarmTargetMountAddresses))
-	for _, warmTargetMountAddress := range w.currentWorkJob.WarmTargetMountAddresses {
-		if localPath, err := EnsureWarmPath(warmTargetMountAddress, w.currentWorkJob.WarmTargetExportPath, w.currentWorkJob.WarmTargetPath); err == nil {
+func (w *Worker) mountAllWorkingPaths(workingFile *WorkingFile) ([]string, error) {
+	localPaths := make([]string, 0, len(workingFile.workerJob.WarmTargetMountAddresses))
+	for _, warmTargetMountAddress := range workingFile.workerJob.WarmTargetMountAddresses {
+		if localPath, err := EnsureWarmPath(warmTargetMountAddress, workingFile.workerJob.WarmTargetExportPath, workingFile.workerJob.WarmTargetPath); err == nil {
 			localPaths = append(localPaths, localPath)
 		} else {
-			return nil, fmt.Errorf("error warming path '%s' '%s' '%s'", warmTargetMountAddress, w.currentWorkJob.WarmTargetExportPath, w.currentWorkJob.WarmTargetPath)
+			return nil, fmt.Errorf("error warming path '%s' '%s' '%s'", warmTargetMountAddress, workingFile.workerJob.WarmTargetExportPath, workingFile.workerJob.WarmTargetPath)
 		}
 	}
 	return localPaths, nil
 }
 
-func (w *Worker) fillWorkQueue(ctx context.Context) {
+func (w *Worker) fillWorkQueue(ctx context.Context, workingFile *WorkingFile) {
 	log.Debug.Printf("[Worker.fillWorkQueue")
 	defer log.Debug.Printf("Worker.fillWorkQueue]")
 
-	localPaths, err := w.mountAllWorkingPaths()
+	localPaths, err := w.mountAllWorkingPaths(workingFile)
 	if err != nil {
 		log.Error.Printf("error mounting working paths: %v", err)
 		return
@@ -213,52 +191,57 @@ func (w *Worker) fillWorkQueue(ctx context.Context) {
 			return
 		}
 		defer f.Close()
+		workItemsQueued := 0
 		for {
 			files, err := f.Readdir(WorkerReadFilesAtOnce)
 			// touch file between reads
-			TouchFile(w.currentWorkingFile)
+			go workingFile.TouchFile()
 
 			if len(files) == 0 && err == io.EOF {
 				log.Info.Printf("finished reading directory '%s'", readPath)
-				return
+				break
 			}
 
 			if err != nil && err != io.EOF {
 				log.Error.Printf("error reading dirnames from directory '%s': '%v'", readPath, err)
-				return
+				break
 			}
 
-			w.QueueWork(localPaths, files)
+			workItemsQueued += w.QueueWork(localPaths, files, workingFile)
 
 			// verify that cancellation has not occurred
 			if isCancelled(ctx) {
-				return
+				break
 			}
 		}
+		if workItemsQueued > 0 {
+			log.Info.Printf("add %d jobs to the work queue [%d mounts]", workItemsQueued, len(localPaths))
+		} else {
+			log.Info.Printf("no items added to the work queue, proceeding to delete job file")
+			workingFile.FileProcessed()
+		}
+
 	} else {
 		// queue the file for read
-		log.Info.Printf("Queueing work items for file %s", readPath)
-		filePaths := []string{readPath}
-		w.workQueue.AddWork(filePaths)
+		log.Info.Printf("Queueing work item for file %s", readPath)
+		filesToWarm := []FileToWarm{InitializeFileToWarm(readPath, workingFile)}
+		w.workQueue.AddWork(filesToWarm)
 	}
 }
 
-func (w *Worker) QueueWork(localPaths []string, fileInfos []os.FileInfo) {
-	filePaths := make([]string, 0, len(fileInfos)*len(localPaths))
+func (w *Worker) QueueWork(localPaths []string, fileInfos []os.FileInfo, workingFile *WorkingFile) int {
+	filesToWarm := make([]FileToWarm, 0, len(fileInfos))
 	for _, fileInfo := range fileInfos {
 		if !fileInfo.IsDir() && fileInfo.Size() < MinimumSingleFileSize {
 			randomPath := localPaths[rand.Intn(len(localPaths))]
-			filePaths = append(filePaths, path.Join(randomPath, fileInfo.Name()))
-
-			/* the below is only useful if always_forwad is turned off
-			// add a filepath for each mount path
-			for _, localPath := range localPaths {
-				filePaths = append(filePaths, path.Join(localPath, fileInfo.Name()))
-			}*/
+			fullPath := path.Join(randomPath, fileInfo.Name())
+			filesToWarm = append(filesToWarm, InitializeFileToWarm(fullPath, workingFile))
 		}
 	}
-	log.Info.Printf("add %d jobs to the work queue [%d mounts]", len(filePaths), len(localPaths))
-	w.workQueue.AddWork(filePaths)
+	if len(filesToWarm) > 0 {
+		w.workQueue.AddWork(filesToWarm)
+	}
+	return len(filesToWarm)
 }
 
 func (w *Worker) worker(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
@@ -288,21 +271,19 @@ func (w *Worker) worker(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
 }
 
 func (w *Worker) processWorkItem(ctx context.Context) {
-	// try to grab the work item, counting self as reader
-	w.readerCounter.AddReader()
-	defer w.readerCounter.RemoveReader()
-	workItem, workExists := w.workQueue.GetNextWorkItem()
+	fileToWarm, workExists := w.workQueue.GetNextWorkItem()
 	if !workExists {
 		return
 	}
-	w.readFile(ctx, workItem)
+	w.readFile(ctx, fileToWarm)
 }
 
-func (w *Worker) readFile(ctx context.Context, filepath string) {
+func (w *Worker) readFile(ctx context.Context, fileToWarm FileToWarm) {
+	defer fileToWarm.ParentJobFile.FileProcessed()
 	var readBytes int
-	file, err := os.Open(filepath)
+	file, err := os.Open(fileToWarm.WarmFileFullPath)
 	if err != nil {
-		log.Error.Printf("error opening file %s: %v", filepath, err)
+		log.Error.Printf("error opening file %s: %v", fileToWarm.WarmFileFullPath, err)
 		return
 	}
 	defer file.Close()
@@ -313,11 +294,12 @@ func (w *Worker) readFile(ctx context.Context, filepath string) {
 		readBytes += count
 		if err != nil {
 			if err != io.EOF {
-				log.Error.Printf("error reading file %s: %v", filepath, err)
+				log.Error.Printf("error reading file %s: %v", fileToWarm.WarmFileFullPath, err)
 			}
-			log.Debug.Printf("read %d bytes from filepath %s", readBytes, filepath)
+			log.Info.Printf("read %d bytes from filepath %s", readBytes, fileToWarm.WarmFileFullPath)
 			return
 		}
+		go fileToWarm.ParentJobFile.TouchFile()
 		// ensure no cancel
 		if time.Since(lastCancelCheckTime) > timeBetweenCancelCheck {
 			lastCancelCheckTime = time.Now()
