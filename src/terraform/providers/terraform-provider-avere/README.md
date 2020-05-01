@@ -34,6 +34,7 @@ resource "avere_vfxt" "vfxt" {
     vfxt_cluster_name = "vfxt"
     vfxt_admin_password = "ReplacePassword$"
     vfxt_node_count = 3
+    node_cache_size = 4096
     
     global_custom_settings = [
         "vcm.alwaysForwardReadSize DL 134217728",
@@ -99,7 +100,8 @@ The following arguments are supported:
 * <a name="image_id"></a>[image_id](#image_id) - (Optional) specify a custom image id for the vFXT.  This is useful when needing to use a bug fix or there is a marketplace outage.  For more information see the [docs on how to create a custom image for the conroller and vfxt](../../examples/vfxt#create-vfxt-controller-from-custom-images).
 * <a name="vfxt_cluster_name"></a>[vfxt_cluster_name](#vfxt_cluster_name) - (Required) this is the name of the vFXT cluster that is shown when you browse to the management ip.  To help Avere support, choose a name that matches the Avere's purpose.
 * <a name="vfxt_admin_password"></a>[vfxt_admin_password](#vfxt_admin_password) - (Required) the password for the vFXT cluster.
-* <a name="vfxt_node_count"></a>[vfxt_node_count](#vfxt_node_count) - (Required) the number of nodes to deploy for the Avere cluster.  The count may be a minimum of 3 and a maximum of 16.  If the cluster is already deployed, this will result in scaling up or down to the node count.  It requires about 15 minutes to delete and add each node in a scale-up or scale-down scenario.  
+* <a name="vfxt_node_count"></a>[vfxt_node_count](#vfxt_node_count) - (Required) the number of nodes to deploy for the Avere cluster.  The count may be a minimum of 3 and a maximum of 16.  If the cluster is already deployed, this will result in scaling up or down to the node count.  It requires about 15 minutes to delete and add each node in a scale-up or scale-down scenario.
+* <a name="node_cache_size"></a>[node_cache_size](#node_cache_size) - (Optional) The cache size in GB to use for each Avere vFXT VM.  The default value is 4096.  
 * <a name="global_custom_settings"></a>[global_custom_settings](#global_custom_settings) - (Optional) these are custom settings provided by Avere support to match advanced use case scenarios.  They are a list of strings of the form "SETTINGNAME CHECKCODE VALUE".
 * <a name="vserver_settings"></a>[vserver_settings](#vserver_settings) - (Optional) these are custom settings provided by Avere support to match advanced use case scenarios.  They are a list of strings of the form "SETTINGNAME CHECKCODE VALUE".  Do not prefix with the vserver as it is automatically detected.
 * [azure_storage_filer](#azure_storage_filer) - (Optional) zero or more storage filer blocks used to specify zero or more [Azure Blob Storage Cloud core filers](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-deploy-plan#cloud-core-filers).

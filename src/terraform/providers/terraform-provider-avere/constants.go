@@ -87,6 +87,7 @@ const (
 	vfxt_cluster_name            = "vfxt_cluster_name"
 	vfxt_admin_password          = "vfxt_admin_password"
 	vfxt_node_count              = "vfxt_node_count"
+	node_cache_size              = "node_cache_size"
 	global_custom_settings       = "global_custom_settings"
 	vserver_settings             = "vserver_settings"
 	core_filer                   = "core_filer"
