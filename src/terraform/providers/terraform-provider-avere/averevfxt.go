@@ -798,24 +798,6 @@ func (a *AvereVfxt) AvereCommand(cmd string) (string, error) {
 	return a.AvereCommandWithCorrection(cmd, nil)
 }
 
-// no change can be made to the core parameters of the existing filers
-func EnsureNoCoreAttributeChangeForExistingFilers(oldFiler map[string]*CoreFiler, newFiler map[string]*CoreFiler) error {
-	for k, new := range newFiler {
-		old, ok := oldFiler[k]
-		if !ok {
-			// no change since the core filer didn't previously exist
-			continue
-		}
-		if old.FqdnOrPrimaryIp != new.FqdnOrPrimaryIp {
-			return fmt.Errorf("Error: the fqdn or ip changed for filer '%s'.  To change delete the filer, and re-add", k)
-		}
-		if old.CachePolicy != new.CachePolicy {
-			return fmt.Errorf("Error: the cache policy changed for filer '%s'.  To change delete the filer, and re-add", k)
-		}
-	}
-	return nil
-}
-
 // scale-up the cluster to the newNodeCount
 func (a *AvereVfxt) scaleUpCluster(newNodeCount int) error {
 	for {
