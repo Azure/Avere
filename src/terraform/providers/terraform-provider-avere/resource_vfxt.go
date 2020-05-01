@@ -128,7 +128,7 @@ func resourceVfxt() *schema.Resource {
 			},
 			node_cache_size: {
 				Type:     schema.TypeInt,
-				Required: false,
+				Optional: true,
 				ForceNew: true,
 				Default:  4096,
 				ValidateFunc: validation.IntInSlice([]int{
