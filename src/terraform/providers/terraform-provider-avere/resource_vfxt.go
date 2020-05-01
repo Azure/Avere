@@ -5,11 +5,12 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
-	"log"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -90,30 +91,35 @@ func resourceVfxt() *schema.Resource {
 				},
 			},
 			proxy_uri: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringDoesNotContainAny(" '\"$"),
 			},
 			cluster_proxy_uri: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringDoesNotContainAny(" '\"$"),
 			},
 			image_id: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringDoesNotContainAny(" '\"$"),
 			},
 			vfxt_cluster_name: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringDoesNotContainAny(" '\"$"),
 			},
 			vfxt_admin_password: {
-				Type:      schema.TypeString,
-				Required:  true,
-				ForceNew:  true,
-				Sensitive: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
 			},
 			vfxt_node_count: {
 				Type:         schema.TypeInt,
@@ -223,7 +229,7 @@ func resourceVfxt() *schema.Resource {
 						},
 						junction_namespace_path: {
 							Type:         schema.TypeString,
-							Optional: true,
+							Optional:     true,
 							ValidateFunc: validation.StringIsNotWhiteSpace,
 						},
 					},
@@ -440,22 +446,22 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	var err error
 	var controllerAddress, controllerAdminUsername, controllerAdminPassword string
-	
+
 	runLocal := d.Get(run_local).(bool)
 
 	var authMethod ssh.AuthMethod
 	if runLocal == false {
-		if v, exists := d.GetOk(controller_address) ; exists {
+		if v, exists := d.GetOk(controller_address); exists {
 			controllerAddress = v.(string)
 		} else {
 			return nil, fmt.Errorf("missing argument '%s'", controller_address)
 		}
-		if v, exists := d.GetOk(controller_admin_username) ; exists {
+		if v, exists := d.GetOk(controller_admin_username); exists {
 			controllerAdminUsername = v.(string)
 		} else {
 			return nil, fmt.Errorf("missing argument '%s'", controller_admin_username)
 		}
-		if v, exists := d.GetOk(controller_admin_password) ; exists {
+		if v, exists := d.GetOk(controller_admin_password); exists {
 			controllerAdminPassword = v.(string)
 		}
 
