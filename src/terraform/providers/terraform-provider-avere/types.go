@@ -26,6 +26,7 @@ type AvereVfxt struct {
 	AvereVfxtName      string
 	AvereAdminPassword string
 	NodeCount          int
+	NodeCacheSize      int
 
 	NtpServers *[]string
 

@@ -126,6 +126,16 @@ func resourceVfxt() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.IntBetween(3, 16),
 			},
+			node_cache_size: {
+				Type:     schema.TypeInt,
+				Required: false,
+				ForceNew: true,
+				Default:  4096,
+				ValidateFunc: validation.IntInSlice([]int{
+					1024,
+					4096,
+				}),
+			},
 			global_custom_settings: {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -502,6 +512,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(vfxt_cluster_name).(string),
 		d.Get(vfxt_admin_password).(string),
 		d.Get(vfxt_node_count).(int),
+		d.Get(node_cache_size).(int),
 		utils.ExpandStringSlice(d.Get(ntp_servers).([]interface{})),
 		d.Get(proxy_uri).(string),
 		d.Get(cluster_proxy_uri).(string),

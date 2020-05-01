@@ -22,7 +22,6 @@ const (
 	AzLoginSleepSeconds = 10
 	AvereInstanceType   = "Standard_E32s_v3"
 	AverOperatorRole    = "Avere Operator"
-	NodeCacheSize       = 4096
 )
 
 type Azure struct {
@@ -258,7 +257,7 @@ func (a Azure) getBaseVfxtCommand(avereVfxt *AvereVfxt) string {
 	// add the values consistent across all commands
 	sb.WriteString(fmt.Sprintf("vfxt.py --cloud-type azure --on-instance --instance-type %s --node-cache-size %d --azure-role '%s' --debug ",
 		AvereInstanceType,
-		NodeCacheSize,
+		avereVfxt.NodeCacheSize,
 		AverOperatorRole))
 
 	// add the resource group and location
