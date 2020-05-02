@@ -23,10 +23,11 @@ type AvereVfxt struct {
 
 	Platform IaasPlatform
 
-	AvereVfxtName      string
-	AvereAdminPassword string
-	NodeCount          int
-	NodeCacheSize      int
+	AvereVfxtName        string
+	AvereAdminPassword   string
+	EnableSupportUploads bool
+	NodeCount            int
+	NodeCacheSize        int
 
 	NtpServers *[]string
 

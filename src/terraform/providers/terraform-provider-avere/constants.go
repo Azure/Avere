@@ -90,6 +90,7 @@ const (
 	node_cache_size              = "node_cache_size"
 	global_custom_settings       = "global_custom_settings"
 	vserver_settings             = "vserver_settings"
+	enable_support_uploads       = "enable_support_uploads"
 	core_filer                   = "core_filer"
 	core_filer_name              = "name"
 	fqdn_or_primary_ip           = "fqdn_or_primary_ip"
