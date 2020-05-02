@@ -81,6 +81,7 @@ const (
 	azure_network_name           = "azure_network_name"
 	azure_subnet_name            = "azure_subnet_name"
 	ntp_servers                  = "ntp_servers"
+	timezone                     = "timezone"
 	proxy_uri                    = "proxy_uri"
 	cluster_proxy_uri            = "cluster_proxy_uri"
 	image_id                     = "image_id"
