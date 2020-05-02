@@ -90,6 +90,12 @@ func resourceVfxt() *schema.Resource {
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
 			},
+			timezone: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      DefaultTimezone,
+				ValidateFunc: validation.StringInSlice(GetSupportedTimezones(), false),
+			},
 			proxy_uri: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -343,6 +349,12 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	if avereVfxt.Timezone != DefaultTimezone {
+		if err := avereVfxt.UpdateCluster(); err != nil {
+			return err
+		}
+	}
+
 	// update the support
 	if avereVfxt.EnableSupportUploads == true {
 		if err := avereVfxt.ModifySupportUploads(); err != nil {
@@ -475,6 +487,12 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if d.HasChange(timezone) {
+		if err := avereVfxt.UpdateCluster(); err != nil {
+			return err
+		}
+	}
+
 	// scale the cluster if node changed
 	if d.HasChange(vfxt_node_count) {
 		if err := scaleCluster(d, avereVfxt); err != nil {
@@ -570,6 +588,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(vfxt_node_count).(int),
 		d.Get(node_cache_size).(int),
 		utils.ExpandStringSlice(d.Get(ntp_servers).([]interface{})),
+		d.Get(timezone).(string),
 		d.Get(proxy_uri).(string),
 		d.Get(cluster_proxy_uri).(string),
 		d.Get(image_id).(string),

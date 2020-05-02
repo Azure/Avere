@@ -52,6 +52,7 @@ func NewAvereVfxt(
 	nodeCount int,
 	nodeCacheSize int,
 	ntpServers *[]string,
+	timezone string,
 	proxyUri string,
 	clusterProxyUri string,
 	imageId string,
@@ -70,6 +71,7 @@ func NewAvereVfxt(
 		NodeCount:            nodeCount,
 		NodeCacheSize:        nodeCacheSize,
 		NtpServers:           ntpServers,
+		Timezone:             timezone,
 		ProxyUri:             proxyUri,
 		ClusterProxyUri:      clusterProxyUri,
 		ImageId:              imageId,
@@ -227,6 +229,27 @@ func (a *AvereVfxt) GetActivities() ([]Activity, error) {
 		return nil, err
 	}
 	return results, nil
+}
+
+func (a *AvereVfxt) GetCluster() (Cluster, error) {
+	var result Cluster
+	clusterJson, err := a.AvereCommand(a.getClusterGetJsonCommand())
+	if err != nil {
+		return result, err
+	}
+	if err := json.Unmarshal([]byte(clusterJson), &result); err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
+func (a *AvereVfxt) UpdateCluster() error {
+	cluster, err := a.GetCluster()
+	if err != nil {
+		return err
+	}
+	_, err = a.AvereCommand(a.getClusterModifyCommand(cluster))
+	return err
 }
 
 func (a *AvereVfxt) GetAlerts() ([]Alert, error) {
@@ -946,6 +969,18 @@ func (a *AvereVfxt) getClusterListActivitiesJsonCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json cluster.listActivities", a.getBaseAvereCmd()), AverecmdLogFile)
 }
 
+func (a *AvereVfxt) getClusterGetJsonCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json cluster.get", a.getBaseAvereCmd()), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getClusterModifyCommand(cluster Cluster) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cluster.modify \"{'timezone':'%s','mgmtIP':{'IP': '%s','netmask':'%s','vlan':'%s'}}\"", a.getBaseAvereCmd(), a.Timezone, cluster.MgmtIP.IP, cluster.MgmtIP.Netmask, cluster.InternetVlan), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getSetNtpServersCommand(ntpServer1 string, ntpServer2 string, ntpServer3 string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cluster.modifyNTP \"%s\" \"%s\" \"%s\"", a.getBaseAvereCmd(), ntpServer1, ntpServer2, ntpServer3), AverecmdLogFile)
+}
+
 func (a *AvereVfxt) getGetActiveAlertsJsonCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json alert.getActive", a.getBaseAvereCmd()), AverecmdLogFile)
 }
@@ -1031,10 +1066,6 @@ func (a *AvereVfxt) getCreateJunctionCommand(junction *Junction) string {
 
 func (a *AvereVfxt) getDeleteJunctionCommand(junctionNameSpacePath string) string {
 	return WrapCommandForLogging(fmt.Sprintf("%s vserver.removeJunction \"%s\" \"%s\"", a.getBaseAvereCmd(), VServerName, junctionNameSpacePath), AverecmdLogFile)
-}
-
-func (a *AvereVfxt) getSetNtpServersCommand(ntpServer1 string, ntpServer2 string, ntpServer3 string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s cluster.modifyNTP \"%s\" \"%s\" \"%s\"", a.getBaseAvereCmd(), ntpServer1, ntpServer2, ntpServer3), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getListCustomSettingsJsonCommand() string {

@@ -30,6 +30,7 @@ type AvereVfxt struct {
 	NodeCacheSize        int
 
 	NtpServers *[]string
+	Timezone   string
 
 	ProxyUri        string
 	ClusterProxyUri string
@@ -108,4 +109,16 @@ type CustomSetting struct {
 	Name      string `json:"name"`
 	Value     string `json:"value"`
 	CheckCode string `json:"checkCode"`
+}
+
+type IPAddress struct {
+	IP      string `json:"IP"`
+	Netmask string `json:"netmask"`
+}
+
+// returned by the cluster.get command
+type Cluster struct {
+	MgmtIP       IPAddress `json:"mgmtIP"`
+	InternetVlan string    `json:"internetVlan"`
+	Timezone     string    `json:"timezone"`
 }
