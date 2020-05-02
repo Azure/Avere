@@ -154,6 +154,11 @@ func resourceVfxt() *schema.Resource {
 				},
 				Set: schema.HashString,
 			},
+			enable_support_uploads: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			core_filer: {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -338,6 +343,13 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	// update the support
+	if avereVfxt.EnableSupportUploads == true {
+		if err := avereVfxt.ModifySupportUploads(); err != nil {
+			return err
+		}
+	}
+
 	return resourceVfxtRead(d, m)
 }
 
@@ -398,6 +410,12 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 		if err := createVServerSettings(d, avereVfxt); err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange(enable_support_uploads) {
+		if err := avereVfxt.ModifySupportUploads(); err != nil {
 			return err
 		}
 	}
@@ -548,6 +566,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		iaasPlatform,
 		d.Get(vfxt_cluster_name).(string),
 		d.Get(vfxt_admin_password).(string),
+		d.Get(enable_support_uploads).(bool),
 		d.Get(vfxt_node_count).(int),
 		d.Get(node_cache_size).(int),
 		utils.ExpandStringSlice(d.Get(ntp_servers).([]interface{})),

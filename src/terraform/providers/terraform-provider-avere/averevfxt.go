@@ -48,6 +48,7 @@ func NewAvereVfxt(
 	platform IaasPlatform,
 	avereVfxtName string,
 	avereAdminPassword string,
+	enableSupportUploads bool,
 	nodeCount int,
 	nodeCacheSize int,
 	ntpServers *[]string,
@@ -58,22 +59,23 @@ func NewAvereVfxt(
 	vServerIPAddresses *[]string,
 	nodeNames *[]string) *AvereVfxt {
 	return &AvereVfxt{
-		ControllerAddress:  controllerAddress,
-		ControllerUsename:  controllerUsername,
-		SshAuthMethod:      sshAuthMethod,
-		RunLocal:           runLocal,
-		Platform:           platform,
-		AvereVfxtName:      avereVfxtName,
-		AvereAdminPassword: avereAdminPassword,
-		NodeCount:          nodeCount,
-		NodeCacheSize:      nodeCacheSize,
-		NtpServers:         ntpServers,
-		ProxyUri:           proxyUri,
-		ClusterProxyUri:    clusterProxyUri,
-		ImageId:            imageId,
-		ManagementIP:       managementIP,
-		VServerIPAddresses: vServerIPAddresses,
-		NodeNames:          nodeNames,
+		ControllerAddress:    controllerAddress,
+		ControllerUsename:    controllerUsername,
+		SshAuthMethod:        sshAuthMethod,
+		RunLocal:             runLocal,
+		Platform:             platform,
+		AvereVfxtName:        avereVfxtName,
+		AvereAdminPassword:   avereAdminPassword,
+		EnableSupportUploads: enableSupportUploads,
+		NodeCount:            nodeCount,
+		NodeCacheSize:        nodeCacheSize,
+		NtpServers:           ntpServers,
+		ProxyUri:             proxyUri,
+		ClusterProxyUri:      clusterProxyUri,
+		ImageId:              imageId,
+		ManagementIP:         managementIP,
+		VServerIPAddresses:   vServerIPAddresses,
+		NodeNames:            nodeNames,
 	}
 }
 
@@ -766,6 +768,24 @@ func (a *AvereVfxt) DeleteJunction(junctionNameSpacePath string) error {
 	return nil
 }
 
+func (a *AvereVfxt) ModifySupportUploads() error {
+	if a.EnableSupportUploads {
+		if _, err := a.AvereCommand(a.getSupportAcceptTermsCommand()); err != nil {
+			return err
+		}
+		if _, err := a.AvereCommand(a.getSupportSupportTestUploadCommand()); err != nil {
+			return err
+		}
+	}
+	if _, err := a.AvereCommand(a.getSupportModifyCustomerUploadInfoCommand()); err != nil {
+		return err
+	}
+	if _, err := a.AvereCommand(a.getSupportSecureProactiveSupportCommand()); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (a *AvereVfxt) AvereCommandWithCorrection(cmd string, correctiveAction func() error) (string, error) {
 	var result string
 	for retries := 0; ; retries++ {
@@ -1028,6 +1048,33 @@ func (a *AvereVfxt) getSetCustomSettingCommand(customSetting string) string {
 func (a *AvereVfxt) getRemoveCustomSettingCommand(customSetting string) string {
 	firstArgument := getCustomSettingName(customSetting)
 	return WrapCommandForLogging(fmt.Sprintf("%s support.removeCustomSetting %s", a.getBaseAvereCmd(), firstArgument), AverecmdLogFile)
+}
+
+// This is activated by the customer accepting the privacy policy by setting enable_support_uploads.  Otherwise, none of the examples will ever set this.
+func (a *AvereVfxt) getSupportAcceptTermsCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s support.acceptTerms yes", a.getBaseAvereCmd()), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getSupportSupportTestUploadCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s support.testUpload", a.getBaseAvereCmd()), AverecmdLogFile)
+}
+
+// this updates support uploads per docs https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-enable-support
+func (a *AvereVfxt) getSupportModifyCustomerUploadInfoCommand() string {
+	isEnabled := "no"
+	if a.EnableSupportUploads {
+		isEnabled = "yes"
+	}
+	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'crashInfo':'%s','corePolicy':'overwriteOldest','statsMonitor':'%s','rollingTrace':'no','traceLevel':'0x1','memoryDebugging':'no','generalInfo':'%s','customerId':'%s'}\"", a.getBaseAvereCmd(), isEnabled, isEnabled, isEnabled, a.AvereVfxtName), AverecmdLogFile)
+}
+
+// this updates SPS (Secure Proactive Support) per docs https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-enable-support
+func (a *AvereVfxt) getSupportSecureProactiveSupportCommand() string {
+	isEnabled := "no"
+	if a.EnableSupportUploads {
+		isEnabled = "yes"
+	}
+	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'remoteCommandEnabled':'Disabled','SPSLinkInterval':'300','SPSLinkEnabled':'%s','remoteCommandExpiration':''}\"", a.getBaseAvereCmd(), isEnabled), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getSetVServerSettingCommand(customSetting string) string {
