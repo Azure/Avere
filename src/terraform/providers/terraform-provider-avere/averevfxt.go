@@ -53,6 +53,9 @@ func NewAvereVfxt(
 	nodeCacheSize int,
 	ntpServers *[]string,
 	timezone string,
+	dnsServer string,
+	dnsDomain string,
+	dnsSearch string,
 	proxyUri string,
 	clusterProxyUri string,
 	imageId string,
@@ -72,6 +75,9 @@ func NewAvereVfxt(
 		NodeCacheSize:        nodeCacheSize,
 		NtpServers:           ntpServers,
 		Timezone:             timezone,
+		DnsServer:            dnsServer,
+		DnsDomain:            dnsDomain,
+		DnsSearch:            dnsSearch,
 		ProxyUri:             proxyUri,
 		ClusterProxyUri:      clusterProxyUri,
 		ImageId:              imageId,
@@ -974,7 +980,19 @@ func (a *AvereVfxt) getClusterGetJsonCommand() string {
 }
 
 func (a *AvereVfxt) getClusterModifyCommand(cluster Cluster) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s cluster.modify \"{'timezone':'%s','mgmtIP':{'IP': '%s','netmask':'%s','vlan':'%s'}}\"", a.getBaseAvereCmd(), a.Timezone, cluster.MgmtIP.IP, cluster.MgmtIP.Netmask, cluster.InternetVlan), AverecmdLogFile)
+	dnsServer := cluster.DnsServer
+	if len(a.DnsServer) > 0 {
+		dnsServer = a.DnsServer
+	}
+	dnsDomain := cluster.DnsDomain
+	if len(a.DnsDomain) > 0 {
+		dnsDomain = a.DnsDomain
+	}
+	dnsSearch := cluster.DnsSearch
+	if len(a.DnsSearch) > 0 {
+		dnsSearch = a.DnsSearch
+	}
+	return WrapCommandForLogging(fmt.Sprintf("%s cluster.modify \"{'timezone':'%s','DNSserver':'%s','DNSdomain':'%s','DNSsearch':'%s','mgmtIP':{'IP': '%s','netmask':'%s','vlan':'%s'}}\"", a.getBaseAvereCmd(), a.Timezone, dnsServer, dnsDomain, dnsSearch, cluster.MgmtIP.IP, cluster.MgmtIP.Netmask, cluster.InternetVlan), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getSetNtpServersCommand(ntpServer1 string, ntpServer2 string, ntpServer3 string) string {

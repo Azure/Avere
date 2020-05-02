@@ -96,6 +96,21 @@ func resourceVfxt() *schema.Resource {
 				Default:      DefaultTimezone,
 				ValidateFunc: validation.StringInSlice(GetSupportedTimezones(), false),
 			},
+			dns_server: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringIsNotWhiteSpace,
+			},
+			dns_domain: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringIsNotWhiteSpace,
+			},
+			dns_search: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringIsNotWhiteSpace,
+			},
 			proxy_uri: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -349,7 +364,7 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if avereVfxt.Timezone != DefaultTimezone {
+	if avereVfxt.Timezone != DefaultTimezone || len(avereVfxt.DnsServer) > 0 || len(avereVfxt.DnsDomain) > 0 || len(avereVfxt.DnsSearch) > 0 {
 		if err := avereVfxt.UpdateCluster(); err != nil {
 			return err
 		}
@@ -487,7 +502,7 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	if d.HasChange(timezone) {
+	if d.HasChange(timezone) || d.HasChange(dns_server) || d.HasChange(dns_domain) || d.HasChange(dns_search) {
 		if err := avereVfxt.UpdateCluster(); err != nil {
 			return err
 		}
@@ -589,6 +604,9 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(node_cache_size).(int),
 		utils.ExpandStringSlice(d.Get(ntp_servers).([]interface{})),
 		d.Get(timezone).(string),
+		d.Get(dns_server).(string),
+		d.Get(dns_domain).(string),
+		d.Get(dns_search).(string),
 		d.Get(proxy_uri).(string),
 		d.Get(cluster_proxy_uri).(string),
 		d.Get(image_id).(string),

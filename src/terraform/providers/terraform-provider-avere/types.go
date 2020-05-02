@@ -31,6 +31,9 @@ type AvereVfxt struct {
 
 	NtpServers *[]string
 	Timezone   string
+	DnsServer  string
+	DnsDomain  string
+	DnsSearch  string
 
 	ProxyUri        string
 	ClusterProxyUri string
@@ -121,4 +124,7 @@ type Cluster struct {
 	MgmtIP       IPAddress `json:"mgmtIP"`
 	InternetVlan string    `json:"internetVlan"`
 	Timezone     string    `json:"timezone"`
+	DnsServer    string    `json:"DNSserver"`
+	DnsDomain    string    `json:"DNSdomain"`
+	DnsSearch    string    `json:"DNSsearch"`
 }
