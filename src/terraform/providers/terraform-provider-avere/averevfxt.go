@@ -939,20 +939,20 @@ func (a *AvereVfxt) getListFilersJsonCommand() string {
 }
 
 func (a *AvereVfxt) getListCoreFilersVerboseJsonCommand() string {
-	filerArray := fmt.Sprintf("\"$(%s)\"", a.getUnwrappedFilersJsonCommand())
+	filerArray := fmt.Sprintf("$(%s)", a.getUnwrappedFilersJsonCommand())
 	return a.getFilerJsonCommand(filerArray)
 }
 
 func (a *AvereVfxt) getListCoreFilerExportsJsonCommand(filer string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s --json corefiler.listExports %s", a.getBaseAvereCmd(), filer), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s --json corefiler.listExports \"%s\"", a.getBaseAvereCmd(), filer), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getFilerJsonCommand(filer string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s --json corefiler.get %s", a.getBaseAvereCmd(), filer), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s --json corefiler.get \"%s\"", a.getBaseAvereCmd(), filer), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getCreateCoreFilerCommand(coreFiler *CoreFiler) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.create %s %s true \"{'filerNetwork':'cluster','filerClass':'Other','cachePolicy':'%s',}\"", a.getBaseAvereCmd(), coreFiler.Name, coreFiler.FqdnOrPrimaryIp, coreFiler.CachePolicy), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.create \"%s\" \"%s\" true \"{'filerNetwork':'cluster','filerClass':'Other','cachePolicy':'%s',}\"", a.getBaseAvereCmd(), coreFiler.Name, coreFiler.FqdnOrPrimaryIp, coreFiler.CachePolicy), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getCreateAzureStorageFilerCommand(azureStorageFiler *AzureStorageFiler) (string, error) {
@@ -961,11 +961,11 @@ func (a *AvereVfxt) getCreateAzureStorageFilerCommand(azureStorageFiler *AzureSt
 	if err != nil {
 		return "", err
 	}
-	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.createCloudFiler %s \"{'cryptoMode':'DISABLED','maxCallsBeforeResetHTTPS':'9999','bucketContents':'%s','connectionFailoverMode':'skipBad','force':'false','connectionMode':'2','compressMode':'DISABLED','serverName':'%s.blob.core.windows.net','filerNetwork':'cluster','bucket':'%s/%s','sslVerifyMode':'DISABLED','sslMethod':'autonegotiate','cachePolicyName':'Full Caching','cloudCredential':'%s','https':'yes','nearline':'no','cloudType':'azure','type':'cloud','port': '443'}\"", a.getBaseAvereCmd(), azureStorageFiler.GetCloudFilerName(), bucketContents, azureStorageFiler.AccountName, azureStorageFiler.AccountName, azureStorageFiler.Container, azureStorageFiler.GetCloudFilerName()), AverecmdLogFile), nil
+	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.createCloudFiler \"%s\" \"{'cryptoMode':'DISABLED','maxCallsBeforeResetHTTPS':'9999','bucketContents':'%s','connectionFailoverMode':'skipBad','force':'false','connectionMode':'2','compressMode':'DISABLED','serverName':'%s.blob.core.windows.net','filerNetwork':'cluster','bucket':'%s/%s','sslVerifyMode':'DISABLED','sslMethod':'autonegotiate','cachePolicyName':'Full Caching','cloudCredential':'%s','https':'yes','nearline':'no','cloudType':'azure','type':'cloud','port': '443'}\"", a.getBaseAvereCmd(), azureStorageFiler.GetCloudFilerName(), bucketContents, azureStorageFiler.AccountName, azureStorageFiler.AccountName, azureStorageFiler.Container, azureStorageFiler.GetCloudFilerName()), AverecmdLogFile), nil
 }
 
 func (a *AvereVfxt) getDeleteFilerCommand(filer string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.remove %s", a.getBaseAvereCmd(), filer), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.remove \"%s\"", a.getBaseAvereCmd(), filer), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getListCredentialsCommand() string {
@@ -982,11 +982,11 @@ func (a *AvereVfxt) getCreateAzureStorageCredentialsCommand(azureStorageFiler *A
 		return "", err
 	}
 
-	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.createCredential %s azure-storage \"{'note':'Automatically created from Terraform','storageKey':'BASE64:%s','tenant':'%s','subscription':'%s',}\"", a.getBaseAvereCmd(), azureStorageFiler.GetCloudFilerName(), key, azureStorageFiler.AccountName, subscriptionId), AverecmdLogFile), nil
+	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.createCredential \"%s\" azure-storage \"{'note':'Automatically created from Terraform','storageKey':'BASE64:%s','tenant':'%s','subscription':'%s',}\"", a.getBaseAvereCmd(), azureStorageFiler.GetCloudFilerName(), key, azureStorageFiler.AccountName, subscriptionId), AverecmdLogFile), nil
 }
 
 func (a *AvereVfxt) getDeleteAzureStorageCredentialsCommand(azureStorageFiler *AzureStorageFiler) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.removeCredential %s", a.getBaseAvereCmd(), azureStorageFiler.GetCloudFilerName()), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.removeCredential \"%s\"", a.getBaseAvereCmd(), azureStorageFiler.GetCloudFilerName()), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getVServerClientIPHomeJsonCommand() string {
@@ -1002,15 +1002,15 @@ func (a *AvereVfxt) getCreateCachePolicyCommand(cachePolicy string, checkAttribu
 }
 
 func (a *AvereVfxt) getListJunctionsJsonCommand() string {
-	return WrapCommandForLogging(fmt.Sprintf("%s --json vserver.listJunctions %s", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s --json vserver.listJunctions \"%s\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getCreateJunctionCommand(junction *Junction) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s vserver.addJunction %s %s %s %s \"{'sharesubdir':'','inheritPolicy':'yes','sharename':'','access':'posix','createSubdirs':'yes','subdir':'','policy':'','permissions':'%s'}\"", a.getBaseAvereCmd(), VServerName, junction.NameSpacePath, junction.CoreFilerName, junction.CoreFilerExport, junction.SharePermissions), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s vserver.addJunction \"%s\" \"%s\" \"%s\" \"%s\" \"{'sharesubdir':'','inheritPolicy':'yes','sharename':'','access':'posix','createSubdirs':'yes','subdir':'','policy':'','permissions':'%s'}\"", a.getBaseAvereCmd(), VServerName, junction.NameSpacePath, junction.CoreFilerName, junction.CoreFilerExport, junction.SharePermissions), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getDeleteJunctionCommand(junctionNameSpacePath string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s vserver.removeJunction %s %s", a.getBaseAvereCmd(), VServerName, junctionNameSpacePath), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s vserver.removeJunction \"%s\" \"%s\"", a.getBaseAvereCmd(), VServerName, junctionNameSpacePath), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getSetNtpServersCommand(ntpServer1 string, ntpServer2 string, ntpServer3 string) string {
