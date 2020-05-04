@@ -75,11 +75,11 @@ Azure Artist Anywhere is composed of the following open-source software and Micr
 
 The following diagram depicts the Azure Artist Anywhere solution architecture spanning on-premises and Microsoft Azure.
 
-![](https://mediastudio.blob.core.windows.net/bin/Artist.Anywhere-Solution.Architecture-(04.01.2020).png)
+![](https://mediastudio.blob.core.windows.net/bin/Artist.Anywhere-Solution.Architecture-(07.01.2020).png)
 
 The following diagram represents the Azure Artist Anywhere deployment modules along with their dependency relationship.
 
-![](https://mediastudio.blob.core.windows.net/bin/Artist.Anywhere-Module.Dependency-(04.01.2020).png)
+![](https://mediastudio.blob.core.windows.net/bin/Artist.Anywhere-Module.Dependency-(07.01.2020).png)
 
 The following list describes each of the Azure Artist Anywhere deployment script files.
 
