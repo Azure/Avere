@@ -29,7 +29,7 @@ type AvereVfxt struct {
 	NodeCount            int
 	NodeCacheSize        int
 
-	NtpServers *[]string
+	NtpServers string
 	Timezone   string
 	DnsServer  string
 	DnsDomain  string
@@ -127,4 +127,7 @@ type Cluster struct {
 	DnsServer    string    `json:"DNSserver"`
 	DnsDomain    string    `json:"DNSdomain"`
 	DnsSearch    string    `json:"DNSsearch"`
+	NtpServers   string    `json:"NTPservers"`
+	ClusterName  string    `json:"name"`
+	Proxy        string    `json:"proxy"`
 }

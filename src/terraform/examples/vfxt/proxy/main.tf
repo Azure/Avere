@@ -165,7 +165,7 @@ resource "avere_vfxt" "vfxt" {
     vfxt_admin_password = local.vfxt_cluster_password
     vfxt_node_count = 3
     global_custom_settings = []
-    ntp_servers = ["169.254.169.254"]
+    ntp_servers = "169.254.169.254"
     proxy_uri = "http://${module.proxy.address}:3128"
     cluster_proxy_uri = "http://${module.proxy.address}:3128"
     image_id = local.vfxt_image_id

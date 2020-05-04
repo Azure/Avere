@@ -51,7 +51,7 @@ func NewAvereVfxt(
 	enableSupportUploads bool,
 	nodeCount int,
 	nodeCacheSize int,
-	ntpServers *[]string,
+	ntpServers string,
 	timezone string,
 	dnsServer string,
 	dnsDomain string,
@@ -341,24 +341,8 @@ func (a *AvereVfxt) EnsureClusterStable() error {
 	return nil
 }
 
-func (a *AvereVfxt) SetNtpServers(ntpServers *[]string) error {
-	if len(*ntpServers) == 0 {
-		return fmt.Errorf("ntp servers are empty, this is a bug, and validation should have blocked setting of empty NTP servers")
-	}
-
-	ntpServer1 := (*ntpServers)[0]
-
-	ntpServer2 := ""
-	if len(*ntpServers) > 1 {
-		ntpServer2 = (*ntpServers)[1]
-	}
-
-	ntpServer3 := ""
-	if len(*ntpServers) > 2 {
-		ntpServer3 = (*ntpServers)[2]
-	}
-
-	_, err := a.AvereCommand(a.getSetNtpServersCommand(ntpServer1, ntpServer2, ntpServer3))
+func (a *AvereVfxt) SetNtpServers(ntpServers string) error {
+	_, err := a.AvereCommand(a.getSetNtpServersCommand(ntpServers))
 	return err
 }
 
@@ -995,8 +979,20 @@ func (a *AvereVfxt) getClusterModifyCommand(cluster Cluster) string {
 	return WrapCommandForLogging(fmt.Sprintf("%s cluster.modify \"{'timezone':'%s','DNSserver':'%s','DNSdomain':'%s','DNSsearch':'%s','mgmtIP':{'IP': '%s','netmask':'%s','vlan':'%s'}}\"", a.getBaseAvereCmd(), a.Timezone, dnsServer, dnsDomain, dnsSearch, cluster.MgmtIP.IP, cluster.MgmtIP.Netmask, cluster.InternetVlan), AverecmdLogFile)
 }
 
-func (a *AvereVfxt) getSetNtpServersCommand(ntpServer1 string, ntpServer2 string, ntpServer3 string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s cluster.modifyNTP \"%s\" \"%s\" \"%s\"", a.getBaseAvereCmd(), ntpServer1, ntpServer2, ntpServer3), AverecmdLogFile)
+func (a *AvereVfxt) getSetNtpServersCommand(ntpServers string) string {
+	ntp_max_size := 3
+	ntpPartialSlice := strings.Split(ntpServers, " ")
+	var ntpFullSlice []string
+	if len(ntpPartialSlice) >= ntp_max_size {
+		ntpFullSlice = ntpPartialSlice
+	} else {
+		ntpFullSlice = make([]string, ntp_max_size)
+		for i, v := range ntpPartialSlice {
+			ntpFullSlice[i] = v
+		}
+	}
+
+	return WrapCommandForLogging(fmt.Sprintf("%s cluster.modifyNTP \"%s\" \"%s\" \"%s\"", a.getBaseAvereCmd(), ntpFullSlice[0], ntpFullSlice[1], ntpFullSlice[2]), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getGetActiveAlertsJsonCommand() string {
