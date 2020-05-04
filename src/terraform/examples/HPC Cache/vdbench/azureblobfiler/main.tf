@@ -98,7 +98,7 @@ resource "azurerm_hpc_cache" "hpc_cache" {
   location            = azurerm_resource_group.hpc_cache_rg.location
   cache_size_in_gb    = local.cache_size
   subnet_id           = module.network.cloud_filers_subnet_id
-  sku_name            = "Standard_2G"
+  sku_name            = local.cache_throughput
 }
 
 resource "azurerm_resource_group" "storage" {
