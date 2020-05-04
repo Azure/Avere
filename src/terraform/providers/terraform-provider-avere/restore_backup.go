@@ -675,7 +675,7 @@ func WriteTerraformFiles(vfxtBackupDirectory string) error {
 		return fmt.Errorf("error writing contents to '%s': '%v'", VfxtTerraformFilename, err)
 	}
 	file.Close()
-	fmt.Printf("'%s' written, derived from backup '%s'", VfxtTerraformFilename, vfxtBackupDirectory)
+	fmt.Printf("'%s' written, derived from backup '%s'\n", VfxtTerraformFilename, vfxtBackupDirectory)
 
 	tf = GetHPCCacheTerraform(avereVfxt, coreFilers, storageFilers, junctions)
 
@@ -688,7 +688,7 @@ func WriteTerraformFiles(vfxtBackupDirectory string) error {
 		return fmt.Errorf("error writing contents to '%s': '%v'", HPCCacheTerraformFilename, err)
 	}
 	file.Close()
-	fmt.Printf("'%s' written, derived from backup '%s'", HPCCacheTerraformFilename, vfxtBackupDirectory)
+	fmt.Printf("'%s' written, derived from backup '%s'\n", HPCCacheTerraformFilename, vfxtBackupDirectory)
 
 	return nil
 }

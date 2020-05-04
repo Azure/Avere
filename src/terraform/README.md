@@ -34,6 +34,7 @@ Both HPC Cache and Avere vFXT for Azure provide file caching for high-performanc
 5. [NFS Ephemeral Filer](examples/nfsfiler) - builds high performance NFS filers.
 6. [Jumpbox](examples/jumpbox) - this deploys a VM pre-installed with pre-installed with az cli, terraform, golang, and the built avere provider
 Security.
+7. [Backup Restore](examples/backuprestore) - Backup any FXT or vFXT cluster and build terraform to restore to HPC Cache or Avere vFXT for Azure.
 
 # Modules
 
