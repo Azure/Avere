@@ -46,6 +46,18 @@ resource "azurerm_network_security_group" "ssh_nsg" {
     }
 
     security_rule {
+        name                       = "allowazurestorage"
+        priority                   = 2010
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "443"
+        source_address_prefix      = "VirtualNetwork"
+        destination_address_prefix = "Storage.${var.location}"
+    }
+
+    security_rule {
         name                       = "denyallin"
         priority                   = 3000
         direction                  = "Inbound"
@@ -197,6 +209,8 @@ resource "azurerm_subnet" "jumpbox" {
     virtual_network_name = azurerm_virtual_network.vnet.name
     resource_group_name  = azurerm_resource_group.render_rg.name
     address_prefix       = var.subnet_jumpbox_address_prefix
+    # needed for the controller to add storage containers
+    service_endpoints    = ["Microsoft.Storage"]
 }
 
 resource "azurerm_subnet_network_security_group_association" "jumpbox" {
@@ -234,7 +248,6 @@ resource "azurerm_subnet" "proxy" {
     virtual_network_name = azurerm_virtual_network.vnet.name
     resource_group_name  = azurerm_resource_group.render_rg.name
     address_prefix       = var.subnet_proxy_address_prefix
-    service_endpoints    = ["Microsoft.Storage"]
 }
 
 resource "azurerm_subnet_network_security_group_association" "proxy" {

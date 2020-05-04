@@ -95,7 +95,7 @@ resource "azurerm_storage_account" "storage" {
   network_rules {
       virtual_network_subnet_ids = [
           module.network.cloud_cache_subnet_id,
-          module.network.proxy_subnet_id,
+          module.network.jumpbox_subnet_id,
       ]
       default_action = "Deny"
   }
