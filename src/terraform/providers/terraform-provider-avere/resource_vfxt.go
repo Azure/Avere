@@ -82,13 +82,9 @@ func resourceVfxt() *schema.Resource {
 				ValidateFunc: validation.StringIsNotWhiteSpace,
 			},
 			ntp_servers: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 3,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringIsNotEmpty,
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringIsNotWhiteSpace,
 			},
 			timezone: {
 				Type:         schema.TypeString,
@@ -602,7 +598,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(enable_support_uploads).(bool),
 		d.Get(vfxt_node_count).(int),
 		d.Get(node_cache_size).(int),
-		utils.ExpandStringSlice(d.Get(ntp_servers).([]interface{})),
+		d.Get(ntp_servers).(string),
 		d.Get(timezone).(string),
 		d.Get(dns_server).(string),
 		d.Get(dns_domain).(string),
@@ -617,11 +613,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 }
 
 func updateNtpServers(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
-	ntpServers := utils.ExpandStringSlice(d.Get(ntp_servers).([]interface{}))
-	if len(*ntpServers) == 0 {
-		return nil
-	}
-	return avereVfxt.SetNtpServers(ntpServers)
+	return avereVfxt.SetNtpServers(d.Get(ntp_servers).(string))
 }
 
 func createGlobalSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {

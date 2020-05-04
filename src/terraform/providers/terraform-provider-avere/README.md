@@ -22,7 +22,7 @@ resource "avere_vfxt" "vfxt" {
     // ssh key comes from ~/.ssh/id_rsa otherwise you can specify password
     //controller_admin_password = ""
     
-    ntp_servers = ["169.254.169.254"]
+    ntp_servers = "169.254.169.254"
     proxy_uri = "http://10.0.254.250:3128"
     cluster_proxy_uri = "http://10.0.254.250:3128"
     
@@ -94,7 +94,7 @@ The following arguments are supported:
 * <a name="azure_network_resource_group"></a>[azure_network_resource_group](#azure_network_resource_group) - (Required) this is the resource group of the VNET to where the vFXT will be deployed.
 * <a name="azure_network_name"></a>[azure_network_name](#azure_network_name) - (Required) this is the name of the VNET to where the vFXT will be deployed.
 * <a name="azure_subnet_name"></a>[azure_subnet_name](#azure_subnet_name) - (Required) this is the name of the subnet to where the vFXT will be deployed.  As a best practice the Avere vFXT should be installed in its own VNET.
-* <a name="ntp_servers"></a>[ntp_servers](#ntp_servers) - (Optional) specify up to 3 NTP servers for the Avere to use, otherwise Avere defaults to time.windows.com.
+* <a name="ntp_servers"></a>[ntp_servers](#ntp_servers) - (Optional) A space separated list of up to 3 NTP servers for the Avere to use, otherwise Avere defaults to time.windows.com.
 * <a name="timezone"></a>[timezone](#timezone) - (Optional) The clusters local timezone.  Choose from a timezone defined in the [timezone file](timezone.go).  The default is "UTC".
 * <a name="dns_server"></a>[dns_server](#dns_server) - (Optional) A space separated list of up to 3 DNS Servers.
 * <a name="dns_domain"></a>[dns_domain](#dns_domain) - (Optional) Name of the network's DNS domain.
