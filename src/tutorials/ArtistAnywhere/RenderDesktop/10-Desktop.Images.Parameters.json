@@ -6,7 +6,7 @@
       "value": {
         "machineImages": [
           {
-            "enabled": true,
+            "enabled": false,
             "templateName": "LinuxDesktop",
             "definitionName": "LinuxDesktop",
             "sourceType": "PlatformImage",
@@ -23,7 +23,7 @@
             "buildTimeoutMinutes": 120
           },
           {
-            "enabled": true,
+            "enabled": false,
             "templateName": "WindowsDesktop",
             "definitionName": "WindowsDesktop",
             "sourceType": "PlatformImage",

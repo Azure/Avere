@@ -7,10 +7,9 @@
         "machineCountPerType": 1,
         "machineTypes": [
           {
-            "enabled": true,
+            "enabled": false,
             "namePrefix": "renderHostLNV",
             "machineSize": "Standard_NV6",
-            "acceleratedNetworking": false,
             "image": {
               "templateName": "LinuxDesktop",
               "definitionName": "LinuxDesktop",
@@ -41,10 +40,9 @@
             }
           },
           {
-            "enabled": true,
+            "enabled": false,
             "namePrefix": "renderHostWNV",
             "machineSize": "Standard_NV6",
-            "acceleratedNetworking": false,
             "image": {
               "templateName": "WindowsDesktop",
               "definitionName": "WindowsDesktop",
@@ -85,9 +83,9 @@
     },
     "virtualNetwork": {
       "value": {
-        "resourceGroupName": "",
         "name": "",
-        "subnetName": "Desktop"
+        "subnetName": "Desktop",
+        "resourceGroupName": ""
       }
     }
   }

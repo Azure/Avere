@@ -4,10 +4,10 @@
   "parameters": {
     "storageAccount": {
       "value": {
-        "name": "MediaStudio",
+        "name": "MediaStudioWest",
         "type": "StorageV2",
         "replication": "Standard_LRS",
-        "subnetName": ""
+        "subnetName": "Object"
       }
     },
     "storageContainers": {
@@ -23,19 +23,12 @@
         }
       ]
     },
+    "storageMounts": {
+      "value": [
+      ]
+    },
     "storageTargets": {
       "value": [
-        {
-          "name": "Frames",
-          "type": "clfs",
-          "junctions": [
-            {
-              "namespacePath": "/storage/object/frames",
-              "targetPath": ""
-            }
-          ],
-          "mountOptions": "nfs vers=3,hard,proto=tcp,mountproto=tcp,retry=30 0 0"
-        },
         {
           "name": "Scenes",
           "type": "clfs",
@@ -62,7 +55,7 @@
     },
     "virtualNetwork": {
       "value": {
-        "name": "MediaStorage",
+        "name": "MediaStorageWest",
         "addressSpace": "10.9.255.0/24",
         "subnets": [
           {

@@ -1,8 +1,4 @@
-﻿# Before running this Azure resource deployment script, make sure that the Azure CLI is installed locally.
-# You must have version 2.4.0 (or greater) of the Azure CLI installed for this script to run properly.
-# The current Azure CLI release is available at http://docs.microsoft.com/cli/azure/install-azure-cli
-
-param (
+﻿param (
 	# Set a naming prefix for the Azure resource groups that are created by this deployment script
 	[string] $resourceGroupNamePrefix,
 
@@ -18,7 +14,7 @@ if (!$templateDirectory) {
 	$templateDirectory = $using:templateDirectory
 }
 
-Import-Module "$templateDirectory\Deploy.psm1"
+Import-Module "$templateDirectory/Deploy.psm1"
 
 $moduleDirectory = "RenderDesktop"
 
@@ -26,12 +22,12 @@ $moduleDirectory = "RenderDesktop"
 $computeRegionIndex = 0
 $moduleName = "10.0 - Desktop Image Template"
 New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
-$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Image"
+$resourceGroupName = Get-ResourceGroupName $computeRegionIndex $resourceGroupNamePrefix "Image"
 $resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 if (!$resourceGroup) { return }
 
-$templateResources = "$templateDirectory\$moduleDirectory\10-Desktop.Image.json"
-$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\10-Desktop.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
+$templateResources = "$templateDirectory/$moduleDirectory/10-Desktop.Images.json"
+$templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/10-Desktop.Images.Parameters.json" -Raw | ConvertFrom-Json).parameters
 if ($templateParameters.imageBuilder.value.imageGalleryName -eq "") {
 	$templateParameters.imageBuilder.value.imageGalleryName = $imageGallery.name
 }
@@ -48,10 +44,10 @@ $imageVersionIds = @()
 $computeRegionIndex = 0
 $moduleName = "10.1 - Desktop Image Version"
 New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
-$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\10-Desktop.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters
+$templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/10-Desktop.Images.Parameters.json" -Raw | ConvertFrom-Json).parameters
 foreach ($machineImage in $templateParameters.renderDesktop.value.machineImages) {
 	New-TraceMessage "$moduleName [$($machineImage.templateName)]" $false $computeRegionNames[$computeRegionIndex]
-	$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Image"
+	$resourceGroupName = Get-ResourceGroupName $computeRegionIndex $resourceGroupNamePrefix "Image"
 	$imageVersionId = Get-ImageVersionId $resourceGroupName $imageGallery.name $machineImage.definitionName $machineImage.templateName
 	if (!$imageVersionId -and $machineImage.enabled) {
 		az image builder run --resource-group $resourceGroupName --name $machineImage.templateName

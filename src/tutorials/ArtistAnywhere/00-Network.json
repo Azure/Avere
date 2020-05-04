@@ -137,13 +137,9 @@
     }
   ],
   "outputs": {
-    "virtualNetworkName": {
-      "type": "string",
-      "value": "[parameters('virtualNetwork').name]"
-    },
-    "virtualNetworkDomainName": {
-      "type": "string",
-      "value": "[parameters('virtualNetwork').domainName]"
+    "virtualNetwork": {
+      "type": "object",
+      "value": "[parameters('virtualNetwork')]"
     }
   }
 }

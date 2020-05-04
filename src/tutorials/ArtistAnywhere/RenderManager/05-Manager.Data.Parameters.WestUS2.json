@@ -17,9 +17,9 @@
     },
     "virtualNetwork": {
       "value": {
-        "resourceGroupName": "",
         "name": "",
-        "subnetName": "Render"
+        "subnetName": "Render",
+        "resourceGroupName": ""
       }
     }
   }

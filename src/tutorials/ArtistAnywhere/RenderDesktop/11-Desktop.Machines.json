@@ -125,7 +125,6 @@
       "location": "[resourceGroup().location]",
       "properties": {
         "primary": true,
-        "enableAcceleratedNetworking": "[parameters('renderDesktop').machineTypes[desktop.GetMachineIndex(parameters('renderDesktop').machineTypes, copyIndex())].acceleratedNetworking]",
         "ipConfigurations": [
           {
             "name": "ipConfig0",

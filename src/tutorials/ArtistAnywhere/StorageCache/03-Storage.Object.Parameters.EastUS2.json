@@ -1,0 +1,90 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageAccount": {
+      "value": {
+        "name": "MediaStudioEast",
+        "type": "StorageV2",
+        "replication": "Standard_LRS",
+        "subnetName": "Object"
+      }
+    },
+    "storageContainers": {
+      "value": [
+        {
+          "name": "frames"
+        },
+        {
+          "name": "scenes"
+        },
+        {
+          "name": "tools"
+        }
+      ]
+    },
+    "storageMounts": {
+      "value": [
+      ]
+    },
+    "storageTargets": {
+      "value": [
+        {
+          "name": "Scenes",
+          "type": "clfs",
+          "junctions": [
+            {
+              "namespacePath": "/storage/object/scenes",
+              "targetPath": ""
+            }
+          ],
+          "mountOptions": "nfs vers=3,hard,proto=tcp,mountproto=tcp,retry=30 0 0"
+        },
+        {
+          "name": "Tools",
+          "type": "clfs",
+          "junctions": [
+            {
+              "namespacePath": "/storage/object/tools",
+              "targetPath": ""
+            }
+          ],
+          "mountOptions": "nfs vers=3,hard,proto=tcp,mountproto=tcp,retry=30 0 0"
+        }
+      ]
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "MediaStorageEast",
+        "addressSpace": "10.10.255.0/24",
+        "subnets": [
+          {
+            "name": "NetApp",
+            "addressSpace": "10.10.255.0/25",
+            "serviceEndpoints": [
+            ],
+            "delegations": [
+              {
+                "name": "netAppVolumes",
+                "properties": {
+                  "serviceName": "Microsoft.NetApp/volumes"
+                }
+              }
+            ]
+          },
+          {
+            "name": "Object",
+            "addressSpace": "10.10.255.128/25",
+            "serviceEndpoints": [
+              {
+                "service": "Microsoft.Storage"
+              }
+            ],
+            "delegations": [
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

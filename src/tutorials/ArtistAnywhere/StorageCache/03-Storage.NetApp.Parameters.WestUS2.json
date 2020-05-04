@@ -4,7 +4,7 @@
   "parameters": {
     "storageAccount": {
       "value": {
-        "name": "MediaStudio",
+        "name": "MediaStudioWest",
         "subnetName": "NetApp"
       }
     },
@@ -69,27 +69,25 @@
         }
       ]
     },
-    "storageTargets": {
+    "storageMounts": {
       "value": [
         {
-          "name": "Frames",
-          "type": "nfs3",
-          "junctions": [
-            {
-              "namespacePath": "/storage/netApp/frames",
-              "nfsExport": "/frames",
-              "targetPath": ""
-            }
-          ],
-          "mountOptions": "nfs vers=3,hard,proto=tcp,mountproto=tcp,retry=30 0 0",
-          "usageModel": "WRITE_AROUND"
-        },
+          "pool": "Storage",
+          "volume": "Frames",
+          "exportPath": "/frames",
+          "directory": "/storage/netapp/frames",
+          "options": "-t nfs -o rw,hard,rsize=65536,wsize=65536,vers=3,tcp"
+        }
+      ]
+    },
+    "storageTargets": {
+      "value": [
         {
           "name": "Scenes",
           "type": "nfs3",
           "junctions": [
             {
-              "namespacePath": "/storage/netApp/scenes",
+              "namespacePath": "/storage/netapp/scenes",
               "nfsExport": "/scenes",
               "targetPath": ""
             }
@@ -102,7 +100,7 @@
           "type": "nfs3",
           "junctions": [
             {
-              "namespacePath": "/storage/netApp/tools",
+              "namespacePath": "/storage/netapp/tools",
               "nfsExport": "/tools",
               "targetPath": ""
             }
@@ -114,7 +112,7 @@
     },
     "virtualNetwork": {
       "value": {
-        "name": "MediaStorage",
+        "name": "MediaStorageWest",
         "addressSpace": "10.9.255.0/24",
         "subnets": [
           {

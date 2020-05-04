@@ -15,18 +15,23 @@
 	Write-Host $traceMessage
 }
 
-function New-NetworkPeering ([string[]] $computeRegionNames, [object[]] $computeNetworks, $storageNetwork, $storageType) {
-	$moduleName = "03.1 - $storageType Storage Network Peering"
+function New-NetworkPeering ([string[]] $computeRegionNames, [object[]] $computeNetworks, $storageNetwork, $moduleName) {
+	$moduleName += " Network Peering"
 	New-TraceMessage $moduleName $false
-	$storageNetworkId = az network vnet show --resource-group $storageNetwork.resourceGroupName --name $storageNetwork.name --query id
+	$storageNetwork = (az network vnet show --resource-group $storageNetwork.resourceGroupName --name $storageNetwork.name)  | ConvertFrom-Json
+	foreach ($storageNetworkPeering in $storageNetwork.virtualNetworkPeerings) {
+		if ($storageNetworkPeering.peeringState -eq "Disconnected") {
+			az network vnet peering delete --resource-group $storageNetwork.resourceGroup --vnet-name $storageNetwork.name --name $storageNetworkPeering.name
+		}
+	}
 	for ($computeNetworkIndex = 0; $computeNetworkIndex -lt $computeNetworks.length; $computeNetworkIndex++) {
 		New-TraceMessage $moduleName $false $computeRegionNames[$computeNetworkIndex]
 		$computeNetworkResourceGroupName = $computeNetworks[$computeNetworkIndex].resourceGroupName
 		$computeNetworkName = $computeNetworks[$computeNetworkIndex].name
-		$networkPeering = az network vnet peering create --resource-group $computeNetworkResourceGroupName --vnet-name $computeNetworkName --name $storageNetwork.name --remote-vnet $storageNetworkId --allow-vnet-access
+		$computeNetwork = (az network vnet show --resource-group $computeNetworkResourceGroupName --name $computeNetworkName)  | ConvertFrom-Json
+		$networkPeering = az network vnet peering create --resource-group $computeNetworkResourceGroupName --vnet-name $computeNetwork.name --name $storageNetwork.name --remote-vnet $storageNetwork.id --allow-vnet-access
 		if (!$networkPeering) { return }
-		$computeNetworkId = az network vnet show --resource-group $computeNetworkResourceGroupName --name $computeNetworkName --query id
-		$networkPeering = az network vnet peering create --resource-group $storageNetwork.resourceGroupName --vnet-name $storageNetwork.name --name $computeNetworkName --remote-vnet $computeNetworkId --allow-vnet-access
+		$networkPeering = az network vnet peering create --resource-group $storageNetwork.resourceGroup --vnet-name $storageNetwork.name --name $computeNetwork.name --remote-vnet $computeNetwork.id --allow-vnet-access
 		if (!$networkPeering) { return }
 		New-TraceMessage $moduleName $true $computeRegionNames[$computeNetworkIndex]
 	}
@@ -34,12 +39,12 @@ function New-NetworkPeering ([string[]] $computeRegionNames, [object[]] $compute
 	return $networkPeering
 }
 
-function New-SharedServices ($networkOnly, $computeRegionNames, $computeNetworks) {
+function New-SharedServices ($resourceGroupNamePrefix, $templateDirectory, $networkOnly, $computeRegionNames, $computeNetworks) {
 	if (!$networkOnly) {
 		# * - Image Gallery Job
 		$moduleName = "* - Image Gallery Job"
 		New-TraceMessage $moduleName $false
-		$imageGalleryJob = Start-Job -FilePath "$templateDirectory\Deploy.ImageGallery.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames
+		$imageGalleryJob = Start-Job -FilePath "$templateDirectory/Deploy.ImageGallery.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames
 	}
 
 	if (!$computeNetworks -or $computeNetworks.length -eq 0) {
@@ -50,19 +55,17 @@ function New-SharedServices ($networkOnly, $computeRegionNames, $computeNetworks
 		for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
 			$computeRegionName = $computeRegionNames[$computeRegionIndex]
 			New-TraceMessage $moduleName $false $computeRegionName
-			$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Network"
+			$resourceGroupName = Get-ResourceGroupName $computeRegionIndex $resourceGroupNamePrefix "Network"
 			$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionName
 			if (!$resourceGroup) { return }
 
-			$templateResources = "$templateDirectory\00-Network.json"
-			$templateParameters = "$templateDirectory\00-Network.Parameters.$computeRegionName.json"
+			$templateResources = "$templateDirectory/00-Network.json"
+			$templateParameters = "$templateDirectory/00-Network.Parameters.$computeRegionName.json"
 			$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 			if (!$groupDeployment) { return }
 
-			$computeNetwork = New-Object PSObject
+			$computeNetwork = $groupDeployment.properties.outputs.virtualNetwork.value
 			$computeNetwork | Add-Member -MemberType NoteProperty -Name "resourceGroupName" -Value $resourceGroupName
-			$computeNetwork | Add-Member -MemberType NoteProperty -Name "name" -Value $groupDeployment.properties.outputs.virtualNetworkName.value
-			$computeNetwork | Add-Member -MemberType NoteProperty -Name "domainName" -Value $groupDeployment.properties.outputs.virtualNetworkDomainName.value
 			$computeNetworks += $computeNetwork
 			New-TraceMessage $moduleName $true $computeRegionName
 		}
@@ -74,17 +77,17 @@ function New-SharedServices ($networkOnly, $computeRegionNames, $computeNetworks
 		$computeRegionIndex = 0
 		$moduleName = "02 - Security"
 		New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
-		$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Security"
+		$resourceGroupName = Get-ResourceGroupName $computeRegionIndex $resourceGroupNamePrefix "Security"
 		$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 		if (!$resourceGroup) { return }
 
-		$templateResources = "$templateDirectory\02-Security.json"
-		$templateParameters = (Get-Content "$templateDirectory\02-Security.Parameters.json" -Raw | ConvertFrom-Json).parameters
-		if ($templateParameters.virtualNetwork.value.resourceGroupName -eq "") {
-			$templateParameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
-		}
+		$templateResources = "$templateDirectory/02-Security.json"
+		$templateParameters = (Get-Content "$templateDirectory/02-Security.Parameters.json" -Raw | ConvertFrom-Json).parameters
 		if ($templateParameters.virtualNetwork.value.name -eq "") {
 			$templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
+		}
+		if ($templateParameters.virtualNetwork.value.resourceGroupName -eq "") {
+			$templateParameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
 		}
 		$templateParameters = '"{0}"' -f ($templateParameters | ConvertTo-Json -Compress).Replace('"', '\"')
 		$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
@@ -125,9 +128,9 @@ function Get-RegionNames ([string[]] $regionDisplayNames) {
 	return $regionNames
 }
 
-function Get-ResourceGroupName ([string[]] $computeRegionNames, $computeRegionIndex, $resourceGroupNamePrefix, $resourceGroupNameSuffix) {
-	$computeRegionId = $computeRegionIndex + 1
-	$resourceGroupName = "$resourceGroupNamePrefix$computeRegionId"
+function Get-ResourceGroupName ($regionIndex, $resourceGroupNamePrefix, $resourceGroupNameSuffix) {
+	$regionId = $regionIndex + 1
+	$resourceGroupName = "$resourceGroupNamePrefix$regionId"
 	return "$resourceGroupName-$resourceGroupNameSuffix"
 }
 
@@ -148,20 +151,20 @@ function Get-ImageVersionId ($imageGalleryResourceGroupName, $imageGalleryName, 
 	}
 }
 
-function Get-CacheMounts ($storageCache) {
-	$cacheMounts = ""
-	foreach ($storageCacheMount in $storageCache.mounts) {
-		if ($cacheMounts -ne "") {
-			$cacheMounts += "|"
+function Get-FileSystemMounts ($storageCache) {
+	$fsMounts = ""
+	foreach ($fileSystem in $storageCache) {
+		if ($fsMounts -ne "") {
+			$fsMounts += "|"
 		}
-		$cacheMount = $storageCacheMount.targetHost + ":" + $storageCacheMount.namespacePath
-		$cacheMount += " " + $storageCacheMount.namespacePath
-		$cacheMount += " " + $storageCacheMount.mountOptions
-		$cacheMounts += $cacheMount
+		$fsMount = $fileSystem.exportHost + ":" + $fileSystem.exportPath
+		$fsMount += " " + $fileSystem.directory
+		$fsMount += " " + $fileSystem.options
+		$fsMounts += $fsMount
 	}
 	$memoryStream = New-Object System.IO.MemoryStream
 	$streamWriter = New-Object System.IO.StreamWriter($memoryStream)
-	$streamWriter.Write($cacheMounts)
+	$streamWriter.Write($fsMounts)
 	$streamWriter.Close();
 	return [System.Convert]::ToBase64String($memoryStream.ToArray())	
 }

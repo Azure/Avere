@@ -8,11 +8,11 @@ cp opencue-rqd.service /etc/systemd/system
 systemctl enable opencue-rqd
 systemctl start opencue-rqd
 
-IFS='|' read -a cacheMounts <<< "$CACHE_MOUNTS"
-for cacheMount in "${cacheMounts[@]}"
+IFS='|' read -a fileSystemMounts <<< "$FILE_SYSTEM_MOUNTS"
+for fileSystemMount in "${fileSystemMounts[@]}"
 do
-	localPath="$(cut --delimiter ' ' --fields 2 <<< $cacheMount)"
-	mkdir --parents $localPath
-	echo $cacheMount >> /etc/fstab
+	localPath="$(cut -d ' ' -f 2 <<< $fileSystemMount)"
+	mkdir -p $localPath
+	echo $fileSystemMount >> /etc/fstab
 done
-mount --all
+mount -a

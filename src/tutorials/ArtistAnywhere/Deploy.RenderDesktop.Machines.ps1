@@ -1,8 +1,4 @@
-﻿# Before running this Azure resource deployment script, make sure that the Azure CLI is installed locally.
-# You must have version 2.4.0 (or greater) of the Azure CLI installed for this script to run properly.
-# The current Azure CLI release is available at http://docs.microsoft.com/cli/azure/install-azure-cli
-
-param (
+﻿param (
 	# Set a naming prefix for the Azure resource groups that are created by this deployment script
 	[string] $resourceGroupNamePrefix,
 
@@ -27,7 +23,7 @@ if (!$templateDirectory) {
 	$templateDirectory = $using:templateDirectory
 }
 
-Import-Module "$templateDirectory\Deploy.psm1"
+Import-Module "$templateDirectory/Deploy.psm1"
 
 $moduleDirectory = "RenderDesktop"
 
@@ -37,12 +33,12 @@ $moduleName = "11 - Desktop Machines"
 New-TraceMessage $moduleName $false
 for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
 	New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
-	$resourceGroupName = Get-ResourceGroupName $computeRegionNames $computeRegionIndex $resourceGroupNamePrefix "Desktop"
+	$resourceGroupName = Get-ResourceGroupName $computeRegionIndex $resourceGroupNamePrefix "Desktop"
 	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 	if (!$resourceGroup) { return }
 
-	$templateResources = "$templateDirectory\$moduleDirectory\11-Desktop.Machines.json"
-	$templateParameters = (Get-Content "$templateDirectory\$moduleDirectory\11-Desktop.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
+	$templateResources = "$templateDirectory/$moduleDirectory/11-Desktop.Machines.json"
+	$templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/11-Desktop.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
 	for ($machineTypeIndex = 0; $machineTypeIndex -lt $templateParameters.renderDesktop.value.machineTypes.length; $machineTypeIndex++) {
 		if ($templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].image.referenceId -eq "") {
 			$imageTemplateName = $templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].image.templateName
@@ -52,7 +48,7 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 		}
 		if ($templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptCommands -eq "") {
 			$scriptFile = $templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptFile
-			$scriptFile = "$templateDirectory\$moduleDirectory\$scriptFile"
+			$scriptFile = "$templateDirectory/$moduleDirectory/$scriptFile"
 			$imageDefinition = (az sig image-definition show --resource-group $imageGallery.resourceGroupName --gallery-name $imageGallery.name --gallery-image-definition $imageDefinitionName) | ConvertFrom-Json
 			if ($imageDefinition.osType -eq "Windows") {
 				$scriptParameters = $templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptParameters
@@ -76,11 +72,11 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	if ($templateParameters.logAnalytics.value.workspaceKey -eq "") {
 		$templateParameters.logAnalytics.value.workspaceKey = $logAnalytics.workspaceKey
 	}
-	if ($templateParameters.virtualNetwork.value.resourceGroupName -eq "") {
-		$templateParameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
-	}
 	if ($templateParameters.virtualNetwork.value.name -eq "") {
 		$templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
+	}
+	if ($templateParameters.virtualNetwork.value.resourceGroupName -eq "") {
+		$templateParameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
 	}
 	$templateParameters = '"{0}"' -f ($templateParameters | ConvertTo-Json -Compress -Depth 5).Replace('"', '\"')
 	$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
