@@ -321,15 +321,18 @@ func getAzCliGetStorageKeyCommand(avereVfxt *AvereVfxt, accountName string) stri
 }
 
 func getAzCliCreateStorageContainerCommand(avereVfxt *AvereVfxt, accountName string, container string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s az storage container create --account-name %s --name %s", getAzCliProxyExports(avereVfxt.ProxyUri), accountName, container), AzCliLogFile)
+	// data plane does not use proxy, the avere vfxt goes directly to the storage account, so the controller should also go directly there
+	return WrapCommandForLogging(fmt.Sprintf("az storage container create --account-name %s --name %s", accountName, container), AzCliLogFile)
 }
 
 func getAzCliContainerExistsCommand(avereVfxt *AvereVfxt, accountName string, container string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s az storage container exists --account-name %s --name %s", getAzCliProxyExports(avereVfxt.ProxyUri), accountName, container), AzCliLogFile)
+	// data plane does not use proxy, the avere vfxt goes directly to the storage account, so the controller should also go directly there
+	return WrapCommandForLogging(fmt.Sprintf("az storage container exists --account-name %s --name %s", accountName, container), AzCliLogFile)
 }
 
 func getAzCliListFirstBlobCommand(avereVfxt *AvereVfxt, accountName string, container string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s az storage blob list --account-name %s --container-name %s --num-results 1 --query \"[].name\"", getAzCliProxyExports(avereVfxt.ProxyUri), accountName, container), AzCliLogFile)
+	// data plane does not use proxy, the avere vfxt goes directly to the storage account, so the controller should also go directly there
+	return WrapCommandForLogging(fmt.Sprintf("az storage blob list --account-name %s --container-name %s --num-results 1 --query \"[].name\"", accountName, container), AzCliLogFile)
 }
 
 // isVfxtNotFoundReported returns true if vfxt.py reports vfxt no found
