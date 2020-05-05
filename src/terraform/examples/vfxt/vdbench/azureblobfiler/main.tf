@@ -2,20 +2,14 @@
 locals {
     // the region of the deployment
     location = "eastus"
+    resource_group_name = "vdbench_resource_group"
+    
     vm_admin_username = "azureuser"
-    // use either SSH Key data or admin password, if ssh_key_data is specified
-    // then admin_password is ignored
-    vm_admin_password = "ReplacePassword$"
-    // if you use SSH key, ensure you have ~/.ssh/id_rsa with permission 600
-    // populated where you are running terraform
+    // the vdbench example requires an ssh key
     vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
     
-    // network details
-    network_resource_group_name = "network_resource_group"
-    
     // storage details
-    storage_resource_group_name = "storage_resource_group"
-    storage_account_name = "storageaccount"
+    storage_account_name = ""
     avere_storage_container_name = "vdbench"
     nfs_export_path = "/vdbench"
     
@@ -26,26 +20,25 @@ locals {
     vfxt_cluster_name = "vfxt"
     vfxt_cluster_password = "VFXT_PASSWORD"
 
-    // advance scenario: vfxt and controller image ids, leave this null, unless not using default marketplace
-    controller_image_id = null
-    vfxt_image_id       = null
-    // advance scenario: in addition to storage account put the custom image resource group here
-    alternative_resource_groups = [local.storage_resource_group_name]
-    
     # download the latest vdbench from https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html
     # and upload to an azure storage blob and put the URL below
     vdbench_url = ""
 
     // vmss details
-    vmss_resource_group_name = "vmss_rg"
-    unique_name = ""
+    unique_name = "vmss"
     vm_count = 12
-    vmss_size = "Standard_DS2_v2"
+    vmss_size = "Standard_D2s_v3"
     mount_target = "/data"
+
+    // advanced scenario: the resources may be put in separate resource groups
+    network_resource_group_name = local.resource_group_name
+    hpc_cache_resource_group_name = local.resource_group_name
+    storage_resource_group_name = local.resource_group_name
+    vmss_resource_group_name = local.resource_group_name
 }
 
 provider "azurerm" {
-    version = "~>2.4.0"
+    version = "~>2.8.0"
     features {}
 }
 
@@ -89,9 +82,7 @@ module "vfxtcontroller" {
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.controller_add_public_ip
-    image_id = local.controller_image_id
-    alternative_resource_groups = local.alternative_resource_groups
-
+    
     // network details
     virtual_network_resource_group = local.network_resource_group_name
     virtual_network_name = module.network.vnet_name
@@ -117,7 +108,6 @@ resource "avere_vfxt" "vfxt" {
     vfxt_cluster_name = local.vfxt_cluster_name
     vfxt_admin_password = local.vfxt_cluster_password
     vfxt_node_count = 3
-    image_id = local.vfxt_image_id
 
     azure_storage_filer {
         account_name = azurerm_storage_account.storage.name

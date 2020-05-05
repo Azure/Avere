@@ -2,23 +2,16 @@
 locals {
     // the region of the deployment
     location = "eastus"
-    vm_admin_username = "azureuser"
-    // use either SSH Key data or admin password, if ssh_key_data is specified
-    // then admin_password is ignored
-    vm_admin_password = "ReplacePassword$"
-    // if you use SSH key, ensure you have ~/.ssh/id_rsa with permission 600
-    // populated where you are running terraform
-    vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
+    resource_group_name = "vdbench_resource_group"
 
-    // network details
-    network_resource_group_name = "network_resource_group"
+    vm_admin_username = "azureuser"
+    // the vdbench example requires an ssh key
+    vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
     
     // nfs filer details
-    filer_resource_group_name = "filer_resource_group"
     nfs_export_path = "/nfs1data"
     
     // vfxt details
-    vfxt_resource_group_name = "vfxt_resource_group"
     // if you are running a locked down network, set controller_add_public_ip to false
     controller_add_public_ip = true
     vfxt_cluster_name = "vfxt"
@@ -31,26 +24,25 @@ locals {
     //  "Transitioning Clients Before or After a Migration"
     cache_policy = "Read and Write Caching" // "Read and Write Caching" is more performant than "Full Caching"
 
-    // advance scenario: vfxt and controller image ids, leave this null, unless not using default marketplace
-    controller_image_id = null
-    vfxt_image_id       = null
-    // advance scenario: put the custom image resource group here
-    alternative_resource_groups = []
-
     # download the latest vdbench from https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html
     # and upload to an azure storage blob and put the URL below
     vdbench_url = ""
 
     // vmss details
-    vmss_resource_group_name = "vmss_rg"
-    unique_name = "uniquename"
+    unique_name = "vmss"
     vm_count = 12
-    vmss_size = "Standard_DS2_v2"
+    vmss_size = "Standard_D2s_v3"
     mount_target = "/data"
+
+    // advanced scenario: the resources may be put in separate resource groups
+    network_resource_group_name = local.resource_group_name
+    filer_resource_group_name = local.resource_group_name
+    hpc_cache_resource_group_name = local.resource_group_name
+    vmss_resource_group_name = local.resource_group_name
 }
 
 provider "azurerm" {
-    version = "~>2.4.0"
+    version = "~>2.8.0"
     features {}
 }
 
@@ -92,9 +84,7 @@ module "vfxtcontroller" {
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.controller_add_public_ip
-    image_id = local.controller_image_id
-    alternative_resource_groups = local.alternative_resource_groups
-
+    
     // network details
     virtual_network_resource_group = local.network_resource_group_name
     virtual_network_name = module.network.vnet_name
@@ -120,7 +110,6 @@ resource "avere_vfxt" "vfxt" {
     vfxt_cluster_name = local.vfxt_cluster_name
     vfxt_admin_password = local.vfxt_cluster_password
     vfxt_node_count = 3
-    image_id = local.vfxt_image_id
 
     core_filer {
         name = "nfs1"
