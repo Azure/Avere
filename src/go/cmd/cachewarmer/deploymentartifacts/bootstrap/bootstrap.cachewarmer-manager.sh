@@ -25,6 +25,10 @@ function write_system_files() {
     # configuration inspired by https://fabianlee.org/2017/05/21/golang-running-a-go-binary-as-a-systemd-service-on-ubuntu-16-04/
     BOOTSTRAP_BASE_PATH="$(dirname ${BOOTSTRAP_PATH}${BOOTSTRAP_SCRIPT})"
 
+    # disable output so secrets are not printed
+    set +x
+    set -x
+
     # copy the systemd file and search replace users/groups/workdircsv
     SRC_FILE=$BOOTSTRAP_BASE_PATH/systemd/${CACHEWARMER_MANAGER_SERVICE_FILE}
     DST_FILE=/lib/systemd/system/${CACHEWARMER_MANAGER_SERVICE_FILE}
@@ -32,9 +36,15 @@ function write_system_files() {
     cp $SRC_FILE $DST_FILE
     sed -i "s/USERREPLACE/$SERVICE_USER/g" $DST_FILE
     sed -i "s/GROUPREPLACE/$SERVICE_USER/g" $DST_FILE
-    sed -i "s/JOBMOUNTADDRESSREPLACE/$JOB_MOUNT_ADDRESS/g" $DST_FILE
-    sed -i "s:JOBEXPORTREPLACE:$JOB_EXPORT_PATH:g" $DST_FILE
-    sed -i "s:JOBBASEREPLACE:$JOB_BASE_PATH:g" $DST_FILE
+    sed -i "s:JOB_BASE_PATH_REPLACE:$JOB_BASE_PATH:g" $DST_FILE
+    sed -i "s:JOB_EXPORT_PATH_REPLACE:$JOB_EXPORT_PATH:g" $DST_FILE
+    sed -i "s/JOB_MOUNT_ADDRESS_REPLACE/$JOB_MOUNT_ADDRESS/g" $DST_FILE
+    sed -i "s:BOOTSTRAP_EXPORT_PATH_REPLACE:$JOB_BASE_PATH:g" $DST_FILE
+    sed -i "s:BOOTSTRAP_MOUNT_ADDRESS_REPLACE:$JOB_EXPORT_PATH:g" $DST_FILE
+    sed -i "s/BOOTSTRAP_SCRIPT_PATH_REPLACE/$BOOTSTRAP_SCRIPT/g" $DST_FILE
+    sed -i "s:VMSS_USERNAME_REPLACE:$JOB_BASE_PATH:g" $DST_FILE
+    sed -i "s:VMSS_SSH_PUBLIC_KEY_REPLACE:$JOB_EXPORT_PATH:g" $DST_FILE
+    sed -i "s/VMSS_SUBNET_NAME_REPLACE/$JOB_MOUNT_ADDRESS/g" $DST_FILE
 
     # copy the rsyslog file
     cp $BOOTSTRAP_BASE_PATH/rsyslog/$RSYSLOG_FILE /etc/rsyslog.d/.
