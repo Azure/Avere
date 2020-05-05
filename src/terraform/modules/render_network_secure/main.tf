@@ -57,6 +57,19 @@ resource "azurerm_network_security_group" "ssh_nsg" {
         destination_address_prefix = "Storage.${var.location}"
     }
 
+    // needed for RBAC
+    security_rule {
+        name                       = "allowazureresourcemanager"
+        priority                   = 2020
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "443"
+        source_address_prefix      = "VirtualNetwork"
+        destination_address_prefix = "AzureResourceManager"
+    }
+
     security_rule {
         name                       = "denyallin"
         priority                   = 3000
@@ -145,6 +158,19 @@ resource "azurerm_network_security_group" "no_internet_nsg" {
         destination_port_range     = "443"
         source_address_prefix      = "VirtualNetwork"
         destination_address_prefix = "Storage.${var.location}"
+    }
+
+    // needed for RBAC
+    security_rule {
+        name                       = "allowazureresourcemanager"
+        priority                   = 2020
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "443"
+        source_address_prefix      = "VirtualNetwork"
+        destination_address_prefix = "AzureResourceManager"
     }
 
     security_rule {
