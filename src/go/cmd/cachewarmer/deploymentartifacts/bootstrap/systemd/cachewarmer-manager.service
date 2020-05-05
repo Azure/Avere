@@ -12,7 +12,7 @@ LimitNOFILE=16384
 Restart=always
 RestartSec=2
 
-ExecStart=/usr/local/bin/cachewarmer-manager -jobBasePath "JOBBASEREPLACE" -jobExportPath "JOBEXPORTREPLACE" -jobMountAddress "JOBMOUNTADDRESSREPLACE"
+ExecStart=/usr/local/bin/cachewarmer-manager -jobBasePath "JOB_BASE_PATH_REPLACE" -jobExportPath "JOB_EXPORT_PATH_REPLACE" -jobMountAddress "JOB_MOUNT_ADDRESS_REPLACE" -bootstrapExportPath "BOOTSTRAP_EXPORT_PATH_REPLACE" -bootstrapMountAddress "BOOTSTRAP_MOUNT_ADDRESS_REPLACE" -bootstrapScriptPath "BOOTSTRAP_SCRIPT_PATH_REPLACE" -vmssUserName "VMSS_USERNAME_REPLACE" -vmssSshPublicKey "VMSS_SSH_PUBLIC_KEY_REPLACE" -vmssSubnetName "VMSS_SUBNET_NAME_REPLACE"
 
 # make sure log directory exists and owned by syslog
 PermissionsStartOnly=true
