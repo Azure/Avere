@@ -32,7 +32,8 @@ function yum_install() {
 }
 
 function config_linux() {
-    yum_install 20 10 180 nfs-utils
+    # try for 20 minutes
+    yum_install 120 10 180 nfs-utils
 }
 
 function config_ephemeral_nvme {
@@ -93,14 +94,14 @@ function config_ephemeral_disk {
     else
         chown nobody:nogroup $EXPORT_PATH
     fi
-    chmod 777 $EXPORT_PATH
-
+    
     ls -1 /dev/nvme*
     if [ $? = "0" ]; then
         config_ephemeral_nvme
     else
         config_ephemeral_ssd
     fi
+    chmod 777 $EXPORT_PATH
 }
 
 # export the ephemeral disk as specified by $EXPORT_PATH
