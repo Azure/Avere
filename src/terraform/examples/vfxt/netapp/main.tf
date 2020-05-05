@@ -58,7 +58,7 @@ resource "azurerm_subnet" "netapp" {
   name                 = "netapp-subnet"
   resource_group_name  = module.network.vnet_resource_group
   virtual_network_name = module.network.vnet_name
-  address_prefix       = "10.0.255.0/24"
+  address_prefixes     = "10.0.255.0/24"
 
   delegation {
     name = "netapp"

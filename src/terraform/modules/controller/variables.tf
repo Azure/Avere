@@ -18,7 +18,7 @@ variable "admin_username" {
 
 variable "admin_password" {
   description = "(optional) The password used for access to the controller.  If not specified, ssh_key_data needs to be set."
-  default = ""
+  default = null
 }
 
 variable "ssh_key_data" {
