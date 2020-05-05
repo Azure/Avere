@@ -183,7 +183,7 @@ resource "azurerm_subnet" "cloud_cache" {
     name                 = var.subnet_cloud_cache_subnet_name
     virtual_network_name = azurerm_virtual_network.vnet.name
     resource_group_name  = azurerm_resource_group.render_rg.name
-    address_prefixes     = var.subnet_cloud_cache_address_prefix
+    address_prefixes     = [var.subnet_cloud_cache_address_prefix]
     service_endpoints    = ["Microsoft.Storage"]
 }
 
@@ -196,7 +196,7 @@ resource "azurerm_subnet" "cloud_filers" {
     name                 = var.subnet_cloud_filers_subnet_name
     virtual_network_name = azurerm_virtual_network.vnet.name
     resource_group_name  = azurerm_resource_group.render_rg.name
-    address_prefixes     = var.subnet_cloud_filers_address_prefix
+    address_prefixes     = [var.subnet_cloud_filers_address_prefix]
 }
 
 resource "azurerm_subnet_network_security_group_association" "cloud_filers" {
@@ -208,7 +208,7 @@ resource "azurerm_subnet" "jumpbox" {
     name                 = var.subnet_jumpbox_subnet_name
     virtual_network_name = azurerm_virtual_network.vnet.name
     resource_group_name  = azurerm_resource_group.render_rg.name
-    address_prefixes     = var.subnet_jumpbox_address_prefix
+    address_prefixes     = [var.subnet_jumpbox_address_prefix]
     # needed for the controller to add storage containers
     service_endpoints    = ["Microsoft.Storage"]
 }
@@ -222,7 +222,7 @@ resource "azurerm_subnet" "render_clients1" {
     name                 = var.subnet_render_clients1_subnet_name
     virtual_network_name = azurerm_virtual_network.vnet.name
     resource_group_name  = azurerm_resource_group.render_rg.name
-    address_prefixes     = var.subnet_render_clients1_address_prefix
+    address_prefixes     = [var.subnet_render_clients1_address_prefix]
 }
 
 // partition the render clients in groups of roughly 500 nodes (max 507, and azure takes 5 reserved)
@@ -235,7 +235,7 @@ resource "azurerm_subnet" "render_clients2" {
     name                 = var.subnet_render_clients2_subnet_name
     virtual_network_name = azurerm_virtual_network.vnet.name
     resource_group_name  = azurerm_resource_group.render_rg.name
-    address_prefixes     = var.subnet_render_clients2_address_prefix
+    address_prefixes     = [var.subnet_render_clients2_address_prefix]
 }
 
 resource "azurerm_subnet_network_security_group_association" "render_clients2" {
@@ -247,7 +247,7 @@ resource "azurerm_subnet" "proxy" {
     name                 = var.subnet_proxy_subnet_name
     virtual_network_name = azurerm_virtual_network.vnet.name
     resource_group_name  = azurerm_resource_group.render_rg.name
-    address_prefixes     = var.subnet_proxy_address_prefix
+    address_prefixes     = [var.subnet_proxy_address_prefix]
 }
 
 resource "azurerm_subnet_network_security_group_association" "proxy" {
