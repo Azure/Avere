@@ -42,7 +42,7 @@ locals {
 }
 
 provider "azurerm" {
-    version = "~>2.4.0"
+    version = "~>2.8.0"
     features {}
 }
 
@@ -195,7 +195,7 @@ locals {
 }
 
 provider "azurerm" {
-    version = "~>2.4.0"
+    version = "~>2.8.0"
     features {}
 }
 

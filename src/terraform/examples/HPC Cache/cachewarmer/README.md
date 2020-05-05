@@ -1,6 +1,28 @@
-# VMSS Round Robin mount HPC Cache performance
+# CacheWarmer for HPC Cache
 
-This is a basic setup to start VMSS and round robin mount [Azure HPC Cache](https://azure.microsoft.com/services/hpc-cache/).
+This is an example of how to setup the CacheWarmer for HPC [Azure HPC Cache](https://azure.microsoft.com/services/hpc-cache/).
+
+The CacheWarmer runs as a service on the jumpbox, and watches a pre-defined directory for a job file.  The job file describes the HPC Cache mount addresses, export path, and path to warm.  For example, the following file is an example of this file:
+
+```bash
+{
+  "WarmTargetMountAddresses": [
+    "10.0.1.11",
+    "10.0.1.12",
+    "10.0.1.13"
+  ],
+  "WarmTargetExportPath": "/animation",
+  "WarmTargetPath": "/scene1"
+}
+```
+
+The CacheWarmer will then automatically start VMSS SPOT instances to warm the target through each of the mount addresses.  Once warmed, the VMSS instances will be destroyed.
+
+This examples configures a render network, jumpbox, and HPC Cache with 1 filer as shown in the diagram below:
+
+![The architecture](../../../../../docs/images/terraform/cachewarmer-hpcc.png)
+
+To simulate latency, the NFS filer will live in a different vnet, resource group, and region.
 
 ## Deployment Instructions
 

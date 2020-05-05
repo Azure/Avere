@@ -2,13 +2,8 @@
 locals {
     // the region of the deployment
     location = "eastus"
+    resource_group_name = "vdbench_resource_group"
     
-    // network details
-    network_resource_group_name = "network_resource_group"
-    
-    // hpc cache details
-    hpc_cache_resource_group_name = "hpc_cache_resource_group"
-
     // HPC Cache Throughput SKU - 3 allowed values for throughput (GB/s) of the cache
     //    Standard_2G
     //    Standard_4G
@@ -24,7 +19,7 @@ locals {
     cache_size = 12288
 
     // unique name for cache
-    cache_name = "uniquename"
+    cache_name = "hpccache"
 
     // usage model
     //    WRITE_AROUND
@@ -32,12 +27,10 @@ locals {
     //    WRITE_WORKLOAD_15
     usage_model = "WRITE_WORKLOAD_15"
 
-    // storage details
-    storage_resource_group_name = "storage_resource_group"
     // create a globally unique name for the storage account
     storage_account_name = ""
-    avere_storage_container_name = "hpccache"
-    nfs_export_path = "/blob_storage"
+    avere_storage_container_name = "vdbench"
+    nfs_export_path = "/vdbench"
 
     // per the hpc cache documentation: https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-add-storage
     // customers who joined during the preview (before GA), will need to
@@ -51,11 +44,7 @@ locals {
     // jumpbox related variables
     jumpbox_add_public_ip = true
     vm_admin_username = "azureuser"
-    // use either SSH Key data or admin password, if ssh_key_data is specified
-    // then admin_password is ignored
-    vm_admin_password = "ReplacePassword$"
-    // if you use SSH key, ensure you have ~/.ssh/id_rsa with permission 600
-    // populated where you are running terraform
+    // the vdbench example requires an ssh key
     vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
   
     # download the latest vdbench from https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html
@@ -63,15 +52,20 @@ locals {
     vdbench_url = ""
     
     // vmss details
-    vmss_resource_group_name = "vmss_rg"
-    unique_name = "uniquename"
+    unique_name = "vmss"
     vm_count = 12
-    vmss_size = "Standard_DS2_v2"
+    vmss_size = "Standard_D2s_v3"
     mount_target = "/data"
+
+    // advanced scenario: the resources may be put in separate resource groups
+    network_resource_group_name = local.resource_group_name
+    hpc_cache_resource_group_name = local.resource_group_name
+    storage_resource_group_name = local.resource_group_name
+    vmss_resource_group_name = local.resource_group_name
 }
 
 provider "azurerm" {
-    version = "~>2.4.0"
+    version = "~>2.8.0"
     features {}
 }
 
@@ -184,7 +178,6 @@ module "jumpbox" {
     resource_group_name = azurerm_resource_group.hpc_cache_rg.name
     location = local.location
     admin_username = local.vm_admin_username
-    admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.jumpbox_add_public_ip
 
@@ -200,7 +193,6 @@ module "vdbench_configure" {
 
     node_address = module.jumpbox.jumpbox_address
     admin_username = module.jumpbox.jumpbox_username
-    admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     nfs_address = azurerm_hpc_cache.hpc_cache.mount_addresses[0]
     nfs_export_path = azurerm_hpc_cache_blob_target.blob_target1.namespace_path
@@ -214,7 +206,6 @@ module "vmss" {
     resource_group_name = local.vmss_resource_group_name
     location = local.location
     admin_username =local.vm_admin_username
-    admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     unique_name = local.unique_name
     vm_count = local.vm_count

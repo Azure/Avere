@@ -36,15 +36,15 @@ locals {
     // the proxy used by the running vfxt cluster
     cluster_proxy_uri = null
 
-    // advance scenario: vfxt and controller image ids, leave this null, unless not using default marketplace
+    // advanced scenario: vfxt and controller image ids, leave this null, unless not using default marketplace
     controller_image_id = null
     vfxt_image_id       = null
-    // advance scenario: put the custom image resource group here
+    // advanced scenario: put the custom image resource group here
     alternative_resource_groups = []
 }
 
 provider "azurerm" {
-    version = "~>2.4.0"
+    version = "~>2.8.0"
     features {}
 }
 
