@@ -2,9 +2,9 @@
 locals {
     // the region of the deployment
     location = "eastus"
-    hpc_cache_resource_group_name = "vdbench_hpccache_rg"
     filer_resource_group_name     = "vdbench_filer_rg"
     network_resource_group_name   = "vdbench_network_rg"
+    vfxt_resource_group_name      = "vdbench_vfxt_rg"
     vmss_resource_group_name      = "vdbench_vmss_rg"
 
     vm_admin_username = "azureuser"
@@ -64,7 +64,7 @@ module "nasfiler1" {
     ssh_key_data = local.vm_ssh_key_data
     vm_size = "Standard_D32s_v3"
     unique_name = "nasfiler1"
-
+    
     // network details
     virtual_network_resource_group = local.network_resource_group_name
     virtual_network_name = module.network.vnet_name
