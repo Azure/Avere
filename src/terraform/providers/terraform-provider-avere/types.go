@@ -3,6 +3,8 @@
 package main
 
 import (
+	"regexp"
+
 	"golang.org/x/crypto/ssh"
 )
 
@@ -19,7 +21,8 @@ type AvereVfxt struct {
 
 	SshAuthMethod ssh.AuthMethod
 
-	RunLocal bool
+	RunLocal      bool
+	AllowNonAscii bool
 
 	Platform IaasPlatform
 
@@ -43,6 +46,8 @@ type AvereVfxt struct {
 	ManagementIP       string
 	VServerIPAddresses *[]string
 	NodeNames          *[]string
+
+	rePasswordReplace *regexp.Regexp
 }
 
 ///////////////////////////////////////////////////////////
