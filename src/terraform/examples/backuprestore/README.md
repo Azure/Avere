@@ -40,7 +40,7 @@ mkdir -p ~/avere-restore
 mv backup.tgz ~/avere-restore
 cd ~/avere-restore
 tar zxvf backup.tgz
-wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.8.2/terraform-provider-avere
+wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.8.3/terraform-provider-avere
 chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 ~/.terraform.d/plugins/terraform-provider-avere cluster_rebuild_2020-05-04_17_30_00
 ```
