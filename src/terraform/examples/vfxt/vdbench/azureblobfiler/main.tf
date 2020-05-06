@@ -2,9 +2,9 @@
 locals {
     // the region of the deployment
     location = "eastus"
-    hpc_cache_resource_group_name = "vdbench_hpccache_rg"
     network_resource_group_name   = "vdbench_network_rg"
     storage_resource_group_name   = "vdbench_storage_rg"
+    vfxt_resource_group_name      = "vdbench_vfxt_rg"
     vmss_resource_group_name      = "vdbench_vmss_rg"
     
     vm_admin_username = "azureuser"
@@ -31,6 +31,8 @@ locals {
     vm_count = 12
     vmss_size = "Standard_D2s_v3"
     mount_target = "/data"
+
+    alternative_resource_groups = [local.storage_resource_group_name]
 }
 
 provider "azurerm" {
@@ -77,6 +79,7 @@ module "vfxtcontroller" {
     admin_username = local.vm_admin_username
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.controller_add_public_ip
+    alternative_resource_groups = local.alternative_resource_groups
     
     // network details
     virtual_network_resource_group = module.network.vnet_resource_group
