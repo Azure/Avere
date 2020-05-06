@@ -2,7 +2,10 @@
 locals {
     // the region of the deployment
     location = "eastus"
-    resource_group_name = "vdbench_resource_group"
+    hpc_cache_resource_group_name = "vdbench_hpccache_rg"
+    filer_resource_group_name     = "vdbench_filer_rg"
+    network_resource_group_name   = "vdbench_network_rg"
+    vmss_resource_group_name      = "vdbench_vmss_rg"
 
     vm_admin_username = "azureuser"
     // the vdbench example requires an ssh key
@@ -33,12 +36,6 @@ locals {
     vm_count = 12
     vmss_size = "Standard_D2s_v3"
     mount_target = "/data"
-
-    // advanced scenario: the resources may be put in separate resource groups
-    network_resource_group_name = local.resource_group_name
-    filer_resource_group_name = local.resource_group_name
-    hpc_cache_resource_group_name = local.resource_group_name
-    vmss_resource_group_name = local.resource_group_name
 }
 
 provider "azurerm" {
@@ -64,7 +61,6 @@ module "nasfiler1" {
     resource_group_name = azurerm_resource_group.nfsfiler.name
     location = azurerm_resource_group.nfsfiler.location
     admin_username = local.vm_admin_username
-    admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     vm_size = "Standard_D32s_v3"
     unique_name = "nasfiler1"
@@ -81,12 +77,11 @@ module "vfxtcontroller" {
     resource_group_name = local.vfxt_resource_group_name
     location = local.location
     admin_username = local.vm_admin_username
-    admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.controller_add_public_ip
     
     // network details
-    virtual_network_resource_group = local.network_resource_group_name
+    virtual_network_resource_group = module.network.vnet_resource_group
     virtual_network_name = module.network.vnet_name
     virtual_network_subnet_name = module.network.jumpbox_subnet_name
 }
@@ -95,8 +90,6 @@ module "vfxtcontroller" {
 resource "avere_vfxt" "vfxt" {
     controller_address = module.vfxtcontroller.controller_address
     controller_admin_username = module.vfxtcontroller.controller_username
-    // ssh key takes precedence over controller password
-    controller_admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
     // terraform is not creating the implicit dependency on the controller module
     // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
     // to work around, add the explicit dependency
@@ -104,7 +97,7 @@ resource "avere_vfxt" "vfxt" {
     
     location = local.location
     azure_resource_group = local.vfxt_resource_group_name
-    azure_network_resource_group = local.network_resource_group_name
+    azure_network_resource_group = module.network.vnet_resource_group
     azure_network_name = module.network.vnet_name
     azure_subnet_name = module.network.cloud_cache_subnet_name
     vfxt_cluster_name = local.vfxt_cluster_name
@@ -128,7 +121,6 @@ module "vdbench_configure" {
 
     node_address = module.vfxtcontroller.controller_address
     admin_username = module.vfxtcontroller.controller_username
-    admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     nfs_address = tolist(avere_vfxt.vfxt.vserver_ip_addresses)[0]
     nfs_export_path = local.nfs_export_path
@@ -142,12 +134,11 @@ module "vmss" {
     resource_group_name = local.vmss_resource_group_name
     location = local.location
     admin_username = module.vfxtcontroller.controller_username
-    admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     unique_name = local.unique_name
     vm_count = local.vm_count
     vm_size = local.vmss_size
-    virtual_network_resource_group = local.network_resource_group_name
+    virtual_network_resource_group = module.network.vnet_resource_group
     virtual_network_name = module.network.vnet_name
     virtual_network_subnet_name = module.network.render_clients1_subnet_name
     mount_target = local.mount_target

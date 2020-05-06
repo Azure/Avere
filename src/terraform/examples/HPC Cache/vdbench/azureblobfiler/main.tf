@@ -2,7 +2,10 @@
 locals {
     // the region of the deployment
     location = "eastus"
-    resource_group_name = "vdbench_resource_group"
+    hpc_cache_resource_group_name = "vdbench_hpccache_rg"
+    network_resource_group_name   = "vdbench_network_rg"
+    storage_resource_group_name   = "vdbench_storage_rg"
+    vmss_resource_group_name      = "vdbench_vmss_rg"
     
     // HPC Cache Throughput SKU - 3 allowed values for throughput (GB/s) of the cache
     //    Standard_2G
@@ -50,23 +53,27 @@ locals {
     # download the latest vdbench from https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html
     # and upload to an azure storage blob and put the URL below
     vdbench_url = ""
-    
+     
     // vmss details
     unique_name = "vmss"
     vm_count = 12
     vmss_size = "Standard_D2s_v3"
     mount_target = "/data"
-
-    // advanced scenario: the resources may be put in separate resource groups
-    network_resource_group_name = local.resource_group_name
-    hpc_cache_resource_group_name = local.resource_group_name
-    storage_resource_group_name = local.resource_group_name
-    vmss_resource_group_name = local.resource_group_name
 }
 
 provider "azurerm" {
     version = "~>2.8.0"
     features {}
+}
+
+resource "azurerm_resource_group" "hpc_cache_rg" {
+  name     = local.hpc_cache_resource_group_name
+  location = local.location
+}
+
+resource "azurerm_resource_group" "storage" {
+  name     = local.storage_resource_group_name
+  location = local.location
 }
 
 // the render network
@@ -76,16 +83,6 @@ module "network" {
     location            = local.location
 }
 
-resource "azurerm_resource_group" "hpc_cache_rg" {
-  name     = local.hpc_cache_resource_group_name
-  location = local.location
-  // the depends on is necessary for destroy.  Due to the
-  // limitation of the template deployment, the only
-  // way to destroy template resources is to destroy
-  // the resource group
-  depends_on = [module.network]
-}
-
 resource "azurerm_hpc_cache" "hpc_cache" {
   name                = local.cache_name
   resource_group_name = azurerm_resource_group.hpc_cache_rg.name
@@ -93,11 +90,6 @@ resource "azurerm_hpc_cache" "hpc_cache" {
   cache_size_in_gb    = local.cache_size
   subnet_id           = module.network.cloud_filers_subnet_id
   sku_name            = local.cache_throughput
-}
-
-resource "azurerm_resource_group" "storage" {
-  name     = local.storage_resource_group_name
-  location = local.location
 }
 
 resource "azurerm_storage_account" "storage" {
@@ -176,13 +168,13 @@ resource "azurerm_hpc_cache_blob_target" "blob_target1" {
 module "jumpbox" {
     source = "github.com/Azure/Avere/src/terraform/modules/jumpbox"
     resource_group_name = azurerm_resource_group.hpc_cache_rg.name
-    location = local.location
+    location = azurerm_resource_group.hpc_cache_rg.location
     admin_username = local.vm_admin_username
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.jumpbox_add_public_ip
 
     // network details
-    virtual_network_resource_group = local.network_resource_group_name
+    virtual_network_resource_group = module.network.vnet_resource_group
     virtual_network_name = module.network.vnet_name
     virtual_network_subnet_name = module.network.jumpbox_subnet_name
 }
@@ -210,7 +202,7 @@ module "vmss" {
     unique_name = local.unique_name
     vm_count = local.vm_count
     vm_size = local.vmss_size
-    virtual_network_resource_group = local.network_resource_group_name
+    virtual_network_resource_group = module.network.vnet_resource_group
     virtual_network_name = module.network.vnet_name
     virtual_network_subnet_name = module.network.render_clients1_subnet_name
     mount_target = local.mount_target
