@@ -44,6 +44,11 @@ func resourceVfxt() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			allow_non_ascii: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			location: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -542,6 +547,13 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	var controllerAddress, controllerAdminUsername, controllerAdminPassword string
 
 	runLocal := d.Get(run_local).(bool)
+	allowNonAscii := d.Get(allow_non_ascii).(bool)
+
+	if !allowNonAscii {
+		if err := validateSchemaforOnlyAscii(d); err != nil {
+			return nil, err
+		}
+	}
 
 	var authMethod ssh.AuthMethod
 	if runLocal == false {
@@ -592,6 +604,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		controllerAdminUsername,
 		authMethod,
 		runLocal,
+		allowNonAscii,
 		iaasPlatform,
 		d.Get(vfxt_cluster_name).(string),
 		d.Get(vfxt_admin_password).(string),
@@ -1067,4 +1080,110 @@ func resourceAvereVfxtAzureStorageCoreFilerReferenceHash(v interface{}) int {
 		}
 	}
 	return hashcode.String(buf.String())
+}
+
+func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
+	validateParameterSlice := []string{
+		controller_address,
+		controller_admin_username,
+		controller_admin_password,
+		location,
+		azure_resource_group,
+		azure_network_resource_group,
+		azure_network_name,
+		azure_subnet_name,
+		ntp_servers,
+		timezone,
+		dns_server,
+		dns_domain,
+		dns_search,
+		proxy_uri,
+		cluster_proxy_uri,
+		image_id,
+		vfxt_cluster_name,
+		vfxt_admin_password,
+	}
+
+	for _, parameter := range validateParameterSlice {
+		if v, exists := d.GetOk(parameter); exists {
+			if err := ValidateOnlyAscii(v.(string), parameter); err != nil {
+				return err
+			}
+		}
+	}
+
+	validateListParameterSlice := []string{
+		global_custom_settings,
+		vserver_settings,
+	}
+
+	for _, listName := range validateListParameterSlice {
+		for _, v := range d.Get(listName).(*schema.Set).List() {
+			if err := ValidateOnlyAscii(v.(string), fmt.Sprintf("%s-'%s'", listName, v.(string))); err != nil {
+				return err
+			}
+		}
+	}
+
+	// set
+	for _, v := range d.Get(core_filer).(*schema.Set).List() {
+		input := v.(map[string]interface{})
+		corefilerSlice := []string{
+			input[core_filer_name].(string),
+			input[fqdn_or_primary_ip].(string),
+			input[cache_policy].(string),
+		}
+		for _, parameter := range corefilerSlice {
+			if err := ValidateOnlyAscii(parameter, parameter); err != nil {
+				return err
+			}
+		}
+		for _, v := range input[custom_settings].(*schema.Set).List() {
+			if err := ValidateOnlyAscii(v.(string), fmt.Sprintf("%s-customsetting-'%s'", input[core_filer_name].(string), v.(string))); err != nil {
+				return err
+			}
+		}
+		// the junction
+		if v, ok := input[junction].(*schema.Set); ok {
+			for _, j := range v.List() {
+				if m, ok := j.(map[string]interface{}); ok {
+					if v2, ok := m[namespace_path]; ok {
+						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", input[core_filer_name].(string), v2.(string))); err != nil {
+							return err
+						}
+					}
+					if v2, ok := m[core_filer_export]; ok {
+						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", input[core_filer_name].(string), v2.(string))); err != nil {
+							return err
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// storage filers
+	for _, v := range d.Get(azure_storage_filer).(*schema.Set).List() {
+		input := v.(map[string]interface{})
+		storagefilerSlice := []string{
+			input[account_name].(string),
+			input[container_name].(string),
+		}
+		// the junction namespace path is optional
+		if v, ok := input[junction_namespace_path]; ok {
+			storagefilerSlice = append(storagefilerSlice, v.(string))
+		}
+		for _, parameter := range storagefilerSlice {
+			if err := ValidateOnlyAscii(parameter, parameter); err != nil {
+				return err
+			}
+		}
+		for _, v := range input[custom_settings].(*schema.Set).List() {
+			if err := ValidateOnlyAscii(v.(string), fmt.Sprintf("%s-customsetting-'%s'", input[account_name].(string), v.(string))); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

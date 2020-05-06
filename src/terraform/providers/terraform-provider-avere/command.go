@@ -9,7 +9,21 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+	"unicode"
 )
+
+// ValidateOnlyAscii ensures the targetString contains only ascii characters.  The targetString
+// is never recorded or logged in case it contains a secret.  The descriptionForLogging is used to identify
+// the string, but the description should never contain secrets.
+func ValidateOnlyAscii(targetString string, descriptionForLogging string) error {
+	// from https://stackoverflow.com/questions/53069040/checking-a-string-contains-only-ascii-characters
+	for i := 0; i < len(targetString); i++ {
+		if targetString[i] > unicode.MaxASCII {
+			return fmt.Errorf("invalid non-ascii character at position %d (counting from 0) in string '%s'", i, descriptionForLogging)
+		}
+	}
+	return nil
+}
 
 func BashCommand(cmdstr string) (bytes.Buffer, bytes.Buffer, error) {
 	// command execution technique modified from examples of https://blog.kowalczyk.info/article/wOYk/advanced-command-execution-in-go-with-osexec.html

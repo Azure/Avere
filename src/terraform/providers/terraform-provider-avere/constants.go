@@ -74,6 +74,7 @@ const (
 	controller_admin_username    = "controller_admin_username"
 	controller_admin_password    = "controller_admin_password"
 	run_local                    = "run_local"
+	allow_non_ascii              = "allow_non_ascii"
 	location                     = "location"
 	platform                     = "platform"
 	azure_resource_group         = "azure_resource_group"

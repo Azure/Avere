@@ -45,6 +45,7 @@ func NewAvereVfxt(
 	controllerUsername string,
 	sshAuthMethod ssh.AuthMethod,
 	runLocal bool,
+	allowNonAscii bool,
 	platform IaasPlatform,
 	avereVfxtName string,
 	avereAdminPassword string,
@@ -67,6 +68,7 @@ func NewAvereVfxt(
 		ControllerUsename:    controllerUsername,
 		SshAuthMethod:        sshAuthMethod,
 		RunLocal:             runLocal,
+		AllowNonAscii:        allowNonAscii,
 		Platform:             platform,
 		AvereVfxtName:        avereVfxtName,
 		AvereAdminPassword:   avereAdminPassword,
@@ -84,10 +86,18 @@ func NewAvereVfxt(
 		ManagementIP:         managementIP,
 		VServerIPAddresses:   vServerIPAddresses,
 		NodeNames:            nodeNames,
+		rePasswordReplace:    regexp.MustCompile(`-password [^ ]*`),
 	}
 }
 
 func (a *AvereVfxt) RunCommand(cmd string) (bytes.Buffer, bytes.Buffer, error) {
+	scrubbedCmd := a.rePasswordReplace.ReplaceAllLiteralString(cmd, "***")
+	if !a.AllowNonAscii {
+		if err := ValidateOnlyAscii(cmd, scrubbedCmd); err != nil {
+			var stdoutBuf, stderrBuf bytes.Buffer
+			return stdoutBuf, stderrBuf, err
+		}
+	}
 	if a.RunLocal {
 		return BashCommand(cmd)
 	} else {
