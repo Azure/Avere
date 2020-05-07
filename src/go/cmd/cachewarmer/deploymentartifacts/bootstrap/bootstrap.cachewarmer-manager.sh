@@ -4,11 +4,18 @@
 set -x
 
 # NEED following ENV VARS
-# BOOTSTRAP_PATH
+# BOOTSTRAP_PATH - the mount path for bootstrap
+#
+# JOB_BASE_PATH - usually '/'
+# JOB_EXPORT_PATH
+# JOB_MOUNT_ADDRESS
+# BOOTSTRAP_EXPORT_PATH
+# BOOTSTRAP_MOUNT_ADDRESS
 # BOOTSTRAP_SCRIPT
-# JOB_MOUNT_ADDRESS - the nfs address of the filer hosting cache warmer jobs
-# JOB_EXPORT_PATH - the nfs export path for the cache warmer jobs
-# JOB_BASE_PATH - the job base path, usually '/'
+# VMSS_USERNAME
+# (OPT)VMSS_SUBNET
+# (OPT)VMSS_SSHPUBLICKEY
+# (OPT)VMSS_PASSWORD
 
 SERVICE_USER=root
 RSYSLOG_FILE="35-cachewarmer-manager.conf"
@@ -25,10 +32,6 @@ function write_system_files() {
     # configuration inspired by https://fabianlee.org/2017/05/21/golang-running-a-go-binary-as-a-systemd-service-on-ubuntu-16-04/
     BOOTSTRAP_BASE_PATH="$(dirname ${BOOTSTRAP_PATH}${BOOTSTRAP_SCRIPT})"
 
-    # disable output so secrets are not printed
-    set +x
-    set -x
-
     # copy the systemd file and search replace users/groups/workdircsv
     SRC_FILE=$BOOTSTRAP_BASE_PATH/systemd/${CACHEWARMER_MANAGER_SERVICE_FILE}
     DST_FILE=/lib/systemd/system/${CACHEWARMER_MANAGER_SERVICE_FILE}
@@ -39,13 +42,30 @@ function write_system_files() {
     sed -i "s:JOB_BASE_PATH_REPLACE:$JOB_BASE_PATH:g" $DST_FILE
     sed -i "s:JOB_EXPORT_PATH_REPLACE:$JOB_EXPORT_PATH:g" $DST_FILE
     sed -i "s/JOB_MOUNT_ADDRESS_REPLACE/$JOB_MOUNT_ADDRESS/g" $DST_FILE
-    sed -i "s:BOOTSTRAP_EXPORT_PATH_REPLACE:$JOB_BASE_PATH:g" $DST_FILE
-    sed -i "s:BOOTSTRAP_MOUNT_ADDRESS_REPLACE:$JOB_EXPORT_PATH:g" $DST_FILE
+    sed -i "s:BOOTSTRAP_EXPORT_PATH_REPLACE:$BOOTSTRAP_EXPORT_PATH:g" $DST_FILE
+    sed -i "s:BOOTSTRAP_MOUNT_ADDRESS_REPLACE:$BOOTSTRAP_MOUNT_ADDRESS:g" $DST_FILE
     sed -i "s/BOOTSTRAP_SCRIPT_PATH_REPLACE/$BOOTSTRAP_SCRIPT/g" $DST_FILE
-    sed -i "s:VMSS_USERNAME_REPLACE:$JOB_BASE_PATH:g" $DST_FILE
-    sed -i "s:VMSS_SSH_PUBLIC_KEY_REPLACE:$JOB_EXPORT_PATH:g" $DST_FILE
-    sed -i "s/VMSS_SUBNET_NAME_REPLACE/$JOB_MOUNT_ADDRESS/g" $DST_FILE
-
+    sed -i "s:VMSS_USERNAME_REPLACE:$VMSS_USERNAME:g" $DST_FILE
+    
+    if [[ -z "${VMSS_SSHPUBLICKEY}" ]]; then
+        sed -i "s:VMSS_SSH_PUBLIC_KEY_REPLACE::g" $DST_FILE
+    else
+        sed -i "s:VMSS_SSH_PUBLIC_KEY_REPLACE:-vmssSshPublicKey '$VMSS_SSHPUBLICKEY':g" $DST_FILE
+    fi
+    # disable output so secrets are not printed
+    set +x
+    if [[ -z "${VMSS_PASSWORD}" ]]; then
+        sed -i "s:VMSS_PASSWORD_REPLACE::g" $DST_FILE
+    else
+        sed -i "s:VMSS_PASSWORD_REPLACE:-vmssPassword '$VMSS_PASSWORD':g" $DST_FILE
+    fi
+    set -x
+    if [[ -z "${VMSS_SUBNET}" ]]; then
+        sed -i "s/VMSS_SUBNET_NAME_REPLACE//g" $DST_FILE
+    else
+        sed -i "s/VMSS_SUBNET_NAME_REPLACE/-vmssSubnetName $VMSS_SUBNET/g" $DST_FILE
+    fi
+    
     # copy the rsyslog file
     cp $BOOTSTRAP_BASE_PATH/rsyslog/$RSYSLOG_FILE /etc/rsyslog.d/.
 }
