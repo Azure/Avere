@@ -93,12 +93,23 @@ On the controller or jumpbox, execute the following steps
 
 1. Edit and execute the following environment variables:
 ```bash
-export BOOTSTRAP_PATH=/nfs/node0/bootstrap/
-export BOOTSTRAP_SCRIPT=bootstrap.cachewarmer-manager.sh
+export BOOTSTRAP_PATH=/nfs/node0
+
 export JOB_MOUNT_ADDRESS=10.0.1.11
 export JOB_EXPORT_PATH=/nfs1data
 export JOB_BASE_PATH=/
+
+export BOOTSTRAP_EXPORT_PATH=/nfs1data
+export BOOTSTRAP_MOUNT_ADDRESS=10.0.1.11
+export BOOTSTRAP_SCRIPT=/bootstrap/bootstrap.cachewarmer-manager.sh
+export VMSS_USERNAME=azureuser
+# an ssh key or password may be specified
+export VMSS_SSHPUBLICKEY='ssh-rsa AAAAB3Nz...UcyupgH'
+export VMSS_PASSWORD=
+# you may leave the subnet blank
+export VMSS_SUBNET=
 ```
+
 2. Run the following script:
 ```bash
 bash /nfs/node0/bootstrap/bootstrap.cachewarmer-manager.sh

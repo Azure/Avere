@@ -38,11 +38,11 @@ func initializeApplicationVariables() *cachewarmer.WarmPathManager {
 	var bootstrapScriptPath = flag.String("bootstrapScriptPath", "", "the path to the worker bootstrap script")
 	var jobMountAddress = flag.String("jobMountAddress", "", "the mount address for warm job processing")
 	var jobExportPath = flag.String("jobExportPath", "", "the export path for warm job processing")
-	var jobBasePath = flag.String("jobBasePath", "", "the warm job processing path")
+	var jobBasePath = flag.String("jobBasePath", "", fmt.Sprintf("the warm job processing path, writeable by the manager for job queueing.  The manager will create the subpaths '%s' and '%s' to hold the jobs", cachewarmer.DefaultCacheJobSubmitterDir, cachewarmer.DefaultCacheWorkerJobsDir))
 	var vmssUserName = flag.String("vmssUserName", "", "the username for the vmss vms")
-	var vmssPassword = flag.String("vmssPassword", "", "the password for the vmss vms, this is unused if the public key is specified")
-	var vmssSshPublicKey = flag.String("vmssSshPublicKey", "", "the ssh public key for the vmss vms, this will be used by default, however if this is blank, the password will be used")
-	var vmssSubnetName = flag.String("vmssSubnetName", "", "the subnet to use for the VMSS, if blank, the same subnet as the controller will be used")
+	var vmssPassword = flag.String("vmssPassword", "", "(optional) the password for the vmss vms, this is unused if the public key is specified")
+	var vmssSshPublicKey = flag.String("vmssSshPublicKey", "", "(optional) the ssh public key for the vmss vms, this will be used by default, however if this is blank, the password will be used")
+	var vmssSubnetName = flag.String("vmssSubnetName", "", "(optional) the subnet to use for the VMSS, if not specified use the same subnet as the controller")
 
 	flag.Parse()
 
