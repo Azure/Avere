@@ -16,11 +16,27 @@ variable "ssh_key_data" {
   description = "(optional) The public SSH key used for access to the controller or jumpbox.  If not specified, the password needs to be set.  The ssh_key_data takes precedence over the password, and if set, the password will be ignored."
 }
 
-variable "bootstrap_mount_address" {
-    description = "the mount address that hosts the worker bootstrap script"
+variable "jobMount_address" {
+    description = "the mount address for warm job processing"
 }
 
-variable "bootstrap_export_path" {
-    description = "the export path that hosts the worker bootstrap script"
+variable "job_export_path" {
+    description = "the export path for warm job processing"
+}
+
+variable "job_base_path" {
+    description = "the warm job processing path, writeable by the manager for job queueing."
+}
+
+variable "warm_mount_addresses" {
+    description = "the warm target cache filer mount addresses separated by comma"
+}
+
+variable "warm_target_export_path" {
+    description = "the warm target export path"
+}
+
+variable "warm_target_path" {
+    description = "the target path to warm"
 }
 
