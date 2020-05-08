@@ -81,10 +81,8 @@ resource "avere_vfxt" "vfxt" {
     }
 }
 
-
-
 module "cachewarmer_build" {
-  source = "../../../../modules/cachewarmer_build"
+  source = "github.com/Azure/Avere/src/terraform/modules/cachewarmer_build"
 
   // authentication with controller
   node_address = local.controller_address
@@ -98,7 +96,7 @@ module "cachewarmer_build" {
 }
 
 module "cachewarmer_manager_install" {
-  source = "../../../../modules/cachewarmer_manager_install"
+  source = "github.com/Azure/Avere/src/terraform/modules/cachewarmer_manager_install"
 
   // authentication with controller
   node_address = local.controller_address
@@ -125,7 +123,7 @@ module "cachewarmer_manager_install" {
 
 
 module "cachewarmer_submitjob" {
-  source = "../../../../modules/cachewarmer_submitjob"
+  source = "github.com/Azure/Avere/src/terraform/modules/cachewarmer_submitjob"
 
   // authentication with controller
   node_address = local.controller_address
@@ -134,9 +132,9 @@ module "cachewarmer_submitjob" {
   ssh_key_data = local.vm_ssh_key_data
   
   // the job path
-  jobMount_address = tolist(avere_vfxt.vfxt.vserver_ip_addresses)[0]
-  job_export_path = local.storage_namespace_path
-  job_base_path = "/"
+  jobMount_address = module.cachewarmer_manager_install.job_mount_address
+  job_export_path = module.cachewarmer_manager_install.job_export_path
+  job_base_path = module.cachewarmer_manager_install.job_path
 
   // the path to warm
   warm_mount_addresses = join(",", tolist(avere_vfxt.vfxt.vserver_ip_addresses))
