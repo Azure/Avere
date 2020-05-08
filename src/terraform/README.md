@@ -13,7 +13,7 @@ Both HPC Cache and Avere vFXT for Azure provide file caching for high-performanc
    2. [HPC Cache mounting Azure Blob Storage cloud core filer example](examples/HPC%20Cache/azureblobfiler)
    3. [HPC Cache mounting 1 IaaS NAS filer example](examples/HPC%20Cache/1-filer)
    4. [HPC Cache mounting 3 IaaS NAS filers example](examples/HPC%20Cache/3-filers)
-   5. [HPC Cache mounting mounting an Azure Netapp Volume](examples/HPC%20Cache/netapp)
+   5. [HPC Cache mounting an Azure Netapp Volume](examples/HPC%20Cache/netapp)
    6. [HPC Cache and VDBench example](examples/HPC%20Cache/vdbench)
    7. [HPC Cache and VMSS example](examples/HPC%20Cache/vmss)
 2. [Avere vFXT for Azure](examples/vfxt)
