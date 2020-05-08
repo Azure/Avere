@@ -8,6 +8,11 @@ output "vnet_name" {
   value       = azurerm_virtual_network.vnet.name
 }
 
+output "vnet_id" {
+  description = "The id of the virtual network."
+  value       = azurerm_virtual_network.vnet.id
+}
+
 output "cloud_cache_subnet_name" {
   description = "The name of the cloud cache subnet."
   value       = azurerm_subnet.cloud_cache.name
