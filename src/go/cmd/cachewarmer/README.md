@@ -1,6 +1,6 @@
 # CacheWarmer - run the cache warmer daemon
 
-The CacheWarmer provides a method for warming an Avere Cache Filer.  This may be use for the HPC Cache or the Avere vFXT for Azure.
+The CacheWarmer provides a method for warming an Avere Cache Filer.  This may be use for the HPC Cache or the Avere vFXT for Azure.  An example of how to deploy this is described in the [Terraform CacheWarmer example](../../../terraform/examples/vfxt/cachewarmer).
 
 The components of the cache warmer are the following:
 1. `cachewarmer-jobsubmitter` - submits the jobs for the cachewarmer

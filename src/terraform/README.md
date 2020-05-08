@@ -24,6 +24,7 @@ Both HPC Cache and Avere vFXT for Azure provide file caching for high-performanc
    5. [Avere vFXT for Azure mounting an Azure Netapp Volume](examples/vfxt/netapp)
    6. [Avere vFXT and VDBench example](examples/vfxt/vdbench)
    7. [Avere vFXT and VMSS example](examples/vfxt/vmss)
+   8. [Avere vFXT and CacheWarmer example](examples/vfxt/cachewarmer)
 3. [Specialized Avere vFXT for Rendering and Artists](examples/vfxt)
    1. [Avere vFXT optimized for Houdini](examples/vfxt/HoudiniOptimized)
    2. [Avere vFXT and Cloud Workstations](examples/vfxt/cloudworkstation)
