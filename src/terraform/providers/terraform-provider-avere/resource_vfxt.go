@@ -6,10 +6,12 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/validate"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
 
 	"golang.org/x/crypto/ssh"
@@ -248,12 +250,12 @@ func resourceVfxt() *schema.Resource {
 						account_name: {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringIsNotWhiteSpace,
+							ValidateFunc: ValidateArmStorageAccountName,
 						},
 						container_name: {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringIsNotWhiteSpace,
+							ValidateFunc: validate.StorageContainerName,
 						},
 						custom_settings: {
 							Type:     schema.TypeSet,
@@ -1186,4 +1188,15 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 	}
 
 	return nil
+}
+
+// from "github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/storage"
+func ValidateArmStorageAccountName(v interface{}, _ string) (warnings []string, errors []error) {
+	input := v.(string)
+
+	if !regexp.MustCompile(`\A([a-z0-9]{3,24})\z`).MatchString(input) {
+		errors = append(errors, fmt.Errorf("name (%q) can only consist of lowercase letters and numbers, and must be between 3 and 24 characters long", input))
+	}
+
+	return warnings, errors
 }
