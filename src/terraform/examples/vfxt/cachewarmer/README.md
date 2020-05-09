@@ -24,7 +24,7 @@ This examples configures a render network, controller, and Avere vFXT with 1 fil
 
 To simulate latency, the NFS filer will live in a different vnet, resource group, and region.
 
-A azure storage blob filer will be used to hold the bootstrap directory and the warm job directories.  The example is broken into 3 phases.  The third phase demonstrates how to chain up the terraform modules to including deployment of the vFXT, mounting all junctions, building and installation of the CacheWarmer, and finally the job submission.  Once the 3 phase has completed the cache is warmed with the desired content.
+A nfs filer will be used to hold the bootstrap directory and the warm job directories.  The example is broken into 3 phases.  The third phase demonstrates how to chain up the terraform modules to including deployment of the vFXT, mounting all junctions, building and installation of the CacheWarmer, and finally the job submission.  Once the 3 phase has completed the cache is warmed with the desired content.
 
 ![The architecture](../../../../../docs/images/terraform/cachewarmerpipeline.png)
 
@@ -57,14 +57,14 @@ git pull origin master
 
 7. save the output to use for the installation of the Avere vFXT.
 
-## Deploy the vFXT controller and the Storage account
+## Deploy the vFXT controller
 
-These steps install the vFXT controller and storage account.
+These steps install the vFXT controller.
 
-1. using the existing https://shell.azure.com, change to `2.vfxtcontrollerandstorageaccount`
+1. using the existing https://shell.azure.com, change to `2.vfxtcontroller`
 
 ```bash
-cd ~/tf/src/terraform/examples/vfxt/cachewarmer/2.vfxtcontrollerandstorageaccount
+cd ~/tf/src/terraform/examples/vfxt/cachewarmer/2.vfxtcontroller
 ```
 
 3. double check your Avere vFXT prerequisites, including running `az vm image accept-terms --urn microsoft-avere:vfxt:avere-vfxt-controller:latest`: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs

@@ -43,6 +43,8 @@ resource "null_resource" "build_cachewarmer_bootstrap" {
       "sudo rmdir ${local.mount_dir}",
     ]
   }
+
+  depends_on = [var.module_depends_on]
 }
 
 
