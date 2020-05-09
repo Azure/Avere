@@ -106,7 +106,7 @@ func BlockUntilWarm(jobSubmitterPath string, jobWorkerPath string) {
 	for {
 		select {
 		case <-sigchan:
-			log.Info.Printf("Received ctrl-c, stopping services...")
+			log.Info.Printf("Received ctrl-c, stopping...")
 			return
 		case <-ticker.C:
 			if time.Since(lastCheckTime) > timeBetweenBlockCheck {
@@ -125,7 +125,7 @@ func BlockUntilWarm(jobSubmitterPath string, jobWorkerPath string) {
 				} else {
 					// check the worker job directory
 					exists, _, err := cachewarmer.JobsExist(jobWorkerPath)
-					if err == nil {
+					if err != nil {
 						log.Error.Printf("error encountered checking for job existence: %v", err)
 					}
 					if !exists {
