@@ -1,6 +1,6 @@
 locals {
   mount_dir = "/b"
-  block_flag = var.block_until_arm ? " -blockUntilWarm " : ""
+  block_flag = var.block_until_warm ? " -blockUntilWarm " : ""
 }
 
 resource "null_resource" "cachewarmer_submitjob" {
