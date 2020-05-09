@@ -11,8 +11,6 @@ locals {
   // vfxt details
   vfxt_cluster_name = "vfxt"
   vfxt_cluster_password = "VFXT_PASSWORD"
-  storage_account_container = "warm"
-  storage_namespace_path = "/warm"
 
   // vfxt cache polies
   //  "Clients Bypassing the Cluster"
@@ -27,10 +25,9 @@ locals {
   filer_export = ""
   vfxt_cache_subnet_name = ""
   
-  // paste the values from the values from the controller and storage account
+  // paste the values from the values from the controller creation
   controller_address = ""
   controller_username = ""
-  storage_account_name = ""
   vfxt_resource_group_name = ""
 }
 
@@ -72,13 +69,6 @@ resource "avere_vfxt" "vfxt" {
             core_filer_export = local.filer_export
         }
     }
-
-    azure_storage_filer {
-        account_name = local.storage_account_name
-        container_name = local.storage_account_container
-        custom_settings = []
-        junction_namespace_path = local.storage_namespace_path
-    }
 }
 
 module "cachewarmer_build" {
@@ -92,7 +82,9 @@ module "cachewarmer_build" {
   
   // bootstrap directory to store the cache manager binaries and install scripts
   bootstrap_mount_address = tolist(avere_vfxt.vfxt.vserver_ip_addresses)[0]
-  bootstrap_export_path = local.storage_namespace_path
+  bootstrap_export_path = local.filer_export
+
+  module_depends_on = [avere_vfxt.vfxt.vserver_ip_addresses]
 }
 
 module "cachewarmer_manager_install" {
@@ -112,15 +104,16 @@ module "cachewarmer_manager_install" {
     
   // the job path
   jobMount_address = tolist(avere_vfxt.vfxt.vserver_ip_addresses)[0]
-  job_export_path = local.storage_namespace_path
+  job_export_path = local.filer_export
   job_base_path = "/"
 
   // the cachewarmer VMSS auth details
   vmss_user_name = local.controller_username
   vmss_password = local.vm_admin_password
   vmss_ssh_public_key = local.vm_ssh_key_data
-}
 
+  module_depends_on = [module.cachewarmer_build.module_depends_on_id]
+}
 
 module "cachewarmer_submitjob" {
   source = "github.com/Azure/Avere/src/terraform/modules/cachewarmer_submitjob"
@@ -140,6 +133,8 @@ module "cachewarmer_submitjob" {
   warm_mount_addresses = join(",", tolist(avere_vfxt.vfxt.vserver_ip_addresses))
   warm_target_export_path = local.filer_export
   warm_target_path = "/island"
+
+  module_depends_on = [module.cachewarmer_manager_install.module_depends_on_id]
 }
 
 output "bootstrap_mount_address" {

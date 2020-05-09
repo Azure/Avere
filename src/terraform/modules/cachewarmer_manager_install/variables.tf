@@ -64,3 +64,8 @@ variable "vmss_subnet_name" {
     default = null
 }
 
+variable "module_depends_on" {
+  default = [""]
+  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
+}
+

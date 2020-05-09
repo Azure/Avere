@@ -2,7 +2,7 @@ locals {
   mount_dir = "/b"
 }
 
-resource "null_resource" "install_cachewarmer_manager" {
+resource "null_resource" "cachewarmer_submitjob" {
   connection {
       type  = "ssh"
       host  = var.node_address
@@ -20,4 +20,7 @@ resource "null_resource" "install_cachewarmer_manager" {
       "sudo mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' ${var.jobMount_address}:${var.job_export_path} ${local.mount_dir}",
     ]
   }
+
+  depends_on = [var.module_depends_on]
 }
+

@@ -28,6 +28,8 @@ resource "null_resource" "install_cachewarmer_manager" {
       "sudo rmdir ${local.mount_dir}",
     ]
   }
+
+  depends_on = [var.module_depends_on]
 }
 
 
