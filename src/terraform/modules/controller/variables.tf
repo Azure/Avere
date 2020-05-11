@@ -61,3 +61,8 @@ variable "alternative_resource_groups" {
   description = "specifies alternative resource groups including those containing custom images or storage accounts"
   default = []
 }
+
+variable "apply_patch" {
+  description = "specifies if the controller should have a publice ip"
+  default = true
+}
