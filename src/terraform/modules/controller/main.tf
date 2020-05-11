@@ -62,7 +62,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   resource_group_name = var.create_resource_group ? azurerm_resource_group.vm[0].name : data.azurerm_resource_group.vm[0].name
   network_interface_ids = [azurerm_network_interface.vm.id]
   computer_name  = var.unique_name
-  custom_data = base64encode(local.cloud_init_file)
+  custom_data = var.apply_patch ? base64encode(local.cloud_init_file) : null
   size = var.vm_size
   source_image_id = var.image_id
   
