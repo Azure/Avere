@@ -15,25 +15,25 @@ Before starting, download the latest vdbench from https://www.oracle.com/technet
 3. double check your [HPC Cache prerequisites](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-prereqs)
 
 4. get the terraform examples
-```bash
-mkdir tf
-cd tf
-git init
-git remote add origin -f https://github.com/Azure/Avere.git
-git config core.sparsecheckout true
-echo "src/terraform/*" >> .git/info/sparse-checkout
-git pull origin master
-```
+   ```bash
+   mkdir tf
+   cd tf
+   git init
+   git remote add origin -f https://github.com/Azure/Avere.git
+   git config core.sparsecheckout true
+   echo "src/terraform/*" >> .git/info/sparse-checkout
+   git pull origin master
+   ```
 
-6. Decide to use either the NFS filer or Azure storage blob test and cd to the directory:
+5. Decide to use either the NFS filer or Azure storage blob test and cd to the directory:
     1. for Azure Storage Blob testing: `cd src/terraform/examples/HPC\ Cache/vdbench/azureblobfiler`
     2. for NFS filer testing: `cd src/terraform/examples/HPC\ Cache/vdbench/nfsfiler`
 
-7. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences
+6. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences
 
-8. execute `terraform init` in the directory of `main.tf`.
+7. execute `terraform init` in the directory of `main.tf`.
 
-9. execute `terraform apply -auto-approve` to build the HPC Cache cluster with a 12 node VMSS configured to run VDBench.
+8. execute `terraform apply -auto-approve` to build the HPC Cache cluster with a 12 node VMSS configured to run VDBench.
 
 ## Using vdbench
 
