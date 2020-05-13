@@ -8,6 +8,12 @@
         "description": "The render farm manager."
       }
     },
+    "logAnalytics": {
+      "type": "object",
+      "metadata": {
+        "description": "The log analytics workspace."
+      }
+    },
     "virtualNetwork": {
       "type": "object",
       "metadata": {
@@ -17,7 +23,7 @@
   },
   "variables": {
     "virtualNetworkApiVersion": "2020-04-01",
-    "virtualMachineApiVersion": "2019-12-01",
+    "virtualMachineApiVersion": "2020-06-01",
     "availabilitySetName": "RenderManagers",
     "loadBalancerNameInternal": "[concat(variables('availabilitySetName'), 'Internal')]",
     "loadBalancerNameOutbound": "[concat(variables('availabilitySetName'), 'Outbound')]",
@@ -217,7 +223,7 @@
         },
         "storageProfile": {
           "imageReference": {
-            "id": "[parameters('renderManager').imageVersionId]"
+            "id": "[parameters('renderManager').image.referenceId]"
           },
           "osDisk": {
             "caching": "ReadOnly",
@@ -255,15 +261,16 @@
             "typeHandlerVersion": "2.1",
             "autoUpgradeMinorVersion": true,
             "protectedSettings": {
-              "commandToExecute": "[concat('echo ', parameters('renderManager').extensionScriptCommands, ' | base64 --decode | gunzip | sed \"s|\r$||\" | HOME_DIRECTORY=\"', parameters('renderManager').homeDirectory, '\" MANAGER_INDEX=', copyIndex() ,' DB_DEPLOY_SQL=\"', parameters('renderManager').databaseDeploySql, '\" DB_CLIENT_URL=\"', parameters('renderManager').databaseClientUrl, '\" DB_CLIENT_USERNAME=\"', parameters('renderManager').databaseClientUsername, '\" DB_CLIENT_PASSWORD=\"', parameters('renderManager').databaseClientPassword, '\" /bin/bash')]"
+              "commandToExecute": "[concat('echo ', parameters('renderManager').scriptCommands, ' | base64 --decode | gunzip | sed \"s|\r$||\" | MANAGER_INDEX=', copyIndex() ,' DB_DEPLOY_SQL=\"', parameters('renderManager').databaseDeploySql, '\" DB_CLIENT_URL=\"', parameters('renderManager').databaseClientUrl, '\" DB_CLIENT_USERNAME=\"', parameters('renderManager').databaseClientUsername, '\" DB_CLIENT_PASSWORD=\"', parameters('renderManager').databaseClientPassword, '\" /bin/bash')]"
             }
           }
         },
         {
+          "condition": "[not(equals(parameters('logAnalytics').workspaceId, ''))]",
           "type": "extensions",
+          "name": "[concat(parameters('renderManager').machines[copyIndex()].name, 'Monitor')]",
           "apiVersion": "[variables('virtualMachineApiVersion')]",
           "location": "[resourceGroup().location]",
-          "name": "[concat(parameters('renderManager').machines[copyIndex()].name, 'Monitor')]",
           "dependsOn": [
             "[resourceId('Microsoft.Compute/virtualMachines', parameters('renderManager').machines[copyIndex()].name)]"
           ],
@@ -273,10 +280,10 @@
             "typeHandlerVersion": "1.12",
             "autoUpgradeMinorVersion": true,
             "protectedSettings": {
-              "workspaceKey": "[parameters('renderManager').logAnalyticsWorkspaceKey]"
+              "workspaceKey": "[parameters('logAnalytics').workspaceKey]"
             },
             "settings": {
-              "workspaceId": "[parameters('renderManager').logAnalyticsWorkspaceId]"
+              "workspaceId": "[parameters('logAnalytics').workspaceId]"
             }
           }
         }

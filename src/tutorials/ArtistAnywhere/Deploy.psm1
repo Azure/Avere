@@ -17,7 +17,6 @@
 
 function New-NetworkPeering ([string[]] $computeRegionNames, [object[]] $computeNetworks, $storageNetwork, $moduleName) {
 	$moduleName += " Network Peering"
-	New-TraceMessage $moduleName $false
 	$storageNetwork = (az network vnet show --resource-group $storageNetwork.resourceGroupName --name $storageNetwork.name)  | ConvertFrom-Json
 	foreach ($storageNetworkPeering in $storageNetwork.virtualNetworkPeerings) {
 		if ($storageNetworkPeering.peeringState -eq "Disconnected") {
@@ -35,111 +34,19 @@ function New-NetworkPeering ([string[]] $computeRegionNames, [object[]] $compute
 		if (!$networkPeering) { return }
 		New-TraceMessage $moduleName $true $computeRegionNames[$computeNetworkIndex]
 	}
-	New-TraceMessage $moduleName $true
 	return $networkPeering
 }
 
-function New-SharedServices ($resourceGroupNamePrefix, $templateDirectory, $networkOnly, $computeRegionNames, $computeNetworks) {
-	if (!$networkOnly) {
-		# * - Image Gallery Job
-		$moduleName = "* - Image Gallery Job"
-		New-TraceMessage $moduleName $false
-		$imageGalleryJob = Start-Job -FilePath "$templateDirectory/Deploy.ImageGallery.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames
+function Get-ResourceGroupName ($resourceGroupNamePrefix, $resourceGroupNameSuffix, $regionIndex) {
+	$resourceGroupName = $resourceGroupNamePrefix
+	if ($null -ne $regionIndex) {
+		$regionId = $regionIndex + 1
+		$resourceGroupName = "$resourceGroupName$regionId"
 	}
-
-	if (!$computeNetworks -or $computeNetworks.length -eq 0) {
-		# 00 - Network
-		$computeNetworks = @()
-		$moduleName = "00 - Network"
-		New-TraceMessage $moduleName $false
-		for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
-			$computeRegionName = $computeRegionNames[$computeRegionIndex]
-			New-TraceMessage $moduleName $false $computeRegionName
-			$resourceGroupName = Get-ResourceGroupName $computeRegionIndex $resourceGroupNamePrefix "Network"
-			$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionName
-			if (!$resourceGroup) { return }
-
-			$templateResources = "$templateDirectory/00-Network.json"
-			$templateParameters = "$templateDirectory/00-Network.Parameters.$computeRegionName.json"
-			$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
-			if (!$groupDeployment) { return }
-
-			$computeNetwork = $groupDeployment.properties.outputs.virtualNetwork.value
-			$computeNetwork | Add-Member -MemberType NoteProperty -Name "resourceGroupName" -Value $resourceGroupName
-			$computeNetworks += $computeNetwork
-			New-TraceMessage $moduleName $true $computeRegionName
-		}
-		New-TraceMessage $moduleName $true
+	if ($null -ne $resourceGroupNameSuffix) {
+		$resourceGroupName = "$resourceGroupName-$resourceGroupNameSuffix"
 	}
-
-	if (!$networkOnly) {
-		# 02 - Security
-		$computeRegionIndex = 0
-		$moduleName = "02 - Security"
-		New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
-		$resourceGroupName = Get-ResourceGroupName $computeRegionIndex $resourceGroupNamePrefix "Security"
-		$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
-		if (!$resourceGroup) { return }
-
-		$templateResources = "$templateDirectory/02-Security.json"
-		$templateParameters = (Get-Content "$templateDirectory/02-Security.Parameters.json" -Raw | ConvertFrom-Json).parameters
-		if ($templateParameters.virtualNetwork.value.name -eq "") {
-			$templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
-		}
-		if ($templateParameters.virtualNetwork.value.resourceGroupName -eq "") {
-			$templateParameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
-		}
-		$templateParameters = '"{0}"' -f ($templateParameters | ConvertTo-Json -Compress).Replace('"', '\"')
-		$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
-		if (!$groupDeployment) { return }
-
-		$logAnalyticsWorkspaceId = $groupDeployment.properties.outputs.logAnalyticsWorkspaceId.value
-		$logAnalyticsWorkspaceKey = $groupDeployment.properties.outputs.logAnalyticsWorkspaceKey.value
-		New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
-
-		# * - Image Gallery Job
-		$moduleName = "* - Image Gallery Job"
-		$imageGallery = Receive-Job -InstanceId $imageGalleryJob.InstanceId -Wait
-		New-TraceMessage $moduleName $true
-	}
-
-	$logAnalytics = New-Object PSObject
-	$logAnalytics | Add-Member -MemberType NoteProperty -Name "workspaceId" -Value $logAnalyticsWorkspaceId
-	$logAnalytics | Add-Member -MemberType NoteProperty -Name "workspaceKey" -Value $logAnalyticsWorkspaceKey
-
-	$sharedServices = New-Object PSObject
-	$sharedServices | Add-Member -MemberType NoteProperty -Name "computeNetworks" -Value $computeNetworks
-	$sharedServices | Add-Member -MemberType NoteProperty -Name "imageGallery" -Value $imageGallery
-	$sharedServices | Add-Member -MemberType NoteProperty -Name "logAnalytics" -Value $logAnalytics
-
-	return $sharedServices
-}
-
-function Get-RegionNames ([string[]] $regionDisplayNames) {
-	$regionNames = @()
-	$regionLocations = (az account list-locations) | ConvertFrom-Json
-	foreach ($regionDisplayName in $regionDisplayNames) {
-		foreach ($regionLocation in $regionLocations) {
-			if ($regionLocation.displayName -eq $regionDisplayName) {
-				$regionNames += $regionLocation.name
-			}
-		}
-	}
-	return $regionNames
-}
-
-function Get-ResourceGroupName ($regionIndex, $resourceGroupNamePrefix, $resourceGroupNameSuffix) {
-	$regionId = $regionIndex + 1
-	$resourceGroupName = "$resourceGroupNamePrefix$regionId"
-	return "$resourceGroupName-$resourceGroupNameSuffix"
-}
-
-function Get-ImageDefinition ($imageGallery, $imageDefinitionName) {
-	foreach ($imageDefinition in $imageGallery.imageDefinitions) {
-		if ($imageDefinition.name -eq $imageDefinitionName) {
-			return $imageDefinition
-		}
-	}
+	return $resourceGroupName
 }
 
 function Get-ImageVersionId ($imageGalleryResourceGroupName, $imageGalleryName, $imageDefinitionName, $imageTemplateName) {
@@ -151,15 +58,41 @@ function Get-ImageVersionId ($imageGalleryResourceGroupName, $imageGalleryName, 
 	}
 }
 
-function Get-FileSystemMounts ($storageCache) {
+function Get-FileSystemMountCommands ($storageMounts, $aptInstaller) {
+	$mountCommands = @()
+    if ($aptInstaller) {
+		$mountCommands += "apt install nfs-common"
+	} else {
+		$mountCommands += "yum -y install nfs-utils"
+	}
+	foreach ($storageMount in $storageMounts) {
+		$mountCommands += "mkdir -p " + $storageMount.directory
+		$fsMount = "mount " + $storageMount.options
+		$fsMount += " " + $storageMount.exportHost + ":" + $storageMount.exportPath
+		$fsMount += " " + $storageMount.directory
+		$mountCommands += $fsMount
+	}
+	return $mountCommands
+}
+
+function Get-FileSystemMounts ($storageMounts, $cacheMounts) {
 	$fsMounts = ""
-	foreach ($fileSystem in $storageCache) {
+	foreach ($mount in $storageCache) {
 		if ($fsMounts -ne "") {
 			$fsMounts += "|"
 		}
-		$fsMount = $fileSystem.exportHost + ":" + $fileSystem.exportPath
-		$fsMount += " " + $fileSystem.directory
-		$fsMount += " " + $fileSystem.options
+		$fsMount = $mount.exportHost + ":" + $mount.exportPath
+		$fsMount += " " + $mount.directory
+		$fsMount += " " + $mount.options
+		$fsMounts += $fsMount
+	}
+	foreach ($mount in $cacheMounts) {
+		if ($fsMounts -ne "") {
+			$fsMounts += "|"
+		}
+		$fsMount = $mount.exportHost + ":" + $mount.exportPath
+		$fsMount += " " + $mount.directory
+		$fsMount += " " + $mount.options
 		$fsMounts += $fsMount
 	}
 	$memoryStream = New-Object System.IO.MemoryStream

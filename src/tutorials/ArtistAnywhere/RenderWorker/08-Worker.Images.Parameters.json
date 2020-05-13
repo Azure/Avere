@@ -4,21 +4,57 @@
   "parameters": {
     "renderWorker": {
       "value": {
-        "requirementsUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/requirements.txt",
-        "softwareUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.0/rqd-0.4.0-all.tar.gz",
-        "serviceUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/rqd/deploy/opencue-rqd.service",
-        "blenderUrl": "https://mirror.clarkson.edu/blender/release/Blender2.82/blender-2.82a-linux64.tar.xz"
+        "machineImages": [
+          {
+            "enabled": true,
+            "templateName": "RenderWorker",
+            "definitionName": "Linux",
+            "sourceType": "PlatformImage",
+            "sourceVersion": "latest",
+            "buildCustomization": [
+              {
+                "name": "Tools",
+                "type": "Shell",
+                "inline": [
+                  "cd /usr/local/bin",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-requirements.txt .",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-rqd.tar.gz .",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-rqd.service ."
+                ]
+              },
+              {
+                "name": "OpenCue",
+                "type": "Shell",
+                "inline": [
+                  "yum -y install gcc",
+                  "yum -y install python3-devel",
+                  "yum -y install redhat-rpm-config",
+                  "cd /usr/local/bin",
+                  "pip3 install -r opencue-requirements.txt",
+                  "tar -xzf opencue-rqd.tar.gz",
+                  "cd rqd-*",
+                  "python3 setup.py install"
+                ]
+              }
+            ],
+            "buildTimeoutMinutes": 120
+          }
+        ]
       }
     },
-    "imageBuilder": {
+    "imageGallery": {
       "value": {
-        "imageGalleryName": "",
-        "imageTemplateName": "RenderWorker",
-        "imageSourceType": "PlatformImage",
-        "imageBuildTimeoutMinutes": 120,
+        "name": "",
         "imageReplicationCount": 10,
         "imageReplicationRegions": [
         ]
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "",
+        "subnetName": "Render",
+        "resourceGroupName": ""
       }
     }
   }

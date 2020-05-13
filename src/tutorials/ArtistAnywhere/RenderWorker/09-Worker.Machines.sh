@@ -1,8 +1,9 @@
 #!/bin/bash -xe
 
-cd "$HOME_DIRECTORY"
+cd /usr/local/bin
 
-sed --in-place "/Environment=OPTIONS=/i Environment=CUEBOT_HOSTNAME=$RENDER_MANAGER_HOST" opencue-rqd.service
+sed -i "/Environment=BIN/c Environment=BIN=/usr/local/bin" opencue-rqd.service
+sed -i "/Environment=OPTIONS=/i Environment=CUEBOT_HOSTNAME=$RENDER_MANAGER_HOST" opencue-rqd.service
 cp opencue-rqd.service /etc/systemd/system
 
 systemctl enable opencue-rqd

@@ -4,11 +4,13 @@
   "parameters": {
     "renderWorker": {
       "value": {
-        "homeDirectory": "",
-        "imageVersionId": "",
-        "extensionScriptCommands": "",
-        "logAnalyticsWorkspaceId": "",
-        "logAnalyticsWorkspaceKey": "",
+        "scriptCommands": "",
+        "fileSystemMounts": "",
+        "image": {
+          "templateName": "RenderWorker",
+          "definitionName": "Linux",
+          "referenceId": ""
+        },
         "machineScaleSets": [
           {
             "name": "renderWorkers0",
@@ -27,6 +29,12 @@
     "renderManager": {
       "value": {
         "hostAddress": ""
+      }
+    },
+    "logAnalytics": {
+      "value" : {
+        "workspaceId": "",
+        "workspaceKey": ""
       }
     },
     "virtualNetwork": {

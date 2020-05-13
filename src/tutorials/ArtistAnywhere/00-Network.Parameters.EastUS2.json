@@ -12,33 +12,49 @@
         "subnets": [
           {
             "name": "Render",
-            "addressSpace": "10.1.0.0/17",
-            "serviceEndpoints": [
-              {
-                "service": "Microsoft.KeyVault"
-              },
-              {
-                "service": "Microsoft.Sql"
-              }
-            ]
+            "properties": {
+              "addressPrefix": "10.1.0.0/17",
+              "serviceEndpoints": [
+                {
+                  "service": "Microsoft.KeyVault"
+                },
+                {
+                  "service": "Microsoft.Sql"
+                }
+              ],
+              "privateEndpointNetworkPolicies": "Enabled",
+              "privateLinkServiceNetworkPolicies": "Disabled"
+            }
           },
           {
             "name": "Desktop",
-            "addressSpace": "10.1.128.0/18",
-            "serviceEndpoints": [
-            ]
+            "properties": {
+              "addressPrefix": "10.1.128.0/18",
+              "serviceEndpoints": [
+              ],
+              "privateEndpointNetworkPolicies": "Enabled",
+              "privateLinkServiceNetworkPolicies": "Disabled" 
+            }
           },
           {
             "name": "Cache",
-            "addressSpace": "10.1.192.0/24",
-            "serviceEndpoints": [
-            ]
+            "properties": {
+              "addressPrefix": "10.1.192.0/24",
+              "serviceEndpoints": [
+              ],
+              "privateEndpointNetworkPolicies": "Enabled",
+              "privateLinkServiceNetworkPolicies": "Enabled"
+            }
           },
           {
             "name": "GatewaySubnet",
-            "addressSpace": "10.1.193.0/24",
-            "serviceEndpoints": [
-            ]
+            "properties": {
+              "addressPrefix": "10.1.193.0/24",
+              "serviceEndpoints": [
+              ],
+              "privateEndpointNetworkPolicies": "Enabled",
+              "privateLinkServiceNetworkPolicies": "Enabled"
+            }
           }
         ]
       }

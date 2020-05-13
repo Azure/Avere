@@ -4,21 +4,52 @@
   "parameters": {
     "renderManager": {
       "value": {
-        "databaseSchemaUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.0/schema-0.4.0.sql",
-        "databaseDataUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.0/demo_data-0.4.0.sql",
-        "softwareUrl": "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.0/cuebot-0.4.0-all.jar",
-        "serviceUrl": "https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/cuebot/deploy/systemd/opencue-cuebot.service"
+        "machineImages": [
+          {
+            "enabled": true,
+            "templateName": "RenderManager",
+            "definitionName": "Linux",
+            "sourceType": "PlatformImage",
+            "sourceVersion": "latest",
+            "buildCustomization": [
+              {
+                "name": "Tools",
+                "type": "Shell",
+                "inline": [
+                  "cd /usr/local/bin",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-cuebot-schema.sql .",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-cuebot-data.sql .",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-cuebot.jar .",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-cuebot.service ."
+                ]
+              },
+              {
+                "name": "OpenCue",
+                "type": "Shell",
+                "inline": [
+                  "yum -y install java-11-openjdk",
+                  "yum -y install postgresql-contrib"
+                ]
+              }
+            ],
+            "buildTimeoutMinutes": 120
+          }
+        ]
       }
     },
-    "imageBuilder": {
+    "imageGallery": {
       "value": {
-        "imageGalleryName": "",
-        "imageTemplateName": "RenderManager",
-        "imageSourceType": "PlatformImage",
-        "imageBuildTimeoutMinutes": 120,
+        "name": "",
         "imageReplicationCount": 1,
         "imageReplicationRegions": [
         ]
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "",
+        "subnetName": "Render",
+        "resourceGroupName": ""
       }
     }
   }

@@ -101,21 +101,24 @@
     }
   ],
   "outputs": {
-    "keyVaultUri": {
-      "type": "string",
-      "value": "[reference(resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name), variables('keyVaultApiVersion')).vaultUri]"
+    "managedIdentity": {
+      "type": "object",
+      "value": {
+        "id": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('keyVault').name), variables('managedIdentityApiVersion')).principalId]"
+      }
     },
-    "managedIdentityId": {
-      "type": "string",
-      "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('keyVault').name), variables('managedIdentityApiVersion')).principalId]"
+    "keyVault": {
+      "type": "object",
+      "value": {
+        "uri": "[reference(resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name), variables('keyVaultApiVersion')).vaultUri]"
+      }
     },
-    "logAnalyticsWorkspaceId": {
-      "type": "string",
-      "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalytics').name), variables('operationalInsightsApiVersion')).customerId]"
-    },
-    "logAnalyticsWorkspaceKey": {
-      "type": "string",
-      "value": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalytics').name), variables('operationalInsightsApiVersion')).primarySharedKey]"
+    "logAnalytics": {
+      "type": "object",
+      "value": {
+        "workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalytics').name), variables('operationalInsightsApiVersion')).customerId]",
+        "workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalytics').name), variables('operationalInsightsApiVersion')).primarySharedKey]"
+      }
     }
   }
 }

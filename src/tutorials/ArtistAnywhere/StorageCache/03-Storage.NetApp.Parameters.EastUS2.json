@@ -73,9 +73,23 @@
       "value": [
         {
           "pool": "Storage",
+          "volume": "Scenes",
+          "exportPath": "/scenes",
+          "directory": "/mnt/scenes",
+          "options": "-t nfs -o rw,hard,rsize=65536,wsize=65536,vers=3,tcp"
+        },
+        {
+          "pool": "Storage",
+          "volume": "Tools",
+          "exportPath": "/tools",
+          "directory": "/mnt/tools",
+          "options": "-t nfs -o rw,hard,rsize=65536,wsize=65536,vers=3,tcp"
+        },
+        {
+          "pool": "Storage",
           "volume": "Frames",
           "exportPath": "/frames",
-          "directory": "/storage/netapp/frames",
+          "directory": "/mnt/frames",
           "options": "-t nfs -o rw,hard,rsize=65536,wsize=65536,vers=3,tcp"
         }
       ]
@@ -87,7 +101,7 @@
           "type": "nfs3",
           "junctions": [
             {
-              "namespacePath": "/storage/netapp/scenes",
+              "namespacePath": "/mnt/scenes",
               "nfsExport": "/scenes",
               "targetPath": ""
             }
@@ -100,7 +114,7 @@
           "type": "nfs3",
           "junctions": [
             {
-              "namespacePath": "/storage/netapp/tools",
+              "namespacePath": "/mnt/tools",
               "nfsExport": "/tools",
               "targetPath": ""
             }

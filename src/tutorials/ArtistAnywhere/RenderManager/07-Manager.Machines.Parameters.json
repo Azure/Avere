@@ -4,15 +4,16 @@
   "parameters": {
     "renderManager": {
       "value": {
-        "homeDirectory": "",
-        "imageVersionId": "",
         "databaseDeploySql": "",
         "databaseClientUrl": "",
         "databaseClientUsername": "",
         "databaseClientPassword": "",
-        "extensionScriptCommands": "",
-        "logAnalyticsWorkspaceId": "",
-        "logAnalyticsWorkspaceKey": "",
+        "scriptCommands": "",
+        "image": {
+          "templateName": "RenderManager",
+          "definitionName": "Linux",
+          "referenceId": ""
+        },
         "machines": [
           {
             "name": "renderManager0",
@@ -24,6 +25,12 @@
         ],
         "clientNetworkProtocol": "Tcp",
         "clientNetworkPort": 8443
+      }
+    },
+    "logAnalytics": {
+      "value" : {
+        "workspaceId": "",
+        "workspaceKey": ""
       }
     },
     "virtualNetwork": {

@@ -14,10 +14,10 @@
         "description": "The render farm manager."
       }
     },
-    "cacheMounts": {
-      "type": "string",
+    "logAnalytics": {
+      "type": "object",
       "metadata": {
-        "description": "The storage cache mounts."
+        "description": "The log analytics workspace."
       }
     },
     "virtualNetwork": {
@@ -29,7 +29,7 @@
   },
   "variables": {
     "virtualNetworkApiVersion": "2020-04-01",
-    "virtualMachineApiVersion": "2019-12-01"
+    "virtualMachineApiVersion": "2020-06-01"
   },
   "resources": [
     {
@@ -66,7 +66,7 @@
           "billingProfile": "[if(not(equals(parameters('renderWorker').machineScaleSets[copyIndex()].maxBillingPrice, '')), json(concat('{\"maxPrice\": \"', parameters('renderWorker').machineScaleSets[copyIndex()].maxBillingPrice, '\"}')), json('null'))]",
           "storageProfile": {
             "imageReference": {
-              "id": "[parameters('renderWorker').imageVersionId]"
+              "id": "[parameters('renderWorker').image.referenceId]"
             },
             "osDisk": {
               "caching": "ReadOnly",
@@ -99,22 +99,7 @@
                   "typeHandlerVersion": "2.1",
                   "autoUpgradeMinorVersion": true,
                   "protectedSettings": {
-                    "commandToExecute": "[concat('echo ', parameters('renderWorker').extensionScriptCommands, ' | base64 --decode | gunzip | sed \"s|\r$||\" | HOME_DIRECTORY=\"', parameters('renderWorker').homeDirectory, '\" RENDER_MANAGER_HOST=\"', parameters('renderManager').hostAddress, '\" FILE_SYSTEM_MOUNTS=\"', base64ToString(parameters('fileSystemMounts')), '\" /bin/bash')]"
-                  }
-                }
-              },
-              {
-                "name": "[concat(parameters('renderWorker').machineScaleSets[copyIndex()].name, 'Monitor')]",
-                "properties": {
-                  "publisher": "Microsoft.EnterpriseCloud.Monitoring",
-                  "type": "OmsAgentForLinux",
-                  "typeHandlerVersion": "1.12",
-                  "autoUpgradeMinorVersion": true,
-                  "protectedSettings": {
-                    "workspaceKey": "[parameters('renderWorker').logAnalyticsWorkspaceKey]"
-                  },
-                  "settings": {
-                    "workspaceId": "[parameters('renderWorker').logAnalyticsWorkspaceId]"
+                    "commandToExecute": "[concat('echo ', parameters('renderWorker').scriptCommands, ' | base64 --decode | gunzip | sed \"s|\r$||\" | RENDER_MANAGER_HOST=\"', parameters('renderManager').hostAddress, '\" FILE_SYSTEM_MOUNTS=\"', base64ToString(parameters('renderWorker').fileSystemMounts), '\" /bin/bash')]"
                   }
                 }
               }

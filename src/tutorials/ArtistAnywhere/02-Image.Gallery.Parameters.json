@@ -7,14 +7,13 @@
         "name": "MediaStudio",
         "imageDefinitions": [
           {
-            "name": "LinuxServer",
+            "name": "Linux",
             "type": "Linux",
             "generation": "v1",
             "state": "Generalized",
             "publisher": "OpenLogic",
             "offer": "CentOS",
-            "sku": "8.0",
-            "homeDirectory": "/home/az/"
+            "sku": "8_1"
           },
           {
             "name": "WindowsServer",
@@ -22,19 +21,8 @@
             "generation": "v1",
             "state": "Generalized",
             "publisher": "MicrosoftWindowsServer",
-            "offer": "WindowsServerHPCPack",
-            "sku": "2019hn-ws2019",
-            "homeDirectory": "/users/az/"
-          },
-          {
-            "name": "LinuxDesktop",
-            "type": "Linux",
-            "generation": "v1",
-            "state": "Generalized",
-            "publisher": "OpenLogic",
-            "offer": "CentOS",
-            "sku": "7.7",
-            "homeDirectory": "/home/az/"
+            "offer": "WindowsServer",
+            "sku": "2019-datacenter-smalldisk"
           },
           {
             "name": "WindowsDesktop",
@@ -43,17 +31,22 @@
             "state": "Generalized",
             "publisher": "MicrosoftWindowsDesktop",
             "offer": "Windows-10",
-            "sku": "rs5-enterprise-standard",
-            "homeDirectory": "/users/az/"
+            "sku": "19h2-pro"
           }
         ]
       }
     },
-    "imageRegistry": {
+    "containerRegistry": {
       "value": {
-        "enabled": false,
         "name": "MediaStudio",
-        "tier": "Standard"
+        "tier": "Premium"
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "",
+        "subnetName": "Render",
+        "resourceGroupName": ""
       }
     }
   }

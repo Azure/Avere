@@ -16,9 +16,12 @@
     }
   },
   "variables": {
+    "roleAssignmentApiVersion": "2020-03-01-preview",
     "virtualNetworkApiVersion": "2020-04-01",
     "virtualNetworkDomainApiVersion": "2020-01-01",
-    "virtualNetworkGatewayZoned": "[endsWith(parameters('virtualNetworkGateway').vpnTier, 'AZ')]"
+    "virtualNetworkGatewayZoned": "[endsWith(parameters('virtualNetworkGateway').vpnTier, 'AZ')]",
+    "imageBuilderPrincipalId": "ef511139-6170-438e-a6e1-763dc31bdf74",
+    "imageBuilderRoleId": "b24988ac-6180-42a0-ab88-20f7382dd24c"
   },
   "resources": [
     {
@@ -41,10 +44,7 @@
             "count": "[length(parameters('virtualNetwork').subnets)]",
             "input": {
               "name": "[parameters('virtualNetwork').subnets[copyIndex('subnets')].name]",
-              "properties": {
-                "addressPrefix": "[parameters('virtualNetwork').subnets[copyIndex('subnets')].addressSpace]",
-                "serviceEndpoints": "[parameters('virtualNetwork').subnets[copyIndex('subnets')].serviceEndpoints]"
-              }
+              "properties": "[parameters('virtualNetwork').subnets[copyIndex('subnets')].properties]"
             }
           }
         ]
@@ -133,6 +133,16 @@
             }
           ]
         }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "name": "[guid(resourceGroup().id)]",
+      "apiVersion": "[variables('roleAssignmentApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "principalId": "[variables('imageBuilderPrincipalId')]",
+        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('imageBuilderRoleId'))]"
       }
     }
   ],

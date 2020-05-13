@@ -34,7 +34,7 @@
           "type": "clfs",
           "junctions": [
             {
-              "namespacePath": "/storage/object/scenes",
+              "namespacePath": "/mnt/scenes",
               "targetPath": ""
             }
           ],
@@ -45,7 +45,7 @@
           "type": "clfs",
           "junctions": [
             {
-              "namespacePath": "/storage/object/tools",
+              "namespacePath": "/mnt/tools",
               "targetPath": ""
             }
           ],

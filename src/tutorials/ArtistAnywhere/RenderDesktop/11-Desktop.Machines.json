@@ -23,7 +23,7 @@
   },
   "variables": {
     "virtualNetworkApiVersion": "2020-04-01",
-    "virtualMachineApiVersion": "2019-12-01"
+    "virtualMachineApiVersion": "2020-06-01"
   },
   "functions": [
     {
@@ -255,7 +255,7 @@
     }
   ],
   "outputs": {
-    "renderDesktops": {
+    "renderDesktopMachines": {
       "type": "array",
       "value": "[parameters('renderDesktop').machineTypes]"
     }

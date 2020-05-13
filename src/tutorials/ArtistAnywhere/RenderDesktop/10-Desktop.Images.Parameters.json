@@ -6,17 +6,69 @@
       "value": {
         "machineImages": [
           {
-            "enabled": false,
+            "enabled": true,
             "templateName": "LinuxDesktop",
-            "definitionName": "LinuxDesktop",
+            "definitionName": "Linux",
             "sourceType": "PlatformImage",
             "sourceVersion": "latest",
             "buildCustomization": [
               {
+                "name": "Tools",
+                "type": "Shell",
+                "inline": [
+                  "cd /usr/local/bin",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-requirements.txt .",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-requirements-gui.txt .",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-pycue.tar.gz .",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-pyoutline.tar.gz .",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-cuesubmit.tar.gz .",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-cueadmin.tar.gz .",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-cuegui.tar.gz .",
+                  "cp /mnt/tools/blender/v2.82a/blender.tar.xz ."
+                ]
+              },
+              {
+                "name": "OpenCue",
+                "type": "Shell",
+                "inline": [
+                  "yum -y install gcc",
+                  "yum -y install python3-devel",
+                  "yum -y install redhat-rpm-config",
+                  "cd /usr/local/bin",
+                  "pip3 install -r opencue-requirements.txt",
+                  "pip3 install -r opencue-requirements-gui.txt",
+                  "tar -xzf opencue-pycue.tar.gz",
+                  "tar -xzf opencue-pyoutline.tar.gz",
+                  "tar -xzf opencue-cuesubmit.tar.gz",
+                  "tar -xzf opencue-cueadmin.tar.gz",
+                  "tar -xzf opencue-cuegui.tar.gz",
+                  "cd pycue-*",
+                  "python3 setup.py install",
+                  "cd ../pyoutline-*",
+                  "python3 setup.py install",
+                  "cd ../cuesubmit-*",
+                  "python3 setup.py install",
+                  "cd ../cueadmin-*",
+                  "python3 setup.py install"
+                ]
+              },
+              {
+                "name": "Blender",
+                "type": "Shell",
+                "inline": [
+                  "yum -y install libXi",
+                  "yum -y install libXrender",
+                  "yum -y install mesa-libGL",
+                  "cd /usr/local/bin",
+                  "tar -xJf blender.tar.xz",
+                  "mv blender-*/* ."
+                ]
+              },
+              {
                 "name": "Teradici",
                 "type": "Shell",
                 "inline": [
-                  "yum -y groups install 'GNOME Desktop'"
+                  "yum -y groups install 'Workstation'"
                 ]
               }              
             ],
@@ -29,18 +81,34 @@
             "sourceType": "PlatformImage",
             "sourceVersion": "latest",
             "buildCustomization": [
+              {
+                "name": "Tools",
+                "type": "PowerShell",
+                "inline": [
+                  "DISM /Online /Enable-Feature /FeatureName:ServicesForNFS-ClientOnly",
+                  "mkdir /tools",
+                  "cd /tools"
+                ]
+              }
             ],
             "buildTimeoutMinutes": 120
           }
         ]
       }
     },
-    "imageBuilder": {
+    "imageGallery": {
       "value": {
-        "imageGalleryName": "",
+        "name": "",
         "imageReplicationCount": 1,
         "imageReplicationRegions": [
         ]
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "",
+        "subnetName": "Desktop",
+        "resourceGroupName": ""
       }
     }
   }

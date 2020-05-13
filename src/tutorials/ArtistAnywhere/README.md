@@ -1,8 +1,21 @@
 # Azure Artist Anywhere
 
-Azure Artist Anywhere is a modular series of parameterized <a href="https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview" target="_blank">Azure Resource Manager (ARM)</a> templates and <a href="https://docs.microsoft.com/en-us/powershell/scripting/overview" target="_blank">PowerShell Core</a> scripts for the automated deployment of an end-to-end media rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight deployment framework that can be modified and extended as needed to meet various requirements.
+Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/overview) templates for the automated deployment of an end-to-end media rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight deployment framework that can be configured as needed to meet various environment requirements.
 
-Azure Artist Anywhere is composed of the following open-source software and Microsoft Azure services:
+## Deployment Modules
+
+Azure Artist Anywhere is composed of the following Microsoft Azure resource deployment modules.
+
+| Foundation | Storage & Cache | Render Managers | Render Workers | Render Desktops |
+| - | - | - | - | - |
+| [00 - Network](00-Network.json) | [03 - Storage (NetApp)](StorageCache/03-Storage.NetApp.json) | [05 - Manager Data](RenderManager/05-Manager.Data.json) | [08 - Worker Images](RenderWorker/08-Worker.Images.json) | [10 - Desktop Images](RenderDesktop/10-Desktop.Images.json) |
+| [01 - Access Control](01-Access.Control.json) | [03 - Storage (Object)](StorageCache/03-Storage.Object.json) | [06 - Manager Images](RenderManager/06-Manager.Images.json) | [09 - Worker Machines](RenderWorker/09-Worker.Machines.json) | [11 - Desktop Machines](RenderDesktop/11-Desktop.Machines.json) |
+| [02 - Image Gallery](02-Image.Gallery.json) | [04 - Cache (HPC)](StorageCache/04-Cache.json) | [07 - Manager Machines](RenderManager/07-Manager.Machines.json) | [09 - Worker Machines<br>Extension Script (Linux)](RenderWorker/09-Worker.Machines.sh) | [11 - Desktop Machines<br>Extension Script (Linux)](RenderDesktop/11-Desktop.Machines.sh) |
+| | | [07 - Manager Machines<br>Extension Script (Linux)](RenderManager/07-Manager.Machines.sh) | | [11 - Desktop Machines<br>Extension Script (Windows)](RenderDesktop/11-Desktop.Machines.ps1) |
+
+## Solution Architecture
+
+Azure Artist Anywhere is composed of the following open-source software and Microsoft Azure services.
 
 <table>
     <tr>
@@ -73,36 +86,32 @@ Azure Artist Anywhere is composed of the following open-source software and Micr
     </tr>
 </table>
 
-The following diagram depicts the Azure Artist Anywhere solution architecture spanning on-premises and Microsoft Azure.
+The following diagram depicts the Azure Artist Anywhere solution architecture, which spans on-premises and Microsoft Azure.
 
 ![](https://mediastudio.blob.core.windows.net/bin/AzureArtistAnywhere.SolutionArchitecture.07-01-2020.png)
 
-The following diagram represents the Azure Artist Anywhere deployment modules along with their dependency relationship.
+The following diagram defines the Azure Artist Anywhere deployment modules along with their dependency relationships.
 
 ![](https://mediastudio.blob.core.windows.net/bin/AzureArtistAnywhere.ModuleDependency.07-01-2020.png)
 
 The following list describes each of the Azure Artist Anywhere deployment script files.
 
-* *Deploy.ps1* - main script that orchestrates the overall deployment process
+* [*Deploy.ps1*](Deploy.ps1) - main script that orchestrates the solution deployment process
 
-* *Deploy.psm1* - shared module that is referenced from each deployment script
+* [*Deploy.psm1*](Deploy.psm1) - shared module that is referenced from each deployment script
 
-* *Deploy.ImageGallery.ps1* - background job script that deploys the shared image gallery
+* [*Deploy.SharedServices.ps1*](Deploy.SharedServices.ps1) - core script that deploys shared services (Network, Storage, etc.)
 
-* *Deploy.StorageCache.ps1* - background job script that deploys storage and cache services
+* [*Deploy.RenderManager.ps1*](Deploy.RenderManager.ps1) - background job script that deploys the render farm manager services
 
-* *Deploy.RenderManager.ps1* - background job script that deploys render manager services
+* [*Deploy.RenderDesktop.ps1*](Deploy.RenderDesktop.ps1) - orchestration script that deploys the render desktop client services
 
-* *Deploy.RenderDesktop.ps1* - foreground job script that deploys the render desktop services
+* [*Deploy.RenderDesktop.Images.ps1*](Deploy.RenderDesktop.Images.ps1) - background job script that deploys the render desktop images
 
-* *Deploy.RenderDesktop.Images.ps1* - background job script that deploys the render desktop images
+* [*Deploy.RenderDesktop.Machines.ps1*](Deploy.RenderDesktop.Machines.ps1) - background job script that deploys render desktop machines
 
-* *Deploy.RenderDesktop.Machines.ps1* - background job script that deploys render desktop machines
+As an example deployment, the following output is from the *Deploy.ps1* script within Azure Cloud Shell.
 
-Unlike other background job scripts, the *Deploy.StorageCache.ps1* script can be executed directly for deployment of Network, Storage and Cache only. The other background job scripts must be initiated via *Deploy.ps1* or *Deploy.RenderDesktop.ps1*
-
-The following sample terminal output is from a *Deploy.ps1* orchestrated deployment across 2 paired Microsoft Azure regions. Note that the background jobs have overlapping *start* and *end* times as expected from the parallel deployment process.
-
-![](https://mediastudio.blob.core.windows.net/bin/AzureArtistAnywhere.ModuleDeployment.03-01-2020.png)
+![](https://mediastudio.blob.core.windows.net/bin/AzureArtistAnywhere.ModuleDeployment.05-01-2020.png)
 
 For more information, contact Rick Shahid (rick.shahid@microsoft.com)

@@ -8,20 +8,29 @@
         "description": "The shared image gallery."
       }
     },
-    "imageRegistry": {
+    "containerRegistry": {
       "type": "object",
       "metadata": {
-        "description": "The container image registry."
+        "description": "The container registry."
+      }
+    },
+    "virtualNetwork": {
+      "type": "object",
+      "metadata": {
+        "description": "The virtual network subnet."
       }
     }
   },
   "variables": {
+    "roleAssignmentApiVersion": "2020-03-01-preview",
     "imageGalleryApiVersion": "2019-12-01",
-    "imageRegistryApiVersion": "2019-12-01-preview"
+    "containerRegistryApiVersion": "2019-12-01-preview",
+    "imageBuilderPrincipalId": "ef511139-6170-438e-a6e1-763dc31bdf74",
+    "imageBuilderRoleId": "b24988ac-6180-42a0-ab88-20f7382dd24c"
+
   },
   "resources": [
     {
-      "condition": "[not(parameters('imageRegistry').enabled)]",
       "type": "Microsoft.Compute/galleries",
       "name": "[parameters('imageGallery').name]",
       "apiVersion": "[variables('imageGalleryApiVersion')]",
@@ -30,7 +39,6 @@
       }
     },
     {
-      "condition": "[not(parameters('imageRegistry').enabled)]",
       "type": "Microsoft.Compute/galleries/images",
       "name": "[concat(parameters('imageGallery').name, '/', parameters('imageGallery').imageDefinitions[copyIndex()].name)]",
       "apiVersion": "[variables('imageGalleryApiVersion')]",
@@ -54,16 +62,25 @@
       }
     },
     {
-      "condition": "[parameters('imageRegistry').enabled]",
       "type": "Microsoft.ContainerRegistry/registries",
-      "name": "[parameters('imageRegistry').name]",
-      "apiVersion": "[variables('imageRegistryApiVersion')]",
+      "name": "[parameters('containerRegistry').name]",
+      "apiVersion": "[variables('containerRegistryApiVersion')]",
       "location": "[resourceGroup().location]",
       "sku": {
-        "name": "[parameters('imageRegistry').tier]"
+        "name": "[parameters('containerRegistry').tier]"
       },
       "properties": {
         "adminUserEnabled": false
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "name": "[guid(resourceGroup().id)]",
+      "apiVersion": "[variables('roleAssignmentApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "principalId": "[variables('imageBuilderPrincipalId')]",
+        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('imageBuilderRoleId'))]"
       }
     }
   ],
@@ -71,10 +88,6 @@
     "imageGallery": {
       "type": "object",
       "value": "[parameters('imageGallery')]"
-    },
-    "imageRegistry": {
-      "type": "object",
-      "value": "[parameters('imageRegistry')]"
     }
   }
 }

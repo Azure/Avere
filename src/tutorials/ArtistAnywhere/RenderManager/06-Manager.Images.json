@@ -8,84 +8,65 @@
         "description": "The render farm manager."
       }
     },
-    "imageBuilder": {
+    "imageGallery": {
       "type": "object",
       "metadata": {
-        "description": "The shared image builder."
+        "description": "The shared image gallery."
       }
     },
-    "imageDefinition": {
+    "virtualNetwork": {
       "type": "object",
       "metadata": {
-        "description": "The shared image definition."
+        "description": "The virtual network subnet."
       }
     }
   },
   "variables": {
-    "roleAssignmentApiVersion": "2020-03-01-preview",
-    "roleDefinitionContributorId": "b24988ac-6180-42a0-ab88-20f7382dd24c",
-    "imageBuilderApiVersion": "2019-05-01-preview",
-    "imageBuilderPrincipalId": "ef511139-6170-438e-a6e1-763dc31bdf74"
+    "imageGalleryApiVersion": "2019-12-01",
+    "imageBuilderApiVersion": "2019-05-01-preview"
   },
   "resources": [
     {
-      "type": "Microsoft.Authorization/roleAssignments",
-      "name": "[guid(resourceGroup().id)]",
-      "apiVersion": "[variables('roleAssignmentApiVersion')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "principalId": "[variables('imageBuilderPrincipalId')]",
-        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('roleDefinitionContributorId'))]"
-      }
-    },
-    {
+      "condition": "[parameters('renderManager').machineImages[copyIndex()].enabled]",
       "type": "Microsoft.VirtualMachineImages/imageTemplates",
-      "name": "[parameters('imageBuilder').imageTemplateName]",
+      "name": "[parameters('renderManager').machineImages[copyIndex()].templateName]",
       "apiVersion": "[variables('imageBuilderApiVersion')]",
       "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Authorization/roleAssignments', guid(resourceGroup().id))]"
-      ],
       "properties": {
-        "buildTimeoutInMinutes": "[parameters('imageBuilder').imageBuildTimeoutMinutes]",
-        "source": {
-          "type": "[parameters('imageBuilder').imageSourceType]",
-          "publisher": "[parameters('imageDefinition').publisher]",
-          "offer": "[parameters('imageDefinition').offer]",
-          "sku": "[parameters('imageDefinition').sku]",
-          "version": "[parameters('imageDefinition').version]"
+        "vmProfile": {
+          "vnetConfig": "[parameters('virtualNetwork')]"
         },
-        "customize": [
-          {
-            "name": "OpenCue",
-            "type": "Shell",
-            "inline": [
-              "yum -y install java-11-openjdk",
-              "yum -y install postgresql-contrib",
-              "[concat('useradd --system --create-home ', replace(replace(parameters('imageDefinition').homeDirectory, 'home', ''), '/', ''))]",
-              "[concat('cd ', parameters('imageDefinition').homeDirectory)]",
-              "[concat('curl --output opencue-cuebot-schema.sql --location --url ', parameters('renderManager').databaseSchemaUrl)]",
-              "[concat('curl --output opencue-cuebot-data.sql --location --url ', parameters('renderManager').databaseDataUrl)]",
-              "[concat('curl --output opencue-cuebot.jar --location --url ', parameters('renderManager').softwareUrl)]",
-              "[concat('curl --output opencue-cuebot.service --location --url ', parameters('renderManager').serviceUrl)]",
-              "[concat('sed --in-place ''/Environment=JAR_PATH/c Environment=JAR_PATH=', parameters('imageDefinition').homeDirectory, 'opencue-cuebot.jar'' opencue-cuebot.service')]"
-            ]
-          }
-        ],
+        "buildTimeoutInMinutes": "[parameters('renderManager').machineImages[copyIndex()].buildTimeoutMinutes]",
+        "source": {
+          "type": "[parameters('renderManager').machineImages[copyIndex()].sourceType]",
+          "version": "[parameters('renderManager').machineImages[copyIndex()].sourceVersion]",
+          "publisher": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('renderManager').machineImages[copyIndex()].definitionName), variables('imageGalleryApiVersion')).identifier.publisher]",
+          "offer": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('renderManager').machineImages[copyIndex()].definitionName), variables('imageGalleryApiVersion')).identifier.offer]",
+          "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('renderManager').machineImages[copyIndex()].definitionName), variables('imageGalleryApiVersion')).identifier.sku]"
+        },
+        "customize": "[if(equals(length(parameters('renderManager').machineImages[copyIndex()].buildCustomization), 0), json('null'), parameters('renderManager').machineImages[copyIndex()].buildCustomization)]",
         "distribute": [
           {
             "type": "SharedImage",
             "runOutputName": "SharedImage",
-            "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('imageBuilder').imageGalleryName, parameters('imageDefinition').name)]",
-            "replicationRegions": "[parameters('imageBuilder').imageReplicationRegions]",
+            "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('renderManager').machineImages[copyIndex()].definitionName)]",
+            "replicationRegions": "[parameters('imageGallery').imageReplicationRegions]",
             "artifactTags": {
-              "imageTemplate": "[parameters('imageBuilder').imageTemplateName]"
+              "imageTemplate": "[parameters('renderManager').machineImages[copyIndex()].templateName]"
             }
           }
         ]
+      },
+      "copy": {
+        "name": "renderManagers",
+        "count": "[length(parameters('renderManager').machineImages)]"
       }
     }
   ],
   "outputs": {
+    "renderManagerImages": {
+      "type": "array",
+      "value": "[parameters('renderManager').machineImages]"
+    }
   }
 }

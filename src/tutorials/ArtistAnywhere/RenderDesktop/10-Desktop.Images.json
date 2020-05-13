@@ -8,56 +8,49 @@
         "description": "The render client desktop."
       }
     },
-    "imageBuilder": {
+    "imageGallery": {
       "type": "object",
       "metadata": {
-        "description": "The shared image builder."
+        "description": "The shared image gallery."
+      }
+    },
+    "virtualNetwork": {
+      "type": "object",
+      "metadata": {
+        "description": "The virtual network subnet."
       }
     }
   },
   "variables": {
-    "roleAssignmentApiVersion": "2020-03-01-preview",
-    "roleDefinitionContributorId": "b24988ac-6180-42a0-ab88-20f7382dd24c",
     "imageGalleryApiVersion": "2019-12-01",
-    "imageBuilderApiVersion": "2019-05-01-preview",
-    "imageBuilderPrincipalId": "ef511139-6170-438e-a6e1-763dc31bdf74"
+    "imageBuilderApiVersion": "2019-05-01-preview"
   },
   "resources": [
-    {
-      "type": "Microsoft.Authorization/roleAssignments",
-      "name": "[guid(resourceGroup().id)]",
-      "apiVersion": "[variables('roleAssignmentApiVersion')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "principalId": "[variables('imageBuilderPrincipalId')]",
-        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('roleDefinitionContributorId'))]"
-      }
-    },
     {
       "condition": "[parameters('renderDesktop').machineImages[copyIndex()].enabled]",
       "type": "Microsoft.VirtualMachineImages/imageTemplates",
       "name": "[parameters('renderDesktop').machineImages[copyIndex()].templateName]",
       "apiVersion": "[variables('imageBuilderApiVersion')]",
       "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Authorization/roleAssignments', guid(resourceGroup().id))]"
-      ],
       "properties": {
+        "vmProfile": {
+          "vnetConfig": "[parameters('virtualNetwork')]"
+        },
         "buildTimeoutInMinutes": "[parameters('renderDesktop').machineImages[copyIndex()].buildTimeoutMinutes]",
         "source": {
           "type": "[parameters('renderDesktop').machineImages[copyIndex()].sourceType]",
           "version": "[parameters('renderDesktop').machineImages[copyIndex()].sourceVersion]",
-          "publisher": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageBuilder').imageGalleryName, parameters('renderDesktop').machineImages[copyIndex()].definitionName), variables('imageGalleryApiVersion')).identifier.publisher]",
-          "offer": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageBuilder').imageGalleryName, parameters('renderDesktop').machineImages[copyIndex()].definitionName), variables('imageGalleryApiVersion')).identifier.offer]",
-          "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageBuilder').imageGalleryName, parameters('renderDesktop').machineImages[copyIndex()].definitionName), variables('imageGalleryApiVersion')).identifier.sku]"
+          "publisher": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('renderDesktop').machineImages[copyIndex()].definitionName), variables('imageGalleryApiVersion')).identifier.publisher]",
+          "offer": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('renderDesktop').machineImages[copyIndex()].definitionName), variables('imageGalleryApiVersion')).identifier.offer]",
+          "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('renderDesktop').machineImages[copyIndex()].definitionName), variables('imageGalleryApiVersion')).identifier.sku]"
         },
         "customize": "[if(equals(length(parameters('renderDesktop').machineImages[copyIndex()].buildCustomization), 0), json('null'), parameters('renderDesktop').machineImages[copyIndex()].buildCustomization)]",
         "distribute": [
           {
             "type": "SharedImage",
             "runOutputName": "SharedImage",
-            "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('imageBuilder').imageGalleryName, parameters('renderDesktop').machineImages[copyIndex()].definitionName)]",
-            "replicationRegions": "[parameters('imageBuilder').imageReplicationRegions]",
+            "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('renderDesktop').machineImages[copyIndex()].definitionName)]",
+            "replicationRegions": "[parameters('imageGallery').imageReplicationRegions]",
             "artifactTags": {
               "imageTemplate": "[parameters('renderDesktop').machineImages[copyIndex()].templateName]"
             }
@@ -71,5 +64,9 @@
     }
   ],
   "outputs": {
+    "renderDesktopImages": {
+      "type": "array",
+      "value": "[parameters('renderDesktop').machineImages]"
+    }
   }
 }

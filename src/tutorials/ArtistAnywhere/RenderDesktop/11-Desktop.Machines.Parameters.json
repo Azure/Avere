@@ -7,21 +7,21 @@
         "machineCountPerType": 1,
         "machineTypes": [
           {
-            "enabled": false,
+            "enabled": true,
             "namePrefix": "renderHostLNV",
             "machineSize": "Standard_NV6",
             "image": {
               "templateName": "LinuxDesktop",
-              "definitionName": "LinuxDesktop",
+              "definitionName": "Linux",
               "referenceId": ""
-             },
+            },
             "login": {
               "adminUsername": "az",
               "adminPassword": "P@ssword1234",
               "sshPublicKeyData": ""
             },
             "gpuDriver": {
-              "publisher": "Microsoft.HpcCompute",
+              "publisher": "Microsoft.HpcCompute.Edp",
               "type": "NvidiaGpuDriverLinux",
               "typeVersion": "1.4"
              },
@@ -47,7 +47,7 @@
               "templateName": "WindowsDesktop",
               "definitionName": "WindowsDesktop",
               "referenceId": ""
-             },
+            },
             "login": {
               "adminUsername": "az",
               "adminPassword": "P@ssword1234",
