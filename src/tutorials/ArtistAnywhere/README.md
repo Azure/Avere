@@ -1,17 +1,17 @@
 # Azure Artist Anywhere
 
-Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/overview) templates for the automated deployment of an end-to-end media rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight deployment framework that can be configured as needed to meet various environment requirements.
+Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/overview) templates (JSON) for the automated deployment of an end-to-end media rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight framework that can be configured and extended as needed to meet various environment requirements.
 
 ## Deployment Modules
 
 Azure Artist Anywhere is composed of the following Microsoft Azure resource deployment modules.
 
-| Foundation | Storage & Cache | Render Managers | Render Workers | Render Desktops |
+| Foundation | Storage & Cache | Render Managers | Render Workers | Artist Desktops |
 | - | - | - | - | - |
-| [00 - Network](00-Network.json) | [03 - Storage (NetApp)](StorageCache/03-Storage.NetApp.json) | [05 - Manager Data](RenderManager/05-Manager.Data.json) | [08 - Worker Images](RenderWorker/08-Worker.Images.json) | [10 - Desktop Images](RenderDesktop/10-Desktop.Images.json) |
-| [01 - Access Control](01-Access.Control.json) | [03 - Storage (Object)](StorageCache/03-Storage.Object.json) | [06 - Manager Images](RenderManager/06-Manager.Images.json) | [09 - Worker Machines](RenderWorker/09-Worker.Machines.json) | [11 - Desktop Machines](RenderDesktop/11-Desktop.Machines.json) |
-| [02 - Image Gallery](02-Image.Gallery.json) | [04 - Cache (HPC)](StorageCache/04-Cache.json) | [07 - Manager Machines](RenderManager/07-Manager.Machines.json) | [09 - Worker Machines<br>Extension Script (Linux)](RenderWorker/09-Worker.Machines.sh) | [11 - Desktop Machines<br>Extension Script (Linux)](RenderDesktop/11-Desktop.Machines.sh) |
-| | | [07 - Manager Machines<br>Extension Script (Linux)](RenderManager/07-Manager.Machines.sh) | | [11 - Desktop Machines<br>Extension Script (Windows)](RenderDesktop/11-Desktop.Machines.ps1) |
+| [00 - Network](00-Network.json) | [03 - Storage (NetApp)](StorageCache/03-Storage.NetApp.json) | [05 - Manager Data](RenderManager/05-Manager.Data.json) | [08 - Worker Images](RenderWorker/08-Worker.Images.json) | [10 - Desktop Images](ArtistDesktop/10-Desktop.Images.json) |
+| [01 - Access Control](01-Access.Control.json) | [03 - Storage (Object)](StorageCache/03-Storage.Object.json) | [06 - Manager Images](RenderManager/06-Manager.Images.json) | [09 - Worker Machines](RenderWorker/09-Worker.Machines.json) | [11 - Desktop Machines](ArtistDesktop/11-Desktop.Machines.json) |
+| [02 - Image Gallery](02-Image.Gallery.json) | [04 - Cache (HPC)](StorageCache/04-Cache.json) | [07 - Manager Machines](RenderManager/07-Manager.Machines.json) | [09 - Worker Machines Extension Script (Linux)](RenderWorker/09-Worker.Machines.sh) | [11 - Desktop Machines Extension Script (Linux)](ArtistDesktop/11-Desktop.Machines.sh) |
+| | | [07 - Manager Machines Extension Script (Linux)](RenderManager/07-Manager.Machines.sh) | | [11 - Desktop Machines Extension Script (Windows)](ArtistDesktop/11-Desktop.Machines.ps1) |
 
 ## Solution Architecture
 
@@ -104,14 +104,14 @@ The following list describes each of the Azure Artist Anywhere deployment script
 
 * [*Deploy.RenderManager.ps1*](Deploy.RenderManager.ps1) - background job script that deploys the render farm manager services
 
-* [*Deploy.RenderDesktop.ps1*](Deploy.RenderDesktop.ps1) - orchestration script that deploys the render desktop client services
+* [*Deploy.ArtistDesktop.ps1*](Deploy.ArtistDesktop.ps1) - orchestration script that deploys the artist desktop images & machines
 
-* [*Deploy.RenderDesktop.Images.ps1*](Deploy.RenderDesktop.Images.ps1) - background job script that deploys the render desktop images
+* [*Deploy.ArtistDesktop.Images.ps1*](Deploy.ArtistDesktop.Images.ps1) - background job script that deploys the artist desktop images
 
-* [*Deploy.RenderDesktop.Machines.ps1*](Deploy.RenderDesktop.Machines.ps1) - background job script that deploys render desktop machines
+* [*Deploy.ArtistDesktop.Machines.ps1*](Deploy.ArtistDesktop.Machines.ps1) - background job script that deploys artist desktop machines
 
-As an example deployment, the following output is from the *Deploy.ps1* script within Azure Cloud Shell.
+As an example deployment, the following output is from the [*Deploy.ps1*](Deploy.ps1) script within Azure Cloud Shell.
 
-![](https://mediastudio.blob.core.windows.net/bin/AzureArtistAnywhere.ModuleDeployment.05-01-2020.png)
+![](https://mediastudio.blob.core.windows.net/bin/AzureArtistAnywhere.ModuleDeployment.06-01-2020.png)
 
 For more information, contact Rick Shahid (rick.shahid@microsoft.com)

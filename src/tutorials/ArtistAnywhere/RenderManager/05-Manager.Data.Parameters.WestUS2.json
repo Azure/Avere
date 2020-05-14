@@ -11,6 +11,7 @@
         "dataServerStorageAutoGrow": "Enabled",
         "dataServerBackupRetentionDays": 7,
         "databaseName": "OpenCue",
+        "databaseAdminId": "ef54b085-8b87-4b95-b2a7-cbe762e5664f",
         "databaseAdminUsername": "az",
         "databaseAdminPassword": "P@ssword1234"
       }

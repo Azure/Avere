@@ -30,8 +30,11 @@ if (!$sharedServices) {
 	$moduleName = "* - Shared Services Job"
 	New-TraceMessage $moduleName $false
 	$sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable
-	$sharedServices = Receive-Job -InstanceId $sharedServicesJob.InstanceId -Wait
-	if (!$sharedServices) { return }
+	$sharedServices = Receive-Job -Job $sharedServicesJob -Wait
+	if ($sharedServicesJob.JobStateInfo.State -eq "Failed") {
+		Write-Host $sharedServicesJob.JobStateInfo.Reason
+		return
+	}
 	New-TraceMessage $moduleName $true
 }
 
@@ -39,7 +42,7 @@ $computeNetworks = $sharedServices.computeNetworks
 $imageGallery = $sharedServices.imageGallery
 $storageMounts = $sharedServices.storageMounts
 
-$moduleDirectory = "RenderDesktop"
+$moduleDirectory = "ArtistDesktop"
 
 # 10.0 - Desktop Image Template
 $computeRegionIndex = 0
@@ -54,8 +57,8 @@ $templateResources = "$templateDirectory/$moduleDirectory/10-Desktop.Images.json
 $templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/10-Desktop.Images.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
 $mountCommands = Get-FileSystemMountCommands $storageMounts[$computeRegionIndex] $false
-for ($machineImageIndex = 0; $machineImageIndex -lt $templateParameters.renderDesktop.value.machineImages.length; $machineImageIndex++) {
-	$templateParameters.renderDesktop.value.machineImages[$machineImageIndex].buildCustomization[0].inline = $mountCommands + $templateParameters.renderDesktop.value.machineImages[$machineImageIndex].buildCustomization[0].inline
+for ($machineImageIndex = 0; $machineImageIndex -lt $templateParameters.artistDesktop.value.machineImages.length; $machineImageIndex++) {
+	$templateParameters.artistDesktop.value.machineImages[$machineImageIndex].buildCustomization[0].inline = $mountCommands + $templateParameters.artistDesktop.value.machineImages[$machineImageIndex].buildCustomization[0].inline
 }
 if ($templateParameters.imageGallery.value.name -eq "") {
 	$templateParameters.imageGallery.value.name = $imageGallery.name
@@ -76,24 +79,24 @@ $groupDeployment = (az deployment group create --resource-group $resourceGroupNa
 New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 
 # 10.1 - Desktop Image Version
-$renderDesktopImages = @()
+$artistDesktopImages = @()
 $computeRegionIndex = 0
 $moduleName = "10.1 - Desktop Image Version"
 $resourceGroupNameSuffix = "Image"
 New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 $resourceGroupName = Get-ResourceGroupName $resourceGroupNamePrefix $resourceGroupNameSuffix
 $templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/10-Desktop.Images.Parameters.json" -Raw | ConvertFrom-Json).parameters
-foreach ($machineImage in $templateParameters.renderDesktop.value.machineImages) {
+foreach ($machineImage in $templateParameters.artistDesktop.value.machineImages) {
 	if ($machineImage.enabled) {
 		New-TraceMessage "$moduleName [$($machineImage.templateName)]" $false $computeRegionNames[$computeRegionIndex]
 		$imageVersionId = Get-ImageVersionId $resourceGroupName $imageGallery.name $machineImage.definitionName $machineImage.templateName
 		if (!$imageVersionId) {
 			az image builder run --resource-group $resourceGroupName --name $machineImage.templateName
 		}
-		$renderDesktopImages += $machineImage
+		$artistDesktopImages += $machineImage
 		New-TraceMessage "$moduleName [$($machineImage.templateName)]" $true $computeRegionNames[$computeRegionIndex]
 	}
 }
 New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 
-Write-Output -InputObject $renderDesktopImages -NoEnumerate
+Write-Output -InputObject $artistDesktopImages -NoEnumerate

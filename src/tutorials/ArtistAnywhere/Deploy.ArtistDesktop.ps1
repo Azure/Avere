@@ -27,23 +27,32 @@ if (!$sharedServices) {
 	$moduleName = "* - Shared Services Job"
 	New-TraceMessage $moduleName $false
 	$sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable
-	$sharedServices = Receive-Job -InstanceId $sharedServicesJob.InstanceId -Wait
-	if (!$sharedServices) { return }
+	$sharedServices = Receive-Job -Job $sharedServicesJob -Wait
+	if ($sharedServicesJob.JobStateInfo.State -eq "Failed") {
+		Write-Host $sharedServicesJob.JobStateInfo.Reason
+		return
+	}
 	New-TraceMessage $moduleName $true
 }
 
-# * - Render Desktop Images Job
-$moduleName = "* - Render Desktop Images Job"
+# * - Artist Desktop Images Job
+$moduleName = "* - Artist Desktop Images Job"
 New-TraceMessage $moduleName $false
-$renderDesktopImagesJob = Start-Job -FilePath "$templateDirectory/Deploy.RenderDesktop.Images.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $sharedServices
-$renderDesktopImages = Receive-Job -InstanceId $renderDesktopImagesJob.InstanceId -Wait
-if (!$renderDesktopImages) { return }
+$artistDesktopImagesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Images.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $sharedServices
+$artistDesktopImages = Receive-Job -Job $artistDesktopImagesJob -Wait
+if ($artistDesktopImagesJob.JobStateInfo.State -eq "Failed") {
+	Write-Host $artistDesktopImagesJob.JobStateInfo.Reason
+	return
+}
 New-TraceMessage $moduleName $true
 
-# * - Render Desktop Machines Job
-$moduleName = "* - Render Desktop Machines Job"
+# * - Artist Desktop Machines Job
+$moduleName = "* - Artist Desktop Machines Job"
 New-TraceMessage $moduleName $false
-$renderDesktopMachinesJob = Start-Job -FilePath "$templateDirectory/Deploy.RenderDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $sharedServices, $renderManagers
-$renderDesktopMachines = Receive-Job -InstanceId $renderDesktopMachinesJob.InstanceId -Wait
-if (!$renderDesktopMachines) { return }
+$artistDesktopMachinesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $sharedServices, $renderManagers
+$artistDesktopMachines = Receive-Job -Job $artistDesktopMachinesJob -Wait
+if ($artistDesktopMachinesJob.JobStateInfo.State -eq "Failed") {
+	Write-Host $artistDesktopMachinesJob.JobStateInfo.Reason
+	return
+}
 New-TraceMessage $moduleName $true

@@ -108,7 +108,7 @@
           "priority": "[parameters('renderWorker').machineScaleSets[copyIndex()].machinePriority]",
           "evictionPolicy": "Delete"
         },
-        "overprovision": false,
+        "overprovision": "[parameters('renderWorker').machineScaleSets[copyIndex()].overProvision]",
         "singlePlacementGroup": false,
         "platformFaultDomainCount": 1,
         "upgradePolicy": {

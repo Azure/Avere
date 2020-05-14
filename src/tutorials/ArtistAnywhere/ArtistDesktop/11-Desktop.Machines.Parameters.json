@@ -2,7 +2,7 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "renderDesktop": {
+    "artistDesktop": {
       "value": {
         "machineCountPerType": 1,
         "machineTypes": [
@@ -11,7 +11,7 @@
             "namePrefix": "renderHostLNV",
             "machineSize": "Standard_NV6",
             "image": {
-              "templateName": "LinuxDesktop",
+              "templateName": "ArtistDesktopLinux",
               "definitionName": "Linux",
               "referenceId": ""
             },
@@ -44,7 +44,7 @@
             "namePrefix": "renderHostWNV",
             "machineSize": "Standard_NV6",
             "image": {
-              "templateName": "WindowsDesktop",
+              "templateName": "ArtistDesktopWindows",
               "definitionName": "WindowsDesktop",
               "referenceId": ""
             },

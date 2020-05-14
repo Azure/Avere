@@ -30,8 +30,11 @@ if (!$sharedServices) {
 	$moduleName = "* - Shared Services Job"
 	New-TraceMessage $moduleName $false
 	$sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable
-	$sharedServices = Receive-Job -InstanceId $sharedServicesJob.InstanceId -Wait
-	if (!$sharedServices) { return }
+	$sharedServices = Receive-Job -Job $sharedServicesJob -Wait
+	if ($sharedServicesJob.JobStateInfo.State -eq "Failed") {
+		Write-Host $sharedServicesJob.JobStateInfo.Reason
+		return
+	}
 	New-TraceMessage $moduleName $true
 }
 

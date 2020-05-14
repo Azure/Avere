@@ -33,8 +33,11 @@ if (!$sharedServices) {
 	$moduleName = "* - Shared Services Job"
 	New-TraceMessage $moduleName $false
 	$sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable
-	$sharedServices = Receive-Job -InstanceId $sharedServicesJob.InstanceId -Wait
-	if (!$sharedServices) { return }
+	$sharedServices = Receive-Job -Job $sharedServicesJob -Wait
+	if ($sharedServicesJob.JobStateInfo.State -eq "Failed") {
+		Write-Host $sharedServicesJob.JobStateInfo.Reason
+		return
+	}
 	New-TraceMessage $moduleName $true
 }
 
@@ -44,10 +47,10 @@ $imageGallery = $sharedServices.imageGallery
 $storageMounts = $sharedServices.storageMounts
 $cacheMounts = $sharedServices.cacheMounts
 
-$moduleDirectory = "RenderDesktop"
+$moduleDirectory = "ArtistDesktop"
 
 # 11 - Desktop Machines
-$renderDesktopMachines = @()
+$artistDesktopMachines = @()
 $moduleName = "11 - Desktop Machines"
 $resourceGroupNameSuffix = "Desktop"
 New-TraceMessage $moduleName $false
@@ -60,32 +63,34 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	$templateResources = "$templateDirectory/$moduleDirectory/11-Desktop.Machines.json"
 	$templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/11-Desktop.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
-	for ($machineTypeIndex = 0; $machineTypeIndex -lt $templateParameters.renderDesktop.value.machineTypes.length; $machineTypeIndex++) {
-		if ($templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].image.referenceId -eq "") {
-			$imageTemplateName = $templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].image.templateName
-			$imageDefinitionName = $templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].image.definitionName
-			$imageVersionId = Get-ImageVersionId $imageGallery.resourceGroupName $imageGallery.name $imageDefinitionName $imageTemplateName
-			if (!$imageVersionId) { return }
-			$templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].image.referenceId = $imageVersionId
-		}
-		if ($templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptCommands -eq "") {
-			$scriptFile = $templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptFile
-			$scriptFile = "$templateDirectory/$moduleDirectory/$scriptFile"
-			$imageDefinition = (az sig image-definition show --resource-group $imageGallery.resourceGroupName --gallery-name $imageGallery.name --gallery-image-definition $imageDefinitionName) | ConvertFrom-Json
-			if ($imageDefinition.osType -eq "Windows") {
-				$scriptParameters = $templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptParameters
-				if ($renderManagers.length -gt $computeRegionIndex) {
-					$scriptParameters += " -openCueRenderManagerHost " + $renderManagers[$computeRegionIndex]
-				}
-				$scriptCommands = Get-ScriptCommands $scriptFile $scriptParameters
-				$templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptParameters = ""
-			} else {
-				if ($renderManagers.length -gt $computeRegionIndex) {
-					$templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptParameters += " OPENCUE_RENDER_MANAGER_HOST=" + $renderManagers[$computeRegionIndex]
-				}
-				$scriptCommands = Get-ScriptCommands $scriptFile
+	for ($machineTypeIndex = 0; $machineTypeIndex -lt $templateParameters.artistDesktop.value.machineTypes.length; $machineTypeIndex++) {
+		if ($templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].enabled) {
+			if ($templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].image.referenceId -eq "") {
+				$imageTemplateName = $templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].image.templateName
+				$imageDefinitionName = $templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].image.definitionName
+				$imageVersionId = Get-ImageVersionId $imageGallery.resourceGroupName $imageGallery.name $imageDefinitionName $imageTemplateName
+				if (!$imageVersionId) { return }
+				$templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].image.referenceId = $imageVersionId
 			}
-			$templateParameters.renderDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptCommands = $scriptCommands
+			if ($templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptCommands -eq "") {
+				$scriptFile = $templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptFile
+				$scriptFile = "$templateDirectory/$moduleDirectory/$scriptFile"
+				$imageDefinition = (az sig image-definition show --resource-group $imageGallery.resourceGroupName --gallery-name $imageGallery.name --gallery-image-definition $imageDefinitionName) | ConvertFrom-Json
+				if ($imageDefinition.osType -eq "Windows") {
+					$scriptParameters = $templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptParameters
+					if ($renderManagers.length -gt $computeRegionIndex) {
+						$scriptParameters += " -openCueRenderManagerHost " + $renderManagers[$computeRegionIndex]
+					}
+					$scriptCommands = Get-ScriptCommands $scriptFile $scriptParameters
+					$templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptParameters = ""
+				} else {
+					if ($renderManagers.length -gt $computeRegionIndex) {
+						$templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptParameters += " OPENCUE_RENDER_MANAGER_HOST=" + $renderManagers[$computeRegionIndex]
+					}
+					$scriptCommands = Get-ScriptCommands $scriptFile
+				}
+				$templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptCommands = $scriptCommands
+			}
 		}
 	}
 	# if ($templateParameters.logAnalytics.value.workspaceId -eq "") {
@@ -105,9 +110,9 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
 	if (!$groupDeployment) { return }
 
-	$renderDesktopMachines += $groupDeployment.properties.outputs.renderDesktopMachines.value
+	$artistDesktopMachines += $groupDeployment.properties.outputs.artistDesktopMachines.value
 	New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 }
 New-TraceMessage $moduleName $true
 
-Write-Output -InputObject $renderDesktopMachines -NoEnumerate
+Write-Output -InputObject $artistDesktopMachines -NoEnumerate

@@ -2,11 +2,11 @@
 
 cd /usr/local/bin
 
-tableExists=$(psql "$DB_DEPLOY_SQL" -t -c="select to_regclass('public.show')")
+tableExists=$(psql "$DB_DEPLOY_SQL" -t -c "select to_regclass('public.show')")
 if [ !$tableExists ]
 then
-    psql "$DB_DEPLOY_SQL" -f=opencue-cuebot-schema.sql
-    psql "$DB_DEPLOY_SQL" -f=opencue-cuebot-data.sql
+    psql "$DB_DEPLOY_SQL" -f opencue-cuebot-schema.sql
+    psql "$DB_DEPLOY_SQL" -f opencue-cuebot-data.sql
 fi
 
 sed -i "/Environment=DB_URL/c Environment=DB_URL=$DB_CLIENT_URL" opencue-cuebot.service

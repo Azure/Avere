@@ -23,8 +23,11 @@ Import-Module "$templateDirectory/Deploy.psm1"
 $moduleName = "* - Shared Services Job"
 New-TraceMessage $moduleName $false
 $sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable
-$sharedServices = Receive-Job -InstanceId $sharedServicesJob.InstanceId -Wait
-if (!$sharedServices) { return }
+$sharedServices = Receive-Job -Job $sharedServicesJob -Wait
+if ($sharedServicesJob.JobStateInfo.State -eq "Failed") {
+	Write-Host $sharedServicesJob.JobStateInfo.Reason
+	return
+}
 New-TraceMessage $moduleName $true
 
 $computeNetworks = $sharedServices.computeNetworks
@@ -36,12 +39,12 @@ $cacheMounts = $sharedServices.cacheMounts
 # * - Render Manager Job
 $moduleName = "* - Render Manager Job"
 New-TraceMessage $moduleName $false
-$renderManagerJob = Start-Job -FilePath "$templateDirectory/Deploy.RenderManager.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $sharedServices
+$renderManagersJob = Start-Job -FilePath "$templateDirectory/Deploy.RenderManager.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $sharedServices
 
-# * - Render Desktop Images Job
-$moduleName = "* - Render Desktop Images Job"
+# * - Artist Desktop Images Job
+$moduleName = "* - Artist Desktop Images Job"
 New-TraceMessage $moduleName $false
-$renderDesktopImagesJob = Start-Job -FilePath "$templateDirectory/Deploy.RenderDesktop.Images.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $sharedServices
+$artistDesktopImagesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Images.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $sharedServices
 
 $moduleDirectory = "RenderWorker"
 
@@ -100,20 +103,26 @@ New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 
 # * - Render Manager Job
 $moduleName = "* - Render Manager Job"
-$renderManagers = Receive-Job -InstanceId $renderManagerJob.InstanceId -Wait
-if (!$renderManagers) { return }
+$renderManagers = Receive-Job -Job $renderManagersJob -Wait
+if ($renderManagersJob.JobStateInfo.State -eq "Failed") {
+	Write-Host $renderManagersJob.JobStateInfo.Reason
+	return
+}
 New-TraceMessage $moduleName $true
 
-# * - Render Desktop Images Job
-$moduleName = "* - Render Desktop Images Job"
-$renderDesktopImages = Receive-Job -InstanceId $renderDesktopImagesJob.InstanceId -Wait
-if (!$renderDesktopImages) { return }
+# * - Artist Desktop Images Job
+$moduleName = "* - Artist Desktop Images Job"
+$artistDesktopImages = Receive-Job -Job $artistDesktopImagesJob -Wait
+if ($artistDesktopImagesJob.JobStateInfo.State -eq "Failed") {
+	Write-Host $artistDesktopImagesJob.JobStateInfo.Reason
+	return
+}
 New-TraceMessage $moduleName $true
 
-# * - Render Desktop Machines Job
-$moduleName = "* - Render Desktop Machines Job"
+# * - Artist Desktop Machines Job
+$moduleName = "* - Artist Desktop Machines Job"
 New-TraceMessage $moduleName $false
-$renderDesktopMachinesJob = Start-Job -FilePath "$templateDirectory/Deploy.RenderDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $sharedServices, $renderManagers
+$artistDesktopMachinesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $sharedServices, $renderManagers
 
 # 09 - Worker Machines
 $moduleName = "09 - Worker Machines"
@@ -166,8 +175,11 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 }
 New-TraceMessage $moduleName $true
 
-# * - Render Desktop Machines Job
-$moduleName = "* - Render Desktop Machines Job"
-$renderDesktopMachines = Receive-Job -InstanceId $renderDesktopMachinesJob.InstanceId -Wait
-if (!$renderDesktopMachines) { return }
+# * - Artist Desktop Machines Job
+$moduleName = "* - Artist Desktop Machines Job"
+$artistDesktopMachines = Receive-Job -Job $artistDesktopMachinesJob -Wait
+if ($artistDesktopMachinesJob.JobStateInfo.State -eq "Failed") {
+	Write-Host $artistDesktopMachinesJob.JobStateInfo.Reason
+	return
+}
 New-TraceMessage $moduleName $true
