@@ -15,9 +15,10 @@ const (
 )
 
 const (
-	MinimumSingleFileSize = int64(50 * MB)
-	MaximumJobSize        = int64(1 * GB) // 1 GB per job
-	allFilesOrBytes       = int64(-1)
+	MinimumSingleFileSize   = int64(25 * MB)
+	MaximumJobSize          = int64(500 * GB) // 1 GB per job
+	allFilesOrBytes         = int64(-1)
+	MinimumJobsBeforeRefill = 100
 
 	// a warm job specifies a full path warm job
 	DefaultCacheJobSubmitterDir = ".cachewarmjob"
