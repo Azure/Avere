@@ -69,7 +69,7 @@ resource "azurerm_virtual_machine_extension" "cse" {
 
   settings = <<SETTINGS
     {
-        "commandToExecute": "/bin/base64 -d /var/lib/waagent/CustomData | /bin/gunzip | EXPORT_PATH=${var.nfs_export_path} EXPORT_OPTIONS=\"${var.nfs_export_options}\" ${local.proxy_env} /bin/bash 2>&1 | tee -a /var/log/installnfs.log"
+        "commandToExecute": "/bin/base64 -d /var/lib/waagent/CustomData | /bin/gunzip | EXPORT_PATH=${var.nfs_export_path} EXPORT_OPTIONS=\"${var.nfs_export_options}\" ${local.proxy_env} /bin/bash 2>&1 | tee -a /var/log/installnfs.log ; exit 0"
     }
 SETTINGS
 }
