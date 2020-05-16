@@ -59,7 +59,7 @@ func (w *Worker) RunWorkerManager(ctx context.Context, syncWaitGroup *sync.WaitG
 		case <-ticker.C:
 			if time.Since(lastJobCheckTime) > timeBetweenWorkerJobCheck || w.workAvailable {
 				lastJobCheckTime = time.Now()
-				if w.workQueue.IsEmpty() {
+				if w.workQueue.WorkItemCount() < (2 * workerCount) {
 					workingFile := w.GetNextWorkItem()
 					if workingFile != nil {
 						w.workAvailable = true
@@ -67,7 +67,6 @@ func (w *Worker) RunWorkerManager(ctx context.Context, syncWaitGroup *sync.WaitG
 					} else {
 						w.workAvailable = false
 					}
-
 				}
 			}
 		}
@@ -220,12 +219,21 @@ func (w *Worker) fillWorkQueue(ctx context.Context, workingFile *WorkingFile) {
 			log.Info.Printf("no items added to the work queue, proceeding to delete job file")
 			workingFile.FileProcessed()
 		}
-
+	} else if workingFile.workerJob.StartByte == allFilesOrBytes || workingFile.workerJob.StopByte == allFilesOrBytes {
+		log.Info.Printf("Queueing work item for file %s", readPath)
+		filesToWarm := []FileToWarm{InitializeFileToWarm(readPath, workingFile, allFilesOrBytes, allFilesOrBytes)}
+		w.workQueue.AddWork(filesToWarm)
 	} else {
 		// queue the file for read
-		log.Info.Printf("Queueing work item for file %s", readPath)
-		filesToWarm := []FileToWarm{InitializeFileToWarm(readPath, workingFile)}
-		w.workQueue.AddWork(filesToWarm)
+		for i := workingFile.workerJob.StartByte; i < workingFile.workerJob.StopByte; i += MinimumSingleFileSize {
+			end := i + MinimumSingleFileSize
+			if end > workingFile.workerJob.StopByte {
+				end = workingFile.workerJob.StopByte
+			}
+			log.Info.Printf("Queueing work item for file %s [%d,%d)", readPath, i, end)
+			filesToWarm := []FileToWarm{InitializeFileToWarm(readPath, workingFile, i, end)}
+			w.workQueue.AddWork(filesToWarm)
+		}
 	}
 }
 
@@ -235,7 +243,7 @@ func (w *Worker) QueueWork(localPaths []string, fileInfos []os.FileInfo, working
 		if !fileInfo.IsDir() && fileInfo.Size() < MinimumSingleFileSize {
 			randomPath := localPaths[rand.Intn(len(localPaths))]
 			fullPath := path.Join(randomPath, fileInfo.Name())
-			filesToWarm = append(filesToWarm, InitializeFileToWarm(fullPath, workingFile))
+			filesToWarm = append(filesToWarm, InitializeFileToWarm(fullPath, workingFile, allFilesOrBytes, allFilesOrBytes))
 		}
 	}
 	if len(filesToWarm) > 0 {
@@ -279,6 +287,14 @@ func (w *Worker) processWorkItem(ctx context.Context) {
 }
 
 func (w *Worker) readFile(ctx context.Context, fileToWarm FileToWarm) {
+	if fileToWarm.StartByte == allFilesOrBytes || fileToWarm.StopByte == allFilesOrBytes {
+		w.readFileFull(ctx, fileToWarm)
+	} else {
+		w.readFilePartial(ctx, fileToWarm)
+	}
+}
+
+func (w *Worker) readFileFull(ctx context.Context, fileToWarm FileToWarm) {
 	defer fileToWarm.ParentJobFile.FileProcessed()
 	var readBytes int
 	file, err := os.Open(fileToWarm.WarmFileFullPath)
@@ -308,4 +324,43 @@ func (w *Worker) readFile(ctx context.Context, fileToWarm FileToWarm) {
 			}
 		}
 	}
+}
+
+func (w *Worker) readFilePartial(ctx context.Context, fileToWarm FileToWarm) {
+	defer fileToWarm.ParentJobFile.FileProcessed()
+	if fileToWarm.StartByte == allFilesOrBytes || fileToWarm.StopByte == allFilesOrBytes {
+		log.Error.Printf("error no startbyte or stop byte set for partial read")
+		return
+	}
+
+	var readBytes int
+	file, err := os.Open(fileToWarm.WarmFileFullPath)
+	if err != nil {
+		log.Error.Printf("error opening file %s: %v", fileToWarm.WarmFileFullPath, err)
+		return
+	}
+	defer file.Close()
+	buffer := make([]byte, ReadPageSize)
+	lastCancelCheckTime := time.Now()
+
+	for currentByte := fileToWarm.StartByte; currentByte < fileToWarm.StopByte; currentByte = fileToWarm.StartByte + int64(readBytes) {
+		count, err := file.ReadAt(buffer, currentByte)
+		readBytes += count
+		if err != nil {
+			if err != io.EOF {
+				log.Error.Printf("error reading file %s: %v", fileToWarm.WarmFileFullPath, err)
+			}
+			break
+		}
+		go fileToWarm.ParentJobFile.TouchFile()
+		// ensure no cancel
+		if time.Since(lastCancelCheckTime) > timeBetweenCancelCheck {
+			lastCancelCheckTime = time.Now()
+			if isCancelled(ctx) {
+				break
+			}
+		}
+	}
+
+	log.Info.Printf("read %d bytes from filepath %s [%d,%d)", readBytes, fileToWarm.WarmFileFullPath, fileToWarm.StartByte, fileToWarm.StopByte)
 }
