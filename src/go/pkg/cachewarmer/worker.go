@@ -59,7 +59,7 @@ func (w *Worker) RunWorkerManager(ctx context.Context, syncWaitGroup *sync.WaitG
 		case <-ticker.C:
 			if time.Since(lastJobCheckTime) > timeBetweenWorkerJobCheck || w.workAvailable {
 				lastJobCheckTime = time.Now()
-				if w.workQueue.WorkItemCount() < (2 * workerCount) {
+				if w.workQueue.WorkItemCount() < MinimumJobsBeforeRefill {
 					workingFile := w.GetNextWorkItem()
 					if workingFile != nil {
 						w.workAvailable = true
