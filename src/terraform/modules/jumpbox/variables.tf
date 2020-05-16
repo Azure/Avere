@@ -46,3 +46,13 @@ variable "add_public_ip" {
   description = "specifies if the jumpbox should have a publice ip"
   default = false
 }
+
+variable "build_vfxt_terraform_provider" {
+  description = "specifies if the jumpbox should build the terraform provider"
+  default = true
+}
+
+variable "alternative_resource_groups" {
+  description = "specifies alternative resource groups including those containing custom images or storage accounts"
+  default = []
+}

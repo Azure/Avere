@@ -47,6 +47,10 @@ resource "azurerm_linux_virtual_machine" "vm" {
   custom_data = base64encode(local.cloud_init_file)
   size = var.vm_size
 
+  identity {
+    type = "SystemAssigned"
+  }
+
   os_disk {
     name              = "${var.unique_name}-osdisk"
     caching           = "ReadWrite"
@@ -81,8 +85,25 @@ resource "azurerm_virtual_machine_extension" "cse" {
 
   settings = <<SETTINGS
     {
-        "commandToExecute": " ADMIN_USER_NAME=${var.admin_username} /bin/bash /opt/install.sh"
+        "commandToExecute": " ADMIN_USER_NAME=${var.admin_username} BUILD_VFXT_PROVIDER=${var.build_vfxt_terraform_provider} /bin/bash /opt/install.sh"
     }
 SETTINGS
+}
+
+locals {
+  vm_contributor_rgs = distinct(concat(
+    [
+      var.resource_group_name,
+      var.virtual_network_resource_group,
+    ],
+    var.alternative_resource_groups))
+}
+
+resource "azurerm_role_assignment" "create_cluster_role" {
+  count                            = length(local.vm_contributor_rgs)
+  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${local.vm_contributor_rgs[count.index]}"
+  role_definition_name             = "Virtual Machine Contributor"
+  principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
+  skip_service_principal_aad_check = true
 }
 
