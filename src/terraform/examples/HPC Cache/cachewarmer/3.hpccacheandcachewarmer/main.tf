@@ -37,6 +37,7 @@ locals {
   hpccache_cache_subnet_name = ""
   hpccache_network_name = ""
   hpccache_network_resource_group_name = ""
+  hpccache_render_subnet_name = ""
   
   // paste the values from the values from the jumpbox creation
   hpccache_resource_group_name = ""
@@ -117,6 +118,7 @@ module "cachewarmer_manager_install" {
   vmss_user_name = local.jumpbox_username
   vmss_password = local.vm_admin_password
   vmss_ssh_public_key = local.vm_ssh_key_data
+  vmss_subnet_name = local.hpccache_render_subnet_name
 
   module_depends_on = [module.cachewarmer_build.module_depends_on_id]
 }
