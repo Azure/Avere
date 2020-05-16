@@ -65,6 +65,10 @@ function write_system_files() {
     else
         sed -i "s/VMSS_SUBNET_NAME_REPLACE/-vmssSubnetName $VMSS_SUBNET/g" $DST_FILE
     fi
+
+    if [ -f '/etc/centos-release' ]; then 
+        sed -i "s/chown syslog:adm/chown root:root/g" $DST_FILE
+    fi
     
     # copy the rsyslog file
     cp $BOOTSTRAP_BASE_PATH/rsyslog/$RSYSLOG_FILE /etc/rsyslog.d/.

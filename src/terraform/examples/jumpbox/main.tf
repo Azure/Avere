@@ -13,8 +13,8 @@ locals {
     // network details
     network_resource_group_name = "network_resource_group"
     
-    // vfxt details
-    vfxt_resource_group_name = "jumpbox_resource_group"
+    // jumpbox details
+    jumpbox_resource_group_name = "jumpbox_resource_group"
     // if you are running a locked down network, set jumpbox_add_public_ip to false
     jumpbox_add_public_ip = true
 }
@@ -32,7 +32,7 @@ module "network" {
 }
 
 resource "azurerm_resource_group" "jumpboxrg" {
-  name     = local.vfxt_resource_group_name
+  name     = local.jumpbox_resource_group_name
   location = local.location
 }
 
