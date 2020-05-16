@@ -15,7 +15,9 @@ const (
 )
 
 const (
-	MinimumSingleFileSize = int64(100 * MB)
+	MinimumSingleFileSize = int64(50 * MB)
+	MaximumJobSize        = int64(1 * GB) // 1 GB per job
+	allFilesOrBytes       = int64(-1)
 
 	// a warm job specifies a full path warm job
 	DefaultCacheJobSubmitterDir = ".cachewarmjob"
@@ -45,19 +47,18 @@ const (
 	MarketPlaceOffer        = "UbuntuServer"
 	MarketPlaceSku          = "18.04-LTS"
 
-	tick                        = time.Duration(10) * time.Millisecond // 10ms
-	timeBetweenJobCheck         = time.Duration(5) * time.Second       // 5 second between checking for jobs
-	timeBetweenWorkerJobCheck   = time.Duration(5) * time.Second       // 5 second between checking for jobs
-	timeToDeleteVMSSAfterNoJobs = time.Duration(20) * time.Second      // 20 seconds before deleting the VMSS
-	failureTimeToDeleteVMSS     = time.Duration(15) * time.Minute      // after 15 minutes of failure, ensure vmss deleted
+	tick                        = time.Duration(1) * time.Millisecond // 1ms
+	timeBetweenJobCheck         = time.Duration(5) * time.Second      // 5 second between checking for jobs
+	timeBetweenWorkerJobCheck   = time.Duration(5) * time.Second      // 5 second between checking for jobs
+	timeToDeleteVMSSAfterNoJobs = time.Duration(20) * time.Second     // 20 seconds before deleting the VMSS
+	failureTimeToDeleteVMSS     = time.Duration(15) * time.Minute     // after 15 minutes of failure, ensure vmss deleted
 
 	// file read settings
-	ReadPageSize           = 10 * MB
+	ReadPageSize           = 1 * MB
 	timeBetweenCancelCheck = time.Duration(100) * time.Millisecond // 100ms
 
-	WorkerMultiplier          = 2
-	WorkerReadWorkItemsAtOnce = 30
-	WorkerReadFilesAtOnce     = 100
+	WorkerMultiplier      = 2
+	WorkerReadFilesAtOnce = 20
 
 	// size of slice for the locked paths
 	LockedWorkItemStartSliceSize = 1024

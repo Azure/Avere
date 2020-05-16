@@ -20,6 +20,8 @@ type WorkerJob struct {
 	WarmTargetMountAddresses []string
 	WarmTargetExportPath     string
 	WarmTargetPath           string
+	StartByte                int64
+	StopByte                 int64
 }
 
 func JobsExist(jobFolder string) (exists bool, mountCount int, err error) {
@@ -62,11 +64,15 @@ func JobsExist(jobFolder string) (exists bool, mountCount int, err error) {
 func InitializeWorkerJob(
 	warmTargetMountAddresses []string,
 	warmTargetExportPath string,
-	warmTargetPath string) *WorkerJob {
+	warmTargetPath string,
+	startByte int64,
+	stopByte int64) *WorkerJob {
 	return &WorkerJob{
 		WarmTargetMountAddresses: warmTargetMountAddresses,
 		WarmTargetExportPath:     warmTargetExportPath,
 		WarmTargetPath:           warmTargetPath,
+		StartByte:                startByte,
+		StopByte:                 stopByte,
 	}
 }
 
@@ -115,5 +121,5 @@ func GenerateWorkerJobFilename(jobpath string, contents string) string {
 	h.Write([]byte(contents))
 
 	t := time.Now()
-	return path.Join(jobpath, fmt.Sprintf("%02d-%02d-%02d-%02d%02d%02d-%d.job", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), h.Sum32()))
+	return path.Join(jobpath, fmt.Sprintf("%02d-%02d-%02d-%02d%02d%02d.%d-%d.job", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), h.Sum32()))
 }

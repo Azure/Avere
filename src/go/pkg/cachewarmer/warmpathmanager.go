@@ -148,12 +148,6 @@ func (m *WarmPathManager) processJobFile(ctx context.Context, filename string) e
 		folderSlice[len(folderSlice)-1] = ""
 		folderSlice = folderSlice[:len(folderSlice)-1]
 
-		// write worker file for this path
-		workerJob := InitializeWorkerJob(warmPathJob.WarmTargetMountAddresses, warmPathJob.WarmTargetExportPath, warmFolder)
-		if err := workerJob.WriteJob(m.JobWorkerPath); err != nil {
-			log.Error.Printf("error writing worker job to %s: %v", m.JobWorkerPath, err)
-		}
-
 		// queue up additional folders
 		fullWarmPath := path.Join(localMountPath, warmFolder)
 		files, err := ioutil.ReadDir(fullWarmPath)
@@ -161,17 +155,33 @@ func (m *WarmPathManager) processJobFile(ctx context.Context, filename string) e
 			log.Error.Printf("error encountered reading directory '%s': %v", warmFolder, err)
 			continue
 		}
+		// only write paths with one or more non-zero files
+		pathWritten := false
 		for _, file := range files {
 			if file.IsDir() {
 				if !isCacheWarmerFolder(file.Name()) {
 					folderSlice = append(folderSlice, path.Join(warmFolder, file.Name()))
 				}
-			} else if file.Size() >= MinimumSingleFileSize {
-				fullPath := path.Join(warmFolder, file.Name())
-				log.Info.Printf("queuing separate job for %v byte file %s", file.Size(), fullPath)
-				workerJob := InitializeWorkerJob(warmPathJob.WarmTargetMountAddresses, warmPathJob.WarmTargetExportPath, fullPath)
-				if err := workerJob.WriteJob(m.JobWorkerPath); err != nil {
-					log.Error.Printf("error writing worker job to %s: %v", m.JobWorkerPath, err)
+			} else {
+				fileSize := file.Size()
+				if fileSize >= MinimumSingleFileSize {
+					fullPath := path.Join(warmFolder, file.Name())
+
+					for i := int64(0); i < fileSize; i += MaximumJobSize {
+						end := i + MaximumJobSize
+						if end > fileSize {
+							end = fileSize
+						}
+						log.Info.Printf("queuing job for file %s [%d,%d)", fullPath, i, end)
+						workerJob := InitializeWorkerJob(warmPathJob.WarmTargetMountAddresses, warmPathJob.WarmTargetExportPath, fullPath, i, end)
+						go writeJob(workerJob, m.JobWorkerPath)
+					}
+				} else if fileSize != 0 && pathWritten == false {
+					pathWritten = true
+					// write worker file for this path
+					log.Info.Printf("queuing job for path %s", warmFolder)
+					workerJob := InitializeWorkerJob(warmPathJob.WarmTargetMountAddresses, warmPathJob.WarmTargetExportPath, warmFolder, allFilesOrBytes, allFilesOrBytes)
+					go writeJob(workerJob, m.JobWorkerPath)
 				}
 			}
 		}
@@ -183,6 +193,12 @@ func (m *WarmPathManager) processJobFile(ctx context.Context, filename string) e
 	}
 
 	return nil
+}
+
+func writeJob(workerJob *WorkerJob, jobPath string) {
+	if err := workerJob.WriteJob(jobPath); err != nil {
+		log.Error.Printf("error writing worker job to %s: %v", jobPath, err)
+	}
 }
 
 func isCacheWarmerFolder(folder string) bool {
