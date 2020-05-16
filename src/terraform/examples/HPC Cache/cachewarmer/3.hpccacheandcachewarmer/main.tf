@@ -90,7 +90,7 @@ module "cachewarmer_build" {
   bootstrap_mount_address = tolist(azurerm_hpc_cache.hpc_cache.mount_addresses)[0]
   bootstrap_export_path = local.filer_export
 
-  module_depends_on = [azurerm_hpc_cache.hpc_cache.mount_addresses]
+  module_depends_on = [azurerm_hpc_cache.hpc_cache.mount_addresses, azurerm_hpc_cache_nfs_target.nfs_targets.id]
 }
 
 module "cachewarmer_manager_install" {

@@ -1,6 +1,6 @@
 # CacheWarmer for HPC Cache
 
-This is an example of how to setup the CacheWarmer for HPC [Azure HPC Cache](https://azure.microsoft.com/services/hpc-cache/).
+This is an example of how to setup the CacheWarmer for [Azure HPC Cache](https://azure.microsoft.com/services/hpc-cache/).
 
 The CacheWarmer runs as a service on the jumpbox, and watches a pre-defined directory for a job file.  The job file describes the HPC Cache mount addresses, export path, and path to warm.  For example, the following file is an example of this file:
 
