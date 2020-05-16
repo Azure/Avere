@@ -31,7 +31,7 @@ resource "azurerm_resource_group" "jumpboxrg" {
   location = local.location
 }
 module "jumpbox" {
-    source = "../../../../../modules/jumpbox"
+    source = "github.com/Azure/Avere/src/terraform/modules/jumpbox"
     resource_group_name = azurerm_resource_group.jumpboxrg.name
     location = azurerm_resource_group.jumpboxrg.location
     admin_username = local.vm_admin_username

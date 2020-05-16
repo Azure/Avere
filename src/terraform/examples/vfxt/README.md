@@ -9,7 +9,7 @@ The examples in this folder build various configurations of the Avere vFXT with 
 5. [Avere vFXT for Azure mounting an Azure Netapp Volume](netapp/)
 6. [Avere vFXT and VDBench example](vdbench/)
 7. [Avere vFXT and VMSS example](vmss/)
-8. [Avere vFXT and CacheWarmer example](cachewarmer/)
+8. [Avere vFXT and CacheWarmer](cachewarmer/)
 9. [Avere vFXT optimized for Houdini](HoudiniOptimized/)
 10. [Avere vFXT and Cloud Workstations](cloudworkstation/)
 11. [Avere vFXT only](vfxt-only/) - this example is useful for when the cloud environment is already configured.

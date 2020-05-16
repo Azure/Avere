@@ -9,3 +9,4 @@ The examples in this folder build various configurations of the HPC Cache with A
 5. [HPC Cache mounting an Azure Netapp Volume](netapp/)
 6. [HPC Cache and VDBench example](vdbench/)
 7. [HPC Cache and VMSS example](vmss/)
+8. [HPC Cache and CacheWarmer](cachewarmer/)
