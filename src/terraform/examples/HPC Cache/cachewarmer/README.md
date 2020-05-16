@@ -26,7 +26,7 @@ To simulate latency, the NFS filer will live in a different vnet, resource group
 
 A nfs filer will be used to hold the bootstrap directory and the warm job directories.  The example is broken into 3 phases.  The third phase demonstrates how to chain up the terraform modules including deployment of the HPC Cache, mounting all junctions, building and installation of the CacheWarmer, and finally the job submission.  Once the 3 phase has completed the cache is warmed with the desired content.
 
-![The architecture](../../../../../docs/images/terraform/cachewarmerpipeline.png)
+![The architecture](../../../../../docs/images/terraform/cachewarmerpipeline-hpcc.png)
 
 ## Deploy the Virtual Networks and Filer
 

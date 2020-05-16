@@ -24,6 +24,7 @@ locals {
   filer_address = ""
   filer_export = ""
   vfxt_cache_subnet_name = ""
+  vfxt_render_subnet_name = ""
   
   // paste the values from the values from the controller creation
   controller_address = ""
@@ -111,6 +112,7 @@ module "cachewarmer_manager_install" {
   vmss_user_name = local.controller_username
   vmss_password = local.vm_admin_password
   vmss_ssh_public_key = local.vm_ssh_key_data
+  vmss_subnet_name = local.vfxt_render_subnet_name
 
   module_depends_on = [module.cachewarmer_build.module_depends_on_id]
 }
