@@ -53,7 +53,7 @@ git pull origin master
 
 5. execute `terraform init` in the directory of `main.tf`.
 
-6. execute `terraform apply -auto-approve` to build the vfxt cluster
+6. execute `terraform apply -auto-approve` to deploy the virtual networks and the filer
 
 7. save the output to use for the installation of the Avere vFXT.
 
@@ -73,7 +73,7 @@ cd ~/tf/src/terraform/examples/vfxt/cachewarmer/2.vfxtcontroller
 
 5. execute `terraform init` in the directory of `main.tf`.
 
-6. execute `terraform apply -auto-approve` to build the vfxt cluster
+6. execute `terraform apply -auto-approve` to build the vfxt controller
 
 7. Now logon to the controller and jump to the filer to prepare content.  One good potential content is the [Moana Island Scene from  Walt Disney Animation Studios](https://www.technology.disneyanimation.com/islandscene).
 
@@ -99,9 +99,9 @@ chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 
 4. execute `terraform init` in the directory of `main.tf`.
 
-5. execute `terraform apply -auto-approve` to build the vfxt cluster
+5. execute `terraform apply -auto-approve` to build the vfxt cluster and deploy and subnet the cache warmer job.  The cache warmer job submission will block until the cache warming process is complete.
 
-To submit addition directories for warming, you would submit the `cachewarmer_submitjob` module, or you can write a file similar to the following to the warm directory, in this example `/warm/cachewarmjob` folder on the vFXT:
+To submit addition directories for warming, you would submit the `cachewarmer_submitjob` module, or you can write a file similar to the following to the warm directory in this example `/.cachewarmjob` folder on the vFXT:
 
 ```bash
 {
