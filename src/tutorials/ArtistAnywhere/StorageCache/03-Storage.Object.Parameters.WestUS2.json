@@ -39,17 +39,6 @@
             }
           ],
           "mountOptions": "nfs vers=3,hard,proto=tcp,mountproto=tcp,retry=30 0 0"
-        },
-        {
-          "name": "Tools",
-          "type": "clfs",
-          "junctions": [
-            {
-              "namespacePath": "/mnt/tools",
-              "targetPath": ""
-            }
-          ],
-          "mountOptions": "nfs vers=3,hard,proto=tcp,mountproto=tcp,retry=30 0 0"
         }
       ]
     },

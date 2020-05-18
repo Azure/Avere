@@ -73,24 +73,19 @@
       "value": [
         {
           "pool": "Storage",
-          "volume": "Scenes",
-          "exportPath": "/scenes",
-          "directory": "/mnt/scenes",
-          "options": "-t nfs -o rw,hard,rsize=65536,wsize=65536,vers=3,tcp"
-        },
-        {
-          "pool": "Storage",
           "volume": "Tools",
           "exportPath": "/tools",
           "directory": "/mnt/tools",
-          "options": "-t nfs -o rw,hard,rsize=65536,wsize=65536,vers=3,tcp"
+          "options": "-t nfs -o rw,hard,rsize=65536,wsize=65536,vers=3,tcp",
+          "drive": "T"
         },
         {
           "pool": "Storage",
           "volume": "Frames",
           "exportPath": "/frames",
           "directory": "/mnt/frames",
-          "options": "-t nfs -o rw,hard,rsize=65536,wsize=65536,vers=3,tcp"
+          "options": "-t nfs -o rw,hard,rsize=65536,wsize=65536,vers=3,tcp",
+          "drive": "F"
         }
       ]
     },
@@ -107,19 +102,7 @@
             }
           ],
           "mountOptions": "nfs vers=3,hard,proto=tcp,mountproto=tcp,retry=30 0 0",
-          "usageModel": "WRITE_AROUND"
-        },
-        {
-          "name": "Tools",
-          "type": "nfs3",
-          "junctions": [
-            {
-              "namespacePath": "/mnt/tools",
-              "nfsExport": "/tools",
-              "targetPath": ""
-            }
-          ],
-          "mountOptions": "nfs vers=3,hard,proto=tcp,mountproto=tcp,retry=30 0 0",
+          "mountDrive": "S",
           "usageModel": "WRITE_AROUND"
         }
       ]

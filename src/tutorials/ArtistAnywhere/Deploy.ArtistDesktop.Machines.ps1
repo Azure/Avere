@@ -75,19 +75,24 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 			if ($templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptCommands -eq "") {
 				$scriptFile = $templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptFile
 				$scriptFile = "$templateDirectory/$moduleDirectory/$scriptFile"
+				$scriptParameters = $templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptParameters
 				$imageDefinition = (az sig image-definition show --resource-group $imageGallery.resourceGroupName --gallery-name $imageGallery.name --gallery-image-definition $imageDefinitionName) | ConvertFrom-Json
 				if ($imageDefinition.osType -eq "Windows") {
-					$scriptParameters = $templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptParameters
+					$fileSystemMounts = Get-FileSystemMounts $storageMounts $cacheMounts $true
+					$scriptParameters += " -fileSystemMounts '" + $fileSystemMounts + "'"
 					if ($renderManagers.length -gt $computeRegionIndex) {
 						$scriptParameters += " -openCueRenderManagerHost " + $renderManagers[$computeRegionIndex]
 					}
 					$scriptCommands = Get-ScriptCommands $scriptFile $scriptParameters
 					$templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptParameters = ""
 				} else {
+					$fileSystemMounts = Get-FileSystemMounts $storageMounts $cacheMounts $false
+					$scriptParameters += " FILE_SYSTEM_MOUNTS='" + $fileSystemMounts + "'"
 					if ($renderManagers.length -gt $computeRegionIndex) {
-						$templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptParameters += " OPENCUE_RENDER_MANAGER_HOST=" + $renderManagers[$computeRegionIndex]
+						$scriptParameters += " OPENCUE_RENDER_MANAGER_HOST=" + $renderManagers[$computeRegionIndex]
 					}
 					$scriptCommands = Get-ScriptCommands $scriptFile
+					$templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptParameters = $scriptParameters
 				}
 				$templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptCommands = $scriptCommands
 			}

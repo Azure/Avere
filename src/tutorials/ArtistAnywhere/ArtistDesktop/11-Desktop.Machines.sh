@@ -8,9 +8,9 @@ fi
 yum -y install $TERADICI_REPOSITORY_URL
 yum -y install $TERADICI_HOST_AGENT_NAME
 
-if [ "$TERADICI_HOST_AGENT_KEY" != "" ]
+if [ "$TERADICI_HOST_AGENT_LICENSE_KEY" != "" ]
 then
-    pcoip-register-host --registration-code=$TERADICI_HOST_AGENT_KEY
+    pcoip-register-host --registration-code=$TERADICI_HOST_AGENT_LICENSE_KEY
 fi
 
 IFS='|' read -a fileSystemMounts <<< "$FILE_SYSTEM_MOUNTS"

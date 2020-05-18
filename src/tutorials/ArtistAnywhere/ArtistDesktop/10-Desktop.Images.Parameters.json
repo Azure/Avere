@@ -6,7 +6,7 @@
       "value": {
         "machineImages": [
           {
-            "enabled": true,
+            "enabled": false,
             "templateName": "ArtistDesktopLinux",
             "definitionName": "Linux",
             "sourceType": "PlatformImage",
@@ -75,7 +75,7 @@
             "buildTimeoutMinutes": 120
           },
           {
-            "enabled": false,
+            "enabled": true,
             "templateName": "ArtistDesktopWindows",
             "definitionName": "WindowsDesktop",
             "sourceType": "PlatformImage",
@@ -85,9 +85,16 @@
                 "name": "Tools",
                 "type": "PowerShell",
                 "inline": [
-                  "DISM /Online /Enable-Feature /FeatureName:ServicesForNFS-ClientOnly",
                   "mkdir /tools",
-                  "cd /tools"
+                  "cd /tools",
+                  "Copy-Item -PassThru -Path T:\\OpenCue\\v0.4.14\\opencue-requirements.txt",
+                  "Copy-Item -PassThru -Path T:\\OpenCue\\v0.4.14\\opencue-requirements-gui.txt",
+                  "Copy-Item -PassThru -Path T:\\OpenCue\\v0.4.14\\opencue-pycue.tar.gz",
+                  "Copy-Item -PassThru -Path T:\\OpenCue\\v0.4.14\\opencue-pyoutline.tar.gz",
+                  "Copy-Item -PassThru -Path T:\\OpenCue\\v0.4.14\\opencue-cuesubmit.tar.gz",
+                  "Copy-Item -PassThru -Path T:\\OpenCue\\v0.4.14\\opencue-cueadmin.tar.gz",
+                  "Copy-Item -PassThru -Path T:\\OpenCue\\v0.4.14\\opencue-cuegui.tar.gz",
+                  "Copy-Item -PassThru -Path T:\\Blender\\v2.82a\\blender.msi"
                 ]
               }
             ],

@@ -3,14 +3,14 @@
 	if ($regionName) {
 		$traceMessage += " @ " + $regionName
 	}
-	$traceMessage += " ($moduleName "
+	$traceMessage += " ($moduleName"
 	if ($moduleName.Substring(0, 1) -ne "*") {
-		$traceMessage += "Deployment "
+		$traceMessage += " Deployment"
 	}
 	if ($moduleEnd) {
-		$traceMessage += "End)"
+		$traceMessage += " End)"
 	} else {
-		$traceMessage += "Start)"
+		$traceMessage += " Start)"
 	}
 	Write-Host $traceMessage
 }
@@ -58,48 +58,62 @@ function Get-ImageVersionId ($imageGalleryResourceGroupName, $imageGalleryName, 
 	}
 }
 
-function Get-FileSystemMountCommands ($storageMounts, $aptInstaller) {
-	$mountCommands = @()
-    if ($aptInstaller) {
-		$mountCommands += "apt install nfs-common"
+function Get-FileSystemMountCommands ($imageGallery, $imageDefinitionName, $storageMounts) {
+	$fsMountCommands = @()
+	$imageDefinition = (az sig image-definition show --resource-group $imageGallery.resourceGroupName --gallery-name $imageGallery.name --gallery-image-definition $imageDefinitionName) | ConvertFrom-Json
+	if ($imageDefinition.osType -eq "Windows") {
+		$fsMountCommands += "DISM /Online /Enable-Feature /All /FeatureName:ClientForNFS-Infrastructure"
+		$fsMountCommands += "New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\ClientForNFS\CurrentVersion\Default -Name AnonymousUid -PropertyType DWord -Value 0"
+		$fsMountCommands += "New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\ClientForNFS\CurrentVersion\Default -Name AnonymousGid -PropertyType DWord -Value 0"
+		foreach ($storageMount in $storageMounts) {
+			$fsMountCommand = "New-PSDrive -Name " + $storageMount.drive + " -PSProvider FileSystem"
+			$fsMountCommand += " -Root \\" + $storageMount.exportHost + $storageMount.exportPath
+			$fsMountCommands += $fsMountCommand
+		}
 	} else {
-		$mountCommands += "yum -y install nfs-utils"
+		if ($imageDefinition.identifier.offer -like "*CentOS*") {
+			$fsMountCommands += "yum -y install nfs-utils"
+		} else {
+			$fsMountCommands += "apt install nfs-common"
+		}
+		foreach ($storageMount in $storageMounts) {
+			$fsMountCommands += "mkdir -p " + $storageMount.directory
+			$fsMountCommand = "mount " + $storageMount.options
+			$fsMountCommand += " " + $storageMount.exportHost + ":" + $storageMount.exportPath
+			$fsMountCommand += " " + $storageMount.directory
+			$fsMountCommands += $fsMountCommand
+		}
 	}
-	foreach ($storageMount in $storageMounts) {
-		$mountCommands += "mkdir -p " + $storageMount.directory
-		$fsMount = "mount " + $storageMount.options
-		$fsMount += " " + $storageMount.exportHost + ":" + $storageMount.exportPath
-		$fsMount += " " + $storageMount.directory
-		$mountCommands += $fsMount
-	}
-	return $mountCommands
+	return $fsMountCommands
 }
 
-function Get-FileSystemMounts ($storageMounts, $cacheMounts) {
+function Get-FileSystemMount ($mount, $mapDrive) {
+	$fsMount = $mount.exportHost + ":" + $mount.exportPath
+	$fsMount += " " + $mount.directory
+	$fsMount += " " + $mount.options
+	if ($mapDrive) {
+		$fsMount += " " + $mount.drive
+	}
+	return $fsMount
+}
+
+function Get-FileSystemMounts ($storageMounts, $cacheMounts, $mapDrive) {
 	$fsMounts = ""
-	foreach ($mount in $storageCache) {
+	foreach ($storageMount in $storageMounts) {
 		if ($fsMounts -ne "") {
-			$fsMounts += "|"
+			$fsMounts += '|'
 		}
-		$fsMount = $mount.exportHost + ":" + $mount.exportPath
-		$fsMount += " " + $mount.directory
-		$fsMount += " " + $mount.options
+		$fsMount = Get-FileSystemMount $storageMount $mapDrive
 		$fsMounts += $fsMount
 	}
-	foreach ($mount in $cacheMounts) {
+	foreach ($cacheMount in $cacheMounts) {
 		if ($fsMounts -ne "") {
-			$fsMounts += "|"
+			$fsMounts += '|'
 		}
-		$fsMount = $mount.exportHost + ":" + $mount.exportPath
-		$fsMount += " " + $mount.directory
-		$fsMount += " " + $mount.options
+		$fsMount = Get-FileSystemMount $cacheMount $mapDrive
 		$fsMounts += $fsMount
 	}
-	$memoryStream = New-Object System.IO.MemoryStream
-	$streamWriter = New-Object System.IO.StreamWriter($memoryStream)
-	$streamWriter.Write($fsMounts)
-	$streamWriter.Close();
-	return [System.Convert]::ToBase64String($memoryStream.ToArray())	
+	return $fsMounts
 }
 
 function Get-ScriptCommands ($scriptFile, $scriptParameters) {

@@ -140,7 +140,8 @@
           "exportHost": "[split(reference(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))).primaryEndpoints.blob, '/')[2]]",
           "exportPath": "[parameters('storageMounts')[copyIndex()].exportPath]",
           "directory": "[parameters('storageMounts')[copyIndex()].directory]",
-          "options": "[parameters('storageMounts')[copyIndex()].options]"
+          "options": "[parameters('storageMounts')[copyIndex()].options]",
+          "drive": "[parameters('storageMounts')[copyIndex()].drive]"
         }
       }
     },
@@ -154,7 +155,8 @@
           "host": "[split(reference(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))).primaryEndpoints.blob, '/')[2]]",
           "target": "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('storageAccountName'), 'default', toLower(parameters('storageTargets')[copyIndex()].name))]",
           "junctions": "[parameters('storageTargets')[copyIndex()].junctions]",
-          "mountOptions": "[parameters('storageTargets')[copyIndex()].mountOptions]"
+          "mountOptions": "[parameters('storageTargets')[copyIndex()].mountOptions]",
+          "mountDrive": "[parameters('storageTargets')[copyIndex()].mountDrive]"
         }
       }
     }

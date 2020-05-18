@@ -181,8 +181,9 @@ if ($storageNetAppEnable -or $storageObjectEnable) {
 			if (!$networkPeering) { return }
 		}
 
-		$storageMounts += , ($storageMountsNetApp + $storageMountsObject)
-		$storageTargets += , ($storageTargetsNetApp + $storageTargetsObject)
+		$storageMounts += $storageMountsNetApp + $storageMountsObject
+		$storageTargets += $storageTargetsNetApp + $storageTargetsObject
+
 		New-TraceMessage $moduleName $true $storageRegionName
 	}
 	New-TraceMessage $moduleName $true
@@ -200,17 +201,13 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 	$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionName
 	if (!$resourceGroup) { return }
 
-	$cacheStorageTargets = @()
 	$templateResources = "$templateDirectory/$moduleDirectory/04-Cache.json"
 	$templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/04-Cache.Parameters.$computeRegionName.json" -Raw | ConvertFrom-Json).parameters
 
-	if ($storageTargets.length -gt $computeRegionIndex) {
-		$cacheStorageTargets = $storageTargets[$computeRegionIndex]
-	}
 	if ($templateParameters.storageTargets.value.length -gt 0 -and $templateParameters.storageTargets.value[0].name -ne "") {
-		$templateParameters.storageTargets.value += $cacheStorageTargets
+		$templateParameters.storageTargets.value += $storageTargets
 	} else {
-		$templateParameters.storageTargets.value = $cacheStorageTargets
+		$templateParameters.storageTargets.value = $storageTargets
 	}
 	if ($templateParameters.virtualNetwork.value.name -eq "") {
 		$templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
@@ -238,11 +235,12 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 			$cacheClientMount | Add-Member -MemberType NoteProperty -Name "exportPath" -Value $cacheTargetJunction.namespacePath
 			$cacheClientMount | Add-Member -MemberType NoteProperty -Name "directory" -Value $cacheTargetJunction.namespacePath
 			$cacheClientMount | Add-Member -MemberType NoteProperty -Name "options" -Value $cacheTarget.mountOptions
+			$cacheClientMount | Add-Member -MemberType NoteProperty -Name "drive" -Value $cacheTarget.mountDrive
 			$cacheClientMounts += $cacheClientMount
 		}
 	}
 
-	$cacheMounts += , $cacheClientMounts
+	$cacheMounts += $cacheClientMounts
 	New-TraceMessage $moduleName $true $computeRegionName
 }
 New-TraceMessage $moduleName $true

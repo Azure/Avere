@@ -94,9 +94,12 @@ if (!$resourceGroup) { return }
 $templateResources = "$templateDirectory/$moduleDirectory/06-Manager.Images.json"
 $templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/06-Manager.Images.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
-$mountCommands = Get-FileSystemMountCommands $storageMounts[$computeRegionIndex] $false
 for ($machineImageIndex = 0; $machineImageIndex -lt $templateParameters.renderManager.value.machineImages.length; $machineImageIndex++) {
-	$templateParameters.renderManager.value.machineImages[$machineImageIndex].buildCustomization[0].inline = $mountCommands + $templateParameters.renderManager.value.machineImages[$machineImageIndex].buildCustomization[0].inline
+	if ($templateParameters.renderManager.value.machineImages[$machineImageIndex].buildCustomization.length -gt 0) {
+		$imageDefinitionName = $templateParameters.artistDesktop.value.machineImages[$machineImageIndex].definitionName
+		$fileSystemMountCommands = Get-FileSystemMountCommands $imageGallery $imageDefinitionName $storageMounts
+		$templateParameters.renderManager.value.machineImages[$machineImageIndex].buildCustomization[0].inline = $fileSystemMountCommands + $templateParameters.renderManager.value.machineImages[$machineImageIndex].buildCustomization[0].inline
+	}
 }
 if ($templateParameters.imageGallery.value.name -eq "") {
 	$templateParameters.imageGallery.value.name = $imageGallery.name
