@@ -59,8 +59,8 @@ func (q *WorkQueue) GetNextWorkItem() (FileToWarm, bool) {
 	}
 }
 
-func (q *WorkQueue) AddWork(filesToWarm []FileToWarm) {
+func (q *WorkQueue) AddWorkItem(fileToWarm FileToWarm) {
 	q.mux.Lock()
 	defer q.mux.Unlock()
-	q.workItems = append(q.workItems, filesToWarm...)
+	q.workItems = append(q.workItems, fileToWarm)
 }

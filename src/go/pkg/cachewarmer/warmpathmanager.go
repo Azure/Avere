@@ -237,6 +237,7 @@ func (m *WarmPathManager) RunVMSSManager(ctx context.Context, syncWaitGroup *syn
 					}
 					continue
 				}
+				log.Info.Printf("jobsExist %v", jobsExist)
 				lastReadDirSuccess = time.Now()
 
 				if jobsExist {
