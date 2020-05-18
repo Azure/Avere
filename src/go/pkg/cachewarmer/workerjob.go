@@ -34,28 +34,29 @@ func JobsExist(jobFolder string) (exists bool, mountCount int, err error) {
 	defer f.Close()
 
 	for {
-		files, err := f.Readdir(2)
+		files, err := f.Readdirnames(MinimumJobsOnDirRead)
 		if len(files) == 0 && err == io.EOF {
 			return false, mountCount, nil
 		}
 		if err != nil && err != io.EOF {
 			return exists, mountCount, err
 		}
-		for _, f := range files {
-			if !f.IsDir() {
-				fullpath := path.Join(jobFolder, f.Name())
-				byteContent, err := ioutil.ReadFile(fullpath)
-				if err != nil {
-					log.Error.Printf("error readingfile '%s'", fullpath)
-					return true, MinimumAvereNodesPerCluster, nil
-				}
-				warmPathJob, err := InitializeWorkerJobFromString(string(byteContent))
-				if err != nil {
-					log.Error.Printf("error readingfile '%s'", fullpath)
-					return true, MinimumAvereNodesPerCluster, nil
-				}
-				return true, len(warmPathJob.WarmTargetMountAddresses), nil
+		for _, filename := range files {
+			fullpath := path.Join(jobFolder, filename)
+			byteContent, err := ioutil.ReadFile(fullpath)
+			if err != nil {
+				log.Error.Printf("error readingfile '%s': %v", fullpath, err)
+				continue
 			}
+			warmPathJob, err := InitializeWorkerJobFromString(string(byteContent))
+			if err != nil {
+				log.Error.Printf("error serializing file '%s': %v", fullpath, err)
+				if e2 := os.Remove(fullpath); e2 != nil {
+					log.Error.Printf("error removing '%s': %v", fullpath, e2)
+				}
+				continue
+			}
+			return true, len(warmPathJob.WarmTargetMountAddresses), nil
 		}
 	}
 }
