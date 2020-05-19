@@ -8,5 +8,5 @@ output "controller_username" {
 
 output "module_depends_on_id" {
   description = "the id(s) to force others to wait"
-  value = zurerm_role_assignment.create_compute.id
+  value = azurerm_role_assignment.create_compute.id
 }
