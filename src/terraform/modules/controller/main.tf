@@ -140,7 +140,7 @@ resource "azurerm_role_assignment" "avere_create_cluster_role" {
   principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
   skip_service_principal_aad_check = true
 
-  depends_on = [azurerm_linux_virtual_machine.vm.id]
+  depends_on = [azurerm_linux_virtual_machine.vm]
 }
 
 resource "azurerm_role_assignment" "user_access_administrator_role" {
@@ -150,7 +150,7 @@ resource "azurerm_role_assignment" "user_access_administrator_role" {
   principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
   skip_service_principal_aad_check = true
 
-  depends_on = [azurerm_role_assignment.avere_create_cluster_role.id]
+  depends_on = [azurerm_role_assignment.avere_create_cluster_role]
 }
 
 // ensure controller rg is a VM contributor to enable cache warming
@@ -160,7 +160,7 @@ resource "azurerm_role_assignment" "create_compute" {
   principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
   skip_service_principal_aad_check = true
 
-   depends_on = [azurerm_role_assignment.user_access_administrator_role.id]
+   depends_on = [azurerm_role_assignment.user_access_administrator_role]
 }
 
 
