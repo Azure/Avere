@@ -2,6 +2,8 @@ data "azurerm_subnet" "vnet" {
   name                 = var.virtual_network_subnet_name
   virtual_network_name = var.virtual_network_name
   resource_group_name  = var.virtual_network_resource_group
+
+  depends_on = [var.module_depends_on]
 }
 
 data "azurerm_subscription" "primary" {}
