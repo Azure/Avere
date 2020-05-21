@@ -31,6 +31,8 @@ type AvereVfxt struct {
 	EnableSupportUploads bool
 	NodeCount            int
 	NodeCacheSize        int
+	FirstIPAddress       string
+	LastIPAddress        string
 
 	NtpServers string
 	Timezone   string

@@ -160,6 +160,13 @@ func resourceVfxt() *schema.Resource {
 					4096,
 				}),
 			},
+			vserver_first_ip: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "",
+				ValidateFunc: validation.IsIPv4Address,
+			},
 			global_custom_settings: {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -328,6 +335,10 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 
 	// the management ip will uniquely identify the cluster in the VNET
 	d.SetId(avereVfxt.ManagementIP)
+
+	if err := avereVfxt.CreateVServer(); err != nil {
+		return fmt.Errorf("ERROR: error while creating VServer: %s", err)
+	}
 
 	if err := updateNtpServers(d, avereVfxt); err != nil {
 		return err
@@ -623,6 +634,16 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	vServerIPAddressesRaw := d.Get(vserver_ip_addresses).(*schema.Set).List()
 	nodeNamesRaw := d.Get(node_names).(*schema.Set).List()
 
+	nodeCount := d.Get(vfxt_node_count).(int)
+
+	firstIPAddress := d.Get(vserver_first_ip).(string)
+	lastIPAddress := ""
+	if len(firstIPAddress) > 0 {
+		if lastIPAddress, err = GetLastIPAddress(firstIPAddress, nodeCount); err != nil {
+			return nil, err
+		}
+	}
+
 	return NewAvereVfxt(
 		controllerAddress,
 		controllerAdminUsername,
@@ -633,8 +654,10 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(vfxt_cluster_name).(string),
 		d.Get(vfxt_admin_password).(string),
 		d.Get(enable_support_uploads).(bool),
-		d.Get(vfxt_node_count).(int),
+		nodeCount,
 		d.Get(node_cache_size).(int),
+		firstIPAddress,
+		lastIPAddress,
 		d.Get(ntp_servers).(string),
 		d.Get(timezone).(string),
 		d.Get(dns_server).(string),

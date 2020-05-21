@@ -93,6 +93,7 @@ const (
 	vfxt_admin_password          = "vfxt_admin_password"
 	vfxt_node_count              = "vfxt_node_count"
 	node_cache_size              = "node_cache_size"
+	vserver_first_ip             = "vserver_first_ip"
 	global_custom_settings       = "global_custom_settings"
 	vserver_settings             = "vserver_settings"
 	enable_support_uploads       = "enable_support_uploads"
