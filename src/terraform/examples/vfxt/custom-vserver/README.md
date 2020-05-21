@@ -1,8 +1,10 @@
-# Avere vFXT with 1 Filer optimized for Houdini
+# Avere vFXT with 1 Filer
 
-This examples configures a render network, controller, and vfxt with 1 filer as shown in the diagram below.  The vFXT in this example has custom settings so that the vFXT and the core filer custom configuration is optimized for Houdini:
+This examples configures a render network, controller, and vfxt with 1 filer and demonstrates the ability to specify a vserver range used by the vFXT as shown in the diagram below:
 
-![The architecture](../../../../../docs/images/terraform/1filer.png)
+![The architecture](../../../../../docs/images/terraform/1filer-custom-vserver.png)
+
+The advantage of specifying a well-known IP range is that it enables you to setup the DNS entries ahead of time.
 
 ## Deployment Instructions
 
@@ -33,7 +35,7 @@ echo "src/terraform/*" >> .git/info/sparse-checkout
 git pull origin master
 ```
 
-6. `cd src/terraform/examples/vfxt/1-filer`
+6. `cd src/terraform/examples/vfxt/custom-vserver`
 
 7. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  If you are using an [ssk key](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys), ensure that ~/.ssh/id_rsa is populated.
 

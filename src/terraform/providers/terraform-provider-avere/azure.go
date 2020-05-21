@@ -239,7 +239,12 @@ func VerifyAzLogin(avereVfxt *AvereVfxt) error {
 }
 
 func (a Azure) getCreateVfxtCommand(avereVfxt *AvereVfxt) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s --create --no-corefiler --nodes %d", a.getBaseVfxtCommand(avereVfxt), avereVfxt.NodeCount), fmt.Sprintf("~/vfxt.%s.log", time.Now().Format("2006-01-02-15.04.05")))
+	vServerStr := ""
+	if len(avereVfxt.FirstIPAddress) > 0 && len(avereVfxt.FirstIPAddress) > 0 {
+		vServerStr = "--no-vserver"
+	}
+
+	return WrapCommandForLogging(fmt.Sprintf("%s --create --no-corefiler %s --nodes %d", a.getBaseVfxtCommand(avereVfxt), vServerStr, avereVfxt.NodeCount), fmt.Sprintf("~/vfxt.%s.log", time.Now().Format("2006-01-02-15.04.05")))
 }
 
 func (a Azure) getDestroyVfxtCommand(avereVfxt *AvereVfxt) string {

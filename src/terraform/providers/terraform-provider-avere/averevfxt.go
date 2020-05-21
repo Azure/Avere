@@ -52,6 +52,8 @@ func NewAvereVfxt(
 	enableSupportUploads bool,
 	nodeCount int,
 	nodeCacheSize int,
+	firstIPAddress string,
+	lastIPAddress string,
 	ntpServers string,
 	timezone string,
 	dnsServer string,
@@ -75,6 +77,8 @@ func NewAvereVfxt(
 		EnableSupportUploads: enableSupportUploads,
 		NodeCount:            nodeCount,
 		NodeCacheSize:        nodeCacheSize,
+		FirstIPAddress:       firstIPAddress,
+		LastIPAddress:        lastIPAddress,
 		NtpServers:           ntpServers,
 		Timezone:             timezone,
 		DnsServer:            dnsServer,
@@ -746,6 +750,21 @@ func (a *AvereVfxt) GetExistingJunctions() (map[string]*Junction, error) {
 	return results, nil
 }
 
+func (a *AvereVfxt) CreateVServer() error {
+	if len(a.FirstIPAddress) == 0 || len(a.LastIPAddress) == 0 {
+		// no first ip or last ip address.  This means the vServer would have been automatically created, just return.
+		return nil
+	}
+	if _, err := a.AvereCommand(a.getVServerCreateCommand()); err != nil {
+		return err
+	}
+	log.Printf("[INFO] vfxt: ensure stable cluster after creating the vServer")
+	if err := a.EnsureClusterStable(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (a *AvereVfxt) CreateJunction(junction *Junction) error {
 	// listExports will cause the vFXT to refresh exports
 	listExports := func() error {
@@ -1080,12 +1099,16 @@ func (a *AvereVfxt) getCreateCachePolicyCommand(cachePolicy string, checkAttribu
 	return WrapCommandForLogging(fmt.Sprintf("%s cachePolicy.create \"%s\" read-write 30 \"%s\" False", a.getBaseAvereCmd(), cachePolicy, checkAttributes), AverecmdLogFile)
 }
 
+func (a *AvereVfxt) getVServerCreateCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json vserver.create \"%s\" \"{'firstIP':'%s','netmask':'255.255.255.255','lastIP':'%s'}\"", a.getBaseAvereCmd(), VServerName, a.FirstIPAddress, a.LastIPAddress), AverecmdLogFile)
+}
+
 func (a *AvereVfxt) getListJunctionsJsonCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json vserver.listJunctions \"%s\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getCreateJunctionCommand(junction *Junction) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s vserver.addJunction \"%s\" \"%s\" \"%s\" \"%s\" \"{'sharesubdir':'','inheritPolicy':'yes','sharename':'','access':'posix','createSubdirs':'yes','subdir':'','policy':'','permissions':'%s'}\"", a.getBaseAvereCmd(), VServerName, junction.NameSpacePath, junction.CoreFilerName, junction.CoreFilerExport, junction.SharePermissions), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s vserver.addJunction \"%s\" \"%s\" \"%s\" \"%s\" \"{'sharesubdir':'','inheritPolicy':'yes','sharename':'','access':'posix','createSubdirs':'yes','subdir':'%s','policy':'','permissions':'%s'}\"", a.getBaseAvereCmd(), VServerName, junction.NameSpacePath, junction.CoreFilerName, junction.CoreFilerExport, junction.ExportSubdirectory, junction.SharePermissions), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getDeleteJunctionCommand(junctionNameSpacePath string) string {

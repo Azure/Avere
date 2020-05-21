@@ -126,6 +126,9 @@ func getHPCCacheCoreFilerJunctions(coreFilers []CoreFiler, junctions map[string]
 					sb.WriteString("    namespace_junction {\n")
 					sb.WriteString(fmt.Sprintf("        namespace_path = \"%s\"\n", junction.NameSpacePath))
 					sb.WriteString(fmt.Sprintf("        nfs_export     = \"%s\"\n", junction.CoreFilerExport))
+					if len(junction.ExportSubdirectory) > 0 {
+						sb.WriteString(fmt.Sprintf("        target_path    = \"%s\"\n", junction.ExportSubdirectory))
+					}
 					sb.WriteString("    }\n")
 				}
 			}
@@ -338,6 +341,9 @@ func getCoreFilerJunctions(coreFilers []CoreFiler, customSettings map[string][]s
 				sb.WriteString("        junction {\n")
 				sb.WriteString(fmt.Sprintf("            namespace_path = \"%s\"\n", junction.NameSpacePath))
 				sb.WriteString(fmt.Sprintf("            core_filer_export = \"%s\"\n", junction.CoreFilerExport))
+				if len(junction.ExportSubdirectory) > 0 {
+					sb.WriteString(fmt.Sprintf("            export_subdirectory = \"%s\"\n", junction.ExportSubdirectory))
+				}
 				sb.WriteString("        }\n")
 			}
 		}
@@ -598,7 +604,7 @@ func FillAzureStorageFilers(lines []string) ([]AzureStorageFiler, map[string]str
 func FillJunctions(lines []string, storageFilerNametoAccountMapping map[string]string) (map[string][]Junction, error) {
 	junctions := make(map[string][]Junction)
 
-	junctionRegEx := regexp.MustCompile(`averecmd vserver.addJunction\s*[^\s]*\s([^\s]*)\s([^\s]*)\s([^\s]*)`)
+	junctionRegEx := regexp.MustCompile(`averecmd vserver.addJunction\s*[^\s]*\s([^\s]*)\s([^\s]*)\s([^\s]*).*subdir': '([^']*)`)
 
 	for _, line := range lines {
 		junctionMatches := junctionRegEx.FindStringSubmatch(line)
@@ -609,10 +615,12 @@ func FillJunctions(lines []string, storageFilerNametoAccountMapping map[string]s
 				coreFilerName = v
 			}
 			coreFilerExport := junctionMatches[3]
+			exportSubdirectory := junctionMatches[4]
 			junction := Junction{
-				NameSpacePath:   nameSpacePath,
-				CoreFilerName:   coreFilerName,
-				CoreFilerExport: coreFilerExport,
+				NameSpacePath:      nameSpacePath,
+				CoreFilerName:      coreFilerName,
+				CoreFilerExport:    coreFilerExport,
+				ExportSubdirectory: exportSubdirectory,
 			}
 			if _, ok := junctions[junction.CoreFilerName]; !ok {
 				junctions[junction.CoreFilerName] = make([]Junction, 0)

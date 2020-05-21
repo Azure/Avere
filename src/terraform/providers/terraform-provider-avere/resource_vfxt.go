@@ -160,6 +160,13 @@ func resourceVfxt() *schema.Resource {
 					4096,
 				}),
 			},
+			vserver_first_ip: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "",
+				ValidateFunc: validation.IsIPv4Address,
+			},
 			global_custom_settings: {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -235,6 +242,12 @@ func resourceVfxt() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringIsNotWhiteSpace,
 									},
+									export_subdirectory: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "",
+										ValidateFunc: ValidateExportSubdirectory,
+									},
 								},
 							},
 						},
@@ -309,8 +322,6 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if avereVfxt.RunLocal == false {
-		// this only needs to be done on create since the controller's ssh
-		// may take a while to become ready
 		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod); err != nil {
 			return err
 		}
@@ -324,6 +335,10 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 
 	// the management ip will uniquely identify the cluster in the VNET
 	d.SetId(avereVfxt.ManagementIP)
+
+	if err := avereVfxt.CreateVServer(); err != nil {
+		return fmt.Errorf("ERROR: error while creating VServer: %s", err)
+	}
 
 	if err := updateNtpServers(d, avereVfxt); err != nil {
 		return err
@@ -392,6 +407,12 @@ func resourceVfxtRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	if avereVfxt.RunLocal == false {
+		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod); err != nil {
+			return err
+		}
+	}
+
 	currentVServerIPAddresses, err := avereVfxt.GetVServerIPAddresses()
 	if err != nil {
 		return fmt.Errorf("error encountered while getting vserver addresses '%v'", err)
@@ -418,6 +439,12 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 	avereVfxt, err := fillAvereVfxt(d)
 	if err != nil {
 		return err
+	}
+
+	if avereVfxt.RunLocal == false {
+		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod); err != nil {
+			return err
+		}
 	}
 
 	if d.HasChange(ntp_servers) {
@@ -525,18 +552,24 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] [resourceVfxtDelete")
 	defer log.Printf("[INFO] resourceVfxtDelete]")
 
-	averevfxt, err := fillAvereVfxt(d)
+	avereVfxt, err := fillAvereVfxt(d)
 	if err != nil {
 		return err
 	}
 
-	if err := averevfxt.Platform.DestroyVfxt(averevfxt); err != nil {
+	if avereVfxt.RunLocal == false {
+		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod); err != nil {
+			return err
+		}
+	}
+
+	if err := avereVfxt.Platform.DestroyVfxt(avereVfxt); err != nil {
 		return fmt.Errorf("failed to destroy cluster: %s\n", err)
 	}
 
-	d.Set(vfxt_management_ip, averevfxt.ManagementIP)
-	d.Set(vserver_ip_addresses, averevfxt.VServerIPAddresses)
-	d.Set(node_names, averevfxt.NodeNames)
+	d.Set(vfxt_management_ip, avereVfxt.ManagementIP)
+	d.Set(vserver_ip_addresses, avereVfxt.VServerIPAddresses)
+	d.Set(node_names, avereVfxt.NodeNames)
 
 	// acknowledge deletion of the vfxt
 	d.SetId("")
@@ -601,6 +634,16 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	vServerIPAddressesRaw := d.Get(vserver_ip_addresses).(*schema.Set).List()
 	nodeNamesRaw := d.Get(node_names).(*schema.Set).List()
 
+	nodeCount := d.Get(vfxt_node_count).(int)
+
+	firstIPAddress := d.Get(vserver_first_ip).(string)
+	lastIPAddress := ""
+	if len(firstIPAddress) > 0 {
+		if lastIPAddress, err = GetLastIPAddress(firstIPAddress, nodeCount); err != nil {
+			return nil, err
+		}
+	}
+
 	return NewAvereVfxt(
 		controllerAddress,
 		controllerAdminUsername,
@@ -611,8 +654,10 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(vfxt_cluster_name).(string),
 		d.Get(vfxt_admin_password).(string),
 		d.Get(enable_support_uploads).(bool),
-		d.Get(vfxt_node_count).(int),
+		nodeCount,
 		d.Get(node_cache_size).(int),
+		firstIPAddress,
+		lastIPAddress,
 		d.Get(ntp_servers).(string),
 		d.Get(timezone).(string),
 		d.Get(dns_server).(string),
@@ -994,10 +1039,11 @@ func expandCoreFilerJunctions(l []interface{}, results map[string]*Junction) err
 		for _, jv := range junctions {
 			junctionRaw := jv.(map[string]interface{})
 			junction := &Junction{
-				NameSpacePath:    junctionRaw[namespace_path].(string),
-				CoreFilerName:    coreFilerName,
-				CoreFilerExport:  junctionRaw[core_filer_export].(string),
-				SharePermissions: PermissionsPreserve,
+				NameSpacePath:      junctionRaw[namespace_path].(string),
+				CoreFilerName:      coreFilerName,
+				CoreFilerExport:    junctionRaw[core_filer_export].(string),
+				ExportSubdirectory: junctionRaw[export_subdirectory].(string),
+				SharePermissions:   PermissionsPreserve,
 			}
 			// verify no duplicates
 			if _, ok := results[junction.NameSpacePath]; ok {
@@ -1055,6 +1101,9 @@ func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
 						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
 					}
 					if v2, ok := m[core_filer_export]; ok {
+						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
+					}
+					if v2, ok := m[export_subdirectory]; ok {
 						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
 					}
 				}
@@ -1141,7 +1190,7 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 			}
 		}
 		for _, v := range input[custom_settings].(*schema.Set).List() {
-			if err := ValidateOnlyAscii(v.(string), fmt.Sprintf("%s-customsetting-'%s'", input[core_filer_name].(string), v.(string))); err != nil {
+			if err := ValidateOnlyAscii(v.(string), fmt.Sprintf("%s-customsetting-'%s'", core_filer_name, v.(string))); err != nil {
 				return err
 			}
 		}
@@ -1150,12 +1199,17 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 			for _, j := range v.List() {
 				if m, ok := j.(map[string]interface{}); ok {
 					if v2, ok := m[namespace_path]; ok {
-						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", input[core_filer_name].(string), v2.(string))); err != nil {
+						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", core_filer_name, v2.(string))); err != nil {
 							return err
 						}
 					}
 					if v2, ok := m[core_filer_export]; ok {
-						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", input[core_filer_name].(string), v2.(string))); err != nil {
+						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", core_filer_name, v2.(string))); err != nil {
+							return err
+						}
+					}
+					if v2, ok := m[export_subdirectory]; ok {
+						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", export_subdirectory, v2.(string))); err != nil {
 							return err
 						}
 					}
@@ -1196,6 +1250,16 @@ func ValidateArmStorageAccountName(v interface{}, _ string) (warnings []string, 
 
 	if !regexp.MustCompile(`\A([a-z0-9]{3,24})\z`).MatchString(input) {
 		errors = append(errors, fmt.Errorf("name (%q) can only consist of lowercase letters and numbers, and must be between 3 and 24 characters long", input))
+	}
+
+	return warnings, errors
+}
+
+func ValidateExportSubdirectory(v interface{}, _ string) (warnings []string, errors []error) {
+	input := v.(string)
+
+	if len(input) > 0 && !regexp.MustCompile(`^[^\/]`).MatchString(input) {
+		errors = append(errors, fmt.Errorf("%s (%s) must not begin with a '/'", export_subdirectory, input))
 	}
 
 	return warnings, errors

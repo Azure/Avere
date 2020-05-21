@@ -42,7 +42,7 @@ data "azurerm_resource_group" "vm" {
 
 resource "azurerm_public_ip" "vm" {
     name                         = "${var.unique_name}-publicip"
-    location                     = var.create_resource_group ? azurerm_resource_group.vm[0].location : data.azurerm_resource_group.vm[0].location
+    location                     = var.location
     resource_group_name          = var.create_resource_group ? azurerm_resource_group.vm[0].name : data.azurerm_resource_group.vm[0].name
     allocation_method            = "Static"
 
@@ -54,7 +54,7 @@ resource "azurerm_public_ip" "vm" {
 resource "azurerm_network_interface" "vm" {
   name                = "${var.unique_name}-nic"
   resource_group_name = var.create_resource_group ? azurerm_resource_group.vm[0].name : data.azurerm_resource_group.vm[0].name
-  location            = var.create_resource_group ? azurerm_resource_group.vm[0].location : data.azurerm_resource_group.vm[0].location
+  location            = var.location
 
   ip_configuration {
     name                          = "${var.unique_name}-ipconfig"
@@ -68,7 +68,7 @@ resource "azurerm_network_interface" "vm" {
 
 resource "azurerm_linux_virtual_machine" "vm" {
   name = "${var.unique_name}-vm"
-  location = var.create_resource_group ? azurerm_resource_group.vm[0].location : data.azurerm_resource_group.vm[0].location
+  location = var.location
   resource_group_name = var.create_resource_group ? azurerm_resource_group.vm[0].name : data.azurerm_resource_group.vm[0].name
   network_interface_ids = [azurerm_network_interface.vm.id]
   computer_name  = var.unique_name

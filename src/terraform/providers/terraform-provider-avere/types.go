@@ -31,6 +31,8 @@ type AvereVfxt struct {
 	EnableSupportUploads bool
 	NodeCount            int
 	NodeCacheSize        int
+	FirstIPAddress       string
+	LastIPAddress        string
 
 	NtpServers string
 	Timezone   string
@@ -107,10 +109,11 @@ type AzureStorageFiler struct {
 }
 
 type Junction struct {
-	NameSpacePath    string `json:"path"`
-	CoreFilerName    string `json:"mass"`
-	CoreFilerExport  string `json:"export"`
-	SharePermissions string
+	NameSpacePath      string `json:"path"`
+	CoreFilerName      string `json:"mass"`
+	CoreFilerExport    string `json:"export"`
+	ExportSubdirectory string `json:"subdir"`
+	SharePermissions   string
 }
 
 type CustomSetting struct {
