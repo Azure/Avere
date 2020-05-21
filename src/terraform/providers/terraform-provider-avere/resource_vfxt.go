@@ -315,8 +315,6 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if avereVfxt.RunLocal == false {
-		// this only needs to be done on create since the controller's ssh
-		// may take a while to become ready
 		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod); err != nil {
 			return err
 		}
@@ -398,6 +396,12 @@ func resourceVfxtRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	if avereVfxt.RunLocal == false {
+		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod); err != nil {
+			return err
+		}
+	}
+
 	currentVServerIPAddresses, err := avereVfxt.GetVServerIPAddresses()
 	if err != nil {
 		return fmt.Errorf("error encountered while getting vserver addresses '%v'", err)
@@ -424,6 +428,12 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 	avereVfxt, err := fillAvereVfxt(d)
 	if err != nil {
 		return err
+	}
+
+	if avereVfxt.RunLocal == false {
+		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod); err != nil {
+			return err
+		}
 	}
 
 	if d.HasChange(ntp_servers) {
@@ -531,18 +541,24 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] [resourceVfxtDelete")
 	defer log.Printf("[INFO] resourceVfxtDelete]")
 
-	averevfxt, err := fillAvereVfxt(d)
+	avereVfxt, err := fillAvereVfxt(d)
 	if err != nil {
 		return err
 	}
 
-	if err := averevfxt.Platform.DestroyVfxt(averevfxt); err != nil {
+	if avereVfxt.RunLocal == false {
+		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod); err != nil {
+			return err
+		}
+	}
+
+	if err := avereVfxt.Platform.DestroyVfxt(avereVfxt); err != nil {
 		return fmt.Errorf("failed to destroy cluster: %s\n", err)
 	}
 
-	d.Set(vfxt_management_ip, averevfxt.ManagementIP)
-	d.Set(vserver_ip_addresses, averevfxt.VServerIPAddresses)
-	d.Set(node_names, averevfxt.NodeNames)
+	d.Set(vfxt_management_ip, avereVfxt.ManagementIP)
+	d.Set(vserver_ip_addresses, avereVfxt.VServerIPAddresses)
+	d.Set(node_names, avereVfxt.NodeNames)
 
 	// acknowledge deletion of the vfxt
 	d.SetId("")
