@@ -104,7 +104,8 @@
     "managedIdentity": {
       "type": "object",
       "value": {
-        "id": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('keyVault').name), variables('managedIdentityApiVersion')).principalId]"
+        "userResourceId": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('keyVault').name)]",
+        "userPrincipalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('keyVault').name), variables('managedIdentityApiVersion')).principalId]"
       }
     },
     "keyVault": {

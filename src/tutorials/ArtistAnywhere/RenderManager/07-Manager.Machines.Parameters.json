@@ -11,7 +11,7 @@
         "scriptCommands": "",
         "image": {
           "templateName": "RenderManager",
-          "definitionName": "Linux",
+          "definitionName": "Linux8",
           "referenceId": ""
         },
         "machines": [

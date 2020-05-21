@@ -13,6 +13,9 @@
 
 	# Set to true to deploy Azure Object (Blob) Storage (http://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview)
 	[boolean] $storageObjectEnable = $false,
+
+	# Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview)
+	[boolean] $cacheEnable = $false,
 	
 	# The set of shared Azure services across regions, including Storage, Cache, Image Gallery, etc.
 	[object] $sharedServices,
@@ -32,7 +35,7 @@ Import-Module "$templateDirectory/Deploy.psm1"
 if (!$sharedServices) {
 	$moduleName = "* - Shared Services Job"
 	New-TraceMessage $moduleName $false
-	$sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable
+	$sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $cacheEnable
 	$sharedServices = Receive-Job -Job $sharedServicesJob -Wait
 	if ($sharedServicesJob.JobStateInfo.State -eq "Failed") {
 		Write-Host $sharedServicesJob.JobStateInfo.Reason
@@ -69,7 +72,6 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 				$imageTemplateName = $templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].image.templateName
 				$imageDefinitionName = $templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].image.definitionName
 				$imageVersionId = Get-ImageVersionId $imageGallery.resourceGroupName $imageGallery.name $imageDefinitionName $imageTemplateName
-				if (!$imageVersionId) { return }
 				$templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].image.referenceId = $imageVersionId
 			}
 			if ($templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].customExtension.scriptCommands -eq "") {

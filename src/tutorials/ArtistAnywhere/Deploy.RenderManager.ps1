@@ -13,6 +13,9 @@
 
 	# Set to true to deploy Azure Object (Blob) Storage (http://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview)
 	[boolean] $storageObjectEnable = $false,
+
+	# Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview)
+	[boolean] $cacheEnable = $false,
 	
 	# The set of shared Azure services across regions, including Storage, Cache, Image Gallery, etc.
 	[object] $sharedServices
@@ -29,7 +32,7 @@ Import-Module "$templateDirectory/Deploy.psm1"
 if (!$sharedServices) {
 	$moduleName = "* - Shared Services Job"
 	New-TraceMessage $moduleName $false
-	$sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable
+	$sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $cacheEnable
 	$sharedServices = Receive-Job -Job $sharedServicesJob -Wait
 	if ($sharedServicesJob.JobStateInfo.State -eq "Failed") {
 		Write-Host $sharedServicesJob.JobStateInfo.Reason
@@ -39,6 +42,7 @@ if (!$sharedServices) {
 }
 
 $computeNetworks = $sharedServices.computeNetworks
+$managedIdentity = $sharedServices.managedIdentity
 $logAnalytics = $sharedServices.logAnalytics
 $imageGallery = $sharedServices.imageGallery
 $storageMounts = $sharedServices.storageMounts
@@ -94,11 +98,14 @@ if (!$resourceGroup) { return }
 $templateResources = "$templateDirectory/$moduleDirectory/06-Manager.Images.json"
 $templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/06-Manager.Images.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
+if ($templateParameters.renderManager.value.userIdentityId -eq "") {
+	$templateParameters.renderManager.value.userIdentityId = $managedIdentity.userResourceId
+}
 for ($machineImageIndex = 0; $machineImageIndex -lt $templateParameters.renderManager.value.machineImages.length; $machineImageIndex++) {
-	if ($templateParameters.renderManager.value.machineImages[$machineImageIndex].buildCustomization.length -gt 0) {
-		$imageDefinitionName = $templateParameters.artistDesktop.value.machineImages[$machineImageIndex].definitionName
-		$fileSystemMountCommands = Get-FileSystemMountCommands $imageGallery $imageDefinitionName $storageMounts
-		$templateParameters.renderManager.value.machineImages[$machineImageIndex].buildCustomization[0].inline = $fileSystemMountCommands + $templateParameters.renderManager.value.machineImages[$machineImageIndex].buildCustomization[0].inline
+	if ($templateParameters.renderManager.value.machineImages[$machineImageIndex].customizePipeline[1].inline.length -eq 0) {
+		$imageDefinitionName = $templateParameters.renderManager.value.machineImages[$machineImageIndex].definitionName
+		$mountCommands = Get-FileSystemMountCommands $imageGallery $imageDefinitionName $storageMounts
+		$templateParameters.renderManager.value.machineImages[$machineImageIndex].customizePipeline[1].inline = $mountCommands
 	}
 }
 if ($templateParameters.imageGallery.value.name -eq "") {
@@ -157,7 +164,6 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 		$imageTemplateName = $templateParameters.renderManager.value.image.templateName
 		$imageDefinitionName = $templateParameters.renderManager.value.image.definitionName
 		$imageVersionId = Get-ImageVersionId $imageGallery.resourceGroupName $imageGallery.name $imageDefinitionName $imageTemplateName
-		if (!$imageVersionId) { return }
 		$templateParameters.renderManager.value.image.referenceId = $imageVersionId
 	}
 	if ($templateParameters.renderManager.value.scriptCommands -eq "") {

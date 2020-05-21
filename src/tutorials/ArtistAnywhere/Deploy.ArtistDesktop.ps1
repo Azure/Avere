@@ -13,6 +13,9 @@
 
 	# Set to true to deploy Azure Object (Blob) Storage (http://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview)
 	[boolean] $storageObjectEnable = $false,
+
+	# Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview)
+	[boolean] $cacheEnable = $false,
 	
 	# The set of shared Azure services across regions, including Storage, Cache, Image Gallery, etc.
 	[object] $sharedServices
@@ -26,7 +29,7 @@ Import-Module "$templateDirectory/Deploy.psm1"
 if (!$sharedServices) {
 	$moduleName = "* - Shared Services Job"
 	New-TraceMessage $moduleName $false
-	$sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable
+	$sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $cacheEnable
 	$sharedServices = Receive-Job -Job $sharedServicesJob -Wait
 	if ($sharedServicesJob.JobStateInfo.State -eq "Failed") {
 		Write-Host $sharedServicesJob.JobStateInfo.Reason
@@ -38,7 +41,7 @@ if (!$sharedServices) {
 # * - Artist Desktop Images Job
 $moduleName = "* - Artist Desktop Images Job"
 New-TraceMessage $moduleName $false
-$artistDesktopImagesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Images.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $sharedServices
+$artistDesktopImagesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Images.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $cacheEnable, $sharedServices
 $artistDesktopImages = Receive-Job -Job $artistDesktopImagesJob -Wait
 if ($artistDesktopImagesJob.JobStateInfo.State -eq "Failed") {
 	Write-Host $artistDesktopImagesJob.JobStateInfo.Reason
@@ -49,7 +52,7 @@ New-TraceMessage $moduleName $true
 # * - Artist Desktop Machines Job
 $moduleName = "* - Artist Desktop Machines Job"
 New-TraceMessage $moduleName $false
-$artistDesktopMachinesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $sharedServices, $renderManagers
+$artistDesktopMachinesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $cacheEnable, $sharedServices, $renderManagers
 $artistDesktopMachines = Receive-Job -Job $artistDesktopMachinesJob -Wait
 if ($artistDesktopMachinesJob.JobStateInfo.State -eq "Failed") {
 	Write-Host $artistDesktopMachinesJob.JobStateInfo.Reason

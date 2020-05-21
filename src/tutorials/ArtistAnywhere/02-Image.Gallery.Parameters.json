@@ -7,7 +7,16 @@
         "name": "MediaStudio",
         "imageDefinitions": [
           {
-            "name": "Linux",
+            "name": "Linux7",
+            "type": "Linux",
+            "generation": "v1",
+            "state": "Generalized",
+            "publisher": "OpenLogic",
+            "offer": "CentOS",
+            "sku": "7.7"
+          },
+          {
+            "name": "Linux8",
             "type": "Linux",
             "generation": "v1",
             "state": "Generalized",
@@ -36,6 +45,11 @@
         ]
       }
     },
+    "imageBuilder": {
+      "value": {
+        "userPrincipalId": ""
+      }
+    },
     "containerRegistry": {
       "value": {
         "name": "MediaStudio",
@@ -45,7 +59,6 @@
     "virtualNetwork": {
       "value": {
         "name": "",
-        "subnetName": "Render",
         "resourceGroupName": ""
       }
     }

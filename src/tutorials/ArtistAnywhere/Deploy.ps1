@@ -12,7 +12,10 @@
 	[boolean] $storageNetAppEnable = $false,
 
 	# Set to true to deploy Azure Object (Blob) Storage (http://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview)
-	[boolean] $storageObjectEnable = $false
+	[boolean] $storageObjectEnable = $false,
+
+	# Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview)
+	[boolean] $cacheEnable = $false
 )
 
 $templateDirectory = $PSScriptRoot
@@ -22,7 +25,7 @@ Import-Module "$templateDirectory/Deploy.psm1"
 # * - Shared Services Job
 $moduleName = "* - Shared Services Job"
 New-TraceMessage $moduleName $false
-$sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable
+$sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $cacheEnable
 $sharedServices = Receive-Job -Job $sharedServicesJob -Wait
 if ($sharedServicesJob.JobStateInfo.State -eq "Failed") {
 	Write-Host $sharedServicesJob.JobStateInfo.Reason
@@ -31,6 +34,7 @@ if ($sharedServicesJob.JobStateInfo.State -eq "Failed") {
 New-TraceMessage $moduleName $true
 
 $computeNetworks = $sharedServices.computeNetworks
+$managedIdentity = $sharedServices.managedIdentity
 $logAnalytics = $sharedServices.logAnalytics
 $imageGallery = $sharedServices.imageGallery
 $storageMounts = $sharedServices.storageMounts
@@ -39,12 +43,12 @@ $cacheMounts = $sharedServices.cacheMounts
 # * - Render Manager Job
 $moduleName = "* - Render Manager Job"
 New-TraceMessage $moduleName $false
-$renderManagersJob = Start-Job -FilePath "$templateDirectory/Deploy.RenderManager.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $sharedServices
+$renderManagersJob = Start-Job -FilePath "$templateDirectory/Deploy.RenderManager.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $cacheEnable, $sharedServices
 
 # * - Artist Desktop Images Job
 $moduleName = "* - Artist Desktop Images Job"
 New-TraceMessage $moduleName $false
-$artistDesktopImagesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Images.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $sharedServices
+$artistDesktopImagesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Images.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $cacheEnable, $sharedServices
 
 $moduleDirectory = "RenderWorker"
 
@@ -60,11 +64,14 @@ if (!$resourceGroup) { return }
 $templateResources = "$templateDirectory/$moduleDirectory/08-Worker.Images.json"
 $templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/08-Worker.Images.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
+if ($templateParameters.renderWorker.value.userIdentityId -eq "") {
+	$templateParameters.renderWorker.value.userIdentityId = $managedIdentity.userResourceId
+}
 for ($machineImageIndex = 0; $machineImageIndex -lt $templateParameters.renderWorker.value.machineImages.length; $machineImageIndex++) {
-	if ($templateParameters.renderWorker.value.machineImages[$machineImageIndex].buildCustomization.length -gt 0) {
-		$imageDefinitionName = $templateParameters.artistDesktop.value.machineImages[$machineImageIndex].definitionName
-		$fileSystemMountCommands = Get-FileSystemMountCommands $imageGallery $imageDefinitionName $storageMounts
-		$templateParameters.renderWorker.value.machineImages[$machineImageIndex].buildCustomization[0].inline = $fileSystemMountCommands + $templateParameters.renderWorker.value.machineImages[$machineImageIndex].buildCustomization[0].inline
+	if ($templateParameters.renderWorker.value.machineImages[$machineImageIndex].customizePipeline[1].inline.length -eq 0) {
+		$imageDefinitionName = $templateParameters.renderWorker.value.machineImages[$machineImageIndex].definitionName
+		$mountCommands = Get-FileSystemMountCommands $imageGallery $imageDefinitionName $storageMounts
+		$templateParameters.renderWorker.value.machineImages[$machineImageIndex].customizePipeline[1].inline = $mountCommands
 	}
 }
 if ($templateParameters.imageGallery.value.name -eq "") {
@@ -125,7 +132,7 @@ New-TraceMessage $moduleName $true
 # * - Artist Desktop Machines Job
 $moduleName = "* - Artist Desktop Machines Job"
 New-TraceMessage $moduleName $false
-$artistDesktopMachinesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $sharedServices, $renderManagers
+$artistDesktopMachinesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $cacheEnable, $sharedServices, $renderManagers
 
 # 09 - Worker Machines
 $moduleName = "09 - Worker Machines"
@@ -145,7 +152,6 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
 		$imageTemplateName = $templateParameters.renderWorker.value.image.templateName
 		$imageDefinitionName = $templateParameters.renderWorker.value.image.definitionName
 		$imageVersionId = Get-ImageVersionId $imageGallery.resourceGroupName $imageGallery.name $imageDefinitionName $imageTemplateName
-		if (!$imageVersionId) { return }
 		$templateParameters.renderWorker.value.image.referenceId = $imageVersionId
 	}
 	if ($templateParameters.renderWorker.value.scriptCommands -eq "") {

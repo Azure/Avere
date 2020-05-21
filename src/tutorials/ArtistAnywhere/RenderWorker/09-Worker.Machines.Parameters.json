@@ -8,7 +8,7 @@
         "fileSystemMounts": "",
         "image": {
           "templateName": "RenderWorker",
-          "definitionName": "Linux",
+          "definitionName": "Linux8",
           "referenceId": ""
         },
         "machineScaleSets": [

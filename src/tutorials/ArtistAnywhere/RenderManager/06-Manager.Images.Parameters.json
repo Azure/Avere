@@ -4,14 +4,28 @@
   "parameters": {
     "renderManager": {
       "value": {
+        "userIdentityId": "",
         "machineImages": [
           {
             "enabled": true,
             "templateName": "RenderManager",
-            "definitionName": "Linux",
+            "definitionName": "Linux8",
             "sourceType": "PlatformImage",
             "sourceVersion": "latest",
-            "buildCustomization": [
+            "customizePipeline": [
+              {
+                "name": "PreMounts",
+                "type": "Shell",
+                "inline": [
+                  "yum -y install nfs-utils"
+                ]
+              },
+              {
+                "name": "Mounts",
+                "type": "Shell",
+                "inline": [
+                ]
+              },
               {
                 "name": "Tools",
                 "type": "Shell",
@@ -32,7 +46,7 @@
                 ]
               }
             ],
-            "buildTimeoutMinutes": 120
+            "buildTimeoutMinutes": 180
           }
         ]
       }

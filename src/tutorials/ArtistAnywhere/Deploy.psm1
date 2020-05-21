@@ -62,20 +62,12 @@ function Get-FileSystemMountCommands ($imageGallery, $imageDefinitionName, $stor
 	$fsMountCommands = @()
 	$imageDefinition = (az sig image-definition show --resource-group $imageGallery.resourceGroupName --gallery-name $imageGallery.name --gallery-image-definition $imageDefinitionName) | ConvertFrom-Json
 	if ($imageDefinition.osType -eq "Windows") {
-		$fsMountCommands += "DISM /Online /Enable-Feature /All /FeatureName:ClientForNFS-Infrastructure"
-		$fsMountCommands += "New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\ClientForNFS\CurrentVersion\Default -Name AnonymousUid -PropertyType DWord -Value 0"
-		$fsMountCommands += "New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\ClientForNFS\CurrentVersion\Default -Name AnonymousGid -PropertyType DWord -Value 0"
 		foreach ($storageMount in $storageMounts) {
 			$fsMountCommand = "New-PSDrive -Name " + $storageMount.drive + " -PSProvider FileSystem"
 			$fsMountCommand += " -Root \\" + $storageMount.exportHost + $storageMount.exportPath
 			$fsMountCommands += $fsMountCommand
 		}
 	} else {
-		if ($imageDefinition.identifier.offer -like "*CentOS*") {
-			$fsMountCommands += "yum -y install nfs-utils"
-		} else {
-			$fsMountCommands += "apt install nfs-common"
-		}
 		foreach ($storageMount in $storageMounts) {
 			$fsMountCommands += "mkdir -p " + $storageMount.directory
 			$fsMountCommand = "mount " + $storageMount.options
@@ -87,30 +79,31 @@ function Get-FileSystemMountCommands ($imageGallery, $imageDefinitionName, $stor
 	return $fsMountCommands
 }
 
-function Get-FileSystemMount ($mount, $mapDrive) {
+function Get-FileSystemMount ($mount, $includeDrive) {
 	$fsMount = $mount.exportHost + ":" + $mount.exportPath
 	$fsMount += " " + $mount.directory
 	$fsMount += " " + $mount.options
-	if ($mapDrive) {
+	if ($includeDrive) {
 		$fsMount += " " + $mount.drive
 	}
 	return $fsMount
 }
 
-function Get-FileSystemMounts ($storageMounts, $cacheMounts, $mapDrive) {
+function Get-FileSystemMounts ([object[]] $storageMounts, [object[]] $cacheMounts, $includeDrive) {
 	$fsMounts = ""
+	$fsMountDelimiter = ";"
 	foreach ($storageMount in $storageMounts) {
 		if ($fsMounts -ne "") {
-			$fsMounts += '|'
+			$fsMounts += $fsMountDelimiter
 		}
-		$fsMount = Get-FileSystemMount $storageMount $mapDrive
+		$fsMount = Get-FileSystemMount $storageMount $includeDrive
 		$fsMounts += $fsMount
 	}
 	foreach ($cacheMount in $cacheMounts) {
 		if ($fsMounts -ne "") {
-			$fsMounts += '|'
+			$fsMounts += $fsMountDelimiter
 		}
-		$fsMount = Get-FileSystemMount $cacheMount $mapDrive
+		$fsMount = Get-FileSystemMount $cacheMount $includeDrive
 		$fsMounts += $fsMount
 	}
 	return $fsMounts
@@ -118,10 +111,10 @@ function Get-FileSystemMounts ($storageMounts, $cacheMounts, $mapDrive) {
 
 function Get-ScriptCommands ($scriptFile, $scriptParameters) {
 	$script = Get-Content $scriptFile -Raw
-	if ($scriptParameters) { # Windows PowerShell
+	if ($scriptParameters) { # PowerShell
 		$script = "& {" + $script + "} " + $scriptParameters
 		$scriptCommands = [System.Text.Encoding]::Unicode.GetBytes($script)
-	} else { # Linux Bash
+	} else {
 		$memoryStream = New-Object System.IO.MemoryStream
 		$compressionStream = New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode]::Compress)
 		$streamWriter = New-Object System.IO.StreamWriter($compressionStream)
