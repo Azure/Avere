@@ -4,8 +4,9 @@ package main
 
 func (j *Junction) IsEqual(j2 *Junction) bool {
 	// don't compare share permissions since share permissions is
-	// return when listing junctions
+	// returned when listing junctions
 	return j.NameSpacePath == j2.NameSpacePath &&
 		j.CoreFilerName == j2.CoreFilerName &&
+		j.CoreFilerExport == j2.CoreFilerExport &&
 		j.ExportSubdirectory == j2.ExportSubdirectory
 }
