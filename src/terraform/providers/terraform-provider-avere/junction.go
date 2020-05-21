@@ -7,5 +7,5 @@ func (j *Junction) IsEqual(j2 *Junction) bool {
 	// return when listing junctions
 	return j.NameSpacePath == j2.NameSpacePath &&
 		j.CoreFilerName == j2.CoreFilerName &&
-		j.CoreFilerExport == j2.CoreFilerExport
+		j.ExportSubdirectory == j2.ExportSubdirectory
 }

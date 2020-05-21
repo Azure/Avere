@@ -142,6 +142,7 @@ A <a name="core_filer"></a>`core_filer` block supports the following:
 A <a name="junction"></a>`junction` block supports the following:
 * <a name="namespace_path"></a>[namespace_path](#namespace_path) - (Required) this is the exported namespace from the Avere vFXT. 
 * <a name="core_filer_export"></a>[core_filer_export](#core_filer_export) - (Required) this is the export from the hardware core filer.
+* <a name="export_subdirectory"></a>[export_subdirectory](#export_subdirectory) - (Optional) if the export does not point directly to the core filer directory that you want to associate with this junction, add the relative subdirectory path here.  (Do not begin the path with "/".)  If the subdirectory does not already exist, it will be created automatically.
  
 # Attributes Reference
 
