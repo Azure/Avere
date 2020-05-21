@@ -235,6 +235,12 @@ func resourceVfxt() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringIsNotWhiteSpace,
 									},
+									export_subdirectory: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "",
+										ValidateFunc: ValidateExportSubdirectory,
+									},
 								},
 							},
 						},
@@ -994,10 +1000,11 @@ func expandCoreFilerJunctions(l []interface{}, results map[string]*Junction) err
 		for _, jv := range junctions {
 			junctionRaw := jv.(map[string]interface{})
 			junction := &Junction{
-				NameSpacePath:    junctionRaw[namespace_path].(string),
-				CoreFilerName:    coreFilerName,
-				CoreFilerExport:  junctionRaw[core_filer_export].(string),
-				SharePermissions: PermissionsPreserve,
+				NameSpacePath:      junctionRaw[namespace_path].(string),
+				CoreFilerName:      coreFilerName,
+				CoreFilerExport:    junctionRaw[core_filer_export].(string),
+				ExportSubdirectory: junctionRaw[export_subdirectory].(string),
+				SharePermissions:   PermissionsPreserve,
 			}
 			// verify no duplicates
 			if _, ok := results[junction.NameSpacePath]; ok {
@@ -1055,6 +1062,9 @@ func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
 						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
 					}
 					if v2, ok := m[core_filer_export]; ok {
+						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
+					}
+					if v2, ok := m[export_subdirectory]; ok {
 						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
 					}
 				}
@@ -1141,7 +1151,7 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 			}
 		}
 		for _, v := range input[custom_settings].(*schema.Set).List() {
-			if err := ValidateOnlyAscii(v.(string), fmt.Sprintf("%s-customsetting-'%s'", input[core_filer_name].(string), v.(string))); err != nil {
+			if err := ValidateOnlyAscii(v.(string), fmt.Sprintf("%s-customsetting-'%s'", core_filer_name, v.(string))); err != nil {
 				return err
 			}
 		}
@@ -1150,12 +1160,17 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 			for _, j := range v.List() {
 				if m, ok := j.(map[string]interface{}); ok {
 					if v2, ok := m[namespace_path]; ok {
-						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", input[core_filer_name].(string), v2.(string))); err != nil {
+						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", core_filer_name, v2.(string))); err != nil {
 							return err
 						}
 					}
 					if v2, ok := m[core_filer_export]; ok {
-						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", input[core_filer_name].(string), v2.(string))); err != nil {
+						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", core_filer_name, v2.(string))); err != nil {
+							return err
+						}
+					}
+					if v2, ok := m[export_subdirectory]; ok {
+						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", export_subdirectory, v2.(string))); err != nil {
 							return err
 						}
 					}
@@ -1196,6 +1211,16 @@ func ValidateArmStorageAccountName(v interface{}, _ string) (warnings []string, 
 
 	if !regexp.MustCompile(`\A([a-z0-9]{3,24})\z`).MatchString(input) {
 		errors = append(errors, fmt.Errorf("name (%q) can only consist of lowercase letters and numbers, and must be between 3 and 24 characters long", input))
+	}
+
+	return warnings, errors
+}
+
+func ValidateExportSubdirectory(v interface{}, _ string) (warnings []string, errors []error) {
+	input := v.(string)
+
+	if len(input) > 0 && !regexp.MustCompile(`^[^\/]`).MatchString(input) {
+		errors = append(errors, fmt.Errorf("%s (%s) must not begin with a '/'", export_subdirectory, input))
 	}
 
 	return warnings, errors

@@ -104,6 +104,7 @@ const (
 	junction                     = "junction"
 	namespace_path               = "namespace_path"
 	core_filer_export            = "core_filer_export"
+	export_subdirectory          = "export_subdirectory"
 	azure_storage_filer          = "azure_storage_filer"
 	account_name                 = "account_name"
 	container_name               = "container_name"

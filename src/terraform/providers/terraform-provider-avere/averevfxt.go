@@ -1085,7 +1085,7 @@ func (a *AvereVfxt) getListJunctionsJsonCommand() string {
 }
 
 func (a *AvereVfxt) getCreateJunctionCommand(junction *Junction) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s vserver.addJunction \"%s\" \"%s\" \"%s\" \"%s\" \"{'sharesubdir':'','inheritPolicy':'yes','sharename':'','access':'posix','createSubdirs':'yes','subdir':'','policy':'','permissions':'%s'}\"", a.getBaseAvereCmd(), VServerName, junction.NameSpacePath, junction.CoreFilerName, junction.CoreFilerExport, junction.SharePermissions), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s vserver.addJunction \"%s\" \"%s\" \"%s\" \"%s\" \"{'sharesubdir':'','inheritPolicy':'yes','sharename':'','access':'posix','createSubdirs':'yes','subdir':'%s','policy':'','permissions':'%s'}\"", a.getBaseAvereCmd(), VServerName, junction.NameSpacePath, junction.CoreFilerName, junction.CoreFilerExport, junction.ExportSubdirectory, junction.SharePermissions), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getDeleteJunctionCommand(junctionNameSpacePath string) string {
