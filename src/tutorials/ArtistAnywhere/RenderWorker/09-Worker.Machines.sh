@@ -12,8 +12,8 @@ systemctl start opencue-rqd
 IFS=';' read -a fileSystemMounts <<< "$FILE_SYSTEM_MOUNTS"
 for fileSystemMount in "${fileSystemMounts[@]}"
 do
-	localPath="$(cut -d ' ' -f 2 <<< $fileSystemMount)"
-	mkdir -p $localPath
-	echo $fileSystemMount >> /etc/fstab
+    localPath="$(cut -d ' ' -f 2 <<< $fileSystemMount)"
+    mkdir -p $localPath
+    echo $fileSystemMount >> /etc/fstab
 done
 mount -a

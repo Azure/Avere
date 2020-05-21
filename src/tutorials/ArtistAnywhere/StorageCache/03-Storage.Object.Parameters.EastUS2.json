@@ -38,7 +38,8 @@
               "targetPath": ""
             }
           ],
-          "mountOptions": "nfs vers=3,hard,proto=tcp,mountproto=tcp,retry=30 0 0",
+          "mountOptions": "ro,hard,vers=3,proto=tcp,mountproto=tcp,retry=30",
+          "mountType": "nfs",
           "mountDrive": "S"
         }
       ]

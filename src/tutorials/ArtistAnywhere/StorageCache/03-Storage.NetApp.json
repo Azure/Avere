@@ -139,6 +139,7 @@
           "exportPath": "[parameters('storageMounts')[copyIndex()].exportPath]",
           "directory": "[parameters('storageMounts')[copyIndex()].directory]",
           "options": "[parameters('storageMounts')[copyIndex()].options]",
+          "type": "[parameters('storageMounts')[copyIndex()].type]",
           "drive": "[parameters('storageMounts')[copyIndex()].drive]"
         }
       }
@@ -154,6 +155,7 @@
           "target": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('storageAccount').name, parameters('storageVolumes')[copyIndex()].pool, parameters('storageVolumes')[copyIndex()].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
           "junctions": "[parameters('storageTargets')[copyIndex()].junctions]",
           "mountOptions": "[parameters('storageTargets')[copyIndex()].mountOptions]",
+          "mountType": "[parameters('storageTargets')[copyIndex()].mountType]",
           "mountDrive": "[parameters('storageTargets')[copyIndex()].mountDrive]",
           "usageModel": "[parameters('storageTargets')[copyIndex()].usageModel]"
         }

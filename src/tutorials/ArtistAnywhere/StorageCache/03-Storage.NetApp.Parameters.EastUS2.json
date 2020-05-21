@@ -76,7 +76,8 @@
           "volume": "Tools",
           "exportPath": "/tools",
           "directory": "/mnt/tools",
-          "options": "-t nfs -o rw,hard,rsize=65536,wsize=65536,vers=3,tcp",
+          "options": "ro,hard,vers=3,rsize=65536,wsize=65536,tcp",
+          "type": "nfs",
           "drive": "T"
         },
         {
@@ -84,7 +85,8 @@
           "volume": "Frames",
           "exportPath": "/frames",
           "directory": "/mnt/frames",
-          "options": "-t nfs -o rw,hard,rsize=65536,wsize=65536,vers=3,tcp",
+          "options": "rw,hard,vers=3,rsize=65536,wsize=65536,tcp",
+          "type": "nfs",
           "drive": "F"
         }
       ]
@@ -101,7 +103,8 @@
               "targetPath": ""
             }
           ],
-          "mountOptions": "nfs vers=3,hard,proto=tcp,mountproto=tcp,retry=30 0 0",
+          "mountOptions": "vers=3,hard,proto=tcp,mountproto=tcp,retry=30",
+          "mountType": "nfs",
           "usageModel": "WRITE_AROUND"
         }
       ]

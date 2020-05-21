@@ -141,6 +141,7 @@
           "exportPath": "[parameters('storageMounts')[copyIndex()].exportPath]",
           "directory": "[parameters('storageMounts')[copyIndex()].directory]",
           "options": "[parameters('storageMounts')[copyIndex()].options]",
+          "type": "[parameters('storageMounts')[copyIndex()].type]",
           "drive": "[parameters('storageMounts')[copyIndex()].drive]"
         }
       }
@@ -156,6 +157,7 @@
           "target": "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('storageAccountName'), 'default', toLower(parameters('storageTargets')[copyIndex()].name))]",
           "junctions": "[parameters('storageTargets')[copyIndex()].junctions]",
           "mountOptions": "[parameters('storageTargets')[copyIndex()].mountOptions]",
+          "mountType": "[parameters('storageTargets')[copyIndex()].mountType]",
           "mountDrive": "[parameters('storageTargets')[copyIndex()].mountDrive]"
         }
       }

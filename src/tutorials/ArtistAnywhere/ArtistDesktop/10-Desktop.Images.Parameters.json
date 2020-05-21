@@ -87,7 +87,9 @@
                 "type": "Shell",
                 "inline": [
                   "yum -y groups install 'GNOME Desktop'",
-                  "yum -y install https://downloads.teradici.com/rhel/teradici-repo-latest.noarch.rpm"
+                  "yum -y install https://downloads.teradici.com/rhel/teradici-repo-latest.noarch.rpm",
+                  "wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm",
+                  "rpm -i epel-release-latest-7.noarch.rpm"
                 ]
               }
             ],
@@ -174,7 +176,7 @@
                   "yum -y groups install 'Workstation'",
                   "yum -y install https://downloads.teradici.com/rhel/teradici-repo-latest.noarch.rpm"
                 ]
-              }              
+              }
             ],
             "buildTimeoutMinutes": 180
           },
