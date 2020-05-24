@@ -1,18 +1,9 @@
 param (
-    [string] $fileSystemMounts,
-    [string] $openCueRenderManagerHost,
+    [string] $teradiciHostAgentLicenseKey,
     [string] $teradiciHostAgentFilePath,
-    [string] $teradiciHostAgentLicenseKey
+    [string] $openCueRenderManagerHost,
+    [string] $fileSystemMounts
 )
-
-[System.Environment]::SetEnvironmentVariable('CUEBOT_HOSTS', $openCueRenderManagerHost, [System.EnvironmentVariableTarget]::Machine)
-
-foreach ($fileSystemMount in $fileSystemMounts.Split(';')) {
-    $mountParameters = $fileSystemMount.Split(' ')
-    $mountRoot = "\\" + $mountParameters[0]
-    $mountDrive = $mountParameters[-1]
-    New-PSDrive -Name $mountDrive -PSProvider FileSystem -Root $mountRoot -Scope Global -Persist
-}
 
 if ($teradiciHostAgentLicenseKey -ne '') {
     $agentInstall = Start-Process -FilePath $teradiciHostAgentFilePath -ArgumentList '/S /NoPostReboot' -Wait -PassThru
@@ -22,4 +13,13 @@ if ($teradiciHostAgentLicenseKey -ne '') {
         & .\pcoip-validate-license.ps1
         Restart-Service -Name 'PCoIPAgent'
     }
+}
+
+[System.Environment]::SetEnvironmentVariable('CUEBOT_HOSTS', $openCueRenderManagerHost, [System.EnvironmentVariableTarget]::Machine)
+
+foreach ($fileSystemMount in $fileSystemMounts.Split(';')) {
+    $mountParameters = $fileSystemMount.Split(' ')
+    $mountRoot = "\\" + $mountParameters[0]
+    $mountDrive = $mountParameters[-1]
+    New-PSDrive -Name $mountDrive -PSProvider FileSystem -Root $mountRoot -Scope Global -Persist
 }
