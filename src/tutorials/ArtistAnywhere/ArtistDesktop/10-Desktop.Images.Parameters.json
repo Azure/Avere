@@ -8,6 +8,91 @@
         "machineImages": [
           {
             "enabled": true,
+            "templateName": "ArtistDesktopLinux8",
+            "definitionName": "Linux8",
+            "sourceType": "PlatformImage",
+            "sourceVersion": "latest",
+            "customizePipeline": [
+              {
+                "name": "PreMounts",
+                "type": "Shell",
+                "inline": [
+                  "yum -y install nfs-utils"
+                ]
+              },
+              {
+                "name": "Mounts",
+                "type": "Shell",
+                "inline": [
+                ]
+              },
+              {
+                "name": "Tools",
+                "type": "Shell",
+                "inline": [
+                  "cd /usr/local/bin",
+                  "cp /mnt/tools/blender/v2.82a/blender.tar.xz .",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-requirements.txt .",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-requirements-gui.txt .",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-pycue.tar.gz .",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-pyoutline.tar.gz .",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-cuesubmit.tar.gz .",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-cueadmin.tar.gz .",
+                  "cp /mnt/tools/opencue/v0.4.14/opencue-cuegui.tar.gz ."
+                ]
+              },
+              {
+                "name": "Blender",
+                "type": "Shell",
+                "inline": [
+                  "yum -y install libXi",
+                  "yum -y install libXrender",
+                  "yum -y install mesa-libGL",
+                  "cd /usr/local/bin",
+                  "tar -xJf blender.tar.xz",
+                  "mv blender-*/* ."
+                ]
+              },
+              {
+                "name": "OpenCue",
+                "type": "Shell",
+                "inline": [
+                  "yum -y install gcc",
+                  "yum -y install python3-devel",
+                  "yum -y install redhat-rpm-config",
+                  "cd /usr/local/bin",
+                  "pip3 install -r opencue-requirements.txt",
+                  "pip3 install -r opencue-requirements-gui.txt",
+                  "tar -xzf opencue-pycue.tar.gz",
+                  "tar -xzf opencue-pyoutline.tar.gz",
+                  "tar -xzf opencue-cuesubmit.tar.gz",
+                  "tar -xzf opencue-cueadmin.tar.gz",
+                  "tar -xzf opencue-cuegui.tar.gz",
+                  "find . -type f -name '*.pyc' -delete",
+                  "cd pycue-*",
+                  "python3 setup.py install",
+                  "cd ../pyoutline-*",
+                  "python3 setup.py install",
+                  "cd ../cuesubmit-*",
+                  "python3 setup.py install",
+                  "cd ../cueadmin-*",
+                  "python3 setup.py install",
+                  "cd ../cuegui-*",
+                  "python3 setup.py install"
+                ]
+              },
+              {
+                "name": "Teradici",
+                "type": "Shell",
+                "inline": [
+                  "yum -y groups install 'Workstation'"
+                ]
+              }
+            ],
+            "buildTimeoutMinutes": 180
+          },
+          {
+            "enabled": false,
             "templateName": "ArtistDesktopLinux7",
             "definitionName": "Linux7",
             "sourceType": "PlatformImage",
@@ -70,6 +155,7 @@
                   "tar -xzf opencue-cuesubmit.tar.gz",
                   "tar -xzf opencue-cueadmin.tar.gz",
                   "tar -xzf opencue-cuegui.tar.gz",
+                  "find . -type f -name '*.pyc' -delete",
                   "cd pycue-*",
                   "python setup.py install",
                   "cd ../pyoutline-*",
@@ -87,91 +173,6 @@
                 "type": "Shell",
                 "inline": [
                   "yum -y groups install 'GNOME Desktop'"
-                ]
-              }
-            ],
-            "buildTimeoutMinutes": 180
-          },
-          {
-            "enabled": false,
-            "templateName": "ArtistDesktopLinux8",
-            "definitionName": "Linux8",
-            "sourceType": "PlatformImage",
-            "sourceVersion": "latest",
-            "customizePipeline": [
-              {
-                "name": "PreMounts",
-                "type": "Shell",
-                "inline": [
-                  "yum -y install nfs-utils"
-                ]
-              },
-              {
-                "name": "Mounts",
-                "type": "Shell",
-                "inline": [
-                ]
-              },
-              {
-                "name": "Tools",
-                "type": "Shell",
-                "inline": [
-                  "cd /usr/local/bin",
-                  "cp /mnt/tools/blender/v2.82a/blender.tar.xz .",
-                  "cp /mnt/tools/opencue/v0.4.14/opencue-requirements.txt .",
-                  "cp /mnt/tools/opencue/v0.4.14/opencue-requirements-gui.txt .",
-                  "cp /mnt/tools/opencue/v0.4.14/opencue-pycue.tar.gz .",
-                  "cp /mnt/tools/opencue/v0.4.14/opencue-pyoutline.tar.gz .",
-                  "cp /mnt/tools/opencue/v0.4.14/opencue-cuesubmit.tar.gz .",
-                  "cp /mnt/tools/opencue/v0.4.14/opencue-cueadmin.tar.gz .",
-                  "cp /mnt/tools/opencue/v0.4.14/opencue-cuegui.tar.gz ."
-                ]
-              },
-              {
-                "name": "Blender",
-                "type": "Shell",
-                "inline": [
-                  "yum -y install libXi",
-                  "yum -y install libXrender",
-                  "yum -y install mesa-libGL",
-                  "cd /usr/local/bin",
-                  "tar -xJf blender.tar.xz",
-                  "mv blender-*/* ."
-                ]
-              },
-              {
-                "name": "OpenCue",
-                "type": "Shell",
-                "inline": [
-                  "yum -y install gcc",
-                  "yum -y install python3-devel",
-                  "yum -y install redhat-rpm-config",
-                  "cd /usr/local/bin",
-                  "pip3 install -r opencue-requirements.txt",
-                  "pip3 install -r opencue-requirements-gui.txt",
-                  "tar -xzf opencue-pycue.tar.gz",
-                  "tar -xzf opencue-pyoutline.tar.gz",
-                  "tar -xzf opencue-cuesubmit.tar.gz",
-                  "tar -xzf opencue-cueadmin.tar.gz",
-                  "tar -xzf opencue-cuegui.tar.gz",
-                  "cd pycue-*",
-                  "python3 setup.py install",
-                  "cd ../pyoutline-*",
-                  "python3 setup.py install",
-                  "cd ../cuesubmit-*",
-                  "python3 setup.py install",
-                  "cd ../cueadmin-*",
-                  "python3 setup.py install",
-                  "cd ../cuegui-*",
-                  "python3 setup.py install"
-                ]
-              },
-              {
-                "name": "Teradici",
-                "type": "Shell",
-                "inline": [
-                  "yum -y groups install 'Workstation'",
-                  "yum -y install https://downloads.teradici.com/rhel/teradici-repo-latest.noarch.rpm"
                 ]
               }
             ],

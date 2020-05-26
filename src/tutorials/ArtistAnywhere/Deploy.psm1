@@ -75,7 +75,7 @@ function Get-StorageMountCommands ($imageGallery, $imageDefinitionName, $storage
     if ($imageDefinition.osType -eq "Windows") {
         foreach ($storageMount in $storageMounts) {
             $mountCommand = "New-PSDrive -Name " + $storageMount.drive + " -PSProvider FileSystem"
-            $mountCommand += " -Root \\" + $storageMount.exportHost + $storageMount.exportPath
+            $mountCommand += " -Root \\" + $storageMount.exportHost + $storageMount.exportPath.Replace('/', '\')
             $mountCommand += " -Scope Global -Persist"
             $mountCommands += $mountCommand
         }
