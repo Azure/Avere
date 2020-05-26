@@ -70,8 +70,8 @@ if ($templateParameters.renderWorker.value.userIdentityId -eq "") {
 for ($machineImageIndex = 0; $machineImageIndex -lt $templateParameters.renderWorker.value.machineImages.length; $machineImageIndex++) {
     if ($templateParameters.renderWorker.value.machineImages[$machineImageIndex].customizePipeline[1].inline.length -eq 0) {
         $imageDefinitionName = $templateParameters.renderWorker.value.machineImages[$machineImageIndex].definitionName
-        $mountCommands = Get-FileSystemMountCommands $imageGallery $imageDefinitionName $storageMounts
-        $templateParameters.renderWorker.value.machineImages[$machineImageIndex].customizePipeline[1].inline = $mountCommands
+        $storageMountCommands = Get-StorageMountCommands $imageGallery $imageDefinitionName $storageMounts
+        $templateParameters.renderWorker.value.machineImages[$machineImageIndex].customizePipeline[1].inline = $storageMountCommands
     }
 }
 if ($templateParameters.imageGallery.value.name -eq "") {
@@ -158,7 +158,7 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
         $templateParameters.renderWorker.value.scriptCommands = $scriptCommands
     }
     if ($templateParameters.renderWorker.value.fileSystemMounts -eq "") {
-        $fileSystemMounts = Get-FileSystemMounts $storageMounts $cacheMounts
+        $fileSystemMounts = Get-FileSystemMounts $storageMounts $cacheMounts $false
         $templateParameters.renderWorker.value.fileSystemMounts = $fileSystemMounts
     }
     if ($templateParameters.renderManager.value.hostAddress -eq "") {

@@ -19,7 +19,7 @@ if ($teradiciHostAgentLicenseKey -ne '') {
 
 foreach ($fileSystemMount in $fileSystemMounts.Split(';')) {
     $mountParameters = $fileSystemMount.Split(' ')
-    $mountRoot = "\\" + $mountParameters[0]
+    $mountRoot = "\\" + $mountParameters[0].Replace(":", "")
     $mountDrive = $mountParameters[-1]
     New-PSDrive -Name $mountDrive -PSProvider FileSystem -Root $mountRoot -Scope Global -Persist
 }

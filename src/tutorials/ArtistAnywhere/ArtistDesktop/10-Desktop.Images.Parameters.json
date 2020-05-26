@@ -205,17 +205,17 @@
                 "inline": [
                   "mkdir /tools",
                   "cd /tools",
-                  "Copy-Item -Path T:\\Blender\\v2.82a\\blender.msi",
-                  "Copy-Item -Path T:\\OpenCue\\v0.4.14\\opencue-requirements.txt",
-                  "Copy-Item -Path T:\\OpenCue\\v0.4.14\\opencue-requirements-gui.txt",
-                  "Copy-Item -Path T:\\OpenCue\\v0.4.14\\opencue-pycue.tar.gz",
-                  "Copy-Item -Path T:\\OpenCue\\v0.4.14\\opencue-pyoutline.tar.gz",
-                  "Copy-Item -Path T:\\OpenCue\\v0.4.14\\opencue-cuesubmit.tar.gz",
-                  "Copy-Item -Path T:\\OpenCue\\v0.4.14\\opencue-cueadmin.tar.gz",
-                  "Copy-Item -Path T:\\OpenCue\\v0.4.14\\opencue-cuegui.tar.gz",
-                  "Copy-Item -Path T:\\Teradici\\v20.04.0\\pcoip-agent-standard.exe",
-                  "Copy-Item -Path T:\\Teradici\\v20.04.0\\pcoip-agent-graphics.exe",
-                  "Copy-Item -Path T:\\Teradici\\pcoip-session-viewer.exe"
+                  "Copy-Item -Path T:\\Blender\\v2.82a\\blender.msi -Destination .",
+                  "Copy-Item -Path T:\\OpenCue\\v0.4.14\\opencue-requirements.txt -Destination .",
+                  "Copy-Item -Path T:\\OpenCue\\v0.4.14\\opencue-requirements-gui.txt -Destination .",
+                  "Copy-Item -Path T:\\OpenCue\\v0.4.14\\opencue-pycue.tar.gz -Destination .",
+                  "Copy-Item -Path T:\\OpenCue\\v0.4.14\\opencue-pyoutline.tar.gz -Destination .",
+                  "Copy-Item -Path T:\\OpenCue\\v0.4.14\\opencue-cuesubmit.tar.gz -Destination .",
+                  "Copy-Item -Path T:\\OpenCue\\v0.4.14\\opencue-cueadmin.tar.gz -Destination .",
+                  "Copy-Item -Path T:\\OpenCue\\v0.4.14\\opencue-cuegui.tar.gz -Destination .",
+                  "Copy-Item -Path T:\\Teradici\\v20.04.0\\pcoip-agent-standard.exe -Destination .",
+                  "Copy-Item -Path T:\\Teradici\\v20.04.0\\pcoip-agent-graphics.exe -Destination .",
+                  "Copy-Item -Path T:\\Teradici\\pcoip-session-viewer.exe -Destination ."
                 ]
               }
             ],

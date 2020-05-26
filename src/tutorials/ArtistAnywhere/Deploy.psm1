@@ -58,27 +58,6 @@ function Get-ImageVersionId ($imageGalleryResourceGroupName, $imageGalleryName, 
     }
 }
 
-function Get-FileSystemMountCommands ($imageGallery, $imageDefinitionName, $storageMounts) {
-    $fsMountCommands = @()
-    $imageDefinition = (az sig image-definition show --resource-group $imageGallery.resourceGroupName --gallery-name $imageGallery.name --gallery-image-definition $imageDefinitionName) | ConvertFrom-Json
-    if ($imageDefinition.osType -eq "Windows") {
-        foreach ($storageMount in $storageMounts) {
-            $fsMountCommand = "New-PSDrive -Name " + $storageMount.drive + " -PSProvider FileSystem"
-            $fsMountCommand += " -Root \\" + $storageMount.exportHost + $storageMount.exportPath
-            $fsMountCommands += $fsMountCommand
-        }
-    } else {
-        foreach ($storageMount in $storageMounts) {
-            $fsMountCommands += "mkdir -p " + $storageMount.directory
-            $fsMountCommand = "mount -t " + $storageMount.type + " -o " + $storageMount.options
-            $fsMountCommand += " " + $storageMount.exportHost + ":" + $storageMount.exportPath
-            $fsMountCommand += " " + $storageMount.directory
-            $fsMountCommands += $fsMountCommand
-        }
-    }
-    return $fsMountCommands
-}
-
 function Get-FileSystemMount ($mount, $includeDrive) {
     $fsMount = $mount.exportHost + ":" + $mount.exportPath
     $fsMount += " " + $mount.directory
@@ -88,6 +67,28 @@ function Get-FileSystemMount ($mount, $includeDrive) {
         $fsMount += " " + $mount.drive
     }
     return $fsMount
+}
+
+function Get-StorageMountCommands ($imageGallery, $imageDefinitionName, $storageMounts) {
+    $mountCommands = @()
+    $imageDefinition = (az sig image-definition show --resource-group $imageGallery.resourceGroupName --gallery-name $imageGallery.name --gallery-image-definition $imageDefinitionName) | ConvertFrom-Json
+    if ($imageDefinition.osType -eq "Windows") {
+        foreach ($storageMount in $storageMounts) {
+            $mountCommand = "New-PSDrive -Name " + $storageMount.drive + " -PSProvider FileSystem"
+            $mountCommand += " -Root \\" + $storageMount.exportHost + $storageMount.exportPath
+            $mountCommand += " -Scope Global -Persist"
+            $mountCommands += $mountCommand
+        }
+    } else {
+        foreach ($storageMount in $storageMounts) {
+            $mountCommands += "mkdir -p " + $storageMount.directory
+            $mountCommand = "mount -t " + $storageMount.type + " -o " + $storageMount.options
+            $mountCommand += " " + $storageMount.exportHost + ":" + $storageMount.exportPath
+            $mountCommand += " " + $storageMount.directory
+            $mountCommands += $mountCommand
+        }
+    }
+    return $mountCommands
 }
 
 function Get-FileSystemMounts ([object[]] $storageMounts, [object[]] $cacheMounts, $includeDrive) {

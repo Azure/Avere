@@ -104,8 +104,8 @@ if ($templateParameters.renderManager.value.userIdentityId -eq "") {
 for ($machineImageIndex = 0; $machineImageIndex -lt $templateParameters.renderManager.value.machineImages.length; $machineImageIndex++) {
     if ($templateParameters.renderManager.value.machineImages[$machineImageIndex].customizePipeline[1].inline.length -eq 0) {
         $imageDefinitionName = $templateParameters.renderManager.value.machineImages[$machineImageIndex].definitionName
-        $mountCommands = Get-FileSystemMountCommands $imageGallery $imageDefinitionName $storageMounts
-        $templateParameters.renderManager.value.machineImages[$machineImageIndex].customizePipeline[1].inline = $mountCommands
+        $storageMountCommands = Get-StorageMountCommands $imageGallery $imageDefinitionName $storageMounts
+        $templateParameters.renderManager.value.machineImages[$machineImageIndex].customizePipeline[1].inline = $storageMountCommands
     }
 }
 if ($templateParameters.imageGallery.value.name -eq "") {

@@ -66,8 +66,8 @@ if ($templateParameters.artistDesktop.value.userIdentityId -eq "") {
 for ($machineImageIndex = 0; $machineImageIndex -lt $templateParameters.artistDesktop.value.machineImages.length; $machineImageIndex++) {
     if ($templateParameters.artistDesktop.value.machineImages[$machineImageIndex].customizePipeline[1].inline.length -eq 0) {
         $imageDefinitionName = $templateParameters.artistDesktop.value.machineImages[$machineImageIndex].definitionName
-        $mountCommands = Get-FileSystemMountCommands $imageGallery $imageDefinitionName $storageMounts
-        $templateParameters.artistDesktop.value.machineImages[$machineImageIndex].customizePipeline[1].inline = $mountCommands
+        $storageMountCommands = Get-StorageMountCommands $imageGallery $imageDefinitionName $storageMounts
+        $templateParameters.artistDesktop.value.machineImages[$machineImageIndex].customizePipeline[1].inline = $storageMountCommands
     }
 }
 if ($templateParameters.imageGallery.value.name -eq "") {
