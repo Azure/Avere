@@ -272,7 +272,7 @@ func (m *WarmPathManager) EnsureVmssRunning(ctx context.Context, mountCount int)
 	vmssSubnetId := localVMSubnetId
 	if len(m.vmssSubnet) > 0 {
 		// swap the subnet if the customer requested an alternative subnet
-		SwapResourceName(localVMSubnetId, m.vmssSubnet)
+		vmssSubnetId = SwapResourceName(localVMSubnetId, m.vmssSubnet)
 	}
 
 	cacheWarmerCloudInit := InitializeCloutInit(
