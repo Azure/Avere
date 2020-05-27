@@ -6,7 +6,7 @@ Here is an example:
 
 ```terraform
 module "cachewarmer_submitmultipejobs" {
-  source = "../../../../../modules/cachewarmer_submitmultiplejobs"
+  source = "github.com/Azure/Avere/src/terraform/modules/cachewarmer_submitmultiplejobs"
 
   // authentication with controller
   node_address = local.controller_address
