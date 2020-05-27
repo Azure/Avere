@@ -84,3 +84,11 @@ az image list -g $CUSTOMIMAGE_RESOURCEGROUP --query "[].id"
 5. copy the two image IDs output
 
 Now you can use any of the vFXT examples and pass in for the controller and vfxt image ids.
+
+# Accept Azure Marketplace Terms
+
+If this is your first time deploying a vFXT cluster on Azure you will have to accept the marketplace terms and conditions for the image. Please read the terms and conditions, and if you accept them, you can confirm this via the Azure CLI:
+
+```
+az vm image terms accept --urn microsoft-avere:vfxt:avere-vfxt-controller:latest
+```
