@@ -1,10 +1,6 @@
-# HPC Cache Deployment with an Azure Netapp Volume
+# HPC Cache Deployment with an Azure NetApp Files volume
 
-This example shows how to deploy an HPC Cache mounting 1 NFS Filer.
-
-This example currently uses `azurerm_template_deployment` to deploy a template, but will be replaced soon by a native azurerm module.
-
-This examples configures a render network, controller, and HPC Cache with an Azure Netapp volume as shown in the diagram below:
+This example configures a render network, controller, and HPC Cache with an [Azure NetApp Files](https://azure.microsoft.com/en-us/services/netapp/) volume as shown in the diagram below:
 
 ![The architecture](../../../../../docs/images/terraform/netappfiler-hpcc.png)
 

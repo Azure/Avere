@@ -1,6 +1,6 @@
-# Avere vFXT with an Azure Netapp Volume
+# Avere vFXT with an Azure NetApp Files volume
 
-This examples configures a render network, controller, and vfxt with an Azure Netapp volume as shown in the diagram below:
+This examples configures a render network, controller, and vfxt with an [Azure NetApp Files](https://azure.microsoft.com/en-us/services/netapp/) volume as shown in the diagram below:
 
 ![The architecture](../../../../../docs/images/terraform/netappfiler.png)
 

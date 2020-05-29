@@ -1,10 +1,6 @@
 # HPC Cache Deployment with 1 NFS Filer
 
-This example shows how to deploy an HPC Cache mounting 1 NFS Filer.
-
-This example currently uses `azurerm_template_deployment` to deploy a template, but will be replaced soon by a native azurerm module.
-
-This examples configures a render network, controller, and HPC Cache with 1 filer as shown in the diagram below:
+This example shows how to deploy a render network, controller, and HPC Cache with 1 filer as shown in the diagram below:
 
 ![The architecture](../../../../../docs/images/terraform/1filer-hpcc.png)
 
