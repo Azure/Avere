@@ -60,3 +60,8 @@ variable "subnet_render_clients2_address_prefix" {
     description = "The address prefix used for the second render clients subnet."
     default = "10.0.6.0/23"
 }
+
+variable "module_depends_on" {
+  default = [""]
+  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
+}
