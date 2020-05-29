@@ -97,50 +97,25 @@ resource "azurerm_netapp_pool" "pool" {
   size_in_tb          = local.pool_size_in_tb
 }
 
-locals {
-    // values may be Standard, Premium, Ultra
-    storage_quota_in_bytes = local.volume_storage_quota_in_gb * 1024 * 1024 * 1024
-    // full definition here: https://docs.microsoft.com/en-us/azure/templates/microsoft.netapp/2019-06-01/netappaccounts/capacitypools/volumes
-    arm_template = templatefile("volume.json",
-    {
-        netappaccount       = azurerm_netapp_account.account.name,
-        netapppool          = azurerm_netapp_pool.pool.name,
-        netappvolume        = "netappvolume"
-        location            = azurerm_resource_group.netapprg.location,
-        export_path         = local.export_path
-        service_level       = local.service_level
-        subnet_id           = azurerm_subnet.netapp.id
-        storage_quota_in_bytes = local.storage_quota_in_bytes
-    })
-}
-
-// The only way to destroy a template deployment is to destroy the associated
-// RG, so keep each netapp filer template unique to its RG. 
-resource "azurerm_template_deployment" "netappvolume" {
-  name                = "netappvolumetmpl"
-  resource_group_name = azurerm_resource_group.netapprg.name
-  deployment_mode     = "Incremental"
-  template_body       = local.arm_template
-}
-
-/*
-Due to bug https://github.com/terraform-providers/terraform-provider-azurerm/issues/5416, we are unable to get the mount_adress to pass on, and therefor need template
-resource "azurerm_netapp_volume" "volume" {
-  lifecycle {
-    prevent_destroy = true
-  }
-
-  name                = "example-netappvolume"
+resource "azurerm_netapp_volume" "netappvolume" {
+  name                = "netappvolume"
   location            = azurerm_resource_group.netapprg.location
   resource_group_name = azurerm_resource_group.netapprg.name
   account_name        = azurerm_netapp_account.account.name
   pool_name           = azurerm_netapp_pool.pool.name
   volume_path         = local.export_path
-  service_level       = "Premium"
+  service_level       = local.service_level
   subnet_id           = azurerm_subnet.netapp.id
   protocols           = ["NFSv3"]
-  storage_quota_in_gb = 100
-}*/
+  storage_quota_in_gb = local.volume_storage_quota_in_gb
+
+  export_policy_rule {
+    rule_index = 1
+    allowed_clients = [module.network.vnet_address_space]
+    protocols_enabled = ["NFSv3"]
+    unix_read_write = true
+  }
+}
 
 // the vfxt controller
 module "vfxtcontroller" {
@@ -185,18 +160,12 @@ resource "avere_vfxt" "vfxt" {
 
     core_filer {
         name = "nfs1"
-        fqdn_or_primary_ip = azurerm_template_deployment.netappvolume.outputs["mountIpAddress"]
+        fqdn_or_primary_ip = join(" ", tolist(azurerm_netapp_volume.netappvolume.mount_ip_addresses))
         cache_policy = local.cache_policy
         junction {
-            namespace_path = "/datacache"
+            namespace_path = "/${local.export_path}"
             core_filer_export = "/${local.export_path}"
         }
-        /* add additional junctions by adding another junction block shown below
-        junction {
-            namespace_path = "/nfsdata2"
-            core_filer_export = "/data2"
-        }
-        */
     }
 } 
 
@@ -204,8 +173,8 @@ output "netapp_export_path" {
     value = local.export_path
 }
 
-output "netapp_mount_ip_address" {
-    value = azurerm_template_deployment.netappvolume.outputs["mountIpAddress"]
+output "netapp_addresses" {
+    value = azurerm_netapp_volume.netappvolume.mount_ip_addresses
 }
 
 output "controller_username" {
@@ -220,10 +189,14 @@ output "ssh_command_with_avere_tunnel" {
     value = "ssh -L443:${avere_vfxt.vfxt.vfxt_management_ip}:443 ${module.vfxtcontroller.controller_username}@${module.vfxtcontroller.controller_address}"
 }
 
-output "management_ip" {
+output "vfxt_management_ip" {
     value = avere_vfxt.vfxt.vfxt_management_ip
 }
 
-output "mount_addresses" {
+output "vfxt_mount_addresses" {
     value = tolist(avere_vfxt.vfxt.vserver_ip_addresses)
+}
+
+output "vfxt_export_path" {
+    value = "/${local.export_path}"
 }

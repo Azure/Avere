@@ -23,7 +23,7 @@ Both HPC Cache and Avere vFXT for Azure provide file caching for high-performanc
    2. [Avere vFXT mounting Azure Blob Storage cloud core filer example](examples/vfxt/azureblobfiler)
    3. [Avere vFXT mounting 1 IaaS NAS filer example](examples/vfxt/1-filer)
    4. [Avere vFXT mounting 3 IaaS NAS filers example](examples/vfxt/3-filers)
-   5. [Avere vFXT for Azure mounting an Azure NetApp Files volume](examples/vfxt/netapp)
+   5. [Avere vFXT mounting an Azure NetApp Files volume](examples/vfxt/netapp)
    6. [Avere vFXT extends Azure NetApp Files across regions](examples/vfxt/netapp-across-region)
    7. [Avere vFXT and VDBench example](examples/vfxt/vdbench)
    8. [Avere vFXT and VMSS example](examples/vfxt/vmss)

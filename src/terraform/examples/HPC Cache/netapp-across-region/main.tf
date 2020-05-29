@@ -266,7 +266,7 @@ output "netapp_addresses" {
 }
 
 output "netapp_export" {
-    value = "\"${local.export_path}\""
+    value = "/${local.export_path}"
 }
 
 output "hpccache_mount_addresses" {
