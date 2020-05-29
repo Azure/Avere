@@ -298,11 +298,11 @@ output "netapp_export" {
 }
 
 output "controller_username" {
-    value = module.vfxtcontroller.controller_username}
+    value = module.vfxtcontroller.controller_username
 }
 
 output "controller_address" {
-    value = ${module.vfxtcontroller.controller_address}
+    value = module.vfxtcontroller.controller_address
 }
 
 output "ssh_command_with_avere_tunnel" {
