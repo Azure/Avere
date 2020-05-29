@@ -1,6 +1,8 @@
 resource "azurerm_resource_group" "render_rg" {
     name     = var.resource_group_name
     location = var.location
+
+    depends_on = [var.module_depends_on]
 }
 
 // the following is only needed if you need to ssh to the controller
