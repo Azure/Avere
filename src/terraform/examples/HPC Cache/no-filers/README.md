@@ -1,9 +1,5 @@
 # HPC Cache Deployment with no Filers
 
-This example shows how to deploy an HPC Cache by itself.
-
-This example currently uses `azurerm_template_deployment` to deploy a template, but will be replaced soon by a native azurerm module.
-
 This examples configures a render network, controller, and HPC Cache without any filers as shown in the diagram below:
 
 ![The architecture](../../../../../docs/images/terraform/nofiler-hpcc.png)
