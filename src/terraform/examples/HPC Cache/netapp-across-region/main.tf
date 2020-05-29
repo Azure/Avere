@@ -258,7 +258,7 @@ resource "azurerm_hpc_cache_nfs_target" "nfs_targets" {
     target_path    = ""
   }
 
-  depends_on = [azurerm_virtual_network_gateway_connection.render_to_filer.id, azurerm_virtual_network_gateway_connection.filer_to_render.id]
+  depends_on = [azurerm_virtual_network_gateway_connection.render_to_filer, azurerm_virtual_network_gateway_connection.filer_to_render]
 }
 
 output "netapp_addresses" {
