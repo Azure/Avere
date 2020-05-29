@@ -8,7 +8,7 @@ output "vnet_name" {
   value       = azurerm_virtual_network.vnet.name
 }
 
-variable "vnet_address_space" {
+output "vnet_address_space" {
   description = "The full address space of the virtual network"
   value = var.vnet_address_space
 }
