@@ -7,6 +7,7 @@ locals {
     // netapp filer details
     filer_location = "westus2"
     filer_resource_group_name = "filer_resource_group"
+    netapp_account_name = "netappaccount"
     export_path = "data"
     // possible values are Standard, Premium, Ultra
     service_level = "Premium"
@@ -107,7 +108,7 @@ resource "azurerm_subnet" "netapp" {
 }
 
 resource "azurerm_netapp_account" "account" {
-  name                = "netappaccount"
+  name                = local.netapp_account_name
   location            = azurerm_resource_group.nfsfiler.location
   resource_group_name = azurerm_resource_group.nfsfiler.name
 }
@@ -253,7 +254,7 @@ resource "avere_vfxt" "vfxt" {
     // terraform is not creating the implicit dependency on the controller module
     // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
     // to work around, add the explicit dependency
-    depends_on = [module.vfxtcontroller]
+    depends_on = [module.vfxtcontroller, azurerm_virtual_network_gateway_connection.render_to_filer.id, azurerm_virtual_network_gateway_connection.filer_to_render.id]
 
     location = local.location
     azure_resource_group = local.vfxt_resource_group_name
@@ -278,8 +279,8 @@ resource "avere_vfxt" "vfxt" {
           "nfsConnMult YW 16", // put against heavy duty nfs
         ]
         junction {
-            namespace_path = "/${local.filer_export}"
-            core_filer_export = "/${local.filer_export}"
+            namespace_path = "/${local.export_path}"
+            core_filer_export = "/${local.export_path}"
         }
     }
 }
@@ -321,5 +322,5 @@ output "vfxt_mount_addresses" {
 }
 
 output "vfxt_export_path" {
-    value = "/${local.filer_export}"
+    value = "/${local.export_path}"
 }
