@@ -16,7 +16,7 @@ locals {
   // the following are the arguments to be passed to the custom script
   windows_custom_script_arguments = "$arguments = '-UserName ${local.vm_admin_username}' ; "
 
-  // load the powershell file, you can substitue kv pairs as you need them, but 
+  // load the powershell file, you can substitute kv pairs as you need them, but 
   // use arguments where possible
   powershell_script = templatefile("${path.module}/setupMachine.ps1", {})
 }

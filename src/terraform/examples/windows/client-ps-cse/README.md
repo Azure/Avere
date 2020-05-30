@@ -63,11 +63,11 @@ The loaded file is gzipped and base64 encoded and passed to the `custom_data` ar
 
 The following is the plumbing to execute the powershell script.  This code should not need to be modified.  The script does the folllowing:
 
-1. unzips the powershell script to file `c:\AzureData\CustomDataSetupScript.ps1`
+1. unzips the powershell script to file `C:\AzureData\CustomDataSetupScript.ps1`
 
 2. executes the script using the unrestricted policy.  The script will execute in the starting directory under `C:\WindowsAzure\Logs\Plugins\Microsoft.Compute.CustomScriptExtension\1.10.8`
 
-3. all stdout and stderr output is logged to c:\AzureData\CustomDataSetupScript.log
+3. all stdout and stderr output is logged to `C:\AzureData\CustomDataSetupScript.log`
 
 
 ```terraform
