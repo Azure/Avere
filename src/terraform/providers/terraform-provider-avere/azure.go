@@ -339,7 +339,7 @@ func getAzCliGetStorageAuthKeyCommand(avereVfxt *AvereVfxt, accountName string) 
 }
 
 func getAzCliGetStorageKeyCommand(avereVfxt *AvereVfxt, accountName string) string {
-	return WrapCommandForLoggingSecret(fmt.Sprintf("%s %s", getAzCliProxyExports(avereVfxt.ProxyUri), getAzCliGetStorageKeyCommandRaw(accountName)), AzCliLogFile)
+	return WrapCommandForLoggingSecretOutput(fmt.Sprintf("%s %s", getAzCliProxyExports(avereVfxt.ProxyUri), getAzCliGetStorageKeyCommandRaw(accountName)), AzCliLogFile)
 }
 
 func getAzCliCreateStorageContainerCommand(avereVfxt *AvereVfxt, accountName string, container string) string {

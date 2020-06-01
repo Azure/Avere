@@ -76,8 +76,12 @@ func WrapCommandForLogging(cmd string, outputfile string) string {
 	return fmt.Sprintf("echo $'\n'$(date) '%s' %s >> %s && %s 1> >(tee -a %s) 2> >(tee -a %s >&2)", strings.ReplaceAll(cmd, "'", "\""), GetScrubPasswordCommand(), outputfile, cmd, outputfile, outputfile)
 }
 
+func WrapCommandForLoggingSecretInput(nonSecretCmd string, secretCmd string, outputfile string) string {
+	return fmt.Sprintf("echo $'\n'$(date) '%s' %s >> %s && %s 1> >(tee -a %s) 2> >(tee -a %s >&2)", strings.ReplaceAll(nonSecretCmd, "'", "\""), GetScrubPasswordCommand(), outputfile, secretCmd, outputfile, outputfile)
+}
+
 // do not log output if secrets are present
-func WrapCommandForLoggingSecret(cmd string, outputfile string) string {
+func WrapCommandForLoggingSecretOutput(cmd string, outputfile string) string {
 	return fmt.Sprintf("echo $'\n'$(date) '%s' %s >> %s && %s 2> >(tee -a %s >&2)", strings.ReplaceAll(cmd, "'", "\""), GetScrubPasswordCommand(), outputfile, cmd, outputfile)
 }
 

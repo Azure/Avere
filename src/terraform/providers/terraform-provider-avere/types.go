@@ -84,6 +84,12 @@ type Alert struct {
 	Message  string `json:"message"`
 }
 
+type User struct {
+	Name       string `json:"name"`
+	Permission string `json:"permission"`
+	Password   string
+}
+
 type CoreFilerGeneric struct {
 	Name         string `json:"name"`
 	NetworkName  string `json:"networkName"`

@@ -518,6 +518,35 @@ func (a *AvereVfxt) EnsureCachePolicyExists(cachePolicy string, checkAttributes 
 	return nil
 }
 
+func (a *AvereVfxt) ListNonAdminUsers() (map[string]*User, error) {
+	usersJson, err := a.AvereCommand(a.getGetAdminListUsersJsonCommand())
+	if err != nil {
+		return nil, err
+	}
+	var users []User
+	if err := json.Unmarshal([]byte(usersJson), &users); err != nil {
+		return nil, err
+	}
+	results := make(map[string]*User)
+	for _, user := range users {
+		// only add the non-admin users
+		if user.Name != AdminUserName {
+			results[user.Name] = &user
+		}
+	}
+	return results, nil
+}
+
+func (a *AvereVfxt) AddUser(user *User) error {
+	_, err := a.AvereCommand(a.getGetAdminAddUserJsonCommand(user.Name, user.Password, user.Permission))
+	return err
+}
+
+func (a *AvereVfxt) RemoveUser(user *User) error {
+	_, err := a.AvereCommand(a.getGetAdminRemoveUserJsonCommand(user.Name))
+	return err
+}
+
 func (a *AvereVfxt) EnsureCachePolicy(corefiler *CoreFiler) error {
 	switch corefiler.CachePolicy {
 	case CachePolicyClientsBypass:
@@ -1026,6 +1055,19 @@ func (a *AvereVfxt) getSetNtpServersCommand(ntpServers string) string {
 
 func (a *AvereVfxt) getGetActiveAlertsJsonCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json alert.getActive", a.getBaseAvereCmd()), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getGetAdminListUsersJsonCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json admin.listUsers", a.getBaseAvereCmd()), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getGetAdminAddUserJsonCommand(name string, password string, permission string) string {
+	nonSecretAddUserBase := fmt.Sprintf("%s --json admin.addUser '%s' '%s'", a.getBaseAvereCmd(), name, permission)
+	return WrapCommandForLoggingSecretInput(nonSecretAddUserBase, fmt.Sprintf("%s '%s'", nonSecretAddUserBase, password), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getGetAdminRemoveUserJsonCommand(name string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json admin.removeUser '%s'", a.getBaseAvereCmd(), name), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getUnwrappedFilersJsonCommand() string {

@@ -28,6 +28,11 @@ const (
 	CachePolicyIsolatedCloudWorkstationCheckAttributes      = "{}"
 	CachePolicyCollaboratingCloudWorkstationCheckAttributes = "{'checkAttrPeriod':30,'checkDirAttrPeriod':30}"
 
+	// user policies for admin.addUser Avere xml rpc call
+	UserReadOnly  = "ro"
+	UserReadWrite = "rw"
+	AdminUserName = "admin"
+
 	// filer class
 	FilerClassNetappNonClustered = "NetappNonClustered"
 	FilerClassNetappClustered    = "NetappClustered"
@@ -97,6 +102,10 @@ const (
 	global_custom_settings       = "global_custom_settings"
 	vserver_settings             = "vserver_settings"
 	enable_support_uploads       = "enable_support_uploads"
+	user                         = "user"
+	name                         = "name"
+	password                     = "password"
+	permission                   = "permission"
 	core_filer                   = "core_filer"
 	core_filer_name              = "name"
 	fqdn_or_primary_ip           = "fqdn_or_primary_ip"

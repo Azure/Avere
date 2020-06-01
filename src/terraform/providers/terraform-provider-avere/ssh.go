@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os/user"
+	osuser "os/user"
 	"sync"
 	"time"
 
@@ -25,7 +25,7 @@ func GetPasswordAuthMethod(password string) ssh.AuthMethod {
 }
 
 func GetKeyFileAuthMethod() (authMethod ssh.AuthMethod, err error) {
-	usr, _ := user.Current()
+	usr, _ := osuser.Current()
 	file := usr.HomeDir + "/.ssh/id_rsa"
 	buf, err := ioutil.ReadFile(file)
 	if err != nil {
