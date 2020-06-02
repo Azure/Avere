@@ -12,18 +12,21 @@ import (
 	"strings"
 )
 
-func GetVfxtTerraform(avereVfxt AvereVfxt, coreFilers []CoreFiler, storageFilers []AzureStorageFiler, customSettings map[string][]string, junctions map[string][]Junction) string {
+func GetVfxtTerraform(avereVfxt AvereVfxt, users []User, coreFilers []CoreFiler, storageFilers []AzureStorageFiler, customSettings map[string][]string, junctions map[string][]Junction) string {
 	mainBody := getVfxtBase()
 	vfxtSettings := getVfxtSettings(avereVfxt, customSettings)
+	userSettings := getUserSettings(users)
 	coreFilerJunctions := getCoreFilerJunctions(coreFilers, customSettings, junctions)
 	cloudFilerJunctions := getCloudFilerJunctions(storageFilers, customSettings, junctions)
-	return fmt.Sprintf(mainBody, vfxtSettings, coreFilerJunctions, cloudFilerJunctions)
+	return fmt.Sprintf(mainBody, vfxtSettings, userSettings, coreFilerJunctions, cloudFilerJunctions)
 }
 
 const (
 	UsageModelWriteAround     = "WRITE_AROUND"
 	UsageModelReadHeavyInfreq = "READ_HEAVY_INFREQ"
 	UsageModelWriteWorkload   = "WRITE_WORKLOAD_15"
+
+	TemporaryUserPassword = "ReplacePassword"
 )
 
 func getHPCCacheBase() string {
@@ -239,7 +242,9 @@ resource "avere_vfxt" "vfxt" {
 
     // vFXT settings
 %s
-    // core filer junctions
+	// user settings
+%s
+	// core filer junctions
 %s
     // cloud filer junctions
 %s
@@ -318,6 +323,20 @@ func getVfxtSettings(avereVfxt AvereVfxt, customSettings map[string][]string) st
 	sb.WriteString("    // support uploads enable Avere support staff to provide the best possible support\n")
 	sb.WriteString("    // by setting to true, you agree to the privacy policy https://privacy.microsoft.com/en-us/privacystatement\n")
 	sb.WriteString("    enable_support_uploads = false\n")
+
+	return sb.String()
+}
+
+func getUserSettings(users []User) string {
+	var sb strings.Builder
+
+	for _, user := range users {
+		sb.WriteString("	user {\n")
+		sb.WriteString(fmt.Sprintf("        name = \"%s\"\n", user.Name))
+		sb.WriteString(fmt.Sprintf("        password = \"%s\"\n", user.Password))
+		sb.WriteString(fmt.Sprintf("        permission = \"%s\"\n", user.Permission))
+		sb.WriteString("    }\n")
+	}
 
 	return sb.String()
 }
@@ -554,6 +573,27 @@ func FillAvereVfxtFromBackupFile(lines []string) (AvereVfxt, error) {
 	return avereVfxt, nil
 }
 
+func FillUsersFromBackupFile(lines []string) ([]User, error) {
+	users := make([]User, 0)
+
+	UserMatch := 1
+	PermissionsMatch := 2
+
+	userRegEx := regexp.MustCompile(`averecmd admin.addUser ([^ ]*) ([^ ]*)`)
+	for _, line := range lines {
+		matches := userRegEx.FindStringSubmatch(line)
+		if len(matches) > PermissionsMatch && len(matches[UserMatch]) > 0 && (matches[PermissionsMatch] == UserReadOnly || matches[PermissionsMatch] == UserReadWrite) {
+			user := User{
+				Name:       matches[1],
+				Password:   TemporaryUserPassword,
+				Permission: matches[2],
+			}
+			users = append(users, user)
+		}
+	}
+	return users, nil
+}
+
 func FillCoreFilers(lines []string) ([]CoreFiler, error) {
 	results := make([]CoreFiler, 0)
 
@@ -631,48 +671,52 @@ func FillJunctions(lines []string, storageFilerNametoAccountMapping map[string]s
 	return junctions, nil
 }
 
-func GetModels(vfxtBackupDirectory string) (avereVfxt AvereVfxt, coreFilers []CoreFiler, storageFilers []AzureStorageFiler, customSettings map[string][]string, junctions map[string][]Junction, err error) {
+func GetModels(vfxtBackupDirectory string) (avereVfxt AvereVfxt, users []User, coreFilers []CoreFiler, storageFilers []AzureStorageFiler, customSettings map[string][]string, junctions map[string][]Junction, err error) {
 	masses, err := GetMasses(vfxtBackupDirectory)
 	if err != nil {
-		return avereVfxt, coreFilers, storageFilers, customSettings, junctions, err
+		return avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, err
 	}
 
 	if customSettings, err = GetCustomSettings(vfxtBackupDirectory, masses); err != nil {
-		return avereVfxt, coreFilers, storageFilers, customSettings, junctions, err
+		return avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, err
 	}
 
 	backupFileLines, err := GetBackupLines(vfxtBackupDirectory)
 	if err != nil {
-		return avereVfxt, coreFilers, storageFilers, customSettings, junctions, err
+		return avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, err
 	}
 
 	if avereVfxt, err = FillAvereVfxtFromBackupFile(backupFileLines); err != nil {
-		return avereVfxt, coreFilers, storageFilers, customSettings, junctions, err
+		return avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, err
+	}
+
+	if users, err = FillUsersFromBackupFile(backupFileLines); err != nil {
+		return avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, err
 	}
 
 	if coreFilers, err = FillCoreFilers(backupFileLines); err != nil {
-		return avereVfxt, coreFilers, storageFilers, customSettings, junctions, err
+		return avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, err
 	}
 
 	var storageFilerNametoAccountMapping map[string]string
 	if storageFilers, storageFilerNametoAccountMapping, err = FillAzureStorageFilers(backupFileLines); err != nil {
-		return avereVfxt, coreFilers, storageFilers, customSettings, junctions, err
+		return avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, err
 	}
 
 	if junctions, err = FillJunctions(backupFileLines, storageFilerNametoAccountMapping); err != nil {
-		return avereVfxt, coreFilers, storageFilers, customSettings, junctions, err
+		return avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, err
 	}
 
-	return avereVfxt, coreFilers, storageFilers, customSettings, junctions, nil
+	return avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, nil
 }
 
 func WriteTerraformFiles(vfxtBackupDirectory string) error {
-	avereVfxt, coreFilers, storageFilers, customSettings, junctions, err := GetModels(vfxtBackupDirectory)
+	avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, err := GetModels(vfxtBackupDirectory)
 	if err != nil {
 		return nil
 	}
 
-	tf := GetVfxtTerraform(avereVfxt, coreFilers, storageFilers, customSettings, junctions)
+	tf := GetVfxtTerraform(avereVfxt, users, coreFilers, storageFilers, customSettings, junctions)
 
 	file, err := os.OpenFile(VfxtTerraformFilename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
