@@ -20,6 +20,11 @@ locals {
     vfxt_cluster_name = "vfxt"
     vfxt_cluster_password = "VFXT_PASSWORD"
 
+    // add a read-only user
+    rouser = "rouser"
+    rouser_pw = "rouserpassword"
+    rouser_permissions = "ro"
+
     // advanced scenario: vfxt and controller image ids, leave this null, unless not using default marketplace
     controller_image_id = null
     vfxt_image_id       = null
@@ -80,6 +85,11 @@ resource "avere_vfxt" "vfxt" {
     vfxt_node_count = 3
     image_id = local.vfxt_image_id
 
+    user {
+        name = local.rouser
+        password = local.rouser_pw
+        permission = local.rouser_permissions
+    }
 } 
 
 output "controller_username" {

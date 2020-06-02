@@ -796,23 +796,25 @@ func updateUsers(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 		for key, oldVal := range oldUsers {
 			existingVal, existingOK := existingUsers[key]
 
-			// check if user was removed
-			if newVal, ok := newUsers[key]; !ok {
-				if !existingOK {
-					removalList[key] = oldVal
-				}
+			// check if user was removed and still exists
+			if newVal, ok := newUsers[key]; !ok && existingOK {
+				removalList[key] = oldVal
 				// check if user was modified
-			} else if !newVal.IsEqual(oldVal) || (existingOK && !newVal.IsEqualNoPassword(existingVal)) {
-				if !existingOK {
+			} else if ok && (!newVal.IsEqual(oldVal) || (existingOK && !newVal.IsEqualNoPassword(existingVal))) {
+				if existingOK {
 					removalList[key] = oldVal
 				}
+				additionList[key] = newVal
+				// add if the user was missing
+			} else if ok && !existingOK {
 				additionList[key] = newVal
 			}
 		}
 
 		// compare cluster existing to new
 		for key, existingVal := range existingUsers {
-			if _, oldOK := oldUsers[key]; !oldOK {
+			if _, oldOK := oldUsers[key]; oldOK {
+				// this was in the model, and already evaluated
 				continue
 			}
 			// check if the user exists on Avere and is removed in the model
@@ -820,7 +822,7 @@ func updateUsers(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 				removalList[key] = existingVal
 
 				// check if user exists on Avere and is modified from the model's values
-			} else if newVal.IsEqualNoPassword(existingVal) {
+			} else if !newVal.IsEqualNoPassword(existingVal) {
 				removalList[key] = existingVal
 				additionList[key] = newVal
 			}
@@ -1245,12 +1247,6 @@ func resourceAvereUserReferenceHash(v interface{}) int {
 	var buf bytes.Buffer
 	if m, ok := v.(map[string]interface{}); ok {
 		if v, ok := m[name]; ok {
-			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
-		}
-		if v, ok := m[password]; ok {
-			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
-		}
-		if v, ok := m[permission]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
 	}
