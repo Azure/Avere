@@ -190,6 +190,34 @@ func resourceVfxt() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			user: {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						name: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: ValidateUserName,
+						},
+						password: {
+							Type:         schema.TypeString,
+							Required:     true,
+							Sensitive:    true,
+							ValidateFunc: validation.StringLenBetween(1, 36),
+						},
+						permission: {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								UserReadOnly,
+								UserReadWrite,
+							}, false),
+						},
+					},
+				},
+				Set: resourceAvereUserReferenceHash,
+			},
 			core_filer: {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -352,6 +380,10 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	if err := createUsers(d, avereVfxt); err != nil {
+		return err
+	}
+
 	// add the new filers
 	existingCoreFilers := make(map[string]*CoreFiler)
 	coreFilersToAdd, coreFilersToModify, err := getCoreFilersToAddorModify(d, existingCoreFilers, existingCoreFilers)
@@ -467,6 +499,12 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 		if err := createVServerSettings(d, avereVfxt); err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange(user) {
+		if err := updateUsers(d, avereVfxt); err != nil {
 			return err
 		}
 	}
@@ -726,6 +764,107 @@ func deleteVServerSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 	return nil
 }
 
+func createUsers(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
+	new := d.Get(user)
+	newUsers, err := expandUsers(new.(*schema.Set).List())
+	if err != nil {
+		return err
+	}
+	return addUsers(newUsers, avereVfxt)
+}
+
+func updateUsers(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
+	if d.HasChange(user) {
+		old, new := d.GetChange(user)
+		oldUsers, err := expandUsers(old.(*schema.Set).List())
+		if err != nil {
+			return err
+		}
+		newUsers, err := expandUsers(new.(*schema.Set).List())
+		if err != nil {
+			return err
+		}
+		existingUsers, err := avereVfxt.ListNonAdminUsers()
+		if err != nil {
+			return err
+		}
+
+		removalList := make(map[string]*User)
+		additionList := make(map[string]*User)
+
+		// compare the old model to new
+		for key, oldVal := range oldUsers {
+			existingVal, existingOK := existingUsers[key]
+
+			// check if user was removed
+			if newVal, ok := newUsers[key]; !ok {
+				if !existingOK {
+					removalList[key] = oldVal
+				}
+				// check if user was modified
+			} else if !newVal.IsEqual(oldVal) || (existingOK && !newVal.IsEqualNoPassword(existingVal)) {
+				if !existingOK {
+					removalList[key] = oldVal
+				}
+				additionList[key] = newVal
+			}
+		}
+
+		// compare cluster existing to new
+		for key, existingVal := range existingUsers {
+			if _, oldOK := oldUsers[key]; !oldOK {
+				continue
+			}
+			// check if the user exists on Avere and is removed in the model
+			if newVal, ok := newUsers[key]; !ok {
+				removalList[key] = existingVal
+
+				// check if user exists on Avere and is modified from the model's values
+			} else if newVal.IsEqualNoPassword(existingVal) {
+				removalList[key] = existingVal
+				additionList[key] = newVal
+			}
+		}
+
+		// find the new users
+		for key, newVal := range newUsers {
+			_, existingOK := existingUsers[key]
+
+			if _, ok := oldUsers[key]; !ok && !existingOK {
+				additionList[key] = newVal
+			}
+		}
+
+		if err := removeUsers(removalList, avereVfxt); err != nil {
+			return err
+		}
+
+		if err := addUsers(additionList, avereVfxt); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func addUsers(users map[string]*User, avereVfxt *AvereVfxt) error {
+	for _, u := range users {
+		if err := avereVfxt.AddUser(u); err != nil {
+			return fmt.Errorf("ERROR: failed to add user'%s': %s", u.Name, err)
+		}
+	}
+	return nil
+}
+
+func removeUsers(users map[string]*User, avereVfxt *AvereVfxt) error {
+	for _, u := range users {
+		if err := avereVfxt.RemoveUser(u); err != nil {
+			return fmt.Errorf("ERROR: failed to remove user'%s': %s", u.Name, err)
+		}
+	}
+	return nil
+}
+
 func getCoreFilersToDelete(d *schema.ResourceData, existingCoreFilers map[string]*CoreFiler) (results map[string]*CoreFiler, err error) {
 	results = make(map[string]*CoreFiler)
 	new := d.Get(core_filer)
@@ -956,6 +1095,30 @@ func scaleCluster(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 	return nil
 }
 
+func expandUsers(l []interface{}) (map[string]*User, error) {
+	results := make(map[string]*User)
+	for _, v := range l {
+		input := v.(map[string]interface{})
+		name := input[name].(string)
+		password := input[password].(string)
+		permission := input[permission].(string)
+
+		// verify no duplicates
+		if _, ok := results[name]; ok {
+			return nil, fmt.Errorf("Error: two or more admin users share the same key '%s'", name)
+		}
+
+		user := &User{
+			Name:       name,
+			Password:   password,
+			Permission: permission,
+		}
+
+		results[name] = user
+	}
+	return results, nil
+}
+
 func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 	results := make(map[string]*CoreFiler)
 	for _, v := range l {
@@ -1078,6 +1241,22 @@ func expandAzureStorageFilerJunctions(l []interface{}, results map[string]*Junct
 	return nil
 }
 
+func resourceAvereUserReferenceHash(v interface{}) int {
+	var buf bytes.Buffer
+	if m, ok := v.(map[string]interface{}); ok {
+		if v, ok := m[name]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m[password]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m[permission]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+	}
+	return hashcode.String(buf.String())
+}
+
 func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
 	var buf bytes.Buffer
 
@@ -1176,7 +1355,8 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 		}
 	}
 
-	// set
+	// user parameters do not need ascii check since they have custom validation functions
+
 	for _, v := range d.Get(core_filer).(*schema.Set).List() {
 		input := v.(map[string]interface{})
 		corefilerSlice := []string{
@@ -1260,6 +1440,21 @@ func ValidateExportSubdirectory(v interface{}, _ string) (warnings []string, err
 
 	if len(input) > 0 && !regexp.MustCompile(`^[^\/]`).MatchString(input) {
 		errors = append(errors, fmt.Errorf("%s (%s) must not begin with a '/'", export_subdirectory, input))
+	}
+
+	return warnings, errors
+}
+
+// ValidateAutomationRunbookName validates Automation Account Runbook names
+func ValidateUserName(v interface{}, _ string) (warnings []string, errors []error) {
+	input := v.(string)
+
+	if input == AdminUserName {
+		errors = append(errors, fmt.Errorf("the name specified for user must not be reserved user '%s'", AdminUserName))
+	}
+
+	if !regexp.MustCompile(`^[0-9a-zA-Z]{1,60}$`).MatchString(input) {
+		errors = append(errors, fmt.Errorf("the user name '%s' is invalid, and may only alphanumeric characters and be 1 to 60 characters in length", input))
 	}
 
 	return warnings, errors

@@ -115,9 +115,19 @@ The following arguments are supported:
   Azure will take the first 4 address (eg. .0-.3 on a /24), and the controller and Avere vFXT will take 2+(n*2) ip addresses where n is the value set in [vfxt_node_count](#vfxt_node_count) (eg. .4-.10 on a /24 subnet).  Also at the end of the range, Azure will consume the broadcast address (eg. .255 on a /24 subnet).  More details on Azure reserved subnets in the [virtual networks faq](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-faq#are-there-any-restrictions-on-using-ip-addresses-within-these-subnets).  The default is to let the deployment automatically add the vserver ip addresses.  Note: cluster re-created if modified.
 * <a name="global_custom_settings"></a>[global_custom_settings](#global_custom_settings) - (Optional) these are custom settings provided by Avere support to match advanced use case scenarios.  They are a list of strings of the form "SETTINGNAME CHECKCODE VALUE".
 * <a name="vserver_settings"></a>[vserver_settings](#vserver_settings) - (Optional) these are custom settings provided by Avere support to match advanced use case scenarios.  They are a list of strings of the form "SETTINGNAME CHECKCODE VALUE".  Do not prefix with the vserver as it is automatically detected.
+* [user](#user) - (Optional) zero or more user blocks to add additional users in addition to the existing admin user role.
 * [azure_storage_filer](#azure_storage_filer) - (Optional) zero or more storage filer blocks used to specify zero or more [Azure Blob Storage Cloud core filers](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-deploy-plan#cloud-core-filers).
 * [core_filer](#core_filer) - (Optional) zero or more storage filer blocks used to specify zero or more [NFS filers](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-deploy-plan#hardware-core-filers)
 * <a name="enable_support_uploads"></a>[enable_support_uploads](#enable_support_uploads) - (Optional) This setting defaults to 'false' and by setting to 'true' you agree to the [Privacy Policy](https://privacy.microsoft.com/en-us/privacystatement) of the Avere vFXT.  This enables support exactly as described in the [Enable Support Uploads documentation](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-enable-support).  Avere vFXT for Azure can automatically upload support data about your cluster. These uploads let support staff provide the best possible customer service.
+---
+
+A <a name="user"></a>`user` block supports the following
+* <a name="user"></a>[user](#user) - (Required) the user name, must not be blank, or match with an existing user including the `admin` username.  The username can contain only alphanumeric characters and must have a length of no more than 60 characters.
+* <a name="password"></a>[password](#password) - (Required) The user's password.  The password must have a length of no more than 36 characters.
+* <a name="permission"></a>[permission](#permission) - (Required)  One of the following:
+    * 'rw' for read-write administrative access,
+    * 'ro' for read-only administrative access
+
 ---
 
 A <a name="azure_storage_filer"></a>`azure_storage_filer` block supports the following
