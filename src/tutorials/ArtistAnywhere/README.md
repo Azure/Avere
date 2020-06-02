@@ -6,11 +6,11 @@ Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager 
 
 Azure Artist Anywhere is composed of the following Microsoft Azure resource deployment modules.
 
-| Foundation | Storage & Cache | Render Managers | Render Workers | Artist Desktops |
+| Virtual Network | Storage Cache | Render Managers | Render Workers | Artist Desktops |
 | - | - | - | - | - |
-| [00 - Network](00-Network.json) | [03 - Storage (NetApp)](StorageCache/03-Storage.NetApp.json) | [05 - Manager Data](RenderManager/05-Manager.Data.json) | [08 - Worker Images](RenderWorker/08-Worker.Images.json) | [10 - Desktop Images](ArtistDesktop/10-Desktop.Images.json) |
-| [01 - Access Control](01-Access.Control.json) | [03 - Storage (Object)](StorageCache/03-Storage.Object.json) | [06 - Manager Images](RenderManager/06-Manager.Images.json) | [09 - Worker Machines](RenderWorker/09-Worker.Machines.json) | [11 - Desktop Machines](ArtistDesktop/11-Desktop.Machines.json) |
-| [02 - Image Gallery](02-Image.Gallery.json) | [04 - Cache (HPC)](StorageCache/04-Cache.json) | [07 - Manager Machines](RenderManager/07-Manager.Machines.json) | [09 - Worker Machines Extension Script (Linux)](RenderWorker/09-Worker.Machines.sh) | [11 - Desktop Machines Extension Script (Linux)](ArtistDesktop/11-Desktop.Machines.sh) |
+| [00 - Network](VirtualNetwork/00-Network.json) | [03 - Storage (NetApp)](StorageCache/03-Storage.NetApp.json) | [05 - Manager Data](RenderManager/05-Manager.Data.json) | [08 - Worker Images](RenderWorker/08-Worker.Images.json) | [10 - Desktop Images](ArtistDesktop/10-Desktop.Images.json) |
+| [01 - Access Control](VirtualNetwork/01-Access.Control.json) | [03 - Storage (Object)](StorageCache/03-Storage.Object.json) | [06 - Manager Images](RenderManager/06-Manager.Images.json) | [09 - Worker Machines](RenderWorker/09-Worker.Machines.json) | [11 - Desktop Machines](ArtistDesktop/11-Desktop.Machines.json) |
+| [02 - Image Gallery](VirtualNetwork/02-Image.Gallery.json) | [04 - Cache (HPC)](StorageCache/04-Cache.json) | [07 - Manager Machines](RenderManager/07-Manager.Machines.json) | [09 - Worker Machines Extension Script (Linux)](RenderWorker/09-Worker.Machines.sh) | [11 - Desktop Machines Extension Script (Linux)](ArtistDesktop/11-Desktop.Machines.sh) |
 | | | [07 - Manager Machines Extension Script (Linux)](RenderManager/07-Manager.Machines.sh) | | [11 - Desktop Machines Extension Script (Windows)](ArtistDesktop/11-Desktop.Machines.ps1) |
 
 ## Solution Architecture

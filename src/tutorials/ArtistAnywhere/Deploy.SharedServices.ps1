@@ -25,6 +25,8 @@ if (!$templateDirectory) {
 
 Import-Module "$templateDirectory/Deploy.psm1"
 
+$moduleDirectory = "VirtualNetwork"
+
 # 00 - Network
 $computeNetworks = @()
 $moduleName = "00 - Network"
@@ -37,8 +39,8 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
     $resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionName
     if (!$resourceGroup) { return }
 
-    $templateResources = "$templateDirectory/00-Network.json"
-    $templateParameters = "$templateDirectory/00-Network.Parameters.$computeRegionName.json"
+    $templateResources = "$templateDirectory/$moduleDirectory/00-Network.json"
+    $templateParameters = "$templateDirectory/$moduleDirectory/00-Network.Parameters.$computeRegionName.json"
 
     $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
     if (!$groupDeployment) { return }
@@ -58,8 +60,8 @@ $resourceGroupName = Get-ResourceGroupName $resourceGroupNamePrefix
 $resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 if (!$resourceGroup) { return }
 
-$templateResources = "$templateDirectory/01-Access.Control.json"
-$templateParameters = (Get-Content "$templateDirectory/01-Access.Control.Parameters.json" -Raw | ConvertFrom-Json).parameters
+$templateResources = "$templateDirectory/$moduleDirectory/01-Access.Control.json"
+$templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/01-Access.Control.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
 if ($templateParameters.virtualNetwork.value.name -eq "") {
     $templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
@@ -86,8 +88,8 @@ $resourceGroupName = Get-ResourceGroupName $resourceGroupNamePrefix $resourceGro
 $resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
 if (!$resourceGroup) { return }
 
-$templateResources = "$templateDirectory/02-Image.Gallery.json"
-$templateParameters = (Get-Content "$templateDirectory/02-Image.Gallery.Parameters.json" -Raw | ConvertFrom-Json).parameters
+$templateResources = "$templateDirectory/$moduleDirectory/02-Image.Gallery.json"
+$templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/02-Image.Gallery.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
 if ($templateParameters.imageBuilder.value.userPrincipalId -eq "") {
     $templateParameters.imageBuilder.value.userPrincipalId = $managedIdentity.userPrincipalId
