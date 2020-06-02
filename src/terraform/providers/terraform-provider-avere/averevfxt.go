@@ -531,7 +531,10 @@ func (a *AvereVfxt) ListNonAdminUsers() (map[string]*User, error) {
 	for _, user := range users {
 		// only add the non-admin users
 		if user.Name != AdminUserName {
-			results[user.Name] = &user
+			// add to a new user to get a valid ptr, otherwise the range changes the pointer value
+			// and corrupts the results
+			addUser := user
+			results[addUser.Name] = &addUser
 		}
 	}
 	return results, nil

@@ -4,6 +4,8 @@ This examples configures a render network, controller, and vfxt without any file
 
 ![The architecture with no filers](../../../../../docs/images/terraform/nofiler.png)
 
+This example also adds a read-only user.
+
 ## Deployment Instructions
 
 To run the example, execute the following instructions.  This assumes use of Azure Cloud Shell, but you can use in your own environment, ensure you install the vfxt provider as described in the [build provider instructions](../../../providers/terraform-provider-avere#build-the-terraform-provider-binary).  However, if you are installing into your own environment, you will need to follow the [instructions to setup terraform for the Azure environment](https://docs.microsoft.com/en-us/azure/terraform/terraform-install-configure).
