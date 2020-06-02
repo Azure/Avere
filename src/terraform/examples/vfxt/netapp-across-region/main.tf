@@ -265,19 +265,10 @@ resource "avere_vfxt" "vfxt" {
     vfxt_admin_password = local.vfxt_cluster_password
     vfxt_node_count = 3
 
-    global_custom_settings = [
-      "cluster.ctcConnMult CE 25"
-    ]
-    
     core_filer {
         name = "nfs1"
         fqdn_or_primary_ip = join(" ", tolist(azurerm_netapp_volume.netappvolume.mount_ip_addresses))
         cache_policy = local.cache_policy
-        custom_settings = [
-          "always_forward OZ 1", // only a single copy, ensures cluster capacity is the cache capacity
-          "autoWanOptimize YF 2", // over WAN (via VPN or express route)
-          "nfsConnMult YW 16", // put against heavy duty nfs
-        ]
         junction {
             namespace_path = "/${local.export_path}"
             core_filer_export = "/${local.export_path}"
