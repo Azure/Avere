@@ -37,17 +37,11 @@ resource "avere_vfxt" "vfxt" {
     vfxt_cluster_name = local.vfxt_cluster_name
     vfxt_admin_password = local.vfxt_cluster_password
     vfxt_node_count = 3
-    global_custom_settings = [
-    ]
-
-    vserver_settings = [
-    ]
 
     core_filer {
         name = "nfs1"
         fqdn_or_primary_ip = local.filer_address
         cache_policy = local.cache_policy
-        custom_settings = []
         junction {
             namespace_path = "/nfs1data"
             core_filer_export = local.filer_export

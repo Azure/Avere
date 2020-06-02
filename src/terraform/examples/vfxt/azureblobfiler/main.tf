@@ -108,12 +108,10 @@ resource "avere_vfxt" "vfxt" {
     vfxt_admin_password = local.vfxt_cluster_password
     vfxt_node_count = 3
     image_id = local.vfxt_image_id
-    global_custom_settings = []
 
     azure_storage_filer {
         account_name = azurerm_storage_account.storage.name
         container_name = local.avere_storage_container_name
-        custom_settings = []
         junction_namespace_path = "/storagevfxt"
     }
 }

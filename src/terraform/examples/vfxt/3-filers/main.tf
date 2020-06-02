@@ -142,30 +142,11 @@ resource "avere_vfxt" "vfxt" {
     vfxt_admin_password = local.vfxt_cluster_password
     vfxt_node_count = 3
     image_id = local.vfxt_image_id
-    global_custom_settings = [
-        "cluster.CtcBackEndTimeout KO 110000000",
-        "cluster.HaBackEndTimeout II 120000000",
-        "cluster.NfsBackEndTimeout VO 100000000",
-        "cluster.NfsFrontEndCwnd EK 1",
-        "cluster.ctcConnMult CE 25",
-        "vcm.alwaysForwardReadSize DL 134217728",
-        "vcm.disableReadAhead AB 1",
-        "vcm.vcm_waWriteBlocksValid GN 0",
-    ]
-
-    vserver_settings = [
-        "NfsFrontEndSobuf OG 1048576",
-        "rwsize IZ 524288",
-    ]
 
     core_filer {
         name = "nfs1"
         fqdn_or_primary_ip = module.nasfiler1.primary_ip
         cache_policy = local.cache_policy
-        custom_settings = [
-            "autoWanOptimize YF 2",
-            "nfsConnMult YW 5",
-        ]
         junction {
             namespace_path = "/nfs1data"
             core_filer_export = module.nasfiler1.core_filer_export
@@ -182,11 +163,6 @@ resource "avere_vfxt" "vfxt" {
         name = "nfs2"
         fqdn_or_primary_ip = module.nasfiler2.primary_ip
         cache_policy = local.cache_policy
-        custom_settings = [
-            "always_forward OZ 1",
-            "autoWanOptimize YF 2",
-            "nfsConnMult YW 4",
-        ]
         junction {
             namespace_path = "/nfs2data"
             core_filer_export = module.nasfiler2.core_filer_export
@@ -197,12 +173,6 @@ resource "avere_vfxt" "vfxt" {
         name = "nfs3"
         fqdn_or_primary_ip = module.nasfiler3.primary_ip
         cache_policy = local.cache_policy
-        custom_settings = [
-            "autoWanOptimize YF 2",
-            "client_rt_preferred FE 524288",
-            "client_wt_preferred NO 524288",
-            "nfsConnMult YW 20",
-        ]
         junction {
             namespace_path = "/nfs3data"
             core_filer_export = module.nasfiler3.core_filer_export

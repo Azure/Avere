@@ -36,19 +36,9 @@ resource "avere_vfxt" "vfxt" {
     vfxt_node_count = 3
     node_cache_size = 4096
     
-    global_custom_settings = [
-        "vcm.alwaysForwardReadSize DL 134217728",
-    ]
-
-    vserver_settings = [
-        "NfsFrontEndSobuf OG 1048576",
-        "rwsize IZ 524288",
-    ]
-
     azure_storage_filer {
         account_name = "unique0azure0storage0account0name"
         container_name = "tools"
-        custom_settings = []
         junction_namespace_path = "/animation-tools"
     }
 
@@ -56,10 +46,6 @@ resource "avere_vfxt" "vfxt" {
         name = "animation"
         fqdn_or_primary_ip = "animation-filer.vfxexample.com"
         cache_policy = "Clients Bypassing the Cluster"
-        custom_settings = [
-            "autoWanOptimize YF 2",
-            "nfsConnMult YW 5",
-        ]
         junction {
             namespace_path = "/animation"
             core_filer_export = "/animation"
