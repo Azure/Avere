@@ -355,6 +355,20 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	//
+	// The cluster will be created in the following order
+	//  1. Cluster creation
+	//  2. SetId() in Terraform to commit the cluster creation
+	//  3. Timezone and DNS changes
+	//  4. NTP Servers
+	//  5. Global and Vserver Custom Support settings
+	//  6. Users
+	//  7. Delete Junctions
+	//  8. Core Filers including custom settings
+	//  9. Junctions
+	//  10. Support Uploads if requested
+	//
+
 	if err := avereVfxt.Platform.CreateVfxt(avereVfxt); err != nil {
 		return fmt.Errorf("failed to create cluster: %s\n", err)
 	}
@@ -366,6 +380,12 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 
 	if err := avereVfxt.CreateVServer(); err != nil {
 		return fmt.Errorf("ERROR: error while creating VServer: %s", err)
+	}
+
+	if avereVfxt.Timezone != DefaultTimezone || len(avereVfxt.DnsServer) > 0 || len(avereVfxt.DnsDomain) > 0 || len(avereVfxt.DnsSearch) > 0 {
+		if err := avereVfxt.UpdateCluster(); err != nil {
+			return err
+		}
 	}
 
 	if err := updateNtpServers(d, avereVfxt); err != nil {
@@ -412,12 +432,6 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 	// add the new junctions
 	if err := createJunctions(d, avereVfxt); err != nil {
 		return err
-	}
-
-	if avereVfxt.Timezone != DefaultTimezone || len(avereVfxt.DnsServer) > 0 || len(avereVfxt.DnsDomain) > 0 || len(avereVfxt.DnsSearch) > 0 {
-		if err := avereVfxt.UpdateCluster(); err != nil {
-			return err
-		}
 	}
 
 	// update the support
@@ -479,6 +493,25 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	//
+	// The cluster will be updated in the following order
+	//  1. Timezone and DNS changes
+	//  2. NTP Servers
+	//  3. Global and Vserver Custom Support settings
+	//  4. Update Users
+	//  5. Delete Junctions
+	//  5. Update Core Filers including Core Filer custom settings
+	//  6. Add Junctions
+	//  7. Scale cluster
+	//  8. Update Support Uploads
+	//
+
+	if d.HasChange(timezone) || d.HasChange(dns_server) || d.HasChange(dns_domain) || d.HasChange(dns_search) {
+		if err := avereVfxt.UpdateCluster(); err != nil {
+			return err
+		}
+	}
+
 	if d.HasChange(ntp_servers) {
 		if err := updateNtpServers(d, avereVfxt); err != nil {
 			return err
@@ -509,15 +542,8 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	if d.HasChange(enable_support_uploads) {
-		if err := avereVfxt.ModifySupportUploads(); err != nil {
-			return err
-		}
-	}
-
 	// update the core filers
 	if d.HasChange(core_filer) || d.HasChange(azure_storage_filer) {
-
 		existingCoreFilers, existingAzureStorageFilers, err := avereVfxt.GetExistingFilers()
 		if err != nil {
 			return err
@@ -570,15 +596,15 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	if d.HasChange(timezone) || d.HasChange(dns_server) || d.HasChange(dns_domain) || d.HasChange(dns_search) {
-		if err := avereVfxt.UpdateCluster(); err != nil {
+	// scale the cluster if node changed
+	if d.HasChange(vfxt_node_count) {
+		if err := scaleCluster(d, avereVfxt); err != nil {
 			return err
 		}
 	}
 
-	// scale the cluster if node changed
-	if d.HasChange(vfxt_node_count) {
-		if err := scaleCluster(d, avereVfxt); err != nil {
+	if d.HasChange(enable_support_uploads) {
+		if err := avereVfxt.ModifySupportUploads(); err != nil {
 			return err
 		}
 	}
