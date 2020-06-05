@@ -1,23 +1,25 @@
-# Best Practices for using Azure Virtual Machine Scale Sets (VMSS) for Rendering 
+# Best Practices for using Azure Virtual Machine Scale Sets (VMSS) or Azure Cycle Cloud for Rendering 
 
 Animation and VFX Rendering have two major requirements for render nodes:
-1. Lowest cost of ownership - studios operate on razor thin margins
-1. Thousands of compute cores - animation and VFX require an enormous amount of compute power
+1. **Lowest cost of ownership** - studios operate on razor thin margins
+1. **Thousands of compute cores** - animation and VFX require an enormous amount of compute power
 
-The following are best practices for configuring Azure Virtual Machine Scale Sets (VMSS) for rendering to meet these two requirements:
+The following are best practices for configuring Azure Virtual Machine Scale Sets (VMSS) or Azure Cycle Cloud for rendering to meet these two requirements:
 
 1. To minimize TCO:
     1. Use [Azure Spot Virtual Machines](https://azure.microsoft.com/en-us/pricing/spot/) and set policy to "Delete".
     1. Use [Ephemeral OS disks for Azure VMs](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/ephemeral-os-disks)
-    1. Don't specify "zones".  This ensures there are no traffic charges between zones
+    1. Don't specify `zones`.  This ensures there are no traffic charges between zones
 1. Adjust properties so machines are free to deploy anywhere in region:
-    1. set "singlePlacementGroup" to false.  This will also increase the limit > 100.
-    1. set "platformFaultDomainCount" to 1.
-    1. set "enableAcceleratedNetworking" to false.
-    1. (covered above) don't specify "zones"
-    1. don't specify proximityPlacementGroup
-    1. don't specify "additionalCapabilities"
-1. Set "overprovision" to false, so machines don't temporarily run and then get destroyed leading to problems and delays with the render managers.
+    1. set `singlePlacementGroup` to false.  This will also increase the limit > 100.
+    1. set `platformFaultDomainCount` to 1.
+    1. set `enableAcceleratedNetworking` to false.
+    1. (covered above) don't specify `zones`
+    1. don't specify `proximityPlacementGroup`
+    1. don't specify `additionalCapabilities`
+1. Set `overprovision` to false, so machines don't temporarily run and then get destroyed leading to problems and delays with the render managers.
+1. If using custom images, and scaling above 1k-2k nodes, use [Azure Shared Image Gallery](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/shared-image-galleries).
+1. Once using > 1000 nodes consider using [Azure Cycle Cloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/) for help with the complexity of managing multiple VMSS instances at the same time and best option for itegration with the render manager.  The best practices and settings above, apply to [Azure Cycle Cloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/).
 
 In this directory are terraform and ARM template examples to demonstrate how to achieve all of the above properties.  Closely related is deployment performance, and there are [best practices for improving virtual machine performance](https://github.com/Azure/Avere/blob/master/docs/azure_vm_provision_best_practices.md).
 
