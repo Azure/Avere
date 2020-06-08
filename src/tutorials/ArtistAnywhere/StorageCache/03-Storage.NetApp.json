@@ -137,10 +137,11 @@
         "input": {
           "exportHost": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('storageAccount').name, parameters('storageMounts')[copyIndex()].pool, parameters('storageMounts')[copyIndex()].volume), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
           "exportPath": "[parameters('storageMounts')[copyIndex()].exportPath]",
-          "directory": "[parameters('storageMounts')[copyIndex()].directory]",
-          "options": "[parameters('storageMounts')[copyIndex()].options]",
-          "type": "[parameters('storageMounts')[copyIndex()].type]",
-          "drive": "[parameters('storageMounts')[copyIndex()].drive]"
+          "directoryPath": "[parameters('storageMounts')[copyIndex()].directoryPath]",
+          "directoryPermissions": "[parameters('storageMounts')[copyIndex()].directoryPermissions]",
+          "fileSystemType": "[parameters('storageMounts')[copyIndex()].fileSystemType]",
+          "fileSystemDrive": "[parameters('storageMounts')[copyIndex()].fileSystemDrive]",
+          "fileSystemOptions": "[parameters('storageMounts')[copyIndex()].fileSystemOptions]"
         }
       }
     },

@@ -71,7 +71,7 @@
             "osDisk": {
               "caching": "ReadOnly",
               "createOption": "FromImage",
-              "diffDiskSettings": "[if(parameters('renderWorker').machineScaleSets[copyIndex()].osEphemeralDisk, json(concat('{\"option\": \"Local\"}')), json('null'))]"
+              "diffDiskSettings": "[if(parameters('renderWorker').machineScaleSets[copyIndex()].osDiskEphemeral, json(concat('{\"option\": \"Local\"}')), json('null'))]"
             }
           },
           "osProfile": {
@@ -105,15 +105,15 @@
               }
             ]
           },
-          "priority": "[parameters('renderWorker').machineScaleSets[copyIndex()].machinePriority]",
-          "evictionPolicy": "Delete"
+          "evictionPolicy": "[parameters('renderWorker').machineScaleSets[copyIndex()].evictionPolicy]",
+          "priority": "[parameters('renderWorker').machineScaleSets[copyIndex()].machinePriority]"
         },
         "overprovision": "[parameters('renderWorker').machineScaleSets[copyIndex()].overProvision]",
-        "singlePlacementGroup": false,
-        "platformFaultDomainCount": 1,
         "upgradePolicy": {
-          "mode": "Manual"
-        }
+          "mode": "[parameters('renderWorker').machineScaleSets[copyIndex()].upgradePolicy]"
+        },
+        "singlePlacementGroup": false,
+        "platformFaultDomainCount": 1
       },
       "copy": {
         "name": "renderWorkers",

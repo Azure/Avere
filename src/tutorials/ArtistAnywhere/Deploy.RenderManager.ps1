@@ -50,10 +50,14 @@ $storageMounts = $sharedServices.storageMounts
 $moduleDirectory = "RenderManager"
 
 # 05 - Manager Data
-$managerDatabaseDeploySql = @()
-$managerDatabaseClientUrl = @()
-$managerDatabaseClientUsername = @()
-$managerDatabaseClientPassword = @()
+$managerDatabaseSql = @()
+$managerDatabaseAdminName = @()
+$managerDatabaseAdminLogin = @()
+$managerDatabaseAdminPassword = @()
+$managerDatabaseUrl = @()
+$managerDatabaseUserName = @()
+$managerDatabaseUserLogin = @()
+$managerDatabaseUserPassword = @()
 $moduleName = "05 - Manager Data"
 $resourceGroupNameSuffix = "Manager"
 New-TraceMessage $moduleName $false
@@ -78,10 +82,14 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
     $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
     if (!$groupDeployment) { return }
 
-    $managerDatabaseDeploySql += $groupDeployment.properties.outputs.managerDatabaseDeploySql.value
-    $managerDatabaseClientUrl += $groupDeployment.properties.outputs.managerDatabaseClientUrl.value
-    $managerDatabaseClientUsername += $groupDeployment.properties.outputs.managerDatabaseClientUsername.value
-    $managerDatabaseClientPassword += $groupDeployment.properties.outputs.managerDatabaseClientPassword.value
+    $managerDatabaseSql += $groupDeployment.properties.outputs.managerDatabaseSql.value
+    $managerDatabaseAdminName += $groupDeployment.properties.outputs.managerDatabaseAdminName.value
+    $managerDatabaseAdminLogin += $groupDeployment.properties.outputs.managerDatabaseAdminLogin.value
+    $managerDatabaseAdminPassword += $groupDeployment.properties.outputs.managerDatabaseAdminPassword.value
+    $managerDatabaseUrl += $groupDeployment.properties.outputs.managerDatabaseUrl.value
+    $managerDatabaseUserName += $groupDeployment.properties.outputs.managerDatabaseUserName.value
+    $managerDatabaseUserLogin += $groupDeployment.properties.outputs.managerDatabaseUserLogin.value
+    $managerDatabaseUserPassword += $groupDeployment.properties.outputs.managerDatabaseUserPassword.value
     New-TraceMessage $moduleName $true $computeRegionName
 }
 New-TraceMessage $moduleName $true
@@ -169,17 +177,29 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
     if ($templateParameters.renderManager.value.scriptCommands -eq "") {
         $templateParameters.renderManager.value.scriptCommands = $scriptCommands
     }
-    if ($templateParameters.renderManager.value.databaseDeploySql -eq "") {
-        $templateParameters.renderManager.value.databaseDeploySql = $managerDatabaseDeploySql[$computeRegionIndex]
+    if ($templateParameters.renderManager.value.databaseSql -eq "") {
+        $templateParameters.renderManager.value.databaseSql = $managerDatabaseSql[$computeRegionIndex]
     }
-    if ($templateParameters.renderManager.value.databaseClientUrl -eq "") {
-        $templateParameters.renderManager.value.databaseClientUrl = $managerDatabaseClientUrl[$computeRegionIndex]
+    if ($templateParameters.renderManager.value.databaseAdminName -eq "") {
+        $templateParameters.renderManager.value.databaseAdminName = $managerDatabaseAdminName[$computeRegionIndex]
     }
-    if ($templateParameters.renderManager.value.databaseClientUsername -eq "") {
-        $templateParameters.renderManager.value.databaseClientUsername = $managerDatabaseClientUsername[$computeRegionIndex]
+    if ($templateParameters.renderManager.value.databaseAdminLogin -eq "") {
+        $templateParameters.renderManager.value.databaseAdminLogin = $managerDatabaseAdminLogin[$computeRegionIndex]
     }
-    if ($templateParameters.renderManager.value.databaseClientPassword -eq "") {
-        $templateParameters.renderManager.value.databaseClientPassword = $managerDatabaseClientPassword[$computeRegionIndex]
+    if ($templateParameters.renderManager.value.databaseAdminPassword -eq "") {
+        $templateParameters.renderManager.value.databaseAdminPassword = $managerDatabaseAdminPassword[$computeRegionIndex]
+    }
+    if ($templateParameters.renderManager.value.databaseUrl -eq "") {
+        $templateParameters.renderManager.value.databaseUrl = $managerDatabaseUrl[$computeRegionIndex]
+    }
+    if ($templateParameters.renderManager.value.databaseUserName -eq "") {
+        $templateParameters.renderManager.value.databaseUserName = $managerDatabaseUserName[$computeRegionIndex]
+    }
+    if ($templateParameters.renderManager.value.databaseUserLogin -eq "") {
+        $templateParameters.renderManager.value.databaseUserLogin = $managerDatabaseUserLogin[$computeRegionIndex]
+    }
+    if ($templateParameters.renderManager.value.databaseUserPassword -eq "") {
+        $templateParameters.renderManager.value.databaseUserPassword = $managerDatabaseUserPassword[$computeRegionIndex]
     }
     # if ($templateParameters.logAnalytics.value.workspaceId -eq "") {
     #     $templateParameters.logAnalytics.value.workspaceId = $logAnalytics.workspaceId

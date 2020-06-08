@@ -158,7 +158,7 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
         $templateParameters.renderWorker.value.scriptCommands = $scriptCommands
     }
     if ($templateParameters.renderWorker.value.fileSystemMounts -eq "") {
-        $fileSystemMounts = Get-FileSystemMounts $storageMounts $cacheMounts $false
+        $fileSystemMounts = Get-FileSystemMounts $storageMounts $cacheMounts
         $templateParameters.renderWorker.value.fileSystemMounts = $fileSystemMounts
     }
     if ($templateParameters.renderManager.value.hostAddress -eq "") {

@@ -19,7 +19,8 @@
     "dataServerApiVersion": "2017-12-01",
     "dataServerName": "[toLower(parameters('renderManager').dataServerName)]",
     "dataServerHost": "[concat(variables('dataServerName'), '.postgres.database.azure.com')]",
-    "databaseAdminUsername": "[concat(parameters('renderManager').databaseAdminUsername, '@', variables('dataServerName'))]"
+    "databaseAdminLogin": "[concat(parameters('renderManager').databaseAdminName, '@', variables('dataServerName'))]",
+    "databaseUserLogin": "[concat(parameters('renderManager').databaseUserName, '@', variables('dataServerName'))]"
   },
   "resources": [
     {
@@ -32,7 +33,7 @@
       },
       "properties": {
         "version": "[parameters('renderManager').dataServerSqlVersion]",
-        "administratorLogin": "[parameters('renderManager').databaseAdminUsername]",
+        "administratorLogin": "[parameters('renderManager').databaseAdminName]",
         "administratorLoginPassword": "[parameters('renderManager').databaseAdminPassword]",
         "storageProfile": {
           "storageMB": "[parameters('renderManager').dataServerStorageMB]",
@@ -66,21 +67,37 @@
     }
   ],
   "outputs": {
-    "managerDatabaseDeploySql": {
+    "managerDatabaseSql": {
       "type": "string",
-      "value": "[concat('host=', variables('dataServerHost'), ' port=5432 sslmode=require dbname=', parameters('renderManager').databaseName, ' user=', variables('databaseAdminUsername'), ' password=', parameters('renderManager').databaseAdminPassword)]"
+      "value": "[concat('host=', variables('dataServerHost'), ' port=5432 sslmode=require dbname=', parameters('renderManager').databaseName, ' user=', variables('databaseAdminLogin'), ' password=', parameters('renderManager').databaseAdminPassword)]"
     },
-    "managerDatabaseClientUrl": {
+    "managerDatabaseAdminName": {
+      "type": "string",
+      "value": "[parameters('renderManager').databaseAdminName]"
+    },
+    "managerDatabaseAdminLogin": {
+      "type": "string",
+      "value": "[variables('databaseAdminLogin')]"
+    },
+    "managerDatabaseAdminPassword": {
+      "type": "string",
+      "value": "[parameters('renderManager').databaseAdminPassword]"
+    },
+    "managerDatabaseUrl": {
       "type": "string",
       "value": "[concat('jdbc:postgresql://', variables('dataServerHost'), ':5432/', parameters('renderManager').databaseName, '?sslmode=require')]"
     },
-    "managerDatabaseClientUsername": {
+    "managerDatabaseUserName": {
       "type": "string",
-      "value": "[variables('databaseAdminUsername')]"
+      "value": "[parameters('renderManager').databaseUserName]"
     },
-    "managerDatabaseClientPassword": {
+    "managerDatabaseUserLogin": {
       "type": "string",
-      "value": "[parameters('renderManager').databaseAdminPassword]"
+      "value": "[variables('databaseUserLogin')]"
+    },
+    "managerDatabaseUserPassword": {
+      "type": "string",
+      "value": "[parameters('renderManager').databaseUserPassword]"
     }
   }
 }

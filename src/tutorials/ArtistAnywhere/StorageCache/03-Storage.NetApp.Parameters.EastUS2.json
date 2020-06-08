@@ -75,19 +75,21 @@
           "pool": "Storage",
           "volume": "Tools",
           "exportPath": "/tools",
-          "directory": "/mnt/tools",
-          "options": "ro,hard,vers=3,rsize=65536,wsize=65536,tcp",
-          "type": "nfs",
-          "drive": "T"
+          "directoryPath": "/mnt/tools",
+          "directoryPermissions": 775,
+          "fileSystemType": "nfs",
+          "fileSystemDrive": "T",
+          "fileSystemOptions": "rw,hard,vers=3,rsize=65536,wsize=65536,tcp"
         },
         {
           "pool": "Storage",
           "volume": "Frames",
           "exportPath": "/frames",
-          "directory": "/mnt/frames",
-          "options": "rw,hard,vers=3,rsize=65536,wsize=65536,tcp",
-          "type": "nfs",
-          "drive": "F"
+          "directoryPath": "/mnt/frames",
+          "directoryPermissions": 777,
+          "fileSystemType": "nfs",
+          "fileSystemDrive": "F",
+          "fileSystemOptions": "rw,hard,vers=3,rsize=65536,wsize=65536,tcp"
         }
       ]
     },

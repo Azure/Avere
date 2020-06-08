@@ -8,7 +8,40 @@
         "machineTypes": [
           {
             "enabled": true,
-            "namePrefix": "renderHostLNV",
+            "namePrefix": "renderHostL7NV",
+            "machineSize": "Standard_NV6",
+            "image": {
+              "templateName": "ArtistDesktopLinux7",
+              "definitionName": "Linux7",
+              "referenceId": ""
+            },
+            "login": {
+              "adminUsername": "az",
+              "adminPassword": "P@ssword1234",
+              "sshPublicKeyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0rSgH3dwDtBI5U2WBqpYkO7KZadaN34qpgl0IpYSui+ctFYG7bH0QHAz1p2Taznbf/5Qsh8/exmcoEcWHQzURLmqr0llVarbnqQykCp2cpGBH6adPWHMBh/OsR5ZCPL2IMr6eCdKj6mpf9dALB/ieUgCYNGNv20RwK1fBBicQN9oBE6N+KI7ko4cdFRGE66DX9m8DhlPdOO03Zd40e0ZiDdyxpxp2+aI087pXtDkO2tJbanDYToJhrA4hXx+z8qSS1pfaTSXZvTQ83uHClTmxCs8TGLw3l2K7vUf0v8E/7jGFtmHxeNCXBZuSw27M7PoT8EeHbq876pSzgEQvNzgj"
+            },
+            "gpuDriver": {
+              "publisher": "Microsoft.HpcCompute.Edp",
+              "type": "NvidiaGpuDriverLinux",
+              "typeVersion": "1.4"
+             },
+            "customExtension": {
+              "publisher": "Microsoft.Azure.Extensions",
+              "type": "CustomScript",
+              "typeVersion": "2.1",
+              "scriptFile": "11-Desktop.Machines.sh",
+              "scriptParameters": "TERADICI_HOST_AGENT_LICENSE_KEY='' TERADICI_HOST_AGENT_NAME=pcoip-agent-graphics",
+              "scriptCommands": ""
+            },
+            "monitorAgent": {
+              "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+              "type": "OmsAgentForLinux",
+              "typeVersion": "1.12"
+            }
+          },
+          {
+            "enabled": false,
+            "namePrefix": "renderHostL8NV",
             "machineSize": "Standard_NV6",
             "image": {
               "templateName": "ArtistDesktopLinux8",
@@ -21,7 +54,7 @@
               "sshPublicKeyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0rSgH3dwDtBI5U2WBqpYkO7KZadaN34qpgl0IpYSui+ctFYG7bH0QHAz1p2Taznbf/5Qsh8/exmcoEcWHQzURLmqr0llVarbnqQykCp2cpGBH6adPWHMBh/OsR5ZCPL2IMr6eCdKj6mpf9dALB/ieUgCYNGNv20RwK1fBBicQN9oBE6N+KI7ko4cdFRGE66DX9m8DhlPdOO03Zd40e0ZiDdyxpxp2+aI087pXtDkO2tJbanDYToJhrA4hXx+z8qSS1pfaTSXZvTQ83uHClTmxCs8TGLw3l2K7vUf0v8E/7jGFtmHxeNCXBZuSw27M7PoT8EeHbq876pSzgEQvNzgj"
             },
             "gpuDriver": {
-              "publisher": "Microsoft.HpcCompute.Edp",
+              "publisher": "Microsoft.HpcCompute",
               "type": "NvidiaGpuDriverLinux",
               "typeVersion": "1.4"
              },

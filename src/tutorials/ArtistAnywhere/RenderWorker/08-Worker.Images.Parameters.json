@@ -29,11 +29,18 @@
               {
                 "name": "Tools",
                 "type": "Shell",
+                "scriptUri": "https://mediastudio.blob.core.windows.net/script/08-Worker.Images.sh"
+              },
+              {
+                "name": "Blender",
+                "type": "Shell",
                 "inline": [
+                  "yum -y install libXi",
+                  "yum -y install libXrender",
+                  "yum -y install mesa-libGL",
                   "cd /usr/local/bin",
-                  "cp /mnt/tools/opencue/v0.4.14/opencue-requirements.txt .",
-                  "cp /mnt/tools/opencue/v0.4.14/opencue-rqd.tar.gz .",
-                  "cp /mnt/tools/opencue/v0.4.14/opencue-rqd.service ."
+                  "tar -xJf blender.tar.xz",
+                  "mv blender-*/* ."
                 ]
               },
               {
@@ -46,6 +53,7 @@
                   "cd /usr/local/bin",
                   "pip3 install -r opencue-requirements.txt",
                   "tar -xzf opencue-rqd.tar.gz",
+                  "find . -type f -name '*.pyc' -delete",
                   "cd rqd-*",
                   "python3 setup.py install"
                 ]
@@ -59,7 +67,7 @@
     "imageGallery": {
       "value": {
         "name": "",
-        "imageReplicationCount": 10,
+        "imageReplicationCount": 1,
         "imageReplicationRegions": [
         ]
       }

@@ -58,14 +58,13 @@ function Get-ImageVersionId ($imageGalleryResourceGroupName, $imageGalleryName, 
     }
 }
 
-function Get-FileSystemMount ($mount, $includeDrive) {
+function Get-FileSystemMount ($mount) {
     $fsMount = $mount.exportHost + ":" + $mount.exportPath
-    $fsMount += " " + $mount.directory
-    $fsMount += " " + $mount.type
-    $fsMount += " " + $mount.options + " 0 0"
-    if ($includeDrive) {
-        $fsMount += " " + $mount.drive
-    }
+    $fsMount += " " + $mount.directoryPath
+    $fsMount += " " + $mount.fileSystemType
+    $fsMount += " " + $mount.fileSystemOptions + " 0 0"
+    $fsMount += " # " + $mount.fileSystemDrive
+    $fsMount += " " + $mount.directoryPermissions
     return $fsMount
 }
 
@@ -74,38 +73,38 @@ function Get-StorageMountCommands ($imageGallery, $imageDefinitionName, $storage
     $imageDefinition = (az sig image-definition show --resource-group $imageGallery.resourceGroupName --gallery-name $imageGallery.name --gallery-image-definition $imageDefinitionName) | ConvertFrom-Json
     if ($imageDefinition.osType -eq "Windows") {
         foreach ($storageMount in $storageMounts) {
-            $mountCommand = "New-PSDrive -Name " + $storageMount.drive + " -PSProvider FileSystem"
+            $mountCommand = "New-PSDrive -Name " + $storageMount.fileSystemDrive + " -PSProvider FileSystem"
             $mountCommand += " -Root \\" + $storageMount.exportHost + $storageMount.exportPath.Replace('/', '\')
             $mountCommand += " -Scope Global -Persist"
             $mountCommands += $mountCommand
         }
     } else {
         foreach ($storageMount in $storageMounts) {
-            $mountCommands += "mkdir -p " + $storageMount.directory
-            $mountCommand = "mount -t " + $storageMount.type + " -o " + $storageMount.options
+            $mountCommands += "mkdir -p " + $storageMount.directoryPath
+            $mountCommand = "mount -t " + $storageMount.fileSystemType + " -o " + $storageMount.fileSystemOptions
             $mountCommand += " " + $storageMount.exportHost + ":" + $storageMount.exportPath
-            $mountCommand += " " + $storageMount.directory
+            $mountCommand += " " + $storageMount.directoryPath
             $mountCommands += $mountCommand
         }
     }
     return $mountCommands
 }
 
-function Get-FileSystemMounts ([object[]] $storageMounts, [object[]] $cacheMounts, $includeDrive) {
+function Get-FileSystemMounts ([object[]] $storageMounts, [object[]] $cacheMounts) {
     $fsMounts = ""
     $fsMountDelimiter = ";"
     foreach ($storageMount in $storageMounts) {
         if ($fsMounts -ne "") {
             $fsMounts += $fsMountDelimiter
         }
-        $fsMount = Get-FileSystemMount $storageMount $includeDrive
+        $fsMount = Get-FileSystemMount $storageMount
         $fsMounts += $fsMount
     }
     foreach ($cacheMount in $cacheMounts) {
         if ($fsMounts -ne "") {
             $fsMounts += $fsMountDelimiter
         }
-        $fsMount = Get-FileSystemMount $cacheMount $includeDrive
+        $fsMount = Get-FileSystemMount $cacheMount
         $fsMounts += $fsMount
     }
     return $fsMounts

@@ -4,10 +4,14 @@
   "parameters": {
     "renderManager": {
       "value": {
-        "databaseDeploySql": "",
-        "databaseClientUrl": "",
-        "databaseClientUsername": "",
-        "databaseClientPassword": "",
+        "databaseSql": "",
+        "databaseAdminName": "",
+        "databaseAdminLogin": "",
+        "databaseAdminPassword": "",
+        "databaseUrl": "",
+        "databaseUserName": "",
+        "databaseUserLogin": "",
+        "databaseUserPassword": "",
         "scriptCommands": "",
         "image": {
           "templateName": "RenderManager",

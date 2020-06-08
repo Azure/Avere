@@ -1,4 +1,6 @@
-#!/bin/bash -xe
+#!/bin/bash
+
+set -ex
 
 cd /usr/local/bin
 
@@ -12,8 +14,18 @@ systemctl start opencue-rqd
 IFS=';' read -a fileSystemMounts <<< "$FILE_SYSTEM_MOUNTS"
 for fileSystemMount in "${fileSystemMounts[@]}"
 do
-    localPath="$(cut -d ' ' -f 2 <<< $fileSystemMount)"
-    mkdir -p $localPath
+    IFS=' ' read -a fsTabMount <<< "$fileSystemMount"
+    directoryPath="${fsTabMount[1]}"
+    mkdir -p $directoryPath
     echo $fileSystemMount >> /etc/fstab
 done
 mount -a
+
+IFS=';' read -a fileSystemMounts <<< "$FILE_SYSTEM_MOUNTS"
+for fileSystemMount in "${fileSystemMounts[@]}"
+do
+    IFS=' ' read -a fsTabMount <<< "$fileSystemMount"
+    directoryPath="${fsTabMount[1]}"
+    directoryPermissions="${fsTabMount[-1]}"
+    chmod $directoryPermissions $directoryPath
+done

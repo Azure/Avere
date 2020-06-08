@@ -9,9 +9,11 @@ Azure Artist Anywhere is composed of the following Microsoft Azure resource depl
 | Virtual Network | Storage Cache | Render Managers | Render Workers | Artist Desktops |
 | - | - | - | - | - |
 | [00 - Network](VirtualNetwork/00-Network.json) | [03 - Storage (NetApp)](StorageCache/03-Storage.NetApp.json) | [05 - Manager Data](RenderManager/05-Manager.Data.json) | [08 - Worker Images](RenderWorker/08-Worker.Images.json) | [10 - Desktop Images](ArtistDesktop/10-Desktop.Images.json) |
-| [01 - Access Control](VirtualNetwork/01-Access.Control.json) | [03 - Storage (Object)](StorageCache/03-Storage.Object.json) | [06 - Manager Images](RenderManager/06-Manager.Images.json) | [09 - Worker Machines](RenderWorker/09-Worker.Machines.json) | [11 - Desktop Machines](ArtistDesktop/11-Desktop.Machines.json) |
-| [02 - Image Gallery](VirtualNetwork/02-Image.Gallery.json) | [04 - Cache (HPC)](StorageCache/04-Cache.json) | [07 - Manager Machines](RenderManager/07-Manager.Machines.json) | [09 - Worker Machines Extension Script (Linux)](RenderWorker/09-Worker.Machines.sh) | [11 - Desktop Machines Extension Script (Linux)](ArtistDesktop/11-Desktop.Machines.sh) |
-| | | [07 - Manager Machines Extension Script (Linux)](RenderManager/07-Manager.Machines.sh) | | [11 - Desktop Machines Extension Script (Windows)](ArtistDesktop/11-Desktop.Machines.ps1) |
+| [01 - Access Control](VirtualNetwork/01-Access.Control.json) | [03 - Storage (Object)](StorageCache/03-Storage.Object.json) | [06 - Manager Images](RenderManager/06-Manager.Images.json) | [08 - Worker Images Customize Script (Linux)](RenderWorker/08-Worker.Images.sh) | [10 - Desktop Images Customize Script (Linux)](ArtistDesktop/10-Desktop.Images.sh) |
+| [02 - Image Gallery](VirtualNetwork/02-Image.Gallery.json) | [04 - Cache (HPC)](StorageCache/04-Cache.json) | [06 - Manager Images Customize Script (Linux)](RenderManager/06-Manager.Images.sh) | [09 - Worker Machines](RenderWorker/09-Worker.Machines.json) | [10 - Desktop Images Customize Script (Windows)](ArtistDesktop/10-Desktop.Images.ps1) |
+| | | [07 - Manager Machines](RenderManager/07-Manager.Machines.json) | [09 - Worker Machines Extension Script (Linux)](RenderWorker/09-Worker.Machines.sh) | [11 - Desktop Machines](ArtistDesktop/11-Desktop.Machines.json) |
+| | | [07 - Manager Machines Extension Script (Linux)](RenderManager/07-Manager.Machines.sh) | | [11 - Desktop Machines Extension Script (Linux)](ArtistDesktop/11-Desktop.Machines.sh) |
+| | | | | [11 - Desktop Machines Extension Script (Windows)](ArtistDesktop/11-Desktop.Machines.ps1) |
 
 ## Solution Architecture
 
@@ -88,11 +90,11 @@ Azure Artist Anywhere is composed of the following open-source software and Micr
 
 The following diagram depicts the Azure Artist Anywhere solution architecture, which spans on-premises and Microsoft Azure.
 
-![](https://mediastudio.blob.core.windows.net/bin/AzureArtistAnywhere.SolutionArchitecture.07-01-2020.png)
+![](https://mediastudio.blob.core.windows.net/bin/AzureArtistAnywhere.SolutionArchitecture.2020-07-01.png)
 
 The following diagram defines the Azure Artist Anywhere deployment modules along with their dependency relationships.
 
-![](https://mediastudio.blob.core.windows.net/bin/AzureArtistAnywhere.ModuleDependency.07-01-2020.png)
+![](https://mediastudio.blob.core.windows.net/bin/AzureArtistAnywhere.ModuleDependency.2020-07-01.png)
 
 The following list describes each of the Azure Artist Anywhere deployment script files.
 

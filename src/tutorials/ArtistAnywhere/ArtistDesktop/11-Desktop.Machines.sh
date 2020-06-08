@@ -1,4 +1,27 @@
-#!/bin/bash -xe
+#!/bin/bash
+
+set -ex
+
+IFS=';' read -a fileSystemMounts <<< "$FILE_SYSTEM_MOUNTS"
+for fileSystemMount in "${fileSystemMounts[@]}"
+do
+    IFS=' ' read -a fsTabMount <<< "$fileSystemMount"
+    directoryPath="${fsTabMount[1]}"
+    mkdir -p $directoryPath
+    echo $fileSystemMount >> /etc/fstab
+done
+mount -a
+
+IFS=';' read -a fileSystemMounts <<< "$FILE_SYSTEM_MOUNTS"
+for fileSystemMount in "${fileSystemMounts[@]}"
+do
+    IFS=' ' read -a fsTabMount <<< "$fileSystemMount"
+    directoryPath="${fsTabMount[1]}"
+    directoryPermissions="${fsTabMount[-1]}"
+    chmod $directoryPermissions $directoryPath
+done
+
+echo "export CUEBOT_HOSTS=$OPENCUE_RENDER_MANAGER_HOST" > /etc/profile.d/opencue.sh
 
 if [ "$TERADICI_HOST_AGENT_LICENSE_KEY" != "" ]
 then
@@ -7,14 +30,3 @@ then
     pcoip-register-host --registration-code=$TERADICI_HOST_AGENT_LICENSE_KEY
     systemctl restart pcoip-agent
 fi
-
-echo "export CUEBOT_HOSTS=$OPENCUE_RENDER_MANAGER_HOST" > /etc/profile.d/opencue.sh
-
-IFS=';' read -a fileSystemMounts <<< "$FILE_SYSTEM_MOUNTS"
-for fileSystemMount in "${fileSystemMounts[@]}"
-do
-    localPath="$(cut -d ' ' -f 2 <<< $fileSystemMount)"
-    mkdir -p $localPath
-    echo $fileSystemMount >> /etc/fstab
-done
-mount -a
