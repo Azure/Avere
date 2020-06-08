@@ -5,7 +5,7 @@
     "storageAccount": {
       "type": "object",
       "metadata": {
-        "description": "The Azure Blob storage account."
+        "description": "The object storage account."
       }
     },
     "storageContainers": {

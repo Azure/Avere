@@ -2,6 +2,18 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "userIdentity": {
+      "type": "object",
+      "metadata": {
+        "description": "The managed user identity."
+      }
+    },
+    "storageAccount": {
+      "type": "object",
+      "metadata": {
+        "description": "The object storage account."
+      }
+    },
     "keyVault": {
       "type": "object",
       "metadata": {
@@ -22,6 +34,10 @@
     }
   },
   "variables": {
+    "roleAssignmentApiVersion": "2020-03-01-preview",
+    "storageApiVersion": "2019-06-01",
+    "storageAccountName": "[toLower(parameters('storageAccount').name)]",
+    "storageReaderRoleId": "2a2b9908-6ea1-4ae2-8e65-a410df84e7d1",
     "keyVaultApiVersion": "2019-09-01",
     "managedIdentityApiVersion": "2018-11-30",
     "operationalInsightsApiVersion": "2020-03-01-preview"
@@ -29,10 +45,37 @@
   "resources": [
     {
       "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
-      "name": "[parameters('keyVault').name]",
+      "name": "[parameters('userIdentity').name]",
       "apiVersion": "[variables('managedIdentityApiVersion')]",
       "location": "[resourceGroup().location]",
       "properties": {
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountName')]",
+      "apiVersion": "[variables('storageApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "kind": "[parameters('storageAccount').type]",
+      "sku": {
+        "name": "[parameters('storageAccount').replication]"
+      },
+      "properties": {
+        "supportsHttpsTrafficOnly": true
+        }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/providers/roleAssignments",
+      "name": "[concat(variables('storageAccountName'), '/Microsoft.Authorization/', guid(variables('storageReaderRoleId'), variables('storageAccountName')))]",
+      "apiVersion": "[variables('roleAssignmentApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userIdentity').name)]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ],
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userIdentity').name), variables('managedIdentityApiVersion')).principalId]",
+        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('storageReaderRoleId'))]"
       }
     },
     {
@@ -104,8 +147,8 @@
     "managedIdentity": {
       "type": "object",
       "value": {
-        "userResourceId": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('keyVault').name)]",
-        "userPrincipalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('keyVault').name), variables('managedIdentityApiVersion')).principalId]"
+        "userResourceId": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userIdentity').name)]",
+        "userPrincipalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userIdentity').name), variables('managedIdentityApiVersion')).principalId]"
       }
     },
     "keyVault": {
