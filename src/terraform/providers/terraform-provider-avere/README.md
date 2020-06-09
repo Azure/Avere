@@ -92,7 +92,7 @@ The following arguments are supported:
 * <a name="vfxt_cluster_name"></a>[vfxt_cluster_name](#vfxt_cluster_name) - (Required) this is the name of the vFXT cluster that is shown when you browse to the management ip.  To help Avere support, choose a name that matches the Avere's purpose.  Note: cluster re-created if modified.
 * <a name="vfxt_admin_password"></a>[vfxt_admin_password](#vfxt_admin_password) - (Required) the password for the vFXT cluster.  Note: cluster re-created if modified.
 * <a name="vfxt_node_count"></a>[vfxt_node_count](#vfxt_node_count) - (Required) the number of nodes to deploy for the Avere cluster.  The count may be a minimum of 3 and a maximum of 16.  If the cluster is already deployed, this will result in scaling up or down to the node count.  It requires about 15 minutes to delete and add each node in a scale-up or scale-down scenario.
-* <a name="node_cache_size"></a>[node_cache_size](#node_cache_size) - (Optional) The cache size in GB to use for each Avere vFXT VM.  The default value is 4096.  Note: cluster re-created if modified.
+* <a name="node_cache_size"></a>[node_cache_size](#node_cache_size) - (Optional) The cache size in GB to use for each Avere vFXT VM.  There are two options: 1024 or 4096 where 4096 is the default value.  Note: cluster re-created if modified.
 * <a name="vserver_first_ip"></a>[vserver_first_ip](#vserver_first_ip) - (Optional) To ensure predictable vserver ranges for dns pre-population, specify the first IP of the vserver.  This will create consecutive ip addresses based on the node count set in [vfxt_node_count](#vfxt_node_count).  The following configuration is recommended:
     1. ensure the Avere vFxt has a dedicated subnet,
     2. consider a range at the end of the subnet, and

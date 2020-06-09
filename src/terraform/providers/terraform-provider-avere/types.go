@@ -30,6 +30,7 @@ type AvereVfxt struct {
 	AvereAdminPassword   string
 	EnableSupportUploads bool
 	NodeCount            int
+	NodeSize             string
 	NodeCacheSize        int
 	FirstIPAddress       string
 	LastIPAddress        string

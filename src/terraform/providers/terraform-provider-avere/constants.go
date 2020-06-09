@@ -16,6 +16,10 @@ const (
 	// Platform
 	PlatformAzure = "azure"
 
+	// cluster sizes
+	ClusterSkuUnsupportedTest = "unsupported_test_SKU"
+	ClusterSkuProd            = "prod_sku"
+
 	// cache policies
 	CachePolicyClientsBypass                 = "Clients Bypassing the Cluster"
 	CachePolicyReadCaching                   = "Read Caching"
@@ -97,6 +101,7 @@ const (
 	vfxt_cluster_name            = "vfxt_cluster_name"
 	vfxt_admin_password          = "vfxt_admin_password"
 	vfxt_node_count              = "vfxt_node_count"
+	node_size                    = "node_size"
 	node_cache_size              = "node_cache_size"
 	vserver_first_ip             = "vserver_first_ip"
 	global_custom_settings       = "global_custom_settings"
