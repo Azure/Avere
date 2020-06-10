@@ -12,11 +12,6 @@ locals {
 
     // network details
     network_resource_group_name = "network_resource_group"
-
-    // storage details
-    storage_resource_group_name = "storage_resource_group"
-    storage_account_name = "storageaccount"
-    avere_storage_container_name = "vfxt"
     
     // vfxt details
     vfxt_resource_group_name = "vfxt_resource_group"
@@ -25,11 +20,16 @@ locals {
     vfxt_cluster_name = "vfxt"
     vfxt_cluster_password = "VFXT_PASSWORD"
 
+    // add a read-only user
+    rouser = "rouser"
+    rouser_pw = "rouserpassword"
+    rouser_permissions = "ro"
+
     // advanced scenario: vfxt and controller image ids, leave this null, unless not using default marketplace
     controller_image_id = null
     vfxt_image_id       = null
-    // advanced scenario: in addition to storage account put the custom image resource group here
-    alternative_resource_groups = [local.storage_resource_group_name]
+    // advanced scenario: put the custom image resource group here
+    alternative_resource_groups = []
 }
 
 provider "azurerm" {
@@ -42,30 +42,6 @@ module "network" {
     source = "github.com/Azure/Avere/src/terraform/modules/render_network"
     resource_group_name = local.network_resource_group_name
     location = local.location
-}
-
-resource "azurerm_resource_group" "storage" {
-  name     = local.storage_resource_group_name
-  location = local.location
-}
-
-resource "azurerm_storage_account" "storage" {
-  name                     = local.storage_account_name
-  resource_group_name      = azurerm_resource_group.storage.name
-  location                 = azurerm_resource_group.storage.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-  network_rules {
-      virtual_network_subnet_ids = [
-          module.network.cloud_cache_subnet_id,
-          // need for the controller to create the container
-          module.network.jumpbox_subnet_id,
-      ]
-      default_action = "Deny"
-  }
-  // if the nsg associations do not complete before the storage account
-  // create is started, it will fail with "subnet updating"
-  depends_on = [module.network]
 }
 
 // the vfxt controller
@@ -109,12 +85,16 @@ resource "avere_vfxt" "vfxt" {
     vfxt_node_count = 3
     image_id = local.vfxt_image_id
 
-    azure_storage_filer {
-        account_name = azurerm_storage_account.storage.name
-        container_name = local.avere_storage_container_name
-        junction_namespace_path = "/storagevfxt"
+    // the following two parameters make a cost effective test cluster (unsupported on PROD)
+    node_size = "unsupported_test_SKU"
+    node_cache_size = 1024
+
+    user {
+        name = local.rouser
+        password = local.rouser_pw
+        permission = local.rouser_permissions
     }
-}
+} 
 
 output "controller_username" {
   value = module.vfxtcontroller.controller_username
