@@ -150,6 +150,16 @@ func resourceVfxt() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.IntBetween(3, 16),
 			},
+			node_size: {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  ClusterSkuProd,
+				ValidateFunc: validation.StringInSlice([]string{
+					ClusterSkuUnsupportedTest,
+					ClusterSkuProd,
+				}, false),
+			},
 			node_cache_size: {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -719,6 +729,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(vfxt_admin_password).(string),
 		d.Get(enable_support_uploads).(bool),
 		nodeCount,
+		d.Get(node_size).(string),
 		d.Get(node_cache_size).(int),
 		firstIPAddress,
 		lastIPAddress,
