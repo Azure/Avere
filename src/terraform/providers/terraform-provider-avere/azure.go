@@ -20,7 +20,8 @@ const (
 	AzCliLogFile        = "~/azcli.log"
 	AzLoginRetryCount   = 18 // wait 3 minutes
 	AzLoginSleepSeconds = 10
-	AvereInstanceType   = "Standard_E32s_v3"
+	AvereInstanceE32s   = "Standard_E32s_v3"
+	AvereInstanceD16s   = "Standard_D16s_v3"
 	AverOperatorRole    = "Avere Operator"
 )
 
@@ -261,7 +262,7 @@ func (a Azure) getBaseVfxtCommand(avereVfxt *AvereVfxt) string {
 
 	// add the values consistent across all commands
 	sb.WriteString(fmt.Sprintf("vfxt.py --cloud-type azure --on-instance --instance-type %s --node-cache-size %d --azure-role '%s' --debug ",
-		AvereInstanceType,
+		convertSku(avereVfxt.NodeSize),
 		avereVfxt.NodeCacheSize,
 		AverOperatorRole))
 
@@ -397,4 +398,11 @@ func getLastVfxtValue(stderrBuf bytes.Buffer, vfxtRegex *regexp.Regexp) string {
 		}
 	}
 	return lastVfxtAddr
+}
+
+func convertSku(sku string) string {
+	if sku == ClusterSkuUnsupportedTest {
+		return AvereInstanceD16s
+	}
+	return AvereInstanceE32s
 }
