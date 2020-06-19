@@ -23,7 +23,7 @@ param(
 
     [string]
     [ValidateNotNullOrEmpty()]
-    $TargetPath,
+    $TargetPath
 )
 
 # the windows packages we want to remove

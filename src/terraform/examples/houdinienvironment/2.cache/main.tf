@@ -101,8 +101,7 @@ resource "avere_vfxt" "vfxt" {
 
 // the vfxt controller
 module "mount_nfs" {
-    //source = "github.com/Azure/Avere/src/terraform/modules/mount_nfs"
-    source = "../../../../modules/mount_nfs"
+    source = "github.com/Azure/Avere/src/terraform/modules/mount_nfs"
     node_address = module.vfxtcontroller.controller_address
     admin_username = local.vm_admin_username
     admin_password = local.vm_admin_password
