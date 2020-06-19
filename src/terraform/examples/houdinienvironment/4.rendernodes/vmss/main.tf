@@ -67,9 +67,10 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
   }
     
   os_profile {
-  computer_name_prefix = local.unique_name
-  admin_username       = local.vm_admin_username
-  admin_password       = local.vm_admin_password
+    computer_name_prefix = local.unique_name
+    admin_username       = local.vm_admin_username
+    admin_password       = local.vm_admin_password
+    custom_data          = base64gzip(local.powershell_script)
   }
 
   storage_profile_image_reference {
