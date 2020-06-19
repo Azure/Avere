@@ -8,7 +8,7 @@ locals {
   vm_admin_username = "azureuser"
   // use either SSH Key data or admin password, if ssh_key_data is specified
   // then admin_password is ignored
-  vm_admin_password = "P@$$w0rd1234!"
+  vm_admin_password = "ReplacePassword$"
 
   // replace below variables with the infrastructure variables from 1.base_infrastructure
   location = ""
@@ -19,7 +19,7 @@ locals {
   mount_path = ""
   
   // advanced scenarios: the below variables rarely need to change  
-  single_mount_address = tolist(local.mount_addresses)[0]
+  mount_address_csv = join(",", tolist(local.mount_addresses))
   target_path = "c:\\\\cloudcache"
 
   // the following are the arguments to be passed to the custom script

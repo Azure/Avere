@@ -15,7 +15,7 @@ param(
 
     [string]
     [ValidateNotNullOrEmpty()]
-    $MountIP,
+    $MountAddressesCSV,
     
     [string]
     [ValidateNotNullOrEmpty()]
@@ -65,11 +65,20 @@ DownloadFileOverHttp($Url, $DestinationPath)
 function
 Install-NFS
 {
+    # install NFS
     New-ItemProperty -Path HKLM:'\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System' -Name EnableLinkedConnections -Value 1 -Type DWord
     Enable-WindowsOptionalFeature -Online -FeatureName "ServicesForNFS-ClientOnly" -All
     Enable-WindowsOptionalFeature -Online -FeatureName "NFS-Administration" -All
     Enable-WindowsOptionalFeature -Online -FeatureName "ClientForNFS-Infrastructure" -All
-    cmd /c mklink /D ${TargetPath} "\\${MountIP}${MountPath}".replace("/","\\")
+
+    # get the mount address, round robin across ip addresses
+    $mount_addresses = $MountAddressesCSV -split ","
+    $ipV4full = Test-Connection -ComputerName (hostname) -Count 1
+    $octets = $ipV4full.IPV4Address.IPAddressToString -split "\."
+    $mount_index = $octets[3] % $mount_addresses.Length
+    $mount_address = $mount_addresses[$mount_index]
+    
+    cmd /c mklink /D ${TargetPath} "\\${mount_address}${MountPath}".replace("/","\\")
 }
 
 try

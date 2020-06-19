@@ -21,7 +21,7 @@ locals {
     mount_path = ""
 
     // advanced scenarios: the below variables rarely need to change  
-    single_mount_address = tolist(local.mount_addresses)[0]
+    mount_address_csv = join(",", tolist(local.mount_addresses))
     target_path = "c:\\\\cloudcache"
 
     // the following are the arguments to be passed to the custom script
