@@ -62,13 +62,15 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
 
   sku {
     name = local.vmss_size
-    tier = local.vmss_priority
+    tier = "Standard"
     capacity = local.vm_count
   }
     
+  os_profile {
   computer_name_prefix = local.unique_name
   admin_username       = local.vm_admin_username
   admin_password       = local.vm_admin_password
+  }
 
   storage_profile_image_reference {
     id = local.source_image_id
@@ -81,9 +83,8 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
   }
 
   network_profile {
-    name    = "vminic-${var.unique_name}"
+    name    = "vminic-${local.unique_name}"
     primary = true
-    enable_accelerated_networking = false
 
     ip_configuration {
       name      = "internal"
