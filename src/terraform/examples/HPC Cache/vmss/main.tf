@@ -45,6 +45,10 @@ locals {
 
     // jumpbox variable
     jumpbox_add_public_ip = true
+    open_external_ports = [22]
+    // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
+    // or if accessing from cloud shell, put "AzureCloud"
+    open_external_sources = ["*"]
     
     // vmss details
     vmss_resource_group_name = "vmss_rg"
@@ -148,7 +152,7 @@ module "vmss_configure" {
     nfs_address = azurerm_hpc_cache.hpc_cache.mount_addresses[0]
     nfs_export_path = tolist(azurerm_hpc_cache_nfs_target.nfs_targets.namespace_junction)[0].namespace_path
 
-    module_depends_on = [azurerm_hpc_cache_nfs_target.nfs_targets.id]
+    module_depends_on = [azurerm_hpc_cache_nfs_target.nfs_targets.id, module.jumpbox.module_depends_on_id]
 }
 
 // the VMSS module

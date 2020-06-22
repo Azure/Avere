@@ -137,7 +137,7 @@ module "vdbench_configure" {
     nfs_export_path = tolist(azurerm_hpc_cache_nfs_target.nfs_targets.namespace_junction)[0].namespace_path
     vdbench_url = local.vdbench_url
 
-    module_depends_on = [azurerm_hpc_cache_nfs_target.nfs_targets.id]
+    module_depends_on = [azurerm_hpc_cache_nfs_target.nfs_targets.id, module.jumpbox.module_depends_on_id]
 }
 
 // the VMSS module

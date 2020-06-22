@@ -71,7 +71,7 @@ variable "open_external_ports" {
     description = "these are the ports to open externally on the jumpbox subnet, default is 22"
 }
 
-variable "open_external_source" {
-    default = "*"
+variable "open_external_sources" {
+    default = ["*"]
     description = "this is the external source to open on the subnet"
 }
