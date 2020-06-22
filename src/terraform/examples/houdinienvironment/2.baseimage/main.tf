@@ -8,7 +8,7 @@ locals {
   vm_admin_username = "azureuser"
   // use either SSH Key data or admin password, if ssh_key_data is specified
   // then admin_password is ignored
-  vm_admin_password = "P@$$w0rd1234!"
+  vm_admin_password = "ReplacePassword$"
 
   // replace below variables with the infrastructure variables from 1.base_infrastructure
   location = ""
@@ -23,7 +23,7 @@ locals {
   target_path = "c:\\\\cloudcache"
 
   // the following are the arguments to be passed to the custom script
-  windows_custom_script_arguments = "$arguments = '-UserName ${local.vm_admin_username} -MountAddressesCSV ${local.mount_address_csv} -MountPath ${local.mount_path} -TargetPath ${local.target_path} '  ; "
+  windows_custom_script_arguments = "$arguments = '-UserName ${local.vm_admin_username} -MountAddressesCSV \\\"${local.mount_address_csv}\\\" -MountPath ${local.mount_path} -TargetPath ${local.target_path} '  ; "
 
   // load the powershell file, you can substitute kv pairs as you need them, but 
   // use arguments where possible
