@@ -10,17 +10,20 @@ resource "azurerm_network_security_group" "ssh_nsg" {
     name                = "ssh_nsg"
     location            = var.location
     resource_group_name = azurerm_resource_group.render_rg.name
-    
-    security_rule {
-        name                       = "SSH"
-        priority                   = 1001
-        direction                  = "Inbound"
-        access                     = "Allow"
-        protocol                   = "Tcp"
-        source_port_range          = "*"
-        destination_port_range     = "22"
-        source_address_prefix      = "*"
-        destination_address_prefix = "*"
+
+    dynamic "security_rule" {
+        for_each = length(var.open_external_ports) > 0 ? ["singleloop"] : []
+        content {
+            name                       = "SSH"
+            priority                   = 120
+            direction                  = "Inbound"
+            access                     = "Allow"
+            protocol                   = "Tcp"
+            source_port_range          = "*"
+            destination_port_ranges    = var.open_external_ports
+            source_address_prefix      = var.open_external_source
+            destination_address_prefix = "*"
+        }
     }
 }
 
@@ -28,11 +31,11 @@ resource "azurerm_network_security_group" "no_internet_nsg" {
     name                = "no_internet_nsg"
     location            = var.location
     resource_group_name = azurerm_resource_group.render_rg.name
-    
+
     // block all inbound from lb, etc
     security_rule {
         name                       = "nointernetinbound"
-        priority                   = 4000
+        priority                   = 130
         direction                  = "Inbound"
         access                     = "Deny"
         protocol                   = "*"

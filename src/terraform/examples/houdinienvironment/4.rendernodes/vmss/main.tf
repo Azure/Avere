@@ -25,7 +25,7 @@ locals {
     target_path = "c:\\\\cloudcache"
 
     // the following are the arguments to be passed to the custom script
-    windows_custom_script_arguments = "$arguments = '-UserName ${local.vm_admin_username} -MountIP ${local.single_mount_address} -MountPath ${local.mount_path} -TargetPath ${local.target_path} '  ; "
+    windows_custom_script_arguments = "$arguments = '-UserName ${local.vm_admin_username} -MountAddressesCSV \\\"${local.mount_address_csv}\\\" -MountPath ${local.mount_path} -TargetPath ${local.target_path} '  ; "
 
     // load the powershell file, you can substitute kv pairs as you need them, but 
     // use arguments where possible
