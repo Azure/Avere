@@ -68,7 +68,7 @@ variable "module_depends_on" {
 
 variable "open_external_ports" {
     default = [22]
-    description = "these are the ports to open externally on the jumpbox subnet, default is 22, and 3389"
+    description = "these are the ports to open externally on the jumpbox subnet, default is 22"
 }
 
 variable "open_external_source" {

@@ -8,12 +8,16 @@ data "azurerm_subnet" "vnet" {
   name                 = var.virtual_network_subnet_name
   virtual_network_name = var.virtual_network_name
   resource_group_name  = var.virtual_network_resource_group
+
+  depends_on = [var.module_depends_on]
 }
 
 data "azurerm_subscription" "primary" {}
 
 data "azurerm_resource_group" "vm" {
   name     = var.resource_group_name
+
+  depends_on = [var.module_depends_on]
 }
 
 resource "azurerm_public_ip" "vm" {
@@ -100,7 +104,7 @@ locals {
 }
 
 resource "azurerm_role_assignment" "create_cluster_role" {
-  count                            = length(local.vm_contributor_rgs)
+  count                            = var.add_role_assignments ? length(local.vm_contributor_rgs) : 0
   scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${local.vm_contributor_rgs[count.index]}"
   role_definition_name             = "Virtual Machine Contributor"
   principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id

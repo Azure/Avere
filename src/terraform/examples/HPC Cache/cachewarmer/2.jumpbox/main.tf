@@ -30,6 +30,7 @@ resource "azurerm_resource_group" "jumpboxrg" {
   name     = local.hpccache_resource_group_name
   location = local.location
 }
+
 module "jumpbox" {
     source = "github.com/Azure/Avere/src/terraform/modules/jumpbox"
     resource_group_name = azurerm_resource_group.jumpboxrg.name
@@ -39,11 +40,15 @@ module "jumpbox" {
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.controller_add_public_ip
     build_vfxt_terraform_provider = false
+    // needed for the cachewarmer so it can create virtual machine scalesets
+    add_role_assignments = true
     
     // network details
     virtual_network_resource_group = local.hpccache_network_resource_group_name
     virtual_network_name = local.hpccache_network_name
     virtual_network_subnet_name = local.hpccache_jumpbox_subnet_name
+
+    module_depends_on = [azurerm_resource_group.jumpboxrg.id]
 }
 
 output "hpccache_resource_group_name" {

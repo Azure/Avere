@@ -2,7 +2,7 @@
 
 This example shows how to configure the end to end infrastructure for a Houdini render farm on azure.  This example provides the azure infrastructure required to implement a [Houdini RenderFarm](https://www.sidefx.com/faq/question/indie-renderfarm-setup/) ([also described here](http://www.sidefx.com/docs/houdini/render/cloudfarm.html#rendering-on-cloud)).  The architecture includes a license server, an HQueue server, cloud cache and render nodes:
 
-![The architecture](../../../../../docs/images/terraform/houdini.png)
+![The architecture](../../../../docs/images/terraform/houdini.png)
 
 ## Deployment Instructions
 
@@ -30,7 +30,7 @@ Before running the examples you will need to setup the following pre-requisites:
     ```bash
     mkdir -p ~/.terraform.d/plugins
     # install the vfxt released binary from https://github.com/Azure/Avere
-    wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.0/terraform-provider-avere
+    wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.1/terraform-provider-avere
     chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
     ```
 
@@ -45,47 +45,28 @@ Before running the examples you will need to setup the following pre-requisites:
     git pull origin master
     ```
 
-1. **storage** - if using an on-prem filer, 
+1. **storage** - if using an on-prem filer, you will need to establish an [Azure VPN Gateway](https://azure.microsoft.com/en-us/services/vpn-gateway/) to on-premises for connectivity to backend storage, rendering license server, active directory server, or render manager.  This step is configured after building out the Virtual Network in step 0 below.
 
 ## Phase 1: Step 0 - Network
 
-To run the example, execute the following instructions.  This assumes use of Azure Cloud Shell, but you can use in your own environment, ensure you install the vfxt provider as described in the [build provider instructions](../../../providers/terraform-provider-avere#build-the-terraform-provider-binary).  However, if you are installing into your own environment, you will need to follow the [instructions to setup terraform for the Azure environment](https://docs.microsoft.com/en-us/azure/terraform/terraform-install-configure).
+The first step is to setup the Virtual Network, subnets, and network security groups:
 
-1. browse to https://shell.azure.com
+1. continuing from the previous instructions browse to the houdini network directory: `cd ~/tf/src/terraform/examples/vfxt/houdinienvrionment/0.network`
 
-2. Specify your subscription by running this command with your subscription ID:  ```az account set --subscription YOUR_SUBSCRIPTION_ID```.  You will need to run this every time after restarting your shell, otherwise it may default you to the wrong subscription, and you will see an error similar to `azurerm_public_ip.vm is empty tuple`.
+1. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.
 
-3. double check your Avere vFXT prerequisites, including running `az vm image accept-terms --urn microsoft-avere:vfxt:avere-vfxt-controller:latest`: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs
+1. execute `terraform init` in the directory of `main.tf`.
 
-4. If not already installed, run the following commands to install the Avere vFXT provider for Azure:
-```bash
-mkdir -p ~/.terraform.d/plugins
-# install the vfxt released binary from https://github.com/Azure/Avere
-wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.0/terraform-provider-avere
-chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
-```
+1. execute `terraform apply -auto-approve` to build the vfxt cluster
 
-5. get the terraform examples
-```bash
-mkdir tf
-cd tf
-git init
-git remote add origin -f https://github.com/Azure/Avere.git
-git config core.sparsecheckout true
-echo "src/terraform/*" >> .git/info/sparse-checkout
-git pull origin master
-```
+Once deployed, capture the output variables to somewhere safe, as they will be needed in the following deployments.
 
-6. `cd src/terraform/examples/vfxt/1-filer`
+Once your virtual network is setup, determine if you need to establish an [Azure VPN Gateway](https://azure.microsoft.com/en-us/services/vpn-gateway/) to on-premises for connectivity to backend storage, rendering license server, active directory server, or render manager.
 
-7. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  If you are using an [ssk key](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys), ensure that ~/.ssh/id_rsa is populated.
+## Phase 1: Step 1 - Storage
 
-8. execute `terraform init` in the directory of `main.tf`.
+The next step is to establish backend storage.  If using a backend storage filer, you can skip this step.  Otherwise if you are using cloud based storage, proceed through the following steps:
 
-9. execute `terraform apply -auto-approve` to build the vfxt cluster
+1. decide whether to use blob based storage or an nfs filer and run the following steps:
+    1. if using blob based storage: `cd ~/tf/src/terraform/examples/vfxt/houdinienvrionment/1.storage`
 
-Once installed you will be able to login and use the vFXT cluster according to the vFXT documentation: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-cluster-gui.
-
-Try to scale up and down the cluster, adjust the customer settings, add new junctions, etc, by editing the `main.tf`, and running `terraform apply -auto-approve`.
-
-When you are done using the cluster, you can destroy it by running `terraform destroy -auto-approve` or just delete the three resource groups created.

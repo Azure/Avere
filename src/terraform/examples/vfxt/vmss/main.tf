@@ -141,6 +141,8 @@ module "vmss_configure" {
     ssh_key_data = local.vm_ssh_key_data
     nfs_address = tolist(avere_vfxt.vfxt.vserver_ip_addresses)[0]
     nfs_export_path = local.nfs_export_path
+
+    module_depends_on = [avere_vfxt.vfxt]
 }
 
 // the VMSS module
@@ -162,7 +164,7 @@ module "vmss" {
     nfs_export_addresses = tolist(avere_vfxt.vfxt.vserver_ip_addresses)
     nfs_export_path = local.nfs_export_path
     bootstrap_script_path = module.vmss_configure.bootstrap_script_path
-    vmss_depends_on = module.vmss_configure.bootstrap_script_path
+    module_depends_on = [module.vmss_configure.module_depends_on_id]
 }
 
 output "controller_username" {
