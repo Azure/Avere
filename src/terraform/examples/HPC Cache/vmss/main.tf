@@ -81,7 +81,7 @@ resource "azurerm_hpc_cache" "hpc_cache" {
   resource_group_name = azurerm_resource_group.hpc_cache_rg.name
   location            = azurerm_resource_group.hpc_cache_rg.location
   cache_size_in_gb    = local.cache_size
-  subnet_id           = module.network.cloud_filers_subnet_id
+  subnet_id           = module.network.cloud_cache_subnet_id
   sku_name            = local.cache_throughput
 }
 
@@ -133,6 +133,8 @@ module "jumpbox" {
     virtual_network_resource_group = local.network_resource_group_name
     virtual_network_name = module.network.vnet_name
     virtual_network_subnet_name = module.network.jumpbox_subnet_name
+
+    module_depends_on = [azurerm_resource_group.hpc_cache_rg.id]
 }
 
 // the vmss config module to install the round robin mount
@@ -145,6 +147,8 @@ module "vmss_configure" {
     ssh_key_data = local.vm_ssh_key_data
     nfs_address = azurerm_hpc_cache.hpc_cache.mount_addresses[0]
     nfs_export_path = tolist(azurerm_hpc_cache_nfs_target.nfs_targets.namespace_junction)[0].namespace_path
+
+    module_depends_on = [azurerm_hpc_cache_nfs_target.nfs_targets.id]
 }
 
 // the VMSS module
@@ -166,7 +170,7 @@ module "vmss" {
     nfs_export_addresses = azurerm_hpc_cache.hpc_cache.mount_addresses
     nfs_export_path = local.nfs_export_path
     bootstrap_script_path = module.vmss_configure.bootstrap_script_path
-    vmss_depends_on = module.vmss_configure.bootstrap_script_path
+    module_depends_on = [module.vmss_configure.module_depends_on_id]
 }
 
 output "jumpbox_username" {

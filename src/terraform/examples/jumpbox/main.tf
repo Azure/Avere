@@ -49,6 +49,8 @@ module "jumpbox" {
     virtual_network_resource_group = local.network_resource_group_name
     virtual_network_name = module.network.vnet_name
     virtual_network_subnet_name = module.network.jumpbox_subnet_name
+
+    module_depends_on = [azurerm_resource_group.jumpboxrg.id]
 }
 
 output "jumpbox_username" {

@@ -43,7 +43,7 @@ variable "virtual_network_subnet_name" {
 }
 
 variable "add_public_ip" {
-  description = "specifies if the jumpbox should have a publice ip"
+  description = "specifies if the jumpbox should have a public ip"
   default = false
 }
 
@@ -52,7 +52,17 @@ variable "build_vfxt_terraform_provider" {
   default = true
 }
 
+variable "add_role_assignments" {
+  description = "specifies if the jumpbox should have a role assignment"
+  default = false
+}
+
 variable "alternative_resource_groups" {
   description = "specifies alternative resource groups including those containing custom images or storage accounts"
   default = []
+}
+
+variable "module_depends_on" {
+  default = [""]
+  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
 }

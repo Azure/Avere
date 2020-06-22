@@ -79,11 +79,9 @@ variable "overprovision" {
   default = false
 }
 
-// depends on technique described here: https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2
-variable "vmss_depends_on" {
-  description = "used to establish dependency between objects"
-  type = any
-  default = null
+variable "module_depends_on" {
+  default = [""]
+  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
 }
 
 variable "mount_all" {

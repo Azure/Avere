@@ -26,3 +26,8 @@ variable "nfs_export_path" {
 variable "vdbench_url" {
     description = "The VDBench URL points to the VDBench zip binary."
 }
+
+variable "module_depends_on" {
+  default = [""]
+  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
+}

@@ -127,6 +127,8 @@ module "vdbench_configure" {
     nfs_address = tolist(avere_vfxt.vfxt.vserver_ip_addresses)[0]
     nfs_export_path = local.nfs_export_path
     vdbench_url = local.vdbench_url
+
+    module_depends_on = [avere_vfxt.vfxt]
 }
 
 // the VMSS module
@@ -147,7 +149,7 @@ module "vmss" {
     nfs_export_addresses = tolist(avere_vfxt.vfxt.vserver_ip_addresses)
     nfs_export_path = local.nfs_export_path
     bootstrap_script_path = module.vdbench_configure.bootstrap_script_path
-    vmss_depends_on = module.vdbench_configure.bootstrap_script_path
+    module_depends_on = [module.vdbench_configure.module_depends_on_id]
 }
 
 output "controller_username" {
