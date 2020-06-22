@@ -8,5 +8,5 @@ output "jumpbox_username" {
 
 output "module_depends_on_id" {
   description = "the id(s) to force others to wait"
-  value = var.add_role_assignments ? azurerm_role_assignment.create_cluster_role.id : azurerm_virtual_machine_extension.cse.id
+  value = var.add_role_assignments ? azurerm_role_assignment.create_cluster_role[0].id : azurerm_virtual_machine_extension.cse.id
 }
