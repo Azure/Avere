@@ -178,7 +178,7 @@ module "jumpbox" {
     virtual_network_name = module.network.vnet_name
     virtual_network_subnet_name = module.network.jumpbox_subnet_name
 
-    module_depends_on = [azurerm_resource_group.hpc_cache_rg.id]
+    module_depends_on = [azurerm_resource_group.hpc_cache_rg.id, module.jumpbox.module_depends_on_id]
 }
 
 // the vdbench module

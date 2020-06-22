@@ -21,7 +21,7 @@ resource "azurerm_network_security_group" "ssh_nsg" {
             protocol                   = "Tcp"
             source_port_range          = "*"
             destination_port_ranges    = var.open_external_ports
-            source_address_prefix      = var.open_external_source
+            source_address_prefixes    = var.open_external_sources
             destination_address_prefix = "*"
         }
     }
