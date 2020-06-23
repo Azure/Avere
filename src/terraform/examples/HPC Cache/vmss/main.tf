@@ -112,8 +112,6 @@ module "nasfiler1" {
     virtual_network_resource_group = local.network_resource_group_name
     virtual_network_name = module.network.vnet_name
     virtual_network_subnet_name = module.network.cloud_filers_subnet_name
-
-    depends_on = [module.network.module_depends_on_ids]
 }
 
 resource "azurerm_hpc_cache_nfs_target" "nfs_targets" {
