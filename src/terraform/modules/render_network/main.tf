@@ -12,16 +12,16 @@ resource "azurerm_network_security_group" "ssh_nsg" {
     resource_group_name = azurerm_resource_group.render_rg.name
 
     dynamic "security_rule" {
-        for_each = length(var.open_external_ports) > 0 ? ["singleloop"] : []
+        for_each = length(var.open_external_ports) > 0 ? var.open_external_sources : []
         content {
-            name                       = "SSH"
-            priority                   = 120
+            name                       = "SSH-${security_rule.key + 120}"
+            priority                   = security_rule.key + 120
             direction                  = "Inbound"
             access                     = "Allow"
             protocol                   = "Tcp"
             source_port_range          = "*"
             destination_port_ranges    = var.open_external_ports
-            source_address_prefixes    = var.open_external_sources
+            source_address_prefix      = security_rule.value
             destination_address_prefix = "*"
         }
     }
