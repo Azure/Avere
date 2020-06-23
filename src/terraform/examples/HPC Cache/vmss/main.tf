@@ -68,6 +68,9 @@ module "network" {
     source              = "github.com/Azure/Avere/src/terraform/modules/render_network"
     resource_group_name = local.network_resource_group_name
     location            = local.location
+
+    open_external_ports   = local.open_external_ports
+    open_external_sources = local.open_external_sources
 }
 
 resource "azurerm_resource_group" "hpc_cache_rg" {

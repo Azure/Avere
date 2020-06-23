@@ -25,6 +25,7 @@ module "network" {
     location            = local.location
 
     open_external_ports                   = local.open_external_ports
+    open_external_sources                 = local.open_external_sources
     vnet_address_space                    = "10.0.0.0/16"
     subnet_cloud_cache_address_prefix     = "10.0.1.0/24"
     subnet_cloud_filers_address_prefix    = "10.0.2.0/24"
