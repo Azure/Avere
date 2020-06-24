@@ -2,6 +2,7 @@
 locals {
   resource_group_name = "houdini_vm_rg"
   unique_name = "unique"
+  // paste in the id of the full custom image
   source_image_id = ""
   vm_size = "Standard_D4s_v3"
   add_public_ip = true
@@ -10,24 +11,25 @@ locals {
   // then admin_password is ignored
   vm_admin_password = "ReplacePassword$"
 
-  // replace below variables with the infrastructure variables from 1.base_infrastructure
+  // replace below variables with the infrastructure variables from 0.network
   location = ""
   vnet_render_clients1_subnet_id = ""
   
-  // replace below variables with the cache variables from 2.cache
+  // replace below variables with the cache variables from 3.cache
   mount_addresses = []
   mount_path = ""
   
   // advanced scenarios: the below variables rarely need to change  
   mount_address_csv = join(",", tolist(local.mount_addresses))
   target_path = "c:\\\\cloudcache"
+  rdp_port = 3389
 
   // the following are the arguments to be passed to the custom script
-  windows_custom_script_arguments = "$arguments = '-UserName ${local.vm_admin_username} -MountAddressesCSV \\\"${local.mount_address_csv}\\\" -MountPath ${local.mount_path} -TargetPath ${local.target_path} '  ; "
+  windows_custom_script_arguments = "$arguments = ' -MountAddressesCSV ''${local.mount_address_csv}'' -MountPath ''${local.mount_path}'' -TargetPath ''${local.target_path}'' '  ; "
 
   // load the powershell file, you can substitute kv pairs as you need them, but 
   // use arguments where possible
-  powershell_script = file("${path.module}/setupMachine.ps1")
+  powershell_script = file("${path.module}/../../setupMachine.ps1")
 }
 
 provider "azurerm" {
@@ -108,6 +110,6 @@ output "username" {
   value = local.vm_admin_username
 }
 
-output "jumpbox_address" {
+output "vm_address" {
   value = "${local.add_public_ip ? azurerm_public_ip.vm[0].ip_address : azurerm_network_interface.vm.ip_configuration[0].private_ip_address}"
 }

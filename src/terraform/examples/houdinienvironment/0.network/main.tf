@@ -54,6 +54,21 @@ output "vnet_jumpbox_subnet_name" {
   value = "\"${module.network.jumpbox_subnet_name}\""
 }
 
+output "vnet_cloud_filers_subnet_name" {
+  value = "\"${module.network.cloud_filers_subnet_name}\""
+}
+
+output "vnet_cloud_cache_subnet_id" {
+  value = "\"${module.network.cloud_cache_subnet_id}\""
+}
+
+output "vnet_jumpbox_subnet_id" {
+  value = "\"${module.network.jumpbox_subnet_id}\""
+}
+
 output "vnet_render_clients1_subnet_id" {
   value = "\"${module.network.render_clients1_subnet_id}\""
 }
+
+
+
