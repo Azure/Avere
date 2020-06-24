@@ -1,33 +1,58 @@
 // customize the simple VM by adjusting the following local variables
 locals {
-  resource_group_name = "houdini_license_rg"
+  resource_group_name = "houdini_windows_vms_rg"
   unique_name = "unique"
-  source_image_id = ""
   vm_size = "Standard_D4s_v3"
+  # choose one of the following windows versions
+  source_image_reference = local.windows_server_2016
+  #source_image_reference = local.windows_server_2019
+  #source_image_reference = local.windows_10
   add_public_ip = true
   vm_admin_username = "azureuser"
   // use either SSH Key data or admin password, if ssh_key_data is specified
   // then admin_password is ignored
   vm_admin_password = "ReplacePassword$"
 
-  // replace below variables with the infrastructure variables from 1.base_infrastructure
+  // replace below variables with the infrastructure variables from 0.network
   location = ""
   vnet_render_clients1_subnet_id = ""
   
-  // replace below variables with the cache variables from 2.cache
+  // replace below variables with the cache variables from the nfs filer or cache (in case of blob backed storage)
   mount_addresses = []
   mount_path = ""
   
   // advanced scenarios: the below variables rarely need to change  
   mount_address_csv = join(",", tolist(local.mount_addresses))
   target_path = "c:\\\\cloudcache"
+  rdp_port = 3389
 
   // the following are the arguments to be passed to the custom script
-  windows_custom_script_arguments = "$arguments = '-UserName ${local.vm_admin_username} -MountAddressesCSV \\\"${local.mount_address_csv}\\\" -MountPath ${local.mount_path} -TargetPath ${local.target_path} '  ; "
+  windows_custom_script_arguments = "$arguments = ' -MountAddressesCSV ''${local.mount_address_csv}'' -MountPath ''${local.mount_path}'' -TargetPath ''${local.target_path}'' '  ; "
 
   // load the powershell file, you can substitute kv pairs as you need them, but 
   // use arguments where possible
-  powershell_script = file("${path.module}/setupMachine.ps1")
+  powershell_script = file("${path.module}/../setupMachine.ps1")
+
+  windows_server_2016 = {
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = "2016-Datacenter"
+    version   = "latest"
+  }
+
+  windows_server_2019 = {
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = "2019-Datacenter"
+    version   = "latest"
+  }
+
+  windows_10 = {
+    publisher = "microsoftvisualstudio"
+    offer     = "Windows"
+    sku       = "Windows-10-N-x64"
+    version   = "latest"
+  }
 }
 
 provider "azurerm" {
@@ -56,7 +81,7 @@ resource "azurerm_network_interface" "vm" {
 
   ip_configuration {
     name                          = "internal"
-    subnet_id                     = local.vnet_render_clients1_subnet_id
+    subnet_id                     = local.vnet_jumpbox_subnet_id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = local.add_public_ip ? azurerm_public_ip.vm[0].id : ""
   }
@@ -72,14 +97,19 @@ resource "azurerm_windows_virtual_machine" "vm" {
   admin_password        = local.vm_admin_password
   size                  = local.vm_size
   network_interface_ids = [azurerm_network_interface.vm.id]
-  source_image_id       = local.source_image_id
-
+  
   os_disk {
     name                 = "${local.unique_name}-osdisk"
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
 
+  source_image_reference {
+    publisher = local.source_image_reference.publisher
+    offer     = local.source_image_reference.offer
+    sku       = local.source_image_reference.sku
+    version   = local.source_image_reference.version
+  }
 }
 
 locals {
@@ -108,6 +138,6 @@ output "username" {
   value = local.vm_admin_username
 }
 
-output "jumpbox_address" {
+output "vm_address" {
   value = "${local.add_public_ip ? azurerm_public_ip.vm[0].ip_address : azurerm_network_interface.vm.ip_configuration[0].private_ip_address}"
 }

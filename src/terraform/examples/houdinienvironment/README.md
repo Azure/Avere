@@ -7,7 +7,7 @@ This example shows how to configure the end to end infrastructure for a Houdini 
 ## Deployment Instructions
 
 The deployment instructions are based on the [first render pilot document](https://aka.ms/first-render-pilot) with two phases:
-1. **Phase 1: first frame render** - this sets up the pre-requisites of network, storage, render node, and supporting nodes
+1. **Phase 1: single frame render** - this sets up the pre-requisites of network, storage, render node, and supporting nodes
     1. **0.network** - build out the virtual network on Azure and connect to onprem if required.
     1. **1.storage** - build a backing storage solution: this could connecting back to on-prem filer, or all in cloud blob storage, or cloud filer.
     1. **2.base image** - this step builds the license server, queue server, and render node.  At this point you should be able to render your first frame
@@ -47,7 +47,7 @@ Before running the examples you will need to setup the following pre-requisites:
 
 1. **storage** - if using an on-prem filer, you will need to establish an [Azure VPN Gateway](https://azure.microsoft.com/en-us/services/vpn-gateway/) to on-premises for connectivity to backend storage, rendering license server, active directory server, or render manager.  This step is configured after building out the Virtual Network in step 0 below.
 
-## Phase 1: Step 0 - Network
+## Phase 1 Single Frame Render: Step 0 - Network
 
 The first step is to setup the Virtual Network, subnets, and network security groups:
 
@@ -57,16 +57,86 @@ The first step is to setup the Virtual Network, subnets, and network security gr
 
 1. execute `terraform init` in the directory of `main.tf`.
 
-1. execute `terraform apply -auto-approve` to build the vfxt cluster
+1. execute `terraform apply -auto-approve` to build the network
 
 Once deployed, capture the output variables to somewhere safe, as they will be needed in the following deployments.
 
 Once your virtual network is setup, determine if you need to establish an [Azure VPN Gateway](https://azure.microsoft.com/en-us/services/vpn-gateway/) to on-premises for connectivity to backend storage, rendering license server, active directory server, or render manager.
 
-## Phase 1: Step 1 - Storage
+## Phase 1 Single Frame Render: Step 1 - Storage
 
 The next step is to establish backend storage.  If using a backend storage filer, you can skip this step.  Otherwise if you are using cloud based storage, proceed through the following steps:
 
 1. decide whether to use blob based storage or an nfs filer and run the following steps:
-    1. if using blob based storage: `cd ~/tf/src/terraform/examples/vfxt/houdinienvrionment/1.storage`
+    1. if using blob based storage: `cd ~/tf/src/terraform/examples/vfxt/houdinienvrionment/1.storage/blobstorage`.  You will need to additionally install the Avere Cache in step 3 so that nfs or smb clients can mount.
+    1. if using an nfs cloud filer: `cd ~/tf/src/terraform/examples/vfxt/houdinienvrionment/1.storage/nfsfiler`
 
+1. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.
+
+1. execute `terraform init` in the directory of `main.tf`.
+
+1. execute `terraform apply -auto-approve` to deploy the storage
+
+Once deployed, capture the output variables to somewhere safe, as they will be needed in the following deployments.
+
+## Phase 1 Single Frame Render: Step 2a - Deploy Windows VM
+
+The next step is to build out the node types:
+* **render node** - (required) this contains the Houdini software
+* **HQueue server** - (optional) this is the Houdini scheduler and will not be needed if this is being handled by a node on prem
+* **license server** - (optional) this is the Houdini license server.  This may not be needed if a license server on-prem can be used.  This server will need to be long lived since it requires manual registration with SideFX.
+* **Domain Controller** - (optional) this will be needed for SMB access to the Cache.
+
+Run the following steps for each of the above deployment.
+
+1. continuing from the previous instructions browse to the Windows VM directory: `cd ~/tf/src/terraform/examples/vfxt/houdinienvrionment/2.windowsvm`
+
+1. copy the main.tf to a new directory
+
+```bash
+mkdir -p rendernode
+cp main.tf setupMachine.ps1 rendernode/.
+cd rendernode
+```
+
+1. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.
+
+1. execute `terraform init` in the directory of `main.tf`.
+
+1. execute `terraform apply -auto-approve` to build the windows VM
+
+Repeat each of the above for the nodes you need.
+
+## Phase 1 Single Frame Render: Step 2b Test Single Frame Render and Capture Images
+
+At this point you can test a single frame render.  Once the single frame render is complete, follow the instructions to capture the render node, HQueue server and DC controller into windows images: https://docs.microsoft.com/en-us/azure/virtual-machines/windows/capture-image-resource.  Capture these images in a long lived resource group.
+
+## Phase 2 Scaling: Step 3 - Cache
+
+At this point you are now ready to scale the render nodes.
+
+1. verify you have completed all pre-requisites above
+
+1. continuing from the previous steps, browse to the cache directory: `cd ~/tf/src/terraform/examples/vfxt/houdinienvrionment/3.windowsvm`
+
+1. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  You will need to paste in the output values from the deployment of the storage and the network steps.
+
+1. execute `terraform init` in the directory of `main.tf`.
+
+1. execute `terraform apply -auto-approve` to deploy the storage.
+
+## Phase 3 Scaling: Step 4 - Render Nodes
+
+At this point you are now ready to deploy your custom images previously created.
+
+1. continuing from the previous steps, decide what you need to deploy:
+    1. **HQueue or Windows Domain Controller images** - use the single vm image deployment by browsing to the vm directory `cd ~/tf/src/terraform/examples/vfxt/houdinienvrionment/4.rendernodes/vm`
+    1. **render nodes** - use the VMSS deployment by browsing to the vmss directory cd ~/tf/src/terraform/examples/vfxt/houdinienvrionment/4.rendernodes/vm`
+
+1. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  You will need to paste in the output values from the deployment of the storage, network, and cache steps.
+
+1. execute `terraform init` in the directory of `main.tf`.
+
+1. execute `terraform apply -auto-approve` to build the windows VM
+
+At this point you should have a complete rendering environment where you can run scale tests.
