@@ -44,11 +44,13 @@ func NewAvereVfxt(
 	controllerAddress string,
 	controllerUsername string,
 	sshAuthMethod ssh.AuthMethod,
+	sshPort int,
 	runLocal bool,
 	allowNonAscii bool,
 	platform IaasPlatform,
 	avereVfxtName string,
 	avereAdminPassword string,
+	sshKeyData string,
 	enableSupportUploads bool,
 	nodeCount int,
 	nodeSize string,
@@ -70,11 +72,13 @@ func NewAvereVfxt(
 		ControllerAddress:    controllerAddress,
 		ControllerUsename:    controllerUsername,
 		SshAuthMethod:        sshAuthMethod,
+		SshPort:              sshPort,
 		RunLocal:             runLocal,
 		AllowNonAscii:        allowNonAscii,
 		Platform:             platform,
 		AvereVfxtName:        avereVfxtName,
 		AvereAdminPassword:   avereAdminPassword,
+		AvereSshKeyData:      sshKeyData,
 		EnableSupportUploads: enableSupportUploads,
 		NodeCount:            nodeCount,
 		NodeSize:             nodeSize,
@@ -107,7 +111,7 @@ func (a *AvereVfxt) RunCommand(cmd string) (bytes.Buffer, bytes.Buffer, error) {
 	if a.RunLocal {
 		return BashCommand(cmd)
 	} else {
-		return SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, cmd)
+		return SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, cmd, a.SshPort)
 	}
 }
 

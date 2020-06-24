@@ -12,7 +12,7 @@ locals {
   # send the script file to custom data, adding env vars
   script_file_b64 = base64gzip(replace(file("${path.module}/averecmd.txt"),"\r",""))
   msazure_patch1_file_b64 = base64gzip(replace(file("${path.module}/msazure.py.patch1"),"\r",""))
-  cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { averecmd = local.script_file_b64, msazure_patch1 = local.msazure_patch1_file_b64 })
+  cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { averecmd = local.script_file_b64, msazure_patch1 = local.msazure_patch1_file_b64, ssh_port = var.ssh_port })
   # the roles assigned to the controller managed identity principal
   # the contributor role is required to create Avere clusters
   avere_create_cluster_role = "Avere Contributor"

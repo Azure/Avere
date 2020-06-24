@@ -16,6 +16,11 @@ variable "ssh_key_data" {
   description = "(optional) The public SSH key used for access to the controller or jumpbox.  If not specified, the password needs to be set.  The ssh_key_data takes precedence over the password, and if set, the password will be ignored."
 }
 
+variable "ssh_port" {
+  description = "specifies the tcp port to use for ssh"
+  default = 22
+}
+
 variable "bootstrap_mount_address" {
     description = "the mount address that hosts the worker bootstrap script"
 }

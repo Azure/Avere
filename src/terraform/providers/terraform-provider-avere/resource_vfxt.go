@@ -41,6 +41,11 @@ func resourceVfxt() *schema.Resource {
 				Optional:  true,
 				Sensitive: true,
 			},
+			controller_ssh_port: {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(0, 65535),
+			},
 			run_local: {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -145,10 +150,16 @@ func resourceVfxt() *schema.Resource {
 				Sensitive:    true,
 				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
 			},
+			vfxt_ssh_key_data: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringDoesNotContainAny("'\""),
+			},
 			vfxt_node_count: {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ValidateFunc: validation.IntBetween(3, 16),
+				ValidateFunc: validation.IntBetween(MinNodesCount, MaxNodesCount),
 			},
 			node_size: {
 				Type:     schema.TypeString,
@@ -360,7 +371,7 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if avereVfxt.RunLocal == false {
-		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod); err != nil {
+		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, avereVfxt.SshPort); err != nil {
 			return err
 		}
 	}
@@ -464,7 +475,7 @@ func resourceVfxtRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if avereVfxt.RunLocal == false {
-		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod); err != nil {
+		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, avereVfxt.SshPort); err != nil {
 			return err
 		}
 	}
@@ -498,7 +509,7 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if avereVfxt.RunLocal == false {
-		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod); err != nil {
+		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, avereVfxt.SshPort); err != nil {
 			return err
 		}
 	}
@@ -632,7 +643,7 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if avereVfxt.RunLocal == false {
-		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod); err != nil {
+		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, avereVfxt.SshPort); err != nil {
 			return err
 		}
 	}
@@ -654,6 +665,7 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	var err error
 	var controllerAddress, controllerAdminUsername, controllerAdminPassword string
+	var controllerSshPort int
 
 	runLocal := d.Get(run_local).(bool)
 	allowNonAscii := d.Get(allow_non_ascii).(bool)
@@ -676,8 +688,10 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		} else {
 			return nil, fmt.Errorf("missing argument '%s'", controller_admin_username)
 		}
-		if v, exists := d.GetOk(controller_admin_password); exists {
-			controllerAdminPassword = v.(string)
+		if v, exists := d.GetOk(controller_ssh_port); exists {
+			controllerSshPort = v.(int)
+		} else {
+			controllerSshPort = DefaultSshPort
 		}
 
 		if len(controllerAdminPassword) > 0 {
@@ -722,11 +736,13 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		controllerAddress,
 		controllerAdminUsername,
 		authMethod,
+		controllerSshPort,
 		runLocal,
 		allowNonAscii,
 		iaasPlatform,
 		d.Get(vfxt_cluster_name).(string),
 		d.Get(vfxt_admin_password).(string),
+		d.Get(vfxt_ssh_key_data).(string),
 		d.Get(enable_support_uploads).(bool),
 		nodeCount,
 		d.Get(node_size).(string),
@@ -1365,6 +1381,7 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 		image_id,
 		vfxt_cluster_name,
 		vfxt_admin_password,
+		vfxt_ssh_key_data,
 	}
 
 	for _, parameter := range validateParameterSlice {

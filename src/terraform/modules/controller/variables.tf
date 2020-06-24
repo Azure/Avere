@@ -67,6 +67,11 @@ variable "apply_patch" {
   default = true
 }
 
+variable "ssh_port" {
+  description = "specifies the tcp port to use for ssh"
+  default = 22
+}
+
 variable "module_depends_on" {
   default = [""]
   description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"

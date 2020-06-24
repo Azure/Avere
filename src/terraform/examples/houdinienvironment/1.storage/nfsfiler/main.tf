@@ -10,7 +10,7 @@ locals {
     vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
 
     // nfs filer details
-    filer_resource_group_name = "houdini_storage_rg"
+    storage_resource_group_name = "houdini_storage_rg"
     // more filer sizes listed at https://github.com/Azure/Avere/tree/master/src/terraform/modules/nfs_filer
     filer_size = "Standard_D2s_v3" 
 
@@ -32,7 +32,7 @@ provider "azurerm" {
 }
 
 resource "azurerm_resource_group" "nfsfiler" {
-  name     = local.filer_resource_group_name
+  name     = local.storage_resource_group_name
   location = local.location
 }
 
@@ -65,3 +65,10 @@ output "filer_export" {
   value = "\"${module.nasfiler1.core_filer_export}\""
 }
 
+output "storage_resource_group_name" {
+  value = "\"${local.storage_resource_group_name}\""
+}
+
+output "use_nfs_storage" {
+  value = true
+}

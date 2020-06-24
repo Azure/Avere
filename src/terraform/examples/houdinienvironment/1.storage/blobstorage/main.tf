@@ -48,3 +48,7 @@ output "storage_resource_group_name" {
 output "storage_account_name" {
   value = "\"${local.storage_account_name}\""
 }
+
+output "use_blob_storage" {
+  value = true
+}
