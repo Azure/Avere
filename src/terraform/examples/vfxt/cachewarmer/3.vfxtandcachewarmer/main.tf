@@ -7,10 +7,11 @@ locals {
   // if you use SSH key, ensure you have ~/.ssh/id_rsa with permission 600
   // populated where you are running terraform
   vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
-
+  
   // vfxt details
   vfxt_cluster_name = "vfxt"
   vfxt_cluster_password = "VFXT_PASSWORD"
+  vfxt_ssh_key_data = local.vm_ssh_key_data
 
   // vfxt cache polies
   //  "Clients Bypassing the Cluster"
@@ -29,6 +30,7 @@ locals {
   // paste the values from the values from the controller creation
   controller_address = ""
   controller_username = ""
+  ssh_port = 22
   vfxt_resource_group_name = ""
 }
 
@@ -43,7 +45,7 @@ resource "avere_vfxt" "vfxt" {
     controller_admin_username = local.controller_username
     // ssh key takes precedence over controller password
     controller_admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
-    
+    controller_ssh_port = local.ssh_port
     location = local.location
     azure_resource_group = local.vfxt_resource_group_name
     azure_network_resource_group = local.vfxt_network_resource_group_name
@@ -51,6 +53,7 @@ resource "avere_vfxt" "vfxt" {
     azure_subnet_name = local.vfxt_cache_subnet_name
     vfxt_cluster_name = local.vfxt_cluster_name
     vfxt_admin_password = local.vfxt_cluster_password
+    vfxt_ssh_key_data = local.vfxt_ssh_key_data
     vfxt_node_count = 3
     global_custom_settings = [
       "cluster.ctcConnMult CE 25"

@@ -10,6 +10,7 @@ locals {
     vm_admin_username = "azureuser"
     // the vdbench example requires an ssh key
     vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
+    ssh_port = 22
     
     // storage details
     storage_account_name = ""
@@ -21,6 +22,7 @@ locals {
     controller_add_public_ip = true
     vfxt_cluster_name = "vfxt"
     vfxt_cluster_password = "VFXT_PASSWORD"
+    vfxt_ssh_key_data = local.vm_ssh_key_data
 
     # download the latest vdbench from https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html
     # and upload to an azure storage blob and put the URL below
@@ -33,6 +35,11 @@ locals {
     mount_target = "/data"
 
     alternative_resource_groups = [local.storage_resource_group_name]
+    // advanced scenario: add external ports to work with cloud policies example [10022, 13389]
+    open_external_ports = [22,3389]
+    // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
+    // or if accessing from cloud shell, put "AzureCloud"
+    open_external_sources = ["*"]
 }
 
 provider "azurerm" {
@@ -45,6 +52,9 @@ module "network" {
     source = "github.com/Azure/Avere/src/terraform/modules/render_network"
     resource_group_name = local.network_resource_group_name
     location = local.location
+
+    open_external_ports   = local.open_external_ports
+    open_external_sources = local.open_external_sources
 }
 
 resource "azurerm_resource_group" "storage" {
@@ -80,6 +90,7 @@ module "vfxtcontroller" {
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.controller_add_public_ip
     alternative_resource_groups = local.alternative_resource_groups
+    ssh_port = local.ssh_port
     
     // network details
     virtual_network_resource_group = module.network.vnet_resource_group
@@ -93,6 +104,7 @@ module "vfxtcontroller" {
 resource "avere_vfxt" "vfxt" {
     controller_address = module.vfxtcontroller.controller_address
     controller_admin_username = module.vfxtcontroller.controller_username
+    controller_ssh_port = local.ssh_port
     // terraform is not creating the implicit dependency on the controller module
     // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
     // to work around, add the explicit dependency
@@ -105,6 +117,7 @@ resource "avere_vfxt" "vfxt" {
     azure_subnet_name = module.network.cloud_cache_subnet_name
     vfxt_cluster_name = local.vfxt_cluster_name
     vfxt_admin_password = local.vfxt_cluster_password
+    vfxt_ssh_key_data = local.vfxt_ssh_key_data
     vfxt_node_count = 3
 
     azure_storage_filer {

@@ -12,6 +12,7 @@ locals {
     vfxt_resource_group_name = "vfxt_resource_group"
     vfxt_cluster_name = "vfxt"
     vfxt_cluster_password = "VFXT_PASSWORD"
+    vfxt_ssh_key_data = null //"ssh-rsa AAAAB3...."
     
     // filer details
     filer_address = ""
@@ -36,6 +37,7 @@ resource "avere_vfxt" "vfxt" {
     azure_subnet_name = local.vfxt_network_subnet_name
     vfxt_cluster_name = local.vfxt_cluster_name
     vfxt_admin_password = local.vfxt_cluster_password
+    vfxt_ssh_key_data = local.vfxt_ssh_key_data
     vfxt_node_count = 3
 
     core_filer {
