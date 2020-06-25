@@ -68,6 +68,15 @@ func (a Azure) CreateVfxt(avereVfxt *AvereVfxt) error {
 	if err := VerifyAzLogin(avereVfxt); err != nil {
 		return fmt.Errorf("Error verifying az cli login: %v", err)
 	}
+	if len(avereVfxt.AvereSshKeyData) > 0 {
+		cmd := a.getEnsureAvereSshKeyData(avereVfxt.AvereSshKeyData)
+		stdoutBuf, stderrBuf, err := avereVfxt.RunCommand(cmd)
+		if err != nil {
+			allErrors := getAllVfxtErrors(stdoutBuf, stderrBuf)
+			return fmt.Errorf("Error ensuring public key: %v, '%s'", err, allErrors)
+		}
+	}
+
 	cmd := a.getCreateVfxtCommand(avereVfxt)
 	stdoutBuf, stderrBuf, err := avereVfxt.RunCommand(cmd)
 	if err != nil {
@@ -239,6 +248,10 @@ func VerifyAzLogin(avereVfxt *AvereVfxt) error {
 	return err
 }
 
+func (a Azure) getEnsureAvereSshKeyData(publicKeyData string) string {
+	return WrapCommandForLogging(fmt.Sprintf("echo '%s' > %s", publicKeyData, VfxtKeyPubFile), ShellLogFile)
+}
+
 func (a Azure) getCreateVfxtCommand(avereVfxt *AvereVfxt) string {
 	vServerStr := ""
 	if len(avereVfxt.FirstIPAddress) > 0 && len(avereVfxt.FirstIPAddress) > 0 {
@@ -292,10 +305,14 @@ func (a Azure) getBaseVfxtCommand(avereVfxt *AvereVfxt) string {
 	// add the vfxt information
 	sb.WriteString(fmt.Sprintf("--cluster-name %s --admin-password '%s' ", avereVfxt.AvereVfxtName, avereVfxt.AvereAdminPassword))
 
+	if len(avereVfxt.AvereSshKeyData) > 0 {
+		sb.WriteString(fmt.Sprintf("--ssh-key %s ", VfxtKeyPubFile))
+	}
+
 	return sb.String()
 }
 
-// used when mulitple commands piped together
+// used when multiple commands piped together
 func getAzCliProxyExports(proxyUri string) string {
 	if len(proxyUri) > 0 {
 		return fmt.Sprintf(" export HTTPS_PROXY=\"%s\" && export NO_PROXY=\"169.254.169.254\" && ", proxyUri)

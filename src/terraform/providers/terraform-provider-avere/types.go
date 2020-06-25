@@ -20,6 +20,7 @@ type AvereVfxt struct {
 	ControllerUsename string
 
 	SshAuthMethod ssh.AuthMethod
+	SshPort       int
 
 	RunLocal      bool
 	AllowNonAscii bool
@@ -28,6 +29,7 @@ type AvereVfxt struct {
 
 	AvereVfxtName        string
 	AvereAdminPassword   string
+	AvereSshKeyData      string
 	EnableSupportUploads bool
 	NodeCount            int
 	NodeSize             string

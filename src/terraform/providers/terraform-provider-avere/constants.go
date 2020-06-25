@@ -6,12 +6,15 @@ const (
 	AvereAdminUsername        = "admin"
 	MinNodesCount             = 3
 	MaxNodesCount             = 16
+	DefaultSshPort            = 22
 	VfxtLogDateFormat         = "2006-01-02.15.04.05"
 	VServerRangeSeperator     = "-"
 	AverecmdRetryCount        = 30 // wait 5 minutes (ex. remove core filer gets perm denied for a while)
 	AverecmdRetrySleepSeconds = 10
 	AverecmdLogFile           = "~/averecmd.log"
 	VServerName               = "vserver"
+	VfxtKeyPubFile            = "~/vfxt_ssh_key_data.pub"
+	ShellLogFile              = "~/shell.log"
 
 	// Platform
 	PlatformAzure = "azure"
@@ -82,6 +85,7 @@ const (
 	controller_address           = "controller_address"
 	controller_admin_username    = "controller_admin_username"
 	controller_admin_password    = "controller_admin_password"
+	controller_ssh_port          = "controller_ssh_port"
 	run_local                    = "run_local"
 	allow_non_ascii              = "allow_non_ascii"
 	location                     = "location"
@@ -100,6 +104,7 @@ const (
 	image_id                     = "image_id"
 	vfxt_cluster_name            = "vfxt_cluster_name"
 	vfxt_admin_password          = "vfxt_admin_password"
+	vfxt_ssh_key_data            = "vfxt_ssh_key_data"
 	vfxt_node_count              = "vfxt_node_count"
 	node_size                    = "node_size"
 	node_cache_size              = "node_cache_size"

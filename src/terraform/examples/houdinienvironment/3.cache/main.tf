@@ -7,6 +7,7 @@ locals {
     // if you use SSH key, ensure you have ~/.ssh/id_rsa with permission 600
     // populated where you are running terraform
     vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
+    ssh_port = 22
 
     // vfxt details
     vfxt_resource_group_name = "houdini_vfxt_rg"
@@ -14,8 +15,9 @@ locals {
     controller_add_public_ip = true
     vfxt_cluster_name = "vfxt"
     vfxt_cluster_password = "VFXT_PASSWORD"
+    vfxt_ssh_key_data = local.vm_ssh_key_data
 
-    // replace below variables with the infrastructure variables from 1.base_infrastructure
+    // replace below variables with the infrastructure variables from 0.network
     location = ""
     storage_account_name = ""
     storage_resource_group_name = ""
@@ -25,12 +27,33 @@ locals {
     vnet_render_clients1_subnet_id = ""
     vnet_resource_group = ""
 
+    // either replace below variables from 
+    //  1.storage/blobstorage,
+    use_blob_storage = false
+    storage_account_name = ""
+    //storage_resource_group_name = ""
+    //  or 1.storage/nfsfiler
+    use_nfs_storage = false
+    filer_address = ""
+    filer_export = ""
+    storage_resource_group_name = ""
+
     // advanced scenarios: the variables below raraly need changing
     // in addition to storage account put the custom image resource group here
     alternative_resource_groups = [local.storage_resource_group_name]
     // cloud filer details
-    junction_namespace_path = "/storagevfxt"
+    junction_namespace_path_clfs = "/houdiniclfs"
+    junction_namespace_path_filer = "/houdinifiler"
+    // only for the blob storage
     storage_container_name = "cache"
+    // only for the nfs filer storage
+    // vfxt cache polies
+    //  "Clients Bypassing the Cluster"
+    //  "Read Caching"
+    //  "Read and Write Caching"
+    //  "Full Caching"
+    //  "Transitioning Clients Before or After a Migration"
+    cache_policy = "Clients Bypassing the Cluster"
 }
 
 provider "azurerm" {
@@ -48,6 +71,7 @@ module "vfxtcontroller" {
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.controller_add_public_ip
     alternative_resource_groups = local.alternative_resource_groups
+    ssh_port = local.ssh_port
 
     // network details
     virtual_network_resource_group = local.vnet_resource_group
@@ -61,10 +85,11 @@ resource "avere_vfxt" "vfxt" {
     controller_admin_username = module.vfxtcontroller.controller_username
     // ssh key takes precedence over controller password
     controller_admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
+    controller_ssh_port = local.ssh_port
     // terraform is not creating the implicit dependency on the controller module
     // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
     // to work around, add the explicit dependency
-    depends_on = [module.vfxtcontroller]
+    depends_on = [module.vfxtcontroller.module_depends_on_id]
     
     // network
     azure_network_resource_group = local.vnet_resource_group
@@ -75,6 +100,7 @@ resource "avere_vfxt" "vfxt" {
     azure_resource_group = local.vfxt_resource_group_name
     vfxt_cluster_name = local.vfxt_cluster_name
     vfxt_admin_password = local.vfxt_cluster_password
+    vfxt_ssh_key_data = local.vfxt_ssh_key_data
     vfxt_node_count = 3
 
     global_custom_settings = [
@@ -85,17 +111,40 @@ resource "avere_vfxt" "vfxt" {
         "cluster.NfsFrontEndCwnd EK 1",
     ]
     
-    azure_storage_filer {
-        account_name = local.storage_account_name
-        container_name = local.storage_container_name
-        junction_namespace_path = local.junction_namespace_path
-        custom_settings = [
-            "client_rt_preferred FE 524288",
-            "client_wt_preferred NO 524288",
-            "nfsConnMult YW 20",
-            "autoWanOptimize YF 2",
-            "always_forward OZ 1",
-        ]
+    dynamic "azure_storage_filer" {
+        for_each = local.use_blob_storage ? ["use_blob_storage"] : []
+        content {
+            account_name = local.storage_account_name
+            container_name = local.storage_container_name
+            junction_namespace_path = local.junction_namespace_path_clfs
+            custom_settings = [
+                "client_rt_preferred FE 524288",
+                "client_wt_preferred NO 524288",
+                "nfsConnMult YW 20",
+                "autoWanOptimize YF 2",
+                "always_forward OZ 1",
+            ]
+        }
+    }
+
+    dynamic "core_filer" {
+        for_each = local.use_nfs_storage ? ["use_nfs_storage"] : []
+        content {
+            name = "nfs1"
+            fqdn_or_primary_ip = local.filer_address
+            cache_policy = local.cache_policy
+            custom_settings = [
+                "client_rt_preferred FE 524288",
+                "client_wt_preferred NO 524288",
+                "nfsConnMult YW 20",
+                "autoWanOptimize YF 2",
+                "always_forward OZ 1",
+            ]
+            junction {
+                namespace_path = local.junction_namespace_path_filer
+                core_filer_export = local.filer_export
+            }
+        }
     }
 }
 
@@ -105,10 +154,11 @@ module "mount_nfs" {
     node_address = module.vfxtcontroller.controller_address
     admin_username = local.vm_admin_username
     admin_password = local.vm_admin_password
+    ssh_port = local.ssh_port
     ssh_key_data = local.vm_ssh_key_data
     mount_dir = "/mnt/nfs"
     nfs_address = tolist(avere_vfxt.vfxt.vserver_ip_addresses)[0]
-    nfs_export_path = local.junction_namespace_path
+    nfs_export_path = local.use_nfs_storage ? local.junction_namespace_path_filer : local.junction_namespace_path_clfs
 }
 
 output "controller_username" {
@@ -132,5 +182,5 @@ output "mount_addresses" {
 }
 
 output "mount_path" {
-    value = "\"${local.junction_namespace_path}\""
+    value = "\"${local.use_nfs_storage ? local.junction_namespace_path_filer : local.junction_namespace_path_clfs}\""
 }
