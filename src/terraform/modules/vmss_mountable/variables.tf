@@ -88,3 +88,8 @@ variable "mount_all" {
   description = "if true mount all Avere endpoints, otherwise round-robin mount"
   default = false
 }
+
+variable "additional_env_vars" {
+  description = "additional environment vars needed for bootstrap script"
+  defailt = ""
+}

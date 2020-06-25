@@ -20,7 +20,7 @@ resource "azurerm_resource_group" "vmss" {
 
 locals {
     mount_all_env_var = var.mount_all ? " MOUNT_ALL=true " : ""
-    env_vars = " ${local.mount_all_env_var} LINUX_USER=${var.admin_username} NODE_PREFIX=${local.vm_name} NODE_COUNT=${var.vm_count} BASE_DIR=${var.mount_target} BOOTSTRAP_SCRIPT_PATH=${var.bootstrap_script_path} NFS_IP_CSV='${join(",",var.nfs_export_addresses)}' NFS_PATH=${var.nfs_export_path}"
+    env_vars = " ${local.mount_all_env_var} LINUX_USER=${var.admin_username} NODE_PREFIX=${local.vm_name} NODE_COUNT=${var.vm_count} BASE_DIR=${var.mount_target} BOOTSTRAP_SCRIPT_PATH=${var.bootstrap_script_path} NFS_IP_CSV='${join(",",var.nfs_export_addresses)}' NFS_PATH=${var.nfs_export_path} ${var.additional_env_vars}"
 
     bootstrap_path = "/b"
 
