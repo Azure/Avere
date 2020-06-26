@@ -13,6 +13,10 @@ locals {
   // then admin_password is ignored
   vm_admin_password = "ReplacePassword$"
 
+  // network, set static and IP if using a DC
+  use_static_private_ip_address = false
+  private_ip_address = "" // for example "10.0.3.254" could be use for domain controller
+
   // replace below variables with the infrastructure variables from 0.network
   location = ""
   vnet_render_clients1_subnet_id = ""
@@ -20,14 +24,14 @@ locals {
   // replace below variables with the cache variables from the nfs filer or cache (in case of blob backed storage)
   mount_addresses = []
   mount_path = ""
-  
+
   // advanced scenarios: the below variables rarely need to change  
   mount_address_csv = join(",", tolist(local.mount_addresses))
   target_path = "c:\\\\cloudcache"
   rdp_port = 3389
 
   // the following are the arguments to be passed to the custom script
-  windows_custom_script_arguments = "$arguments = ' -MountAddressesCSV ''${local.mount_address_csv}'' -MountPath ''${local.mount_path}'' -TargetPath ''${local.target_path}'' '  ; "
+  windows_custom_script_arguments = "$arguments = ' -MountAddressesCSV ''${local.mount_address_csv}'' -MountPath ''${local.mount_path}'' -TargetPath ''${local.target_path}'' -RDPPort ${local.rdp_port} '  ; "
 
   // load the powershell file, you can substitute kv pairs as you need them, but 
   // use arguments where possible
@@ -82,7 +86,8 @@ resource "azurerm_network_interface" "vm" {
   ip_configuration {
     name                          = "internal"
     subnet_id                     = local.vnet_jumpbox_subnet_id
-    private_ip_address_allocation = "Dynamic"
+    private_ip_address_allocation = local.use_static_private_ip_address ? "Static" : "Dynamic"
+    private_ip_address            = local.use_static_private_ip_address ? local.private_ip_address : null
     public_ip_address_id          = local.add_public_ip ? azurerm_public_ip.vm[0].id : ""
   }
 }
