@@ -9,7 +9,7 @@ All the steps below assume you have brought up the [vFXT Cluster GUI](https://do
 1. Browse to Settings->Administrative Network and configure the DNS server:
 
     <p align="center">
-       <img src="images/administrativenetwork.png" width="400">
+       <img src="images/administrativenetwork.png" width="800">
     </p>
 
 ## Configure Directory Services
@@ -36,7 +36,7 @@ The following steps set the AD Domain for the directory services.
 1. ensure you are using a DNS name under "Core filer network name/IP" field
 
     <p align="center">
-       <img src="images/nfsfiler.png" width="400">
+       <img src="images/nfsfiler.png" width="600">
     </p>
 
 ## Add the CIFS share
@@ -46,5 +46,5 @@ The following steps set the AD Domain for the directory services.
 1. Click "Add New Share", name the share, and point at the correct namespace path:
 
     <p align="center">
-       <img src="images/createcifsshare.png" width="400">
+       <img src="images/createcifsshare.png" width="800">
     </p>

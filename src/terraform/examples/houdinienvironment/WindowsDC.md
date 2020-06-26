@@ -17,7 +17,7 @@ Here are the minimal steps to configure a Windows machine with a domain controll
 1. Click through the "Server Roles" section and to install the domain controller select "Active Directory Domain Services" and the "DNS Server" as shown in the image below.
 
     <p align="center">
-       <img src="images/dcfeatures.png" width="600">
+       <img src="images/dcfeatures.png" width="800">
     </p>
 
 1. Click Next all the way through to Confirmation, and then click on the Install button.
@@ -30,19 +30,19 @@ The machine is now ready to configure.
 1. back at the server button, click the warning in the top right, and click "Promote this server to a domain controller".
 
     <p align="center">
-       <img src="images/configurewarning.png" width="600">
+       <img src="images/configurewarning.png" width="800">
     </p>
 
 1. Click "Add a new forest" and put in a root domain name as shown below, and click Next.
  
     <p align="center">
-       <img src="images/deploymentconfig.png" width="400">
+       <img src="images/deploymentconfig.png" width="600">
     </p>
 
 1. in the Domain Controller options select only the DNS and GC, and add your password, and click Next.
  
     <p align="center">
-       <img src="images/dcoptions.png" width="400">
+       <img src="images/dcoptions.png" width="600">
     </p>
 
 1. Click Next all the way through to Install, and click Install to create the new forest.  The VM will restart.
@@ -54,7 +54,7 @@ The machine is now ready to configure.
 1. On the left, browse to the domain, and "users" and then double click on the user to edit properties, and Browse to the Attribute Editor as shown below:
 
     <p align="center">
-       <img src="images/attributeeditor.png" width="400">
+       <img src="images/attributeeditor.png" width="800">
     </p>
 
 1. Set the `uidNumber` and `gidNumber` to `1000` for azureuser since that is what is set for uid and gid in centos.
@@ -69,5 +69,5 @@ The machine is now ready to configure.
 1. In the DNS manager add the dns record for the nameserver, as shown below:
 
     <p align="center">
-       <img src="images/dnsmanager.png" width="400">
+       <img src="images/dnsmanager.png" width="800">
     </p>
