@@ -68,10 +68,10 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
   }
 
   storage_profile_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
-    version   = "latest"
+    publisher = var.image_reference_publisher
+    offer     = var.image_reference_offer
+    sku       = var.image_reference_sku
+    version   = var.image_reference_version
   }
 
   storage_profile_os_disk  {

@@ -95,3 +95,23 @@ variable "additional_env_vars" {
   description = "additional environment vars needed for bootstrap script"
   default = ""
 }
+
+variable "image_reference_publisher" {
+  description = "publisher image reference for the VMSS"
+  default = "Canonical"
+}
+
+variable "image_reference_offer" {
+  description = "offer image reference for the VMSS"
+  default = "UbuntuServer"
+}
+
+variable "image_reference_sku" {
+  description = "sku image reference for the VMSS"
+  default = "18.04-LTS"
+}
+
+variable "image_reference_version" {
+  description = "version image reference for the VMSS"
+  default = "latest"
+}
