@@ -81,8 +81,55 @@ function main() {
         mount_all
     fi
 
+    # Install PBRT on nodes
+    # https://github.com/mmp/pbrt-v3/
+    # cd ~
+    # apt-get install -yq cmake build-essential gcc-4.8 g++-4.8 make bison flex libpthread-stubs0-dev
+    # update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.8
+    # git clone --recursive https://github.com/mmp/pbrt-v3/
+    # mkdir pbrt
+    # cd pbrt
+    # cmake ../pbrt-v3/
+    # make
+
+    # Use pre-built pbrt tools
+    mkdir /opencue-tools
+    cp -r ${MOUNT_POINT}/tools /opencue-tools
+
+
     # Set up the RQD environment on each node
     # Based on https://www.opencue.io/docs/getting-started/deploying-rqd/
+    
+    # yum based install
+    # Update this for yum based installs...
+    # yum -y install gcc
+    # yum -y install python3-devel
+    # yum -y install redhat-rpm-config
+    # cd /usr/local/bin
+    # pip3 install -r opencue-requirements.txt
+    # tar -xzf opencue-rqd.tar.gz
+    # find . -type f -name '*.pyc' -delete
+    # cd rqd-*
+    # python3 setup.py install
+    
+    # apt based install
+    apt-get install python3 python3-dev python3-pip gcc
+    cd ~
+    echo "CUEBOT_HOSTNAME=$CUEBOT_HOSTNAME"
+    echo "CUE_FS_ROOT=$CUE_FS_ROOT"
+    wget "https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/rqd-0.4.14-all.tar.gz"
+    export RQD_TARBALL="rqd-0.4.14-all.tar.gz"
+    export RQD_DIR=$(basename "${RQD_TARBALL}" .tar.gz)
+    tar zxvf "$RQD_TARBALL"
+    cd "$RQD_DIR"
+    pip3 install -r requirements.txt
+    python3 setup.py install
+    cd ..
+    rm -rf "$RQD_DIR"
+    rqd
+
+
+
 
     # add extra bootstrap and installation code here
     # this could be:
