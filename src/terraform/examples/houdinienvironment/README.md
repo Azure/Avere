@@ -135,11 +135,11 @@ To configure Avere with CIFS, you will need to perform the following steps:
 
 ## Phase 2 Scaling: Step 4 - Render Nodes
 
-At this point you are now ready to deploy your custom images previously created.
+At this point you are now ready to deploy your custom images previously created.  Before running you can modify the powershell script located at `~/tf/src/terraform/examples/houdinienvironment/setupMachine.ps1`
 
 1. continuing from the previous steps, decide what you need to deploy:
     1. **HQueue or Windows Domain Controller images** - use the single vm image deployment by browsing to the vm directory `cd ~/tf/src/terraform/examples/houdinienvironment/4.rendernodes/vm`
-    1. **render nodes** - use the VMSS deployment by browsing to the vmss directory cd ~/tf/src/terraform/examples/houdinienvironment/4.rendernodes/vm`
+    1. **render nodes** - use the VMSS deployment by browsing to the vmss directory `cd ~/tf/src/terraform/examples/houdinienvironment/4.rendernodes/vmss`
 
 1. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  You will need to paste in the output values from the deployment of the storage, network, and cache steps.
 
