@@ -1,6 +1,6 @@
-# A Houdini Render Farm on Azure using SMB/CIFS
+# Create a Houdini Render Farm On Azure
 
-This example shows how to configure the end to end infrastructure for a Houdini render farm on azure using SMB / CIFS.  This example provides the azure infrastructure required to implement a [Houdini RenderFarm](https://www.sidefx.com/faq/question/indie-renderfarm-setup/) ([also described here](http://www.sidefx.com/docs/houdini/render/cloudfarm.html#rendering-on-cloud)).  The architecture includes a license server, an HQueue server, cloud cache and render nodes:
+This example shows how to configure the end to end infrastructure for a Houdini render farm on Azure.  This example provides the azure infrastructure required to implement a [Houdini RenderFarm](https://www.sidefx.com/faq/question/indie-renderfarm-setup/) ([also described here](http://www.sidefx.com/docs/houdini/render/cloudfarm.html#rendering-on-cloud)).  The architecture includes a license server, an HQueue server, cloud cache and render nodes:
 
 ![The architecture](../../../../docs/images/terraform/houdini.png)
 
@@ -125,11 +125,11 @@ At this point you are now ready to scale the render nodes.
 
 1. execute `terraform apply -auto-approve` to deploy the storage.
 
-## Phase 2 Scaling: step 3a - Setup CIFS/SMB
+## Phase 2 Scaling: step 3a - Setup CIFS/SMB on Avere
 
 To configure Avere with CIFS, you will need to perform the following steps:
 
-1. **Configure Windows Domain Controller** - Using the instructions from [Phase 1->Step2](phase-1-single-frame-render-step-2a---deploy-windows-vm), create a Windows Server.  Next [install the domain controller and the DNS server.](WindowsDC.md)
+1. **Configure Windows Domain Controller** - Using the instructions from [Phase 1->Step2](#phase-1-single-frame-render-step-2a---deploy-windows-vm), create a Windows Server.  Next [install the domain controller and the DNS server.](WindowsDC.md)
 
 1. **Configure Avere and setup the CIFS Share** - Next you will need to join the Avere to the domain controller, and expose the CIFS share using the [CIFS instructions](averecifs.md).
 
