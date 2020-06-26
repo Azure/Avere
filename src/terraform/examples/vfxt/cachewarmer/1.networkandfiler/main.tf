@@ -16,6 +16,12 @@ locals {
     filer_resource_group_name = "filer_resource_group"
     // more filer sizes listed at https://github.com/Azure/Avere/tree/master/src/terraform/modules/nfs_filer
     filer_size = "Standard_D2s_v3" 
+    
+    // advanced scenario: add external ports to work with cloud policies example [10022, 13389]
+    open_external_ports = [22,3389]
+    // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
+    // or if accessing from cloud shell, put "AzureCloud"
+    open_external_sources = ["*"]
 }
 
 provider "azurerm" {
@@ -28,6 +34,9 @@ module "network" {
     source = "github.com/Azure/Avere/src/terraform/modules/render_network"
     resource_group_name = local.network_resource_group_name
     location = local.location
+
+    open_external_ports   = local.open_external_ports
+    open_external_sources = local.open_external_sources
 }
 
 resource "azurerm_resource_group" "nfsfiler" {

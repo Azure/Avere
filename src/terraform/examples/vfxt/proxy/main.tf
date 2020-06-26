@@ -9,6 +9,7 @@ locals {
     // if you use SSH key, ensure you have ~/.ssh/id_rsa with permission 600
     // populated where you are running terraform
     vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
+    ssh_port = 22
     
     // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
     // or if accessing from cloud shell, put "AzureCloud"
@@ -34,6 +35,7 @@ locals {
     controller_add_public_ip = true
     vfxt_cluster_name = "vfxt"
     vfxt_cluster_password = "VFXT_PASSWORD"
+    vfxt_ssh_key_data = local.vm_ssh_key_data
     // vfxt cache polies
     //  "Clients Bypassing the Cluster"
     //  "Read Caching"
@@ -47,6 +49,11 @@ locals {
     vfxt_image_id       = null
     // advanced scenario: in addition to storage account put the custom image resource group here
     alternative_resource_groups = [local.storage_resource_group_name]
+    // advanced scenario: add external ports to work with cloud policies example [10022, 13389]
+    open_external_ports = [22,3389]
+    // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
+    // or if accessing from cloud shell, put "AzureCloud"
+    open_external_sources = ["*"]
 }
 
 provider "azurerm" {
@@ -60,6 +67,9 @@ module "network" {
     resource_group_name = local.network_resource_group_name
     location = local.location
     ssh_source_address_prefix = local.ssh_source_ip
+
+    open_external_ports   = local.open_external_ports
+    open_external_sources = local.open_external_sources
 }
 
 resource "azurerm_resource_group" "proxy" {
@@ -138,6 +148,7 @@ module "vfxtcontroller" {
     add_public_ip = local.controller_add_public_ip
     image_id = local.controller_image_id
     alternative_resource_groups = local.alternative_resource_groups
+    ssh_port = local.ssh_port
     
     // network details
     virtual_network_resource_group = local.network_resource_group_name
@@ -153,6 +164,7 @@ resource "avere_vfxt" "vfxt" {
     controller_admin_username = module.vfxtcontroller.controller_username
     // ssh key takes precedence over controller password
     controller_admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
+    controller_ssh_port = local.ssh_port
     // terraform is not creating the implicit dependency on the controller module
     // otherwise during destroy, it tries to destroy the controller and proxy at the 
     // same time as vfxt cluster to work around, add the explicit dependencies
@@ -165,6 +177,7 @@ resource "avere_vfxt" "vfxt" {
     azure_subnet_name = module.network.cloud_cache_subnet_name
     vfxt_cluster_name = local.vfxt_cluster_name
     vfxt_admin_password = local.vfxt_cluster_password
+    vfxt_ssh_key_data = local.vfxt_ssh_key_data
     vfxt_node_count = 3
     ntp_servers = "169.254.169.254"
     proxy_uri = "http://${module.proxy.address}:3128"

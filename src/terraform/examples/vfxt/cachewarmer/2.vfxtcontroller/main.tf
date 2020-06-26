@@ -11,6 +11,7 @@ locals {
   // if you use SSH key, ensure you have ~/.ssh/id_rsa with permission 600
   // populated where you are running terraform
   vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
+  ssh_port = 22
 
   // controller details
   controller_add_public_ip = true
@@ -38,6 +39,7 @@ module "vfxtcontroller" {
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.controller_add_public_ip
+    ssh_port = local.ssh_port
     
     // network details
     virtual_network_resource_group = local.vfxt_network_resource_group_name
@@ -55,4 +57,8 @@ output "controller_username" {
 
 output "controller_address" {
   value = "\"${module.vfxtcontroller.controller_address}\""
+}
+
+output "ssh_port" {
+  value = local.ssh_port
 }
