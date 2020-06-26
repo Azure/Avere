@@ -43,7 +43,7 @@ resource "azurerm_linux_virtual_machine" "nfsfiler" {
 
   source_image_reference {
     publisher = "OpenLogic"
-    offer     = "CentOS"
+    offer     = "CentOS-CI"
     sku       = "7.7"
     version   = "latest"
   }

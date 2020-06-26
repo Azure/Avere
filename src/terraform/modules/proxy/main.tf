@@ -45,7 +45,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
   source_image_reference {
         publisher = "OpenLogic"
-        offer     = "CentOS"
+        offer     = "CentOS-CI"
         sku       = "7-CI"
         version   = "latest"
   }
