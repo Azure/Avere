@@ -1,6 +1,6 @@
-# A Houdini Render Farm on Azure
+# A Houdini Render Farm on Azure using SMB/CIFS
 
-This example shows how to configure the end to end infrastructure for a Houdini render farm on azure.  This example provides the azure infrastructure required to implement a [Houdini RenderFarm](https://www.sidefx.com/faq/question/indie-renderfarm-setup/) ([also described here](http://www.sidefx.com/docs/houdini/render/cloudfarm.html#rendering-on-cloud)).  The architecture includes a license server, an HQueue server, cloud cache and render nodes:
+This example shows how to configure the end to end infrastructure for a Houdini render farm on azure using SMB / CIFS.  This example provides the azure infrastructure required to implement a [Houdini RenderFarm](https://www.sidefx.com/faq/question/indie-renderfarm-setup/) ([also described here](http://www.sidefx.com/docs/houdini/render/cloudfarm.html#rendering-on-cloud)).  The architecture includes a license server, an HQueue server, cloud cache and render nodes:
 
 ![The architecture](../../../../docs/images/terraform/houdini.png)
 
@@ -51,7 +51,7 @@ Before running the examples you will need to setup the following pre-requisites:
 
 The first step is to setup the Virtual Network, subnets, and network security groups:
 
-1. continuing from the previous instructions browse to the houdini network directory: `cd ~/tf/src/terraform/examples/vfxt/houdinienvrionment/0.network`
+1. continuing from the previous instructions browse to the houdini network directory: `cd ~/tf/src/terraform/examples/houdinienvironment/0.network`
 
 1. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.
 
@@ -68,8 +68,8 @@ Once your virtual network is setup, determine if you need to establish an [Azure
 The next step is to establish backend storage.  If using a backend storage filer, you can skip this step.  Otherwise if you are using cloud based storage, proceed through the following steps:
 
 1. decide whether to use blob based storage or an nfs filer and run the following steps:
-    1. if using blob based storage: `cd ~/tf/src/terraform/examples/vfxt/houdinienvrionment/1.storage/blobstorage`.  You will need to additionally install the Avere Cache in step 3 so that nfs or smb clients can mount.
-    1. if using an nfs cloud filer: `cd ~/tf/src/terraform/examples/vfxt/houdinienvrionment/1.storage/nfsfiler`
+    1. if using blob based storage: `cd ~/tf/src/terraform/examples/houdinienvironment/1.storage/blobstorage`.  You will need to additionally install the Avere Cache in step 3 so that nfs or smb clients can mount.
+    1. if using an nfs cloud filer: `cd ~/tf/src/terraform/examples/houdinienvironment/1.storage/nfsfiler`
 
 1. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.
 
@@ -89,7 +89,7 @@ The next step is to build out the node types:
 
 Run the following steps for each of the above deployment.
 
-1. continuing from the previous instructions browse to the Windows VM directory: `cd ~/tf/src/terraform/examples/vfxt/houdinienvrionment/2.windowsvm`
+1. continuing from the previous instructions browse to the Windows VM directory: `cd ~/tf/src/terraform/examples/houdinienvironment/2.windowsvm`
 
 1. copy the main.tf to a new directory
 
@@ -117,7 +117,7 @@ At this point you are now ready to scale the render nodes.
 
 1. verify you have completed all pre-requisites above
 
-1. continuing from the previous steps, browse to the cache directory: `cd ~/tf/src/terraform/examples/vfxt/houdinienvrionment/3.windowsvm`
+1. continuing from the previous steps, browse to the cache directory: `cd ~/tf/src/terraform/examples/houdinienvironment/3.cache`
 
 1. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  You will need to paste in the output values from the deployment of the storage and the network steps.
 
@@ -125,13 +125,21 @@ At this point you are now ready to scale the render nodes.
 
 1. execute `terraform apply -auto-approve` to deploy the storage.
 
-## Phase 3 Scaling: Step 4 - Render Nodes
+## Phase 2 Scaling: step 3a - Setup CIFS/SMB
+
+To configure Avere with CIFS, you will need to perform the following steps:
+
+1. **Configure Windows Domain Controller** - Using the instructions from [Phase 1->Step2](phase-1-single-frame-render-step-2a---deploy-windows-vm), create a Windows Server.  Next [install the domain controller and the DNS server.](WindowsDC.md)
+
+1. **Configure Avere and setup the CIFS Share** - Next you will need to join the Avere to the domain controller, and expose the CIFS share using the [CIFS instructions](averecifs.md).
+
+## Phase 2 Scaling: Step 4 - Render Nodes
 
 At this point you are now ready to deploy your custom images previously created.
 
 1. continuing from the previous steps, decide what you need to deploy:
-    1. **HQueue or Windows Domain Controller images** - use the single vm image deployment by browsing to the vm directory `cd ~/tf/src/terraform/examples/vfxt/houdinienvrionment/4.rendernodes/vm`
-    1. **render nodes** - use the VMSS deployment by browsing to the vmss directory cd ~/tf/src/terraform/examples/vfxt/houdinienvrionment/4.rendernodes/vm`
+    1. **HQueue or Windows Domain Controller images** - use the single vm image deployment by browsing to the vm directory `cd ~/tf/src/terraform/examples/houdinienvironment/4.rendernodes/vm`
+    1. **render nodes** - use the VMSS deployment by browsing to the vmss directory cd ~/tf/src/terraform/examples/houdinienvironment/4.rendernodes/vm`
 
 1. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  You will need to paste in the output values from the deployment of the storage, network, and cache steps.
 

@@ -27,7 +27,7 @@ locals {
     rdp_port = 3389
 
     // the following are the arguments to be passed to the custom script
-    windows_custom_script_arguments = "$arguments = ' -MountAddressesCSV ''${local.mount_address_csv}'' -MountPath ''${local.mount_path}'' -TargetPath ''${local.target_path}'' '  ; "
+    windows_custom_script_arguments = "$arguments = ' -MountAddressesCSV ''${local.mount_address_csv}'' -MountPath ''${local.mount_path}'' -TargetPath ''${local.target_path}'' -RDPPort ${local.rdp_port} '  ; "
 
     // load the powershell file, you can substitute kv pairs as you need them, but 
     // use arguments where possible
