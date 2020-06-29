@@ -95,7 +95,7 @@ function main() {
     # Use pre-built pbrt tools
     echo "copy PBRT from cache to /opencue-tools/tools/pbrt-release/pbrt"
     mkdir /opencue-tools
-    cp -r ${MOUNT_POINT}/tools /opencue-tools
+    cp -r "${BASE_DIR}/opencue-demo/tools" /opencue-tools
 
 
     # Set up the RQD environment on each node
@@ -115,7 +115,7 @@ function main() {
     # python3 setup.py install
     
     # apt based install
-    apt-get install python3 python3-dev python3-pip gcc
+    apt-get -y install python3 python3-dev python3-pip gcc
     cd ~
     echo "CUEBOT_HOSTNAME=$CUEBOT_HOSTNAME"
     echo "CUE_FS_ROOT=$CUE_FS_ROOT"
