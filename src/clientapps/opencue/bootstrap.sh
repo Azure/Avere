@@ -93,13 +93,15 @@ function main() {
     # make
 
     # Use pre-built pbrt tools
+    echo "copy PBRT from cache to /opencue-tools/tools/pbrt-release/pbrt"
     mkdir /opencue-tools
     cp -r ${MOUNT_POINT}/tools /opencue-tools
 
 
     # Set up the RQD environment on each node
     # Based on https://www.opencue.io/docs/getting-started/deploying-rqd/
-    
+    echo "set up RQD server and connect to CueBot server"
+
     # yum based install
     # Update this for yum based installs...
     # yum -y install gcc
