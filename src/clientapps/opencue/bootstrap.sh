@@ -128,7 +128,7 @@ function main() {
     python3 setup.py install
     cd ..
     rm -rf "$RQD_DIR"
-    rqd
+    rqd &
 
 
 
