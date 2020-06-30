@@ -18,7 +18,7 @@ locals {
     filer_resource_group_name = "filer_resource_group"
 
     // advanced scenario: add external ports to work with cloud policies example [10022, 13389]
-    open_external_ports = [22,3389]
+    open_external_ports = [local.ssh_port,3389]
     // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
     // or if accessing from cloud shell, put "AzureCloud"
     open_external_sources = ["*"]

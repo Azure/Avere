@@ -38,7 +38,8 @@ locals {
 
     // jumpbox variable
     jumpbox_add_public_ip = true
-
+    ssh_port = 22
+    
     # download the latest vdbench from https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html
     # and upload to an azure storage blob and put the URL below
     vdbench_url = ""
@@ -48,6 +49,12 @@ locals {
     vm_count = 12
     vmss_size = "Standard_D2s_v3"
     mount_target = "/data"
+
+    // advanced scenario: add external ports to work with cloud policies example [10022, 13389]
+    open_external_ports = [local.ssh_port,3389]
+    // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
+    // or if accessing from cloud shell, put "AzureCloud"
+    open_external_sources = ["*"]
 }
 
 provider "azurerm" {
@@ -70,6 +77,9 @@ module "network" {
     source              = "github.com/Azure/Avere/src/terraform/modules/render_network"
     resource_group_name = local.network_resource_group_name
     location            = local.location
+
+    open_external_ports   = local.open_external_ports
+    open_external_sources = local.open_external_sources
 }
 
 resource "azurerm_hpc_cache" "hpc_cache" {
@@ -117,6 +127,7 @@ module "jumpbox" {
     admin_username = local.vm_admin_username
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.jumpbox_add_public_ip
+    ssh_port = local.ssh_port
 
     // network details
     virtual_network_resource_group = module.network.vnet_resource_group
@@ -133,6 +144,7 @@ module "vdbench_configure" {
     node_address = module.jumpbox.jumpbox_address
     admin_username = module.jumpbox.jumpbox_username
     ssh_key_data = local.vm_ssh_key_data
+    ssh_port = local.ssh_port
     nfs_address = azurerm_hpc_cache.hpc_cache.mount_addresses[0]
     nfs_export_path = tolist(azurerm_hpc_cache_nfs_target.nfs_targets.namespace_junction)[0].namespace_path
     vdbench_url = local.vdbench_url
@@ -171,6 +183,10 @@ output "jumpbox_address" {
 
 output "mount_addresses" {
   value = azurerm_hpc_cache.hpc_cache.mount_addresses
+}
+
+output "ssh_port" {
+  value = local.ssh_port
 }
 
 output "export_namespace" {

@@ -1,7 +1,7 @@
 locals {
   # send the script file to custom data, adding env vars
   script_file_b64 = base64gzip(replace(file("${path.module}/install.sh"),"\r",""))
-  cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { installcmd = local.script_file_b64 })
+  cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { installcmd = local.script_file_b64, ssh_port = var.ssh_port })
 }
 
 data "azurerm_subnet" "vnet" {
