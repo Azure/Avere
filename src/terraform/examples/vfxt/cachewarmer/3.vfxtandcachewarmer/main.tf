@@ -167,7 +167,7 @@ output "controller_address" {
 }
 
 output "ssh_command_with_avere_tunnel" {
-    value = "ssh -L8443:${avere_vfxt.vfxt.vfxt_management_ip}:443 ${local.controller_username}@${local.controller_address}"
+    value = "ssh -p ${local.ssh_port} -L8443:${avere_vfxt.vfxt.vfxt_management_ip}:443 ${local.controller_username}@${local.controller_address}"
 }
 
 output "management_ip" {

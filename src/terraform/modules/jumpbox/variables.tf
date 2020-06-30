@@ -20,6 +20,11 @@ variable "ssh_key_data" {
   description = "(optional) The public SSH key used for access to the jumpbox.  If not specified, admin_password needs to be set.  The ssh_key_data takes precedence over the admin_password, and if set, the admin_password will be ignored."
 }
 
+variable "ssh_port" {
+  description = "specifies the tcp port to use for ssh"
+  default = 22
+}
+
 variable "unique_name" {
   description = "The unique name used for the jumpbox and for resource names associated with the VM."
   default = "jumpbox"

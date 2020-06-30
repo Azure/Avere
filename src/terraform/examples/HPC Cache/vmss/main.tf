@@ -45,17 +45,20 @@ locals {
 
     // jumpbox variable
     jumpbox_add_public_ip = true
-    open_external_ports = [22]
-    // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
-    // or if accessing from cloud shell, put "AzureCloud"
-    open_external_sources = ["*"]
-    
+    ssh_port = 22
+        
     // vmss details
     vmss_resource_group_name = "vmss_rg"
     unique_name = "uniquename"
     vm_count = 2
     vmss_size = "Standard_DS2_v2"
     mount_target = "/data"
+
+    // advanced scenario: add external ports to work with cloud policies example [10022, 13389]
+    open_external_ports = [local.ssh_port,3389]
+    // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
+    // or if accessing from cloud shell, put "AzureCloud"
+    open_external_sources = ["*"]
 }
 
 provider "azurerm" {
@@ -135,6 +138,7 @@ module "jumpbox" {
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.jumpbox_add_public_ip
+    ssh_port = local.ssh_port
 
     // network details
     virtual_network_resource_group = local.network_resource_group_name
@@ -151,6 +155,7 @@ module "vmss_configure" {
     node_address = module.jumpbox.jumpbox_address
     admin_username = module.jumpbox.jumpbox_username
     admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
+    ssh_port = local.ssh_port
     ssh_key_data = local.vm_ssh_key_data
     nfs_address = azurerm_hpc_cache.hpc_cache.mount_addresses[0]
     nfs_export_path = tolist(azurerm_hpc_cache_nfs_target.nfs_targets.namespace_junction)[0].namespace_path

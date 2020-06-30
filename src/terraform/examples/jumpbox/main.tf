@@ -44,6 +44,7 @@ module "jumpbox" {
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.jumpbox_add_public_ip
+    ssh_port = local.ssh_port
 
     // network details
     virtual_network_resource_group = local.network_resource_group_name
