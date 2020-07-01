@@ -128,10 +128,8 @@ function main() {
     python3 setup.py install
     cd ..
     rm -rf "$RQD_DIR"
-    rqd &
-
-
-
+    # rqd &
+    /usr/bin/nohup /bin/bash -c "rqd &" &
 
     # add extra bootstrap and installation code here
     # this could be:
