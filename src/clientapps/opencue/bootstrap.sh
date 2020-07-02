@@ -129,7 +129,7 @@ function main() {
     cd ..
     rm -rf "$RQD_DIR"
     # rqd &
-    /usr/bin/nohup /bin/bash -c "rqd &" &
+    /usr/bin/nohup /bin/bash -c "rqd" > /dev/null 2>&1 &
 
     # add extra bootstrap and installation code here
     # this could be:
