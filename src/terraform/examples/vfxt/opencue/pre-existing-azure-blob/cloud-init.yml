@@ -1,0 +1,72 @@
+#cloud-config
+package_upgrade: true
+packages:
+  - python3
+  - python3-dev
+  - python3-pip
+  - gcc
+  - postgresql
+  - openjdk-8-jre
+  - nfs-common
+  - xfce4
+  - xfce4-goodies
+  - tightvncserver
+runcmd:
+  - mkdir -p /cuebot/install
+  - mkdir -p /nfs/opencue-demo
+  - systemctl enable postgresql.service
+  - systemctl start postgresql.service
+  - export DB_HOST=localhost
+  - export DB_NAME=cuebot_local
+  - export DB_USER=cuebot
+  - export DB_PASS=Password1234!
+  - export CUE_FS_ROOT=/nfs/opencue-demo
+  - export JAR_PATH=/cuebot/install/cuebot-0.4.14-all.jar
+  - sudo -u postgres createdb $DB_NAME
+  - sudo -u postgres createuser $DB_USER
+  - sudo -u postgres psql -c "ALTER user $DB_USER WITH PASSWORD '$DB_PASS'"
+  - sudo -u postgres psql -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO $DB_USER" $DB_NAME
+  - cd /cuebot/install
+  - wget https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/schema-0.4.14.sql
+  - wget https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/demo_data-0.4.14.sql
+  - wget https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/cuebot-0.4.14-all.jar
+  - wget https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/pyoutline-0.4.14-all.tar.gz
+  - wget https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/pycue-0.4.14-all.tar.gz
+  - wget https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/cuegui-0.4.14-all.tar.gz
+  - wget https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/cuesubmit-0.4.14-all.tar.gz
+  - wget https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/cueadmin-0.4.14-all.tar.gz
+  - tar zxvf pycue-0.4.14-all.tar.gz
+  - cd pycue-0.4.14-all
+  - pip3 install -r requirements.txt
+  - python3 setup.py install
+  - cd ..
+  - tar zxvf pyoutline-0.4.14-all.tar.gz
+  - cd pyoutline-0.4.14-all
+  - pip3 install -r requirements.txt
+  - python3 setup.py install
+  - cd ..
+  - tar zxvf cuegui-0.4.14-all.tar.gz
+  - cd cuegui-0.4.14-all
+  - pip3 install -r requirements.txt
+  - pip3 install -r requirements_gui.txt
+  - find . -type f -name '*.pyc' -delete
+  - python3 setup.py install
+  - cd ..
+  - tar zxvf cuesubmit-0.4.14-all.tar.gz
+  - cd cuesubmit-0.4.14-all
+  - pip3 install -r requirements.txt
+  - pip3 install -r requirements_gui.txt
+  - python3 setup.py install
+  - cd ..
+  - tar zxvf cueadmin-0.4.14-all.tar.gz
+  - cd cueadmin-0.4.14-all
+  - pip3 install -r requirements.txt
+  - python3 setup.py install
+  - cd ..
+  - sudo -u postgres psql -w -f /cuebot/install/schema-0.4.14.sql $DB_NAME
+  - sudo -u postgres psql -w -f /cuebot/install/demo_data-0.4.14.sql $DB_NAME
+  - mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' ${cache_ip}:/opencue-demo /nfs/opencue-demo
+  - java -jar $JAR_PATH --datasource.cue-data-source.jdbc-url=jdbc:postgresql://$DB_HOST/$DB_NAME --datasource.cue-data-source.username=$DB_USER --datasource.cue-data-source.password=$DB_PASS --log.frame-log-root=$CUE_FS_ROOT"/logs"
+  # - export CUEBOT_HOSTNAME_OR_IP=localhost
+  # - CUEBOT_HOSTS=$CUEBOT_HOSTNAME_OR_IP cuegui
+  # - CUEBOT_HOSTS=$CUEBOT_HOSTNAME_OR_IP cuesubmit

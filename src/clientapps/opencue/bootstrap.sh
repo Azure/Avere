@@ -103,7 +103,6 @@ function main() {
     echo "set up RQD server and connect to CueBot server"
 
     # yum based install
-    # Update this for yum based installs...
     # yum -y install gcc
     # yum -y install python3-devel
     # yum -y install redhat-rpm-config
@@ -128,7 +127,6 @@ function main() {
     python3 setup.py install
     cd ..
     rm -rf "$RQD_DIR"
-    # rqd &
     /usr/bin/nohup /bin/bash -c "rqd" > /dev/null 2>&1 &
 
     # add extra bootstrap and installation code here
