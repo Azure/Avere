@@ -1,4 +1,4 @@
-// TerraformApply.jp - Jenkins declarative pipeline for Terraform GitOps via GitHub App v3 Pull Requests
+// Jenkins declarative pipeline for Terraform GitOps via GitHub App v3 Pull Requests
 
 pipeline {
   agent any
@@ -50,7 +50,8 @@ pipeline {
   stages {
     stage('Local Workspace') {
       steps {
-        sh script: '''#!/bin/bash -ex
+        sh script: '''#!/bin/bash
+          set -ex
           git clean -dff
         '''
       }
@@ -63,7 +64,8 @@ pipeline {
       }
       steps {
         script {
-          def appWebToken = sh returnStdout: true, script: '''#!/bin/bash -ex
+          def appWebToken = sh returnStdout: true, script: '''#!/bin/bash
+            set -ex
             python3 "$WORKSPACE$GITHUB_APP_AUTH_TOKEN_GENERATOR" "$GITHUB_APP_KEY_FILE_USR" "$GITHUB_APP_KEY_FILE" "$GITHUB_APP_AUTH_TOKEN_SECONDS" 'RS256'
           '''
           def appAuthTokenCreate = httpRequest url: "$GITHUB_REPOSITORY_HOST/installations/$GITHUB_APP_INSTALLATION_ID/access_tokens", httpMode: 'POST', customHeaders: [[name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT"], [name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT_AUTH"], [name: 'Authorization', value: "Bearer $appWebToken"]]
@@ -107,7 +109,8 @@ pipeline {
       }      
       steps {
         script {
-          def exitCode = sh returnStatus: true, script: '''#!/bin/bash -xe
+          def exitCode = sh returnStatus: true, script: '''#!/bin/bash
+            set -ex
             while IFS=$'\n\r' read environmentVariable
             do
               export "$environmentVariable"
@@ -129,7 +132,8 @@ pipeline {
     always {
       script {
         if (env.GITHUB_REPOSITORY_HOST != null) {
-          def appWebToken = sh returnStdout: true, script: '''#!/bin/bash -ex
+          def appWebToken = sh returnStdout: true, script: '''#!/bin/bash
+            set -ex
             python3 "$WORKSPACE$GITHUB_APP_AUTH_TOKEN_GENERATOR" "$GITHUB_APP_KEY_FILE_USR" "$GITHUB_APP_KEY_FILE" "$GITHUB_APP_AUTH_TOKEN_SECONDS" 'RS256'
           '''
           def appAuthTokenCreate = httpRequest url: "$GITHUB_REPOSITORY_HOST/installations/$GITHUB_APP_INSTALLATION_ID/access_tokens", httpMode: 'POST', customHeaders: [[name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT"], [name: 'Accept', value: "$GITHUB_API_HEADER_ACCEPT_AUTH"], [name: 'Authorization', value: "Bearer $appWebToken"]]
@@ -143,7 +147,8 @@ pipeline {
       }
     }
     failure {
-      sh script: '''#!/bin/bash -xe
+      sh script: '''#!/bin/bash
+        set -ex
         git revert -m 1 "$GITHUB_PULL_REQUEST_MERGE_HASH"
         git remote set-url origin "$GITHUB_REMOTE_ORIGIN_URL"
         git push origin HEAD:"$GITHUB_PULL_REQUEST_REFERENCE_HEAD"
