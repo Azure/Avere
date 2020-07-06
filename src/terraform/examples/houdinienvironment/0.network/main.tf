@@ -11,6 +11,7 @@ locals {
     // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
     // or if accessing from cloud shell, put "AzureCloud"
     open_external_sources = ["*"]
+    dns_servers = null // set this to the dc, for example ["10.0.3.254"] could be use for domain controller
 }
 
 provider "azurerm" {
@@ -23,6 +24,7 @@ module "network" {
     source              = "github.com/Azure/Avere/src/terraform/modules/render_network"
     resource_group_name = local.network_resource_group_name
     location            = local.location
+    dns_servers         = local.dns_servers
 
     open_external_ports                   = local.open_external_ports
     open_external_sources                 = local.open_external_sources

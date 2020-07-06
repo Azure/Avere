@@ -61,6 +61,11 @@ variable "subnet_render_clients2_address_prefix" {
     default = "10.0.6.0/23"
 }
 
+variable "dns_servers" {
+    description = "a list of dns servers"
+    default = null
+}
+
 variable "module_depends_on" {
   default = [""]
   description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"

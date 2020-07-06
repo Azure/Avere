@@ -51,6 +51,7 @@ resource "azurerm_virtual_network" "vnet" {
     address_space       = [var.vnet_address_space]
     location            = var.location
     resource_group_name = azurerm_resource_group.render_rg.name
+    dns_servers         = var.dns_servers
 }
 
 resource "azurerm_subnet" "cloud_cache" {
