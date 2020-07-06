@@ -13,7 +13,7 @@ locals {
     cuebot_vm_size = "Standard_D2s_v3" // Min 6GB RAM required by cuebot
     vm_admin_password = "Password1234!"
     vm_admin_username = "azureuser"
-    vm_ssh_key_data = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC1h+TT0gyMSdiMKpFjYUrGZ3H9fAxqgWetzNLYcemUxl9PqwuuT3XiiBam029SJRTNx2NoJaPpbF/9iYJfGIAtO1p1ckr7GUNCnbTNsF7ufUQBrgZBEO7MCOKrDKwh5aSGXSrSGObnlzUJdILWSwDt6Vxwf5PKCzuqydzkIQ+MygQ40jV/WaoYRtXPr2S1JQGeezhlxe2lSbvrgB0TYcT7jXHl8QJEhL6t2HHulRRY1XlZJDgcxZFUHUfT65wmfjwHBTaRN0O1s+bWDQd4UoOo6e0kQMqrMrnK5Zo0PA3TupNyOvUgJlIj9bLCYBODK+4hahqX2IZtVdeujVqCo6vX" //"ssh-rsa AAAAB3...."
+    vm_ssh_key_data = "ssh-rsa AAAAB3...."
     
     // storage details
     storage_account_name = ""
@@ -112,8 +112,8 @@ resource "avere_vfxt" "vfxt" {
     vfxt_admin_password = local.vfxt_cluster_password
     vfxt_node_count = 3
 
-    node_size = "unsupported_test_SKU"
-    node_cache_size = 1024
+    # node_size = "unsupported_test_SKU"
+    # node_cache_size = 1024
 
     azure_storage_filer {
         account_name = local.storage_resource_group_name
