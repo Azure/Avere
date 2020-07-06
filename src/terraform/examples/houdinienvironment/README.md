@@ -89,7 +89,7 @@ The next step is to build out the node types:
 
 Run the following steps for each of the above deployment.
 
-1. continuing from the previous instructions browse to the Windows VM directory: `cd ~/tf/src/terraform/examples/houdinienvironment/2.windowsvm`
+1. continuing from the previous instructions browse to the Windows VM directory: `cd ~/tf/src/terraform/examples/houdinienvironment/2.windowsstockvm`
 
 1. copy the main.tf to a new directory
 
