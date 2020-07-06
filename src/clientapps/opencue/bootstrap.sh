@@ -84,12 +84,12 @@ function main() {
     # Install PBRT on nodes
     # https://github.com/mmp/pbrt-v3/
     # cd ~
-    # apt-get install -yq cmake build-essential gcc-4.8 g++-4.8 make bison flex libpthread-stubs0-dev
+    # apt install -yq cmake build-essential gcc-4.8 g++-4.8 make bison flex libpthread-stubs0-dev
     # update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.8
     # git clone --recursive https://github.com/mmp/pbrt-v3/
     # mkdir pbrt
     # cd pbrt
-    # cmake ../pbrt-v3/
+    # cmake -DCMAKE_BUILD_TYPE=Release ../pbrt-v3/
     # make
 
     # Use pre-built pbrt tools
