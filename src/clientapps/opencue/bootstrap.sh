@@ -84,24 +84,25 @@ function main() {
     # Install PBRT on nodes
     # https://github.com/mmp/pbrt-v3/
     # cd ~
-    # apt-get install -yq cmake build-essential gcc-4.8 g++-4.8 make bison flex libpthread-stubs0-dev
+    # apt install -yq cmake build-essential gcc-4.8 g++-4.8 make bison flex libpthread-stubs0-dev
     # update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.8
     # git clone --recursive https://github.com/mmp/pbrt-v3/
     # mkdir pbrt
     # cd pbrt
-    # cmake ../pbrt-v3/
+    # cmake -DCMAKE_BUILD_TYPE=Release ../pbrt-v3/
     # make
 
     # Use pre-built pbrt tools
+    echo "copy PBRT from cache to /opencue-tools/tools/pbrt-release/pbrt"
     mkdir /opencue-tools
-    cp -r ${MOUNT_POINT}/tools /opencue-tools
+    cp -r "${BASE_DIR}/opencue-demo/tools" /opencue-tools
 
 
     # Set up the RQD environment on each node
     # Based on https://www.opencue.io/docs/getting-started/deploying-rqd/
-    
+    echo "set up RQD server and connect to CueBot server"
+
     # yum based install
-    # Update this for yum based installs...
     # yum -y install gcc
     # yum -y install python3-devel
     # yum -y install redhat-rpm-config
@@ -113,7 +114,7 @@ function main() {
     # python3 setup.py install
     
     # apt based install
-    apt-get install python3 python3-dev python3-pip gcc
+    apt-get -y install python3 python3-dev python3-pip gcc
     cd ~
     echo "CUEBOT_HOSTNAME=$CUEBOT_HOSTNAME"
     echo "CUE_FS_ROOT=$CUE_FS_ROOT"
@@ -126,10 +127,7 @@ function main() {
     python3 setup.py install
     cd ..
     rm -rf "$RQD_DIR"
-    rqd
-
-
-
+    /usr/bin/nohup /bin/bash -c "rqd" > /dev/null 2>&1 &
 
     # add extra bootstrap and installation code here
     # this could be:
