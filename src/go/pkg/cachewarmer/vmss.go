@@ -302,9 +302,10 @@ func createCacheWarmerVmssModel(
 }
 
 func VmssExists(ctx context.Context, azureClients *AzureClients, name string) (bool, error) {
+	log.Info.Printf("checking if VMSS %s/%s", azureClients.LocalMetadata.ResourceGroup, name)
 	_, err := azureClients.VMSSClient.Get(ctx, azureClients.LocalMetadata.ResourceGroup, name)
 	if err != nil {
-		if strings.Contains(err.Error(), "Code=\"ResourceNotFound\"") {
+		if strings.Contains(err.Error(), "Code=\"ResourceNotFound\"") || strings.Contains(err.Error(), "Code=\"NotFound\"") {
 			return false, nil
 		} else {
 			return false, err
