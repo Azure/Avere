@@ -19,9 +19,10 @@ resource "null_resource" "build_cachewarmer_bootstrap" {
     inline = [
       "set -x",
       "if [ -f '/etc/centos-release' ]; then sudo yum -y install git nfs-utils ; else sudo apt-get install -y nfs-common ; fi",
-      "wget -O ~/go.tgz https://dl.google.com/go/go1.11.2.linux-amd64.tar.gz",
+      "wget -O ~/go.tgz https://golang.org/dl/go1.14.4.linux-amd64.tar.gz",
       "tar zxf ~/go.tgz",
       "sudo chown -R root:root ~/go",
+      "sudo rm -rf /usr/local/go",
       "sudo mv go /usr/local",
       "rm ~/go.tgz",
       "rm -rf ~/gopath",

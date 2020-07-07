@@ -30,7 +30,7 @@ function update_linux() {
 
 function install_golang() {
     cd $AZURE_HOME_DIR/.
-    GO_DL_FILE=go1.14.linux-amd64.tar.gz
+    GO_DL_FILE=go1.14.4.linux-amd64.tar.gz
     retrycmd_if_failure 12 5 wget https://dl.google.com/go/$GO_DL_FILE
     tar xvf $GO_DL_FILE
     chown -R $ADMIN_USER_NAME:$ADMIN_USER_NAME ./go
