@@ -81,12 +81,21 @@ function configure_rsyslog() {
     systemctl restart rsyslog
 }
 
+function stop_service() {
+    systemctl stop ${CACHEWARMER_MANAGER_SERVICE}
+    systemctl disable ${CACHEWARMER_MANAGER_SERVICE_FILE}
+}
+
 function configure_service() {
+    systemctl daemon-reload
     systemctl enable ${CACHEWARMER_MANAGER_SERVICE_FILE}
-    sudo systemctl start ${CACHEWARMER_MANAGER_SERVICE}
+    systemctl start ${CACHEWARMER_MANAGER_SERVICE}
 }
 
 function main() {
+    echo "stop service if exists"
+    stop_service
+
     echo "copy binaries"
     copy_binaries
 
