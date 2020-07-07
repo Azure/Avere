@@ -241,7 +241,10 @@ func (w *Worker) fillWorkQueue(ctx context.Context, workingFile *WorkingFile) {
 				break
 			}
 
-			workItemsQueued += w.QueueWork(localPaths, filenames, workingFile)
+			filteredFilenames := workingFile.workerJob.FilterFiles(filenames)
+			if len(filteredFilenames) > 0 {
+				workItemsQueued += w.QueueWork(localPaths, filteredFilenames, workingFile)
+			}
 
 			// verify that cancellation has not occurred
 			if isCancelled(ctx) {

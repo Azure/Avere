@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/Azure/Avere/src/go/pkg/log"
@@ -22,6 +23,9 @@ type WorkerJob struct {
 	WarmTargetPath           string
 	StartByte                int64
 	StopByte                 int64
+	ApplyFilter              bool
+	StartFileFilter          string
+	EndFileFilter            string
 }
 
 func JobsExist(jobFolder string) (exists bool, mountCount int, err error) {
@@ -65,6 +69,23 @@ func JobsExist(jobFolder string) (exists bool, mountCount int, err error) {
 func InitializeWorkerJob(
 	warmTargetMountAddresses []string,
 	warmTargetExportPath string,
+	warmTargetPath string) *WorkerJob {
+	return &WorkerJob{
+		WarmTargetMountAddresses: warmTargetMountAddresses,
+		WarmTargetExportPath:     warmTargetExportPath,
+		WarmTargetPath:           warmTargetPath,
+		StartByte:                allFilesOrBytes,
+		StopByte:                 allFilesOrBytes,
+		ApplyFilter:              false,
+		StartFileFilter:          "",
+		EndFileFilter:            "",
+	}
+}
+
+// InitializeWorkerJob initializes the worker job structure
+func InitializeWorkerJobForLargeFile(
+	warmTargetMountAddresses []string,
+	warmTargetExportPath string,
 	warmTargetPath string,
 	startByte int64,
 	stopByte int64) *WorkerJob {
@@ -74,6 +95,28 @@ func InitializeWorkerJob(
 		WarmTargetPath:           warmTargetPath,
 		StartByte:                startByte,
 		StopByte:                 stopByte,
+		ApplyFilter:              false,
+		StartFileFilter:          "",
+		EndFileFilter:            "",
+	}
+}
+
+// InitializeWorkerJobWithFilter initializes the worker job structure
+func InitializeWorkerJobWithFilter(
+	warmTargetMountAddresses []string,
+	warmTargetExportPath string,
+	warmTargetPath string,
+	startFileFilter string,
+	endFileFilter string) *WorkerJob {
+	return &WorkerJob{
+		WarmTargetMountAddresses: warmTargetMountAddresses,
+		WarmTargetExportPath:     warmTargetExportPath,
+		WarmTargetPath:           warmTargetPath,
+		StartByte:                allFilesOrBytes,
+		StopByte:                 allFilesOrBytes,
+		ApplyFilter:              true,
+		StartFileFilter:          startFileFilter,
+		EndFileFilter:            endFileFilter,
 	}
 }
 
@@ -123,4 +166,21 @@ func GenerateWorkerJobFilename(jobpath string, contents string) string {
 
 	t := time.Now()
 	return path.Join(jobpath, fmt.Sprintf("%02d-%02d-%02d-%02d%02d%02d.%d-%d.job", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), h.Sum32()))
+}
+
+func (j *WorkerJob) FilterFiles(filenames []string) []string {
+	if j.ApplyFilter == false {
+		return filenames
+	}
+
+	filteredFileNames := make([]string, 0, len(filenames))
+
+	for _, filename := range filenames {
+		compareStart := strings.Compare(filename, j.StartFileFilter)
+		if compareStart == 0 || (compareStart > 0 && strings.Compare(filename, j.EndFileFilter) <= 0) {
+			filteredFileNames = append(filteredFileNames, filename)
+		}
+	}
+
+	return filteredFileNames
 }

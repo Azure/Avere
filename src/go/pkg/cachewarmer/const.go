@@ -18,6 +18,7 @@ const (
 	MinimumSingleFileSize = int64(100 * MB)
 	MaximumJobSize        = int64(1500 * MB)
 	allFilesOrBytes       = int64(-1)
+	MaximumFilesToRead    = 200
 
 	// golang uses an 8192 buffer passed to getdents64 so we'll choose 128 because we get these on the first call anyway
 	MinimumJobsOnDirRead = 128

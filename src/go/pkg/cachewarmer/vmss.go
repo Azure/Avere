@@ -253,7 +253,7 @@ func createCacheWarmerVmssModel(
 		VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{
 			Overprovision: to.BoolPtr(false),
 			UpgradePolicy: &compute.UpgradePolicy{
-				Mode: compute.Manual,
+				Mode: compute.UpgradeModeManual,
 			},
 			SinglePlacementGroup: to.BoolPtr(false),
 			VirtualMachineProfile: &compute.VirtualMachineScaleSetVMProfile{

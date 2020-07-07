@@ -93,7 +93,7 @@ func initializeApplicationVariables() (*cachewarmer.WarmPathJob, bool) {
 }
 
 func BlockUntilWarm(jobSubmitterPath string, jobWorkerPath string) {
-	log.Info.Printf("wait for ctrl-c")
+	log.Status.Printf("blocking until warm")
 	// wait on ctrl-c
 	sigchan := make(chan os.Signal, 10)
 	signal.Notify(sigchan, os.Interrupt)
@@ -119,7 +119,7 @@ func BlockUntilWarm(jobSubmitterPath string, jobWorkerPath string) {
 						continue
 					}
 					if len(files) == 0 {
-						log.Info.Printf("Job directory empty, now checking worker job directory")
+						log.Status.Printf("job directory empty, now checking worker job directory")
 						jobDirectoryEmpty = true
 					}
 				} else {
@@ -129,7 +129,7 @@ func BlockUntilWarm(jobSubmitterPath string, jobWorkerPath string) {
 						log.Error.Printf("error encountered checking for job existence: %v", err)
 					}
 					if !exists {
-						log.Info.Printf("warming complete")
+						log.Status.Printf("warming complete")
 						return
 					}
 				}
@@ -143,7 +143,7 @@ func main() {
 	// initialize the variables
 	jobSubmitter, blockUntilWarm := initializeApplicationVariables()
 
-	log.Info.Printf("job submitter %v", jobSubmitter)
+	log.Status.Printf("job submitter started: %v", jobSubmitter)
 
 	// write the job to the warm path
 	if err := jobSubmitter.WriteJob(); err != nil {
@@ -160,5 +160,5 @@ func main() {
 		BlockUntilWarm(jobSubmitterPath, jobWorkerPath)
 	}
 
-	log.Info.Printf("finished")
+	log.Status.Printf("job submitter finished")
 }

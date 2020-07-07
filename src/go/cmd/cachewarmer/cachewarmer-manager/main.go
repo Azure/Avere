@@ -143,11 +143,13 @@ func main() {
 	// initialize the sync wait group
 	syncWaitGroup := sync.WaitGroup{}
 
-	log.Info.Printf("create job generator")
+	log.Status.Printf("cachewarmer manager started")
+
+	log.Status.Printf("create job generator")
 	syncWaitGroup.Add(1)
 	go warmPathManager.RunJobGenerator(ctx, &syncWaitGroup)
 
-	log.Info.Printf("create the vmss manager")
+	log.Status.Printf("create the vmss manager")
 	syncWaitGroup.Add(1)
 	go warmPathManager.RunVMSSManager(ctx, &syncWaitGroup)
 
@@ -165,5 +167,5 @@ func main() {
 	log.Info.Printf("Waiting for all processes to finish")
 	syncWaitGroup.Wait()
 
-	log.Info.Printf("finished")
+	log.Status.Printf("cachewarmer manager finished")
 }
