@@ -1,10 +1,10 @@
 # Azure Artist Anywhere
 
-Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/overview) templates (JSON) for the automated deployment of an end-to-end media rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight and extensible framework that can be configured as needed to meet various environment and deployment requirements.
+Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/overview) templates (JSON) for the automated deployment of an end-to-end rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight solution framework that can be configured and extended to meet various environment requirements. Each resource deployment template can also be leveraged directly.
 
-## Deployment Modules
+## Deployment Templates
 
-Azure Artist Anywhere is composed of the following Microsoft Azure resource deployment modules.
+Azure Artist Anywhere is composed of the following Microsoft Azure resource deployment templates.
 
 | Virtual Network | Storage Cache | Render Managers | Render Workers | Artist Desktops |
 | - | - | - | - | - |
