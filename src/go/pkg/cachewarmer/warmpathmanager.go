@@ -240,6 +240,11 @@ func processDirEntries(dirEntries []os.FileInfo) ([]os.FileInfo, []os.FileInfo, 
 }
 
 func printStats(fileSizes []int64, dirCount int) {
+	if len(fileSizes) == 0 {
+		log.Status.Printf("dir stats: dircount, filecount, totalfilesize, P0, P10, P50, P75, P90, P95, P99, P100: %d, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1",
+			dirCount)
+		return
+	}
 	totalSize := int64(0)
 	for _, size := range fileSizes {
 		totalSize += size
