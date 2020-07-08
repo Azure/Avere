@@ -8,6 +8,7 @@ resource "null_resource" "install_bootstrap" {
   # So we just choose the first in this case
   connection {
       type  = "ssh"
+      port  = var.ssh_port
       host  = var.node_address
       user  = var.admin_username
       password = var.ssh_key_data != null && var.ssh_key_data != "" ? "" : var.admin_password

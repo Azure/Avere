@@ -23,3 +23,8 @@ variable "nfs_address" {
 variable "nfs_export_path" {
     description = "The writeable path exported on the nfs server that will host the boostrap scripts"
 }
+
+variable "ssh_port" {
+  description = "specifies the tcp port to use for ssh"
+  default = 22
+}
