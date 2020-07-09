@@ -12,6 +12,7 @@ packages:
   - xfce4-goodies
   - tightvncserver
 runcmd:
+  - if [ "${ssh_port}" -ne "22" ]; then sed -i 's/^#\?Port .*/Port ${ssh_port}/' /etc/ssh/sshd_config && systemctl restart sshd ; fi
   - mkdir -p /cuebot/install
   - mkdir -p /nfs/opencue-demo
   - systemctl enable postgresql.service
@@ -65,7 +66,7 @@ runcmd:
   - cd ..
   - sudo -u postgres psql -w -f /cuebot/install/schema-0.4.14.sql $DB_NAME
   - sudo -u postgres psql -w -f /cuebot/install/demo_data-0.4.14.sql $DB_NAME
-  - mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' ${cache_ip}:/opencue-demo /nfs/opencue-demo
+  - mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' ${cache_ip}:${namespace_path} /nfs/opencue-demo
   - java -jar $JAR_PATH --datasource.cue-data-source.jdbc-url=jdbc:postgresql://$DB_HOST/$DB_NAME --datasource.cue-data-source.username=$DB_USER --datasource.cue-data-source.password=$DB_PASS --log.frame-log-root=$CUE_FS_ROOT"/logs"
   # - export CUEBOT_HOSTNAME_OR_IP=localhost
   # - CUEBOT_HOSTS=$CUEBOT_HOSTNAME_OR_IP cuegui
