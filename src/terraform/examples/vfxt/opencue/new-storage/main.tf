@@ -14,6 +14,7 @@ locals {
     vm_admin_password = "Password1234!"
     vm_admin_username = "azureuser"
     vm_ssh_key_data = "ssh-rsa AAAAB3...."
+    ssh_port = 22
     
     // storage details
     storage_account_name = ""
@@ -25,6 +26,7 @@ locals {
     controller_add_public_ip = true
     vfxt_cluster_name = "vfxt"
     vfxt_cluster_password = "VFXT_PASSWORD"
+    vfxt_ssh_key_data = local.vm_ssh_key_data
 
     # download the latest moana island scene from https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html
     # and upload to an azure storage blob and put the URL below
@@ -38,6 +40,11 @@ locals {
     opencue_env_vars = "CUE_FS_ROOT=${local.mount_target}/opencue-demo"
 
     alternative_resource_groups = [local.storage_resource_group_name]
+    // advanced scenario: add external ports to work with cloud policies example [10022, 13389]
+    open_external_ports = [local.ssh_port,3389]
+    // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
+    // or if accessing from cloud shell, put "AzureCloud"
+    open_external_sources = ["*"]
 }
 
 provider "azurerm" {
@@ -50,6 +57,9 @@ module "network" {
     source = "github.com/Azure/Avere/src/terraform/modules/render_network"
     resource_group_name = local.network_resource_group_name
     location = local.location
+
+    open_external_ports   = local.open_external_ports
+    open_external_sources = local.open_external_sources
 }
 
 resource "azurerm_resource_group" "storage" {
@@ -85,6 +95,7 @@ module "vfxtcontroller" {
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.controller_add_public_ip
     alternative_resource_groups = local.alternative_resource_groups
+    ssh_port = local.ssh_port
     
     // network details
     virtual_network_resource_group = module.network.vnet_resource_group
@@ -98,6 +109,8 @@ module "vfxtcontroller" {
 resource "avere_vfxt" "vfxt" {
     controller_address = module.vfxtcontroller.controller_address
     controller_admin_username = module.vfxtcontroller.controller_username
+    controller_admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
+    controller_ssh_port = local.ssh_port
     // terraform is not creating the implicit dependency on the controller module
     // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
     // to work around, add the explicit dependency
@@ -110,6 +123,7 @@ resource "avere_vfxt" "vfxt" {
     azure_subnet_name = module.network.cloud_cache_subnet_name
     vfxt_cluster_name = local.vfxt_cluster_name
     vfxt_admin_password = local.vfxt_cluster_password
+    vfxt_ssh_key_data = local.vfxt_ssh_key_data
     vfxt_node_count = 3
 
     # node_size = "unsupported_test_SKU"
@@ -172,17 +186,31 @@ resource "azurerm_virtual_machine" "cuebot" {
         create_option     = "FromImage"
         managed_disk_type = "Standard_LRS"
     }
-    os_profile {
-        computer_name  = "hostname"
+    dynamic "os_profile" {
+        for_each = (local.vm_ssh_key_data == null || local.vm_ssh_key_data == "") && local.vm_admin_password != null && local.vm_admin_password != "" ? [local.vm_admin_password] : [null] 
+        content {
+        computer_name  = local.cuebot_name
         admin_username = local.vm_admin_username
-        admin_password = local.vm_admin_password
-        custom_data    = templatefile("${path.module}/cloud-init.yml", {cache_ip = tolist(avere_vfxt.vfxt.vserver_ip_addresses)[0]})//local.cuebot_vm_cloud_init
+        admin_password = os_profile.value
+        custom_data    = templatefile("${path.module}/cloud-init.yml", {namespace_path = local.nfs_export_path, ssh_port = local.ssh_port, cache_ip = tolist(avere_vfxt.vfxt.vserver_ip_addresses)[0]})//local.cuebot_vm_cloud_init
+        }
     }
-    os_profile_linux_config {
+    // dynamic block when password is specified
+    dynamic "os_profile_linux_config" {
+        for_each = (local.vm_ssh_key_data == null || local.vm_ssh_key_data == "") && local.vm_admin_password != null && local.vm_admin_password != "" ? [local.vm_admin_password] : [] 
+        content {
         disable_password_authentication = false
-        ssh_keys {
-            key_data = local.vm_ssh_key_data
-            path = "/home/${local.vm_admin_username}/.ssh/authorized_keys"
+        }
+    }
+    // dynamic block when SSH key is specified
+    dynamic "os_profile_linux_config" {
+        for_each = local.vm_ssh_key_data == null || local.vm_ssh_key_data == "" ? [] : [local.vm_ssh_key_data]
+        content {
+            disable_password_authentication = true
+            ssh_keys {
+                key_data = local.vm_ssh_key_data
+                path = "/home/${local.vm_admin_username}/.ssh/authorized_keys"
+            }
         }
     }
 
@@ -198,6 +226,7 @@ module "opencue_configure" {
     ssh_key_data = local.vm_ssh_key_data
     nfs_address = tolist(avere_vfxt.vfxt.vserver_ip_addresses)[0]
     nfs_export_path = local.nfs_export_path
+    ssh_port = local.ssh_port
 }
 
 // the VMSS module
@@ -220,7 +249,7 @@ module "vmss" {
     nfs_export_path = local.nfs_export_path
     additional_env_vars = "${local.opencue_env_vars} CUEBOT_HOSTNAME=${azurerm_network_interface.cuebot_nic.private_ip_address}"
     bootstrap_script_path = module.opencue_configure.bootstrap_script_path
-    module_depends_on = [module.opencue_configure.bootstrap_script_path, azurerm_virtual_machine.cuebot]
+    module_depends_on = [module.opencue_configure.module_depends_on_id, azurerm_virtual_machine.cuebot]
 }
 
 output "cuebot_vm_ssh" {
@@ -235,8 +264,12 @@ output "controller_address" {
   value = module.vfxtcontroller.controller_address
 }
 
+output "controller_ssh_port" {
+  value = local.ssh_port
+}
+
 output "ssh_command_with_avere_tunnel" {
-    value = "ssh -L8443:${avere_vfxt.vfxt.vfxt_management_ip}:443 ${module.vfxtcontroller.controller_username}@${module.vfxtcontroller.controller_address}"
+    value = "ssh -p ${local.ssh_port} -L8443:${avere_vfxt.vfxt.vfxt_management_ip}:443 ${module.vfxtcontroller.controller_username}@${module.vfxtcontroller.controller_address}"
 }
 
 output "management_ip" {
