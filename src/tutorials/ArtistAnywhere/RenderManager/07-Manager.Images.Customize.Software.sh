@@ -4,22 +4,15 @@ set -ex
 
 cd /usr/local/bin
 
-fileDirectory=/mnt/tools/blender/v2.83.0
+yum -y install nfs-utils
 
-fileName=blender.tar.xz
-fileUrl=https://mirror.clarkson.edu/blender/release/Blender2.83/blender-2.83.0-linux64.tar.xz
-if [ ! -f $fileDirectory/$fileName ]; then
-    curl -L -o $fileName $fileUrl
-    mkdir -p $fileDirectory
-    cp $fileName $fileDirectory
-else
-    cp $fileDirectory/$fileName .
-fi
+mkdir -p /mnt/tools
+mount -t nfs -o rw,hard,rsize=65536,wsize=65536,vers=3,tcp 10.0.194.4:/tools /mnt/tools
 
 fileDirectory=/mnt/tools/opencue/v0.4.14
 
-fileName=opencue-requirements.txt
-fileUrl=https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/requirements.txt
+fileName=opencue-bot-schema.sql
+fileUrl=https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/schema-0.4.14.sql
 if [ ! -f $fileDirectory/$fileName ]; then
     curl -L -o $fileName $fileUrl
     mkdir -p $fileDirectory
@@ -28,8 +21,8 @@ else
     cp $fileDirectory/$fileName .
 fi
 
-fileName=opencue-rqd.tar.gz
-fileUrl=https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/rqd-0.4.14-all.tar.gz
+fileName=opencue-bot-data.sql
+fileUrl=https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/demo_data-0.4.14.sql
 if [ ! -f $fileDirectory/$fileName ]; then
     curl -L -o $fileName $fileUrl
     mkdir -p $fileDirectory
@@ -38,8 +31,18 @@ else
     cp $fileDirectory/$fileName .
 fi
 
-fileName=opencue-rqd.service
-fileUrl=https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/rqd/deploy/opencue-rqd.service
+fileName=opencue-bot.jar
+fileUrl=https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/cuebot-0.4.14-all.jar
+if [ ! -f $fileDirectory/$fileName ]; then
+    curl -L -o $fileName $fileUrl
+    mkdir -p $fileDirectory
+    cp $fileName $fileDirectory
+else
+    cp $fileDirectory/$fileName .
+fi
+
+fileName=opencue-bot.service
+fileUrl=https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/cuebot/deploy/systemd/opencue-cuebot.service
 if [ ! -f $fileDirectory/$fileName ]; then
     curl -L -o $fileName $fileUrl
     mkdir -p $fileDirectory

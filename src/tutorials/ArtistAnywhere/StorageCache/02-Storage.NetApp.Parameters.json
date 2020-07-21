@@ -4,15 +4,14 @@
   "parameters": {
     "storageAccount": {
       "value": {
-        "name": "MediaStudioWest",
-        "subnetName": "NetApp"
+        "name": "MediaStudio"
       }
     },
     "storagePools": {
       "value": [
         {
           "name": "Storage",
-          "tier": "Standard",
+          "tier": "Ultra",
           "size": 4
         }
       ]
@@ -114,35 +113,9 @@
     },
     "virtualNetwork": {
       "value": {
-        "name": "MediaStorageWest",
-        "addressSpace": "10.9.255.0/24",
-        "subnets": [
-          {
-            "name": "NetApp",
-            "addressSpace": "10.9.255.0/25",
-            "serviceEndpoints": [
-            ],
-            "delegations": [
-              {
-                "name": "netAppVolumes",
-                "properties": {
-                  "serviceName": "Microsoft.NetApp/volumes"
-                }
-              }
-            ]
-          },
-          {
-            "name": "Object",
-            "addressSpace": "10.9.255.128/25",
-            "serviceEndpoints": [
-              {
-                "service": "Microsoft.Storage"
-              }
-            ],
-            "delegations": [
-            ]
-          }
-        ]
+        "name": "",
+        "subnetName": "StorageNetApp",
+        "resourceGroupName": ""
       }
     }
   }

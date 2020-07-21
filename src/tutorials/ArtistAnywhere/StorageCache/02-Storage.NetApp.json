@@ -35,44 +35,16 @@
     "virtualNetwork": {
       "type": "object",
       "metadata": {
-        "description": "The virtual network subnet."
+        "description": "The virtual network."
       }
     }
   },
   "variables": {
-    "virtualNetworkApiVersion": "2020-04-01",
     "netAppApiVersion": "2020-03-01",
     "bytesPerTebibyte": 1099511627776,
     "bytesPerGibibyte": 1073741824
   },
   "resources": [
-    {
-      "type": "Microsoft.Network/virtualNetworks",
-      "name": "[parameters('virtualNetwork').name]",
-      "apiVersion": "[variables('virtualNetworkApiVersion')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "[parameters('virtualNetwork').addressSpace]"
-          ]
-        },
-        "copy": [
-          {
-            "name": "subnets",
-            "count": "[length(parameters('virtualNetwork').subnets)]",
-            "input": {
-              "name": "[parameters('virtualNetwork').subnets[copyIndex('subnets')].name]",
-              "properties": {
-                "addressPrefix": "[parameters('virtualNetwork').subnets[copyIndex('subnets')].addressSpace]",
-                "serviceEndpoints": "[parameters('virtualNetwork').subnets[copyIndex('subnets')].serviceEndpoints]",
-                "delegations": "[parameters('virtualNetwork').subnets[copyIndex('subnets')].delegations]"
-              }
-            }
-          }
-        ]
-      }
-    },
     {
       "type": "Microsoft.NetApp/netAppAccounts",
       "name": "[parameters('storageAccount').name]",
@@ -104,11 +76,10 @@
       "apiVersion": "[variables('netAppApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetwork').name)]",
         "[resourceId('Microsoft.NetApp/netAppAccounts/capacityPools', parameters('storageAccount').name, parameters('storageVolumes')[copyIndex()].pool)]"
       ],
       "properties": {
-        "subnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('storageAccount').subnetName)]",
+        "subnetId": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]",
         "usageThreshold": "[mul(variables('bytesPerGibibyte'), parameters('storageVolumes')[copyIndex()].size)]",
         "creationToken": "[toLower(parameters('storageVolumes')[copyIndex()].name)]",
         "exportPolicy": {
@@ -122,14 +93,6 @@
     }
   ],
   "outputs": {
-    "virtualNetwork": {
-      "type": "object",
-      "value": "[parameters('virtualNetwork')]"
-    },
-    "storageAccount": {
-      "type": "object",
-      "value": "[parameters('storageAccount')]"
-    },
     "storageMounts": {
       "type": "array",
       "copy": {
@@ -150,7 +113,7 @@
       "copy": {
         "count": "[length(parameters('storageTargets'))]",
         "input": {
-          "name": "[concat(parameters('virtualNetwork').name, '-NetApp-', parameters('storageTargets')[copyIndex()].name)]",
+          "name": "[concat(parameters('virtualNetwork').name, '.NetApp.', parameters('storageTargets')[copyIndex()].name)]",
           "type": "[parameters('storageTargets')[copyIndex()].type]",
           "host": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('storageAccount').name, parameters('storageVolumes')[copyIndex()].pool, parameters('storageVolumes')[copyIndex()].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
           "target": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('storageAccount').name, parameters('storageVolumes')[copyIndex()].pool, parameters('storageVolumes')[copyIndex()].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",

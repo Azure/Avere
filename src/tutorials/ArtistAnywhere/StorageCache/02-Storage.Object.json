@@ -29,44 +29,37 @@
     "virtualNetwork": {
       "type": "object",
       "metadata": {
-        "description": "The virtual network subnet."
+        "description": "The virtual network."
       }
     }
   },
   "variables": {
-    "roleAssignmentApiVersion": "2020-03-01-preview",
-    "virtualNetworkApiVersion": "2020-04-01",
+    "virtualNetworkApiVersion": "2020-05-01",
     "storageApiVersion": "2019-06-01",
     "storageAccountName": "[toLower(parameters('storageAccount').name)]",
-    "storageCachePrincipalId": "831d4223-7a3c-4121-a445-1e423591e57b",
-    "storageCacheRoleIds": [
-      "17d1049b-9a84-46fb-8f53-869881c3d3ab",
-      "ba92f5b4-2d11-453d-a403-e96b0029c9fe"
-    ]
+    "roleAssignmentApiVersion": "2020-04-01-preview"
   },
   "resources": [
     {
-      "type": "Microsoft.Network/virtualNetworks",
-      "name": "[parameters('virtualNetwork').name]",
+      "type": "Microsoft.Network/privateEndpoints",
+      "name": "[variables('storageAccountName')]",
       "apiVersion": "[variables('virtualNetworkApiVersion')]",
       "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ],
       "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "[parameters('virtualNetwork').addressSpace]"
-          ]
+        "subnet": {
+          "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
         },
-        "copy": [
+        "privateLinkServiceConnections": [
           {
-            "name": "subnets",
-            "count": "[length(parameters('virtualNetwork').subnets)]",
-            "input": {
-              "name": "[parameters('virtualNetwork').subnets[copyIndex('subnets')].name]",
-              "properties": {
-                "addressPrefix": "[parameters('virtualNetwork').subnets[copyIndex('subnets')].addressSpace]",
-                "serviceEndpoints": "[parameters('virtualNetwork').subnets[copyIndex('subnets')].serviceEndpoints]",
-                "delegations": "[parameters('virtualNetwork').subnets[copyIndex('subnets')].delegations]"
-              }
+            "name": "[variables('storageAccountName')]",
+            "properties": {
+              "privateLinkServiceId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
+              "groupIds": [
+                "blob"
+              ]
             }
           }
         ]
@@ -77,17 +70,17 @@
       "name": "[variables('storageAccountName')]",
       "apiVersion": "[variables('storageApiVersion')]",
       "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetwork').name)]"
-      ],
       "kind": "[parameters('storageAccount').type]",
       "sku": {
         "name": "[parameters('storageAccount').replication]"
       },
       "properties": {
-        "networkAcls": "[json(concat('{\"bypass\": \"None\", \"defaultAction\": \"Deny\", \"virtualNetworkRules\": [{\"action\": \"Allow\", \"id\": \"', resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('storageAccount').subnetName), '\"}]}'))]",
-        "supportsHttpsTrafficOnly": true
+        "supportsHttpsTrafficOnly": true,
+        "networkAcls": {
+          "defaultAction": "Deny",
+          "bypass": "AzureServices"
         }
+      }
     },
     {
       "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
@@ -107,31 +100,23 @@
     },
     {
       "type": "Microsoft.Storage/storageAccounts/providers/roleAssignments",
-      "name": "[concat(variables('storageAccountName'), '/Microsoft.Authorization/', guid(variables('storageCacheRoleIds')[copyIndex()], variables('storageAccountName')))]",
+      "name": "[concat(variables('storageAccountName'), '/Microsoft.Authorization/', guid(parameters('storageAccount').roleAssignments[copyIndex()].roleDefinitionId, variables('storageAccountName')))]",
       "apiVersion": "[variables('roleAssignmentApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
       ],
       "properties": {
-        "principalId": "[variables('storageCachePrincipalId')]",
-        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('storageCacheRoleIds')[copyIndex()])]"
+        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', parameters('storageAccount').roleAssignments[copyIndex()].roleDefinitionId)]",
+        "principalId": "[parameters('storageAccount').roleAssignments[copyIndex()].principalId]"
       },
       "copy": {
-        "name": "storageCacheRoleIds",
-        "count": "[length(variables('storageCacheRoleIds'))]"
+        "name": "roleAssignments",
+        "count": "[length(parameters('storageAccount').roleAssignments)]"
       }
     }
   ],
   "outputs": {
-    "virtualNetwork": {
-      "type": "object",
-      "value": "[parameters('virtualNetwork')]"
-    },
-    "storageAccount": {
-      "type": "object",
-      "value": "[parameters('storageAccount')]"
-    },
     "storageMounts": {
       "type": "array",
       "copy": {
@@ -152,7 +137,7 @@
       "copy": {
         "count": "[length(parameters('storageTargets'))]",
         "input": {
-          "name": "[concat(parameters('virtualNetwork').name, '-Object-', parameters('storageTargets')[copyIndex()].name)]",
+          "name": "[concat(parameters('virtualNetwork').name, '.Object.', parameters('storageTargets')[copyIndex()].name)]",
           "type": "[parameters('storageTargets')[copyIndex()].type]",
           "host": "[split(reference(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))).primaryEndpoints.blob, '/')[2]]",
           "target": "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('storageAccountName'), 'default', toLower(parameters('storageTargets')[copyIndex()].name))]",

@@ -4,10 +4,24 @@
   "parameters": {
     "storageAccount": {
       "value": {
-        "name": "MediaStudioWest",
+        "name": "MediaStudio",
         "type": "StorageV2",
         "replication": "Standard_LRS",
-        "subnetName": "Object"
+        "subnetName": "Storage",
+        "roleAssignments": [
+          {
+            "roleDefinitionId": "2a2b9908-6ea1-4ae2-8e65-a410df84e7d1",
+            "principalId": "7a9492c8-a6d2-4329-ace3-d4dd643c92ae"
+          },
+          {
+            "roleDefinitionId": "17d1049b-9a84-46fb-8f53-869881c3d3ab",
+            "principalId": "831d4223-7a3c-4121-a445-1e423591e57b"
+          },
+          {
+            "roleDefinitionId": "ba92f5b4-2d11-453d-a403-e96b0029c9fe",
+            "principalId": "831d4223-7a3c-4121-a445-1e423591e57b"
+          }
+        ]
       }
     },
     "storageContainers": {
@@ -17,6 +31,9 @@
         },
         {
           "name": "scenes"
+        },
+        {
+          "name": "scripts"
         },
         {
           "name": "tools"
@@ -46,35 +63,9 @@
     },
     "virtualNetwork": {
       "value": {
-        "name": "MediaStorageWest",
-        "addressSpace": "10.9.255.0/24",
-        "subnets": [
-          {
-            "name": "NetApp",
-            "addressSpace": "10.9.255.0/25",
-            "serviceEndpoints": [
-            ],
-            "delegations": [
-              {
-                "name": "netAppVolumes",
-                "properties": {
-                  "serviceName": "Microsoft.NetApp/volumes"
-                }
-              }
-            ]
-          },
-          {
-            "name": "Object",
-            "addressSpace": "10.9.255.128/25",
-            "serviceEndpoints": [
-              {
-                "service": "Microsoft.Storage"
-              }
-            ],
-            "delegations": [
-            ]
-          }
-        ]
+        "name": "",
+        "subnetName": "Storage",
+        "resourceGroupName": ""
       }
     }
   }

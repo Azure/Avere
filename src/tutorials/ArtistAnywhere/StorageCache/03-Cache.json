@@ -43,7 +43,7 @@
     "virtualNetwork": {
       "type": "object",
       "metadata": {
-        "description": "The virtual network subnet."
+        "description": "The virtual network."
       }
     }
   },

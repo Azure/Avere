@@ -11,11 +11,12 @@
     "virtualNetwork": {
       "type": "object",
       "metadata": {
-        "description": "The virtual network subnet."
+        "description": "The virtual network."
       }
     }
   },
   "variables": {
+    "virtualNetworkApiVersion": "2020-05-01",
     "dataServerApiVersion": "2017-12-01",
     "dataServerName": "[toLower(parameters('renderManager').dataServerName)]",
     "dataServerHost": "[concat(variables('dataServerName'), '.postgres.database.azure.com')]",
@@ -43,18 +44,6 @@
       }
     },
     {
-      "type": "Microsoft.DBforPostgreSQL/servers/virtualNetworkRules",
-      "name": "[concat(variables('dataServerName'), '/virtualNetwork')]",
-      "apiVersion": "[variables('dataServerApiVersion')]",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[resourceId('Microsoft.DBforPostgreSQL/servers', variables('dataServerName'))]"
-      ],
-      "properties": {
-        "virtualNetworkSubnetId": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
-      }
-    },
-    {
       "type": "Microsoft.DBforPostgreSQL/servers/databases",
       "name": "[concat(variables('dataServerName'), '/', parameters('renderManager').databaseName)]",
       "apiVersion": "[variables('dataServerApiVersion')]",
@@ -63,6 +52,31 @@
         "[resourceId('Microsoft.DBforPostgreSQL/servers', variables('dataServerName'))]"
       ],
       "properties": {
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints",
+      "name": "[variables('dataServerName')]",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/servers', variables('dataServerName'))]"
+      ],
+      "properties": {
+        "subnet": {
+          "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "[variables('dataServerName')]",
+            "properties": {
+              "privateLinkServiceId": "[resourceId('Microsoft.DBforPostgreSQL/servers', variables('dataServerName'))]",
+              "groupIds": [
+                "server"
+              ]
+            }
+          }
+        ]
       }
     }
   ],

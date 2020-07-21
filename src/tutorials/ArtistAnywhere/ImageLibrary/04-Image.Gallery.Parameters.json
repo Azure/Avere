@@ -2,19 +2,16 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "userIdentity": {
+      "value": {
+        "name": "",
+        "resourceGroupName": ""
+      }
+    },
     "imageGallery": {
       "value": {
         "name": "MediaStudio",
         "imageDefinitions": [
-          {
-            "name": "Linux7",
-            "type": "Linux",
-            "generation": "v1",
-            "state": "Generalized",
-            "publisher": "OpenLogic",
-            "offer": "CentOS",
-            "sku": "7.7"
-          },
           {
             "name": "Linux8",
             "type": "Linux",
@@ -22,7 +19,7 @@
             "state": "Generalized",
             "publisher": "OpenLogic",
             "offer": "CentOS",
-            "sku": "8_1"
+            "sku": "8_2"
           },
           {
             "name": "WindowsServer",
@@ -31,7 +28,7 @@
             "state": "Generalized",
             "publisher": "MicrosoftWindowsServer",
             "offer": "WindowsServer",
-            "sku": "2019-datacenter-smalldisk"
+            "sku": "2019-Datacenter"
           },
           {
             "name": "WindowsDesktop",
@@ -40,25 +37,13 @@
             "state": "Generalized",
             "publisher": "MicrosoftWindowsDesktop",
             "offer": "Windows-10",
-            "sku": "19h2-pro"
+            "sku": "19H2-Pro"
           }
         ]
       }
     },
-    "imageBuilder": {
-      "value": {
-        "userPrincipalId": ""
-      }
-    },
-    "containerRegistry": {
-      "value": {
-        "name": "MediaStudio",
-        "tier": "Premium"
-      }
-    },
     "virtualNetwork": {
       "value": {
-        "name": "",
         "resourceGroupName": ""
       }
     }

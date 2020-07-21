@@ -5,7 +5,7 @@
     "virtualNetwork": {
       "type": "object",
       "metadata": {
-        "description": "The virtual network subnets."
+        "description": "The virtual network."
       }
     },
     "virtualNetworkGateway": {
@@ -13,13 +13,19 @@
       "metadata": {
         "description": "The virtual network gateway."
       }
+    },
+    "storageNetwork": {
+      "type": "object",
+      "metadata": {
+        "description": "The storage virtual network."
+      }
     }
   },
   "variables": {
-    "roleAssignmentApiVersion": "2020-03-01-preview",
-    "virtualNetworkApiVersion": "2020-04-01",
+    "virtualNetworkApiVersion": "2020-05-01",
     "virtualNetworkDomainApiVersion": "2020-01-01",
-    "virtualNetworkGatewayZoned": "[endsWith(parameters('virtualNetworkGateway').vpnTier, 'AZ')]"
+    "resourceDeploymentApiVersion": "2019-09-01",
+    "roleAssignmentApiVersion": "2020-04-01-preview"
   },
   "resources": [
     {
@@ -79,10 +85,10 @@
       "apiVersion": "[variables('virtualNetworkApiVersion')]",
       "location": "[resourceGroup().location]",
       "sku": {
-        "name": "[if(variables('virtualNetworkGatewayZoned'), 'Standard', 'Basic')]"
+        "name": "[parameters('virtualNetworkGateway').ipAddress.type]"
       },
       "properties": {
-        "publicIPAllocationMethod": "[if(variables('virtualNetworkGatewayZoned'), 'Static', 'Dynamic')]"
+        "publicIPAllocationMethod": "[parameters('virtualNetworkGateway').ipAddress.allocationMethod]"
       }
     },
     {
@@ -100,11 +106,12 @@
           "name": "[parameters('virtualNetworkGateway').vpnTier]",
           "tier": "[parameters('virtualNetworkGateway').vpnTier]"
         },
+        "vpnGatewayGeneration": "[parameters('virtualNetworkGateway').vpnGeneration]",
         "vpnType": "[parameters('virtualNetworkGateway').vpnType]",
         "gatewayType": "[parameters('virtualNetworkGateway').type]",
         "ipConfigurations": [
           {
-            "name": "vpnGatewayConfig",
+            "name": "ipConfig",
             "properties": {
               "subnet": {
                 "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, 'GatewaySubnet')]"
@@ -127,6 +134,63 @@
               "name": "[parameters('virtualNetworkGateway').vpnClient.rootCertificateName]",
               "properties": {
                 "publicCertData": "[parameters('virtualNetworkGateway').vpnClient.rootCertificateData]"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "condition": "[and(parameters('virtualNetworkGateway').enabled, not(equals(parameters('storageNetwork').name, '')))]",
+      "type": "Microsoft.Network/connections",
+      "name": "[parameters('virtualNetwork').name]",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('virtualNetwork').name)]"
+      ],
+      "properties": {
+        "connectionType": "Vnet2Vnet",
+        "connectionProtocol": "[parameters('virtualNetworkGateway').connection.protocol]",
+        "sharedKey": "[parameters('virtualNetworkGateway').connection.key]",
+        "virtualNetworkGateway1": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('virtualNetwork').name)]"
+        },
+        "virtualNetworkGateway2": {
+          "id": "[resourceId(parameters('storageNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworkGateways', parameters('storageNetwork').name)]"
+        }
+      }
+    },
+    {
+      "condition": "[and(parameters('virtualNetworkGateway').enabled, not(equals(parameters('storageNetwork').name, '')))]",
+      "type": "Microsoft.Resources/deployments",
+      "name": "00-Network.Connections",
+      "apiVersion": "[variables('resourceDeploymentApiVersion')]",
+      "resourceGroup": "[parameters('storageNetwork').resourceGroupName]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('virtualNetwork').name)]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": [
+            {
+              "type": "Microsoft.Network/connections",
+              "name": "[parameters('storageNetwork').name]",
+              "apiVersion": "[variables('virtualNetworkApiVersion')]",
+              "location": "[parameters('storageNetwork').regionName]",
+              "properties": {
+                "connectionType": "Vnet2Vnet",
+                "connectionProtocol": "[parameters('virtualNetworkGateway').connection.protocol]",
+                "sharedKey": "[parameters('virtualNetworkGateway').connection.key]",
+                "virtualNetworkGateway1": {
+                  "id": "[resourceId(parameters('storageNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworkGateways', parameters('storageNetwork').name)]"
+                },
+                "virtualNetworkGateway2": {
+                  "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('virtualNetwork').name)]"
+                }
               }
             }
           ]

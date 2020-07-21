@@ -15,36 +15,13 @@
     Write-Host $traceMessage
 }
 
-function New-NetworkPeering ([string[]] $computeRegionNames, [object[]] $computeNetworks, $storageNetwork, $moduleName) {
-    $moduleName += " Network Peering"
-    $storageNetwork = (az network vnet show --resource-group $storageNetwork.resourceGroupName --name $storageNetwork.name)  | ConvertFrom-Json
-    foreach ($storageNetworkPeering in $storageNetwork.virtualNetworkPeerings) {
-        if ($storageNetworkPeering.peeringState -eq "Disconnected") {
-            az network vnet peering delete --resource-group $storageNetwork.resourceGroup --vnet-name $storageNetwork.name --name $storageNetworkPeering.name
-        }
-    }
-    for ($computeNetworkIndex = 0; $computeNetworkIndex -lt $computeNetworks.length; $computeNetworkIndex++) {
-        New-TraceMessage $moduleName $false $computeRegionNames[$computeNetworkIndex]
-        $computeNetworkResourceGroupName = $computeNetworks[$computeNetworkIndex].resourceGroupName
-        $computeNetworkName = $computeNetworks[$computeNetworkIndex].name
-        $computeNetwork = (az network vnet show --resource-group $computeNetworkResourceGroupName --name $computeNetworkName)  | ConvertFrom-Json
-        $networkPeering = az network vnet peering create --resource-group $computeNetworkResourceGroupName --vnet-name $computeNetwork.name --name $storageNetwork.name --remote-vnet $storageNetwork.id --allow-vnet-access
-        if (!$networkPeering) { return }
-        $networkPeering = az network vnet peering create --resource-group $storageNetwork.resourceGroup --vnet-name $storageNetwork.name --name $computeNetwork.name --remote-vnet $computeNetwork.id --allow-vnet-access
-        if (!$networkPeering) { return }
-        New-TraceMessage $moduleName $true $computeRegionNames[$computeNetworkIndex]
-    }
-    return $networkPeering
-}
-
-function Get-ResourceGroupName ($resourceGroupNamePrefix, $resourceGroupNameSuffix, $regionIndex) {
+function Get-ResourceGroupName ($resourceGroupNamePrefix, $resourceGroupNameSuffix, $regionName) {
     $resourceGroupName = $resourceGroupNamePrefix
-    if ($null -ne $regionIndex) {
-        $regionId = $regionIndex + 1
-        $resourceGroupName = "$resourceGroupName$regionId"
+    if ($null -ne $regionName) {
+        $resourceGroupName = "$resourceGroupName.$regionName"
     }
     if ($null -ne $resourceGroupNameSuffix) {
-        $resourceGroupName = "$resourceGroupName-$resourceGroupNameSuffix"
+        $resourceGroupName = "$resourceGroupName$resourceGroupNameSuffix"
     }
     return $resourceGroupName
 }

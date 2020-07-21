@@ -1,26 +1,23 @@
 ﻿param (
     # Set a naming prefix for the Azure resource groups that are created by this deployment script
-    [string] $resourceGroupNamePrefix,
+    [string] $resourceGroupNamePrefix = "Azure.Media.Studio",
 
-    # Set to 1 or more Azure region names (http://azure.microsoft.com/global-infrastructure/regions)
-    [string[]] $computeRegionNames = @("WestUS2"),
+    # Set the Azure region name(s) for Compute resources (e.g., Image Builder, Virtual Machines, HPC Cache, etc.)
+    [string[]] $computeRegionNames = @("EastUS2", "WestUS2"),
 
-    # Set to 1 or more Azure region names (http://azure.microsoft.com/global-infrastructure/regions)
-    [string[]] $storageRegionNames = @("WestUS2"),
+    # Set the Azure region name for Storage resources (e.g., VPN Gateway, NetApp Files, Object (Blob) Storage, etc.)
+    [string] $storageRegionName = $computeRegionNames[0],
 
-    # Set to true to deploy Azure NetApp Files (http://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
+    # Set to true to deploy Azure NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
     [boolean] $storageNetAppEnable = $false,
 
-    # Set to true to deploy Azure Object (Blob) Storage (http://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview)
-    [boolean] $storageObjectEnable = $false,
+    # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview)
+    [boolean] $storageCacheEnable = $false,
 
-    # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview)
-    [boolean] $cacheEnable = $false,
-    
-    # The set of shared Azure services across regions, including Storage, Cache, Image Gallery, etc.
+    # The shared Azure services (e.g., Virtual Networks, Managed Identity, Log Analytics, etc.)
     [object] $sharedServices,
 
-    # Set to the Azure Render Manager farm host (name or IP address) for each of the compute regions
+    # The Azure render farm manager host names (or IP addresses)
     [string[]] $renderManagers
 )
 
@@ -35,36 +32,34 @@ Import-Module "$templateDirectory/Deploy.psm1"
 if (!$sharedServices) {
     $moduleName = "* - Shared Services Job"
     New-TraceMessage $moduleName $false
-    $sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $cacheEnable
+    $sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionName, $storageNetAppEnable, $storageCacheEnable
     $sharedServices = Receive-Job -Job $sharedServicesJob -Wait
-    if ($sharedServicesJob.JobStateInfo.State -eq "Failed") {
-        Write-Host $sharedServicesJob.JobStateInfo.Reason
-        return
-    }
+    if (!$?) { return }
     New-TraceMessage $moduleName $true
 }
 
 $computeNetworks = $sharedServices.computeNetworks
+$userIdentity = $sharedServices.userIdentity
 $logAnalytics = $sharedServices.logAnalytics
-$imageGallery = $sharedServices.imageGallery
 $storageMounts = $sharedServices.storageMounts
 $cacheMounts = $sharedServices.cacheMounts
+$imageGallery = $sharedServices.imageGallery
 
 $moduleDirectory = "ArtistDesktop"
 
-# 11 - Desktop Machines
+# 12 - Desktop Machines
 $artistDesktopMachines = @()
-$moduleName = "11 - Desktop Machines"
-$resourceGroupNameSuffix = "Desktop"
+$moduleName = "12 - Desktop Machines"
+$resourceGroupNameSuffix = ".Desktop"
 New-TraceMessage $moduleName $false
 for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
     New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
-    $resourceGroupName = Get-ResourceGroupName $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionIndex
+    $resourceGroupName = Get-ResourceGroupName $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionNames[$computeRegionIndex]
     $resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
-    if (!$resourceGroup) { return }
+    if (!$resourceGroup) { throw }
 
-    $templateResources = "$templateDirectory/$moduleDirectory/11-Desktop.Machines.json"
-    $templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/11-Desktop.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
+    $templateFile = "$templateDirectory/$moduleDirectory/12-Desktop.Machines.json"
+    $templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/12-Desktop.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
     for ($machineTypeIndex = 0; $machineTypeIndex -lt $templateParameters.artistDesktop.value.machineTypes.length; $machineTypeIndex++) {
         if ($templateParameters.artistDesktop.value.machineTypes[$machineTypeIndex].enabled) {
@@ -100,12 +95,12 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
             }
         }
     }
-    if ($templateParameters.logAnalytics.value.workspaceId -eq "") {
-        $templateParameters.logAnalytics.value.workspaceId = $logAnalytics.workspaceId
-    }
-    if ($templateParameters.logAnalytics.value.workspaceKey -eq "") {
-        $templateParameters.logAnalytics.value.workspaceKey = $logAnalytics.workspaceKey
-    }
+    # if ($templateParameters.logAnalytics.value.workspaceId -eq "") {
+    #     $templateParameters.logAnalytics.value.workspaceId = $logAnalytics.workspaceId
+    # }
+    # if ($templateParameters.logAnalytics.value.workspaceKey -eq "") {
+    #     $templateParameters.logAnalytics.value.workspaceKey = $logAnalytics.workspaceKey
+    # }
     if ($templateParameters.virtualNetwork.value.name -eq "") {
         $templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
     }
@@ -114,8 +109,8 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
     }
     
     $templateParameters = '"{0}"' -f ($templateParameters | ConvertTo-Json -Compress -Depth 5).Replace('"', '\"')
-    $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
-    if (!$groupDeployment) { return }
+    $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
+    if (!$groupDeployment) { throw }
 
     $artistDesktopMachines += $groupDeployment.properties.outputs.artistDesktopMachines.value
     New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]

@@ -11,18 +11,18 @@
     "logAnalytics": {
       "type": "object",
       "metadata": {
-        "description": "The log analytics workspace."
+        "description": "The monitor log analytics."
       }
     },
     "virtualNetwork": {
       "type": "object",
       "metadata": {
-        "description": "The virtual network subnet."
+        "description": "The virtual network."
       }
     }
   },
   "variables": {
-    "virtualNetworkApiVersion": "2020-04-01",
+    "virtualNetworkApiVersion": "2020-05-01",
     "virtualMachineApiVersion": "2020-06-01",
     "availabilitySetName": "RenderManagers",
     "loadBalancerNameInternal": "[concat(variables('availabilitySetName'), 'Internal')]",
@@ -182,7 +182,7 @@
         "primary": true,
         "ipConfigurations": [
           {
-            "name": "ipConfig0",
+            "name": "ipConfig",
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {

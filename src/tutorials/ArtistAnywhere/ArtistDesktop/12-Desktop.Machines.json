@@ -1,0 +1,228 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "artistDesktops": {
+      "type": "array",
+      "metadata": {
+        "description": "The artist desktop machines."
+      }
+    },
+    "logAnalytics": {
+      "type": "object",
+      "metadata": {
+        "description": "The monitor log analytics."
+      }
+    },
+    "virtualNetwork": {
+      "type": "object",
+      "metadata": {
+        "description": "The virtual network."
+      }
+    }
+  },
+  "variables": {
+    "virtualNetworkApiVersion": "2020-05-01",
+    "virtualMachineApiVersion": "2020-06-01",
+    "resourceDeploymentApiVersion": "2019-09-01"
+  },
+  "functions": [
+    {
+      "namespace": "desktop",
+      "members": {
+        "getLinuxConfig": {
+          "parameters": [
+            {
+              "name": "sshPublicKeyData",
+              "type": "string"
+            },
+            {
+              "name": "adminUserName",
+              "type": "string"
+            }
+          ],
+          "output": {
+            "type": "string",
+            "value": "[if(equals(parameters('sshPublicKeyData'), ''), 'null', concat('{\"ssh\": {\"publicKeys\": [{\"path\": \"/home/', parameters('adminUsername'), '/.ssh/authorized_keys\", \"keyData\": \"', parameters('sshPublicKeyData'), '\"}]}}'))]"
+          }
+        },
+        "GetExtensionCommand": {
+          "parameters": [
+            {
+              "name": "scriptCommands",
+              "type": "string"
+            },
+            {
+              "name": "scriptParameters",
+              "type": "string"
+            }
+          ],
+          "output": {
+            "type": "string",
+            "value": "[if(equals(parameters('scriptParameters'), ''), format('PowerShell.exe -ExecutionPolicy Unrestricted -EncodedCommand {0}', parameters('scriptCommands')), format('echo {0} | base64 -d | gunzip | tr -d \r | {1} /bin/bash', parameters('scriptCommands'), parameters('scriptParameters')))]"
+          }
+        }
+      }
+    }
+  ],
+  "resources": [
+    {
+      "condition": "[parameters('artistDesktops')[copyIndex()].enabled]",
+      "type": "Microsoft.Resources/deployments",
+      "name": "[concat('12-Desktop.Machines.', parameters('artistDesktops')[copyIndex()].namePrefix)]",
+      "apiVersion": "[variables('resourceDeploymentApiVersion')]",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": [
+            {
+              "type": "Microsoft.Network/networkInterfaces",
+              "name": "[concat(parameters('artistDesktops')[copyIndex()].namePrefix, copyIndex())]",
+              "apiVersion": "[variables('virtualNetworkApiVersion')]",
+              "location": "[resourceGroup().location]",
+              "properties": {
+                "primary": true,
+                "ipConfigurations": [
+                  {
+                    "name": "ipConfig",
+                    "properties": {
+                      "privateIPAllocationMethod": "Dynamic",
+                      "subnet": {
+                        "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+                      }
+                    }
+                  }
+                ]
+              },
+              "copy": {
+                "name": "artistMachines",
+                "count": "[parameters('artistDesktops')[copyIndex()].machineCount)]"
+              }
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines",
+              "name": "[concat(parameters('artistDesktops')[copyIndex()].namePrefix, copyIndex())]",
+              "apiVersion": "[variables('virtualMachineApiVersion')]",
+              "location": "[resourceGroup().location]",
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('artistDesktops')[copyIndex()].namePrefix, copyIndex())]"
+              ],
+              "properties": {
+                "hardwareProfile": {
+                  "vmSize": "[parameters('artistDesktops')[copyIndex()].machineSize]"
+                },
+                "networkProfile": {
+                  "networkInterfaces": [
+                    {
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('artistDesktops')[copyIndex()].namePrefix, copyIndex())]"
+                    }
+                  ]
+                },
+                "storageProfile": {
+                  "imageReference": {
+                    "id": "[parameters('artistDesktops')[copyIndex()].image.referenceId]"
+                  },
+                  "osDisk": {
+                    "caching": "ReadOnly",
+                    "createOption": "FromImage"
+                  }
+                },
+                "osProfile": {
+                  "computerName": "[concat(parameters('artistDesktops')[copyIndex()].namePrefix, copyIndex())]",
+                  "adminUsername": "[parameters('artistDesktops')[copyIndex()].login.adminUsername]",
+                  "adminPassword": "[parameters('artistDesktops')[copyIndex()].login.adminPassword]",
+                  "linuxConfiguration": "[json(desktop.getLinuxConfig(parameters('artistDesktops')[copyIndex()].login.sshPublicKeyData, parameters('artistDesktops')[copyIndex()].login.adminUsername))]"
+                }
+              },
+              "copy": {
+                "name": "artistMachines",
+                "count": "[parameters('artistDesktops')[copyIndex()].machineCount)]"
+              }
+            },
+            {
+              "condition": "[not(equals(parameters('artistDesktops')[copyIndex()].gpuDriver.type, ''))]",
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "name": "[concat(parameters('artistDesktops')[copyIndex()].namePrefix, copyIndex(), '/Graphics')]",
+              "apiVersion": "[variables('virtualMachineApiVersion')]",
+              "location": "[resourceGroup().location]",
+              "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', concat(parameters('artistDesktops')[copyIndex()].namePrefix, copyIndex()))]"
+              ],
+              "properties": {
+                "publisher": "[parameters('artistDesktops')[copyIndex()].gpuDriver.publisher]",
+                "type": "[parameters('artistDesktops')[copyIndex()].gpuDriver.type]",
+                "typeHandlerVersion": "[parameters('artistDesktops')[copyIndex()].gpuDriver.typeVersion]",
+                "autoUpgradeMinorVersion": "[parameters('artistDesktops')[copyIndex()].gpuDriver.upgradeMinorVersion]"
+              },
+              "copy": {
+                "name": "artistMachines",
+                "count": "[parameters('artistDesktops')[copyIndex()].machineCount)]"
+              }
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "name": "[concat(parameters('artistDesktops')[copyIndex()].namePrefix, copyIndex(), '/Custom')]",
+              "apiVersion": "[variables('virtualMachineApiVersion')]",
+              "location": "[resourceGroup().location]",
+              "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', concat(parameters('artistDesktops')[copyIndex()].namePrefix, copyIndex()))]",
+                "[resourceId('Microsoft.Compute/virtualMachines/extensions', concat(parameters('artistDesktops')[copyIndex()].namePrefix, copyIndex()), 'Graphics')]"
+              ],
+              "properties": {
+                "publisher": "[parameters('artistDesktops')[copyIndex()].customExtension.publisher]",
+                "type": "[parameters('artistDesktops')[copyIndex()].customExtension.type]",
+                "typeHandlerVersion": "[parameters('artistDesktops')[copyIndex()].customExtension.typeVersion]",
+                "autoUpgradeMinorVersion": "[parameters('artistDesktops')[copyIndex()].customExtension.upgradeMinorVersion]",
+                "protectedSettings": {
+                  "commandToExecute": "[desktop.GetExtensionCommand(parameters('artistDesktops')[copyIndex()].customExtension.scriptCommands, parameters('artistDesktops')[copyIndex()].customExtension.scriptParameters)]"
+                }
+              },
+              "copy": {
+                "name": "artistMachines",
+                "count": "[parameters('artistDesktops')[copyIndex()].machineCount)]"
+              }
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "name": "[concat(parameters('artistDesktops')[copyIndex()].namePrefix, copyIndex(), '/Monitor')]",
+              "apiVersion": "[variables('virtualMachineApiVersion')]",
+              "location": "[resourceGroup().location]",
+              "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', concat(parameters('artistDesktops')[copyIndex()].namePrefix, copyIndex()))]",
+                "[resourceId('Microsoft.Compute/virtualMachines/extensions', concat(parameters('artistDesktops')[copyIndex()].namePrefix, copyIndex()), 'Custom')]"
+              ],
+              "properties": {
+                "publisher": "[parameters('artistDesktops')[copyIndex()].monitorAgent.publisher]",
+                "type": "[parameters('artistDesktops')[copyIndex()].monitorAgent.type]",
+                "typeHandlerVersion": "[parameters('artistDesktops')[copyIndex()].monitorAgent.typeVersion]",
+                "autoUpgradeMinorVersion": "[parameters('artistDesktops')[copyIndex()].monitorAgent.upgradeMinorVersion]",
+                "protectedSettings": {
+                  "workspaceKey": "[parameters('logAnalytics').workspaceKey]"
+                },
+                "settings": {
+                  "workspaceId": "[parameters('logAnalytics').workspaceId]"
+                }
+              },
+              "copy": {
+                "name": "artistMachines",
+                "count": "[parameters('artistDesktops')[copyIndex()].machineCount)]"
+              }
+            }
+          ]
+        }
+      },
+      "copy": {
+        "name": "artistDesktops",
+        "count": "[length(parameters('artistDesktops'))]"
+      }
+    }
+  ],
+  "outputs": {
+    "artistDesktops": {
+      "type": "array",
+      "value": "[parameters('artistDesktops')]"
+    }
+  }
+}

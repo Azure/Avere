@@ -4,32 +4,15 @@ set -ex
 
 cd /usr/local/bin
 
-fileDirectory=/mnt/tools/blender/v2.83.0
+yum -y install nfs-utils
 
-fileName=blender.tar.xz
-fileUrl=https://mirror.clarkson.edu/blender/release/Blender2.83/blender-2.83.0-linux64.tar.xz
-if [ ! -f $fileDirectory/$fileName ]; then
-    curl -L -o $fileName $fileUrl
-    mkdir -p $fileDirectory
-    cp $fileName $fileDirectory
-else
-    cp $fileDirectory/$fileName .
-fi
+mkdir -p /mnt/tools
+mount -t nfs -o rw,hard,rsize=65536,wsize=65536,vers=3,tcp 10.0.194.4:/tools /mnt/tools
 
 fileDirectory=/mnt/tools/opencue/v0.4.14
 
 fileName=opencue-requirements.txt
 fileUrl=https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/requirements.txt
-if [ ! -f $fileDirectory/$fileName ]; then
-    curl -L -o $fileName $fileUrl
-    mkdir -p $fileDirectory
-    cp $fileName $fileDirectory
-else
-    cp $fileDirectory/$fileName .
-fi
-
-fileName=opencue-requirements-gui.txt
-fileUrl=https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/requirements_gui.txt
 if [ ! -f $fileDirectory/$fileName ]; then
     curl -L -o $fileName $fileUrl
     mkdir -p $fileDirectory
@@ -58,8 +41,8 @@ else
     cp $fileDirectory/$fileName .
 fi
 
-fileName=opencue-admin.tar.gz
-fileUrl=https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/cueadmin-0.4.14-all.tar.gz
+fileName=opencue-rqd.tar.gz
+fileUrl=https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/rqd-0.4.14-all.tar.gz
 if [ ! -f $fileDirectory/$fileName ]; then
     curl -L -o $fileName $fileUrl
     mkdir -p $fileDirectory
@@ -68,8 +51,8 @@ else
     cp $fileDirectory/$fileName .
 fi
 
-fileName=opencue-submit.tar.gz
-fileUrl=https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/cuesubmit-0.4.14-all.tar.gz
+fileName=opencue-rqd.service
+fileUrl=https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/rqd/deploy/opencue-rqd.service
 if [ ! -f $fileDirectory/$fileName ]; then
     curl -L -o $fileName $fileUrl
     mkdir -p $fileDirectory
@@ -78,8 +61,10 @@ else
     cp $fileDirectory/$fileName .
 fi
 
-fileName=opencue-gui.tar.gz
-fileUrl=https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/cuegui-0.4.14-all.tar.gz
+fileDirectory=/mnt/tools/blender/v2.83.2
+
+fileName=blender.tar.xz
+fileUrl=https://mirror.clarkson.edu/blender/release/Blender2.83/blender-2.83.2-linux64.tar.xz
 if [ ! -f $fileDirectory/$fileName ]; then
     curl -L -o $fileName $fileUrl
     mkdir -p $fileDirectory

@@ -2,37 +2,31 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "userIdentity": {
+      "type": "object",
+      "metadata": {
+        "description": "The managed user identity."
+      }
+    },
     "imageGallery": {
       "type": "object",
       "metadata": {
         "description": "The shared image gallery."
       }
     },
-    "imageBuilder": {
-      "type": "object",
-      "metadata": {
-        "description": "The shared image builder."
-      }
-    },
-    "containerRegistry": {
-      "type": "object",
-      "metadata": {
-        "description": "The container registry."
-      }
-    },
     "virtualNetwork": {
       "type": "object",
       "metadata": {
-        "description": "The virtual network subnet."
+        "description": "The virtual network."
       }
     }
   },
   "variables": {
     "imageGalleryApiVersion": "2019-12-01",
+    "managedIdentityApiVersion": "2018-11-30",
     "resourceDeploymentApiVersion": "2019-09-01",
-    "roleAssignmentApiVersion": "2020-03-01-preview",
-    "containerRegistryApiVersion": "2019-12-01-preview",
-    "contributorRoleId": "b24988ac-6180-42a0-ab88-20f7382dd24c"
+    "roleAssignmentApiVersion": "2020-04-01-preview",
+    "roleContributorId": "b24988ac-6180-42a0-ab88-20f7382dd24c"
   },
   "resources": [
     {
@@ -67,20 +61,18 @@
       }
     },
     {
-      "type": "Microsoft.ContainerRegistry/registries",
-      "name": "[parameters('containerRegistry').name]",
-      "apiVersion": "[variables('containerRegistryApiVersion')]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "name": "[guid(resourceGroup().id)]",
+      "apiVersion": "[variables('roleAssignmentApiVersion')]",
       "location": "[resourceGroup().location]",
-      "sku": {
-        "name": "[parameters('containerRegistry').tier]"
-      },
       "properties": {
-        "adminUserEnabled": false
+        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('roleContributorId'))]",
+        "principalId": "[reference(resourceId(parameters('userIdentity').resourceGroupName, 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userIdentity').name), variables('managedIdentityApiVersion')).principalId]"
       }
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "name": "imageBuilderNetworkRead",
+      "name": "04-Image.Builder",
       "apiVersion": "[variables('resourceDeploymentApiVersion')]",
       "resourceGroup": "[parameters('virtualNetwork').resourceGroupName]",
       "properties": {
@@ -95,23 +87,13 @@
               "apiVersion": "[variables('roleAssignmentApiVersion')]",
               "location": "[resourceGroup().location]",
               "properties": {
-                "principalId": "[parameters('imageBuilder').userPrincipalId]",
-                "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('contributorRoleId'))]",
+                "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('roleContributorId'))]",
+                "principalId": "[reference(resourceId(parameters('userIdentity').resourceGroupName, 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userIdentity').name), variables('managedIdentityApiVersion')).principalId]",
                 "scope": "[concat(subscription().id, '/resourceGroups/', parameters('virtualNetwork').resourceGroupName)]"
               }
             }
           ]
         }
-      }
-    },
-    {
-      "type": "Microsoft.Authorization/roleAssignments",
-      "name": "[guid(resourceGroup().id)]",
-      "apiVersion": "[variables('roleAssignmentApiVersion')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "principalId": "[parameters('imageBuilder').userPrincipalId]",
-        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('contributorRoleId'))]"
       }
     }
   ],

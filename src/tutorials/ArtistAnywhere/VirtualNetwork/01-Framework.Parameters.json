@@ -7,11 +7,19 @@
         "name": "MediaStudio"
       }
     },
-    "storageAccount": {
+    "logAnalytics": {
       "value": {
         "name": "MediaStudio",
-        "type": "StorageV2",
-        "replication": "Standard_LRS"
+        "tier": "PerGB2018",
+        "dataRetentionDays": 31,
+        "networkAccessPublicIngest": "Disabled",
+        "networkAccessPublicQuery": "Disabled"
+      }
+    },
+    "automationAccount": {
+      "value": {
+        "name": "MediaStudio",
+        "tier": "Basic"
       }
     },
     "keyVault": {
@@ -19,12 +27,6 @@
         "name": "MediaStudio",
         "tier": "Standard",
         "adminId": "ef54b085-8b87-4b95-b2a7-cbe762e5664f"
-      }
-    },
-    "logAnalytics": {
-      "value": {
-        "name": "MediaStudio",
-        "tier": "PerGB2018"
       }
     },
     "virtualNetwork": {

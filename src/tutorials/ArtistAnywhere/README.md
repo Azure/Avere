@@ -1,53 +1,52 @@
 # Azure Artist Anywhere
 
-Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/overview) templates (JSON) for the automated deployment of an end-to-end rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight solution framework that can be configured and extended as needed to meet various hybrid environment requirements. Each resource deployment template can also be leveraged directly.
+Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/azure/azure-resource-manager/management/overview) templates (JSON) for the automated deployment of an end-to-end rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight solution framework that can be configured and extended as needed to meet various hybrid environment requirements. Each resource deployment template can also be leveraged directly.
 
 ## Deployment Templates
 
-Azure Artist Anywhere is composed of the following Microsoft Azure resource deployment templates.
+The following Microsoft Azure resource templates and customization scripts define the Azure Artist Anywhere deployment modules.
 
-| Virtual Network | Storage Cache | Render Managers | Render Workers | Artist Desktops |
-| - | - | - | - | - |
-| [00 - Network](VirtualNetwork/00-Network.json) | [03 - Storage (NetApp)](StorageCache/03-Storage.NetApp.json) | [05 - Manager Data](RenderManager/05-Manager.Data.json) | [08 - Worker Images](RenderWorker/08-Worker.Images.json) | [10 - Desktop Images](ArtistDesktop/10-Desktop.Images.json) |
-| [01 - Access Control](VirtualNetwork/01-Access.Control.json) | [03 - Storage (Object)](StorageCache/03-Storage.Object.json) | [06 - Manager Images](RenderManager/06-Manager.Images.json) | [08 - Worker Images Customize Script (Linux)](RenderWorker/08-Worker.Images.sh) | [10 - Desktop Images Customize Script (Linux)](ArtistDesktop/10-Desktop.Images.sh) |
-| [02 - Image Gallery](VirtualNetwork/02-Image.Gallery.json) | [04 - Cache (HPC)](StorageCache/04-Cache.json) | [06 - Manager Images Customize Script (Linux)](RenderManager/06-Manager.Images.sh) | [09 - Worker Machines](RenderWorker/09-Worker.Machines.json) | [10 - Desktop Images Customize Script (Windows)](ArtistDesktop/10-Desktop.Images.ps1) |
-| | | [07 - Manager Machines](RenderManager/07-Manager.Machines.json) | [09 - Worker Machines Extension Script (Linux)](RenderWorker/09-Worker.Machines.sh) | [11 - Desktop Machines](ArtistDesktop/11-Desktop.Machines.json) |
-| | | [07 - Manager Machines Extension Script (Linux)](RenderManager/07-Manager.Machines.sh) | | [11 - Desktop Machines Extension Script (Linux)](ArtistDesktop/11-Desktop.Machines.sh) |
-| | | | | [11 - Desktop Machines Extension Script (Windows)](ArtistDesktop/11-Desktop.Machines.ps1) |
+| *Virtual Network* | *Storage Cache* | *Image Library* | *Render Managers* | *Render Workers* | *Artist Desktops* |
+| - | - | - | - | - | - |
+| [00 - Network](VirtualNetwork/00-Network.json) | [02 - Storage (Object)](StorageCache/02-Storage.Object.json) | [04 - Image Gallery](ImageLibrary/04-Image.Gallery.json) | [06 - Manager Data](RenderManager/06-Manager.Data.json) | [09 - Worker Images](RenderWorker/09-Worker.Images.json) | [11 - Desktop Images](ArtistDesktop/11-Desktop.Images.json) |
+| [01 - Framework](VirtualNetwork/01-Framework.json) | [02 - Storage (NetApp)](StorageCache/02-Storage.NetApp.json) | [05 - Image Registry](ImageLibrary/05-Image.Registry.json) | [07 - Manager Images](RenderManager/07-Manager.Images.json) | [09 - Worker Images Customize (Software)](RenderWorker/09-Worker.Images.Customize.Software.sh) | [11 - Desktop Images Customize (Software)](ArtistDesktop/11-Desktop.Images.Customize.Software.sh) |
+| | [03 - Cache (HPC)](StorageCache/03-Cache.json) | | [07 - Manager Images Customize (Software)](RenderManager/07-Manager.Images.Customize.Software.sh) | [09 - Worker Images Customize (Build)](RenderWorker/09-Worker.Images.Customize.Build.sh) | [11 - Desktop Images Customize (Build)](ArtistDesktop/11-Desktop.Images.Customize.Build.sh) |
+| | | | [07 - Manager Images Customize (Build)](RenderManager/07-Manager.Images.Customize.Build.sh) | [10 - Worker Machines](RenderWorker/10-Worker.Machines.json) | [12 - Desktop Machines](ArtistDesktop/12-Desktop.Machines.json) |
+| | | | [08 - Manager Machines](RenderManager/08-Manager.Machines.json) | [10 - Worker Machines Initialize](RenderWorker/10-Worker.Machines.sh) | [12 - Desktop Machines Initialize (Linux)](ArtistDesktop/12-Desktop.Machines.sh) |
+| | | | [08 - Manager Machines Initialize](RenderManager/08-Manager.Machines.sh) | | [12 - Desktop Machines Initialize (Windows)](ArtistDesktop/12-Desktop.Machines.ps1) |
 
 ## Solution Architecture
 
-Azure Artist Anywhere is composed of the following open-source software and Microsoft Azure services.
+The following overview diagram depicts the Azure Artist Anywhere solution architecture with on-premises storage.
+
+![](https://mediasolutions.blob.core.windows.net/bin/AzureArtistAnywhere.SolutionArchitecture.2020-08-01.png)
+
+The following Microsoft Azure services and open-source software comprise the Azure Artist Anywhere solution.
 
 <table>
     <tr>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview" target="_blank">Azure Virtual Network</a>
+            <a href="https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview" target="_blank">Azure Virtual Network</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview" target="_blank">Azure HPC Cache</a>
+            <a href="https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction" target="_blank">Azure NetApp Files</a>
         </td>
         <td>
-            <a href="https://docs.teradici.com/find/product/cloud-access-software" target="_blank">Teradici PCoIP Remote Access</a>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            <a href="https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways" target="_blank">Azure Virtual Network Gateway</a>
+            <a href="https://docs.microsoft.com/azure/private-link/private-link-overview" target="_blank">Azure Private Link</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-introduction" target="_blank">Azure NetApp Files</a>
-        </td>
-        <td>
-            <a href="https://www.blender.org/" target="_blank">Blender Artist 3D Creation Suite</a>
+            <a href="https://docs.microsoft.com/azure/aks/intro-kubernetes" target="_blank">Azure Kubernetes Service</a>
         </td>
     </tr>
     <tr>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/" target="_blank">Azure Virtual Machines</a>
+            <a href="https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways" target="_blank">Azure Virtual Network Gateway</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blobs-overview" target="_blank">Azure Object (Blob) Storage</a>
+            <a href="https://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview" target="_blank">Azure Object Storage</a>
+        </td>
+        <td>
+            <a href="https://docs.microsoft.com/azure/dns/private-dns-overview" target="_blank">Azure Private DNS</a>
         </td>
         <td>
             <a href="https://www.opencue.io/" target="_blank">OpenCue Render Farm Manager</a>
@@ -55,46 +54,63 @@ Azure Artist Anywhere is composed of the following open-source software and Micr
     </tr>
     <tr>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview" target="_blank">Azure Virtual Machine Scale Sets</a>
+            <a href="https://docs.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview" target="_blank">Azure Managed Identity</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-overview" target="_blank">Azure Image Builder</a>
+            <a href="https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview" target="_blank">Azure HPC Cache</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/postgresql/overview" target="_blank">Azure Database for PostgreSQL</a>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            <a href="https://docs.microsoft.com/en-us/azure/dns/private-dns-overview" target="_blank">Azure Private DNS</a>
+            <a href="https://docs.microsoft.com/azure/load-balancer/load-balancer-overview" target="_blank">Azure Load Balancer</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/linux/shared-image-galleries" target="_blank">Azure Shared Image Gallery</a>
-        </td>
-        <td>
-            <a href="https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-overview" target="_blank">Azure Load Balancer</a>
+            <a href="https://www.blender.org/" target="_blank">Blender Artist 3D Creation Suite</a>
         </td>
     </tr>
     <tr>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/active-directory/fundamentals/active-directory-whatis" target="_blank">Azure Active Directory</a>
+            <a href="https://docs.microsoft.com/azure/key-vault/key-vault-overview" target="_blank">Azure Key Vault</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/key-vault/key-vault-overview" target="_blank">Azure Key Vault</a>
+            <a href="https://docs.microsoft.com/azure/virtual-machines/linux/shared-image-galleries" target="_blank">Azure Shared Image Gallery</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/azure-monitor/" target="_blank">Azure Monitor</a>
+            <a href="https://docs.microsoft.com/azure/postgresql/overview" target="_blank">Azure Database for PostgreSQL</a>
+        </td>
+        <td>
+            <a href="https://docs.teradici.com/find/product/cloud-access-software" target="_blank">Teradici PCoIP Remote Access</a>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <a href="https://docs.microsoft.com/azure/azure-monitor/overview" target="_blank">Azure Monitor</a>
+        </td>
+        <td>
+            <a href="https://docs.microsoft.com/azure/container-registry/container-registry-intro" target="_blank">Azure Container Registry</a>
+        </td>
+        <td>
+            <a href="https://docs.microsoft.com/azure/virtual-machines/linux/overview" target="_blank">Azure Virtual Machines</a>
+        </td>
+        <td>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <a href="https://docs.microsoft.com/azure/automation/automation-intro" target="_blank">Azure Automation</a>
+        </td>
+        <td>
+            <a href="https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-overview" target="_blank">Azure Image Builder</a>
+        </td>
+        <td>
+            <a href="https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview" target="_blank">Azure Virtual Machine Scale Sets</a>
+        </td>
+        <td>
         </td>
     </tr>
 </table>
 
-The following diagram depicts the Azure Artist Anywhere solution architecture, which spans on-premises and Microsoft Azure.
-
-![](https://mediasolutions.blob.core.windows.net/bin/AzureArtistAnywhere.SolutionArchitecture.2020-07-01.png)
-
 The following diagram defines the Azure Artist Anywhere deployment modules along with their dependency relationships.
 
-![](https://mediasolutions.blob.core.windows.net/bin/AzureArtistAnywhere.ModuleDependency.2020-07-01.png)
+![](https://mediasolutions.blob.core.windows.net/bin/AzureArtistAnywhere.ModuleDependency.2020-08-01.png)
 
 The following list describes each of the Azure Artist Anywhere deployment script files.
 

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "userIdentity": {
+      "value": {
+        "name": "",
+        "resourceGroupName": ""
+      }
+    },
+    "imageTemplates": {
+      "value": [
+        {
+          "enabled": true,
+          "templateName": "RenderManager",
+          "definitionName": "Linux8",
+          "sourceType": "PlatformImage",
+          "sourceVersion": "latest",
+          "machineProfile": {
+            "size": "",
+            "osDiskSizeGB": 0
+          },
+          "buildTimeoutMinutes": 120,
+          "customizePipeline": [
+            {
+              "name": "Software",
+              "type": "Shell",
+              "scriptUri": "https://mediastudio.blob.core.windows.net/scripts/07-Manager.Images.Customize.Software.sh",
+              "validExitCodes": [0],
+              "sha256Checksum": ""
+            },
+            {
+              "name": "Build",
+              "type": "Shell",
+              "scriptUri": "https://mediastudio.blob.core.windows.net/scripts/07-Manager.Images.Customize.Build.sh",
+              "validExitCodes": [0],
+              "sha256Checksum": ""
+            }
+          ]
+        }
+      ]
+    },
+    "imageGallery": {
+      "value": {
+        "name": "",
+        "storageAccount": {
+          "type": "Standard_LRS"
+        },
+        "replicationCount": 1,
+        "replicationRegions": [
+        ]
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "",
+        "subnetName": "Render",
+        "resourceGroupName": ""
+      }
+    }
+  }
+}

@@ -1,23 +1,20 @@
 ﻿param (
     # Set a naming prefix for the Azure resource groups that are created by this deployment script
-    [string] $resourceGroupNamePrefix,
+    [string] $resourceGroupNamePrefix = "Azure.Media.Studio",
 
-    # Set to 1 or more Azure region names (http://azure.microsoft.com/global-infrastructure/regions)
-    [string[]] $computeRegionNames = @("WestUS2"),
+    # Set the Azure region name(s) for Compute resources (e.g., Image Builder, Virtual Machines, HPC Cache, etc.)
+    [string[]] $computeRegionNames = @("EastUS2", "WestUS2"),
 
-    # Set to 1 or more Azure region names (http://azure.microsoft.com/global-infrastructure/regions)
-    [string[]] $storageRegionNames = @("WestUS2"),
+    # Set the Azure region name for Storage resources (e.g., VPN Gateway, NetApp Files, Object (Blob) Storage, etc.)
+    [string] $storageRegionName = $computeRegionNames[0],
 
-    # Set to true to deploy Azure NetApp Files (http://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
+    # Set to true to deploy Azure NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
     [boolean] $storageNetAppEnable = $false,
 
-    # Set to true to deploy Azure Object (Blob) Storage (http://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview)
-    [boolean] $storageObjectEnable = $false,
+    # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview)
+    [boolean] $storageCacheEnable = $false,
 
-    # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview)
-    [boolean] $cacheEnable = $false,
-
-    # The set of shared Azure services across regions, including Storage, Cache, Image Gallery, etc.
+    # The shared Azure services (e.g., Virtual Networks, Managed Identity, Log Analytics, etc.)
     [object] $sharedServices
 )
 
@@ -32,49 +29,42 @@ Import-Module "$templateDirectory/Deploy.psm1"
 if (!$sharedServices) {
     $moduleName = "* - Shared Services Job"
     New-TraceMessage $moduleName $false
-    $sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionNames, $storageNetAppEnable, $storageObjectEnable, $cacheEnable
+    $sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionName, $storageNetAppEnable, $storageCacheEnable
     $sharedServices = Receive-Job -Job $sharedServicesJob -Wait
-    if ($sharedServicesJob.JobStateInfo.State -eq "Failed") {
-        Write-Host $sharedServicesJob.JobStateInfo.Reason
-        return
-    }
+    if (!$?) { return }
     New-TraceMessage $moduleName $true
 }
 
 $computeNetworks = $sharedServices.computeNetworks
-$managedIdentity = $sharedServices.managedIdentity
-$imageGallery = $sharedServices.imageGallery
+$userIdentity = $sharedServices.userIdentity
 $storageMounts = $sharedServices.storageMounts
+$imageGallery = $sharedServices.imageGallery
 
 $moduleDirectory = "ArtistDesktop"
 
-# 10.0 - Desktop Image Template
-$computeRegionIndex = 0
-$moduleName = "10.0 - Desktop Image Template"
-$resourceGroupNameSuffix = "Image"
+# 11.0 - Desktop Image Template
+$computeRegionIndex = $computeRegionNames.length - 1
+$moduleName = "11.0 - Desktop Image Template"
+$resourceGroupNameSuffix = ".Gallery"
 New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 $resourceGroupName = Get-ResourceGroupName $resourceGroupNamePrefix $resourceGroupNameSuffix
 $resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
-if (!$resourceGroup) { return }
+if (!$resourceGroup) { throw }
 
-$templateResources = "$templateDirectory/$moduleDirectory/10-Desktop.Images.json"
-$templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/10-Desktop.Images.Parameters.json" -Raw | ConvertFrom-Json).parameters
+$templateFile = "$templateDirectory/$moduleDirectory/11-Desktop.Images.json"
+$templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/11-Desktop.Images.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
-if ($templateParameters.artistDesktop.value.userIdentityId -eq "") {
-    $templateParameters.artistDesktop.value.userIdentityId = $managedIdentity.userResourceId
+if ($templateParameters.userIdentity.value.name -eq "") {
+    $templateParameters.userIdentity.value.name = $userIdentity.name
 }
-for ($machineImageIndex = 0; $machineImageIndex -lt $templateParameters.artistDesktop.value.machineImages.length; $machineImageIndex++) {
-    if ($templateParameters.artistDesktop.value.machineImages[$machineImageIndex].customizePipeline[1].inline.length -eq 0) {
-        $imageDefinitionName = $templateParameters.artistDesktop.value.machineImages[$machineImageIndex].definitionName
-        $storageMountCommands = Get-StorageMountCommands $imageGallery $imageDefinitionName $storageMounts
-        $templateParameters.artistDesktop.value.machineImages[$machineImageIndex].customizePipeline[1].inline = $storageMountCommands
-    }
+if ($templateParameters.userIdentity.value.resourceGroupName -eq "") {
+    $templateParameters.userIdentity.value.resourceGroupName = $userIdentity.resourceGroupName
 }
 if ($templateParameters.imageGallery.value.name -eq "") {
     $templateParameters.imageGallery.value.name = $imageGallery.name
 }
-if ($templateParameters.imageGallery.value.imageReplicationRegions.length -eq 0) {
-    $templateParameters.imageGallery.value.imageReplicationRegions = $computeRegionNames
+if ($templateParameters.imageGallery.value.replicationRegions.length -eq 0) {
+    $templateParameters.imageGallery.value.replicationRegions = $computeRegionNames
 }
 if ($templateParameters.virtualNetwork.value.name -eq "") {
     $templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
@@ -83,30 +73,28 @@ if ($templateParameters.virtualNetwork.value.resourceGroupName -eq "") {
     $templateParameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
 }
 
-$templateParameters = '"{0}"' -f ($templateParameters | ConvertTo-Json -Compress -Depth 7).Replace('"', '\"')
-$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResources --parameters $templateParameters) | ConvertFrom-Json
-# if (!$groupDeployment) { return }
+$templateParameters = '"{0}"' -f ($templateParameters | ConvertTo-Json -Compress -Depth 5).Replace('"', '\"')
+$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
+if (!$groupDeployment) { throw }
 New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 
-# 10.1 - Desktop Image Version
-$artistDesktopImages = @()
-$computeRegionIndex = 0
-$moduleName = "10.1 - Desktop Image Version"
-$resourceGroupNameSuffix = "Image"
+# 11.1 - Desktop Image Version
+$computeRegionIndex = $computeRegionNames.length - 1
+$moduleName = "11.1 - Desktop Image Version"
+$resourceGroupNameSuffix = ".Gallery"
 New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 $resourceGroupName = Get-ResourceGroupName $resourceGroupNamePrefix $resourceGroupNameSuffix
-$templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/10-Desktop.Images.Parameters.json" -Raw | ConvertFrom-Json).parameters
-foreach ($machineImage in $templateParameters.artistDesktop.value.machineImages) {
-    if ($machineImage.enabled) {
-        New-TraceMessage "$moduleName [$($machineImage.templateName)]" $false $computeRegionNames[$computeRegionIndex]
-        $imageVersionId = Get-ImageVersionId $resourceGroupName $imageGallery.name $machineImage.definitionName $machineImage.templateName
+$templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/11-Desktop.Images.Parameters.json" -Raw | ConvertFrom-Json).parameters
+foreach ($imageTemplate in $templateParameters.imageTemplates.value) {
+    if ($imageTemplate.enabled) {
+        New-TraceMessage "$moduleName [$($imageTemplate.templateName)]" $false $computeRegionNames[$computeRegionIndex]
+        $imageVersionId = Get-ImageVersionId $resourceGroupName $imageGallery.name $imageTemplate.definitionName $imageTemplate.templateName
         if (!$imageVersionId) {
-            az image builder run --resource-group $resourceGroupName --name $machineImage.templateName
+            az image builder run --resource-group $resourceGroupName --name $imageTemplate.templateName
         }
-        $artistDesktopImages += $machineImage
         New-TraceMessage "$moduleName [$($machineImage.templateName)]" $true $computeRegionNames[$computeRegionIndex]
     }
 }
 New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 
-Write-Output -InputObject $artistDesktopImages -NoEnumerate
+Write-Output -InputObject $templateParameters.imageTemplates.value -NoEnumerate
