@@ -1,0 +1,281 @@
+Scale -1 1 1
+Film "image" "string filename" ["island.png"]
+     "integer xresolution" [1024] "integer yresolution" [429]
+     "float maxsampleluminance" 10
+
+# shotCam
+#LookAt -1139.015893 23.286733 1479.794723 244.814337 238.807148 560.380117 -0.107149 0.991691 0.071190
+#Camera "perspective" "float fov" [69.504606]
+#                     "float screenwindow" [-1.000000 1.000000 -0.418945 0.418945]
+#                     "float frameaspectratio" [2.386946]
+#                     "float lensradius" [0.003125]
+#                     "float focaldistance" [1675.338285]
+
+# frame 90
+LookAt -1112.237781 23.286733 1425.865416 248.056442 238.807148 471.973941 -0.105327 0.991691 0.073859
+Camera "perspective" "float fov" [66.552369]
+                     "float screenwindow" [-1.000000 1.000000 -0.418945 0.418945]
+                     "float frameaspectratio" [2.386946]
+                     "float lensradius" [0.003304]
+                     "float focaldistance" [1675.338285]
+
+
+# beachCam
+#LookAt -510.523907 87.308744 181.770197 152.465305 30.939795 -72.727517 0.073871 0.996865 -0.028356
+#Camera "perspective" "float fov" [54.432223]
+#                     "float screenwindow" [-1.000000 1.000000 -0.418945 0.418945]
+#                     "float frameaspectratio" [2.386946]
+#                     "float lensradius" [0.003125]
+#                    "float focaldistance" [712.391212]
+
+# palmsCam
+#LookAt -124.025465 405.622146 369.173046 472.312924 571.462848 16.499506 -0.200376 0.972526 0.118502
+#Camera "perspective" "float fov" [54.432223]
+#                     "float screenwindow" [-1.000000 1.000000 -0.418945 0.418945]
+#                     "float frameaspectratio" [2.386946]
+#                     "float lensradius" [0.003125]
+#                     "float focaldistance" [712.391212]
+
+# dunesACam
+#LookAt -71.335795 78.734578 108.929948 -271.104819 80.800854 -297.054315 0.002016 0.999990 0.004097
+#Camera "perspective" "float fov" [54.432223]
+#                     "float screenwindow" [-1.000000 1.000000 -0.418945 0.418945]
+#                     "float frameaspectratio" [2.386946]
+#                     "float lensradius" [0.003125]
+#                     "float focaldistance" [452.476689]
+
+# hibiscusCam
+#LookAt 3.552661 850.641890 747.549775 237.075317 52.971848 -263.947975 0.137061 0.792946 -0.593676
+#Camera "perspective" "float fov" [54.432223]
+#                     "float screenwindow" [-1.000000 1.000000 -0.418945 0.418945]
+#                     "float frameaspectratio" [2.386946]
+#                     "float lensradius" [0.003125]
+#                     "float focaldistance" [1309.174559]
+
+# rootsCam
+#LookAt -53.247680 63.459327 -57.577743 -44.095926 56.992385 -68.562019 0.263805 0.911128 -0.316628
+#Camera "perspective" "float fov" [54.432223]
+#                     "float screenwindow" [-1.000000 1.000000 -0.418945 0.418945]
+#                     "float frameaspectratio" [2.386946]
+#                     "float lensradius" [0.003125]
+#                     "float focaldistance" [15.691725]
+
+# grassCam
+#LookAt -5.171249 20.334400 -89.973061 18.549567 8.008263 -107.847977 0.306118 0.923623 -0.230677
+#Camera "perspective" "float fov" [54.432223]
+#                     "float screenwindow" [-1.000000 1.000000 -0.418945 0.418945]
+#                     "float frameaspectratio" [2.386946]
+#                     "float lensradius" [0.003125]
+#                     "float focaldistance" [32.157789]
+
+Sampler "sobol" "integer pixelsamples" 1024
+Integrator "volpath" "integer maxdepth" [10]
+
+WorldBegin
+# quad light w/ simple triangle mesh: palm_key_0001_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [64.000000 36.322427 11.101160]
+    Transform [0.973579 0.000000 -0.228351 0.000000 -0.134221 0.809017 -0.572255 0.000000 0.184740 0.587785 0.787642 0.000000 1.459472 726.152294 82.182788 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[20.000000  20.000000 0    -20.000000  20.000000 0    -20.000000 -20.000000 0     20.000000 -20.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: palm_key_0002_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [64.000000 36.322427 11.101160]
+    Transform [0.866025 0.000000 -0.500000 0.000000 -0.263478 0.849893 -0.456357 0.000000 0.424946 0.526956 0.736029 0.000000 272.951680 602.514167 165.926528 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[20.000000  20.000000 0    -20.000000  20.000000 0    -20.000000 -20.000000 0     20.000000 -20.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: palm_bounce_0007_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [0.144612 2.000000 1.688784]
+    Transform [0.877798 -0.068580 0.474097 0.000000 -0.479031 -0.125669 0.868756 0.000000 0.000000 -0.989699 -0.143164 0.000000 4826.318728 30.147937 407.927647 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[50.000000  50.000000 0    -50.000000  50.000000 0    -50.000000 -50.000000 0     50.000000 -50.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: distantPalm_key_0002_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [32.000000 18.161214 5.550580]
+    Transform [0.966224 -0.121583 -0.227218 0.000000 -0.071151 0.721572 -0.688673 0.000000 0.247685 0.681580 0.688550 0.000000 4022.406521 1324.593446 656.126056 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[250.000000  250.000000 0    -250.000000  250.000000 0    -250.000000 -250.000000 0     250.000000 -250.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: sun_quad_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [891.443777 505.928150 154.625939]
+    Transform [0.906308 0.000000 -0.422618 0.000000 -0.271654 0.766044 -0.582563 0.000000 0.323744 0.642788 0.694272 0.000000 95000.000000 195000.000000 200000.000000 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[10000.000000  10000.000000 0    -10000.000000  10000.000000 0    -10000.000000 -10000.000000 0     10000.000000 -10000.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: palm_key_0003_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [64.000000 36.322427 11.101160]
+    Transform [0.663926 0.000000 -0.747798 0.000000 -0.439545 0.809017 -0.390246 0.000000 0.604981 0.587785 0.537128 0.000000 -273.471705 388.391340 236.265299 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[20.000000  20.000000 0    -20.000000  20.000000 0    -20.000000 -20.000000 0     20.000000 -20.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: distantPalm_key_0003_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [16.000000 9.080607 2.775290]
+    Transform [0.966224 -0.121583 -0.227218 0.000000 -0.071151 0.721572 -0.688673 0.000000 0.247685 0.681580 0.688550 0.000000 6416.284014 1845.651672 2646.958949 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[250.000000  250.000000 0    -250.000000  250.000000 0    -250.000000 -250.000000 0     250.000000 -250.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: palm_key_0005_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [64.000000 36.322427 11.101160]
+    Transform [0.921863 0.000000 -0.387516 0.000000 -0.263294 0.733730 -0.626352 0.000000 0.284332 0.679441 0.676399 0.000000 635.259150 582.982864 321.609141 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[20.000000  20.000000 0    -20.000000  20.000000 0    -20.000000 -20.000000 0     20.000000 -20.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: palm_bounce_0005_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [0.144612 2.000000 1.688784]
+    Transform [0.877798 -0.068580 0.474097 0.000000 -0.479031 -0.125669 0.868756 0.000000 0.000000 -0.989699 -0.143164 0.000000 5152.974616 39.179269 732.282308 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[50.000000  50.000000 0    -50.000000  50.000000 0    -50.000000 -50.000000 0     50.000000 -50.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: palm_key_0009_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [64.000000 36.322427 11.101160]
+    Transform [0.858960 0.000000 0.512043 0.000000 0.277378 0.840567 -0.465306 0.000000 -0.430406 0.541708 0.722013 0.000000 5787.167208 500.096191 1224.975388 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[20.000000  20.000000 0    -20.000000  20.000000 0    -20.000000 -20.000000 0     20.000000 -20.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: palm_key_0007_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [64.000000 36.322427 11.101160]
+    Transform [0.866025 0.000000 -0.500000 0.000000 -0.288216 0.817145 -0.499205 0.000000 0.408572 0.576432 0.707668 0.000000 1250.625626 710.853241 289.978562 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[20.000000  20.000000 0    -20.000000  20.000000 0    -20.000000 -20.000000 0     20.000000 -20.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: palm_key_0006_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [64.000000 36.322427 11.101160]
+    Transform [0.756995 0.000000 -0.653421 0.000000 -0.437224 0.743145 -0.506529 0.000000 0.485586 0.669131 0.562557 0.000000 694.613120 781.182603 -10.946265 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[20.000000  20.000000 0    -20.000000  20.000000 0    -20.000000 -20.000000 0     20.000000 -20.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: palm_bounce_0003_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [0.144612 2.000000 1.688784]
+    Transform [1.000000 0.000000 0.000000 0.000000 0.000000 -0.143164 0.989699 0.000000 0.000000 -0.989699 -0.143164 0.000000 859.438733 23.969144 182.029918 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[50.000000  50.000000 0    -50.000000  50.000000 0    -50.000000 -50.000000 0     50.000000 -50.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: palm_bounce_0002_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [0.144612 2.000000 1.688784]
+    Transform [1.000000 0.000000 0.000000 0.000000 0.000000 -0.143164 0.989699 0.000000 0.000000 -0.989699 -0.143164 0.000000 548.574149 8.972369 161.699442 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[50.000000  50.000000 0    -50.000000  50.000000 0    -50.000000 -50.000000 0     50.000000 -50.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: palm_key_0010_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [64.000000 36.322427 11.101160]
+    Transform [0.848048 0.000000 0.529919 0.000000 0.340626 0.766044 -0.545115 0.000000 -0.405942 0.642788 0.649643 0.000000 5412.319667 666.929562 923.055282 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[20.000000  20.000000 0    -20.000000  20.000000 0    -20.000000 -20.000000 0     20.000000 -20.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: palm_bounce_0004_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [0.144612 2.000000 1.688784]
+    Transform [1.000000 0.000000 0.000000 0.000000 0.000000 -0.143164 0.989699 0.000000 0.000000 -0.989699 -0.143164 0.000000 3603.879439 23.969144 -66.078417 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[50.000000  50.000000 0    -50.000000  50.000000 0    -50.000000 -50.000000 0     50.000000 -50.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: beach_key_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [11.313708 6.420959 1.962426]
+    Transform [0.988228 -0.000000 -0.152986 0.000000 -0.119894 0.621148 -0.774468 0.000000 0.095027 0.783693 0.613836 0.000000 -54.082588 154.213439 175.754522 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[5.000000  5.000000 0    -5.000000  5.000000 0    -5.000000 -5.000000 0     5.000000 -5.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: palm_key_0004_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [64.000000 36.322427 11.101160]
+    Transform [0.541708 0.000000 -0.840567 0.000000 -0.465162 0.832921 -0.299777 0.000000 0.700126 0.553392 0.451200 0.000000 513.767811 860.971465 -124.389107 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[20.000000  20.000000 0    -20.000000  20.000000 0    -20.000000 -20.000000 0     20.000000 -20.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: palm_bounce_0001_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [0.144612 2.000000 1.688784]
+    Transform [1.000000 0.000000 0.000000 0.000000 0.000000 -0.148451 0.988920 0.000000 0.000000 -0.988920 -0.148451 0.000000 -370.747518 23.600331 59.582644 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[50.000000  50.000000 0    -50.000000  50.000000 0    -50.000000 -50.000000 0     50.000000 -50.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: palm_key_0008_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [64.000000 36.322427 11.101160]
+    Transform [0.988228 -0.000000 -0.152986 0.000000 -0.080162 0.851727 -0.517818 0.000000 0.130302 0.523986 0.841701 0.000000 5462.852275 611.569172 1081.965025 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[20.000000  20.000000 0    -20.000000  20.000000 0    -20.000000 -20.000000 0     20.000000 -20.000000 0]
+AttributeEnd
+
+# skydome: sky_dome_llc
+AttributeBegin
+    Scale -1 1 1
+    Rotate 90 -1 0 0
+    Rotate 65 0 0 1
+    LightSource "infinite" "string mapname" "../textures/islandsunVIS.png"
+AttributeEnd
+
+# quad light w/ simple triangle mesh: palm_bounce_0006_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [0.144612 2.000000 1.688784]
+    Transform [0.877798 -0.068580 0.474097 0.000000 -0.479031 -0.125669 0.868756 0.000000 0.000000 -0.989699 -0.143164 0.000000 5791.997859 30.147937 1147.308689 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[50.000000  50.000000 0    -50.000000  50.000000 0    -50.000000 -50.000000 0     50.000000 -50.000000 0]
+AttributeEnd
+
+# quad light w/ simple triangle mesh: distantPalm_key_0001_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [32.000000 18.161214 5.550580]
+    Transform [0.966224 -0.121583 -0.227218 0.000000 -0.071151 0.721572 -0.688673 0.000000 0.247685 0.681580 0.688550 0.000000 4384.439925 2008.483739 1063.383147 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[250.000000  250.000000 0    -250.000000  250.000000 0    -250.000000 -250.000000 0     250.000000 -250.000000 0]
+AttributeEnd
+
+
+Include "isMountainA/isMountainA.pbrt"
+Include "isPalmRig/isPalmRig.pbrt"
+Include "isHibiscus/isHibiscus.pbrt"
+Include "isMountainB/isMountainB.pbrt"
+Include "isIronwoodB/isIronwoodB.pbrt"
+Include "isDunesB/isDunesB.pbrt"
+Include "isGardeniaA/isGardeniaA.pbrt"
+Include "isPalmDead/isPalmDead.pbrt"
+Include "isLavaRocks/isLavaRocks.pbrt"
+Include "isHibiscusYoung/isHibiscusYoung.pbrt"
+Include "isIronwoodA1/isIronwoodA1.pbrt"
+Include "isNaupakaA/isNaupakaA.pbrt"
+Include "isCoral/isCoral.pbrt"
+Include "isCoastline/isCoastline.pbrt"
+Include "isBeach/isBeach.pbrt"
+Include "isDunesA/isDunesA.pbrt"
+Include "isPandanusA/isPandanusA.pbrt"
+Include "osOcean/osOcean.pbrt"
+Include "isBayCedarA1/isBayCedarA1.pbrt"
+Include "isKava/isKava.pbrt"
+
+WorldEnd

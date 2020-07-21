@@ -66,30 +66,6 @@ module "network" {
     open_external_sources = local.open_external_sources
 }
 
-# resource "azurerm_resource_group" "storage" {
-#   name     = local.storage_resource_group_name
-#   location = local.location
-# }
-
-# resource "azurerm_storage_account" "storage" {
-#   name                     = local.storage_account_name
-#   resource_group_name      = azurerm_resource_group.storage.name
-#   location                 = azurerm_resource_group.storage.location
-#   account_tier             = "Standard"
-#   account_replication_type = "LRS"
-#   network_rules {
-#       virtual_network_subnet_ids = [
-#           module.network.cloud_cache_subnet_id,
-#           // need for the controller to create the container
-#           module.network.jumpbox_subnet_id,
-#       ]
-#       default_action = "Deny"
-#   }
-#   // if the nsg associations do not complete before the storage account
-#   // create is started, it will fail with "subnet updating"
-#   depends_on = [module.network]
-# }
-
 // the vfxt controller
 module "vfxtcontroller" {
     source = "github.com/Azure/Avere/src/terraform/modules/controller"
@@ -254,7 +230,6 @@ module "vmss" {
     nfs_export_path = local.nfs_export_path
     additional_env_vars = "${local.opencue_env_vars} CUEBOT_HOSTNAME=${azurerm_network_interface.cuebot_nic.private_ip_address}"
     bootstrap_script_path = module.opencue_configure.bootstrap_script_path
-    module_depends_on = [module.opencue_configure.bootstrap_script_path, azurerm_virtual_machine.cuebot]
     module_depends_on = [module.opencue_configure.module_depends_on_id, azurerm_virtual_machine.cuebot]
 }
 

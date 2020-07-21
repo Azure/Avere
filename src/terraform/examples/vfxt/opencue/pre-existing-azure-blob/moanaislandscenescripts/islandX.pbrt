@@ -1,0 +1,55 @@
+Scale -1 1 1
+Film "image" "string filename" ["islandX.png"]
+     "integer xresolution" [1024] "integer yresolution" [429]
+     "float maxsampleluminance" 10
+
+LookAt -1139.015893 23.286733 1479.794723 244.814337 238.807148 560.380117 -0.107149 0.991691 0.071190
+Camera "perspective" "float fov" [69.504606]
+                     "float screenwindow" [-1.000000 1.000000 -0.418945 0.418945]
+                     "float frameaspectratio" [2.386946]
+                     "float lensradius" [0.003125]
+                     "float focaldistance" [1675.338285]
+
+Sampler "sobol" "integer pixelsamples" 1024
+Integrator "volpath" "integer maxdepth" [10]
+
+WorldBegin
+
+# quad light w/ simple triangle mesh: sun_quad_llc
+AttributeBegin
+    AreaLightSource "diffuse" "rgb L" [891.443777 505.928150 154.625939]
+    Transform [0.906308 0.000000 -0.422618 0.000000 -0.271654 0.766044 -0.582563 0.000000 0.323744 0.642788 0.694272 0.000000 95000.000000 195000.000000 200000.000000 1.000000]
+    Shape "trianglemesh"  "integer indices" [0 2 1 0 3 2] "float alpha" 0
+    "point P"[10000.000000  10000.000000 0    -10000.000000  10000.000000 0    -10000.000000 -10000.000000 0     10000.000000 -10000.000000 0]
+AttributeEnd
+
+# skydome: sky_dome_llc
+AttributeBegin
+    Scale -1 1 1
+    Rotate 90 -1 0 0
+    Rotate 65 0 0 1
+    LightSource "infinite" "string mapname" "../textures/islandsun.exr"
+AttributeEnd
+
+Include "isMountainA/isMountainA.pbrt"
+Include "isPalmRig/isPalmRig.pbrt"
+Include "isHibiscus/isHibiscus.pbrt"
+Include "isMountainB/isMountainB.pbrt"
+Include "isIronwoodB/isIronwoodB.pbrt"
+Include "isDunesB/isDunesB.pbrt"
+Include "isGardeniaA/isGardeniaA.pbrt"
+Include "isPalmDead/isPalmDead.pbrt"
+Include "isLavaRocks/isLavaRocks.pbrt"
+Include "isHibiscusYoung/isHibiscusYoung.pbrt"
+Include "isIronwoodA1/isIronwoodA1.pbrt"
+Include "isNaupakaA/isNaupakaA.pbrt"
+Include "isCoral/isCoral.pbrt"
+Include "isCoastline/isCoastline.pbrt"
+Include "isBeach/isBeach.pbrt"
+Include "isDunesA/isDunesA.pbrt"
+Include "isPandanusA/isPandanusA.pbrt"
+Include "osOcean/osOcean.pbrt"
+Include "isBayCedarA1/isBayCedarA1.pbrt"
+Include "isKava/isKava.pbrt"
+
+WorldEnd

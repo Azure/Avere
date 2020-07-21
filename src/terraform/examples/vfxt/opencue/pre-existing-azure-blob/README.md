@@ -14,7 +14,7 @@ This example deploys a complete environment with OpenCue, render nodes, vFXT, an
 ```bash
 mkdir -p ~/.terraform.d/plugins
 # install the vfxt released binary from https://github.com/Azure/Avere
-wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.0/terraform-provider-avere
+wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.2/terraform-provider-avere
 chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 ```
 
@@ -39,3 +39,52 @@ git pull origin master
 9. execute `terraform apply -auto-approve` to build the vfxt cluster
 
 When you are done using the cluster, you can destroy it by running `terraform destroy -auto-approve` or just delete the three resource groups created.
+
+
+## CueBot Server
+
+### VNC
+
+If you plan to VNC into the CueBot server, you will need to [open a port](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/nsg-quickstart-portal), e.g. port 5901, in the 'ssh_nsg' Network Security Group to set up the tunnel to the VM. `tightvncserver` is installed on the CueBot VM, these are sample commands to configure VNC:
+```
+vncserver
+vncserver -kill :1
+mv ~/.vnc/xstartup ~/.vnc/xstartup.bak
+nano ~/.vnc/xstartup
+```
+Add the following to the xstartup file:
+```
+#!/bin/bash
+xrdb $HOME/.Xresources
+startxfce4 &
+```
+
+Then change permissions and restart vncserver
+```
+sudo chmod +x ~/.vnc/xstartup
+vncserver
+```
+
+To start a tunnel from your local machine, you'll need to ensure you have the private key that is the pair of the public key used in the main.tf file. Then use the following command:
+
+```
+ssh -I <path to private key> -L 5901:127.0.0.1:5901 -C -N -l azureuser <cuebot VM IP address>
+```
+
+Connect to your server by using a local VNC app, e.g. Screen Sharing on OS X, and use the address `127.0.0.1:5901`
+
+### CueGui and CueSubmit
+
+Once connected to the CueBot VM, you can start CueGui in the terminal with the following command:
+
+```
+CUEBOT_HOSTS=localhost cuegui
+```
+
+To start CueSubmit use the following command:
+
+```
+CUEBOT_HOSTS=$CUEBOT_HOSTNAME_OR_IP cuesubmit
+```
+
+Sample scripts to render several different shots from the [moana island scene]() are available in the [scripts](moanaislandscenescripts/) directory. These scripts make use of [pbrt](https://github.com/mmp/pbrt-v3/) to render the shots. You will need to ensure you have the [moana island scene](https://www.technology.disneyanimation.com/islandscene) assets downloaded and stored on a core filer accessible by your vFXT/HPC Cache.
