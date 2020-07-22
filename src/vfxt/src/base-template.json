@@ -257,9 +257,6 @@
     "storageAccountKind": "StorageV2",
     "environmentVariables": "[concat(' SUBSCRIPTION_ID=', subscription().subscriptionId,' RESOURCE_GROUP=', resourceGroup().name, ' LOCATION=', variables('location'), ' NETWORK_RESOURCE_GROUP=', variables('virtualNetworkResourceGroup'), ' NETWORK=', variables('virtualNetworkName'),' SUBNET=', variables('virtualNetworkSubnetName'), ' AVERE_CLUSTER_ROLE=\"', variables('avereClusterRole'), '\" CREATE_CLOUD_BACKED_CLUSTER=', variables('useAvereBackedStorageAccount'), ' STORAGE_ACCOUNT=', variables('avereBackedStorageAccountName'), ' CACHE_SIZE=', variables('avereCacheSizeGB'), ' CLUSTER_NAME=', variables('avereClusterName'), ' INSTANCE_TYPE=', variables('avereInstanceType'), ' CONTROLLER_ADMIN_USER_NAME=', variables('controllerAdminUsername'),' ENABLE_CLOUD_TRACE_DEBUG=', variables('enableCloudTraceDebugging'),' BUILD_CONTROLLER=', variables('buildController'), ' DEBUG=\"', variables('additionalVFXTParameters'), '\" ', if(greater(length(parameters('nodeImageId')), 0), concat(' IMAGE_ID_VALUE=\"', parameters('nodeImageId'), '\"'), ''))]",
     "sshKeyPath": "[concat('/home/',variables('controllerAdminUsername'),'/.ssh/authorized_keys')]",
-    "nicNetworkSecurityGroup": {
-      "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
-    },
     "controllerOSProfilePassword": {
       "computerName": "[variables('vmName')]",
       "adminUsername": "[variables('controllerAdminUsername')]",
@@ -334,6 +331,9 @@
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('virtualNetworkName')]",
       "location": "[variables('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]"
+      ],
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
@@ -349,7 +349,10 @@
                 {
                   "service": "Microsoft.Storage"
                 }
-              ]
+              ],
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+              }
             }
           }
         ]
@@ -387,9 +390,6 @@
       "type": "Microsoft.Network/networkSecurityGroups",
       "name": "[variables('networkSecurityGroupName')]",
       "location": "[variables('location')]",
-      "dependsOn": [
-        "[concat('Microsoft.Storage/storageAccounts/', variables('avereBackedStorageAccountName'))]"
-      ],
       "properties": {
         "securityRules": [
           {
@@ -428,8 +428,7 @@
       "name": "[variables('nicName')]",
       "location": "[variables('location')]",
       "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
-        "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]"
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
       ],
       "properties": {
         "ipConfigurations": [
@@ -443,8 +442,7 @@
               }
             }
           }
-        ],
-        "networkSecurityGroup": "[if(variables('createVirtualNetwork'), variables('nicNetworkSecurityGroup'), json('null'))]"
+        ]
       }
     },
     {
