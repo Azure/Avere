@@ -8,12 +8,12 @@
 # Save this script to any Avere vFXT volume, for example:
 #     /bootstrap/bootstrap.sh
 #
-# The following environment variables must be set:
-#     NFS_IP_CSV="10.0.0.22,10.0.0.23,10.0.0.24"
-#     NFS_PATH=/msazure
-#     BASE_DIR=/nfs
-#     CUEBOT_HOSTNAME="10.0.0.30"
-#     CUEBOT_FS_ROOT=$BASE_DIR/opencue-demo
+# The following environment variables must be set, example values below that may not match your environment:
+#     NFS_IP_CSV="10.0.0.22,10.0.0.23,10.0.0.24" # the ip addresses for your NFS (vFXT, ot HPC Cache) servers in CSV format
+#     NFS_PATH=/msazure # the path on the NFS server that you want to mount
+#     BASE_DIR=/nfs # base directory where your NFS server will be mounted
+#     CUEBOT_HOSTNAME="10.0.0.30" # Cuebot IP address (or hostname)
+#     CUEBOT_FS_ROOT=$BASE_DIR/opencue-demo # Cuebot filesystem root, used to store Cuebot logs
 #
 set -x
 NODE_MOUNT_PREFIX="/node"
@@ -81,21 +81,22 @@ function main() {
         mount_all
     fi
 
-    # Install PBRT on nodes
-    # https://github.com/mmp/pbrt-v3/
-    # cd ~
-    # apt install -yq cmake build-essential gcc-4.8 g++-4.8 make bison flex libpthread-stubs0-dev
-    # update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.8
-    # git clone --recursive https://github.com/mmp/pbrt-v3/
-    # mkdir pbrt
-    # cd pbrt
-    # cmake -DCMAKE_BUILD_TYPE=Release ../pbrt-v3/
-    # make
+    # Build and install PBRT on render nodes
+    # Reference: https://github.com/mmp/pbrt-v3/
+    cd /
+    apt install -yq cmake build-essential gcc-4.8 g++-4.8 make bison flex libpthread-stubs0-dev
+    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.8
+    git clone --recursive https://github.com/mmp/pbrt-v3/
+    mkdir pbrt
+    cd pbrt
+    cmake -DCMAKE_BUILD_TYPE=Release ../pbrt-v3/
+    make
 
     # Use pre-built pbrt tools
-    echo "copy PBRT from cache to /opencue-tools/tools/pbrt-release/pbrt"
-    mkdir /opencue-tools
-    cp -r "${BASE_DIR}/opencue-demo/tools" /opencue-tools
+    # If you have pre-built PBRT (or another render engine and it is stored on your NFS server) you can copy it to your render nodes for use
+    # echo "copy PBRT from cache to /opencue-tools/tools/pbrt-release/pbrt"
+    # mkdir /opencue-tools
+    # cp -r "${BASE_DIR}/opencue-demo/tools" /opencue-tools
 
 
     # Set up the RQD environment on each node
@@ -114,7 +115,7 @@ function main() {
     # python3 setup.py install
     
     # apt based install
-    apt-get -y install python3 python3-dev python3-pip gcc
+    apt install -yq python3 python3-dev python3-pip gcc
     cd ~
     echo "CUEBOT_HOSTNAME=$CUEBOT_HOSTNAME"
     echo "CUE_FS_ROOT=$CUE_FS_ROOT"
