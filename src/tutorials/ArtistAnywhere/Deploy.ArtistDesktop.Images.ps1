@@ -66,16 +66,10 @@ if ($templateParameters.imageGallery.value.name -eq "") {
 if ($templateParameters.imageGallery.value.replicationRegions.length -eq 0) {
     $templateParameters.imageGallery.value.replicationRegions = $computeRegionNames
 }
-if ($templateParameters.virtualNetwork.value.name -eq "") {
-    $templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
-}
-if ($templateParameters.virtualNetwork.value.resourceGroupName -eq "") {
-    $templateParameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
-}
 
 $templateParameters = '"{0}"' -f ($templateParameters | ConvertTo-Json -Compress -Depth 5).Replace('"', '\"')
 $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
-if (!$groupDeployment) { throw }
+# if (!$groupDeployment) { throw }
 New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 
 # 11.1 - Desktop Image Version
@@ -92,7 +86,7 @@ foreach ($imageTemplate in $templateParameters.imageTemplates.value) {
         if (!$imageVersionId) {
             az image builder run --resource-group $resourceGroupName --name $imageTemplate.templateName
         }
-        New-TraceMessage "$moduleName [$($machineImage.templateName)]" $true $computeRegionNames[$computeRegionIndex]
+        New-TraceMessage "$moduleName [$($imageTemplate.templateName)]" $true $computeRegionNames[$computeRegionIndex]
     }
 }
 New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]

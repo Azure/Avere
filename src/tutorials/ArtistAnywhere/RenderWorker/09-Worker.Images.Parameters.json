@@ -13,7 +13,7 @@
         {
           "enabled": true,
           "templateName": "RenderWorker",
-          "definitionName": "Linux8",
+          "definitionName": "Linux7",
           "sourceType": "PlatformImage",
           "sourceVersion": "latest",
           "machineProfile": {
@@ -21,18 +21,19 @@
             "osDiskSizeGB": 0
           },
           "buildTimeoutMinutes": 120,
+          "imageVersionId": "1.0.0",
           "customizePipeline": [
             {
-              "name": "Software",
+              "name": "OpenCue",
               "type": "Shell",
-              "scriptUri": "https://mediastudio.blob.core.windows.net/scripts/09-Worker.Images.Customize.Software.sh",
+              "scriptUri": "https://mediastudio.blob.core.windows.net/scripts/09-Worker.Images.Customize.OpenCue.sh",
               "validExitCodes": [0],
               "sha256Checksum": ""
             },
             {
-              "name": "Build",
+              "name": "Blender",
               "type": "Shell",
-              "scriptUri": "https://mediastudio.blob.core.windows.net/scripts/09-Worker.Images.Customize.Build.sh",
+              "scriptUri": "https://mediastudio.blob.core.windows.net/scripts/09-Worker.Images.Customize.Blender.sh",
               "validExitCodes": [0],
               "sha256Checksum": ""
             }
@@ -49,13 +50,6 @@
         "replicationCount": 1,
         "replicationRegions": [
         ]
-      }
-    },
-    "virtualNetwork": {
-      "value": {
-        "name": "",
-        "subnetName": "Render",
-        "resourceGroupName": ""
       }
     }
   }

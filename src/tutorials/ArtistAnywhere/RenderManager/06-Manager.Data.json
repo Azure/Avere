@@ -33,6 +33,7 @@
         "name": "[parameters('renderManager').dataServerTier]"
       },
       "properties": {
+        "publicNetworkAccess": "Disabled",
         "version": "[parameters('renderManager').dataServerSqlVersion]",
         "administratorLogin": "[parameters('renderManager').databaseAdminName]",
         "administratorLoginPassword": "[parameters('renderManager').databaseAdminPassword]",
@@ -72,7 +73,7 @@
             "properties": {
               "privateLinkServiceId": "[resourceId('Microsoft.DBforPostgreSQL/servers', variables('dataServerName'))]",
               "groupIds": [
-                "server"
+                "postgresqlServer"
               ]
             }
           }
@@ -108,10 +109,6 @@
     "managerDatabaseUserLogin": {
       "type": "string",
       "value": "[variables('databaseUserLogin')]"
-    },
-    "managerDatabaseUserPassword": {
-      "type": "string",
-      "value": "[parameters('renderManager').databaseUserPassword]"
     }
   }
 }

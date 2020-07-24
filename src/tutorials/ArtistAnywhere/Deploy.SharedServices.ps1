@@ -263,6 +263,12 @@ if (!$resourceGroup) { throw }
 $templateFile = "$templateDirectory/$moduleDirectory/05-Image.Registry.json"
 $templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/05-Image.Registry.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
+if ($templateParameters.userIdentity.value.name -eq "") {
+    $templateParameters.userIdentity.value.name = $userIdentity.name
+}
+if ($templateParameters.userIdentity.value.resourceGroupName -eq "") {
+    $templateParameters.userIdentity.value.resourceGroupName = $userIdentity.resourceGroupName
+}
 if ($templateParameters.virtualNetwork.value.name -eq "") {
     $templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
 }

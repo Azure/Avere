@@ -15,7 +15,7 @@
             "properties": {
               "addressPrefix": "10.1.0.0/17",
               "privateEndpointNetworkPolicies": "Disabled",
-              "privateLinkServiceNetworkPolicies": "Enabled"
+              "privateLinkServiceNetworkPolicies": "Disabled"
             }
           },
           {

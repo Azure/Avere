@@ -5,13 +5,23 @@
     "userIdentity": {
       "value": {
         "name": "",
-        "resourceGroupName": ""
+        "resourceGroupName": "",
+        "roleDefinitionId": "b24988ac-6180-42a0-ab88-20f7382dd24c"
       }
     },
     "imageGallery": {
       "value": {
         "name": "MediaStudio",
         "imageDefinitions": [
+          {
+            "name": "Linux7",
+            "type": "Linux",
+            "generation": "v1",
+            "state": "Generalized",
+            "publisher": "OpenLogic",
+            "offer": "CentOS",
+            "sku": "7.7"
+          },
           {
             "name": "Linux8",
             "type": "Linux",

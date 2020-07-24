@@ -19,12 +19,6 @@
       "metadata": {
         "description": "The shared image gallery."
       }
-    },
-    "virtualNetwork": {
-      "type": "object",
-      "metadata": {
-        "description": "The virtual network."
-      }
     }
   },
   "variables": {
@@ -49,10 +43,7 @@
         "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].buildTimeoutMinutes]",
         "vmProfile": {
           "vmSize": "[parameters('imageTemplates')[copyIndex()].machineProfile.size]",
-          "osDiskSizeGB": "[parameters('imageTemplates')[copyIndex()].machineProfile.osDiskSizeGB]",
-          "vnetConfig": {
-            "subnetId": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
-          }
+          "osDiskSizeGB": "[parameters('imageTemplates')[copyIndex()].machineProfile.osDiskSizeGB]"
         },
         "source": {
           "type": "[parameters('imageTemplates')[copyIndex()].sourceType]",
@@ -66,7 +57,7 @@
           {
             "type": "SharedImage",
             "runOutputName": "SharedImage",
-            "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('imageTemplates')[copyIndex()].definitionName)]",
+            "galleryImageId": "[concat(resourceId('Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('imageTemplates')[copyIndex()].definitionName), '/versions/', parameters('imageTemplates')[copyIndex()].imageVersionId)]",
             "replicationRegions": "[parameters('imageGallery').replicationRegions]",
             "storageAccountType": "[parameters('imageGallery').storageAccount.type]",
             "artifactTags": {

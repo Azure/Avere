@@ -58,8 +58,11 @@ if (!$resourceGroup) { throw }
 $templateFile = "$templateDirectory/$moduleDirectory/09-Worker.Images.json"
 $templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/09-Worker.Images.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
-if ($templateParameters.renderWorker.value.userIdentityId -eq "") {
-    $templateParameters.renderWorker.value.userIdentityId = $userIdentity.resourceId
+if ($templateParameters.userIdentity.value.name -eq "") {
+    $templateParameters.userIdentity.value.name = $userIdentity.name
+}
+if ($templateParameters.userIdentity.value.resourceGroupName -eq "") {
+    $templateParameters.userIdentity.value.resourceGroupName = $userIdentity.resourceGroupName
 }
 if ($templateParameters.imageGallery.value.name -eq "") {
     $templateParameters.imageGallery.value.name = $imageGallery.name
@@ -67,16 +70,10 @@ if ($templateParameters.imageGallery.value.name -eq "") {
 if ($templateParameters.imageGallery.value.replicationRegions.length -eq 0) {
     $templateParameters.imageGallery.value.replicationRegions = $computeRegionNames
 }
-if ($templateParameters.virtualNetwork.value.name -eq "") {
-    $templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
-}
-if ($templateParameters.virtualNetwork.value.resourceGroupName -eq "") {
-    $templateParameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
-}
 
 $templateParameters = '"{0}"' -f ($templateParameters | ConvertTo-Json -Compress -Depth 7).Replace('"', '\"')
 $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
-if (!$groupDeployment) { throw }
+# if (!$groupDeployment) { throw }
 New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
 
 # 09.1 - Worker Image Version
@@ -86,14 +83,14 @@ $resourceGroupNameSuffix = ".Gallery"
 New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
 $resourceGroupName = Get-ResourceGroupName $resourceGroupNamePrefix $resourceGroupNameSuffix
 $templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/09-Worker.Images.Parameters.json" -Raw | ConvertFrom-Json).parameters
-foreach ($machineImage in $templateParameters.renderWorker.value.machineImages) {
-    if ($machineImage.enabled) {
-        New-TraceMessage "$moduleName [$($machineImage.templateName)]" $false $computeRegionNames[$computeRegionIndex]
-        $imageVersionId = Get-ImageVersionId $resourceGroupName $imageGallery.name $machineImage.definitionName $machineImage.templateName
+foreach ($imageTemplate in $templateParameters.imageTemplates.value) {
+    if ($imageTemplate.enabled) {
+        New-TraceMessage "$moduleName [$($imageTemplate.templateName)]" $false $computeRegionNames[$computeRegionIndex]
+        $imageVersionId = Get-ImageVersionId $resourceGroupName $imageGallery.name $imageTemplate.definitionName $imageTemplate.templateName
         if (!$imageVersionId) {
-            az image builder run --resource-group $resourceGroupName --name $machineImage.templateName
+            az image builder run --resource-group $resourceGroupName --name $imageTemplate.templateName
         }
-        New-TraceMessage "$moduleName [$($machineImage.templateName)]" $true $computeRegionNames[$computeRegionIndex]
+        New-TraceMessage "$moduleName [$($imageTemplate.templateName)]" $true $computeRegionNames[$computeRegionIndex]
     }
 }
 New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
@@ -145,12 +142,12 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
     if ($templateParameters.renderManager.value.hostAddress -eq "") {
         $templateParameters.renderManager.value.hostAddress = $renderManagers[$computeRegionIndex]
     }
-    # if ($templateParameters.logAnalytics.value.workspaceId -eq "") {
-    #     $templateParameters.logAnalytics.value.workspaceId = $logAnalytics.workspaceId
-    # }
-    # if ($templateParameters.logAnalytics.value.workspaceKey -eq "") {
-    #     $templateParameters.logAnalytics.value.workspaceKey = $logAnalytics.workspaceKey
-    # }
+    if ($templateParameters.logAnalytics.value.workspaceId -eq "") {
+        $templateParameters.logAnalytics.value.workspaceId = $logAnalytics.workspaceId
+    }
+    if ($templateParameters.logAnalytics.value.workspaceKey -eq "") {
+        $templateParameters.logAnalytics.value.workspaceKey = $logAnalytics.workspaceKey
+    }
     if ($templateParameters.virtualNetwork.value.name -eq "") {
         $templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
     }

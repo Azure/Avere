@@ -2,6 +2,12 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "userIdentity": {
+      "type": "object",
+      "metadata": {
+        "description": "The managed user identity."
+      }
+    },
     "imageRegistry": {
       "type": "object",
       "metadata": {
@@ -28,13 +34,32 @@
       "sku": {
         "name": "[parameters('imageRegistry').tier]"
       },
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceId(parameters('userIdentity').resourceGroupName, 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userIdentity').name)]": {
+          }
+        }
+      },
       "properties": {
         "adminUserEnabled": true,
         "dataEndpointEnabled": true,
-        "publicNetworkAccess": "Disabled",
-        "networkRuleSet": {
-          "defaultAction": "Deny"
-        }
+        "publicNetworkAccess": "Disabled"
+      }
+    },
+    {
+      "type": "Microsoft.ContainerRegistry/registries/replications",
+      "name": "[concat(parameters('imageRegistry').name, '/', if(equals(length(parameters('imageRegistry').replicationRegions), 0), resourceGroup().location, toLower(parameters('imageRegistry').replicationRegions[copyIndex()])))]",
+      "apiVersion": "[variables('containerRegistryApiVersion')]",
+      "location": "[if(equals(length(parameters('imageRegistry').replicationRegions), 0), resourceGroup().location, parameters('imageRegistry').replicationRegions[copyIndex()])]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('imageRegistry').name)]"
+      ],
+      "properties": {
+      },
+      "copy": {
+        "name": "replicationRegions",
+        "count": "[length(parameters('imageRegistry').replicationRegions)]"
       }
     },
     {

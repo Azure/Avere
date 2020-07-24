@@ -6,14 +6,14 @@ Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager 
 
 The following Microsoft Azure resource templates and customization scripts define the Azure Artist Anywhere deployment modules.
 
-| *Virtual Network* | *Storage Cache* | *Image Library* | *Render Managers* | *Render Workers* | *Artist Desktops* |
-| - | - | - | - | - | - |
-| [00 - Network](VirtualNetwork/00-Network.json) | [02 - Storage (Object)](StorageCache/02-Storage.Object.json) | [04 - Image Gallery](ImageLibrary/04-Image.Gallery.json) | [06 - Manager Data](RenderManager/06-Manager.Data.json) | [09 - Worker Images](RenderWorker/09-Worker.Images.json) | [11 - Desktop Images](ArtistDesktop/11-Desktop.Images.json) |
-| [01 - Framework](VirtualNetwork/01-Framework.json) | [02 - Storage (NetApp)](StorageCache/02-Storage.NetApp.json) | [05 - Image Registry](ImageLibrary/05-Image.Registry.json) | [07 - Manager Images](RenderManager/07-Manager.Images.json) | [09 - Worker Images Customize (Software)](RenderWorker/09-Worker.Images.Customize.Software.sh) | [11 - Desktop Images Customize (Software)](ArtistDesktop/11-Desktop.Images.Customize.Software.sh) |
-| | [03 - Cache (HPC)](StorageCache/03-Cache.json) | | [07 - Manager Images Customize (Software)](RenderManager/07-Manager.Images.Customize.Software.sh) | [09 - Worker Images Customize (Build)](RenderWorker/09-Worker.Images.Customize.Build.sh) | [11 - Desktop Images Customize (Build)](ArtistDesktop/11-Desktop.Images.Customize.Build.sh) |
-| | | | [07 - Manager Images Customize (Build)](RenderManager/07-Manager.Images.Customize.Build.sh) | [10 - Worker Machines](RenderWorker/10-Worker.Machines.json) | [12 - Desktop Machines](ArtistDesktop/12-Desktop.Machines.json) |
-| | | | [08 - Manager Machines](RenderManager/08-Manager.Machines.json) | [10 - Worker Machines Initialize](RenderWorker/10-Worker.Machines.sh) | [12 - Desktop Machines Initialize (Linux)](ArtistDesktop/12-Desktop.Machines.sh) |
-| | | | [08 - Manager Machines Initialize](RenderManager/08-Manager.Machines.sh) | | [12 - Desktop Machines Initialize (Windows)](ArtistDesktop/12-Desktop.Machines.ps1) |
+| *Virtual Network* | *Storage Cache* | *Image Library* | *Render Managers* | *Render Workers* | *Artist Desktop Images* | *Artist Desktop Machines*
+| - | - | - | - | - | - | - |
+| [00 - Network](VirtualNetwork/00-Network.json) | [02 - Storage (Object)](StorageCache/02-Storage.Object.json) | [04 - Image Gallery](ImageLibrary/04-Image.Gallery.json) | [06 - Manager Data](RenderManager/06-Manager.Data.json) | [09 - Worker Images](RenderWorker/09-Worker.Images.json) | [11 - Desktop Images](ArtistDesktop/11-Desktop.Images.json) | [12 - Desktop Machines](ArtistDesktop/12-Desktop.Machines.json)
+| [01 - Framework](VirtualNetwork/01-Framework.json) | [02 - Storage (NetApp)](StorageCache/02-Storage.NetApp.json) | [05 - Image Registry](ImageLibrary/05-Image.Registry.json) | [07 - Manager Images](RenderManager/07-Manager.Images.json) | [09 - Worker Images Customize (OpenCue)](RenderWorker/09-Worker.Images.Customize.OpenCue.sh) | [11 - Desktop Images Customize ](ArtistDesktop/11-Desktop.Images.Customize.sh) | [12 - Desktop Machines Initialize (Linux)](ArtistDesktop/12-Desktop.Machines.sh)
+| | [03 - Cache (HPC)](StorageCache/03-Cache.json) | | [07 - Manager Images Customize (OpenCue)](RenderManager/07-Manager.Images.Customize.OpenCue.sh) | [09 - Worker Images Customize (Blender)](RenderWorker/09-Worker.Images.Customize.Blender.sh) | [11 - Desktop Images Customize (OpenCue)](ArtistDesktop/11-Desktop.Images.Customize.OpenCue.sh) | [12 - Desktop Machines Initialize (Windows)](ArtistDesktop/12-Desktop.Machines.ps1)
+| | | | [08 - Manager Machines](RenderManager/08-Manager.Machines.json) | [10 - Worker Machines](RenderWorker/10-Worker.Machines.json) | [11 - Desktop Images Customize (Blender) ](ArtistDesktop/11-Desktop.Images.Customize.Blender.sh) |
+| | | | [08 - Manager Machines Initialize](RenderManager/08-Manager.Machines.sh) | [10 - Worker Machines Initialize](RenderWorker/10-Worker.Machines.sh) | [11 - Desktop Images Customize (Teradici) ](ArtistDesktop/11-Desktop.Images.Customize.Teradici.sh) |
+| | | | | | [11 - Desktop Images Customize (HP) ](ArtistDesktop/11-Desktop.Images.Customize.HP.sh) |
 
 ## Solution Architecture
 
@@ -35,7 +35,7 @@ The following Microsoft Azure services and open-source software comprise the Azu
             <a href="https://docs.microsoft.com/azure/private-link/private-link-overview" target="_blank">Azure Private Link</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/azure/aks/intro-kubernetes" target="_blank">Azure Kubernetes Service</a>
+            <a href="https://www.opencue.io/" target="_blank">OpenCue Render Farm Manager</a>
         </td>
     </tr>
     <tr>
@@ -49,7 +49,7 @@ The following Microsoft Azure services and open-source software comprise the Azu
             <a href="https://docs.microsoft.com/azure/dns/private-dns-overview" target="_blank">Azure Private DNS</a>
         </td>
         <td>
-            <a href="https://www.opencue.io/" target="_blank">OpenCue Render Farm Manager</a>
+            <a href="https://www.blender.org/" target="_blank">Blender Artist 3D Creation Suite</a>
         </td>
     </tr>
     <tr>
@@ -63,7 +63,7 @@ The following Microsoft Azure services and open-source software comprise the Azu
             <a href="https://docs.microsoft.com/azure/load-balancer/load-balancer-overview" target="_blank">Azure Load Balancer</a>
         </td>
         <td>
-            <a href="https://www.blender.org/" target="_blank">Blender Artist 3D Creation Suite</a>
+            <a href="https://docs.teradici.com/find/product/cloud-access-software" target="_blank">Teradici PCoIP Remote Access</a>
         </td>
     </tr>
     <tr>
@@ -77,7 +77,6 @@ The following Microsoft Azure services and open-source software comprise the Azu
             <a href="https://docs.microsoft.com/azure/postgresql/overview" target="_blank">Azure Database for PostgreSQL</a>
         </td>
         <td>
-            <a href="https://docs.teradici.com/find/product/cloud-access-software" target="_blank">Teradici PCoIP Remote Access</a>
         </td>
     </tr>
     <tr>

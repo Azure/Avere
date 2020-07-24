@@ -14,8 +14,7 @@
         "databaseAdminId": "ef54b085-8b87-4b95-b2a7-cbe762e5664f",
         "databaseAdminName": "az",
         "databaseAdminPassword": "P@ssword1234",
-        "databaseUserName": "opencue",
-        "databaseUserPassword": "P@ssword1234"
+        "databaseUserName": "opencue"
       }
     },
     "virtualNetwork": {

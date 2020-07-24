@@ -95,12 +95,12 @@ for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length
             }
         }
     }
-    # if ($templateParameters.logAnalytics.value.workspaceId -eq "") {
-    #     $templateParameters.logAnalytics.value.workspaceId = $logAnalytics.workspaceId
-    # }
-    # if ($templateParameters.logAnalytics.value.workspaceKey -eq "") {
-    #     $templateParameters.logAnalytics.value.workspaceKey = $logAnalytics.workspaceKey
-    # }
+    if ($templateParameters.logAnalytics.value.workspaceId -eq "") {
+        $templateParameters.logAnalytics.value.workspaceId = $logAnalytics.workspaceId
+    }
+    if ($templateParameters.logAnalytics.value.workspaceKey -eq "") {
+        $templateParameters.logAnalytics.value.workspaceKey = $logAnalytics.workspaceKey
+    }
     if ($templateParameters.virtualNetwork.value.name -eq "") {
         $templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
     }

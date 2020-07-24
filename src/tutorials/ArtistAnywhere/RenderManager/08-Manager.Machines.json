@@ -2,6 +2,12 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "userIdentity": {
+      "type": "object",
+      "metadata": {
+        "description": "The managed user identity."
+      }
+    },
     "renderManager": {
       "type": "object",
       "metadata": {
@@ -24,6 +30,7 @@
   "variables": {
     "virtualNetworkApiVersion": "2020-05-01",
     "virtualMachineApiVersion": "2020-06-01",
+    "managedIdentityApiVersion": "2018-11-30",
     "availabilitySetName": "RenderManagers",
     "loadBalancerNameInternal": "[concat(variables('availabilitySetName'), 'Internal')]",
     "loadBalancerNameOutbound": "[concat(variables('availabilitySetName'), 'Outbound')]",
@@ -207,6 +214,13 @@
         "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]",
         "[resourceId('Microsoft.Network/networkInterfaces', parameters('renderManager').machines[copyIndex()].name)]"
       ],
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceId(parameters('userIdentity').resourceGroupName, 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userIdentity').name)]": {
+          }
+        }
+      },
       "properties": {
         "availabilitySet": {
           "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
@@ -261,7 +275,7 @@
             "typeHandlerVersion": "2.1",
             "autoUpgradeMinorVersion": true,
             "protectedSettings": {
-              "commandToExecute": "[concat('echo ', parameters('renderManager').scriptCommands, ' | base64 --decode | gunzip | sed \"s|\r$||\" | MANAGER_INDEX=', copyIndex() ,' DB_SQL=\"', parameters('renderManager').databaseSql, '\" DB_URL=\"', parameters('renderManager').databaseUrl, '\" DB_USER_NAME=\"', parameters('renderManager').databaseUserName, '\" DB_USER_LOGIN=\"', parameters('renderManager').databaseUserLogin, '\" DB_USER_PASSWORD=\"', parameters('renderManager').databaseUserPassword, '\" /bin/bash')]"
+              "commandToExecute": "[concat('echo ', parameters('renderManager').scriptCommands, ' | base64 --decode | gunzip | sed \"s|\r$||\" | MANAGER_INDEX=', copyIndex() ,' DB_SQL=\"', parameters('renderManager').databaseSql, '\" DB_URL=\"', parameters('renderManager').databaseUrl, '\" DB_CLIENT_ID=\"', reference(resourceId(parameters('userIdentity').resourceGroupName, 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userIdentity').name), variables('managedIdentityApiVersion')).principalId, '\" DB_USER_NAME=\"', parameters('renderManager').databaseUserName, '\" DB_USER_LOGIN=\"', parameters('renderManager').databaseUserLogin, '\" /bin/bash')]"
             }
           }
         },

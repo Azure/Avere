@@ -75,11 +75,7 @@
         "name": "[parameters('storageAccount').replication]"
       },
       "properties": {
-        "supportsHttpsTrafficOnly": true,
-        "networkAcls": {
-          "defaultAction": "Deny",
-          "bypass": "AzureServices"
-        }
+        "supportsHttpsTrafficOnly": true
       }
     },
     {

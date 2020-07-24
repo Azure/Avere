@@ -4,17 +4,30 @@ set -ex
 
 cd /usr/local/bin
 
-yum -y install libXi
-yum -y install libXrender
-yum -y install mesa-libGL
-tar -xJf blender.tar.xz
-mv blender-*/* .
+fileName=opencue-requirements.txt
+fileUrl=https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/requirements.txt
+curl -L -o $fileName $fileUrl
+
+fileName=opencue-pycue.tar.gz
+fileUrl=https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/pycue-0.4.14-all.tar.gz
+curl -L -o $fileName $fileUrl
+
+fileName=opencue-pyoutline.tar.gz
+fileUrl=https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/pyoutline-0.4.14-all.tar.gz
+curl -L -o $fileName $fileUrl
+
+fileName=opencue-rqd.tar.gz
+fileUrl=https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/rqd-0.4.14-all.tar.gz
+curl -L -o $fileName $fileUrl
+
+fileName=opencue-rqd.service
+fileUrl=https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/rqd/deploy/opencue-rqd.service
+curl -L -o $fileName $fileUrl
 
 yum -y install gcc
 if [ "$(cat /etc/os-release | grep 'centos:8')" ]; then
     yum -y install python3-devel
     yum -y install redhat-rpm-config
-    yum -y groups install 'Workstation'
     pip3 install -r opencue-requirements.txt
     tar -xzf opencue-pycue.tar.gz
     tar -xzf opencue-pyoutline.tar.gz
@@ -23,17 +36,10 @@ if [ "$(cat /etc/os-release | grep 'centos:8')" ]; then
     python3 setup.py install
     cd ../pyoutline-*
     python3 setup.py install
-    cd ../cueadmin-*
-    python3 setup.py install
-    cd ../cuesubmit-*
-    python3 setup.py install
-    cd ../cuegui-*
-    python3 setup.py install
 else
     yum -y install epel-release
     yum -y install python-devel
     yum -y install python-pip
-    yum -y groups install 'GNOME Desktop'
     pip install -U pip
     pip install -Ir opencue-requirements.txt
     tar -xzf opencue-pycue.tar.gz

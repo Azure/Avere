@@ -25,8 +25,7 @@
     "imageGalleryApiVersion": "2019-12-01",
     "managedIdentityApiVersion": "2018-11-30",
     "resourceDeploymentApiVersion": "2019-09-01",
-    "roleAssignmentApiVersion": "2020-04-01-preview",
-    "roleContributorId": "b24988ac-6180-42a0-ab88-20f7382dd24c"
+    "roleAssignmentApiVersion": "2020-04-01-preview"
   },
   "resources": [
     {
@@ -66,7 +65,7 @@
       "apiVersion": "[variables('roleAssignmentApiVersion')]",
       "location": "[resourceGroup().location]",
       "properties": {
-        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('roleContributorId'))]",
+        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', parameters('userIdentity').roleDefinitionId)]",
         "principalId": "[reference(resourceId(parameters('userIdentity').resourceGroupName, 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userIdentity').name), variables('managedIdentityApiVersion')).principalId]"
       }
     },
@@ -87,7 +86,7 @@
               "apiVersion": "[variables('roleAssignmentApiVersion')]",
               "location": "[resourceGroup().location]",
               "properties": {
-                "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('roleContributorId'))]",
+                "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', parameters('userIdentity').roleDefinitionId)]",
                 "principalId": "[reference(resourceId(parameters('userIdentity').resourceGroupName, 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userIdentity').name), variables('managedIdentityApiVersion')).principalId]",
                 "scope": "[concat(subscription().id, '/resourceGroups/', parameters('virtualNetwork').resourceGroupName)]"
               }
