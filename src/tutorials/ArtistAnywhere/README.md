@@ -1,4 +1,4 @@
-# Azure Artist Anywhere (aka.ms/aaa)
+# Azure Artist Anywhere ([aka.ms/aaa](http://aka.ms/aaa))
 
 Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/azure/azure-resource-manager/management/overview) templates (JSON) for the automated deployment of an end-to-end rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight solution framework that can be configured and extended as needed to meet various hybrid environment requirements. Each resource deployment template can also be leveraged directly.
 
