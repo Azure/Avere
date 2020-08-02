@@ -35,7 +35,7 @@
       "identity": {
         "type": "UserAssigned",
         "userAssignedIdentities": {
-          "[resourceId(parameters('userIdentity').resourceGroupName, 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userIdentity').name)]": {
+          "[parameters('userIdentity').resourceId]": {
           }
         }
       },

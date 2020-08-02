@@ -4,19 +4,18 @@
   "parameters": {
     "userIdentity": {
       "value": {
-        "name": "",
-        "resourceGroupName": ""
+        "clientId": "",
+        "resourceId": ""
       }
     },
     "renderManager": {
       "value": {
         "databaseSql": "",
-        "databaseAdminName": "",
-        "databaseAdminLogin": "",
-        "databaseAdminPassword": "",
         "databaseUrl": "",
+        "databaseName": "",
         "databaseUserName": "",
         "databaseUserLogin": "",
+        "databaseAccessToken": "",
         "scriptCommands": "",
         "image": {
           "templateName": "RenderManager",

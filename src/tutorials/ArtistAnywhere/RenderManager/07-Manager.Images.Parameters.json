@@ -4,8 +4,7 @@
   "parameters": {
     "userIdentity": {
       "value": {
-        "name": "",
-        "resourceGroupName": ""
+        "resourceId": ""
       }
     },
     "imageTemplates": {
@@ -24,10 +23,22 @@
           "imageVersionId": "1.0.0",
           "customizePipeline": [
             {
+              "name": "Data",
+              "type": "File",
+              "sourceUri": "https://mediastudio.blob.core.windows.net/scripts/08-Manager.Machines.DataAccess.sh",
+              "destination": "/tmp/Manager.Machines.DataAccess.sh",
+              "sha256Checksum": ""
+            },
+            {
+              "name": "Environment",
+              "type": "Shell",
+              "scriptUri": "https://mediastudio.blob.core.windows.net/scripts/07-Manager.Images.Customize.sh",
+              "sha256Checksum": ""
+            },
+            {
               "name": "OpenCue",
               "type": "Shell",
               "scriptUri": "https://mediastudio.blob.core.windows.net/scripts/07-Manager.Images.Customize.OpenCue.sh",
-              "validExitCodes": [0],
               "sha256Checksum": ""
             }
           ]

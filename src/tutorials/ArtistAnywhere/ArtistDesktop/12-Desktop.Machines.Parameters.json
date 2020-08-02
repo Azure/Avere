@@ -7,7 +7,7 @@
         {
           "enabled": true,
           "namePrefix": "renderHostLI",
-          "machineSize": "Standard_NV12s_v3",
+          "machineSize": "Standard_NV6",
           "machineCount": 1,
           "image": {
             "templateName": "ArtistDesktopLinux",
@@ -22,7 +22,7 @@
           "gpuDriver": {
             "publisher": "Microsoft.HpcCompute",
             "type": "NvidiaGpuDriverLinux",
-            "typeVersion": "1.4",
+            "typeVersion": "1.3",
             "upgradeMinorVersion": true
            },
           "customExtension": {
@@ -31,7 +31,7 @@
             "typeVersion": "2.1",
             "upgradeMinorVersion": true,
             "scriptFile": "12-Desktop.Machines.sh",
-            "scriptParameters": "TERADICI_HOST_AGENT_LICENSE_KEY=''",
+            "scriptParameters": "TERADICI_HOST_AGENT_LICENSE_KEY='' TERADICI_HOST_AGENT='pcoip-agent-graphics'",
             "scriptCommands": ""
           },
           "monitorAgent": {
@@ -68,7 +68,7 @@
             "typeVersion": "2.1",
             "upgradeMinorVersion": true,
             "scriptFile": "12-Desktop.Machines.sh",
-            "scriptParameters": "TERADICI_HOST_AGENT_LICENSE_KEY=''",
+            "scriptParameters": "TERADICI_HOST_AGENT_LICENSE_KEY='' TERADICI_HOST_AGENT='pcoip-agent-graphics'",
             "scriptCommands": ""
           },
           "monitorAgent": {
@@ -79,9 +79,9 @@
           }
         },
         {
-          "enabled": true,
+          "enabled": false,
           "namePrefix": "renderHostWI",
-          "machineSize": "Standard_NV12s_v3",
+          "machineSize": "Standard_NV6",
           "machineCount": 1,
           "image": {
             "templateName": "ArtistDesktopWindows",
@@ -105,7 +105,7 @@
             "typeVersion": "1.10",
             "upgradeMinorVersion": true,
             "scriptFile": "12-Desktop.Machines.ps1",
-            "scriptParameters": "-teradiciHostAgentLicenseKey '' -teradiciHostAgentFilePath pcoip-agent-graphics.exe",
+            "scriptParameters": "-teradiciHostAgentLicenseKey '' -teradiciHostAgentFileName 'pcoip-agent-graphics.exe'",
             "scriptCommands": ""
           },
           "monitorAgent": {
@@ -142,7 +142,7 @@
             "typeVersion": "1.10",
             "upgradeMinorVersion": true,
             "scriptFile": "12-Desktop.Machines.ps1",
-            "scriptParameters": "-teradiciHostAgentLicenseKey '' -teradiciHostAgentFilePath pcoip-agent-graphics.exe",
+            "scriptParameters": "-teradiciHostAgentLicenseKey '' -teradiciHostAgentFileName 'pcoip-agent-graphics.exe'",
             "scriptCommands": ""
           },
           "monitorAgent": {

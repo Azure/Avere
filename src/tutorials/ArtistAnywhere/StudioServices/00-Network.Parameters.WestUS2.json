@@ -4,16 +4,16 @@
   "parameters": {
     "virtualNetwork": {
       "value": {
-        "name": "MediaStudioEast",
-        "addressSpace": "10.0.0.0/16",
-        "domainName": "east.media.studio",
+        "name": "MediaStudioWest",
+        "addressSpace": "10.1.0.0/16",
+        "domainName": "west.media.studio",
         "domainServers": [
         ],
         "subnets": [
           {
             "name": "Render",
             "properties": {
-              "addressPrefix": "10.0.0.0/17",
+              "addressPrefix": "10.1.0.0/17",
               "privateEndpointNetworkPolicies": "Disabled",
               "privateLinkServiceNetworkPolicies": "Disabled"
             }
@@ -21,7 +21,7 @@
           {
             "name": "Desktop",
             "properties": {
-              "addressPrefix": "10.0.128.0/18",
+              "addressPrefix": "10.1.128.0/18",
               "privateEndpointNetworkPolicies": "Disabled",
               "privateLinkServiceNetworkPolicies": "Disabled" 
             }
@@ -29,39 +29,15 @@
           {
             "name": "Cache",
             "properties": {
-              "addressPrefix": "10.0.192.0/24",
+              "addressPrefix": "10.1.192.0/24",
               "privateEndpointNetworkPolicies": "Disabled",
               "privateLinkServiceNetworkPolicies": "Enabled"
-            }
-          },
-          {
-            "name": "Storage",
-            "properties": {
-              "addressPrefix": "10.0.193.0/24",
-              "privateEndpointNetworkPolicies": "Disabled",
-              "privateLinkServiceNetworkPolicies": "Enabled"
-            }
-          },
-          {
-            "name": "StorageNetApp",
-            "properties": {
-              "addressPrefix": "10.0.194.0/24",
-              "privateEndpointNetworkPolicies": "Disabled",
-              "privateLinkServiceNetworkPolicies": "Enabled",
-              "delegations": [
-                {
-                  "name": "netAppVolumes",
-                  "properties": {
-                    "serviceName": "Microsoft.NetApp/volumes"
-                  }
-                }
-              ]
             }
           },
           {
             "name": "GatewaySubnet",
             "properties": {
-              "addressPrefix": "10.0.195.0/24",
+              "addressPrefix": "10.1.193.0/24",
               "privateEndpointNetworkPolicies": "Disabled",
               "privateLinkServiceNetworkPolicies": "Enabled"
             }
@@ -81,25 +57,14 @@
             "IKEv2",
             "SSTP"
           ],
-          "addressSpace": "10.10.0.0/18",
-          "rootCertificateName": "MediaStudioEast",
+          "addressSpace": "10.11.0.0/18",
+          "rootCertificateName": "MediaStudioWest",
           "rootCertificateData": "MIIC9TCCAd2gAwIBAgIQYBWJ/AVMGYJFWDrpgLkPZjANBgkqhkiG9w0BAQsFADAdMRswGQYDVQQDDBJBenVyZSBNZWRpYSBTdHVkaW8wHhcNMjAwMTIzMDM0NDMyWhcNMjEwMTIzMDQwNDMyWjAdMRswGQYDVQQDDBJBenVyZSBNZWRpYSBTdHVkaW8wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCyNZZXBDcnrWt9LWinVmjZ9Lnv78VTYdX8XNCJcdsGCPaWVu6k8g9zB3qWktH0CxJdDlM1PMcVAMankfgVP7+FK6qEXHUWHARSWCFRKDyBxNVJ/wZEiLuVp9/15i1Zsu7qrwLTmj8aaM5aAex2eXFkvgpp/eKPw+pzgln/AD69vaQkmBEOcteXGkTSXDxLRtg2cdUCKb5Th55UWz99Bf4ms89LN//4Sq02P3013mgiG/z16ZJ4E9KZe5SzAGHF/EeQTnQ7nF2G8fAS/krq+pgGteCs76Xu/v3BjG3QpRkyM8/a0HSTZNrPNr5kE8Lxz6OZ6yyJHZrZJ+pWN9zVBG41AgMBAAGjMTAvMA4GA1UdDwEB/wQEAwICBDAdBgNVHQ4EFgQUqPULUL0gZBbm0+LXZCRlujk6egIwDQYJKoZIhvcNAQELBQADggEBAFIuQ3L40PMEPt9qFgFQ9EK8UUFcrjjEkGnPNJjC6zopXGgcAROGVza98mGikJf1o2xgpNeJlLkOkDMoWYS+Hmxbq3LlPHRuIVAHABZ2K2Ze+1DXcqJKeyRRCzsYVs2lL0kBewFQlAe/nyPh284KNTUu+L4V23Ugd4QmV/WXFdcuQ3Dwm82p6LJvqzum5EGFE4gaQJpClblYkW7XzqVi72NhemH+KzTP0g4tE/yYwllKMV9RYaXbEJE/vrQ+gxe0kv9NGFLdONMJ2OQZtmTHCG5uH1bTCkO9naWZilRbESgQUWjwnZD9Y1A+pEgMYr227/loSH97PAtm9d4bD9Y+tRM="
         },
         "ipAddress": {
-          "type": "Standard",
-          "allocationMethod": "Static"
-        },
-        "connection": {
-          "protocol": "IKEv2",
-          "key": "BFC3791592E4CD6A5277D748416B8"
+          "type": "Basic",
+          "allocationMethod": "Dynamic"
         }
-      }
-    },
-    "storageNetwork": {
-      "value": {
-        "name": "",
-        "regionName": "",
-        "resourceGroupName": ""
       }
     }
   }

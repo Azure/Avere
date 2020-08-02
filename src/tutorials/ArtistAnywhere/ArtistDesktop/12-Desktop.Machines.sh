@@ -2,6 +2,8 @@
 
 set -ex
 
+cd /usr/local/bin
+
 IFS=';' read -a fileSystemMounts <<< "$FILE_SYSTEM_MOUNTS"
 for fileSystemMount in "${fileSystemMounts[@]}"
 do
@@ -23,8 +25,9 @@ done
 
 echo "export CUEBOT_HOSTS=$OPENCUE_RENDER_MANAGER_HOST" > /etc/profile.d/opencue.sh
 
-if [ "$TERADICI_HOST_AGENT_LICENSE_KEY" != "" ]
-then
-    pcoip-register-host --registration-code=$TERADICI_HOST_AGENT_LICENSE_KEY
-    systemctl restart pcoip-agent
+if [ "$TERADICI_HOST_AGENT_LICENSE_KEY" != "" ]; then
+    yum -y install 'https://downloads.teradici.com/rhel/teradici-repo-latest.noarch.rpm'
+    yum -y install "$TERADICI_HOST_AGENT"
+    pcoip-register-host --registration-code="$TERADICI_HOST_AGENT_LICENSE_KEY"
+    systemctl restart 'pcoip-agent'
 fi

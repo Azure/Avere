@@ -217,7 +217,7 @@
       "identity": {
         "type": "UserAssigned",
         "userAssignedIdentities": {
-          "[resourceId(parameters('userIdentity').resourceGroupName, 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userIdentity').name)]": {
+          "[parameters('userIdentity').resourceId]": {
           }
         }
       },
@@ -265,7 +265,7 @@
           "type": "extensions",
           "apiVersion": "[variables('virtualMachineApiVersion')]",
           "location": "[resourceGroup().location]",
-          "name": "[concat(parameters('renderManager').machines[copyIndex()].name, 'Render')]",
+          "name": "[concat(parameters('renderManager').machines[copyIndex()].name, 'Custom')]",
           "dependsOn": [
             "[resourceId('Microsoft.Compute/virtualMachines', parameters('renderManager').machines[copyIndex()].name)]"
           ],
@@ -275,7 +275,7 @@
             "typeHandlerVersion": "2.1",
             "autoUpgradeMinorVersion": true,
             "protectedSettings": {
-              "commandToExecute": "[concat('echo ', parameters('renderManager').scriptCommands, ' | base64 --decode | gunzip | sed \"s|\r$||\" | MANAGER_INDEX=', copyIndex() ,' DB_SQL=\"', parameters('renderManager').databaseSql, '\" DB_URL=\"', parameters('renderManager').databaseUrl, '\" DB_CLIENT_ID=\"', reference(resourceId(parameters('userIdentity').resourceGroupName, 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userIdentity').name), variables('managedIdentityApiVersion')).principalId, '\" DB_USER_NAME=\"', parameters('renderManager').databaseUserName, '\" DB_USER_LOGIN=\"', parameters('renderManager').databaseUserLogin, '\" /bin/bash')]"
+              "commandToExecute": "[concat('echo ', parameters('renderManager').scriptCommands, ' | base64 --decode | gunzip | sed \"s|\r$||\" | DB_ACCESS_TOKEN=\"', parameters('renderManager').databaseAccessToken, '\" DB_CLIENT_ID=\"', parameters('userIdentity').clientId, '\" DB_SQL=\"', parameters('renderManager').databaseSql, '\" DB_URL=\"', parameters('renderManager').databaseUrl, '\" DB_USER_NAME=\"', parameters('renderManager').databaseUserName, '\" DB_USER_LOGIN=\"', parameters('renderManager').databaseUserLogin, '\" /bin/bash')]"
             }
           }
         },

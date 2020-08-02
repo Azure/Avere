@@ -107,7 +107,7 @@
               "apiVersion": "[variables('virtualMachineApiVersion')]",
               "location": "[resourceGroup().location]",
               "dependsOn": [
-                "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('artistDesktops')[copyIndex()].namePrefix, copyIndex())]"
+                "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('artistDesktops')[copyIndex()].namePrefix, copyIndex()))]"
               ],
               "properties": {
                 "hardwareProfile": {
@@ -116,7 +116,7 @@
                 "networkProfile": {
                   "networkInterfaces": [
                     {
-                      "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('artistDesktops')[copyIndex()].namePrefix, copyIndex())]"
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('artistDesktops')[copyIndex()].namePrefix, copyIndex()))]"
                     }
                   ]
                 },
@@ -185,6 +185,7 @@
               }
             },
             {
+              "condition": "[not(equals(parameters('logAnalytics').workspaceId, ''))]",
               "type": "Microsoft.Compute/virtualMachines/extensions",
               "name": "[concat(parameters('artistDesktops')[copyIndex()].namePrefix, copyIndex(), '/Monitor')]",
               "apiVersion": "[variables('virtualMachineApiVersion')]",
