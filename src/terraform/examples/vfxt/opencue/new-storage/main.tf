@@ -17,7 +17,7 @@ locals {
     ssh_port = 22
     
     // storage details
-    storage_account_name = ""
+    storage_account_name = "opencuetest1234"
     avere_storage_container_name = "opencue"
     nfs_export_path = "/opencue-demo"
     
@@ -39,7 +39,7 @@ locals {
     mount_target = "/nfs"
     opencue_env_vars = "CUE_FS_ROOT=${local.mount_target}/opencue-demo"
 
-    alternative_resource_groups = [local.storage_resource_group_name]
+    alternative_resource_groups = []
     // advanced scenario: add external ports to work with cloud policies example [10022, 13389]
     open_external_ports = [local.ssh_port,3389]
     // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
@@ -130,7 +130,7 @@ resource "avere_vfxt" "vfxt" {
     # node_cache_size = 1024
 
     azure_storage_filer {
-        account_name = local.storage_resource_group_name
+        account_name = local.storage_account_name
         container_name = local.avere_storage_container_name
         custom_settings = []
         junction_namespace_path = local.nfs_export_path
