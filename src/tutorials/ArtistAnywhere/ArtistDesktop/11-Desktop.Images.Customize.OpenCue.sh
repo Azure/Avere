@@ -66,7 +66,6 @@ if [ "$(cat /etc/os-release | grep 'centos:8')" ]; then
     cd ../cuegui-*
     python3 setup.py install
 else
-    yum -y install epel-release
     yum -y install python-devel
     yum -y install python-pip
     pip install -U pip

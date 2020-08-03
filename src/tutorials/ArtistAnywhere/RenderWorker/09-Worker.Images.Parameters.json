@@ -23,6 +23,12 @@
           "imageVersionId": "1.0.1",
           "customizePipeline": [
             {
+              "name": "Environment",
+              "type": "Shell",
+              "scriptUri": "https://mediastudio.blob.core.windows.net/scripts/09-Worker.Images.Customize.sh",
+              "sha256Checksum": ""
+            },
+            {
               "name": "OpenCue",
               "type": "Shell",
               "scriptUri": "https://mediastudio.blob.core.windows.net/scripts/09-Worker.Images.Customize.OpenCue.sh",

@@ -105,7 +105,7 @@
             "typeVersion": "1.10",
             "upgradeMinorVersion": true,
             "scriptFile": "12-Desktop.Machines.ps1",
-            "scriptParameters": "-teradiciHostAgentLicenseKey '' -teradiciHostAgentFileName 'pcoip-agent-graphics.exe'",
+            "scriptParameters": "-teradiciHostAgentLicenseKey '' -teradiciHostAgentFileUrl 'https://mediasolutions.blob.core.windows.net/bin/pcoip-agent-graphics_20.07.0.exe' -teradiciHostAgentFileName 'pcoip-agent-graphics.exe'",
             "scriptCommands": ""
           },
           "monitorAgent": {
@@ -142,7 +142,7 @@
             "typeVersion": "1.10",
             "upgradeMinorVersion": true,
             "scriptFile": "12-Desktop.Machines.ps1",
-            "scriptParameters": "-teradiciHostAgentLicenseKey '' -teradiciHostAgentFileName 'pcoip-agent-graphics.exe'",
+            "scriptParameters": "-teradiciHostAgentLicenseKey '' -teradiciHostAgentFileUrl 'https://mediasolutions.blob.core.windows.net/bin/pcoip-agent-graphics_20.07.0.exe' -teradiciHostAgentFileName 'pcoip-agent-graphics.exe'",
             "scriptCommands": ""
           },
           "monitorAgent": {

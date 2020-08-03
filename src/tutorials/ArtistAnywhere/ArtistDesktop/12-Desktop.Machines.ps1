@@ -1,9 +1,12 @@
 param (
     [string] $fileSystemMounts,
     [string] $openCueRenderManagerHost,
+    [string] $teradiciHostAgentFileUrl,
     [string] $teradiciHostAgentFileName,
     [string] $teradiciHostAgentLicenseKey
 )
+
+Set-Location -Path 'C:\Users\Public\Downloads'
 
 foreach ($fileSystemMount in $fileSystemMounts.Split(';')) {
     $mountParameters = $fileSystemMount.Split(' ')
@@ -15,6 +18,7 @@ foreach ($fileSystemMount in $fileSystemMounts.Split(';')) {
 [System.Environment]::SetEnvironmentVariable('CUEBOT_HOSTS', $openCueRenderManagerHost, [System.EnvironmentVariableTarget]::Machine)
 
 if ($teradiciHostAgentLicenseKey -ne '') {
+    Invoke-WebRequest -Uri $teradiciHostAgentFileUrl -OutFile $teradiciHostAgentFileName
     $agentInstall = Start-Process -FilePath $teradiciHostAgentFileName -ArgumentList '/S /NoPostReboot' -Wait -PassThru
     if ($agentInstall.ExitCode -eq 0 -or $agentInstall.ExitCode -eq 1641) {
         Set-Location -Path 'C:\Program Files\Teradici\PCoIP Agent\'
