@@ -4,7 +4,7 @@ This example deploys a complete environment with OpenCue, render nodes, vFXT, an
 
 ## Architecure
 
-![vFXT OpenCue Architecture](../OpenCue Architecture.png)
+![vFXT OpenCue Architecture](../OpenCueArchitecture.png)
 
 ## Deployment Instructions
 
