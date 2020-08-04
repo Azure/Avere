@@ -2,6 +2,10 @@
 
 This example deploys a complete environment with OpenCue, render nodes, vFXT, and all the networking required to render the Moana Island Scene. This example creates an new empty Azure blob storage account to store the data accessed by the vFXT deployment.
 
+## Architecure
+
+![vFXT OpenCue Architecture](../OpenCue Architecture.png)
+
 ## Deployment Instructions
 
 1. browse to https://shell.azure.com

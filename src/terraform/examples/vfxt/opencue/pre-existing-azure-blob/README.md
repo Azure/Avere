@@ -1,6 +1,10 @@
 # Deploy Network, vFXT, OpenCue, and OpenCue client nodes
 
-This example deploys a complete environment with OpenCue, render nodes, vFXT, and all the networking required to render the Moana Island Scene. This example assumes you alreade have the scene downloaded to an existing Azure blob storage account that was populated via a previous vFXT deployment. If this is not the case use the [new storage example](../README.md) instead.
+This example deploys a complete environment with OpenCue, render nodes, vFXT, and all the networking required to render the Moana Island Scene. This example assumes you alreade have the scene downloaded to an existing Azure blob storage account that was populated via a previous vFXT deployment. If this is not the case use the [new storage example](../new-storage/README.md) instead.
+
+## Architecure
+
+![vFXT OpenCue Architecture](../OpenCue Architecture.png)
 
 ## Deployment Instructions
 
