@@ -19,8 +19,7 @@
     "virtualNetworkApiVersion": "2020-05-01",
     "dataServerApiVersion": "2017-12-01",
     "dataServerName": "[toLower(parameters('renderManager').dataServerName)]",
-    "dataServerHost": "[concat(variables('dataServerName'), '.postgres.database.azure.com')]",
-    "databaseAdminLogin": "[concat(parameters('renderManager').databaseAdminName, '@', variables('dataServerName'))]",
+    "databaseAdminLogin": "[concat(parameters('renderManager').databaseServerAdmin.name, '@', variables('dataServerName'))]",
     "databaseUserLogin": "[concat(parameters('renderManager').databaseUserName, '@', variables('dataServerName'))]"
   },
   "resources": [
@@ -35,12 +34,12 @@
       "properties": {
         "publicNetworkAccess": "Disabled",
         "version": "[parameters('renderManager').dataServerSqlVersion]",
-        "administratorLogin": "[parameters('renderManager').databaseAdminName]",
-        "administratorLoginPassword": "[parameters('renderManager').databaseAdminPassword]",
+        "administratorLogin": "[parameters('renderManager').databaseServerAdmin.name]",
+        "administratorLoginPassword": "[parameters('renderManager').databaseServerAdmin.password]",
         "storageProfile": {
-          "storageMB": "[parameters('renderManager').dataServerStorageMB]",
-          "storageAutoGrow": "[parameters('renderManager').dataServerStorageAutoGrow]",
-          "backupRetentionDays": "[parameters('renderManager').dataServerBackupRetentionDays]"
+          "storageMB": "[parameters('renderManager').dataServerStorage.sizeMB]",
+          "storageAutoGrow": "[parameters('renderManager').dataServerStorage.autoGrow]",
+          "backupRetentionDays": "[parameters('renderManager').dataServerBackup.retentionDays]"
         }
       }
     },
@@ -53,6 +52,21 @@
         "[resourceId('Microsoft.DBforPostgreSQL/servers', variables('dataServerName'))]"
       ],
       "properties": {
+      }
+    },
+    {
+      "type": "Microsoft.DBforPostgreSQL/servers/administrators",
+      "name": "[concat(variables('dataServerName'), '/activeDirectory')]",
+      "apiVersion": "[variables('dataServerApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/servers', variables('dataServerName'))]"
+      ],
+      "properties": {
+        "administratorType": "ActiveDirectory",
+        "tenantId": "[parameters('renderManager').databaseDirectoryAdmin.tenantId]",
+        "sid": "[parameters('renderManager').databaseDirectoryAdmin.userId]",
+        "login": "[parameters('renderManager').databaseDirectoryAdmin.login]"
       }
     },
     {
@@ -84,23 +98,15 @@
   "outputs": {
     "managerDatabaseSql": {
       "type": "string",
-      "value": "[concat('host=', variables('dataServerHost'), ' port=5432 sslmode=require dbname=', parameters('renderManager').databaseName, ' user=', variables('databaseAdminLogin'), ' password=', parameters('renderManager').databaseAdminPassword)]"
-    },
-    "managerDatabaseAdminName": {
-      "type": "string",
-      "value": "[parameters('renderManager').databaseAdminName]"
-    },
-    "managerDatabaseAdminLogin": {
-      "type": "string",
-      "value": "[variables('databaseAdminLogin')]"
-    },
-    "managerDatabaseAdminPassword": {
-      "type": "string",
-      "value": "[parameters('renderManager').databaseAdminPassword]"
+      "value": "[concat('host=', reference(resourceId('Microsoft.Network/privateEndpoints', variables('dataServerName')), variables('virtualNetworkApiVersion')).customDnsConfigs[0].ipAddresses[0], ' port=5432 sslmode=require dbname=', parameters('renderManager').databaseName, ' user=', parameters('renderManager').databaseDirectoryAdmin.login, '@', variables('dataServerName'))]"
     },
     "managerDatabaseUrl": {
       "type": "string",
-      "value": "[concat('jdbc:postgresql://', variables('dataServerHost'), ':5432/', parameters('renderManager').databaseName, '?sslmode=require')]"
+      "value": "[concat('jdbc:postgresql://', reference(resourceId('Microsoft.Network/privateEndpoints', variables('dataServerName')), variables('virtualNetworkApiVersion')).customDnsConfigs[0].ipAddresses[0], ':5432/', parameters('renderManager').databaseName, '?sslmode=require')]"
+    },
+    "managerDatabaseName": {
+      "type": "string",
+      "value": "[parameters('renderManager').databaseName]"
     },
     "managerDatabaseUserName": {
       "type": "string",

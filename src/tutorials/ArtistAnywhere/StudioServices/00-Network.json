@@ -13,19 +13,11 @@
       "metadata": {
         "description": "The virtual network gateway."
       }
-    },
-    "storageNetwork": {
-      "type": "object",
-      "metadata": {
-        "description": "The storage virtual network."
-      }
     }
   },
   "variables": {
     "virtualNetworkApiVersion": "2020-05-01",
-    "virtualNetworkDomainApiVersion": "2020-01-01",
-    "resourceDeploymentApiVersion": "2019-09-01",
-    "roleAssignmentApiVersion": "2020-04-01-preview"
+    "virtualNetworkDomainApiVersion": "2020-01-01"
   },
   "resources": [
     {
@@ -134,63 +126,6 @@
               "name": "[parameters('virtualNetworkGateway').vpnClient.rootCertificateName]",
               "properties": {
                 "publicCertData": "[parameters('virtualNetworkGateway').vpnClient.rootCertificateData]"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "condition": "[and(parameters('virtualNetworkGateway').enabled, not(equals(parameters('storageNetwork').name, '')))]",
-      "type": "Microsoft.Network/connections",
-      "name": "[parameters('virtualNetwork').name]",
-      "apiVersion": "[variables('virtualNetworkApiVersion')]",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('virtualNetwork').name)]"
-      ],
-      "properties": {
-        "connectionType": "Vnet2Vnet",
-        "connectionProtocol": "[parameters('virtualNetworkGateway').connection.protocol]",
-        "sharedKey": "[parameters('virtualNetworkGateway').connection.key]",
-        "virtualNetworkGateway1": {
-          "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('virtualNetwork').name)]"
-        },
-        "virtualNetworkGateway2": {
-          "id": "[resourceId(parameters('storageNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworkGateways', parameters('storageNetwork').name)]"
-        }
-      }
-    },
-    {
-      "condition": "[and(parameters('virtualNetworkGateway').enabled, not(equals(parameters('storageNetwork').name, '')))]",
-      "type": "Microsoft.Resources/deployments",
-      "name": "00-Network.Connections",
-      "apiVersion": "[variables('resourceDeploymentApiVersion')]",
-      "resourceGroup": "[parameters('storageNetwork').resourceGroupName]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('virtualNetwork').name)]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "resources": [
-            {
-              "type": "Microsoft.Network/connections",
-              "name": "[parameters('storageNetwork').name]",
-              "apiVersion": "[variables('virtualNetworkApiVersion')]",
-              "location": "[parameters('storageNetwork').regionName]",
-              "properties": {
-                "connectionType": "Vnet2Vnet",
-                "connectionProtocol": "[parameters('virtualNetworkGateway').connection.protocol]",
-                "sharedKey": "[parameters('virtualNetworkGateway').connection.key]",
-                "virtualNetworkGateway1": {
-                  "id": "[resourceId(parameters('storageNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworkGateways', parameters('storageNetwork').name)]"
-                },
-                "virtualNetworkGateway2": {
-                  "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('virtualNetwork').name)]"
-                }
               }
             }
           ]

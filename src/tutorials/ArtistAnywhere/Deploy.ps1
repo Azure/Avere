@@ -3,10 +3,10 @@
     [string] $resourceGroupNamePrefix = "Azure.Media.Studio",
 
     # Set the Azure region name(s) for Compute resources (e.g., Image Builder, Virtual Machines, HPC Cache, etc.)
-    [string[]] $computeRegionNames = @("EastUS2", "WestUS2"),
+    [string[]] $computeRegionNames = @("WestUS2"),
 
-    # Set the Azure region name for Storage resources (e.g., VPN Gateway, NetApp Files, Object (Blob) Storage, etc.)
-    [string] $storageRegionName = $computeRegionNames[0],
+    # Set the Azure region name for Storage resources (e.g., Virtual Network, Object (Blob) Storage, NetApp Files, etc.)
+    [string] $storageRegionName = "EastUS2",
 
     # Set to true to deploy Azure NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
     [boolean] $storageNetAppEnable = $false,
@@ -22,17 +22,18 @@ Import-Module "$templateDirectory/Deploy.psm1"
 # * - Shared Services Job
 $moduleName = "* - Shared Services Job"
 New-TraceMessage $moduleName $false
-$sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionName, $storageNetAppEnable, $storageCacheEnable
+$sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames
 $sharedServices = Receive-Job -Job $sharedServicesJob -Wait
-if (!$?) { return }
-New-TraceMessage $moduleName $true
-
 $computeNetworks = $sharedServices.computeNetworks
 $userIdentity = $sharedServices.userIdentity
 $logAnalytics = $sharedServices.logAnalytics
-$storageMounts = $sharedServices.storageMounts
-$cacheMounts = $sharedServices.cacheMounts
 $imageGallery = $sharedServices.imageGallery
+New-TraceMessage $moduleName $true
+
+# * - Storage Cache Job
+$moduleName = "* - Storage Cache Job"
+New-TraceMessage $moduleName $false
+$storageCacheJob = Start-Job -FilePath "$templateDirectory/Deploy.StorageCache.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionName, $storageNetAppEnable, $storageCacheEnable, $sharedServices
 
 # * - Render Manager Job
 $moduleName = "* - Render Manager Job"
@@ -47,22 +48,19 @@ $artistDesktopImagesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistD
 $moduleDirectory = "RenderWorker"
 
 # 09.0 - Worker Image Template
-$computeRegionIndex = $computeRegionNames.length - 1
+$computeRegionIndex = 0
+$computeRegionName = $computeRegionNames[$computeRegionIndex]
 $moduleName = "09.0 - Worker Image Template"
 $resourceGroupNameSuffix = ".Gallery"
-New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
-$resourceGroupName = Get-ResourceGroupName $resourceGroupNamePrefix $resourceGroupNameSuffix
-$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
-if (!$resourceGroup) { throw }
+New-TraceMessage $moduleName $false $computeRegionName
+$resourceGroupName = Get-ResourceGroupName $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
+$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionName
 
 $templateFile = "$templateDirectory/$moduleDirectory/09-Worker.Images.json"
 $templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/09-Worker.Images.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
-if ($templateParameters.userIdentity.value.name -eq "") {
-    $templateParameters.userIdentity.value.name = $userIdentity.name
-}
-if ($templateParameters.userIdentity.value.resourceGroupName -eq "") {
-    $templateParameters.userIdentity.value.resourceGroupName = $userIdentity.resourceGroupName
+if ($templateParameters.userIdentity.value.resourceId -eq "") {
+    $templateParameters.userIdentity.value.resourceId = $userIdentity.resourceId
 }
 if ($templateParameters.imageGallery.value.name -eq "") {
     $templateParameters.imageGallery.value.name = $imageGallery.name
@@ -73,97 +71,106 @@ if ($templateParameters.imageGallery.value.replicationRegions.length -eq 0) {
 
 $templateParameters = '"{0}"' -f ($templateParameters | ConvertTo-Json -Compress -Depth 7).Replace('"', '\"')
 $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
-# if (!$groupDeployment) { throw }
-New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+
+New-TraceMessage $moduleName $true $computeRegionName
 
 # 09.1 - Worker Image Version
-$computeRegionIndex = $computeRegionNames.length - 1
+$computeRegionIndex = 0
+$computeRegionName = $computeRegionNames[$computeRegionIndex]
 $moduleName = "09.1 - Worker Image Version"
 $resourceGroupNameSuffix = ".Gallery"
-New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
-$resourceGroupName = Get-ResourceGroupName $resourceGroupNamePrefix $resourceGroupNameSuffix
+New-TraceMessage $moduleName $false $computeRegionName
+$resourceGroupName = Get-ResourceGroupName $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 $templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/09-Worker.Images.Parameters.json" -Raw | ConvertFrom-Json).parameters
 foreach ($imageTemplate in $templateParameters.imageTemplates.value) {
     if ($imageTemplate.enabled) {
-        New-TraceMessage "$moduleName [$($imageTemplate.templateName)]" $false $computeRegionNames[$computeRegionIndex]
+        New-TraceMessage "$moduleName [$($imageTemplate.templateName)]" $false $computeRegionName
         $imageVersionId = Get-ImageVersionId $resourceGroupName $imageGallery.name $imageTemplate.definitionName $imageTemplate.templateName
         if (!$imageVersionId) {
             az image builder run --resource-group $resourceGroupName --name $imageTemplate.templateName
         }
-        New-TraceMessage "$moduleName [$($imageTemplate.templateName)]" $true $computeRegionNames[$computeRegionIndex]
+        New-TraceMessage "$moduleName [$($imageTemplate.templateName)]" $true $computeRegionName
     }
 }
-New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+New-TraceMessage $moduleName $true $computeRegionName
+
+# * - Storage Cache Job
+$moduleName = "* - Storage Cache Job"
+$storageCache = Receive-Job -Job $storageCacheJob -Wait
+$storageMounts = $storageCache.storageMounts
+$cacheMounts = $storageCache.cacheMounts
+New-TraceMessage $moduleName $true
 
 # * - Render Manager Job
 $moduleName = "* - Render Manager Job"
 $renderManagers = Receive-Job -Job $renderManagersJob -Wait
-if (!$?) { return }
 New-TraceMessage $moduleName $true
 
 # * - Artist Desktop Images Job
 $moduleName = "* - Artist Desktop Images Job"
 $artistDesktopImages = Receive-Job -Job $artistDesktopImagesJob -Wait
-if (!$?) { return }
 New-TraceMessage $moduleName $true
 
 # * - Artist Desktop Machines Job
 $moduleName = "* - Artist Desktop Machines Job"
 New-TraceMessage $moduleName $false
-$artistDesktopMachinesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionName, $storageNetAppEnable, $storageCacheEnable, $sharedServices, $renderManagers
+$artistDesktopMachinesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionName, $storageNetAppEnable, $storageCacheEnable, $sharedServices, $storageCache, $renderManagers
 
 # 10 - Worker Machines
 $moduleName = "10 - Worker Machines"
 $resourceGroupNameSuffix = ".Worker"
 New-TraceMessage $moduleName $false
 for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
-    New-TraceMessage $moduleName $false $computeRegionNames[$computeRegionIndex]
-    $resourceGroupName = Get-ResourceGroupName $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionNames[$computeRegionIndex]
-    $resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionNames[$computeRegionIndex]
-    if (!$resourceGroup) { throw }
+    $computeRegionName = $computeRegionNames[$computeRegionIndex]
+    New-TraceMessage $moduleName $false $computeRegionName
+    $resourceGroupName = Get-ResourceGroupName $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
+    $resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionName
 
     $templateFile = "$templateDirectory/$moduleDirectory/10-Worker.Machines.json"
-    $templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/10-Worker.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
+    $templateParameters = Get-Content "$templateDirectory/$moduleDirectory/10-Worker.Machines.Parameters.json" -Raw | ConvertFrom-Json
     $scriptCommands = Get-ScriptCommands "$templateDirectory/$moduleDirectory/10-Worker.Machines.sh"
 
-    if ($templateParameters.renderWorker.value.image.referenceId -eq "") {
-        $imageTemplateName = $templateParameters.renderWorker.value.image.templateName
-        $imageDefinitionName = $templateParameters.renderWorker.value.image.definitionName
+    if ($templateParameters.parameters.userIdentity.value.resourceId -eq "") {
+        $templateParameters.parameters.userIdentity.value.resourceId = $userIdentity.resourceId
+    }
+    if ($templateParameters.parameters.renderWorker.value.image.referenceId -eq "") {
+        $imageTemplateName = $templateParameters.parameters.renderWorker.value.image.templateName
+        $imageDefinitionName = $templateParameters.parameters.renderWorker.value.image.definitionName
         $imageVersionId = Get-ImageVersionId $imageGallery.resourceGroupName $imageGallery.name $imageDefinitionName $imageTemplateName
-        $templateParameters.renderWorker.value.image.referenceId = $imageVersionId
+        $templateParameters.parameters.renderWorker.value.image.referenceId = $imageVersionId
     }
-    if ($templateParameters.renderWorker.value.scriptCommands -eq "") {
-        $templateParameters.renderWorker.value.scriptCommands = $scriptCommands
+    if ($templateParameters.parameters.renderWorker.value.scriptCommands -eq "") {
+        $templateParameters.parameters.renderWorker.value.scriptCommands = $scriptCommands
     }
-    if ($templateParameters.renderWorker.value.fileSystemMounts -eq "") {
+    if ($templateParameters.parameters.renderWorker.value.fileSystemMounts -eq "") {
         $fileSystemMounts = Get-FileSystemMounts $storageMounts $cacheMounts
-        $templateParameters.renderWorker.value.fileSystemMounts = $fileSystemMounts
+        $templateParameters.parameters.renderWorker.value.fileSystemMounts = $fileSystemMounts
     }
-    if ($templateParameters.renderManager.value.hostAddress -eq "") {
-        $templateParameters.renderManager.value.hostAddress = $renderManagers[$computeRegionIndex]
+    if ($templateParameters.parameters.renderManager.value.hostAddress -eq "") {
+        $templateParameters.parameters.renderManager.value.hostAddress = $renderManagers[$computeRegionIndex]
     }
-    if ($templateParameters.logAnalytics.value.workspaceId -eq "") {
-        $templateParameters.logAnalytics.value.workspaceId = $logAnalytics.workspaceId
+    # if ($templateParameters.parameters.logAnalytics.value.workspaceId -eq "") {
+    #     $templateParameters.parameters.logAnalytics.value.workspaceId = $logAnalytics.workspaceId
+    # }
+    # if ($templateParameters.parameters.logAnalytics.value.workspaceKey -eq "") {
+    #     $templateParameters.parameters.logAnalytics.value.workspaceKey = $logAnalytics.workspaceKey
+    # }
+    if ($templateParameters.parameters.virtualNetwork.value.name -eq "") {
+        $templateParameters.parameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
     }
-    if ($templateParameters.logAnalytics.value.workspaceKey -eq "") {
-        $templateParameters.logAnalytics.value.workspaceKey = $logAnalytics.workspaceKey
-    }
-    if ($templateParameters.virtualNetwork.value.name -eq "") {
-        $templateParameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
-    }
-    if ($templateParameters.virtualNetwork.value.resourceGroupName -eq "") {
-        $templateParameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
+    if ($templateParameters.parameters.virtualNetwork.value.resourceGroupName -eq "") {
+        $templateParameters.parameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
     }
 
-    $templateParameters = '"{0}"' -f ($templateParameters | ConvertTo-Json -Compress -Depth 4).Replace('"', '\"')
+    $templateParameters | ConvertTo-Json -Depth 5 | Set-Content -Path "$templateDirectory/$moduleDirectory/10-Worker.Machines.Parameters.$computeRegionName.json"
+    $templateParameters = "$templateDirectory/$moduleDirectory/10-Worker.Machines.Parameters.$computeRegionName.json"
     $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
-    if (!$groupDeployment) { throw }
-    New-TraceMessage $moduleName $true $computeRegionNames[$computeRegionIndex]
+
+    New-TraceMessage $moduleName $true $computeRegionName
 }
 New-TraceMessage $moduleName $true
 
 # * - Artist Desktop Machines Job
 $moduleName = "* - Artist Desktop Machines Job"
 $artistDesktopMachines = Receive-Job -Job $artistDesktopMachinesJob -Wait
-if (!$?) { return }
 New-TraceMessage $moduleName $true

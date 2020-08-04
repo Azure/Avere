@@ -4,8 +4,7 @@
   "parameters": {
     "userIdentity": {
       "value": {
-        "name": "",
-        "resourceGroupName": ""
+        "resourceId": ""
       }
     },
     "imageRegistry": {

@@ -3,10 +3,10 @@
     [string] $resourceGroupNamePrefix = "Azure.Media.Studio",
 
     # Set the Azure region name(s) for Compute resources (e.g., Image Builder, Virtual Machines, HPC Cache, etc.)
-    [string[]] $computeRegionNames = @("EastUS2", "WestUS2"),
+    [string[]] $computeRegionNames = @("WestUS2"),
 
-    # Set the Azure region name for Storage resources (e.g., VPN Gateway, NetApp Files, Object (Blob) Storage, etc.)
-    [string] $storageRegionName = $computeRegionNames[0],
+    # Set the Azure region name for Storage resources (e.g., Virtual Network, Object (Blob) Storage, NetApp Files, etc.)
+    [string] $storageRegionName = "EastUS2",
 
     # Set to true to deploy Azure NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
     [boolean] $storageNetAppEnable = $false,
@@ -22,23 +22,30 @@ Import-Module "$templateDirectory/Deploy.psm1"
 # * - Shared Services Job
 $moduleName = "* - Shared Services Job"
 New-TraceMessage $moduleName $false
-$sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionName, $storageNetAppEnable, $storageCacheEnable
+$sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames
 $sharedServices = Receive-Job -Job $sharedServicesJob -Wait
-if (!$?) { return }
 New-TraceMessage $moduleName $true
+
+# * - Storage Cache Job
+$moduleName = "* - Storage Cache Job"
+New-TraceMessage $moduleName $false
+$storageCacheJob = Start-Job -FilePath "$templateDirectory/Deploy.StorageCache.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionName, $storageNetAppEnable, $storageCacheEnable, $sharedServices
 
 # * - Artist Desktop Images Job
 $moduleName = "* - Artist Desktop Images Job"
 New-TraceMessage $moduleName $false
 $artistDesktopImagesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Images.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionName, $storageNetAppEnable, $storageCacheEnable, $sharedServices
 $artistDesktopImages = Receive-Job -Job $artistDesktopImagesJob -Wait
-if (!$?) { return }
+New-TraceMessage $moduleName $true
+
+# * - Storage Cache Job
+$moduleName = "* - Storage Cache Job"
+$storageCache = Receive-Job -Job $storageCacheJob -Wait
 New-TraceMessage $moduleName $true
 
 # * - Artist Desktop Machines Job
 $moduleName = "* - Artist Desktop Machines Job"
 New-TraceMessage $moduleName $false
-$artistDesktopMachinesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionName, $storageNetAppEnable, $storageCacheEnable, $sharedServices, $renderManagers
+$artistDesktopMachinesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionName, $storageNetAppEnable, $storageCacheEnable, $sharedServices, $storageCache, $renderManagers
 $artistDesktopMachines = Receive-Job -Job $artistDesktopMachinesJob -Wait
-if (!$?) { return }
 New-TraceMessage $moduleName $true

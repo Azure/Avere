@@ -29,7 +29,7 @@ function Get-ResourceGroupName ($resourceGroupNamePrefix, $resourceGroupNameSuff
 function Get-ImageVersionId ($imageGalleryResourceGroupName, $imageGalleryName, $imageDefinitionName, $imageTemplateName) {
     $imageVersions = (az sig image-version list --resource-group $imageGalleryResourceGroupName --gallery-name $imageGalleryName --gallery-image-definition $imageDefinitionName) | ConvertFrom-Json
     foreach ($imageVersion in $imageVersions) {
-        if ($imageVersion.tags.imageTemplate -eq $imageTemplateName) {
+        if ($imageVersion.tags.imageTemplateName -eq $imageTemplateName) {
             return $imageVersion.id
         }
     }
@@ -43,28 +43,6 @@ function Get-FileSystemMount ($mount) {
     $fsMount += " # " + $mount.fileSystemDrive
     $fsMount += " " + $mount.directoryPermissions
     return $fsMount
-}
-
-function Get-StorageMountCommands ($imageGallery, $imageDefinitionName, $storageMounts) {
-    $mountCommands = @()
-    $imageDefinition = (az sig image-definition show --resource-group $imageGallery.resourceGroupName --gallery-name $imageGallery.name --gallery-image-definition $imageDefinitionName) | ConvertFrom-Json
-    if ($imageDefinition.osType -eq "Windows") {
-        foreach ($storageMount in $storageMounts) {
-            $mountCommand = "New-PSDrive -Name " + $storageMount.fileSystemDrive + " -PSProvider FileSystem"
-            $mountCommand += " -Root \\" + $storageMount.exportHost + $storageMount.exportPath.Replace('/', '\')
-            $mountCommand += " -Scope Global -Persist"
-            $mountCommands += $mountCommand
-        }
-    } else {
-        foreach ($storageMount in $storageMounts) {
-            $mountCommands += "mkdir -p " + $storageMount.directoryPath
-            $mountCommand = "mount -t " + $storageMount.fileSystemType + " -o " + $storageMount.fileSystemOptions
-            $mountCommand += " " + $storageMount.exportHost + ":" + $storageMount.exportPath
-            $mountCommand += " " + $storageMount.directoryPath
-            $mountCommands += $mountCommand
-        }
-    }
-    return $mountCommands
 }
 
 function Get-FileSystemMounts ([object[]] $storageMounts, [object[]] $cacheMounts) {
@@ -87,18 +65,22 @@ function Get-FileSystemMounts ([object[]] $storageMounts, [object[]] $cacheMount
     return $fsMounts
 }
 
+function Get-CompressedData ($uncompressedData) {
+    $memoryStream = New-Object System.IO.MemoryStream
+    $compressionStream = New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode]::Compress)
+    $streamWriter = New-Object System.IO.StreamWriter($compressionStream)
+    $streamWriter.Write($uncompressedData)
+    $streamWriter.Close();
+    return $memoryStream.ToArray()
+}
+
 function Get-ScriptCommands ($scriptFile, $scriptParameters) {
     $script = Get-Content $scriptFile -Raw
     if ($scriptParameters) { # PowerShell
         $script = "& {" + $script + "} " + $scriptParameters
         $scriptCommands = [System.Text.Encoding]::Unicode.GetBytes($script)
     } else {
-        $memoryStream = New-Object System.IO.MemoryStream
-        $compressionStream = New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode]::Compress)
-        $streamWriter = New-Object System.IO.StreamWriter($compressionStream)
-        $streamWriter.Write($script)
-        $streamWriter.Close();
-        $scriptCommands = $memoryStream.ToArray()    
+        $scriptCommands = Get-CompressedData($script)
     }
     return [Convert]::ToBase64String($scriptCommands)
 }

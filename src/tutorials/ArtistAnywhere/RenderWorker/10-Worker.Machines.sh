@@ -4,12 +4,13 @@ set -ex
 
 cd /usr/local/bin
 
-sed -i "/Environment=BIN/c Environment=BIN=/usr/local/bin" opencue-rqd.service
-sed -i "/Environment=OPTIONS=/i Environment=CUEBOT_HOSTNAME=$RENDER_MANAGER_HOST" opencue-rqd.service
-cp opencue-rqd.service /etc/systemd/system
+systemService="opencue-rqd.service"
+sed -i "/Environment=BIN/c Environment=BIN=/usr/local/bin" $systemService
+sed -i "/Environment=OPTIONS=/i Environment=CUEBOT_HOSTNAME=$RENDER_MANAGER_HOST" $systemService
+cp $systemService /etc/systemd/system
 
-systemctl enable opencue-rqd
-systemctl start opencue-rqd
+systemctl enable $systemService
+systemctl start $systemService
 
 IFS=';' read -a fileSystemMounts <<< "$FILE_SYSTEM_MOUNTS"
 for fileSystemMount in "${fileSystemMounts[@]}"

@@ -1,4 +1,4 @@
-# Azure Artist Anywhere
+# Azure Artist Anywhere ([aka.ms/aaa](http://aka.ms/aaa))
 
 Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/azure/azure-resource-manager/management/overview) templates (JSON) for the automated deployment of an end-to-end rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight solution framework that can be configured and extended as needed to meet various hybrid environment requirements. Each resource deployment template can also be leveraged directly.
 
@@ -6,14 +6,15 @@ Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager 
 
 The following Microsoft Azure resource templates and customization scripts define the Azure Artist Anywhere deployment modules.
 
-| *Virtual Network* | *Storage Cache* | *Image Library* | *Render Managers* | *Render Workers* | *Artist Desktop Images* | *Artist Desktop Machines*
+| *Studio Services* | *Image Library* | *Storage Cache* | *Render Managers* | *Render Workers* | *Artist Desktop Images* | *Artist Desktop Machines*
 | - | - | - | - | - | - | - |
-| [00 - Network](VirtualNetwork/00-Network.json) | [02 - Storage (Object)](StorageCache/02-Storage.Object.json) | [04 - Image Gallery](ImageLibrary/04-Image.Gallery.json) | [06 - Manager Data](RenderManager/06-Manager.Data.json) | [09 - Worker Images](RenderWorker/09-Worker.Images.json) | [11 - Desktop Images](ArtistDesktop/11-Desktop.Images.json) | [12 - Desktop Machines](ArtistDesktop/12-Desktop.Machines.json)
-| [01 - Framework](VirtualNetwork/01-Framework.json) | [02 - Storage (NetApp)](StorageCache/02-Storage.NetApp.json) | [05 - Image Registry](ImageLibrary/05-Image.Registry.json) | [07 - Manager Images](RenderManager/07-Manager.Images.json) | [09 - Worker Images Customize (OpenCue)](RenderWorker/09-Worker.Images.Customize.OpenCue.sh) | [11 - Desktop Images Customize ](ArtistDesktop/11-Desktop.Images.Customize.sh) | [12 - Desktop Machines Initialize (Linux)](ArtistDesktop/12-Desktop.Machines.sh)
-| | [03 - Cache (HPC)](StorageCache/03-Cache.json) | | [07 - Manager Images Customize (OpenCue)](RenderManager/07-Manager.Images.Customize.OpenCue.sh) | [09 - Worker Images Customize (Blender)](RenderWorker/09-Worker.Images.Customize.Blender.sh) | [11 - Desktop Images Customize (OpenCue)](ArtistDesktop/11-Desktop.Images.Customize.OpenCue.sh) | [12 - Desktop Machines Initialize (Windows)](ArtistDesktop/12-Desktop.Machines.ps1)
-| | | | [08 - Manager Machines](RenderManager/08-Manager.Machines.json) | [10 - Worker Machines](RenderWorker/10-Worker.Machines.json) | [11 - Desktop Images Customize (Blender) ](ArtistDesktop/11-Desktop.Images.Customize.Blender.sh) |
-| | | | [08 - Manager Machines Initialize](RenderManager/08-Manager.Machines.sh) | [10 - Worker Machines Initialize](RenderWorker/10-Worker.Machines.sh) | [11 - Desktop Images Customize (Teradici) ](ArtistDesktop/11-Desktop.Images.Customize.Teradici.sh) |
-| | | | | | [11 - Desktop Images Customize (HP) ](ArtistDesktop/11-Desktop.Images.Customize.HP.sh) |
+| [00 - Network](StudioServices/00-Network.json) | [02 - Image Gallery](ImageLibrary/02-Image.Gallery.json) | [04 - Storage Network](StorageCache/04-Storage.Network.json) | [06 - Manager Data](RenderManager/06-Manager.Data.json) | [09 - Worker Images](RenderWorker/09-Worker.Images.json) | [11 - Desktop Images](ArtistDesktop/11-Desktop.Images.json) | [12 - Desktop Machines](ArtistDesktop/12-Desktop.Machines.json)
+| [01 - Security](StudioServices/01-Security.json) | [03 - Image Registry](ImageLibrary/03-Image.Registry.json) | [04 - Storage (Object)](StorageCache/04-Storage.Object.json) | [07 - Manager Images](RenderManager/07-Manager.Images.json) | [09 - Worker Images Customize](RenderWorker/09-Worker.Images.Customize.sh) | [11 - Desktop Images Customize (Linux) ](ArtistDesktop/11-Desktop.Images.Customize.sh) | [12 - Desktop Machines Initialize (Linux)](ArtistDesktop/12-Desktop.Machines.sh)
+| | | [04 - Storage (NetApp)](StorageCache/04-Storage.NetApp.json) | [07 - Manager Images Customize](RenderManager/07-Manager.Images.Customize.sh) | [09 - Worker Images Customize (OpenCue)](RenderWorker/09-Worker.Images.Customize.OpenCue.sh) | [11 - Desktop Images Customize (Linux OpenCue)](ArtistDesktop/11-Desktop.Images.Customize.OpenCue.sh) | [12 - Desktop Machines Initialize (Windows)](ArtistDesktop/12-Desktop.Machines.ps1)
+| | | [05 - Cache (HPC)](StorageCache/05-Cache.json) | [07 - Manager Images Customize (OpenCue)](RenderManager/07-Manager.Images.Customize.OpenCue.sh) | [09 - Worker Images Customize (Blender)](RenderWorker/09-Worker.Images.Customize.Blender.sh) | [11 - Desktop Images Customize (Linux Blender) ](ArtistDesktop/11-Desktop.Images.Customize.Blender.sh) |
+| | | | [08 - Manager Machines](RenderManager/08-Manager.Machines.json) | [10 - Worker Machines](RenderWorker/10-Worker.Machines.json) | [11 - Desktop Images Customize (Windows) ](ArtistDesktop/11-Desktop.Images.Customize.ps1) |
+| | | | [08 - Manager Machines Initialize](RenderManager/08-Manager.Machines.sh) | [10 - Worker Machines Initialize](RenderWorker/10-Worker.Machines.sh) | [11 - Desktop Images Customize (Windows OpenCue) ](ArtistDesktop/11-Desktop.Images.Customize.OpenCue.ps1) |
+| | | | [08 - Manager Machines Initialize (Data Access)](RenderManager/08-Manager.Machines.DataAccess.sh) | | [11 - Desktop Images Customize (Windows Blender) ](ArtistDesktop/11-Desktop.Images.Customize.Blender.ps1) |
 
 ## Solution Architecture
 
@@ -117,7 +118,9 @@ The following list describes each of the Azure Artist Anywhere deployment script
 
 * [*Deploy.psm1*](Deploy.psm1) - shared module that is referenced from each deployment script
 
-* [*Deploy.SharedServices.ps1*](Deploy.SharedServices.ps1) - core script that deploys shared services (Network, Storage, etc.)
+* [*Deploy.SharedServices.ps1*](Deploy.SharedServices.ps1) - core script that deploys shared studio services
+
+* [*Deploy.StorageCache.ps1*](Deploy.StorageCache.ps1) - background job script that deploys storage and cache services
 
 * [*Deploy.RenderManager.ps1*](Deploy.RenderManager.ps1) - background job script that deploys the render farm manager services
 
@@ -129,6 +132,6 @@ The following list describes each of the Azure Artist Anywhere deployment script
 
 As an example deployment, the following output is from the [*Deploy.ps1*](Deploy.ps1) script within Azure Cloud Shell.
 
-![](https://mediasolutions.blob.core.windows.net/bin/AzureArtistAnywhere.ModuleDeployment.06-01-2020.png)
+![](https://mediasolutions.blob.core.windows.net/bin/AzureArtistAnywhere.ModuleDeployment.2020-08-01.png)
 
 For more information, contact Rick Shahid (rick.shahid@microsoft.com)
