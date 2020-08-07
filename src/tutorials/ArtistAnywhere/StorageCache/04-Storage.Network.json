@@ -14,10 +14,10 @@
         "description": "The virtual network gateway."
       }
     },
-    "computeNetworks": {
-      "type": "array",
+    "computeNetwork": {
+      "type": "object",
       "metadata": {
-        "description": "The compute virtual networks."
+        "description": "The compute virtual network."
       }
     }
   },
@@ -25,7 +25,7 @@
     "virtualNetworkApiVersion": "2020-05-01",
     "virtualNetworkDomainApiVersion": "2020-01-01",
     "virtualNetworkResourceGroupName": "[resourceGroup().name]",
-    "resourceDeploymentApiVersion": "2019-09-01",
+    "resourceDeploymentApiVersion": "2020-06-01",
     "roleAssignmentApiVersion": "2020-04-01-preview"
   },
   "resources": [
@@ -158,12 +158,8 @@
           "id": "[resourceId(variables('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworkGateways', parameters('virtualNetwork').name)]"
         },
         "virtualNetworkGateway2": {
-          "id": "[resourceId(parameters('computeNetworks')[copyIndex()].resourceGroupName, 'Microsoft.Network/virtualNetworkGateways', parameters('computeNetworks')[copyIndex()].name)]"
+          "id": "[resourceId(parameters('computeNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworkGateways', parameters('computeNetwork').name)]"
         }
-      },
-      "copy": {
-        "name": "computeNetworks",
-        "count": "[length(parameters('computeNetworks'))]"
       }
     },
     {
@@ -171,7 +167,7 @@
       "type": "Microsoft.Resources/deployments",
       "name": "04-Storage.Network.Connections",
       "apiVersion": "[variables('resourceDeploymentApiVersion')]",
-      "resourceGroup": "[parameters('computeNetworks')[copyIndex()].resourceGroupName]",
+      "resourceGroup": "[parameters('computeNetwork').resourceGroupName]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('virtualNetwork').name)]"
       ],
@@ -183,15 +179,15 @@
           "resources": [
             {
               "type": "Microsoft.Network/connections",
-              "name": "[parameters('computeNetworks')[copyIndex()].name]",
+              "name": "[parameters('computeNetwork').name]",
               "apiVersion": "[variables('virtualNetworkApiVersion')]",
-              "location": "[parameters('computeNetworks')[copyIndex()].regionName]",
+              "location": "[parameters('computeNetwork').regionName]",
               "properties": {
                 "connectionType": "Vnet2Vnet",
                 "connectionProtocol": "[parameters('virtualNetworkGateway').connection.protocol]",
                 "sharedKey": "[parameters('virtualNetworkGateway').connection.key]",
                 "virtualNetworkGateway1": {
-                  "id": "[resourceId(parameters('computeNetworks')[copyIndex()].resourceGroupName, 'Microsoft.Network/virtualNetworkGateways', parameters('computeNetworks')[copyIndex()].name)]"
+                  "id": "[resourceId(parameters('computeNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworkGateways', parameters('computeNetwork').name)]"
                 },
                 "virtualNetworkGateway2": {
                   "id": "[resourceId(variables('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworkGateways', parameters('virtualNetwork').name)]"
@@ -200,10 +196,6 @@
             }
           ]
         }
-      },
-      "copy": {
-        "name": "computeNetworks",
-        "count": "[length(parameters('computeNetworks'))]"
       }
     }
   ],

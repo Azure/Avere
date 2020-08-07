@@ -31,13 +31,13 @@
             "typeVersion": "2.1",
             "upgradeMinorVersion": true,
             "scriptFile": "12-Desktop.Machines.sh",
-            "scriptParameters": "TERADICI_HOST_AGENT_LICENSE_KEY='' TERADICI_HOST_AGENT='pcoip-agent-graphics'",
+            "scriptParameters": "TERADICI_AGENT_KEY='' TERADICI_AGENT='pcoip-agent-graphics'",
             "scriptCommands": ""
           },
           "monitorAgent": {
             "publisher": "Microsoft.EnterpriseCloud.Monitoring",
             "type": "OmsAgentForLinux",
-            "typeVersion": "1.12",
+            "typeVersion": "1.13",
             "upgradeMinorVersion": true
           }
         },
@@ -68,13 +68,13 @@
             "typeVersion": "2.1",
             "upgradeMinorVersion": true,
             "scriptFile": "12-Desktop.Machines.sh",
-            "scriptParameters": "TERADICI_HOST_AGENT_LICENSE_KEY='' TERADICI_HOST_AGENT='pcoip-agent-graphics'",
+            "scriptParameters": "TERADICI_AGENT_KEY='' TERADICI_AGENT='pcoip-agent-graphics'",
             "scriptCommands": ""
           },
           "monitorAgent": {
             "publisher": "Microsoft.EnterpriseCloud.Monitoring",
             "type": "OmsAgentForLinux",
-            "typeVersion": "1.12",
+            "typeVersion": "1.13",
             "upgradeMinorVersion": true
           }
         },
@@ -105,7 +105,7 @@
             "typeVersion": "1.10",
             "upgradeMinorVersion": true,
             "scriptFile": "12-Desktop.Machines.ps1",
-            "scriptParameters": "-teradiciHostAgentLicenseKey '' -teradiciHostAgentFileUrl 'https://mediasolutions.blob.core.windows.net/bin/pcoip-agent-graphics_20.07.0.exe' -teradiciHostAgentFileName 'pcoip-agent-graphics.exe'",
+            "scriptParameters": "-teradiciAgentLicenseKey '' -teradiciAgentFileUrl 'https://mediasolutions.blob.core.windows.net/bin/pcoip-agent-graphics_20.07.0.exe' -teradiciAgentFileName 'pcoip-agent-graphics.exe'",
             "scriptCommands": ""
           },
           "monitorAgent": {
@@ -142,7 +142,7 @@
             "typeVersion": "1.10",
             "upgradeMinorVersion": true,
             "scriptFile": "12-Desktop.Machines.ps1",
-            "scriptParameters": "-teradiciHostAgentLicenseKey '' -teradiciHostAgentFileUrl 'https://mediasolutions.blob.core.windows.net/bin/pcoip-agent-graphics_20.07.0.exe' -teradiciHostAgentFileName 'pcoip-agent-graphics.exe'",
+            "scriptParameters": "-teradiciAgentLicenseKey '' -teradiciAgentFileUrl 'https://mediasolutions.blob.core.windows.net/bin/pcoip-agent-graphics_20.07.0.exe' -teradiciAgentFileName 'pcoip-agent-graphics.exe'",
             "scriptCommands": ""
           },
           "monitorAgent": {

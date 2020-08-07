@@ -19,7 +19,7 @@
             "size": "",
             "osDiskSizeGB": 0
           },
-          "buildTimeoutMinutes": 120,
+          "buildTimeoutMinutes": 180,
           "imageVersionId": "1.0.0",
           "customizePipeline": [
             {
@@ -40,6 +40,12 @@
               "type": "Shell",
               "scriptUri": "https://mediastudio.blob.core.windows.net/scripts/07-Manager.Images.Customize.OpenCue.sh",
               "sha256Checksum": ""
+            },
+            {
+              "name": "Blender",
+              "type": "Shell",
+              "scriptUri": "https://mediastudio.blob.core.windows.net/scripts/07-Manager.Images.Customize.Blender.sh",
+              "sha256Checksum": ""
             }
           ]
         }
@@ -54,6 +60,13 @@
         "replicationCount": 1,
         "replicationRegions": [
         ]
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "",
+        "subnetName": "Render",
+        "resourceGroupName": ""
       }
     }
   }

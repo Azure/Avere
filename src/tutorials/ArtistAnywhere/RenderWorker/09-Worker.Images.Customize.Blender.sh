@@ -2,14 +2,15 @@
 
 set -ex
 
-cd /usr/local/bin
+localDirectory='/usr/bin'
+cd $localDirectory
 
-fileName='blender.tar.xz'
-fileUrl='https://mirror.clarkson.edu/blender/release/Blender2.83/blender-2.83.3-linux64.tar.xz'
-curl -L -o $fileName $fileUrl
+storageDirectory='/mnt/tools/Blender'
+mkdir -p $storageDirectory
+
+fileName='blender2834.tar.xz'
+if [ ! -f $storageDirectory/$fileName ]; then
+    curl -L -o $storageDirectory/$fileName 'https://mirror.clarkson.edu/blender/release/Blender2.83/blender-2.83.4-linux64.tar.xz'
+fi
+cp $storageDirectory/$fileName .
 tar -xJf $fileName
-
-yum -y install libXi
-yum -y install libXrender
-yum -y install mesa-libGL
-mv blender-*/* .

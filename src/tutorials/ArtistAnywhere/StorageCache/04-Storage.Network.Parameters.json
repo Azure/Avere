@@ -95,9 +95,9 @@
         }
       }
     },
-    "computeNetworks": {
-      "value": [
-      ]
+    "computeNetwork": {
+      "value": {
+      }
     }
   }
 }

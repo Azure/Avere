@@ -2,8 +2,8 @@
     # Set a naming prefix for the Azure resource groups that are created by this deployment script
     [string] $resourceGroupNamePrefix = "Azure.Media.Studio",
 
-    # Set the Azure region name(s) for Compute resources (e.g., Image Builder, Virtual Machines, HPC Cache, etc.)
-    [string[]] $computeRegionNames = @("WestUS2"),
+    # Set the Azure region name for Compute resources (e.g., Image Builder, Virtual Machines, HPC Cache, etc.)
+    [string] $computeRegionName = "WestUS2",
 
     # Set the Azure region name for Storage resources (e.g., Virtual Network, Object (Blob) Storage, NetApp Files, etc.)
     [string] $storageRegionName = "EastUS2",
@@ -20,8 +20,8 @@
     # The Azure storage (e.g., Blob, NetApp Files, etc.) and cache (e.g., HPC Cache) services
     [object] $storageCache,
 
-    # The Azure render farm manager host names (or IP addresses)
-    [string[]] $renderManagers
+    # The Azure render farm manager
+    [object] $renderManager
 )
 
 $templateDirectory = $PSScriptRoot
@@ -35,11 +35,11 @@ Import-Module "$templateDirectory/Deploy.psm1"
 if (!$sharedServices) {
     $moduleName = "* - Shared Services Job"
     New-TraceMessage $moduleName $false
-    $sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames
+    $sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName
     $sharedServices = Receive-Job -Job $sharedServicesJob -Wait
     New-TraceMessage $moduleName $true
 }
-$computeNetworks = $sharedServices.computeNetworks
+$computeNetwork = $sharedServices.computeNetwork
 $logAnalytics = $sharedServices.logAnalytics
 $imageGallery = $sharedServices.imageGallery
 
@@ -47,7 +47,7 @@ $imageGallery = $sharedServices.imageGallery
 if (!$storageCache) {
     $moduleName = "* - Storage Cache Job"
     New-TraceMessage $moduleName $false
-    $storageCacheJob = Start-Job -FilePath "$templateDirectory/Deploy.StorageCache.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames, $storageRegionName, $storageNetAppEnable, $storageCacheEnable, $sharedServices
+    $storageCacheJob = Start-Job -FilePath "$templateDirectory/Deploy.StorageCache.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $storageNetAppEnable, $storageCacheEnable, $sharedServices
     $storageCache = Receive-Job -Job $storageCacheJob -Wait
     New-TraceMessage $moduleName $true
 }
@@ -60,70 +60,61 @@ $moduleDirectory = "ArtistDesktop"
 $artistDesktops = @()
 $moduleName = "12 - Desktop Machines"
 $resourceGroupNameSuffix = ".Desktop"
-New-TraceMessage $moduleName $false
-for ($computeRegionIndex = 0; $computeRegionIndex -lt $computeRegionNames.length; $computeRegionIndex++) {
-    $computeRegionName = $computeRegionNames[$computeRegionIndex]
-    New-TraceMessage $moduleName $false $computeRegionName
-    $resourceGroupName = Get-ResourceGroupName $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
-    $resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionName
+New-TraceMessage $moduleName $false $computeRegionName
+$resourceGroupName = Get-ResourceGroupName $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
+$resourceGroup = az group create --resource-group $resourceGroupName --location $computeRegionName
 
-    $templateFile = "$templateDirectory/$moduleDirectory/12-Desktop.Machines.json"
-    $templateParameters = Get-Content "$templateDirectory/$moduleDirectory/12-Desktop.Machines.Parameters.json" -Raw | ConvertFrom-Json
+$templateFile = "$templateDirectory/$moduleDirectory/12-Desktop.Machines.json"
+$templateParameters = Get-Content "$templateDirectory/$moduleDirectory/12-Desktop.Machines.Parameters.json" -Raw | ConvertFrom-Json
 
-    for ($machineIndex = 0; $machineIndex -lt $templateParameters.parameters.artistDesktops.value.length; $machineIndex++) {
-        if ($templateParameters.parameters.artistDesktops.value[$machineIndex].enabled) {
-            if ($templateParameters.parameters.artistDesktops.value[$machineIndex].image.referenceId -eq "") {
-                $imageTemplateName = $templateParameters.parameters.artistDesktops.value[$machineIndex].image.templateName
-                $imageDefinitionName = $templateParameters.parameters.artistDesktops.value[$machineIndex].image.definitionName
-                $imageVersionId = Get-ImageVersionId $imageGallery.resourceGroupName $imageGallery.name $imageDefinitionName $imageTemplateName
-                $templateParameters.parameters.artistDesktops.value[$machineIndex].image.referenceId = $imageVersionId
+for ($machineIndex = 0; $machineIndex -lt $templateParameters.parameters.artistDesktops.value.length; $machineIndex++) {
+    if ($templateParameters.parameters.artistDesktops.value[$machineIndex].enabled) {
+        if ($templateParameters.parameters.artistDesktops.value[$machineIndex].image.referenceId -eq "") {
+            $imageTemplateName = $templateParameters.parameters.artistDesktops.value[$machineIndex].image.templateName
+            $imageDefinitionName = $templateParameters.parameters.artistDesktops.value[$machineIndex].image.definitionName
+            $imageVersionId = Get-ImageVersionId $imageGallery.resourceGroupName $imageGallery.name $imageDefinitionName $imageTemplateName
+            $templateParameters.parameters.artistDesktops.value[$machineIndex].image.referenceId = $imageVersionId
+        }
+        if ($templateParameters.parameters.artistDesktops.value[$machineIndex].customExtension.scriptCommands -eq "") {
+            $scriptFile = $templateParameters.parameters.artistDesktops.value[$machineIndex].customExtension.scriptFile
+            $scriptFile = "$templateDirectory/$moduleDirectory/$scriptFile"
+            $scriptParameters = $templateParameters.parameters.artistDesktops.value[$machineIndex].customExtension.scriptParameters
+            $imageDefinition = (az sig image-definition show --resource-group $imageGallery.resourceGroupName --gallery-name $imageGallery.name --gallery-image-definition $imageDefinitionName) | ConvertFrom-Json
+            if ($imageDefinition.osType -eq "Windows") {
+                $fileSystemMounts = Get-FileSystemMounts $storageMounts $cacheMounts
+                $scriptParameters += " -fileSystemMounts '" + $fileSystemMounts + "'"
+                $scriptParameters += " -renderManagerHost '" + $renderManager.hostAddress + "'"
+                $scriptCommands = Get-ScriptCommands $scriptFile $scriptParameters
+                $templateParameters.parameters.artistDesktops.value[$machineIndex].customExtension.scriptParameters = ""
+            } else {
+                $fileSystemMounts = Get-FileSystemMounts $storageMounts $cacheMounts
+                $scriptParameters += " FILE_SYSTEM_MOUNTS='" + $fileSystemMounts + "'"
+                $scriptParameters += " RENDER_MANAGER_HOST='" + $renderManager.hostAddress + "'"
+                $scriptCommands = Get-ScriptCommands $scriptFile
+                $templateParameters.parameters.artistDesktops.value[$machineIndex].customExtension.scriptParameters = $scriptParameters
             }
-            if ($templateParameters.parameters.artistDesktops.value[$machineIndex].customExtension.scriptCommands -eq "") {
-                $scriptFile = $templateParameters.parameters.artistDesktops.value[$machineIndex].customExtension.scriptFile
-                $scriptFile = "$templateDirectory/$moduleDirectory/$scriptFile"
-                $scriptParameters = $templateParameters.parameters.artistDesktops.value[$machineIndex].customExtension.scriptParameters
-                $imageDefinition = (az sig image-definition show --resource-group $imageGallery.resourceGroupName --gallery-name $imageGallery.name --gallery-image-definition $imageDefinitionName) | ConvertFrom-Json
-                if ($imageDefinition.osType -eq "Windows") {
-                    $fileSystemMounts = Get-FileSystemMounts $storageMounts $cacheMounts
-                    $scriptParameters += " -fileSystemMounts '" + $fileSystemMounts + "'"
-                    if ($renderManagers.length -gt $computeRegionIndex) {
-                        $scriptParameters += " -openCueRenderManagerHost " + $renderManagers[$computeRegionIndex]
-                    }
-                    $scriptCommands = Get-ScriptCommands $scriptFile $scriptParameters
-                    $templateParameters.parameters.artistDesktops.value[$machineIndex].customExtension.scriptParameters = ""
-                } else {
-                    $fileSystemMounts = Get-FileSystemMounts $storageMounts $cacheMounts
-                    $scriptParameters += " FILE_SYSTEM_MOUNTS='" + $fileSystemMounts + "'"
-                    if ($renderManagers.length -gt $computeRegionIndex) {
-                        $scriptParameters += " OPENCUE_RENDER_MANAGER_HOST=" + $renderManagers[$computeRegionIndex]
-                    }
-                    $scriptCommands = Get-ScriptCommands $scriptFile
-                    $templateParameters.parameters.artistDesktops.value[$machineIndex].customExtension.scriptParameters = $scriptParameters
-                }
-                $templateParameters.parameters.artistDesktops.value[$machineIndex].customExtension.scriptCommands = $scriptCommands
-            }
+            $templateParameters.parameters.artistDesktops.value[$machineIndex].customExtension.scriptCommands = $scriptCommands
         }
     }
-    # if ($templateParameters.parameters.logAnalytics.value.workspaceId -eq "") {
-    #     $templateParameters.parameters.logAnalytics.value.workspaceId = $logAnalytics.workspaceId
-    # }
-    # if ($templateParameters.parameters.logAnalytics.value.workspaceKey -eq "") {
-    #     $templateParameters.parameters.logAnalytics.value.workspaceKey = $logAnalytics.workspaceKey
-    # }
-    if ($templateParameters.parameters.virtualNetwork.value.name -eq "") {
-        $templateParameters.parameters.virtualNetwork.value.name = $computeNetworks[$computeRegionIndex].name
-    }
-    if ($templateParameters.parameters.virtualNetwork.value.resourceGroupName -eq "") {
-        $templateParameters.parameters.virtualNetwork.value.resourceGroupName = $computeNetworks[$computeRegionIndex].resourceGroupName
-    }
-
-    $templateParameters | ConvertTo-Json -Depth 5 | Set-Content -Path "$templateDirectory/$moduleDirectory/12-Desktop.Machines.Parameters.$computeRegionName.json"
-    $templateParameters = "$templateDirectory/$moduleDirectory/12-Desktop.Machines.Parameters.$computeRegionName.json"
-    $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
-
-    $artistDesktops += $groupDeployment.properties.outputs.artistDesktops.value
-    New-TraceMessage $moduleName $true $computeRegionName
 }
-New-TraceMessage $moduleName $true
+# if ($templateParameters.parameters.logAnalytics.value.workspaceId -eq "") {
+#     $templateParameters.parameters.logAnalytics.value.workspaceId = $logAnalytics.workspaceId
+# }
+# if ($templateParameters.parameters.logAnalytics.value.workspaceKey -eq "") {
+#     $templateParameters.parameters.logAnalytics.value.workspaceKey = $logAnalytics.workspaceKey
+# }
+if ($templateParameters.parameters.virtualNetwork.value.name -eq "") {
+    $templateParameters.parameters.virtualNetwork.value.name = $computeNetwork.name
+}
+if ($templateParameters.parameters.virtualNetwork.value.resourceGroupName -eq "") {
+    $templateParameters.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
+}
+
+$templateParameters | ConvertTo-Json -Depth 5 | Set-Content -Path "$templateDirectory/$moduleDirectory/12-Desktop.Machines.Parameters.$computeRegionName.json"
+$templateParameters = "$templateDirectory/$moduleDirectory/12-Desktop.Machines.Parameters.$computeRegionName.json"
+$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
+
+$artistDesktops = $groupDeployment.properties.outputs.artistDesktops.value
+New-TraceMessage $moduleName $true $computeRegionName
 
 Write-Output -InputObject $artistDesktops -NoEnumerate

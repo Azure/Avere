@@ -2,7 +2,7 @@
 
 set -ex
 
-cd /usr/local/bin
+cd /usr/local/bin/OpenCue
 
 export PGPASSWORD=$DB_ACCESS_TOKEN
 
@@ -14,8 +14,9 @@ if [ !$tableExists ]; then
     psql "$DB_SQL" -f opencue-bot-data.sql
 fi
 
-sed -i "/Environment=DB_URL/c Environment=DB_URL=$DB_URL" opencue-bot.service
-sed -i "/Environment=DB_USER/c Environment=DB_USER=$DB_USER_LOGIN" opencue-bot.service
-sed -i "/Environment=JAR_PATH/c Environment=JAR_PATH=/usr/local/bin/opencue-bot.jar" opencue-bot.service
+systemService='opencue-bot.service'
+sed -i "/Environment=DB_URL/c Environment=DB_URL=$DB_URL" $systemService
+sed -i "/Environment=DB_USER/c Environment=DB_USER=$DB_USER_LOGIN" $systemService
+sed -i "/Environment=JAR_PATH/c Environment=JAR_PATH=/usr/local/bin/OpenCue/opencue-bot.jar" $systemService
 
-cat Manager.Machines.DataAccess.sh | sed 's|\r$||' | /bin/bash
+cat /usr/local/bin/Manager.Machines.DataAccess.sh | sed 's|\r$||' | /bin/bash

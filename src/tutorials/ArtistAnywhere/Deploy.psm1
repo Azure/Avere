@@ -41,7 +41,6 @@ function Get-FileSystemMount ($mount) {
     $fsMount += " " + $mount.fileSystemType
     $fsMount += " " + $mount.fileSystemOptions + " 0 0"
     $fsMount += " # " + $mount.fileSystemDrive
-    $fsMount += " " + $mount.directoryPermissions
     return $fsMount
 }
 
