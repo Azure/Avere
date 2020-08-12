@@ -688,12 +688,14 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		} else {
 			return nil, fmt.Errorf("missing argument '%s'", controller_admin_username)
 		}
+		if v, exists := d.GetOk(controller_admin_password); exists {
+			controllerAdminPassword = v.(string)
+		}
 		if v, exists := d.GetOk(controller_ssh_port); exists {
 			controllerSshPort = v.(int)
 		} else {
 			controllerSshPort = DefaultSshPort
 		}
-
 		if len(controllerAdminPassword) > 0 {
 			authMethod = GetPasswordAuthMethod(controllerAdminPassword)
 		} else {
