@@ -342,20 +342,18 @@ func resourceVfxt() *schema.Resource {
 				Computed: true,
 			},
 			vserver_ip_addresses: {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Set: schema.HashString,
 			},
 			node_names: {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Set: schema.HashString,
 			},
 		},
 	}
@@ -485,14 +483,14 @@ func resourceVfxtRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("error encountered while getting vserver addresses '%v'", err)
 	}
 	avereVfxt.VServerIPAddresses = &currentVServerIPAddresses
-	d.Set(vserver_ip_addresses, schema.NewSet(schema.HashString, utils.FlattenStringSlice(avereVfxt.VServerIPAddresses)))
+	d.Set(vserver_ip_addresses, flattenStringSlice(avereVfxt.VServerIPAddresses))
 
 	nodeNames, err := avereVfxt.GetNodes()
 	if err != nil {
 		return fmt.Errorf("error encountered getting nodes '%v'", err)
 	}
 	avereVfxt.NodeNames = &nodeNames
-	d.Set(node_names, schema.NewSet(schema.HashString, utils.FlattenStringSlice(avereVfxt.NodeNames)))
+	d.Set(node_names, flattenStringSlice(avereVfxt.NodeNames))
 	if len(*(avereVfxt.NodeNames)) >= MinNodesCount {
 		d.Set(vfxt_node_count, len(*(avereVfxt.NodeNames)))
 	}
@@ -721,8 +719,8 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	if val, ok := d.Get(vfxt_management_ip).(string); ok {
 		managementIP = val
 	}
-	vServerIPAddressesRaw := d.Get(vserver_ip_addresses).(*schema.Set).List()
-	nodeNamesRaw := d.Get(node_names).(*schema.Set).List()
+	vServerIPAddressesRaw := d.Get(vserver_ip_addresses).([]interface{})
+	nodeNamesRaw := d.Get(node_names).([]interface{})
 
 	nodeCount := d.Get(vfxt_node_count).(int)
 
@@ -1510,4 +1508,28 @@ func ValidateUserName(v interface{}, _ string) (warnings []string, errors []erro
 	}
 
 	return warnings, errors
+}
+
+func unflattenStringSlice(input []interface{}) *[]string {
+	output := make([]string, 0)
+
+	if input != nil {
+		for _, v := range input {
+			output = append(output, v.(string))
+		}
+	}
+
+	return &output
+}
+
+func flattenStringSlice(input *[]string) []interface{} {
+	output := make([]interface{}, 0)
+
+	if input != nil {
+		for _, v := range *input {
+			output = append(output, v)
+		}
+	}
+
+	return output
 }
