@@ -154,6 +154,7 @@ In addition to all arguments above, the following attributes are exported:
 * <a name="vfxt_management_ip"></a>[vfxt_management_ip](#vfxt_management_ip) - this is the Avere vFXT management ip address.
 * <a name="vserver_ip_addresses"></a>[vserver_ip_addresses](#vserver_ip_addresses) - these are the list of vserver ip addresses.  Clients will mount to these addresses.
 * <a name="node_names"></a>[node_names](#node_names) - these are the node names of the cluster.
+* <a name="primary_cluster_ips"></a>[primary_cluster_ips](#primary_cluster_ips) - these are the static primary ip addresses of the cluster that do not move.
 
 # Build the Terraform Provider binary
 
