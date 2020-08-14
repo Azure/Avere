@@ -265,6 +265,7 @@ func resourceVfxt() *schema.Resource {
 								CachePolicyTransitioningClients,
 								CachePolicyIsolatedCloudWorkstation,
 								CachePolicyCollaboratingCloudWorkstation,
+								CachePolicyReadOnlyHighWriteBackDelay,
 							}, false),
 						},
 						custom_settings: {

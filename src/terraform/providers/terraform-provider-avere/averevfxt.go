@@ -513,7 +513,7 @@ func (a *AvereVfxt) ListExports(filer string) ([]NFSExport, error) {
 	return result, nil
 }
 
-func (a *AvereVfxt) EnsureCachePolicyExists(cachePolicy string, checkAttributes string) error {
+func (a *AvereVfxt) EnsureCachePolicyExists(cachePolicy string, cacheMode string, checkAttributes string, writeBackDelay int) error {
 	// list the cache policies
 	cachePoliciesJson, err := a.AvereCommand(a.getListCachePoliciesJsonCommand())
 	if err != nil {
@@ -534,7 +534,7 @@ func (a *AvereVfxt) EnsureCachePolicyExists(cachePolicy string, checkAttributes 
 	}
 
 	// if not exists, create the new policy
-	if _, err := a.AvereCommand(a.getCreateCachePolicyCommand(cachePolicy, checkAttributes)); err != nil {
+	if _, err := a.AvereCommand(a.getCreateCachePolicyCommand(cachePolicy, cacheMode, checkAttributes, writeBackDelay)); err != nil {
 		return err
 	}
 	log.Printf("[INFO] vfxt: ensure stable cluster after creating cache policy")
@@ -589,9 +589,11 @@ func (a *AvereVfxt) EnsureCachePolicy(corefiler *CoreFiler) error {
 	case CachePolicyTransitioningClients:
 		return nil
 	case CachePolicyIsolatedCloudWorkstation:
-		return a.EnsureCachePolicyExists(CachePolicyIsolatedCloudWorkstation, CachePolicyIsolatedCloudWorkstationCheckAttributes)
+		return a.EnsureCachePolicyExists(CachePolicyIsolatedCloudWorkstation, CacheModeReadWrite, CachePolicyIsolatedCloudWorkstationCheckAttributes, WriteBackDelayDefault)
 	case CachePolicyCollaboratingCloudWorkstation:
-		return a.EnsureCachePolicyExists(CachePolicyCollaboratingCloudWorkstation, CachePolicyCollaboratingCloudWorkstationCheckAttributes)
+		return a.EnsureCachePolicyExists(CachePolicyCollaboratingCloudWorkstation, CacheModeReadWrite, CachePolicyCollaboratingCloudWorkstationCheckAttributes, WriteBackDelayDefault)
+	case CachePolicyReadOnlyHighWriteBackDelay:
+		return a.EnsureCachePolicyExists(CachePolicyReadOnlyHighWriteBackDelay, CacheModeReadOnly, "", CachePolicyReadOnlyHighWriteBackDelayValue)
 	default:
 		return fmt.Errorf("Error: core filer '%s' specifies unknown cache policy '%s'", corefiler.Name, corefiler.CachePolicy)
 	}
@@ -1166,8 +1168,8 @@ func (a *AvereVfxt) getListCachePoliciesJsonCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json cachePolicy.list", a.getBaseAvereCmd()), AverecmdLogFile)
 }
 
-func (a *AvereVfxt) getCreateCachePolicyCommand(cachePolicy string, checkAttributes string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s cachePolicy.create \"%s\" read-write 30 \"%s\" False", a.getBaseAvereCmd(), cachePolicy, checkAttributes), AverecmdLogFile)
+func (a *AvereVfxt) getCreateCachePolicyCommand(cachePolicy string, cacheMode string, checkAttributes string, writeBackDelay int) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cachePolicy.create \"%s\" \"%s\" %d \"%s\" False", a.getBaseAvereCmd(), cachePolicy, cacheMode, writeBackDelay, checkAttributes), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getVServerCreateCommand() string {
