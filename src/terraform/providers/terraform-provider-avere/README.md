@@ -138,7 +138,7 @@ A <a name="core_filer"></a>`core_filer` block supports the following:
     | "Full Caching" | Use this cache policy with cloud core filers or to optimize for op reduction to the core filer. |
     | "Isolated Cloud Workstation" | useful for vdi workstations reading and writing to separate locations as described in [Cloud Workstations](../../examples/vfxt/cloudworkstation) |
     | "Collaborating Cloud Workstation" | useful for vdi workstations reading and writing to the same content as described in [Cloud Workstations](../../examples/vfxt/cloudworkstation) |
-    | "Read Only High Write Back Delay" | Use this for read heavy content, where changes in the data are infrequent. |
+    | "Read Only High Verification Time" | Use this for read heavy data, where changes in the data are infrequent. |
 * <a name="custom_settings_2"></a>[custom_settings](#custom_settings_2) - (Optional) - these are custom settings provided by Avere support to match advanced use case scenarios.  They are a list of strings of the form "SETTINGNAME CHECKCODE VALUE".  Do not prefix with the mass name as it is automatically detected.
 * [junction](#junction) - (Required) this specifies the junction block as described below.
  
