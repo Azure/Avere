@@ -592,8 +592,8 @@ func (a *AvereVfxt) EnsureCachePolicy(corefiler *CoreFiler) error {
 		return a.EnsureCachePolicyExists(CachePolicyIsolatedCloudWorkstation, CacheModeReadWrite, CachePolicyIsolatedCloudWorkstationCheckAttributes, WriteBackDelayDefault)
 	case CachePolicyCollaboratingCloudWorkstation:
 		return a.EnsureCachePolicyExists(CachePolicyCollaboratingCloudWorkstation, CacheModeReadWrite, CachePolicyCollaboratingCloudWorkstationCheckAttributes, WriteBackDelayDefault)
-	case CachePolicyReadOnlyHighWriteBackDelay:
-		return a.EnsureCachePolicyExists(CachePolicyReadOnlyHighWriteBackDelay, CacheModeReadOnly, "", CachePolicyReadOnlyHighWriteBackDelayValue)
+	case CachePolicyReadOnlyHighVerificationTime:
+		return a.EnsureCachePolicyExists(CachePolicyReadOnlyHighVerificationTime, CacheModeReadOnly, CachePolicyReadOnlyHighVerificationTimeCheckAttributes, 0)
 	default:
 		return fmt.Errorf("Error: core filer '%s' specifies unknown cache policy '%s'", corefiler.Name, corefiler.CachePolicy)
 	}

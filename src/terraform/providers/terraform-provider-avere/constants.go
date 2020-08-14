@@ -31,11 +31,11 @@ const (
 	CachePolicyTransitioningClients          = "Transitioning Clients Before or After a Migration"
 	CachePolicyIsolatedCloudWorkstation      = "Isolated Cloud Workstation"
 	CachePolicyCollaboratingCloudWorkstation = "Collaborating Cloud Workstation"
-	CachePolicyReadOnlyHighWriteBackDelay    = "Read Only High Write Back Delay"
+	CachePolicyReadOnlyHighVerificationTime  = "Read Only High Verification Time"
 
 	CachePolicyIsolatedCloudWorkstationCheckAttributes      = "{}"
 	CachePolicyCollaboratingCloudWorkstationCheckAttributes = "{'checkAttrPeriod':30,'checkDirAttrPeriod':30}"
-	CachePolicyReadOnlyHighWriteBackDelayValue              = 10800
+	CachePolicyReadOnlyHighVerificationTimeCheckAttributes  = "{'checkAttrPeriod':10800,'checkDirAttrPeriod':10800}"
 
 	CacheModeReadWrite = "read-write"
 	CacheModeReadOnly  = "read"
