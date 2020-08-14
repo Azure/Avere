@@ -185,6 +185,26 @@ func (a *AvereVfxt) GetNodes() ([]string, error) {
 	return results, nil
 }
 
+func (a *AvereVfxt) GetNodePrimaryIPs() ([]string, error) {
+	nodeMap, err := a.GetExistingNodes()
+	if err != nil {
+		return nil, err
+	}
+
+	var results []string
+	for _, v := range nodeMap {
+		if val, ok := v.PrimaryClusterIP[PrimaryClusterIPKey]; ok {
+			results = append(results, val)
+		} else {
+			// this is not essential data, so just print an error
+			log.Printf("[ERROR] primary IP missing for node %s", v.Name)
+			//return nil, fmt.Errorf("primary IP missing for node %s", v.Name)
+		}
+	}
+
+	return results, nil
+}
+
 func (a *AvereVfxt) GetExistingNodes() (map[string]*Node, error) {
 	nodes, err := a.GetNodes()
 	if err != nil {

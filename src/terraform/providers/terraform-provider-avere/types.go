@@ -65,8 +65,9 @@ type NFSExport struct {
 }
 
 type Node struct {
-	Name  string `json:"name"`
-	State string `json:"state"`
+	Name             string            `json:"name"`
+	State            string            `json:"state"`
+	PrimaryClusterIP map[string]string `json:"primaryClusterIP"`
 }
 
 type VServerClientIPHome struct {

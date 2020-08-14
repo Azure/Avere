@@ -78,6 +78,8 @@ const (
 	// the share permssions
 	PermissionsPreserve = "preserve" // this is the default for NFS shares
 	PermissionsModebits = "modebits" // this is the default for the Azure Storage Share
+
+	PrimaryClusterIPKey = "IP"
 )
 
 // terraform schema constants - avoids bugs on schema name changes
@@ -132,4 +134,5 @@ const (
 	vserver_ip_addresses         = "vserver_ip_addresses"
 	node_names                   = "node_names"
 	junction_namespace_path      = "junction_namespace_path"
+	primary_cluster_ips          = "primary_cluster_ips"
 )

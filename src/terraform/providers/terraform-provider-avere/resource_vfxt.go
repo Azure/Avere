@@ -355,6 +355,13 @@ func resourceVfxt() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			primary_cluster_ips: {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -494,6 +501,16 @@ func resourceVfxtRead(d *schema.ResourceData, m interface{}) error {
 	if len(*(avereVfxt.NodeNames)) >= MinNodesCount {
 		d.Set(vfxt_node_count, len(*(avereVfxt.NodeNames)))
 	}
+
+	primaryIPs, err := avereVfxt.GetNodePrimaryIPs()
+	if err != nil {
+		return fmt.Errorf("error encountered getting nodes primary ips '%v'", err)
+	}
+	d.Set(primary_cluster_ips, flattenStringSlice(&primaryIPs))
+	if len(*(avereVfxt.NodeNames)) >= MinNodesCount {
+		d.Set(vfxt_node_count, len(*(avereVfxt.NodeNames)))
+	}
+
 	return nil
 }
 
