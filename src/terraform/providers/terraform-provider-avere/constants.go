@@ -135,4 +135,5 @@ const (
 	node_names                   = "node_names"
 	junction_namespace_path      = "junction_namespace_path"
 	primary_cluster_ips          = "primary_cluster_ips"
+	licensing_id                 = "licensing_id"
 )

@@ -141,7 +141,7 @@ func resourceVfxt() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringDoesNotContainAny(" '\"$"),
+				ValidateFunc: ValidateVfxtName,
 			},
 			vfxt_admin_password: {
 				Type:         schema.TypeString,
@@ -362,6 +362,10 @@ func resourceVfxt() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			licensing_id: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -510,6 +514,12 @@ func resourceVfxtRead(d *schema.ResourceData, m interface{}) error {
 	if len(*(avereVfxt.NodeNames)) >= MinNodesCount {
 		d.Set(vfxt_node_count, len(*(avereVfxt.NodeNames)))
 	}
+
+	cluster, err := avereVfxt.GetCluster()
+	if err != nil {
+		return fmt.Errorf("error encountered getting cluster '%v'", err)
+	}
+	d.Set(licensing_id, cluster.LicensingId)
 
 	return nil
 }
@@ -1512,7 +1522,6 @@ func ValidateExportSubdirectory(v interface{}, _ string) (warnings []string, err
 	return warnings, errors
 }
 
-// ValidateAutomationRunbookName validates Automation Account Runbook names
 func ValidateUserName(v interface{}, _ string) (warnings []string, errors []error) {
 	input := v.(string)
 
@@ -1522,6 +1531,16 @@ func ValidateUserName(v interface{}, _ string) (warnings []string, errors []erro
 
 	if !regexp.MustCompile(`^[0-9a-zA-Z]{1,60}$`).MatchString(input) {
 		errors = append(errors, fmt.Errorf("the user name '%s' is invalid, and may only alphanumeric characters and be 1 to 60 characters in length", input))
+	}
+
+	return warnings, errors
+}
+
+func ValidateVfxtName(v interface{}, _ string) (warnings []string, errors []error) {
+	input := v.(string)
+
+	if !regexp.MustCompile(`^[a-z]([-a-z0-9]*[a-z0-9])?$`).MatchString(input) {
+		errors = append(errors, fmt.Errorf("the vfxt name '%s' is invalid, and per vfxt.py must match the regular expressesion ^[a-z]([-a-z0-9]*[a-z0-9])?$ ''", input))
 	}
 
 	return warnings, errors

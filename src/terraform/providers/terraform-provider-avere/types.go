@@ -148,4 +148,5 @@ type Cluster struct {
 	NtpServers   string    `json:"NTPservers"`
 	ClusterName  string    `json:"name"`
 	Proxy        string    `json:"proxy"`
+	LicensingId  string    `json:"id"`
 }
