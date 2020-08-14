@@ -31,9 +31,16 @@ const (
 	CachePolicyTransitioningClients          = "Transitioning Clients Before or After a Migration"
 	CachePolicyIsolatedCloudWorkstation      = "Isolated Cloud Workstation"
 	CachePolicyCollaboratingCloudWorkstation = "Collaborating Cloud Workstation"
+	CachePolicyReadOnlyHighWriteBackDelay    = "Read Only High Write Back Delay"
 
 	CachePolicyIsolatedCloudWorkstationCheckAttributes      = "{}"
 	CachePolicyCollaboratingCloudWorkstationCheckAttributes = "{'checkAttrPeriod':30,'checkDirAttrPeriod':30}"
+	CachePolicyReadOnlyHighWriteBackDelayValue              = 10800
+
+	CacheModeReadWrite = "read-write"
+	CacheModeReadOnly  = "read"
+
+	WriteBackDelayDefault = 30
 
 	// user policies for admin.addUser Avere xml rpc call
 	UserReadOnly  = "ro"

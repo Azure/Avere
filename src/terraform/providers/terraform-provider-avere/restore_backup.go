@@ -97,7 +97,7 @@ func getUsageModel(cachePolicy string) string {
 	case CachePolicyClientsBypass, CachePolicyIsolatedCloudWorkstation, CachePolicyCollaboratingCloudWorkstation, CachePolicyTransitioningClients:
 		return UsageModelWriteAround
 
-	case CachePolicyReadCaching:
+	case CachePolicyReadCaching, CachePolicyReadOnlyHighWriteBackDelay:
 		return UsageModelReadHeavyInfreq
 
 	case CachePolicyReadWriteCaching, CachePolicyFullCaching:
