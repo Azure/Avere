@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -268,6 +269,11 @@ func resourceVfxt() *schema.Resource {
 								CachePolicyReadOnlyHighVerificationTime,
 							}, false),
 						},
+						ordinal: {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0,
+						},
 						custom_settings: {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -320,6 +326,11 @@ func resourceVfxt() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validate.StorageContainerName,
 						},
+						ordinal: {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0,
+						},
 						custom_settings: {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -350,6 +361,13 @@ func resourceVfxt() *schema.Resource {
 				},
 			},
 			node_names: {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			mass_filer_mappings: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -515,6 +533,12 @@ func resourceVfxtRead(d *schema.ResourceData, m interface{}) error {
 	if len(*(avereVfxt.NodeNames)) >= MinNodesCount {
 		d.Set(vfxt_node_count, len(*(avereVfxt.NodeNames)))
 	}
+
+	massMappings, err := avereVfxt.GetGenericFilerMappingList()
+	if err != nil {
+		return fmt.Errorf("error encountered getting the filer mappings '%v'", err)
+	}
+	d.Set(mass_filer_mappings, flattenStringSlice(&massMappings))
 
 	cluster, err := avereVfxt.GetCluster()
 	if err != nil {
@@ -1073,7 +1097,20 @@ func getCoreFilersToAddorModify(d *schema.ResourceData, existingCoreFilers map[s
 }
 
 func createCoreFilers(coreFilersToAdd map[string]*CoreFiler, averevfxt *AvereVfxt) error {
+	corefilers := make([]*CoreFiler, 0, len(coreFilersToAdd))
 	for _, v := range coreFilersToAdd {
+		corefilers = append(corefilers, v)
+	}
+
+	// sort the CoreFiler slice by ordinal and name
+	sort.Slice(corefilers, func(i, j int) bool {
+		if corefilers[i].Ordinal == corefilers[j].Ordinal {
+			return corefilers[i].Name < corefilers[j].Name
+		}
+		return corefilers[i].Ordinal < corefilers[j].Ordinal
+	})
+
+	for _, v := range corefilers {
 		if err := averevfxt.CreateCoreFiler(v); err != nil {
 			return err
 		}
@@ -1120,7 +1157,20 @@ func getAzureStorageFilersToAddorModify(d *schema.ResourceData, existingAzureSto
 }
 
 func createAzureStorageFilers(storageFilersToAdd map[string]*AzureStorageFiler, averevfxt *AvereVfxt) error {
+	storagefilers := make([]*AzureStorageFiler, 0, len(storageFilersToAdd))
 	for _, v := range storageFilersToAdd {
+		storagefilers = append(storagefilers, v)
+	}
+
+	// sort the CoreFiler slice by ordinal and name
+	sort.Slice(storagefilers, func(i, j int) bool {
+		if storagefilers[i].Ordinal == storagefilers[j].Ordinal {
+			return storagefilers[i].GetCloudFilerName() < storagefilers[j].GetCloudFilerName()
+		}
+		return storagefilers[i].Ordinal < storagefilers[j].Ordinal
+	})
+
+	for _, v := range storagefilers {
 		if err := averevfxt.CreateAzureStorageFiler(v); err != nil {
 			return err
 		}
@@ -1211,6 +1261,7 @@ func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 		name := input[core_filer_name].(string)
 		fqdnOrPrimaryIp := input[fqdn_or_primary_ip].(string)
 		cachePolicy := input[cache_policy].(string)
+		ordinal := input[ordinal].(int)
 		customSettingsRaw := input[custom_settings].(*schema.Set).List()
 		customSettings := make([]*CustomSetting, len(customSettingsRaw), len(customSettingsRaw))
 		for i, v := range customSettingsRaw {
@@ -1226,6 +1277,7 @@ func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 			Name:            name,
 			FqdnOrPrimaryIp: fqdnOrPrimaryIp,
 			CachePolicy:     cachePolicy,
+			Ordinal:         ordinal,
 			CustomSettings:  customSettings,
 		}
 		results[name] = output
@@ -1241,6 +1293,7 @@ func expandAzureStorageFilers(l []interface{}) (map[string]*AzureStorageFiler, e
 		// get the properties
 		name := input[account_name].(string)
 		container := input[container_name].(string)
+		ordinal := input[ordinal].(int)
 		customSettingsRaw := input[custom_settings].(*schema.Set).List()
 		customSettings := make([]*CustomSetting, len(customSettingsRaw), len(customSettingsRaw))
 		for i, v := range customSettingsRaw {
@@ -1251,6 +1304,7 @@ func expandAzureStorageFilers(l []interface{}) (map[string]*AzureStorageFiler, e
 		output := &AzureStorageFiler{
 			AccountName:    name,
 			Container:      container,
+			Ordinal:        ordinal,
 			CustomSettings: customSettings,
 		}
 		// verify no duplicates
@@ -1347,6 +1401,9 @@ func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
 		if v, ok := m[cache_policy]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
+		if v, ok := m[ordinal]; ok {
+			buf.WriteString(fmt.Sprintf("%d;", v.(int)))
+		}
 		if v, ok := m[custom_settings]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(*schema.Set).List()))
 		}
@@ -1378,6 +1435,9 @@ func resourceAvereVfxtAzureStorageCoreFilerReferenceHash(v interface{}) int {
 		}
 		if v, ok := m[container_name]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m[ordinal]; ok {
+			buf.WriteString(fmt.Sprintf("%d;", v.(int)))
 		}
 		if v, ok := m[custom_settings]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(*schema.Set).List()))

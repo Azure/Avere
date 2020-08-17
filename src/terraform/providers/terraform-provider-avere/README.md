@@ -121,6 +121,7 @@ A <a name="user"></a>`user` block supports the following
 A <a name="azure_storage_filer"></a>`azure_storage_filer` block supports the following
 * <a name="account_name"></a>[account_name](#account_name) - (Required) specifies the Azure storage account name for the cloud filer.
 * <a name="container_name"></a>[container_name](#container_name) - (Required) specifies the Azure storage blob container name to use for the cloud filer.
+* <a name="ordinal_1"></a>[ordinal](#ordinal_1) - (Optional) - this specifies the order that the storage filers are added. The default is 0, and the core filers are added in ascending numerical order followed by ascending alphabetical order on name.
 * <a name="custom_settings_1"></a>[custom_settings](#custom_settings_1) - (Optional) - these are custom settings provided by Avere support to match advanced use case scenarios.  They are a list of strings of the form "SETTINGNAME CHECKCODE VALUE".  Do not prefix with the mass name as it is automatically detected.
 * <a name="junction_namespace_path"></a>[junction_namespace_path](#junction_namespace_path) - (Optional) this is the exported namespace from the Avere vFXT.
 
@@ -139,6 +140,7 @@ A <a name="core_filer"></a>`core_filer` block supports the following:
     | "Isolated Cloud Workstation" | useful for vdi workstations reading and writing to separate locations as described in [Cloud Workstations](../../examples/vfxt/cloudworkstation) |
     | "Collaborating Cloud Workstation" | useful for vdi workstations reading and writing to the same content as described in [Cloud Workstations](../../examples/vfxt/cloudworkstation) |
     | "Read Only High Verification Time" | Use this for read heavy data, where changes in the data are infrequent. |
+* <a name="ordinal_2"></a>[ordinal](#ordinal_2) - (Optional) - this specifies the order that the core filers are added. The default is 0, and the core filers are added in ascending numerical order followed by ascending alphabetical order on name.
 * <a name="custom_settings_2"></a>[custom_settings](#custom_settings_2) - (Optional) - these are custom settings provided by Avere support to match advanced use case scenarios.  They are a list of strings of the form "SETTINGNAME CHECKCODE VALUE".  Do not prefix with the mass name as it is automatically detected.
 * [junction](#junction) - (Required) this specifies the junction block as described below.
  
@@ -156,6 +158,7 @@ In addition to all arguments above, the following attributes are exported:
 * <a name="vserver_ip_addresses"></a>[vserver_ip_addresses](#vserver_ip_addresses) - these are the list of vserver ip addresses.  Clients will mount to these addresses.
 * <a name="node_names"></a>[node_names](#node_names) - these are the node names of the cluster.
 * <a name="primary_cluster_ips"></a>[primary_cluster_ips](#primary_cluster_ips) - these are the static primary ip addresses of the cluster that do not move.
+* <a name="mass_filer_mappings"></a>[mass_filer_mappings](#mass_filer_mappings) - these are the static primary ip addresses of the cluster that do not move.
 
 # Build the Terraform Provider binary
 
