@@ -6,6 +6,8 @@ const (
 	AvereAdminUsername        = "admin"
 	MinNodesCount             = 3
 	MaxNodesCount             = 16
+	MinFixedQuotaPercent      = 0
+	MaxFixedQuotaPercent      = 100
 	DefaultSshPort            = 22
 	VfxtLogDateFormat         = "2006-01-02.15.04.05"
 	VServerRangeSeperator     = "-"
@@ -36,6 +38,9 @@ const (
 	CachePolicyIsolatedCloudWorkstationCheckAttributes      = "{}"
 	CachePolicyCollaboratingCloudWorkstationCheckAttributes = "{'checkAttrPeriod':30,'checkDirAttrPeriod':30}"
 	CachePolicyReadOnlyHighVerificationTimeCheckAttributes  = "{'checkAttrPeriod':10800,'checkDirAttrPeriod':10800}"
+
+	QuotaCacheMoveMax = "cfs.quotaCacheMoveMax DN 0.2"
+	QuotaSleepSeconds = 180
 
 	CacheModeReadWrite = "read-write"
 	CacheModeReadOnly  = "read"
@@ -130,6 +135,7 @@ const (
 	fqdn_or_primary_ip           = "fqdn_or_primary_ip"
 	cache_policy                 = "cache_policy"
 	ordinal                      = "ordinal"
+	fixed_quota_percent          = "fixed_quota_percent"
 	custom_settings              = "custom_settings"
 	junction                     = "junction"
 	namespace_path               = "namespace_path"

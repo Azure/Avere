@@ -8,6 +8,7 @@ import (
 	"log"
 	"regexp"
 	"sort"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -273,6 +274,12 @@ func resourceVfxt() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  0,
+						},
+						fixed_quota_percent: {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      0,
+							ValidateFunc: validation.IntBetween(MinFixedQuotaPercent, MaxFixedQuotaPercent),
 						},
 						custom_settings: {
 							Type:     schema.TypeSet,
@@ -1110,15 +1117,66 @@ func createCoreFilers(coreFilersToAdd map[string]*CoreFiler, averevfxt *AvereVfx
 		return corefilers[i].Ordinal < corefilers[j].Ordinal
 	})
 
+	// increase speed of dynamic block allocation
+	if err := startFixedQuotaPercent(corefilers, averevfxt); err != nil {
+		return fmt.Errorf("error encountered while starting setting of fixed quota: %v", err)
+	}
+
 	for _, v := range corefilers {
 		if err := averevfxt.CreateCoreFiler(v); err != nil {
 			return err
+		}
+		if v.FixedQuotaPercent > MinFixedQuotaPercent {
+			averevfxt.SetFixedQuotaPercent(v.Name, v.FixedQuotaPercent)
 		}
 		if err := averevfxt.AddFilerCustomSettings(v.Name, v.CustomSettings); err != nil {
 			return err
 		}
 	}
+
+	// restore speed of dynamic block allocation and remove all cpolicyActive settings
+	if err := finishFixedQuotaPercent(corefilers, averevfxt); err != nil {
+		return fmt.Errorf("error encountered while starting setting of fixed quota: %v", err)
+	}
+
 	return nil
+}
+
+func startFixedQuotaPercent(corefilers []*CoreFiler, averevfxt *AvereVfxt) error {
+	if isFixedQuotaRequired(corefilers) {
+		if err := averevfxt.CreateCustomSetting(QuotaCacheMoveMax); err != nil {
+			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaCacheMoveMax, err)
+		}
+	}
+	return nil
+}
+
+func finishFixedQuotaPercent(corefilers []*CoreFiler, averevfxt *AvereVfxt) error {
+	if isFixedQuotaRequired(corefilers) {
+		// sleep 60 seconds for the core filers to settle and adjust
+		time.Sleep(QuotaSleepSeconds * time.Second)
+
+		// remove each of the cpolicyActive custom settings
+		for _, v := range corefilers {
+			if v.FixedQuotaPercent > MinFixedQuotaPercent {
+				averevfxt.RemoveFixedQuotaPercent(v.Name, v.FixedQuotaPercent)
+			}
+		}
+
+		if err := averevfxt.RemoveCustomSetting(QuotaCacheMoveMax); err != nil {
+			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaCacheMoveMax, err)
+		}
+	}
+	return nil
+}
+
+func isFixedQuotaRequired(corefilers []*CoreFiler) bool {
+	for _, v := range corefilers {
+		if v.FixedQuotaPercent > MinFixedQuotaPercent {
+			return true
+		}
+	}
+	return false
 }
 
 func modifyCoreFilers(coreFilersToModify map[string]*CoreFiler, averevfxt *AvereVfxt) error {
@@ -1254,6 +1312,9 @@ func expandUsers(l []interface{}) (map[string]*User, error) {
 
 func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 	results := make(map[string]*CoreFiler)
+
+	totalFixedQuotaPercent := MinFixedQuotaPercent
+
 	for _, v := range l {
 		input := v.(map[string]interface{})
 
@@ -1262,6 +1323,7 @@ func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 		fqdnOrPrimaryIp := input[fqdn_or_primary_ip].(string)
 		cachePolicy := input[cache_policy].(string)
 		ordinal := input[ordinal].(int)
+		fixedQuotaPercent := input[fixed_quota_percent].(int)
 		customSettingsRaw := input[custom_settings].(*schema.Set).List()
 		customSettings := make([]*CustomSetting, len(customSettingsRaw), len(customSettingsRaw))
 		for i, v := range customSettingsRaw {
@@ -1271,14 +1333,20 @@ func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 		if _, ok := results[name]; ok {
 			return nil, fmt.Errorf("Error: two or more core filers share the same key '%s'", name)
 		}
+		// verify haven't exceeded fixed quota percent
+		totalFixedQuotaPercent += fixedQuotaPercent
+		if totalFixedQuotaPercent > MaxFixedQuotaPercent {
+			return nil, fmt.Errorf("the sum of fixed_quota_percent on the core filer exceeds 100")
+		}
 
 		// add to map
 		output := &CoreFiler{
-			Name:            name,
-			FqdnOrPrimaryIp: fqdnOrPrimaryIp,
-			CachePolicy:     cachePolicy,
-			Ordinal:         ordinal,
-			CustomSettings:  customSettings,
+			Name:              name,
+			FqdnOrPrimaryIp:   fqdnOrPrimaryIp,
+			CachePolicy:       cachePolicy,
+			Ordinal:           ordinal,
+			FixedQuotaPercent: fixedQuotaPercent,
+			CustomSettings:    customSettings,
 		}
 		results[name] = output
 	}

@@ -10,6 +10,7 @@ import (
 	"net"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -26,6 +27,9 @@ var matchMethodNotSupported = regexp.MustCompile(`(Method Not Supported)`)
 var matchMustRemoveRelatedJunction = regexp.MustCompile(`(You must remove the related junction.s. before you can remove this core filer)`)
 var matchCannotFindMass = regexp.MustCompile(`('Cannot find MASS)`)
 var matchJunctionNotFound = regexp.MustCompile(`(removeJunction failed.*'Cannot find junction)`)
+
+// parse numbers from mass
+var matchNumbersInMass = regexp.MustCompile(`[^0-9]+`)
 
 func initializeCustomSetting(customSettingString string) *CustomSetting {
 	return &CustomSetting{
@@ -717,6 +721,32 @@ func (a *AvereVfxt) AddFilerCustomSettings(corefilerName string, customSettings 
 	return nil
 }
 
+func (a *AvereVfxt) SetFixedQuotaPercent(corefilerName string, percent int) error {
+	internalName, err := a.GetInternalName(corefilerName)
+	if err != nil {
+		return err
+	}
+	massIndex := getMassIndex(internalName)
+	setFixedQuotaPercentCustomSetting := fmt.Sprintf("cpolicyActive%d.fixedQuota RU %d", massIndex, percent)
+	if err := a.CreateCustomSetting(setFixedQuotaPercentCustomSetting); err != nil {
+		return fmt.Errorf("ERROR: failed to set fixed quota percent '%s': %s", QuotaCacheMoveMax, err)
+	}
+	return nil
+}
+
+func (a *AvereVfxt) RemoveFixedQuotaPercent(corefilerName string, percent int) error {
+	internalName, err := a.GetInternalName(corefilerName)
+	if err != nil {
+		return err
+	}
+	massIndex := getMassIndex(internalName)
+	setFixedQuotaPercentCustomSetting := fmt.Sprintf("cpolicyActive%d.fixedQuota RU %d", massIndex, percent)
+	if err := a.RemoveCustomSetting(setFixedQuotaPercentCustomSetting); err != nil {
+		return fmt.Errorf("ERROR: failed to remove fixed quota percent '%s': %s", QuotaCacheMoveMax, err)
+	}
+	return nil
+}
+
 func (a *AvereVfxt) RemoveFilerCustomSettings(corefilerName string, customSettings []*CustomSetting) error {
 	internalName, err := a.GetInternalName(corefilerName)
 	if err != nil {
@@ -1319,4 +1349,15 @@ func isAverecmdNotRetryable(stdoutBuf bytes.Buffer, stderrBuf bytes.Buffer) bool
 		return true
 	}
 	return false
+}
+
+func getMassIndex(internalName string) int {
+	massIndex := matchNumbersInMass.ReplaceAllString(internalName, "")
+	if len(massIndex) == 0 {
+		return 0
+	}
+	if s, err := strconv.Atoi(massIndex); err == nil {
+		return s
+	}
+	return 0
 }
