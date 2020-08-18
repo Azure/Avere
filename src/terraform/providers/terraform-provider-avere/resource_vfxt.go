@@ -1143,7 +1143,7 @@ func createCoreFilers(coreFilersToAdd map[string]*CoreFiler, averevfxt *AvereVfx
 }
 
 func startFixedQuotaPercent(corefilers []*CoreFiler, averevfxt *AvereVfxt) error {
-	if isFixedQuotaRequired(corefilers) {
+	if isRequired := isFixedQuotaRequired(corefilers); isRequired {
 		if err := averevfxt.CreateCustomSetting(QuotaCacheMoveMax); err != nil {
 			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaCacheMoveMax, err)
 		}
@@ -1152,9 +1152,17 @@ func startFixedQuotaPercent(corefilers []*CoreFiler, averevfxt *AvereVfxt) error
 }
 
 func finishFixedQuotaPercent(corefilers []*CoreFiler, averevfxt *AvereVfxt) error {
-	if isFixedQuotaRequired(corefilers) {
-		// sleep 60 seconds for the core filers to settle and adjust
-		time.Sleep(QuotaSleepSeconds * time.Second)
+	if isRequired := isFixedQuotaRequired(corefilers); isRequired {
+		// wait QuotaWaitMinutes or until until the core filers are in the correct range
+		startTime := time.Now()
+		durationQuotaWaitMinutes := time.Duration(QuotaWaitMinutes) * time.Minute
+		for time.Since(startTime) < durationQuotaWaitMinutes {
+			time.Sleep(30 * time.Second)
+			if withinRange(corefilers, averevfxt) {
+				log.Printf("[INFO] all core filers within correct quota range")
+				break
+			}
+		}
 
 		// remove each of the cpolicyActive custom settings
 		for _, v := range corefilers {
@@ -1177,6 +1185,32 @@ func isFixedQuotaRequired(corefilers []*CoreFiler) bool {
 		}
 	}
 	return false
+}
+
+func withinRange(corefilers []*CoreFiler, averevfxt *AvereVfxt) bool {
+	percentageMap, err := averevfxt.GetCoreFilerSpacePercentage()
+	if err != nil {
+		log.Printf("[WARN] error encountered getting core filer space percentage: %v", err)
+		return false
+	}
+
+	for _, v := range corefilers {
+		clusterPct, ok := percentageMap[v.Name]
+		if !ok {
+			log.Printf("[WARN] missing key %s: corefilers %v, pmap %v", v.Name, corefilers, percentageMap)
+			return false
+		}
+		if v.FixedQuotaPercent > MinFixedQuotaPercent {
+			targetPercentage := float32(v.FixedQuotaPercent) / 100.0
+			minTargetPercentageError := targetPercentage - TargetPercentageError
+			if clusterPct < minTargetPercentageError {
+				log.Printf("[INFO] %s not yet within range: corefilers %v, pmap %v", v.Name, corefilers, percentageMap)
+				return false
+			}
+		}
+	}
+
+	return true
 }
 
 func modifyCoreFilers(coreFilersToModify map[string]*CoreFiler, averevfxt *AvereVfxt) error {

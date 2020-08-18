@@ -153,3 +153,7 @@ type Cluster struct {
 	Proxy        string    `json:"proxy"`
 	LicensingId  string    `json:"id"`
 }
+
+type ClusterFilersRaw struct {
+	AvailableForReads int64 `json:"availableForReads"`
+}
