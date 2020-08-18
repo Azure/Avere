@@ -931,6 +931,45 @@ func (a *AvereVfxt) ModifySupportUploads() error {
 	return nil
 }
 
+func (a *AvereVfxt) GetCoreFilerSpacePercentage() (map[string]float32, error) {
+	jsonData, err := a.AvereCommand(a.getAnalyticsCoreFilerSpaceCommand())
+	if err != nil {
+		return nil, err
+	}
+
+	var analytics map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonData), &analytics); err != nil {
+		return nil, err
+	}
+
+	rawFreeSpace, ok := analytics[AnalyticsClusterFilersRaw]
+	if !ok {
+		return nil, fmt.Errorf("key %s not found in analytics", AnalyticsClusterFilersRaw)
+	}
+
+	rawJson, err := json.Marshal(rawFreeSpace)
+	if err != nil {
+		return nil, err
+	}
+
+	var freeSpaceMap map[string]ClusterFilersRaw
+	if err := json.Unmarshal(rawJson, &freeSpaceMap); err != nil {
+		return nil, err
+	}
+
+	var totalSpace float32
+	for _, v := range freeSpaceMap {
+		totalSpace += float32(v.AvailableForReads)
+	}
+
+	result := make(map[string]float32)
+	for k, v := range freeSpaceMap {
+		result[k] = float32(v.AvailableForReads) / totalSpace
+	}
+
+	return result, nil
+}
+
 func (a *AvereVfxt) AvereCommandWithCorrection(cmd string, correctiveAction func() error) (string, error) {
 	var result string
 	for retries := 0; ; retries++ {
@@ -1251,6 +1290,10 @@ func (a *AvereVfxt) getSupportAcceptTermsCommand() string {
 
 func (a *AvereVfxt) getSupportSupportTestUploadCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s support.testUpload", a.getBaseAvereCmd()), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getAnalyticsCoreFilerSpaceCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json analytics.getCoreFilerCacheSpaceData", a.getBaseAvereCmd()), AverecmdLogFile)
 }
 
 // this updates support uploads per docs https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-enable-support

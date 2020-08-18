@@ -11,7 +11,7 @@ const (
 	DefaultSshPort            = 22
 	VfxtLogDateFormat         = "2006-01-02.15.04.05"
 	VServerRangeSeperator     = "-"
-	AverecmdRetryCount        = 30 // wait 5 minutes (ex. remove core filer gets perm denied for a while)
+	AverecmdRetryCount        = 60 // wait 10 minutes (ex. remove core filer gets perm denied for a while)
 	AverecmdRetrySleepSeconds = 10
 	AverecmdLogFile           = "~/averecmd.log"
 	VServerName               = "vserver"
@@ -39,8 +39,11 @@ const (
 	CachePolicyCollaboratingCloudWorkstationCheckAttributes = "{'checkAttrPeriod':30,'checkDirAttrPeriod':30}"
 	CachePolicyReadOnlyHighVerificationTimeCheckAttributes  = "{'checkAttrPeriod':10800,'checkDirAttrPeriod':10800}"
 
-	QuotaCacheMoveMax = "cfs.quotaCacheMoveMax DN 0.2"
-	QuotaSleepSeconds = 180
+	QuotaCacheMoveMax     = "cfs.quotaCacheMoveMax DN 0.2"
+	QuotaWaitMinutes      = 60
+	TargetPercentageError = float32(0.01)
+
+	AnalyticsClusterFilersRaw = "cluster_filers_raw"
 
 	CacheModeReadWrite = "read-write"
 	CacheModeReadOnly  = "read"
