@@ -129,6 +129,7 @@ const (
 	core_filer_name              = "name"
 	fqdn_or_primary_ip           = "fqdn_or_primary_ip"
 	cache_policy                 = "cache_policy"
+	ordinal                      = "ordinal"
 	custom_settings              = "custom_settings"
 	junction                     = "junction"
 	namespace_path               = "namespace_path"
@@ -143,4 +144,5 @@ const (
 	junction_namespace_path      = "junction_namespace_path"
 	primary_cluster_ips          = "primary_cluster_ips"
 	licensing_id                 = "licensing_id"
+	mass_filer_mappings          = "mass_filer_mappings"
 )

@@ -107,6 +107,7 @@ type CoreFiler struct {
 	Name            string `json:"name"`
 	FqdnOrPrimaryIp string `json:"networkName"`
 	CachePolicy     string `json:"policyName"`
+	Ordinal         int
 	CustomSettings  []*CustomSetting
 }
 
@@ -115,6 +116,7 @@ type CoreFiler struct {
 type AzureStorageFiler struct {
 	AccountName    string
 	Container      string
+	Ordinal        int
 	CustomSettings []*CustomSetting
 }
 

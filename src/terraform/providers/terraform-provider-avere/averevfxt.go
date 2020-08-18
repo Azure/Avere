@@ -430,6 +430,19 @@ func (a *AvereVfxt) GetGenericFilers() (map[string]*CoreFilerGeneric, error) {
 	return results, nil
 }
 
+func (a *AvereVfxt) GetGenericFilerMappingList() ([]string, error) {
+	genericFilers, err := a.GetGenericFilers()
+	if err != nil {
+		return nil, err
+	}
+	result := make([]string, 0, len(genericFilers))
+	for _, v := range genericFilers {
+		result = append(result, fmt.Sprintf("%s:%s", v.InternalName, v.Name))
+	}
+	sort.Strings(result)
+	return result, nil
+}
+
 func (a *AvereVfxt) GetFilerCustomSettings(filerInternalName string) (map[string]*CustomSetting, error) {
 	customSettings, err := a.GetCustomSettings()
 	if err != nil {
