@@ -2,24 +2,6 @@
 
 set -ex
 
-storageDirectory='/mnt/scenes/Blender/EEVEE'
-mkdir -p $storageDirectory
-
-fileName='color-vortex.blend'
-if [ ! -f $storageDirectory/$fileName ]; then
-    curl -L -o $storageDirectory/$fileName 'https://download.blender.org/demo/color_vortex.blend'
-fi
-
-fileName='mr-elephant.blend'
-if [ ! -f $storageDirectory/$fileName ]; then
-    curl -L -o $storageDirectory/$fileName 'https://download.blender.org/demo/eevee/mr_elephant/mr_elephant.blend'
-fi
-
-fileName='race-spaceship.blend'
-if [ ! -f $storageDirectory/$fileName ]; then
-    curl -L -o $storageDirectory/$fileName 'https://download.blender.org/demo/eevee/race_spaceship/race_spaceship.blend'
-fi
-
 storageDirectory='/mnt/scenes/Blender/Cycles'
 mkdir -p $storageDirectory
 
@@ -36,9 +18,35 @@ fi
 fileName='benchmark.zip'
 if [ ! -f $storageDirectory/$fileName ]; then
     curl -L -o $storageDirectory/$fileName 'https://download.blender.org/demo/test/benchmark.zip'
+    unzip $fileName
 fi
 
 fileName='bmw.zip'
 if [ ! -f $storageDirectory/$fileName ]; then
     curl -L -o $storageDirectory/$fileName 'https://download.blender.org/demo/test/BMW27_2.blend.zip'
+    unzip $fileName
+fi
+
+fileName='daily-dweebs.zip'
+if [ ! -f $storageDirectory/$fileName ]; then
+    curl -L -o $storageDirectory/$fileName 'https://mediasolutions.blob.core.windows.net/bin/daily-dweebs.zip'
+    unzip $fileName
+fi
+
+storageDirectory='/mnt/scenes/Blender/EEVEE'
+mkdir -p $storageDirectory
+
+fileName='color-vortex.blend'
+if [ ! -f $storageDirectory/$fileName ]; then
+    curl -L -o $storageDirectory/$fileName 'https://download.blender.org/demo/color_vortex.blend'
+fi
+
+fileName='mr-elephant.blend'
+if [ ! -f $storageDirectory/$fileName ]; then
+    curl -L -o $storageDirectory/$fileName 'https://download.blender.org/demo/eevee/mr_elephant/mr_elephant.blend'
+fi
+
+fileName='race-spaceship.blend'
+if [ ! -f $storageDirectory/$fileName ]; then
+    curl -L -o $storageDirectory/$fileName 'https://download.blender.org/demo/eevee/race_spaceship/race_spaceship.blend'
 fi

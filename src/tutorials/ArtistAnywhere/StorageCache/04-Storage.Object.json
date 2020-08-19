@@ -132,7 +132,7 @@
       "copy": {
         "count": "[length(parameters('storageTargets'))]",
         "input": {
-          "name": "[concat(parameters('virtualNetwork').name, '.Object.', parameters('storageTargets')[copyIndex()].name)]",
+          "name": "[concat(parameters('virtualNetwork').name, '-Object-', parameters('storageTargets')[copyIndex()].name)]",
           "type": "[parameters('storageTargets')[copyIndex()].type]",
           "host": "[split(reference(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))).primaryEndpoints.blob, '/')[2]]",
           "target": "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('storageAccountName'), 'default', toLower(parameters('storageTargets')[copyIndex()].name))]",

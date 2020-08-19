@@ -12,7 +12,10 @@
     [boolean] $storageNetAppEnable = $false,
 
     # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview)
-    [boolean] $storageCacheEnable = $false
+    [boolean] $storageCacheEnable = $false,
+
+    # Set to true to deploy Azure artist virtual desktop image building, machine deployment, etc.
+    [boolean] $artistDesktopEnable = $false
 )
 
 $templateDirectory = $PSScriptRoot
@@ -40,10 +43,12 @@ $moduleName = "* - Render Manager Job"
 New-TraceMessage $moduleName $false
 $renderManagerJob = Start-Job -FilePath "$templateDirectory/Deploy.RenderManager.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $storageNetAppEnable, $storageCacheEnable, $sharedServices
 
-# * - Artist Desktop Images Job
-$moduleName = "* - Artist Desktop Images Job"
-New-TraceMessage $moduleName $false
-$artistDesktopImagesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Images.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $storageNetAppEnable, $storageCacheEnable, $sharedServices
+if ($artistDesktopEnable) {
+    # * - Artist Desktop Images Job
+    $moduleName = "* - Artist Desktop Images Job"
+    New-TraceMessage $moduleName $false
+    $artistDesktopImagesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Images.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $storageNetAppEnable, $storageCacheEnable, $sharedServices
+}
 
 $moduleDirectory = "RenderWorker"
 
@@ -105,15 +110,17 @@ $moduleName = "* - Render Manager Job"
 $renderManager = Receive-Job -Job $renderManagerJob -Wait
 New-TraceMessage $moduleName $true
 
-# * - Artist Desktop Images Job
-$moduleName = "* - Artist Desktop Images Job"
-$artistDesktopImages = Receive-Job -Job $artistDesktopImagesJob -Wait
-New-TraceMessage $moduleName $true
+if ($artistDesktopEnable) {
+    # * - Artist Desktop Images Job
+    $moduleName = "* - Artist Desktop Images Job"
+    $artistDesktopImages = Receive-Job -Job $artistDesktopImagesJob -Wait
+    New-TraceMessage $moduleName $true
 
-# * - Artist Desktop Machines Job
-$moduleName = "* - Artist Desktop Machines Job"
-New-TraceMessage $moduleName $false
-$artistDesktopMachinesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $storageNetAppEnable, $storageCacheEnable, $sharedServices, $storageCache, $renderManager
+    # * - Artist Desktop Machines Job
+    $moduleName = "* - Artist Desktop Machines Job"
+    New-TraceMessage $moduleName $false
+    $artistDesktopMachinesJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistDesktop.Machines.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $storageNetAppEnable, $storageCacheEnable, $sharedServices, $storageCache, $renderManager
+}
 
 # 10 - Worker Machines
 $moduleName = "10 - Worker Machines"
@@ -164,7 +171,9 @@ $groupDeployment = (az deployment group create --resource-group $resourceGroupNa
 
 New-TraceMessage $moduleName $true $computeRegionName
 
-# * - Artist Desktop Machines Job
-$moduleName = "* - Artist Desktop Machines Job"
-$artistDesktopMachines = Receive-Job -Job $artistDesktopMachinesJob -Wait
-New-TraceMessage $moduleName $true
+if ($artistDesktopEnable) {
+    # * - Artist Desktop Machines Job
+    $moduleName = "* - Artist Desktop Machines Job"
+    $artistDesktopMachines = Receive-Job -Job $artistDesktopMachinesJob -Wait
+    New-TraceMessage $moduleName $true
+}

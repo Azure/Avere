@@ -4,6 +4,9 @@ set -ex
 
 cd /usr/local/bin/OpenCue
 
+mkdir /shots
+chmod 777 /shots
+
 systemService='opencue-rqd.service'
 sed -i "/Environment=OPTIONS=/i Environment=CUEBOT_HOSTNAME=$RENDER_MANAGER_HOST" $systemService
 cp $systemService /etc/systemd/system
@@ -19,4 +22,10 @@ do
     mkdir -p $directoryPath
     echo $fileSystemMount >> /etc/fstab
 done
-mount -a
+for i in {1..100}; do
+    mount -a
+    if [ $? -eq 0 ]; then
+        break
+    fi
+    sleep 1
+done

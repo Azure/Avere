@@ -6,7 +6,7 @@ localDirectory='/usr/local/bin/OpenCue'
 mkdir -p $localDirectory
 cd $localDirectory
 
-storageDirectory='/mnt/tools/OpenCue/v0.4.14'
+storageDirectory='/mnt/tools/OpenCue/v0.4.55'
 mkdir -p $storageDirectory
 
 fileName='opencue-requirements.txt'
@@ -17,21 +17,21 @@ cp $storageDirectory/$fileName .
 
 fileName='opencue-pycue.tar.gz'
 if [ ! -f $storageDirectory/$fileName ]; then
-    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/pycue-0.4.14-all.tar.gz'
+    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.55/pycue-0.4.55-all.tar.gz'
 fi
 cp $storageDirectory/$fileName .
 tar -xzf $fileName
 
 fileName='opencue-pyoutline.tar.gz'
 if [ ! -f $storageDirectory/$fileName ]; then
-    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/pyoutline-0.4.14-all.tar.gz'
+    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.55/pyoutline-0.4.55-all.tar.gz'
 fi
 cp $storageDirectory/$fileName .
 tar -xzf $fileName
 
 fileName='opencue-rqd.tar.gz'
 if [ ! -f $storageDirectory/$fileName ]; then
-    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/rqd-0.4.14-all.tar.gz'
+    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.55/rqd-0.4.55-all.tar.gz'
 fi
 cp $storageDirectory/$fileName .
 tar -xzf $fileName

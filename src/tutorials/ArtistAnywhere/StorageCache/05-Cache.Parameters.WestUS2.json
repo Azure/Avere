@@ -11,6 +11,12 @@
     "cacheSize": {
       "value": 3072
     },
+    "cacheConfig": {
+      "value": {
+        "mtuSize": 1500,
+        "rootSquash": true
+      }
+    },
     "storageTargets": {
       "value": [
         {

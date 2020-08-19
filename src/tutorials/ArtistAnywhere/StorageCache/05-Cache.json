@@ -34,6 +34,12 @@
         "description": "The size (GBs) of the cache."
       }
     },
+    "cacheConfig": {
+      "type": "object",
+      "metadata": {
+        "description": "The cache config settings."
+      }
+    },
     "storageTargets": {
       "type": "array",
       "metadata": {
@@ -80,7 +86,13 @@
       },
       "properties": {
         "cacheSizeGB": "[parameters('cacheSize')]",
-        "subnet": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+        "subnet": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]",
+        "networkSettings": {
+          "mtu": "[parameters('cacheConfig').mtuSize]"
+        },
+        "securitySettings": {
+          "rootSquash": "[parameters('cacheConfig').rootSquash]"
+        }
       }
     },
     {

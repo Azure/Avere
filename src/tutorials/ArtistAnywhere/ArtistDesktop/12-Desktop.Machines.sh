@@ -12,7 +12,13 @@ do
     mkdir -p $directoryPath
     echo $fileSystemMount >> /etc/fstab
 done
-mount -a
+for i in {1..100}; do
+    mount -a
+    if [ $? -eq 0 ]; then
+        break
+    fi
+    sleep 1
+done
 
 echo "export CUEBOT_HOSTS=$RENDER_MANAGER_HOST" > /etc/profile.d/opencue.sh
 

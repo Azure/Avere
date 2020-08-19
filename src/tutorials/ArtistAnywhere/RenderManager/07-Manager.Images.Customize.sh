@@ -6,6 +6,7 @@ if [ "$(cat /etc/os-release | grep 'centos:7')" ]; then
     yum -y install epel-release
 fi
 yum -y install nfs-utils
+yum -y install unzip
 yum -y install jq
 
 mv /tmp/Manager.Machines.DataAccess.sh /usr/local/bin
