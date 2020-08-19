@@ -30,7 +30,7 @@ git init
 git remote add origin -f https://github.com/Azure/Avere.git
 git config core.sparsecheckout true
 echo "src/terraform/*" >> .git/info/sparse-checkout
-git pull origin master
+git pull origin main
 ```
 
 6. `cd src/terraform/examples/vfxt/1-filer`

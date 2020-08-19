@@ -38,7 +38,7 @@ Here is the setup for the experiment:
 
 1. Pick a region, and ensure enough quota exists for 1000 DS2v2 VMs. We chose DS2v2 because it has enough [Blob cache](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-general#dsv2-series) to hold large binary / toolchain payloads.
 
-2. Deploy a virtual network and storage account, and create an Avere vFXT cluster using these [deployment instructions](https://github.com/Azure/Avere/blob/master/docs/jumpstart_deploy.md). 
+2. Deploy a virtual network and storage account, and create an Avere vFXT cluster using these [deployment instructions](https://github.com/Azure/Avere/blob/main/docs/jumpstart_deploy.md). 
 
     Cluster details: 
 

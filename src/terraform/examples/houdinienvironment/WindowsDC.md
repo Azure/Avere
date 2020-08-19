@@ -8,7 +8,7 @@ Here are the minimal steps to configure a Windows machine with a domain controll
 
 ## Installation
 
-1. install a Windows Server VM according to instructions, and ensure you use a static private ip:  https://github.com/Azure/Avere/tree/master/src/terraform/examples/houdinienvironment.
+1. install a Windows Server VM according to instructions, and ensure you use a static private ip:  https://github.com/Azure/Avere/tree/main/src/terraform/examples/houdinienvironment.
 
 1. RDP to the Windows VM, and open the Server Manager
 

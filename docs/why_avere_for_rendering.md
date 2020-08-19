@@ -54,7 +54,7 @@ To setup the above architecture run the following steps:
    ```bash
    # SSH to eastus NFS server
    sudo mkdir -p /datadisks/disks1/bootstrap
-   sudo wget -O /datadisks/disks1/bootstrap/centosbootstrap.sh https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/nfslatency/batch/centosbootstrap-nfsexperiment.sh
+   sudo wget -O /datadisks/disks1/bootstrap/centosbootstrap.sh https://raw.githubusercontent.com/Azure/Avere/main/src/tutorials/nfslatency/batch/centosbootstrap-nfsexperiment.sh
    # edit the file to update the IP addresses of each server
    vi centosbootstrap.sh
    ```

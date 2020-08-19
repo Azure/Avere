@@ -189,7 +189,7 @@
         "autoUpgradeMinorVersion": true,
         "settings": {
           "fileUris": [
-            "https://raw.githubusercontent.com/Azure/Avere/master/src/tutorials/simplenfsfiler/installnfs.sh"
+            "https://raw.githubusercontent.com/Azure/Avere/main/src/tutorials/simplenfsfiler/installnfs.sh"
           ],
           "commandToExecute": "[concat(variables('environmentVariables'), ' /bin/bash installnfs.sh')]"
         }

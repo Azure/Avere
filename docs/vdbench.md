@@ -46,7 +46,7 @@ These deployment instructions describe the installation of all components requir
     ```bash
     mkdir -p /nfs/node0/bootstrap
     cd /nfs/node0/bootstrap
-    curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.vdbench.sh https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/bootstrap.vdbench.sh
+    curl --retry 5 --retry-delay 5 -o /nfs/node0/bootstrap/bootstrap.vdbench.sh https://raw.githubusercontent.com/Azure/Avere/main/src/clientapps/vdbench/bootstrap.vdbench.sh
     ```
 
 5. Download the latest vdbench from https://www.oracle.com/technetwork/server-storage/vdbench-downloads-1901681.html, and scp the zip file to the `/nfs/node0/bootstrap` directory.  To download you will need to create an account with Oracle and accept the license.
@@ -54,14 +54,14 @@ These deployment instructions describe the installation of all components requir
 6. From your controller, verify your vdbench setup by running the following script.  If the script shows success, you are ready to deploy.  Otherwise you will need to fix each error listed.
 
     ```bash
-    curl -o- https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/vdbenchVerify.sh | bash
+    curl -o- https://raw.githubusercontent.com/Azure/Avere/main/src/clientapps/vdbench/vdbenchVerify.sh | bash
     ```
 
 7. Deploy the clients by clicking the "Deploy to Azure" button below, but set the following settings:
   * SSH key is required for vdbench
   * specify `/bootstrap/bootstrap.vdbench.sh` for the bootstrap script
 
-    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fclient%2Fvmas%2Fazuredeploy.json" target="_blank">
+    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmain%2Fsrc%2Fclient%2Fvmas%2Fazuredeploy.json" target="_blank">
     <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
     </a>
 

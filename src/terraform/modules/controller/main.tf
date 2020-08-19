@@ -117,7 +117,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 }
 
-// assign roles per the the following article: https://github.com/Azure/Avere/tree/master/src/vfxt#managed-identity-and-roles
+// assign roles per the the following article: https://github.com/Azure/Avere/tree/main/src/vfxt#managed-identity-and-roles
 // also allow other roles for storage accounts in other rgs or custom image ids in other rgs
 locals {
   avere_contributor_rgs = distinct(concat(

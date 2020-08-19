@@ -22,7 +22,7 @@ Before starting, download the latest vdbench from https://www.oracle.com/technet
    git remote add origin -f https://github.com/Azure/Avere.git
    git config core.sparsecheckout true
    echo "src/terraform/*" >> .git/info/sparse-checkout
-   git pull origin master
+   git pull origin main
    ```
 
 5. Decide to use either the NFS filer or Azure storage blob test and cd to the directory:

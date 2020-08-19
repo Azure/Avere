@@ -1,5 +1,5 @@
 locals {
-    bootstrap_script = "https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/opencue/bootstrap.sh"
+    bootstrap_script = "https://raw.githubusercontent.com/Azure/Avere/main/src/clientapps/opencue/bootstrap.sh"
     mount_dir = "/b"
     bootstrap_dir = "bootstrap"
 }
