@@ -3,7 +3,7 @@
 # These owners will be the default owners for everything in
 # the repo. Unless a later match takes precedence, these will be requested for
 # review when someone opens a pull request.
-*       @omzevall @rebecca-makar @anhowe
+*       @omzevall @rebecca-makar @anhowe @baileye
 
 # Order is important; the last matching pattern takes the most
 # precedence. When someone opens a pull request that only
