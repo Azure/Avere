@@ -52,7 +52,8 @@ type AvereVfxt struct {
 	VServerIPAddresses *[]string
 	NodeNames          *[]string
 
-	rePasswordReplace *regexp.Regexp
+	rePasswordReplace  *regexp.Regexp
+	rePasswordReplace2 *regexp.Regexp
 }
 
 ///////////////////////////////////////////////////////////
