@@ -1122,6 +1122,7 @@ func createCoreFilers(coreFilersToAdd map[string]*CoreFiler, averevfxt *AvereVfx
 		return fmt.Errorf("error encountered while starting setting of fixed quota: %v", err)
 	}
 
+	// add the core filer and quota percent first
 	for _, v := range corefilers {
 		if err := averevfxt.CreateCoreFiler(v); err != nil {
 			return err
@@ -1129,6 +1130,12 @@ func createCoreFilers(coreFilersToAdd map[string]*CoreFiler, averevfxt *AvereVfx
 		if v.FixedQuotaPercent > MinFixedQuotaPercent {
 			averevfxt.SetFixedQuotaPercent(v.Name, v.FixedQuotaPercent)
 		}
+	}
+
+	// add the custom settings, after core filers and fixed quota percent has been added
+	// the custom settings are added after all core filers are added because they are slow to add,
+	// and could slow down the rebalancing
+	for _, v := range corefilers {
 		if err := averevfxt.AddFilerCustomSettings(v.Name, v.CustomSettings); err != nil {
 			return err
 		}
@@ -1143,16 +1150,25 @@ func createCoreFilers(coreFilersToAdd map[string]*CoreFiler, averevfxt *AvereVfx
 }
 
 func startFixedQuotaPercent(corefilers []*CoreFiler, averevfxt *AvereVfxt) error {
-	if isRequired := isFixedQuotaRequired(corefilers); isRequired {
+	if smallestQuota, isRequired := isFixedQuotaRequired(corefilers); isRequired {
 		if err := averevfxt.CreateCustomSetting(QuotaCacheMoveMax); err != nil {
 			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaCacheMoveMax, err)
+		}
+
+		divisorFloorSetting := fmt.Sprintf(QuotaDivisorFloor, smallestQuota)
+		if err := averevfxt.CreateCustomSetting(divisorFloorSetting); err != nil {
+			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", divisorFloorSetting, err)
+		}
+
+		if err := averevfxt.CreateCustomSetting(QuotaMaxMultiplierForInvalidatedMassQuota); err != nil {
+			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaMaxMultiplierForInvalidatedMassQuota, err)
 		}
 	}
 	return nil
 }
 
 func finishFixedQuotaPercent(corefilers []*CoreFiler, averevfxt *AvereVfxt) error {
-	if isRequired := isFixedQuotaRequired(corefilers); isRequired {
+	if _, isRequired := isFixedQuotaRequired(corefilers); isRequired {
 		// wait QuotaWaitMinutes or until until the core filers are in the correct range
 		startTime := time.Now()
 		durationQuotaWaitMinutes := time.Duration(QuotaWaitMinutes) * time.Minute
@@ -1174,17 +1190,24 @@ func finishFixedQuotaPercent(corefilers []*CoreFiler, averevfxt *AvereVfxt) erro
 		if err := averevfxt.RemoveCustomSetting(QuotaCacheMoveMax); err != nil {
 			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaCacheMoveMax, err)
 		}
+		if err := averevfxt.RemoveCustomSetting(QuotaDivisorFloor); err != nil {
+			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaDivisorFloor, err)
+		}
+		if err := averevfxt.RemoveCustomSetting(QuotaMaxMultiplierForInvalidatedMassQuota); err != nil {
+			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaMaxMultiplierForInvalidatedMassQuota, err)
+		}
 	}
 	return nil
 }
 
-func isFixedQuotaRequired(corefilers []*CoreFiler) bool {
+func isFixedQuotaRequired(corefilers []*CoreFiler) (int, bool) {
+	result := MaxFixedQuotaPercent
 	for _, v := range corefilers {
-		if v.FixedQuotaPercent > MinFixedQuotaPercent {
-			return true
+		if v.FixedQuotaPercent > MinFixedQuotaPercent && v.FixedQuotaPercent < result {
+			result = v.FixedQuotaPercent
 		}
 	}
-	return false
+	return result, (result != MaxFixedQuotaPercent)
 }
 
 func withinRange(corefilers []*CoreFiler, averevfxt *AvereVfxt) bool {
