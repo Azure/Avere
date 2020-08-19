@@ -101,11 +101,13 @@ func NewAvereVfxt(
 		VServerIPAddresses:   vServerIPAddresses,
 		NodeNames:            nodeNames,
 		rePasswordReplace:    regexp.MustCompile(`-password [^ ]*`),
+		rePasswordReplace2:   regexp.MustCompile(`sshpass -p [^ ]*`),
 	}
 }
 
 func (a *AvereVfxt) RunCommand(cmd string) (bytes.Buffer, bytes.Buffer, error) {
 	scrubbedCmd := a.rePasswordReplace.ReplaceAllLiteralString(cmd, "***")
+	scrubbedCmd = a.rePasswordReplace2.ReplaceAllLiteralString(scrubbedCmd, "***")
 	if !a.AllowNonAscii {
 		if err := ValidateOnlyAscii(cmd, scrubbedCmd); err != nil {
 			var stdoutBuf, stderrBuf bytes.Buffer
@@ -530,6 +532,14 @@ func (a *AvereVfxt) ListExports(filer string) ([]NFSExport, error) {
 	return result, nil
 }
 
+// use the following command if we encounter "permission errors", this is modeled after the UI
+func (a *AvereVfxt) EnableAPIMaintenance() error {
+	if _, err := a.AvereCommand(a.getEnableAPIMaintenanceCommand()); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (a *AvereVfxt) EnsureCachePolicyExists(cachePolicy string, cacheMode string, checkAttributes string, writeBackDelay int) error {
 	// list the cache policies
 	cachePoliciesJson, err := a.AvereCommand(a.getListCachePoliciesJsonCommand())
@@ -625,10 +635,46 @@ func (a *AvereVfxt) CreateCoreFiler(corefiler *CoreFiler) error {
 	if _, err := a.AvereCommand(a.getCreateCoreFilerCommand(corefiler)); err != nil {
 		return err
 	}
+
+	if err := a.EnsureServerAddressCorrect(corefiler); err != nil {
+		return err
+	}
+
 	log.Printf("[INFO] vfxt: ensure stable cluster after adding core filer")
 	if err := a.EnsureClusterStable(); err != nil {
 		return err
 	}
+	return nil
+}
+
+// if the fqdn is in multiple parts, run the dbutil.py command, as there
+// is a bug in averecmd that only sets the first ip address
+func (a *AvereVfxt) EnsureServerAddressCorrect(corefiler *CoreFiler) error {
+	fqdnParts := strings.Split(corefiler.FqdnOrPrimaryIp, " ")
+	if len(fqdnParts) <= 1 {
+		return nil
+	}
+	log.Printf("[INFO] working around averecmd bug to set server addresses '%s'", corefiler.FqdnOrPrimaryIp)
+
+	if stdoutBuf, stderrBuf, err := a.RunCommand(getEnsureSSHPass()); err != nil {
+		return fmt.Errorf("Error installing sshpass: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	}
+
+	// get the mass
+	internalName, err := a.GetInternalName(corefiler.Name)
+	if err != nil {
+		return err
+	}
+
+	// set the server IP, adjusting the command with sshpass
+	sshPassPrefix := fmt.Sprintf("sshpass -p '%s' ", a.AvereAdminPassword)
+
+	dbUtilCommand := WrapCommandForLogging(fmt.Sprintf("%s ssh -oProxyCommand=\"%s ssh -W %%h:%%p admin@%s\" root@localhost 'bash -l -c \"dbutil.py set %s serverAddr '\"'\"'%s'\"'\"' -x\"'", sshPassPrefix, sshPassPrefix, a.ManagementIP, internalName, corefiler.FqdnOrPrimaryIp), ShellLogFile)
+
+	if stdoutBuf, stderrBuf, err := a.RunCommand(dbUtilCommand); err != nil {
+		return fmt.Errorf("Error running dbutil.py command: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	}
+
 	return nil
 }
 
@@ -791,7 +837,12 @@ func (a *AvereVfxt) RemoveFilerCustomSettings(corefilerName string, customSettin
 }
 
 func (a *AvereVfxt) DeleteFiler(corefilerName string) error {
-	_, err := a.AvereCommand(a.getDeleteFilerCommand(corefilerName))
+	enableAPIMaintenance := func() error {
+		err := a.EnableAPIMaintenance()
+		return err
+	}
+
+	_, err := a.AvereCommandWithCorrection(a.getDeleteFilerCommand(corefilerName), enableAPIMaintenance)
 	if err != nil {
 		return err
 	}
@@ -985,8 +1036,9 @@ func (a *AvereVfxt) AvereCommandWithCorrection(cmd string, correctiveAction func
 			return "", fmt.Errorf("Non retryable error applying command: '%s' '%s'", stdoutBuf.String(), stderrBuf.String())
 		}
 		if correctiveAction != nil {
+			// the corrective action is best effort, just log an error if one occurs
 			if err = correctiveAction(); err != nil {
-				return "", err
+				log.Printf("[ERROR] error performing correctiveAction: %v", err)
 			}
 		}
 		if retries > AverecmdRetryCount {
@@ -1200,12 +1252,22 @@ func (a *AvereVfxt) getListCoreFilerExportsJsonCommand(filer string) string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json corefiler.listExports \"%s\"", a.getBaseAvereCmd(), filer), AverecmdLogFile)
 }
 
+func (a *AvereVfxt) getEnableAPIMaintenanceCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s system.enableAPI maintenance", a.getBaseAvereCmd()), AverecmdLogFile)
+}
+
 func (a *AvereVfxt) getFilerJsonCommand(filer string) string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json corefiler.get \"%s\"", a.getBaseAvereCmd(), filer), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getCreateCoreFilerCommand(coreFiler *CoreFiler) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.create \"%s\" \"%s\" true \"{'filerNetwork':'cluster','filerClass':'Other','cachePolicy':'%s',}\"", a.getBaseAvereCmd(), coreFiler.Name, coreFiler.FqdnOrPrimaryIp, coreFiler.CachePolicy), AverecmdLogFile)
+	// due to a bug in averecmd (#794), we can only set a single address
+	fqdnParts := strings.Split(coreFiler.FqdnOrPrimaryIp, " ")
+	firstFqdn := coreFiler.FqdnOrPrimaryIp
+	if len(fqdnParts) > 1 {
+		firstFqdn = fqdnParts[0]
+	}
+	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.create \"%s\" \"%s\" true \"{'filerNetwork':'cluster','filerClass':'Other','cachePolicy':'%s',}\"", a.getBaseAvereCmd(), coreFiler.Name, firstFqdn, coreFiler.CachePolicy), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getCreateAzureStorageFilerCommand(azureStorageFiler *AzureStorageFiler) (string, error) {
@@ -1403,4 +1465,8 @@ func getMassIndex(internalName string) int {
 		return s
 	}
 	return 0
+}
+
+func getEnsureSSHPass() string {
+	return WrapCommandForLogging("which sshpass || sudo apt-get install -y sshpass", ShellLogFile)
 }

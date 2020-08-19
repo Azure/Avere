@@ -86,5 +86,5 @@ func WrapCommandForLoggingSecretOutput(cmd string, outputfile string) string {
 }
 
 func GetScrubPasswordCommand() string {
-	return "| sed 's/-password [^ ]*/-password ***/g' | sed 's/BASE64:[^\\x27]*/BASE64:***/g'"
+	return "| sed 's/-password [^ ]*/-password ***/g' | sed 's/sshpass -p [^ ]*/sshpass -p ***/g' | sed 's/BASE64:[^\\x27]*/BASE64:***/g'"
 }
