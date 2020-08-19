@@ -39,9 +39,14 @@ const (
 	CachePolicyCollaboratingCloudWorkstationCheckAttributes = "{'checkAttrPeriod':30,'checkDirAttrPeriod':30}"
 	CachePolicyReadOnlyHighVerificationTimeCheckAttributes  = "{'checkAttrPeriod':10800,'checkDirAttrPeriod':10800}"
 
-	QuotaCacheMoveMax     = "cfs.quotaCacheMoveMax DN 0.2"
-	QuotaWaitMinutes      = 60
-	TargetPercentageError = float32(0.01)
+	QuotaCacheMoveMax = "cfs.quotaCacheMoveMax DN 50" // 50 is the max
+	QuotaDivisorFloor = "cfs.quotaCacheDivisorFloor CQ %d"
+	// This setting is used to speed up the number of blocks
+	// to be assigned to a policy. Decreasing it could reduce
+	// the impact from the early added corefiler default is 20
+	QuotaMaxMultiplierForInvalidatedMassQuota = "cfs.maxMultiplierForInvalidatedMassQuota VS 2"
+	QuotaWaitMinutes                          = 30 // wait up to 30 minutes for the quota to balance
+	TargetPercentageError                     = float32(0.01)
 
 	AnalyticsClusterFilersRaw = "cluster_filers_raw"
 
