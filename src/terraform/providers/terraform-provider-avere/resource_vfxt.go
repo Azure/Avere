@@ -189,6 +189,14 @@ func resourceVfxt() *schema.Resource {
 				ForceNew:     true,
 				Default:      "",
 				ValidateFunc: validation.IsIPv4Address,
+				RequiredWith: []string{vserver_ip_count},
+			},
+			vserver_ip_count: {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntBetween(MinVserverIpCount, MaxVserverIpCount),
+				RequiredWith: []string{vserver_first_ip},
 			},
 			global_custom_settings: {
 				Type:     schema.TypeSet,
@@ -784,9 +792,13 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	nodeCount := d.Get(vfxt_node_count).(int)
 
 	firstIPAddress := d.Get(vserver_first_ip).(string)
+	ipAddressCount := d.Get(vserver_ip_count).(int)
+	if nodeCount > ipAddressCount {
+		ipAddressCount = nodeCount
+	}
 	lastIPAddress := ""
 	if len(firstIPAddress) > 0 {
-		if lastIPAddress, err = GetLastIPAddress(firstIPAddress, nodeCount); err != nil {
+		if lastIPAddress, err = GetLastIPAddress(firstIPAddress, ipAddressCount); err != nil {
 			return nil, err
 		}
 	}

@@ -6,6 +6,8 @@ const (
 	AvereAdminUsername        = "admin"
 	MinNodesCount             = 3
 	MaxNodesCount             = 16
+	MinVserverIpCount         = MinNodesCount
+	MaxVserverIpCount         = 2 * MaxNodesCount
 	MinFixedQuotaPercent      = 0
 	MaxFixedQuotaPercent      = 100
 	DefaultSshPort            = 22
@@ -131,6 +133,7 @@ const (
 	node_size                    = "node_size"
 	node_cache_size              = "node_cache_size"
 	vserver_first_ip             = "vserver_first_ip"
+	vserver_ip_count             = "vserver_ip_count"
 	global_custom_settings       = "global_custom_settings"
 	vserver_settings             = "vserver_settings"
 	enable_support_uploads       = "enable_support_uploads"

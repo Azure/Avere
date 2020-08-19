@@ -7,7 +7,7 @@ import (
 	"net"
 )
 
-func GetLastIPAddress(firstIp string, nodeCount int) (string, error) {
+func GetLastIPAddress(firstIp string, ipAddressCount int) (string, error) {
 	// a.b.c.d where a==0, b==1, c==2, d==3
 	d := 3
 
@@ -20,15 +20,15 @@ func GetLastIPAddress(firstIp string, nodeCount int) (string, error) {
 		return "", fmt.Errorf("expected first IP '%s' to contain a valid IPv4 address", firstIp)
 	}
 
-	// subtract 1 from node count since we already have the ip address of the first node
-	for i := 0; i < (nodeCount - 1); i++ {
+	// subtract 1 from ip count since we already have the ip address of the first node
+	for i := 0; i < (ipAddressCount - 1); i++ {
 		ipv4[d]++
 		if ipv4[d] == 0 {
-			return "", fmt.Errorf("overflow happened while finding the last ip address using nodecount of %d and first ip address of %s", nodeCount, firstIp)
+			return "", fmt.Errorf("overflow happened while finding the last ip address using nodecount of %d and first ip address of %s", ipAddressCount, firstIp)
 		}
 	}
 	if (ipv4[d] + 1) == 0 {
-		return "", fmt.Errorf("last IP address %s ended on the broadcast address using nodecount of %d and first ip address of %s", ipv4.String(), nodeCount, firstIp)
+		return "", fmt.Errorf("last IP address %s ended on the broadcast address using nodecount of %d and first ip address of %s", ipv4.String(), ipAddressCount, firstIp)
 	}
 	return ipv4.String(), nil
 }
