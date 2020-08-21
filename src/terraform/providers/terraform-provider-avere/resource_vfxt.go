@@ -319,6 +319,12 @@ func resourceVfxt() *schema.Resource {
 										Default:      "",
 										ValidateFunc: ValidateExportSubdirectory,
 									},
+									export_rule: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "",
+										ValidateFunc: ValidateExportRule,
+									},
 								},
 							},
 						},
@@ -359,6 +365,12 @@ func resourceVfxt() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringIsNotWhiteSpace,
+						},
+						export_rule: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "",
+							ValidateFunc: ValidateExportRule,
 						},
 					},
 				},
@@ -427,10 +439,9 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 	//  4. NTP Servers
 	//  5. Global and Vserver Custom Support settings
 	//  6. Users
-	//  7. Delete Junctions
-	//  8. Core Filers including custom settings
-	//  9. Junctions
-	//  10. Support Uploads if requested
+	//  7. Core Filers including custom settings
+	//  8. Junctions
+	//  9. Support Uploads if requested
 	//
 
 	if err := avereVfxt.Platform.CreateVfxt(avereVfxt); err != nil {
@@ -1475,12 +1486,15 @@ func expandCoreFilerJunctions(l []interface{}, results map[string]*Junction) err
 		junctions := input[junction].(*schema.Set).List()
 		for _, jv := range junctions {
 			junctionRaw := jv.(map[string]interface{})
-			junction := &Junction{
-				NameSpacePath:      junctionRaw[namespace_path].(string),
-				CoreFilerName:      coreFilerName,
-				CoreFilerExport:    junctionRaw[core_filer_export].(string),
-				ExportSubdirectory: junctionRaw[export_subdirectory].(string),
-				SharePermissions:   PermissionsPreserve,
+			junction, err := NewJunction(
+				junctionRaw[namespace_path].(string),
+				coreFilerName,
+				junctionRaw[core_filer_export].(string),
+				junctionRaw[export_subdirectory].(string),
+				PermissionsPreserve,
+				junctionRaw[export_rule].(string))
+			if err != nil {
+				return err
 			}
 			// verify no duplicates
 			if _, ok := results[junction.NameSpacePath]; ok {
@@ -1498,13 +1512,15 @@ func expandAzureStorageFilerJunctions(l []interface{}, results map[string]*Junct
 		storageName := input[account_name].(string)
 		containerName := input[container_name].(string)
 		cloudFilerName := GetCloudFilerName(storageName, containerName)
-		namespacePath := input[junction_namespace_path].(string)
-
-		junction := &Junction{
-			NameSpacePath:    namespacePath,
-			CoreFilerName:    cloudFilerName,
-			CoreFilerExport:  CloudFilerExport,
-			SharePermissions: PermissionsModebits,
+		junction, err := NewJunction(
+			input[junction_namespace_path].(string),
+			cloudFilerName,
+			CloudFilerExport,
+			"",
+			PermissionsModebits,
+			input[export_rule].(string))
+		if err != nil {
+			return err
 		}
 		// verify no duplicates
 		if _, ok := results[junction.NameSpacePath]; ok {
@@ -1556,6 +1572,9 @@ func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
 					if v2, ok := m[export_subdirectory]; ok {
 						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
 					}
+					if v2, ok := m[export_rule]; ok {
+						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
+					}
 				}
 			}
 		}
@@ -1580,6 +1599,9 @@ func resourceAvereVfxtAzureStorageCoreFilerReferenceHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%s;", v.(*schema.Set).List()))
 		}
 		if v, ok := m[junction_namespace_path]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m[export_rule]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
 	}
@@ -1654,7 +1676,7 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 			for _, j := range v.List() {
 				if m, ok := j.(map[string]interface{}); ok {
 					if v2, ok := m[namespace_path]; ok {
-						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", core_filer_name, v2.(string))); err != nil {
+						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", namespace_path, v2.(string))); err != nil {
 							return err
 						}
 					}
@@ -1665,6 +1687,11 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 					}
 					if v2, ok := m[export_subdirectory]; ok {
 						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", export_subdirectory, v2.(string))); err != nil {
+							return err
+						}
+					}
+					if v2, ok := m[export_rule]; ok {
+						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", export_rule, v2.(string))); err != nil {
 							return err
 						}
 					}
@@ -1679,8 +1706,9 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 		storagefilerSlice := []string{
 			input[account_name].(string),
 			input[container_name].(string),
+			input[export_rule].(string),
 		}
-		// the junction namespace path is optional
+		// the junction namespace path is optional, and has no default
 		if v, ok := input[junction_namespace_path]; ok {
 			storagefilerSlice = append(storagefilerSlice, v.(string))
 		}
@@ -1715,6 +1743,18 @@ func ValidateExportSubdirectory(v interface{}, _ string) (warnings []string, err
 
 	if len(input) > 0 && !regexp.MustCompile(`^[^\/]`).MatchString(input) {
 		errors = append(errors, fmt.Errorf("%s (%s) must not begin with a '/'", export_subdirectory, input))
+	}
+
+	return warnings, errors
+}
+
+func ValidateExportRule(v interface{}, _ string) (warnings []string, errors []error) {
+	input := v.(string)
+
+	if len(input) > 0 {
+		if _, err := ParseExportRules(input); err != nil {
+			errors = append(errors, err)
+		}
 	}
 
 	return warnings, errors

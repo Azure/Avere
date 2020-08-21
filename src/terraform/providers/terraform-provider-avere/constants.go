@@ -102,6 +102,8 @@ const (
 	PermissionsModebits = "modebits" // this is the default for the Azure Storage Share
 
 	PrimaryClusterIPKey = "IP"
+
+	DefaultExportPolicyName = "default"
 )
 
 // terraform schema constants - avoids bugs on schema name changes
@@ -152,6 +154,7 @@ const (
 	namespace_path               = "namespace_path"
 	core_filer_export            = "core_filer_export"
 	export_subdirectory          = "export_subdirectory"
+	export_rule                  = "export_rule"
 	azure_storage_filer          = "azure_storage_filer"
 	account_name                 = "account_name"
 	container_name               = "container_name"
