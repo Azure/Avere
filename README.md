@@ -1,4 +1,4 @@
-[![Build Status](https://dev.azure.com/averevfxt/vfxt-github/_apis/build/status/Azure.Avere?branchName=main)](https://dev.azure.com/averevfxt/vfxt-github/_build/latest?definitionId=1?branchName=main)
+[![Build Status](https://dev.azure.com/averevfxt/vfxt-github/_apis/build/status/Azure.Avere?branchName=main)](https://dev.azure.com/averevfxt/vfxt-github/_build?definitionId=1)
 
 <img src="docs/images/avere_vfxt.png">
 
