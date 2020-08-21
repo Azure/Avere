@@ -5,26 +5,14 @@ Set-Location -Path $localDirectory
 $storageDirectory = 'T:/Blender'
 New-Item -ItemType 'Directory' -Path $storageDirectory -Force
 
-$fileName = 'blender279b.msi'
+$fileName = 'blender2835.msi'
 $fileExists = Test-Path -PathType 'Leaf' -Path $storageDirectory/$fileName
 if (!$fileExists) {
-    Invoke-WebRequest -OutFile $storageDirectory/$fileName -Uri 'https://download.blender.org/release/Blender2.79/blender-2.79b-windows64.msi'
+    Invoke-WebRequest -OutFile $storageDirectory/$fileName -Uri 'https://download.blender.org/release/Blender2.83/blender-2.83.5-windows64.msi'
 }
 Copy-Item -Path $storageDirectory/$fileName -Destination .
 
 Start-Process -FilePath $fileName -ArgumentList '/quiet' -Wait
 $oldPath = [System.Environment]::GetEnvironmentVariable('PATH', [System.EnvironmentVariableTarget]::Machine)
-$newPath = "$oldPath;C:\Program Files\Blender Foundation\Blender"
+$newPath = "$oldPath;C:\Program Files\Blender Foundation\Blender 2.83"
 [System.Environment]::SetEnvironmentVariable('PATH', $newPath, [System.EnvironmentVariableTarget]::Machine)
-
-$fileName = 'blender2834.msi'
-$fileExists = Test-Path -PathType 'Leaf' -Path $storageDirectory/$fileName
-if (!$fileExists) {
-    Invoke-WebRequest -OutFile $storageDirectory/$fileName -Uri 'https://download.blender.org/release/Blender2.83/blender-2.83.4-windows64.msi'
-}
-Copy-Item -Path $storageDirectory/$fileName -Destination .
-
-# Start-Process -FilePath $fileName -ArgumentList '/quiet' -Wait
-# $oldPath = [System.Environment]::GetEnvironmentVariable('PATH', [System.EnvironmentVariableTarget]::Machine)
-# $newPath = "$oldPath;C:\Program Files\Blender Foundation\Blender 2.83"
-# [System.Environment]::SetEnvironmentVariable('PATH', $newPath, [System.EnvironmentVariableTarget]::Machine)

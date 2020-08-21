@@ -17,7 +17,7 @@ for i in {1..100}; do
     if [ $? -eq 0 ]; then
         break
     fi
-    sleep 1
+    sleep 3
 done
 
 echo "export CUEBOT_HOSTS=$RENDER_MANAGER_HOST" > /etc/profile.d/opencue.sh

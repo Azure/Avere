@@ -20,7 +20,7 @@
           {
             "name": "renderWorkers0",
             "machineSize": "Standard_F16s_v2",
-            "machineCount": 600,
+            "machineCount": 3,
             "machinePriority": "Spot",
             "maxBillingPrice": "",
             "adminUsername": "az",
