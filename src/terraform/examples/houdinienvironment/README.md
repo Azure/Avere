@@ -42,7 +42,7 @@ Before running the examples you will need to setup the following pre-requisites:
     git remote add origin -f https://github.com/Azure/Avere.git
     git config core.sparsecheckout true
     echo "src/terraform/*" >> .git/info/sparse-checkout
-    git pull origin master
+    git pull origin main
     ```
 
 1. **storage** - if using an on-prem filer, you will need to establish an [Azure VPN Gateway](https://azure.microsoft.com/en-us/services/vpn-gateway/) to on-premises for connectivity to backend storage, rendering license server, active directory server, or render manager.  This step is configured after building out the Virtual Network in step 0 below.

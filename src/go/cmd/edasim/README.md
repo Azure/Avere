@@ -96,10 +96,10 @@ These deployment instructions describe the installation of all components requir
     # download the bootstrap files
     mkdir /nfs/node0/bootstrap
     cd /nfs/node0/bootstrap
-    curl --retry 5 --retry-delay 5 -o bootstrap.jobsubmitter.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.jobsubmitter.sh
-    curl --retry 5 --retry-delay 5 -o bootstrap.orchestrator.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.orchestrator.sh
-    curl --retry 5 --retry-delay 5 -o bootstrap.onpremjobuploader.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.onpremjobuploader.sh
-    curl --retry 5 --retry-delay 5 -o bootstrap.worker.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.worker.sh
+    curl --retry 5 --retry-delay 5 -o bootstrap.jobsubmitter.sh https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.jobsubmitter.sh
+    curl --retry 5 --retry-delay 5 -o bootstrap.orchestrator.sh https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.orchestrator.sh
+    curl --retry 5 --retry-delay 5 -o bootstrap.onpremjobuploader.sh https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.onpremjobuploader.sh
+    curl --retry 5 --retry-delay 5 -o bootstrap.worker.sh https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/edasim/deploymentartifacts/bootstrap/bootstrap.worker.sh
 
     # copy in the built binaries
     mkdir /nfs/node0/bootstrap/edasim
@@ -108,19 +108,19 @@ These deployment instructions describe the installation of all components requir
     # download the rsyslog scripts
     mkdir /nfs/node0/bootstrap/rsyslog
     cd /nfs/node0/bootstrap/rsyslog
-    curl --retry 5 --retry-delay 5 -o 33-jobsubmitter.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/33-jobsubmitter.conf
-    curl --retry 5 --retry-delay 5 -o 30-orchestrator.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/30-orchestrator.conf
-    curl --retry 5 --retry-delay 5 -o 31-worker.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/31-worker.conf
-    curl --retry 5 --retry-delay 5 -o 32-onpremjobuploader.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/32-onpremjobuploader.conf
+    curl --retry 5 --retry-delay 5 -o 33-jobsubmitter.conf https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/33-jobsubmitter.conf
+    curl --retry 5 --retry-delay 5 -o 30-orchestrator.conf https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/30-orchestrator.conf
+    curl --retry 5 --retry-delay 5 -o 31-worker.conf https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/31-worker.conf
+    curl --retry 5 --retry-delay 5 -o 32-onpremjobuploader.conf https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/edasim/deploymentartifacts/bootstrap/rsyslog/32-onpremjobuploader.conf
     
 
     # download the service scripts
     mkdir /nfs/node0/bootstrap/systemd
     cd /nfs/node0/bootstrap/systemd
-    curl --retry 5 --retry-delay 5 -o jobsubmitter.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/jobsubmitter.service
-    curl --retry 5 --retry-delay 5 -o onpremjobuploader.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/onpremjobuploader.service
-    curl --retry 5 --retry-delay 5 -o orchestrator.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/orchestrator.service
-    curl --retry 5 --retry-delay 5 -o worker.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/worker.service
+    curl --retry 5 --retry-delay 5 -o jobsubmitter.service https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/jobsubmitter.service
+    curl --retry 5 --retry-delay 5 -o onpremjobuploader.service https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/onpremjobuploader.service
+    curl --retry 5 --retry-delay 5 -o orchestrator.service https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/orchestrator.service
+    curl --retry 5 --retry-delay 5 -o worker.service https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/edasim/deploymentartifacts/bootstrap/systemd/worker.service
     ```
 
 6. Deploy the eda simulator cluster by clicking the "Deploy to Azure" button below and for `appEnvironmentVariables` use the one line environment variable string you created above.  Here are the following nodes of the cluster:
@@ -129,7 +129,7 @@ These deployment instructions describe the installation of all components requir
     1. **worker node(s)** - running orchestrators to process work
     1. **onpremjobuploader node(s)** - running job uploaders to upload the processed work
 
-    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fgo%2Fcmd%2Fedasim%2Fdeploymentartifacts%2Ftemplate%2Fazuredeploy.json" target="_blank">
+    <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmain%2Fsrc%2Fgo%2Fcmd%2Fedasim%2Fdeploymentartifacts%2Ftemplate%2Fazuredeploy.json" target="_blank">
     <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
     </a>
 

@@ -245,7 +245,7 @@ To use msrsync to populate an Azure cloud volume with an Avere cluster, follow t
 1. Install msrsync and its prerequisites (rsync and Python 2.6 or later)
 2. Determine the total number of files and directories to be copied.
 
-   For example, use the Avere utility ``prime.py`` with arguments ```prime.py --directory /path/to/some/directory``` (available by downloading url https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/dataingestor/prime.py).
+   For example, use the Avere utility ``prime.py`` with arguments ```prime.py --directory /path/to/some/directory``` (available by downloading url https://raw.githubusercontent.com/Azure/Avere/main/src/clientapps/dataingestor/prime.py).
 
    If not using ``prime.py``, you can calculate the number of items with the Gnu ``find`` tool as follows:
    ```bash

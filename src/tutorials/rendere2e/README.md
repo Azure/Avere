@@ -94,7 +94,7 @@ Use VM or VMSS to startup more than 1 VM, up to 5 VMs.  This will enable you to 
 
 The Avere vFXT hides latency to the core filer and keeps storage close to the cloud.  To install Avere, verify you have the [prerequisites](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs), you can use the wizard [Avere vFXT Marketplace Wizard](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/microsoft-avere.vfxt-template?tab=Overview).  Follow the [Add Storage Article](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-add-storage) to add your NFS filer.  Your NFS filer must have `no_root_squash` enabled.
 
-Additionally you may request to the Avere team to be registered into private preview of the cache xervice.  Click [here](https://github.com/Azure/Avere/blob/master/docs/legacy/hpc-cache-preview.md) to learn more about getting started.
+Additionally you may request to the Avere team to be registered into private preview of the cache xervice.  Click [here](https://github.com/Azure/Avere/blob/main/docs/legacy/hpc-cache-preview.md) to learn more about getting started.
 
 # Scaling Render Nodes
 

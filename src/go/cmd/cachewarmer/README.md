@@ -71,20 +71,20 @@ These deployment instructions describe the installation of all components requir
     # download the bootstrap files
     mkdir -p /nfs/node0/bootstrap
     cd /nfs/node0/bootstrap
-    curl --retry 5 --retry-delay 5 -o bootstrap.cachewarmer-manager.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/bootstrap.cachewarmer-manager.sh
-    curl --retry 5 --retry-delay 5 -o bootstrap.cachewarmer-worker.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/bootstrap.cachewarmer-worker.sh
+    curl --retry 5 --retry-delay 5 -o bootstrap.cachewarmer-manager.sh https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/bootstrap.cachewarmer-manager.sh
+    curl --retry 5 --retry-delay 5 -o bootstrap.cachewarmer-worker.sh https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/bootstrap.cachewarmer-worker.sh
 
     # download the rsyslog scripts
     mkdir /nfs/node0/bootstrap/rsyslog
     cd /nfs/node0/bootstrap/rsyslog
-    curl --retry 5 --retry-delay 5 -o 35-cachewarmer-manager.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/rsyslog/35-cachewarmer-manager.conf
-    curl --retry 5 --retry-delay 5 -o 36-cachewarmer-worker.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/rsyslog/36-cachewarmer-worker.conf
+    curl --retry 5 --retry-delay 5 -o 35-cachewarmer-manager.conf https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/rsyslog/35-cachewarmer-manager.conf
+    curl --retry 5 --retry-delay 5 -o 36-cachewarmer-worker.conf https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/rsyslog/36-cachewarmer-worker.conf
         
     # download the service scripts
     mkdir /nfs/node0/bootstrap/systemd
     cd /nfs/node0/bootstrap/systemd
-    curl --retry 5 --retry-delay 5 -o cachewarmer-manager.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/systemd/cachewarmer-manager.service
-    curl --retry 5 --retry-delay 5 -o cachewarmer-worker.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/systemd/cachewarmer-worker.service
+    curl --retry 5 --retry-delay 5 -o cachewarmer-manager.service https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/systemd/cachewarmer-manager.service
+    curl --retry 5 --retry-delay 5 -o cachewarmer-worker.service https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/systemd/cachewarmer-worker.service
     ```
 
 ### Install the cachewarmer manager on the Controller or Jumpbox
