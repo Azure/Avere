@@ -127,7 +127,9 @@ type Junction struct {
 	CoreFilerName      string `json:"mass"`
 	CoreFilerExport    string `json:"export"`
 	ExportSubdirectory string `json:"subdir"`
+	PolicyName         string `json:"policy"`
 	SharePermissions   string
+	ExportRules        map[string]*ExportRule
 }
 
 type CustomSetting struct {

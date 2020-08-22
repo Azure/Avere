@@ -899,8 +899,18 @@ func (a *AvereVfxt) GetExistingJunctions() (map[string]*Junction, error) {
 		// create a new object to assign v
 		newJunction := Junction{}
 		newJunction = v
-		results[v.NameSpacePath] = &newJunction
+		// assign existing rules, or an empty map
+		if newJunction.PolicyName == GenerateExportPolicyName(newJunction.NameSpacePath) {
+			newJunction.ExportRules, err = a.GetExportRules(newJunction.PolicyName)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			newJunction.ExportRules = make(map[string]*ExportRule)
+		}
+		results[newJunction.NameSpacePath] = &newJunction
 	}
+
 	return results, nil
 }
 
@@ -919,27 +929,83 @@ func (a *AvereVfxt) CreateVServer() error {
 	return nil
 }
 
-func (a *AvereVfxt) CreateJunction(junction *Junction) error {
-	// listExports will cause the vFXT to refresh exports
-	listExports := func() error {
-		_, err := a.ListExports(junction.CoreFilerName)
+func (a *AvereVfxt) CreateExportPolicy(policyName string) error {
+	log.Printf("[INFO] [CreateExportPolicy %s", policyName)
+	defer log.Printf("[INFO] CreateExportPolicy %s]", policyName)
+	deleteExport := func() error {
+		err := a.DeleteExportPolicy(policyName)
 		return err
 	}
-	if _, err := a.AvereCommandWithCorrection(a.getCreateJunctionCommand(junction), listExports); err != nil {
-		return err
-	}
-	log.Printf("[INFO] vfxt: ensure stable cluster after creating a junction")
-	if err := a.EnsureClusterStable(); err != nil {
+	if _, err := a.AvereCommandWithCorrection(a.getCreateExportPolicyCommand(policyName), deleteExport); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (a *AvereVfxt) DeleteJunction(junctionNameSpacePath string) error {
-	_, err := a.AvereCommand(a.getDeleteJunctionCommand(junctionNameSpacePath))
-	if err != nil {
+func (a *AvereVfxt) DeleteExportPolicy(policyName string) error {
+	log.Printf("[INFO] [DeleteExportPolicy %s", policyName)
+	defer log.Printf("[INFO] DeleteExportPolicy %s]", policyName)
+	if _, err := a.AvereCommand(a.getDeleteExportPolicyCommand(policyName)); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (a *AvereVfxt) AddExportRules(policyName string, exportRules map[string]*ExportRule) error {
+	log.Printf("[INFO] [AddExportRules %s", policyName)
+	defer log.Printf("[INFO] AddExportRules %s]", policyName)
+	for _, v := range exportRules {
+		if _, err := a.AvereCommand(a.getCreateExportRuleCommand(policyName, v)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *AvereVfxt) GetExportRules(policyName string) (map[string]*ExportRule, error) {
+	results := make(map[string]*ExportRule)
+	exportRulesJson, err := a.AvereCommand(a.getListExportRulesJsonCommand(policyName))
+	if err != nil {
+		return results, err
+	}
+	var exportRules []ExportRule
+	if err := json.Unmarshal([]byte(exportRulesJson), &exportRules); err != nil {
+		return results, err
+	}
+	for _, e := range exportRules {
+		// make a copy before assigning the exportRule, otherwise we end up with a map of all the same items
+		exportRule := ExportRule{}
+		exportRule = e
+		results[exportRule.Filter] = &exportRule
+	}
+	return results, nil
+}
+
+func (a *AvereVfxt) CreateJunction(junction *Junction) error {
+	log.Printf("[INFO] [CreateJunction %s", junction.NameSpacePath)
+	defer log.Printf("[INFO] CreateJunction %s]", junction.NameSpacePath)
+	policyName := ""
+	if len(junction.ExportRules) > 0 {
+		policyName = GenerateExportPolicyName(junction.NameSpacePath)
+		if err := a.CreateExportPolicy(policyName); err != nil {
+			return err
+		}
+		if err2 := a.AddExportRules(policyName, junction.ExportRules); err2 != nil {
+			return err2
+		}
+	}
+	// listExports will cause the vFXT to refresh exports
+	listExports := func() error {
+		_, err := a.ListExports(junction.CoreFilerName)
+		return err
+	}
+	if _, err := a.AvereCommandWithCorrection(a.getCreateJunctionCommand(junction, policyName), listExports); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *AvereVfxt) WaitForJunctionToRemove(junctionNameSpacePath string) error {
 	for retries := 0; ; retries++ {
 		junctions, err := a.GetExistingJunctions()
 		if err != nil {
@@ -957,6 +1023,63 @@ func (a *AvereVfxt) DeleteJunction(junctionNameSpacePath string) error {
 		}
 		time.Sleep(FilerRetrySleepSeconds * time.Second)
 	}
+	return nil
+}
+
+func (a *AvereVfxt) GetExportPolicies() (map[string]bool, error) {
+	results := make(map[string]bool)
+	exportPoliciesJson, err := a.AvereCommand(a.getListExportPoliciesJsonCommand())
+	if err != nil {
+		return results, err
+	}
+	var policies []string
+	if err := json.Unmarshal([]byte(exportPoliciesJson), &policies); err != nil {
+		return results, err
+	}
+	for _, p := range policies {
+		results[p] = true
+	}
+	return results, nil
+}
+
+func (a *AvereVfxt) ExportPolicyExists(policyName string) (bool, error) {
+	exportPolicyMap, err := a.GetExportPolicies()
+	if err != nil {
+		return false, err
+	}
+	_, ok := exportPolicyMap[policyName]
+	return ok, nil
+}
+
+func (a *AvereVfxt) DeleteExportPolicyIfExists(junctionNameSpacePath string) error {
+	policyName := GenerateExportPolicyName(junctionNameSpacePath)
+	policyExists, err := a.ExportPolicyExists(policyName)
+	if err != nil {
+		return err
+	}
+	if policyExists {
+		if _, err := a.AvereCommand(a.getDeleteExportPolicyCommand(policyName)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *AvereVfxt) DeleteJunction(junctionNameSpacePath string) error {
+	log.Printf("[INFO] [DeleteJunction %s", junctionNameSpacePath)
+	defer log.Printf("[INFO] DeleteJunction %s]", junctionNameSpacePath)
+	if _, err := a.AvereCommand(a.getDeleteJunctionCommand(junctionNameSpacePath)); err != nil {
+		return err
+	}
+
+	if err := a.WaitForJunctionToRemove(junctionNameSpacePath); err != nil {
+		return err
+	}
+
+	if err := a.DeleteExportPolicyIfExists(junctionNameSpacePath); err != nil {
+		return err
+	}
+
 	log.Printf("[INFO] vfxt: ensure stable cluster after deleting junction")
 	if err := a.EnsureClusterStable(); err != nil {
 		return err
@@ -1320,12 +1443,36 @@ func (a *AvereVfxt) getVServerCreateCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json vserver.create \"%s\" \"{'firstIP':'%s','netmask':'255.255.255.255','lastIP':'%s'}\"", a.getBaseAvereCmd(), VServerName, a.FirstIPAddress, a.LastIPAddress), AverecmdLogFile)
 }
 
+func (a *AvereVfxt) getListExportPoliciesJsonCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json nfs.listPolicies \"%s\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getCreateExportPolicyCommand(policyName string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s nfs.addPolicy \"%s\" \"%s\"", a.getBaseAvereCmd(), VServerName, policyName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getDeleteExportPolicyCommand(policyName string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s nfs.removePolicy \"%s\" \"%s\"", a.getBaseAvereCmd(), VServerName, policyName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getListExportRulesJsonCommand(policyName string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json nfs.listRules \"%s\" \"%s\"", a.getBaseAvereCmd(), VServerName, policyName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getCreateExportRuleCommand(policyName string, exportRule *ExportRule) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s nfs.addRule \"%s\" \"%s\" %s", a.getBaseAvereCmd(), VServerName, policyName, exportRule.NfsAddRuleArgumentsString()), AverecmdLogFile)
+}
+
 func (a *AvereVfxt) getListJunctionsJsonCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json vserver.listJunctions \"%s\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
 }
 
-func (a *AvereVfxt) getCreateJunctionCommand(junction *Junction) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s vserver.addJunction \"%s\" \"%s\" \"%s\" \"%s\" \"{'sharesubdir':'','inheritPolicy':'yes','sharename':'','access':'posix','createSubdirs':'yes','subdir':'%s','policy':'','permissions':'%s'}\"", a.getBaseAvereCmd(), VServerName, junction.NameSpacePath, junction.CoreFilerName, junction.CoreFilerExport, junction.ExportSubdirectory, junction.SharePermissions), AverecmdLogFile)
+func (a *AvereVfxt) getCreateJunctionCommand(junction *Junction, policyName string) string {
+	inheritPolicy := "yes"
+	if len(policyName) > 0 {
+		inheritPolicy = "no"
+	}
+	return WrapCommandForLogging(fmt.Sprintf("%s vserver.addJunction \"%s\" \"%s\" \"%s\" \"%s\" \"{'sharesubdir':'','inheritPolicy':'%s','sharename':'','access':'posix','createSubdirs':'yes','subdir':'%s','policy':'%s','permissions':'%s'}\"", a.getBaseAvereCmd(), VServerName, junction.NameSpacePath, junction.CoreFilerName, junction.CoreFilerExport, inheritPolicy, junction.ExportSubdirectory, policyName, junction.SharePermissions), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getDeleteJunctionCommand(junctionNameSpacePath string) string {

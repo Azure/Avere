@@ -125,6 +125,7 @@ A <a name="azure_storage_filer"></a>`azure_storage_filer` block supports the fol
 * <a name="ordinal_1"></a>[ordinal](#ordinal_1) - (Optional) - this specifies the order that the storage filers are added. The default is 0, and the core filers are added in ascending numerical order followed by ascending alphabetical order on name.
 * <a name="custom_settings_1"></a>[custom_settings](#custom_settings_1) - (Optional) - these are custom settings provided by Avere support to match advanced use case scenarios.  They are a list of strings of the form "SETTINGNAME CHECKCODE VALUE".  Do not prefix with the mass name as it is automatically detected.
 * <a name="junction_namespace_path"></a>[junction_namespace_path](#junction_namespace_path) - (Optional) this is the exported namespace from the Avere vFXT.
+* <a name="export_rule_1"></a>[export_rule](#export_rule_1) - (Optional) this is an export rule described in the [Export Rules section](#export-rules).  If not specified, the junction uses the most permissive rule set by the default policy.
 
 ---
 
@@ -152,7 +153,61 @@ A <a name="junction"></a>`junction` block supports the following:
 * <a name="namespace_path"></a>[namespace_path](#namespace_path) - (Required) this is the exported namespace from the Avere vFXT. 
 * <a name="core_filer_export"></a>[core_filer_export](#core_filer_export) - (Required) this is the export from the hardware core filer.
 * <a name="export_subdirectory"></a>[export_subdirectory](#export_subdirectory) - (Optional) if the export does not point directly to the core filer directory that you want to associate with this junction, add the relative subdirectory path here.  (Do not begin the path with "/".)  If the subdirectory does not already exist, it will be created automatically.
- 
+* <a name="export_rule_2"></a>[export_rule](#export_rule_2) - (Optional) this is an export rule described in the [Export Rules section](#export-rules).  If not specified, the junction uses the most permissive rule set by the default policy.
+
+# Export Rules
+
+Each junction may specify export rules.  The export rules control client access to core filer exports.  More detailed information on export rules can be found in the [Avere OS Configuration Guide](https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_export_rules.html#export-rules) or the [XML-RPC API Guide](https://azure.github.io/Avere/legacy/pdf/avere-os-5-1-xmlrpc-api-2019-01.pdf) under the method `nfs.addRule`.
+
+The `export_rule` is of the format `"<host1>(<options>) <host2>(<options>)..."`.  The host may be a fully qualified domain name, an IP address, an IP address with a mask (CIDR notation), or '*' to represent all clients.
+
+The rules describe the access options and are specified in any order as follows:
+* **access level** - the access level may be read-only `ro` or read/write `rw`.  If not specified, the default is `ro`.
+* **squash** - this setting determines how user identities are sent to the core filer, and one of the following three modes may be specified.  If not specified, the default is `all_squash`.
+    1. `no_root_squash` - UIDs are passed verbatim from the client to the core filer.
+    1. `root_squash` - this will map the root user to the anonymous user (-2)
+    1. `all_squash` - this will map all user ids to the anonymous user (-2)
+* **allow SUID bits** - specify `allow_suid` if you want to allow files on the core filer to change user IDs (SUID) and group IDs (SGID) upon client access.  If not specified, the default is to disable.  
+* **allow submounts** - specify `allow_submounts` to let clients also access subdirectories of the core filer export point.  If not specified, the default is to disable.
+
+**Example 1:** `export_rule = "10.0.0.5"` or  `export_rule = "10.0.0.5()"`
+
+This rule will restrict junction access to only host `10.0.0.5` with all the settings mapped to their default values:
+| Access Parameter | Value |
+| --- | --- |
+| access level | `ro` |
+| squash | `all_root_squash` |
+| allow SUID bits | `no` |
+| allow submounts | `no` |
+
+**Example 2:** `export_rule = "rendermanager.vfx.com(rw,no_root_squash,allow_suid,allow_submounts) 10.0.1.0/24(rw,no_root_squash,allow_suid,allow_submounts) *()"`
+
+This rule enables the following junction access to host `rendermanager.vfx.com` and IP range `10.0.1.0/24`:
+| Access Parameter | Value |
+| --- | --- |
+| access level | `rw` |
+| squash | `no_root_squash` |
+| allow SUID bits | `yes` |
+| allow submounts | `yes` |
+
+All other hosts will be restricted to the following access:
+| Access Parameter | Value |
+| --- | --- |
+| access level | `ro` |
+| squash | `all_root_squash` |
+| allow SUID bits | `no` |
+| allow submounts | `no` |
+
+**Example 3:** `export_rule = ""` or `export_rule` not specified
+
+This rule causes no action to be taken, and the junction inherits the default policy where all hosts `"*"` have the following settings:
+| Access Parameter | Value |
+| --- | --- |    
+| access level | `rw` |
+| squash | `no_root_squash` |
+| allow SUID bits | `yes` |
+| allow submounts | `yes` |
+
 # Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
