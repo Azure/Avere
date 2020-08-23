@@ -203,7 +203,7 @@ func resourceVfxt() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringIsNotWhiteSpace,
+					ValidateFunc: ValidateCustomSetting,
 				},
 				Set: schema.HashString,
 			},
@@ -212,7 +212,7 @@ func resourceVfxt() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringIsNotWhiteSpace,
+					ValidateFunc: ValidateCustomSetting,
 				},
 				Set: schema.HashString,
 			},
@@ -278,6 +278,11 @@ func resourceVfxt() *schema.Resource {
 								CachePolicyReadOnlyHighVerificationTime,
 							}, false),
 						},
+						auto_wan_optimize: {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
 						ordinal: {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -294,7 +299,7 @@ func resourceVfxt() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringIsNotWhiteSpace,
+								ValidateFunc: ValidateCustomSetting,
 							},
 							Set: schema.HashString,
 						},
@@ -357,7 +362,7 @@ func resourceVfxt() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringIsNotWhiteSpace,
+								ValidateFunc: ValidateCustomSetting,
 							},
 							Set: schema.HashString,
 						},
@@ -851,7 +856,7 @@ func updateNtpServers(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 
 func createGlobalSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 	for _, v := range d.Get(global_custom_settings).(*schema.Set).List() {
-		if err := avereVfxt.CreateCustomSetting(v.(string)); err != nil {
+		if err := avereVfxt.CreateCustomSetting(v.(string), TerraformAutoMessage); err != nil {
 			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", v.(string), err)
 		}
 	}
@@ -1159,7 +1164,8 @@ func createCoreFilers(coreFilersToAdd map[string]*CoreFiler, averevfxt *AvereVfx
 	// the custom settings are added after all core filers are added because they are slow to add,
 	// and could slow down the rebalancing
 	for _, v := range corefilers {
-		if err := averevfxt.AddFilerCustomSettings(v.Name, v.CustomSettings); err != nil {
+		// add auto WAN optimize if required
+		if err := averevfxt.AddCoreFilerCustomSettings(v); err != nil {
 			return err
 		}
 	}
@@ -1174,16 +1180,16 @@ func createCoreFilers(coreFilersToAdd map[string]*CoreFiler, averevfxt *AvereVfx
 
 func startFixedQuotaPercent(corefilers []*CoreFiler, averevfxt *AvereVfxt) error {
 	if smallestQuota, isRequired := isFixedQuotaRequired(corefilers); isRequired {
-		if err := averevfxt.CreateCustomSetting(QuotaCacheMoveMax); err != nil {
+		if err := averevfxt.CreateCustomSetting(QuotaCacheMoveMax, TerraformFeatureMessage); err != nil {
 			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaCacheMoveMax, err)
 		}
 
 		divisorFloorSetting := fmt.Sprintf(QuotaDivisorFloor, smallestQuota)
-		if err := averevfxt.CreateCustomSetting(divisorFloorSetting); err != nil {
+		if err := averevfxt.CreateCustomSetting(divisorFloorSetting, TerraformFeatureMessage); err != nil {
 			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", divisorFloorSetting, err)
 		}
 
-		if err := averevfxt.CreateCustomSetting(QuotaMaxMultiplierForInvalidatedMassQuota); err != nil {
+		if err := averevfxt.CreateCustomSetting(QuotaMaxMultiplierForInvalidatedMassQuota, TerraformFeatureMessage); err != nil {
 			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaMaxMultiplierForInvalidatedMassQuota, err)
 		}
 	}
@@ -1261,10 +1267,10 @@ func withinRange(corefilers []*CoreFiler, averevfxt *AvereVfxt) bool {
 
 func modifyCoreFilers(coreFilersToModify map[string]*CoreFiler, averevfxt *AvereVfxt) error {
 	for _, v := range coreFilersToModify {
-		if err := averevfxt.RemoveFilerCustomSettings(v.Name, v.CustomSettings); err != nil {
+		if err := averevfxt.RemoveCoreFilerCustomSettings(v); err != nil {
 			return err
 		}
-		if err := averevfxt.AddFilerCustomSettings(v.Name, v.CustomSettings); err != nil {
+		if err := averevfxt.AddCoreFilerCustomSettings(v); err != nil {
 			return err
 		}
 	}
@@ -1312,7 +1318,7 @@ func createAzureStorageFilers(storageFilersToAdd map[string]*AzureStorageFiler, 
 		if err := averevfxt.CreateAzureStorageFiler(v); err != nil {
 			return err
 		}
-		if err := averevfxt.AddFilerCustomSettings(v.GetCloudFilerName(), v.CustomSettings); err != nil {
+		if err := averevfxt.AddStorageFilerCustomSettings(v); err != nil {
 			return err
 		}
 	}
@@ -1321,10 +1327,10 @@ func createAzureStorageFilers(storageFilersToAdd map[string]*AzureStorageFiler, 
 
 func modifyAzureStorageFilers(storageFilersToModify map[string]*AzureStorageFiler, averevfxt *AvereVfxt) error {
 	for _, v := range storageFilersToModify {
-		if err := averevfxt.RemoveFilerCustomSettings(v.GetCloudFilerName(), v.CustomSettings); err != nil {
+		if err := averevfxt.RemoveStorageFilerCustomSettings(v); err != nil {
 			return err
 		}
-		if err := averevfxt.AddFilerCustomSettings(v.GetCloudFilerName(), v.CustomSettings); err != nil {
+		if err := averevfxt.AddStorageFilerCustomSettings(v); err != nil {
 			return err
 		}
 	}
@@ -1402,12 +1408,13 @@ func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 		name := input[core_filer_name].(string)
 		fqdnOrPrimaryIp := input[fqdn_or_primary_ip].(string)
 		cachePolicy := input[cache_policy].(string)
+		autoWanOptimize := input[auto_wan_optimize].(bool)
 		ordinal := input[ordinal].(int)
 		fixedQuotaPercent := input[fixed_quota_percent].(int)
 		customSettingsRaw := input[custom_settings].(*schema.Set).List()
 		customSettings := make([]*CustomSetting, len(customSettingsRaw), len(customSettingsRaw))
 		for i, v := range customSettingsRaw {
-			customSettings[i] = initializeCustomSetting(v.(string))
+			customSettings[i] = InitializeCustomSetting(v.(string))
 		}
 		// verify no duplicates
 		if _, ok := results[name]; ok {
@@ -1424,6 +1431,7 @@ func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 			Name:              name,
 			FqdnOrPrimaryIp:   fqdnOrPrimaryIp,
 			CachePolicy:       cachePolicy,
+			AutoWanOptimize:   autoWanOptimize,
 			Ordinal:           ordinal,
 			FixedQuotaPercent: fixedQuotaPercent,
 			CustomSettings:    customSettings,
@@ -1445,7 +1453,7 @@ func expandAzureStorageFilers(l []interface{}) (map[string]*AzureStorageFiler, e
 		customSettingsRaw := input[custom_settings].(*schema.Set).List()
 		customSettings := make([]*CustomSetting, len(customSettingsRaw), len(customSettingsRaw))
 		for i, v := range customSettingsRaw {
-			customSettings[i] = initializeCustomSetting(v.(string))
+			customSettings[i] = InitializeCustomSetting(v.(string))
 		}
 
 		// add to map
@@ -1553,6 +1561,9 @@ func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
 		}
 		if v, ok := m[cache_policy]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m[auto_wan_optimize]; ok {
+			buf.WriteString(fmt.Sprintf("%v;", v.(bool)))
 		}
 		if v, ok := m[ordinal]; ok {
 			buf.WriteString(fmt.Sprintf("%d;", v.(int)))
@@ -1781,6 +1792,19 @@ func ValidateVfxtName(v interface{}, _ string) (warnings []string, errors []erro
 		errors = append(errors, fmt.Errorf("the vfxt name '%s' is invalid, and per vfxt.py must match the regular expressesion ^[a-z]([-a-z0-9]*[a-z0-9])?$ ''", input))
 	}
 
+	return warnings, errors
+}
+
+func ValidateCustomSetting(v interface{}, _ string) (warnings []string, errors []error) {
+	customSetting := v.(string)
+
+	if err := ValidateCustomSettingFormat(customSetting); err != nil {
+		errors = append(errors, err)
+	}
+
+	if IsAutoWanOptimizeCustomSetting(customSetting) {
+		errors = append(errors, fmt.Errorf("Please remove '%s', the autoWanOptimize custom setting has been deprecated.  Instead use the %s flag, see provider docs for more information: https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#auto_wan_optimize.", customSetting, auto_wan_optimize))
+	}
 	return warnings, errors
 }
 

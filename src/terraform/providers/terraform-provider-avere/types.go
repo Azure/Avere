@@ -110,6 +110,7 @@ type CoreFiler struct {
 	CachePolicy       string `json:"policyName"`
 	Ordinal           int
 	FixedQuotaPercent int
+	AutoWanOptimize   bool
 	CustomSettings    []*CustomSetting
 }
 

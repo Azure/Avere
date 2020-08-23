@@ -31,18 +31,6 @@ var matchJunctionNotFound = regexp.MustCompile(`(removeJunction failed.*'Cannot 
 // parse numbers from mass
 var matchNumbersInMass = regexp.MustCompile(`[^0-9]+`)
 
-func initializeCustomSetting(customSettingString string) *CustomSetting {
-	return &CustomSetting{
-		Name:      getCustomSettingName(customSettingString),
-		CheckCode: getCustomSettingCheckCode(customSettingString),
-		Value:     getCustomSettingValue(customSettingString),
-	}
-}
-
-func (c *CustomSetting) GetCustomSettingCommand() string {
-	return fmt.Sprintf("%s %s %s", c.Name, c.CheckCode, c.Value)
-}
-
 // NewAvereVfxt creates new AvereVfxt
 func NewAvereVfxt(
 	controllerAddress string,
@@ -392,8 +380,8 @@ func (a *AvereVfxt) SetNtpServers(ntpServers string) error {
 	return err
 }
 
-func (a *AvereVfxt) CreateCustomSetting(customSetting string) error {
-	_, err := a.AvereCommand(a.getSetCustomSettingCommand(customSetting))
+func (a *AvereVfxt) CreateCustomSetting(customSetting string, message string) error {
+	_, err := a.AvereCommand(a.getSetCustomSettingCommand(customSetting, message))
 	return err
 }
 
@@ -403,7 +391,7 @@ func (a *AvereVfxt) RemoveCustomSetting(customSetting string) error {
 }
 
 func (a *AvereVfxt) CreateVServerSetting(customSetting string) error {
-	_, err := a.AvereCommand(a.getSetVServerSettingCommand(customSetting))
+	_, err := a.AvereCommand(a.getSetVServerSettingCommand(customSetting, TerraformAutoMessage))
 	return err
 }
 
@@ -735,17 +723,59 @@ func (a *AvereVfxt) GetInternalName(filerName string) (string, error) {
 	return newfiler.InternalName, nil
 }
 
-func (a *AvereVfxt) AddFilerCustomSettings(corefilerName string, customSettings []*CustomSetting) error {
-	if len(customSettings) == 0 {
+func (a *AvereVfxt) AddStorageFilerCustomSettings(storageFiler *AzureStorageFiler) error {
+	if len(storageFiler.CustomSettings) == 0 {
 		// no custom settings to add
 		return nil
 	}
 
-	internalName, err := a.GetInternalName(corefilerName)
+	internalName, err := a.GetInternalName(storageFiler.GetCloudFilerName())
 	if err != nil {
 		return err
 	}
 
+	if err := a.AddFilerCustomSettingsList(internalName, storageFiler.CustomSettings); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *AvereVfxt) AddCoreFilerCustomSettings(coreFiler *CoreFiler) error {
+	if len(coreFiler.CustomSettings) == 0 && coreFiler.AutoWanOptimize {
+		// no custom settings to add
+		return nil
+	}
+
+	internalName, err := a.GetInternalName(coreFiler.Name)
+	if err != nil {
+		return err
+	}
+
+	// add all custom setting features
+	if coreFiler.AutoWanOptimize {
+		if err := a.AddFilerCustomerSettingAsFeature(internalName, InitializeCustomSetting(AutoWanOptimizeCustomSetting)); err != nil {
+			return err
+		}
+	}
+
+	if len(coreFiler.CustomSettings) > 0 {
+		if err := a.AddFilerCustomSettingsList(internalName, coreFiler.CustomSettings); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (a *AvereVfxt) AddFilerCustomerSettingAsFeature(internalName string, customSetting *CustomSetting) error {
+	if _, err := a.AvereCommand(a.getSetFilerSettingCommand(internalName, customSetting, TerraformFeatureMessage)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *AvereVfxt) AddFilerCustomSettingsList(internalName string, customSettings []*CustomSetting) error {
 	// get the mass custom settings
 	existingCustomSettings, err := a.GetFilerCustomSettings(internalName)
 	if err != nil {
@@ -754,12 +784,12 @@ func (a *AvereVfxt) AddFilerCustomSettings(corefilerName string, customSettings 
 
 	// add the new settings
 	for _, v := range customSettings {
-		customSettingName := getFilerCustomSettingName(internalName, v.Name)
+		customSettingName := GetFilerCustomSettingName(internalName, v.Name)
 		if _, ok := existingCustomSettings[customSettingName]; ok {
 			// the custom setting already exists
 			continue
 		}
-		if _, err := a.AvereCommand(a.getSetFilerSettingCommand(internalName, v)); err != nil {
+		if _, err := a.AvereCommand(a.getSetFilerSettingCommand(internalName, v, TerraformAutoMessage)); err != nil {
 			return err
 		}
 	}
@@ -774,7 +804,7 @@ func (a *AvereVfxt) SetFixedQuotaPercent(corefilerName string, percent int) erro
 	}
 	massIndex := getMassIndex(internalName)
 	setFixedQuotaPercentCustomSetting := fmt.Sprintf("cpolicyActive%d.fixedQuota RU %d", massIndex, percent)
-	if err := a.CreateCustomSetting(setFixedQuotaPercentCustomSetting); err != nil {
+	if err := a.CreateCustomSetting(setFixedQuotaPercentCustomSetting, TerraformFeatureMessage); err != nil {
 		return fmt.Errorf("ERROR: failed to set fixed quota percent '%s': %s", QuotaCacheMoveMax, err)
 	}
 	return nil
@@ -791,6 +821,22 @@ func (a *AvereVfxt) RemoveFixedQuotaPercent(corefilerName string, percent int) e
 		return fmt.Errorf("ERROR: failed to remove fixed quota percent '%s': %s", QuotaCacheMoveMax, err)
 	}
 	return nil
+}
+
+func (a *AvereVfxt) RemoveStorageFilerCustomSettings(storageFiler *AzureStorageFiler) error {
+	return a.RemoveFilerCustomSettings(storageFiler.GetCloudFilerName(), storageFiler.CustomSettings)
+}
+
+func (a *AvereVfxt) RemoveCoreFilerCustomSettings(coreFiler *CoreFiler) error {
+	allCustomSettings := make([]*CustomSetting, len(coreFiler.CustomSettings), len(coreFiler.CustomSettings)+1)
+	copy(allCustomSettings, coreFiler.CustomSettings)
+
+	// add all custom setting features
+	if coreFiler.AutoWanOptimize {
+		allCustomSettings = append(allCustomSettings, InitializeCustomSetting(AutoWanOptimizeCustomSetting))
+	}
+
+	return a.RemoveFilerCustomSettings(coreFiler.Name, allCustomSettings)
 }
 
 func (a *AvereVfxt) RemoveFilerCustomSettings(corefilerName string, customSettings []*CustomSetting) error {
@@ -810,7 +856,7 @@ func (a *AvereVfxt) RemoveFilerCustomSettings(corefilerName string, customSettin
 		// fix the core filer settings by adding the mass
 		customSetting := CustomSetting{}
 		customSetting = *v
-		customSetting.Name = getFilerCustomSettingName(internalName, customSetting.Name)
+		customSetting.Name = GetFilerCustomSettingName(internalName, customSetting.Name)
 		newSettingsSet[customSetting.Name] = &customSetting
 	}
 
@@ -1420,7 +1466,7 @@ func (a *AvereVfxt) getCreateAzureStorageCredentialsCommand(azureStorageFiler *A
 		return "", err
 	}
 
-	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.createCredential \"%s\" azure-storage \"{'note':'Automatically created from Terraform','storageKey':'BASE64:%s','tenant':'%s','subscription':'%s',}\"", a.getBaseAvereCmd(), azureStorageFiler.GetCloudFilerName(), key, azureStorageFiler.AccountName, subscriptionId), AverecmdLogFile), nil
+	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.createCredential \"%s\" azure-storage \"{'note':'%s','storageKey':'BASE64:%s','tenant':'%s','subscription':'%s',}\"", a.getBaseAvereCmd(), azureStorageFiler.GetCloudFilerName(), TerraformAutoMessage, key, azureStorageFiler.AccountName, subscriptionId), AverecmdLogFile), nil
 }
 
 func (a *AvereVfxt) getDeleteAzureStorageCredentialsCommand(azureStorageFiler *AzureStorageFiler) string {
@@ -1483,12 +1529,12 @@ func (a *AvereVfxt) getListCustomSettingsJsonCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json support.listCustomSettings", a.getBaseAvereCmd()), AverecmdLogFile)
 }
 
-func (a *AvereVfxt) getSetCustomSettingCommand(customSetting string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s support.setCustomSetting %s \"Automatically created from Terraform\"", a.getBaseAvereCmd(), customSetting), AverecmdLogFile)
+func (a *AvereVfxt) getSetCustomSettingCommand(customSetting string, message string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s support.setCustomSetting %s \"%s\"", a.getBaseAvereCmd(), customSetting, message), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getRemoveCustomSettingCommand(customSetting string) string {
-	firstArgument := getCustomSettingName(customSetting)
+	firstArgument := GetCustomSettingName(customSetting)
 	return WrapCommandForLogging(fmt.Sprintf("%s support.removeCustomSetting %s", a.getBaseAvereCmd(), firstArgument), AverecmdLogFile)
 }
 
@@ -1523,55 +1569,23 @@ func (a *AvereVfxt) getSupportSecureProactiveSupportCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'remoteCommandEnabled':'Disabled','SPSLinkInterval':'300','SPSLinkEnabled':'%s','remoteCommandExpiration':''}\"", a.getBaseAvereCmd(), isEnabled), AverecmdLogFile)
 }
 
-func (a *AvereVfxt) getSetVServerSettingCommand(customSetting string) string {
-	vServerCustomSetting := getVServerCustomSettingName(customSetting)
-	return a.getSetCustomSettingCommand(vServerCustomSetting)
+func (a *AvereVfxt) getSetVServerSettingCommand(customSetting string, message string) string {
+	vServerCustomSetting := GetVServerCustomSettingName(customSetting)
+	return a.getSetCustomSettingCommand(vServerCustomSetting, message)
 }
 
 func (a *AvereVfxt) getRemoveVServerSettingCommand(customSetting string) string {
-	vServerCustomSetting := getVServerCustomSettingName(customSetting)
+	vServerCustomSetting := GetVServerCustomSettingName(customSetting)
 	return a.getRemoveCustomSettingCommand(vServerCustomSetting)
 }
 
-func (a *AvereVfxt) getSetFilerSettingCommand(internalName string, customSetting *CustomSetting) string {
-	coreFilerCustomSetting := getFilerCustomSettingName(internalName, customSetting.GetCustomSettingCommand())
-	return a.getSetCustomSettingCommand(coreFilerCustomSetting)
+func (a *AvereVfxt) getSetFilerSettingCommand(internalName string, customSetting *CustomSetting, message string) string {
+	coreFilerCustomSetting := GetFilerCustomSettingName(internalName, customSetting.GetCustomSettingCommand())
+	return a.getSetCustomSettingCommand(coreFilerCustomSetting, message)
 }
 
 func (a *AvereVfxt) getRemoveFilerSettingCommand(customSettingName string) string {
 	return a.getRemoveCustomSettingCommand(customSettingName)
-}
-
-func getCustomSettingName(customSettingString string) string {
-	return strings.Split(customSettingString, " ")[0]
-}
-
-func getCustomSettingCheckCode(customSettingString string) string {
-	parts := strings.Split(customSettingString, " ")
-	if len(parts) > 1 {
-		return parts[1]
-	}
-	return ""
-}
-
-func getCustomSettingValue(customSettingString string) string {
-	parts := strings.Split(customSettingString, " ")
-	if len(parts) > 2 {
-		var sb strings.Builder
-		for i := 2; i < len(parts); i++ {
-			sb.WriteString(fmt.Sprintf("%s ", parts[i]))
-		}
-		return strings.TrimSpace(sb.String())
-	}
-	return ""
-}
-
-func getVServerCustomSettingName(customSetting string) string {
-	return fmt.Sprintf("%s1.%s", VServerName, customSetting)
-}
-
-func getFilerCustomSettingName(internalName string, customSetting string) string {
-	return fmt.Sprintf("%s.%s", internalName, customSetting)
 }
 
 func (a *AvereVfxt) getBaseAvereCmd() string {
