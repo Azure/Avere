@@ -50,6 +50,11 @@ const (
 	QuotaWaitMinutes                          = 30 // wait up to 30 minutes for the quota to balance
 	TargetPercentageError                     = float32(0.01)
 
+	TerraformAutoMessage    = "Customer Added Custom Setting via Terraform"
+	TerraformFeatureMessage = "Terraform Feature"
+	// features that are custom settings
+	AutoWanOptimizeCustomSetting = "autoWanOptimize YF 2"
+
 	AnalyticsClusterFilersRaw = "cluster_filers_raw"
 
 	CacheModeReadWrite = "read-write"
@@ -147,6 +152,7 @@ const (
 	core_filer_name              = "name"
 	fqdn_or_primary_ip           = "fqdn_or_primary_ip"
 	cache_policy                 = "cache_policy"
+	auto_wan_optimize            = "auto_wan_optimize"
 	ordinal                      = "ordinal"
 	fixed_quota_percent          = "fixed_quota_percent"
 	custom_settings              = "custom_settings"
