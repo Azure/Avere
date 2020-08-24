@@ -43,6 +43,13 @@ func IsAutoWanOptimizeCustomSetting(customSettingString string) bool {
 	return GetCustomSettingName(customSettingString) == GetCustomSettingName(AutoWanOptimizeCustomSetting)
 }
 
+func IsQuotaBalanceCustomSetting(customSettingString string) bool {
+	customSettingName := GetCustomSettingName(customSettingString)
+	return customSettingName == GetCustomSettingName(QuotaCacheMoveMax) ||
+		customSettingName == GetCustomSettingName(QuotaDivisorFloor) ||
+		customSettingName == GetCustomSettingName(QuotaMaxMultiplierForInvalidatedMassQuota)
+}
+
 func getCustomSettingCheckCode(customSettingString string) string {
 	parts := strings.Split(customSettingString, " ")
 	if len(parts) > 1 {
