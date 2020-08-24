@@ -1909,11 +1909,15 @@ func ValidateCustomSetting(v interface{}, _ string) (warnings []string, errors [
 	}
 
 	if IsAutoWanOptimizeCustomSetting(customSetting) {
-		errors = append(errors, fmt.Errorf("Please remove '%s', the autoWanOptimize custom setting has been deprecated.  Instead use the %s flag, see provider docs for more information: https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#auto_wan_optimize.", customSetting, auto_wan_optimize))
+		errors = append(errors, fmt.Errorf("Please remove '%s', the autoWanOptimize custom setting has been deprecated.  Instead use the %s flag, see provider docs for more information: https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#auto_wan_optimize.  Also, autoWanOptimize it not required for storage filers as it is always automatically applied for cloud storage filers.", customSetting, auto_wan_optimize))
 	}
 
 	if IsQuotaBalanceCustomSetting(customSetting) {
 		errors = append(errors, fmt.Errorf("Please remove '%s'.  This custom setting is deprecated and is now used as part of quota balancing: https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#fixed_quota_percent.", customSetting))
+	}
+
+	if IsCustomSettingDeprecated(customSetting) {
+		errors = append(errors, fmt.Errorf("The custom setting '%s' has been deprecated and is no longer needed.  If support has recommended the setting, to override the deprecation, specify the custom setting as '%s%s'", customSetting, CustomSettingOverride, customSetting))
 	}
 
 	return warnings, errors

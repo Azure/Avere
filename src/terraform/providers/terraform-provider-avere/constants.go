@@ -55,6 +55,7 @@ const (
 	TerraformFeatureMessage = "Terraform Feature"
 	// features that are custom settings
 	AutoWanOptimizeCustomSetting = "autoWanOptimize YF 2"
+	CustomSettingOverride        = "override "
 
 	AnalyticsClusterFilersRaw = "cluster_filers_raw"
 

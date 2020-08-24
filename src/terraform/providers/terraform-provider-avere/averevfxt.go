@@ -784,7 +784,7 @@ func (a *AvereVfxt) AddFilerCustomSettingsList(internalName string, customSettin
 
 	// add the new settings
 	for _, v := range customSettings {
-		customSettingName := GetFilerCustomSettingName(internalName, v.Name)
+		customSettingName := GetFilerCustomSetting(internalName, v.Name)
 		if _, ok := existingCustomSettings[customSettingName]; ok {
 			// the custom setting already exists
 			continue
@@ -856,7 +856,7 @@ func (a *AvereVfxt) RemoveFilerCustomSettings(corefilerName string, customSettin
 		// fix the core filer settings by adding the mass
 		customSetting := CustomSetting{}
 		customSetting = *v
-		customSetting.Name = GetFilerCustomSettingName(internalName, customSetting.Name)
+		customSetting.SetFilerCustomSettingName(internalName)
 		newSettingsSet[customSetting.Name] = &customSetting
 	}
 
@@ -1530,7 +1530,8 @@ func (a *AvereVfxt) getListCustomSettingsJsonCommand() string {
 }
 
 func (a *AvereVfxt) getSetCustomSettingCommand(customSetting string, message string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s support.setCustomSetting %s \"%s\"", a.getBaseAvereCmd(), customSetting, message), AverecmdLogFile)
+	c := InitializeCustomSetting(customSetting)
+	return WrapCommandForLogging(fmt.Sprintf("%s support.setCustomSetting %s \"%s\"", a.getBaseAvereCmd(), c.GetCustomSettingCommand(), message), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getRemoveCustomSettingCommand(customSetting string) string {
@@ -1570,17 +1571,17 @@ func (a *AvereVfxt) getSupportSecureProactiveSupportCommand() string {
 }
 
 func (a *AvereVfxt) getSetVServerSettingCommand(customSetting string, message string) string {
-	vServerCustomSetting := GetVServerCustomSettingName(customSetting)
+	vServerCustomSetting := GetVServerCustomSetting(customSetting)
 	return a.getSetCustomSettingCommand(vServerCustomSetting, message)
 }
 
 func (a *AvereVfxt) getRemoveVServerSettingCommand(customSetting string) string {
-	vServerCustomSetting := GetVServerCustomSettingName(customSetting)
+	vServerCustomSetting := GetVServerCustomSetting(customSetting)
 	return a.getRemoveCustomSettingCommand(vServerCustomSetting)
 }
 
 func (a *AvereVfxt) getSetFilerSettingCommand(internalName string, customSetting *CustomSetting, message string) string {
-	coreFilerCustomSetting := GetFilerCustomSettingName(internalName, customSetting.GetCustomSettingCommand())
+	coreFilerCustomSetting := GetFilerCustomSetting(internalName, customSetting.GetCustomSettingCommand())
 	return a.getSetCustomSettingCommand(coreFilerCustomSetting, message)
 }
 
