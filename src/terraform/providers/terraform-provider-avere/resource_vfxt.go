@@ -1145,29 +1145,97 @@ func createCoreFilers(coreFilersToAdd map[string]*CoreFiler, averevfxt *AvereVfx
 		return corefilers[i].Ordinal < corefilers[j].Ordinal
 	})
 
+	isFixedQuotaRequired, err := isFixedQuotaRequired(corefilers, averevfxt)
+	if err != nil {
+		return err
+	}
+
+	if isFixedQuotaRequired {
+		if err = addCoreFilersWithBalancedQuota(corefilers, averevfxt); err != nil {
+			return err
+		}
+	} else {
+		if err = addCoreFilersWithNoBalancedQuota(corefilers, averevfxt); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func isFixedQuotaRequired(corefilers []*CoreFiler, averevfxt *AvereVfxt) (bool, error) {
+	// ignore fixed quota for 1 or less corefilers
+	if len(corefilers) <= 1 {
+		return false, nil
+	}
+
+	// only balance quota when starting with no core filers
+	coreFilers, err := averevfxt.GetExistingFilerNames()
+	if err != nil {
+		return false, err
+	}
+	if len(coreFilers) > 0 {
+		return false, nil
+	}
+
+	for _, v := range corefilers {
+		if v.FixedQuotaPercent > MinFixedQuotaPercent {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// add the core filers and custom settings without balancing quota
+func addCoreFilersWithBalancedQuota(corefilers []*CoreFiler, averevfxt *AvereVfxt) error {
+	log.Printf("[INFO] [addCoreFilerWithBalancedQuota")
+	defer log.Printf("[INFO] addCoreFilerWithBalancedQuota]")
+
+	var lastCoreFiler *CoreFiler
+	lastIndex := len(corefilers)
+
 	// increase speed of dynamic block allocation
 	if err := startFixedQuotaPercent(corefilers, averevfxt); err != nil {
 		return fmt.Errorf("error encountered while starting setting of fixed quota: %v", err)
 	}
 
-	// add the core filer and quota percent first
-	for _, v := range corefilers {
-		if err := averevfxt.CreateCoreFiler(v); err != nil {
+	// There is an undesired behavior in Avere vFXT where the first core filer is added and
+	// it receives all the quota space.  To speed up balancing, add the last core filer, and
+	// then delete it after added the other core filers.  This releases the space.
+	if QuotaSpeedUpDeleteFirstFiler {
+		lastIndex = lastIndex - 1
+		lastCoreFiler = corefilers[lastIndex]
+		log.Printf("[INFO] add last core filer '%s'", lastCoreFiler.Name)
+		if err := createCoreFilerWithFixedQuota(lastCoreFiler, averevfxt); err != nil {
 			return err
 		}
-		if v.FixedQuotaPercent > MinFixedQuotaPercent {
-			averevfxt.SetFixedQuotaPercent(v.Name, v.FixedQuotaPercent)
+	}
+
+	// add the core filer and quota percent first (not adding last core filer if used for quota speedup)
+	for i := 0; i < lastIndex; i++ {
+		if err := createCoreFilerWithFixedQuota(corefilers[i], averevfxt); err != nil {
+			return err
+		}
+	}
+
+	// remove and add the last core filer and quota percent, to release the space, and speed allocation
+	if QuotaSpeedUpDeleteFirstFiler {
+		log.Printf("[INFO] remove last core filer '%s'", lastCoreFiler.Name)
+		if err := averevfxt.DeleteFiler(lastCoreFiler.Name); err != nil {
+			return err
+		}
+
+		log.Printf("[INFO] add last core filer '%s'", lastCoreFiler.Name)
+		if err := createCoreFilerWithFixedQuota(lastCoreFiler, averevfxt); err != nil {
+			return err
 		}
 	}
 
 	// add the custom settings, after core filers and fixed quota percent has been added
 	// the custom settings are added after all core filers are added because they are slow to add,
 	// and could slow down the rebalancing
-	for _, v := range corefilers {
-		// add auto WAN optimize if required
-		if err := averevfxt.AddCoreFilerCustomSettings(v); err != nil {
-			return err
-		}
+	if err := addCustomSettings(corefilers, averevfxt); err != nil {
+		return err
 	}
 
 	// restore speed of dynamic block allocation and remove all cpolicyActive settings
@@ -1178,65 +1246,103 @@ func createCoreFilers(coreFilersToAdd map[string]*CoreFiler, averevfxt *AvereVfx
 	return nil
 }
 
+// add the core filers and custom settings without balancing quota
+func addCoreFilersWithNoBalancedQuota(corefilers []*CoreFiler, averevfxt *AvereVfxt) error {
+	log.Printf("[INFO] [addCoreFilerWithNoBalancedQuota")
+	defer log.Printf("[INFO] addCoreFilerWithNoBalancedQuota]")
+
+	for i := 0; i < len(corefilers); i++ {
+		if err := averevfxt.CreateCoreFiler(corefilers[i]); err != nil {
+			return err
+		}
+	}
+
+	if err := addCustomSettings(corefilers, averevfxt); err != nil {
+		return err
+	}
+	return nil
+}
+
+func addCustomSettings(corefilers []*CoreFiler, averevfxt *AvereVfxt) error {
+	for _, v := range corefilers {
+		if err := averevfxt.AddCoreFilerCustomSettings(v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func createCoreFilerWithFixedQuota(coreFiler *CoreFiler, averevfxt *AvereVfxt) error {
+	if err := averevfxt.CreateCoreFiler(coreFiler); err != nil {
+		return err
+	}
+	if coreFiler.FixedQuotaPercent > MinFixedQuotaPercent {
+		if err := averevfxt.SetFixedQuotaPercent(coreFiler.Name, coreFiler.FixedQuotaPercent); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func startFixedQuotaPercent(corefilers []*CoreFiler, averevfxt *AvereVfxt) error {
-	if smallestQuota, isRequired := isFixedQuotaRequired(corefilers); isRequired {
-		if err := averevfxt.CreateCustomSetting(QuotaCacheMoveMax, TerraformFeatureMessage); err != nil {
-			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaCacheMoveMax, err)
-		}
 
-		divisorFloorSetting := fmt.Sprintf(QuotaDivisorFloor, smallestQuota)
-		if err := averevfxt.CreateCustomSetting(divisorFloorSetting, TerraformFeatureMessage); err != nil {
-			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", divisorFloorSetting, err)
-		}
-
-		if err := averevfxt.CreateCustomSetting(QuotaMaxMultiplierForInvalidatedMassQuota, TerraformFeatureMessage); err != nil {
-			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaMaxMultiplierForInvalidatedMassQuota, err)
-		}
+	if err := averevfxt.CreateCustomSetting(QuotaCacheMoveMax, TerraformFeatureMessage); err != nil {
+		return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaCacheMoveMax, err)
 	}
+
+	smallestQuota := getSmallestQuotaPercent(corefilers)
+	divisorFloorSetting := fmt.Sprintf(QuotaDivisorFloor, smallestQuota)
+	if err := averevfxt.CreateCustomSetting(divisorFloorSetting, TerraformFeatureMessage); err != nil {
+		return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", divisorFloorSetting, err)
+	}
+
+	if err := averevfxt.CreateCustomSetting(QuotaMaxMultiplierForInvalidatedMassQuota, TerraformFeatureMessage); err != nil {
+		return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaMaxMultiplierForInvalidatedMassQuota, err)
+	}
+
 	return nil
 }
 
-func finishFixedQuotaPercent(corefilers []*CoreFiler, averevfxt *AvereVfxt) error {
-	if _, isRequired := isFixedQuotaRequired(corefilers); isRequired {
-		// wait QuotaWaitMinutes or until until the core filers are in the correct range
-		startTime := time.Now()
-		durationQuotaWaitMinutes := time.Duration(QuotaWaitMinutes) * time.Minute
-		for time.Since(startTime) < durationQuotaWaitMinutes {
-			time.Sleep(30 * time.Second)
-			if withinRange(corefilers, averevfxt) {
-				log.Printf("[INFO] all core filers within correct quota range")
-				break
-			}
-		}
-
-		// remove each of the cpolicyActive custom settings
-		for _, v := range corefilers {
-			if v.FixedQuotaPercent > MinFixedQuotaPercent {
-				averevfxt.RemoveFixedQuotaPercent(v.Name, v.FixedQuotaPercent)
-			}
-		}
-
-		if err := averevfxt.RemoveCustomSetting(QuotaCacheMoveMax); err != nil {
-			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaCacheMoveMax, err)
-		}
-		if err := averevfxt.RemoveCustomSetting(QuotaDivisorFloor); err != nil {
-			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaDivisorFloor, err)
-		}
-		if err := averevfxt.RemoveCustomSetting(QuotaMaxMultiplierForInvalidatedMassQuota); err != nil {
-			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaMaxMultiplierForInvalidatedMassQuota, err)
-		}
-	}
-	return nil
-}
-
-func isFixedQuotaRequired(corefilers []*CoreFiler) (int, bool) {
+func getSmallestQuotaPercent(corefilers []*CoreFiler) int {
 	result := MaxFixedQuotaPercent
 	for _, v := range corefilers {
 		if v.FixedQuotaPercent > MinFixedQuotaPercent && v.FixedQuotaPercent < result {
 			result = v.FixedQuotaPercent
 		}
 	}
-	return result, (result != MaxFixedQuotaPercent)
+	return result
+}
+
+func finishFixedQuotaPercent(corefilers []*CoreFiler, averevfxt *AvereVfxt) error {
+	// wait QuotaWaitMinutes or until until the core filers are in the correct range
+	startTime := time.Now()
+	durationQuotaWaitMinutes := time.Duration(QuotaWaitMinutes) * time.Minute
+	for time.Since(startTime) < durationQuotaWaitMinutes {
+		time.Sleep(30 * time.Second)
+		if withinRange(corefilers, averevfxt) {
+			log.Printf("[INFO] all core filers within correct quota range")
+			break
+		}
+	}
+
+	// remove each of the cpolicyActive custom settings
+	for _, v := range corefilers {
+		if v.FixedQuotaPercent > MinFixedQuotaPercent {
+			averevfxt.RemoveFixedQuotaPercent(v.Name, v.FixedQuotaPercent)
+		}
+	}
+
+	if err := averevfxt.RemoveCustomSetting(QuotaCacheMoveMax); err != nil {
+		return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaCacheMoveMax, err)
+	}
+	if err := averevfxt.RemoveCustomSetting(QuotaDivisorFloor); err != nil {
+		return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaDivisorFloor, err)
+	}
+	if err := averevfxt.RemoveCustomSetting(QuotaMaxMultiplierForInvalidatedMassQuota); err != nil {
+		return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaMaxMultiplierForInvalidatedMassQuota, err)
+	}
+
+	return nil
 }
 
 func withinRange(corefilers []*CoreFiler, averevfxt *AvereVfxt) bool {
@@ -1805,6 +1911,11 @@ func ValidateCustomSetting(v interface{}, _ string) (warnings []string, errors [
 	if IsAutoWanOptimizeCustomSetting(customSetting) {
 		errors = append(errors, fmt.Errorf("Please remove '%s', the autoWanOptimize custom setting has been deprecated.  Instead use the %s flag, see provider docs for more information: https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#auto_wan_optimize.", customSetting, auto_wan_optimize))
 	}
+
+	if IsQuotaBalanceCustomSetting(customSetting) {
+		errors = append(errors, fmt.Errorf("Please remove '%s'.  This custom setting is deprecated and is now used as part of quota balancing: https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#fixed_quota_percent.", customSetting))
+	}
+
 	return warnings, errors
 }
 

@@ -47,8 +47,9 @@ const (
 	// to be assigned to a policy. Decreasing it could reduce
 	// the impact from the early added corefiler default is 20
 	QuotaMaxMultiplierForInvalidatedMassQuota = "cfs.maxMultiplierForInvalidatedMassQuota VS 2"
-	QuotaWaitMinutes                          = 30 // wait up to 30 minutes for the quota to balance
+	QuotaWaitMinutes                          = 20 // wait up to 20 minutes for the quota to balance
 	TargetPercentageError                     = float32(0.01)
+	QuotaSpeedUpDeleteFirstFiler              = true
 
 	TerraformAutoMessage    = "Customer Added Custom Setting via Terraform"
 	TerraformFeatureMessage = "Terraform Feature"
