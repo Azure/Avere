@@ -15,11 +15,32 @@ func ValidateCustomSettingFormat(customSettingString string) error {
 	return nil
 }
 
-func InitializeCustomSetting(customSettingString string) *CustomSetting {
+func InitializeCustomSetting(customSetting string) *CustomSetting {
+	override, nonOverriddenCustomSetting := isOverrideEnabled(customSetting)
+
+	parts := strings.Split(nonOverriddenCustomSetting, " ")
+
+	name := parts[0]
+
+	checkCode := ""
+	if len(parts) > 1 {
+		checkCode = parts[1]
+	}
+
+	value := ""
+	if len(parts) > 2 {
+		var sb strings.Builder
+		for i := 2; i < len(parts); i++ {
+			sb.WriteString(fmt.Sprintf("%s ", parts[i]))
+		}
+		value = strings.TrimSpace(sb.String())
+	}
+
 	return &CustomSetting{
-		Name:      GetCustomSettingName(customSettingString),
-		CheckCode: getCustomSettingCheckCode(customSettingString),
-		Value:     getCustomSettingValue(customSettingString),
+		Name:      name,
+		CheckCode: checkCode,
+		Value:     value,
+		Override:  override,
 	}
 }
 
@@ -27,45 +48,67 @@ func (c *CustomSetting) GetCustomSettingCommand() string {
 	return fmt.Sprintf("%s %s %s", c.Name, c.CheckCode, c.Value)
 }
 
-func GetCustomSettingName(customSettingString string) string {
-	return strings.Split(customSettingString, " ")[0]
+func GetCustomSettingName(customSetting string) string {
+	c := InitializeCustomSetting(customSetting)
+	return c.Name
 }
 
-func GetVServerCustomSettingName(customSetting string) string {
-	return fmt.Sprintf("%s1.%s", VServerName, customSetting)
+func GetVServerCustomSetting(customSetting string) string {
+	c := InitializeCustomSetting(customSetting)
+	return fmt.Sprintf("%s1.%s", VServerName, c.GetCustomSettingCommand())
 }
 
-func GetFilerCustomSettingName(internalName string, customSetting string) string {
-	return fmt.Sprintf("%s.%s", internalName, customSetting)
+func GetFilerCustomSetting(internalName string, customSetting string) string {
+	c := InitializeCustomSetting(customSetting)
+	return fmt.Sprintf("%s.%s", internalName, c.GetCustomSettingCommand())
 }
 
-func IsAutoWanOptimizeCustomSetting(customSettingString string) bool {
-	return GetCustomSettingName(customSettingString) == GetCustomSettingName(AutoWanOptimizeCustomSetting)
+func (c *CustomSetting) SetFilerCustomSettingName(internalName string) {
+	c.Name = fmt.Sprintf("%s.%s", internalName, c.Name)
 }
 
-func IsQuotaBalanceCustomSetting(customSettingString string) bool {
-	customSettingName := GetCustomSettingName(customSettingString)
+func IsAutoWanOptimizeCustomSetting(customSetting string) bool {
+	return GetCustomSettingName(customSetting) == GetCustomSettingName(AutoWanOptimizeCustomSetting)
+}
+
+func IsQuotaBalanceCustomSetting(customSetting string) bool {
+	customSettingName := GetCustomSettingName(customSetting)
 	return customSettingName == GetCustomSettingName(QuotaCacheMoveMax) ||
 		customSettingName == GetCustomSettingName(QuotaDivisorFloor) ||
 		customSettingName == GetCustomSettingName(QuotaMaxMultiplierForInvalidatedMassQuota)
 }
 
-func getCustomSettingCheckCode(customSettingString string) string {
-	parts := strings.Split(customSettingString, " ")
-	if len(parts) > 1 {
-		return parts[1]
+func IsCustomSettingDeprecated(customSetting string) bool {
+	deprecatedCustomSettings := []string{
+		"cluster.ctcConnMult",
+		"cfs.quotaCacheMoveMax",
+		"cfs.quotaCacheDivisorFloor",
+		"cluster.HaBackEndTimeout",
+		"cluster.NfsBackEndTimeout",
+		"cluster.NfsFrontEndCwnd",
+		"NfsFrontEndSobuf",
+		"rwsize",
+		"vcm.alwaysForwardReadSize",
+		"vcm.disableReadAhead",
+		"always_forward",
 	}
-	return ""
+
+	c := InitializeCustomSetting(customSetting)
+	// this setting has been overridden
+	if c.Override {
+		return false
+	}
+
+	for _, deprecatedSetting := range deprecatedCustomSettings {
+		if c.Name == deprecatedSetting {
+			return true
+		}
+	}
+
+	return false
 }
 
-func getCustomSettingValue(customSettingString string) string {
-	parts := strings.Split(customSettingString, " ")
-	if len(parts) > 2 {
-		var sb strings.Builder
-		for i := 2; i < len(parts); i++ {
-			sb.WriteString(fmt.Sprintf("%s ", parts[i]))
-		}
-		return strings.TrimSpace(sb.String())
-	}
-	return ""
+func isOverrideEnabled(customSetting string) (bool, string) {
+	result := strings.TrimPrefix(customSetting, CustomSettingOverride)
+	return result != customSetting, result
 }

@@ -137,6 +137,7 @@ type CustomSetting struct {
 	Name      string `json:"name"`
 	Value     string `json:"value"`
 	CheckCode string `json:"checkCode"`
+	Override  bool
 }
 
 type IPAddress struct {
