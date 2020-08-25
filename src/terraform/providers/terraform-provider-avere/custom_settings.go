@@ -91,6 +91,11 @@ func IsCustomSettingDeprecated(customSetting string) bool {
 		"vcm.alwaysForwardReadSize",
 		"vcm.disableReadAhead",
 		"always_forward",
+		"client_wt_preferred",
+		"client_rt_preferred",
+		"cluster.CtcBackEndTimeout",
+		"cluster.HAVoteTimeToLive",
+		"vcm.vcm_waWriteBlocksValid",
 	}
 
 	c := InitializeCustomSetting(customSetting)
