@@ -1208,8 +1208,17 @@ func (a *AvereVfxt) AvereCommandWithCorrection(cmd string, correctiveAction func
 			// the corrective action is best effort, just log an error if one occurs
 			if err = correctiveAction(); err != nil {
 				log.Printf("[ERROR] error performing correctiveAction: %v", err)
+			} else {
+				// try the command again after a successful correction
+				stdoutBuf, stderrBuf, err = a.RunCommand(cmd)
+				if err == nil {
+					// success
+					result = stdoutBuf.String()
+					break
+				}
 			}
 		}
+
 		if retries > AverecmdRetryCount {
 			// failure after exhausted retries
 			return "", fmt.Errorf("Failure after %d retries applying command: '%s' '%s'", AverecmdRetryCount, stdoutBuf.String(), stderrBuf.String())
@@ -1449,7 +1458,7 @@ func (a *AvereVfxt) getCreateAzureStorageFilerCommand(azureStorageFiler *AzureSt
 }
 
 func (a *AvereVfxt) getDeleteFilerCommand(filer string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.remove \"%s\"", a.getBaseAvereCmd(), filer), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s system.multicall \"[{'methodName':'system.enableAPI','params':['maintenance']},{'methodName':'corefiler.remove','params':['%s']}]\"", a.getBaseAvereCmd(), filer), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getListCredentialsCommand() string {
