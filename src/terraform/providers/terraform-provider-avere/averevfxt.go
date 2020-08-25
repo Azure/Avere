@@ -1157,10 +1157,16 @@ func (a *AvereVfxt) GetCoreFilerSpacePercentage() (map[string]float32, error) {
 		return nil, err
 	}
 
-	var analytics map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonData), &analytics); err != nil {
+	var outputParts [][]interface{}
+	if err := json.Unmarshal([]byte(jsonData), &outputParts); err != nil {
 		return nil, err
 	}
+
+	if len(outputParts) <= 1 && len(outputParts[1]) < 1 {
+		return nil, fmt.Errorf("json did not parse correctly and is less than two parts: '%v'", jsonData)
+	}
+
+	analytics := (outputParts[1][0]).(map[string]interface{})
 
 	rawFreeSpace, ok := analytics[AnalyticsClusterFilersRaw]
 	if !ok {
@@ -1558,7 +1564,7 @@ func (a *AvereVfxt) getSupportSupportTestUploadCommand() string {
 }
 
 func (a *AvereVfxt) getAnalyticsCoreFilerSpaceCommand() string {
-	return WrapCommandForLogging(fmt.Sprintf("%s --json analytics.getCoreFilerCacheSpaceData", a.getBaseAvereCmd()), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s --json system.multicall \"[{'methodName':'system.enableAPI','params':['internal']},{'methodName':'analytics.getCoreFilerCacheSpaceData','params':[]}]\"", a.getBaseAvereCmd()), AverecmdLogFile)
 }
 
 // this updates support uploads per docs https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-enable-support
