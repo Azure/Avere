@@ -4,7 +4,7 @@ Because the Avere cluster is compatible with diverse software and hardware envir
 
 This section gives some examples of the kinds of custom tuning that can be done.
 
-**Tip:** The VDBench utility can be helfpul in generating I/O workloads to test a vFXT cluster. Read [Measuring vFXT Performance](../vdbench.md) to learn more. 
+**Tip:** The VDBench utility can be helfpul in generating I/O workloads to test a vFXT cluster. Read [Measuring vFXT Performance](../../vdbench.md) to learn more. 
 
 ## General optimizations
 
