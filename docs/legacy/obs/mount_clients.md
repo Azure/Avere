@@ -3,7 +3,7 @@
 Follow these steps to connect client machines to access your vFXT cluster.
 
 1. Configure a core filer and junction as described in the previous step, [Configure storage](configure_storage.md).
-1. Decide how to load-balance client traffic among your cluster nodes. Read [Balancing client load](balancing-client-load), below, for details. 
+1. Decide how to load-balance client traffic among your cluster nodes. Read [Balancing client load](#balancing-client-load), below, for details. 
 1. Choose the [IP address and junction path](#identifying-ip-addresses-and-paths-to-mount) to mount.
 1. Issue the [mount command](#mount-command-arguments), with appropriate arguments.
 
@@ -42,7 +42,7 @@ function mount_round_robin() {
     fi   
 } 
 ```
-The function above is part of the [Batch example](maya_azure_batch_avere_vfxt_demo.md); the entire file is available [here](../src/tutorials/mayabatch/centosbootstrap.sh).
+The function above is part of the [Batch example](../../maya_azure_batch_avere_vfxt_demo.md); the entire file is available [here](../../../src/tutorials/mayabatch/centosbootstrap.sh).
 
 ## Identifying IP addresses and paths to mount
 
@@ -73,7 +73,7 @@ The junction path corresponds to the **Namespace path** field you defined when c
 
 !["Add new junction" dialog with /avere/files in the namespace path field](images/create_junction_example.png)
 
-In addition to the paths, include the [Mount command arguments](mount-command-arguments) described below when mounting each client.
+In addition to the paths, include the [Mount command arguments](#mount-command-arguments) described below when mounting each client.
 
 ## Mount command arguments
 

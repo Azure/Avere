@@ -14,7 +14,7 @@ This section explains strategies for creating a multi-client, multithreaded file
 
 It also explains some utilities that can help. The ``msrsync`` utility can be used to partially automate the process of dividing a dataset into buckets and using rsync commands. The ``parallelcp`` script is another utility that reads the source directory and issues copy commands automatically.  
 
-To install a data ingestor VM with all of these parallel data ingestion tools follow the [data ingestor tutorial](data_ingestor.md).
+To install a data ingestor VM with all of these parallel data ingestion tools follow the [data ingestor tutorial](../../data_ingestor.md).
 
 Click the link to jump to a section:
 

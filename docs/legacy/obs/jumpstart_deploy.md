@@ -75,7 +75,7 @@ cp /create-minimal-cluster ./cmc
 vi cmc
 ```
 
-Edit the following fields in the `cmc` script to supply the values you captured from [outputs (above)](browse-to-outputs) for resource group, location, virtual network, and subnet:
+Edit the following fields in the `cmc` script to supply the values you captured from [outputs (above)](#browse-to-outputs) for resource group, location, virtual network, and subnet:
 
 ```bash
 RESOURCE_GROUP=<from controller Outputs>
