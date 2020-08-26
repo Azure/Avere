@@ -1,6 +1,6 @@
 # NFS NAS Core Filer
 
-The templates in this folder implements an NFS based NAS Filer described in [Why use the Avere vFXT for Rendering?](../../../docs/why_avere_for_rendering.md).
+The templates in this folder implements an NFS based NAS Filer described in [Why use the Avere vFXT for Rendering?](../../../../docs/why_avere_for_rendering.md).
 
 A VNET is created for the NAS filer, but you can easily adjust the templates to replace the VNET resource with reference to your own VNET.
 

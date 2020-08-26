@@ -124,7 +124,7 @@ More information about junctions can be found [here](http://library.averesystems
 - Choose the core filer export.
 - Click **Next**.
 
-  ![Screenshot of the "Add new junction" page with the fields completed for junction, core filer, and export](images/24addjunction.png)
+  <!-- ![Screenshot of the "Add new junction" page with the fields completed for junction, core filer, and export](images/24addjunction.png) -->
 
 The junction will appear after a few seconds. Create additional junctions as needed.
 

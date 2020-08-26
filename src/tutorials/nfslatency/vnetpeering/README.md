@@ -1,6 +1,6 @@
 # VNET Peering of NFS NAS Core Filers
 
-The template and parameter files implement the VNET peering described in [Why use the Avere vFXT for Rendering?](../../../docs/why_avere_for_rendering.md).
+The template and parameter files implement the VNET peering described in [Why use the Avere vFXT for Rendering?](../../../../docs/why_avere_for_rendering.md).
 
 The main East US VNETs is peered to 4 smaller VNETs, as shown in the following diagram:
 
