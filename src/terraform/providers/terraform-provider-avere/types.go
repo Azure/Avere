@@ -37,6 +37,13 @@ type AvereVfxt struct {
 	FirstIPAddress       string
 	LastIPAddress        string
 
+	CifsAdDomain           string
+	CifsServerName         string
+	CifsUsername           string
+	CifsPassword           string
+	CifsOrganizationalUnit string
+	EnableExtendedGroups   bool
+
 	NtpServers string
 	Timezone   string
 	DnsServer  string
@@ -131,6 +138,8 @@ type Junction struct {
 	PolicyName         string `json:"policy"`
 	SharePermissions   string
 	ExportRules        map[string]*ExportRule
+	CifsShareName      string
+	CifsAces           map[string]*ShareAce
 }
 
 type CustomSetting struct {
@@ -161,4 +170,10 @@ type Cluster struct {
 
 type ClusterFilersRaw struct {
 	AvailableForReads int64 `json:"availableForReads"`
+}
+
+type CifsShare struct {
+	ShareName string `json:"shareName"`
+	Export    string `json:"export"`
+	Suffix    string `json:"suffix"`
 }

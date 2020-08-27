@@ -221,6 +221,48 @@ func resourceVfxt() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			cifs_ad_domain: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: ValidateCIFSDomain,
+				RequiredWith: []string{cifs_server_name, cifs_username, cifs_password},
+			},
+			cifs_server_name: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: ValidateCIFSServerName,
+				RequiredWith: []string{cifs_ad_domain, cifs_username, cifs_password},
+			},
+			cifs_username: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: ValidateCIFSUsername,
+				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_password},
+			},
+			cifs_password: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				Default:      "",
+				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
+				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_username},
+			},
+			cifs_organizational_unit: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
+				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_username, cifs_password},
+			},
+			enable_extended_groups: {
+				Type:         schema.TypeBool,
+				Optional:     true,
+				Default:      false,
+				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_username, cifs_password},
+			},
 			user: {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -313,6 +355,18 @@ func resourceVfxt() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringIsNotWhiteSpace,
 									},
+									cifs_share_name: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "",
+										ValidateFunc: ValidateCIFSShareName,
+									},
+									cifs_share_ace: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "",
+										ValidateFunc: ValidateCIFSShareAce,
+									},
 									core_filer_export: {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -370,6 +424,18 @@ func resourceVfxt() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringIsNotWhiteSpace,
+						},
+						cifs_share_name: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "",
+							ValidateFunc: ValidateCIFSShareName,
+						},
+						cifs_share_ace: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "",
+							ValidateFunc: ValidateCIFSShareAce,
 						},
 						export_rule: {
 							Type:         schema.TypeString,
@@ -444,9 +510,10 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 	//  4. NTP Servers
 	//  5. Global and Vserver Custom Support settings
 	//  6. Users
-	//  7. Core Filers including custom settings
-	//  8. Junctions
-	//  9. Support Uploads if requested
+	//  7. CIFS Settings
+	//  8. Core Filers including custom settings
+	//  9. Junctions
+	// 10. Support Uploads if requested
 	//
 
 	if err := avereVfxt.Platform.CreateVfxt(avereVfxt); err != nil {
@@ -482,6 +549,16 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 
 	if err := createUsers(d, avereVfxt); err != nil {
 		return err
+	}
+
+	if err := avereVfxt.EnableCIFS(); err != nil {
+		return err
+	}
+
+	if avereVfxt.EnableExtendedGroups == true {
+		if err := avereVfxt.ModifyExtendedGroups(); err != nil {
+			return err
+		}
 	}
 
 	// add the new filers
@@ -602,10 +679,12 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 	//  3. Global and Vserver Custom Support settings
 	//  4. Update Users
 	//  5. Delete Junctions
-	//  5. Update Core Filers including Core Filer custom settings
-	//  6. Add Junctions
-	//  7. Scale cluster
-	//  8. Update Support Uploads
+	//  6. Update CIFs
+	//  7. Update Core Filers including Core Filer custom settings
+	//  8. Add Junctions
+	//  9. Update Extended Groups
+	// 10. Scale cluster
+	// 11. Update Support Uploads
 	//
 
 	if d.HasChange(timezone) || d.HasChange(dns_server) || d.HasChange(dns_domain) || d.HasChange(dns_search) {
@@ -679,6 +758,11 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		if err := deleteAzureStorageFilers(storageFilersToDelete, avereVfxt); err != nil {
 			return err
 		}
+
+		if err := updateCifs(d, avereVfxt); err != nil {
+			return err
+		}
+
 		if err := createCoreFilers(coreFilersToAdd, avereVfxt); err != nil {
 			return err
 		}
@@ -694,6 +778,16 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 
 		// refresh all junctions, and add all missing
 		if err := createJunctions(d, avereVfxt); err != nil {
+			return err
+		}
+	} else {
+		if err := updateCifs(d, avereVfxt); err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange(enable_extended_groups) {
+		if err := avereVfxt.ModifyExtendedGroups(); err != nil {
 			return err
 		}
 	}
@@ -819,6 +913,12 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		}
 	}
 
+	cifsAdDomain := d.Get(cifs_ad_domain).(string)
+	cifsServerName := d.Get(cifs_server_name).(string)
+	cifsUsername := d.Get(cifs_username).(string)
+	cifsPassword := d.Get(cifs_password).(string)
+	cifsOrganizationalUnit := d.Get(cifs_organizational_unit).(string)
+
 	return NewAvereVfxt(
 		controllerAddress,
 		controllerAdminUsername,
@@ -836,6 +936,12 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(node_cache_size).(int),
 		firstIPAddress,
 		lastIPAddress,
+		cifsAdDomain,
+		cifsServerName,
+		cifsUsername,
+		cifsPassword,
+		cifsOrganizationalUnit,
+		d.Get(enable_extended_groups).(bool),
 		d.Get(ntp_servers).(string),
 		d.Get(timezone).(string),
 		d.Get(dns_server).(string),
@@ -1099,6 +1205,11 @@ func getJunctionsToDelete(d *schema.ResourceData, averevfxt *AvereVfxt, coreFile
 
 func deleteJunctions(junctionsToDelete map[string]*Junction, averevfxt *AvereVfxt) error {
 	for _, j := range junctionsToDelete {
+		if len(j.CifsShareName) > 0 {
+			if err := averevfxt.DeleteCifsShare(j.CifsShareName); err != nil {
+				return err
+			}
+		}
 		if err := averevfxt.DeleteJunction(j.NameSpacePath); err != nil {
 			return err
 		}
@@ -1443,10 +1554,23 @@ func modifyAzureStorageFilers(storageFilersToModify map[string]*AzureStorageFile
 	return nil
 }
 
+func junctionsRequireCifs(junctions map[string]*Junction) bool {
+	for _, v := range junctions {
+		if len(v.CifsShareName) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
 func createJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 	newJunctions, err := expandAllJunctions(d)
 	if err != nil {
 		return err
+	}
+
+	if junctionsRequireCifs(newJunctions) && !averevfxt.CIFSSettingsExist() {
+		return fmt.Errorf("one or more junctions requests a cifs share, but cifs not enabled")
 	}
 
 	// get the map of existing junctions
@@ -1462,6 +1586,20 @@ func createJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 			continue
 		}
 		if err := averevfxt.CreateJunction(v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func updateCifs(d *schema.ResourceData, averevfxt *AvereVfxt) error {
+	// CIFS must be updated after the last possible CIF shares have been removed, but
+	// before new shares are added
+	if d.HasChange(cifs_ad_domain) || d.HasChange(cifs_server_name) || d.HasChange(cifs_username) || d.HasChange(cifs_password) || d.HasChange(cifs_organizational_unit) {
+		if err := averevfxt.DisableCIFS(); err != nil {
+			return err
+		}
+		if err := averevfxt.EnableCIFS(); err != nil {
 			return err
 		}
 	}
@@ -1606,7 +1744,9 @@ func expandCoreFilerJunctions(l []interface{}, results map[string]*Junction) err
 				junctionRaw[core_filer_export].(string),
 				junctionRaw[export_subdirectory].(string),
 				PermissionsPreserve,
-				junctionRaw[export_rule].(string))
+				junctionRaw[export_rule].(string),
+				junctionRaw[cifs_share_name].(string),
+				junctionRaw[cifs_share_ace].(string))
 			if err != nil {
 				return err
 			}
@@ -1632,7 +1772,9 @@ func expandAzureStorageFilerJunctions(l []interface{}, results map[string]*Junct
 			CloudFilerExport,
 			"",
 			PermissionsModebits,
-			input[export_rule].(string))
+			input[export_rule].(string),
+			input[cifs_share_name].(string),
+			input[cifs_share_ace].(string))
 		if err != nil {
 			return err
 		}
@@ -1692,6 +1834,12 @@ func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
 					if v2, ok := m[export_rule]; ok {
 						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
 					}
+					if v2, ok := m[cifs_share_name]; ok {
+						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
+					}
+					if v2, ok := m[cifs_share_ace]; ok {
+						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
+					}
 				}
 			}
 		}
@@ -1719,6 +1867,12 @@ func resourceAvereVfxtAzureStorageCoreFilerReferenceHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
 		if v, ok := m[export_rule]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m[cifs_share_name]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m[cifs_share_ace]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
 	}
@@ -1812,6 +1966,16 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 							return err
 						}
 					}
+					if v2, ok := m[cifs_share_name]; ok {
+						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", cifs_share_name, v2.(string))); err != nil {
+							return err
+						}
+					}
+					if v2, ok := m[cifs_share_ace]; ok {
+						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", cifs_share_ace, v2.(string))); err != nil {
+							return err
+						}
+					}
 				}
 			}
 		}
@@ -1824,6 +1988,8 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 			input[account_name].(string),
 			input[container_name].(string),
 			input[export_rule].(string),
+			input[cifs_share_name].(string),
+			input[cifs_share_ace].(string),
 		}
 		// the junction namespace path is optional, and has no default
 		if v, ok := input[junction_namespace_path]; ok {
