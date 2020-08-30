@@ -108,6 +108,12 @@ The following arguments are supported:
 * [azure_storage_filer](#azure_storage_filer) - (Optional) zero or more storage filer blocks used to specify zero or more [Azure Blob Storage Cloud core filers](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-deploy-plan#cloud-core-filers).
 * [core_filer](#core_filer) - (Optional) zero or more storage filer blocks used to specify zero or more [NFS filers](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-deploy-plan#hardware-core-filers)
 * <a name="enable_support_uploads"></a>[enable_support_uploads](#enable_support_uploads) - (Optional) This setting defaults to 'false' and by setting to 'true' you agree to the [Privacy Policy](https://privacy.microsoft.com/en-us/privacystatement) of the Avere vFXT.  This enables support exactly as described in the [Enable Support Uploads documentation](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-enable-support).  Avere vFXT for Azure can automatically upload support data about your cluster. These uploads let support staff provide the best possible customer service.
+* <a name="cifs_ad_domain"></a>[cifs_ad_domain](#cifs_ad_domain) - (optional, but if specified required with `"cifs_server_name"`, `"cifs_username"`, `"cifs_password"`) Enter the fully qualified domain name (FQDN) of the Active Directory domain that the cluster is to join.  Configure to enable SMB2 on this cluster.
+* <a name="cifs_server_name"></a>[cifs_server_name](#cifs_server_name) - (optional, but if specified required with `"cifs_ad_domain"`, `"cifs_username"`, `"cifs_password"`) Enter the name for the CIFS server.  The default value is the name of the cluster, but you can enter a different name if you prefer.  The name can be no longer than 15 characters.  Names can include alphanumeric characters (a-z, A-Z, 0-9) and hyphens (-), but not underscores (_), periods (.), or other special characters.
+* <a name="cifs_username"></a>[cifs_username](#cifs_username) - (optional, but if specified required with `"cifs_ad_domain"`, `"cifs_server_name"`, `"cifs_password"`) Enter the name of a Windows user with permission to join the Active Directory domain configured for the cluster.  The name is specified as either a username (e.g. "jsmith") or username with FQDN suffix (e.g. "jsmith@contoso.com")
+* <a name="cifs_password"></a>[cifs_username](#cifs_password) - (optional, but if specified required with `"cifs_ad_domain"`, `"cifs_server_name"`, `"cifs_username"`) Enter the password for the cifs_username.
+* <a name="cifs_organizational_unit"></a>[cifs_username](#cifs_password) - (optional, but if specified required with `"cifs_ad_domain"`, `"cifs_server_name"`, `"cifs_username"`, `"cifs_password"`) the organizational unit for the machine account to be created in.
+* <a name="enable_extended_groups"></a>[enable_extended_groups](#enable_extended_groups) - (optional, but if specified required with `"cifs_ad_domain"`, `"cifs_server_name"`, `"cifs_username"`, `"cifs_password"`) set to true to enable extended groups to support users that are in more than 16 authsys groups. By default this is set to false.
 ---
 
 A <a name="user"></a>`user` block supports the following
@@ -125,6 +131,8 @@ A <a name="azure_storage_filer"></a>`azure_storage_filer` block supports the fol
 * <a name="ordinal_1"></a>[ordinal](#ordinal_1) - (Optional) - this specifies the order that the storage filers are added. The default is 0, and the core filers are added in ascending numerical order followed by ascending alphabetical order on name.
 * <a name="custom_settings_1"></a>[custom_settings](#custom_settings_1) - (Optional) - these are custom settings provided by Avere support to match advanced use case scenarios.  They are a list of strings of the form "SETTINGNAME CHECKCODE VALUE".  Do not prefix with the mass name as it is automatically detected.
 * <a name="junction_namespace_path"></a>[junction_namespace_path](#junction_namespace_path) - (Optional) this is the exported namespace from the Avere vFXT.
+* <a name="cifs_share_name_1"></a>[cifs_share_name](#cifs_share_name_1) - (Optional) this is an SMB2 share exported from the Avere vFXT.
+* <a name="cifs_share_ace_1"></a>[cifs_share_ace](#cifs_share_ace_1) - (Optional) this is an export rule described in the [CIFS Share ACE section](#cifs-share-ace).  If not specified, the junction uses the most permissive access set to `Everyone`.
 * <a name="export_rule_1"></a>[export_rule](#export_rule_1) - (Optional) this is an export rule described in the [Export Rules section](#export-rules).  If not specified, the junction uses the most permissive rule set by the default policy.
 
 ---
@@ -152,6 +160,8 @@ A <a name="core_filer"></a>`core_filer` block supports the following:
 
 A <a name="junction"></a>`junction` block supports the following:
 * <a name="namespace_path"></a>[namespace_path](#namespace_path) - (Required) this is the exported namespace from the Avere vFXT. 
+* <a name="cifs_share_name_2"></a>[cifs_share_name](#cifs_share_name_2) - (Optional) this is an SMB2 share exported from the Avere vFXT. 
+* <a name="cifs_share_ace_2"></a>[cifs_share_ace](#cifs_share_ace_2) - (Optional) this is an export rule described in the [CIFS Share ACE section](#cifs-share-ace).  If not specified, the junction uses the most permissive access set to `Everyone`.
 * <a name="core_filer_export"></a>[core_filer_export](#core_filer_export) - (Required) this is the export from the hardware core filer.
 * <a name="export_subdirectory"></a>[export_subdirectory](#export_subdirectory) - (Optional) if the export does not point directly to the core filer directory that you want to associate with this junction, add the relative subdirectory path here.  (Do not begin the path with "/".)  If the subdirectory does not already exist, it will be created automatically.
 * <a name="export_rule_2"></a>[export_rule](#export_rule_2) - (Optional) this is an export rule described in the [Export Rules section](#export-rules).  If not specified, the junction uses the most permissive rule set by the default policy.
@@ -162,7 +172,7 @@ Each junction may specify export rules.  The export rules control client access 
 
 The `export_rule` is of the format `"<host1>(<options>) <host2>(<options>)..."`.  The host may be a fully qualified domain name, an IP address, an IP address with a mask (CIDR notation), or '*' to represent all clients.
 
-The rules describe the access options and are specified in any order as follows:
+The options describe the access rules and are specified in any order as follows:
 * **access level** - the access level may be read-only `ro` or read/write `rw`.  If not specified, the default is `ro`.
 * **squash** - this setting determines how user identities are sent to the core filer, and one of the following three modes may be specified.  If not specified, the default is `all_squash`.
     1. `no_root_squash` - UIDs are passed verbatim from the client to the core filer.
@@ -208,6 +218,40 @@ This rule causes no action to be taken, and the junction inherits the default po
 | squash | `no_root_squash` |
 | allow SUID bits | `yes` |
 | allow submounts | `yes` |
+
+# CIFS Share ACE
+
+Each CIFS share may specify a share ACE to control access to the share.  More information about CIFS management can be found in the [Active Directory Administrator Guide to Avere FXT Deployment](https://azure.github.io/Avere/legacy/pdf/ADAdminCIFSACLsGuide_20140716.pdf).
+
+The `cifs_share_ace` is of the form `"<user1/group1>(<options>) <user2/group2>(<options>)..."`.  The user or group may be a name or security ID (SID).  The name may also include the domain prefix (for example, 'DOMAIN\UserOrGroup').
+
+The options describe the access rules and are specified in any order as follows:
+* **type** - the type of ACE (either 'ALLOW' or 'DENY')
+* **permission** - the type of permission being allowed or denied - either 'READ', 'CHANGE', or "FULL".
+
+**Example 1:** `cifs_share_ace = "azureuser"` or  `cifs_share_ace = "azureuser()"`
+
+This rule will restrict cifs share access to only user `azureuser` with all the settings mapped to their default values:
+| Access Parameter | Value |
+| --- | --- |
+| type | `ALLOW` |
+| permission | `READ` |
+
+**Example 2:** `cifs_share_ace = "RENDERING\rendergroup(ALLOW,FULL) RENDERING\renderwranglers(ALLOW,FULL)"`
+
+This rule will restrict cifs share access to group `RENDERING\rendergroup` and group `RENDERING\renderwranglers` with the following values:
+| Access Parameter | Value |
+| --- | --- |
+| type | `ALLOW` |
+| permission | `FULL` |
+
+**Example 3:** `cifs_share_ace = ""` or `cifs_share_ace` not specified
+
+This rule causes no action to be taken, and the junction inherits the default policy where group `Everyone` has the following settings:
+| Access Parameter | Value |
+| --- | --- |
+| type | `ALLOW` |
+| permission | `FULL` |
 
 # Attributes Reference
 

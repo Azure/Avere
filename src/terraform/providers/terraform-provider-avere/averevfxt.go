@@ -49,6 +49,12 @@ func NewAvereVfxt(
 	nodeCacheSize int,
 	firstIPAddress string,
 	lastIPAddress string,
+	cifsAdDomain string,
+	cifsServerName string,
+	cifsUserName string,
+	cifsPassword string,
+	cifsOrganizationalUnit string,
+	enableExtendedGroups bool,
 	ntpServers string,
 	timezone string,
 	dnsServer string,
@@ -61,35 +67,41 @@ func NewAvereVfxt(
 	vServerIPAddresses *[]string,
 	nodeNames *[]string) *AvereVfxt {
 	return &AvereVfxt{
-		ControllerAddress:    controllerAddress,
-		ControllerUsename:    controllerUsername,
-		SshAuthMethod:        sshAuthMethod,
-		SshPort:              sshPort,
-		RunLocal:             runLocal,
-		AllowNonAscii:        allowNonAscii,
-		Platform:             platform,
-		AvereVfxtName:        avereVfxtName,
-		AvereAdminPassword:   avereAdminPassword,
-		AvereSshKeyData:      sshKeyData,
-		EnableSupportUploads: enableSupportUploads,
-		NodeCount:            nodeCount,
-		NodeSize:             nodeSize,
-		NodeCacheSize:        nodeCacheSize,
-		FirstIPAddress:       firstIPAddress,
-		LastIPAddress:        lastIPAddress,
-		NtpServers:           ntpServers,
-		Timezone:             timezone,
-		DnsServer:            dnsServer,
-		DnsDomain:            dnsDomain,
-		DnsSearch:            dnsSearch,
-		ProxyUri:             proxyUri,
-		ClusterProxyUri:      clusterProxyUri,
-		ImageId:              imageId,
-		ManagementIP:         managementIP,
-		VServerIPAddresses:   vServerIPAddresses,
-		NodeNames:            nodeNames,
-		rePasswordReplace:    regexp.MustCompile(`-password [^ ]*`),
-		rePasswordReplace2:   regexp.MustCompile(`sshpass -p [^ ]*`),
+		ControllerAddress:      controllerAddress,
+		ControllerUsename:      controllerUsername,
+		SshAuthMethod:          sshAuthMethod,
+		SshPort:                sshPort,
+		RunLocal:               runLocal,
+		AllowNonAscii:          allowNonAscii,
+		Platform:               platform,
+		AvereVfxtName:          avereVfxtName,
+		AvereAdminPassword:     avereAdminPassword,
+		AvereSshKeyData:        sshKeyData,
+		EnableSupportUploads:   enableSupportUploads,
+		NodeCount:              nodeCount,
+		NodeSize:               nodeSize,
+		NodeCacheSize:          nodeCacheSize,
+		FirstIPAddress:         firstIPAddress,
+		LastIPAddress:          lastIPAddress,
+		CifsAdDomain:           cifsAdDomain,
+		CifsServerName:         cifsServerName,
+		CifsUsername:           cifsUserName,
+		CifsPassword:           cifsPassword,
+		CifsOrganizationalUnit: cifsOrganizationalUnit,
+		EnableExtendedGroups:   enableExtendedGroups,
+		NtpServers:             ntpServers,
+		Timezone:               timezone,
+		DnsServer:              dnsServer,
+		DnsDomain:              dnsDomain,
+		DnsSearch:              dnsSearch,
+		ProxyUri:               proxyUri,
+		ClusterProxyUri:        clusterProxyUri,
+		ImageId:                imageId,
+		ManagementIP:           managementIP,
+		VServerIPAddresses:     vServerIPAddresses,
+		NodeNames:              nodeNames,
+		rePasswordReplace:      regexp.MustCompile(`-password [^ ]*`),
+		rePasswordReplace2:     regexp.MustCompile(`sshpass -p [^ ]*`),
 	}
 }
 
@@ -371,6 +383,60 @@ func (a *AvereVfxt) EnsureClusterStable() error {
 			return fmt.Errorf("Failure for cluster to become stable after %d retries", retries)
 		}
 		time.Sleep(ClusterStableRetrySleepSeconds * time.Second)
+	}
+	return nil
+}
+
+func (a *AvereVfxt) CIFSSettingsExist() bool {
+	return len(a.CifsAdDomain) > 0 && len(a.CifsServerName) > 0 && len(a.CifsUsername) > 0 && len(a.CifsPassword) > 0
+}
+
+func (a *AvereVfxt) EnableCIFS() error {
+	log.Printf("[INFO] [EnableCIFS")
+	defer log.Printf("[INFO] EnableCIFS]")
+	if a.CIFSSettingsExist() {
+		if _, err := a.AvereCommand(a.getDirServicesEnableCIFSCommand()); err != nil {
+			return fmt.Errorf("directory services enablement failed with error: %v", err)
+		}
+
+		if _, err := a.AvereCommand(a.getCIFSConfigureCommand()); err != nil {
+			return fmt.Errorf("cifs configuration failed with error: %v", err)
+		}
+
+		if _, err := a.AvereCommand(a.getCIFSSetOptionsCommand()); err != nil {
+			return fmt.Errorf("cifs set options failed with error: %v", err)
+		}
+
+		if _, err := a.AvereCommand(a.getCIFSEnableCommand()); err != nil {
+			return fmt.Errorf("cifs enable failed with error: %v", err)
+		}
+	}
+
+	return nil
+}
+
+func (a *AvereVfxt) DisableCIFS() error {
+	if !a.CIFSSettingsExist() {
+		// it is enough to just call disable CIFS to disable it
+		if _, err := a.AvereCommand(a.getCIFSDisableCommand()); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (a *AvereVfxt) ModifyExtendedGroups() error {
+	log.Printf("[INFO] [ModifyExtendedGroups %v", a.EnableExtendedGroups)
+	defer log.Printf("[INFO] ModifyExtendedGroups %v]", a.EnableExtendedGroups)
+	if a.EnableExtendedGroups {
+		if _, err := a.AvereCommand(a.getEnableExtendedGroupsCommand()); err != nil {
+			return err
+		}
+	} else {
+		if _, err := a.AvereCommand(a.getDisableExtendedGroupsCommand()); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -941,6 +1007,10 @@ func (a *AvereVfxt) GetExistingJunctions() (map[string]*Junction, error) {
 	if err := json.Unmarshal([]byte(coreJunctionsJson), &jsonResults); err != nil {
 		return nil, err
 	}
+	cifsShares, err := a.GetCifShares()
+	if err != nil {
+		return nil, err
+	}
 	for _, v := range jsonResults {
 		// create a new object to assign v
 		newJunction := Junction{}
@@ -954,10 +1024,96 @@ func (a *AvereVfxt) GetExistingJunctions() (map[string]*Junction, error) {
 		} else {
 			newJunction.ExportRules = make(map[string]*ExportRule)
 		}
+		// assign existing shares and aces, or an empty ace map
+		if cifsShare, ok := cifsShares[newJunction.NameSpacePath]; ok {
+			newJunction.CifsShareName = cifsShare.ShareName
+			shareAces, err := a.GetCifShareAces(newJunction.CifsShareName)
+			if err != nil {
+				return nil, err
+			}
+			newJunction.CifsAces = shareAces
+		} else {
+			newJunction.CifsAces = make(map[string]*ShareAce)
+		}
 		results[newJunction.NameSpacePath] = &newJunction
 	}
 
 	return results, nil
+}
+
+func (a *AvereVfxt) GetCifShares() (map[string]*CifsShare, error) {
+	results := make(map[string]*CifsShare)
+	cifSharesJson, err := a.AvereCommand(a.getListCIFSSharesJSONCommand())
+	if err != nil {
+		return nil, err
+	}
+	var jsonResults []CifsShare
+	if err := json.Unmarshal([]byte(cifSharesJson), &jsonResults); err != nil {
+		return nil, err
+	}
+	for _, v := range jsonResults {
+		cifsShare := CifsShare{}
+		cifsShare = v
+		cifsSharePtr := &cifsShare
+		results[cifsSharePtr.GetNameSpacePath()] = cifsSharePtr
+	}
+	return results, nil
+}
+
+func (a *AvereVfxt) GetCifShareAces(sharename string) (map[string]*ShareAce, error) {
+	results := make(map[string]*ShareAce)
+	cifShareAclsJson, err := a.AvereCommand(a.getGetShareAclsJSONCommand(sharename))
+	if err != nil {
+		return nil, err
+	}
+	var jsonResults []ShareAce
+	if err := json.Unmarshal([]byte(cifShareAclsJson), &jsonResults); err != nil {
+		return nil, err
+	}
+	for _, v := range jsonResults {
+		cifsShareAcePtr := InitializeCleanAce(&v)
+		results[cifsShareAcePtr.Name] = cifsShareAcePtr
+	}
+	return results, nil
+}
+
+func (a *AvereVfxt) DeleteCifsShare(sharename string) error {
+	log.Printf("[INFO] [DeleteCifsShare %s", sharename)
+	defer log.Printf("[INFO] DeleteCifsShare %s]", sharename)
+	// delete the cifs share
+	// no need to touch aces as they disappear with the share, and if
+	// it is recreated, we update the aces
+	if _, err := a.AvereCommand(a.getRemoveCIFSShareCommand(sharename)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *AvereVfxt) AddCifsShare(sharename string, namespaceName string, targetShareAces map[string]*ShareAce) error {
+	log.Printf("[INFO] [DeleteCifsShare %s ns:%s", sharename, namespaceName)
+	defer log.Printf("[INFO] DeleteCifsShare %s ns:%s]", sharename, namespaceName)
+	if _, err := a.AvereCommand(a.getAddCIFSShareCommand(sharename, namespaceName)); err != nil {
+		return err
+	}
+	// get the aces
+	existingShareAces, err := a.GetCifShareAces(sharename)
+	if err != nil {
+		return err
+	}
+
+	shareAcesToDelete, shareAcesToCreate := GetShareAceAdjustments(existingShareAces, targetShareAces)
+	for _, v := range shareAcesToDelete {
+		if _, err := a.AvereCommand(a.getGetRemoveShareAceCommand(sharename, v)); err != nil {
+			return err
+		}
+	}
+	for _, v := range shareAcesToCreate {
+		if _, err := a.AvereCommand(a.getGetAddShareAceCommand(sharename, v)); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (a *AvereVfxt) CreateVServer() error {
@@ -1047,6 +1203,12 @@ func (a *AvereVfxt) CreateJunction(junction *Junction) error {
 	}
 	if _, err := a.AvereCommandWithCorrection(a.getCreateJunctionCommand(junction, policyName), listExports); err != nil {
 		return err
+	}
+	// add the cifs share
+	if len(junction.CifsShareName) > 0 {
+		if err := a.AddCifsShare(junction.CifsShareName, junction.NameSpacePath, junction.CifsAces); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -1583,6 +1745,64 @@ func (a *AvereVfxt) getSupportSecureProactiveSupportCommand() string {
 		isEnabled = "yes"
 	}
 	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'remoteCommandEnabled':'Disabled','SPSLinkInterval':'300','SPSLinkEnabled':'%s','remoteCommandExpiration':''}\"", a.getBaseAvereCmd(), isEnabled), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getDirServicesEnableCIFSCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s dirServices.modify \"default\" \"{'usernameMapSource':'None','usernameSource':'AD','DCsmbProtocol':'SMB2','netgroupSource':'None','usernameConditions':'enabled','ADdomainName':'%s','ADtrusted':'','nfsDomain':'','netgroupPollPeriod':'3600','usernamePollPeriod':'3600'}\"", a.getBaseAvereCmd(), a.CifsAdDomain), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getCIFSConfigureCommand() string {
+	organizationalUnit := ""
+	if len(a.CifsOrganizationalUnit) > 0 {
+		organizationalUnit = fmt.Sprintf(",'%s'", a.CifsOrganizationalUnit)
+	}
+	// wrap in mutli-call since OU doesn't get picked up otherwise
+	nonSecretCommand := fmt.Sprintf("%s system.multicall \"[{'methodName':'cifs.configure','params':['%s','%s','%s','%%s'%s]}]\"", a.getBaseAvereCmd(), VServerName, a.CifsServerName, a.CifsUsername, organizationalUnit)
+	return WrapCommandForLoggingSecretInput(nonSecretCommand, fmt.Sprintf(nonSecretCommand, a.CifsPassword), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getCIFSSetOptionsCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cifs.setOptions \"%s\" \"{'client_ntlmssp_disable':'no','disable_outbound_ntlmssp':'yes','smb2':'yes','ntlm_auth':'no','smb1':'no','read_only_optimized':'no','native_identity':'yes','server_signing':'auto'}\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getCIFSEnableCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cifs.enable \"%s\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getCIFSDisableCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cifs.disable \"%s\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getAddCIFSShareCommand(sharename string, namespaceName string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cifs.addShare \"%s\" \"%s\" \"/\" \"%s\" \"\" \"false\" \"{}\" ", a.getBaseAvereCmd(), VServerName, sharename, namespaceName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getRemoveCIFSShareCommand(sharename string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cifs.removeShare \"%s\" \"%s\"", a.getBaseAvereCmd(), VServerName, sharename), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getListCIFSSharesJSONCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json cifs.listShares \"%s\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getGetShareAclsJSONCommand(sharename string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json cifs.getShareAcl \"%s\" \"%s\"", a.getBaseAvereCmd(), VServerName, sharename), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getGetAddShareAceCommand(sharename string, shareAce *ShareAce) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cifs.addShareAce '%s' '%s' %s", a.getBaseAvereCmd(), VServerName, sharename, shareAce.NfsAddRuleArgumentsString()), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getGetRemoveShareAceCommand(sharename string, shareAce *ShareAce) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cifs.removeShareAce '%s' '%s' %s", a.getBaseAvereCmd(), VServerName, sharename, shareAce.NfsAddRuleArgumentsString()), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getEnableExtendedGroupsCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s nfs.modify \"%s\" \"{'extendedGroups':'yes'}\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getDisableExtendedGroupsCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s nfs.modify \"%s\" \"{'extendedGroups':'no'}\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getSetVServerSettingCommand(customSetting string, message string) string {
