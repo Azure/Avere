@@ -2,6 +2,9 @@
 
 set -ex
 
+localDirectory='/usr/local/bin'
+cd $localDirectory
+
 if [ "$(cat /etc/os-release | grep 'centos:7')" ]; then
     yum -y install epel-release
 fi
@@ -9,8 +12,8 @@ yum -y install nfs-utils
 yum -y install unzip
 yum -y install jq
 
-mv /tmp/Manager.Machines.DataAccess.sh /usr/local/bin
-echo '0 0 * * * root /usr/local/bin/Manager.Machines.DataAccess.sh' > /var/spool/cron/root
+mv /tmp/Manager.Machines.DataAccess.sh $localDirectory
+echo "0 0 * * * root $localDirectory/Manager.Machines.DataAccess.sh" > /var/spool/cron/root
 
 storageDirectory='/mnt/tools'
 mkdir -p $storageDirectory

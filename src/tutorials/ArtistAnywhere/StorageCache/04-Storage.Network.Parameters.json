@@ -71,7 +71,7 @@
     },
     "virtualNetworkGateway": {
       "value": {
-        "enabled": false,
+        "deploy": false,
         "type": "Vpn",
         "vpnGeneration": "Generation2",
         "vpnTier": "VpnGw2",

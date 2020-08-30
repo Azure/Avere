@@ -16,7 +16,7 @@
     }
   },
   "variables": {
-    "virtualNetworkApiVersion": "2020-05-01",
+    "virtualNetworkApiVersion": "2020-06-01",
     "dataServerApiVersion": "2017-12-01",
     "dataServerName": "[toLower(parameters('renderManager').dataServerName)]",
     "databaseAdminLogin": "[concat(parameters('renderManager').databaseServerAdmin.name, '@', variables('dataServerName'))]",

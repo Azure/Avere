@@ -34,7 +34,7 @@
     }
   },
   "variables": {
-    "virtualNetworkApiVersion": "2020-05-01",
+    "virtualNetworkApiVersion": "2020-06-01",
     "storageApiVersion": "2019-06-01",
     "storageAccountName": "[toLower(parameters('storageAccount').name)]",
     "roleAssignmentApiVersion": "2020-04-01-preview"

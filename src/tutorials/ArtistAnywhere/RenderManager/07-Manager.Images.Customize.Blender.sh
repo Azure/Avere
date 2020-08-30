@@ -18,19 +18,13 @@ fi
 fileName='benchmark.zip'
 if [ ! -f $storageDirectory/$fileName ]; then
     curl -L -o $storageDirectory/$fileName 'https://download.blender.org/demo/test/benchmark.zip'
-    unzip $fileName
+    unzip $storageDirectory/$fileName
 fi
 
 fileName='bmw.zip'
 if [ ! -f $storageDirectory/$fileName ]; then
     curl -L -o $storageDirectory/$fileName 'https://download.blender.org/demo/test/BMW27_2.blend.zip'
-    unzip $fileName
-fi
-
-fileName='daily-dweebs.zip'
-if [ ! -f $storageDirectory/$fileName ]; then
-    curl -L -o $storageDirectory/$fileName 'https://mediasolutions.blob.core.windows.net/bin/daily-dweebs.zip'
-    unzip $fileName
+    unzip $storageDirectory/$fileName
 fi
 
 storageDirectory='/mnt/scenes/Blender/EEVEE'

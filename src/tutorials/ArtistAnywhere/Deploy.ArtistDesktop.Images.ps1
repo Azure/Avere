@@ -5,14 +5,17 @@
     # Set the Azure region name for Compute resources (e.g., Image Builder, Virtual Machines, HPC Cache, etc.)
     [string] $computeRegionName = "WestUS2",
 
-    # Set the Azure region name for Storage resources (e.g., Virtual Network, Object (Blob) Storage, NetApp Files, etc.)
-    [string] $storageRegionName = "EastUS2",
+    # Set the Azure region name for Storage resources (e.g., Virtual Network, NetApp Files, Object Storage, etc.)
+    [string] $storageRegionName = "EastUS",
 
     # Set to true to deploy Azure NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
     [boolean] $storageNetAppEnable = $false,
 
     # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview)
     [boolean] $storageCacheEnable = $false,
+
+    # Set to true to deploy Azure VPN Gateway (https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways)
+    [boolean] $vnetGatewayEnable = $false,
 
     # The shared Azure solution services (e.g., Virtual Networks, Managed Identity, Log Analytics, etc.)
     [object] $sharedServices
@@ -25,13 +28,11 @@ if (!$templateDirectory) {
 
 Import-Module "$templateDirectory/Deploy.psm1"
 
-# * - Shared Services Job
 if (!$sharedServices) {
-    $moduleName = "* - Shared Services Job"
-    New-TraceMessage $moduleName $false
-    $sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName
-    $sharedServices = Receive-Job -Job $sharedServicesJob -Wait
-    New-TraceMessage $moduleName $true
+    $sharedServices = Get-SharedServices $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageNetAppEnable $vnetGatewayEnable
+}
+if (!$sharedServices.computeNetwork) {
+    return
 }
 $computeNetwork = $sharedServices.computeNetwork
 $userIdentity = $sharedServices.userIdentity

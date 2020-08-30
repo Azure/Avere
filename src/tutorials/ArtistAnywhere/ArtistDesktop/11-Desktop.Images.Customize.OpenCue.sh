@@ -23,21 +23,21 @@ cp $storageDirectory/$fileName .
 
 fileName='opencue-pycue.tar.gz'
 if [ ! -f $storageDirectory/$fileName ]; then
-    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.55/pycue-0.4.55-all.tar.gz'
+    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.4.55/pycue-0.4.55-all.tar.gz'
 fi
 cp $storageDirectory/$fileName .
 tar -xzf $fileName
 
 fileName='opencue-pyoutline.tar.gz'
 if [ ! -f $storageDirectory/$fileName ]; then
-    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.55/pyoutline-0.4.55-all.tar.gz'
+    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.4.55/pyoutline-0.4.55-all.tar.gz'
 fi
 cp $storageDirectory/$fileName .
 tar -xzf $fileName
 
 fileName='opencue-rqd.tar.gz'
 if [ ! -f $storageDirectory/$fileName ]; then
-    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.55/rqd-0.4.55-all.tar.gz'
+    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.4.55/rqd-0.4.55-all.tar.gz'
 fi
 cp $storageDirectory/$fileName .
 tar -xzf $fileName
@@ -50,21 +50,21 @@ cp $storageDirectory/$fileName .
 
 fileName='opencue-admin.tar.gz'
 if [ ! -f $storageDirectory/$fileName ]; then
-    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.55/cueadmin-0.4.55-all.tar.gz'
+    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.4.55/cueadmin-0.4.55-all.tar.gz'
 fi
 cp $storageDirectory/$fileName .
 tar -xzf $fileName
 
 fileName='opencue-submit.tar.gz'
 if [ ! -f $storageDirectory/$fileName ]; then
-    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.55/cuesubmit-0.4.55-all.tar.gz'
+    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.4.55/cuesubmit-0.4.55-all.tar.gz'
 fi
 cp $storageDirectory/$fileName .
 tar -xzf $fileName
 
 fileName='opencue-gui.tar.gz'
 if [ ! -f $storageDirectory/$fileName ]; then
-    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.55/cuegui-0.4.55-all.tar.gz'
+    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.4.55/cuegui-0.4.55-all.tar.gz'
 fi
 cp $storageDirectory/$fileName .
 tar -xzf $fileName

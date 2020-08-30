@@ -22,7 +22,7 @@ Copy-Item -Path $storageDirectory/$fileName -Destination .
 $fileName = 'opencue-pycue.tar.gz'
 $fileExists = Test-Path -PathType 'Leaf' -Path $storageDirectory/$fileName
 if (!$fileExists) {
-    Invoke-WebRequest -OutFile $storageDirectory/$fileName -Uri 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.55/pycue-0.4.55-all.tar.gz'
+    Invoke-WebRequest -OutFile $storageDirectory/$fileName -Uri 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.4.55/pycue-0.4.55-all.tar.gz'
 }
 Copy-Item -Path $storageDirectory/$fileName -Destination .
 tar -xzf $fileName
@@ -30,7 +30,7 @@ tar -xzf $fileName
 $fileName = 'opencue-pyoutline.tar.gz'
 $fileExists = Test-Path -PathType 'Leaf' -Path $storageDirectory/$fileName
 if (!$fileExists) {
-    Invoke-WebRequest -OutFile $storageDirectory/$fileName -Uri 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.55/pyoutline-0.4.55-all.tar.gz'
+    Invoke-WebRequest -OutFile $storageDirectory/$fileName -Uri 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.4.55/pyoutline-0.4.55-all.tar.gz'
 }
 Copy-Item -Path $storageDirectory/$fileName -Destination .
 tar -xzf $fileName
@@ -38,7 +38,7 @@ tar -xzf $fileName
 $fileName = 'opencue-rqd.tar.gz'
 $fileExists = Test-Path -PathType 'Leaf' -Path $storageDirectory/$fileName
 if (!$fileExists) {
-    Invoke-WebRequest -OutFile $storageDirectory/$fileName -Uri 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.55/rqd-0.4.55-all.tar.gz'
+    Invoke-WebRequest -OutFile $storageDirectory/$fileName -Uri 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.4.55/rqd-0.4.55-all.tar.gz'
 }
 Copy-Item -Path $storageDirectory/$fileName -Destination .
 tar -xzf $fileName
@@ -46,7 +46,7 @@ tar -xzf $fileName
 $fileName = 'opencue-admin.tar.gz'
 $fileExists = Test-Path -PathType 'Leaf' -Path $storageDirectory/$fileName
 if (!$fileExists) {
-    Invoke-WebRequest -OutFile $storageDirectory/$fileName -Uri 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.55/cueadmin-0.4.55-all.tar.gz'
+    Invoke-WebRequest -OutFile $storageDirectory/$fileName -Uri 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.4.55/cueadmin-0.4.55-all.tar.gz'
 }
 Copy-Item -Path $storageDirectory/$fileName -Destination .
 tar -xzf $fileName
@@ -54,7 +54,7 @@ tar -xzf $fileName
 $fileName = 'opencue-submit.tar.gz'
 $fileExists = Test-Path -PathType 'Leaf' -Path $storageDirectory/$fileName
 if (!$fileExists) {
-    Invoke-WebRequest -OutFile $storageDirectory/$fileName -Uri 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.55/cuesubmit-0.4.55-all.tar.gz'
+    Invoke-WebRequest -OutFile $storageDirectory/$fileName -Uri 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.4.55/cuesubmit-0.4.55-all.tar.gz'
 }
 Copy-Item -Path $storageDirectory/$fileName -Destination .
 tar -xzf $fileName
@@ -62,7 +62,7 @@ tar -xzf $fileName
 $fileName = 'opencue-gui.tar.gz'
 $fileExists = Test-Path -PathType 'Leaf' -Path $storageDirectory/$fileName
 if (!$fileExists) {
-    Invoke-WebRequest -OutFile $storageDirectory/$fileName -Uri 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.55/cuegui-0.4.55-all.tar.gz'
+    Invoke-WebRequest -OutFile $storageDirectory/$fileName -Uri 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.4.55/cuegui-0.4.55-all.tar.gz'
 }
 Copy-Item -Path $storageDirectory/$fileName -Destination .
 # tar -xzf $fileName

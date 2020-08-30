@@ -34,7 +34,7 @@
     }
   },
   "variables": {
-    "virtualNetworkApiVersion": "2020-05-01",
+    "virtualNetworkApiVersion": "2020-06-01",
     "virtualMachineApiVersion": "2020-06-01"
   },
   "resources": [

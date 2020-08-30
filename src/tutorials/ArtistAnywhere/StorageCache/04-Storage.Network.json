@@ -22,7 +22,7 @@
     }
   },
   "variables": {
-    "virtualNetworkApiVersion": "2020-05-01",
+    "virtualNetworkApiVersion": "2020-06-01",
     "virtualNetworkDomainApiVersion": "2020-01-01",
     "virtualNetworkResourceGroupName": "[resourceGroup().name]",
     "resourceDeploymentApiVersion": "2020-06-01",
@@ -80,7 +80,7 @@
       }
     },
     {
-      "condition": "[parameters('virtualNetworkGateway').enabled]",
+      "condition": "[parameters('virtualNetworkGateway').deploy]",
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[parameters('virtualNetwork').name]",
       "apiVersion": "[variables('virtualNetworkApiVersion')]",
@@ -93,7 +93,7 @@
       }
     },
     {
-      "condition": "[parameters('virtualNetworkGateway').enabled]",
+      "condition": "[parameters('virtualNetworkGateway').deploy]",
       "type": "Microsoft.Network/virtualNetworkGateways",
       "name": "[parameters('virtualNetwork').name]",
       "apiVersion": "[variables('virtualNetworkApiVersion')]",
@@ -142,7 +142,7 @@
       }
     },
     {
-      "condition": "[parameters('virtualNetworkGateway').enabled]",
+      "condition": "[parameters('virtualNetworkGateway').deploy]",
       "type": "Microsoft.Network/connections",
       "name": "[parameters('virtualNetwork').name]",
       "apiVersion": "[variables('virtualNetworkApiVersion')]",
@@ -163,7 +163,7 @@
       }
     },
     {
-      "condition": "[parameters('virtualNetworkGateway').enabled]",
+      "condition": "[parameters('virtualNetworkGateway').deploy]",
       "type": "Microsoft.Resources/deployments",
       "name": "04-Storage.Network.Connections",
       "apiVersion": "[variables('resourceDeploymentApiVersion')]",
