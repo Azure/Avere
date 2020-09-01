@@ -3,22 +3,24 @@
 package main
 
 const (
-	AvereAdminUsername        = "admin"
-	MinNodesCount             = 3
-	MaxNodesCount             = 16
-	MinVserverIpCount         = MinNodesCount
-	MaxVserverIpCount         = 2 * MaxNodesCount
-	MinFixedQuotaPercent      = 0
-	MaxFixedQuotaPercent      = 100
-	DefaultSshPort            = 22
-	VfxtLogDateFormat         = "2006-01-02.15.04.05"
-	VServerRangeSeperator     = "-"
-	AverecmdRetryCount        = 60 // wait 10 minutes (ex. remove core filer gets perm denied for a while)
-	AverecmdRetrySleepSeconds = 10
-	AverecmdLogFile           = "~/averecmd.log"
-	VServerName               = "vserver"
-	VfxtKeyPubFile            = "~/vfxt_ssh_key_data.pub"
-	ShellLogFile              = "~/shell.log"
+	AvereAdminUsername            = "admin"
+	MinNodesCount                 = 3
+	MaxNodesCount                 = 16
+	MinVserverIpCount             = MinNodesCount
+	MaxVserverIpCount             = 2 * MaxNodesCount
+	MinFixedQuotaPercent          = 0
+	MaxFixedQuotaPercent          = 100
+	DefaultSshPort                = 22
+	VfxtLogDateFormat             = "2006-01-02.15.04.05"
+	VServerRangeSeperator         = "-"
+	AverecmdRetryCount            = 60 // wait 10 minutes (ex. remove core filer gets perm denied for a while)
+	AverecmdRetrySleepSeconds     = 10
+	ClusterAliveRetryCount        = 3 // try 3 times to see if the cluster is alive
+	ClusterAliveRetrySleepSeconds = 5
+	AverecmdLogFile               = "~/averecmd.log"
+	VServerName                   = "vserver"
+	VfxtKeyPubFile                = "~/vfxt_ssh_key_data.pub"
+	ShellLogFile                  = "~/shell.log"
 
 	// Platform
 	PlatformAzure = "azure"
@@ -111,6 +113,12 @@ const (
 	PrimaryClusterIPKey = "IP"
 
 	DefaultExportPolicyName = "default"
+
+	DefaultDirectoryServiceName = "default"
+
+	FaultString = "faultString"
+	FaultCode   = "faultCode"
+	MultiCall   = "--json system.multicall"
 )
 
 // terraform schema constants - avoids bugs on schema name changes

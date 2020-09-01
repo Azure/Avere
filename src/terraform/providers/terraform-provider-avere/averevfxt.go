@@ -105,6 +105,24 @@ func NewAvereVfxt(
 	}
 }
 
+func (a *AvereVfxt) IsAlive() bool {
+	managementIPAlivecmd := fmt.Sprintf("nc -zvv %s 443", a.ManagementIP)
+	for retries := 1; ; retries++ {
+		_, _, err := a.RunCommand(managementIPAlivecmd)
+		if err == nil {
+			return true
+		}
+		log.Printf("[WARN] [%d/%d] command '%s' to %s failed with '%v' ", retries, ClusterAliveRetryCount, managementIPAlivecmd, a.ControllerAddress, err)
+
+		if retries > ClusterAliveRetryCount {
+			// failure after exhausted retries
+			break
+		}
+		time.Sleep(ClusterAliveRetrySleepSeconds * time.Second)
+	}
+	return false
+}
+
 func (a *AvereVfxt) RunCommand(cmd string) (bytes.Buffer, bytes.Buffer, error) {
 	scrubbedCmd := a.rePasswordReplace.ReplaceAllLiteralString(cmd, "***")
 	scrubbedCmd = a.rePasswordReplace2.ReplaceAllLiteralString(scrubbedCmd, "***")
@@ -409,6 +427,11 @@ func (a *AvereVfxt) EnableCIFS() error {
 
 		if _, err := a.AvereCommand(a.getCIFSEnableCommand()); err != nil {
 			return fmt.Errorf("cifs enable failed with error: %v", err)
+		}
+
+		// finish with polling for users / groups, otherwise cifs doesn't work immediately
+		if _, err := a.AvereCommand(a.getDirServicesPollUserGroupCommand()); err != nil {
+			return fmt.Errorf("dir services polling failed with error: %v", err)
 		}
 	}
 
@@ -808,7 +831,7 @@ func (a *AvereVfxt) AddStorageFilerCustomSettings(storageFiler *AzureStorageFile
 }
 
 func (a *AvereVfxt) AddCoreFilerCustomSettings(coreFiler *CoreFiler) error {
-	if len(coreFiler.CustomSettings) == 0 && coreFiler.AutoWanOptimize {
+	if len(coreFiler.CustomSettings) == 0 && !coreFiler.AutoWanOptimize {
 		// no custom settings to add
 		return nil
 	}
@@ -1358,10 +1381,47 @@ func (a *AvereVfxt) GetCoreFilerSpacePercentage() (map[string]float32, error) {
 	return result, nil
 }
 
+func IsMultiCall(cmd string) bool {
+	return strings.Contains(cmd, MultiCall)
+}
+
+func IsMultiCallResultSuccessful(result string) (bool, string, error) {
+	if len(result) == 0 {
+		return true, "", nil
+	}
+
+	var resultList []interface{}
+	if err := json.Unmarshal([]byte(result), &resultList); err != nil {
+		return false, "", err
+	}
+	for _, in := range resultList {
+		switch v := in.(type) {
+		case map[string]interface{}:
+			if faultString, ok := v[FaultString]; ok {
+				return false, fmt.Sprintf("fault encountered: %v", faultString), nil
+			}
+			if faultCode, ok := v[FaultCode]; ok {
+				return false, fmt.Sprintf("fault encountered: %v", faultCode), nil
+			}
+		}
+	}
+	return true, "", nil
+}
+
 func (a *AvereVfxt) AvereCommandWithCorrection(cmd string, correctiveAction func() error) (string, error) {
 	var result string
 	for retries := 0; ; retries++ {
 		stdoutBuf, stderrBuf, err := a.RunCommand(cmd)
+		// look for the error if this is a multi-call
+		if err == nil && IsMultiCall(cmd) {
+			if isMultiCallSuccess, faultStr, err2 := IsMultiCallResultSuccessful(stdoutBuf.String()); !isMultiCallSuccess {
+				if err2 != nil {
+					err = fmt.Errorf("BUG: multcall result parse error: %v", err2)
+				} else if len(faultStr) > 0 {
+					err = fmt.Errorf("multi call error: '%s'", faultStr)
+				}
+			}
+		}
 		if err == nil {
 			// success
 			result = stdoutBuf.String()
@@ -1626,7 +1686,7 @@ func (a *AvereVfxt) getCreateAzureStorageFilerCommand(azureStorageFiler *AzureSt
 }
 
 func (a *AvereVfxt) getDeleteFilerCommand(filer string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s system.multicall \"[{'methodName':'system.enableAPI','params':['maintenance']},{'methodName':'corefiler.remove','params':['%s']}]\"", a.getBaseAvereCmd(), filer), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s --json system.multicall \"[{'methodName':'system.enableAPI','params':['maintenance']},{'methodName':'corefiler.remove','params':['%s']}]\"", a.getBaseAvereCmd(), filer), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getListCredentialsCommand() string {
@@ -1748,7 +1808,11 @@ func (a *AvereVfxt) getSupportSecureProactiveSupportCommand() string {
 }
 
 func (a *AvereVfxt) getDirServicesEnableCIFSCommand() string {
-	return WrapCommandForLogging(fmt.Sprintf("%s dirServices.modify \"default\" \"{'usernameMapSource':'None','usernameSource':'AD','DCsmbProtocol':'SMB2','netgroupSource':'None','usernameConditions':'enabled','ADdomainName':'%s','ADtrusted':'','nfsDomain':'','netgroupPollPeriod':'3600','usernamePollPeriod':'3600'}\"", a.getBaseAvereCmd(), a.CifsAdDomain), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s dirServices.modify \"%s\" \"{'usernameMapSource':'None','usernameSource':'AD','DCsmbProtocol':'SMB2','netgroupSource':'None','usernameConditions':'enabled','ADdomainName':'%s','ADtrusted':'','nfsDomain':'','netgroupPollPeriod':'3600','usernamePollPeriod':'3600'}\"", a.getBaseAvereCmd(), DefaultDirectoryServiceName, a.CifsAdDomain), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getDirServicesPollUserGroupCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s dirServices.usernamePoll \"%s\"", a.getBaseAvereCmd(), DefaultDirectoryServiceName), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getCIFSConfigureCommand() string {
@@ -1757,7 +1821,7 @@ func (a *AvereVfxt) getCIFSConfigureCommand() string {
 		organizationalUnit = fmt.Sprintf(",'%s'", a.CifsOrganizationalUnit)
 	}
 	// wrap in mutli-call since OU doesn't get picked up otherwise
-	nonSecretCommand := fmt.Sprintf("%s system.multicall \"[{'methodName':'cifs.configure','params':['%s','%s','%s','%%s'%s]}]\"", a.getBaseAvereCmd(), VServerName, a.CifsServerName, a.CifsUsername, organizationalUnit)
+	nonSecretCommand := fmt.Sprintf("%s --json system.multicall \"[{'methodName':'cifs.configure','params':['%s','%s','%s','%%s'%s]}]\"", a.getBaseAvereCmd(), VServerName, a.CifsServerName, a.CifsUsername, organizationalUnit)
 	return WrapCommandForLoggingSecretInput(nonSecretCommand, fmt.Sprintf(nonSecretCommand, a.CifsPassword), AverecmdLogFile)
 }
 
