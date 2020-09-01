@@ -254,7 +254,7 @@ func resourceVfxt() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "",
-				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
+				ValidateFunc: ValidateOrganizationalUnit,
 				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_username, cifs_password},
 			},
 			enable_extended_groups: {
@@ -616,6 +616,11 @@ func resourceVfxtRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	// return from read if the vfxt is not alive since it may be stop deallocated
+	if !avereVfxt.IsAlive() {
+		return fmt.Errorf("The vfxt management IP '%s' is not reachable.  Please confirm the cluster is alive and not stopped.", avereVfxt.ManagementIP)
+	}
+
 	currentVServerIPAddresses, err := avereVfxt.GetVServerIPAddresses()
 	if err != nil {
 		return fmt.Errorf("error encountered while getting vserver addresses '%v'", err)
@@ -670,6 +675,11 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, avereVfxt.SshPort); err != nil {
 			return err
 		}
+	}
+
+	// return from read if the vfxt is not alive since it may be stop deallocated
+	if !avereVfxt.IsAlive() {
+		return fmt.Errorf("The vfxt management IP '%s' is not reachable.  Please confirm the cluster is alive and not stopped.", avereVfxt.ManagementIP)
 	}
 
 	//

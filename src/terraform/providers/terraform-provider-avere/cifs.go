@@ -38,6 +38,7 @@ var matchAcePartsRexexp = regexp.MustCompile(`(?:([^\s\(\)]+)(\([^\(\)]*\))?)`)
 var cifsServerNameRegexp = regexp.MustCompile(`^[a-zA-Z0-9-]{1,15}$`)
 var cifsUsernameRegexp = regexp.MustCompile(`^[A-Za-z0-9\\\._\-#]{2,}$`)
 var cifsShareRegexp = regexp.MustCompile(`^[A-Za-z0-9\._\-$]{1,}$`)
+var cifsOrganizationalUnitRegExp = regexp.MustCompile(`^(?:(?:CN|OU|DC)\=[^,'"]+,)*(?:CN|OU|DC)\=[^,'"]+$`)
 
 func (s *ShareAce) String() string {
 	return fmt.Sprintf("%s(%s), %s, %s", s.Name, s.Sid, s.Type, s.Permission)
@@ -293,6 +294,14 @@ func ValidateCIFSShareAce(v interface{}, _ string) (warnings []string, errors []
 		}
 	}
 
+	return warnings, errors
+}
+
+func ValidateOrganizationalUnit(v interface{}, _ string) (warnings []string, errors []error) {
+	oranizationalUnit := v.(string)
+	if !cifsOrganizationalUnitRegExp.MatchString(oranizationalUnit) {
+		errors = append(errors, fmt.Errorf("invalid organizational unit share '%s'.  The name must match regular expression '%s'.", oranizationalUnit, cifsOrganizationalUnitRegExp))
+	}
 	return warnings, errors
 }
 

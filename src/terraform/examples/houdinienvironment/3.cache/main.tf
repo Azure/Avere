@@ -54,6 +54,22 @@ locals {
     //  "Full Caching"
     //  "Transitioning Clients Before or After a Migration"
     cache_policy = "Clients Bypassing the Cluster"
+
+    // cifs related settings, dns is required to find the corefiler
+    // as corefiler is required to have a dns name an not an ip
+    dns_server = "" // example "10.0.3.4"
+    dns_domain = "" // example "rendering.com"
+    cifs_ad_domain = "" // example "rendering.com"
+    cifs_server_name = local.vfxt_cluster_name
+    cifs_username = "" 
+    cifs_password = ""
+    // OU is optional
+    cifs_organizational_unit = "" // example "OU=avere technology,DC=rendering,DC=com"
+
+    // cifs nfs corefiler share name
+    cifs_nfs_corefiler_share_name = "houdinifiler"
+    cifs_cloud_storage_corefiler_share_name = "houdiniclfs"
+    cifs_share_ace = "" // leave empty for Everyone, otherwise example "azureuser(ALLOW,FULL) azureuser2(ALLOW,READ)"
 }
 
 provider "azurerm" {
@@ -103,6 +119,16 @@ resource "avere_vfxt" "vfxt" {
     vfxt_ssh_key_data = local.vfxt_ssh_key_data
     vfxt_node_count = 3
 
+    // cifs related settings:
+    dns_server = local.dns_server
+    dns_domain = local.dns_domain
+    cifs_ad_domain = local.cifs_ad_domain
+    cifs_server_name = local.cifs_server_name
+    cifs_username = local.cifs_username
+    cifs_password = local.cifs_password
+    // OU is optional, uncomment if necessary
+    cifs_organizational_unit = local.cifs_organizational_unit
+
     global_custom_settings = [
         "vcm.disableReadAhead AB 1",
         "cluster.ctcConnMult CE 24",
@@ -117,6 +143,8 @@ resource "avere_vfxt" "vfxt" {
             account_name = local.storage_account_name
             container_name = local.storage_container_name
             junction_namespace_path = local.junction_namespace_path_clfs
+            cifs_share_name = local.cifs_nfs_corefiler_share_name
+            cifs_share_ace = local.cifs_share_ace
             custom_settings = [
                 "client_rt_preferred FE 524288",
                 "client_wt_preferred NO 524288",
@@ -133,6 +161,8 @@ resource "avere_vfxt" "vfxt" {
             name = "nfs1"
             fqdn_or_primary_ip = local.filer_address
             cache_policy = local.cache_policy
+            cifs_share_name = local.cifs_cloud_storage_corefiler_share_name
+            cifs_share_ace = local.cifs_share_ace
             custom_settings = [
                 "client_rt_preferred FE 524288",
                 "client_wt_preferred NO 524288",

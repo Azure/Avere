@@ -79,8 +79,9 @@ func IsQuotaBalanceCustomSetting(customSetting string) bool {
 }
 
 func IsCustomSettingDeprecated(customSetting string) bool {
+	// use datadump.py -c custom_settings -w local to get the defaults
 	deprecatedCustomSettings := []string{
-		"cluster.ctcConnMult",
+		"cluster.ctcConnMult", // defaults to 8
 		"cfs.quotaCacheMoveMax",
 		"cfs.quotaCacheDivisorFloor",
 		"cluster.HaBackEndTimeout",
@@ -90,7 +91,7 @@ func IsCustomSettingDeprecated(customSetting string) bool {
 		"rwsize",
 		"vcm.alwaysForwardReadSize",
 		"vcm.disableReadAhead",
-		"always_forward",
+		"always_forward", // defaults to 1
 		"client_wt_preferred",
 		"client_rt_preferred",
 		"cluster.CtcBackEndTimeout",
