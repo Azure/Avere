@@ -1,6 +1,6 @@
 # Azure Artist Anywhere ([aka.ms/aaa](http://aka.ms/aaa))
 
-Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/azure/azure-resource-manager/management/overview) templates for automated deployment of an end-to-end rendering solution architecture in Microsoft Azure. Azure Artist Anywhere provides a lightweight deployment framework that can be configured and extended as needed to meet various environment and integration requirements, including burst rendering with caching of on-premises asset storage.
+Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/azure/azure-resource-manager/management/overview) templates for automated deployment of an end-to-end rendering solution architecture in Microsoft Azure. Azure Artist Anywhere provides a lightweight deployment framework that can be configured and extended as needed to meet various integration requirements, including burst rendering with caching of on-premises asset storage.
 
 ## Deployment Templates
 
