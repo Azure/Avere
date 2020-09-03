@@ -32,10 +32,11 @@
               "unixReadWrite": true,
               "allowedClients": "0.0.0.0/0"
             }
-          ]
+          ],
+          "kerberosEnabled": false
         },
         {
-          "name": "Scenes",
+          "name": "Shots",
           "pool": "Storage",
           "size": 2048,
           "exportPolicyRules": [
@@ -48,7 +49,8 @@
               "unixReadWrite": true,
               "allowedClients": "0.0.0.0/0"
             }
-          ]
+          ],
+          "kerberosEnabled": false
         },
         {
           "name": "Tools",
@@ -64,7 +66,8 @@
               "unixReadWrite": true,
               "allowedClients": "0.0.0.0/0"
             }
-          ]
+          ],
+          "kerberosEnabled": false
         }
       ]
     },
@@ -93,12 +96,12 @@
     "storageTargets": {
       "value": [
         {
-          "name": "Scenes",
+          "name": "Shots",
           "type": "nfs3",
           "junctions": [
             {
-              "namespacePath": "/mnt/scenes",
-              "nfsExport": "/scenes",
+              "namespacePath": "/mnt/shots",
+              "nfsExport": "/shots",
               "targetPath": ""
             }
           ],

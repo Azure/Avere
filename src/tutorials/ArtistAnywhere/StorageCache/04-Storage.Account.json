@@ -8,16 +8,22 @@
         "description": "The object storage account."
       }
     },
-    "storageContainers": {
+    "storageObjectContainers": {
       "type": "array",
       "metadata": {
         "description": "The storage object containers."
       }
     },
+    "storageFileShares": {
+      "type": "array",
+      "metadata": {
+        "description": "The storage file shares."
+      }
+    },
     "storageMounts": {
       "type": "array",
       "metadata": {
-        "description": "The storage container mounts."
+        "description": "The storage mounts."
       }
     },
     "storageTargets": {
@@ -58,7 +64,7 @@
             "properties": {
               "privateLinkServiceId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
               "groupIds": [
-                "blob"
+                "file"
               ]
             }
           }
@@ -79,8 +85,24 @@
       }
     },
     {
+      "type": "Microsoft.Storage/storageAccounts/fileServices/shares/",
+      "name": "[concat(variables('storageAccountName'), '/default/', parameters('storageFileShares')[copyIndex()].name)]",
+      "apiVersion": "[variables('storageApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ],
+      "properties": {
+        "shareQuota": "[parameters('storageFileShares')[copyIndex()].size]"
+      },
+      "copy": {
+        "name": "storageFileShares",
+        "count": "[length(parameters('storageFileShares'))]"
+      }
+    },
+    {
       "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
-      "name": "[concat(variables('storageAccountName'), '/default/', parameters('storageContainers')[copyIndex()].name)]",
+      "name": "[concat(variables('storageAccountName'), '/default/', parameters('storageObjectContainers')[copyIndex()].name)]",
       "apiVersion": "[variables('storageApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
@@ -90,8 +112,8 @@
         "publicAccess": "None"
       },
       "copy": {
-        "name": "storageContainers",
-        "count": "[length(parameters('storageContainers'))]"
+        "name": "storageObjectContainers",
+        "count": "[length(parameters('storageObjectContainers'))]"
       }
     },
     {

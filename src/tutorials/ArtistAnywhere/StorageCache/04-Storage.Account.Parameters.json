@@ -24,19 +24,26 @@
         ]
       }
     },
-    "storageContainers": {
+    "storageFileShares": {
       "value": [
         {
-          "name": "frames"
+          "name": "frames",
+          "size": 5120
         },
         {
-          "name": "scenes"
+          "name": "shots",
+          "size": 5120
         },
+        {
+          "name": "tools",
+          "size": 5120
+        }
+      ]
+    },
+    "storageObjectContainers": {
+      "value": [
         {
           "name": "scripts"
-        },
-        {
-          "name": "tools"
         }
       ]
     },
@@ -47,11 +54,11 @@
     "storageTargets": {
       "value": [
         {
-          "name": "Scenes",
+          "name": "Shots",
           "type": "clfs",
           "junctions": [
             {
-              "namespacePath": "/mnt/scenes",
+              "namespacePath": "/mnt/shots",
               "targetPath": ""
             }
           ],

@@ -199,15 +199,15 @@ function Get-SharedServices ($resourceGroupNamePrefix, $computeRegionName, $stor
         New-TraceMessage $moduleName $true $storageRegionName
     }
 
-    # 04 - Storage (Object)
-    $moduleName = "04 - Storage (Object)"
-    $resourceGroupNameSuffix = ".Storage.Object"
+    # 04 - Storage Account
+    $moduleName = "04 - Storage Account"
+    $resourceGroupNameSuffix = ".Storage"
     New-TraceMessage $moduleName $false $storageRegionName
     $resourceGroupName = Get-ResourceGroupName $resourceGroupNamePrefix $resourceGroupNameSuffix $storageRegionName
     $resourceGroup = az group create --resource-group $resourceGroupName --location $storageRegionName
 
-    $templateFile = "$templateDirectory/$moduleDirectory/04-Storage.Object.json"
-    $templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/04-Storage.Object.Parameters.json" -Raw | ConvertFrom-Json).parameters
+    $templateFile = "$templateDirectory/$moduleDirectory/04-Storage.Account.json"
+    $templateParameters = (Get-Content "$templateDirectory/$moduleDirectory/04-Storage.Account.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
     if ($templateParameters.virtualNetwork.value.name -eq "") {
         $templateParameters.virtualNetwork.value.name = $storageNetwork.name

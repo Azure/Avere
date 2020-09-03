@@ -2,7 +2,7 @@
 
 set -ex
 
-storageDirectory='/mnt/scenes/Blender/Cycles'
+storageDirectory='/mnt/shots/Blender/Cycles'
 mkdir -p $storageDirectory
 
 fileName='barbershop-cpu.blend'
@@ -27,7 +27,7 @@ if [ ! -f $storageDirectory/$fileName ]; then
     unzip $storageDirectory/$fileName
 fi
 
-storageDirectory='/mnt/scenes/Blender/EEVEE'
+storageDirectory='/mnt/shots/Blender/EEVEE'
 mkdir -p $storageDirectory
 
 fileName='color-vortex.blend'
