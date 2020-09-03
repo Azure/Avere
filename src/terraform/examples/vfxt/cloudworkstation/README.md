@@ -1,12 +1,14 @@
 # Experimental: Reducing Latency for Cloud Workstations Connected to On-premises NFS Filers
 
-Once remote cloud workstations have been deployed, users discover that creation, deletion, and listing of files on remote NFS shares are slow due to high latency back to on-premises NFS Filers.  This guide shows how to use Avere vFXT to reduce latency to for cloud workstations connected to an on-premises NFS Filer.  The following table shows where the Avere vFXT edge cache fits within the cloud workstation architecture:
+Once remote cloud workstations have been deployed, users discover that creation, deletion, and listing of files on remote SMB or NFS shares are slow due to high latency back to on-premises SMB or NFS Filers.  This guide shows how to use Avere vFXT to reduce latency to for cloud workstations connected to an on-premises NFS Filer.  The following table shows where the Avere vFXT edge cache fits within the cloud workstation architecture:
 
 | Cloud Workstations Without Avere | Cloud Workstations With Avere |
 | --- | --- |
 | <img src="withoutavere.png"> | <img src="withavere.png"> |
 
 **Important Note:** The cloud workstation feature is experimental: the Avere vFXT performs best for read workloads, but the two cache policies outlined here should improve the artist or user experience over not using Avere.
+
+To enable CIFS (SMB), please see our [CIFS (SMB) documentation](../../../providers/terraform-provider-avere#cifs_ad_domain) and [example](../../houdinienvironment#phase-2-scaling-step-3b---cache).
 
 ## Cache Policy "Isolated Cloud Workstation"
 
