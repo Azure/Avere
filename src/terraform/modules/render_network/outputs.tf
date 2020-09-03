@@ -1,6 +1,6 @@
 output "vnet_resource_group" {
   description = "The resource group of the virtual network."
-  value       = azurerm_resource_group.render_rg.name
+  value       = var.resource_group_name
 }
 
 output "vnet_name" {

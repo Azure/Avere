@@ -77,7 +77,8 @@ resource "azurerm_linux_virtual_machine" "vm" {
   source_image_id = var.image_id
   
   identity {
-    type = "SystemAssigned"
+    type = var.user_assigned_managed_identity_id == null ? "SystemAssigned" : "UserAssigned"
+    identity_ids = var.user_assigned_managed_identity_id == null ? [] : [var.user_assigned_managed_identity_id]
   }
 
   os_disk {
@@ -120,19 +121,21 @@ resource "azurerm_linux_virtual_machine" "vm" {
 // assign roles per the the following article: https://github.com/Azure/Avere/tree/main/src/vfxt#managed-identity-and-roles
 // also allow other roles for storage accounts in other rgs or custom image ids in other rgs
 locals {
-  avere_contributor_rgs = distinct(concat(
+  avere_contributor_rgs = var.user_assigned_managed_identity_id != null ? [] : distinct(concat(
     [
       var.resource_group_name,
       var.virtual_network_resource_group,
     ],
     var.alternative_resource_groups))
   
-  user_access_rgs = distinct(
+  user_access_rgs = var.user_assigned_managed_identity_id != null ? [] : distinct(
     [
       var.resource_group_name,
       var.virtual_network_resource_group,
     ]
   )
+
+  create_compute_rgs = var.user_assigned_managed_identity_id != null ? [] : [var.resource_group_name]
 }
 
 resource "azurerm_role_assignment" "avere_create_cluster_role" {
@@ -157,12 +160,13 @@ resource "azurerm_role_assignment" "user_access_administrator_role" {
 
 // ensure controller rg is a VM contributor to enable cache warming
 resource "azurerm_role_assignment" "create_compute" {
-  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${var.resource_group_name}"
+  count                            = length(local.create_compute_rgs)
+  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${local.create_compute_rgs[count.index]}"
   role_definition_name             = local.create_compute_role
   principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
   skip_service_principal_aad_check = true
 
-   depends_on = [azurerm_role_assignment.user_access_administrator_role]
+  depends_on = [azurerm_role_assignment.user_access_administrator_role]
 }
 
 

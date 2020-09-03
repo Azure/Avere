@@ -44,6 +44,8 @@ type AvereVfxt struct {
 	CifsOrganizationalUnit string
 	EnableExtendedGroups   bool
 
+	UserAssignedManagedIdentity string
+
 	NtpServers string
 	Timezone   string
 	DnsServer  string

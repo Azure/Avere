@@ -263,6 +263,12 @@ func resourceVfxt() *schema.Resource {
 				Default:      false,
 				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_username, cifs_password},
 			},
+			user_assigned_managed_identity: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
+			},
 			user: {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -952,6 +958,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		cifsPassword,
 		cifsOrganizationalUnit,
 		d.Get(enable_extended_groups).(bool),
+		d.Get(user_assigned_managed_identity).(string),
 		d.Get(ntp_servers).(string),
 		d.Get(timezone).(string),
 		d.Get(dns_server).(string),
