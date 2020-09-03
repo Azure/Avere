@@ -125,7 +125,7 @@ export SP_APP_ID_SECRET=""
 
 This step will deploy the VNET, filer, storage account, controller and vfxt.  It will use the service principal and managed identities created above.
 
-1. `cd src/terraform/examples/vfxt/1-filer`
+1. `cd ~/tf/src/terraform/examples/vfxt/user-assigned-managed-identity`
 
 2. `code main.tf` to edit the local variables section at the top of the file and to customize to your preferences.  At the top paste in the variables from the output of the principal script executed above.  If you are using an [ssk key](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys), ensure that ~/.ssh/id_rsa is populated.
 

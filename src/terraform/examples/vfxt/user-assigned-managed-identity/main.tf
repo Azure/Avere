@@ -45,7 +45,8 @@ locals {
 
     controller_add_public_ip = true
     // advanced scenario: add external ports to work with cloud policies example [10022, 13389]
-    open_external_ports = [22,3389]
+    ssh_port = 22
+    open_external_ports = [local.ssh_port,3389]
     // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
     // or if accessing from cloud shell, put "AzureCloud"
     open_external_sources = ["*"]
@@ -138,9 +139,9 @@ resource "avere_vfxt" "vfxt" {
     controller_admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
     controller_ssh_port = local.ssh_port
     // terraform is not creating the implicit dependency on the controller module
-    // otherwise during destroy, it tries to destroy the controller and proxy at the 
+    // otherwise during destroy, it tries to destroy the controller at the 
     // same time as vfxt cluster to work around, add the explicit dependencies
-    depends_on = [module.vfxtcontroller, module.proxy]
+    depends_on = [module.vfxtcontroller]
     
     location = local.location
     azure_resource_group = local.vfxt_resource_group_name

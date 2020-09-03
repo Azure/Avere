@@ -1917,6 +1917,7 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 		vfxt_cluster_name,
 		vfxt_admin_password,
 		vfxt_ssh_key_data,
+		user_assigned_managed_identity,
 	}
 
 	for _, parameter := range validateParameterSlice {
