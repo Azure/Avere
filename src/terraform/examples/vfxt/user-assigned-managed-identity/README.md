@@ -88,7 +88,7 @@ az role assignment create --role "Network Contributor" --scope /subscriptions/$S
 # create the controller managed identity
 az identity create --resource-group ${RG_PREFIX}managed_identity --name controllermi | tee cmi.txt
 export controllerMI_ID=$(jq -r '.clientId' cmi.txt)
-export controllerMI_ARMID==$(jq -r '.id' cmi.txt)
+export controllerMI_ARMID=$(jq -r '.id' cmi.txt)
 rm cmi.txt
 # retry on first role assignment to allow the appId to propagate
 while true; do az role assignment create --role "Avere Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}vfxt_resource_group --assignee $controllerMI_ID ; [ $? -eq 0  ] && break; sleep 10; done
@@ -107,17 +107,17 @@ while true; do az role assignment create --role "Avere Operator" --scope /subscr
 az role assignment create --role "Avere Operator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}network_resource_group --assignee $vfxtmi_ID 
 az role assignment create --role "Avere Operator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}storage_resource_group --assignee $vfxtmi_ID 
 
-echo "// ###############################################"
-echo "// please save the following for terraform locals"
-echo "// ###############################################"
-echo ""
-echo "    subscription_id = \"${SUBSCRIPTION}\""
-echo "    client_id       = \"${SP_APP_ID}\""
-echo "    client_secret   = \"${SP_APP_ID_SECRET}\""
-echo "    tenant_id       = \"${SP_APP_ID_TENANT}\""
-echo ""    
-echo "    controller_managed_identity_id = \"${controllerMI_ARMID}\""
-echo "    vfxt_managed_identity_id = \"${vfxtmi_ARMID}\""
+echo "// ###############################################
+// please save the following for terraform locals
+// ###############################################
+
+    subscription_id = \"${SUBSCRIPTION}\"
+    client_id       = \"${SP_APP_ID}\"
+    client_secret   = \"${SP_APP_ID_SECRET}\"
+    tenant_id       = \"${SP_APP_ID_TENANT}\"
+
+    controller_managed_identity_id = \"${controllerMI_ARMID}\"
+    vfxt_managed_identity_id = \"${vfxtmi_ARMID}\""
 
 # clear the secret
 export SP_APP_ID_SECRET=""
