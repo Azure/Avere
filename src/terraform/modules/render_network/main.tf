@@ -48,6 +48,8 @@ resource "azurerm_network_security_group" "no_internet_nsg" {
         source_address_prefix      = "Internet"
         destination_address_prefix = "*"
     }
+
+    depends_on = [var.module_depends_on, azurerm_resource_group.render_rg]
 }
 
 resource "azurerm_virtual_network" "vnet" {
@@ -56,6 +58,8 @@ resource "azurerm_virtual_network" "vnet" {
     location            = var.location
     resource_group_name = var.resource_group_name
     dns_servers         = var.dns_servers
+
+    depends_on = [var.module_depends_on, azurerm_resource_group.render_rg]
 }
 
 resource "azurerm_subnet" "cloud_cache" {
