@@ -8,5 +8,5 @@ output "controller_username" {
 
 output "module_depends_on_id" {
   description = "the id(s) to force others to wait"
-  value = azurerm_role_assignment.create_compute.id
+  value = var.user_assigned_managed_identity_id != null ? azurerm_linux_virtual_machine.vm.id : azurerm_role_assignment.create_compute[0].id
 }

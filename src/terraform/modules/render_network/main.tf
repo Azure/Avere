@@ -2,6 +2,8 @@ resource "azurerm_resource_group" "render_rg" {
     name     = var.resource_group_name
     location = var.location
 
+    count = var.create_resource_group ? 1 : 0
+
     depends_on = [var.module_depends_on]
 }
 
@@ -9,7 +11,7 @@ resource "azurerm_resource_group" "render_rg" {
 resource "azurerm_network_security_group" "ssh_nsg" {
     name                = "ssh_nsg"
     location            = var.location
-    resource_group_name = azurerm_resource_group.render_rg.name
+    resource_group_name = var.resource_group_name
 
     dynamic "security_rule" {
         for_each = length(var.open_external_ports) > 0 ? var.open_external_sources : []
@@ -25,12 +27,14 @@ resource "azurerm_network_security_group" "ssh_nsg" {
             destination_address_prefix = "*"
         }
     }
+
+    depends_on = [var.module_depends_on, azurerm_resource_group.render_rg]
 }
 
 resource "azurerm_network_security_group" "no_internet_nsg" {
     name                = "no_internet_nsg"
     location            = var.location
-    resource_group_name = azurerm_resource_group.render_rg.name
+    resource_group_name = var.resource_group_name
 
     // block all inbound from lb, etc
     security_rule {
@@ -50,14 +54,14 @@ resource "azurerm_virtual_network" "vnet" {
     name                = "rendervnet"
     address_space       = [var.vnet_address_space]
     location            = var.location
-    resource_group_name = azurerm_resource_group.render_rg.name
+    resource_group_name = var.resource_group_name
     dns_servers         = var.dns_servers
 }
 
 resource "azurerm_subnet" "cloud_cache" {
     name                 = var.subnet_cloud_cache_subnet_name
     virtual_network_name = azurerm_virtual_network.vnet.name
-    resource_group_name  = azurerm_resource_group.render_rg.name
+    resource_group_name = var.resource_group_name
     address_prefixes     = [var.subnet_cloud_cache_address_prefix]
     service_endpoints    = ["Microsoft.Storage"]
 }
@@ -70,7 +74,7 @@ resource "azurerm_subnet_network_security_group_association" "cloud_cache" {
 resource "azurerm_subnet" "cloud_filers" {
     name                 = var.subnet_cloud_filers_subnet_name
     virtual_network_name = azurerm_virtual_network.vnet.name
-    resource_group_name  = azurerm_resource_group.render_rg.name
+    resource_group_name = var.resource_group_name
     address_prefixes     = [var.subnet_cloud_filers_address_prefix]
 }
 
@@ -82,7 +86,7 @@ resource "azurerm_subnet_network_security_group_association" "cloud_filers" {
 resource "azurerm_subnet" "jumpbox" {
     name                 = var.subnet_jumpbox_subnet_name
     virtual_network_name = azurerm_virtual_network.vnet.name
-    resource_group_name  = azurerm_resource_group.render_rg.name
+    resource_group_name = var.resource_group_name
     address_prefixes     = [var.subnet_jumpbox_address_prefix]
     # needed for the controller to add storage containers
     service_endpoints    = ["Microsoft.Storage"]
@@ -96,7 +100,7 @@ resource "azurerm_subnet_network_security_group_association" "jumpbox" {
 resource "azurerm_subnet" "render_clients1" {
     name                 = var.subnet_render_clients1_subnet_name
     virtual_network_name = azurerm_virtual_network.vnet.name
-    resource_group_name  = azurerm_resource_group.render_rg.name
+    resource_group_name = var.resource_group_name
     address_prefixes     = [var.subnet_render_clients1_address_prefix]
 }
 
@@ -109,7 +113,7 @@ resource "azurerm_subnet_network_security_group_association" "render_clients1" {
 resource "azurerm_subnet" "render_clients2" {
     name                 = var.subnet_render_clients2_subnet_name
     virtual_network_name = azurerm_virtual_network.vnet.name
-    resource_group_name  = azurerm_resource_group.render_rg.name
+    resource_group_name  = var.resource_group_name
     address_prefixes     = [var.subnet_render_clients2_address_prefix]
 }
 

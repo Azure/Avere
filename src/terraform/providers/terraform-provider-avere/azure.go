@@ -302,6 +302,10 @@ func (a Azure) getBaseVfxtCommand(avereVfxt *AvereVfxt) string {
 		sb.WriteString(fmt.Sprintf("--image-id \"%s\" ", avereVfxt.ImageId))
 	}
 
+	if len(avereVfxt.UserAssignedManagedIdentity) > 0 {
+		sb.WriteString(fmt.Sprintf("--azure-identity \"%s\" ", avereVfxt.UserAssignedManagedIdentity))
+	}
+
 	// add the vfxt information
 	sb.WriteString(fmt.Sprintf("--cluster-name %s --admin-password '%s' ", avereVfxt.AvereVfxtName, avereVfxt.AvereAdminPassword))
 

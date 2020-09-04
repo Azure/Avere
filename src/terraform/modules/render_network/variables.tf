@@ -1,3 +1,8 @@
+variable "create_resource_group" {
+  description = "specifies to create the resource group"
+  default = true
+}
+
 variable "resource_group_name" {
     description = "The resource group to contain the NFS filer."
 }
