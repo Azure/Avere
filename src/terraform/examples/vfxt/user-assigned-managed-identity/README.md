@@ -91,8 +91,8 @@ export controllerMI_ID=$(jq -r '.clientId' cmi.txt)
 rm cmi.txt
 # retry on first role assignment to allow the appId to propagate
 while true; do az role assignment create --role "Avere Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}vfxt_resource_group --assignee $controllerMI_ID ; [ $? -eq 0  ] && break; sleep 10; done
-az role assignment create --role "Avere Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}network_resource_group --assignee $controllerMI_ID 
-az role assignment create --role "Avere Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}storage_resource_group --assignee $controllerMI_ID 
+az role assignment create --role "Avere Operator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}network_resource_group --assignee $controllerMI_ID 
+az role assignment create --role "Avere Operator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}storage_resource_group --assignee $controllerMI_ID 
 az role assignment create --role "Managed Identity Operator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}vfxt_resource_group --assignee $controllerMI_ID 
 az role assignment create --role "Managed Identity Operator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}managed_identity --assignee $controllerMI_ID 
 
