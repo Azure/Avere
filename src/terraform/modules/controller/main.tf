@@ -13,7 +13,7 @@ locals {
   script_file_b64 = base64gzip(replace(file("${path.module}/averecmd.txt"),"\r",""))
   msazure_patch1_file_b64 = base64gzip(replace(file("${path.module}/msazure.py.patch1"),"\r",""))
   msazure_patchidentity_file_b64 = base64gzip(replace(file("${path.module}/msazure.py.patchidentity"),"\r",""))
-  vfxt_patchidentity_file_b64 = base64gzip(replace(file("${path.module}/msazure.py.patchidentity"),"\r",""))
+  vfxt_patchidentity_file_b64 = base64gzip(replace(file("${path.module}/vfxt.py.patchidentity"),"\r",""))
   cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { averecmd = local.script_file_b64, msazure_patch1 = local.msazure_patch1_file_b64, msazure_patchidentity = local.msazure_patchidentity_file_b64, vfxt_patchidentity = local.vfxt_patchidentity_file_b64, ssh_port = var.ssh_port })
   # the roles assigned to the controller managed identity principal
   # the contributor role is required to create Avere clusters
