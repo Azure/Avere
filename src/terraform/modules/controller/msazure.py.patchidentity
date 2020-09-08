@@ -1,6 +1,29 @@
 --- sep3/msazure.py	2020-09-03 19:23:11.023824700 -0400
-+++ sep3new/msazure.py	2020-09-04 06:10:32.499336200 -0400
-@@ -1073,6 +1073,7 @@
++++ sep8new/msazure.py	2020-09-08 18:29:56.640655500 -0400
+@@ -1003,13 +1003,18 @@
+     def _instance_identity_custom_role(self, instance):
+         '''Return the custom role of the instance
+ 
+-            This is currently the role applied the system managed identity of the instance.
++            This is currently the role applied the system managed identity of the instance or if a user assigned
++            identity is in use we return None.
+         '''
+         conn = self.connection('authorization')
+-        if not hasattr(instance, 'identity') and not hasattr(instance.identity, 'principal_id'):
++        if not hasattr(instance, 'identity'):
+             raise vFXTConfigurationException("Instance {} has no identity configuration".format(self.name(instance)))
+-
+-        principal_id = instance.identity.principal_id
++        identity = instance.identity
++        if getattr(identity, 'user_assigned_identities', None):
++            return None
++        if not getattr(identity, 'principal_id', None):
++            raise vFXTConfigurationException("Instance {} has no identity configuration".format(self.name(instance)))
++        principal_id = identity.principal_id
+         role_assignments = conn.role_assignments.list("principalId eq '{}'".format(principal_id))
+         roles = [conn.role_definitions.get_by_id(_.role_definition_id) for _ in role_assignments]
+         custom_roles = [_ for _ in roles if _.role_type == 'CustomRole']
+@@ -1073,6 +1078,7 @@
                  advanced_networking (bool, optional): Turn on advanced networking (if image supports it)
                  private_ip_address (str, optional): primary private IP address
                  azure_role (str, optional): Azure role name to assign to the system provided identity
@@ -8,18 +31,49 @@
                  identity (str, optional): ARM resource identity reference (full path)
                  storage_account_type (str, optional): Storage account type for managed disks
                  user_data (bytes, optional): Custom data for the instance CustomData field
-@@ -1124,6 +1125,10 @@
+@@ -1124,6 +1130,19 @@
              }
          }
  
 +        azure_identity = options.get('azure_identity')
 +        if azure_identity:
-+            body['identity'] = {'type': 'UserAssigned', 'user_assigned_identities': {azure_identity: {}}}
++            identity_conn = self.connection('identity')
++            try:
++                identity_id = identity_conn.user_assigned_identities.get(self.resource_group, azure_identity).id
++            except msrestazure.azure_exceptions.CloudError as ex:
++                provider = 'Microsoft.ManagedIdentity/userAssignedIdentities'
++                if provider in azure_identity: # already fully qualified
++                    identity_id = azure_identity
++                else:
++                    identity_id = '{}/providers/{}/{}'.format(self._resource_group_scope(), provider, azure_identity)
++            body['identity'] = {'type': 'UserAssigned', 'user_assigned_identities': {identity_id: {}}}
 +        
          if body['tags']:
              if len(body['tags']) > 15:
                  raise vFXTConfigurationException("Resources cannot have more than 15 tags")
-@@ -1276,8 +1281,8 @@
+@@ -1150,11 +1169,6 @@
+             except Exception as e:
+                 raise vFXTServiceFailure("Failed to lookup availability set {}: {}".format(availability_set, e))
+ 
+-        identity = options.get('identity') or None
+-        if identity:
+-            body['identity']['type'] = 'UserAssigned'
+-            body['identity']['identity_ids'] = [identity]
+-
+         # determine where we are getting the root disk
+         # if its a url and in our storage account, use it directly
+         boot_disk_image_url = urlparse.urlparse(boot_disk_image)
+@@ -1171,7 +1185,8 @@
+ 
+             try:
+                 self.create_container('{}/{}'.format(self.storage_account, self.SYSTEM_CONTAINER))
+-            except ContainerExistsException: pass
++            except ContainerExistsException:
++                pass
+ 
+             # Simple existing check... there may be better ways if we want to invalidate our existing copy
+             if not self._blob_exists(self.storage_account, self.SYSTEM_CONTAINER, blob_name):
+@@ -1276,8 +1291,8 @@
              self._wait_for_operation(op, msg="instance {} to be created".format(name), retries=wait_for_success)
              instance = conn.virtual_machines.get(resource_group, name)
  
@@ -30,7 +84,7 @@
                  self._assign_role(instance.identity.principal_id, role_name)
  
              self.wait_for_status(instance, self.ON_STATUS, wait_for_success)
-@@ -1410,6 +1415,7 @@
+@@ -1410,6 +1425,7 @@
                  wait_for_state (str, optional): red, yellow, green cluster state (defaults to yellow)
                  skip_cleanup (bool, optional): do not clean up on failure
                  azure_role (str, optional): Azure role name for the service principal (otherwise DEFAULT_ROLE is used)
@@ -38,13 +92,41 @@
                  availability_set (str, optional): existing availability set for the cluster instances
                  subnets ([str], optional): one or more subnets
                  location (str, optional): location for availability set
-@@ -1715,7 +1721,8 @@
+@@ -1425,6 +1441,7 @@
+         '''
+         cluster.availability_set = None
+         cluster.role = None
++        cluster.identity = None
+ 
+         if not all([cluster.mgmt_ip, cluster.mgmt_netmask, cluster.cluster_ip_start, cluster.cluster_ip_end]):
+             raise vFXTConfigurationException("Cluster networking configuration is incomplete")
+@@ -1555,10 +1572,13 @@
+         try:
+             if instance.os_profile.linux_configuration.ssh and 'admin_ssh_data' not in options:
+                 options['admin_ssh_data'] = instance.os_profile.linux_configuration.ssh.public_keys[0].key_data
+-        except Exception: pass
++        except Exception:
++            pass
+ 
+         if not options.get('azure_role'):
+             options['azure_role'] = cluster.role.role_name
++        if not options.get('azure_identity'):
++            options['azure_identity'] = cluster.identity
+ 
+         # set network security group for added nodes
+         options['network_security_group'] = cluster.network_security_group
+@@ -1715,7 +1735,13 @@
              try: # try and find the cluster role
                  cluster.role = self._instance_identity_custom_role(instances[0]) or self._get_role(self.DEFAULT_ROLE)
              except Exception as e:
 -                raise vFXTConfigurationException("Failed to lookup cluster role: {}".format(e))
-+                log.exception(e)
-+                cluster.role = self._get_role(self.DEFAULT_ROLE)
++                 raise vFXTConfigurationException("Failed to lookup cluster role: {}".format(e))
++
++            # if the cluster is using a user assigned identity
++            try:
++                cluster.identity = list(instances[0].identity.user_assigned_identities.keys())[0]
++            except (AttributeError, IndexError) as e:
++                pass
  
              # try and find the network security group
              try:

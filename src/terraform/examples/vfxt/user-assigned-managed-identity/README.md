@@ -68,44 +68,59 @@ export SP_APP_ID_SECRET=$(jq -r '.password' sp.txt)
 export SP_APP_ID_TENANT=$(jq -r '.tenant' sp.txt)
 rm sp.txt
 
+# the following function will retry on failures due to propogation delays
+function create_role_assignment() {
+    retries=12; sleep_seconds=10
+    role=$1; scope=$2; assignee=$3
+    for i in $(seq 1 $retries); do
+        az role assignment create --role "${role}" --scope $scope --assignee $assignee
+        [ $? -eq 0  ] && break || \
+        if [ $i -eq $retries ]; then
+            echo Executed \"az role assignment create --role \"${role}\" --scope $scope --assignee $assignee\" $i times;
+            return 1
+        else
+            sleep $sleep_seconds
+        fi
+    done
+}
+
 # assign the "Managed Identity Operator"
-# retry on first role assignment to allow the appId to propagate
-while true; do az role assignment create --role "Managed Identity Operator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}managed_identity --assignee $SP_APP_ID; [ $? -eq 0  ] && break; sleep 10; done
-az role assignment create --role "Managed Identity Operator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}vfxt_resource_group --assignee $SP_APP_ID
+create_role_assignment "Managed Identity Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}managed_identity $SP_APP_ID
+create_role_assignment "Managed Identity Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}vfxt_resource_group $SP_APP_ID
 
 # assign the "Network Contributor"
-az role assignment create --role "Network Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}network_resource_group --assignee $SP_APP_ID
+create_role_assignment "Network Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}network_resource_group $SP_APP_ID
 
 # assign the "Storage Account Contributor" for storage accounts and "Virtual Machine Contributor" for NFS Filers
-az role assignment create --role "Storage Account Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}storage_resource_group --assignee $SP_APP_ID
-az role assignment create --role "Virtual Machine Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}storage_resource_group --assignee $SP_APP_ID
+create_role_assignment "Storage Account Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}storage_resource_group $SP_APP_ID
+create_role_assignment "Virtual Machine Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}storage_resource_group $SP_APP_ID
 
 # assign the "Avere Contributor"
-az role assignment create --role "Avere Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}vfxt_resource_group --assignee $SP_APP_ID
-az role assignment create --role "Virtual Machine Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}vfxt_resource_group --assignee $SP_APP_ID
-az role assignment create --role "Network Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}vfxt_resource_group --assignee $SP_APP_ID
+create_role_assignment "Avere Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}vfxt_resource_group $SP_APP_ID
+create_role_assignment "Virtual Machine Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}vfxt_resource_group $SP_APP_ID
+create_role_assignment "Network Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}vfxt_resource_group $SP_APP_ID
 
 # create the controller managed identity
 az identity create --resource-group ${RG_PREFIX}managed_identity --name controllermi | tee cmi.txt
 export controllerMI_ID=$(jq -r '.clientId' cmi.txt)
 export controllerMI_ARMID=$(jq -r '.id' cmi.txt)
 rm cmi.txt
-# retry on first role assignment to allow the appId to propagate
-while true; do az role assignment create --role "Avere Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}vfxt_resource_group --assignee $controllerMI_ID ; [ $? -eq 0  ] && break; sleep 10; done
-az role assignment create --role "Avere Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}network_resource_group --assignee $controllerMI_ID 
-az role assignment create --role "Avere Contributor" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}storage_resource_group --assignee $controllerMI_ID 
-az role assignment create --role "Managed Identity Operator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}vfxt_resource_group --assignee $controllerMI_ID 
-az role assignment create --role "Managed Identity Operator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}managed_identity --assignee $controllerMI_ID 
+
+create_role_assignment "Avere Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}vfxt_resource_group $controllerMI_ID
+create_role_assignment "Avere Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}network_resource_group $controllerMI_ID 
+create_role_assignment "Avere Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}storage_resource_group $controllerMI_ID 
+create_role_assignment "Managed Identity Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}vfxt_resource_group $controllerMI_ID 
+create_role_assignment "Managed Identity Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}managed_identity $controllerMI_ID 
 
 # create the vfxt managed identity
 az identity create --resource-group ${RG_PREFIX}managed_identity --name vfxtmi | tee vfxtmi.txt
 export vfxtmi_ID=$(jq -r '.clientId' vfxtmi.txt)
 export vfxtmi_ARMID=$(jq -r '.id' vfxtmi.txt)
 rm vfxtmi.txt
-# retry on first role assignment to allow the appId to propagate
-while true; do az role assignment create --role "Avere Operator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}vfxt_resource_group --assignee $vfxtmi_ID ; [ $? -eq 0  ] && break; sleep 10; done
-az role assignment create --role "Avere Operator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}network_resource_group --assignee $vfxtmi_ID 
-az role assignment create --role "Avere Operator" --scope /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}storage_resource_group --assignee $vfxtmi_ID 
+
+create_role_assignment "Avere Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}vfxt_resource_group $vfxtmi_ID
+create_role_assignment "Avere Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}network_resource_group $vfxtmi_ID 
+create_role_assignment "Avere Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/${RG_PREFIX}storage_resource_group $vfxtmi_ID 
 
 echo "// ###############################################
 // please save the following for terraform locals
