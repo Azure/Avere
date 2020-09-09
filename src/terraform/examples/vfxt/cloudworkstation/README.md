@@ -1,48 +1,60 @@
 # Experimental: Reducing Latency for Cloud Workstations Connected to On-premises NFS Filers
 
-Once remote cloud workstations have been deployed, users discover that creation, deletion, and listing of files on remote NFS shares are slow due to high latency back to on-premises NFS Filers.  This guide shows how to use Avere vFXT to reduce latency to for cloud workstations connected to an on-premises NFS Filer.  The following table shows where the Avere vFXT edge cache fits within the cloud workstation architecture:
+After deploying remote cloud workstations, workstation users can see slow response when creating, deleting, or listing files on remote NFS shares. This delay is caused by the high latency between the workstations and the on-premises NFS filers.  This guide shows how to use Avere vFXT for Azure to reduce latency to for cloud workstations connected to an on-premises NFS filer.  
+
+The following diagram shows where the Avere vFXT edge cache fits within the cloud workstation architecture:
 
 | Cloud Workstations Without Avere | Cloud Workstations With Avere |
 | --- | --- |
 | <img src="withoutavere.png"> | <img src="withavere.png"> |
 
-**Important Note:** The cloud workstation feature is experimental: the Avere vFXT performs best for read workloads, but the two cache policies outlined here should improve the artist or user experience over not using Avere.
+These configurations use customized caching policies to reduce latency. Cache policies control which items are cached and how frequently they are written to and compared with the versions on the back-end filer. [Learn more about cache policies](<https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_manage_cache_policies.html>)
 
-## Cache Policy "Isolated Cloud Workstation"
+**Important Note:** The cloud workstation feature is experimental. Avere vFXT performs best with read-heavy workloads, but the two cache policies outlined here should improve the artist or user experience over a system that does not use the Avere vFXT edge cache.
 
-The first and most performant cache policy to consider is named "Isolated Cloud Workstation".  This cache policy is used when users are isolated and not collaborating on the same workload.  The following image shows a concrete example where artists are independently working on scenes.  They may have shared read access to a tools directory, and this also works for the isolated cache policy.  The following diagram illustrates the "Isolated Cloud Workstation" cache policy.
+## "Isolated Cloud Workstation" Cache Policy
+
+The first and most performant cache policy to consider is named "Isolated Cloud Workstation".  This cache policy can be used when users are isolated and not collaborating on the same workload.  
+
+The following image shows a concrete example where artists are independently working on scenes.  They may have shared read access to a tools directory, and this also works for the isolated cache policy. This example is a candidate for using the "Isolated Cloud Workstation" cache policy.
 
 <div style="text-align:center"><img src="isolatedcloudworkstation.png"></div>
 
-## Cache Policy "Collaborating Cloud Workstation"
+The Isolated Cloud Workstation policy is not designed for situations where multiple users are writing changes to the same file. Cached content can diverge significantly from the on-premises file. [Read more about filer verification settings](<https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_manage_cache_policies.html#cache-policy-settings-advanced-options>)
 
-The second cache policy is named "Collaborating Cloud Workstation".  This policy is used when users are collaborating on the same workload. The following image shows a concrete example where artists are working together on the same scene.  There may also be an artist on-premises also working on the same workload.  The following diagram illustrates the "Collaborating Cloud Workstation" cache policy. 
+## "Collaborating Cloud Workstation" Cache Policy
+
+The second cache policy is named "Collaborating Cloud Workstation".  This policy is used when multiple users are collaborating on the same workload.
+
+The following image shows a concrete example where artists are working together on the same scene.  There may also be an artist on premises who is working on the same workload.  This example is a candidate for using the "Collaborating Cloud Workstation" cache policy.
 
 <div style="text-align:center"><img src="collaboratingcloudworkstation.png"></div>
 
-## Deployment Instructions of Avere vFXT
+This cache policy includes more frequent checks to compare files in the cache with the versions on the on-premises filer. [Read more about filer verification settings](<https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_manage_cache_policies.html#cache-policy-settings-advanced-options>)
 
-This examples configures a render network, controller, and vfxt with 1 filer as shown in the diagram below, and let's you choose between Isolated or Shared workstation cache policies:
+## Deployment Instructions for Avere vFXT
+
+This examples configures a render network, controller, and vFXT with one filer as shown in the diagram below, and lets you choose between Isolated or Shared workstation cache policies:
 
 ![The architecture](../../../../../docs/images/terraform/1filer.png)
 
-To run the example, execute the following instructions.  This assumes use of Azure Cloud Shell, but you can use in your own environment, ensure you install the vfxt provider as described in the [build provider instructions](../../../providers/terraform-provider-avere#build-the-terraform-provider-binary).  However, if you are installing into your own environment, you will need to follow the [instructions to setup terraform for the Azure environment](https://docs.microsoft.com/en-us/azure/terraform/terraform-install-configure).
+To run the example, execute the following instructions.  These instructions assume use of Azure Cloud Shell, but you can use your own environment if you install the vFXT provider as described in the [build provider instructions](../../../providers/terraform-provider-avere#build-the-terraform-provider-binary).  However, if you are installing into your own environment, you will need to follow the [instructions to setup terraform for the Azure environment](https://docs.microsoft.com/en-us/azure/terraform/terraform-install-configure). <!-- so you need to do two things if using your own environment? should rephrase -->
 
-1. browse to https://shell.azure.com
+1. Browse to https://shell.azure.com
 
 2. Specify your subscription by running this command with your subscription ID:  ```az account set --subscription YOUR_SUBSCRIPTION_ID```.  You will need to run this every time after restarting your shell, otherwise it may default you to the wrong subscription, and you will see an error similar to `azurerm_public_ip.vm is empty tuple`.
 
-3. double check your Avere vFXT prerequisites, including running `az vm image accept-terms --urn microsoft-avere:vfxt:avere-vfxt-controller:latest`: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs
+3. Double check your Avere vFXT prerequisites, including running `az vm image accept-terms --urn microsoft-avere:vfxt:avere-vfxt-controller:latest`: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs
 
 4. If not already installed, run the following commands to install the Avere vFXT provider for Azure:
 ```bash
 mkdir -p ~/.terraform.d/plugins
-# install the vfxt released binary from https://github.com/Azure/Avere
+# install the vFXT released binary from https://github.com/Azure/Avere
 wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.2/terraform-provider-avere
 chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 ```
 
-5. get the terraform examples
+5. Get the terraform examples
 ```bash
 mkdir tf
 cd tf
@@ -53,20 +65,18 @@ echo "src/terraform/*" >> .git/info/sparse-checkout
 git pull origin master
 ```
 
-6. Determine your workstation usage and determine which cache policy you can use as discussed in [reducing latency for cloud workstations](README.md):
-    1. If using isolated cloud workstations `cd src/terraform/examples/vfxt/cloudworkstation/isolatedcloudworkstation`
-    2. If using collaborating cloud workstations `cd src/terraform/examples/vfxt/cloudworkstation/collaboratingcloudworkstation`
+6. Determine your workstation usage and which cache policy you can use as discussed in [reducing latency for cloud workstations](README.md):
+    * If using isolated cloud workstations: `cd src/terraform/examples/vfxt/cloudworkstation/isolatedcloudworkstation`
+    * If using collaborating cloud workstations: `cd src/terraform/examples/vfxt/cloudworkstation/collaboratingcloudworkstation`
 
-7. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  If you are using an [ssk key](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys), ensure that ~/.ssh/id_rsa is populated.
+7. Open `code main.tf` and edit the local variables section at the top of the file to customize to your preferences.  If you are using an [ssk key](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys), ensure that ~/.ssh/id_rsa is populated.
 
-8. execute `terraform init` in the directory of `main.tf`.
+8. Execute `terraform init` in the directory of `main.tf`.
 
-9. execute `terraform apply -auto-approve` to build the vfxt cluster
+9. Execute `terraform apply -auto-approve` to build the vFXT cluster
 
-Once installed you will be able to login and use the vFXT cluster according to the vFXT documentation: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-cluster-gui.
+Once installed you will be able to log in and use the vFXT cluster according to the vFXT documentation: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-cluster-gui.
 
 Try to scale up and down the cluster, adjust the customer settings, add new junctions, etc, by editing the `main.tf`, and running `terraform apply -auto-approve`.
 
 When you are done using the cluster, you can destroy it by running `terraform destroy -auto-approve` or just delete the three resource groups created.
-
-
