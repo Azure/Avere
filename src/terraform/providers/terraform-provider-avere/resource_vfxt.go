@@ -331,6 +331,12 @@ func resourceVfxt() *schema.Resource {
 							Optional: true,
 							Default:  true,
 						},
+						nfs_connection_multiplier: {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      DefaultNFSConnMult,
+							ValidateFunc: validation.IntBetween(MinNFSConnMult, MaxNFSConnMult),
+						},
 						ordinal: {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -979,7 +985,7 @@ func updateNtpServers(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 
 func createGlobalSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 	for _, v := range d.Get(global_custom_settings).(*schema.Set).List() {
-		if err := avereVfxt.CreateCustomSetting(v.(string), TerraformAutoMessage); err != nil {
+		if err := avereVfxt.CreateCustomSetting(v.(string), GetTerraformMessage(v.(string))); err != nil {
 			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", v.(string), err)
 		}
 	}
@@ -1670,6 +1676,7 @@ func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 		fqdnOrPrimaryIp := input[fqdn_or_primary_ip].(string)
 		cachePolicy := input[cache_policy].(string)
 		autoWanOptimize := input[auto_wan_optimize].(bool)
+		nfsConnectionMultiplier := input[nfs_connection_multiplier].(int)
 		ordinal := input[ordinal].(int)
 		fixedQuotaPercent := input[fixed_quota_percent].(int)
 		customSettingsRaw := input[custom_settings].(*schema.Set).List()
@@ -1689,13 +1696,14 @@ func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 
 		// add to map
 		output := &CoreFiler{
-			Name:              name,
-			FqdnOrPrimaryIp:   fqdnOrPrimaryIp,
-			CachePolicy:       cachePolicy,
-			AutoWanOptimize:   autoWanOptimize,
-			Ordinal:           ordinal,
-			FixedQuotaPercent: fixedQuotaPercent,
-			CustomSettings:    customSettings,
+			Name:                    name,
+			FqdnOrPrimaryIp:         fqdnOrPrimaryIp,
+			CachePolicy:             cachePolicy,
+			AutoWanOptimize:         autoWanOptimize,
+			NfsConnectionMultiplier: nfsConnectionMultiplier,
+			Ordinal:                 ordinal,
+			FixedQuotaPercent:       fixedQuotaPercent,
+			CustomSettings:          customSettings,
 		}
 		results[name] = output
 	}
@@ -1829,6 +1837,9 @@ func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
 		}
 		if v, ok := m[auto_wan_optimize]; ok {
 			buf.WriteString(fmt.Sprintf("%v;", v.(bool)))
+		}
+		if v, ok := m[nfs_connection_multiplier]; ok {
+			buf.WriteString(fmt.Sprintf("%v;", v.(int)))
 		}
 		if v, ok := m[ordinal]; ok {
 			buf.WriteString(fmt.Sprintf("%d;", v.(int)))
@@ -2092,16 +2103,8 @@ func ValidateCustomSetting(v interface{}, _ string) (warnings []string, errors [
 		errors = append(errors, err)
 	}
 
-	if IsAutoWanOptimizeCustomSetting(customSetting) {
-		errors = append(errors, fmt.Errorf("Please remove '%s', the autoWanOptimize custom setting has been deprecated.  Instead use the %s flag, see provider docs for more information: https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#auto_wan_optimize.  Also, autoWanOptimize it not required for storage filers as it is always automatically applied for cloud storage filers.", customSetting, auto_wan_optimize))
-	}
-
-	if IsQuotaBalanceCustomSetting(customSetting) {
-		errors = append(errors, fmt.Errorf("Please remove '%s'.  This custom setting is deprecated and is now used as part of quota balancing: https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#fixed_quota_percent.", customSetting))
-	}
-
-	if IsCustomSettingDeprecated(customSetting) {
-		errors = append(errors, fmt.Errorf("The custom setting '%s' has been deprecated and is no longer needed.  If support has recommended the setting, to override the deprecation, specify the custom setting as '%s%s'", customSetting, CustomSettingOverride, customSetting))
+	if ok, err := IsCustomSettingDeprecated(customSetting); ok {
+		errors = append(errors, err)
 	}
 
 	return warnings, errors

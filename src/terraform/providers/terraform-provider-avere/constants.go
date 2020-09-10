@@ -53,11 +53,16 @@ const (
 	TargetPercentageError                     = float32(0.01)
 	QuotaSpeedUpDeleteFirstFiler              = true
 
-	TerraformAutoMessage    = "Customer Added Custom Setting via Terraform"
-	TerraformFeatureMessage = "Terraform Feature"
+	TerraformAutoMessage           = "Customer Added Custom Setting via Terraform"
+	TerraformOverriddenAutoMessage = "Customer Overridden Deprecated Custom Setting via Terraform"
+	TerraformFeatureMessage        = "Terraform Feature"
 	// features that are custom settings
 	AutoWanOptimizeCustomSetting = "autoWanOptimize YF 2"
 	CustomSettingOverride        = "override "
+	NFSConnMultCustomSetting     = "nfsConnMult YW %d"
+	MinNFSConnMult               = 1
+	MaxNFSConnMult               = 23
+	DefaultNFSConnMult           = 4
 
 	AnalyticsClusterFilersRaw = "cluster_filers_raw"
 
@@ -170,6 +175,7 @@ const (
 	fqdn_or_primary_ip             = "fqdn_or_primary_ip"
 	cache_policy                   = "cache_policy"
 	auto_wan_optimize              = "auto_wan_optimize"
+	nfs_connection_multiplier      = "nfs_connection_multiplier"
 	ordinal                        = "ordinal"
 	fixed_quota_percent            = "fixed_quota_percent"
 	custom_settings                = "custom_settings"
