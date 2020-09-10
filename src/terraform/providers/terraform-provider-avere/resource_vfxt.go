@@ -41,6 +41,11 @@ func resourceVfxt() *schema.Resource {
 				Optional:  true,
 				Sensitive: true,
 			},
+			controller_ssh_port: {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(0, 65535),
+			},
 			run_local: {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -145,10 +150,26 @@ func resourceVfxt() *schema.Resource {
 				Sensitive:    true,
 				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
 			},
+			vfxt_ssh_key_data: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringDoesNotContainAny("'\""),
+			},
 			vfxt_node_count: {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ValidateFunc: validation.IntBetween(3, 16),
+				ValidateFunc: validation.IntBetween(MinNodesCount, MaxNodesCount),
+			},
+			node_size: {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  ClusterSkuProd,
+				ValidateFunc: validation.StringInSlice([]string{
+					ClusterSkuUnsupportedTest,
+					ClusterSkuProd,
+				}, false),
 			},
 			node_cache_size: {
 				Type:     schema.TypeInt,
@@ -159,6 +180,13 @@ func resourceVfxt() *schema.Resource {
 					1024,
 					4096,
 				}),
+			},
+			vserver_first_ip: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "",
+				ValidateFunc: validation.IsIPv4Address,
 			},
 			global_custom_settings: {
 				Type:     schema.TypeSet,
@@ -182,6 +210,34 @@ func resourceVfxt() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			user: {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						name: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: ValidateUserName,
+						},
+						password: {
+							Type:         schema.TypeString,
+							Required:     true,
+							Sensitive:    true,
+							ValidateFunc: validation.StringLenBetween(1, 36),
+						},
+						permission: {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								UserReadOnly,
+								UserReadWrite,
+							}, false),
+						},
+					},
+				},
+				Set: resourceAvereUserReferenceHash,
 			},
 			core_filer: {
 				Type:     schema.TypeSet,
@@ -234,6 +290,12 @@ func resourceVfxt() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringIsNotWhiteSpace,
+									},
+									export_subdirectory: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "",
+										ValidateFunc: ValidateExportSubdirectory,
 									},
 								},
 							},
@@ -309,12 +371,24 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if avereVfxt.RunLocal == false {
-		// this only needs to be done on create since the controller's ssh
-		// may take a while to become ready
-		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod); err != nil {
+		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, avereVfxt.SshPort); err != nil {
 			return err
 		}
 	}
+
+	//
+	// The cluster will be created in the following order
+	//  1. Cluster creation
+	//  2. SetId() in Terraform to commit the cluster creation
+	//  3. Timezone and DNS changes
+	//  4. NTP Servers
+	//  5. Global and Vserver Custom Support settings
+	//  6. Users
+	//  7. Delete Junctions
+	//  8. Core Filers including custom settings
+	//  9. Junctions
+	//  10. Support Uploads if requested
+	//
 
 	if err := avereVfxt.Platform.CreateVfxt(avereVfxt); err != nil {
 		return fmt.Errorf("failed to create cluster: %s\n", err)
@@ -325,6 +399,16 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 	// the management ip will uniquely identify the cluster in the VNET
 	d.SetId(avereVfxt.ManagementIP)
 
+	if err := avereVfxt.CreateVServer(); err != nil {
+		return fmt.Errorf("ERROR: error while creating VServer: %s", err)
+	}
+
+	if avereVfxt.Timezone != DefaultTimezone || len(avereVfxt.DnsServer) > 0 || len(avereVfxt.DnsDomain) > 0 || len(avereVfxt.DnsSearch) > 0 {
+		if err := avereVfxt.UpdateCluster(); err != nil {
+			return err
+		}
+	}
+
 	if err := updateNtpServers(d, avereVfxt); err != nil {
 		return err
 	}
@@ -334,6 +418,10 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if err := createVServerSettings(d, avereVfxt); err != nil {
+		return err
+	}
+
+	if err := createUsers(d, avereVfxt); err != nil {
 		return err
 	}
 
@@ -367,12 +455,6 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if avereVfxt.Timezone != DefaultTimezone || len(avereVfxt.DnsServer) > 0 || len(avereVfxt.DnsDomain) > 0 || len(avereVfxt.DnsSearch) > 0 {
-		if err := avereVfxt.UpdateCluster(); err != nil {
-			return err
-		}
-	}
-
 	// update the support
 	if avereVfxt.EnableSupportUploads == true {
 		if err := avereVfxt.ModifySupportUploads(); err != nil {
@@ -390,6 +472,12 @@ func resourceVfxtRead(d *schema.ResourceData, m interface{}) error {
 	avereVfxt, err := fillAvereVfxt(d)
 	if err != nil {
 		return err
+	}
+
+	if avereVfxt.RunLocal == false {
+		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, avereVfxt.SshPort); err != nil {
+			return err
+		}
 	}
 
 	currentVServerIPAddresses, err := avereVfxt.GetVServerIPAddresses()
@@ -420,6 +508,31 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	if avereVfxt.RunLocal == false {
+		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, avereVfxt.SshPort); err != nil {
+			return err
+		}
+	}
+
+	//
+	// The cluster will be updated in the following order
+	//  1. Timezone and DNS changes
+	//  2. NTP Servers
+	//  3. Global and Vserver Custom Support settings
+	//  4. Update Users
+	//  5. Delete Junctions
+	//  5. Update Core Filers including Core Filer custom settings
+	//  6. Add Junctions
+	//  7. Scale cluster
+	//  8. Update Support Uploads
+	//
+
+	if d.HasChange(timezone) || d.HasChange(dns_server) || d.HasChange(dns_domain) || d.HasChange(dns_search) {
+		if err := avereVfxt.UpdateCluster(); err != nil {
+			return err
+		}
+	}
+
 	if d.HasChange(ntp_servers) {
 		if err := updateNtpServers(d, avereVfxt); err != nil {
 			return err
@@ -444,15 +557,14 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	if d.HasChange(enable_support_uploads) {
-		if err := avereVfxt.ModifySupportUploads(); err != nil {
+	if d.HasChange(user) {
+		if err := updateUsers(d, avereVfxt); err != nil {
 			return err
 		}
 	}
 
 	// update the core filers
 	if d.HasChange(core_filer) || d.HasChange(azure_storage_filer) {
-
 		existingCoreFilers, existingAzureStorageFilers, err := avereVfxt.GetExistingFilers()
 		if err != nil {
 			return err
@@ -505,15 +617,15 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	if d.HasChange(timezone) || d.HasChange(dns_server) || d.HasChange(dns_domain) || d.HasChange(dns_search) {
-		if err := avereVfxt.UpdateCluster(); err != nil {
+	// scale the cluster if node changed
+	if d.HasChange(vfxt_node_count) {
+		if err := scaleCluster(d, avereVfxt); err != nil {
 			return err
 		}
 	}
 
-	// scale the cluster if node changed
-	if d.HasChange(vfxt_node_count) {
-		if err := scaleCluster(d, avereVfxt); err != nil {
+	if d.HasChange(enable_support_uploads) {
+		if err := avereVfxt.ModifySupportUploads(); err != nil {
 			return err
 		}
 	}
@@ -525,18 +637,24 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] [resourceVfxtDelete")
 	defer log.Printf("[INFO] resourceVfxtDelete]")
 
-	averevfxt, err := fillAvereVfxt(d)
+	avereVfxt, err := fillAvereVfxt(d)
 	if err != nil {
 		return err
 	}
 
-	if err := averevfxt.Platform.DestroyVfxt(averevfxt); err != nil {
+	if avereVfxt.RunLocal == false {
+		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, avereVfxt.SshPort); err != nil {
+			return err
+		}
+	}
+
+	if err := avereVfxt.Platform.DestroyVfxt(avereVfxt); err != nil {
 		return fmt.Errorf("failed to destroy cluster: %s\n", err)
 	}
 
-	d.Set(vfxt_management_ip, averevfxt.ManagementIP)
-	d.Set(vserver_ip_addresses, averevfxt.VServerIPAddresses)
-	d.Set(node_names, averevfxt.NodeNames)
+	d.Set(vfxt_management_ip, avereVfxt.ManagementIP)
+	d.Set(vserver_ip_addresses, avereVfxt.VServerIPAddresses)
+	d.Set(node_names, avereVfxt.NodeNames)
 
 	// acknowledge deletion of the vfxt
 	d.SetId("")
@@ -547,6 +665,7 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	var err error
 	var controllerAddress, controllerAdminUsername, controllerAdminPassword string
+	var controllerSshPort int
 
 	runLocal := d.Get(run_local).(bool)
 	allowNonAscii := d.Get(allow_non_ascii).(bool)
@@ -569,8 +688,10 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		} else {
 			return nil, fmt.Errorf("missing argument '%s'", controller_admin_username)
 		}
-		if v, exists := d.GetOk(controller_admin_password); exists {
-			controllerAdminPassword = v.(string)
+		if v, exists := d.GetOk(controller_ssh_port); exists {
+			controllerSshPort = v.(int)
+		} else {
+			controllerSshPort = DefaultSshPort
 		}
 
 		if len(controllerAdminPassword) > 0 {
@@ -601,18 +722,33 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	vServerIPAddressesRaw := d.Get(vserver_ip_addresses).(*schema.Set).List()
 	nodeNamesRaw := d.Get(node_names).(*schema.Set).List()
 
+	nodeCount := d.Get(vfxt_node_count).(int)
+
+	firstIPAddress := d.Get(vserver_first_ip).(string)
+	lastIPAddress := ""
+	if len(firstIPAddress) > 0 {
+		if lastIPAddress, err = GetLastIPAddress(firstIPAddress, nodeCount); err != nil {
+			return nil, err
+		}
+	}
+
 	return NewAvereVfxt(
 		controllerAddress,
 		controllerAdminUsername,
 		authMethod,
+		controllerSshPort,
 		runLocal,
 		allowNonAscii,
 		iaasPlatform,
 		d.Get(vfxt_cluster_name).(string),
 		d.Get(vfxt_admin_password).(string),
+		d.Get(vfxt_ssh_key_data).(string),
 		d.Get(enable_support_uploads).(bool),
-		d.Get(vfxt_node_count).(int),
+		nodeCount,
+		d.Get(node_size).(string),
 		d.Get(node_cache_size).(int),
+		firstIPAddress,
+		lastIPAddress,
 		d.Get(ntp_servers).(string),
 		d.Get(timezone).(string),
 		d.Get(dns_server).(string),
@@ -676,6 +812,109 @@ func deleteVServerSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 			if err := avereVfxt.RemoveVServerSetting(v.(string)); err != nil {
 				return fmt.Errorf("ERROR: failed to remove VServer setting '%s': %s", v.(string), err)
 			}
+		}
+	}
+	return nil
+}
+
+func createUsers(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
+	new := d.Get(user)
+	newUsers, err := expandUsers(new.(*schema.Set).List())
+	if err != nil {
+		return err
+	}
+	return addUsers(newUsers, avereVfxt)
+}
+
+func updateUsers(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
+	if d.HasChange(user) {
+		old, new := d.GetChange(user)
+		oldUsers, err := expandUsers(old.(*schema.Set).List())
+		if err != nil {
+			return err
+		}
+		newUsers, err := expandUsers(new.(*schema.Set).List())
+		if err != nil {
+			return err
+		}
+		existingUsers, err := avereVfxt.ListNonAdminUsers()
+		if err != nil {
+			return err
+		}
+
+		removalList := make(map[string]*User)
+		additionList := make(map[string]*User)
+
+		// compare the old model to new
+		for key, oldVal := range oldUsers {
+			existingVal, existingOK := existingUsers[key]
+
+			// check if user was removed and still exists
+			if newVal, ok := newUsers[key]; !ok && existingOK {
+				removalList[key] = oldVal
+				// check if user was modified
+			} else if ok && (!newVal.IsEqual(oldVal) || (existingOK && !newVal.IsEqualNoPassword(existingVal))) {
+				if existingOK {
+					removalList[key] = oldVal
+				}
+				additionList[key] = newVal
+				// add if the user was missing
+			} else if ok && !existingOK {
+				additionList[key] = newVal
+			}
+		}
+
+		// compare cluster existing to new
+		for key, existingVal := range existingUsers {
+			if _, oldOK := oldUsers[key]; oldOK {
+				// this was in the model, and already evaluated
+				continue
+			}
+			// check if the user exists on Avere and is removed in the model
+			if newVal, ok := newUsers[key]; !ok {
+				removalList[key] = existingVal
+
+				// check if user exists on Avere and is modified from the model's values
+			} else if !newVal.IsEqualNoPassword(existingVal) {
+				removalList[key] = existingVal
+				additionList[key] = newVal
+			}
+		}
+
+		// find the new users
+		for key, newVal := range newUsers {
+			_, existingOK := existingUsers[key]
+
+			if _, ok := oldUsers[key]; !ok && !existingOK {
+				additionList[key] = newVal
+			}
+		}
+
+		if err := removeUsers(removalList, avereVfxt); err != nil {
+			return err
+		}
+
+		if err := addUsers(additionList, avereVfxt); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func addUsers(users map[string]*User, avereVfxt *AvereVfxt) error {
+	for _, u := range users {
+		if err := avereVfxt.AddUser(u); err != nil {
+			return fmt.Errorf("ERROR: failed to add user'%s': %s", u.Name, err)
+		}
+	}
+	return nil
+}
+
+func removeUsers(users map[string]*User, avereVfxt *AvereVfxt) error {
+	for _, u := range users {
+		if err := avereVfxt.RemoveUser(u); err != nil {
+			return fmt.Errorf("ERROR: failed to remove user'%s': %s", u.Name, err)
 		}
 	}
 	return nil
@@ -911,6 +1150,30 @@ func scaleCluster(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 	return nil
 }
 
+func expandUsers(l []interface{}) (map[string]*User, error) {
+	results := make(map[string]*User)
+	for _, v := range l {
+		input := v.(map[string]interface{})
+		name := input[name].(string)
+		password := input[password].(string)
+		permission := input[permission].(string)
+
+		// verify no duplicates
+		if _, ok := results[name]; ok {
+			return nil, fmt.Errorf("Error: two or more admin users share the same key '%s'", name)
+		}
+
+		user := &User{
+			Name:       name,
+			Password:   password,
+			Permission: permission,
+		}
+
+		results[name] = user
+	}
+	return results, nil
+}
+
 func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 	results := make(map[string]*CoreFiler)
 	for _, v := range l {
@@ -994,10 +1257,11 @@ func expandCoreFilerJunctions(l []interface{}, results map[string]*Junction) err
 		for _, jv := range junctions {
 			junctionRaw := jv.(map[string]interface{})
 			junction := &Junction{
-				NameSpacePath:    junctionRaw[namespace_path].(string),
-				CoreFilerName:    coreFilerName,
-				CoreFilerExport:  junctionRaw[core_filer_export].(string),
-				SharePermissions: PermissionsPreserve,
+				NameSpacePath:      junctionRaw[namespace_path].(string),
+				CoreFilerName:      coreFilerName,
+				CoreFilerExport:    junctionRaw[core_filer_export].(string),
+				ExportSubdirectory: junctionRaw[export_subdirectory].(string),
+				SharePermissions:   PermissionsPreserve,
 			}
 			// verify no duplicates
 			if _, ok := results[junction.NameSpacePath]; ok {
@@ -1032,6 +1296,16 @@ func expandAzureStorageFilerJunctions(l []interface{}, results map[string]*Junct
 	return nil
 }
 
+func resourceAvereUserReferenceHash(v interface{}) int {
+	var buf bytes.Buffer
+	if m, ok := v.(map[string]interface{}); ok {
+		if v, ok := m[name]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+	}
+	return hashcode.String(buf.String())
+}
+
 func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
 	var buf bytes.Buffer
 
@@ -1055,6 +1329,9 @@ func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
 						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
 					}
 					if v2, ok := m[core_filer_export]; ok {
+						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
+					}
+					if v2, ok := m[export_subdirectory]; ok {
 						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
 					}
 				}
@@ -1104,6 +1381,7 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 		image_id,
 		vfxt_cluster_name,
 		vfxt_admin_password,
+		vfxt_ssh_key_data,
 	}
 
 	for _, parameter := range validateParameterSlice {
@@ -1127,7 +1405,8 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 		}
 	}
 
-	// set
+	// user parameters do not need ascii check since they have custom validation functions
+
 	for _, v := range d.Get(core_filer).(*schema.Set).List() {
 		input := v.(map[string]interface{})
 		corefilerSlice := []string{
@@ -1141,7 +1420,7 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 			}
 		}
 		for _, v := range input[custom_settings].(*schema.Set).List() {
-			if err := ValidateOnlyAscii(v.(string), fmt.Sprintf("%s-customsetting-'%s'", input[core_filer_name].(string), v.(string))); err != nil {
+			if err := ValidateOnlyAscii(v.(string), fmt.Sprintf("%s-customsetting-'%s'", core_filer_name, v.(string))); err != nil {
 				return err
 			}
 		}
@@ -1150,12 +1429,17 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 			for _, j := range v.List() {
 				if m, ok := j.(map[string]interface{}); ok {
 					if v2, ok := m[namespace_path]; ok {
-						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", input[core_filer_name].(string), v2.(string))); err != nil {
+						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", core_filer_name, v2.(string))); err != nil {
 							return err
 						}
 					}
 					if v2, ok := m[core_filer_export]; ok {
-						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", input[core_filer_name].(string), v2.(string))); err != nil {
+						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", core_filer_name, v2.(string))); err != nil {
+							return err
+						}
+					}
+					if v2, ok := m[export_subdirectory]; ok {
+						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", export_subdirectory, v2.(string))); err != nil {
 							return err
 						}
 					}
@@ -1196,6 +1480,31 @@ func ValidateArmStorageAccountName(v interface{}, _ string) (warnings []string, 
 
 	if !regexp.MustCompile(`\A([a-z0-9]{3,24})\z`).MatchString(input) {
 		errors = append(errors, fmt.Errorf("name (%q) can only consist of lowercase letters and numbers, and must be between 3 and 24 characters long", input))
+	}
+
+	return warnings, errors
+}
+
+func ValidateExportSubdirectory(v interface{}, _ string) (warnings []string, errors []error) {
+	input := v.(string)
+
+	if len(input) > 0 && !regexp.MustCompile(`^[^\/]`).MatchString(input) {
+		errors = append(errors, fmt.Errorf("%s (%s) must not begin with a '/'", export_subdirectory, input))
+	}
+
+	return warnings, errors
+}
+
+// ValidateAutomationRunbookName validates Automation Account Runbook names
+func ValidateUserName(v interface{}, _ string) (warnings []string, errors []error) {
+	input := v.(string)
+
+	if input == AdminUserName {
+		errors = append(errors, fmt.Errorf("the name specified for user must not be reserved user '%s'", AdminUserName))
+	}
+
+	if !regexp.MustCompile(`^[0-9a-zA-Z]{1,60}$`).MatchString(input) {
+		errors = append(errors, fmt.Errorf("the user name '%s' is invalid, and may only alphanumeric characters and be 1 to 60 characters in length", input))
 	}
 
 	return warnings, errors

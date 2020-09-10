@@ -5,11 +5,19 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"os/signal"
 	"strings"
-	
+	"time"
+
 	"github.com/Azure/Avere/src/go/pkg/cachewarmer"
 	"github.com/Azure/Avere/src/go/pkg/log"
+)
+
+const (
+	tick                  = time.Duration(10) * time.Millisecond // 10ms
+	timeBetweenBlockCheck = time.Duration(10) * time.Second      // 5 second between checking for jobs
 )
 
 func usage(errs ...error) {
@@ -22,7 +30,7 @@ func usage(errs ...error) {
 	flag.PrintDefaults()
 }
 
-func initializeApplicationVariables() *cachewarmer.WarmPathJob {
+func initializeApplicationVariables() (*cachewarmer.WarmPathJob, bool) {
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
 	var warmTargetMountAddresses = flag.String("warmTargetMountAddresses", "", "the warm target cache filer mount addresses separated by commas")
 	var warmTargetExportPath = flag.String("warmTargetExportPath", "", "the warm target export path")
@@ -30,6 +38,7 @@ func initializeApplicationVariables() *cachewarmer.WarmPathJob {
 	var jobMountAddress = flag.String("jobMountAddress", "", "the mount address for warm job processing")
 	var jobExportPath = flag.String("jobExportPath", "", "the export path for warm job processing")
 	var jobBasePath = flag.String("jobBasePath", "", "the warm job processing path")
+	var blockUntilWarm = flag.Bool("blockUntilWarm", false, "the job submitter will not return until there are no more jobs")
 
 	flag.Parse()
 
@@ -80,15 +89,61 @@ func initializeApplicationVariables() *cachewarmer.WarmPathJob {
 		*warmTargetPath,
 		*jobMountAddress,
 		*jobExportPath,
-		*jobBasePath)
+		*jobBasePath), *blockUntilWarm
+}
+
+func BlockUntilWarm(jobSubmitterPath string, jobWorkerPath string) {
+	log.Status.Printf("blocking until warm")
+	// wait on ctrl-c
+	sigchan := make(chan os.Signal, 10)
+	signal.Notify(sigchan, os.Interrupt)
+
+	lastCheckTime := time.Now().Add(-timeBetweenBlockCheck)
+	ticker := time.NewTicker(tick)
+	defer ticker.Stop()
+
+	jobDirectoryEmpty := false
+	for {
+		select {
+		case <-sigchan:
+			log.Info.Printf("Received ctrl-c, stopping...")
+			return
+		case <-ticker.C:
+			if time.Since(lastCheckTime) > timeBetweenBlockCheck {
+				lastCheckTime = time.Now()
+				if !jobDirectoryEmpty {
+					// check the job directory
+					files, err := ioutil.ReadDir(jobSubmitterPath)
+					if err != nil {
+						log.Error.Printf("error reading path %s: %v", jobSubmitterPath, err)
+						continue
+					}
+					if len(files) == 0 {
+						log.Status.Printf("job directory empty, now checking worker job directory")
+						jobDirectoryEmpty = true
+					}
+				} else {
+					// check the worker job directory
+					exists, _, err := cachewarmer.JobsExist(jobWorkerPath)
+					if err != nil {
+						log.Error.Printf("error encountered checking for job existence: %v", err)
+					}
+					if !exists {
+						log.Status.Printf("warming complete")
+						return
+					}
+				}
+			}
+		}
+	}
 }
 
 func main() {
 
 	// initialize the variables
-	jobSubmitter := initializeApplicationVariables()
+	jobSubmitter, blockUntilWarm := initializeApplicationVariables()
 
-	log.Info.Printf("job submitter %v", jobSubmitter)
+	log.Status.Printf("job submitter started: %v", jobSubmitter)
 
 	// write the job to the warm path
 	if err := jobSubmitter.WriteJob(); err != nil {
@@ -96,5 +151,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Info.Printf("finished")
+	if blockUntilWarm {
+		jobSubmitterPath, jobWorkerPath, err := jobSubmitter.GetJobPaths()
+		if err != nil {
+			log.Error.Printf("ERROR: encountered while getting job paths %v", err)
+			os.Exit(1)
+		}
+		BlockUntilWarm(jobSubmitterPath, jobWorkerPath)
+	}
+
+	log.Status.Printf("job submitter finished")
 }

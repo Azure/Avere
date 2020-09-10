@@ -79,14 +79,37 @@ variable "overprovision" {
   default = false
 }
 
-// depends on technique described here: https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2
-variable "vmss_depends_on" {
-  description = "used to establish dependency between objects"
-  type = any
-  default = null
+variable "module_depends_on" {
+  default = [""]
+  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
 }
 
 variable "mount_all" {
   description = "if true mount all Avere endpoints, otherwise round-robin mount"
   default = false
+}
+
+variable "additional_env_vars" {
+  description = "additional environment vars needed for bootstrap script"
+  default = ""
+}
+
+variable "image_reference_publisher" {
+  description = "publisher image reference for the VMSS"
+  default = "Canonical"
+}
+
+variable "image_reference_offer" {
+  description = "offer image reference for the VMSS"
+  default = "UbuntuServer"
+}
+
+variable "image_reference_sku" {
+  description = "sku image reference for the VMSS"
+  default = "18.04-LTS"
+}
+
+variable "image_reference_version" {
+  description = "version image reference for the VMSS"
+  default = "latest"
 }

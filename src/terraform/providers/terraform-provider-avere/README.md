@@ -36,19 +36,9 @@ resource "avere_vfxt" "vfxt" {
     vfxt_node_count = 3
     node_cache_size = 4096
     
-    global_custom_settings = [
-        "vcm.alwaysForwardReadSize DL 134217728",
-    ]
-
-    vserver_settings = [
-        "NfsFrontEndSobuf OG 1048576",
-        "rwsize IZ 524288",
-    ]
-
     azure_storage_filer {
         account_name = "unique0azure0storage0account0name"
         container_name = "tools"
-        custom_settings = []
         junction_namespace_path = "/animation-tools"
     }
 
@@ -56,10 +46,6 @@ resource "avere_vfxt" "vfxt" {
         name = "animation"
         fqdn_or_primary_ip = "animation-filer.vfxexample.com"
         cache_policy = "Clients Bypassing the Cluster"
-        custom_settings = [
-            "autoWanOptimize YF 2",
-            "nfsConnMult YW 5",
-        ]
         junction {
             namespace_path = "/animation"
             core_filer_export = "/animation"
@@ -88,30 +74,48 @@ The following arguments are supported:
 * <a name="controller_address"></a>[controller_address](#controller_address) - (Optional if [run_local](#run_local) is set to true) the ip address of the controller.  This address may be public or private.  If private it will need to be reachable from where terraform is executed.
 * <a name="controller_admin_username"></a>[controller_admin_username](#controller_admin_username) - (Optional if [run_local](#run_local) is set to true) the admin username to the controller
 * <a name="controller_admin_password"></a>[controller_admin_password](#controller_admin_password) - (Optional) only specify if [run_local](#run_local) is set to false and password is to be used to access the key, instead of the ssh key ~/.ssh/id_rsa
+* <a name="controller_ssh_port"></a>[controller_ssh_port](#controller_ssh_port) - (Optional) only specify if [run_local](#run_local) is set to false and the ssh is a value other than the default port 22.
 * <a name="run_local"></a>[run_local](#run_local) - (Optional) specifies if terraform is run directly on the controller (or similar machine with vfxt.py, az cli, and averecmd).  This defaults to false, and if false, a minimum of [controller_address](#controller_address) and [controller_admin_username](#controller_admin_username) must be set.
 * <a name="allow_non_ascii"></a>[run_local](#run_local) - (Optional) non-ascii characters can break deployment so this is set to `false` by default.  In more advanced scenarios, the ascii check may be disabled by setting to `true`.
-* <a name="location"></a>[location](#location) - (Required) specify the azure region
-* <a name="azure_resource_group"></a>[azure_resource_group](#azure_resource_group) - (Required) this is the azure resource group to install the vFXT.  This must be the same resource as the controller, or increase the RBAC scope of the controller's managed identity roles with a different resource group.
-* <a name="azure_network_resource_group"></a>[azure_network_resource_group](#azure_network_resource_group) - (Required) this is the resource group of the VNET to where the vFXT will be deployed.
-* <a name="azure_network_name"></a>[azure_network_name](#azure_network_name) - (Required) this is the name of the VNET to where the vFXT will be deployed.
-* <a name="azure_subnet_name"></a>[azure_subnet_name](#azure_subnet_name) - (Required) this is the name of the subnet to where the vFXT will be deployed.  As a best practice the Avere vFXT should be installed in its own VNET.
+* <a name="location"></a>[location](#location) - (Required) specify the azure region.  Note: cluster re-created if modified.
+* <a name="azure_resource_group"></a>[azure_resource_group](#azure_resource_group) - (Required) this is the azure resource group to install the vFXT.  This must be the same resource as the controller, or increase the RBAC scope of the controller's managed identity roles with a different resource group.  Note: cluster re-created if modified.
+* <a name="azure_network_resource_group"></a>[azure_network_resource_group](#azure_network_resource_group) - (Required) this is the resource group of the VNET to where the vFXT will be deployed.  Note: cluster re-created if modified.
+* <a name="azure_network_name"></a>[azure_network_name](#azure_network_name) - (Required) this is the name of the VNET to where the vFXT will be deployed.  Note: cluster re-created if modified.
+* <a name="azure_subnet_name"></a>[azure_subnet_name](#azure_subnet_name) - (Required) this is the name of the subnet to where the vFXT will be deployed.  As a best practice the Avere vFXT should be installed in its own VNET.  Note: cluster re-created if modified.
 * <a name="ntp_servers"></a>[ntp_servers](#ntp_servers) - (Optional) A space separated list of up to 3 NTP servers for the Avere to use, otherwise Avere defaults to time.windows.com.
 * <a name="timezone"></a>[timezone](#timezone) - (Optional) The clusters local timezone.  Choose from a timezone defined in the [timezone file](timezone.go).  The default is "UTC".
 * <a name="dns_server"></a>[dns_server](#dns_server) - (Optional) A space separated list of up to 3 DNS Servers.
 * <a name="dns_domain"></a>[dns_domain](#dns_domain) - (Optional) Name of the network's DNS domain.
 * <a name="dns_search"></a>[dns_search](#dns_search) - (Optional) A space separated list of up to 6 domains to search during host-name resolution.
-* <a name="proxy_uri"></a>[proxy_uri](#proxy_uri) - specify the proxy used by `vfxt.py` for the cluster deployment.  The format is usually `https://PROXY_ADDRESS:3128`.  A working example that uses the proxy is described in the [Avere vFXT in a Proxy Environment Example](../../examples/vfxt/proxy).
-* <a name="cluster_proxy_uri"></a>[cluster_proxy_uri](#cluster_proxy_uri) - (Optional) specify the proxy used be used by the Avere vFXT cluster.  The format is usually `https://PROXY_ADDRESS:3128`.  A working example that uses the proxy is described in the [Avere vFXT in a Proxy Environment Example](../../examples/vfxt/proxy).
-* <a name="image_id"></a>[image_id](#image_id) - (Optional) specify a custom image id for the vFXT.  This is useful when needing to use a bug fix or there is a marketplace outage.  For more information see the [docs on how to create a custom image for the conroller and vfxt](../../examples/vfxt#create-vfxt-controller-from-custom-images).
-* <a name="vfxt_cluster_name"></a>[vfxt_cluster_name](#vfxt_cluster_name) - (Required) this is the name of the vFXT cluster that is shown when you browse to the management ip.  To help Avere support, choose a name that matches the Avere's purpose.
-* <a name="vfxt_admin_password"></a>[vfxt_admin_password](#vfxt_admin_password) - (Required) the password for the vFXT cluster.
+* <a name="proxy_uri"></a>[proxy_uri](#proxy_uri) - specify the proxy used by `vfxt.py` for the cluster deployment.  The format is usually `https://PROXY_ADDRESS:3128`.  A working example that uses the proxy is described in the [Avere vFXT in a Proxy Environment Example](../../examples/vfxt/proxy).    Note: cluster re-created if modified.
+* <a name="cluster_proxy_uri"></a>[cluster_proxy_uri](#cluster_proxy_uri) - (Optional) specify the proxy used be used by the Avere vFXT cluster.  The format is usually `https://PROXY_ADDRESS:3128`.  A working example that uses the proxy is described in the [Avere vFXT in a Proxy Environment Example](../../examples/vfxt/proxy).  Note: cluster re-created if modified.
+* <a name="image_id"></a>[image_id](#image_id) - (Optional) specify a custom image id for the vFXT.  This is useful when needing to use a bug fix or there is a marketplace outage.  For more information see the [docs on how to create a custom image for the conroller and vfxt](../../examples/vfxt#create-vfxt-controller-from-custom-images).  Note: cluster re-created if modified.
+* <a name="vfxt_cluster_name"></a>[vfxt_cluster_name](#vfxt_cluster_name) - (Required) this is the name of the vFXT cluster that is shown when you browse to the management ip.  To help Avere support, choose a name that matches the Avere's purpose.  Note: cluster re-created if modified.
+* <a name="vfxt_admin_password"></a>[vfxt_admin_password](#vfxt_admin_password) - (Required) the password for the vFXT cluster.  Note: cluster re-created if modified.
+* <a name="vfxt_ssh_key_data"></a>[vfxt_ssh_key_data](#vfxt_ssh_key_data) - (Optional) deploy the cluster using the ssh public key for authentication instead of the password, this is useful to align with policies.
 * <a name="vfxt_node_count"></a>[vfxt_node_count](#vfxt_node_count) - (Required) the number of nodes to deploy for the Avere cluster.  The count may be a minimum of 3 and a maximum of 16.  If the cluster is already deployed, this will result in scaling up or down to the node count.  It requires about 15 minutes to delete and add each node in a scale-up or scale-down scenario.
-* <a name="node_cache_size"></a>[node_cache_size](#node_cache_size) - (Optional) The cache size in GB to use for each Avere vFXT VM.  The default value is 4096.  
+* <a name="node_cache_size"></a>[node_cache_size](#node_cache_size) - (Optional) The cache size in GB to use for each Avere vFXT VM.  There are two options: 1024 or 4096 where 4096 is the default value.  Note: cluster re-created if modified.
+* <a name="vserver_first_ip"></a>[vserver_first_ip](#vserver_first_ip) - (Optional) To ensure predictable vserver ranges for dns pre-population, specify the first IP of the vserver.  This will create consecutive ip addresses based on the node count set in [vfxt_node_count](#vfxt_node_count).  The following configuration is recommended:
+    1. ensure the Avere vFxt has a dedicated subnet,
+    2. consider a range at the end of the subnet, and
+    3. consider room for scale-up.
+    
+  Azure will take the first 4 address (eg. .0-.3 on a /24), and the controller and Avere vFXT will take 2+(n*2) ip addresses where n is the value set in [vfxt_node_count](#vfxt_node_count) (eg. .4-.10 on a /24 subnet).  Also at the end of the range, Azure will consume the broadcast address (eg. .255 on a /24 subnet).  More details on Azure reserved subnets in the [virtual networks faq](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-faq#are-there-any-restrictions-on-using-ip-addresses-within-these-subnets).  The default is to let the deployment automatically add the vserver ip addresses.  Note: cluster re-created if modified.
 * <a name="global_custom_settings"></a>[global_custom_settings](#global_custom_settings) - (Optional) these are custom settings provided by Avere support to match advanced use case scenarios.  They are a list of strings of the form "SETTINGNAME CHECKCODE VALUE".
 * <a name="vserver_settings"></a>[vserver_settings](#vserver_settings) - (Optional) these are custom settings provided by Avere support to match advanced use case scenarios.  They are a list of strings of the form "SETTINGNAME CHECKCODE VALUE".  Do not prefix with the vserver as it is automatically detected.
+* [user](#user) - (Optional) zero or more user blocks to add additional users in addition to the existing admin user role.
 * [azure_storage_filer](#azure_storage_filer) - (Optional) zero or more storage filer blocks used to specify zero or more [Azure Blob Storage Cloud core filers](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-deploy-plan#cloud-core-filers).
 * [core_filer](#core_filer) - (Optional) zero or more storage filer blocks used to specify zero or more [NFS filers](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-deploy-plan#hardware-core-filers)
 * <a name="enable_support_uploads"></a>[enable_support_uploads](#enable_support_uploads) - (Optional) This setting defaults to 'false' and by setting to 'true' you agree to the [Privacy Policy](https://privacy.microsoft.com/en-us/privacystatement) of the Avere vFXT.  This enables support exactly as described in the [Enable Support Uploads documentation](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-enable-support).  Avere vFXT for Azure can automatically upload support data about your cluster. These uploads let support staff provide the best possible customer service.
+---
+
+A <a name="user"></a>`user` block supports the following
+* <a name="user"></a>[user](#user) - (Required) the user name, must not be blank, or match with an existing user including the `admin` username.  The username can contain only alphanumeric characters and must have a length of no more than 60 characters.
+* <a name="password"></a>[password](#password) - (Required) The user's password.  The password must have a length of no more than 36 characters.
+* <a name="permission"></a>[permission](#permission) - (Required)  One of the following:
+    * 'rw' for read-write administrative access,
+    * 'ro' for read-only administrative access
+
 ---
 
 A <a name="azure_storage_filer"></a>`azure_storage_filer` block supports the following
@@ -142,6 +146,7 @@ A <a name="core_filer"></a>`core_filer` block supports the following:
 A <a name="junction"></a>`junction` block supports the following:
 * <a name="namespace_path"></a>[namespace_path](#namespace_path) - (Required) this is the exported namespace from the Avere vFXT. 
 * <a name="core_filer_export"></a>[core_filer_export](#core_filer_export) - (Required) this is the export from the hardware core filer.
+* <a name="export_subdirectory"></a>[export_subdirectory](#export_subdirectory) - (Optional) if the export does not point directly to the core filer directory that you want to associate with this junction, add the relative subdirectory path here.  (Do not begin the path with "/".)  If the subdirectory does not already exist, it will be created automatically.
  
 # Attributes Reference
 

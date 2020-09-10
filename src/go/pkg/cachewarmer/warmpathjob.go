@@ -74,6 +74,18 @@ func (j *WarmPathJob) WriteJob() error {
 	return nil
 }
 
+func (j *WarmPathJob) GetJobPaths() (string, string, error) {
+	jobSubmitterPath, err := EnsureJobSubmitterPath(j.jobMountAddress, j.jobExportPath, j.jobBasePath)
+	if err != nil {
+		return "", "", fmt.Errorf("encountered error while ensuring path %s: %v", jobSubmitterPath, err)
+	}
+	workerJobPath, err := EnsureWorkerJobPath(j.jobMountAddress, j.jobExportPath, j.jobBasePath)
+	if err != nil {
+		return "", "", fmt.Errorf("encountered error while ensuring path %s: %v", jobSubmitterPath, err)
+	}
+	return jobSubmitterPath, workerJobPath, nil
+}
+
 // GetWarmPathJobFileContents returns the contents of the file
 func (j *WarmPathJob) GetWarmPathJobFileContents() (string, error) {
 	data, err := json.Marshal(j)

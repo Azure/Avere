@@ -8,14 +8,18 @@ import (
 
 type FileToWarm struct {
 	WarmFileFullPath string
+	StartByte        int64
+	StopByte         int64
 	ParentJobFile    *WorkingFile
 }
 
-func InitializeFileToWarm(warmFilePath string, parentJobFile *WorkingFile) FileToWarm {
+func InitializeFileToWarm(warmFilePath string, parentJobFile *WorkingFile, startByte int64, stopByte int64) FileToWarm {
 	parentJobFile.IncrementFileToProcess()
 	return FileToWarm{
 		WarmFileFullPath: warmFilePath,
 		ParentJobFile:    parentJobFile,
+		StartByte:        startByte,
+		StopByte:         stopByte,
 	}
 }
 
@@ -35,6 +39,12 @@ func (q *WorkQueue) IsEmpty() bool {
 	return len(q.workItems) == 0
 }
 
+func (q *WorkQueue) WorkItemCount() int {
+	q.mux.Lock()
+	defer q.mux.Unlock()
+	return len(q.workItems)
+}
+
 // GetNextWorkItem retrieves the next workItem
 func (q *WorkQueue) GetNextWorkItem() (FileToWarm, bool) {
 	q.mux.Lock()
@@ -49,8 +59,8 @@ func (q *WorkQueue) GetNextWorkItem() (FileToWarm, bool) {
 	}
 }
 
-func (q *WorkQueue) AddWork(filesToWarm []FileToWarm) {
+func (q *WorkQueue) AddWorkItem(fileToWarm FileToWarm) {
 	q.mux.Lock()
 	defer q.mux.Unlock()
-	q.workItems = append(q.workItems, filesToWarm...)
+	q.workItems = append(q.workItems, fileToWarm)
 }

@@ -20,7 +20,8 @@ const (
 	AzCliLogFile        = "~/azcli.log"
 	AzLoginRetryCount   = 18 // wait 3 minutes
 	AzLoginSleepSeconds = 10
-	AvereInstanceType   = "Standard_E32s_v3"
+	AvereInstanceE32s   = "Standard_E32s_v3"
+	AvereInstanceD16s   = "Standard_D16s_v3"
 	AverOperatorRole    = "Avere Operator"
 )
 
@@ -67,6 +68,15 @@ func (a Azure) CreateVfxt(avereVfxt *AvereVfxt) error {
 	if err := VerifyAzLogin(avereVfxt); err != nil {
 		return fmt.Errorf("Error verifying az cli login: %v", err)
 	}
+	if len(avereVfxt.AvereSshKeyData) > 0 {
+		cmd := a.getEnsureAvereSshKeyData(avereVfxt.AvereSshKeyData)
+		stdoutBuf, stderrBuf, err := avereVfxt.RunCommand(cmd)
+		if err != nil {
+			allErrors := getAllVfxtErrors(stdoutBuf, stderrBuf)
+			return fmt.Errorf("Error ensuring public key: %v, '%s'", err, allErrors)
+		}
+	}
+
 	cmd := a.getCreateVfxtCommand(avereVfxt)
 	stdoutBuf, stderrBuf, err := avereVfxt.RunCommand(cmd)
 	if err != nil {
@@ -238,8 +248,17 @@ func VerifyAzLogin(avereVfxt *AvereVfxt) error {
 	return err
 }
 
+func (a Azure) getEnsureAvereSshKeyData(publicKeyData string) string {
+	return WrapCommandForLogging(fmt.Sprintf("echo '%s' > %s", publicKeyData, VfxtKeyPubFile), ShellLogFile)
+}
+
 func (a Azure) getCreateVfxtCommand(avereVfxt *AvereVfxt) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s --create --no-corefiler --nodes %d", a.getBaseVfxtCommand(avereVfxt), avereVfxt.NodeCount), fmt.Sprintf("~/vfxt.%s.log", time.Now().Format("2006-01-02-15.04.05")))
+	vServerStr := ""
+	if len(avereVfxt.FirstIPAddress) > 0 && len(avereVfxt.FirstIPAddress) > 0 {
+		vServerStr = "--no-vserver"
+	}
+
+	return WrapCommandForLogging(fmt.Sprintf("%s --create --no-corefiler %s --nodes %d", a.getBaseVfxtCommand(avereVfxt), vServerStr, avereVfxt.NodeCount), fmt.Sprintf("~/vfxt.%s.log", time.Now().Format("2006-01-02-15.04.05")))
 }
 
 func (a Azure) getDestroyVfxtCommand(avereVfxt *AvereVfxt) string {
@@ -256,7 +275,7 @@ func (a Azure) getBaseVfxtCommand(avereVfxt *AvereVfxt) string {
 
 	// add the values consistent across all commands
 	sb.WriteString(fmt.Sprintf("vfxt.py --cloud-type azure --on-instance --instance-type %s --node-cache-size %d --azure-role '%s' --debug ",
-		AvereInstanceType,
+		convertSku(avereVfxt.NodeSize),
 		avereVfxt.NodeCacheSize,
 		AverOperatorRole))
 
@@ -286,10 +305,14 @@ func (a Azure) getBaseVfxtCommand(avereVfxt *AvereVfxt) string {
 	// add the vfxt information
 	sb.WriteString(fmt.Sprintf("--cluster-name %s --admin-password '%s' ", avereVfxt.AvereVfxtName, avereVfxt.AvereAdminPassword))
 
+	if len(avereVfxt.AvereSshKeyData) > 0 {
+		sb.WriteString(fmt.Sprintf("--ssh-key %s ", VfxtKeyPubFile))
+	}
+
 	return sb.String()
 }
 
-// used when mulitple commands piped together
+// used when multiple commands piped together
 func getAzCliProxyExports(proxyUri string) string {
 	if len(proxyUri) > 0 {
 		return fmt.Sprintf(" export HTTPS_PROXY=\"%s\" && export NO_PROXY=\"169.254.169.254\" && ", proxyUri)
@@ -334,7 +357,7 @@ func getAzCliGetStorageAuthKeyCommand(avereVfxt *AvereVfxt, accountName string) 
 }
 
 func getAzCliGetStorageKeyCommand(avereVfxt *AvereVfxt, accountName string) string {
-	return WrapCommandForLoggingSecret(fmt.Sprintf("%s %s", getAzCliProxyExports(avereVfxt.ProxyUri), getAzCliGetStorageKeyCommandRaw(accountName)), AzCliLogFile)
+	return WrapCommandForLoggingSecretOutput(fmt.Sprintf("%s %s", getAzCliProxyExports(avereVfxt.ProxyUri), getAzCliGetStorageKeyCommandRaw(accountName)), AzCliLogFile)
 }
 
 func getAzCliCreateStorageContainerCommand(avereVfxt *AvereVfxt, accountName string, container string) string {
@@ -392,4 +415,11 @@ func getLastVfxtValue(stderrBuf bytes.Buffer, vfxtRegex *regexp.Regexp) string {
 		}
 	}
 	return lastVfxtAddr
+}
+
+func convertSku(sku string) string {
+	if sku == ClusterSkuUnsupportedTest {
+		return AvereInstanceD16s
+	}
+	return AvereInstanceE32s
 }

@@ -528,7 +528,7 @@ func (v *VMScaler) createNewVmssModel(vmssName string) compute.VirtualMachineSca
 		VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{
 			Overprovision: to.BoolPtr(v.OverProvision),
 			UpgradePolicy: &compute.UpgradePolicy{
-				Mode: compute.Manual,
+				Mode: compute.UpgradeModeManual,
 			},
 			SinglePlacementGroup: to.BoolPtr(v.SinglePlacementGroup),
 			VirtualMachineProfile: &compute.VirtualMachineScaleSetVMProfile{

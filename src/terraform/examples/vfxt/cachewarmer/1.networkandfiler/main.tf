@@ -10,16 +10,23 @@ locals {
     // if you use SSH key, ensure you have ~/.ssh/id_rsa with permission 600
     // populated where you are running terraform
     vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
+    ssh_port = 22
 
     // nfs filer details
     filer_location = "westus2"
     filer_resource_group_name = "filer_resource_group"
     // more filer sizes listed at https://github.com/Azure/Avere/tree/master/src/terraform/modules/nfs_filer
     filer_size = "Standard_D2s_v3" 
+    
+    // advanced scenario: add external ports to work with cloud policies example [10022, 13389]
+    open_external_ports = [local.ssh_port,3389]
+    // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
+    // or if accessing from cloud shell, put "AzureCloud"
+    open_external_sources = ["*"]
 }
 
 provider "azurerm" {
-    version = "~>2.8.0"
+    version = "~>2.12.0"
     features {}
 }
 
@@ -28,6 +35,9 @@ module "network" {
     source = "github.com/Azure/Avere/src/terraform/modules/render_network"
     resource_group_name = local.network_resource_group_name
     location = local.location
+
+    open_external_ports   = local.open_external_ports
+    open_external_sources = local.open_external_sources
 }
 
 resource "azurerm_resource_group" "nfsfiler" {

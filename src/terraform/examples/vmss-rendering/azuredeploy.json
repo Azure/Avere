@@ -1,0 +1,163 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "uniquename": {
+      "type": "string",
+      "metadata": {
+        "description": "The unique name used for resource names associated with these virtual machine clients"
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "defaultValue": "azureuser",
+      "metadata": {
+        "description": "The admin username for the virtual machine clients."
+      }
+    },
+    "sshKeyData": {
+      "type": "string",
+      "defaultValue": "",
+      "minLength": 0,
+      "metadata": {
+        "description": "The public SSH key used for access to the VM."
+      }
+    },
+    "vmCount": {
+      "type": "int",
+      "metadata": {
+        "description": "The number of vms to deploy."
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_D2s_v3",
+      "metadata": {
+        "description": "The SKU size of vms to deploy."
+      }
+    },
+    "virtualNetworkResourceGroup": {
+      "type": "string",
+      "metadata": {
+        "description": "The resource group name for the VNET containing the Avere vFXT."
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name used for the virtual network for the VNET containing the Avere vFXT."
+      }
+    },
+    "virtualNetworkSubnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "The unique name used for the virtual network subnet for the VNET containing the Avere vFXT."
+      }
+    }
+  },
+  "variables": {
+    "uniquename": "[concat(parameters('uniquename'))]",
+    "adminUsername": "[parameters('adminUsername')]",
+    "sshKeyData": "[parameters('sshKeyData')]",
+    "vmCount": "[parameters('vmCount')]",
+    "vmSize": "[parameters('vmSize')]",
+    "virtualNetworkResourceGroup": "[parameters('virtualNetworkResourceGroup')]",
+    "virtualNetworkName": "[parameters('virtualNetworkName')]",
+    "virtualNetworkSubnetName": "[parameters('virtualNetworkSubnetName')]",
+    "vnetID": "[resourceId(variables('virtualNetworkResourceGroup'),'Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+    "subnetId": "[concat(variables('vnetID'),'/subnets/',variables('virtualNetworkSubnetName'))]",
+    "nicName": "[concat('vmnic-',variables('uniquename'))]",
+    "vmName": "[concat('vm-',variables('uniquename'))]",
+    "sshKeyPath": "[concat('/home/',variables('adminUsername'),'/.ssh/authorized_keys')]",
+    "imageReference": {
+        "publisher": "OpenLogic",
+        "offer": "CentOS-CI",
+        "sku": "7-CI",
+        "version": "latest"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "[variables('vmName')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2019-07-01",
+      "sku": {
+        "name": "[variables('vmSize')]",
+        "tier": "Standard",
+        "capacity": "[variables('vmCount')]"
+      },
+      "properties": {
+        "overprovision": "false",
+        "platformFaultDomainCount": 1,
+        "singlePlacementGroup": "false",
+        "upgradePolicy": {
+          "mode": "Manual"
+        },
+        "virtualMachineProfile": {
+          "priority": "Spot",
+          "storageProfile": {
+            "osDisk": {
+              "diffDiskSettings": {
+                "option": "Local"
+              },
+              "createOption": "FromImage",
+              "caching": "ReadOnly",
+              "writeAcceleratorEnabled": false,
+              "managedDisk": {
+                "storageAccountType": "Standard_LRS"
+              }
+            },
+            "imageReference": "[variables('imageReference')]"
+          },
+          "osProfile": {
+            "computerNamePrefix": "[variables('vmName')]",
+            "adminUsername": "[variables('adminUsername')]",
+            "linuxConfiguration": {
+              "disablePasswordAuthentication": "true",
+              "ssh": {
+                "publicKeys": [
+                  {
+                    "path": "[variables('sshKeyPath')]",
+                    "keyData": "[variables('sshKeyData')]"
+                  }
+                ]
+              }
+            }
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "[variables('nicName')]",
+                "properties": {
+                  "primary": true,
+                  "ipConfigurations": [
+                    {
+                      "name": "internal",
+                      "properties": {
+                        "primary": true,
+                        "subnet": {
+                          "id": "[variables('subnetId')]"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "node_0_ip_address": {
+      "type": "string",
+      "value": "[reference(concat(resourceId('Microsoft.Compute/virtualMachineScaleSets/', variables('vmName')), '/virtualMachines/0/networkInterfaces/', variables('nicName')), '2017-03-30').ipConfigurations[0].properties.privateIPAddress]"
+    },
+    "vm_count": {
+      "type": "int",
+      "value": "[variables('vmCount')]"
+    }
+  }
+}

@@ -16,6 +16,11 @@ variable "ssh_key_data" {
   description = "(optional) The public SSH key used for access to the controller or jumpbox.  If not specified, the password needs to be set.  The ssh_key_data takes precedence over the password, and if set, the password will be ignored."
 }
 
+variable "ssh_port" {
+  description = "specifies the tcp port to use for ssh"
+  default = 22
+}
+
 variable "bootstrap_mount_address" {
     description = "the mount address that hosts the manager and worker bootstrap script"
 }
@@ -62,5 +67,10 @@ variable "vmss_ssh_public_key" {
 variable "vmss_subnet_name" {
     description = "(optional) the subnet to use for the VMSS, if not specified use the same subnet as the controller"
     default = null
+}
+
+variable "module_depends_on" {
+  default = [""]
+  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
 }
 

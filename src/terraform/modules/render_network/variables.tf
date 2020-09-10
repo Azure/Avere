@@ -60,3 +60,23 @@ variable "subnet_render_clients2_address_prefix" {
     description = "The address prefix used for the second render clients subnet."
     default = "10.0.6.0/23"
 }
+
+variable "dns_servers" {
+    description = "a list of dns servers"
+    default = null
+}
+
+variable "module_depends_on" {
+  default = [""]
+  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
+}
+
+variable "open_external_ports" {
+    default = [22]
+    description = "these are the ports to open externally on the jumpbox subnet, default is 22"
+}
+
+variable "open_external_sources" {
+    default = ["*"]
+    description = "this is the external source to open on the subnet"
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "userIdentity": {
+      "value": {
+        "name": "",
+        "resourceGroupName": ""
+      }
+    },
+    "imageGallery": {
+      "value": {
+        "name": "MediaStudio",
+        "imageDefinitions": [
+          {
+            "name": "Linux8",
+            "type": "Linux",
+            "generation": "v1",
+            "state": "Generalized",
+            "publisher": "OpenLogic",
+            "offer": "CentOS",
+            "sku": "8_2"
+          },
+          {
+            "name": "WindowsServer",
+            "type": "Windows",
+            "generation": "v1",
+            "state": "Generalized",
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2019-Datacenter"
+          },
+          {
+            "name": "WindowsDesktop",
+            "type": "Windows",
+            "generation": "v1",
+            "state": "Generalized",
+            "publisher": "MicrosoftWindowsDesktop",
+            "offer": "Windows-10",
+            "sku": "19H2-Pro"
+          }
+        ]
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "resourceGroupName": ""
+      }
+    }
+  }
+}

@@ -104,9 +104,13 @@ class TestVfxtSupport:
     These tests should attempt to run even if deployment has failed.
     """
 
+    def test_collect_gsi(self, averecmd_params):  # noqa: F811
+        """Collect and upload a GSI bundle."""
+        upload_gsi(averecmd_params)  # collect/upload a "normal" GSI bundle
+
     def test_for_cores(self, averecmd_params):  # noqa: F811
         """
-        Check the cluster for cores. If a core is found, collect/send a GSI.
+        Check the cluster for cores.
         """
         log = logging.getLogger("test_for_cores")
         node_cores = run_averecmd(
@@ -120,7 +124,9 @@ class TestVfxtSupport:
 
         if cores_found:
             log.error("Cores found: {}".format(node_cores))
-            upload_gsi(averecmd_params)  # collect/upload a "normal" GSI bundle
+            # If a core is found, upload a GSI.
+            # 2020-06-23: Disabled for now since test_collect_gsi always runs.
+            # upload_gsi(averecmd_params)  # collect/upload a "normal" GSI bundle
 
         assert(not cores_found)
 

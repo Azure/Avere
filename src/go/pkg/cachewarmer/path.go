@@ -35,18 +35,18 @@ func EnsureWarmPath(jobMountAddress string, jobExportPath string, jobBasePath st
 func ensureJobPath(jobMountAddress string, jobExportPath string, jobBasePath string, jobpath string, createAllDirectories bool) (string, error) {
 	localMountPath := GetLocalMountPath(jobMountAddress, jobExportPath)
 	if err := MountPath(jobMountAddress, jobExportPath, localMountPath); err != nil {
-		return "", err
+		return localMountPath, err
 	}
 	jobSubmitterPath := path.Join(localMountPath, jobBasePath, jobpath)
 
 	if createAllDirectories {
 		if err := os.MkdirAll(jobSubmitterPath, os.ModePerm); err != nil {
-			return "", err
+			return jobSubmitterPath, err
 		}
 	} else {
 		// verify the directory exists
 		if _, err := os.Stat(jobSubmitterPath); err != nil {
-			return "", err
+			return jobSubmitterPath, err
 		}
 	}
 

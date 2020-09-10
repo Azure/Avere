@@ -30,7 +30,7 @@ function update_linux() {
 
 function install_golang() {
     cd $AZURE_HOME_DIR/.
-    GO_DL_FILE=go1.14.linux-amd64.tar.gz
+    GO_DL_FILE=go1.14.4.linux-amd64.tar.gz
     retrycmd_if_failure 12 5 wget https://dl.google.com/go/$GO_DL_FILE
     tar xvf $GO_DL_FILE
     chown -R $ADMIN_USER_NAME:$ADMIN_USER_NAME ./go
@@ -76,9 +76,9 @@ gpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/azu
 
 function install_terraform() {
     cd $AZURE_HOME_DIR/.
-    retrycmd_if_failure 12 5 wget https://releases.hashicorp.com/terraform/0.12.21/terraform_0.12.21_linux_amd64.zip
-    unzip terraform_0.12.21_linux_amd64.zip -d /usr/local/bin
-    rm terraform_0.12.21_linux_amd64.zip
+    retrycmd_if_failure 12 5 wget https://releases.hashicorp.com/terraform/0.12.24/terraform_0.12.24_linux_amd64.zip
+    unzip terraform_0.12.24_linux_amd64.zip -d /usr/local/bin
+    rm terraform_0.12.24_linux_amd64.zip
 }
 
 function main() {
@@ -87,11 +87,13 @@ function main() {
     echo "update linux"
     update_linux
 
-    echo "install golang"
-    install_golang
+    if [ "${BUILD_VFXT_PROVIDER}" = "true" ]; then
+        echo "install golang"
+        install_golang
 
-    echo "pull and build the Avere github project"
-    pull_avere_github
+        echo "pull and build the Avere github project"
+        pull_avere_github
+    fi
 
     echo "install az cli"
     install_az_cli

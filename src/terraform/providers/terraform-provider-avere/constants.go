@@ -6,15 +6,22 @@ const (
 	AvereAdminUsername        = "admin"
 	MinNodesCount             = 3
 	MaxNodesCount             = 16
+	DefaultSshPort            = 22
 	VfxtLogDateFormat         = "2006-01-02.15.04.05"
 	VServerRangeSeperator     = "-"
 	AverecmdRetryCount        = 30 // wait 5 minutes (ex. remove core filer gets perm denied for a while)
 	AverecmdRetrySleepSeconds = 10
 	AverecmdLogFile           = "~/averecmd.log"
 	VServerName               = "vserver"
+	VfxtKeyPubFile            = "~/vfxt_ssh_key_data.pub"
+	ShellLogFile              = "~/shell.log"
 
 	// Platform
 	PlatformAzure = "azure"
+
+	// cluster sizes
+	ClusterSkuUnsupportedTest = "unsupported_test_SKU"
+	ClusterSkuProd            = "prod_sku"
 
 	// cache policies
 	CachePolicyClientsBypass                 = "Clients Bypassing the Cluster"
@@ -27,6 +34,11 @@ const (
 
 	CachePolicyIsolatedCloudWorkstationCheckAttributes      = "{}"
 	CachePolicyCollaboratingCloudWorkstationCheckAttributes = "{'checkAttrPeriod':30,'checkDirAttrPeriod':30}"
+
+	// user policies for admin.addUser Avere xml rpc call
+	UserReadOnly  = "ro"
+	UserReadWrite = "rw"
+	AdminUserName = "admin"
 
 	// filer class
 	FilerClassNetappNonClustered = "NetappNonClustered"
@@ -73,6 +85,7 @@ const (
 	controller_address           = "controller_address"
 	controller_admin_username    = "controller_admin_username"
 	controller_admin_password    = "controller_admin_password"
+	controller_ssh_port          = "controller_ssh_port"
 	run_local                    = "run_local"
 	allow_non_ascii              = "allow_non_ascii"
 	location                     = "location"
@@ -91,11 +104,18 @@ const (
 	image_id                     = "image_id"
 	vfxt_cluster_name            = "vfxt_cluster_name"
 	vfxt_admin_password          = "vfxt_admin_password"
+	vfxt_ssh_key_data            = "vfxt_ssh_key_data"
 	vfxt_node_count              = "vfxt_node_count"
+	node_size                    = "node_size"
 	node_cache_size              = "node_cache_size"
+	vserver_first_ip             = "vserver_first_ip"
 	global_custom_settings       = "global_custom_settings"
 	vserver_settings             = "vserver_settings"
 	enable_support_uploads       = "enable_support_uploads"
+	user                         = "user"
+	name                         = "name"
+	password                     = "password"
+	permission                   = "permission"
 	core_filer                   = "core_filer"
 	core_filer_name              = "name"
 	fqdn_or_primary_ip           = "fqdn_or_primary_ip"
@@ -104,6 +124,7 @@ const (
 	junction                     = "junction"
 	namespace_path               = "namespace_path"
 	core_filer_export            = "core_filer_export"
+	export_subdirectory          = "export_subdirectory"
 	azure_storage_filer          = "azure_storage_filer"
 	account_name                 = "account_name"
 	container_name               = "container_name"

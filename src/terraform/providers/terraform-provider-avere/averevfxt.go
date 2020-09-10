@@ -44,14 +44,19 @@ func NewAvereVfxt(
 	controllerAddress string,
 	controllerUsername string,
 	sshAuthMethod ssh.AuthMethod,
+	sshPort int,
 	runLocal bool,
 	allowNonAscii bool,
 	platform IaasPlatform,
 	avereVfxtName string,
 	avereAdminPassword string,
+	sshKeyData string,
 	enableSupportUploads bool,
 	nodeCount int,
+	nodeSize string,
 	nodeCacheSize int,
+	firstIPAddress string,
+	lastIPAddress string,
 	ntpServers string,
 	timezone string,
 	dnsServer string,
@@ -67,14 +72,19 @@ func NewAvereVfxt(
 		ControllerAddress:    controllerAddress,
 		ControllerUsename:    controllerUsername,
 		SshAuthMethod:        sshAuthMethod,
+		SshPort:              sshPort,
 		RunLocal:             runLocal,
 		AllowNonAscii:        allowNonAscii,
 		Platform:             platform,
 		AvereVfxtName:        avereVfxtName,
 		AvereAdminPassword:   avereAdminPassword,
+		AvereSshKeyData:      sshKeyData,
 		EnableSupportUploads: enableSupportUploads,
 		NodeCount:            nodeCount,
+		NodeSize:             nodeSize,
 		NodeCacheSize:        nodeCacheSize,
+		FirstIPAddress:       firstIPAddress,
+		LastIPAddress:        lastIPAddress,
 		NtpServers:           ntpServers,
 		Timezone:             timezone,
 		DnsServer:            dnsServer,
@@ -101,7 +111,7 @@ func (a *AvereVfxt) RunCommand(cmd string) (bytes.Buffer, bytes.Buffer, error) {
 	if a.RunLocal {
 		return BashCommand(cmd)
 	} else {
-		return SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, cmd)
+		return SSHCommand(a.ControllerAddress, a.ControllerUsename, a.SshAuthMethod, cmd, a.SshPort)
 	}
 }
 
@@ -514,6 +524,38 @@ func (a *AvereVfxt) EnsureCachePolicyExists(cachePolicy string, checkAttributes 
 	return nil
 }
 
+func (a *AvereVfxt) ListNonAdminUsers() (map[string]*User, error) {
+	usersJson, err := a.AvereCommand(a.getGetAdminListUsersJsonCommand())
+	if err != nil {
+		return nil, err
+	}
+	var users []User
+	if err := json.Unmarshal([]byte(usersJson), &users); err != nil {
+		return nil, err
+	}
+	results := make(map[string]*User)
+	for _, user := range users {
+		// only add the non-admin users
+		if user.Name != AdminUserName {
+			// add to a new user to get a valid ptr, otherwise the range changes the pointer value
+			// and corrupts the results
+			addUser := user
+			results[addUser.Name] = &addUser
+		}
+	}
+	return results, nil
+}
+
+func (a *AvereVfxt) AddUser(user *User) error {
+	_, err := a.AvereCommand(a.getGetAdminAddUserJsonCommand(user.Name, user.Password, user.Permission))
+	return err
+}
+
+func (a *AvereVfxt) RemoveUser(user *User) error {
+	_, err := a.AvereCommand(a.getGetAdminRemoveUserJsonCommand(user.Name))
+	return err
+}
+
 func (a *AvereVfxt) EnsureCachePolicy(corefiler *CoreFiler) error {
 	switch corefiler.CachePolicy {
 	case CachePolicyClientsBypass:
@@ -744,6 +786,21 @@ func (a *AvereVfxt) GetExistingJunctions() (map[string]*Junction, error) {
 		results[v.NameSpacePath] = &newJunction
 	}
 	return results, nil
+}
+
+func (a *AvereVfxt) CreateVServer() error {
+	if len(a.FirstIPAddress) == 0 || len(a.LastIPAddress) == 0 {
+		// no first ip or last ip address.  This means the vServer would have been automatically created, just return.
+		return nil
+	}
+	if _, err := a.AvereCommand(a.getVServerCreateCommand()); err != nil {
+		return err
+	}
+	log.Printf("[INFO] vfxt: ensure stable cluster after creating the vServer")
+	if err := a.EnsureClusterStable(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (a *AvereVfxt) CreateJunction(junction *Junction) error {
@@ -1009,6 +1066,19 @@ func (a *AvereVfxt) getGetActiveAlertsJsonCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json alert.getActive", a.getBaseAvereCmd()), AverecmdLogFile)
 }
 
+func (a *AvereVfxt) getGetAdminListUsersJsonCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json admin.listUsers", a.getBaseAvereCmd()), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getGetAdminAddUserJsonCommand(name string, password string, permission string) string {
+	nonSecretAddUserBase := fmt.Sprintf("%s --json admin.addUser '%s' '%s'", a.getBaseAvereCmd(), name, permission)
+	return WrapCommandForLoggingSecretInput(nonSecretAddUserBase, fmt.Sprintf("%s '%s'", nonSecretAddUserBase, password), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getGetAdminRemoveUserJsonCommand(name string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json admin.removeUser '%s'", a.getBaseAvereCmd(), name), AverecmdLogFile)
+}
+
 func (a *AvereVfxt) getUnwrappedFilersJsonCommand() string {
 	return fmt.Sprintf("%s --json corefiler.list", a.getBaseAvereCmd())
 }
@@ -1080,12 +1150,16 @@ func (a *AvereVfxt) getCreateCachePolicyCommand(cachePolicy string, checkAttribu
 	return WrapCommandForLogging(fmt.Sprintf("%s cachePolicy.create \"%s\" read-write 30 \"%s\" False", a.getBaseAvereCmd(), cachePolicy, checkAttributes), AverecmdLogFile)
 }
 
+func (a *AvereVfxt) getVServerCreateCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json vserver.create \"%s\" \"{'firstIP':'%s','netmask':'255.255.255.255','lastIP':'%s'}\"", a.getBaseAvereCmd(), VServerName, a.FirstIPAddress, a.LastIPAddress), AverecmdLogFile)
+}
+
 func (a *AvereVfxt) getListJunctionsJsonCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json vserver.listJunctions \"%s\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getCreateJunctionCommand(junction *Junction) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s vserver.addJunction \"%s\" \"%s\" \"%s\" \"%s\" \"{'sharesubdir':'','inheritPolicy':'yes','sharename':'','access':'posix','createSubdirs':'yes','subdir':'','policy':'','permissions':'%s'}\"", a.getBaseAvereCmd(), VServerName, junction.NameSpacePath, junction.CoreFilerName, junction.CoreFilerExport, junction.SharePermissions), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s vserver.addJunction \"%s\" \"%s\" \"%s\" \"%s\" \"{'sharesubdir':'','inheritPolicy':'yes','sharename':'','access':'posix','createSubdirs':'yes','subdir':'%s','policy':'','permissions':'%s'}\"", a.getBaseAvereCmd(), VServerName, junction.NameSpacePath, junction.CoreFilerName, junction.CoreFilerExport, junction.ExportSubdirectory, junction.SharePermissions), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getDeleteJunctionCommand(junctionNameSpacePath string) string {

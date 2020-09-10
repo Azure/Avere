@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "renderManager": {
+      "value": {
+        "dataServerName": "MediaStudioEast",
+        "dataServerTier": "MO_Gen5_4",
+        "dataServerSqlVersion": 11,
+        "dataServerStorageMB": 5120,
+        "dataServerStorageAutoGrow": "Enabled",
+        "dataServerBackupRetentionDays": 7,
+        "databaseName": "OpenCue",
+        "databaseAdminId": "ef54b085-8b87-4b95-b2a7-cbe762e5664f",
+        "databaseAdminName": "az",
+        "databaseAdminPassword": "P@ssword1234",
+        "databaseUserName": "opencue",
+        "databaseUserPassword": "P@ssword1234"
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "",
+        "subnetName": "Render",
+        "resourceGroupName": ""
+      }
+    }
+  }
+}

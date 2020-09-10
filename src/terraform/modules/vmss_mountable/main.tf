@@ -7,16 +7,20 @@ data "azurerm_subnet" "vnet" {
   name                 = var.virtual_network_subnet_name
   virtual_network_name = var.virtual_network_name
   resource_group_name  = var.virtual_network_resource_group
+
+  depends_on = [var.module_depends_on]
 }
 
 resource "azurerm_resource_group" "vmss" {
   name     = var.resource_group_name
   location = var.location
+
+  depends_on = [var.module_depends_on]
 }
 
 locals {
     mount_all_env_var = var.mount_all ? " MOUNT_ALL=true " : ""
-    env_vars = " ${local.mount_all_env_var} LINUX_USER=${var.admin_username} NODE_PREFIX=${local.vm_name} NODE_COUNT=${var.vm_count} BASE_DIR=${var.mount_target} BOOTSTRAP_SCRIPT_PATH=${var.bootstrap_script_path} NFS_IP_CSV='${join(",",var.nfs_export_addresses)}' NFS_PATH=${var.nfs_export_path}"
+    env_vars = " ${local.mount_all_env_var} LINUX_USER=${var.admin_username} NODE_PREFIX=${local.vm_name} NODE_COUNT=${var.vm_count} BASE_DIR=${var.mount_target} BOOTSTRAP_SCRIPT_PATH=${var.bootstrap_script_path} NFS_IP_CSV='${join(",",var.nfs_export_addresses)}' NFS_PATH=${var.nfs_export_path} ${var.additional_env_vars}"
 
     bootstrap_path = "/b"
 
@@ -68,10 +72,10 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
   }
 
   storage_profile_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
-    version   = "latest"
+    publisher = var.image_reference_publisher
+    offer     = var.image_reference_offer
+    sku       = var.image_reference_sku
+    version   = var.image_reference_version
   }
 
   storage_profile_os_disk  {
@@ -110,7 +114,7 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
 SETTINGS
   }
 
-  depends_on = [var.vmss_depends_on]
+  depends_on = [var.module_depends_on]
 }
 
 /*

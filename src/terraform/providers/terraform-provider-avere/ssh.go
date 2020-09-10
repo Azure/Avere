@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os/user"
+	osuser "os/user"
 	"sync"
 	"time"
 
@@ -25,7 +25,7 @@ func GetPasswordAuthMethod(password string) ssh.AuthMethod {
 }
 
 func GetKeyFileAuthMethod() (authMethod ssh.AuthMethod, err error) {
-	usr, _ := user.Current()
+	usr, _ := osuser.Current()
 	file := usr.HomeDir + "/.ssh/id_rsa"
 	buf, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -39,11 +39,28 @@ func GetKeyFileAuthMethod() (authMethod ssh.AuthMethod, err error) {
 	return
 }
 
+func GetPublicKeyPubString() (string, error) {
+	usr, _ := osuser.Current()
+	file := usr.HomeDir + "/.ssh/id_rsa"
+	buf, err := ioutil.ReadFile(file)
+	if err != nil {
+		return "", err
+	}
+	key, err := ssh.ParsePrivateKey(buf)
+	if err != nil {
+		return "", err
+	}
+
+	pubKeyBytes := ssh.MarshalAuthorizedKey(key.PublicKey())
+
+	return string(pubKeyBytes), nil
+}
+
 // on poor wi-fi connections it can take multiple attempts for the first connection
-func VerifySSHConnection(host string, username string, authMethod ssh.AuthMethod) error {
+func VerifySSHConnection(host string, username string, authMethod ssh.AuthMethod, port int) error {
 	var err error
 	for retries := 0; retries < SSHVerifyRetryCount; retries++ {
-		if _, _, err = SSHCommand(host, username, authMethod, VerifyCommand); err == nil {
+		if _, _, err = SSHCommand(host, username, authMethod, VerifyCommand, port); err == nil {
 			// success
 			return nil
 		}
@@ -53,7 +70,7 @@ func VerifySSHConnection(host string, username string, authMethod ssh.AuthMethod
 }
 
 // SSHCommand runs an ssh command, and captures the stdout and stderr in two byte buffers
-func SSHCommand(host string, username string, authMethod ssh.AuthMethod, cmd string) (bytes.Buffer, bytes.Buffer, error) {
+func SSHCommand(host string, username string, authMethod ssh.AuthMethod, cmd string, port int) (bytes.Buffer, bytes.Buffer, error) {
 	var stdoutBuf, stderrBuf bytes.Buffer
 
 	sshConfig := &ssh.ClientConfig{
@@ -63,7 +80,7 @@ func SSHCommand(host string, username string, authMethod ssh.AuthMethod, cmd str
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
-	connection, err := ssh.Dial("tcp", fmt.Sprintf("%s:22", host), sshConfig)
+	connection, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", host, port), sshConfig)
 	if err != nil {
 		return stdoutBuf, stderrBuf, fmt.Errorf("failed to create connection: %s", err)
 	}

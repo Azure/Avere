@@ -16,6 +16,11 @@ variable "ssh_key_data" {
   description = "(optional) The public SSH key used for access to the controller or jumpbox.  If not specified, the password needs to be set.  The ssh_key_data takes precedence over the password, and if set, the password will be ignored."
 }
 
+variable "ssh_port" {
+  description = "specifies the tcp port to use for ssh"
+  default = 22
+}
+
 variable "jobMount_address" {
     description = "the mount address for warm job processing"
 }
@@ -40,3 +45,12 @@ variable "warm_target_path" {
     description = "the target path to warm"
 }
 
+variable "block_until_warm" {
+  description = "block the operation until the cache warming has finished"
+  default = true
+}
+
+variable "module_depends_on" {
+  default = [""]
+  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
+}

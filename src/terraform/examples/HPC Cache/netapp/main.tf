@@ -42,7 +42,7 @@ locals {
 }
 
 provider "azurerm" {
-    version = "~>2.8.0"
+    version = "~>2.12.0"
     features {}
 }
 
@@ -96,50 +96,25 @@ resource "azurerm_netapp_pool" "pool" {
   size_in_tb          = local.pool_size_in_tb
 }
 
-locals {
-    // values may be Standard, Premium, Ultra
-    storage_quota_in_bytes = local.volume_storage_quota_in_gb * 1024 * 1024 * 1024
-    // full definition here: https://docs.microsoft.com/en-us/azure/templates/microsoft.netapp/2019-06-01/netappaccounts/capacitypools/volumes
-    arm_template = templatefile("volume.json",
-    {
-        netappaccount       = azurerm_netapp_account.account.name,
-        netapppool          = azurerm_netapp_pool.pool.name,
-        netappvolume        = "netappvolume"
-        location            = azurerm_resource_group.netapprg.location,
-        export_path         = local.export_path
-        service_level       = local.service_level
-        subnet_id           = azurerm_subnet.netapp.id
-        storage_quota_in_bytes = local.storage_quota_in_bytes
-    })
-}
-
-// The only way to destroy a template deployment is to destroy the associated
-// RG, so keep each netapp filer template unique to its RG. 
-resource "azurerm_template_deployment" "netappvolume" {
-  name                = "netappvolumetmpl"
-  resource_group_name = azurerm_resource_group.netapprg.name
-  deployment_mode     = "Incremental"
-  template_body       = local.arm_template
-}
-
-/*
-Due to bug https://github.com/terraform-providers/terraform-provider-azurerm/issues/5416, we are unable to get the mount_adress to pass on, and therefor need template
-resource "azurerm_netapp_volume" "volume" {
-  lifecycle {
-    prevent_destroy = true
-  }
-
-  name                = "example-netappvolume"
+resource "azurerm_netapp_volume" "netappvolume" {
+  name                = "netappvolume"
   location            = azurerm_resource_group.netapprg.location
   resource_group_name = azurerm_resource_group.netapprg.name
   account_name        = azurerm_netapp_account.account.name
   pool_name           = azurerm_netapp_pool.pool.name
   volume_path         = local.export_path
-  service_level       = "Premium"
+  service_level       = local.service_level
   subnet_id           = azurerm_subnet.netapp.id
   protocols           = ["NFSv3"]
-  storage_quota_in_gb = 100
-}*/
+  storage_quota_in_gb = local.volume_storage_quota_in_gb
+
+  export_policy_rule {
+    rule_index = 1
+    allowed_clients = [module.network.vnet_address_space]
+    protocols_enabled = ["NFSv3"]
+    unix_read_write = true
+  }
+}
 
 resource "azurerm_resource_group" "hpc_cache_rg" {
   name     = local.hpc_cache_resource_group_name
@@ -156,7 +131,7 @@ resource "azurerm_hpc_cache" "hpc_cache" {
   resource_group_name = azurerm_resource_group.hpc_cache_rg.name
   location            = azurerm_resource_group.hpc_cache_rg.location
   cache_size_in_gb    = local.cache_size
-  subnet_id           = module.network.cloud_filers_subnet_id
+  subnet_id           = module.network.cloud_cache_subnet_id
   sku_name            = local.cache_throughput
 }
 
@@ -164,7 +139,7 @@ resource "azurerm_hpc_cache_nfs_target" "nfs_targets" {
   name                = "nfs_targets"
   resource_group_name = azurerm_resource_group.hpc_cache_rg.name
   cache_name          = azurerm_hpc_cache.hpc_cache.name
-  target_host_name    = azurerm_template_deployment.netappvolume.outputs["mountIpAddress"]
+  target_host_name    = azurerm_netapp_volume.netappvolume.mount_ip_addresses[0]
   usage_model         = local.usage_model
   namespace_junction {
     namespace_path = "/datacache"
@@ -173,18 +148,18 @@ resource "azurerm_hpc_cache_nfs_target" "nfs_targets" {
   }
 }
 
-output "netapp_export_path" {
-    value = local.export_path
+output "netapp_addresses" {
+    value = azurerm_netapp_volume.netappvolume.mount_ip_addresses
 }
 
-output "netapp_mount_ip_address" {
-    value = azurerm_template_deployment.netappvolume.outputs["mountIpAddress"]
+output "netapp_export" {
+    value = "/${local.export_path}"
 }
 
-output "mount_addresses" {
-  value = azurerm_hpc_cache.hpc_cache.mount_addresses
+output "hpccache_mount_addresses" {
+    value = azurerm_hpc_cache.hpc_cache.mount_addresses
 }
 
-output "export_namespace" {
-  value = tolist(azurerm_hpc_cache_nfs_target.nfs_targets.namespace_junction)[0].namespace_path
+output "hpccache_export_namespace" {
+    value = tolist(azurerm_hpc_cache_nfs_target.nfs_targets.namespace_junction)[0].namespace_path
 }

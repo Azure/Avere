@@ -36,6 +36,10 @@ function write_system_files() {
     sed -i "s:JOBEXPORTREPLACE:$JOB_EXPORT_PATH:g" $DST_FILE
     sed -i "s:JOBBASEREPLACE:$JOB_BASE_PATH:g" $DST_FILE
 
+    if [ -f '/etc/centos-release' ]; then 
+        sed -i "s/chown syslog:adm/chown root:root/g" $DST_FILE
+    fi
+
     # copy the rsyslog file
     cp $BOOTSTRAP_BASE_PATH/rsyslog/$RSYSLOG_FILE /etc/rsyslog.d/.
 }
@@ -47,12 +51,21 @@ function configure_rsyslog() {
     systemctl restart rsyslog
 }
 
+function stop_service() {
+    systemctl stop ${CACHEWARMER_WORKER_SERVICE_FILE}
+    systemctl disable ${CACHEWARMER_WORKER_SERVICE_FILE}
+}
+
 function configure_service() {
+    systemctl daemon-reload
     systemctl enable ${CACHEWARMER_WORKER_SERVICE_FILE}
-    sudo systemctl start ${CACHEWARMER_WORKER_SERVICE}
+    systemctl start ${CACHEWARMER_WORKER_SERVICE}
 }
 
 function main() {
+    echo "stop service if exists"
+    stop_service
+
     echo "copy binaries"
     copy_binaries
 

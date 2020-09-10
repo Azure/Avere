@@ -1,0 +1,23 @@
+{
+  "uniquename": {
+    "value": "UNIQUE"
+  },
+  "adminUsername": {
+    "value": "azureuser"
+  },
+  "sshKeyData": {
+    "value": "SSHKEY"
+  },
+  "vmCount":{
+    "value": 3
+  },
+  "virtualNetworkResourceGroup": {
+    "value": "UNIQUE"
+  },
+  "virtualNetworkName": {
+    "value": "UNIQUE"
+  },
+  "virtualNetworkSubnetName": {
+    "value": "UNIQUE"
+  }
+}

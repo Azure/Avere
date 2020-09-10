@@ -45,17 +45,24 @@ locals {
 
     // jumpbox variable
     jumpbox_add_public_ip = true
-    
+    ssh_port = 22
+        
     // vmss details
     vmss_resource_group_name = "vmss_rg"
     unique_name = "uniquename"
     vm_count = 2
     vmss_size = "Standard_DS2_v2"
     mount_target = "/data"
+
+    // advanced scenario: add external ports to work with cloud policies example [10022, 13389]
+    open_external_ports = [local.ssh_port,3389]
+    // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
+    // or if accessing from cloud shell, put "AzureCloud"
+    open_external_sources = ["*"]
 }
 
 provider "azurerm" {
-    version = "~>2.8.0"
+    version = "~>2.12.0"
     features {}
 }
 
@@ -64,6 +71,9 @@ module "network" {
     source              = "github.com/Azure/Avere/src/terraform/modules/render_network"
     resource_group_name = local.network_resource_group_name
     location            = local.location
+
+    open_external_ports   = local.open_external_ports
+    open_external_sources = local.open_external_sources
 }
 
 resource "azurerm_resource_group" "hpc_cache_rg" {
@@ -73,7 +83,7 @@ resource "azurerm_resource_group" "hpc_cache_rg" {
   // limitation of the template deployment, the only
   // way to destroy template resources is to destroy
   // the resource group
-  depends_on = [module.network]
+  depends_on = [module.network.module_depends_on_ids]
 }
 
 resource "azurerm_hpc_cache" "hpc_cache" {
@@ -81,7 +91,7 @@ resource "azurerm_hpc_cache" "hpc_cache" {
   resource_group_name = azurerm_resource_group.hpc_cache_rg.name
   location            = azurerm_resource_group.hpc_cache_rg.location
   cache_size_in_gb    = local.cache_size
-  subnet_id           = module.network.cloud_filers_subnet_id
+  subnet_id           = module.network.cloud_cache_subnet_id
   sku_name            = local.cache_throughput
 }
 
@@ -128,11 +138,14 @@ module "jumpbox" {
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.jumpbox_add_public_ip
+    ssh_port = local.ssh_port
 
     // network details
     virtual_network_resource_group = local.network_resource_group_name
     virtual_network_name = module.network.vnet_name
     virtual_network_subnet_name = module.network.jumpbox_subnet_name
+
+    module_depends_on = [azurerm_resource_group.hpc_cache_rg.id]
 }
 
 // the vmss config module to install the round robin mount
@@ -142,9 +155,12 @@ module "vmss_configure" {
     node_address = module.jumpbox.jumpbox_address
     admin_username = module.jumpbox.jumpbox_username
     admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
+    ssh_port = local.ssh_port
     ssh_key_data = local.vm_ssh_key_data
     nfs_address = azurerm_hpc_cache.hpc_cache.mount_addresses[0]
     nfs_export_path = tolist(azurerm_hpc_cache_nfs_target.nfs_targets.namespace_junction)[0].namespace_path
+
+    module_depends_on = [azurerm_hpc_cache_nfs_target.nfs_targets.id, module.jumpbox.module_depends_on_id]
 }
 
 // the VMSS module
@@ -166,7 +182,7 @@ module "vmss" {
     nfs_export_addresses = azurerm_hpc_cache.hpc_cache.mount_addresses
     nfs_export_path = local.nfs_export_path
     bootstrap_script_path = module.vmss_configure.bootstrap_script_path
-    vmss_depends_on = module.vmss_configure.bootstrap_script_path
+    module_depends_on = [module.vmss_configure.module_depends_on_id]
 }
 
 output "jumpbox_username" {

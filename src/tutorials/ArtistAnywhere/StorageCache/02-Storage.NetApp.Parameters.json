@@ -1,0 +1,122 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageAccount": {
+      "value": {
+        "name": "MediaStudio"
+      }
+    },
+    "storagePools": {
+      "value": [
+        {
+          "name": "Storage",
+          "tier": "Ultra",
+          "size": 4
+        }
+      ]
+    },
+    "storageVolumes": {
+      "value": [
+        {
+          "name": "Frames",
+          "pool": "Storage",
+          "size": 1024,
+          "exportPolicyRules": [
+            {
+              "ruleIndex": 1,
+              "cifs": false,
+              "nfsv3": true,
+              "nfsv41": false,
+              "unixReadOnly": false,
+              "unixReadWrite": true,
+              "allowedClients": "0.0.0.0/0"
+            }
+          ]
+        },
+        {
+          "name": "Scenes",
+          "pool": "Storage",
+          "size": 2048,
+          "exportPolicyRules": [
+            {
+              "ruleIndex": 1,
+              "cifs": false,
+              "nfsv3": true,
+              "nfsv41": false,
+              "unixReadOnly": false,
+              "unixReadWrite": true,
+              "allowedClients": "0.0.0.0/0"
+            }
+          ]
+        },
+        {
+          "name": "Tools",
+          "pool": "Storage",
+          "size": 1024,
+          "exportPolicyRules": [
+            {
+              "ruleIndex": 1,
+              "cifs": false,
+              "nfsv3": true,
+              "nfsv41": false,
+              "unixReadOnly": false,
+              "unixReadWrite": true,
+              "allowedClients": "0.0.0.0/0"
+            }
+          ]
+        }
+      ]
+    },
+    "storageMounts": {
+      "value": [
+        {
+          "pool": "Storage",
+          "volume": "Tools",
+          "exportPath": "/tools",
+          "directoryPath": "/mnt/tools",
+          "directoryPermissions": 775,
+          "fileSystemType": "nfs",
+          "fileSystemDrive": "T",
+          "fileSystemOptions": "rw,hard,vers=3,rsize=65536,wsize=65536,tcp"
+        },
+        {
+          "pool": "Storage",
+          "volume": "Frames",
+          "exportPath": "/frames",
+          "directoryPath": "/mnt/frames",
+          "directoryPermissions": 777,
+          "fileSystemType": "nfs",
+          "fileSystemDrive": "F",
+          "fileSystemOptions": "rw,hard,vers=3,rsize=65536,wsize=65536,tcp"
+        }
+      ]
+    },
+    "storageTargets": {
+      "value": [
+        {
+          "name": "Scenes",
+          "type": "nfs3",
+          "junctions": [
+            {
+              "namespacePath": "/mnt/scenes",
+              "nfsExport": "/scenes",
+              "targetPath": ""
+            }
+          ],
+          "mountOptions": "rw,hard,vers=3,proto=tcp,mountproto=tcp,retry=30",
+          "mountType": "nfs",
+          "mountDrive": "S",
+          "usageModel": "WRITE_AROUND"
+        }
+      ]
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "",
+        "subnetName": "StorageNetApp",
+        "resourceGroupName": ""
+      }
+    }
+  }
+}

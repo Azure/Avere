@@ -8,6 +8,7 @@ locals {
 resource "null_resource" "build_cachewarmer_bootstrap" {
   connection {
       type  = "ssh"
+      port  = var.ssh_port
       host  = var.node_address
       user  = var.admin_username
       password = var.ssh_key_data != null && var.ssh_key_data != "" ? "" : var.admin_password
@@ -18,11 +19,13 @@ resource "null_resource" "build_cachewarmer_bootstrap" {
     inline = [
       "set -x",
       "if [ -f '/etc/centos-release' ]; then sudo yum -y install git nfs-utils ; else sudo apt-get install -y nfs-common ; fi",
-      "wget -O ~/go.tgz https://dl.google.com/go/go1.11.2.linux-amd64.tar.gz",
+      "wget -O ~/go.tgz https://golang.org/dl/go1.14.4.linux-amd64.tar.gz",
       "tar zxf ~/go.tgz",
       "sudo chown -R root:root ~/go",
+      "sudo rm -rf /usr/local/go",
       "sudo mv go /usr/local",
       "rm ~/go.tgz",
+      "rm -rf ~/gopath",
       "mkdir ~/gopath",
       "sudo mkdir -p ${local.mount_dir}",
       "sudo mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' ${var.bootstrap_mount_address}:${var.bootstrap_export_path} ${local.mount_dir}",
@@ -33,6 +36,12 @@ resource "null_resource" "build_cachewarmer_bootstrap" {
       "/bin/bash -c 'source ~/.profile && cd $GOPATH && go get github.com/Azure/Avere/src/go/... && cp $GOPATH/bin/cachewarmer-* ${local.mount_dir}/${local.bootstrap_dir}/cachewarmerbin'",
       "mkdir -p ${local.mount_dir}/${local.bootstrap_dir}/rsyslog",
       "mkdir -p ${local.mount_dir}/${local.bootstrap_dir}/systemd",
+      "rm -f ${local.mount_dir}${local.manager_bootstrap_path}",
+      "rm -f ${local.mount_dir}${local.worker_bootstrap_path}",
+      "rm -f ${local.mount_dir}/${local.bootstrap_dir}/rsyslog/35-cachewarmer-manager.conf",
+      "rm -f ${local.mount_dir}/${local.bootstrap_dir}/rsyslog/36-cachewarmer-worker.conf",
+      "rm -f ${local.mount_dir}/${local.bootstrap_dir}/systemd/cachewarmer-manager.service",
+      "rm -f ${local.mount_dir}/${local.bootstrap_dir}/systemd/cachewarmer-worker.service",
       "curl --retry 5 --retry-delay 5 -o ${local.mount_dir}${local.manager_bootstrap_path} https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/bootstrap.cachewarmer-manager.sh",
       "curl --retry 5 --retry-delay 5 -o ${local.mount_dir}${local.worker_bootstrap_path} https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/bootstrap.cachewarmer-worker.sh",
       "curl --retry 5 --retry-delay 5 -o ${local.mount_dir}/${local.bootstrap_dir}/rsyslog/35-cachewarmer-manager.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/rsyslog/35-cachewarmer-manager.conf",
@@ -43,6 +52,8 @@ resource "null_resource" "build_cachewarmer_bootstrap" {
       "sudo rmdir ${local.mount_dir}",
     ]
   }
+
+  depends_on = [var.module_depends_on]
 }
 
 

@@ -1,0 +1,127 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "renderWorker": {
+      "type": "object",
+      "metadata": {
+        "description": "The render farm worker."
+      }
+    },
+    "renderManager": {
+      "type": "object",
+      "metadata": {
+        "description": "The render farm manager."
+      }
+    },
+    "logAnalytics": {
+      "type": "object",
+      "metadata": {
+        "description": "The monitor log analytics."
+      }
+    },
+    "virtualNetwork": {
+      "type": "object",
+      "metadata": {
+        "description": "The virtual network."
+      }
+    }
+  },
+  "variables": {
+    "virtualNetworkApiVersion": "2020-05-01",
+    "virtualMachineApiVersion": "2020-06-01"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "[parameters('renderWorker').machineScaleSets[copyIndex()].name]",
+      "apiVersion": "[variables('virtualMachineApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "[parameters('renderWorker').machineScaleSets[copyIndex()].machineSize]",
+        "capacity": "[parameters('renderWorker').machineScaleSets[copyIndex()].machineCount]"
+      },
+      "properties": {
+        "virtualMachineProfile": {
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "nic0",
+                "properties": {
+                  "primary": true,
+                  "enableAcceleratedNetworking": "parameters('renderWorker').machineScaleSets[copyIndex()].acceleratedNetworking",
+                  "ipConfigurations": [
+                    {
+                      "name": "ipConfig",
+                      "properties": {
+                        "subnet": {
+                          "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "billingProfile": "[if(not(equals(parameters('renderWorker').machineScaleSets[copyIndex()].maxBillingPrice, '')), json(concat('{\"maxPrice\": \"', parameters('renderWorker').machineScaleSets[copyIndex()].maxBillingPrice, '\"}')), json('null'))]",
+          "storageProfile": {
+            "imageReference": {
+              "id": "[parameters('renderWorker').image.referenceId]"
+            },
+            "osDisk": {
+              "caching": "ReadOnly",
+              "createOption": "FromImage",
+              "diffDiskSettings": "[if(parameters('renderWorker').machineScaleSets[copyIndex()].osDiskEphemeral, json(concat('{\"option\": \"Local\"}')), json('null'))]"
+            }
+          },
+          "osProfile": {
+            "computerNamePrefix": "[parameters('renderWorker').machineScaleSets[copyIndex()].name]",
+            "adminUsername": "[parameters('renderWorker').machineScaleSets[copyIndex()].adminUsername]",
+            "adminPassword": "[parameters('renderWorker').machineScaleSets[copyIndex()].adminPassword]",
+            "linuxConfiguration": {
+              "ssh": {
+                "publicKeys": [
+                  {
+                    "path": "[concat('/home/', parameters('renderWorker').machineScaleSets[copyIndex()].adminUsername, '/.ssh/authorized_keys')]",
+                    "keyData": "[parameters('renderWorker').machineScaleSets[copyIndex()].sshPublicKeyData]"
+                  }
+                ]
+              }
+            }
+          },
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "[concat(parameters('renderWorker').machineScaleSets[copyIndex()].name, 'Render')]",
+                "properties": {
+                  "publisher": "Microsoft.Azure.Extensions",
+                  "type": "CustomScript",
+                  "typeHandlerVersion": "2.1",
+                  "autoUpgradeMinorVersion": true,
+                  "protectedSettings": {
+                    "commandToExecute": "[concat('echo ', parameters('renderWorker').scriptCommands, ' | base64 --decode | gunzip | sed \"s|\r$||\" | RENDER_MANAGER_HOST=\"', parameters('renderManager').hostAddress, '\" FILE_SYSTEM_MOUNTS=\"', parameters('renderWorker').fileSystemMounts, '\" /bin/bash')]"
+                  }
+                }
+              }
+            ]
+          },
+          "evictionPolicy": "[parameters('renderWorker').machineScaleSets[copyIndex()].evictionPolicy]",
+          "priority": "[parameters('renderWorker').machineScaleSets[copyIndex()].machinePriority]"
+        },
+        "overprovision": "[parameters('renderWorker').machineScaleSets[copyIndex()].overProvision]",
+        "upgradePolicy": {
+          "mode": "[parameters('renderWorker').machineScaleSets[copyIndex()].upgradePolicy]"
+        },
+        "singlePlacementGroup": "[parameters('renderWorker').machineScaleSets[copyIndex()].singlePlacementGroup]",
+        "platformFaultDomainCount": "[parameters('renderWorker').machineScaleSets[copyIndex()].platformFaultDomainCount]"
+      },
+      "copy": {
+        "name": "renderWorkers",
+        "count": "[length(parameters('renderWorker').machineScaleSets)]"
+      }
+    }
+  ],
+  "outputs": {
+  }
+}

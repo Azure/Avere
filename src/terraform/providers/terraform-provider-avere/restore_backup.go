@@ -12,18 +12,21 @@ import (
 	"strings"
 )
 
-func GetVfxtTerraform(avereVfxt AvereVfxt, coreFilers []CoreFiler, storageFilers []AzureStorageFiler, customSettings map[string][]string, junctions map[string][]Junction) string {
+func GetVfxtTerraform(avereVfxt AvereVfxt, users []User, coreFilers []CoreFiler, storageFilers []AzureStorageFiler, customSettings map[string][]string, junctions map[string][]Junction) string {
 	mainBody := getVfxtBase()
 	vfxtSettings := getVfxtSettings(avereVfxt, customSettings)
+	userSettings := getUserSettings(users)
 	coreFilerJunctions := getCoreFilerJunctions(coreFilers, customSettings, junctions)
 	cloudFilerJunctions := getCloudFilerJunctions(storageFilers, customSettings, junctions)
-	return fmt.Sprintf(mainBody, vfxtSettings, coreFilerJunctions, cloudFilerJunctions)
+	return fmt.Sprintf(mainBody, vfxtSettings, userSettings, coreFilerJunctions, cloudFilerJunctions)
 }
 
 const (
 	UsageModelWriteAround     = "WRITE_AROUND"
 	UsageModelReadHeavyInfreq = "READ_HEAVY_INFREQ"
 	UsageModelWriteWorkload   = "WRITE_WORKLOAD_15"
+
+	TemporaryUserPassword = "ReplacePassword"
 )
 
 func getHPCCacheBase() string {
@@ -42,7 +45,7 @@ locals {
 }
 
 provider "azurerm" {
-    version = "~>2.8.0"
+    version = "~>2.12.0"
     features {}
 }
 
@@ -126,6 +129,9 @@ func getHPCCacheCoreFilerJunctions(coreFilers []CoreFiler, junctions map[string]
 					sb.WriteString("    namespace_junction {\n")
 					sb.WriteString(fmt.Sprintf("        namespace_path = \"%s\"\n", junction.NameSpacePath))
 					sb.WriteString(fmt.Sprintf("        nfs_export     = \"%s\"\n", junction.CoreFilerExport))
+					if len(junction.ExportSubdirectory) > 0 {
+						sb.WriteString(fmt.Sprintf("        target_path    = \"%s\"\n", junction.ExportSubdirectory))
+					}
 					sb.WriteString("    }\n")
 				}
 			}
@@ -195,7 +201,7 @@ locals {
 }
 
 provider "azurerm" {
-    version = "~>2.8.0"
+    version = "~>2.12.0"
     features {}
 }
 
@@ -236,7 +242,9 @@ resource "avere_vfxt" "vfxt" {
 
     // vFXT settings
 %s
-    // core filer junctions
+	// user settings
+%s
+	// core filer junctions
 %s
     // cloud filer junctions
 %s
@@ -251,7 +259,7 @@ output "controller_address" {
 }
 
 output "ssh_command_with_avere_tunnel" {
-    value = "ssh -L443:${avere_vfxt.vfxt.vfxt_management_ip}:443 ${module.vfxtcontroller.controller_username}@${module.vfxtcontroller.controller_address}"
+    value = "ssh -L8443:${avere_vfxt.vfxt.vfxt_management_ip}:443 ${module.vfxtcontroller.controller_username}@${module.vfxtcontroller.controller_address}"
 }
 
 output "management_ip" {
@@ -319,6 +327,20 @@ func getVfxtSettings(avereVfxt AvereVfxt, customSettings map[string][]string) st
 	return sb.String()
 }
 
+func getUserSettings(users []User) string {
+	var sb strings.Builder
+
+	for _, user := range users {
+		sb.WriteString("	user {\n")
+		sb.WriteString(fmt.Sprintf("        name = \"%s\"\n", user.Name))
+		sb.WriteString(fmt.Sprintf("        password = \"%s\"\n", user.Password))
+		sb.WriteString(fmt.Sprintf("        permission = \"%s\"\n", user.Permission))
+		sb.WriteString("    }\n")
+	}
+
+	return sb.String()
+}
+
 func getCoreFilerJunctions(coreFilers []CoreFiler, customSettings map[string][]string, junctions map[string][]Junction) string {
 	var sb strings.Builder
 	for _, coreFiler := range coreFilers {
@@ -338,6 +360,9 @@ func getCoreFilerJunctions(coreFilers []CoreFiler, customSettings map[string][]s
 				sb.WriteString("        junction {\n")
 				sb.WriteString(fmt.Sprintf("            namespace_path = \"%s\"\n", junction.NameSpacePath))
 				sb.WriteString(fmt.Sprintf("            core_filer_export = \"%s\"\n", junction.CoreFilerExport))
+				if len(junction.ExportSubdirectory) > 0 {
+					sb.WriteString(fmt.Sprintf("            export_subdirectory = \"%s\"\n", junction.ExportSubdirectory))
+				}
 				sb.WriteString("        }\n")
 			}
 		}
@@ -548,6 +573,27 @@ func FillAvereVfxtFromBackupFile(lines []string) (AvereVfxt, error) {
 	return avereVfxt, nil
 }
 
+func FillUsersFromBackupFile(lines []string) ([]User, error) {
+	users := make([]User, 0)
+
+	UserMatch := 1
+	PermissionsMatch := 2
+
+	userRegEx := regexp.MustCompile(`averecmd admin.addUser ([^ ]*) ([^ ]*)`)
+	for _, line := range lines {
+		matches := userRegEx.FindStringSubmatch(line)
+		if len(matches) > PermissionsMatch && len(matches[UserMatch]) > 0 && (matches[PermissionsMatch] == UserReadOnly || matches[PermissionsMatch] == UserReadWrite) {
+			user := User{
+				Name:       matches[1],
+				Password:   TemporaryUserPassword,
+				Permission: matches[2],
+			}
+			users = append(users, user)
+		}
+	}
+	return users, nil
+}
+
 func FillCoreFilers(lines []string) ([]CoreFiler, error) {
 	results := make([]CoreFiler, 0)
 
@@ -598,7 +644,7 @@ func FillAzureStorageFilers(lines []string) ([]AzureStorageFiler, map[string]str
 func FillJunctions(lines []string, storageFilerNametoAccountMapping map[string]string) (map[string][]Junction, error) {
 	junctions := make(map[string][]Junction)
 
-	junctionRegEx := regexp.MustCompile(`averecmd vserver.addJunction\s*[^\s]*\s([^\s]*)\s([^\s]*)\s([^\s]*)`)
+	junctionRegEx := regexp.MustCompile(`averecmd vserver.addJunction\s*[^\s]*\s([^\s]*)\s([^\s]*)\s([^\s]*).*subdir': '([^']*)`)
 
 	for _, line := range lines {
 		junctionMatches := junctionRegEx.FindStringSubmatch(line)
@@ -609,10 +655,12 @@ func FillJunctions(lines []string, storageFilerNametoAccountMapping map[string]s
 				coreFilerName = v
 			}
 			coreFilerExport := junctionMatches[3]
+			exportSubdirectory := junctionMatches[4]
 			junction := Junction{
-				NameSpacePath:   nameSpacePath,
-				CoreFilerName:   coreFilerName,
-				CoreFilerExport: coreFilerExport,
+				NameSpacePath:      nameSpacePath,
+				CoreFilerName:      coreFilerName,
+				CoreFilerExport:    coreFilerExport,
+				ExportSubdirectory: exportSubdirectory,
 			}
 			if _, ok := junctions[junction.CoreFilerName]; !ok {
 				junctions[junction.CoreFilerName] = make([]Junction, 0)
@@ -623,48 +671,52 @@ func FillJunctions(lines []string, storageFilerNametoAccountMapping map[string]s
 	return junctions, nil
 }
 
-func GetModels(vfxtBackupDirectory string) (avereVfxt AvereVfxt, coreFilers []CoreFiler, storageFilers []AzureStorageFiler, customSettings map[string][]string, junctions map[string][]Junction, err error) {
+func GetModels(vfxtBackupDirectory string) (avereVfxt AvereVfxt, users []User, coreFilers []CoreFiler, storageFilers []AzureStorageFiler, customSettings map[string][]string, junctions map[string][]Junction, err error) {
 	masses, err := GetMasses(vfxtBackupDirectory)
 	if err != nil {
-		return avereVfxt, coreFilers, storageFilers, customSettings, junctions, err
+		return avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, err
 	}
 
 	if customSettings, err = GetCustomSettings(vfxtBackupDirectory, masses); err != nil {
-		return avereVfxt, coreFilers, storageFilers, customSettings, junctions, err
+		return avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, err
 	}
 
 	backupFileLines, err := GetBackupLines(vfxtBackupDirectory)
 	if err != nil {
-		return avereVfxt, coreFilers, storageFilers, customSettings, junctions, err
+		return avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, err
 	}
 
 	if avereVfxt, err = FillAvereVfxtFromBackupFile(backupFileLines); err != nil {
-		return avereVfxt, coreFilers, storageFilers, customSettings, junctions, err
+		return avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, err
+	}
+
+	if users, err = FillUsersFromBackupFile(backupFileLines); err != nil {
+		return avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, err
 	}
 
 	if coreFilers, err = FillCoreFilers(backupFileLines); err != nil {
-		return avereVfxt, coreFilers, storageFilers, customSettings, junctions, err
+		return avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, err
 	}
 
 	var storageFilerNametoAccountMapping map[string]string
 	if storageFilers, storageFilerNametoAccountMapping, err = FillAzureStorageFilers(backupFileLines); err != nil {
-		return avereVfxt, coreFilers, storageFilers, customSettings, junctions, err
+		return avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, err
 	}
 
 	if junctions, err = FillJunctions(backupFileLines, storageFilerNametoAccountMapping); err != nil {
-		return avereVfxt, coreFilers, storageFilers, customSettings, junctions, err
+		return avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, err
 	}
 
-	return avereVfxt, coreFilers, storageFilers, customSettings, junctions, nil
+	return avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, nil
 }
 
 func WriteTerraformFiles(vfxtBackupDirectory string) error {
-	avereVfxt, coreFilers, storageFilers, customSettings, junctions, err := GetModels(vfxtBackupDirectory)
+	avereVfxt, users, coreFilers, storageFilers, customSettings, junctions, err := GetModels(vfxtBackupDirectory)
 	if err != nil {
 		return nil
 	}
 
-	tf := GetVfxtTerraform(avereVfxt, coreFilers, storageFilers, customSettings, junctions)
+	tf := GetVfxtTerraform(avereVfxt, users, coreFilers, storageFilers, customSettings, junctions)
 
 	file, err := os.OpenFile(VfxtTerraformFilename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {

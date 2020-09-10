@@ -2,19 +2,21 @@
 
 The examples in this folder build various configurations of the Avere vFXT with IaaS based filers:
 
-1. [Avere vFXT for Azure](no-filers/)
+1. [Avere vFXT](no-filers/)
 2. [Avere vFXT mounting Azure Blob Storage cloud core filer example](azureblobfiler/)
-3. [Avere vFXT for Azure mounting 1 IaaS NAS filer](1-filer/)
-4. [Avere vFXT for Azure mounting 3 IaaS NAS filers](3-filers/)
-5. [Avere vFXT for Azure mounting an Azure Netapp Volume](netapp/)
-6. [Avere vFXT and VDBench example](vdbench/)
-7. [Avere vFXT and VMSS example](vmss/)
-8. [Avere vFXT and CacheWarmer example](cachewarmer/)
-9. [Avere vFXT optimized for Houdini](HoudiniOptimized/)
-10. [Avere vFXT and Cloud Workstations](cloudworkstation/)
-11. [Avere vFXT only](vfxt-only/) - this example is useful for when the cloud environment is already configured.
-12. [Avere vFXT in a Proxy Environment](proxy/) - this example shows how to deploy the Avere in a locked down internet environment, with a proxy.
-13. [Deploy Avere vFXT directly from the controller](run-local/) - this example shows how to deploy the Avere directly from the controller.
+3. [Avere vFXT mounting 1 IaaS NAS filer](1-filer/)
+4. [Avere vFXT mounting 3 IaaS NAS filers](3-filers/)
+5. [Avere vFXT mounting an Azure NetApp Files Volume](netapp/)
+6. [Avere vFXT extends Azure NetApp Files across regions](netapp-across-region/)
+7. [Avere vFXT and VDBench example](vdbench/)
+8. [Avere vFXT and VMSS example](vmss/)
+9. [Avere vFXT and CacheWarmer](cachewarmer/)
+10. [Avere vFXT optimized for Houdini](HoudiniOptimized/)
+11. [Avere vFXT and Cloud Workstations](cloudworkstation/)
+12. [Avere vFXT only](vfxt-only/) - this example is useful for when the cloud environment is already configured.
+13. [Avere vFXT in a Proxy Environment](proxy/) - this example shows how to deploy the Avere in a locked down internet environment, with a proxy.
+14. [Deploy Avere vFXT directly from the controller](run-local/) - this example shows how to deploy the Avere directly from the controller.
+15. [Specify a custom VServer IP Range with the Avere vFXT](custom-vserver/) - this example shows how to specify a custom VServer IP Range with the Avere vFXT.
 
 # Create vFXT Controller from Custom Images
 
@@ -83,3 +85,11 @@ az image list -g $CUSTOMIMAGE_RESOURCEGROUP --query "[].id"
 5. copy the two image IDs output
 
 Now you can use any of the vFXT examples and pass in for the controller and vfxt image ids.
+
+# Accept Azure Marketplace Terms
+
+If this is your first time deploying a vFXT cluster on Azure you will have to accept the marketplace terms and conditions for the image. Please read the terms and conditions, and if you accept them, you can confirm this via the Azure CLI:
+
+```
+az vm image terms accept --urn microsoft-avere:vfxt:avere-vfxt-controller:latest
+```

@@ -9,6 +9,7 @@ locals {
     // if you use SSH key, ensure you have ~/.ssh/id_rsa with permission 600
     // populated where you are running terraform
     vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
+    ssh_port = 22
 
     // network details
     network_resource_group_name = "network_resource_group"
@@ -27,6 +28,7 @@ locals {
     controller_add_public_ip = true
     vfxt_cluster_name = "vfxt"
     vfxt_cluster_password = "VFXT_PASSWORD"
+    vfxt_ssh_key_data = local.vm_ssh_key_data
     // vfxt cache polies
     //  "Clients Bypassing the Cluster"
     //  "Read Caching"
@@ -40,10 +42,15 @@ locals {
     vfxt_image_id       = null
     // advanced scenario: put the custom image resource group here
     alternative_resource_groups = []
+    // advanced scenario: add external ports to work with cloud policies example [10022, 13389]
+    open_external_ports = [local.ssh_port,3389]
+    // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
+    // or if accessing from cloud shell, put "AzureCloud"
+    open_external_sources = ["*"]
 }
 
 provider "azurerm" {
-    version = "~>2.8.0"
+    version = "~>2.12.0"
     features {}
 }
 
@@ -52,6 +59,9 @@ module "network" {
     source = "github.com/Azure/Avere/src/terraform/modules/render_network"
     resource_group_name = local.network_resource_group_name
     location = local.location
+
+    open_external_ports   = local.open_external_ports
+    open_external_sources = local.open_external_sources
 }
 
 resource "azurerm_subnet" "netapp" {
@@ -97,50 +107,25 @@ resource "azurerm_netapp_pool" "pool" {
   size_in_tb          = local.pool_size_in_tb
 }
 
-locals {
-    // values may be Standard, Premium, Ultra
-    storage_quota_in_bytes = local.volume_storage_quota_in_gb * 1024 * 1024 * 1024
-    // full definition here: https://docs.microsoft.com/en-us/azure/templates/microsoft.netapp/2019-06-01/netappaccounts/capacitypools/volumes
-    arm_template = templatefile("volume.json",
-    {
-        netappaccount       = azurerm_netapp_account.account.name,
-        netapppool          = azurerm_netapp_pool.pool.name,
-        netappvolume        = "netappvolume"
-        location            = azurerm_resource_group.netapprg.location,
-        export_path         = local.export_path
-        service_level       = local.service_level
-        subnet_id           = azurerm_subnet.netapp.id
-        storage_quota_in_bytes = local.storage_quota_in_bytes
-    })
-}
-
-// The only way to destroy a template deployment is to destroy the associated
-// RG, so keep each netapp filer template unique to its RG. 
-resource "azurerm_template_deployment" "netappvolume" {
-  name                = "netappvolumetmpl"
-  resource_group_name = azurerm_resource_group.netapprg.name
-  deployment_mode     = "Incremental"
-  template_body       = local.arm_template
-}
-
-/*
-Due to bug https://github.com/terraform-providers/terraform-provider-azurerm/issues/5416, we are unable to get the mount_adress to pass on, and therefor need template
-resource "azurerm_netapp_volume" "volume" {
-  lifecycle {
-    prevent_destroy = true
-  }
-
-  name                = "example-netappvolume"
+resource "azurerm_netapp_volume" "netappvolume" {
+  name                = "netappvolume"
   location            = azurerm_resource_group.netapprg.location
   resource_group_name = azurerm_resource_group.netapprg.name
   account_name        = azurerm_netapp_account.account.name
   pool_name           = azurerm_netapp_pool.pool.name
   volume_path         = local.export_path
-  service_level       = "Premium"
+  service_level       = local.service_level
   subnet_id           = azurerm_subnet.netapp.id
   protocols           = ["NFSv3"]
-  storage_quota_in_gb = 100
-}*/
+  storage_quota_in_gb = local.volume_storage_quota_in_gb
+
+  export_policy_rule {
+    rule_index = 1
+    allowed_clients = [module.network.vnet_address_space]
+    protocols_enabled = ["NFSv3"]
+    unix_read_write = true
+  }
+}
 
 // the vfxt controller
 module "vfxtcontroller" {
@@ -153,11 +138,14 @@ module "vfxtcontroller" {
     add_public_ip = local.controller_add_public_ip
     image_id = local.controller_image_id
     alternative_resource_groups = local.alternative_resource_groups
+    ssh_port = local.ssh_port
 
     // network details
     virtual_network_resource_group = local.network_resource_group_name
     virtual_network_name = module.network.vnet_name
     virtual_network_subnet_name = module.network.jumpbox_subnet_name
+
+    module_depends_on = [module.network.vnet_id]
 }
 
 // the vfxt
@@ -166,6 +154,7 @@ resource "avere_vfxt" "vfxt" {
     controller_admin_username = module.vfxtcontroller.controller_username
     // ssh key takes precedence over controller password
     controller_admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
+    controller_ssh_port = local.ssh_port
     // terraform is not creating the implicit dependency on the controller module
     // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
     // to work around, add the explicit dependency
@@ -178,23 +167,18 @@ resource "avere_vfxt" "vfxt" {
     azure_subnet_name = module.network.cloud_cache_subnet_name
     vfxt_cluster_name = local.vfxt_cluster_name
     vfxt_admin_password = local.vfxt_cluster_password
+    vfxt_ssh_key_data = local.vfxt_ssh_key_data
     vfxt_node_count = 3
     image_id = local.vfxt_image_id
 
     core_filer {
         name = "nfs1"
-        fqdn_or_primary_ip = azurerm_template_deployment.netappvolume.outputs["mountIpAddress"]
+        fqdn_or_primary_ip = join(" ", tolist(azurerm_netapp_volume.netappvolume.mount_ip_addresses))
         cache_policy = local.cache_policy
         junction {
-            namespace_path = "/datacache"
+            namespace_path = "/${local.export_path}"
             core_filer_export = "/${local.export_path}"
         }
-        /* add additional junctions by adding another junction block shown below
-        junction {
-            namespace_path = "/nfsdata2"
-            core_filer_export = "/data2"
-        }
-        */
     }
 } 
 
@@ -202,8 +186,8 @@ output "netapp_export_path" {
     value = local.export_path
 }
 
-output "netapp_mount_ip_address" {
-    value = azurerm_template_deployment.netappvolume.outputs["mountIpAddress"]
+output "netapp_addresses" {
+    value = azurerm_netapp_volume.netappvolume.mount_ip_addresses
 }
 
 output "controller_username" {
@@ -215,13 +199,17 @@ output "controller_address" {
 }
 
 output "ssh_command_with_avere_tunnel" {
-    value = "ssh -L443:${avere_vfxt.vfxt.vfxt_management_ip}:443 ${module.vfxtcontroller.controller_username}@${module.vfxtcontroller.controller_address}"
+    value = "ssh -p ${local.ssh_port} -L8443:${avere_vfxt.vfxt.vfxt_management_ip}:443 ${module.vfxtcontroller.controller_username}@${module.vfxtcontroller.controller_address}"
 }
 
-output "management_ip" {
+output "vfxt_management_ip" {
     value = avere_vfxt.vfxt.vfxt_management_ip
 }
 
-output "mount_addresses" {
+output "vfxt_mount_addresses" {
     value = tolist(avere_vfxt.vfxt.vserver_ip_addresses)
+}
+
+output "vfxt_export_path" {
+    value = "/${local.export_path}"
 }

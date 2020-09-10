@@ -16,6 +16,13 @@ const (
 
 const (
 	MinimumSingleFileSize = int64(100 * MB)
+	MaximumJobSize        = int64(1500 * MB)
+	allFilesOrBytes       = int64(-1)
+	MaximumFilesToRead    = 200
+
+	// golang uses an 8192 buffer passed to getdents64 so we'll choose 128 because we get these on the first call anyway
+	MinimumJobsOnDirRead = 128
+	PrimeIndexIncr       = 59
 
 	// a warm job specifies a full path warm job
 	DefaultCacheJobSubmitterDir = ".cachewarmjob"
@@ -45,19 +52,19 @@ const (
 	MarketPlaceOffer        = "UbuntuServer"
 	MarketPlaceSku          = "18.04-LTS"
 
-	tick                        = time.Duration(10) * time.Millisecond // 10ms
-	timeBetweenJobCheck         = time.Duration(5) * time.Second       // 5 second between checking for jobs
-	timeBetweenWorkerJobCheck   = time.Duration(5) * time.Second       // 5 second between checking for jobs
-	timeToDeleteVMSSAfterNoJobs = time.Duration(20) * time.Second      // 20 seconds before deleting the VMSS
-	failureTimeToDeleteVMSS     = time.Duration(15) * time.Minute      // after 15 minutes of failure, ensure vmss deleted
+	tick                        = time.Duration(1) * time.Millisecond // 1ms
+	timeBetweenJobCheck         = time.Duration(5) * time.Second      // 5 second between checking for jobs
+	timeBetweenWorkerJobCheck   = time.Duration(5) * time.Second      // 5 second between checking for jobs
+	timeBetweenEOF              = time.Duration(5) * time.Second      // 5 second between EOF
+	timeToDeleteVMSSAfterNoJobs = time.Duration(20) * time.Second     // 20 seconds before deleting the VMSS
+	failureTimeToDeleteVMSS     = time.Duration(15) * time.Minute     // after 15 minutes of failure, ensure vmss deleted
 
 	// file read settings
 	ReadPageSize           = 10 * MB
 	timeBetweenCancelCheck = time.Duration(100) * time.Millisecond // 100ms
 
-	WorkerMultiplier          = 2
-	WorkerReadWorkItemsAtOnce = 30
-	WorkerReadFilesAtOnce     = 100
+	WorkerMultiplier        = 2
+	MinimumJobsBeforeRefill = 100
 
 	// size of slice for the locked paths
 	LockedWorkItemStartSliceSize = 1024

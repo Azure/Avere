@@ -74,7 +74,8 @@ func main() {
 	// initialize the sync wait group
 	syncWaitGroup := sync.WaitGroup{}
 
-	log.Info.Printf("create worker")
+	log.Status.Printf("cachwarmer worker started")
+	log.Status.Printf("create worker")
 	syncWaitGroup.Add(1)
 	go warmPathManager.RunWorkerManager(ctx, &syncWaitGroup)
 
@@ -91,5 +92,5 @@ func main() {
 	log.Info.Printf("Waiting for all processes to finish")
 	syncWaitGroup.Wait()
 
-	log.Info.Printf("finished")
+	log.Status.Printf("cachwarmer worker finished")
 }

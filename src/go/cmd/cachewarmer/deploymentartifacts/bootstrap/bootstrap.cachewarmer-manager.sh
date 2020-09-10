@@ -65,6 +65,10 @@ function write_system_files() {
     else
         sed -i "s/VMSS_SUBNET_NAME_REPLACE/-vmssSubnetName $VMSS_SUBNET/g" $DST_FILE
     fi
+
+    if [ -f '/etc/centos-release' ]; then 
+        sed -i "s/chown syslog:adm/chown root:root/g" $DST_FILE
+    fi
     
     # copy the rsyslog file
     cp $BOOTSTRAP_BASE_PATH/rsyslog/$RSYSLOG_FILE /etc/rsyslog.d/.
@@ -77,12 +81,21 @@ function configure_rsyslog() {
     systemctl restart rsyslog
 }
 
+function stop_service() {
+    systemctl stop ${CACHEWARMER_MANAGER_SERVICE}
+    systemctl disable ${CACHEWARMER_MANAGER_SERVICE_FILE}
+}
+
 function configure_service() {
+    systemctl daemon-reload
     systemctl enable ${CACHEWARMER_MANAGER_SERVICE_FILE}
-    sudo systemctl start ${CACHEWARMER_MANAGER_SERVICE}
+    systemctl start ${CACHEWARMER_MANAGER_SERVICE}
 }
 
 function main() {
+    echo "stop service if exists"
+    stop_service
+
     echo "copy binaries"
     copy_binaries
 

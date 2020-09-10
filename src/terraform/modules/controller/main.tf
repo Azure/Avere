@@ -2,6 +2,8 @@ data "azurerm_subnet" "vnet" {
   name                 = var.virtual_network_subnet_name
   virtual_network_name = var.virtual_network_name
   resource_group_name  = var.virtual_network_resource_group
+
+  depends_on = [var.module_depends_on]
 }
 
 data "azurerm_subscription" "primary" {}
@@ -10,7 +12,7 @@ locals {
   # send the script file to custom data, adding env vars
   script_file_b64 = base64gzip(replace(file("${path.module}/averecmd.txt"),"\r",""))
   msazure_patch1_file_b64 = base64gzip(replace(file("${path.module}/msazure.py.patch1"),"\r",""))
-  cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { averecmd = local.script_file_b64, msazure_patch1 = local.msazure_patch1_file_b64 })
+  cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { averecmd = local.script_file_b64, msazure_patch1 = local.msazure_patch1_file_b64, ssh_port = var.ssh_port })
   # the roles assigned to the controller managed identity principal
   # the contributor role is required to create Avere clusters
   avere_create_cluster_role = "Avere Contributor"
@@ -26,27 +28,33 @@ resource "azurerm_resource_group" "vm" {
   location = var.location
 
   count = var.create_resource_group ? 1 : 0
+
+  depends_on = [var.module_depends_on]
 }
 
 data "azurerm_resource_group" "vm" {
   name = var.resource_group_name
 
   count = var.create_resource_group ? 0 : 1
+
+  depends_on = [var.module_depends_on]
 }
 
 resource "azurerm_public_ip" "vm" {
     name                         = "${var.unique_name}-publicip"
-    location                     = var.create_resource_group ? azurerm_resource_group.vm[0].location : data.azurerm_resource_group.vm[0].location
+    location                     = var.location
     resource_group_name          = var.create_resource_group ? azurerm_resource_group.vm[0].name : data.azurerm_resource_group.vm[0].name
     allocation_method            = "Static"
 
     count = var.add_public_ip ? 1 : 0
+
+    depends_on = [var.module_depends_on]
 }
 
 resource "azurerm_network_interface" "vm" {
   name                = "${var.unique_name}-nic"
   resource_group_name = var.create_resource_group ? azurerm_resource_group.vm[0].name : data.azurerm_resource_group.vm[0].name
-  location            = var.create_resource_group ? azurerm_resource_group.vm[0].location : data.azurerm_resource_group.vm[0].location
+  location            = var.location
 
   ip_configuration {
     name                          = "${var.unique_name}-ipconfig"
@@ -54,15 +62,17 @@ resource "azurerm_network_interface" "vm" {
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = var.add_public_ip ? azurerm_public_ip.vm[0].id : ""
   }
+
+  depends_on = [var.module_depends_on]
 }
 
 resource "azurerm_linux_virtual_machine" "vm" {
   name = "${var.unique_name}-vm"
-  location = var.create_resource_group ? azurerm_resource_group.vm[0].location : data.azurerm_resource_group.vm[0].location
+  location = var.location
   resource_group_name = var.create_resource_group ? azurerm_resource_group.vm[0].name : data.azurerm_resource_group.vm[0].name
   network_interface_ids = [azurerm_network_interface.vm.id]
   computer_name  = var.unique_name
-  custom_data = base64encode(local.cloud_init_file)
+  custom_data = var.apply_patch ? base64encode(local.cloud_init_file) : null
   size = var.vm_size
   source_image_id = var.image_id
   
@@ -131,6 +141,8 @@ resource "azurerm_role_assignment" "avere_create_cluster_role" {
   role_definition_name             = local.avere_create_cluster_role
   principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
   skip_service_principal_aad_check = true
+
+  depends_on = [azurerm_linux_virtual_machine.vm]
 }
 
 resource "azurerm_role_assignment" "user_access_administrator_role" {
@@ -139,6 +151,8 @@ resource "azurerm_role_assignment" "user_access_administrator_role" {
   role_definition_name             = local.user_access_administrator_role
   principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
   skip_service_principal_aad_check = true
+
+  depends_on = [azurerm_role_assignment.avere_create_cluster_role]
 }
 
 // ensure controller rg is a VM contributor to enable cache warming
@@ -147,6 +161,8 @@ resource "azurerm_role_assignment" "create_compute" {
   role_definition_name             = local.create_compute_role
   principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
   skip_service_principal_aad_check = true
+
+   depends_on = [azurerm_role_assignment.user_access_administrator_role]
 }
 
 

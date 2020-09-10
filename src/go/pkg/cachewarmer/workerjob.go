@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/Azure/Avere/src/go/pkg/log"
@@ -20,6 +21,11 @@ type WorkerJob struct {
 	WarmTargetMountAddresses []string
 	WarmTargetExportPath     string
 	WarmTargetPath           string
+	StartByte                int64
+	StopByte                 int64
+	ApplyFilter              bool
+	StartFileFilter          string
+	EndFileFilter            string
 }
 
 func JobsExist(jobFolder string) (exists bool, mountCount int, err error) {
@@ -32,28 +38,29 @@ func JobsExist(jobFolder string) (exists bool, mountCount int, err error) {
 	defer f.Close()
 
 	for {
-		files, err := f.Readdir(2)
+		files, err := f.Readdirnames(MinimumJobsOnDirRead)
 		if len(files) == 0 && err == io.EOF {
 			return false, mountCount, nil
 		}
 		if err != nil && err != io.EOF {
 			return exists, mountCount, err
 		}
-		for _, f := range files {
-			if !f.IsDir() {
-				fullpath := path.Join(jobFolder, f.Name())
-				byteContent, err := ioutil.ReadFile(fullpath)
-				if err != nil {
-					log.Error.Printf("error readingfile '%s'", fullpath)
-					return true, MinimumAvereNodesPerCluster, nil
-				}
-				warmPathJob, err := InitializeWorkerJobFromString(string(byteContent))
-				if err != nil {
-					log.Error.Printf("error readingfile '%s'", fullpath)
-					return true, MinimumAvereNodesPerCluster, nil
-				}
-				return true, len(warmPathJob.WarmTargetMountAddresses), nil
+		for _, filename := range files {
+			fullpath := path.Join(jobFolder, filename)
+			byteContent, err := ioutil.ReadFile(fullpath)
+			if err != nil {
+				log.Error.Printf("error readingfile '%s': %v", fullpath, err)
+				continue
 			}
+			warmPathJob, err := InitializeWorkerJobFromString(string(byteContent))
+			if err != nil {
+				log.Error.Printf("error serializing file '%s': %v", fullpath, err)
+				if e2 := os.Remove(fullpath); e2 != nil {
+					log.Error.Printf("error removing '%s': %v", fullpath, e2)
+				}
+				continue
+			}
+			return true, len(warmPathJob.WarmTargetMountAddresses), nil
 		}
 	}
 }
@@ -67,6 +74,49 @@ func InitializeWorkerJob(
 		WarmTargetMountAddresses: warmTargetMountAddresses,
 		WarmTargetExportPath:     warmTargetExportPath,
 		WarmTargetPath:           warmTargetPath,
+		StartByte:                allFilesOrBytes,
+		StopByte:                 allFilesOrBytes,
+		ApplyFilter:              false,
+		StartFileFilter:          "",
+		EndFileFilter:            "",
+	}
+}
+
+// InitializeWorkerJob initializes the worker job structure
+func InitializeWorkerJobForLargeFile(
+	warmTargetMountAddresses []string,
+	warmTargetExportPath string,
+	warmTargetPath string,
+	startByte int64,
+	stopByte int64) *WorkerJob {
+	return &WorkerJob{
+		WarmTargetMountAddresses: warmTargetMountAddresses,
+		WarmTargetExportPath:     warmTargetExportPath,
+		WarmTargetPath:           warmTargetPath,
+		StartByte:                startByte,
+		StopByte:                 stopByte,
+		ApplyFilter:              false,
+		StartFileFilter:          "",
+		EndFileFilter:            "",
+	}
+}
+
+// InitializeWorkerJobWithFilter initializes the worker job structure
+func InitializeWorkerJobWithFilter(
+	warmTargetMountAddresses []string,
+	warmTargetExportPath string,
+	warmTargetPath string,
+	startFileFilter string,
+	endFileFilter string) *WorkerJob {
+	return &WorkerJob{
+		WarmTargetMountAddresses: warmTargetMountAddresses,
+		WarmTargetExportPath:     warmTargetExportPath,
+		WarmTargetPath:           warmTargetPath,
+		StartByte:                allFilesOrBytes,
+		StopByte:                 allFilesOrBytes,
+		ApplyFilter:              true,
+		StartFileFilter:          startFileFilter,
+		EndFileFilter:            endFileFilter,
 	}
 }
 
@@ -115,5 +165,22 @@ func GenerateWorkerJobFilename(jobpath string, contents string) string {
 	h.Write([]byte(contents))
 
 	t := time.Now()
-	return path.Join(jobpath, fmt.Sprintf("%02d-%02d-%02d-%02d%02d%02d-%d.job", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), h.Sum32()))
+	return path.Join(jobpath, fmt.Sprintf("%02d-%02d-%02d-%02d%02d%02d.%d-%d.job", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), h.Sum32()))
+}
+
+func (j *WorkerJob) FilterFiles(filenames []string) []string {
+	if j.ApplyFilter == false {
+		return filenames
+	}
+
+	filteredFileNames := make([]string, 0, len(filenames))
+
+	for _, filename := range filenames {
+		compareStart := strings.Compare(filename, j.StartFileFilter)
+		if compareStart == 0 || (compareStart > 0 && strings.Compare(filename, j.EndFileFilter) <= 0) {
+			filteredFileNames = append(filteredFileNames, filename)
+		}
+	}
+
+	return filteredFileNames
 }

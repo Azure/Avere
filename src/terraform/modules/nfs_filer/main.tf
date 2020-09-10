@@ -44,7 +44,7 @@ resource "azurerm_linux_virtual_machine" "nfsfiler" {
 
   source_image_reference {
     publisher = "OpenLogic"
-    offer     = "CentOS"
+    offer     = "CentOS-CI"
     # only 7-CI supports cloud-init https://docs.microsoft.com/en-us/azure/virtual-machines/linux/using-cloud-init
     sku       = "7-CI"
     version   = "latest"

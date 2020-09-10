@@ -24,7 +24,7 @@ This examples configures a render network, controller, and Avere vFXT with 1 fil
 
 To simulate latency, the NFS filer will live in a different vnet, resource group, and region.
 
-A azure storage blob filer will be used to hold the bootstrap directory and the warm job directories.  The example is broken into 3 phases.  The third phase demonstrates how to chain up the terraform modules to including deployment of the vFXT, mounting all junctions, building and installation of the CacheWarmer, and finally the job submission.  Once the 3 phase has completed the cache is warmed with the desired content.
+A nfs filer will be used to hold the bootstrap directory and the warm job directories.  The example is broken into 3 phases.  The third phase demonstrates how to chain up the terraform modules to including deployment of the vFXT, mounting all junctions, building and installation of the CacheWarmer, and finally the job submission.  Once the 3 phase has completed the cache is warmed with the desired content.
 
 ![The architecture](../../../../../docs/images/terraform/cachewarmerpipeline.png)
 
@@ -53,18 +53,18 @@ git pull origin master
 
 5. execute `terraform init` in the directory of `main.tf`.
 
-6. execute `terraform apply -auto-approve` to build the vfxt cluster
+6. execute `terraform apply -auto-approve` to deploy the virtual networks and the filer
 
 7. save the output to use for the installation of the Avere vFXT.
 
-## Deploy the vFXT controller and the Storage account
+## Deploy the vFXT controller
 
-These steps install the vFXT controller and storage account.
+These steps install the vFXT controller.
 
-1. using the existing https://shell.azure.com, change to `2.vfxtcontrollerandstorageaccount`
+1. using the existing https://shell.azure.com, change to `2.vfxtcontroller`
 
 ```bash
-cd ~/tf/src/terraform/examples/vfxt/cachewarmer/2.vfxtcontrollerandstorageaccount
+cd ~/tf/src/terraform/examples/vfxt/cachewarmer/2.vfxtcontroller
 ```
 
 3. double check your Avere vFXT prerequisites, including running `az vm image accept-terms --urn microsoft-avere:vfxt:avere-vfxt-controller:latest`: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs
@@ -73,7 +73,7 @@ cd ~/tf/src/terraform/examples/vfxt/cachewarmer/2.vfxtcontrollerandstorageaccoun
 
 5. execute `terraform init` in the directory of `main.tf`.
 
-6. execute `terraform apply -auto-approve` to build the vfxt cluster
+6. execute `terraform apply -auto-approve` to build the vfxt controller
 
 7. Now logon to the controller and jump to the filer to prepare content.  One good potential content is the [Moana Island Scene from  Walt Disney Animation Studios](https://www.technology.disneyanimation.com/islandscene).
 
@@ -91,7 +91,7 @@ cd ~/tf/src/terraform/examples/vfxt/cachewarmer/3.vfxtandcachewarmer
 ```bash
 mkdir -p ~/.terraform.d/plugins
 # install the vfxt released binary from https://github.com/Azure/Avere
-wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.8.3/terraform-provider-avere
+wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.2/terraform-provider-avere
 chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 ```
 
@@ -99,9 +99,9 @@ chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 
 4. execute `terraform init` in the directory of `main.tf`.
 
-5. execute `terraform apply -auto-approve` to build the vfxt cluster
+5. execute `terraform apply -auto-approve` to build the vfxt cluster and deploy and subnet the cache warmer job.  The cache warmer job submission will block until the cache warming process is complete.
 
-To submit addition directories for warming, you would submit the `cachewarmer_submitjob` module, or you can write a file similar to the following to the warm directory, in this example `/warm/cachewarmjob` folder on the vFXT:
+To submit addition directories for warming, you would submit the `cachewarmer_submitjob` module, or you can write a file similar to the following to the warm directory in this example `/.cachewarmjob` folder on the vFXT:
 
 ```bash
 {

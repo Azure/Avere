@@ -21,7 +21,7 @@ import (
 type Worker struct {
 	JobWorkerPath string
 	workQueue     *WorkQueue
-	workAvailable bool
+	jobFileReader *JobFileReader
 }
 
 // InitializeWorker initializes the job submitter structure
@@ -29,6 +29,7 @@ func InitializeWorker(jobWorkerPath string) *Worker {
 	return &Worker{
 		JobWorkerPath: jobWorkerPath,
 		workQueue:     InitializeWorkQueue(),
+		jobFileReader: NewJobFileReader(jobWorkerPath),
 	}
 }
 
@@ -51,64 +52,97 @@ func (w *Worker) RunWorkerManager(ctx context.Context, syncWaitGroup *sync.WaitG
 		go w.worker(ctx, syncWaitGroup)
 	}
 
+	workAvailable := false
 	// run the infinite loop
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if time.Since(lastJobCheckTime) > timeBetweenWorkerJobCheck || w.workAvailable {
+			if time.Since(lastJobCheckTime) > timeBetweenWorkerJobCheck || workAvailable {
 				lastJobCheckTime = time.Now()
-				if w.workQueue.IsEmpty() {
-					workingFile := w.GetNextWorkItem()
-					if workingFile != nil {
-						w.workAvailable = true
-						w.fillWorkQueue(ctx, workingFile)
-					} else {
-						w.workAvailable = false
-					}
+				workItemCount := w.workQueue.WorkItemCount()
 
+				if workItemCount < MinimumJobsBeforeRefill {
+					workAvailable = w.GetMoreWork(ctx)
 				}
 			}
 		}
 	}
 }
 
-func (w *Worker) GetNextWorkItem() *WorkingFile {
+func GetMoreWorkFinish(start time.Time) {
+	log.Info.Printf("Worker.getNextWorkItem took %v]", time.Now().Sub(start))
+}
+
+func (w *Worker) GetMoreWork(ctx context.Context) bool {
+	log.Info.Printf("[Worker.getNextWorkItem")
+	start := time.Now()
+	defer GetMoreWorkFinish(start)
+
+	workAvailable := false
+	begin := time.Now()
+	workingFile := w.GetNextWorkItem(ctx)
+	log.Info.Printf("GetNextWorkItem took %v", time.Now().Sub(begin))
+	if workingFile != nil {
+		workAvailable = true
+		begin = time.Now()
+		w.fillWorkQueue(ctx, workingFile)
+		log.Info.Printf("FillWorkItem took %v", time.Now().Sub(begin))
+	} else {
+		log.Info.Printf("work item count %d, setting work available to false", w.workQueue.WorkItemCount())
+		workAvailable = false
+	}
+	return workAvailable
+}
+
+func (w *Worker) GetNextWorkItem(ctx context.Context) *WorkingFile {
 	log.Debug.Printf("[Worker.getNextWorkItem")
 	defer log.Debug.Printf("Worker.getNextWorkItem]")
-	f, err := os.Open(w.JobWorkerPath)
-	if err != nil {
-		log.Error.Printf("error reading files from directory '%s': '%v'", w.JobWorkerPath, err)
-		return nil
-	}
-	defer f.Close()
-	lockedPaths := make([]string, 0, LockedWorkItemStartSliceSize)
 
-	for files, err := f.Readdir(WorkerReadFilesAtOnce); len(files) > 0 || (err != nil && err != io.EOF); files, err = f.Readdir(WorkerReadFilesAtOnce) {
-		if err != nil && err != io.EOF {
-			log.Error.Printf("error reading dirnames from directory '%s': '%v'", w.JobWorkerPath, err)
+	filenameSeen := make(map[string]bool)
+
+	lockedPaths := make([]string, 0, LockedWorkItemStartSliceSize)
+	for !isCancelled(ctx) {
+		nextFilename := w.jobFileReader.GetNextFilename()
+		if len(nextFilename) == 0 {
 			return nil
 		}
-		// to avoid collisions randomly choose a startIndex
-		startIndex := rand.Intn(len(files))
-		for i := 0; i < len(files); i++ {
-			f := files[(startIndex+i)%len(files)]
-			filepath := path.Join(w.JobWorkerPath, f.Name())
-			if !Locked(filepath) {
-				if workingFile := w.TrySetCurrentWorkingFile(filepath); workingFile != nil {
-					return workingFile
-				}
-			} else {
-				lockedPaths = append(lockedPaths, filepath)
+		// verify the the job file reader has not looped
+		if _, ok := filenameSeen[nextFilename]; ok {
+			break
+		}
+		filenameSeen[nextFilename] = true
+
+		filepath := path.Join(w.JobWorkerPath, nextFilename)
+		isDirectory, err := IsDirectory(filepath)
+		if err != nil {
+			log.Error.Printf("error querying directory on '%s': %v", filepath, err)
+			continue
+		}
+		if isDirectory {
+			continue
+		}
+		if !Locked(filepath) {
+			begin := time.Now()
+			if workingFile := w.TrySetCurrentWorkingFile(filepath); workingFile != nil {
+				log.Info.Printf("TrySetCurrentWorkingFile took %v", time.Now().Sub(begin))
+				return workingFile
 			}
+		} else {
+			lockedPaths = append(lockedPaths, filepath)
 		}
 	}
 	// iterate through the locked paths to see if one can be stolen
 	for _, lockedPath := range lockedPaths {
 		// if age of locked Path > 2 minutes, steal the file
-		if IsStale(lockedPath) {
+		begin := time.Now()
+		isStale := IsStale(lockedPath)
+		log.Info.Printf("IsStale took %v", time.Now().Sub(begin))
+		if isStale {
+			begin = time.Now()
 			if workingFile := w.TrySetCurrentWorkingFile(lockedPath); workingFile != nil {
+				log.Info.Printf("TrySetCurrentWorkingFile took %v", time.Now().Sub(begin))
 				return workingFile
 			}
 		}
@@ -193,11 +227,11 @@ func (w *Worker) fillWorkQueue(ctx context.Context, workingFile *WorkingFile) {
 		defer f.Close()
 		workItemsQueued := 0
 		for {
-			files, err := f.Readdir(WorkerReadFilesAtOnce)
+			filenames, err := f.Readdirnames(MinimumJobsOnDirRead)
 			// touch file between reads
 			go workingFile.TouchFile()
 
-			if len(files) == 0 && err == io.EOF {
+			if len(filenames) == 0 && err == io.EOF {
 				log.Info.Printf("finished reading directory '%s'", readPath)
 				break
 			}
@@ -207,7 +241,10 @@ func (w *Worker) fillWorkQueue(ctx context.Context, workingFile *WorkingFile) {
 				break
 			}
 
-			workItemsQueued += w.QueueWork(localPaths, files, workingFile)
+			filteredFilenames := workingFile.workerJob.FilterFiles(filenames)
+			if len(filteredFilenames) > 0 {
+				workItemsQueued += w.QueueWork(localPaths, filteredFilenames, workingFile)
+			}
 
 			// verify that cancellation has not occurred
 			if isCancelled(ctx) {
@@ -220,28 +257,41 @@ func (w *Worker) fillWorkQueue(ctx context.Context, workingFile *WorkingFile) {
 			log.Info.Printf("no items added to the work queue, proceeding to delete job file")
 			workingFile.FileProcessed()
 		}
-
+	} else if workingFile.workerJob.StartByte == allFilesOrBytes || workingFile.workerJob.StopByte == allFilesOrBytes {
+		log.Info.Printf("Queueing work item for file %s", readPath)
+		fileToWarm := InitializeFileToWarm(readPath, workingFile, allFilesOrBytes, allFilesOrBytes)
+		w.workQueue.AddWorkItem(fileToWarm)
 	} else {
 		// queue the file for read
-		log.Info.Printf("Queueing work item for file %s", readPath)
-		filesToWarm := []FileToWarm{InitializeFileToWarm(readPath, workingFile)}
-		w.workQueue.AddWork(filesToWarm)
+		for i := workingFile.workerJob.StartByte; i < workingFile.workerJob.StopByte; i += MinimumSingleFileSize {
+			end := i + MinimumSingleFileSize
+			if end > workingFile.workerJob.StopByte {
+				end = workingFile.workerJob.StopByte
+			}
+			log.Info.Printf("Queueing work item for file %s [%d,%d)", readPath, i, end)
+			fileToWarm := InitializeFileToWarm(readPath, workingFile, i, end)
+			w.workQueue.AddWorkItem(fileToWarm)
+		}
 	}
 }
 
-func (w *Worker) QueueWork(localPaths []string, fileInfos []os.FileInfo, workingFile *WorkingFile) int {
-	filesToWarm := make([]FileToWarm, 0, len(fileInfos))
-	for _, fileInfo := range fileInfos {
+func (w *Worker) QueueWork(localPaths []string, filenames []string, workingFile *WorkingFile) int {
+	itemsQueued := 0
+	for _, filename := range filenames {
+		randomPath := localPaths[rand.Intn(len(localPaths))]
+		fullPath := path.Join(randomPath, filename)
+		fileInfo, err := os.Stat(fullPath)
+		if err != nil {
+			log.Error.Printf("os.Stat(%s) return error '%v'", fullPath, err)
+			continue
+		}
 		if !fileInfo.IsDir() && fileInfo.Size() < MinimumSingleFileSize {
-			randomPath := localPaths[rand.Intn(len(localPaths))]
-			fullPath := path.Join(randomPath, fileInfo.Name())
-			filesToWarm = append(filesToWarm, InitializeFileToWarm(fullPath, workingFile))
+			fileToWarm := InitializeFileToWarm(fullPath, workingFile, allFilesOrBytes, allFilesOrBytes)
+			w.workQueue.AddWorkItem(fileToWarm)
+			itemsQueued++
 		}
 	}
-	if len(filesToWarm) > 0 {
-		w.workQueue.AddWork(filesToWarm)
-	}
-	return len(filesToWarm)
+	return itemsQueued
 }
 
 func (w *Worker) worker(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
@@ -251,6 +301,10 @@ func (w *Worker) worker(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
 
 	ticker := time.NewTicker(tick)
 	defer ticker.Stop()
+	idleStart := time.Now()
+
+	lastJobCheckTime := time.Now().Add(-timeBetweenWorkerJobCheck)
+	workAvailable := false
 
 	for {
 		select {
@@ -259,11 +313,21 @@ func (w *Worker) worker(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
 		case <-ticker.C:
 			for {
 				if w.workQueue.IsEmpty() {
-					continue
-				}
-				w.processWorkItem(ctx)
-				if isCancelled(ctx) {
-					return
+					if time.Since(lastJobCheckTime) > timeBetweenWorkerJobCheck || workAvailable {
+						lastJobCheckTime = time.Now()
+						workAvailable = w.GetMoreWork(ctx)
+					} else {
+						break
+					}
+				} else {
+					beforeJob := time.Now()
+					w.processWorkItem(ctx)
+					afterJob := time.Now()
+					log.Info.Printf("time since processing last job %v, time to run job %v, jobcount %d\n", beforeJob.Sub(idleStart), afterJob.Sub(beforeJob), w.workQueue.WorkItemCount())
+					idleStart = afterJob
+					if isCancelled(ctx) {
+						return
+					}
 				}
 			}
 		}
@@ -279,6 +343,14 @@ func (w *Worker) processWorkItem(ctx context.Context) {
 }
 
 func (w *Worker) readFile(ctx context.Context, fileToWarm FileToWarm) {
+	if fileToWarm.StartByte == allFilesOrBytes || fileToWarm.StopByte == allFilesOrBytes {
+		w.readFileFull(ctx, fileToWarm)
+	} else {
+		w.readFilePartial(ctx, fileToWarm)
+	}
+}
+
+func (w *Worker) readFileFull(ctx context.Context, fileToWarm FileToWarm) {
 	defer fileToWarm.ParentJobFile.FileProcessed()
 	var readBytes int
 	file, err := os.Open(fileToWarm.WarmFileFullPath)
@@ -308,4 +380,43 @@ func (w *Worker) readFile(ctx context.Context, fileToWarm FileToWarm) {
 			}
 		}
 	}
+}
+
+func (w *Worker) readFilePartial(ctx context.Context, fileToWarm FileToWarm) {
+	defer fileToWarm.ParentJobFile.FileProcessed()
+	if fileToWarm.StartByte == allFilesOrBytes || fileToWarm.StopByte == allFilesOrBytes {
+		log.Error.Printf("error no startbyte or stop byte set for partial read")
+		return
+	}
+
+	var readBytes int
+	file, err := os.Open(fileToWarm.WarmFileFullPath)
+	if err != nil {
+		log.Error.Printf("error opening file %s: %v", fileToWarm.WarmFileFullPath, err)
+		return
+	}
+	defer file.Close()
+	buffer := make([]byte, ReadPageSize)
+	lastCancelCheckTime := time.Now()
+
+	for currentByte := fileToWarm.StartByte; currentByte < fileToWarm.StopByte; currentByte = fileToWarm.StartByte + int64(readBytes) {
+		count, err := file.ReadAt(buffer, currentByte)
+		readBytes += count
+		if err != nil {
+			if err != io.EOF {
+				log.Error.Printf("error reading file %s: %v", fileToWarm.WarmFileFullPath, err)
+			}
+			break
+		}
+		go fileToWarm.ParentJobFile.TouchFile()
+		// ensure no cancel
+		if time.Since(lastCancelCheckTime) > timeBetweenCancelCheck {
+			lastCancelCheckTime = time.Now()
+			if isCancelled(ctx) {
+				break
+			}
+		}
+	}
+
+	log.Info.Printf("read %d bytes from filepath %s [%d,%d)", readBytes, fileToWarm.WarmFileFullPath, fileToWarm.StartByte, fileToWarm.StopByte)
 }

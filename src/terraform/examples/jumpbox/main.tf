@@ -13,14 +13,14 @@ locals {
     // network details
     network_resource_group_name = "network_resource_group"
     
-    // vfxt details
-    vfxt_resource_group_name = "jumpbox_resource_group"
+    // jumpbox details
+    jumpbox_resource_group_name = "jumpbox_resource_group"
     // if you are running a locked down network, set jumpbox_add_public_ip to false
     jumpbox_add_public_ip = true
 }
 
 provider "azurerm" {
-    version = "~>2.8.0"
+    version = "~>2.12.0"
     features {}
 }
 
@@ -32,7 +32,7 @@ module "network" {
 }
 
 resource "azurerm_resource_group" "jumpboxrg" {
-  name     = local.vfxt_resource_group_name
+  name     = local.jumpbox_resource_group_name
   location = local.location
 }
 
@@ -44,11 +44,14 @@ module "jumpbox" {
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.jumpbox_add_public_ip
+    ssh_port = local.ssh_port
 
     // network details
     virtual_network_resource_group = local.network_resource_group_name
     virtual_network_name = module.network.vnet_name
     virtual_network_subnet_name = module.network.jumpbox_subnet_name
+
+    module_depends_on = [azurerm_resource_group.jumpboxrg.id]
 }
 
 output "jumpbox_username" {

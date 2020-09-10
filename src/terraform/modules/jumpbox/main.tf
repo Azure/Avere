@@ -1,19 +1,23 @@
 locals {
   # send the script file to custom data, adding env vars
   script_file_b64 = base64gzip(replace(file("${path.module}/install.sh"),"\r",""))
-  cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { installcmd = local.script_file_b64 })
+  cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { installcmd = local.script_file_b64, ssh_port = var.ssh_port })
 }
 
 data "azurerm_subnet" "vnet" {
   name                 = var.virtual_network_subnet_name
   virtual_network_name = var.virtual_network_name
   resource_group_name  = var.virtual_network_resource_group
+
+  depends_on = [var.module_depends_on]
 }
 
 data "azurerm_subscription" "primary" {}
 
 data "azurerm_resource_group" "vm" {
   name     = var.resource_group_name
+
+  depends_on = [var.module_depends_on]
 }
 
 resource "azurerm_public_ip" "vm" {
@@ -47,6 +51,10 @@ resource "azurerm_linux_virtual_machine" "vm" {
   custom_data = base64encode(local.cloud_init_file)
   size = var.vm_size
 
+  identity {
+    type = "SystemAssigned"
+  }
+
   os_disk {
     name              = "${var.unique_name}-osdisk"
     caching           = "ReadWrite"
@@ -55,7 +63,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
   source_image_reference {
         publisher = "OpenLogic"
-        offer     = "CentOS"
+        offer     = "CentOS-CI"
         sku       = "7-CI"
         version   = "latest"
   }
@@ -81,8 +89,25 @@ resource "azurerm_virtual_machine_extension" "cse" {
 
   settings = <<SETTINGS
     {
-        "commandToExecute": " ADMIN_USER_NAME=${var.admin_username} /bin/bash /opt/install.sh"
+        "commandToExecute": " ADMIN_USER_NAME=${var.admin_username} BUILD_VFXT_PROVIDER=${var.build_vfxt_terraform_provider} /bin/bash /opt/install.sh"
     }
 SETTINGS
+}
+
+locals {
+  vm_contributor_rgs = distinct(concat(
+    [
+      var.resource_group_name,
+      var.virtual_network_resource_group,
+    ],
+    var.alternative_resource_groups))
+}
+
+resource "azurerm_role_assignment" "create_cluster_role" {
+  count                            = var.add_role_assignments ? length(local.vm_contributor_rgs) : 0
+  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${local.vm_contributor_rgs[count.index]}"
+  role_definition_name             = "Virtual Machine Contributor"
+  principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
+  skip_service_principal_aad_check = true
 }
 

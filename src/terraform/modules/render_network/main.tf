@@ -1,6 +1,8 @@
 resource "azurerm_resource_group" "render_rg" {
     name     = var.resource_group_name
     location = var.location
+
+    depends_on = [var.module_depends_on]
 }
 
 // the following is only needed if you need to ssh to the controller
@@ -8,17 +10,20 @@ resource "azurerm_network_security_group" "ssh_nsg" {
     name                = "ssh_nsg"
     location            = var.location
     resource_group_name = azurerm_resource_group.render_rg.name
-    
-    security_rule {
-        name                       = "SSH"
-        priority                   = 1001
-        direction                  = "Inbound"
-        access                     = "Allow"
-        protocol                   = "Tcp"
-        source_port_range          = "*"
-        destination_port_range     = "22"
-        source_address_prefix      = "*"
-        destination_address_prefix = "*"
+
+    dynamic "security_rule" {
+        for_each = length(var.open_external_ports) > 0 ? var.open_external_sources : []
+        content {
+            name                       = "SSH-${security_rule.key + 120}"
+            priority                   = security_rule.key + 120
+            direction                  = "Inbound"
+            access                     = "Allow"
+            protocol                   = "Tcp"
+            source_port_range          = "*"
+            destination_port_ranges    = var.open_external_ports
+            source_address_prefix      = security_rule.value
+            destination_address_prefix = "*"
+        }
     }
 }
 
@@ -26,11 +31,11 @@ resource "azurerm_network_security_group" "no_internet_nsg" {
     name                = "no_internet_nsg"
     location            = var.location
     resource_group_name = azurerm_resource_group.render_rg.name
-    
+
     // block all inbound from lb, etc
     security_rule {
         name                       = "nointernetinbound"
-        priority                   = 4000
+        priority                   = 130
         direction                  = "Inbound"
         access                     = "Deny"
         protocol                   = "*"
@@ -46,6 +51,7 @@ resource "azurerm_virtual_network" "vnet" {
     address_space       = [var.vnet_address_space]
     location            = var.location
     resource_group_name = azurerm_resource_group.render_rg.name
+    dns_servers         = var.dns_servers
 }
 
 resource "azurerm_subnet" "cloud_cache" {
