@@ -114,13 +114,14 @@ type CoreFilerGeneric struct {
 }
 
 type CoreFiler struct {
-	Name              string `json:"name"`
-	FqdnOrPrimaryIp   string `json:"networkName"`
-	CachePolicy       string `json:"policyName"`
-	Ordinal           int
-	FixedQuotaPercent int
-	AutoWanOptimize   bool
-	CustomSettings    []*CustomSetting
+	Name                    string `json:"name"`
+	FqdnOrPrimaryIp         string `json:"networkName"`
+	CachePolicy             string `json:"policyName"`
+	Ordinal                 int
+	FixedQuotaPercent       int
+	AutoWanOptimize         bool
+	NfsConnectionMultiplier int
+	CustomSettings          []*CustomSetting
 }
 
 // an Azure Storage Account Filer can be used from a vFXT running in

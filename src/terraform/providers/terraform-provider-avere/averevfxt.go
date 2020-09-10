@@ -482,7 +482,7 @@ func (a *AvereVfxt) RemoveCustomSetting(customSetting string) error {
 }
 
 func (a *AvereVfxt) CreateVServerSetting(customSetting string) error {
-	_, err := a.AvereCommand(a.getSetVServerSettingCommand(customSetting, TerraformAutoMessage))
+	_, err := a.AvereCommand(a.getSetVServerSettingCommand(customSetting, GetTerraformMessage(customSetting)))
 	return err
 }
 
@@ -833,13 +833,13 @@ func (a *AvereVfxt) AddStorageFilerCustomSettings(storageFiler *AzureStorageFile
 }
 
 func (a *AvereVfxt) AddCoreFilerCustomSettings(coreFiler *CoreFiler) error {
-	if len(coreFiler.CustomSettings) == 0 && !coreFiler.AutoWanOptimize {
-		// no custom settings to add
-		return nil
-	}
-
 	internalName, err := a.GetInternalName(coreFiler.Name)
 	if err != nil {
+		return err
+	}
+
+	// always add connection multiplier setting: this is a common bottleneck and support issue
+	if err := a.AddFilerCustomerSettingAsFeature(internalName, InitializeCustomSetting(GetNFSConnectionMultiplierSetting(coreFiler.NfsConnectionMultiplier))); err != nil {
 		return err
 	}
 
@@ -880,7 +880,7 @@ func (a *AvereVfxt) AddFilerCustomSettingsList(internalName string, customSettin
 			// the custom setting already exists
 			continue
 		}
-		if _, err := a.AvereCommand(a.getSetFilerSettingCommand(internalName, v, TerraformAutoMessage)); err != nil {
+		if _, err := a.AvereCommand(a.getSetFilerSettingCommand(internalName, v, v.GetTerraformMessage())); err != nil {
 			return err
 		}
 	}
@@ -923,6 +923,7 @@ func (a *AvereVfxt) RemoveCoreFilerCustomSettings(coreFiler *CoreFiler) error {
 	copy(allCustomSettings, coreFiler.CustomSettings)
 
 	// add all custom setting features
+	allCustomSettings = append(allCustomSettings, InitializeCustomSetting(GetNFSConnectionMultiplierSetting(coreFiler.NfsConnectionMultiplier)))
 	if coreFiler.AutoWanOptimize {
 		allCustomSettings = append(allCustomSettings, InitializeCustomSetting(AutoWanOptimizeCustomSetting))
 	}
