@@ -32,6 +32,7 @@ The [Azure ExpressRoute](https://azure.microsoft.com/en-us/services/expressroute
 
 Pre-requisites:
 * Ensure your on-premises switch support [QinQ VLAN Tagging](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-erdirect-about#vlan-tagging) or [Dot1Q VLAN Tagging](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-erdirect-about#vlan-tagging)
+* For installations larger than 10Gbps, work with the Microsoft Rendering and Express Route teams to ensure the established architecture will be the most performant.
 
 For TCO considerations, the here is the cost break down of ExpressRoute
 * consider [Express Route Direct](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-erdirect-about), as this may save you the cost of Express Route + connectivity partner.
