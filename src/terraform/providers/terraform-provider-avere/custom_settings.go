@@ -40,6 +40,10 @@ var deprecatedCustomSettings = map[string]string{
 	"cluster.CtcBackEndTimeout":  GenericDeprecatedError,
 	"cluster.HAVoteTimeToLive":   GenericDeprecatedError,
 	"vcm.vcm_waWriteBlocksValid": GenericDeprecatedError,
+	"doStrictNlmOhMatching":      GenericDeprecatedError,
+	"svidshift":                  GenericDeprecatedError,
+	"skipNfsExportTask":          GenericDeprecatedError,
+	"cfs.fileCountLimit":         GenericDeprecatedError,
 }
 
 func ValidateCustomSettingFormat(customSettingString string) error {
