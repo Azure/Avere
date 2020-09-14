@@ -106,6 +106,7 @@ Write-AvereFiles($avereUsers, $avereGroups)
     ForEach($avereGroup in $avereGroups) {
         $distinguishedNameMap[$avereGroup.DistinguishedName] = $avereGroup
     }
+    Write-Log("preparing users file")
     $avereUserFileContents = ""
     ForEach($avereUser in $avereUsers) {
         $user = $avereUser.SamAccountName
@@ -115,11 +116,12 @@ Write-AvereFiles($avereUsers, $avereGroups)
     }
     $avereUserFileContents | Out-File -encoding ASCII -filepath "$UserFile" -NoNewline
 
+    Write-Log("preparing groups file")
     $avereGroupFileContents = ""
     ForEach($avereGroup in $avereGroups) {
         $groupName = $avereGroup.SamAccountName
         $rid = $avereGroup.RID
-        $members = (Get-ADGroupMember -Identity $avereGroup.SamAccountName | Select -expand name) -join ","
+        $members = (Get-ADGroupMember $avereGroup.SamAccountName | Where { $_.objectClass -eq "user" } | select -expand SamAccountName) -join ","
         $avereGroupFileContents += "${groupName}:*:${rid}:${members}`n"
     }
     $avereGroupFileContents | Out-File -encoding ASCII -filepath "$GroupFile" -NoNewline
