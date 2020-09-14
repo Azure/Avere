@@ -23,11 +23,14 @@ param(
     [Parameter(Mandatory=$true)]
     [ValidateNotNull()]
     [int]
-    $StartRange
-)
+    $StartRange,
 
-$global:UserFile = "avere-user.txt"
-$global:GroupFile = "avere-group.txt"
+    [string]
+    $UserFile = "avere-user.txt",
+
+    [string]
+    $GroupFile = "avere-group.txt"
+)
 
 filter Timestamp {"$(Get-Date -Format o): $_"}
 
@@ -44,7 +47,7 @@ Get-RID($sid)
     $rid = 0
     
     $items = $sid -split "-"
-    if ($items.Count > 0) {
+    if ($items.Count -gt 0) {
         $lastItem = $items[$items.Count-1]
         $rid = [int]$lastItem
     }
@@ -124,7 +127,7 @@ Write-AvereFiles($avereUsers, $avereGroups)
         $gid = Get-Gid -avereUser $avereUser -distinguishedNameMap $distinguishedNameMap
         $avereUserFileContents += "${user}:*:${rid}:${gid}:::`n"
     }
-    $avereUserFileContents | Out-File -encoding ASCII -filepath "$global:UserFile" -NoNewline
+    $avereUserFileContents | Out-File -encoding ASCII -filepath "$UserFile" -NoNewline
 
     $avereGroupFileContents = ""
     ForEach($avereGroup in $avereGroups) {
@@ -133,7 +136,7 @@ Write-AvereFiles($avereUsers, $avereGroups)
         $members = Get-Members -avereGroup $avereGroup -distinguishedNameMap $distinguishedNameMap
         $avereGroupFileContents += "${groupName}:*:${rid}:${members}`n"
     }
-    $avereGroupFileContents | Out-File -encoding ASCII -filepath "$global:GroupFile" -NoNewline
+    $avereGroupFileContents | Out-File -encoding ASCII -filepath "$GroupFile" -NoNewline
 }
 
 try
@@ -144,7 +147,7 @@ try
     Write-Log("retrieve groups")
     $avereGroups = Get-Groups
 
-    Write-Log("write file '$global:UserFile' and file '$global:GroupFile'")
+    Write-Log("write file '$UserFile' and file '$GroupFile'")
     Write-AvereFiles -avereUsers $avereUsers -avereGroups $avereGroups
 }
 catch
