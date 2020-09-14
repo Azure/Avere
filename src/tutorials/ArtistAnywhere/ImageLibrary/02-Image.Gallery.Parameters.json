@@ -19,7 +19,7 @@
             "state": "Generalized",
             "publisher": "OpenLogic",
             "offer": "CentOS",
-            "sku": "7.7"
+            "sku": "7_8"
           },
           {
             "name": "Linux8",

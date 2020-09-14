@@ -19,7 +19,7 @@ sudo apt-get install unzip
 ```bash
 cd
 mkdir -p ~/.terraform.d/plugins
-wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.2/terraform-provider-avere
+wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.13/terraform-provider-avere
 chmod +x ~/.terraform.d/plugins/terraform-provider-avere
 wget https://releases.hashicorp.com/terraform/0.12.24/terraform_0.12.24_linux_amd64.zip
 unzip terraform_0.12.24_linux_amd64.zip
@@ -27,7 +27,7 @@ sudo mv terraform /usr/bin
 rm terraform_0.12.24_linux_amd64.zip
 mkdir -p vfxt
 cd vfxt
-wget -O main.tf  https://raw.githubusercontent.com/Azure/Avere/master/src/terraform/examples/vfxt/run-local/main.tf
+wget -O main.tf  https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/vfxt/run-local/main.tf
 ```
 4. `vi main.tf` to edit the local variables section at the top of the file, to customize to your preferences.
 

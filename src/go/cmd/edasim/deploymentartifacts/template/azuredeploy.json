@@ -280,7 +280,7 @@
                   "typeHandlerVersion": "2.0",
                   "autoUpgradeMinorVersion": true,
                   "protectedSettings": {
-                    "commandToExecute": "[concat('curl --retry 720 --retry-delay 5 -o /home/mountandbootstrap.sh https://raw.githubusercontent.com/Azure/Avere/master/src/client/mountandbootstrap.sh',' ; ',variables('jobSubmitterEnvironmentVariables'), ' /bin/bash /home/mountandbootstrap.sh')]"
+                    "commandToExecute": "[concat('curl --retry 720 --retry-delay 5 -o /home/mountandbootstrap.sh https://raw.githubusercontent.com/Azure/Avere/main/src/client/mountandbootstrap.sh',' ; ',variables('jobSubmitterEnvironmentVariables'), ' /bin/bash /home/mountandbootstrap.sh')]"
                   }
                 }
               }
@@ -363,7 +363,7 @@
                   "typeHandlerVersion": "2.0",
                   "autoUpgradeMinorVersion": true,
                   "protectedSettings": {
-                    "commandToExecute": "[concat('curl --retry 720 --retry-delay 5 -o /home/mountandbootstrap.sh https://raw.githubusercontent.com/Azure/Avere/master/src/client/mountandbootstrap.sh',' ; ',variables('orchestratorEnvironmentVariables'), ' /bin/bash /home/mountandbootstrap.sh')]"
+                    "commandToExecute": "[concat('curl --retry 720 --retry-delay 5 -o /home/mountandbootstrap.sh https://raw.githubusercontent.com/Azure/Avere/main/src/client/mountandbootstrap.sh',' ; ',variables('orchestratorEnvironmentVariables'), ' /bin/bash /home/mountandbootstrap.sh')]"
                   }
                 }
               }
@@ -446,7 +446,7 @@
                   "typeHandlerVersion": "2.0",
                   "autoUpgradeMinorVersion": true,
                   "protectedSettings": {
-                    "commandToExecute": "[concat('curl --retry 720 --retry-delay 5 -o /home/mountandbootstrap.sh https://raw.githubusercontent.com/Azure/Avere/master/src/client/mountandbootstrap.sh',' ; ',variables('workerEnvironmentVariables'), ' /bin/bash /home/mountandbootstrap.sh')]"
+                    "commandToExecute": "[concat('curl --retry 720 --retry-delay 5 -o /home/mountandbootstrap.sh https://raw.githubusercontent.com/Azure/Avere/main/src/client/mountandbootstrap.sh',' ; ',variables('workerEnvironmentVariables'), ' /bin/bash /home/mountandbootstrap.sh')]"
                   }
                 }
               }
@@ -529,7 +529,7 @@
                   "typeHandlerVersion": "2.0",
                   "autoUpgradeMinorVersion": true,
                   "protectedSettings": {
-                    "commandToExecute": "[concat('curl --retry 720 --retry-delay 5 -o /home/mountandbootstrap.sh https://raw.githubusercontent.com/Azure/Avere/master/src/client/mountandbootstrap.sh',' ; ',variables('onpremjobuploaderEnvironmentVariables'), ' /bin/bash /home/mountandbootstrap.sh')]"
+                    "commandToExecute": "[concat('curl --retry 720 --retry-delay 5 -o /home/mountandbootstrap.sh https://raw.githubusercontent.com/Azure/Avere/main/src/client/mountandbootstrap.sh',' ; ',variables('onpremjobuploaderEnvironmentVariables'), ' /bin/bash /home/mountandbootstrap.sh')]"
                   }
                 }
               }

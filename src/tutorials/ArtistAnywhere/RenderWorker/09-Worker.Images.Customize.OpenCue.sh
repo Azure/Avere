@@ -2,30 +2,45 @@
 
 set -ex
 
-cd /usr/local/bin
+localDirectory='/usr/local/bin/OpenCue'
+mkdir -p $localDirectory
+cd $localDirectory
+
+storageDirectory='/mnt/tools/OpenCue/v0.4.55'
+mkdir -p $storageDirectory
 
 fileName='opencue-requirements.txt'
-fileUrl='https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/requirements.txt'
-curl -L -o $fileName $fileUrl
+if [ ! -f $storageDirectory/$fileName ]; then
+    curl -L -o $storageDirectory/$fileName 'https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/requirements.txt'
+fi
+cp $storageDirectory/$fileName .
 
 fileName='opencue-pycue.tar.gz'
-fileUrl='https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/pycue-0.4.14-all.tar.gz'
-curl -L -o $fileName $fileUrl
+if [ ! -f $storageDirectory/$fileName ]; then
+    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.4.55/pycue-0.4.55-all.tar.gz'
+fi
+cp $storageDirectory/$fileName .
 tar -xzf $fileName
- 
+
 fileName='opencue-pyoutline.tar.gz'
-fileUrl='https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/pyoutline-0.4.14-all.tar.gz'
-curl -L -o $fileName $fileUrl
+if [ ! -f $storageDirectory/$fileName ]; then
+    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.4.55/pyoutline-0.4.55-all.tar.gz'
+fi
+cp $storageDirectory/$fileName .
 tar -xzf $fileName
 
 fileName='opencue-rqd.tar.gz'
-fileUrl='https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/0.4.14/rqd-0.4.14-all.tar.gz'
-curl -L -o $fileName $fileUrl
+if [ ! -f $storageDirectory/$fileName ]; then
+    curl -L -o $storageDirectory/$fileName 'https://github.com/AcademySoftwareFoundation/OpenCue/releases/download/v0.4.55/rqd-0.4.55-all.tar.gz'
+fi
+cp $storageDirectory/$fileName .
 tar -xzf $fileName
 
 fileName='opencue-rqd.service'
-fileUrl='https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/rqd/deploy/opencue-rqd.service'
-curl -L -o $fileName $fileUrl
+if [ ! -f $storageDirectory/$fileName ]; then
+    curl -L -o $storageDirectory/$fileName 'https://raw.githubusercontent.com/AcademySoftwareFoundation/OpenCue/master/rqd/deploy/opencue-rqd.service'
+fi
+cp $storageDirectory/$fileName .
 
 yum -y install gcc
 if [ "$(cat /etc/os-release | grep 'centos:8')" ]; then

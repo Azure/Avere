@@ -30,7 +30,7 @@ Before running the examples you will need to setup the following pre-requisites:
     ```bash
     mkdir -p ~/.terraform.d/plugins
     # install the vfxt released binary from https://github.com/Azure/Avere
-    wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.2/terraform-provider-avere
+    wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.13/terraform-provider-avere
     chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
     ```
 
@@ -42,7 +42,7 @@ Before running the examples you will need to setup the following pre-requisites:
     git remote add origin -f https://github.com/Azure/Avere.git
     git config core.sparsecheckout true
     echo "src/terraform/*" >> .git/info/sparse-checkout
-    git pull origin master
+    git pull origin main
     ```
 
 1. **storage** - if using an on-prem filer, you will need to establish an [Azure VPN Gateway](https://azure.microsoft.com/en-us/services/vpn-gateway/) to on-premises for connectivity to backend storage, rendering license server, active directory server, or render manager.  This step is configured after building out the Virtual Network in step 0 below.
@@ -111,7 +111,13 @@ Repeat each of the above for the nodes you need.
 
 At this point you can test a single frame render.  Once the single frame render is complete, follow the instructions to capture the render node, HQueue server and DC controller into windows images: https://docs.microsoft.com/en-us/azure/virtual-machines/windows/capture-image-resource.  Capture these images in a long lived resource group.
 
-## Phase 2 Scaling: Step 3 - Cache
+## Phase 2 Scaling: step 3a - Setup CIFS/SMB on Avere
+
+To configure Avere with CIFS, you will need to perform the following steps:
+
+1. **Configure Windows Domain Controller** - Using the instructions from [Phase 1->Step2](#phase-1-single-frame-render-step-2a---deploy-windows-vm), create a Windows Server.  Next [install the domain controller and the DNS server.](WindowsDC.md)
+
+## Phase 2 Scaling: Step 3b - Cache
 
 At this point you are now ready to scale the render nodes.
 
@@ -119,19 +125,11 @@ At this point you are now ready to scale the render nodes.
 
 1. continuing from the previous steps, browse to the cache directory: `cd ~/tf/src/terraform/examples/houdinienvironment/3.cache`
 
-1. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  You will need to paste in the output values from the deployment of the storage and the network steps.
+1. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  You will need to paste in the output values from the deployment of the storage and the network steps.  The cifs configuration will automatically join the Avere to the domain controller, and expose the CIFS share as described in these  [manual CIFS instructions](averecifs.md)
 
 1. execute `terraform init` in the directory of `main.tf`.
 
 1. execute `terraform apply -auto-approve` to deploy the storage.
-
-## Phase 2 Scaling: step 3a - Setup CIFS/SMB on Avere
-
-To configure Avere with CIFS, you will need to perform the following steps:
-
-1. **Configure Windows Domain Controller** - Using the instructions from [Phase 1->Step2](#phase-1-single-frame-render-step-2a---deploy-windows-vm), create a Windows Server.  Next [install the domain controller and the DNS server.](WindowsDC.md)
-
-1. **Configure Avere and setup the CIFS Share** - Next you will need to join the Avere to the domain controller, and expose the CIFS share using the [CIFS instructions](averecifs.md).
 
 ## Phase 2 Scaling: Step 4 - Render Nodes
 

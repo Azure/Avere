@@ -37,6 +37,15 @@ type AvereVfxt struct {
 	FirstIPAddress       string
 	LastIPAddress        string
 
+	CifsAdDomain           string
+	CifsServerName         string
+	CifsUsername           string
+	CifsPassword           string
+	CifsOrganizationalUnit string
+	EnableExtendedGroups   bool
+
+	UserAssignedManagedIdentity string
+
 	NtpServers string
 	Timezone   string
 	DnsServer  string
@@ -52,7 +61,8 @@ type AvereVfxt struct {
 	VServerIPAddresses *[]string
 	NodeNames          *[]string
 
-	rePasswordReplace *regexp.Regexp
+	rePasswordReplace  *regexp.Regexp
+	rePasswordReplace2 *regexp.Regexp
 }
 
 ///////////////////////////////////////////////////////////
@@ -65,8 +75,9 @@ type NFSExport struct {
 }
 
 type Node struct {
-	Name  string `json:"name"`
-	State string `json:"state"`
+	Name             string            `json:"name"`
+	State            string            `json:"state"`
+	PrimaryClusterIP map[string]string `json:"primaryClusterIP"`
 }
 
 type VServerClientIPHome struct {
@@ -103,10 +114,14 @@ type CoreFilerGeneric struct {
 }
 
 type CoreFiler struct {
-	Name            string `json:"name"`
-	FqdnOrPrimaryIp string `json:"networkName"`
-	CachePolicy     string `json:"policyName"`
-	CustomSettings  []*CustomSetting
+	Name                    string `json:"name"`
+	FqdnOrPrimaryIp         string `json:"networkName"`
+	CachePolicy             string `json:"policyName"`
+	Ordinal                 int
+	FixedQuotaPercent       int
+	AutoWanOptimize         bool
+	NfsConnectionMultiplier int
+	CustomSettings          []*CustomSetting
 }
 
 // an Azure Storage Account Filer can be used from a vFXT running in
@@ -114,6 +129,7 @@ type CoreFiler struct {
 type AzureStorageFiler struct {
 	AccountName    string
 	Container      string
+	Ordinal        int
 	CustomSettings []*CustomSetting
 }
 
@@ -122,13 +138,18 @@ type Junction struct {
 	CoreFilerName      string `json:"mass"`
 	CoreFilerExport    string `json:"export"`
 	ExportSubdirectory string `json:"subdir"`
+	PolicyName         string `json:"policy"`
 	SharePermissions   string
+	ExportRules        map[string]*ExportRule
+	CifsShareName      string
+	CifsAces           map[string]*ShareAce
 }
 
 type CustomSetting struct {
 	Name      string `json:"name"`
 	Value     string `json:"value"`
 	CheckCode string `json:"checkCode"`
+	Override  bool
 }
 
 type IPAddress struct {
@@ -147,4 +168,15 @@ type Cluster struct {
 	NtpServers   string    `json:"NTPservers"`
 	ClusterName  string    `json:"name"`
 	Proxy        string    `json:"proxy"`
+	LicensingId  string    `json:"id"`
+}
+
+type ClusterFilersRaw struct {
+	AvailableForReads int64 `json:"availableForReads"`
+}
+
+type CifsShare struct {
+	ShareName string `json:"shareName"`
+	Export    string `json:"export"`
+	Suffix    string `json:"suffix"`
 }

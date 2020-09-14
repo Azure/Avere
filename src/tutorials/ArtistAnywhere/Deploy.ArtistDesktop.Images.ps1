@@ -2,17 +2,20 @@
     # Set a naming prefix for the Azure resource groups that are created by this deployment script
     [string] $resourceGroupNamePrefix = "Azure.Media.Studio",
 
-    # Set the Azure region name(s) for Compute resources (e.g., Image Builder, Virtual Machines, HPC Cache, etc.)
-    [string[]] $computeRegionNames = @("WestUS2"),
+    # Set the Azure region name for Compute resources (e.g., Image Builder, Virtual Machines, HPC Cache, etc.)
+    [string] $computeRegionName = "WestUS2",
 
-    # Set the Azure region name for Storage resources (e.g., Virtual Network, Object (Blob) Storage, NetApp Files, etc.)
-    [string] $storageRegionName = "EastUS2",
+    # Set the Azure region name for Storage resources (e.g., Virtual Network, NetApp Files, Object Storage, etc.)
+    [string] $storageRegionName = "EastUS",
 
     # Set to true to deploy Azure NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
     [boolean] $storageNetAppEnable = $false,
 
     # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview)
     [boolean] $storageCacheEnable = $false,
+
+    # Set to true to deploy Azure VPN Gateway (https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways)
+    [boolean] $vnetGatewayEnable = $false,
 
     # The shared Azure solution services (e.g., Virtual Networks, Managed Identity, Log Analytics, etc.)
     [object] $sharedServices
@@ -25,22 +28,19 @@ if (!$templateDirectory) {
 
 Import-Module "$templateDirectory/Deploy.psm1"
 
-# * - Shared Services Job
 if (!$sharedServices) {
-    $moduleName = "* - Shared Services Job"
-    New-TraceMessage $moduleName $false
-    $sharedServicesJob = Start-Job -FilePath "$templateDirectory/Deploy.SharedServices.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionNames
-    $sharedServices = Receive-Job -Job $sharedServicesJob -Wait
-    New-TraceMessage $moduleName $true
+    $sharedServices = Get-SharedServices $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageNetAppEnable $vnetGatewayEnable
 }
+if (!$sharedServices.computeNetwork) {
+    return
+}
+$computeNetwork = $sharedServices.computeNetwork
 $userIdentity = $sharedServices.userIdentity
 $imageGallery = $sharedServices.imageGallery
 
 $moduleDirectory = "ArtistDesktop"
 
 # 11.0 - Desktop Image Template
-$computeRegionIndex = 0
-$computeRegionName = $computeRegionNames[$computeRegionIndex]
 $moduleName = "11.0 - Desktop Image Template"
 $resourceGroupNameSuffix = ".Gallery"
 New-TraceMessage $moduleName $false $computeRegionName
@@ -56,8 +56,11 @@ if ($templateParameters.userIdentity.value.resourceId -eq "") {
 if ($templateParameters.imageGallery.value.name -eq "") {
     $templateParameters.imageGallery.value.name = $imageGallery.name
 }
-if ($templateParameters.imageGallery.value.replicationRegions.length -eq 0) {
-    $templateParameters.imageGallery.value.replicationRegions = $computeRegionNames
+if ($templateParameters.virtualNetwork.value.name -eq "") {
+    $templateParameters.virtualNetwork.value.name = $computeNetwork.name
+}
+if ($templateParameters.virtualNetwork.value.resourceGroupName -eq "") {
+    $templateParameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
 }
 
 $templateParameters = '"{0}"' -f ($templateParameters | ConvertTo-Json -Compress -Depth 5).Replace('"', '\"')
@@ -66,8 +69,6 @@ $groupDeployment = (az deployment group create --resource-group $resourceGroupNa
 New-TraceMessage $moduleName $true $computeRegionName
 
 # 11.1 - Desktop Image Version
-$computeRegionIndex = 0
-$computeRegionName = $computeRegionNames[$computeRegionIndex]
 $moduleName = "11.1 - Desktop Image Version"
 $resourceGroupNameSuffix = ".Gallery"
 New-TraceMessage $moduleName $false $computeRegionName

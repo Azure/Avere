@@ -40,7 +40,7 @@
     }
   },
   "variables": {
-    "netAppApiVersion": "2020-03-01",
+    "netAppApiVersion": "2020-06-01",
     "bytesPerTebibyte": 1099511627776,
     "bytesPerGibibyte": 1073741824
   },
@@ -84,7 +84,8 @@
         "creationToken": "[toLower(parameters('storageVolumes')[copyIndex()].name)]",
         "exportPolicy": {
           "rules": "[parameters('storageVolumes')[copyIndex()].exportPolicyRules]"
-        }
+        },
+        "kerberosEnabled": "[parameters('storageVolumes')[copyIndex()].kerberosEnabled]"
       },
       "copy": {
         "name": "storageVolumes",
@@ -101,9 +102,8 @@
           "exportHost": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('storageAccount').name, parameters('storageMounts')[copyIndex()].pool, parameters('storageMounts')[copyIndex()].volume), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
           "exportPath": "[parameters('storageMounts')[copyIndex()].exportPath]",
           "directoryPath": "[parameters('storageMounts')[copyIndex()].directoryPath]",
-          "directoryPermissions": "[parameters('storageMounts')[copyIndex()].directoryPermissions]",
-          "fileSystemType": "[parameters('storageMounts')[copyIndex()].fileSystemType]",
           "fileSystemDrive": "[parameters('storageMounts')[copyIndex()].fileSystemDrive]",
+          "fileSystemType": "[parameters('storageMounts')[copyIndex()].fileSystemType]",
           "fileSystemOptions": "[parameters('storageMounts')[copyIndex()].fileSystemOptions]"
         }
       }
@@ -113,14 +113,14 @@
       "copy": {
         "count": "[length(parameters('storageTargets'))]",
         "input": {
-          "name": "[concat(parameters('virtualNetwork').name, '.NetApp.', parameters('storageTargets')[copyIndex()].name)]",
+          "name": "[concat(parameters('virtualNetwork').name, '-NetApp-', parameters('storageTargets')[copyIndex()].name)]",
           "type": "[parameters('storageTargets')[copyIndex()].type]",
           "host": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('storageAccount').name, parameters('storageVolumes')[copyIndex()].pool, parameters('storageVolumes')[copyIndex()].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
           "target": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('storageAccount').name, parameters('storageVolumes')[copyIndex()].pool, parameters('storageVolumes')[copyIndex()].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
           "junctions": "[parameters('storageTargets')[copyIndex()].junctions]",
-          "mountOptions": "[parameters('storageTargets')[copyIndex()].mountOptions]",
-          "mountType": "[parameters('storageTargets')[copyIndex()].mountType]",
           "mountDrive": "[parameters('storageTargets')[copyIndex()].mountDrive]",
+          "mountType": "[parameters('storageTargets')[copyIndex()].mountType]",
+          "mountOptions": "[parameters('storageTargets')[copyIndex()].mountOptions]",
           "usageModel": "[parameters('storageTargets')[copyIndex()].usageModel]"
         }
       }

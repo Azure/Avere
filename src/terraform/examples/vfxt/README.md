@@ -17,6 +17,7 @@ The examples in this folder build various configurations of the Avere vFXT with 
 13. [Avere vFXT in a Proxy Environment](proxy/) - this example shows how to deploy the Avere in a locked down internet environment, with a proxy.
 14. [Deploy Avere vFXT directly from the controller](run-local/) - this example shows how to deploy the Avere directly from the controller.
 15. [Specify a custom VServer IP Range with the Avere vFXT](custom-vserver/) - this example shows how to specify a custom VServer IP Range with the Avere vFXT.
+16. [Avere vFXT using User Assigned Managed Identity](user-assigned-managed-identity/) - this example shows how to use a user assigned managed identity with the Avere vFXT.
 
 # Create vFXT Controller from Custom Images
 

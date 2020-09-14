@@ -19,7 +19,7 @@
             "size": "",
             "osDiskSizeGB": 0
           },
-          "buildTimeoutMinutes": 120,
+          "buildTimeoutMinutes": 180,
           "imageVersionId": "1.0.2",
           "customizePipeline": [
             {
@@ -52,7 +52,7 @@
             "size": "",
             "osDiskSizeGB": 0
           },
-          "buildTimeoutMinutes": 120,
+          "buildTimeoutMinutes": 180,
           "imageVersionId": "1.0.3",
           "customizePipeline": [
             {
@@ -86,6 +86,13 @@
         "replicationCount": 1,
         "replicationRegions": [
         ]
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "",
+        "subnetName": "Desktop",
+        "resourceGroupName": ""
       }
     }
   }

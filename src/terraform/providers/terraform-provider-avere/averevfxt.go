@@ -10,6 +10,7 @@ import (
 	"net"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -27,17 +28,8 @@ var matchMustRemoveRelatedJunction = regexp.MustCompile(`(You must remove the re
 var matchCannotFindMass = regexp.MustCompile(`('Cannot find MASS)`)
 var matchJunctionNotFound = regexp.MustCompile(`(removeJunction failed.*'Cannot find junction)`)
 
-func initializeCustomSetting(customSettingString string) *CustomSetting {
-	return &CustomSetting{
-		Name:      getCustomSettingName(customSettingString),
-		CheckCode: getCustomSettingCheckCode(customSettingString),
-		Value:     getCustomSettingValue(customSettingString),
-	}
-}
-
-func (c *CustomSetting) GetCustomSettingCommand() string {
-	return fmt.Sprintf("%s %s %s", c.Name, c.CheckCode, c.Value)
-}
+// parse numbers from mass
+var matchNumbersInMass = regexp.MustCompile(`[^0-9]+`)
 
 // NewAvereVfxt creates new AvereVfxt
 func NewAvereVfxt(
@@ -57,6 +49,13 @@ func NewAvereVfxt(
 	nodeCacheSize int,
 	firstIPAddress string,
 	lastIPAddress string,
+	cifsAdDomain string,
+	cifsServerName string,
+	cifsUserName string,
+	cifsPassword string,
+	cifsOrganizationalUnit string,
+	enableExtendedGroups bool,
+	userAssignedManagedIdentity string,
 	ntpServers string,
 	timezone string,
 	dnsServer string,
@@ -69,39 +68,66 @@ func NewAvereVfxt(
 	vServerIPAddresses *[]string,
 	nodeNames *[]string) *AvereVfxt {
 	return &AvereVfxt{
-		ControllerAddress:    controllerAddress,
-		ControllerUsename:    controllerUsername,
-		SshAuthMethod:        sshAuthMethod,
-		SshPort:              sshPort,
-		RunLocal:             runLocal,
-		AllowNonAscii:        allowNonAscii,
-		Platform:             platform,
-		AvereVfxtName:        avereVfxtName,
-		AvereAdminPassword:   avereAdminPassword,
-		AvereSshKeyData:      sshKeyData,
-		EnableSupportUploads: enableSupportUploads,
-		NodeCount:            nodeCount,
-		NodeSize:             nodeSize,
-		NodeCacheSize:        nodeCacheSize,
-		FirstIPAddress:       firstIPAddress,
-		LastIPAddress:        lastIPAddress,
-		NtpServers:           ntpServers,
-		Timezone:             timezone,
-		DnsServer:            dnsServer,
-		DnsDomain:            dnsDomain,
-		DnsSearch:            dnsSearch,
-		ProxyUri:             proxyUri,
-		ClusterProxyUri:      clusterProxyUri,
-		ImageId:              imageId,
-		ManagementIP:         managementIP,
-		VServerIPAddresses:   vServerIPAddresses,
-		NodeNames:            nodeNames,
-		rePasswordReplace:    regexp.MustCompile(`-password [^ ]*`),
+		ControllerAddress:           controllerAddress,
+		ControllerUsename:           controllerUsername,
+		SshAuthMethod:               sshAuthMethod,
+		SshPort:                     sshPort,
+		RunLocal:                    runLocal,
+		AllowNonAscii:               allowNonAscii,
+		Platform:                    platform,
+		AvereVfxtName:               avereVfxtName,
+		AvereAdminPassword:          avereAdminPassword,
+		AvereSshKeyData:             sshKeyData,
+		EnableSupportUploads:        enableSupportUploads,
+		NodeCount:                   nodeCount,
+		NodeSize:                    nodeSize,
+		NodeCacheSize:               nodeCacheSize,
+		FirstIPAddress:              firstIPAddress,
+		LastIPAddress:               lastIPAddress,
+		CifsAdDomain:                cifsAdDomain,
+		CifsServerName:              cifsServerName,
+		CifsUsername:                cifsUserName,
+		CifsPassword:                cifsPassword,
+		CifsOrganizationalUnit:      cifsOrganizationalUnit,
+		EnableExtendedGroups:        enableExtendedGroups,
+		UserAssignedManagedIdentity: userAssignedManagedIdentity,
+		NtpServers:                  ntpServers,
+		Timezone:                    timezone,
+		DnsServer:                   dnsServer,
+		DnsDomain:                   dnsDomain,
+		DnsSearch:                   dnsSearch,
+		ProxyUri:                    proxyUri,
+		ClusterProxyUri:             clusterProxyUri,
+		ImageId:                     imageId,
+		ManagementIP:                managementIP,
+		VServerIPAddresses:          vServerIPAddresses,
+		NodeNames:                   nodeNames,
+		rePasswordReplace:           regexp.MustCompile(`-password [^ ]*`),
+		rePasswordReplace2:          regexp.MustCompile(`sshpass -p [^ ]*`),
 	}
+}
+
+func (a *AvereVfxt) IsAlive() bool {
+	managementIPAlivecmd := fmt.Sprintf("nc -zvv %s 443", a.ManagementIP)
+	for retries := 1; ; retries++ {
+		_, _, err := a.RunCommand(managementIPAlivecmd)
+		if err == nil {
+			return true
+		}
+		log.Printf("[WARN] [%d/%d] command '%s' to %s failed with '%v' ", retries, ClusterAliveRetryCount, managementIPAlivecmd, a.ControllerAddress, err)
+
+		if retries > ClusterAliveRetryCount {
+			// failure after exhausted retries
+			break
+		}
+		time.Sleep(ClusterAliveRetrySleepSeconds * time.Second)
+	}
+	return false
 }
 
 func (a *AvereVfxt) RunCommand(cmd string) (bytes.Buffer, bytes.Buffer, error) {
 	scrubbedCmd := a.rePasswordReplace.ReplaceAllLiteralString(cmd, "***")
+	scrubbedCmd = a.rePasswordReplace2.ReplaceAllLiteralString(scrubbedCmd, "***")
 	if !a.AllowNonAscii {
 		if err := ValidateOnlyAscii(cmd, scrubbedCmd); err != nil {
 			var stdoutBuf, stderrBuf bytes.Buffer
@@ -182,6 +208,26 @@ func (a *AvereVfxt) GetNodes() ([]string, error) {
 	if err := json.Unmarshal([]byte(coreNodesJson), &results); err != nil {
 		return nil, err
 	}
+	return results, nil
+}
+
+func (a *AvereVfxt) GetNodePrimaryIPs() ([]string, error) {
+	nodeMap, err := a.GetExistingNodes()
+	if err != nil {
+		return nil, err
+	}
+
+	var results []string
+	for _, v := range nodeMap {
+		if val, ok := v.PrimaryClusterIP[PrimaryClusterIPKey]; ok {
+			results = append(results, val)
+		} else {
+			// this is not essential data, so just print an error
+			log.Printf("[ERROR] primary IP missing for node %s", v.Name)
+			//return nil, fmt.Errorf("primary IP missing for node %s", v.Name)
+		}
+	}
+
 	return results, nil
 }
 
@@ -361,13 +407,72 @@ func (a *AvereVfxt) EnsureClusterStable() error {
 	return nil
 }
 
+func (a *AvereVfxt) CIFSSettingsExist() bool {
+	return len(a.CifsAdDomain) > 0 && len(a.CifsServerName) > 0 && len(a.CifsUsername) > 0 && len(a.CifsPassword) > 0
+}
+
+func (a *AvereVfxt) EnableCIFS() error {
+	log.Printf("[INFO] [EnableCIFS")
+	defer log.Printf("[INFO] EnableCIFS]")
+	if a.CIFSSettingsExist() {
+		if _, err := a.AvereCommand(a.getDirServicesEnableCIFSCommand()); err != nil {
+			return fmt.Errorf("directory services enablement failed with error: %v", err)
+		}
+
+		if _, err := a.AvereCommand(a.getCIFSConfigureCommand()); err != nil {
+			return fmt.Errorf("cifs configuration failed with error: %v", err)
+		}
+
+		if _, err := a.AvereCommand(a.getCIFSSetOptionsCommand()); err != nil {
+			return fmt.Errorf("cifs set options failed with error: %v", err)
+		}
+
+		if _, err := a.AvereCommand(a.getCIFSEnableCommand()); err != nil {
+			return fmt.Errorf("cifs enable failed with error: %v", err)
+		}
+
+		// finish with polling for users / groups, otherwise cifs doesn't work immediately
+		if _, err := a.AvereCommand(a.getDirServicesPollUserGroupCommand()); err != nil {
+			return fmt.Errorf("dir services polling failed with error: %v", err)
+		}
+	}
+
+	return nil
+}
+
+func (a *AvereVfxt) DisableCIFS() error {
+	if !a.CIFSSettingsExist() {
+		// it is enough to just call disable CIFS to disable it
+		if _, err := a.AvereCommand(a.getCIFSDisableCommand()); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (a *AvereVfxt) ModifyExtendedGroups() error {
+	log.Printf("[INFO] [ModifyExtendedGroups %v", a.EnableExtendedGroups)
+	defer log.Printf("[INFO] ModifyExtendedGroups %v]", a.EnableExtendedGroups)
+	if a.EnableExtendedGroups {
+		if _, err := a.AvereCommand(a.getEnableExtendedGroupsCommand()); err != nil {
+			return err
+		}
+	} else {
+		if _, err := a.AvereCommand(a.getDisableExtendedGroupsCommand()); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (a *AvereVfxt) SetNtpServers(ntpServers string) error {
 	_, err := a.AvereCommand(a.getSetNtpServersCommand(ntpServers))
 	return err
 }
 
-func (a *AvereVfxt) CreateCustomSetting(customSetting string) error {
-	_, err := a.AvereCommand(a.getSetCustomSettingCommand(customSetting))
+func (a *AvereVfxt) CreateCustomSetting(customSetting string, message string) error {
+	_, err := a.AvereCommand(a.getSetCustomSettingCommand(customSetting, message))
 	return err
 }
 
@@ -377,7 +482,7 @@ func (a *AvereVfxt) RemoveCustomSetting(customSetting string) error {
 }
 
 func (a *AvereVfxt) CreateVServerSetting(customSetting string) error {
-	_, err := a.AvereCommand(a.getSetVServerSettingCommand(customSetting))
+	_, err := a.AvereCommand(a.getSetVServerSettingCommand(customSetting, GetTerraformMessage(customSetting)))
 	return err
 }
 
@@ -408,6 +513,19 @@ func (a *AvereVfxt) GetGenericFilers() (map[string]*CoreFilerGeneric, error) {
 		return nil, err
 	}
 	return results, nil
+}
+
+func (a *AvereVfxt) GetGenericFilerMappingList() ([]string, error) {
+	genericFilers, err := a.GetGenericFilers()
+	if err != nil {
+		return nil, err
+	}
+	result := make([]string, 0, len(genericFilers))
+	for _, v := range genericFilers {
+		result = append(result, fmt.Sprintf("%s:%s", v.InternalName, v.Name))
+	}
+	sort.Strings(result)
+	return result, nil
 }
 
 func (a *AvereVfxt) GetFilerCustomSettings(filerInternalName string) (map[string]*CustomSetting, error) {
@@ -493,7 +611,15 @@ func (a *AvereVfxt) ListExports(filer string) ([]NFSExport, error) {
 	return result, nil
 }
 
-func (a *AvereVfxt) EnsureCachePolicyExists(cachePolicy string, checkAttributes string) error {
+// use the following command if we encounter "permission errors", this is modeled after the UI
+func (a *AvereVfxt) EnableAPIMaintenance() error {
+	if _, err := a.AvereCommand(a.getEnableAPIMaintenanceCommand()); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *AvereVfxt) EnsureCachePolicyExists(cachePolicy string, cacheMode string, checkAttributes string, writeBackDelay int) error {
 	// list the cache policies
 	cachePoliciesJson, err := a.AvereCommand(a.getListCachePoliciesJsonCommand())
 	if err != nil {
@@ -514,7 +640,7 @@ func (a *AvereVfxt) EnsureCachePolicyExists(cachePolicy string, checkAttributes 
 	}
 
 	// if not exists, create the new policy
-	if _, err := a.AvereCommand(a.getCreateCachePolicyCommand(cachePolicy, checkAttributes)); err != nil {
+	if _, err := a.AvereCommand(a.getCreateCachePolicyCommand(cachePolicy, cacheMode, checkAttributes, writeBackDelay)); err != nil {
 		return err
 	}
 	log.Printf("[INFO] vfxt: ensure stable cluster after creating cache policy")
@@ -569,9 +695,11 @@ func (a *AvereVfxt) EnsureCachePolicy(corefiler *CoreFiler) error {
 	case CachePolicyTransitioningClients:
 		return nil
 	case CachePolicyIsolatedCloudWorkstation:
-		return a.EnsureCachePolicyExists(CachePolicyIsolatedCloudWorkstation, CachePolicyIsolatedCloudWorkstationCheckAttributes)
+		return a.EnsureCachePolicyExists(CachePolicyIsolatedCloudWorkstation, CacheModeReadWrite, CachePolicyIsolatedCloudWorkstationCheckAttributes, WriteBackDelayDefault)
 	case CachePolicyCollaboratingCloudWorkstation:
-		return a.EnsureCachePolicyExists(CachePolicyCollaboratingCloudWorkstation, CachePolicyCollaboratingCloudWorkstationCheckAttributes)
+		return a.EnsureCachePolicyExists(CachePolicyCollaboratingCloudWorkstation, CacheModeReadWrite, CachePolicyCollaboratingCloudWorkstationCheckAttributes, WriteBackDelayDefault)
+	case CachePolicyReadOnlyHighVerificationTime:
+		return a.EnsureCachePolicyExists(CachePolicyReadOnlyHighVerificationTime, CacheModeReadOnly, CachePolicyReadOnlyHighVerificationTimeCheckAttributes, 0)
 	default:
 		return fmt.Errorf("Error: core filer '%s' specifies unknown cache policy '%s'", corefiler.Name, corefiler.CachePolicy)
 	}
@@ -586,10 +714,46 @@ func (a *AvereVfxt) CreateCoreFiler(corefiler *CoreFiler) error {
 	if _, err := a.AvereCommand(a.getCreateCoreFilerCommand(corefiler)); err != nil {
 		return err
 	}
+
+	if err := a.EnsureServerAddressCorrect(corefiler); err != nil {
+		return err
+	}
+
 	log.Printf("[INFO] vfxt: ensure stable cluster after adding core filer")
 	if err := a.EnsureClusterStable(); err != nil {
 		return err
 	}
+	return nil
+}
+
+// if the fqdn is in multiple parts, run the dbutil.py command, as there
+// is a bug in averecmd that only sets the first ip address
+func (a *AvereVfxt) EnsureServerAddressCorrect(corefiler *CoreFiler) error {
+	fqdnParts := strings.Split(corefiler.FqdnOrPrimaryIp, " ")
+	if len(fqdnParts) <= 1 {
+		return nil
+	}
+	log.Printf("[INFO] working around averecmd bug to set server addresses '%s'", corefiler.FqdnOrPrimaryIp)
+
+	if stdoutBuf, stderrBuf, err := a.RunCommand(getEnsureSSHPass()); err != nil {
+		return fmt.Errorf("Error installing sshpass: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	}
+
+	// get the mass
+	internalName, err := a.GetInternalName(corefiler.Name)
+	if err != nil {
+		return err
+	}
+
+	// set the server IP, adjusting the command with sshpass
+	sshPassPrefix := fmt.Sprintf("sshpass -p '%s' ", a.AvereAdminPassword)
+
+	dbUtilCommand := WrapCommandForLogging(fmt.Sprintf("%s ssh -oProxyCommand=\"%s ssh -W %%h:%%p admin@%s\" root@localhost 'bash -l -c \"dbutil.py set %s serverAddr '\"'\"'%s'\"'\"' -x\"'", sshPassPrefix, sshPassPrefix, a.ManagementIP, internalName, corefiler.FqdnOrPrimaryIp), ShellLogFile)
+
+	if stdoutBuf, stderrBuf, err := a.RunCommand(dbUtilCommand); err != nil {
+		return fmt.Errorf("Error running dbutil.py command: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	}
+
 	return nil
 }
 
@@ -650,17 +814,59 @@ func (a *AvereVfxt) GetInternalName(filerName string) (string, error) {
 	return newfiler.InternalName, nil
 }
 
-func (a *AvereVfxt) AddFilerCustomSettings(corefilerName string, customSettings []*CustomSetting) error {
-	if len(customSettings) == 0 {
+func (a *AvereVfxt) AddStorageFilerCustomSettings(storageFiler *AzureStorageFiler) error {
+	if len(storageFiler.CustomSettings) == 0 {
 		// no custom settings to add
 		return nil
 	}
 
-	internalName, err := a.GetInternalName(corefilerName)
+	internalName, err := a.GetInternalName(storageFiler.GetCloudFilerName())
 	if err != nil {
 		return err
 	}
 
+	if err := a.AddFilerCustomSettingsList(internalName, storageFiler.CustomSettings); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *AvereVfxt) AddCoreFilerCustomSettings(coreFiler *CoreFiler) error {
+	internalName, err := a.GetInternalName(coreFiler.Name)
+	if err != nil {
+		return err
+	}
+
+	// always add connection multiplier setting: this is a common bottleneck and support issue
+	if err := a.AddFilerCustomerSettingAsFeature(internalName, InitializeCustomSetting(GetNFSConnectionMultiplierSetting(coreFiler.NfsConnectionMultiplier))); err != nil {
+		return err
+	}
+
+	// add all custom setting features
+	if coreFiler.AutoWanOptimize {
+		if err := a.AddFilerCustomerSettingAsFeature(internalName, InitializeCustomSetting(AutoWanOptimizeCustomSetting)); err != nil {
+			return err
+		}
+	}
+
+	if len(coreFiler.CustomSettings) > 0 {
+		if err := a.AddFilerCustomSettingsList(internalName, coreFiler.CustomSettings); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (a *AvereVfxt) AddFilerCustomerSettingAsFeature(internalName string, customSetting *CustomSetting) error {
+	if _, err := a.AvereCommand(a.getSetFilerSettingCommand(internalName, customSetting, TerraformFeatureMessage)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *AvereVfxt) AddFilerCustomSettingsList(internalName string, customSettings []*CustomSetting) error {
 	// get the mass custom settings
 	existingCustomSettings, err := a.GetFilerCustomSettings(internalName)
 	if err != nil {
@@ -669,17 +875,60 @@ func (a *AvereVfxt) AddFilerCustomSettings(corefilerName string, customSettings 
 
 	// add the new settings
 	for _, v := range customSettings {
-		customSettingName := getFilerCustomSettingName(internalName, v.Name)
+		customSettingName := GetFilerCustomSetting(internalName, v.Name)
 		if _, ok := existingCustomSettings[customSettingName]; ok {
 			// the custom setting already exists
 			continue
 		}
-		if _, err := a.AvereCommand(a.getSetFilerSettingCommand(internalName, v)); err != nil {
+		if _, err := a.AvereCommand(a.getSetFilerSettingCommand(internalName, v, v.GetTerraformMessage())); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func (a *AvereVfxt) SetFixedQuotaPercent(corefilerName string, percent int) error {
+	internalName, err := a.GetInternalName(corefilerName)
+	if err != nil {
+		return err
+	}
+	massIndex := getMassIndex(internalName)
+	setFixedQuotaPercentCustomSetting := fmt.Sprintf("cpolicyActive%d.fixedQuota RU %d", massIndex, percent)
+	if err := a.CreateCustomSetting(setFixedQuotaPercentCustomSetting, TerraformFeatureMessage); err != nil {
+		return fmt.Errorf("ERROR: failed to set fixed quota percent '%s': %s", QuotaCacheMoveMax, err)
+	}
+	return nil
+}
+
+func (a *AvereVfxt) RemoveFixedQuotaPercent(corefilerName string, percent int) error {
+	internalName, err := a.GetInternalName(corefilerName)
+	if err != nil {
+		return err
+	}
+	massIndex := getMassIndex(internalName)
+	setFixedQuotaPercentCustomSetting := fmt.Sprintf("cpolicyActive%d.fixedQuota RU %d", massIndex, percent)
+	if err := a.RemoveCustomSetting(setFixedQuotaPercentCustomSetting); err != nil {
+		return fmt.Errorf("ERROR: failed to remove fixed quota percent '%s': %s", QuotaCacheMoveMax, err)
+	}
+	return nil
+}
+
+func (a *AvereVfxt) RemoveStorageFilerCustomSettings(storageFiler *AzureStorageFiler) error {
+	return a.RemoveFilerCustomSettings(storageFiler.GetCloudFilerName(), storageFiler.CustomSettings)
+}
+
+func (a *AvereVfxt) RemoveCoreFilerCustomSettings(coreFiler *CoreFiler) error {
+	allCustomSettings := make([]*CustomSetting, len(coreFiler.CustomSettings), len(coreFiler.CustomSettings)+1)
+	copy(allCustomSettings, coreFiler.CustomSettings)
+
+	// add all custom setting features
+	allCustomSettings = append(allCustomSettings, InitializeCustomSetting(GetNFSConnectionMultiplierSetting(coreFiler.NfsConnectionMultiplier)))
+	if coreFiler.AutoWanOptimize {
+		allCustomSettings = append(allCustomSettings, InitializeCustomSetting(AutoWanOptimizeCustomSetting))
+	}
+
+	return a.RemoveFilerCustomSettings(coreFiler.Name, allCustomSettings)
 }
 
 func (a *AvereVfxt) RemoveFilerCustomSettings(corefilerName string, customSettings []*CustomSetting) error {
@@ -699,7 +948,7 @@ func (a *AvereVfxt) RemoveFilerCustomSettings(corefilerName string, customSettin
 		// fix the core filer settings by adding the mass
 		customSetting := CustomSetting{}
 		customSetting = *v
-		customSetting.Name = getFilerCustomSettingName(internalName, customSetting.Name)
+		customSetting.SetFilerCustomSettingName(internalName)
 		newSettingsSet[customSetting.Name] = &customSetting
 	}
 
@@ -726,7 +975,12 @@ func (a *AvereVfxt) RemoveFilerCustomSettings(corefilerName string, customSettin
 }
 
 func (a *AvereVfxt) DeleteFiler(corefilerName string) error {
-	_, err := a.AvereCommand(a.getDeleteFilerCommand(corefilerName))
+	enableAPIMaintenance := func() error {
+		err := a.EnableAPIMaintenance()
+		return err
+	}
+
+	_, err := a.AvereCommandWithCorrection(a.getDeleteFilerCommand(corefilerName), enableAPIMaintenance)
 	if err != nil {
 		return err
 	}
@@ -779,13 +1033,113 @@ func (a *AvereVfxt) GetExistingJunctions() (map[string]*Junction, error) {
 	if err := json.Unmarshal([]byte(coreJunctionsJson), &jsonResults); err != nil {
 		return nil, err
 	}
+	cifsShares, err := a.GetCifShares()
+	if err != nil {
+		return nil, err
+	}
 	for _, v := range jsonResults {
 		// create a new object to assign v
 		newJunction := Junction{}
 		newJunction = v
-		results[v.NameSpacePath] = &newJunction
+		// assign existing rules, or an empty map
+		if newJunction.PolicyName == GenerateExportPolicyName(newJunction.NameSpacePath) {
+			newJunction.ExportRules, err = a.GetExportRules(newJunction.PolicyName)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			newJunction.ExportRules = make(map[string]*ExportRule)
+		}
+		// assign existing shares and aces, or an empty ace map
+		if cifsShare, ok := cifsShares[newJunction.NameSpacePath]; ok {
+			newJunction.CifsShareName = cifsShare.ShareName
+			shareAces, err := a.GetCifShareAces(newJunction.CifsShareName)
+			if err != nil {
+				return nil, err
+			}
+			newJunction.CifsAces = shareAces
+		} else {
+			newJunction.CifsAces = make(map[string]*ShareAce)
+		}
+		results[newJunction.NameSpacePath] = &newJunction
+	}
+
+	return results, nil
+}
+
+func (a *AvereVfxt) GetCifShares() (map[string]*CifsShare, error) {
+	results := make(map[string]*CifsShare)
+	cifSharesJson, err := a.AvereCommand(a.getListCIFSSharesJSONCommand())
+	if err != nil {
+		return nil, err
+	}
+	var jsonResults []CifsShare
+	if err := json.Unmarshal([]byte(cifSharesJson), &jsonResults); err != nil {
+		return nil, err
+	}
+	for _, v := range jsonResults {
+		cifsShare := CifsShare{}
+		cifsShare = v
+		cifsSharePtr := &cifsShare
+		results[cifsSharePtr.GetNameSpacePath()] = cifsSharePtr
 	}
 	return results, nil
+}
+
+func (a *AvereVfxt) GetCifShareAces(sharename string) (map[string]*ShareAce, error) {
+	results := make(map[string]*ShareAce)
+	cifShareAclsJson, err := a.AvereCommand(a.getGetShareAclsJSONCommand(sharename))
+	if err != nil {
+		return nil, err
+	}
+	var jsonResults []ShareAce
+	if err := json.Unmarshal([]byte(cifShareAclsJson), &jsonResults); err != nil {
+		return nil, err
+	}
+	for _, v := range jsonResults {
+		cifsShareAcePtr := InitializeCleanAce(&v)
+		results[cifsShareAcePtr.Name] = cifsShareAcePtr
+	}
+	return results, nil
+}
+
+func (a *AvereVfxt) DeleteCifsShare(sharename string) error {
+	log.Printf("[INFO] [DeleteCifsShare %s", sharename)
+	defer log.Printf("[INFO] DeleteCifsShare %s]", sharename)
+	// delete the cifs share
+	// no need to touch aces as they disappear with the share, and if
+	// it is recreated, we update the aces
+	if _, err := a.AvereCommand(a.getRemoveCIFSShareCommand(sharename)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *AvereVfxt) AddCifsShare(sharename string, namespaceName string, targetShareAces map[string]*ShareAce) error {
+	log.Printf("[INFO] [DeleteCifsShare %s ns:%s", sharename, namespaceName)
+	defer log.Printf("[INFO] DeleteCifsShare %s ns:%s]", sharename, namespaceName)
+	if _, err := a.AvereCommand(a.getAddCIFSShareCommand(sharename, namespaceName)); err != nil {
+		return err
+	}
+	// get the aces
+	existingShareAces, err := a.GetCifShareAces(sharename)
+	if err != nil {
+		return err
+	}
+
+	shareAcesToDelete, shareAcesToCreate := GetShareAceAdjustments(existingShareAces, targetShareAces)
+	for _, v := range shareAcesToDelete {
+		if _, err := a.AvereCommand(a.getGetRemoveShareAceCommand(sharename, v)); err != nil {
+			return err
+		}
+	}
+	for _, v := range shareAcesToCreate {
+		if _, err := a.AvereCommand(a.getGetAddShareAceCommand(sharename, v)); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (a *AvereVfxt) CreateVServer() error {
@@ -803,27 +1157,89 @@ func (a *AvereVfxt) CreateVServer() error {
 	return nil
 }
 
-func (a *AvereVfxt) CreateJunction(junction *Junction) error {
-	// listExports will cause the vFXT to refresh exports
-	listExports := func() error {
-		_, err := a.ListExports(junction.CoreFilerName)
+func (a *AvereVfxt) CreateExportPolicy(policyName string) error {
+	log.Printf("[INFO] [CreateExportPolicy %s", policyName)
+	defer log.Printf("[INFO] CreateExportPolicy %s]", policyName)
+	deleteExport := func() error {
+		err := a.DeleteExportPolicy(policyName)
 		return err
 	}
-	if _, err := a.AvereCommandWithCorrection(a.getCreateJunctionCommand(junction), listExports); err != nil {
-		return err
-	}
-	log.Printf("[INFO] vfxt: ensure stable cluster after creating a junction")
-	if err := a.EnsureClusterStable(); err != nil {
+	if _, err := a.AvereCommandWithCorrection(a.getCreateExportPolicyCommand(policyName), deleteExport); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (a *AvereVfxt) DeleteJunction(junctionNameSpacePath string) error {
-	_, err := a.AvereCommand(a.getDeleteJunctionCommand(junctionNameSpacePath))
-	if err != nil {
+func (a *AvereVfxt) DeleteExportPolicy(policyName string) error {
+	log.Printf("[INFO] [DeleteExportPolicy %s", policyName)
+	defer log.Printf("[INFO] DeleteExportPolicy %s]", policyName)
+	if _, err := a.AvereCommand(a.getDeleteExportPolicyCommand(policyName)); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (a *AvereVfxt) AddExportRules(policyName string, exportRules map[string]*ExportRule) error {
+	log.Printf("[INFO] [AddExportRules %s", policyName)
+	defer log.Printf("[INFO] AddExportRules %s]", policyName)
+	for _, v := range exportRules {
+		if _, err := a.AvereCommand(a.getCreateExportRuleCommand(policyName, v)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *AvereVfxt) GetExportRules(policyName string) (map[string]*ExportRule, error) {
+	results := make(map[string]*ExportRule)
+	exportRulesJson, err := a.AvereCommand(a.getListExportRulesJsonCommand(policyName))
+	if err != nil {
+		return results, err
+	}
+	var exportRules []ExportRule
+	if err := json.Unmarshal([]byte(exportRulesJson), &exportRules); err != nil {
+		return results, err
+	}
+	for _, e := range exportRules {
+		// make a copy before assigning the exportRule, otherwise we end up with a map of all the same items
+		exportRule := ExportRule{}
+		exportRule = e
+		results[exportRule.Filter] = &exportRule
+	}
+	return results, nil
+}
+
+func (a *AvereVfxt) CreateJunction(junction *Junction) error {
+	log.Printf("[INFO] [CreateJunction %s", junction.NameSpacePath)
+	defer log.Printf("[INFO] CreateJunction %s]", junction.NameSpacePath)
+	policyName := ""
+	if len(junction.ExportRules) > 0 {
+		policyName = GenerateExportPolicyName(junction.NameSpacePath)
+		if err := a.CreateExportPolicy(policyName); err != nil {
+			return err
+		}
+		if err2 := a.AddExportRules(policyName, junction.ExportRules); err2 != nil {
+			return err2
+		}
+	}
+	// listExports will cause the vFXT to refresh exports
+	listExports := func() error {
+		_, err := a.ListExports(junction.CoreFilerName)
+		return err
+	}
+	if _, err := a.AvereCommandWithCorrection(a.getCreateJunctionCommand(junction, policyName), listExports); err != nil {
+		return err
+	}
+	// add the cifs share
+	if len(junction.CifsShareName) > 0 {
+		if err := a.AddCifsShare(junction.CifsShareName, junction.NameSpacePath, junction.CifsAces); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *AvereVfxt) WaitForJunctionToRemove(junctionNameSpacePath string) error {
 	for retries := 0; ; retries++ {
 		junctions, err := a.GetExistingJunctions()
 		if err != nil {
@@ -841,6 +1257,63 @@ func (a *AvereVfxt) DeleteJunction(junctionNameSpacePath string) error {
 		}
 		time.Sleep(FilerRetrySleepSeconds * time.Second)
 	}
+	return nil
+}
+
+func (a *AvereVfxt) GetExportPolicies() (map[string]bool, error) {
+	results := make(map[string]bool)
+	exportPoliciesJson, err := a.AvereCommand(a.getListExportPoliciesJsonCommand())
+	if err != nil {
+		return results, err
+	}
+	var policies []string
+	if err := json.Unmarshal([]byte(exportPoliciesJson), &policies); err != nil {
+		return results, err
+	}
+	for _, p := range policies {
+		results[p] = true
+	}
+	return results, nil
+}
+
+func (a *AvereVfxt) ExportPolicyExists(policyName string) (bool, error) {
+	exportPolicyMap, err := a.GetExportPolicies()
+	if err != nil {
+		return false, err
+	}
+	_, ok := exportPolicyMap[policyName]
+	return ok, nil
+}
+
+func (a *AvereVfxt) DeleteExportPolicyIfExists(junctionNameSpacePath string) error {
+	policyName := GenerateExportPolicyName(junctionNameSpacePath)
+	policyExists, err := a.ExportPolicyExists(policyName)
+	if err != nil {
+		return err
+	}
+	if policyExists {
+		if _, err := a.AvereCommand(a.getDeleteExportPolicyCommand(policyName)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *AvereVfxt) DeleteJunction(junctionNameSpacePath string) error {
+	log.Printf("[INFO] [DeleteJunction %s", junctionNameSpacePath)
+	defer log.Printf("[INFO] DeleteJunction %s]", junctionNameSpacePath)
+	if _, err := a.AvereCommand(a.getDeleteJunctionCommand(junctionNameSpacePath)); err != nil {
+		return err
+	}
+
+	if err := a.WaitForJunctionToRemove(junctionNameSpacePath); err != nil {
+		return err
+	}
+
+	if err := a.DeleteExportPolicyIfExists(junctionNameSpacePath); err != nil {
+		return err
+	}
+
 	log.Printf("[INFO] vfxt: ensure stable cluster after deleting junction")
 	if err := a.EnsureClusterStable(); err != nil {
 		return err
@@ -866,10 +1339,92 @@ func (a *AvereVfxt) ModifySupportUploads() error {
 	return nil
 }
 
+func (a *AvereVfxt) GetCoreFilerSpacePercentage() (map[string]float32, error) {
+	jsonData, err := a.AvereCommand(a.getAnalyticsCoreFilerSpaceCommand())
+	if err != nil {
+		return nil, err
+	}
+
+	var outputParts [][]interface{}
+	if err := json.Unmarshal([]byte(jsonData), &outputParts); err != nil {
+		return nil, err
+	}
+
+	if len(outputParts) <= 1 && len(outputParts[1]) < 1 {
+		return nil, fmt.Errorf("json did not parse correctly and is less than two parts: '%v'", jsonData)
+	}
+
+	analytics := (outputParts[1][0]).(map[string]interface{})
+
+	rawFreeSpace, ok := analytics[AnalyticsClusterFilersRaw]
+	if !ok {
+		return nil, fmt.Errorf("key %s not found in analytics", AnalyticsClusterFilersRaw)
+	}
+
+	rawJson, err := json.Marshal(rawFreeSpace)
+	if err != nil {
+		return nil, err
+	}
+
+	var freeSpaceMap map[string]ClusterFilersRaw
+	if err := json.Unmarshal(rawJson, &freeSpaceMap); err != nil {
+		return nil, err
+	}
+
+	var totalSpace float32
+	for _, v := range freeSpaceMap {
+		totalSpace += float32(v.AvailableForReads)
+	}
+
+	result := make(map[string]float32)
+	for k, v := range freeSpaceMap {
+		result[k] = float32(v.AvailableForReads) / totalSpace
+	}
+
+	return result, nil
+}
+
+func IsMultiCall(cmd string) bool {
+	return strings.Contains(cmd, MultiCall)
+}
+
+func IsMultiCallResultSuccessful(result string) (bool, string, error) {
+	if len(result) == 0 {
+		return true, "", nil
+	}
+
+	var resultList []interface{}
+	if err := json.Unmarshal([]byte(result), &resultList); err != nil {
+		return false, "", err
+	}
+	for _, in := range resultList {
+		switch v := in.(type) {
+		case map[string]interface{}:
+			if faultString, ok := v[FaultString]; ok {
+				return false, fmt.Sprintf("fault encountered: %v", faultString), nil
+			}
+			if faultCode, ok := v[FaultCode]; ok {
+				return false, fmt.Sprintf("fault encountered: %v", faultCode), nil
+			}
+		}
+	}
+	return true, "", nil
+}
+
 func (a *AvereVfxt) AvereCommandWithCorrection(cmd string, correctiveAction func() error) (string, error) {
 	var result string
 	for retries := 0; ; retries++ {
 		stdoutBuf, stderrBuf, err := a.RunCommand(cmd)
+		// look for the error if this is a multi-call
+		if err == nil && IsMultiCall(cmd) {
+			if isMultiCallSuccess, faultStr, err2 := IsMultiCallResultSuccessful(stdoutBuf.String()); !isMultiCallSuccess {
+				if err2 != nil {
+					err = fmt.Errorf("BUG: multcall result parse error: %v", err2)
+				} else if len(faultStr) > 0 {
+					err = fmt.Errorf("multi call error: '%s'", faultStr)
+				}
+			}
+		}
 		if err == nil {
 			// success
 			result = stdoutBuf.String()
@@ -881,10 +1436,20 @@ func (a *AvereVfxt) AvereCommandWithCorrection(cmd string, correctiveAction func
 			return "", fmt.Errorf("Non retryable error applying command: '%s' '%s'", stdoutBuf.String(), stderrBuf.String())
 		}
 		if correctiveAction != nil {
+			// the corrective action is best effort, just log an error if one occurs
 			if err = correctiveAction(); err != nil {
-				return "", err
+				log.Printf("[ERROR] error performing correctiveAction: %v", err)
+			} else {
+				// try the command again after a successful correction
+				stdoutBuf, stderrBuf, err = a.RunCommand(cmd)
+				if err == nil {
+					// success
+					result = stdoutBuf.String()
+					break
+				}
 			}
 		}
+
 		if retries > AverecmdRetryCount {
 			// failure after exhausted retries
 			return "", fmt.Errorf("Failure after %d retries applying command: '%s' '%s'", AverecmdRetryCount, stdoutBuf.String(), stderrBuf.String())
@@ -1015,7 +1580,7 @@ func (a *AvereVfxt) getListNodesJsonCommand() string {
 }
 
 func (a *AvereVfxt) getRemoveNodeCommand(node string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s --json node.remove %s", a.getBaseAvereCmd(), node), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s --json node.remove %s false", a.getBaseAvereCmd(), node), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getNodeJsonCommand(node string) string {
@@ -1096,12 +1661,22 @@ func (a *AvereVfxt) getListCoreFilerExportsJsonCommand(filer string) string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json corefiler.listExports \"%s\"", a.getBaseAvereCmd(), filer), AverecmdLogFile)
 }
 
+func (a *AvereVfxt) getEnableAPIMaintenanceCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s system.enableAPI maintenance", a.getBaseAvereCmd()), AverecmdLogFile)
+}
+
 func (a *AvereVfxt) getFilerJsonCommand(filer string) string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json corefiler.get \"%s\"", a.getBaseAvereCmd(), filer), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getCreateCoreFilerCommand(coreFiler *CoreFiler) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.create \"%s\" \"%s\" true \"{'filerNetwork':'cluster','filerClass':'Other','cachePolicy':'%s',}\"", a.getBaseAvereCmd(), coreFiler.Name, coreFiler.FqdnOrPrimaryIp, coreFiler.CachePolicy), AverecmdLogFile)
+	// due to a bug in averecmd (#794), we can only set a single address
+	fqdnParts := strings.Split(coreFiler.FqdnOrPrimaryIp, " ")
+	firstFqdn := coreFiler.FqdnOrPrimaryIp
+	if len(fqdnParts) > 1 {
+		firstFqdn = fqdnParts[0]
+	}
+	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.create \"%s\" \"%s\" true \"{'filerNetwork':'cluster','filerClass':'Other','cachePolicy':'%s',}\"", a.getBaseAvereCmd(), coreFiler.Name, firstFqdn, coreFiler.CachePolicy), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getCreateAzureStorageFilerCommand(azureStorageFiler *AzureStorageFiler) (string, error) {
@@ -1114,7 +1689,7 @@ func (a *AvereVfxt) getCreateAzureStorageFilerCommand(azureStorageFiler *AzureSt
 }
 
 func (a *AvereVfxt) getDeleteFilerCommand(filer string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.remove \"%s\"", a.getBaseAvereCmd(), filer), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s --json system.multicall \"[{'methodName':'system.enableAPI','params':['maintenance']},{'methodName':'corefiler.remove','params':['%s']}]\"", a.getBaseAvereCmd(), filer), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getListCredentialsCommand() string {
@@ -1131,7 +1706,7 @@ func (a *AvereVfxt) getCreateAzureStorageCredentialsCommand(azureStorageFiler *A
 		return "", err
 	}
 
-	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.createCredential \"%s\" azure-storage \"{'note':'Automatically created from Terraform','storageKey':'BASE64:%s','tenant':'%s','subscription':'%s',}\"", a.getBaseAvereCmd(), azureStorageFiler.GetCloudFilerName(), key, azureStorageFiler.AccountName, subscriptionId), AverecmdLogFile), nil
+	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.createCredential \"%s\" azure-storage \"{'note':'%s','storageKey':'BASE64:%s','tenant':'%s','subscription':'%s',}\"", a.getBaseAvereCmd(), azureStorageFiler.GetCloudFilerName(), TerraformAutoMessage, key, azureStorageFiler.AccountName, subscriptionId), AverecmdLogFile), nil
 }
 
 func (a *AvereVfxt) getDeleteAzureStorageCredentialsCommand(azureStorageFiler *AzureStorageFiler) string {
@@ -1146,20 +1721,44 @@ func (a *AvereVfxt) getListCachePoliciesJsonCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json cachePolicy.list", a.getBaseAvereCmd()), AverecmdLogFile)
 }
 
-func (a *AvereVfxt) getCreateCachePolicyCommand(cachePolicy string, checkAttributes string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s cachePolicy.create \"%s\" read-write 30 \"%s\" False", a.getBaseAvereCmd(), cachePolicy, checkAttributes), AverecmdLogFile)
+func (a *AvereVfxt) getCreateCachePolicyCommand(cachePolicy string, cacheMode string, checkAttributes string, writeBackDelay int) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cachePolicy.create \"%s\" \"%s\" %d \"%s\" False", a.getBaseAvereCmd(), cachePolicy, cacheMode, writeBackDelay, checkAttributes), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getVServerCreateCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json vserver.create \"%s\" \"{'firstIP':'%s','netmask':'255.255.255.255','lastIP':'%s'}\"", a.getBaseAvereCmd(), VServerName, a.FirstIPAddress, a.LastIPAddress), AverecmdLogFile)
 }
 
+func (a *AvereVfxt) getListExportPoliciesJsonCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json nfs.listPolicies \"%s\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getCreateExportPolicyCommand(policyName string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s nfs.addPolicy \"%s\" \"%s\"", a.getBaseAvereCmd(), VServerName, policyName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getDeleteExportPolicyCommand(policyName string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s nfs.removePolicy \"%s\" \"%s\"", a.getBaseAvereCmd(), VServerName, policyName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getListExportRulesJsonCommand(policyName string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json nfs.listRules \"%s\" \"%s\"", a.getBaseAvereCmd(), VServerName, policyName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getCreateExportRuleCommand(policyName string, exportRule *ExportRule) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s nfs.addRule \"%s\" \"%s\" %s", a.getBaseAvereCmd(), VServerName, policyName, exportRule.NfsAddRuleArgumentsString()), AverecmdLogFile)
+}
+
 func (a *AvereVfxt) getListJunctionsJsonCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json vserver.listJunctions \"%s\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
 }
 
-func (a *AvereVfxt) getCreateJunctionCommand(junction *Junction) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s vserver.addJunction \"%s\" \"%s\" \"%s\" \"%s\" \"{'sharesubdir':'','inheritPolicy':'yes','sharename':'','access':'posix','createSubdirs':'yes','subdir':'%s','policy':'','permissions':'%s'}\"", a.getBaseAvereCmd(), VServerName, junction.NameSpacePath, junction.CoreFilerName, junction.CoreFilerExport, junction.ExportSubdirectory, junction.SharePermissions), AverecmdLogFile)
+func (a *AvereVfxt) getCreateJunctionCommand(junction *Junction, policyName string) string {
+	inheritPolicy := "yes"
+	if len(policyName) > 0 {
+		inheritPolicy = "no"
+	}
+	return WrapCommandForLogging(fmt.Sprintf("%s vserver.addJunction \"%s\" \"%s\" \"%s\" \"%s\" \"{'sharesubdir':'','inheritPolicy':'%s','sharename':'','access':'posix','createSubdirs':'yes','subdir':'%s','policy':'%s','permissions':'%s'}\"", a.getBaseAvereCmd(), VServerName, junction.NameSpacePath, junction.CoreFilerName, junction.CoreFilerExport, inheritPolicy, junction.ExportSubdirectory, policyName, junction.SharePermissions), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getDeleteJunctionCommand(junctionNameSpacePath string) string {
@@ -1170,12 +1769,13 @@ func (a *AvereVfxt) getListCustomSettingsJsonCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json support.listCustomSettings", a.getBaseAvereCmd()), AverecmdLogFile)
 }
 
-func (a *AvereVfxt) getSetCustomSettingCommand(customSetting string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s support.setCustomSetting %s \"Automatically created from Terraform\"", a.getBaseAvereCmd(), customSetting), AverecmdLogFile)
+func (a *AvereVfxt) getSetCustomSettingCommand(customSetting string, message string) string {
+	c := InitializeCustomSetting(customSetting)
+	return WrapCommandForLogging(fmt.Sprintf("%s support.setCustomSetting %s \"%s\"", a.getBaseAvereCmd(), c.GetCustomSettingCommand(), message), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getRemoveCustomSettingCommand(customSetting string) string {
-	firstArgument := getCustomSettingName(customSetting)
+	firstArgument := GetCustomSettingName(customSetting)
 	return WrapCommandForLogging(fmt.Sprintf("%s support.removeCustomSetting %s", a.getBaseAvereCmd(), firstArgument), AverecmdLogFile)
 }
 
@@ -1186,6 +1786,10 @@ func (a *AvereVfxt) getSupportAcceptTermsCommand() string {
 
 func (a *AvereVfxt) getSupportSupportTestUploadCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s support.testUpload", a.getBaseAvereCmd()), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getAnalyticsCoreFilerSpaceCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json system.multicall \"[{'methodName':'system.enableAPI','params':['internal']},{'methodName':'analytics.getCoreFilerCacheSpaceData','params':[]}]\"", a.getBaseAvereCmd()), AverecmdLogFile)
 }
 
 // this updates support uploads per docs https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-enable-support
@@ -1206,55 +1810,85 @@ func (a *AvereVfxt) getSupportSecureProactiveSupportCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'remoteCommandEnabled':'Disabled','SPSLinkInterval':'300','SPSLinkEnabled':'%s','remoteCommandExpiration':''}\"", a.getBaseAvereCmd(), isEnabled), AverecmdLogFile)
 }
 
-func (a *AvereVfxt) getSetVServerSettingCommand(customSetting string) string {
-	vServerCustomSetting := getVServerCustomSettingName(customSetting)
-	return a.getSetCustomSettingCommand(vServerCustomSetting)
+func (a *AvereVfxt) getDirServicesEnableCIFSCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s dirServices.modify \"%s\" \"{'usernameMapSource':'None','usernameSource':'AD','DCsmbProtocol':'SMB2','netgroupSource':'None','usernameConditions':'enabled','ADdomainName':'%s','ADtrusted':'','nfsDomain':'','netgroupPollPeriod':'3600','usernamePollPeriod':'3600'}\"", a.getBaseAvereCmd(), DefaultDirectoryServiceName, a.CifsAdDomain), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getDirServicesPollUserGroupCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s dirServices.usernamePoll \"%s\"", a.getBaseAvereCmd(), DefaultDirectoryServiceName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getCIFSConfigureCommand() string {
+	organizationalUnit := ""
+	if len(a.CifsOrganizationalUnit) > 0 {
+		organizationalUnit = fmt.Sprintf(",'%s'", a.CifsOrganizationalUnit)
+	}
+	// wrap in mutli-call since OU doesn't get picked up otherwise
+	nonSecretCommand := fmt.Sprintf("%s --json system.multicall \"[{'methodName':'cifs.configure','params':['%s','%s','%s','%%s'%s]}]\"", a.getBaseAvereCmd(), VServerName, a.CifsServerName, a.CifsUsername, organizationalUnit)
+	return WrapCommandForLoggingSecretInput(nonSecretCommand, fmt.Sprintf(nonSecretCommand, a.CifsPassword), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getCIFSSetOptionsCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cifs.setOptions \"%s\" \"{'client_ntlmssp_disable':'no','disable_outbound_ntlmssp':'yes','smb2':'yes','ntlm_auth':'no','smb1':'no','read_only_optimized':'no','native_identity':'yes','server_signing':'auto'}\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getCIFSEnableCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cifs.enable \"%s\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getCIFSDisableCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cifs.disable \"%s\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getAddCIFSShareCommand(sharename string, namespaceName string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cifs.addShare \"%s\" \"%s\" \"/\" \"%s\" \"\" \"false\" \"{}\" ", a.getBaseAvereCmd(), VServerName, sharename, namespaceName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getRemoveCIFSShareCommand(sharename string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cifs.removeShare \"%s\" \"%s\"", a.getBaseAvereCmd(), VServerName, sharename), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getListCIFSSharesJSONCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json cifs.listShares \"%s\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getGetShareAclsJSONCommand(sharename string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json cifs.getShareAcl \"%s\" \"%s\"", a.getBaseAvereCmd(), VServerName, sharename), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getGetAddShareAceCommand(sharename string, shareAce *ShareAce) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cifs.addShareAce '%s' '%s' %s", a.getBaseAvereCmd(), VServerName, sharename, shareAce.NfsAddRuleArgumentsString()), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getGetRemoveShareAceCommand(sharename string, shareAce *ShareAce) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cifs.removeShareAce '%s' '%s' %s", a.getBaseAvereCmd(), VServerName, sharename, shareAce.NfsAddRuleArgumentsString()), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getEnableExtendedGroupsCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s nfs.modify \"%s\" \"{'extendedGroups':'yes'}\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getDisableExtendedGroupsCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s nfs.modify \"%s\" \"{'extendedGroups':'no'}\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getSetVServerSettingCommand(customSetting string, message string) string {
+	vServerCustomSetting := GetVServerCustomSetting(customSetting)
+	return a.getSetCustomSettingCommand(vServerCustomSetting, message)
 }
 
 func (a *AvereVfxt) getRemoveVServerSettingCommand(customSetting string) string {
-	vServerCustomSetting := getVServerCustomSettingName(customSetting)
+	vServerCustomSetting := GetVServerCustomSetting(customSetting)
 	return a.getRemoveCustomSettingCommand(vServerCustomSetting)
 }
 
-func (a *AvereVfxt) getSetFilerSettingCommand(internalName string, customSetting *CustomSetting) string {
-	coreFilerCustomSetting := getFilerCustomSettingName(internalName, customSetting.GetCustomSettingCommand())
-	return a.getSetCustomSettingCommand(coreFilerCustomSetting)
+func (a *AvereVfxt) getSetFilerSettingCommand(internalName string, customSetting *CustomSetting, message string) string {
+	coreFilerCustomSetting := GetFilerCustomSetting(internalName, customSetting.GetCustomSettingCommand())
+	return a.getSetCustomSettingCommand(coreFilerCustomSetting, message)
 }
 
 func (a *AvereVfxt) getRemoveFilerSettingCommand(customSettingName string) string {
 	return a.getRemoveCustomSettingCommand(customSettingName)
-}
-
-func getCustomSettingName(customSettingString string) string {
-	return strings.Split(customSettingString, " ")[0]
-}
-
-func getCustomSettingCheckCode(customSettingString string) string {
-	parts := strings.Split(customSettingString, " ")
-	if len(parts) > 1 {
-		return parts[1]
-	}
-	return ""
-}
-
-func getCustomSettingValue(customSettingString string) string {
-	parts := strings.Split(customSettingString, " ")
-	if len(parts) > 2 {
-		var sb strings.Builder
-		for i := 2; i < len(parts); i++ {
-			sb.WriteString(fmt.Sprintf("%s ", parts[i]))
-		}
-		return strings.TrimSpace(sb.String())
-	}
-	return ""
-}
-
-func getVServerCustomSettingName(customSetting string) string {
-	return fmt.Sprintf("%s1.%s", VServerName, customSetting)
-}
-
-func getFilerCustomSettingName(internalName string, customSetting string) string {
-	return fmt.Sprintf("%s.%s", internalName, customSetting)
 }
 
 func (a *AvereVfxt) getBaseAvereCmd() string {
@@ -1284,4 +1918,19 @@ func isAverecmdNotRetryable(stdoutBuf bytes.Buffer, stderrBuf bytes.Buffer) bool
 		return true
 	}
 	return false
+}
+
+func getMassIndex(internalName string) int {
+	massIndex := matchNumbersInMass.ReplaceAllString(internalName, "")
+	if len(massIndex) == 0 {
+		return 0
+	}
+	if s, err := strconv.Atoi(massIndex); err == nil {
+		return s
+	}
+	return 0
+}
+
+func getEnsureSSHPass() string {
+	return WrapCommandForLogging("which sshpass || sudo apt-get install -y sshpass", ShellLogFile)
 }

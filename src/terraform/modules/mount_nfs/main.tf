@@ -1,5 +1,5 @@
 locals {
-    bootstrap_script = "https://raw.githubusercontent.com/Azure/Avere/master/src/client/bootstrap.sh"
+    bootstrap_script = "https://raw.githubusercontent.com/Azure/Avere/main/src/client/bootstrap.sh"
     bootstrap_dir = "bootstrap"
 }
 resource "null_resource" "install_bootstrap" {

@@ -11,7 +11,7 @@ locals {
 
     // nfs filer details
     storage_resource_group_name = "houdini_storage_rg"
-    // more filer sizes listed at https://github.com/Azure/Avere/tree/master/src/terraform/modules/nfs_filer
+    // more filer sizes listed at https://github.com/Azure/Avere/tree/main/src/terraform/modules/nfs_filer
     filer_size = "Standard_D2s_v3" 
 
     // replace below variables with the infrastructure variables from 1.base_infrastructure

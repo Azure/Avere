@@ -19,6 +19,12 @@
       "metadata": {
         "description": "The shared image gallery."
       }
+    },
+    "virtualNetwork": {
+      "type": "object",
+      "metadata": {
+        "description": "The virtual network."
+      }
     }
   },
   "variables": {
@@ -43,7 +49,10 @@
         "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].buildTimeoutMinutes]",
         "vmProfile": {
           "vmSize": "[parameters('imageTemplates')[copyIndex()].machineProfile.size]",
-          "osDiskSizeGB": "[parameters('imageTemplates')[copyIndex()].machineProfile.osDiskSizeGB]"
+          "osDiskSizeGB": "[parameters('imageTemplates')[copyIndex()].machineProfile.osDiskSizeGB]",
+          "vnetConfig": {
+            "subnetId": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+          }
         },
         "source": {
           "type": "[parameters('imageTemplates')[copyIndex()].sourceType]",

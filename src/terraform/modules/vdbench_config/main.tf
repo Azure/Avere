@@ -1,5 +1,5 @@
 locals {
-    bootstrap_script = "https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/vdbench/bootstrap.vdbench.sh"
+    bootstrap_script = "https://raw.githubusercontent.com/Azure/Avere/main/src/clientapps/vdbench/bootstrap.vdbench.sh"
     mount_dir = "/b"
     bootstrap_dir = "bootstrap"
 }

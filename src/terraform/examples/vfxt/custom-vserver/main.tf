@@ -25,7 +25,8 @@ locals {
     vfxt_cluster_password = "VFXT_PASSWORD"
     vfxt_ssh_key_data = local.vm_ssh_key_data
     vfxt_subnet_range = "10.0.1.0/24"
-    vserver_first_ip = "10.0.1.230"
+    vserver_first_ip = "10.0.1.200"
+    vserver_ip_count = 32
 
     // vfxt cache polies
     //  "Clients Bypassing the Cluster"
@@ -131,6 +132,7 @@ resource "avere_vfxt" "vfxt" {
     image_id = local.vfxt_image_id
 
     vserver_first_ip = local.vserver_first_ip
+    vserver_ip_count = local.vserver_ip_count
 
     core_filer {
         name = "nfs1"

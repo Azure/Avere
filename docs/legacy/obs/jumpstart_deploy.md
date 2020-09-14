@@ -17,7 +17,7 @@ This tutorial assumes that you have checked and configured the following prerequ
 
 To create the cluster controller node from the portal, click the "Deploy to Azure" button below. This deploy template creates the VM that will create and manage the Avere vFXT cluster. 
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fvfxt%2Fazuredeploy.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmain%2Fsrc%2Fvfxt%2Fazuredeploy.json" target="_blank">
 <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 
@@ -75,7 +75,7 @@ cp /create-minimal-cluster ./cmc
 vi cmc
 ```
 
-Edit the following fields in the `cmc` script to supply the values you captured from [outputs (above)](browse-to-outputs) for resource group, location, virtual network, and subnet:
+Edit the following fields in the `cmc` script to supply the values you captured from [outputs (above)](#browse-to-outputs) for resource group, location, virtual network, and subnet:
 
 ```bash
 RESOURCE_GROUP=<from controller Outputs>

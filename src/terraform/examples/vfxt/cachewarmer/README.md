@@ -44,7 +44,7 @@ git init
 git remote add origin -f https://github.com/Azure/Avere.git
 git config core.sparsecheckout true
 echo "src/terraform/*" >> .git/info/sparse-checkout
-git pull origin master
+git pull origin main
 ```
 
 3. `cd src/terraform/examples/vfxt/cachewarmer/1.networkandfiler`
@@ -91,7 +91,7 @@ cd ~/tf/src/terraform/examples/vfxt/cachewarmer/3.vfxtandcachewarmer
 ```bash
 mkdir -p ~/.terraform.d/plugins
 # install the vfxt released binary from https://github.com/Azure/Avere
-wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.2/terraform-provider-avere
+wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.13/terraform-provider-avere
 chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 ```
 

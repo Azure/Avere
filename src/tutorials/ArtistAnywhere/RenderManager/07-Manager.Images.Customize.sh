@@ -2,11 +2,16 @@
 
 set -ex
 
-if [ "$(cat /etc/os-release | grep 'centos:7')" ]; then
+localDirectory='/usr/local/bin'
+cd $localDirectory
+
+if [ "$(cat /etc/os-release | grep 'CentOS-7')" ]; then
     yum -y install epel-release
+    yum -y install jq
+elif [ "$(cat /etc/os-release | grep 'CentOS-8')" ]; then
+    dnf -y install epel-release
+    dnf -y install jq
 fi
-yum -y install jq
 
-mv /tmp/Manager.Machines.DataAccess.sh /usr/local/bin
-
-echo "0 0 * * * root /usr/local/bin/Manager.Machines.DataAccess.sh" > /var/spool/cron/root
+mv /tmp/Manager.Machines.DataAccess.sh $localDirectory
+echo "0 0 * * * root $localDirectory/Manager.Machines.DataAccess.sh" > /var/spool/cron/root

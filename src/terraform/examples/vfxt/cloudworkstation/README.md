@@ -1,6 +1,6 @@
 # Experimental: Reducing Latency for Cloud Workstations Connected to On-premises NFS Filers
 
-After deploying remote cloud workstations, workstation users can see slow response when creating, deleting, or listing files on remote NFS shares. This delay is caused by the high latency between the workstations and the on-premises NFS filers.  This guide shows how to use Avere vFXT for Azure to reduce latency to for cloud workstations connected to an on-premises NFS filer.  
+After deploying remote cloud workstations, workstation users can see slow response when creating, deleting, or listing files on remote SMB or NFS shares. This delay is caused by the high latency between the workstations and the on-premises filers.  This guide shows how to use Avere vFXT for Azure to reduce latency to for cloud workstations connected to an on-premises NFS filer.  
 
 The following diagram shows where the Avere vFXT edge cache fits within the cloud workstation architecture:
 
@@ -12,7 +12,10 @@ These configurations use customized caching policies to reduce latency. Cache po
 
 **Important Note:** The cloud workstation feature is experimental. Avere vFXT performs best with read-heavy workloads, but the two cache policies outlined here should improve the artist or user experience over a system that does not use the Avere vFXT edge cache.
 
+To enable CIFS (SMB), please see our [CIFS (SMB) documentation](../../../providers/terraform-provider-avere#cifs_ad_domain) and [example](../../houdinienvironment#phase-2-scaling-step-3b---cache).
+
 ## "Isolated Cloud Workstation" Cache Policy
+=======
 
 The first and most performant cache policy to consider is named "Isolated Cloud Workstation".  This cache policy can be used when users are isolated and not collaborating on the same workload.  
 
@@ -50,7 +53,7 @@ To run the example, execute the following instructions.  These instructions assu
 ```bash
 mkdir -p ~/.terraform.d/plugins
 # install the vFXT released binary from https://github.com/Azure/Avere
-wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.2/terraform-provider-avere
+wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.13/terraform-provider-avere
 chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 ```
 
@@ -62,7 +65,7 @@ git init
 git remote add origin -f https://github.com/Azure/Avere.git
 git config core.sparsecheckout true
 echo "src/terraform/*" >> .git/info/sparse-checkout
-git pull origin master
+git pull origin main
 ```
 
 6. Determine your workstation usage and which cache policy you can use as discussed in [reducing latency for cloud workstations](README.md):

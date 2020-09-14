@@ -35,6 +35,11 @@ variable "vm_size" {
   default = "Standard_A1_v2"
 }
 
+variable "user_assigned_managed_identity_id" {
+  description = "Use this managed identity over system assigned identity."
+  default = null
+}
+
 variable "virtual_network_resource_group" {
   description = "The resource group name for the VNET."
 }

@@ -21,7 +21,7 @@ The following are best practices for configuring Azure Virtual Machine Scale Set
 1. If using custom images, and scaling above 1k-2k nodes, use [Azure Shared Image Gallery](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/shared-image-galleries).
 1. Once using > 1000 nodes consider using [Azure Cycle Cloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/) for help with the complexity of managing multiple VMSS instances at the same time and best option for itegration with the render manager.  The best practices and settings above, apply to [Azure Cycle Cloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/).
 
-In this directory are terraform and ARM template examples to demonstrate how to achieve all of the above properties.  Closely related is deployment performance, and there are [best practices for improving virtual machine performance](https://github.com/Azure/Avere/blob/master/docs/azure_vm_provision_best_practices.md).
+In this directory are terraform and ARM template examples to demonstrate how to achieve all of the above properties.  Closely related is deployment performance, and there are [best practices for improving virtual machine performance](https://github.com/Azure/Avere/blob/main/docs/azure_vm_provision_best_practices.md).
 
 ## Terraform Deployment
 
@@ -39,7 +39,7 @@ git init
 git remote add origin -f https://github.com/Azure/Avere.git
 git config core.sparsecheckout true
 echo "src/terraform/*" >> .git/info/sparse-checkout
-git pull origin master
+git pull origin main
 ```
 
 1. `cd src/terraform/examples/vmss-rendering`
@@ -72,7 +72,7 @@ git init
 git remote add origin -f https://github.com/Azure/Avere.git
 git config core.sparsecheckout true
 echo "src/terraform/*" >> .git/info/sparse-checkout
-git pull origin master
+git pull origin main
 ```
 
 1. `cd src/terraform/examples/vmss-rendering`

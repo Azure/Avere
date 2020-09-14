@@ -34,9 +34,9 @@
     }
   },
   "variables": {
-    "virtualNetworkApiVersion": "2020-05-01",
+    "virtualNetworkApiVersion": "2020-06-01",
     "managedIdentityApiVersion": "2018-11-30",
-    "operationalInsightsApiVersion": "2020-03-01-preview",
+    "operationalInsightsApiVersion": "2020-08-01",
     "diagnosticSettingsApiVersion": "2017-05-01-preview",
     "automationApiVersion": "2020-01-13-preview",
     "keyVaultApiVersion": "2019-09-01"

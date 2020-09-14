@@ -15,7 +15,7 @@ locals {
     // nfs filer details
     filer_location = "westus2"
     filer_resource_group_name = "filer_resource_group"
-    // more filer sizes listed at https://github.com/Azure/Avere/tree/master/src/terraform/modules/nfs_filer
+    // more filer sizes listed at https://github.com/Azure/Avere/tree/main/src/terraform/modules/nfs_filer
     filer_size = "Standard_D2s_v3" 
     
     // advanced scenario: add external ports to work with cloud policies example [10022, 13389]

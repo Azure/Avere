@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -141,7 +143,7 @@ func resourceVfxt() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringDoesNotContainAny(" '\"$"),
+				ValidateFunc: ValidateVfxtName,
 			},
 			vfxt_admin_password: {
 				Type:         schema.TypeString,
@@ -187,13 +189,21 @@ func resourceVfxt() *schema.Resource {
 				ForceNew:     true,
 				Default:      "",
 				ValidateFunc: validation.IsIPv4Address,
+				RequiredWith: []string{vserver_ip_count},
+			},
+			vserver_ip_count: {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntBetween(MinVserverIpCount, MaxVserverIpCount),
+				RequiredWith: []string{vserver_first_ip},
 			},
 			global_custom_settings: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringIsNotWhiteSpace,
+					ValidateFunc: ValidateCustomSetting,
 				},
 				Set: schema.HashString,
 			},
@@ -202,7 +212,7 @@ func resourceVfxt() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringIsNotWhiteSpace,
+					ValidateFunc: ValidateCustomSetting,
 				},
 				Set: schema.HashString,
 			},
@@ -210,6 +220,54 @@ func resourceVfxt() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			cifs_ad_domain: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: ValidateCIFSDomain,
+				RequiredWith: []string{cifs_server_name, cifs_username, cifs_password},
+			},
+			cifs_server_name: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: ValidateCIFSServerName,
+				RequiredWith: []string{cifs_ad_domain, cifs_username, cifs_password},
+			},
+			cifs_username: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: ValidateCIFSUsername,
+				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_password},
+			},
+			cifs_password: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				Default:      "",
+				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
+				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_username},
+			},
+			cifs_organizational_unit: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: ValidateOrganizationalUnit,
+				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_username, cifs_password},
+			},
+			enable_extended_groups: {
+				Type:         schema.TypeBool,
+				Optional:     true,
+				Default:      false,
+				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_username, cifs_password},
+			},
+			user_assigned_managed_identity: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
 			},
 			user: {
 				Type:     schema.TypeSet,
@@ -265,14 +323,37 @@ func resourceVfxt() *schema.Resource {
 								CachePolicyTransitioningClients,
 								CachePolicyIsolatedCloudWorkstation,
 								CachePolicyCollaboratingCloudWorkstation,
+								CachePolicyReadOnlyHighVerificationTime,
 							}, false),
+						},
+						auto_wan_optimize: {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						nfs_connection_multiplier: {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      DefaultNFSConnMult,
+							ValidateFunc: validation.IntBetween(MinNFSConnMult, MaxNFSConnMult),
+						},
+						ordinal: {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0,
+						},
+						fixed_quota_percent: {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      0,
+							ValidateFunc: validation.IntBetween(MinFixedQuotaPercent, MaxFixedQuotaPercent),
 						},
 						custom_settings: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringIsNotWhiteSpace,
+								ValidateFunc: ValidateCustomSetting,
 							},
 							Set: schema.HashString,
 						},
@@ -286,6 +367,18 @@ func resourceVfxt() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringIsNotWhiteSpace,
 									},
+									cifs_share_name: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "",
+										ValidateFunc: ValidateCIFSShareName,
+									},
+									cifs_share_ace: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "",
+										ValidateFunc: ValidateCIFSShareAce,
+									},
 									core_filer_export: {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -296,6 +389,12 @@ func resourceVfxt() *schema.Resource {
 										Optional:     true,
 										Default:      "",
 										ValidateFunc: ValidateExportSubdirectory,
+									},
+									export_rule: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "",
+										ValidateFunc: ValidateExportRule,
 									},
 								},
 							},
@@ -319,12 +418,17 @@ func resourceVfxt() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validate.StorageContainerName,
 						},
+						ordinal: {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0,
+						},
 						custom_settings: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringIsNotWhiteSpace,
+								ValidateFunc: ValidateCustomSetting,
 							},
 							Set: schema.HashString,
 						},
@@ -332,6 +436,24 @@ func resourceVfxt() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringIsNotWhiteSpace,
+						},
+						cifs_share_name: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "",
+							ValidateFunc: ValidateCIFSShareName,
+						},
+						cifs_share_ace: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "",
+							ValidateFunc: ValidateCIFSShareAce,
+						},
+						export_rule: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "",
+							ValidateFunc: ValidateExportRule,
 						},
 					},
 				},
@@ -342,20 +464,36 @@ func resourceVfxt() *schema.Resource {
 				Computed: true,
 			},
 			vserver_ip_addresses: {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Set: schema.HashString,
 			},
 			node_names: {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Set: schema.HashString,
+			},
+			mass_filer_mappings: {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			primary_cluster_ips: {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			licensing_id: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -384,10 +522,10 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 	//  4. NTP Servers
 	//  5. Global and Vserver Custom Support settings
 	//  6. Users
-	//  7. Delete Junctions
+	//  7. CIFS Settings
 	//  8. Core Filers including custom settings
 	//  9. Junctions
-	//  10. Support Uploads if requested
+	// 10. Support Uploads if requested
 	//
 
 	if err := avereVfxt.Platform.CreateVfxt(avereVfxt); err != nil {
@@ -423,6 +561,16 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 
 	if err := createUsers(d, avereVfxt); err != nil {
 		return err
+	}
+
+	if err := avereVfxt.EnableCIFS(); err != nil {
+		return err
+	}
+
+	if avereVfxt.EnableExtendedGroups == true {
+		if err := avereVfxt.ModifyExtendedGroups(); err != nil {
+			return err
+		}
 	}
 
 	// add the new filers
@@ -480,22 +628,49 @@ func resourceVfxtRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	// return from read if the vfxt is not alive since it may be stop deallocated
+	if !avereVfxt.IsAlive() {
+		return fmt.Errorf("The vfxt management IP '%s' is not reachable.  Please confirm the cluster is alive and not stopped.", avereVfxt.ManagementIP)
+	}
+
 	currentVServerIPAddresses, err := avereVfxt.GetVServerIPAddresses()
 	if err != nil {
 		return fmt.Errorf("error encountered while getting vserver addresses '%v'", err)
 	}
 	avereVfxt.VServerIPAddresses = &currentVServerIPAddresses
-	d.Set(vserver_ip_addresses, schema.NewSet(schema.HashString, utils.FlattenStringSlice(avereVfxt.VServerIPAddresses)))
+	d.Set(vserver_ip_addresses, flattenStringSlice(avereVfxt.VServerIPAddresses))
 
 	nodeNames, err := avereVfxt.GetNodes()
 	if err != nil {
 		return fmt.Errorf("error encountered getting nodes '%v'", err)
 	}
 	avereVfxt.NodeNames = &nodeNames
-	d.Set(node_names, schema.NewSet(schema.HashString, utils.FlattenStringSlice(avereVfxt.NodeNames)))
+	d.Set(node_names, flattenStringSlice(avereVfxt.NodeNames))
 	if len(*(avereVfxt.NodeNames)) >= MinNodesCount {
 		d.Set(vfxt_node_count, len(*(avereVfxt.NodeNames)))
 	}
+
+	primaryIPs, err := avereVfxt.GetNodePrimaryIPs()
+	if err != nil {
+		return fmt.Errorf("error encountered getting nodes primary ips '%v'", err)
+	}
+	d.Set(primary_cluster_ips, flattenStringSlice(&primaryIPs))
+	if len(*(avereVfxt.NodeNames)) >= MinNodesCount {
+		d.Set(vfxt_node_count, len(*(avereVfxt.NodeNames)))
+	}
+
+	massMappings, err := avereVfxt.GetGenericFilerMappingList()
+	if err != nil {
+		return fmt.Errorf("error encountered getting the filer mappings '%v'", err)
+	}
+	d.Set(mass_filer_mappings, flattenStringSlice(&massMappings))
+
+	cluster, err := avereVfxt.GetCluster()
+	if err != nil {
+		return fmt.Errorf("error encountered getting cluster '%v'", err)
+	}
+	d.Set(licensing_id, cluster.LicensingId)
+
 	return nil
 }
 
@@ -514,6 +689,11 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	// return from read if the vfxt is not alive since it may be stop deallocated
+	if !avereVfxt.IsAlive() {
+		return fmt.Errorf("The vfxt management IP '%s' is not reachable.  Please confirm the cluster is alive and not stopped.", avereVfxt.ManagementIP)
+	}
+
 	//
 	// The cluster will be updated in the following order
 	//  1. Timezone and DNS changes
@@ -521,10 +701,12 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 	//  3. Global and Vserver Custom Support settings
 	//  4. Update Users
 	//  5. Delete Junctions
-	//  5. Update Core Filers including Core Filer custom settings
-	//  6. Add Junctions
-	//  7. Scale cluster
-	//  8. Update Support Uploads
+	//  6. Update CIFs
+	//  7. Update Core Filers including Core Filer custom settings
+	//  8. Add Junctions
+	//  9. Update Extended Groups
+	// 10. Scale cluster
+	// 11. Update Support Uploads
 	//
 
 	if d.HasChange(timezone) || d.HasChange(dns_server) || d.HasChange(dns_domain) || d.HasChange(dns_search) {
@@ -598,6 +780,11 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		if err := deleteAzureStorageFilers(storageFilersToDelete, avereVfxt); err != nil {
 			return err
 		}
+
+		if err := updateCifs(d, avereVfxt); err != nil {
+			return err
+		}
+
 		if err := createCoreFilers(coreFilersToAdd, avereVfxt); err != nil {
 			return err
 		}
@@ -613,6 +800,16 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 
 		// refresh all junctions, and add all missing
 		if err := createJunctions(d, avereVfxt); err != nil {
+			return err
+		}
+	} else {
+		if err := updateCifs(d, avereVfxt); err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange(enable_extended_groups) {
+		if err := avereVfxt.ModifyExtendedGroups(); err != nil {
 			return err
 		}
 	}
@@ -688,12 +885,14 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		} else {
 			return nil, fmt.Errorf("missing argument '%s'", controller_admin_username)
 		}
+		if v, exists := d.GetOk(controller_admin_password); exists {
+			controllerAdminPassword = v.(string)
+		}
 		if v, exists := d.GetOk(controller_ssh_port); exists {
 			controllerSshPort = v.(int)
 		} else {
 			controllerSshPort = DefaultSshPort
 		}
-
 		if len(controllerAdminPassword) > 0 {
 			authMethod = GetPasswordAuthMethod(controllerAdminPassword)
 		} else {
@@ -719,18 +918,28 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	if val, ok := d.Get(vfxt_management_ip).(string); ok {
 		managementIP = val
 	}
-	vServerIPAddressesRaw := d.Get(vserver_ip_addresses).(*schema.Set).List()
-	nodeNamesRaw := d.Get(node_names).(*schema.Set).List()
+	vServerIPAddressesRaw := d.Get(vserver_ip_addresses).([]interface{})
+	nodeNamesRaw := d.Get(node_names).([]interface{})
 
 	nodeCount := d.Get(vfxt_node_count).(int)
 
 	firstIPAddress := d.Get(vserver_first_ip).(string)
+	ipAddressCount := d.Get(vserver_ip_count).(int)
+	if nodeCount > ipAddressCount {
+		ipAddressCount = nodeCount
+	}
 	lastIPAddress := ""
 	if len(firstIPAddress) > 0 {
-		if lastIPAddress, err = GetLastIPAddress(firstIPAddress, nodeCount); err != nil {
+		if lastIPAddress, err = GetLastIPAddress(firstIPAddress, ipAddressCount); err != nil {
 			return nil, err
 		}
 	}
+
+	cifsAdDomain := d.Get(cifs_ad_domain).(string)
+	cifsServerName := d.Get(cifs_server_name).(string)
+	cifsUsername := d.Get(cifs_username).(string)
+	cifsPassword := d.Get(cifs_password).(string)
+	cifsOrganizationalUnit := d.Get(cifs_organizational_unit).(string)
 
 	return NewAvereVfxt(
 		controllerAddress,
@@ -749,6 +958,13 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(node_cache_size).(int),
 		firstIPAddress,
 		lastIPAddress,
+		cifsAdDomain,
+		cifsServerName,
+		cifsUsername,
+		cifsPassword,
+		cifsOrganizationalUnit,
+		d.Get(enable_extended_groups).(bool),
+		d.Get(user_assigned_managed_identity).(string),
 		d.Get(ntp_servers).(string),
 		d.Get(timezone).(string),
 		d.Get(dns_server).(string),
@@ -769,7 +985,7 @@ func updateNtpServers(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 
 func createGlobalSettings(d *schema.ResourceData, avereVfxt *AvereVfxt) error {
 	for _, v := range d.Get(global_custom_settings).(*schema.Set).List() {
-		if err := avereVfxt.CreateCustomSetting(v.(string)); err != nil {
+		if err := avereVfxt.CreateCustomSetting(v.(string), GetTerraformMessage(v.(string))); err != nil {
 			return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", v.(string), err)
 		}
 	}
@@ -1012,6 +1228,11 @@ func getJunctionsToDelete(d *schema.ResourceData, averevfxt *AvereVfxt, coreFile
 
 func deleteJunctions(junctionsToDelete map[string]*Junction, averevfxt *AvereVfxt) error {
 	for _, j := range junctionsToDelete {
+		if len(j.CifsShareName) > 0 {
+			if err := averevfxt.DeleteCifsShare(j.CifsShareName); err != nil {
+				return err
+			}
+		}
 		if err := averevfxt.DeleteJunction(j.NameSpacePath); err != nil {
 			return err
 		}
@@ -1045,23 +1266,251 @@ func getCoreFilersToAddorModify(d *schema.ResourceData, existingCoreFilers map[s
 }
 
 func createCoreFilers(coreFilersToAdd map[string]*CoreFiler, averevfxt *AvereVfxt) error {
+	corefilers := make([]*CoreFiler, 0, len(coreFilersToAdd))
 	for _, v := range coreFilersToAdd {
-		if err := averevfxt.CreateCoreFiler(v); err != nil {
+		corefilers = append(corefilers, v)
+	}
+
+	// sort the CoreFiler slice by ordinal and name
+	sort.Slice(corefilers, func(i, j int) bool {
+		if corefilers[i].Ordinal == corefilers[j].Ordinal {
+			return corefilers[i].Name < corefilers[j].Name
+		}
+		return corefilers[i].Ordinal < corefilers[j].Ordinal
+	})
+
+	isFixedQuotaRequired, err := isFixedQuotaRequired(corefilers, averevfxt)
+	if err != nil {
+		return err
+	}
+
+	if isFixedQuotaRequired {
+		if err = addCoreFilersWithBalancedQuota(corefilers, averevfxt); err != nil {
 			return err
 		}
-		if err := averevfxt.AddFilerCustomSettings(v.Name, v.CustomSettings); err != nil {
+	} else {
+		if err = addCoreFilersWithNoBalancedQuota(corefilers, averevfxt); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func isFixedQuotaRequired(corefilers []*CoreFiler, averevfxt *AvereVfxt) (bool, error) {
+	// ignore fixed quota for 1 or less corefilers
+	if len(corefilers) <= 1 {
+		return false, nil
+	}
+
+	// only balance quota when starting with no core filers
+	coreFilers, err := averevfxt.GetExistingFilerNames()
+	if err != nil {
+		return false, err
+	}
+	if len(coreFilers) > 0 {
+		return false, nil
+	}
+
+	for _, v := range corefilers {
+		if v.FixedQuotaPercent > MinFixedQuotaPercent {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// add the core filers and custom settings without balancing quota
+func addCoreFilersWithBalancedQuota(corefilers []*CoreFiler, averevfxt *AvereVfxt) error {
+	log.Printf("[INFO] [addCoreFilerWithBalancedQuota")
+	defer log.Printf("[INFO] addCoreFilerWithBalancedQuota]")
+
+	var lastCoreFiler *CoreFiler
+	lastIndex := len(corefilers)
+
+	// increase speed of dynamic block allocation
+	if err := startFixedQuotaPercent(corefilers, averevfxt); err != nil {
+		return fmt.Errorf("error encountered while starting setting of fixed quota: %v", err)
+	}
+
+	// There is an undesired behavior in Avere vFXT where the first core filer is added and
+	// it receives all the quota space.  To speed up balancing, add the last core filer, and
+	// then delete it after added the other core filers.  This releases the space.
+	if QuotaSpeedUpDeleteFirstFiler {
+		lastIndex = lastIndex - 1
+		lastCoreFiler = corefilers[lastIndex]
+		log.Printf("[INFO] add last core filer '%s'", lastCoreFiler.Name)
+		if err := createCoreFilerWithFixedQuota(lastCoreFiler, averevfxt); err != nil {
+			return err
+		}
+	}
+
+	// add the core filer and quota percent first (not adding last core filer if used for quota speedup)
+	for i := 0; i < lastIndex; i++ {
+		if err := createCoreFilerWithFixedQuota(corefilers[i], averevfxt); err != nil {
+			return err
+		}
+	}
+
+	// remove and add the last core filer and quota percent, to release the space, and speed allocation
+	if QuotaSpeedUpDeleteFirstFiler {
+		log.Printf("[INFO] remove last core filer '%s'", lastCoreFiler.Name)
+		if err := averevfxt.DeleteFiler(lastCoreFiler.Name); err != nil {
+			return err
+		}
+
+		log.Printf("[INFO] add last core filer '%s'", lastCoreFiler.Name)
+		if err := createCoreFilerWithFixedQuota(lastCoreFiler, averevfxt); err != nil {
+			return err
+		}
+	}
+
+	// add the custom settings, after core filers and fixed quota percent has been added
+	// the custom settings are added after all core filers are added because they are slow to add,
+	// and could slow down the rebalancing
+	if err := addCustomSettings(corefilers, averevfxt); err != nil {
+		return err
+	}
+
+	// restore speed of dynamic block allocation and remove all cpolicyActive settings
+	if err := finishFixedQuotaPercent(corefilers, averevfxt); err != nil {
+		return fmt.Errorf("error encountered while starting setting of fixed quota: %v", err)
+	}
+
+	return nil
+}
+
+// add the core filers and custom settings without balancing quota
+func addCoreFilersWithNoBalancedQuota(corefilers []*CoreFiler, averevfxt *AvereVfxt) error {
+	log.Printf("[INFO] [addCoreFilerWithNoBalancedQuota")
+	defer log.Printf("[INFO] addCoreFilerWithNoBalancedQuota]")
+
+	for i := 0; i < len(corefilers); i++ {
+		if err := averevfxt.CreateCoreFiler(corefilers[i]); err != nil {
+			return err
+		}
+	}
+
+	if err := addCustomSettings(corefilers, averevfxt); err != nil {
+		return err
+	}
+	return nil
+}
+
+func addCustomSettings(corefilers []*CoreFiler, averevfxt *AvereVfxt) error {
+	for _, v := range corefilers {
+		if err := averevfxt.AddCoreFilerCustomSettings(v); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func modifyCoreFilers(coreFilersToModify map[string]*CoreFiler, averevfxt *AvereVfxt) error {
-	for _, v := range coreFilersToModify {
-		if err := averevfxt.RemoveFilerCustomSettings(v.Name, v.CustomSettings); err != nil {
+func createCoreFilerWithFixedQuota(coreFiler *CoreFiler, averevfxt *AvereVfxt) error {
+	if err := averevfxt.CreateCoreFiler(coreFiler); err != nil {
+		return err
+	}
+	if coreFiler.FixedQuotaPercent > MinFixedQuotaPercent {
+		if err := averevfxt.SetFixedQuotaPercent(coreFiler.Name, coreFiler.FixedQuotaPercent); err != nil {
 			return err
 		}
-		if err := averevfxt.AddFilerCustomSettings(v.Name, v.CustomSettings); err != nil {
+	}
+	return nil
+}
+
+func startFixedQuotaPercent(corefilers []*CoreFiler, averevfxt *AvereVfxt) error {
+
+	if err := averevfxt.CreateCustomSetting(QuotaCacheMoveMax, TerraformFeatureMessage); err != nil {
+		return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaCacheMoveMax, err)
+	}
+
+	smallestQuota := getSmallestQuotaPercent(corefilers)
+	divisorFloorSetting := fmt.Sprintf(QuotaDivisorFloor, smallestQuota)
+	if err := averevfxt.CreateCustomSetting(divisorFloorSetting, TerraformFeatureMessage); err != nil {
+		return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", divisorFloorSetting, err)
+	}
+
+	if err := averevfxt.CreateCustomSetting(QuotaMaxMultiplierForInvalidatedMassQuota, TerraformFeatureMessage); err != nil {
+		return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaMaxMultiplierForInvalidatedMassQuota, err)
+	}
+
+	return nil
+}
+
+func getSmallestQuotaPercent(corefilers []*CoreFiler) int {
+	result := MaxFixedQuotaPercent
+	for _, v := range corefilers {
+		if v.FixedQuotaPercent > MinFixedQuotaPercent && v.FixedQuotaPercent < result {
+			result = v.FixedQuotaPercent
+		}
+	}
+	return result
+}
+
+func finishFixedQuotaPercent(corefilers []*CoreFiler, averevfxt *AvereVfxt) error {
+	// wait QuotaWaitMinutes or until until the core filers are in the correct range
+	startTime := time.Now()
+	durationQuotaWaitMinutes := time.Duration(QuotaWaitMinutes) * time.Minute
+	for time.Since(startTime) < durationQuotaWaitMinutes {
+		time.Sleep(30 * time.Second)
+		if withinRange(corefilers, averevfxt) {
+			log.Printf("[INFO] all core filers within correct quota range")
+			break
+		}
+	}
+
+	// remove each of the cpolicyActive custom settings
+	for _, v := range corefilers {
+		if v.FixedQuotaPercent > MinFixedQuotaPercent {
+			averevfxt.RemoveFixedQuotaPercent(v.Name, v.FixedQuotaPercent)
+		}
+	}
+
+	if err := averevfxt.RemoveCustomSetting(QuotaCacheMoveMax); err != nil {
+		return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaCacheMoveMax, err)
+	}
+	if err := averevfxt.RemoveCustomSetting(QuotaDivisorFloor); err != nil {
+		return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaDivisorFloor, err)
+	}
+	if err := averevfxt.RemoveCustomSetting(QuotaMaxMultiplierForInvalidatedMassQuota); err != nil {
+		return fmt.Errorf("ERROR: failed to apply custom setting '%s': %s", QuotaMaxMultiplierForInvalidatedMassQuota, err)
+	}
+
+	return nil
+}
+
+func withinRange(corefilers []*CoreFiler, averevfxt *AvereVfxt) bool {
+	percentageMap, err := averevfxt.GetCoreFilerSpacePercentage()
+	if err != nil {
+		log.Printf("[WARN] error encountered getting core filer space percentage: %v", err)
+		return false
+	}
+
+	for _, v := range corefilers {
+		clusterPct, ok := percentageMap[v.Name]
+		if !ok {
+			log.Printf("[WARN] missing key %s: corefilers %v, pmap %v", v.Name, corefilers, percentageMap)
+			return false
+		}
+		if v.FixedQuotaPercent > MinFixedQuotaPercent {
+			targetPercentage := float32(v.FixedQuotaPercent) / 100.0
+			minTargetPercentageError := targetPercentage - TargetPercentageError
+			if clusterPct < minTargetPercentageError {
+				log.Printf("[INFO] %s not yet within range: corefilers %v, pmap %v", v.Name, corefilers, percentageMap)
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+func modifyCoreFilers(coreFilersToModify map[string]*CoreFiler, averevfxt *AvereVfxt) error {
+	for _, v := range coreFilersToModify {
+		if err := averevfxt.RemoveCoreFilerCustomSettings(v); err != nil {
+			return err
+		}
+		if err := averevfxt.AddCoreFilerCustomSettings(v); err != nil {
 			return err
 		}
 	}
@@ -1092,11 +1541,24 @@ func getAzureStorageFilersToAddorModify(d *schema.ResourceData, existingAzureSto
 }
 
 func createAzureStorageFilers(storageFilersToAdd map[string]*AzureStorageFiler, averevfxt *AvereVfxt) error {
+	storagefilers := make([]*AzureStorageFiler, 0, len(storageFilersToAdd))
 	for _, v := range storageFilersToAdd {
+		storagefilers = append(storagefilers, v)
+	}
+
+	// sort the CoreFiler slice by ordinal and name
+	sort.Slice(storagefilers, func(i, j int) bool {
+		if storagefilers[i].Ordinal == storagefilers[j].Ordinal {
+			return storagefilers[i].GetCloudFilerName() < storagefilers[j].GetCloudFilerName()
+		}
+		return storagefilers[i].Ordinal < storagefilers[j].Ordinal
+	})
+
+	for _, v := range storagefilers {
 		if err := averevfxt.CreateAzureStorageFiler(v); err != nil {
 			return err
 		}
-		if err := averevfxt.AddFilerCustomSettings(v.GetCloudFilerName(), v.CustomSettings); err != nil {
+		if err := averevfxt.AddStorageFilerCustomSettings(v); err != nil {
 			return err
 		}
 	}
@@ -1105,20 +1567,33 @@ func createAzureStorageFilers(storageFilersToAdd map[string]*AzureStorageFiler, 
 
 func modifyAzureStorageFilers(storageFilersToModify map[string]*AzureStorageFiler, averevfxt *AvereVfxt) error {
 	for _, v := range storageFilersToModify {
-		if err := averevfxt.RemoveFilerCustomSettings(v.GetCloudFilerName(), v.CustomSettings); err != nil {
+		if err := averevfxt.RemoveStorageFilerCustomSettings(v); err != nil {
 			return err
 		}
-		if err := averevfxt.AddFilerCustomSettings(v.GetCloudFilerName(), v.CustomSettings); err != nil {
+		if err := averevfxt.AddStorageFilerCustomSettings(v); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
+func junctionsRequireCifs(junctions map[string]*Junction) bool {
+	for _, v := range junctions {
+		if len(v.CifsShareName) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
 func createJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 	newJunctions, err := expandAllJunctions(d)
 	if err != nil {
 		return err
+	}
+
+	if junctionsRequireCifs(newJunctions) && !averevfxt.CIFSSettingsExist() {
+		return fmt.Errorf("one or more junctions requests a cifs share, but cifs not enabled")
 	}
 
 	// get the map of existing junctions
@@ -1134,6 +1609,20 @@ func createJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 			continue
 		}
 		if err := averevfxt.CreateJunction(v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func updateCifs(d *schema.ResourceData, averevfxt *AvereVfxt) error {
+	// CIFS must be updated after the last possible CIF shares have been removed, but
+	// before new shares are added
+	if d.HasChange(cifs_ad_domain) || d.HasChange(cifs_server_name) || d.HasChange(cifs_username) || d.HasChange(cifs_password) || d.HasChange(cifs_organizational_unit) {
+		if err := averevfxt.DisableCIFS(); err != nil {
+			return err
+		}
+		if err := averevfxt.EnableCIFS(); err != nil {
 			return err
 		}
 	}
@@ -1176,6 +1665,9 @@ func expandUsers(l []interface{}) (map[string]*User, error) {
 
 func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 	results := make(map[string]*CoreFiler)
+
+	totalFixedQuotaPercent := MinFixedQuotaPercent
+
 	for _, v := range l {
 		input := v.(map[string]interface{})
 
@@ -1183,22 +1675,35 @@ func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 		name := input[core_filer_name].(string)
 		fqdnOrPrimaryIp := input[fqdn_or_primary_ip].(string)
 		cachePolicy := input[cache_policy].(string)
+		autoWanOptimize := input[auto_wan_optimize].(bool)
+		nfsConnectionMultiplier := input[nfs_connection_multiplier].(int)
+		ordinal := input[ordinal].(int)
+		fixedQuotaPercent := input[fixed_quota_percent].(int)
 		customSettingsRaw := input[custom_settings].(*schema.Set).List()
 		customSettings := make([]*CustomSetting, len(customSettingsRaw), len(customSettingsRaw))
 		for i, v := range customSettingsRaw {
-			customSettings[i] = initializeCustomSetting(v.(string))
+			customSettings[i] = InitializeCustomSetting(v.(string))
 		}
 		// verify no duplicates
 		if _, ok := results[name]; ok {
 			return nil, fmt.Errorf("Error: two or more core filers share the same key '%s'", name)
 		}
+		// verify haven't exceeded fixed quota percent
+		totalFixedQuotaPercent += fixedQuotaPercent
+		if totalFixedQuotaPercent > MaxFixedQuotaPercent {
+			return nil, fmt.Errorf("the sum of fixed_quota_percent on the core filer exceeds 100")
+		}
 
 		// add to map
 		output := &CoreFiler{
-			Name:            name,
-			FqdnOrPrimaryIp: fqdnOrPrimaryIp,
-			CachePolicy:     cachePolicy,
-			CustomSettings:  customSettings,
+			Name:                    name,
+			FqdnOrPrimaryIp:         fqdnOrPrimaryIp,
+			CachePolicy:             cachePolicy,
+			AutoWanOptimize:         autoWanOptimize,
+			NfsConnectionMultiplier: nfsConnectionMultiplier,
+			Ordinal:                 ordinal,
+			FixedQuotaPercent:       fixedQuotaPercent,
+			CustomSettings:          customSettings,
 		}
 		results[name] = output
 	}
@@ -1213,16 +1718,18 @@ func expandAzureStorageFilers(l []interface{}) (map[string]*AzureStorageFiler, e
 		// get the properties
 		name := input[account_name].(string)
 		container := input[container_name].(string)
+		ordinal := input[ordinal].(int)
 		customSettingsRaw := input[custom_settings].(*schema.Set).List()
 		customSettings := make([]*CustomSetting, len(customSettingsRaw), len(customSettingsRaw))
 		for i, v := range customSettingsRaw {
-			customSettings[i] = initializeCustomSetting(v.(string))
+			customSettings[i] = InitializeCustomSetting(v.(string))
 		}
 
 		// add to map
 		output := &AzureStorageFiler{
 			AccountName:    name,
 			Container:      container,
+			Ordinal:        ordinal,
 			CustomSettings: customSettings,
 		}
 		// verify no duplicates
@@ -1256,12 +1763,17 @@ func expandCoreFilerJunctions(l []interface{}, results map[string]*Junction) err
 		junctions := input[junction].(*schema.Set).List()
 		for _, jv := range junctions {
 			junctionRaw := jv.(map[string]interface{})
-			junction := &Junction{
-				NameSpacePath:      junctionRaw[namespace_path].(string),
-				CoreFilerName:      coreFilerName,
-				CoreFilerExport:    junctionRaw[core_filer_export].(string),
-				ExportSubdirectory: junctionRaw[export_subdirectory].(string),
-				SharePermissions:   PermissionsPreserve,
+			junction, err := NewJunction(
+				junctionRaw[namespace_path].(string),
+				coreFilerName,
+				junctionRaw[core_filer_export].(string),
+				junctionRaw[export_subdirectory].(string),
+				PermissionsPreserve,
+				junctionRaw[export_rule].(string),
+				junctionRaw[cifs_share_name].(string),
+				junctionRaw[cifs_share_ace].(string))
+			if err != nil {
+				return err
 			}
 			// verify no duplicates
 			if _, ok := results[junction.NameSpacePath]; ok {
@@ -1279,13 +1791,17 @@ func expandAzureStorageFilerJunctions(l []interface{}, results map[string]*Junct
 		storageName := input[account_name].(string)
 		containerName := input[container_name].(string)
 		cloudFilerName := GetCloudFilerName(storageName, containerName)
-		namespacePath := input[junction_namespace_path].(string)
-
-		junction := &Junction{
-			NameSpacePath:    namespacePath,
-			CoreFilerName:    cloudFilerName,
-			CoreFilerExport:  CloudFilerExport,
-			SharePermissions: PermissionsModebits,
+		junction, err := NewJunction(
+			input[junction_namespace_path].(string),
+			cloudFilerName,
+			CloudFilerExport,
+			"",
+			PermissionsModebits,
+			input[export_rule].(string),
+			input[cifs_share_name].(string),
+			input[cifs_share_ace].(string))
+		if err != nil {
+			return err
 		}
 		// verify no duplicates
 		if _, ok := results[junction.NameSpacePath]; ok {
@@ -1319,6 +1835,15 @@ func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
 		if v, ok := m[cache_policy]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
+		if v, ok := m[auto_wan_optimize]; ok {
+			buf.WriteString(fmt.Sprintf("%v;", v.(bool)))
+		}
+		if v, ok := m[nfs_connection_multiplier]; ok {
+			buf.WriteString(fmt.Sprintf("%v;", v.(int)))
+		}
+		if v, ok := m[ordinal]; ok {
+			buf.WriteString(fmt.Sprintf("%d;", v.(int)))
+		}
 		if v, ok := m[custom_settings]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(*schema.Set).List()))
 		}
@@ -1332,6 +1857,15 @@ func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
 						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
 					}
 					if v2, ok := m[export_subdirectory]; ok {
+						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
+					}
+					if v2, ok := m[export_rule]; ok {
+						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
+					}
+					if v2, ok := m[cifs_share_name]; ok {
+						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
+					}
+					if v2, ok := m[cifs_share_ace]; ok {
 						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
 					}
 				}
@@ -1351,10 +1885,22 @@ func resourceAvereVfxtAzureStorageCoreFilerReferenceHash(v interface{}) int {
 		if v, ok := m[container_name]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
+		if v, ok := m[ordinal]; ok {
+			buf.WriteString(fmt.Sprintf("%d;", v.(int)))
+		}
 		if v, ok := m[custom_settings]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(*schema.Set).List()))
 		}
 		if v, ok := m[junction_namespace_path]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m[export_rule]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m[cifs_share_name]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m[cifs_share_ace]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
 	}
@@ -1382,6 +1928,7 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 		vfxt_cluster_name,
 		vfxt_admin_password,
 		vfxt_ssh_key_data,
+		user_assigned_managed_identity,
 	}
 
 	for _, parameter := range validateParameterSlice {
@@ -1429,7 +1976,7 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 			for _, j := range v.List() {
 				if m, ok := j.(map[string]interface{}); ok {
 					if v2, ok := m[namespace_path]; ok {
-						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", core_filer_name, v2.(string))); err != nil {
+						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", namespace_path, v2.(string))); err != nil {
 							return err
 						}
 					}
@@ -1440,6 +1987,21 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 					}
 					if v2, ok := m[export_subdirectory]; ok {
 						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", export_subdirectory, v2.(string))); err != nil {
+							return err
+						}
+					}
+					if v2, ok := m[export_rule]; ok {
+						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", export_rule, v2.(string))); err != nil {
+							return err
+						}
+					}
+					if v2, ok := m[cifs_share_name]; ok {
+						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", cifs_share_name, v2.(string))); err != nil {
+							return err
+						}
+					}
+					if v2, ok := m[cifs_share_ace]; ok {
+						if err := ValidateOnlyAscii(v2.(string), fmt.Sprintf("%s-'%s'", cifs_share_ace, v2.(string))); err != nil {
 							return err
 						}
 					}
@@ -1454,8 +2016,11 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 		storagefilerSlice := []string{
 			input[account_name].(string),
 			input[container_name].(string),
+			input[export_rule].(string),
+			input[cifs_share_name].(string),
+			input[cifs_share_ace].(string),
 		}
-		// the junction namespace path is optional
+		// the junction namespace path is optional, and has no default
 		if v, ok := input[junction_namespace_path]; ok {
 			storagefilerSlice = append(storagefilerSlice, v.(string))
 		}
@@ -1495,7 +2060,18 @@ func ValidateExportSubdirectory(v interface{}, _ string) (warnings []string, err
 	return warnings, errors
 }
 
-// ValidateAutomationRunbookName validates Automation Account Runbook names
+func ValidateExportRule(v interface{}, _ string) (warnings []string, errors []error) {
+	input := v.(string)
+
+	if len(input) > 0 {
+		if _, err := ParseExportRules(input); err != nil {
+			errors = append(errors, err)
+		}
+	}
+
+	return warnings, errors
+}
+
 func ValidateUserName(v interface{}, _ string) (warnings []string, errors []error) {
 	input := v.(string)
 
@@ -1508,4 +2084,52 @@ func ValidateUserName(v interface{}, _ string) (warnings []string, errors []erro
 	}
 
 	return warnings, errors
+}
+
+func ValidateVfxtName(v interface{}, _ string) (warnings []string, errors []error) {
+	input := v.(string)
+
+	if !regexp.MustCompile(`^[a-z]([-a-z0-9]*[a-z0-9])?$`).MatchString(input) {
+		errors = append(errors, fmt.Errorf("the vfxt name '%s' is invalid, and per vfxt.py must match the regular expressesion ^[a-z]([-a-z0-9]*[a-z0-9])?$ ''", input))
+	}
+
+	return warnings, errors
+}
+
+func ValidateCustomSetting(v interface{}, _ string) (warnings []string, errors []error) {
+	customSetting := v.(string)
+
+	if err := ValidateCustomSettingFormat(customSetting); err != nil {
+		errors = append(errors, err)
+	}
+
+	if ok, err := IsCustomSettingDeprecated(customSetting); ok {
+		errors = append(errors, err)
+	}
+
+	return warnings, errors
+}
+
+func unflattenStringSlice(input []interface{}) *[]string {
+	output := make([]string, 0)
+
+	if input != nil {
+		for _, v := range input {
+			output = append(output, v.(string))
+		}
+	}
+
+	return &output
+}
+
+func flattenStringSlice(input *[]string) []interface{} {
+	output := make([]interface{}, 0)
+
+	if input != nil {
+		for _, v := range *input {
+			output = append(output, v)
+		}
+	}
+
+	return output
 }

@@ -18,7 +18,7 @@ This example deploys a complete environment with OpenCue, render nodes, vFXT, an
 ```bash
 mkdir -p ~/.terraform.d/plugins
 # install the vfxt released binary from https://github.com/Azure/Avere
-wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.2/terraform-provider-avere
+wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.13/terraform-provider-avere
 chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 ```
 
@@ -31,12 +31,12 @@ git init
 git remote add origin -f https://github.com/Azure/Avere.git
 git config core.sparsecheckout true
 echo "src/terraform/*" >> .git/info/sparse-checkout
-git pull origin master
+git pull origin main
 ```
 
 6. `cd src/terraform/examples/vfxt/opencue/new-storage`
 
-7. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  If you are using an [ssk key](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys), ensure that ~/.ssh/id_rsa is populated.
+7. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  If you are using an [ssh key](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys), ensure that ~/.ssh/id_rsa is populated.
 
 8. execute `terraform init` in the directory of `main.tf`.
 

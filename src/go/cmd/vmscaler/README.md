@@ -79,19 +79,19 @@ These deployment instructions describe the installation of all components requir
     # download the bootstrap files
     mkdir -p /nfs/node0/bootstrap
     cd /nfs/node0/bootstrap
-    curl --retry 5 --retry-delay 5 -o bootstrap.vmscaler.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/vmscaler/deploymentartifacts/bootstrap/bootstrap.vmscaler.sh
+    curl --retry 5 --retry-delay 5 -o bootstrap.vmscaler.sh https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/vmscaler/deploymentartifacts/bootstrap/bootstrap.vmscaler.sh
 
     mkdir -p /nfs/node0/bootstrap
     cd /nfs/node0/bootstrap
-    curl --retry 5 --retry-delay 5 -o delete_vmss_instance.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/vmscaler/deploymentartifacts/bootstrap/delete_vmss_instance.sh
+    curl --retry 5 --retry-delay 5 -o delete_vmss_instance.sh https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/vmscaler/deploymentartifacts/bootstrap/delete_vmss_instance.sh
 
     mkdir -p /nfs/node0/bootstrap
     cd /nfs/node0/bootstrap
-    curl --retry 5 --retry-delay 5 -o set_capacity.imds.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/vmscaler/deploymentartifacts/bootstrap/set_capacity.imds.sh
+    curl --retry 5 --retry-delay 5 -o set_capacity.imds.sh https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/vmscaler/deploymentartifacts/bootstrap/set_capacity.imds.sh
 
     mkdir -p /nfs/node0/bootstrap
     cd /nfs/node0/bootstrap
-    curl --retry 5 --retry-delay 5 -o set_capacity.service_principal.sh https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/vmscaler/deploymentartifacts/bootstrap/set_capacity.service_principal.sh
+    curl --retry 5 --retry-delay 5 -o set_capacity.service_principal.sh https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/vmscaler/deploymentartifacts/bootstrap/set_capacity.service_principal.sh
 
     # copy in the built binaries
     mkdir -p /nfs/node0/bootstrap/vmscalerbin
@@ -100,18 +100,18 @@ These deployment instructions describe the installation of all components requir
     # download the rsyslog scripts
     mkdir /nfs/node0/bootstrap/rsyslog
     cd /nfs/node0/bootstrap/rsyslog
-    curl --retry 5 --retry-delay 5 -o 34-vmscaler.conf https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/vmscaler/deploymentartifacts/bootstrap/rsyslog/34-vmscaler.conf
+    curl --retry 5 --retry-delay 5 -o 34-vmscaler.conf https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/vmscaler/deploymentartifacts/bootstrap/rsyslog/34-vmscaler.conf
         
     # download the service scripts
     mkdir /nfs/node0/bootstrap/systemd
     cd /nfs/node0/bootstrap/systemd
-    curl --retry 5 --retry-delay 5 -o vmscaler.service https://raw.githubusercontent.com/Azure/Avere/master/src/go/cmd/vmscaler/deploymentartifacts/bootstrap/systemd/vmscaler.service
+    curl --retry 5 --retry-delay 5 -o vmscaler.service https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/vmscaler/deploymentartifacts/bootstrap/systemd/vmscaler.service
     ```
 ### Deploy the VM Manager Node
 
 Deploy the VMScaler cluster by clicking the "Deploy to Azure" button below.  Ensure you deploy once VMscaler per resource group:
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmaster%2Fsrc%2Fgo%2Fcmd%2Fvmscaler%2Fdeploymentartifacts%2Ftemplate%2Fazuredeploy.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAvere%2Fmain%2Fsrc%2Fgo%2Fcmd%2Fvmscaler%2Fdeploymentartifacts%2Ftemplate%2Fazuredeploy.json" target="_blank">
     <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png"/>
 </a>
 

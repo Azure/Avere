@@ -32,10 +32,11 @@
               "unixReadWrite": true,
               "allowedClients": "0.0.0.0/0"
             }
-          ]
+          ],
+          "kerberosEnabled": false
         },
         {
-          "name": "Scenes",
+          "name": "Shots",
           "pool": "Storage",
           "size": 2048,
           "exportPolicyRules": [
@@ -48,7 +49,8 @@
               "unixReadWrite": true,
               "allowedClients": "0.0.0.0/0"
             }
-          ]
+          ],
+          "kerberosEnabled": false
         },
         {
           "name": "Tools",
@@ -64,7 +66,8 @@
               "unixReadWrite": true,
               "allowedClients": "0.0.0.0/0"
             }
-          ]
+          ],
+          "kerberosEnabled": false
         }
       ]
     },
@@ -72,22 +75,20 @@
       "value": [
         {
           "pool": "Storage",
-          "volume": "Tools",
-          "exportPath": "/tools",
-          "directoryPath": "/mnt/tools",
-          "directoryPermissions": 775,
+          "volume": "Frames",
+          "exportPath": "/frames",
+          "directoryPath": "/mnt/frames",
+          "fileSystemDrive": "F",
           "fileSystemType": "nfs",
-          "fileSystemDrive": "T",
           "fileSystemOptions": "rw,hard,vers=3,rsize=65536,wsize=65536,tcp"
         },
         {
           "pool": "Storage",
-          "volume": "Frames",
-          "exportPath": "/frames",
-          "directoryPath": "/mnt/frames",
-          "directoryPermissions": 777,
+          "volume": "Tools",
+          "exportPath": "/tools",
+          "directoryPath": "/mnt/tools",
+          "fileSystemDrive": "T",
           "fileSystemType": "nfs",
-          "fileSystemDrive": "F",
           "fileSystemOptions": "rw,hard,vers=3,rsize=65536,wsize=65536,tcp"
         }
       ]
@@ -95,18 +96,18 @@
     "storageTargets": {
       "value": [
         {
-          "name": "Scenes",
+          "name": "Shots",
           "type": "nfs3",
           "junctions": [
             {
-              "namespacePath": "/mnt/scenes",
-              "nfsExport": "/scenes",
+              "namespacePath": "/mnt/shots",
+              "nfsExport": "/shots",
               "targetPath": ""
             }
           ],
-          "mountOptions": "rw,hard,vers=3,proto=tcp,mountproto=tcp,retry=30",
-          "mountType": "nfs",
           "mountDrive": "S",
+          "mountType": "nfs",
+          "mountOptions": "rw,hard,vers=3,proto=tcp,mountproto=tcp,retry=30",
           "usageModel": "WRITE_AROUND"
         }
       ]

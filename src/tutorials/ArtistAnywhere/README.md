@@ -1,26 +1,27 @@
 # Azure Artist Anywhere ([aka.ms/aaa](http://aka.ms/aaa))
 
-Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/azure/azure-resource-manager/management/overview) templates (JSON) for the automated deployment of an end-to-end rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight solution framework that can be configured and extended as needed to meet various hybrid environment requirements. Each resource deployment template can also be leveraged directly.
+Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/azure/azure-resource-manager/management/overview) templates for automated deployment of an end-to-end rendering solution architecture in Microsoft Azure. Azure Artist Anywhere provides a lightweight and extensible deployment framework that can be configured as needed to meet various integration requirements, including burst rendering with caching of on-premises storage.
 
-## Deployment Templates
+## Deployment Modules
 
-The following Microsoft Azure resource templates and customization scripts define the Azure Artist Anywhere deployment modules.
+The following Microsoft Azure resource templates and scripts define the Azure Artist Anywhere deployment modules.
 
-| *Studio Services* | *Image Library* | *Storage Cache* | *Render Managers* | *Render Workers* | *Artist Desktop Images* | *Artist Desktop Machines*
+| *Studio Services* | *Image Library* | *Storage Cache* | *Render Manager* | *Render Workers* | *Artist Desktop Images* | *Artist Desktop Machines*
 | - | - | - | - | - | - | - |
 | [00 - Network](StudioServices/00-Network.json) | [02 - Image Gallery](ImageLibrary/02-Image.Gallery.json) | [04 - Storage Network](StorageCache/04-Storage.Network.json) | [06 - Manager Data](RenderManager/06-Manager.Data.json) | [09 - Worker Images](RenderWorker/09-Worker.Images.json) | [11 - Desktop Images](ArtistDesktop/11-Desktop.Images.json) | [12 - Desktop Machines](ArtistDesktop/12-Desktop.Machines.json)
-| [01 - Security](StudioServices/01-Security.json) | [03 - Image Registry](ImageLibrary/03-Image.Registry.json) | [04 - Storage (Object)](StorageCache/04-Storage.Object.json) | [07 - Manager Images](RenderManager/07-Manager.Images.json) | [09 - Worker Images Customize](RenderWorker/09-Worker.Images.Customize.sh) | [11 - Desktop Images Customize (Linux) ](ArtistDesktop/11-Desktop.Images.Customize.sh) | [12 - Desktop Machines Initialize (Linux)](ArtistDesktop/12-Desktop.Machines.sh)
+| [01 - Security](StudioServices/01-Security.json) | [03 - Image Registry](ImageLibrary/03-Image.Registry.json) | [04 - Storage Account](StorageCache/04-Storage.Account.json) | [07 - Manager Images](RenderManager/07-Manager.Images.json) | [09 - Worker Images Customize](RenderWorker/09-Worker.Images.Customize.sh) | [11 - Desktop Images Customize (Linux) ](ArtistDesktop/11-Desktop.Images.Customize.sh) | [12 - Desktop Machines Initialize (Linux)](ArtistDesktop/12-Desktop.Machines.sh)
 | | | [04 - Storage (NetApp)](StorageCache/04-Storage.NetApp.json) | [07 - Manager Images Customize](RenderManager/07-Manager.Images.Customize.sh) | [09 - Worker Images Customize (OpenCue)](RenderWorker/09-Worker.Images.Customize.OpenCue.sh) | [11 - Desktop Images Customize (Linux OpenCue)](ArtistDesktop/11-Desktop.Images.Customize.OpenCue.sh) | [12 - Desktop Machines Initialize (Windows)](ArtistDesktop/12-Desktop.Machines.ps1)
-| | | [05 - Cache (HPC)](StorageCache/05-Cache.json) | [07 - Manager Images Customize (OpenCue)](RenderManager/07-Manager.Images.Customize.OpenCue.sh) | [09 - Worker Images Customize (Blender)](RenderWorker/09-Worker.Images.Customize.Blender.sh) | [11 - Desktop Images Customize (Linux Blender) ](ArtistDesktop/11-Desktop.Images.Customize.Blender.sh) |
-| | | | [08 - Manager Machines](RenderManager/08-Manager.Machines.json) | [10 - Worker Machines](RenderWorker/10-Worker.Machines.json) | [11 - Desktop Images Customize (Windows) ](ArtistDesktop/11-Desktop.Images.Customize.ps1) |
-| | | | [08 - Manager Machines Initialize](RenderManager/08-Manager.Machines.sh) | [10 - Worker Machines Initialize](RenderWorker/10-Worker.Machines.sh) | [11 - Desktop Images Customize (Windows OpenCue) ](ArtistDesktop/11-Desktop.Images.Customize.OpenCue.ps1) |
-| | | | [08 - Manager Machines Initialize (Data Access)](RenderManager/08-Manager.Machines.DataAccess.sh) | | [11 - Desktop Images Customize (Windows Blender) ](ArtistDesktop/11-Desktop.Images.Customize.Blender.ps1) |
+| | | [05 - Storage Cache](StorageCache/05-Cache.json) | [07 - Manager Images Customize (OpenCue)](RenderManager/07-Manager.Images.Customize.OpenCue.sh) | [09 - Worker Images Customize (Blender)](RenderWorker/09-Worker.Images.Customize.Blender.sh) | [11 - Desktop Images Customize (Linux Blender) ](ArtistDesktop/11-Desktop.Images.Customize.Blender.sh) |
+| | | | [07 - Manager Images Customize (Blender)](RenderManager/07-Manager.Images.Customize.Blender.sh) | [10 - Worker Scale Sets](RenderWorker/10-Worker.ScaleSets.json) | [11 - Desktop Images Customize (Windows) ](ArtistDesktop/11-Desktop.Images.Customize.ps1) |
+| | | | [08 - Manager Machines](RenderManager/08-Manager.Machines.json) | [10 - Worker Clusters (TBD)](RenderWorker/10-Worker.Clusters.json) | [11 - Desktop Images Customize (Windows OpenCue) ](ArtistDesktop/11-Desktop.Images.Customize.OpenCue.ps1) |
+| | | | [08 - Manager Machines Initialize](RenderManager/08-Manager.Machines.sh) | [10 - Worker Machines Initialize](RenderWorker/10-Worker.Machines.sh) | [11 - Desktop Images Customize (Windows Blender) ](ArtistDesktop/11-Desktop.Images.Customize.Blender.ps1) |
+| | | | [08 - Manager Machines Initialize (Data Access)](RenderManager/08-Manager.Machines.DataAccess.sh) | | |
 
 ## Solution Architecture
 
 The following overview diagram depicts the Azure Artist Anywhere solution architecture with on-premises storage.
 
-![](https://mediasolutions.blob.core.windows.net/bin/AzureArtistAnywhere.SolutionArchitecture.2020-08-01.png)
+![](https://mediasolutions.blob.core.windows.net/bin/AzureArtistAnywhere.SolutionArchitecture.2020-10-01.png)
 
 The following Microsoft Azure services and open-source software comprise the Azure Artist Anywhere solution.
 

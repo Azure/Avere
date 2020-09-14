@@ -2,10 +2,12 @@
 
 set -ex
 
-cd /usr/local/bin
+cd /usr/local/bin/OpenCue
 
-systemService="opencue-rqd.service"
-sed -i "/Environment=BIN/c Environment=BIN=/usr/local/bin" $systemService
+mkdir /shots
+chmod 777 /shots
+
+systemService='opencue-rqd.service'
 sed -i "/Environment=OPTIONS=/i Environment=CUEBOT_HOSTNAME=$RENDER_MANAGER_HOST" $systemService
 cp $systemService /etc/systemd/system
 
@@ -20,13 +22,10 @@ do
     mkdir -p $directoryPath
     echo $fileSystemMount >> /etc/fstab
 done
-mount -a
-
-IFS=';' read -a fileSystemMounts <<< "$FILE_SYSTEM_MOUNTS"
-for fileSystemMount in "${fileSystemMounts[@]}"
-do
-    IFS=' ' read -a fsTabMount <<< "$fileSystemMount"
-    directoryPath="${fsTabMount[1]}"
-    directoryPermissions="${fsTabMount[-1]}"
-    chmod $directoryPermissions $directoryPath
+for i in {1..100}; do
+    mount -a
+    if [ $? -eq 0 ]; then
+        break
+    fi
+    sleep 3
 done

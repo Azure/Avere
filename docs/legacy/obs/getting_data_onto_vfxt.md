@@ -14,7 +14,7 @@ This section explains strategies for creating a multi-client, multithreaded file
 
 It also explains some utilities that can help. The ``msrsync`` utility can be used to partially automate the process of dividing a dataset into buckets and using rsync commands. The ``parallelcp`` script is another utility that reads the source directory and issues copy commands automatically.  
 
-To install a data ingestor VM with all of these parallel data ingestion tools follow the [data ingestor tutorial](data_ingestor.md).
+To install a data ingestor VM with all of these parallel data ingestion tools follow the [data ingestor tutorial](../../data_ingestor.md).
 
 Click the link to jump to a section:
 
@@ -245,7 +245,7 @@ To use msrsync to populate an Azure cloud volume with an Avere cluster, follow t
 1. Install msrsync and its prerequisites (rsync and Python 2.6 or later)
 2. Determine the total number of files and directories to be copied.
 
-   For example, use the Avere utility ``prime.py`` with arguments ```prime.py --directory /path/to/some/directory``` (available by downloading url https://raw.githubusercontent.com/Azure/Avere/master/src/clientapps/dataingestor/prime.py).
+   For example, use the Avere utility ``prime.py`` with arguments ```prime.py --directory /path/to/some/directory``` (available by downloading url https://raw.githubusercontent.com/Azure/Avere/main/src/clientapps/dataingestor/prime.py).
 
    If not using ``prime.py``, you can calculate the number of items with the Gnu ``find`` tool as follows:
    ```bash

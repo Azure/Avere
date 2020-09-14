@@ -36,7 +36,7 @@ The NFS filer holds your digital assets, rendering tools, and any other files re
 
 For this step there are two options:
 1. **use your on-premises NFS filer** - The on-premises NFS based filer may have one or more IP addresses.  This on-premises filer will need to be configured to allow `no_root_squash` and access to the avere subnet created in the network section.
-1. **build a simple NFS filer** - If you don't have an oprem filer, install the [Simple NFS Filer](simplenfsfiler/).  Once you have completed the installation, you will need to copy digital assets to it.  If you don't have digital assets, copy the blender assets described in this [this article](install_blender.md).
+1. **build a simple NFS filer** - If you don't have an oprem filer, install the [Simple NFS Filer](../simplenfsfiler/).  Once you have completed the installation, you will need to copy digital assets to it.  If you don't have digital assets, copy the blender assets described in this [this article](install_blender.md).
 
 # Azure Region
 
@@ -51,7 +51,7 @@ The render manager is responsible for orchestrating the render jobs across the r
 1. **Network access** - network access from the cloud render nodes will need network access to the render manager.
 1. **Scaling** - if the render manager participates in scale-up and scale-down of render nodes it will need access to Azure resource manager.
 
-If you do not have a render manager, install the [Opencue](opencue/) render manager for this tutorial.
+If you do not have a render manager, install the [Opencue](https://www.opencue.io/) render manager for this tutorial.
 
 # Network
 
@@ -74,10 +74,10 @@ There are two ways to build custom images on Azure:
 1. **import from an existing image** - this approach uses one of your existing images whether they rely on-premisis or in another cloud:
     1. [build from on-premisis and upload to Azure](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/create-upload-centos)
     1. [migrate image from AWS](https://docs.microsoft.com/en-us/azure/site-recovery/migrate-tutorial-aws-azure) - fix safe link.
-    1. [migrate image from GCP](../../../docs/CustomImageTransfer_GCE2Azure.md)
+    1. [migrate image from GCP](../../../docs/customImageTransfer_GCE2Azure.md)
 1. **build from an Azure stock image** - Another approach is to deploy a virtual machine (VM) on Azure, and install all your render software and render manager agents.  Once this is complete, [this article](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/capture-image) describes how to capture the VM to an image.
 
-If you don't have render software, use the stock image approach above, and use [this article](install_blender.md) to install blender and [this article](../opencue) to install the Opencue agent.
+If you don't have render software, use the stock image approach above, and use [this article](install_blender.md) to install blender and [this article](https://www.opencue.io/) to install the Opencue agent.
 
 As you are building your image, here are some tips:
 * ensure the waagent is installed and able to access the network, otherwise the VM will be stuck in "creating" and be eventually collected by Microsoft
@@ -94,7 +94,7 @@ Use VM or VMSS to startup more than 1 VM, up to 5 VMs.  This will enable you to 
 
 The Avere vFXT hides latency to the core filer and keeps storage close to the cloud.  To install Avere, verify you have the [prerequisites](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs), you can use the wizard [Avere vFXT Marketplace Wizard](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/microsoft-avere.vfxt-template?tab=Overview).  Follow the [Add Storage Article](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-add-storage) to add your NFS filer.  Your NFS filer must have `no_root_squash` enabled.
 
-Additionally you may request to the Avere team to be registered into private preview of the cache xervice.  Click [here](https://github.com/Azure/Avere/blob/master/docs/legacy/hpc-cache-preview.md) to learn more about getting started.
+Additionally you may request to the Avere team to be registered into private preview of the cache xervice.  Click [here](https://github.com/Azure/Avere/blob/main/docs/legacy/hpc-cache-preview.md) to learn more about getting started.
 
 # Scaling Render Nodes
 
