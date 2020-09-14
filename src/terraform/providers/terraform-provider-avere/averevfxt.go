@@ -53,6 +53,8 @@ func NewAvereVfxt(
 	cifsServerName string,
 	cifsUserName string,
 	cifsPassword string,
+	cifsFlatFilePasswdURI string,
+	cifsFlatFileGroupURI string,
 	cifsOrganizationalUnit string,
 	enableExtendedGroups bool,
 	userAssignedManagedIdentity string,
@@ -88,6 +90,8 @@ func NewAvereVfxt(
 		CifsServerName:              cifsServerName,
 		CifsUsername:                cifsUserName,
 		CifsPassword:                cifsPassword,
+		CifsFlatFilePasswdURI:       cifsFlatFilePasswdURI,
+		CifsFlatFileGroupURI:        cifsFlatFileGroupURI,
 		CifsOrganizationalUnit:      cifsOrganizationalUnit,
 		EnableExtendedGroups:        enableExtendedGroups,
 		UserAssignedManagedIdentity: userAssignedManagedIdentity,
@@ -1811,7 +1815,14 @@ func (a *AvereVfxt) getSupportSecureProactiveSupportCommand() string {
 }
 
 func (a *AvereVfxt) getDirServicesEnableCIFSCommand() string {
-	return WrapCommandForLogging(fmt.Sprintf("%s dirServices.modify \"%s\" \"{'usernameMapSource':'None','usernameSource':'AD','DCsmbProtocol':'SMB2','netgroupSource':'None','usernameConditions':'enabled','ADdomainName':'%s','ADtrusted':'','nfsDomain':'','netgroupPollPeriod':'3600','usernamePollPeriod':'3600'}\"", a.getBaseAvereCmd(), DefaultDirectoryServiceName, a.CifsAdDomain), AverecmdLogFile)
+	usernameSource := CIFS_UsernameSource_AD
+	structSuffix := ""
+	if len(a.CifsFlatFilePasswdURI) > 0 && len(a.CifsFlatFileGroupURI) > 0 {
+		usernameSource = CIFS_UsernameSource_File
+		structSuffix = fmt.Sprintf(",'usernamePasswdURI':'%s','usernameGroupURI':'%s'", a.CifsFlatFilePasswdURI, a.CifsFlatFileGroupURI)
+	}
+
+	return WrapCommandForLogging(fmt.Sprintf("%s dirServices.modify \"%s\" \"{'usernameMapSource':'None','usernameSource':'%s','DCsmbProtocol':'SMB2','netgroupSource':'None','usernameConditions':'enabled','ADdomainName':'%s','ADtrusted':'','nfsDomain':'','netgroupPollPeriod':'3600','usernamePollPeriod':'3600'%s}\"", a.getBaseAvereCmd(), DefaultDirectoryServiceName, usernameSource, a.CifsAdDomain, structSuffix), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getDirServicesPollUserGroupCommand() string {

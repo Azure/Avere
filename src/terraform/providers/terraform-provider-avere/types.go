@@ -41,6 +41,8 @@ type AvereVfxt struct {
 	CifsServerName         string
 	CifsUsername           string
 	CifsPassword           string
+	CifsFlatFilePasswdURI  string
+	CifsFlatFileGroupURI   string
 	CifsOrganizationalUnit string
 	EnableExtendedGroups   bool
 
