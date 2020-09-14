@@ -58,12 +58,11 @@ Get-RID($sid)
 function
 Get-Users
 {
-    $allUsers = Get-ADUser -Filter * -Properties SamAccountName, SID, MemberOf, DistinguishedName | Select-Object -Property SamAccountName, SID, MemberOf, DistinguishedName
+    $allUsers = Get-ADUser -Filter * -Properties SamAccountName, SID, DistinguishedName | Select-Object -Property SamAccountName, SID, DistinguishedName
     ForEach($targetUser in $allUsers){
         @{
             SamAccountName = $targetUser.SamAccountName
             RID = Get-RID $targetUser.SID
-            MemberOf = $targetUser.MemberOf
             DistinguishedName = $targetUser.DistinguishedName
         }
     }
@@ -72,12 +71,11 @@ Get-Users
 function
 Get-Groups
 {
-    $allGroups = Get-ADGroup -Filter * -Properties SamAccountName, SID, Members, DistinguishedName | Select-Object -Property SamAccountName, SID, Members, DistinguishedName
+    $allGroups = Get-ADGroup -Filter * -Properties SamAccountName, SID, DistinguishedName | Select-Object -Property SamAccountName, SID, DistinguishedName
     ForEach($targetGroup in $allGroups){
         @{
             SamAccountName = $targetGroup.SamAccountName
             RID = Get-RID $targetGroup.SID
-            Members = $targetGroup.Members
             DistinguishedName = $targetGroup.DistinguishedName
         }
     }
@@ -86,28 +84,16 @@ Get-Groups
 function
 Get-Gid($avereUser, $distinguishedNameMap) {
     $gid = $avereUser.RID
+    $usergroups = (Get-ADPrincipalGroupMembership $avereUser.SamAccountName | select -expand distinguishedname)
+    $rids = ForEach($usergroup in $usergroups) {
+        $distinguishedNameMap[$usergroup].RID
+    }
 
-    ForEach($group in $avereGroup.MemberOf) {
-        if ($distinguishedNameMap.ContainsKey($group)) {
-            $gid = $distinguishedNameMap[$group].RID
-            break
-        }
+    if ($rids.Count -gt 0) {
+        $gid = ($rids | sort)[0]
     }
 
     $gid
-}
-
-function
-Get-Members($avereGroup, $distinguishedNameMap) {
-    $members = @()
-
-    ForEach($member in $avereGroup.Members) {
-        if ($distinguishedNameMap.ContainsKey($member)) {
-            $members += $distinguishedNameMap[$member].SamAccountName
-        }
-    }
-
-    $members -join ","
 }
 
 function
@@ -133,7 +119,7 @@ Write-AvereFiles($avereUsers, $avereGroups)
     ForEach($avereGroup in $avereGroups) {
         $groupName = $avereGroup.SamAccountName
         $rid = $avereGroup.RID
-        $members = Get-Members -avereGroup $avereGroup -distinguishedNameMap $distinguishedNameMap
+        $members = (Get-ADGroupMember -Identity $avereGroup.SamAccountName | Select -expand name) -join ","
         $avereGroupFileContents += "${groupName}:*:${rid}:${members}`n"
     }
     $avereGroupFileContents | Out-File -encoding ASCII -filepath "$GroupFile" -NoNewline
@@ -149,6 +135,8 @@ try
 
     Write-Log("write file '$UserFile' and file '$GroupFile'")
     Write-AvereFiles -avereUsers $avereUsers -avereGroups $avereGroups
+
+    Write-Log("complete")
 }
 catch
 {
