@@ -63,6 +63,8 @@ locals {
     cifs_server_name = local.vfxt_cluster_name
     cifs_username = "" 
     cifs_password = ""
+    //cifs_flatfile_passwd_b64z = base64gzip(file("${path.module}/avere-user.txt"))
+    //cifs_flatfile_group_b64z = base64gzip(file("${path.module}/avere-group.txt"))
     // OU is optional
     cifs_organizational_unit = "" // example "OU=avere technology,DC=rendering,DC=com"
 
@@ -126,6 +128,8 @@ resource "avere_vfxt" "vfxt" {
     cifs_server_name = local.cifs_server_name
     cifs_username = local.cifs_username
     cifs_password = local.cifs_password
+    //cifs_flatfile_passwd_b64z = local.cifs_flatfile_passwd_b64z
+    //cifs_flatfile_group_b64z = local.cifs_flatfile_group_b64z
     // OU is optional, uncomment if necessary
     cifs_organizational_unit = local.cifs_organizational_unit
 

@@ -125,8 +125,10 @@ const (
 	FaultCode   = "faultCode"
 	MultiCall   = "--json system.multicall"
 
-	CIFS_UsernameSource_AD   = "AD"
-	CIFS_UsernameSource_File = "File"
+	CIFSUsernameSourceAD    = "AD"
+	CIFSUsernameSourceFile  = "File"
+	CIFSSelfPasswdUriStrFmt = "https://%s/avere/avere-user.txt"
+	CIFSSelfGroupUriStrFmt  = "https://%s/avere/avere-group.txt"
 )
 
 // terraform schema constants - avoids bugs on schema name changes
@@ -168,6 +170,8 @@ const (
 	cifs_password                  = "cifs_password"
 	cifs_flatfile_passwd_uri       = "cifs_flatfile_passwd_uri"
 	cifs_flatfile_group_uri        = "cifs_flatfile_group_uri"
+	cifs_flatfile_passwd_b64z      = "cifs_flatfile_passwd_b64z"
+	cifs_flatfile_group_b64z       = "cifs_flatfile_group_b64z"
 	cifs_organizational_unit       = "cifs_organizational_unit"
 	enable_extended_groups         = "enable_extended_groups"
 	user_assigned_managed_identity = "user_assigned_managed_identity"
