@@ -251,18 +251,36 @@ func resourceVfxt() *schema.Resource {
 				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_username},
 			},
 			cifs_flatfile_passwd_uri: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "",
-				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
-				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_password, cifs_flatfile_group_uri},
+				Type:          schema.TypeString,
+				Optional:      true,
+				Default:       "",
+				ValidateFunc:  validation.StringDoesNotContainAny(" '\""),
+				RequiredWith:  []string{cifs_ad_domain, cifs_server_name, cifs_password, cifs_flatfile_group_uri},
+				ConflictsWith: []string{cifs_flatfile_passwd_b64z, cifs_flatfile_group_b64z},
 			},
 			cifs_flatfile_group_uri: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "",
-				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
-				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_password, cifs_flatfile_passwd_uri},
+				Type:          schema.TypeString,
+				Optional:      true,
+				Default:       "",
+				ValidateFunc:  validation.StringDoesNotContainAny(" '\""),
+				RequiredWith:  []string{cifs_ad_domain, cifs_server_name, cifs_password, cifs_flatfile_passwd_uri},
+				ConflictsWith: []string{cifs_flatfile_passwd_b64z, cifs_flatfile_group_b64z},
+			},
+			cifs_flatfile_passwd_b64z: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Default:       "",
+				ValidateFunc:  validation.StringDoesNotContainAny(" '\""),
+				RequiredWith:  []string{cifs_ad_domain, cifs_server_name, cifs_password, cifs_flatfile_group_b64z},
+				ConflictsWith: []string{cifs_flatfile_passwd_uri, cifs_flatfile_group_uri},
+			},
+			cifs_flatfile_group_b64z: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Default:       "",
+				ValidateFunc:  validation.StringDoesNotContainAny(" '\""),
+				RequiredWith:  []string{cifs_ad_domain, cifs_server_name, cifs_password, cifs_flatfile_passwd_b64z},
+				ConflictsWith: []string{cifs_flatfile_passwd_uri, cifs_flatfile_group_uri},
 			},
 			cifs_organizational_unit: {
 				Type:         schema.TypeString,
@@ -972,6 +990,8 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(cifs_password).(string),
 		d.Get(cifs_flatfile_passwd_uri).(string),
 		d.Get(cifs_flatfile_group_uri).(string),
+		d.Get(cifs_flatfile_passwd_b64z).(string),
+		d.Get(cifs_flatfile_group_b64z).(string),
 		d.Get(cifs_organizational_unit).(string),
 		d.Get(enable_extended_groups).(bool),
 		d.Get(user_assigned_managed_identity).(string),
@@ -1628,7 +1648,15 @@ func createJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 func updateCifs(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 	// CIFS must be updated after the last possible CIF shares have been removed, but
 	// before new shares are added
-	if d.HasChange(cifs_ad_domain) || d.HasChange(cifs_server_name) || d.HasChange(cifs_username) || d.HasChange(cifs_password) || d.HasChange(cifs_flatfile_passwd_uri) || d.HasChange(cifs_flatfile_group_uri) || d.HasChange(cifs_organizational_unit) {
+	if d.HasChange(cifs_ad_domain) ||
+		d.HasChange(cifs_server_name) ||
+		d.HasChange(cifs_username) ||
+		d.HasChange(cifs_password) ||
+		d.HasChange(cifs_flatfile_passwd_uri) ||
+		d.HasChange(cifs_flatfile_group_uri) ||
+		d.HasChange(cifs_flatfile_passwd_b64z) ||
+		d.HasChange(cifs_flatfile_group_b64z) ||
+		d.HasChange(cifs_organizational_unit) {
 		if err := averevfxt.DisableCIFS(); err != nil {
 			return err
 		}

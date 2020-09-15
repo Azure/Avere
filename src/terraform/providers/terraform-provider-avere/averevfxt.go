@@ -55,6 +55,8 @@ func NewAvereVfxt(
 	cifsPassword string,
 	cifsFlatFilePasswdURI string,
 	cifsFlatFileGroupURI string,
+	cifsFlatFilePasswdB64z string,
+	cifsFlatFileGroupB64z string,
 	cifsOrganizationalUnit string,
 	enableExtendedGroups bool,
 	userAssignedManagedIdentity string,
@@ -92,6 +94,8 @@ func NewAvereVfxt(
 		CifsPassword:                cifsPassword,
 		CifsFlatFilePasswdURI:       cifsFlatFilePasswdURI,
 		CifsFlatFileGroupURI:        cifsFlatFileGroupURI,
+		CifsFlatFilePasswdB64z:      cifsFlatFilePasswdB64z,
+		CifsFlatFileGroupB64z:       cifsFlatFileGroupB64z,
 		CifsOrganizationalUnit:      cifsOrganizationalUnit,
 		EnableExtendedGroups:        enableExtendedGroups,
 		UserAssignedManagedIdentity: userAssignedManagedIdentity,
@@ -419,6 +423,9 @@ func (a *AvereVfxt) EnableCIFS() error {
 	log.Printf("[INFO] [EnableCIFS")
 	defer log.Printf("[INFO] EnableCIFS]")
 	if a.CIFSSettingsExist() {
+		if err := a.UploadFlatFiles(); err != nil {
+			return fmt.Errorf("uploading flat files failed with error: %v", err)
+		}
 		if _, err := a.AvereCommand(a.getDirServicesEnableCIFSCommand()); err != nil {
 			return fmt.Errorf("directory services enablement failed with error: %v", err)
 		}
@@ -730,6 +737,71 @@ func (a *AvereVfxt) CreateCoreFiler(corefiler *CoreFiler) error {
 	return nil
 }
 
+func (a *AvereVfxt) GetSSHPassPrefix() string {
+	return fmt.Sprintf("sshpass -p '%s' ", a.AvereAdminPassword)
+}
+
+func (a *AvereVfxt) getPutPasswdFileCmd() string {
+	return WrapCommandForLogging(fmt.Sprintf("echo %s | base64 -d | gunzip > ~/avere-user.txt", a.CifsFlatFilePasswdB64z), ShellLogFile)
+}
+
+func (a *AvereVfxt) getPutGroupFileCmd() string {
+	return WrapCommandForLogging(fmt.Sprintf("echo %s | base64 -d | gunzip > ~/avere-group.txt", a.CifsFlatFileGroupB64z), ShellLogFile)
+}
+
+func (a *AvereVfxt) UploadFlatFiles() error {
+	if len(a.CifsFlatFilePasswdB64z) == 0 || len(a.CifsFlatFileGroupB64z) == 0 {
+		return nil
+	}
+	log.Printf("[INFO] [uploading flat files")
+	defer log.Printf("[INFO] uploading flat files]")
+	log.Printf("[INFO] setup ssh")
+	if stdoutBuf, stderrBuf, err := a.RunCommand(getEnsureSSHPass()); err != nil {
+		return fmt.Errorf("Error installing sshpass: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	}
+
+	if stdoutBuf, stderrBuf, err := a.RunCommand(getEnsureNoKnownHosts()); err != nil {
+		return fmt.Errorf("Error removing known hosts file: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	}
+
+	// set the server IP, adjusting the command with sshpass
+	sshPassPrefix := a.GetSSHPassPrefix()
+
+	log.Printf("[INFO] step 1 - put files on controller")
+	if stdoutBuf, stderrBuf, err := a.RunCommand(a.getPutPasswdFileCmd()); err != nil {
+		return fmt.Errorf("Error uploading passwd file: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	}
+	if stdoutBuf, stderrBuf, err := a.RunCommand(a.getPutGroupFileCmd()); err != nil {
+		return fmt.Errorf("Error uploading group file: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	}
+
+	log.Printf("[INFO] step 2 - copy to Avere webserver")
+	scpCmd := WrapCommandForLogging(fmt.Sprintf("%s scp -oStrictHostKeyChecking=no ~/avere-* admin@%s:/tmp ", sshPassPrefix, a.ManagementIP), ShellLogFile)
+	if stdoutBuf, stderrBuf, err := a.RunCommand(scpCmd); err != nil {
+		return fmt.Errorf("Error running scp command: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	}
+	mountWritableCmd := WrapCommandForLogging(fmt.Sprintf("%s ssh -oStrictHostKeyChecking=no -oProxyCommand=\"%s ssh -oStrictHostKeyChecking=no -W %%h:%%p admin@%s\" root@localhost 'bash -l -c \"clusterexec.py mount -uw /\"'", sshPassPrefix, sshPassPrefix, a.ManagementIP), ShellLogFile)
+	if stdoutBuf, stderrBuf, err := a.RunCommand(mountWritableCmd); err != nil {
+		return fmt.Errorf("Error running mount writable command: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	}
+	copyUserCmd := WrapCommandForLogging(fmt.Sprintf("%s ssh -oStrictHostKeyChecking=no -oProxyCommand=\"%s ssh -oStrictHostKeyChecking=no -W %%h:%%p admin@%s\" root@localhost 'bash -l -c \"clustercp.py /tmp/avere-user.txt /usr/local/www/apache24/data/avere/avere-user.txt\"'", sshPassPrefix, sshPassPrefix, a.ManagementIP), ShellLogFile)
+	if stdoutBuf, stderrBuf, err := a.RunCommand(copyUserCmd); err != nil {
+		return fmt.Errorf("Error running copy group command: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	}
+	copyGroupCmd := WrapCommandForLogging(fmt.Sprintf("%s ssh -oStrictHostKeyChecking=no -oProxyCommand=\"%s ssh -oStrictHostKeyChecking=no -W %%h:%%p admin@%s\" root@localhost 'bash -l -c \"clustercp.py /tmp/avere-group.txt /usr/local/www/apache24/data/avere/avere-group.txt\"'", sshPassPrefix, sshPassPrefix, a.ManagementIP), ShellLogFile)
+	if stdoutBuf, stderrBuf, err := a.RunCommand(copyGroupCmd); err != nil {
+		return fmt.Errorf("Error running copy group command: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	}
+
+	log.Printf("[INFO] step 3 - cleanup")
+	mountReadableCmd := WrapCommandForLogging(fmt.Sprintf("%s ssh -oStrictHostKeyChecking=no -oProxyCommand=\"%s ssh -oStrictHostKeyChecking=no -W %%h:%%p admin@%s\" root@localhost 'bash -l -c \"clusterexec.py mount -ur /\"'", sshPassPrefix, sshPassPrefix, a.ManagementIP), ShellLogFile)
+	if stdoutBuf, stderrBuf, err := a.RunCommand(mountReadableCmd); err != nil {
+		return fmt.Errorf("Error running mount readable command: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	}
+
+	return nil
+}
+
 // if the fqdn is in multiple parts, run the dbutil.py command, as there
 // is a bug in averecmd that only sets the first ip address
 func (a *AvereVfxt) EnsureServerAddressCorrect(corefiler *CoreFiler) error {
@@ -743,6 +815,10 @@ func (a *AvereVfxt) EnsureServerAddressCorrect(corefiler *CoreFiler) error {
 		return fmt.Errorf("Error installing sshpass: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
 	}
 
+	if stdoutBuf, stderrBuf, err := a.RunCommand(getEnsureNoKnownHosts()); err != nil {
+		return fmt.Errorf("Error removing known hosts file: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	}
+
 	// get the mass
 	internalName, err := a.GetInternalName(corefiler.Name)
 	if err != nil {
@@ -750,9 +826,9 @@ func (a *AvereVfxt) EnsureServerAddressCorrect(corefiler *CoreFiler) error {
 	}
 
 	// set the server IP, adjusting the command with sshpass
-	sshPassPrefix := fmt.Sprintf("sshpass -p '%s' ", a.AvereAdminPassword)
+	sshPassPrefix := a.GetSSHPassPrefix()
 
-	dbUtilCommand := WrapCommandForLogging(fmt.Sprintf("%s ssh -oProxyCommand=\"%s ssh -W %%h:%%p admin@%s\" root@localhost 'bash -l -c \"dbutil.py set %s serverAddr '\"'\"'%s'\"'\"' -x\"'", sshPassPrefix, sshPassPrefix, a.ManagementIP, internalName, corefiler.FqdnOrPrimaryIp), ShellLogFile)
+	dbUtilCommand := WrapCommandForLogging(fmt.Sprintf("%s ssh -oStrictHostKeyChecking=no -oProxyCommand=\"%s ssh -oStrictHostKeyChecking=no -W %%h:%%p admin@%s\" root@localhost 'bash -l -c \"dbutil.py set %s serverAddr '\"'\"'%s'\"'\"' -x\"'", sshPassPrefix, sshPassPrefix, a.ManagementIP, internalName, corefiler.FqdnOrPrimaryIp), ShellLogFile)
 
 	if stdoutBuf, stderrBuf, err := a.RunCommand(dbUtilCommand); err != nil {
 		return fmt.Errorf("Error running dbutil.py command: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
@@ -1815,11 +1891,17 @@ func (a *AvereVfxt) getSupportSecureProactiveSupportCommand() string {
 }
 
 func (a *AvereVfxt) getDirServicesEnableCIFSCommand() string {
-	usernameSource := CIFS_UsernameSource_AD
+	usernameSource := CIFSUsernameSourceAD
 	structSuffix := ""
-	if len(a.CifsFlatFilePasswdURI) > 0 && len(a.CifsFlatFileGroupURI) > 0 {
-		usernameSource = CIFS_UsernameSource_File
-		structSuffix = fmt.Sprintf(",'usernamePasswdURI':'%s','usernameGroupURI':'%s'", a.CifsFlatFilePasswdURI, a.CifsFlatFileGroupURI)
+	flatFilePasswdUri := a.CifsFlatFilePasswdURI
+	flatFileGroupUri := a.CifsFlatFileGroupURI
+	if len(a.CifsFlatFilePasswdB64z) > 0 && len(a.CifsFlatFileGroupB64z) > 0 {
+		flatFilePasswdUri = fmt.Sprintf(CIFSSelfPasswdUriStrFmt, a.ManagementIP)
+		flatFileGroupUri = fmt.Sprintf(CIFSSelfGroupUriStrFmt, a.ManagementIP)
+	}
+	if len(flatFilePasswdUri) > 0 && len(flatFileGroupUri) > 0 {
+		usernameSource = CIFSUsernameSourceFile
+		structSuffix = fmt.Sprintf(",'usernamePasswdURI':'%s','usernameGroupURI':'%s'", flatFilePasswdUri, flatFileGroupUri)
 	}
 
 	return WrapCommandForLogging(fmt.Sprintf("%s dirServices.modify \"%s\" \"{'usernameMapSource':'None','usernameSource':'%s','DCsmbProtocol':'SMB2','netgroupSource':'None','usernameConditions':'enabled','ADdomainName':'%s','ADtrusted':'','nfsDomain':'','netgroupPollPeriod':'3600','usernamePollPeriod':'3600'%s}\"", a.getBaseAvereCmd(), DefaultDirectoryServiceName, usernameSource, a.CifsAdDomain, structSuffix), AverecmdLogFile)
@@ -1944,4 +2026,8 @@ func getMassIndex(internalName string) int {
 
 func getEnsureSSHPass() string {
 	return WrapCommandForLogging("which sshpass || sudo apt-get install -y sshpass", ShellLogFile)
+}
+
+func getEnsureNoKnownHosts() string {
+	return WrapCommandForLogging("rm -f ~/.ssh/known_hosts", ShellLogFile)
 }
