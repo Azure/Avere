@@ -15,7 +15,6 @@ These configurations use customized caching policies to reduce latency. Cache po
 To enable CIFS (SMB), please see our [CIFS (SMB) documentation](../../../providers/terraform-provider-avere#cifs_ad_domain) and [example](../../houdinienvironment#phase-2-scaling-step-3b---cache).
 
 ## "Isolated Cloud Workstation" Cache Policy
-=======
 
 The first and most performant cache policy to consider is named "Isolated Cloud Workstation".  This cache policy can be used when users are isolated and not collaborating on the same workload.  
 
