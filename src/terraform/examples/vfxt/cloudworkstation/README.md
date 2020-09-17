@@ -38,7 +38,9 @@ Depending on the workload, you might decide to use the predefined cache policy *
 
 [Learn about predefined cache policies](https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_manage_cache_policies.html#predefined-cache-policies)
 
-In the scenario above, where one artist is writing changes directly to the NFS filer and others are working through the cache, there is a risk of file collision if you use Collaborating Cloud Workstation. The cache software handles file locking for the users who write to the cache, but can't anticipate collisions with writes from the on-premises user.
+### Other Options for Cloud Workstations
+
+In the collaborative scenario above, where one artist is writing changes directly to the NFS filer and others are working through the cache, there is a risk of file collision if you use Collaborating Cloud Workstation. The cache software handles file locking for the users who write to the cache, but can't anticipate collisions with writes from the on-premises user.
 
 For example, if a remote user writes a change to the cache for FileA.txt at t=0 seconds, the cache waits for further changes for 30 seconds before writing the changes to the back-end filer. If the on-premises client writes to FileA.txt directly on the filer at t=15 seconds, those changes will be overwritten when the cached change is written back to the filer. The t=15 seconds changes will be overwritten with the changes made at t=0, so the file will have older data.
 
