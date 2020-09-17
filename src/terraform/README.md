@@ -42,7 +42,7 @@ Both HPC Cache and Avere vFXT for Azure provide file caching for high-performanc
 Security.
 1. [Backup Restore](examples/backuprestore) - Backup any FXT or vFXT cluster and build terraform to restore to HPC Cache or Avere vFXT for Azure.
 1. [Best Practices for using Azure Virtual Machine Scale Sets (VMSS) or Azure Cycle Cloud for Rendering](examples/vmss-rendering)
-1. [Best Networking Practices for Rendering](examples/network-rendering)
+1. [Networking Best Practices for Rendering](examples/network-rendering)
 1. [Create a Houdini Render Farm On Azure](examples/houdinienvironment) - this walks through a deployment of a Houdini render environment on Azure.
 1. [Create an OpenCue managed render farm on Azure](examples/vfxt/opencue) - deploy an end to end render solution on Azure using OpenCue as your render manager.
 
