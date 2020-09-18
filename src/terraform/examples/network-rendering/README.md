@@ -32,23 +32,23 @@ The [Azure ExpressRoute](https://azure.microsoft.com/en-us/services/expressroute
 
 ### Pre-requisites:
 * Ensure your on-premises switch support [QinQ VLAN Tagging](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-erdirect-about#vlan-tagging) or [Dot1Q VLAN Tagging](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-erdirect-about#vlan-tagging)
-* For installations larger than 10Gbps, work with the Microsoft Rendering and Express Route teams to ensure the established architecture will provide the best performance.
+* For installations larger than 10Gbps, work with the Microsoft Rendering and ExpressRoute teams to ensure the established architecture will provide the best performance.
 
 ### For TCO considerations, the here is the cost break down of ExpressRoute
-* consider [ExpressRoute Direct](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-erdirect-about), as this may save you the cost of Express Route + connectivity partner.  [ExpressRoute Direct](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-erdirect-about) is based on the concept of physical port pairs. ER Direct is available with port pairs at 10Gbps or 100Gbps.  Over the ExpressRoute port pair is [possible to configure multiple ExpressRoute circuits at different bandwidths](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-erdirect-about).
+* consider [ExpressRoute Direct](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-erdirect-about), as this may save you the cost of ExpressRoute + connectivity partner.  [ExpressRoute Direct](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-erdirect-about) is based on the concept of physical port pairs. ER Direct is available with port pairs at 10Gbps or 100Gbps.  Over the ExpressRoute port pair is [possible to configure multiple ExpressRoute circuits at different bandwidths](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-erdirect-about).  One of key features that ExpressRoute Direct provides is the Massive Data Ingestion through dedicated port pair with the Microsoft Enterprise Edge (MSEE) routers.
 * do not use or specify zones to save cross zonal network charges
 * avoid ExpressRoute unlimited SKUs, due to the bursty nature of rendering as it requires saturation of the pipe more than 70% of the time.
 
 ### Ensuring for highest performance:
 * ensure BGP and ECMP (Equal-Cost-Multi-Path) is enabled
-* ensure [ExpressRoute FastPath](https://docs.microsoft.com/en-us/azure/expressroute/about-fastpath) is enabled.  Note that FastPath doesn't [support UDR, VNET Peering, Basic Load Balancer, or private link](https://docs.microsoft.com/en-us/azure/expressroute/about-fastpath), but these are rare to use for rendering, so it is safe to enable FastPath.  FastPath is designed to improve the data path performance between your on-premises network and your virtual network. When enabled, FastPath sends network traffic directly to virtual machines in the virtual network, bypassing the gateway. Fast path is supported only in UltraPerformance and ErGw3AZ SKUs.  However, per the TCO considerations above prefer UltraPerformance over ErGw3AZ to avoid cross zonal charges.
+* ensure [ExpressRoute FastPath](https://docs.microsoft.com/en-us/azure/expressroute/about-fastpath) is enabled.  Note that FastPath doesn't [support UDR, VNET Peering, Basic Load Balancer, or private link](https://docs.microsoft.com/en-us/azure/expressroute/about-fastpath), but these are rare to use for rendering, so it is safe to enable FastPath.  FastPath is designed to improve the data path performance between your on-premises network and your virtual network. When enabled, FastPath sends network traffic directly to virtual machines in the virtual network, bypassing the ExpressRoute gateway. Fast path is supported only in UltraPerformance and ErGw3AZ SKUs.  However, per the TCO considerations above prefer UltraPerformance over ErGw3AZ to avoid cross zonal charges.
 * The maximum transmission unit (MTU) for the ExpressRoute interface is 1500Byte
 
 ### Ensuring for reliability:
 * To have a configuration with good resilience between the Azure VNet and on-premises network, it is recommended to deploy two Expressroute circuits in two different ExpressRoute locations. The Azure VNet will be linked with both of ExpressRoute circuits
 
 ### Ensuring for security:
-* To ensure your Express Route connection is encrypted end-to-end, consider configuring [IPsec over ExpressRoute for Virtual WAN](https://docs.microsoft.com/en-us/azure/virtual-wan/vpn-over-expressroute).
+* To ensure your ExpressRoute connection is encrypted end-to-end, consider configuring [IPsec over ExpressRoute for Virtual WAN](https://docs.microsoft.com/en-us/azure/virtual-wan/vpn-over-expressroute).
 
 ## Troubleshooting network speeds
 
