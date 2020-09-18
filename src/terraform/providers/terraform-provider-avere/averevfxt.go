@@ -149,6 +149,79 @@ func (a *AvereVfxt) RunCommand(cmd string) (bytes.Buffer, bytes.Buffer, error) {
 	}
 }
 
+func (a *AvereVfxt) ShellCommand(cmd string) (string, error) {
+	var result string
+	for retries := 0; ; retries++ {
+		stdoutBuf, stderrBuf, err := a.RunCommand(cmd)
+		// look for the error if this is a multi-call
+		if err == nil {
+			// success
+			result = stdoutBuf.String()
+			break
+		}
+		log.Printf("[WARN] [%d/%d] command failed with '%v' ", retries, ShellcmdRetryCount, err)
+
+		if retries > ShellcmdRetryCount {
+			// failure after exhausted retries
+			return "", fmt.Errorf("Failure after %d retries applying command: '%s' '%s'", ShellcmdRetryCount, stdoutBuf.String(), stderrBuf.String())
+		}
+		time.Sleep(ShellcmdRetrySleepSeconds * time.Second)
+	}
+	return result, nil
+}
+
+func (a *AvereVfxt) AvereCommand(cmd string) (string, error) {
+	return a.AvereCommandWithCorrection(cmd, nil)
+}
+
+func (a *AvereVfxt) AvereCommandWithCorrection(cmd string, correctiveAction func() error) (string, error) {
+	var result string
+	for retries := 0; ; retries++ {
+		stdoutBuf, stderrBuf, err := a.RunCommand(cmd)
+		// look for the error if this is a multi-call
+		if err == nil && IsMultiCall(cmd) {
+			if isMultiCallSuccess, faultStr, err2 := IsMultiCallResultSuccessful(stdoutBuf.String()); !isMultiCallSuccess {
+				if err2 != nil {
+					err = fmt.Errorf("BUG: multcall result parse error: %v", err2)
+				} else if len(faultStr) > 0 {
+					err = fmt.Errorf("multi call error: '%s'", faultStr)
+				}
+			}
+		}
+		if err == nil {
+			// success
+			result = stdoutBuf.String()
+			break
+		}
+		log.Printf("[WARN] [%d/%d] command to %s failed with '%v' ", retries, AverecmdRetryCount, a.ControllerAddress, err)
+		if isAverecmdNotRetryable(stdoutBuf, stderrBuf) {
+			// failure not retryable
+			return "", fmt.Errorf("Non retryable error applying command: '%s' '%s'", stdoutBuf.String(), stderrBuf.String())
+		}
+		if correctiveAction != nil {
+			// the corrective action is best effort, just log an error if one occurs
+			if err = correctiveAction(); err != nil {
+				log.Printf("[ERROR] error performing correctiveAction: %v", err)
+			} else {
+				// try the command again after a successful correction
+				stdoutBuf, stderrBuf, err = a.RunCommand(cmd)
+				if err == nil {
+					// success
+					result = stdoutBuf.String()
+					break
+				}
+			}
+		}
+
+		if retries > AverecmdRetryCount {
+			// failure after exhausted retries
+			return "", fmt.Errorf("Failure after %d retries applying command: '%s' '%s'", AverecmdRetryCount, stdoutBuf.String(), stderrBuf.String())
+		}
+		time.Sleep(AverecmdRetrySleepSeconds * time.Second)
+	}
+	return result, nil
+}
+
 func (a *AvereVfxt) ScaleCluster(previousNodeCount int, newNodeCount int) error {
 	if newNodeCount < MinNodesCount {
 		return fmt.Errorf("Error: invalid scale size %d, cluster cannot have less than %d nodes", newNodeCount, MinNodesCount)
@@ -737,16 +810,20 @@ func (a *AvereVfxt) CreateCoreFiler(corefiler *CoreFiler) error {
 	return nil
 }
 
-func (a *AvereVfxt) GetSSHPassPrefix() string {
-	return fmt.Sprintf("sshpass -p '%s' ", a.AvereAdminPassword)
-}
+func (a *AvereVfxt) PrepareForVFXTNodeCommands() error {
+	log.Printf("[INFO] [PrepareForVFXTNodeCommands")
+	defer log.Printf("[INFO] PrepareForVFXTNodeCommands]")
 
-func (a *AvereVfxt) getPutPasswdFileCmd() string {
-	return WrapCommandForLogging(fmt.Sprintf("echo %s | base64 -d | gunzip > ~/avere-user.txt", a.CifsFlatFilePasswdB64z), ShellLogFile)
-}
+	if _, err := a.ShellCommand(getEnsureSSHPass()); err != nil {
+		return fmt.Errorf("Error installing sshpass: %v", err)
+	}
 
-func (a *AvereVfxt) getPutGroupFileCmd() string {
-	return WrapCommandForLogging(fmt.Sprintf("echo %s | base64 -d | gunzip > ~/avere-group.txt", a.CifsFlatFileGroupB64z), ShellLogFile)
+	// the Avere management ip address can change from node to node, so we need to clear the known hosts files
+	if _, err := a.ShellCommand(getEnsureNoKnownHosts()); err != nil {
+		return fmt.Errorf("Error removing known hosts file: %v", err)
+	}
+
+	return nil
 }
 
 func (a *AvereVfxt) UploadFlatFiles() error {
@@ -755,49 +832,47 @@ func (a *AvereVfxt) UploadFlatFiles() error {
 	}
 	log.Printf("[INFO] [uploading flat files")
 	defer log.Printf("[INFO] uploading flat files]")
-	log.Printf("[INFO] setup ssh")
-	if stdoutBuf, stderrBuf, err := a.RunCommand(getEnsureSSHPass()); err != nil {
-		return fmt.Errorf("Error installing sshpass: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
-	}
 
-	if stdoutBuf, stderrBuf, err := a.RunCommand(getEnsureNoKnownHosts()); err != nil {
-		return fmt.Errorf("Error removing known hosts file: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	if err := a.PrepareForVFXTNodeCommands(); err != nil {
+		return err
 	}
-
-	// set the server IP, adjusting the command with sshpass
-	sshPassPrefix := a.GetSSHPassPrefix()
 
 	log.Printf("[INFO] step 1 - put files on controller")
-	if stdoutBuf, stderrBuf, err := a.RunCommand(a.getPutPasswdFileCmd()); err != nil {
-		return fmt.Errorf("Error uploading passwd file: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	if _, err := a.ShellCommand(a.getPutPasswdFileCommand()); err != nil {
+		return fmt.Errorf("Error uploading passwd file: %v", err)
 	}
-	if stdoutBuf, stderrBuf, err := a.RunCommand(a.getPutGroupFileCmd()); err != nil {
-		return fmt.Errorf("Error uploading group file: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+
+	if _, err := a.ShellCommand(a.getPutGroupFileCommand()); err != nil {
+		return fmt.Errorf("Error uploading group file: %v", err)
 	}
 
 	log.Printf("[INFO] step 2 - copy to Avere webserver")
-	scpCmd := WrapCommandForLogging(fmt.Sprintf("%s scp -oStrictHostKeyChecking=no ~/avere-* admin@%s:/tmp ", sshPassPrefix, a.ManagementIP), ShellLogFile)
-	if stdoutBuf, stderrBuf, err := a.RunCommand(scpCmd); err != nil {
-		return fmt.Errorf("Error running scp command: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	scpCmd := a.getFlatFileScpCommand()
+	if _, err := a.ShellCommand(scpCmd); err != nil {
+		return fmt.Errorf("Error running scp command: %v", err)
 	}
-	mountWritableCmd := WrapCommandForLogging(fmt.Sprintf("%s ssh -oStrictHostKeyChecking=no -oProxyCommand=\"%s ssh -oStrictHostKeyChecking=no -W %%h:%%p admin@%s\" root@localhost 'bash -l -c \"clusterexec.py mount -uw /\"'", sshPassPrefix, sshPassPrefix, a.ManagementIP), ShellLogFile)
-	if stdoutBuf, stderrBuf, err := a.RunCommand(mountWritableCmd); err != nil {
-		return fmt.Errorf("Error running mount writable command: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	mountWritableCmd := a.getMakeVFXTWritableCommand()
+	if _, err := a.ShellCommand(mountWritableCmd); err != nil {
+		return fmt.Errorf("Error running mount writable command: %v", err)
 	}
-	copyUserCmd := WrapCommandForLogging(fmt.Sprintf("%s ssh -oStrictHostKeyChecking=no -oProxyCommand=\"%s ssh -oStrictHostKeyChecking=no -W %%h:%%p admin@%s\" root@localhost 'bash -l -c \"clustercp.py /tmp/avere-user.txt /usr/local/www/apache24/data/avere/avere-user.txt\"'", sshPassPrefix, sshPassPrefix, a.ManagementIP), ShellLogFile)
-	if stdoutBuf, stderrBuf, err := a.RunCommand(copyUserCmd); err != nil {
-		return fmt.Errorf("Error running copy group command: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	mountReadonlyCmd := a.getMakeVFXTReadonlyCommand()
+	// always mount readable
+	defer func() {
+		if _, err := a.ShellCommand(mountReadonlyCmd); err != nil {
+			log.Printf("[ERROR] Error running mount readable command: %v", err)
+		}
+	}()
+	copyUserCmd := a.getCopyPasswdFileCommand()
+	if _, err := a.ShellCommand(copyUserCmd); err != nil {
+		return fmt.Errorf("Error running copy group command: %v", err)
 	}
-	copyGroupCmd := WrapCommandForLogging(fmt.Sprintf("%s ssh -oStrictHostKeyChecking=no -oProxyCommand=\"%s ssh -oStrictHostKeyChecking=no -W %%h:%%p admin@%s\" root@localhost 'bash -l -c \"clustercp.py /tmp/avere-group.txt /usr/local/www/apache24/data/avere/avere-group.txt\"'", sshPassPrefix, sshPassPrefix, a.ManagementIP), ShellLogFile)
-	if stdoutBuf, stderrBuf, err := a.RunCommand(copyGroupCmd); err != nil {
-		return fmt.Errorf("Error running copy group command: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	copyGroupCmd := a.getCopyGroupFileCommand()
+	if _, err := a.ShellCommand(copyGroupCmd); err != nil {
+		return fmt.Errorf("Error running copy group command: %v", err)
 	}
 
 	log.Printf("[INFO] step 3 - cleanup")
-	mountReadableCmd := WrapCommandForLogging(fmt.Sprintf("%s ssh -oStrictHostKeyChecking=no -oProxyCommand=\"%s ssh -oStrictHostKeyChecking=no -W %%h:%%p admin@%s\" root@localhost 'bash -l -c \"clusterexec.py mount -ur /\"'", sshPassPrefix, sshPassPrefix, a.ManagementIP), ShellLogFile)
-	if stdoutBuf, stderrBuf, err := a.RunCommand(mountReadableCmd); err != nil {
-		return fmt.Errorf("Error running mount readable command: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
-	}
+	// done in the defer command
 
 	return nil
 }
@@ -811,12 +886,8 @@ func (a *AvereVfxt) EnsureServerAddressCorrect(corefiler *CoreFiler) error {
 	}
 	log.Printf("[INFO] working around averecmd bug to set server addresses '%s'", corefiler.FqdnOrPrimaryIp)
 
-	if stdoutBuf, stderrBuf, err := a.RunCommand(getEnsureSSHPass()); err != nil {
-		return fmt.Errorf("Error installing sshpass: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
-	}
-
-	if stdoutBuf, stderrBuf, err := a.RunCommand(getEnsureNoKnownHosts()); err != nil {
-		return fmt.Errorf("Error removing known hosts file: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	if err := a.PrepareForVFXTNodeCommands(); err != nil {
+		return err
 	}
 
 	// get the mass
@@ -825,13 +896,9 @@ func (a *AvereVfxt) EnsureServerAddressCorrect(corefiler *CoreFiler) error {
 		return err
 	}
 
-	// set the server IP, adjusting the command with sshpass
-	sshPassPrefix := a.GetSSHPassPrefix()
-
-	dbUtilCommand := WrapCommandForLogging(fmt.Sprintf("%s ssh -oStrictHostKeyChecking=no -oProxyCommand=\"%s ssh -oStrictHostKeyChecking=no -W %%h:%%p admin@%s\" root@localhost 'bash -l -c \"dbutil.py set %s serverAddr '\"'\"'%s'\"'\"' -x\"'", sshPassPrefix, sshPassPrefix, a.ManagementIP, internalName, corefiler.FqdnOrPrimaryIp), ShellLogFile)
-
-	if stdoutBuf, stderrBuf, err := a.RunCommand(dbUtilCommand); err != nil {
-		return fmt.Errorf("Error running dbutil.py command: %v, '%s' '%s'", err, stdoutBuf.String(), stderrBuf.String())
+	dbUtilCommand := a.getSetServerAddrCommand(internalName, corefiler.FqdnOrPrimaryIp)
+	if _, err := a.ShellCommand(dbUtilCommand); err != nil {
+		return fmt.Errorf("Error running dbutil.py command: %v", err)
 	}
 
 	return nil
@@ -1491,58 +1558,6 @@ func IsMultiCallResultSuccessful(result string) (bool, string, error) {
 	return true, "", nil
 }
 
-func (a *AvereVfxt) AvereCommandWithCorrection(cmd string, correctiveAction func() error) (string, error) {
-	var result string
-	for retries := 0; ; retries++ {
-		stdoutBuf, stderrBuf, err := a.RunCommand(cmd)
-		// look for the error if this is a multi-call
-		if err == nil && IsMultiCall(cmd) {
-			if isMultiCallSuccess, faultStr, err2 := IsMultiCallResultSuccessful(stdoutBuf.String()); !isMultiCallSuccess {
-				if err2 != nil {
-					err = fmt.Errorf("BUG: multcall result parse error: %v", err2)
-				} else if len(faultStr) > 0 {
-					err = fmt.Errorf("multi call error: '%s'", faultStr)
-				}
-			}
-		}
-		if err == nil {
-			// success
-			result = stdoutBuf.String()
-			break
-		}
-		log.Printf("[WARN] [%d/%d] command to %s failed with '%v' ", retries, AverecmdRetryCount, a.ControllerAddress, err)
-		if isAverecmdNotRetryable(stdoutBuf, stderrBuf) {
-			// failure not retryable
-			return "", fmt.Errorf("Non retryable error applying command: '%s' '%s'", stdoutBuf.String(), stderrBuf.String())
-		}
-		if correctiveAction != nil {
-			// the corrective action is best effort, just log an error if one occurs
-			if err = correctiveAction(); err != nil {
-				log.Printf("[ERROR] error performing correctiveAction: %v", err)
-			} else {
-				// try the command again after a successful correction
-				stdoutBuf, stderrBuf, err = a.RunCommand(cmd)
-				if err == nil {
-					// success
-					result = stdoutBuf.String()
-					break
-				}
-			}
-		}
-
-		if retries > AverecmdRetryCount {
-			// failure after exhausted retries
-			return "", fmt.Errorf("Failure after %d retries applying command: '%s' '%s'", AverecmdRetryCount, stdoutBuf.String(), stderrBuf.String())
-		}
-		time.Sleep(AverecmdRetrySleepSeconds * time.Second)
-	}
-	return result, nil
-}
-
-func (a *AvereVfxt) AvereCommand(cmd string) (string, error) {
-	return a.AvereCommandWithCorrection(cmd, nil)
-}
-
 // scale-up the cluster to the newNodeCount
 func (a *AvereVfxt) scaleUpCluster(newNodeCount int) error {
 	for {
@@ -2030,4 +2045,45 @@ func getEnsureSSHPass() string {
 
 func getEnsureNoKnownHosts() string {
 	return WrapCommandForLogging("rm -f ~/.ssh/known_hosts", ShellLogFile)
+}
+
+func (a *AvereVfxt) GetSSHPassPrefix() string {
+	return fmt.Sprintf("sshpass -p '%s' ", a.AvereAdminPassword)
+}
+
+func (a *AvereVfxt) GetBaseVFXTNodeCommand() string {
+	sshPassPrefix := a.GetSSHPassPrefix()
+	return fmt.Sprintf("%s ssh -oStrictHostKeyChecking=no -oProxyCommand=\"%s ssh -oStrictHostKeyChecking=no -W %%h:%%p admin@%s\" root@localhost ", sshPassPrefix, sshPassPrefix, a.ManagementIP)
+}
+
+func (a *AvereVfxt) getPutPasswdFileCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("echo %s | base64 -d | gunzip > ~/avere-user.txt", a.CifsFlatFilePasswdB64z), ShellLogFile)
+}
+
+func (a *AvereVfxt) getPutGroupFileCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("echo %s | base64 -d | gunzip > ~/avere-group.txt", a.CifsFlatFileGroupB64z), ShellLogFile)
+}
+
+func (a *AvereVfxt) getFlatFileScpCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s scp -oStrictHostKeyChecking=no ~/avere-* admin@%s:/tmp ", a.GetSSHPassPrefix(), a.ManagementIP), ShellLogFile)
+}
+
+func (a *AvereVfxt) getCopyPasswdFileCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"clustercp.py /tmp/avere-user.txt /usr/local/www/apache24/data/avere/avere-user.txt\"'", a.GetBaseVFXTNodeCommand()), ShellLogFile)
+}
+
+func (a *AvereVfxt) getCopyGroupFileCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"clustercp.py /tmp/avere-group.txt /usr/local/www/apache24/data/avere/avere-group.txt\"'", a.GetBaseVFXTNodeCommand()), ShellLogFile)
+}
+
+func (a *AvereVfxt) getMakeVFXTWritableCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"clusterexec.py mount -uw /\"'", a.GetBaseVFXTNodeCommand()), ShellLogFile)
+}
+
+func (a *AvereVfxt) getMakeVFXTReadonlyCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"clusterexec.py mount -ur /\"'", a.GetBaseVFXTNodeCommand()), ShellLogFile)
+}
+
+func (a *AvereVfxt) getSetServerAddrCommand(internalName string, coreFileIPStr string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"dbutil.py set %s serverAddr '\"'\"'%s'\"'\"' -x\"'", a.GetBaseVFXTNodeCommand(), internalName, coreFileIPStr), ShellLogFile)
 }

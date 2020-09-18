@@ -15,6 +15,8 @@ const (
 	VServerRangeSeperator         = "-"
 	AverecmdRetryCount            = 60 // wait 10 minutes (ex. remove core filer gets perm denied for a while)
 	AverecmdRetrySleepSeconds     = 10
+	ShellcmdRetryCount            = 60 // wait 10 minutes (ex. apt install waiting for lock to release)
+	ShellcmdRetrySleepSeconds     = 10
 	ClusterAliveRetryCount        = 3 // try 3 times to see if the cluster is alive
 	ClusterAliveRetrySleepSeconds = 5
 	AverecmdLogFile               = "~/averecmd.log"
