@@ -156,7 +156,7 @@ func resourceVfxt() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringDoesNotContainAny("'\""),
+				ValidateFunc: ValidateSSHKey,
 			},
 			vfxt_node_count: {
 				Type:         schema.TypeInt,
@@ -2128,7 +2128,7 @@ func ValidateVfxtName(v interface{}, _ string) (warnings []string, errors []erro
 	input := v.(string)
 
 	if !regexp.MustCompile(`^[a-z]([-a-z0-9]*[a-z0-9])?$`).MatchString(input) {
-		errors = append(errors, fmt.Errorf("the vfxt name '%s' is invalid, and per vfxt.py must match the regular expressesion ^[a-z]([-a-z0-9]*[a-z0-9])?$ ''", input))
+		errors = append(errors, fmt.Errorf("the vfxt name '%s' is invalid, and per vfxt.py must match the regular expression ^[a-z]([-a-z0-9]*[a-z0-9])?$ ''", input))
 	}
 
 	return warnings, errors
@@ -2143,6 +2143,18 @@ func ValidateCustomSetting(v interface{}, _ string) (warnings []string, errors [
 
 	if ok, err := IsCustomSettingDeprecated(customSetting); ok {
 		errors = append(errors, err)
+	}
+
+	return warnings, errors
+}
+
+func ValidateSSHKey(v interface{}, _ string) (warnings []string, errors []error) {
+	input := v.(string)
+
+	// vfxt.py requires the following ssh key format, otherwise during deploy clusters fail to communicate
+	// and shows up as a failure in the vfxt node /var/log/messages as "Host key verification failed."
+	if !regexp.MustCompile(`^ssh-rsa AAAA[0-9A-Za-z+/]+[=]{0,3} ([^@]+@[^@]+)$`).MatchString(input) {
+		errors = append(errors, fmt.Errorf("the ssh key '%s' is invalid.  It must have 3 parts and match the regular expression '^ssh-rsa AAAA[0-9A-Za-z+/]+[=]{0,3} ([^@]+@[^@]+)$'", input))
 	}
 
 	return warnings, errors
