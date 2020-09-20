@@ -1675,7 +1675,7 @@ func (a *AvereVfxt) getListNodesJsonCommand() string {
 }
 
 func (a *AvereVfxt) getRemoveNodeCommand(node string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s --json node.remove %s false", a.getBaseAvereCmd(), node), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s --json system.multicall \"[{'methodName':'system.enableAPI','params':['maintenance']},{'methodName':'node.remove','params':['%s']}]\"", a.getBaseAvereCmd(), node), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getNodeJsonCommand(node string) string {

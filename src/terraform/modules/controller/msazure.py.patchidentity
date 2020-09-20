@@ -110,8 +110,8 @@
  
          if not options.get('azure_role'):
              options['azure_role'] = cluster.role.role_name
-+        if not options.get('azure_identity'):
-+            options['azure_identity'] = cluster.identity
++        #if not options.get('azure_identity'):
++        #    options['azure_identity'] = cluster.identity
  
          # set network security group for added nodes
          options['network_security_group'] = cluster.network_security_group
