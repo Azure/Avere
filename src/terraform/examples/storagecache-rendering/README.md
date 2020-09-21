@@ -16,6 +16,7 @@ The following is a checklist of items to confirm before connecting an HPC Cache 
 
 # Reducing TCO
 
+* use a storage cache to reduce the bandwidth to the cloud, and reduce latency to on-premises filers.
 * delete the HPCCache or the Avere vFXT when not in use.
 * for the lowest TCO, automate the deployment and teardown the HPC Cache or the Avere vFXT.  Terraform examples are available in this repository for both HPC Cache, and Avere vFXT
 * for the Terraform vFXT provider, ensure you use only 3 nodes and the lowest memory to save on storage with the following Terraform:
