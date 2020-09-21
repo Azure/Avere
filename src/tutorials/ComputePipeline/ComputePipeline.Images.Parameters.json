@@ -1,0 +1,175 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "userIdentity": {
+      "value": {
+        "name": "",
+        "resourceGroupName": ""
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "",
+        "subnetName": "",
+        "resourceGroupName": ""
+      }
+    },
+    "roleAssignments": {
+      "value": {
+        "image": [
+          "b24988ac-6180-42a0-ab88-20f7382dd24c"
+        ],
+        "network": [
+          "acdd72a7-3385-48ef-bd42-f606fba81ae7",
+          "9980e02c-c2be-4d73-94e8-173b1dc7cf3c"
+        ]
+      }
+    },
+    "imageGallery": {
+      "value": {
+        "name": "MediaStudio",
+        "imageDefinitions": [
+          {
+            "name": "DesktopLinux",
+            "type": "Linux",
+            "generation": "v1",
+            "state": "Generalized",
+            "publisher": "OpenLogic",
+            "offer": "CentOS",
+            "sku": "7_8"
+          },
+          {
+            "name": "DesktopWindows",
+            "type": "Windows",
+            "generation": "v1",
+            "state": "Generalized",
+            "publisher": "MicrosoftWindowsDesktop",
+            "offer": "Windows-10",
+            "sku": "19H2-Pro"
+          },
+          {
+            "name": "ServerLinux",
+            "type": "Linux",
+            "generation": "v1",
+            "state": "Generalized",
+            "publisher": "OpenLogic",
+            "offer": "CentOS",
+            "sku": "8_2"
+          },
+          {
+            "name": "ServerWindows",
+            "type": "Windows",
+            "generation": "v1",
+            "state": "Generalized",
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2019-Datacenter"
+          }
+        ]
+      }
+    },
+    "imageTemplates": {
+      "value": [
+        {
+          "enabled": true,
+          "name": "DesktopLinux",
+          "imageDefinitionName": "DesktopLinux",
+          "imageSourceType": "PlatformImage",
+          "imageSourceVersion": "latest",
+          "imageOutputVersion": "1.0.0",
+          "imageStorageAccount": {
+            "type": "Standard_LRS"
+          },
+          "machineProfile": {
+            "size": "",
+            "osDiskSizeGB": 0
+          },
+          "buildTimeoutMinutes": 120,
+          "buildCustomization": [
+            {
+              "name": "Teradici",
+              "type": "Shell",
+              "inline": [
+                "yum -y groups install 'GNOME Desktop'",
+                "yum -y install https://downloads.teradici.com/rhel/teradici-repo-latest.noarch.rpm",
+                "yum -y install epel-release",
+                "yum -y install usb-vhci"
+              ]
+            }
+          ]
+        },
+        {
+          "enabled": true,
+          "name": "DesktopWindows",
+          "imageDefinitionName": "DesktopWindows",
+          "imageSourceType": "PlatformImage",
+          "imageSourceVersion": "latest",
+          "imageOutputVersion": "1.0.0",
+          "imageStorageAccount": {
+            "type": "Standard_LRS"
+          },
+          "machineProfile": {
+            "size": "",
+            "osDiskSizeGB": 0
+          },
+          "buildTimeoutMinutes": 120,
+          "buildCustomization": [
+            {
+              "name": "Teradici",
+              "type": "PowerShell",
+              "inline": [
+                "Set-Location -Path /Users/Public/Downloads",
+                "Invoke-WebRequest -Uri https://mediasolutions.blob.core.windows.net/bin/pcoip-agent-graphics_20.07.0.exe -OutFile pcoip-agent-graphics.exe"
+              ]
+            }
+          ]
+        },
+        {
+          "enabled": true,
+          "name": "ServerLinux",
+          "imageDefinitionName": "ServerLinux",
+          "imageSourceType": "PlatformImage",
+          "imageSourceVersion": "latest",
+          "imageOutputVersion": "1.0.0",
+          "imageStorageAccount": {
+            "type": "Standard_LRS"
+          },
+          "machineProfile": {
+            "size": "",
+            "osDiskSizeGB": 0
+          },
+          "buildTimeoutMinutes": 120,
+          "buildCustomization": [
+          ]
+        },
+        {
+          "enabled": true,
+          "name": "ServerWindows",
+          "imageDefinitionName": "ServerWindows",
+          "imageSourceType": "PlatformImage",
+          "imageSourceVersion": "latest",
+          "imageOutputVersion": "1.0.0",
+          "imageStorageAccount": {
+            "type": "Standard_LRS"
+          },
+          "machineProfile": {
+            "size": "",
+            "osDiskSizeGB": 0
+          },
+          "buildTimeoutMinutes": 120,
+          "buildCustomization": [
+            {
+              "name": "Teradici",
+              "type": "PowerShell",
+              "inline": [
+                "Set-Location -Path /Users/Public/Downloads",
+                "Invoke-WebRequest -Uri https://mediasolutions.blob.core.windows.net/bin/pcoip-agent-graphics_20.07.0.exe -OutFile pcoip-agent-graphics.exe"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
