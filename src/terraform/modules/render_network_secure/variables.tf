@@ -75,3 +75,13 @@ variable "ssh_source_address_prefix" {
     description = "The source address prefix granted for ssh access."
     default = "*"
 }
+
+variable "open_external_ports" {
+    default = [22]
+    description = "these are the ports to open externally on the jumpbox subnet, default is 22"
+}
+
+variable "open_external_sources" {
+    default = ["*"]
+    description = "this is the external source to open on the subnet"
+}
