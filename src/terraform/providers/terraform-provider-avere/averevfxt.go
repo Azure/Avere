@@ -1765,13 +1765,7 @@ func (a *AvereVfxt) getFilerJsonCommand(filer string) string {
 }
 
 func (a *AvereVfxt) getCreateCoreFilerCommand(coreFiler *CoreFiler) string {
-	// due to a bug in averecmd (#794), we can only set a single address
-	fqdnParts := strings.Split(coreFiler.FqdnOrPrimaryIp, " ")
-	firstFqdn := coreFiler.FqdnOrPrimaryIp
-	if len(fqdnParts) > 1 {
-		firstFqdn = fqdnParts[0]
-	}
-	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.create \"%s\" \"%s\" true \"{'filerNetwork':'cluster','filerClass':'Other','cachePolicy':'%s',}\"", a.getBaseAvereCmd(), coreFiler.Name, firstFqdn, coreFiler.CachePolicy), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.create \"%s\" \"%s\" true \"{'filerNetwork':'cluster','filerClass':'Other','cachePolicy':'%s',}\"", a.getBaseAvereCmd(), coreFiler.Name, coreFiler.FqdnOrPrimaryIp, coreFiler.CachePolicy), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getCreateAzureStorageFilerCommand(azureStorageFiler *AzureStorageFiler) (string, error) {
