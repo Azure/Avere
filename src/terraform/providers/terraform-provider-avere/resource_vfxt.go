@@ -2153,6 +2153,7 @@ func ValidateSSHKey(v interface{}, _ string) (warnings []string, errors []error)
 
 	// vfxt.py requires the following ssh key format, otherwise during deploy clusters fail to communicate
 	// and shows up as a failure in the vfxt node /var/log/messages as "Host key verification failed."
+	// regex from https://gist.github.com/paranoiq/1932126
 	if !regexp.MustCompile(`^ssh-rsa AAAA[0-9A-Za-z+/]+[=]{0,3} ([^@]+@[^@]+)$`).MatchString(input) {
 		errors = append(errors, fmt.Errorf("the ssh key '%s' is invalid.  It must have 3 parts and match the regular expression '^ssh-rsa AAAA[0-9A-Za-z+/]+[=]{0,3} ([^@]+@[^@]+)$'", input))
 	}
