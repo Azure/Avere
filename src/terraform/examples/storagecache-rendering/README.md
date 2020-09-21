@@ -1,8 +1,6 @@
 # Storage Cache Best Practices for Rendering
 
-Animation and VFX Rendering have two major requirements for networking:
-1. **Lowest cost of ownership** - studios operate on razor thin margins
-1. **On-prem to cloud networking Bandwidth** - burst rendering leverages on-premises storage.
+This document describes the storage cache best practices related to rendering.
 
 # Pre-requisites
 
