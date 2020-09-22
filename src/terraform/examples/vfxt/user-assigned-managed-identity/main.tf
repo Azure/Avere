@@ -44,6 +44,12 @@ locals {
     cache_policy = "Clients Bypassing the Cluster"
 
     controller_add_public_ip = true
+
+    // advanced scenario: vfxt and controller image ids, leave this null, unless not using default marketplace
+    controller_image_id = null
+    vfxt_image_id       = null
+    // advanced scenario: put the custom image resource group here
+    alternative_resource_groups = []
     // advanced scenario: add external ports to work with cloud policies example [10022, 13389]
     ssh_port = 22
     open_external_ports = [local.ssh_port,3389]
@@ -118,6 +124,8 @@ module "vfxtcontroller" {
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.controller_add_public_ip
+    image_id = local.controller_image_id
+    alternative_resource_groups = local.alternative_resource_groups
     ssh_port = local.ssh_port
 
     create_resource_group = false
@@ -152,6 +160,7 @@ resource "avere_vfxt" "vfxt" {
     vfxt_admin_password = local.vfxt_cluster_password
     vfxt_ssh_key_data = local.vfxt_ssh_key_data
     vfxt_node_count = 3
+    image_id = local.vfxt_image_id
     user_assigned_managed_identity = local.vfxt_managed_identity_id
     
     azure_storage_filer {
