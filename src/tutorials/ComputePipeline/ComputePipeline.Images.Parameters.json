@@ -17,7 +17,7 @@
     },
     "roleAssignments": {
       "value": {
-        "image": [
+        "images": [
           "b24988ac-6180-42a0-ab88-20f7382dd24c"
         ],
         "network": [
@@ -72,7 +72,7 @@
     "imageTemplates": {
       "value": [
         {
-          "enabled": true,
+          "enabled": false,
           "name": "DesktopLinux",
           "imageDefinitionName": "DesktopLinux",
           "imageSourceType": "PlatformImage",
@@ -100,7 +100,7 @@
           ]
         },
         {
-          "enabled": true,
+          "enabled": false,
           "name": "DesktopWindows",
           "imageDefinitionName": "DesktopWindows",
           "imageSourceType": "PlatformImage",
@@ -126,7 +126,7 @@
           ]
         },
         {
-          "enabled": true,
+          "enabled": false,
           "name": "ServerLinux",
           "imageDefinitionName": "ServerLinux",
           "imageSourceType": "PlatformImage",
@@ -144,7 +144,7 @@
           ]
         },
         {
-          "enabled": true,
+          "enabled": false,
           "name": "ServerWindows",
           "imageDefinitionName": "ServerWindows",
           "imageSourceType": "PlatformImage",

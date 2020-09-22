@@ -1,0 +1,229 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "userIdentity": {
+      "value": {
+        "name": "",
+        "resourceGroupName": ""
+      }
+    },
+    "imageGallery": {
+      "value": {
+        "name": "",
+        "resourceGroupName": ""
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "",
+        "subnetName": "",
+        "resourceGroupName": ""
+      }
+    },
+    "virtualMachines": {
+      "value": [
+        {
+          "enabled": false,
+          "name": "DesktopL",
+          "size": "Standard_NV6",
+          "image": {
+            "definitionName": "DesktopLinux",
+            "versionId": "1.0.0"
+          },
+          "extensions": [
+            {
+              "name": "Graphics",
+              "publisher": "Microsoft.HpcCompute",
+              "type": "NvidiaGpuDriverLinux",
+              "version": "1.3",
+              "autoUpgrade": true
+            },
+            {
+              "name": "Custom",
+              "publisher": "Microsoft.Azure.Extensions",
+              "type": "CustomScript",
+              "version": "2.1",
+              "autoUpgrade": true
+            }
+          ],
+          "login": {
+            "adminUsername": "az",
+            "adminPassword": "P@ssword1234"
+          }
+        },
+        {
+          "enabled": false,
+          "name": "DesktopW",
+          "size": "Standard_NV6",
+          "image": {
+            "definitionName": "DesktopWindows",
+            "versionId": "1.0.0"
+          },
+          "extensions": [
+            {
+              "name": "Graphics",
+              "publisher": "Microsoft.HpcCompute",
+              "type": "NvidiaGpuDriverWindows",
+              "version": "1.3",
+              "autoUpgrade": true
+            },
+            {
+              "name": "Custom",
+              "publisher": "Microsoft.Compute",
+              "type": "CustomScriptExtension",
+              "version": "1.10",
+              "autoUpgrade": true
+            }
+          ],
+          "login": {
+            "adminUsername": "az",
+            "adminPassword": "P@ssword1234"
+          }
+        },
+        {
+          "enabled": false,
+          "name": "ServerL",
+          "size": "Standard_F8s_v2",
+          "image": {
+            "definitionName": "ServerLinux",
+            "versionId": "1.0.0"
+          },
+          "extensions": [
+          ],
+          "login": {
+            "adminUsername": "az",
+            "adminPassword": "P@ssword1234"
+          }
+        },
+        {
+          "enabled": false,
+          "name": "ServerW",
+          "size": "Standard_F8s_v2",
+          "image": {
+            "definitionName": "ServerWindows",
+            "versionId": "1.0.0"
+          },
+          "extensions": [
+          ],
+          "login": {
+            "adminUsername": "az",
+            "adminPassword": "P@ssword1234"
+          }
+        }
+      ]
+    },
+    "virtualMachineSets": {
+      "value": [
+        {
+          "enabled": false,
+          "name": "DesktopL",
+          "size": "Standard_NV6",
+          "count": 3,
+          "image": {
+            "definitionName": "DesktopLinux",
+            "versionId": "1.0.0"
+          },
+          "extensions": [
+            {
+              "name": "Graphics",
+              "publisher": "Microsoft.HpcCompute",
+              "type": "NvidiaGpuDriverLinux",
+              "version": "1.3",
+              "autoUpgrade": true
+            },
+            {
+              "name": "Custom",
+              "publisher": "Microsoft.Azure.Extensions",
+              "type": "CustomScript",
+              "version": "2.1",
+              "autoUpgrade": true
+            }
+          ],
+          "login": {
+            "adminUsername": "az",
+            "adminPassword": "P@ssword1234"
+          }
+        },
+        {
+          "enabled": false,
+          "name": "DesktopW",
+          "size": "Standard_NV6",
+          "count": 3,
+          "image": {
+            "definitionName": "DesktopWindows",
+            "versionId": "1.0.0"
+          },
+          "extensions": [
+            {
+              "name": "Graphics",
+              "publisher": "Microsoft.HpcCompute",
+              "type": "NvidiaGpuDriverWindows",
+              "version": "1.3",
+              "autoUpgrade": true
+            },
+            {
+              "name": "Custom",
+              "publisher": "Microsoft.Compute",
+              "type": "CustomScriptExtension",
+              "version": "1.10",
+              "autoUpgrade": true
+            }
+          ],
+          "login": {
+            "adminUsername": "az",
+            "adminPassword": "P@ssword1234"
+          }
+        },
+        {
+          "enabled": false,
+          "name": "ServerL",
+          "size": "Standard_F8s_v2",
+          "count": 3,
+          "image": {
+            "definitionName": "ServerLinux",
+            "versionId": "1.0.0"
+          },
+          "extensions": [
+          ],
+          "login": {
+            "adminUsername": "az",
+            "adminPassword": "P@ssword1234"
+          }
+        },
+        {
+          "enabled": false,
+          "name": "ServerW",
+          "size": "Standard_F8s_v2",
+          "count": 3,
+          "image": {
+            "definitionName": "ServerWindows",
+            "versionId": "1.0.0"
+          },
+          "extensions": [
+          ],
+          "login": {
+            "adminUsername": "az",
+            "adminPassword": "P@ssword1234"
+          }
+        }
+      ]
+    },
+    "customExtension": {
+      "value": {
+        "linux": {
+          "fileName": "ComputePipeline.Machines.sh",
+          "fileParameters": "TERADICI_LICENSE_KEY=''",
+          "executeCommands": "",
+          "executeParameters": ""
+        },
+        "windows" : {
+          "fileName": "ComputePipeline.Machines.ps1",
+          "fileParameters": "-teradiciLicenseKey ''",
+          "executeCommands": "",
+          "executeParameters": ""
+        }
+      }
+    }
+  }
+}
