@@ -1263,8 +1263,8 @@ func (a *AvereVfxt) DeleteCifsShare(sharename string) error {
 }
 
 func (a *AvereVfxt) AddCifsShare(sharename string, namespaceName string, targetShareAces map[string]*ShareAce) error {
-	log.Printf("[INFO] [DeleteCifsShare %s ns:%s", sharename, namespaceName)
-	defer log.Printf("[INFO] DeleteCifsShare %s ns:%s]", sharename, namespaceName)
+	log.Printf("[INFO] [AddCifsShare %s ns:%s", sharename, namespaceName)
+	defer log.Printf("[INFO] AddCifsShare %s ns:%s]", sharename, namespaceName)
 	if _, err := a.AvereCommand(a.getAddCIFSShareCommand(sharename, namespaceName)); err != nil {
 		return err
 	}
@@ -1275,6 +1275,7 @@ func (a *AvereVfxt) AddCifsShare(sharename string, namespaceName string, targetS
 	}
 
 	shareAcesToDelete, shareAcesToCreate := GetShareAceAdjustments(existingShareAces, targetShareAces)
+	log.Printf("[INFO] deleting %d aces, adding %d aces", len(shareAcesToDelete), len(shareAcesToCreate))
 	for _, v := range shareAcesToDelete {
 		if _, err := a.AvereCommand(a.getGetRemoveShareAceCommand(sharename, v)); err != nil {
 			return err

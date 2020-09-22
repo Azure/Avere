@@ -408,7 +408,7 @@ func resourceVfxt() *schema.Resource {
 									cifs_share_ace: {
 										Type:         schema.TypeString,
 										Optional:     true,
-										Default:      "",
+										Default:      AceDefault,
 										ValidateFunc: ValidateCIFSShareAce,
 									},
 									core_filer_export: {
@@ -478,7 +478,7 @@ func resourceVfxt() *schema.Resource {
 						cifs_share_ace: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      "",
+							Default:      AceDefault,
 							ValidateFunc: ValidateCIFSShareAce,
 						},
 						export_rule: {
