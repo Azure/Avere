@@ -1,4 +1,4 @@
-﻿$deploymentRegionName = "WestUS2"
+$deploymentRegionName = "WestUS2"
 $resourceGroupNamePrefix = "ComputePipeline"
 
 $virtualNetworkName = "MediaPipeline"
