@@ -14,6 +14,8 @@ const (
 	AceDefaultAllType       = AceTypeAllow
 	AceDefaultAllPermission = AcePermissionFull
 
+	AceDefault = "Everyone(ALLOW,FULL)"
+
 	AcePermissionRead    = "READ"
 	AcePermissionChange  = "CHANGE"
 	AcePermissionFull    = "FULL"
@@ -81,17 +83,16 @@ func ShareAceIsEveryoneDefault(a *ShareAce) bool {
 }
 
 func ShareAcesAreEveryone(a map[string]*ShareAce) bool {
-	if len(a) > 1 {
-		return false
-	}
 	if len(a) == 1 {
 		for _, v := range a {
 			if !ShareAceIsEveryoneDefault(v) {
 				return false
 			}
 		}
+		return true
+	} else {
+		return false
 	}
-	return true
 }
 
 func ShareAcesEqual(a, b map[string]*ShareAce) bool {
@@ -314,13 +315,7 @@ func GetShareAceAdjustments(existingShareAces map[string]*ShareAce, targetShareA
 	shareAcesToCreate := make([]*ShareAce, 0, len(targetShareAces))
 
 	normalizedTargetShareAces := NormalizeShareAces(targetShareAces)
-	everyoneExists := false
 	for k, v := range existingShareAces {
-		// leave default ACE if it exists
-		if len(targetShareAces) == 0 && ShareAceIsEveryoneDefault(v) {
-			everyoneExists = true
-			continue
-		}
 		var ace *ShareAce
 		var ok bool
 		if ace, ok = normalizedTargetShareAces[k]; !ok {
@@ -348,16 +343,6 @@ func GetShareAceAdjustments(existingShareAces map[string]*ShareAce, targetShareA
 		if ace == nil || !(ace.Type == v.Type && ace.Permission == v.Permission) {
 			shareAcesToCreate = append(shareAcesToCreate, v)
 		}
-	}
-
-	// add everyone if it is requested and missing
-	if len(targetShareAces) == 0 && !everyoneExists {
-		everyoneAce := &ShareAce{
-			Name:       AceDefaultAll,
-			Type:       AceDefaultAllType,
-			Permission: AceDefaultAllPermission,
-		}
-		shareAcesToCreate = append(shareAcesToCreate, everyoneAce)
 	}
 
 	return shareAcesToDelete, shareAcesToCreate
