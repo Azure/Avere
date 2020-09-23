@@ -17,7 +17,9 @@ func (j *Junction) IsEqual(j2 *Junction) bool {
 		j.PolicyName == j2.PolicyName &&
 		ExportRulesEqual(j.ExportRules, j2.ExportRules) &&
 		j.CifsShareName == j2.CifsShareName &&
-		ShareAcesEqual(j.CifsAces, j2.CifsAces)
+		ShareAcesEqual(j.CifsAces, j2.CifsAces) &&
+		j.CifsCreateMask == j2.CifsCreateMask &&
+		j.CifsDirMask == j2.CifsDirMask
 }
 
 func NewJunction(
@@ -28,7 +30,9 @@ func NewJunction(
 	sharePermissions string,
 	exportRulesRaw string,
 	cifsShareName string,
-	cifsAcesRaw string) (*Junction, error) {
+	cifsAcesRaw string,
+	cifsCreateMask string,
+	cifsDirMask string) (*Junction, error) {
 	exportRules, err := ParseExportRules(exportRulesRaw)
 	if err != nil {
 		return nil, fmt.Errorf("Error: exportRules parsing failed: %s", err)
@@ -51,6 +55,8 @@ func NewJunction(
 		ExportRules:        exportRules,
 		CifsShareName:      cifsShareName,
 		CifsAces:           cifsAces,
+		CifsCreateMask:     cifsCreateMask,
+		CifsDirMask:        cifsDirMask,
 	}, nil
 }
 
