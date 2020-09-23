@@ -1197,17 +1197,23 @@ func (a *AvereVfxt) GetExistingJunctions() (map[string]*Junction, error) {
 		} else {
 			newJunction.ExportRules = make(map[string]*ExportRule)
 		}
-		// assign existing shares and aces, or an empty ace map
+		// assign existing shares, aces, and masks, or default values
 		if cifsShare, ok := cifsShares[newJunction.NameSpacePath]; ok {
 			newJunction.CifsShareName = cifsShare.ShareName
+			newJunction.CifsCreateMask = cifsShare.CreateMask
+			newJunction.CifsDirMask = cifsShare.DirMask
 			shareAces, err := a.GetCifShareAces(newJunction.CifsShareName)
 			if err != nil {
 				return nil, err
 			}
 			newJunction.CifsAces = shareAces
 		} else {
+			// assign default values
 			newJunction.CifsAces = make(map[string]*ShareAce)
+			newJunction.CifsCreateMask = ""
+			newJunction.CifsDirMask = ""
 		}
+		log.Printf("[INFO] CIFS Share %s, masks '%s' '%s'", newJunction.CifsShareName, newJunction.CifsCreateMask, newJunction.CifsDirMask)
 		results[newJunction.NameSpacePath] = &newJunction
 	}
 
@@ -1262,10 +1268,10 @@ func (a *AvereVfxt) DeleteCifsShare(sharename string) error {
 	return nil
 }
 
-func (a *AvereVfxt) AddCifsShare(sharename string, namespaceName string, targetShareAces map[string]*ShareAce) error {
-	log.Printf("[INFO] [AddCifsShare %s ns:%s", sharename, namespaceName)
+func (a *AvereVfxt) AddCifsShare(sharename string, namespaceName string, targetShareAces map[string]*ShareAce, cifsCreateMask string, cifsDirMask string) error {
+	log.Printf("[INFO] [AddCifsShare %s ns:%s with masks '%s' and '%s'", sharename, namespaceName, cifsCreateMask, cifsDirMask)
 	defer log.Printf("[INFO] AddCifsShare %s ns:%s]", sharename, namespaceName)
-	if _, err := a.AvereCommand(a.getAddCIFSShareCommand(sharename, namespaceName)); err != nil {
+	if _, err := a.AvereCommand(a.getAddCIFSShareCommand(sharename, namespaceName, cifsCreateMask, cifsDirMask)); err != nil {
 		return err
 	}
 	// get the aces
@@ -1380,7 +1386,7 @@ func (a *AvereVfxt) CreateJunction(junction *Junction) error {
 	}
 	// add the cifs share
 	if len(junction.CifsShareName) > 0 {
-		if err := a.AddCifsShare(junction.CifsShareName, junction.NameSpacePath, junction.CifsAces); err != nil {
+		if err := a.AddCifsShare(junction.CifsShareName, junction.NameSpacePath, junction.CifsAces, junction.CifsCreateMask, junction.CifsDirMask); err != nil {
 			return err
 		}
 	}
@@ -1943,8 +1949,8 @@ func (a *AvereVfxt) getCIFSDisableCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s cifs.disable \"%s\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
 }
 
-func (a *AvereVfxt) getAddCIFSShareCommand(sharename string, namespaceName string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s cifs.addShare \"%s\" \"%s\" \"/\" \"%s\" \"\" \"false\" \"{}\" ", a.getBaseAvereCmd(), VServerName, sharename, namespaceName), AverecmdLogFile)
+func (a *AvereVfxt) getAddCIFSShareCommand(sharename string, namespaceName string, cifsCreateMask string, cifsDirMask string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cifs.addShare \"%s\" \"%s\" \"/\" \"%s\" \"\" \"false\" \"{'create mask':'%s','security mask':'%s','directory mask':'%s','directory security mask':'%s'}\" ", a.getBaseAvereCmd(), VServerName, sharename, namespaceName, cifsCreateMask, cifsCreateMask, cifsDirMask, cifsDirMask), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getRemoveCIFSShareCommand(sharename string) string {

@@ -147,6 +147,8 @@ type Junction struct {
 	ExportRules        map[string]*ExportRule
 	CifsShareName      string
 	CifsAces           map[string]*ShareAce
+	CifsCreateMask     string
+	CifsDirMask        string
 }
 
 type CustomSetting struct {
@@ -180,7 +182,9 @@ type ClusterFilersRaw struct {
 }
 
 type CifsShare struct {
-	ShareName string `json:"shareName"`
-	Export    string `json:"export"`
-	Suffix    string `json:"suffix"`
+	ShareName  string `json:"shareName"`
+	Export     string `json:"export"`
+	Suffix     string `json:"suffix"`
+	CreateMask string `json:"create mask"`
+	DirMask    string `json:"directory mask"`
 }

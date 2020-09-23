@@ -411,6 +411,18 @@ func resourceVfxt() *schema.Resource {
 										Default:      AceDefault,
 										ValidateFunc: ValidateCIFSShareAce,
 									},
+									cifs_create_mask: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "",
+										ValidateFunc: ValidateCIFSMask,
+									},
+									cifs_dir_mask: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "",
+										ValidateFunc: ValidateCIFSMask,
+									},
 									core_filer_export: {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -480,6 +492,18 @@ func resourceVfxt() *schema.Resource {
 							Optional:     true,
 							Default:      AceDefault,
 							ValidateFunc: ValidateCIFSShareAce,
+						},
+						cifs_create_mask: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "",
+							ValidateFunc: ValidateCIFSMask,
+						},
+						cifs_dir_mask: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "",
+							ValidateFunc: ValidateCIFSMask,
 						},
 						export_rule: {
 							Type:         schema.TypeString,
@@ -1809,7 +1833,9 @@ func expandCoreFilerJunctions(l []interface{}, results map[string]*Junction) err
 				PermissionsPreserve,
 				junctionRaw[export_rule].(string),
 				junctionRaw[cifs_share_name].(string),
-				junctionRaw[cifs_share_ace].(string))
+				junctionRaw[cifs_share_ace].(string),
+				junctionRaw[cifs_create_mask].(string),
+				junctionRaw[cifs_dir_mask].(string))
 			if err != nil {
 				return err
 			}
@@ -1837,7 +1863,9 @@ func expandAzureStorageFilerJunctions(l []interface{}, results map[string]*Junct
 			PermissionsModebits,
 			input[export_rule].(string),
 			input[cifs_share_name].(string),
-			input[cifs_share_ace].(string))
+			input[cifs_share_ace].(string),
+			input[cifs_create_mask].(string),
+			input[cifs_dir_mask].(string))
 		if err != nil {
 			return err
 		}
@@ -1906,6 +1934,12 @@ func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
 					if v2, ok := m[cifs_share_ace]; ok {
 						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
 					}
+					if v2, ok := m[cifs_create_mask]; ok {
+						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
+					}
+					if v2, ok := m[cifs_dir_mask]; ok {
+						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
+					}
 				}
 			}
 		}
@@ -1939,6 +1973,12 @@ func resourceAvereVfxtAzureStorageCoreFilerReferenceHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
 		if v, ok := m[cifs_share_ace]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m[cifs_create_mask]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m[cifs_dir_mask]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
 	}

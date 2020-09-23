@@ -41,6 +41,7 @@ var cifsServerNameRegexp = regexp.MustCompile(`^[a-zA-Z0-9-]{1,15}$`)
 var cifsUsernameRegexp = regexp.MustCompile(`^[A-Za-z0-9\\\._\-#]{2,}$`)
 var cifsShareRegexp = regexp.MustCompile(`^[A-Za-z0-9\._\-$]{1,}$`)
 var cifsOrganizationalUnitRegExp = regexp.MustCompile(`^(?:(?:CN|OU|DC)\=[^,'"]+,)*(?:CN|OU|DC)\=[^,'"]+$`)
+var cifsMaskRegexp = regexp.MustCompile(`^[0-7]{4}$`)
 
 func (s *ShareAce) String() string {
 	return fmt.Sprintf("%s(%s), %s, %s", s.Name, s.Sid, s.Type, s.Permission)
@@ -266,6 +267,14 @@ func ValidateCIFSServerName(v interface{}, _ string) (warnings []string, errors 
 	cifsServerName := v.(string)
 	if !cifsServerNameRegexp.MatchString(cifsServerName) {
 		errors = append(errors, fmt.Errorf("invalid cifs username '%s'.  The name can be no longer than 15 characters.  Names can include alphanumeric characters (a-z, A-Z, 0-9) and hyphens(-).", cifsServerName))
+	}
+	return warnings, errors
+}
+
+func ValidateCIFSMask(v interface{}, _ string) (warnings []string, errors []error) {
+	cifsServerName := v.(string)
+	if len(cifsServerName) > 0 && !cifsMaskRegexp.MatchString(cifsServerName) {
+		errors = append(errors, fmt.Errorf("invalid cifs mask '%s', it must be empty or a 4 digit octal number and match regex '%s'.", cifsServerName, cifsMaskRegexp))
 	}
 	return warnings, errors
 }

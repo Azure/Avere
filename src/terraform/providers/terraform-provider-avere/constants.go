@@ -194,6 +194,8 @@ const (
 	namespace_path                 = "namespace_path"
 	cifs_share_name                = "cifs_share_name"
 	cifs_share_ace                 = "cifs_share_ace"
+	cifs_create_mask               = "cifs_create_mask"
+	cifs_dir_mask                  = "cifs_dir_mask"
 	core_filer_export              = "core_filer_export"
 	export_subdirectory            = "export_subdirectory"
 	export_rule                    = "export_rule"

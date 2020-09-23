@@ -138,6 +138,8 @@ A <a name="azure_storage_filer"></a>`azure_storage_filer` block supports the fol
 * <a name="junction_namespace_path"></a>[junction_namespace_path](#junction_namespace_path) - (Optional) this is the exported namespace from the Avere vFXT.
 * <a name="cifs_share_name_1"></a>[cifs_share_name](#cifs_share_name_1) - (Optional) this is an SMB2 share exported from the Avere vFXT.
 * <a name="cifs_share_ace_1"></a>[cifs_share_ace](#cifs_share_ace_1) - (Optional) this is an export rule described in the [CIFS Share ACE section](#cifs-share-ace).  If not specified, the junction uses the most permissive access set to `Everyone`.
+* <a name="cifs_create_mask_1"></a>[cifs_create_mask](#cifs_create_mask_1) - (Optional) An octal value specifying the bitwise mask for the UNIX permissions for a newly created file.  If not specified, the default is 0744 for file create, and 0777 when modified from a native Windows NT security dialog box.
+* <a name="cifs_dir_mask_1"></a>[cifs_dir_mask](#cifs_dir_mask_1) - (Optional) An octal value specifying the bitwise mask for the UNIX permissions for a newly created directory.  If not specified, the default is 0755 for directory create, and 0777 when modified from a native Windows NT security dialog box.
 * <a name="export_rule_1"></a>[export_rule](#export_rule_1) - (Optional) this is an export rule described in the [Export Rules section](#export-rules).  If not specified, the junction uses the most permissive rule set by the default policy.
 
 ---
@@ -168,6 +170,8 @@ A <a name="junction"></a>`junction` block supports the following:
 * <a name="namespace_path"></a>[namespace_path](#namespace_path) - (Required) this is the exported namespace from the Avere vFXT. 
 * <a name="cifs_share_name_2"></a>[cifs_share_name](#cifs_share_name_2) - (Optional) this is an SMB2 share exported from the Avere vFXT. 
 * <a name="cifs_share_ace_2"></a>[cifs_share_ace](#cifs_share_ace_2) - (Optional) this is an export rule described in the [CIFS Share ACE section](#cifs-share-ace).  If not specified, the junction uses the most permissive access set to `Everyone`.
+* <a name="cifs_create_mask_2"></a>[cifs_create_mask](#cifs_create_mask_2) - (Optional) An octal value specifying the bitwise mask for the UNIX permissions for a newly created file.  If not specified, the default is 0744 for file create, and 0777 when modified from a native Windows NT security dialog box.
+* <a name="cifs_dir_mask_2"></a>[cifs_dir_mask](#cifs_dir_mask_2) - (Optional) An octal value specifying the bitwise mask for the UNIX permissions for a newly created directory.  If not specified, the default is 0755 for directory create, and 0777 when modified from a native Windows NT security dialog box.
 * <a name="core_filer_export"></a>[core_filer_export](#core_filer_export) - (Required) this is the export from the hardware core filer.
 * <a name="export_subdirectory"></a>[export_subdirectory](#export_subdirectory) - (Optional) if the export does not point directly to the core filer directory that you want to associate with this junction, add the relative subdirectory path here.  (Do not begin the path with "/".)  If the subdirectory does not already exist, it will be created automatically.
 * <a name="export_rule_2"></a>[export_rule](#export_rule_2) - (Optional) this is an export rule described in the [Export Rules section](#export-rules).  If not specified, the junction uses the most permissive rule set by the default policy.
