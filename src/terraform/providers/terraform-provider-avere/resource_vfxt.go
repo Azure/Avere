@@ -221,6 +221,18 @@ func resourceVfxt() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			enable_secure_proactive_support: {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  ProactiveSupportDisabled,
+				ValidateFunc: validation.StringInSlice([]string{
+					ProactiveSupportDisabled,
+					ProactiveSupportSupport,
+					ProactiveSupportAPI,
+					ProactiveSupportFull,
+				}, false),
+				RequiredWith: []string{enable_support_uploads},
+			},
 			cifs_ad_domain: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -877,7 +889,7 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	if d.HasChange(enable_support_uploads) {
+	if d.HasChange(enable_support_uploads) || d.HasChange(enable_secure_proactive_support) {
 		if err := avereVfxt.ModifySupportUploads(); err != nil {
 			return err
 		}
@@ -1003,6 +1015,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(vfxt_admin_password).(string),
 		d.Get(vfxt_ssh_key_data).(string),
 		d.Get(enable_support_uploads).(bool),
+		d.Get(enable_secure_proactive_support).(string),
 		nodeCount,
 		d.Get(node_size).(string),
 		d.Get(node_cache_size).(int),
