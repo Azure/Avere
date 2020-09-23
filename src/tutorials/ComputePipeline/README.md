@@ -1,6 +1,6 @@
 # Azure Compute Pipeline
 
-This sample builds customized images from Azure platform images and deploys them to Azure Virtual Machines and/or Virtual Machine Scale Sets.
+This sample builds custom images from Azure platform images and deploys them to Azure Virtual Machines and/or Virtual Machine Scale Sets.
 
 ## Deployment Instructions
 
@@ -26,14 +26,14 @@ git pull origin main
 
 4. `cd src/tutorials/ComputePipeline`
 
-5. Review and edit the following parameter configuration files per your environment. In the Images and Machines configuration files,
-ensure that the `enabled: true` properties are set for each of the images and machines to be deployed.
+5. Review and edit each of the following template parameter configuration files per your environment.
+Ensure `enabled: true` is set for each of the image and machine configurations to be deployed.
 
-`ComputePipeline.Identity.parameters.json`
+`ComputePipeline.Identity.Parameters.json`
 
-`ComputePipeline.Images.parameters.json`
+`ComputePipeline.Images.Parameters.json`
 
-`ComputePipeline.Machines.parameters.json`
+`ComputePipeline.Machines.Parameters.json`
 
 6. Review and edit the variables at the top of the deployment orchestration script file per your environment.
 
