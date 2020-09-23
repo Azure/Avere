@@ -59,7 +59,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "name": "[concat('ComputePipeline.Images.', parameters('roleAssignments').network[copyIndex()])]",
+      "name": "[concat('Images.', parameters('roleAssignments').network[copyIndex()])]",
       "apiVersion": "[variables('resourceDeploymentApiVersion')]",
       "resourceGroup": "[parameters('virtualNetwork').resourceGroupName]",
       "properties": {

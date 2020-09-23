@@ -212,13 +212,13 @@
     "customExtension": {
       "value": {
         "linux": {
-          "fileName": "ComputePipeline.Machines.sh",
+          "fileName": "Machines.sh",
           "fileParameters": "TERADICI_LICENSE_KEY=''",
           "scriptCommands": "",
           "scriptParameters": ""
         },
         "windows" : {
-          "fileName": "ComputePipeline.Machines.ps1",
+          "fileName": "Machines.ps1",
           "fileParameters": "-teradiciLicenseKey ''",
           "scriptCommands": "",
           "scriptParameters": ""

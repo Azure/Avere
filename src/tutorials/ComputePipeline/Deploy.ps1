@@ -13,8 +13,8 @@ $resourceGroupName = $resourceGroupNamePrefix + $resourceGroupNameSuffix
 
 az group create --resource-group $resourceGroupName --location $deploymentRegionName
 
-$templateFile = "$templateDirectory/ComputePipeline.Identity.json"
-$templateParameters = "$templateDirectory/ComputePipeline.Identity.Parameters.json"
+$templateFile = "$templateDirectory/Identity.json"
+$templateParameters = "$templateDirectory/Identity.Parameters.json"
 
 $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
 
@@ -26,7 +26,7 @@ $resourceGroupName = $resourceGroupNamePrefix + $resourceGroupNameSuffix
 
 $resourceGroupExists = az group exists --resource-group $resourceGroupName
 if ($resourceGroupExists -eq "true") {
-    $imageTemplates = (Get-Content -Path "$templateDirectory/ComputePipeline.Images.Parameters.json" -Raw | ConvertFrom-Json).parameters.imageTemplates.value
+    $imageTemplates = (Get-Content -Path "$templateDirectory/Images.Parameters.json" -Raw | ConvertFrom-Json).parameters.imageTemplates.value
     foreach ($imageTemplate in $imageTemplates) {
         if ($imageTemplate.enabled) {
             az image builder delete --resource-group $resourceGroupName --name $imageTemplate.name
@@ -38,8 +38,8 @@ if ($resourceGroupExists -eq "true") {
     az group create --resource-group $resourceGroupName --location $deploymentRegionName
 }
 
-$templateFile = "$templateDirectory/ComputePipeline.Images.json"
-$templateParameters = "$templateDirectory/ComputePipeline.Images.Parameters.json"
+$templateFile = "$templateDirectory/Images.json"
+$templateParameters = "$templateDirectory/Images.Parameters.json"
 
 $overrideParameters = '{\"userIdentity\":{\"value\":{\"name\":\"' + $userIdentity.name + '\",\"resourceGroupName\":\"' + $userIdentity.resourceGroupName + '\"}}'
 $overrideParameters = $overrideParameters + ',\"virtualNetwork\":{\"value\":{\"name\":\"' + $virtualNetworkName + '\",\"subnetName\":\"' + $virtualNetworkSubnetName + '\",\"resourceGroupName\":\"' + $virtualNetworkResourceGroupName + '\"}}}'
@@ -60,7 +60,7 @@ foreach ($imageTemplate in $imageTemplates) {
 $resourceGroupNameSuffix = ".Machines"
 $resourceGroupName = $resourceGroupNamePrefix + $resourceGroupNameSuffix
 
-$templateParameters = (Get-Content -Path "$templateDirectory/ComputePipeline.Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
+$templateParameters = (Get-Content -Path "$templateDirectory/Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
 
 $extensionFilePath = "$templateDirectory/" + $templateParameters.customExtension.value.linux.fileName
 $extensionFileParameters = $templateParameters.customExtension.value.linux.fileParameters
@@ -84,8 +84,8 @@ $extensionParametersWindows = ""
 
 az group create --resource-group $resourceGroupName --location $deploymentRegionName
 
-$templateFile = "$templateDirectory/ComputePipeline.Machines.json"
-$templateParameters = "$templateDirectory/ComputePipeline.Machines.Parameters.json"
+$templateFile = "$templateDirectory/Machines.json"
+$templateParameters = "$templateDirectory/Machines.Parameters.json"
 
 $overrideParameters = '{\"userIdentity\":{\"value\":{\"name\":\"' + $userIdentity.name + '\",\"resourceGroupName\":\"' + $userIdentity.resourceGroupName + '\"}}'
 $overrideParameters = $overrideParameters + ',\"imageGallery\":{\"value\":{\"name\":\"' + $imageGallery.name + '\",\"resourceGroupName\":\"' + $imageGallery.resourceGroupName + '\"}}'

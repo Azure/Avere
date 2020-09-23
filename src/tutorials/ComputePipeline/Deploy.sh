@@ -15,8 +15,8 @@ resourceGroupName="$resourceGroupNamePrefix$resourceGroupNameSuffix"
 
 az group create --resource-group $resourceGroupName --location $deploymentRegionName
 
-templateFile="$templateDirectory/ComputePipeline.Identity.json"
-templateParameters="$templateDirectory/ComputePipeline.Identity.Parameters.json"
+templateFile="$templateDirectory/Identity.json"
+templateParameters="$templateDirectory/Identity.Parameters.json"
 
 groupDeployment=$(az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters)
 
@@ -28,7 +28,7 @@ userIdentityPrincipalId=$(jq -r '.properties.outputs.userIdentity.value.principa
 resourceGroupNameSuffix=".Images"
 resourceGroupName="$resourceGroupNamePrefix$resourceGroupNameSuffix"
 
-imageTemplates=$(jq -c '.parameters.imageTemplates.value' "$templateDirectory/ComputePipeline.Images.Parameters.json")
+imageTemplates=$(jq -c '.parameters.imageTemplates.value' "$templateDirectory/Images.Parameters.json")
 
 resourceGroupExists=$(az group exists --resource-group $resourceGroupName)
 if [ "$resourceGroupExists" = "true" ]; then
@@ -45,8 +45,8 @@ else
     az group create --resource-group $resourceGroupName --location $deploymentRegionName
 fi
 
-templateFile="$templateDirectory/ComputePipeline.Images.json"
-templateParameters="$templateDirectory/ComputePipeline.Images.Parameters.json"
+templateFile="$templateDirectory/Images.json"
+templateParameters="$templateDirectory/Images.Parameters.json"
 
 overrideParameters="{\"userIdentity\":{\"value\":{\"name\":\"$userIdentityName\",\"resourceGroupName\":\"$userIdentityResourceGroupName\"}}"
 overrideParameters="$overrideParameters,\"virtualNetwork\":{\"value\":{\"name\":\"$virtualNetworkName\",\"subnetName\":\"$virtualNetworkSubnetName\",\"resourceGroupName\":\"$virtualNetworkResourceGroupName\"}}}"
@@ -71,7 +71,7 @@ done
 resourceGroupNameSuffix=".Machines"
 resourceGroupName="$resourceGroupNamePrefix$resourceGroupNameSuffix"
 
-templateParameters=$(jq -c '.parameters' "$templateDirectory/ComputePipeline.Machines.Parameters.json")
+templateParameters=$(jq -c '.parameters' "$templateDirectory/Machines.Parameters.json")
 
 extensionFilePath=$(jq -r '.customExtension.value.linux.fileName' <<< "$templateParameters")
 extensionFileParameters=$(jq -r '.customExtension.value.linux.fileParameters' <<< "$templateParameters")
@@ -87,8 +87,8 @@ extensionParametersWindows=""
 
 az group create --resource-group $resourceGroupName --location $deploymentRegionName
 
-templateFile="$templateDirectory/ComputePipeline.Machines.json"
-templateParameters="$templateDirectory/ComputePipeline.Machines.Parameters.json"
+templateFile="$templateDirectory/Machines.json"
+templateParameters="$templateDirectory/Machines.Parameters.json"
 
 overrideParameters="{\"userIdentity\":{\"value\":{\"name\":\"$userIdentityName\",\"resourceGroupName\":\"$userIdentityResourceGroupName\"}}"
 overrideParameters="$overrideParameters,\"imageGallery\":{\"value\":{\"name\":\"$imageGalleryName\",\"resourceGroupName\":\"$imageGalleryResourceGroupName\"}}"
