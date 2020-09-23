@@ -93,6 +93,6 @@ templateParameters="$templateDirectory/ComputePipeline.Machines.Parameters.json"
 overrideParameters="{\"userIdentity\":{\"value\":{\"name\":\"$userIdentityName\",\"resourceGroupName\":\"$userIdentityResourceGroupName\"}}"
 overrideParameters="$overrideParameters,\"imageGallery\":{\"value\":{\"name\":\"$imageGalleryName\",\"resourceGroupName\":\"$imageGalleryResourceGroupName\"}}"
 overrideParameters="$overrideParameters,\"virtualNetwork\":{\"value\":{\"name\":\"$virtualNetworkName\",\"subnetName\":\"$virtualNetworkSubnetName\",\"resourceGroupName\":\"$virtualNetworkResourceGroupName\"}}"
-overrideParameters="$overrideParameters,\"customExtension\":{\"value\":{\"linux\":{\"executeCommands\":\"$extensionCommandsLinux\",\"executeParameters\":\"$extensionParametersLinux\"},\"windows\":{\"executeCommands\":\"$extensionCommandsWindows\",\"executeParameters\":\"$extensionParametersWindows\"}}}}"
+overrideParameters="$overrideParameters,\"customExtension\":{\"value\":{\"linux\":{\"scriptCommands\":\"$extensionCommandsLinux\",\"scriptParameters\":\"$extensionParametersLinux\"},\"windows\":{\"scriptCommands\":\"$extensionCommandsWindows\",\"scriptParameters\":\"$extensionParametersWindows\"}}}}"
 
 groupDeployment=$(az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters --parameters $overrideParameters)

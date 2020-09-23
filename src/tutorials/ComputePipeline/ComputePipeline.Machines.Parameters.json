@@ -214,14 +214,14 @@
         "linux": {
           "fileName": "ComputePipeline.Machines.sh",
           "fileParameters": "TERADICI_LICENSE_KEY=''",
-          "executeCommands": "",
-          "executeParameters": ""
+          "scriptCommands": "",
+          "scriptParameters": ""
         },
         "windows" : {
           "fileName": "ComputePipeline.Machines.ps1",
           "fileParameters": "-teradiciLicenseKey ''",
-          "executeCommands": "",
-          "executeParameters": ""
+          "scriptCommands": "",
+          "scriptParameters": ""
         }
       }
     }

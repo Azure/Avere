@@ -90,6 +90,6 @@ $templateParameters = "$templateDirectory/ComputePipeline.Machines.Parameters.js
 $overrideParameters = '{\"userIdentity\":{\"value\":{\"name\":\"' + $userIdentity.name + '\",\"resourceGroupName\":\"' + $userIdentity.resourceGroupName + '\"}}'
 $overrideParameters = $overrideParameters + ',\"imageGallery\":{\"value\":{\"name\":\"' + $imageGallery.name + '\",\"resourceGroupName\":\"' + $imageGallery.resourceGroupName + '\"}}'
 $overrideParameters = $overrideParameters + ',\"virtualNetwork\":{\"value\":{\"name\":\"' + $virtualNetworkName + '\",\"subnetName\":\"' + $virtualNetworkSubnetName + '\",\"resourceGroupName\":\"' + $virtualNetworkResourceGroupName + '\"}}'
-$overrideParameters = $overrideParameters + ',\"customExtension\":{\"value\":{\"linux\":{\"executeCommands\":\"' + $extensionCommandsLinux + '\",\"executeParameters\":\"' + $extensionParametersLinux + '\"},\"windows\":{\"executeCommands\":\"' + $extensionCommandsWindows + '\",\"executeParameters\":\"' + $extensionParametersWindows + '\"}}}}'
+$overrideParameters = $overrideParameters + ',\"customExtension\":{\"value\":{\"linux\":{\"scriptCommands\":\"' + $extensionCommandsLinux + '\",\"scriptParameters\":\"' + $extensionParametersLinux + '\"},\"windows\":{\"scriptCommands\":\"' + $extensionCommandsWindows + '\",\"scriptParameters\":\"' + $extensionParametersWindows + '\"}}}}'
 
 $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters --parameters $overrideParameters) | ConvertFrom-Json

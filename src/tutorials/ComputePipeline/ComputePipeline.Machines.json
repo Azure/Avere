@@ -45,22 +45,22 @@
   },
   "functions": [
     {
-      "namespace": "desktop",
+      "namespace": "script",
       "members": {
-        "GetExtensionCommand": {
+        "GetExecuteCommand": {
           "parameters": [
             {
-              "name": "executeCommands",
+              "name": "scriptCommands",
               "type": "string"
             },
             {
-              "name": "executeParameters",
+              "name": "scriptParameters",
               "type": "string"
             }
           ],
           "output": {
             "type": "string",
-            "value": "[if(equals(parameters('executeParameters'), ''), format('PowerShell.exe -ExecutionPolicy Unrestricted -EncodedCommand {0}', parameters('executeCommands')), format('echo {0} | base64 -d | gunzip | tr -d \r | {1} /bin/bash', parameters('executeCommands'), parameters('executeParameters')))]"
+            "value": "[if(equals(parameters('scriptParameters'), ''), format('PowerShell.exe -ExecutionPolicy Unrestricted -EncodedCommand {0}', parameters('scriptCommands')), format('echo {0} | base64 -d | gunzip | tr -d \r | {1} /bin/bash', parameters('scriptCommands'), parameters('scriptParameters')))]"
           }
         }
       }
@@ -149,7 +149,7 @@
             "type": "[parameters('virtualMachines')[copyIndex()].extensions[0].type]",
             "typeHandlerVersion": "[parameters('virtualMachines')[copyIndex()].extensions[0].version]",
             "autoUpgradeMinorVersion": "[parameters('virtualMachines')[copyIndex()].extensions[0].autoUpgrade]",
-            "protectedSettings": "[if(equals(parameters('virtualMachines')[copyIndex()].extensions[0].type, 'CustomScript'), json(concat('{\"commandToExecute\": \"', desktop.GetExtensionCommand(parameters('customExtension').linux.executeCommands, parameters('customExtension').linux.executeParameters), '\"}')), if(equals(parameters('virtualMachines')[copyIndex()].extensions[0].type, 'CustomScriptExtension'), json(concat('{\"commandToExecute\": \"', desktop.GetExtensionCommand(parameters('customExtension').windows.executeCommands, parameters('customExtension').windows.executeParameters), '\"}')), json('null')))]"
+            "protectedSettings": "[if(equals(parameters('virtualMachines')[copyIndex()].extensions[0].type, 'CustomScript'), json(concat('{\"commandToExecute\": \"', script.GetExecuteCommand(parameters('customExtension').linux.scriptCommands, parameters('customExtension').linux.scriptParameters), '\"}')), if(equals(parameters('virtualMachines')[copyIndex()].extensions[0].type, 'CustomScriptExtension'), json(concat('{\"commandToExecute\": \"', script.GetExecuteCommand(parameters('customExtension').windows.scriptCommands, parameters('customExtension').windows.scriptParameters), '\"}')), json('null')))]"
           }
         },
         {
@@ -167,7 +167,7 @@
             "type": "[parameters('virtualMachines')[copyIndex()].extensions[1].type]",
             "typeHandlerVersion": "[parameters('virtualMachines')[copyIndex()].extensions[1].version]",
             "autoUpgradeMinorVersion": "[parameters('virtualMachines')[copyIndex()].extensions[1].autoUpgrade]",
-            "protectedSettings": "[if(equals(parameters('virtualMachines')[copyIndex()].extensions[1].type, 'CustomScript'), json(concat('{\"commandToExecute\": \"', desktop.GetExtensionCommand(parameters('customExtension').linux.executeCommands, parameters('customExtension').linux.executeParameters), '\"}')), if(equals(parameters('virtualMachines')[copyIndex()].extensions[1].type, 'CustomScriptExtension'), json(concat('{\"commandToExecute\": \"', desktop.GetExtensionCommand(parameters('customExtension').windows.executeCommands, parameters('customExtension').windows.executeParameters), '\"}')), json('null')))]"
+            "protectedSettings": "[if(equals(parameters('virtualMachines')[copyIndex()].extensions[1].type, 'CustomScript'), json(concat('{\"commandToExecute\": \"', script.GetExecuteCommand(parameters('customExtension').linux.scriptCommands, parameters('customExtension').linux.scriptParameters), '\"}')), if(equals(parameters('virtualMachines')[copyIndex()].extensions[1].type, 'CustomScriptExtension'), json(concat('{\"commandToExecute\": \"', script.GetExecuteCommand(parameters('customExtension').windows.scriptCommands, parameters('customExtension').windows.scriptParameters), '\"}')), json('null')))]"
           }
         }
       ],
@@ -253,7 +253,7 @@
         "type": "[parameters('virtualMachineSets')[copyIndex()].extensions[0].type]",
         "typeHandlerVersion": "[parameters('virtualMachineSets')[copyIndex()].extensions[0].version]",
         "autoUpgradeMinorVersion": "[parameters('virtualMachineSets')[copyIndex()].extensions[0].autoUpgrade]",
-        "protectedSettings": "[if(equals(parameters('virtualMachineSets')[copyIndex()].extensions[0].type, 'CustomScript'), json(concat('{\"commandToExecute\": \"', desktop.GetExtensionCommand(parameters('customExtension').linux.executeCommands, parameters('customExtension').linux.executeParameters), '\"}')), if(equals(parameters('virtualMachineSets')[copyIndex()].extensions[0].type, 'CustomScriptExtension'), json(concat('{\"commandToExecute\": \"', desktop.GetExtensionCommand(parameters('customExtension').windows.executeCommands, parameters('customExtension').windows.executeParameters), '\"}')), json('null')))]"
+        "protectedSettings": "[if(equals(parameters('virtualMachineSets')[copyIndex()].extensions[0].type, 'CustomScript'), json(concat('{\"commandToExecute\": \"', script.GetExecuteCommand(parameters('customExtension').linux.scriptCommands, parameters('customExtension').linux.scriptParameters), '\"}')), if(equals(parameters('virtualMachineSets')[copyIndex()].extensions[0].type, 'CustomScriptExtension'), json(concat('{\"commandToExecute\": \"', script.GetExecuteCommand(parameters('customExtension').windows.scriptCommands, parameters('customExtension').windows.scriptParameters), '\"}')), json('null')))]"
       },
       "copy": {
         "name": "virtualMachineSets",
@@ -275,7 +275,7 @@
         "type": "[parameters('virtualMachineSets')[copyIndex()].extensions[1].type]",
         "typeHandlerVersion": "[parameters('virtualMachineSets')[copyIndex()].extensions[1].version]",
         "autoUpgradeMinorVersion": "[parameters('virtualMachineSets')[copyIndex()].extensions[1].autoUpgrade]",
-        "protectedSettings": "[if(equals(parameters('virtualMachineSets')[copyIndex()].extensions[1].type, 'CustomScript'), json(concat('{\"commandToExecute\": \"', desktop.GetExtensionCommand(parameters('customExtension').linux.executeCommands, parameters('customExtension').linux.executeParameters), '\"}')), if(equals(parameters('virtualMachineSets')[copyIndex()].extensions[1].type, 'CustomScriptExtension'), json(concat('{\"commandToExecute\": \"', desktop.GetExtensionCommand(parameters('customExtension').windows.executeCommands, parameters('customExtension').windows.executeParameters), '\"}')), json('null')))]"
+        "protectedSettings": "[if(equals(parameters('virtualMachineSets')[copyIndex()].extensions[1].type, 'CustomScript'), json(concat('{\"commandToExecute\": \"', script.GetExecuteCommand(parameters('customExtension').linux.scriptCommands, parameters('customExtension').linux.scriptParameters), '\"}')), if(equals(parameters('virtualMachineSets')[copyIndex()].extensions[1].type, 'CustomScriptExtension'), json(concat('{\"commandToExecute\": \"', script.GetExecuteCommand(parameters('customExtension').windows.scriptCommands, parameters('customExtension').windows.scriptParameters), '\"}')), json('null')))]"
         },
       "copy": {
         "name": "virtualMachineSets",
