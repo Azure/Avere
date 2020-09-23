@@ -27,15 +27,16 @@ type AvereVfxt struct {
 
 	Platform IaasPlatform
 
-	AvereVfxtName        string
-	AvereAdminPassword   string
-	AvereSshKeyData      string
-	EnableSupportUploads bool
-	NodeCount            int
-	NodeSize             string
-	NodeCacheSize        int
-	FirstIPAddress       string
-	LastIPAddress        string
+	AvereVfxtName          string
+	AvereAdminPassword     string
+	AvereSshKeyData        string
+	EnableSupportUploads   bool
+	SecureProactiveSupport string
+	NodeCount              int
+	NodeSize               string
+	NodeCacheSize          int
+	FirstIPAddress         string
+	LastIPAddress          string
 
 	CifsAdDomain           string
 	CifsServerName         string

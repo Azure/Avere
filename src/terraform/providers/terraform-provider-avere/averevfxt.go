@@ -44,6 +44,7 @@ func NewAvereVfxt(
 	avereAdminPassword string,
 	sshKeyData string,
 	enableSupportUploads bool,
+	secureProactiveSupport string,
 	nodeCount int,
 	nodeSize string,
 	nodeCacheSize int,
@@ -83,6 +84,7 @@ func NewAvereVfxt(
 		AvereAdminPassword:          avereAdminPassword,
 		AvereSshKeyData:             sshKeyData,
 		EnableSupportUploads:        enableSupportUploads,
+		SecureProactiveSupport:      secureProactiveSupport,
 		NodeCount:                   nodeCount,
 		NodeSize:                    nodeSize,
 		NodeCacheSize:               nodeCacheSize,
@@ -1903,7 +1905,7 @@ func (a *AvereVfxt) getSupportSecureProactiveSupportCommand() string {
 	if a.EnableSupportUploads {
 		isEnabled = "yes"
 	}
-	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'remoteCommandEnabled':'Disabled','SPSLinkInterval':'300','SPSLinkEnabled':'%s','remoteCommandExpiration':''}\"", a.getBaseAvereCmd(), isEnabled), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'remoteCommandEnabled':'%s','SPSLinkInterval':'300','SPSLinkEnabled':'%s','remoteCommandExpiration':''}\"", a.getBaseAvereCmd(), a.SecureProactiveSupport, isEnabled), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getDirServicesEnableCIFSCommand() string {
