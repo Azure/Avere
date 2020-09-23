@@ -22,7 +22,7 @@ The following image shows a concrete example where artists are independently wor
 
 <div style="text-align:center"><img src="isolatedcloudworkstation.png"></div>
 
-The Isolated Cloud Workstation policy is not designed for situations where multiple users are writing changes to the same file. Also, cached content can diverge significantly from the on-premises file, because files in the cache are never updated with the version from the NFS filer. [Read more about filer verification settings](<https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_manage_cache_policies.html#cache-policy-settings-advanced-options>)
+The Isolated Cloud Workstation policy is not designed for situations where multiple users are writing changes to the same file. <!-- But it's safe, right? Or does this mean to say that it's not designed for having remote users and local users changing the same files? -->Also, cached content can diverge significantly from the on-premises file, because files in the cache are never updated with the version from the NFS filer. [Read more about filer verification settings](<https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_manage_cache_policies.html#cache-policy-settings-advanced-options>)
 
 ## "Collaborating Cloud Workstation" Cache Policy
 
@@ -34,17 +34,15 @@ The following image shows a concrete example where artists are working together 
 
 This cache policy includes frequent checks to compare files in the cache with the versions on the on-premises filer. [Read more about filer verification settings](<https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_manage_cache_policies.html#cache-policy-settings-advanced-options>)
 
-Depending on the workload, you might decide to use the predefined cache policy *Clients Bypassing the Cluster* instead of Collaborating Cloud Workstation for this scenario. The main difference between them is that Clients Bypassing the Cluster is read-only caching, but Collaborating Cloud Workstation caches reads and writes.
+There is a risk of file collision if both the on-premises artist and the remote artists write to the same file. The cache software handles file locking for the users who write to the cache, but can't prevent collisions with writes from the on-premises user.
 
-[Learn about predefined cache policies](https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_manage_cache_policies.html#predefined-cache-policies)
+For example, if a remote user writes a change to the cache for FileA.txt at t=0 seconds, the cache waits until the file goes unchanged for 30 seconds before writing the changes to the back-end filer. (This setting is called *write-back delay*.) If the on-premises client writes to FileA.txt directly on the filer at t=15 seconds, those changes can be overwritten when the cached change is written back to the filer. The t=15 seconds changes will be overwritten with the changes made at t=0, so the file will have older data.
 
 ### Other Options for Cloud Workstations
 
-In the collaborative scenario above, where one artist is writing changes directly to the NFS filer and others are working through the cache, there is a risk of file collision if you use Collaborating Cloud Workstation. The cache software handles file locking for the users who write to the cache, but can't anticipate collisions with writes from the on-premises user.
+If it's important for your workload to tolerate frequent changes from both on-premises and remote users, you might decide to use the predefined cache policy *Clients Bypassing the Cluster* instead of Collaborating Cloud Workstation. Instead of caching writes from remote users, Clients Bypassing the Cluster immediately writes them to the on-premises filer.
 
-For example, if a remote user writes a change to the cache for FileA.txt at t=0 seconds, the cache waits for further changes for 30 seconds before writing the changes to the back-end filer. If the on-premises client writes to FileA.txt directly on the filer at t=15 seconds, those changes will be overwritten when the cached change is written back to the filer. The t=15 seconds changes will be overwritten with the changes made at t=0, so the file will have older data.
-
-Also, because files in the cache are updated from the on-premises version every 30 seconds, it's possible for a cached file to be overwritten with older content from the on-premises filer.
+[Learn about predefined cache policies](https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_manage_cache_policies.html#predefined-cache-policies)
 
 This table summarizes the main differences in these cache policies.
 
