@@ -20,11 +20,10 @@ git remote add origin -f https://github.com/Azure/Avere.git
 git config core.sparsecheckout true
 echo "src/tutorials/*" >> .git/info/sparse-checkout
 git pull origin main
+cd src/tutorials/ComputePipeline
 ```
 
-4. `cd src/tutorials/ComputePipeline`
-
-5. Review and edit each of the following template parameter configuration files per your environment.
+4. Review and edit each of the following template parameter configuration files per your environment.
 Ensure that `enabled: true` is set for each of the image and machine configurations to be deployed.
 
 `Identity.Parameters.json`
@@ -35,6 +34,8 @@ Ensure that `enabled: true` is set for each of the image and machine configurati
 
 6. Review and edit the variables at the top of the deployment orchestration script file per your environment.
 
-`Deploy.sh` OR `Deploy.ps1`
+`Deploy.sh` or `Deploy.ps1`
 
 7. Execute the configured deployment orchestration script.
+
+`bash Deploy.sh` or `./Deploy.ps1`
