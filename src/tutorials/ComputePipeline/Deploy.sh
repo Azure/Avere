@@ -28,10 +28,9 @@ userIdentityPrincipalId=$(jq -r '.properties.outputs.userIdentity.value.principa
 resourceGroupNameSuffix=".Images"
 resourceGroupName="$resourceGroupNamePrefix$resourceGroupNameSuffix"
 
-imageTemplates=$(jq -c '.parameters.imageTemplates.value' "$templateDirectory/Images.Parameters.json")
-
 resourceGroupExists=$(az group exists --resource-group $resourceGroupName)
 if [ "$resourceGroupExists" = "true" ]; then
+    imageTemplates=$(jq -c '.parameters.imageTemplates.value' "$templateDirectory/Images.Parameters.json")
     for imageTemplate in $(jq -c '.[] | {enabled,name}' <<< "$imageTemplates"); do
         imageTemplateEnabled=$(jq -r '.enabled' <<< "$imageTemplate")
         if [ "$imageTemplateEnabled" = "true" ]; then
@@ -56,6 +55,7 @@ groupDeployment=$(az deployment group create --resource-group $resourceGroupName
 imageGalleryName=$(jq -r '.properties.outputs.imageGallery.value.name' <<< "$groupDeployment")
 imageGalleryResourceGroupName=$(jq -r '.properties.outputs.imageGallery.value.resourceGroupName' <<< "$groupDeployment")
 
+imageTemplates=$(jq -r '.properties.outputs.imageTemplates.value' <<< "$groupDeployment")
 for imageTemplate in $(jq -c '.[] | {enabled,name,imageDefinitionName,imageOutputVersion}' <<< "$imageTemplates"); do
     imageTemplateEnabled=$(jq -r '.enabled' <<< "$imageTemplate")
     if [ "$imageTemplateEnabled" = "true" ]; then
@@ -75,14 +75,13 @@ templateParameters=$(jq -c '.parameters' "$templateDirectory/Machines.Parameters
 
 extensionFilePath=$(jq -r '.customExtension.value.linux.fileName' <<< "$templateParameters")
 extensionFileParameters=$(jq -r '.customExtension.value.linux.fileParameters' <<< "$templateParameters")
-extensionCommandsLinux=$(cat $extensionFilePath | gzip | base64)
+extensionCommandsLinux=$(cat $extensionFilePath | base64)
 extensionParametersLinux=$extensionFileParameters
 
 extensionFilePath=$(jq -r '.customExtension.value.windows.fileName' <<< "$templateParameters")
 extensionFileParameters=$(jq -r '.customExtension.value.windows.fileParameters' <<< "$templateParameters")
 extensionCommandsWindows=$(cat $extensionFilePath)
-extensionCommandsWindows="& {$extensionCommandsWindows} $extensionFileParameters"
-extensionCommandsWindows=$(echo $extensionCommandsWindows | base64)
+extensionCommandsWindows=$(echo "& {$extensionCommandsWindows} $extensionFileParameters" | base64)
 extensionParametersWindows=""
 
 az group create --resource-group $resourceGroupName --location $deploymentRegionName

@@ -60,7 +60,7 @@
           ],
           "output": {
             "type": "string",
-            "value": "[if(equals(parameters('scriptParameters'), ''), format('PowerShell.exe -ExecutionPolicy Unrestricted -EncodedCommand {0}', parameters('scriptCommands')), format('echo {0} | base64 -d | gunzip | tr -d \r | {1} /bin/bash', parameters('scriptCommands'), parameters('scriptParameters')))]"
+            "value": "[if(equals(parameters('scriptParameters'), ''), format('PowerShell.exe -ExecutionPolicy Unrestricted -EncodedCommand {0}', parameters('scriptCommands')), format('echo {0} | base64 -d | tr -d \r | {1} /bin/bash', parameters('scriptCommands'), parameters('scriptParameters')))]"
           }
         }
       }
