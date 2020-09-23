@@ -10,11 +10,20 @@ Before starting, download the latest vdbench from https://www.oracle.com/technet
 
 1. browse to https://shell.azure.com
 
-2. Specify your subscription by running this command with your subscription ID:  ```az account set --subscription YOUR_SUBSCRIPTION_ID```.  You will need to run this every time after restarting your shell, otherwise it may default you to the wrong subscription, and you will see an error similar to `azurerm_public_ip.vm is empty tuple`.
+1. Ensure you have a private key stored at ~/.ssh/id_rsa under permission 600.  If you don't have an SSH public-private key pair here are [linux/mac OS](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys) and [windows](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/ssh-from-windows) instructions.
 
-3. double check your [HPC Cache prerequisites](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-prereqs)
+   ```bash
+   touch ~/.ssh/id_rsa
+   chmod 600 ~/.ssh/id_rsa
+   # paste in your private key
+   code ~/.ssh/id_rsa
+   ```
 
-4. get the terraform examples
+1. Specify your subscription by running this command with your subscription ID:  ```az account set --subscription YOUR_SUBSCRIPTION_ID```.  You will need to run this every time after restarting your shell, otherwise it may default you to the wrong subscription, and you will see an error similar to `azurerm_public_ip.vm is empty tuple`.
+
+1. double check your [HPC Cache prerequisites](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-prereqs)
+
+1. get the terraform examples
    ```bash
    mkdir tf
    cd tf
@@ -25,15 +34,15 @@ Before starting, download the latest vdbench from https://www.oracle.com/technet
    git pull origin main
    ```
 
-5. Decide to use either the NFS filer or Azure storage blob test and cd to the directory:
+1. Decide to use either the NFS filer or Azure storage blob test and cd to the directory:
     1. for Azure Storage Blob testing: `cd src/terraform/examples/HPC\ Cache/vdbench/azureblobfiler`
     2. for NFS filer testing: `cd src/terraform/examples/HPC\ Cache/vdbench/nfsfiler`
 
-6. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences
+1. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences
 
-7. execute `terraform init` in the directory of `main.tf`.
+1. execute `terraform init` in the directory of `main.tf`.
 
-8. execute `terraform apply -auto-approve` to build the HPC Cache cluster with a 12 node VMSS configured to run VDBench.
+1. execute `terraform apply -auto-approve` to build the HPC Cache cluster with a 12 node VMSS configured to run VDBench.
 
 ## Using vdbench
 
