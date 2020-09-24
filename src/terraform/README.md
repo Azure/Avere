@@ -45,6 +45,7 @@ Security.
 1. [Networking Best Practices for Rendering](examples/network-rendering)
 1. [Storage Cache Best Practices for Rendering](examples/storagecache-rendering)
 1. [Create a Houdini Render Farm On Azure](examples/houdinienvironment) - this walks through a deployment of a Houdini render environment on Azure.
+1. [Create a Custom CentOS Image](examples/centos) - shows how to create, upload, and deploy a custom centos image.
 1. [Create an OpenCue managed render farm on Azure](examples/vfxt/opencue) - deploy an end to end render solution on Azure using OpenCue as your render manager.
 
 # Modules
