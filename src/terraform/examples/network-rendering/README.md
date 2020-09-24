@@ -30,10 +30,9 @@ Pitfalls to avoid:
 
 ## Virtual WAN
 
-The [Azure Virtual WAN](https://docs.microsoft.com/en-us/azure/virtual-wan/virtual-wan-about) is another approach to increase the 1Gbps limit of the Azure VPN Gateway to 20Gbps.
+The [Azure Virtual WAN](https://docs.microsoft.com/en-us/azure/virtual-wan/virtual-wan-about) is another approach to increase the 1Gbps limit of the Azure VPN Gateway to 20Gbps.  Each [Virtual Wan hub can go up to 20 Gbps](https://docs.microsoft.com/en-us/azure/virtual-wan/virtual-wan-about#what-is-the-total-vpn-throughput-of-a-vpn-tunnel-and-a-connection) where throughput is shared across individual 1Gbps tunnels.
 
 ## Azure ExpressRoute
-
 The [Azure ExpressRoute](https://azure.microsoft.com/en-us/services/expressroute/), enables up to 100Gbps private direct connection to Azure.
 
 ### Pre-requisites:
@@ -44,6 +43,7 @@ The [Azure ExpressRoute](https://azure.microsoft.com/en-us/services/expressroute
 * consider [ExpressRoute Direct](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-erdirect-about), as this may save you the cost of ExpressRoute + connectivity partner.  [ExpressRoute Direct](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-erdirect-about) is based on the concept of physical port pairs. ER Direct is available with port pairs at 10Gbps or 100Gbps.  Over the ExpressRoute port pair is [possible to configure multiple ExpressRoute circuits at different bandwidths](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-erdirect-about).  One of key features that ExpressRoute Direct provides is the Massive Data Ingestion through dedicated port pair with the Microsoft Enterprise Edge (MSEE) routers.
 * avoid [zone redundant gateways](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways#aggthroughput) to save cross zonal network charges ([starting Feb 1, 2021](https://azure.microsoft.com/en-us/pricing/details/bandwidth/)).  For example, choose "Ultra Performance SKU" over "ErGw3AZ".
 * avoid ExpressRoute unlimited SKUs, due to the bursty nature of rendering as it requires saturation of the pipe more than 70% of the time.
+* To save on egress costs, if your data is close to an ExpressRoute location, explore the availability of [ExpressRoute Local](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-faqs#what-is-expressroute-local).  ExpressRoute Local may also be combined with ExpressRoute Direct.
 
 ### Ensuring for highest performance:
 * ensure BGP and ECMP (Equal-Cost-Multi-Path) is enabled
