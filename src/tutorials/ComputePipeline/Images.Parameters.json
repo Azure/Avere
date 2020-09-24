@@ -91,10 +91,7 @@
               "name": "Teradici",
               "type": "Shell",
               "inline": [
-                "yum -y groups install 'GNOME Desktop'",
-                "yum -y install https://downloads.teradici.com/rhel/teradici-repo-latest.noarch.rpm",
-                "yum -y install epel-release",
-                "yum -y install usb-vhci"
+                "yum -y groups install 'GNOME Desktop'"
               ]
             }
           ]

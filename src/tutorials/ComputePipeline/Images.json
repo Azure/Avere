@@ -43,7 +43,7 @@
   "resources": [
     {
       "type": "Microsoft.Authorization/roleAssignments",
-      "name": "[guid(concat(resourceGroup().id, '/', parameters('roleAssignments').images[copyIndex()]))]",
+      "name": "[guid(concat(parameters('userIdentity').name, '.', parameters('roleAssignments').images[copyIndex()]))]",
       "apiVersion": "[variables('roleAssignmentApiVersion')]",
       "location": "[resourceGroup().location]",
       "properties": {
@@ -59,7 +59,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "name": "[concat('Images.', parameters('roleAssignments').network[copyIndex()])]",
+      "name": "[concat(parameters('userIdentity').name, '.', parameters('roleAssignments').network[copyIndex()])]",
       "apiVersion": "[variables('resourceDeploymentApiVersion')]",
       "resourceGroup": "[parameters('virtualNetwork').resourceGroupName]",
       "properties": {
@@ -70,7 +70,7 @@
           "resources": [
             {
               "type": "Microsoft.Authorization/roleAssignments",
-              "name": "[guid(concat(resourceGroup().id, '/', parameters('roleAssignments').network[copyIndex()]))]",
+              "name": "[guid(concat(parameters('userIdentity').name, '.', parameters('roleAssignments').network[copyIndex()]))]",
               "apiVersion": "[variables('roleAssignmentApiVersion')]",
               "properties": {
                 "principalType": "servicePrincipal",

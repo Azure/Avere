@@ -38,11 +38,25 @@ if [ "$resourceGroupExists" = "true" ]; then
             az image builder delete --resource-group $resourceGroupName --name $imageTemplateName
         fi
     done
-    az role assignment delete --assignee $userIdentityPrincipalId --resource-group $resourceGroupName 
-    az role assignment delete --assignee $userIdentityPrincipalId --resource-group $virtualNetworkResourceGroupName
+    roleAssignments=$(az role assignment list --resource-group $resourceGroupName)
+    for roleAssignment in $(jq -c '.[] | {id,principalName}' <<< "$roleAssignments"); do
+        principalName=$(jq -r '.principalName' <<< "$roleAssignment")
+        if [ "$principalName" = "" ]; then
+            roleAssignmentId=$(jq -r '.id' <<< "$roleAssignment")
+            az role assignment delete --ids $roleAssignmentId
+        fi
+    done
 else
     az group create --resource-group $resourceGroupName --location $deploymentRegionName
 fi
+roleAssignments=$(az role assignment list --resource-group $virtualNetworkResourceGroupName)
+for roleAssignment in $(jq -c '.[] | {id,principalName}' <<< "$roleAssignments"); do
+    principalName=$(jq -r '.principalName' <<< "$roleAssignment")
+    if [ "$principalName" = "" ]; then
+        roleAssignmentId=$(jq -r '.id' <<< "$roleAssignment")
+        az role assignment delete --ids $roleAssignmentId
+    fi
+done
 
 templateFile="$templateDirectory/Images.json"
 templateParameters="$templateDirectory/Images.Parameters.json"

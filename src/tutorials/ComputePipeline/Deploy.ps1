@@ -32,10 +32,20 @@ if ($resourceGroupExists -eq "true") {
             az image builder delete --resource-group $resourceGroupName --name $imageTemplate.name
         }
     }
-    az role assignment delete --assignee $userIdentity.principalId --resource-group $resourceGroupName 
-    az role assignment delete --assignee $userIdentity.principalId --resource-group $virtualNetworkResourceGroupName
+    $roleAssignments = (az role assignment list --resource-group $resourceGroupName) | ConvertFrom-Json
+    foreach ($roleAssignment in $roleAssignments) {
+        if ($roleAssignment.principalName -eq "") {
+            az role assignment delete --ids $roleAssignment.id
+        }
+    }
 } else {
     az group create --resource-group $resourceGroupName --location $deploymentRegionName
+}
+$roleAssignments = (az role assignment list --resource-group $virtualNetworkResourceGroupName) | ConvertFrom-Json
+foreach ($roleAssignment in $roleAssignments) {
+    if ($roleAssignment.principalName -eq "") {
+        az role assignment delete --ids $roleAssignment.id
+    }
 }
 
 $templateFile = "$templateDirectory/Images.json"
@@ -65,12 +75,7 @@ $templateParameters = (Get-Content -Path "$templateDirectory/Machines.Parameters
 $extensionFilePath = "$templateDirectory/" + $templateParameters.customExtension.value.linux.fileName
 $extensionFileParameters = $templateParameters.customExtension.value.linux.fileParameters
 $extensionScript = Get-Content -Path $extensionFilePath -Raw
-$memoryStream = New-Object System.IO.MemoryStream
-$compressionStream = New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode]::Compress)
-$streamWriter = New-Object System.IO.StreamWriter($compressionStream)
-$streamWriter.Write($extensionScript)
-$streamWriter.Close();
-$extensionScriptCommands = $memoryStream.ToArray()
+$extensionScriptCommands = [System.Text.Encoding]::Unicode.GetBytes($extensionScript)
 $extensionCommandsLinux = [Convert]::ToBase64String($extensionScriptCommands)
 $extensionParametersLinux = $extensionFileParameters
 
