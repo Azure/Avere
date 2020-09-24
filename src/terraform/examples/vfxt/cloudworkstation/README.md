@@ -36,7 +36,7 @@ This cache policy includes frequent checks to compare files in the cache with th
 
 There is a risk of file collision if both the on-premises artist and the remote artists write to the same file. The cache software handles file locking for the users who write to the cache, but can't prevent collisions with writes from the on-premises user.
 
-For example, if a remote user writes a change to the cache for FileA.txt at t=0 seconds, the cache waits until the file goes unchanged for 30 seconds before writing the changes to the back-end filer. (This setting is called *write-back delay*.) If the on-premises client writes to FileA.txt directly on the filer at t=15 seconds, those changes can be overwritten when the cached change is written back to the filer. The t=15 seconds changes will be overwritten with the changes made at t=0, so the file will have older data.
+For example, if a remote user writes a change to the cache for FileA.txt at t=0 seconds, the cache waits 30 seconds before writing the changes to the on-premises filer. (This setting is called *write-back delay*.) If the on-premises client writes to FileA.txt directly on the filer at t=15 seconds, those changes can be overwritten when the cached change is written back to the filer. The t=15 seconds changes will be overwritten with the changes made at t=0, so the file will have older data.
 
 ### Other Options for Cloud Workstations
 
