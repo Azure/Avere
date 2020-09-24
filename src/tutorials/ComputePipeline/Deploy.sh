@@ -29,11 +29,11 @@ resourceGroupNameSuffix=".Images"
 resourceGroupName="$resourceGroupNamePrefix$resourceGroupNameSuffix"
 
 resourceGroupExists=$(az group exists --resource-group $resourceGroupName)
-if [ "$resourceGroupExists" = "true" ]; then
+if [ "$resourceGroupExists" == "true" ]; then
     imageTemplates=$(jq -c '.parameters.imageTemplates.value' "$templateDirectory/Images.Parameters.json")
     for imageTemplate in $(jq -c '.[] | {enabled,name}' <<< "$imageTemplates"); do
         imageTemplateEnabled=$(jq -r '.enabled' <<< "$imageTemplate")
-        if [ "$imageTemplateEnabled" = "true" ]; then
+        if [ "$imageTemplateEnabled" == "true" ]; then
             imageTemplateName=$(jq -r '.name' <<< "$imageTemplate")
             az image builder delete --resource-group $resourceGroupName --name $imageTemplateName
         fi
@@ -41,7 +41,7 @@ if [ "$resourceGroupExists" = "true" ]; then
     roleAssignments=$(az role assignment list --resource-group $resourceGroupName)
     for roleAssignment in $(jq -c '.[] | {id,principalName}' <<< "$roleAssignments"); do
         principalName=$(jq -r '.principalName' <<< "$roleAssignment")
-        if [ "$principalName" = "" ]; then
+        if [ "$principalName" == "" ]; then
             roleAssignmentId=$(jq -r '.id' <<< "$roleAssignment")
             az role assignment delete --ids $roleAssignmentId
         fi
@@ -52,7 +52,7 @@ fi
 roleAssignments=$(az role assignment list --resource-group $virtualNetworkResourceGroupName)
 for roleAssignment in $(jq -c '.[] | {id,principalName}' <<< "$roleAssignments"); do
     principalName=$(jq -r '.principalName' <<< "$roleAssignment")
-    if [ "$principalName" = "" ]; then
+    if [ "$principalName" == "" ]; then
         roleAssignmentId=$(jq -r '.id' <<< "$roleAssignment")
         az role assignment delete --ids $roleAssignmentId
     fi
@@ -72,7 +72,7 @@ imageGalleryResourceGroupName=$(jq -r '.properties.outputs.imageGallery.value.re
 imageTemplates=$(jq -r '.properties.outputs.imageTemplates.value' <<< "$groupDeployment")
 for imageTemplate in $(jq -c '.[] | {enabled,name,imageDefinitionName,imageOutputVersion}' <<< "$imageTemplates"); do
     imageTemplateEnabled=$(jq -r '.enabled' <<< "$imageTemplate")
-    if [ "$imageTemplateEnabled" = "true" ]; then
+    if [ "$imageTemplateEnabled" == "true" ]; then
         imageTemplateName=$(jq -r '.name' <<< "$imageTemplate")
         imageDefinitionName=$(jq -r '.imageDefinitionName' <<< "$imageTemplate")
         imageOutputVersion=$(jq -r '.imageOutputVersion' <<< "$imageTemplate")
