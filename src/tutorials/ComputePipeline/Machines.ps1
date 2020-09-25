@@ -10,6 +10,5 @@ if ($teradiciLicenseKey -ne '' -and ($installProcess.ExitCode -eq 0 -or $install
     Set-Location -Path 'C:\Program Files\Teradici\PCoIP Agent\'
     & .\pcoip-register-host.ps1 -RegistrationCode $teradiciLicenseKey
     & .\pcoip-validate-license.ps1
+    Restart-Service -Name 'PCoIPAgent'
 }
-
-Restart-Service -Name 'PCoIPAgent'
