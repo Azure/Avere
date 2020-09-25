@@ -89,12 +89,12 @@ templateParameters=$(jq -c '.parameters' "$templateDirectory/Machines.Parameters
 
 extensionFilePath=$(jq -r '.customExtension.value.linux.fileName' <<< "$templateParameters")
 extensionFileParameters=$(jq -r '.customExtension.value.linux.fileParameters' <<< "$templateParameters")
-extensionCommandsLinux=$(cat $extensionFilePath | base64 -w 0)
+extensionCommandsLinux=$(cat $extensionFilePath | iconv -f UTF8 -t UTF16LE | base64 -w 0)
 extensionParametersLinux=$extensionFileParameters
 
 extensionFilePath=$(jq -r '.customExtension.value.windows.fileName' <<< "$templateParameters")
 extensionFileParameters=$(jq -r '.customExtension.value.windows.fileParameters' <<< "$templateParameters")
-extensionCommandsWindows=$(echo -n "& {$(cat $extensionFilePath)} $extensionFileParameters" | base64 -w 0)
+extensionCommandsWindows=$(echo -n "& {$(cat $extensionFilePath)} $extensionFileParameters" | iconv -f UTF8 -t UTF16LE | base64 -w 0)
 extensionParametersWindows=""
 
 az group create --resource-group $resourceGroupName --location $deploymentRegionName
