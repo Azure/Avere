@@ -94,8 +94,7 @@ extensionParametersLinux=$extensionFileParameters
 
 extensionFilePath=$(jq -r '.customExtension.value.windows.fileName' <<< "$templateParameters")
 extensionFileParameters=$(jq -r '.customExtension.value.windows.fileParameters' <<< "$templateParameters")
-extensionCommandsWindows=$(cat $extensionFilePath)
-extensionCommandsWindows=$(echo "& {$extensionCommandsWindows} $extensionFileParameters" | base64 -w 0)
+extensionCommandsWindows=$(echo "& {$(cat $extensionFilePath)} $extensionFileParameters" | base64 -w 0)
 extensionParametersWindows=""
 
 az group create --resource-group $resourceGroupName --location $deploymentRegionName
