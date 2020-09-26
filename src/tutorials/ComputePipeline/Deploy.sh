@@ -78,15 +78,15 @@ done
 resourceGroupNameSuffix=".Machines"
 resourceGroupName="$resourceGroupNamePrefix$resourceGroupNameSuffix"
 
-templateParameters=$(jq -c '.parameters' "$templateDirectory/Machines.Parameters.json")
+customExtension=$(jq -c '.parameters.customExtension.value' "$templateDirectory/Machines.Parameters.json")
 
-extensionFilePath=$(jq -r '.customExtension.value.linux.fileName' <<< "$templateParameters")
-extensionFileParameters=$(jq -r '.customExtension.value.linux.fileParameters' <<< "$templateParameters")
+extensionFilePath=$(jq -r '.linux.fileName' <<< "$customExtension")
+extensionFileParameters=$(jq -r '.linux.fileParameters' <<< "$customExtension")
 extensionCommandsLinux=$(cat $extensionFilePath | iconv -f UTF8 -t UTF16LE | base64 -w 0)
 extensionParametersLinux=$extensionFileParameters
 
-extensionFilePath=$(jq -r '.customExtension.value.windows.fileName' <<< "$templateParameters")
-extensionFileParameters=$(jq -r '.customExtension.value.windows.fileParameters' <<< "$templateParameters")
+extensionFilePath=$(jq -r '.windows.fileName' <<< "$customExtension")
+extensionFileParameters=$(jq -r '.windows.fileParameters' <<< "$customExtension")
 extensionCommandsWindows=$(echo -n "& {$(cat $extensionFilePath)} $extensionFileParameters" | iconv -f UTF8 -t UTF16LE | base64 -w 0)
 extensionParametersWindows=""
 

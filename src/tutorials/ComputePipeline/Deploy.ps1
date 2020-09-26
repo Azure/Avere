@@ -66,17 +66,17 @@ foreach ($imageTemplate in $imageTemplates) {
 $resourceGroupNameSuffix = ".Machines"
 $resourceGroupName = $resourceGroupNamePrefix + $resourceGroupNameSuffix
 
-$templateParameters = (Get-Content -Path "$templateDirectory/Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters
+$customExtension = (Get-Content -Path "$templateDirectory/Machines.Parameters.json" -Raw | ConvertFrom-Json).parameters.customExtension.value
 
-$extensionFilePath = "$templateDirectory/" + $templateParameters.customExtension.value.linux.fileName
-$extensionFileParameters = $templateParameters.customExtension.value.linux.fileParameters
+$extensionFilePath = "$templateDirectory/" + $customExtension.linux.fileName
+$extensionFileParameters = $customExtension.linux.fileParameters
 $extensionScript = Get-Content -Path $extensionFilePath -Raw
 $extensionScriptCommands = [System.Text.Encoding]::Unicode.GetBytes($extensionScript)
 $extensionCommandsLinux = [Convert]::ToBase64String($extensionScriptCommands)
 $extensionParametersLinux = $extensionFileParameters
 
-$extensionFilePath = "$templateDirectory/" + $templateParameters.customExtension.value.windows.fileName
-$extensionFileParameters = $templateParameters.customExtension.value.windows.fileParameters
+$extensionFilePath = "$templateDirectory/" + $customExtension.windows.fileName
+$extensionFileParameters = $customExtension.windows.fileParameters
 $extensionScript = Get-Content -Path $extensionFilePath -Raw
 $extensionScript = "& {" + $extensionScript + "} " + $extensionFileParameters
 $extensionScriptCommands = [System.Text.Encoding]::Unicode.GetBytes($extensionScript)
