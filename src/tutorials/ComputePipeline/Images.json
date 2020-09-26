@@ -34,7 +34,6 @@
     }
   },
   "variables": {
-    "managedIdentityApiVersion": "2018-11-30",
     "imageGalleryApiVersion": "2020-09-30",
     "imageBuilderApiVersion": "2020-02-14"
   },
