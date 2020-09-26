@@ -9,9 +9,11 @@ it is recommended to run the deployment orchestration script (either *Deploy.sh*
 
 1. Ensure the Azure Command-Line Interface (CLI) is installed locally via https://docs.microsoft.com/en-us/cli/azure/install-azure-cli
 
-2. Set your Azure subscription context by running the `az login` command locally.
+2. If you are running Linux locally, ensure `jq` is installed. It is required on Linux to parse the JSON output from the Azure CLI.
 
-3. Download the sample source files
+3. Set your Azure subscription context by running the `az login` command locally.
+
+4. Download the sample source files
 ```
 mkdir az
 cd az
@@ -23,7 +25,7 @@ git pull origin main
 cd src/tutorials/ComputePipeline
 ```
 
-4. Review and edit each of the following template parameter configuration files per your environment.
+5. Review and edit each of the following template parameter configuration files per your environment.
 Ensure that `enabled: true` is set for each of the image and machine configurations to be deployed.
 
 `Identity.Parameters.json`
