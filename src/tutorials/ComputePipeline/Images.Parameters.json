@@ -72,7 +72,7 @@
     "imageTemplates": {
       "value": [
         {
-          "enabled": false,
+          "deploy": false,
           "name": "DesktopLinux",
           "imageDefinitionName": "DesktopLinux",
           "imageSourceType": "PlatformImage",
@@ -101,7 +101,7 @@
           ]
         },
         {
-          "enabled": false,
+          "deploy": false,
           "name": "DesktopWindows",
           "imageDefinitionName": "DesktopWindows",
           "imageSourceType": "PlatformImage",
@@ -127,7 +127,7 @@
           ]
         },
         {
-          "enabled": false,
+          "deploy": false,
           "name": "ServerLinux",
           "imageDefinitionName": "ServerLinux",
           "imageSourceType": "PlatformImage",
@@ -145,7 +145,7 @@
           ]
         },
         {
-          "enabled": false,
+          "deploy": false,
           "name": "ServerWindows",
           "imageDefinitionName": "ServerWindows",
           "imageSourceType": "PlatformImage",

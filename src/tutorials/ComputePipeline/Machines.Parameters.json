@@ -24,7 +24,7 @@
     "virtualMachines": {
       "value": [
         {
-          "enabled": false,
+          "deploy": false,
           "name": "DesktopL",
           "size": "Standard_NV6",
           "image": {
@@ -53,7 +53,7 @@
           }
         },
         {
-          "enabled": false,
+          "deploy": false,
           "name": "DesktopW",
           "size": "Standard_NV6",
           "image": {
@@ -82,7 +82,7 @@
           }
         },
         {
-          "enabled": false,
+          "deploy": false,
           "name": "ServerL",
           "size": "Standard_F8s_v2",
           "image": {
@@ -97,7 +97,7 @@
           }
         },
         {
-          "enabled": false,
+          "deploy": false,
           "name": "ServerW",
           "size": "Standard_F8s_v2",
           "image": {
@@ -116,7 +116,7 @@
     "virtualMachineSets": {
       "value": [
         {
-          "enabled": false,
+          "deploy": false,
           "name": "DesktopL",
           "size": "Standard_NV6",
           "count": 3,
@@ -146,7 +146,7 @@
           }
         },
         {
-          "enabled": false,
+          "deploy": false,
           "name": "DesktopW",
           "size": "Standard_NV6",
           "count": 3,
@@ -176,7 +176,7 @@
           }
         },
         {
-          "enabled": false,
+          "deploy": false,
           "name": "ServerL",
           "size": "Standard_F8s_v2",
           "count": 3,
@@ -192,7 +192,7 @@
           }
         },
         {
-          "enabled": false,
+          "deploy": false,
           "name": "ServerW",
           "size": "Standard_F8s_v2",
           "count": 3,

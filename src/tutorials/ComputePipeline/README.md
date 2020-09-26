@@ -26,7 +26,7 @@ cd src/tutorials/ComputePipeline
 ```
 
 5. Review and edit each of the following template parameter configuration files per your environment.
-Ensure that `enabled: true` is set for each of the image and machine configurations to be deployed.
+Ensure that `deploy: true` is set for each of the image and machine configurations to be deployed.
 
 `Identity.Parameters.json`
 

@@ -28,7 +28,7 @@ $resourceGroupExists = az group exists --resource-group $resourceGroupName
 if ($resourceGroupExists -eq "true") {
     $imageTemplates = (Get-Content -Path "$templateDirectory/Images.Parameters.json" -Raw | ConvertFrom-Json).parameters.imageTemplates.value
     foreach ($imageTemplate in $imageTemplates) {
-        if ($imageTemplate.enabled) {
+        if ($imageTemplate.deploy) {
             az image builder delete --resource-group $resourceGroupName --name $imageTemplate.name
         }
     }
@@ -56,7 +56,7 @@ $imageGallery = $groupDeployment.properties.outputs.imageGallery.value
 
 $imageTemplates = $groupDeployment.properties.outputs.imageTemplates.value
 foreach ($imageTemplate in $imageTemplates) {
-    if ($imageTemplate.enabled) {
+    if ($imageTemplate.deploy) {
         az sig image-version delete --resource-group $imageGallery.resourceGroupName --gallery-name $imageGallery.name --gallery-image-definition $imageTemplate.imageDefinitionName --gallery-image-version $imageTemplate.imageOutputVersion
         az image builder run --resource-group $resourceGroupName --name $imageTemplate.name
     }

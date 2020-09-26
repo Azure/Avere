@@ -68,7 +68,7 @@
   ],
   "resources": [
     {
-      "condition": "[parameters('virtualMachines')[copyIndex()].enabled]",
+      "condition": "[parameters('virtualMachines')[copyIndex()].deploy]",
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[parameters('virtualMachines')[copyIndex()].name]",
       "apiVersion": "[variables('virtualNetworkApiVersion')]",
@@ -93,7 +93,7 @@
       }
     },
     {
-      "condition": "[parameters('virtualMachines')[copyIndex()].enabled]",
+      "condition": "[parameters('virtualMachines')[copyIndex()].deploy]",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[parameters('virtualMachines')[copyIndex()].name]",
       "apiVersion": "[variables('virtualMachineApiVersion')]",
@@ -136,7 +136,7 @@
       },
       "resources": [
         {
-          "condition": "[and(parameters('virtualMachines')[copyIndex()].enabled, greater(length(parameters('virtualMachines')[copyIndex()].extensions), 0))]",
+          "condition": "[and(parameters('virtualMachines')[copyIndex()].deploy, greater(length(parameters('virtualMachines')[copyIndex()].extensions), 0))]",
           "type": "extensions",
           "name": "[if(greater(length(parameters('virtualMachines')[copyIndex()].extensions), 0), parameters('virtualMachines')[copyIndex()].extensions[0].name, 'ex0')]",
           "apiVersion": "[variables('virtualMachineApiVersion')]",
@@ -153,7 +153,7 @@
           }
         },
         {
-          "condition": "[and(parameters('virtualMachines')[copyIndex()].enabled, greater(length(parameters('virtualMachines')[copyIndex()].extensions), 1))]",
+          "condition": "[and(parameters('virtualMachines')[copyIndex()].deploy, greater(length(parameters('virtualMachines')[copyIndex()].extensions), 1))]",
           "type": "extensions",
           "name": "[if(greater(length(parameters('virtualMachines')[copyIndex()].extensions), 1), parameters('virtualMachines')[copyIndex()].extensions[1].name, 'ex1')]",
           "apiVersion": "[variables('virtualMachineApiVersion')]",
@@ -177,7 +177,7 @@
       }
     },
     {
-      "condition": "[parameters('virtualMachineSets')[copyIndex()].enabled]",
+      "condition": "[parameters('virtualMachineSets')[copyIndex()].deploy]",
       "type": "Microsoft.Compute/virtualMachineScaleSets",
       "name": "[parameters('virtualMachineSets')[copyIndex()].name]",
       "apiVersion": "[variables('virtualMachineApiVersion')]",
@@ -240,7 +240,7 @@
       }
     },
     {
-      "condition": "[and(parameters('virtualMachineSets')[copyIndex()].enabled, greater(length(parameters('virtualMachineSets')[copyIndex()].extensions), 0))]",
+      "condition": "[and(parameters('virtualMachineSets')[copyIndex()].deploy, greater(length(parameters('virtualMachineSets')[copyIndex()].extensions), 0))]",
       "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
       "name": "[concat(parameters('virtualMachineSets')[copyIndex()].name, '/', if(greater(length(parameters('virtualMachineSets')[copyIndex()].extensions), 0), parameters('virtualMachineSets')[copyIndex()].extensions[0].name, 'ex0'))]",
       "apiVersion": "[variables('virtualMachineApiVersion')]",
@@ -261,7 +261,7 @@
       }
     },
     {
-      "condition": "[and(parameters('virtualMachineSets')[copyIndex()].enabled, greater(length(parameters('virtualMachineSets')[copyIndex()].extensions), 1))]",
+      "condition": "[and(parameters('virtualMachineSets')[copyIndex()].deploy, greater(length(parameters('virtualMachineSets')[copyIndex()].extensions), 1))]",
       "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
       "name": "[concat(parameters('virtualMachineSets')[copyIndex()].name, '/', if(greater(length(parameters('virtualMachineSets')[copyIndex()].extensions), 1), parameters('virtualMachineSets')[copyIndex()].extensions[1].name, 'ex1'))]",
       "apiVersion": "[variables('virtualMachineApiVersion')]",

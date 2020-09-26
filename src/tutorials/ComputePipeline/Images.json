@@ -70,7 +70,7 @@
       }
     },
     {
-      "condition": "[parameters('imageTemplates')[copyIndex()].enabled]",
+      "condition": "[parameters('imageTemplates')[copyIndex()].deploy]",
       "type": "Microsoft.VirtualMachineImages/imageTemplates",
       "name": "[parameters('imageTemplates')[copyIndex()].name]",
       "apiVersion": "[variables('imageBuilderApiVersion')]",
