@@ -43,7 +43,7 @@
   "resources": [
     {
       "type": "Microsoft.Authorization/roleAssignments",
-      "name": "[guid(concat(parameters('userIdentity').name, '.', parameters('roleAssignments').images[copyIndex()]))]",
+      "name": "[guid(concat(subscription().id, '.', parameters('roleAssignments').images[copyIndex()]))]",
       "apiVersion": "[variables('roleAssignmentApiVersion')]",
       "location": "[resourceGroup().location]",
       "properties": {
@@ -70,7 +70,7 @@
           "resources": [
             {
               "type": "Microsoft.Authorization/roleAssignments",
-              "name": "[guid(concat(parameters('userIdentity').name, '.', parameters('roleAssignments').network[copyIndex()]))]",
+              "name": "[guid(concat(subscription().id, '.', parameters('roleAssignments').network[copyIndex()]))]",
               "apiVersion": "[variables('roleAssignmentApiVersion')]",
               "properties": {
                 "principalType": "servicePrincipal",
