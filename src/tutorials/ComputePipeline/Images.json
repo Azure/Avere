@@ -34,59 +34,11 @@
     }
   },
   "variables": {
-    "resourceDeploymentApiVersion": "2020-06-01",
-    "roleAssignmentApiVersion": "2020-04-01-preview",
     "managedIdentityApiVersion": "2018-11-30",
     "imageGalleryApiVersion": "2020-09-30",
     "imageBuilderApiVersion": "2020-02-14"
   },
   "resources": [
-    {
-      "type": "Microsoft.Authorization/roleAssignments",
-      "name": "[guid(concat(subscription().id, '.', parameters('roleAssignments').images[copyIndex()]))]",
-      "apiVersion": "[variables('roleAssignmentApiVersion')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "principalType": "servicePrincipal",
-        "principalId": "[reference(resourceId(parameters('userIdentity').resourceGroupName, 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userIdentity').name), variables('managedIdentityApiVersion')).principalId]",
-        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', parameters('roleAssignments').images[copyIndex()])]",
-        "scope": "[resourceGroup().id]"
-      },
-      "copy": {
-        "name": "roleAssignments",
-        "count": "[length(parameters('roleAssignments').images)]"
-      }
-    },
-    {
-      "type": "Microsoft.Resources/deployments",
-      "name": "[concat(parameters('userIdentity').name, '.', parameters('roleAssignments').network[copyIndex()])]",
-      "apiVersion": "[variables('resourceDeploymentApiVersion')]",
-      "resourceGroup": "[parameters('virtualNetwork').resourceGroupName]",
-      "properties": {
-        "mode": "Incremental",
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "resources": [
-            {
-              "type": "Microsoft.Authorization/roleAssignments",
-              "name": "[guid(concat(subscription().id, '.', parameters('roleAssignments').network[copyIndex()]))]",
-              "apiVersion": "[variables('roleAssignmentApiVersion')]",
-              "properties": {
-                "principalType": "servicePrincipal",
-                "principalId": "[reference(resourceId(parameters('userIdentity').resourceGroupName, 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userIdentity').name), variables('managedIdentityApiVersion')).principalId]",
-                "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', parameters('roleAssignments').network[copyIndex()])]",
-                "scope": "[concat(subscription().id, '/resourceGroups/', parameters('virtualNetwork').resourceGroupName)]"
-              }
-            }
-          ]
-        }
-      },
-      "copy": {
-        "name": "roleAssignments",
-        "count": "[length(parameters('roleAssignments').network)]"
-      }
-    },
     {
       "type": "Microsoft.Compute/galleries",
       "name": "[parameters('imageGallery').name]",

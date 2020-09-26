@@ -32,20 +32,16 @@ if ($resourceGroupExists -eq "true") {
             az image builder delete --resource-group $resourceGroupName --name $imageTemplate.name
         }
     }
-    $roleAssignments = (az role assignment list --resource-group $resourceGroupName) | ConvertFrom-Json
-    foreach ($roleAssignment in $roleAssignments) {
-        if ($roleAssignment.principalName -eq "") {
-            az role assignment delete --ids $roleAssignment.id
-        }
-    }
 } else {
     az group create --resource-group $resourceGroupName --location $deploymentRegionName
 }
-$roleAssignments = (az role assignment list --resource-group $virtualNetworkResourceGroupName) | ConvertFrom-Json
-foreach ($roleAssignment in $roleAssignments) {
-    if ($roleAssignment.principalName -eq "") {
-        az role assignment delete --ids $roleAssignment.id
-    }
+
+$roleAssignments = (Get-Content -Path "$templateDirectory/Images.Parameters.json" -Raw | ConvertFrom-Json).parameters.roleAssignments.value
+foreach ($roleAssignment in $roleAssignments.images) {
+    az role assignment create --resource-group $resourceGroupName --assignee $userIdentity.principalId --role $roleAssignment
+}
+foreach ($roleAssignment in $roleAssignments.network) {
+    az role assignment create --resource-group $virtualNetworkResourceGroupName --assignee $userIdentity.principalId --role $roleAssignment
 }
 
 $templateFile = "$templateDirectory/Images.json"
