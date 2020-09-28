@@ -56,7 +56,7 @@ ensureAzureNetwork()
         # these are VM nodes, count the VMs
         while [ $COUNTER -lt $NODE_COUNT ]; do
             HOST_NUMBER=$(($COUNTER + 1))
-            HOST_NUMBER_HEX=$( printf '%x' $HOST_NUMBER )
+            HOST_NUMBER_HEX=$( printf '%02x' $HOST_NUMBER )
             NODE_NAME="${NODE_PREFIX}-${COUNTER}"
             host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER}
             if [ $? -ne 0 ]
