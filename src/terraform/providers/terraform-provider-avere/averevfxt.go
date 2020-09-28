@@ -1700,19 +1700,19 @@ func (a *AvereVfxt) getClusterGetJsonCommand() string {
 }
 
 func (a *AvereVfxt) getClusterModifyCommand(cluster Cluster) string {
-	dnsServer := cluster.DnsServer
+	dnsServer := ""
 	if len(a.DnsServer) > 0 {
-		dnsServer = a.DnsServer
+		dnsServer = fmt.Sprintf(",'DNSserver':'%s'", a.DnsServer)
 	}
-	dnsDomain := cluster.DnsDomain
+	dnsDomain := ""
 	if len(a.DnsDomain) > 0 {
-		dnsDomain = a.DnsDomain
+		dnsDomain = fmt.Sprintf(",'DNSdomain':'%s'", a.DnsDomain)
 	}
-	dnsSearch := cluster.DnsSearch
+	dnsSearch := ""
 	if len(a.DnsSearch) > 0 {
-		dnsSearch = a.DnsSearch
+		dnsSearch = fmt.Sprintf(",'DNSsearch':'%s'", a.DnsSearch)
 	}
-	return WrapCommandForLogging(fmt.Sprintf("%s cluster.modify \"{'timezone':'%s','DNSserver':'%s','DNSdomain':'%s','DNSsearch':'%s','mgmtIP':{'IP': '%s','netmask':'%s','vlan':'%s'}}\"", a.getBaseAvereCmd(), a.Timezone, dnsServer, dnsDomain, dnsSearch, cluster.MgmtIP.IP, cluster.MgmtIP.Netmask, cluster.InternetVlan), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s cluster.modify \"{'timezone':'%s'%s%s%s,'mgmtIP':{'IP': '%s','netmask':'%s','vlan':'%s'}}\"", a.getBaseAvereCmd(), a.Timezone, dnsServer, dnsDomain, dnsSearch, cluster.MgmtIP.IP, cluster.MgmtIP.Netmask, cluster.InternetVlan), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getSetNtpServersCommand(ntpServers string) string {
