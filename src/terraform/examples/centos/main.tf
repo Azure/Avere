@@ -98,7 +98,6 @@ resource "azurerm_linux_virtual_machine" "main" {
   network_interface_ids = [azurerm_network_interface.main.id]
   computer_name         = "vm"
   size                  = local.vm_size
-  admin_username        = local.vm_admin_username
   custom_data           = base64encode(local.cloud_init_file)
   source_image_id       = data.azurerm_image.custom_image.id
     
