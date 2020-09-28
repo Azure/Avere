@@ -11,7 +11,7 @@ The following is a checklist of items to confirm before connecting an HPC Cache 
     * **ip range is open** - ensure the HPC Cache or vFXT subnet is specified in the export.  Also, if any render clients are writing around, you will also need to open up the subnet range of the render clients, otherwise this is not needed.
 * ensure the on-prem firewall is open to the HPC Cache or vFXT subnets
 * ensure an NFSv3 endpoint is enabled
-* ensure you put a vFXT or HPC Cache into its own VNET.  The smallest VNET may be a /27.  The HPC Cache and VNET have HA models where they migrate IP addresses in HA events, and it is important that another cluster or another vm does not grab those IP addresses during migration.
+* ensure you put a vFXT or HPC Cache into its own subnet.  The smallest subnet may be a /27.  The HPC Cache and Avere vFXT have HA models where they migrate IP addresses in HA events, and it is important that another cluster or another vm does not grab those IP addresses during migration.
 
 # Reducing TCO
 
