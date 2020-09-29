@@ -235,7 +235,7 @@ EOM
     COUNTER=0
     while [ $COUNTER -lt $NODE_COUNT ]; do
         HOST_NUMBER=$(($COUNTER + 1))
-        HOST_NUMBER_HEX=$( printf '%x' $HOST_NUMBER )
+        HOST_NUMBER_HEX=$( printf '%02x' $HOST_NUMBER )
         NODE_NAME="${NODE_PREFIX}-${COUNTER}"
         IP=$( host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER} | grep ${NODE_NAME} | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
         echo "NODE NAME ${NODE_NAME}, $IP"
@@ -279,7 +279,7 @@ EOM
     FAILURE_MAX=255
     while (( (COUNTER-FAILURE_COUNTER) < NODE_COUNT && FAILURE_COUNTER < $FAILURE_MAX )); do
         HOST_NUMBER=$[1+($COUNTER-$FAILURE_COUNTER)]
-        HOST_NUMBER_HEX=$( printf '%x' $HOST_NUMBER )
+        HOST_NUMBER_HEX=$( printf '%02x' $HOST_NUMBER )
         VMSS_INDEX=$COUNTER
         VMSS_INDEX_HEX=$( printf '%06x' $VMSS_INDEX )
         NODE_NAME="${NODE_PREFIX}${VMSS_INDEX_HEX}"
