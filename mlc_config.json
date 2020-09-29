@@ -11,6 +11,9 @@
 		},
 		{
 			"pattern": "^https://STORAGEACCOUNT.blob.core.windows.net/vhd/centos74.vhd"	
+		},
+		{
+			"pattern": "^https://wiki.linux-nfs.org/wiki/index.php/ACLs#The_ACL_Interoperability_Problem"	
 		}
 	]
 }
