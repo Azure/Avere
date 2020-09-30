@@ -12,15 +12,22 @@ locals {
 
     resource_group_name = "centosresource_group"
     vm_size = "Standard_D2s_v3"
+
+    // the below is the resource group and name of the previously created custom image
+    image_resource_group = "image_resource_group"
+    image_name = "image_name" 
+
+    // network details
+    virtual_network_resource_group = "network_resource_group"
+    virtual_network_name = "rendervnet"
+    virtual_network_subnet_name = "render_clients2"
+
     // this value for OS Disk resize must be between 20GB and 1023GB,
     // after this you will need to repartition the disk
     os_disk_size_gb = 32 
 
-    cloud_init_file = templatefile("${path.module}/cloud-init.tpl", {})
-    
-    // the below is the resource group and name of the previously created custom image
-    image_resource_group = "image_resource_group"
-    image_name = "image_name"
+    script_file_b64 = base64gzip(replace(file("${path.module}/installnfs.sh"),"\r",""))
+    cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { install_script = local.script_file_b64})
 }
 
 provider "azurerm" {
@@ -28,49 +35,20 @@ provider "azurerm" {
     features {}
 }
 
+data "azurerm_subnet" "vnet" {
+  name                 = local.virtual_network_subnet_name
+  virtual_network_name = local.virtual_network_name
+  resource_group_name  = local.virtual_network_resource_group
+}
+
+data "azurerm_image" "custom_image" {
+    name = local.image_name
+    resource_group_name = local.image_resource_group
+}
+
 resource "azurerm_resource_group" "main" {
   name     = local.resource_group_name
   location = local.location
-}
-
-resource "azurerm_network_security_group" "ssh_nsg" {
-    name                = "ssh_nsg"
-    location            = azurerm_resource_group.main.location
-    resource_group_name = azurerm_resource_group.main.name
-
-    security_rule {
-        name                       = "ssh"
-        priority                   = 120
-        direction                  = "Inbound"
-        access                     = "Allow"
-        protocol                   = "Tcp"
-        source_port_range          = "*"
-        destination_port_range     = "22"
-        source_address_prefix      = "Internet"
-        destination_address_prefix = "*"
-    }
-}
-
-resource "azurerm_virtual_network" "main" {
-  name                = "virtualnetwork"
-  // The /29 is the smallest possible VNET in Azure, 5 addresses are reserved for Azure
-  // and 3 are available for use.
-  address_space       = ["10.0.0.0/29"]
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
-
-  subnet {
-    name           = "internal"
-    address_prefix = "10.0.0.0/29"
-    security_group = azurerm_network_security_group.ssh_nsg.id
-  }
-}
-
-resource "azurerm_public_ip" "vm" {
-    name                         = "publicip"
-    location                     = azurerm_resource_group.main.location
-    resource_group_name          = azurerm_resource_group.main.name
-    allocation_method            = "Static"
 }
 
 resource "azurerm_network_interface" "main" {
@@ -80,15 +58,9 @@ resource "azurerm_network_interface" "main" {
 
   ip_configuration {
     name                          = "internal"
-    subnet_id                     = tolist(azurerm_virtual_network.main.subnet)[0].id
+    subnet_id                     = data.azurerm_subnet.vnet.id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.vm.id
   }
-}
-
-data "azurerm_image" "custom_image" {
-    name = local.image_name
-    resource_group_name = local.image_resource_group
 }
 
 resource "azurerm_linux_virtual_machine" "main" {
@@ -128,6 +100,11 @@ resource "azurerm_virtual_machine_extension" "cse" {
   type                 = "CustomScript"
   type_handler_version = "2.0"
 
+  # replace the below with a script you would like to run
+  # A custom script extension (cse) is useful over cloud-init
+  # for 2 reasons:
+  #   1. safe to deliver secrets
+  #   2. provides success or fail signal back to deployment
   settings = <<SETTINGS
     {
         "commandToExecute": " mkdir -p /opt/cse"
@@ -139,10 +116,10 @@ output "username" {
   value = local.vm_admin_username
 }
 
-output "jumpbox_address" {
-  value = azurerm_public_ip.vm.ip_address
+output "vm_address" {
+  value = azurerm_network_interface.main.ip_configuration[0].private_ip_address
 }
 
 output "ssh_command" {
-    value = "ssh ${local.vm_admin_username}@${azurerm_public_ip.vm.ip_address}"
+    value = "ssh ${local.vm_admin_username}@${azurerm_network_interface.main.ip_configuration[0].private_ip_address}"
 }
