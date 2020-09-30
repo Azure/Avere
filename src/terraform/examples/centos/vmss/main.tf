@@ -10,15 +10,28 @@ locals {
     // populated where you are running terraform
     vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
 
-    // network details
-    virtual_network_resource_group = "network_resource_group"
-    
     // vmss details
     vmss_resource_group_name = "vmss_rg"
-    unique_name = "unique"
-    vm_count = 3
+    unique_name = "vm"
+    vm_count = 2
     vmss_size = "Standard_D2s_v3"
     use_ephemeral_os_disk = true
+
+    // the below is the resource group and name of the previously created custom image
+    image_resource_group = "image_resource_group"
+    image_name = "image_name"
+
+    // network details
+    virtual_network_resource_group = "network_resource_group"
+    virtual_network_name = "rendervnet"
+    virtual_network_subnet_name = "render_clients2"
+
+    // this value for OS Disk resize must be between 20GB and 1023GB,
+    // after this you will need to repartition the disk
+    os_disk_size_gb = 32 
+
+    script_file_b64 = base64gzip(replace(file("${path.module}/../installnfs.sh"),"\r",""))
+    cloud_init_file = templatefile("${path.module}/../cloud-init.tpl", { install_script = local.script_file_b64})
 }
 
 provider "azurerm" {
@@ -26,16 +39,20 @@ provider "azurerm" {
     features {}
 }
 
+data "azurerm_subnet" "vnet" {
+  name                 = local.virtual_network_subnet_name
+  virtual_network_name = local.virtual_network_name
+  resource_group_name  = local.virtual_network_resource_group
+}
+
+data "azurerm_image" "custom_image" {
+    name = local.image_name
+    resource_group_name = local.image_resource_group
+}
+
 resource "azurerm_resource_group" "vmss" {
   name     = local.vmss_resource_group_name
   location = local.location
-}
-
-// the render network
-module "network" {
-    source = "github.com/Azure/Avere/src/terraform/modules/render_network"
-    resource_group_name = local.virtual_network_resource_group
-    location = local.location
 }
 
 resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
@@ -47,6 +64,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   admin_username      = local.vm_admin_username
   admin_password      = local.vm_ssh_key_data == null || local.vm_ssh_key_data == "" ? local.vm_admin_password : null
   disable_password_authentication = local.vm_ssh_key_data == null || local.vm_ssh_key_data == "" ? false : true
+
+  custom_data           = base64encode(local.cloud_init_file)
+  source_image_id       = data.azurerm_image.custom_image.id
 
   # use low-priority with Delete.  Stop Deallocate will be incompatible with OS Ephemeral disks
   priority            = "Spot"
@@ -69,17 +89,10 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
       }
   }
 
-  source_image_reference {
-    publisher = "OpenLogic"
-    offer     = "CentOS-CI"
-    # only 7-CI supports cloud-init https://docs.microsoft.com/en-us/azure/virtual-machines/linux/using-cloud-init
-    sku       = "7-CI"
-    version   = "latest"
-  }
-
   os_disk {
     storage_account_type = "Standard_LRS"
     caching              = local.use_ephemeral_os_disk == true ? "ReadOnly" : "ReadWrite"
+    disk_size_gb         = local.os_disk_size_gb
 
     dynamic "diff_disk_settings" {
       for_each = local.use_ephemeral_os_disk == true ? [local.use_ephemeral_os_disk] : []
@@ -97,11 +110,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
     ip_configuration {
       name      = "internal"
       primary   = true
-      subnet_id = module.network.render_clients1_subnet_id
+      subnet_id = data.azurerm_subnet.vnet.id
     }
   }
-
-  depends_on = [module.network.module_depends_on_ids]
 }
 
 output "vmss_id" {
