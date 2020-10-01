@@ -8,9 +8,8 @@ Here are the steps to build an image on-premises, upload to Azure, and deploy on
 1. [Prepare Image Size and Format for Azure](#prepare-image-size-and-format-for-azure)
 1. [Upload Image](#upload-image)
 1. [Create and Deploy Image](#create-and-deploy-image)
-1. [Next Steps: Image Capture and Scaling](#next-steps-image-capture-and-scaling)
-
-All of these instructions may be automated through az cli or the [Terraform Azure Provider](https://www.terraform.io/docs/providers/azurerm/).
+1. [Next Steps: Image Capture and Scaling](#next-steps-image-capture)
+1. [Next Steps: Use VMSS to Scale Deployment](#next-steps-use-vmss-to-scale-deployment)
 
 # Build the Custom Image
 
@@ -20,14 +19,14 @@ Here are the important tips to follow when building the image:
 
 * remove swap partition, as this will eat up your ops on your OS disk.  As an alternative, the Azure Linux Agent (waagent) can configure a swap partition as outlined in the setup instructions
 
-* if you want to enable cloud-init, please follow the instructions for [preparing CentOS for cloud-init on Azure](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cloudinit-prepare-custom-image#preparing-rhel-76--centos-76)
+* to enable cloud-init, follow the instructions for [preparing CentOS for cloud-init on Azure](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cloudinit-prepare-custom-image#preparing-rhel-76--centos-76)
 
-* if you want to run without the WAAgent (and no cloud-init) follow the instructions around [Creating generalized images without a provisioning agent](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/no-agent)
+* to run without the WAAgent (and no cloud-init) follow the instructions [Creating generalized images without a provisioning agent](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/no-agent)
 
 # Prepare Image Size and Format for Azure
 
 Azure requires the following image file requirements:
-1. fixed VHD with a ".vhd extension
+1. fixed VHD with a ".vhd" extension
 1. byte aligned to 1MB chunks + a 512K footer
 
 There are two approaches to converting and resizing the image:
@@ -35,7 +34,7 @@ There are two approaches to converting and resizing the image:
 
 1. **Use Hyper-V tools** - if you are using Hyper-V, use the [Hyper-V manager UI or Powershell tools](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/prepare-for-upload-vhd-image#convert-the-virtual-disk-to-a-fixed-size-vhd) to convert the disk.  Be sure to choose .vhd and Fixed size.
 
-**Pro-tip:** To make upload easy start with a small image, and it can be resized on the cloud using the [disk_size_gb](https://www.terraform.io/docs/providers/azurerm/r/linux_virtual_machine.html#disk_size_gb) property in terraform.
+**Pro-tip:** To make upload less time consuming start with a small image, and it can be resized on the cloud using the [disk_size_gb](https://www.terraform.io/docs/providers/azurerm/r/linux_virtual_machine.html#disk_size_gb) property in terraform.
 
 # Upload Image
 
@@ -123,9 +122,9 @@ The following instructions create an image using a private storage account endpo
     echo "azcopy copy centos.vhd 'https://$STORAGE_FQDN/$CONTAINER_NAME?$SAS_SUFFIX'"
     ```
 
-1. use the above line to populate the /etc/hosts or DNS with the IP address storage account pair
+1. use the hosts line echoed in the previous command to populate the /etc/hosts or DNS with the IP address storage account pair
 
-1. run the `azcopy` command from above to upload the image replacing the source image name `centos.vhd` with your vhd.
+1. run the `azcopy` command echoed in the previous command to upload the image replacing the source image name `centos.vhd` with your vhd name.
 
 1. create the image, updating the variables below
     ```bash
@@ -137,7 +136,7 @@ The following instructions create an image using a private storage account endpo
         image_name = \"$IMAGE_NAME\""
     ```
 
-1. cleanup the resource group, storage account, private endpoint, and restore the subnet.  This will not touch the newly created image.
+1. cleanup the resource group, storage account, private endpoint, and restore the subnet.  This will not delete the newly created image.
     ```bash
     # delete the private endpoint
     az network private-endpoint delete --ids $PRIVATE_ENDPOINT_ID
@@ -186,6 +185,8 @@ Once you have tested and or captured your image, you can delete it by running `t
 # Next Steps: Image Capture
 
 Now that you have the image in cloud you may want to refine it, and that is done in the capture phase described in the following document: https://docs.microsoft.com/en-us/azure/virtual-machines/linux/capture-image.  Step 2 of the document provides the automation commands, but these commands of deallocate, generalize, and image create can all be done by clicking the "capture" button on the VM page in the portal.
+
+If you use the "capture" button, and choose delete VM, you will still need to remove the associated NIC and disk.
 
 # Next Steps: Use VMSS to Scale Deployment
 
