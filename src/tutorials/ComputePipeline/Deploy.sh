@@ -44,11 +44,11 @@ fi
 
 roleAssignments=$(jq -c '.parameters.roleAssignments.value.images' "$templateDirectory/Images.Parameters.json")
 for roleAssignment in $(jq -r '.[]' <<< "$roleAssignments"); do
-    az role assignment create --resource-group $resourceGroupName --assignee $userIdentityPrincipalId --role $roleAssignment
+    az role assignment create --resource-group $resourceGroupName --role $roleAssignment --assignee-object-id $userIdentity.principalId --assignee-principal-type "ServicePrincipal"
 done
 roleAssignments=$(jq -c '.parameters.roleAssignments.value.network' "$templateDirectory/Images.Parameters.json")
 for roleAssignment in $(jq -r '.[]' <<< "$roleAssignments"); do
-    az role assignment create --resource-group $virtualNetworkResourceGroupName --assignee $userIdentityPrincipalId --role $roleAssignment
+    az role assignment create --resource-group $virtualNetworkResourceGroupName --role $roleAssignment --assignee-object-id $userIdentity.principalId --assignee-principal-type "ServicePrincipal"
 done
 
 templateFile="$templateDirectory/Images.json"

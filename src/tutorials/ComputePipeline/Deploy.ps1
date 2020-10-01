@@ -38,10 +38,10 @@ if ($resourceGroupExists -eq "true") {
 
 $roleAssignments = (Get-Content -Path "$templateDirectory/Images.Parameters.json" -Raw | ConvertFrom-Json).parameters.roleAssignments.value
 foreach ($roleAssignment in $roleAssignments.images) {
-    az role assignment create --resource-group $resourceGroupName --assignee $userIdentity.principalId --role $roleAssignment
+    az role assignment create --resource-group $resourceGroupName --role $roleAssignment --assignee-object-id $userIdentity.principalId --assignee-principal-type "ServicePrincipal"
 }
 foreach ($roleAssignment in $roleAssignments.network) {
-    az role assignment create --resource-group $virtualNetworkResourceGroupName --assignee $userIdentity.principalId --role $roleAssignment
+    az role assignment create --resource-group $virtualNetworkResourceGroupName --role $roleAssignment --assignee-object-id $userIdentity.principalId --assignee-principal-type "ServicePrincipal"
 }
 
 $templateFile = "$templateDirectory/Images.json"
