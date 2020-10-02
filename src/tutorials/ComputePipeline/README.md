@@ -1,6 +1,24 @@
 # Azure Compute Pipeline
 
-This sample builds customized images from Azure platform images using the [Azure Image Builder](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-overview) service. It then deploys the custom images to [Azure Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/) and/or [Azure Virtual Machine Scale Sets](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview).
+This sample builds customized images from Azure platform images using the [Azure Image Builder](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-overview) service. It then deploys the custom images to [Azure Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/) and/or [Azure Virtual Machine Scale Sets](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview). Either Linux and/or Windows platform images can be customized as needed.
+
+For an [image build customization example](https://github.com/Azure/Avere/blob/main/src/tutorials/ComputePipeline/Images.Parameters.json#L89-L101), the following configuration adds [Teradici's PCoIP host agent](https://docs.teradici.com/find/product/cloud-access-software) to a CentOS 7.8 platform image in Azure.
+
+```
+"buildCustomization": [
+  {
+    "name": "Teradici",
+    "type": "Shell",
+    "inline": [
+      "yum -y groups install 'GNOME Desktop'",
+      "yum -y install https://downloads.teradici.com/rhel/teradici-repo-latest.noarch.rpm",
+      "yum -y install epel-release",
+      "yum -y install usb-vhci",
+      "yum -y install pcoip-agent-graphics"
+    ]
+  }
+]
+```
 
 ## Deployment Instructions
 
