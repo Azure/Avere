@@ -1,6 +1,6 @@
 # VFX and Animation Rendering with HPC Cache and Avere vFXT on Azure
 
-To meed tight deadlines and reduce total cost of ownership (TCO), VFX and Animation studios use Azure for on-demand access to compute capacity for their render workloads.  Avere technology enables the cloud burst rendering scenario and makes it easy to extend an on-premises rendering pipeline to Azure with minimal workflow changes.
+To meet tight deadlines and reduce total cost of ownership (TCO), VFX and Animation studios use Azure for on-demand access to compute capacity for their render workloads.  Avere technology enables the cloud burst rendering scenario and makes it easy to extend an on-premises rendering pipeline to Azure with minimal workflow changes.
 
 Customers burst render to Azure for the main reasons of controlling and tracking costs, security, ease of use, and collaboration.  The [Azure rendering white paper](https://azure.microsoft.com/en-us/resources/visual-effects-and-animation-rendering-in-azure/) goes into detail on each of these topics.
 
@@ -14,7 +14,7 @@ There are 4 major cloud infrastructure components that make up a cloud rendering
 1. **Custom Image** - customers create a linux or Windows based custom image that contains the necessary rendering and render management software to mount the storage cache and also connect to on-premises services such as a render manager, AD server, and metrics server.
 1. **Render Farm** - Virtual Machine Scalesets are used to scale the custom image across thousands of virtual machines.  Additionally [Azure Cycle Cloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/) is used to help manage the virtual machine scale-sets.
 
-To get started quickly the recommended approach is to follow the [First Render Pilot](examples/securedimage/Azure%20First%20Render%20Pilot.pdf).  The first render pilot provides a phased approach to quickly build out the burst rendering architecture on Azure.  The resources below will help you through each of the phases.
+To get started the recommended approach is to follow the [First Render Pilot](examples/securedimage/Azure%20First%20Render%20Pilot.pdf).  The first render pilot provides a phased approach to  build out the burst rendering architecture on Azure.  The resources below will help you through each of the phases.
 
 ## Learning
 
@@ -36,7 +36,7 @@ The remainder of this page provides Terraform infrastructure examples to build o
 
 ## Rendering Best Practices for Azure Compute, Network, and Storage
 
-The highest priority for VFX and Animation Studios is the lowest possible total cost of ownership (TCO).  The following best practices supplement existing Azure documentation with guidance on how to achieve the lowest TCO.
+The highest priority for VFX and Animation Studios is the lowest total cost of ownership (TCO).  The following best practices supplement existing Azure documentation with guidance on how to achieve the lowest TCO.
 
 1. [Best Practices for using Azure Virtual Machine Scale Sets (VMSS) or Azure Cycle Cloud for Rendering](examples/vmss-rendering)
 1. [Networking Best Practices for Rendering](examples/network-rendering)
