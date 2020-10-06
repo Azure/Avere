@@ -66,6 +66,11 @@ provider "azurerm" {
     client_secret   = local.client_secret
     tenant_id       = local.tenant_id
 
+    # If you are on a new subscription, and encounter resource provider registration
+    # issues, please uncomment the following line.
+    # Please following the directions for a new subscription: 
+    # skip_provider_registration = "true"
+
     features {}
 }
 

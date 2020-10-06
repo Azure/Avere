@@ -149,11 +149,13 @@ This step will deploy the VNET, filer, storage account, controller and vfxt.  It
 
 1. `cd ~/tf/src/terraform/examples/vfxt/user-assigned-managed-identity`
 
-2. `code main.tf` to edit the local variables section at the top of the file and to customize to your preferences.  At the top paste in the variables from the output of the principal script executed above.  If you are using an [ssk key](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys), ensure that ~/.ssh/id_rsa is populated.
+1. `code main.tf` to edit the local variables section at the top of the file and to customize to your preferences.  At the top paste in the variables from the output of the principal script executed above.  If you are using an [ssk key](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys), ensure that ~/.ssh/id_rsa is populated.
 
-3. execute `terraform init` in the directory of `main.tf`.
+1. execute `terraform init` in the directory of `main.tf`.
 
-4. execute `terraform apply -auto-approve` to build the vfxt cluster
+1. execute `terraform plan` to see the resources to be deployed.  If encounter resource provider registration errors, this may be the first time Terraform has been run on this subscription.  You will need to uncomment the line `skip_provider_registration = "true"` in `main.tf` and also run through the directions for [starting with a new subscription](../../new-subscription).
+
+1. execute `terraform apply -auto-approve` to build the vfxt cluster
 
 Once installed you will be able to login and use the vFXT cluster according to the vFXT documentation: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-cluster-gui.
 
