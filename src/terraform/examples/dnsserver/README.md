@@ -1,6 +1,6 @@
 # Azure Virtual Machine Running Unbound (DNS server)
 
-This deploys an Azure virtual machine that installs and configures [Unbound](https://nlnetlabs.nl/projects/unbound/about/) and configures it to spoof the address of an on-premises dns resolver.
+This deploys an Azure virtual machine that installs and configures [Unbound](https://nlnetlabs.nl/projects/unbound/about/) and configures it to override the address of an on-premises filer so that the render nodes mount the Avere to hide the latency.  All other dns requests are forwarded to pre-configured on-premises dns servers.
 
 ## Deployment Instructions
 
