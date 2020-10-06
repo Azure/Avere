@@ -1,10 +1,60 @@
-# Terraform Examples, Modules, and Providers for HPC Cache and Avere vFXT for Azure
+# VFX and Animation Rendering with HPC Cache and Avere vFXT on Azure
 
-This folder contains Terraform Examples, Modules, and Providers for HPC Cache and Avere vFXT for Azure.  Terraform 0.12.x is recommended.
+To meed tight deadlines and reduce total cost of ownership (TCO), VFX and Animation studios use Azure for on-demand access to compute capacity for their render workloads.  Avere technology enables the cloud burst rendering scenario and makes it easy to extend an on-premises rendering pipeline to Azure with minimal workflow changes.
 
-# Examples
+Customers burst render to Azure for the main reasons of controlling and tracking costs, security, ease of use, and collaboration.  The [Azure rendering white paper](https://azure.microsoft.com/en-us/resources/visual-effects-and-animation-rendering-in-azure/) goes into detail on each of these topics.
 
-The examples show how to deploy HPC Cache, Avere vFXT, and an NFS Filer from minimal configurations to 3-node configurations.
+The common cloud burst rendering architecture is shown in the following diagram:
+
+![Burst Rendering Architecture](burstrenderarchitecture.png)
+
+There are 4 major cloud infrastructure components that make up a cloud rendering solution:
+1. **Network connection** - the burst rendering solution is connected via an [Azure Virtual Private Network (VPN) Gateway](https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways) or an [Azure ExpressRoute](https://azure.microsoft.com/en-us/services/expressroute/).
+1. **Storage Cache** - a managed HPC Cache or Avere vFXT is used to cache data, and hide latency to on-premises data.
+1. **Custom Image** - customers create a linux or Windows based custom image that contains the necessary rendering and render management software to mount the storage cache and also connect to on-premises services such as a render manager, AD server, and metrics server.
+1. **Render Farm** - Virtual Machine Scalesets are used to scale the custom image across thousands of virtual machines.  Additionally [Azure Cycle Cloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/) is used to help manage the virtual machine scale-sets.
+
+To get started quickly the recommended approach is to follow the [First Render Pilot](examples/securedimage/Azure%20First%20Render%20Pilot.pdf).  The first render pilot provides a phased approach to quickly build out the burst rendering architecture on Azure.  The resources below will help you through each of the phases.
+
+## Learning
+
+There are multiple video resources to help with learning about burst rendering on Azure:
+
+| Description  | Video Link  |
+|---|---|
+| [Siggraph 2020 Videos](https://siggraph.event.microsoft.com/) - Six videos from Siggraph 2020 review customer solutions and why render on Azure.  | [![Siggraph 2020 Videos](siggraph2020.png)](https://siggraph.event.microsoft.com/)   |
+| [Securing a custom image](https://youtu.be/CNiQU9qbMDk) - This example shows an Azure administrator how to take an on-prem image, upload it to Azure, and then provide secure access to a contributor.  | [![Tutorial Video](examples/securedimage/renderpilot.png)](https://youtu.be/CNiQU9qbMDk)  |
+| [Avere vFXT in a Proxy Environment](https://youtu.be/lxDDwu44OHM) - This example shows how to configure an Avere vFXT in a secured locked down internet environment where access to outside resources is via a proxy.  | [![Tutorial Video](examples/vfxt/proxy/proxyyoutube.png)](https://youtu.be/lxDDwu44OHM)  |
+
+The remainder of this page provides Terraform infrastructure examples to build out the rendering architecture:
+1. [Rendering Best Practices for Azure Compute, Network, and Storage](#rendering-best-practices-for-azure-compute-network-and-storage) - learn about the best practices for rendering to reduce TCO on Compute, Network, and Storage.
+1. [Full End-To-End Examples](#full-end-to-end-examples) - Full end to end examples in Linux and Windows.
+1. [Storage Cache Infrastructure](#storage-cache-infrastructure) - Use HPC Cache 
+1. [Rendering Accessories Infrastructure](#rendering-accessories-infrastructure) - this provides examples of a dns server, NFS ephemeral filer, secure image, and jumpbox.
+1. [Terraform Modules](#terraform-modules) - these are the common infrastructure building blocks that make up the rendering architecture.
+1. [Avere vFXT Terraform Provider](#avere-vfxt-terraform-provider) - this is the resource page that provides the full reference to using the Avere vFXT Terraform provider.
+
+## Rendering Best Practices for Azure Compute, Network, and Storage
+
+The highest priority for VFX and Animation Studios is the lowest possible total cost of ownership (TCO).  The following best practices supplement existing Azure documentation with guidance on how to achieve the lowest TCO.
+
+1. [Best Practices for using Azure Virtual Machine Scale Sets (VMSS) or Azure Cycle Cloud for Rendering](examples/vmss-rendering)
+1. [Networking Best Practices for Rendering](examples/network-rendering)
+1. [Storage Cache Best Practices for Rendering](examples/storagecache-rendering)
+
+## Full End-To-End Examples
+
+**Important Note** Please use Terraform 0.12.x with the following examples.
+
+The following examples provide end-to-end examples that implement the burst rendering architecture in Linux and Windows environments.
+
+1. [Create a Linux based OpenCue managed render farm on Azure](examples/vfxt/opencue) - deploy an end to end render solution on Azure using OpenCue as your render manager.
+1. [Create a CentOS Custom  Image and scale on Azure](examples/centos) - shows how to create, upload, and deploy a centos custom image and then scale the image using VMSS.
+1. [Create a Windows Render Farm On Azure](examples/houdinienvironment) - this walks through a deployment of a Houdini render environment on Azure.
+
+## Storage Cache Infrastructure
+
+**Important Note** Please use Terraform 0.12.x with the following examples.
 
 Both HPC Cache and Avere vFXT for Azure provide file caching for high-performance computing (HPC).  We recommend to always choose HPC Cache for greater user manageability and only choose Avere vFXT for Azure for custom scenarios where HPC is unable to fit.  If you need to use Avere vFXT for Azure because of a missing feature in HPC Cache, please submit an issue so we can track and add to HPC Cache.
 
@@ -36,19 +86,21 @@ Both HPC Cache and Avere vFXT for Azure provide file caching for high-performanc
    5. [Deploy Avere vFXT directly from the controller](examples/vfxt/run-local) - this example shows how to deploy the Avere directly from the controller.
    6. [Specify a custom VServer IP Range with the Avere vFXT](examples/vfxt/custom-vserver) - this example shows how to specify a custom VServer IP Range with the Avere vFXT.
    7. [Avere vFXT using User Assigned Managed Identity](examples/vfxt/user-assigned-managed-identity) - this example shows how to use a user assigned managed identity with the Avere vFXT.
-1. [SecuredImage](examples/securedimage) - shows how to create, upload, and deploy a custom image with an introduction to RBAC, Azure Governance, and Network.
+1. [Backup Restore](examples/backuprestore) - Backup any FXT or vFXT cluster and build terraform to restore to HPC Cache or Avere vFXT for Azure.
+
+## Rendering Accessories Infrastructure
+
+**Important Note** Please use Terraform 0.12.x with the following examples.
+
+The following terraform examples build out accessory rendering infrastructure such as DNS Servers, high speed NFS ephemeral filers, and a jumpbox:
+
+1. [DNS Server to Override Filer Address](examples/dnsserver) - This deploys an Azure virtual machine that installs and configures [Unbound](https://nlnetlabs.nl/projects/unbound/about/) and and configures it to override the address of an on-premises filer so that the render nodes mount the Avere to hide the latency.  All other dns requests are forwarded to pre-configured on-premises dns servers.
 1. [NFS Ephemeral Filer](examples/nfsfiler) - builds high performance NFS filers.
+1. [SecuredImage](examples/securedimage) - shows how to create, upload, and deploy a custom image with an introduction to RBAC, Azure Governance, and Network.
 1. [Jumpbox](examples/jumpbox) - this deploys a VM pre-installed with pre-installed with az cli, terraform, golang, and the built avere provider
 Security.
-1. [Backup Restore](examples/backuprestore) - Backup any FXT or vFXT cluster and build terraform to restore to HPC Cache or Avere vFXT for Azure.
-1. [Best Practices for using Azure Virtual Machine Scale Sets (VMSS) or Azure Cycle Cloud for Rendering](examples/vmss-rendering)
-1. [Networking Best Practices for Rendering](examples/network-rendering)
-1. [Storage Cache Best Practices for Rendering](examples/storagecache-rendering)
-1. [Create a Houdini Render Farm On Azure](examples/houdinienvironment) - this walks through a deployment of a Houdini render environment on Azure.
-1. [Create a Custom CentOS Image](examples/centos) - shows how to create, upload, and deploy a custom centos image.
-1. [Create an OpenCue managed render farm on Azure](examples/vfxt/opencue) - deploy an end to end render solution on Azure using OpenCue as your render manager.
 
-# Modules
+## Terraform Modules
 
 These modules provide core components for use with HPC Cache or Avere vFXT for Azure:
 
@@ -65,7 +117,7 @@ These modules provide core components for use with HPC Cache or Avere vFXT for A
 11. [VMSS Config](modules/vmss_config) - this module configures an NFS share with a round robin mount script.
 12. [Mountable VMSS](modules/vmss_mountable) - this deploys a Linux based VMSS and runs a script off an NFS share.
 
-# Provider
+## Avere vFXT Terraform Provider
 
 The following provider creates, destroys, and manages an Avere vFXT for Azure:
 
