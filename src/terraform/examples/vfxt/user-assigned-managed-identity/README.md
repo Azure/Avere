@@ -49,21 +49,33 @@ This step will create the resource groups, service principal, and the managed id
 This assumes you have the `Owner` role.  If not have someone with the `Owner` role run the following commands.  Ensure you save the output, as this will be needed in the terraform and for cleanup.
 
 ```bash
-# update the variables with your own variables
+#!/bin/bash
+set -x
+
+##################################################
+# update the following variables with your own variables
 export LOCATION=eastus
 export RG_PREFIX=aaa_ # this can be blank, it is used to group the resource groups together
 export SUBSCRIPTION=00000000-0000-0000-0000-000000000000 #YOUR SUBSCRIPTION
 
-export MI_RG=${RG_PREFIX}managed_identity
+# the resource group where your VNET is stored
 export Network_RG=${RG_PREFIX}network_resource_group
-export Storage_RG=${RG_PREFIX}storage_resource_group
+
+# the following may be the same resource group
+export MI_RG=${RG_PREFIX}managed_identity
 export Avere_RG=${RG_PREFIX}vfxt_resource_group
+# you may leave storage blank if not using a storage account as a vfxt core filer
+export Storage_RG=
+#
+##################################################
 
 # create the resource groups
 az group create --location $LOCATION --resource-group $MI_RG
 az group create --location $LOCATION --resource-group $Network_RG
-az group create --location $LOCATION --resource-group $Storage_RG
 az group create --location $LOCATION --resource-group $Avere_RG
+if [[ ! -z ${Storage_RG} ]]; then
+    az group create --location $LOCATION --resource-group $Storage_RG
+fi
 
 # create the service principal
 az ad sp create-for-rbac --skip-assignment | tee sp.txt
@@ -73,7 +85,7 @@ export SP_APP_ID_SECRET=$(jq -r '.password' sp.txt)
 export SP_APP_ID_TENANT=$(jq -r '.tenant' sp.txt)
 rm sp.txt
 
-# the following function will retry on failures due to propogation delays
+# the following function will retry on failures due to propagation delays
 function create_role_assignment() {
     retries=12; sleep_seconds=10
     role=$1; scope=$2; assignee=$3
@@ -97,8 +109,10 @@ create_role_assignment "Managed Identity Operator" /subscriptions/$SUBSCRIPTION/
 create_role_assignment "Network Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Network_RG $SP_APP_ID
 
 # assign the "Storage Account Contributor" for storage accounts and "Virtual Machine Contributor" for NFS Filers
-create_role_assignment "Storage Account Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Storage_RG $SP_APP_ID
-create_role_assignment "Virtual Machine Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Storage_RG $SP_APP_ID
+if [[ ! -z ${Storage_RG} ]]; then
+    create_role_assignment "Storage Account Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Storage_RG $SP_APP_ID
+    create_role_assignment "Virtual Machine Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Storage_RG $SP_APP_ID
+fi
 
 # assign the "Avere Contributor"
 create_role_assignment "Avere Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Avere_RG $SP_APP_ID
@@ -113,9 +127,11 @@ rm cmi.txt
 
 create_role_assignment "Avere Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Avere_RG $controllerMI_ID
 create_role_assignment "Avere Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Network_RG $controllerMI_ID 
-create_role_assignment "Avere Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Storage_RG $controllerMI_ID 
 create_role_assignment "Managed Identity Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/$Avere_RG $controllerMI_ID 
 create_role_assignment "Managed Identity Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/$MI_RG $controllerMI_ID 
+if [[ ! -z ${Storage_RG} ]]; then
+    create_role_assignment "Avere Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Storage_RG $controllerMI_ID 
+fi
 
 # create the vfxt managed identity
 az identity create --resource-group $MI_RG --name vfxtmi | tee vfxtmi.txt
@@ -125,11 +141,13 @@ rm vfxtmi.txt
 
 create_role_assignment "Avere Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/$Avere_RG $vfxtmi_ID
 create_role_assignment "Avere Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/$Network_RG $vfxtmi_ID 
-create_role_assignment "Avere Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/$Storage_RG $vfxtmi_ID 
+if [[ ! -z ${Storage_RG} ]]; then
+    create_role_assignment "Avere Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/$Storage_RG $vfxtmi_ID 
+fi
 
-echo "// ###############################################
-// please save the following for terraform locals
-// ###############################################
+echo "// ###################################################
+// please save the following for terraform local vars
+// ###################################################
 
     subscription_id = \"${SUBSCRIPTION}\"
     client_id       = \"${SP_APP_ID}\"
