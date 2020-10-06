@@ -38,6 +38,7 @@ The remainder of this page provides Terraform infrastructure examples to build o
 
 The highest priority for VFX and Animation Studios is the lowest total cost of ownership (TCO).  The following best practices supplement existing Azure documentation with guidance on how to achieve the lowest TCO.
 
+1. [Best Practices for a New Subscription](examples/new-subscription) - it may be useful for a studio to create a subscription for each office, or each new show to separate out billing.  If this is the case, we recommend creating a one-time process described in this document.
 1. [Best Practices for using Azure Virtual Machine Scale Sets (VMSS) or Azure Cycle Cloud for Rendering](examples/vmss-rendering)
 1. [Networking Best Practices for Rendering](examples/network-rendering)
 1. [Storage Cache Best Practices for Rendering](examples/storagecache-rendering)
