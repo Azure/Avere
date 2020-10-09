@@ -23,6 +23,11 @@ Here are the important tips to follow when building the image:
 
 * to run without the WAAgent (and no cloud-init) follow the instructions [Creating generalized images without a provisioning agent](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/no-agent)
 
+* to add a search domain, add a line similar to the following line to `/etc/sysconfig/network-scripts/ifcfg-eth0`
+```bash
+SEARCH="rendering.com artists.rendering.com"
+```
+
 # Prepare Image Size and Format for Azure
 
 Azure requires the following image file requirements:
