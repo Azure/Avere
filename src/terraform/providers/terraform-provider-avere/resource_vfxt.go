@@ -6,8 +6,10 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"net"
 	"regexp"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
@@ -109,7 +111,7 @@ func resourceVfxt() *schema.Resource {
 			dns_server: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringIsNotWhiteSpace,
+				ValidateFunc: ValidateDnsServers,
 			},
 			dns_domain: {
 				Type:         schema.TypeString,
@@ -2128,6 +2130,28 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 	}
 
 	return nil
+}
+
+func ValidateDnsServers(v interface{}, _ string) (warnings []string, errors []error) {
+	input := v.(string)
+
+	if len(input) > 0 {
+		input := strings.TrimSpace(input)
+		if len(input) == 0 {
+			errors = append(errors, fmt.Errorf("%s has an invalid string, it is only whitespace", dns_server))
+		} else {
+			dnsServers := strings.Split(input, " ")
+
+			for _, dnsServer := range dnsServers {
+				dnsServer = strings.TrimSpace(dnsServer)
+				if len(dnsServer) > 0 && net.ParseIP(dnsServer) == nil {
+					errors = append(errors, fmt.Errorf("%s value of '%s' is not a valid ip address", dns_server, dnsServer))
+				}
+			}
+		}
+	}
+
+	return warnings, errors
 }
 
 // from "github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/storage"

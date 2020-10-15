@@ -84,7 +84,7 @@ The following arguments are supported:
 * <a name="azure_subnet_name"></a>[azure_subnet_name](#azure_subnet_name) - (Required) this is the name of the subnet to where the vFXT will be deployed.  As a best practice the Avere vFXT should be installed in its own VNET.  Note: cluster re-created if modified.
 * <a name="ntp_servers"></a>[ntp_servers](#ntp_servers) - (Optional) A space separated list of up to 3 NTP servers for the Avere to use, otherwise Avere defaults to time.windows.com.
 * <a name="timezone"></a>[timezone](#timezone) - (Optional) The clusters local timezone.  Choose from a timezone defined in the [timezone file](timezone.go).  The default is "UTC".
-* <a name="dns_server"></a>[dns_server](#dns_server) - (Optional) A space separated list of up to 3 DNS Servers.
+* <a name="dns_server"></a>[dns_server](#dns_server) - (Optional) A space separated list of up to 3 DNS Server IP Addresses.
 * <a name="dns_domain"></a>[dns_domain](#dns_domain) - (Optional) Name of the network's DNS domain.
 * <a name="dns_search"></a>[dns_search](#dns_search) - (Optional) A space separated list of up to 6 domains to search during host-name resolution.
 * <a name="proxy_uri"></a>[proxy_uri](#proxy_uri) - specify the proxy used by `vfxt.py` for the cluster deployment.  The format is usually `https://PROXY_ADDRESS:3128`.  A working example that uses the proxy is described in the [Avere vFXT in a Proxy Environment Example](../../examples/vfxt/proxy).    Note: cluster re-created if modified.
