@@ -266,7 +266,7 @@ func ValidateCIFSDomain(v interface{}, _ string) (warnings []string, errors []er
 func ValidateCIFSServerName(v interface{}, _ string) (warnings []string, errors []error) {
 	cifsServerName := v.(string)
 	if !cifsServerNameRegexp.MatchString(cifsServerName) {
-		errors = append(errors, fmt.Errorf("invalid cifs username '%s'.  The name can be no longer than 15 characters.  Names can include alphanumeric characters (a-z, A-Z, 0-9) and hyphens(-).", cifsServerName))
+		errors = append(errors, fmt.Errorf("invalid cifs servername '%s'.  The name can be no longer than 15 characters.  Names can include alphanumeric characters (a-z, A-Z, 0-9) and hyphens(-).  For more information see https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#cifs_server_name", cifsServerName))
 	}
 	return warnings, errors
 }
