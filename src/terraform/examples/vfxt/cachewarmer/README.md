@@ -75,7 +75,7 @@ cd ~/tf/src/terraform/examples/vfxt/cachewarmer/2.vfxtcontroller
 
 6. execute `terraform apply -auto-approve` to build the vfxt controller
 
-7. Now logon to the controller and jump to the filer to prepare content.  One good potential content is the [Moana Island Scene from  Walt Disney Animation Studios](https://www.technology.disneyanimation.com/islandscene).
+7. Now logon to the controller and jump to the filer to prepare content.  One good potential content is the [Moana Island Scene from  Walt Disney Animation Studios](https://www.disneyanimation.com/resources/moana-island-scene/).
 
 ## Deploy the vFXT and the CacheWarmer
 
