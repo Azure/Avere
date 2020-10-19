@@ -91,4 +91,4 @@ To start CueSubmit use the following command:
 CUEBOT_HOSTS=$CUEBOT_HOSTNAME_OR_IP cuesubmit
 ```
 
-Sample scripts to render several different shots from the [moana island scene](https://www.technology.disneyanimation.com/islandscene) are available in the [opencue scripts](../../../../../clientapps/opencue/scripts/moanaislandscene) directory. These scripts make use of [pbrt](https://github.com/mmp/pbrt-v3/) to render the shots. You will need to ensure you have the [moana island scene](https://www.technology.disneyanimation.com/islandscene) assets downloaded and stored on a core filer accessible by your vFXT/HPC Cache.
+Sample scripts to render several different shots from the [moana island scene](https://www.technology.disneyanimation.com/islandscene) are available in the [opencue scripts](../../../../../clientapps/opencue/scripts/moanaislandscene) directory. These scripts make use of [pbrt](https://github.com/mmp/pbrt-v3/) to render the shots. You will need to ensure you have the [moana island scene](https://www.disneyanimation.com/resources/moana-island-scene/) assets downloaded and stored on a core filer accessible by your vFXT/HPC Cache.
