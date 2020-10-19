@@ -73,7 +73,7 @@ cd ~/tf/src/terraform/examples/HPC\ Cache/cachewarmer/2.jumpbox
 
 4. execute `terraform apply -auto-approve` to deploy the jumpbox
 
-5. Now logon to the jumpbox and ssh to the filer to prepare content on "/data".  One good potential content is the 218GB [Moana Island Scene from  Walt Disney Animation Studios](https://www.technology.disneyanimation.com/islandscene).
+5. Now logon to the jumpbox and ssh to the filer to prepare content on "/data".  One good potential content is the 218GB [Moana Island Scene from  Walt Disney Animation Studios](https://www.disneyanimation.com/resources/moana-island-scene/).
 
 ## Deploy the HPC Cache and the CacheWarmer
 
