@@ -1,3 +1,8 @@
+variable "deploy_controller" {
+  description = "specifies to create the controller or not"
+  default = true
+}
+
 variable "create_resource_group" {
   description = "specifies to create the resource group"
   default = true
