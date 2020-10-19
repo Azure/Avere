@@ -29,7 +29,7 @@ resource "azurerm_resource_group" "vm" {
   name     = var.resource_group_name
   location = var.location
 
-  count = var.create_resource_group ? 1 : 0
+  count = var.deploy_controller && var.create_resource_group ? 1 : 0
 
   depends_on = [var.module_depends_on]
 }
@@ -48,7 +48,7 @@ resource "azurerm_public_ip" "vm" {
     resource_group_name          = var.create_resource_group ? azurerm_resource_group.vm[0].name : data.azurerm_resource_group.vm[0].name
     allocation_method            = "Static"
 
-    count = var.add_public_ip ? 1 : 0
+    count = var.deploy_controller && var.add_public_ip ? 1 : 0
 
     depends_on = [var.module_depends_on]
 }
@@ -65,6 +65,8 @@ resource "azurerm_network_interface" "vm" {
     public_ip_address_id          = var.add_public_ip ? azurerm_public_ip.vm[0].id : ""
   }
 
+  count = var.deploy_controller ? 1 : 0
+
   depends_on = [var.module_depends_on]
 }
 
@@ -72,7 +74,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   name = "${var.unique_name}-vm"
   location = var.location
   resource_group_name = var.create_resource_group ? azurerm_resource_group.vm[0].name : data.azurerm_resource_group.vm[0].name
-  network_interface_ids = [azurerm_network_interface.vm.id]
+  network_interface_ids = [azurerm_network_interface.vm[0].id]
   computer_name  = var.unique_name
   custom_data = var.apply_patch ? base64encode(local.cloud_init_file) : null
   size = var.vm_size
@@ -118,6 +120,8 @@ resource "azurerm_linux_virtual_machine" "vm" {
           public_key = var.ssh_key_data
       }
   }
+
+  count = var.deploy_controller ? 1 : 0
 }
 
 // assign roles per the the following article: https://github.com/Azure/Avere/tree/main/src/vfxt#managed-identity-and-roles
@@ -141,20 +145,20 @@ locals {
 }
 
 resource "azurerm_role_assignment" "avere_create_cluster_role" {
-  count                            = length(local.avere_contributor_rgs)
+  count                            = var.deploy_controller ? length(local.avere_contributor_rgs) : 0
   scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${local.avere_contributor_rgs[count.index]}"
   role_definition_name             = local.avere_create_cluster_role
-  principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
+  principal_id                     = azurerm_linux_virtual_machine.vm[0].identity[0].principal_id
   skip_service_principal_aad_check = true
 
-  depends_on = [azurerm_linux_virtual_machine.vm]
+  depends_on = [azurerm_linux_virtual_machine.vm[0]]
 }
 
 resource "azurerm_role_assignment" "user_access_administrator_role" {
-  count                            = length(local.user_access_rgs)
+  count                            = var.deploy_controller ? length(local.user_access_rgs) : 0
   scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${local.user_access_rgs[count.index]}"
   role_definition_name             = local.user_access_administrator_role
-  principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
+  principal_id                     = azurerm_linux_virtual_machine.vm[0].identity[0].principal_id
   skip_service_principal_aad_check = true
 
   depends_on = [azurerm_role_assignment.avere_create_cluster_role]
@@ -162,10 +166,10 @@ resource "azurerm_role_assignment" "user_access_administrator_role" {
 
 // ensure controller rg is a VM contributor to enable cache warming
 resource "azurerm_role_assignment" "create_compute" {
-  count                            = length(local.create_compute_rgs)
+  count                            = var.deploy_controller ? length(local.create_compute_rgs) : 0
   scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${local.create_compute_rgs[count.index]}"
   role_definition_name             = local.create_compute_role
-  principal_id                     = azurerm_linux_virtual_machine.vm.identity[0].principal_id
+  principal_id                     = azurerm_linux_virtual_machine.vm[0].identity[0].principal_id
   skip_service_principal_aad_check = true
 
   depends_on = [azurerm_role_assignment.user_access_administrator_role]
