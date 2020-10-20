@@ -97,7 +97,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
       publisher = "microsoft-avere"
       offer     = "vfxt"
       sku       = "avere-vfxt-controller"
-      version   = "latest"
+      version   = "1.0.12"
     }
   }
 
