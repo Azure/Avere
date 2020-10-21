@@ -52,7 +52,7 @@ provider "azurerm" {
 
 // the vfxt controller
 module "vfxtcontroller" {
-    source = "github.com/Azure/Avere/src/terraform/modules/controller"
+    source = "github.com/Azure/Avere/src/terraform/modules/controller3"
     create_resource_group = false
     resource_group_name = local.vfxt_resource_group_name
     location = local.location
