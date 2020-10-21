@@ -57,7 +57,7 @@ module "network" {
 
 // the vfxt controller
 module "vfxtcontroller" {
-    source = "github.com/Azure/Avere/src/terraform/modules/controller"
+    source = "github.com/Azure/Avere/src/terraform/modules/controller3"
     resource_group_name = local.vfxt_resource_group_name
     location = local.location
     admin_username = local.vm_admin_username
