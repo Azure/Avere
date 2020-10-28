@@ -6,8 +6,10 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"net"
 	"regexp"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
@@ -109,7 +111,7 @@ func resourceVfxt() *schema.Resource {
 			dns_server: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringIsNotWhiteSpace,
+				ValidateFunc: ValidateDnsServers,
 			},
 			dns_domain: {
 				Type:         schema.TypeString,
@@ -156,7 +158,7 @@ func resourceVfxt() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringDoesNotContainAny("'\""),
+				ValidateFunc: ValidateSSHKey,
 			},
 			vfxt_node_count: {
 				Type:         schema.TypeInt,
@@ -220,6 +222,18 @@ func resourceVfxt() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			enable_secure_proactive_support: {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  ProactiveSupportDisabled,
+				ValidateFunc: validation.StringInSlice([]string{
+					ProactiveSupportDisabled,
+					ProactiveSupportSupport,
+					ProactiveSupportAPI,
+					ProactiveSupportFull,
+				}, false),
+				RequiredWith: []string{enable_support_uploads},
 			},
 			cifs_ad_domain: {
 				Type:         schema.TypeString,
@@ -287,6 +301,13 @@ func resourceVfxt() *schema.Resource {
 				Optional:     true,
 				Default:      "",
 				ValidateFunc: ValidateOrganizationalUnit,
+				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_username, cifs_password},
+			},
+			cifs_trusted_active_directory_domains: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: validation.StringDoesNotContainAny("'\""),
 				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_username, cifs_password},
 			},
 			enable_extended_groups: {
@@ -408,8 +429,20 @@ func resourceVfxt() *schema.Resource {
 									cifs_share_ace: {
 										Type:         schema.TypeString,
 										Optional:     true,
-										Default:      "",
+										Default:      AceDefault,
 										ValidateFunc: ValidateCIFSShareAce,
+									},
+									cifs_create_mask: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "",
+										ValidateFunc: ValidateCIFSMask,
+									},
+									cifs_dir_mask: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "",
+										ValidateFunc: ValidateCIFSMask,
 									},
 									core_filer_export: {
 										Type:         schema.TypeString,
@@ -478,8 +511,20 @@ func resourceVfxt() *schema.Resource {
 						cifs_share_ace: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      "",
+							Default:      AceDefault,
 							ValidateFunc: ValidateCIFSShareAce,
+						},
+						cifs_create_mask: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "",
+							ValidateFunc: ValidateCIFSMask,
+						},
+						cifs_dir_mask: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "",
+							ValidateFunc: ValidateCIFSMask,
 						},
 						export_rule: {
 							Type:         schema.TypeString,
@@ -853,7 +898,7 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	if d.HasChange(enable_support_uploads) {
+	if d.HasChange(enable_support_uploads) || d.HasChange(enable_secure_proactive_support) {
 		if err := avereVfxt.ModifySupportUploads(); err != nil {
 			return err
 		}
@@ -979,6 +1024,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(vfxt_admin_password).(string),
 		d.Get(vfxt_ssh_key_data).(string),
 		d.Get(enable_support_uploads).(bool),
+		d.Get(enable_secure_proactive_support).(string),
 		nodeCount,
 		d.Get(node_size).(string),
 		d.Get(node_cache_size).(int),
@@ -993,6 +1039,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(cifs_flatfile_passwd_b64z).(string),
 		d.Get(cifs_flatfile_group_b64z).(string),
 		d.Get(cifs_organizational_unit).(string),
+		d.Get(cifs_trusted_active_directory_domains).(string),
 		d.Get(enable_extended_groups).(bool),
 		d.Get(user_assigned_managed_identity).(string),
 		d.Get(ntp_servers).(string),
@@ -1656,7 +1703,8 @@ func updateCifs(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 		d.HasChange(cifs_flatfile_group_uri) ||
 		d.HasChange(cifs_flatfile_passwd_b64z) ||
 		d.HasChange(cifs_flatfile_group_b64z) ||
-		d.HasChange(cifs_organizational_unit) {
+		d.HasChange(cifs_organizational_unit) ||
+		d.HasChange(cifs_trusted_active_directory_domains) {
 		if err := averevfxt.DisableCIFS(); err != nil {
 			return err
 		}
@@ -1809,7 +1857,9 @@ func expandCoreFilerJunctions(l []interface{}, results map[string]*Junction) err
 				PermissionsPreserve,
 				junctionRaw[export_rule].(string),
 				junctionRaw[cifs_share_name].(string),
-				junctionRaw[cifs_share_ace].(string))
+				junctionRaw[cifs_share_ace].(string),
+				junctionRaw[cifs_create_mask].(string),
+				junctionRaw[cifs_dir_mask].(string))
 			if err != nil {
 				return err
 			}
@@ -1837,7 +1887,9 @@ func expandAzureStorageFilerJunctions(l []interface{}, results map[string]*Junct
 			PermissionsModebits,
 			input[export_rule].(string),
 			input[cifs_share_name].(string),
-			input[cifs_share_ace].(string))
+			input[cifs_share_ace].(string),
+			input[cifs_create_mask].(string),
+			input[cifs_dir_mask].(string))
 		if err != nil {
 			return err
 		}
@@ -1906,6 +1958,12 @@ func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
 					if v2, ok := m[cifs_share_ace]; ok {
 						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
 					}
+					if v2, ok := m[cifs_create_mask]; ok {
+						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
+					}
+					if v2, ok := m[cifs_dir_mask]; ok {
+						buf.WriteString(fmt.Sprintf("%s;", v2.(string)))
+					}
 				}
 			}
 		}
@@ -1939,6 +1997,12 @@ func resourceAvereVfxtAzureStorageCoreFilerReferenceHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
 		if v, ok := m[cifs_share_ace]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m[cifs_create_mask]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m[cifs_dir_mask]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
 	}
@@ -2077,6 +2141,28 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 	return nil
 }
 
+func ValidateDnsServers(v interface{}, _ string) (warnings []string, errors []error) {
+	input := v.(string)
+
+	if len(input) > 0 {
+		input := strings.TrimSpace(input)
+		if len(input) == 0 {
+			errors = append(errors, fmt.Errorf("%s has an invalid string, it is only whitespace", dns_server))
+		} else {
+			dnsServers := strings.Split(input, " ")
+
+			for _, dnsServer := range dnsServers {
+				dnsServer = strings.TrimSpace(dnsServer)
+				if len(dnsServer) > 0 && net.ParseIP(dnsServer) == nil {
+					errors = append(errors, fmt.Errorf("%s value of '%s' is not a valid ip address", dns_server, dnsServer))
+				}
+			}
+		}
+	}
+
+	return warnings, errors
+}
+
 // from "github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/storage"
 func ValidateArmStorageAccountName(v interface{}, _ string) (warnings []string, errors []error) {
 	input := v.(string)
@@ -2128,7 +2214,7 @@ func ValidateVfxtName(v interface{}, _ string) (warnings []string, errors []erro
 	input := v.(string)
 
 	if !regexp.MustCompile(`^[a-z]([-a-z0-9]*[a-z0-9])?$`).MatchString(input) {
-		errors = append(errors, fmt.Errorf("the vfxt name '%s' is invalid, and per vfxt.py must match the regular expressesion ^[a-z]([-a-z0-9]*[a-z0-9])?$ ''", input))
+		errors = append(errors, fmt.Errorf("the vfxt name '%s' is invalid, and per vfxt.py must match the regular expression ^[a-z]([-a-z0-9]*[a-z0-9])?$ ''", input))
 	}
 
 	return warnings, errors
@@ -2143,6 +2229,19 @@ func ValidateCustomSetting(v interface{}, _ string) (warnings []string, errors [
 
 	if ok, err := IsCustomSettingDeprecated(customSetting); ok {
 		errors = append(errors, err)
+	}
+
+	return warnings, errors
+}
+
+func ValidateSSHKey(v interface{}, _ string) (warnings []string, errors []error) {
+	input := v.(string)
+
+	// vfxt.py requires the following ssh key format, otherwise during deploy clusters fail to communicate
+	// and shows up as a failure in the vfxt node /var/log/messages as "Host key verification failed."
+	// regex from https://gist.github.com/paranoiq/1932126
+	if !regexp.MustCompile(`^ssh-rsa AAAA[0-9A-Za-z+/]+[=]{0,3} ([^@]+@[^@]+)$`).MatchString(input) {
+		errors = append(errors, fmt.Errorf("the ssh key '%s' is invalid.  It must have 3 parts and match the regular expression '^ssh-rsa AAAA[0-9A-Za-z+/]+[=]{0,3} ([^@]+@[^@]+)$'", input))
 	}
 
 	return warnings, errors

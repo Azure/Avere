@@ -1,6 +1,8 @@
 # Azure Virtual Machine Running Unbound (DNS server)
 
-This deploys an Azure virtual machine that installs and configures [Unbound](https://nlnetlabs.nl/projects/unbound/about/) and configures it to spoof the address of an on-premises dns resolver.
+This deploys the 1-filer vFXT example, and an Azure virtual machine that installs and configures [Unbound](https://nlnetlabs.nl/projects/unbound/about/) and configures it to override the address of an on-premises filer so that the render nodes mount the Avere to hide the latency.  All other dns requests are forwarded to pre-configured on-premises dns servers.
+
+![The architecture](../../../../docs/images/terraform/1filerdns.png)
 
 ## Deployment Instructions
 
@@ -27,8 +29,10 @@ git pull origin main
 
 8. execute `terraform init` in the directory of `main.tf`.
 
-9. execute `terraform apply -auto-approve` to deploy the VM
+9. execute `terraform apply -auto-approve` to deploy the dns server and cluster
+
+10. use the output DNS ip address to populate the dns servers on your vnet.
 
 Once installed you will be able to point all the cloud nodes using avere at the DNS server.
 
-When you are done using the filer, you can destroy it by running `terraform destroy -auto-approve`.
+When you are done, you can destroy all resources by running `terraform destroy -auto-approve`.

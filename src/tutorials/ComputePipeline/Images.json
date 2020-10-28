@@ -1,0 +1,134 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "userIdentity": {
+      "type": "object",
+      "metadata": {
+        "description": "The managed user identity."
+      }
+    },
+    "virtualNetwork": {
+      "type": "object",
+      "metadata": {
+        "description": "The virtual network to join."
+      }
+    },
+    "roleAssignments": {
+      "type": "object",
+      "metadata": {
+        "description": "The user role assignments."
+      }
+    },
+    "imageGallery": {
+      "type": "object",
+      "metadata": {
+        "description": "The shared image gallery."
+      }
+    },
+    "imageTemplates": {
+      "type": "array",
+      "metadata": {
+        "description": "The image builder templates."
+      }
+    }
+  },
+  "variables": {
+    "imageGalleryApiVersion": "2020-09-30",
+    "imageBuilderApiVersion": "2020-02-14"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Compute/galleries",
+      "name": "[parameters('imageGallery').name]",
+      "apiVersion": "[variables('imageGalleryApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+      }
+    },
+    {
+      "type": "Microsoft.Compute/galleries/images",
+      "name": "[concat(parameters('imageGallery').name, '/', parameters('imageGallery').imageDefinitions[copyIndex()].name)]",
+      "apiVersion": "[variables('imageGalleryApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/galleries', parameters('imageGallery').name)]"
+      ],
+      "properties": {
+        "osType": "[parameters('imageGallery').imageDefinitions[copyIndex()].type]",
+        "osState": "[parameters('imageGallery').imageDefinitions[copyIndex()].state]",
+        "hyperVGeneration": "[parameters('imageGallery').imageDefinitions[copyIndex()].generation]",
+        "identifier": {
+          "publisher": "[parameters('imageGallery').imageDefinitions[copyIndex()].publisher]",
+          "offer": "[parameters('imageGallery').imageDefinitions[copyIndex()].offer]",
+          "sku": "[parameters('imageGallery').imageDefinitions[copyIndex()].sku]"
+        }
+      },
+      "copy": {
+        "name": "imageDefinitions",
+        "count": "[length(parameters('imageGallery').imageDefinitions)]"
+      }
+    },
+    {
+      "condition": "[parameters('imageTemplates')[copyIndex()].deploy]",
+      "type": "Microsoft.VirtualMachineImages/imageTemplates",
+      "name": "[parameters('imageTemplates')[copyIndex()].name]",
+      "apiVersion": "[variables('imageBuilderApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceId(parameters('userIdentity').resourceGroupName, 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userIdentity').name)]": {
+          }
+        }
+      },
+      "properties": {
+        "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].buildTimeoutMinutes]",
+        "vmProfile": {
+          "vmSize": "[parameters('imageTemplates')[copyIndex()].machineProfile.size]",
+          "osDiskSizeGB": "[parameters('imageTemplates')[copyIndex()].machineProfile.osDiskSizeGB]",
+          "vnetConfig": "[if(equals(parameters('virtualNetwork').name, ''), json('null'), json(concat('{\"subnetId\": \"', resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName), '\"}')))]"
+        },
+        "source": {
+          "type": "[parameters('imageTemplates')[copyIndex()].imageSourceType]",
+          "version": "[parameters('imageTemplates')[copyIndex()].imageSourceVersion]",
+          "publisher": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).identifier.publisher]",
+          "offer": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).identifier.offer]",
+          "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).identifier.sku]"
+        },
+        "customize": "[parameters('imageTemplates')[copyIndex()].buildCustomization]",
+        "distribute": [
+          {
+            "type": "SharedImage",
+            "runOutputName": "SharedImage",
+            "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images/versions', parameters('imageGallery').name, parameters('imageTemplates')[copyIndex()].imageDefinitionName, parameters('imageTemplates')[copyIndex()].imageOutputVersion)]",
+            "storageAccountType": "[parameters('imageTemplates')[copyIndex()].imageStorageAccount.type]",
+            "replicationRegions": [
+              "[resourceGroup().location]"
+            ],
+            "artifactTags": {
+              "imageTemplateName": "[parameters('imageTemplates')[copyIndex()].name]"
+            }
+          }
+        ]
+      },
+      "copy": {
+        "name": "imageTemplates",
+        "count": "[length(parameters('imageTemplates'))]"
+      }
+    }
+  ],
+  "outputs": {
+    "imageGallery": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('imageGallery').name]",
+        "resourceGroupName": "[resourceGroup().name]"
+      }
+    },
+    "imageTemplates": {
+      "type": "array",
+      "value": "[parameters('imageTemplates')]"
+    }
+  }
+}

@@ -18,7 +18,7 @@ This example deploys a complete environment with OpenCue, render nodes, vFXT, an
 ```bash
 mkdir -p ~/.terraform.d/plugins
 # install the vfxt released binary from https://github.com/Azure/Avere
-wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.13/terraform-provider-avere
+wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.17/terraform-provider-avere
 chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 ```
 
@@ -90,4 +90,4 @@ To start CueSubmit use the following command:
 CUEBOT_HOSTS=$CUEBOT_HOSTNAME_OR_IP cuesubmit
 ```
 
-Sample scripts to render several different shots from the [moana island scene](https://www.technology.disneyanimation.com/islandscene) are available in the [opencue scripts](../../../../../clientapps/opencue/scripts/moanaislandscene) directory. These scripts make use of [pbrt](https://github.com/mmp/pbrt-v3/) to render the shots. You will need to ensure you have the [moana island scene](https://www.technology.disneyanimation.com/islandscene) assets downloaded and stored on a core filer accessible by your vFXT/HPC Cache.
+Sample scripts to render several different shots from the [moana island scene](https://www.disneyanimation.com/resources/moana-island-scene/) are available in the [opencue scripts](../../../../../clientapps/opencue/scripts/moanaislandscene) directory. These scripts make use of [pbrt](https://github.com/mmp/pbrt-v3/) to render the shots. You will need to ensure you have the [moana island scene](https://www.disneyanimation.com/resources/moana-island-scene/) assets downloaded and stored on a core filer accessible by your vFXT/HPC Cache.

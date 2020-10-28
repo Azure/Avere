@@ -10,7 +10,7 @@ The Avere vFXT is an enterprise-scale clustered file system built for the cloud.
 
 These tutorials help you understand cluster performance testing and common use-case tasks.
 
-  * [Terraform examples of HPC Cache, Avere vFXT, and NFS Filers](src/terraform) - These Terraform examples, modules, and a provider show how to deploy and manage HPC Cache and Avere vFXT on Azure using HashiCorp Terraform.
+  * [VFX and Animation Rendering with HPC Cache and Avere vFXT on Azure](src/terraform) - Use HPC Cache or Avere vFXT as part of your burst rendering architecture.  This document describes the cloud burst rendering architecture and how to build out the infrastructure using Terraform examples, modules, and a provider.
   * [Virtual Machine Client Implementations that mount the Avere vFXT Edge Filer](docs/clients.md) - This tutorial discusses how to deploy and mount 3 types of virtual machines: loose VMs, VM availability sets (VMAS), and VM scale sets (VMSS).
   * [Measure HPC Cache or vFXT performance with vdbench](docs/vdbench.md) - Deploys vdbench on an *N*-node cluster to demonstrate the storage performance characteristics of the HPC Cache or Avere vFXT cluster
   * [Data Ingestor](docs/data_ingestor.md) - This tutorial implements a data ingestor containing the tools required to efficiently load data onto the Avere vFXT Edge Filer.

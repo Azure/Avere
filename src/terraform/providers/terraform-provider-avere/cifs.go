@@ -14,6 +14,8 @@ const (
 	AceDefaultAllType       = AceTypeAllow
 	AceDefaultAllPermission = AcePermissionFull
 
+	AceDefault = "Everyone(ALLOW,FULL)"
+
 	AcePermissionRead    = "READ"
 	AcePermissionChange  = "CHANGE"
 	AcePermissionFull    = "FULL"
@@ -39,6 +41,10 @@ var cifsServerNameRegexp = regexp.MustCompile(`^[a-zA-Z0-9-]{1,15}$`)
 var cifsUsernameRegexp = regexp.MustCompile(`^[A-Za-z0-9\\\._\-#]{2,}$`)
 var cifsShareRegexp = regexp.MustCompile(`^[A-Za-z0-9\._\-$]{1,}$`)
 var cifsOrganizationalUnitRegExp = regexp.MustCompile(`^(?:(?:CN|OU|DC)\=[^,'"]+,)*(?:CN|OU|DC)\=[^,'"]+$`)
+var cifsMaskRegexp = regexp.MustCompile(`^[0-7]{4}$`)
+
+// simple fqdn regex from O'Reilly https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch08s15.html
+var fqdnRegexp = regexp.MustCompile(`^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`)
 
 func (s *ShareAce) String() string {
 	return fmt.Sprintf("%s(%s), %s, %s", s.Name, s.Sid, s.Type, s.Permission)
@@ -81,17 +87,16 @@ func ShareAceIsEveryoneDefault(a *ShareAce) bool {
 }
 
 func ShareAcesAreEveryone(a map[string]*ShareAce) bool {
-	if len(a) > 1 {
-		return false
-	}
 	if len(a) == 1 {
 		for _, v := range a {
 			if !ShareAceIsEveryoneDefault(v) {
 				return false
 			}
 		}
+		return true
+	} else {
+		return false
 	}
-	return true
 }
 
 func ShareAcesEqual(a, b map[string]*ShareAce) bool {
@@ -264,16 +269,43 @@ func ValidateCIFSDomain(v interface{}, _ string) (warnings []string, errors []er
 func ValidateCIFSServerName(v interface{}, _ string) (warnings []string, errors []error) {
 	cifsServerName := v.(string)
 	if !cifsServerNameRegexp.MatchString(cifsServerName) {
-		errors = append(errors, fmt.Errorf("invalid cifs username '%s'.  The name can be no longer than 15 characters.  Names can include alphanumeric characters (a-z, A-Z, 0-9) and hyphens(-).", cifsServerName))
+		errors = append(errors, fmt.Errorf("invalid cifs servername '%s'.  The name can be no longer than 15 characters.  Names can include alphanumeric characters (a-z, A-Z, 0-9) and hyphens(-).  For more information see https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#cifs_server_name", cifsServerName))
+	}
+	return warnings, errors
+}
+
+func ValidateCIFSMask(v interface{}, _ string) (warnings []string, errors []error) {
+	cifsServerName := v.(string)
+	if len(cifsServerName) > 0 && !cifsMaskRegexp.MatchString(cifsServerName) {
+		errors = append(errors, fmt.Errorf("invalid cifs mask '%s', it must be empty or a 4 digit octal number and match regex '%s'.", cifsServerName, cifsMaskRegexp))
 	}
 	return warnings, errors
 }
 
 func ValidateCIFSUsername(v interface{}, _ string) (warnings []string, errors []error) {
 	cifsUsername := v.(string)
-	if !cifsUsernameRegexp.MatchString(cifsUsername) {
-		errors = append(errors, fmt.Errorf("invalid cifs username '%s'.  The name can include alphanumeric characters (a-z, A-Z, 0-9), '.', '\\', '#', hyphens(-), and underscores.", cifsUsername))
+	parseError := ""
+	if strings.Contains(cifsUsername, "@") {
+		parts := strings.Split(cifsUsername, "@")
+		if len(parts) == 2 {
+			if !cifsUsernameRegexp.MatchString(parts[0]) {
+				parseError = "bad username as subpart of full domain string"
+			} else if !fqdnRegexp.MatchString(parts[1]) {
+				parseError = "bad domain_fqdn"
+			}
+		} else {
+			parseError = "multiple @ symbols"
+		}
+	} else {
+		if !cifsUsernameRegexp.MatchString(cifsUsername) {
+			parseError = "bad username"
+		}
 	}
+
+	if len(parseError) > 0 {
+		errors = append(errors, fmt.Errorf("invalid cifs username '%s', failed with error '%s'.  The name can include alphanumeric characters (a-z, A-Z, 0-9), '.', '\\', '#', hyphens(-), and underscores and specified as username[@domain_fqdn] format.", cifsUsername, parseError))
+	}
+
 	return warnings, errors
 }
 
@@ -314,13 +346,7 @@ func GetShareAceAdjustments(existingShareAces map[string]*ShareAce, targetShareA
 	shareAcesToCreate := make([]*ShareAce, 0, len(targetShareAces))
 
 	normalizedTargetShareAces := NormalizeShareAces(targetShareAces)
-	everyoneExists := false
 	for k, v := range existingShareAces {
-		// leave default ACE if it exists
-		if len(targetShareAces) == 0 && ShareAceIsEveryoneDefault(v) {
-			everyoneExists = true
-			continue
-		}
 		var ace *ShareAce
 		var ok bool
 		if ace, ok = normalizedTargetShareAces[k]; !ok {
@@ -348,16 +374,6 @@ func GetShareAceAdjustments(existingShareAces map[string]*ShareAce, targetShareA
 		if ace == nil || !(ace.Type == v.Type && ace.Permission == v.Permission) {
 			shareAcesToCreate = append(shareAcesToCreate, v)
 		}
-	}
-
-	// add everyone if it is requested and missing
-	if len(targetShareAces) == 0 && !everyoneExists {
-		everyoneAce := &ShareAce{
-			Name:       AceDefaultAll,
-			Type:       AceDefaultAllType,
-			Permission: AceDefaultAllPermission,
-		}
-		shareAcesToCreate = append(shareAcesToCreate, everyoneAce)
 	}
 
 	return shareAcesToDelete, shareAcesToCreate

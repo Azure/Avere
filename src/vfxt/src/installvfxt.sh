@@ -191,8 +191,6 @@ function config_linux() {
 
 function install_vfxt() {
     retrycmd_if_failure 12 5 pip install --no-deps vFXT
-    mv /opt/avere/averecmd.txt /usr/local/bin/averecmd
-    chmod 755 /usr/local/bin/averecmd
 }
 
 function install_vfxt_py_docs() {

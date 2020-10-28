@@ -1,0 +1,75 @@
+--- ./oct19c3/msazure.py	2020-10-19 09:29:14.091414600 -0400
++++ oct19c3new/msazure.py	2020-10-19 09:37:05.264401500 -0400
+@@ -1057,10 +1057,14 @@
+             This is currently the role applied the system managed identity of the instance.
+         '''
+         conn = self.connection('authorization')
+-        if not hasattr(instance, 'identity') and not hasattr(instance.identity, 'principal_id'):
++        if not hasattr(instance, 'identity'):
+             raise vFXTConfigurationException("Instance {} has no identity configuration".format(self.name(instance)))
+-
+-        principal_id = instance.identity.principal_id
++        identity = instance.identity
++        if getattr(identity, 'user_assigned_identities', None):
++            return None
++        if not getattr(identity, 'principal_id', None):
++            raise vFXTConfigurationException("Instance {} has no identity configuration".format(self.name(instance)))
++        principal_id = identity.principal_id
+         role_assignments = conn.role_assignments.list("principalId eq '{}'".format(principal_id))
+         roles = [conn.role_definitions.get_by_id(_.role_definition_id) for _ in role_assignments]
+         custom_roles = [_ for _ in roles if _.role_type == 'CustomRole']
+@@ -1194,7 +1198,11 @@
+             try:
+                 identity_id = identity_conn.user_assigned_identities.get(self.resource_group, azure_identity).id
+             except msrestazure.azure_exceptions.CloudError as ex:
+-                identity_id = '{}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{}'.format(self._resource_group_scope(), azure_identity)
++                provider = 'Microsoft.ManagedIdentity/userAssignedIdentities'
++                if provider in azure_identity: # already fully qualified
++                    identity_id = azure_identity
++                else:
++                    identity_id = '{}/providers/{}/{}'.format(self._resource_group_scope(), provider, azure_identity)
+             body['identity'] = {'type': 'UserAssigned', 'user_assigned_identities': {identity_id: {}}}
+ 
+         if body['tags']:
+@@ -1235,11 +1243,6 @@
+             except Exception as e:
+                 raise_from(vFXTServiceFailure("Failed to lookup proximity placement group {}: {}".format(proximity_placement_group, e)), e)
+ 
+-        identity = options.get('identity') or None
+-        if identity:
+-            body['identity']['type'] = 'UserAssigned'
+-            body['identity']['identity_ids'] = [identity]
+-
+         # determine where we are getting the root disk
+         # if its a url and in our storage account, use it directly
+         boot_disk_image_url = urlparse.urlparse(boot_disk_image)
+@@ -1552,6 +1555,7 @@
+         cluster.availability_set = None
+         cluster.proximity_placement_group = None
+         cluster.role = None
++        cluster.identity = None
+ 
+         if not all([cluster.mgmt_ip, cluster.mgmt_netmask, cluster.cluster_ip_start, cluster.cluster_ip_end]):
+             raise vFXTConfigurationException("Cluster networking configuration is incomplete")
+@@ -1712,6 +1716,8 @@
+ 
+         if not options.get('azure_role'):
+             options['azure_role'] = cluster.role.role_name
++        #if not options.get('azure_identity'):
++            #options['azure_identity'] = cluster.identity
+ 
+         # set network security group for added nodes
+         options['network_security_group'] = cluster.network_security_group
+@@ -1881,6 +1887,12 @@
+             except Exception as e:
+                 raise_from(vFXTConfigurationException("Failed to lookup cluster role: {}".format(e)), e)
+ 
++            # if the cluster is using a user assigned identity
++            try:
++                cluster.identity = list(instances[0].identity.user_assigned_identities.keys())[0]
++            except (AttributeError, IndexError) as e:
++                pass
++
+             # try and find the network security group
+             try:
+                 nic = self._instance_primary_nic(instances[0])

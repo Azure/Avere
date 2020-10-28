@@ -9,7 +9,7 @@ The following are best practices for configuring Azure Virtual Machine Scale Set
 1. To minimize TCO:
     1. Use [Azure Spot Virtual Machines](https://azure.microsoft.com/en-us/pricing/spot/) and set policy to "Delete".
     1. Use [Ephemeral OS disks for Azure VMs](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/ephemeral-os-disks)
-    1. Don't specify `zones`.  This ensures there are no traffic charges between zones
+    1. Don't specify `zones`.  This ensures there are no traffic charges between zones ([starting Feb 1, 2021](https://azure.microsoft.com/en-us/pricing/details/bandwidth/))
 1. Adjust properties so machines are free to deploy anywhere in region:
     1. set `singlePlacementGroup` to false.  This will also increase the limit > 100.
     1. set `platformFaultDomainCount` to 1.

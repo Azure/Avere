@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <meta name="author" content="ekpgh">
+    <meta name="date" content="2020-09-16">
+
+    <title>Supported encryption standards</title>
+
+    <style>
+
+        body {
+          background: #fff; 
+          color: #191919;  
+          font-family: AvenirLTStd-Roman, Sans-Serif;
+          font-size: 15px;
+          font-weight: 400px;
+          line-height: 1.5em;
+          border-bottom: 19px solid #FFFFFF;
+        }
+        
+        
+        h1 {font-size:28px;
+            border-bottom: none;
+            margin: 0 0 19px;
+           }
+        h2 {border-bottom: none;}
+        h3 {border-bottom: none;}
+        </style> 
+    </head>
+    
+    <body>
+
+<h1>Supported encryption standards for cache products</h1> 
+
+<!-- adapted from os 5.1.1.2 release notes -->
+
+<p>This document describes the supported encryption standards as of Avere OS 5.1.1.2. These standards apply to the following Microsoft Azure products:
+
+<ul>
+<li><a href="https://azure.microsoft.com/services/fxt-edge-filer/">Azure FXT Edge Filer</a></li>
+<li><a href="https://azure.microsoft.com/services/storage/avere-vfxt/">Avere vFXT for Azure</a></li>
+<!--- <li><a href="https://azure.microsoft.com/services/hpc-cache/">Avere vFXT for Azure</a>"</li> -->
+</ul>
+</p>
+<p>Technology in the products above require the following standards for security. Any system connecting to the products for administrative or infrastructure purposes must meet these standards.</p>
+
+<p>Client machines that mount the cache products do not need to meet all of these requirements, but you should use reasonable efforts to ensure their security.</p>
+
+<h2>TLS standard</h2> 
+
+<ul>
+    <li>TLS1.2 must be enabled</li>
+    <li>SSL V2 and V3 must be disabled</li>
+</ul>
+
+<p>TLS1.0 and TLS1.1 may be used for backward compatibility with private object stores, however it is better to upgrade your private storage to modern security standards. Contact Microsoft Customer Service and Support to learn more.</p>
+
+<h2>Permitted cipher suites</h2>
+
+<p>Microsoft security requirements permit the following TLS cipher suites to be negotiated:
+
+<ul>
+    <li>ECDHE-ECDSA-AES128-GCM-SHA256</li>
+    <li>ECDHE-ECDSA-AES256-GCM-SHA384</li>
+    <li>ECDHE-RSA-AES128-GCM-SHA256</li>
+    <li>ECDHE-RSA-AES256-GCM-SHA384</li>
+    <li>ECDHE-ECDSA-AES128-SHA256</li>
+    <li>ECDHE-ECDSA-AES256-SHA384</li>
+    <li>ECDHE-RSA-AES128-SHA256</li>
+    <li>ECDHE-RSA-AES256-SHA384</li>
+</ul>
+</p>
+
+<p>The cluster administrative HTTPS interface (used for the Avere Control Panel web GUI and administrative RPC connections) supports only the above cipher suites and TLS1.2. No other protocols or cipher suites are supported when connecting to the administrative interface.</p>
+
+<h2>SSH server access</h2>
+
+<p>These standards apply to the SSH server that is embedded in these products.</p>
+
+<p>The SSH server does not allow remote login as the superuser "root". If remote SSH access is required under the guidance of Microsoft Customer Service and Support, log in as the SSH “admin” user, which has a restricted shell.</p>
+
+<p>The following SSH cipher suites are available on the cluster SSH server. Make sure that any client that uses SSH to connect to the cluster has up-to-date software that meets these standards.</p>
+
+<h3>SSH encryption standards</h3>
+
+<table border=1>
+    <tr>
+        <td>Type</td>
+        <td>Supported values</td>
+    </tr>
+<tr> 
+    <td>Ciphers</td>
+    <td>aes256-gcm@openssh.com <br/>aes128-gcm@openssh.com <br/>aes256-ctr <br/>aes128-ctr</td>
+    </tr>
+    <tr>
+        <td>MACs</td>
+        <td>hmac-sha2-512-etm@openssh.com <br/>hmac-sha2-256-etm@openssh.com <br/>hmac-sha2-512 </br>hmac-sha2-256</td>
+    </tr>
+    <tr>
+        <td>KEX algorithms</td>
+        <td>ecdh-sha2-nistp521 <br/>ecdh-sha2-nistp384 <br/>ecdh-sha2-nistp256 <br/>diffie-hellman-group-exchange-sha256</td>
+    </tr>
+</table>
+
+<p>© 2020 Microsoft Corporation. All rights reserved. <br /> <a href="rights.html">Avere Systems copyright and trademark information</a></p>
+
+
+</body></html>

@@ -44,6 +44,12 @@ locals {
     cache_policy = "Clients Bypassing the Cluster"
 
     controller_add_public_ip = true
+
+    // advanced scenario: vfxt and controller image ids, leave this null, unless not using default marketplace
+    controller_image_id = null
+    vfxt_image_id       = null
+    // advanced scenario: put the custom image resource group here
+    alternative_resource_groups = []
     // advanced scenario: add external ports to work with cloud policies example [10022, 13389]
     ssh_port = 22
     open_external_ports = [local.ssh_port,3389]
@@ -59,6 +65,11 @@ provider "azurerm" {
     client_id       = local.client_id
     client_secret   = local.client_secret
     tenant_id       = local.tenant_id
+
+    # If you are on a new subscription, and encounter resource provider registration
+    # issues, please uncomment the following line.
+    # Please following the directions for a new subscription: 
+    # skip_provider_registration = "true"
 
     features {}
 }
@@ -111,13 +122,15 @@ resource "azurerm_storage_account" "storage" {
 
 // the vfxt controller
 module "vfxtcontroller" {
-    source = "github.com/Azure/Avere/src/terraform/modules/controller"
+    source = "github.com/Azure/Avere/src/terraform/modules/controller3"
     resource_group_name = local.vfxt_resource_group_name
     location = local.location
     admin_username = local.vm_admin_username
     admin_password = local.vm_admin_password
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.controller_add_public_ip
+    image_id = local.controller_image_id
+    alternative_resource_groups = local.alternative_resource_groups
     ssh_port = local.ssh_port
 
     create_resource_group = false
@@ -152,6 +165,7 @@ resource "avere_vfxt" "vfxt" {
     vfxt_admin_password = local.vfxt_cluster_password
     vfxt_ssh_key_data = local.vfxt_ssh_key_data
     vfxt_node_count = 3
+    image_id = local.vfxt_image_id
     user_assigned_managed_identity = local.vfxt_managed_identity_id
     
     azure_storage_filer {

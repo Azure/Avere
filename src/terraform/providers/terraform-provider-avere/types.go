@@ -27,26 +27,28 @@ type AvereVfxt struct {
 
 	Platform IaasPlatform
 
-	AvereVfxtName        string
-	AvereAdminPassword   string
-	AvereSshKeyData      string
-	EnableSupportUploads bool
-	NodeCount            int
-	NodeSize             string
-	NodeCacheSize        int
-	FirstIPAddress       string
-	LastIPAddress        string
+	AvereVfxtName          string
+	AvereAdminPassword     string
+	AvereSshKeyData        string
+	EnableSupportUploads   bool
+	SecureProactiveSupport string
+	NodeCount              int
+	NodeSize               string
+	NodeCacheSize          int
+	FirstIPAddress         string
+	LastIPAddress          string
 
-	CifsAdDomain           string
-	CifsServerName         string
-	CifsUsername           string
-	CifsPassword           string
-	CifsFlatFilePasswdURI  string
-	CifsFlatFileGroupURI   string
-	CifsFlatFilePasswdB64z string
-	CifsFlatFileGroupB64z  string
-	CifsOrganizationalUnit string
-	EnableExtendedGroups   bool
+	CifsAdDomain                      string
+	CifsServerName                    string
+	CifsUsername                      string
+	CifsPassword                      string
+	CifsFlatFilePasswdURI             string
+	CifsFlatFileGroupURI              string
+	CifsFlatFilePasswdB64z            string
+	CifsFlatFileGroupB64z             string
+	CifsOrganizationalUnit            string
+	CifsTrustedActiveDirectoryDomains string
+	EnableExtendedGroups              bool
 
 	UserAssignedManagedIdentity string
 
@@ -147,6 +149,8 @@ type Junction struct {
 	ExportRules        map[string]*ExportRule
 	CifsShareName      string
 	CifsAces           map[string]*ShareAce
+	CifsCreateMask     string
+	CifsDirMask        string
 }
 
 type CustomSetting struct {
@@ -180,7 +184,9 @@ type ClusterFilersRaw struct {
 }
 
 type CifsShare struct {
-	ShareName string `json:"shareName"`
-	Export    string `json:"export"`
-	Suffix    string `json:"suffix"`
+	ShareName  string `json:"shareName"`
+	Export     string `json:"export"`
+	Suffix     string `json:"suffix"`
+	CreateMask string `json:"create mask"`
+	DirMask    string `json:"directory mask"`
 }

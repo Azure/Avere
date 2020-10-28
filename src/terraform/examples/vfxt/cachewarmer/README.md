@@ -75,7 +75,7 @@ cd ~/tf/src/terraform/examples/vfxt/cachewarmer/2.vfxtcontroller
 
 6. execute `terraform apply -auto-approve` to build the vfxt controller
 
-7. Now logon to the controller and jump to the filer to prepare content.  One good potential content is the [Moana Island Scene from  Walt Disney Animation Studios](https://www.technology.disneyanimation.com/islandscene).
+7. Now logon to the controller and jump to the filer to prepare content.  One good potential content is the [Moana Island Scene from  Walt Disney Animation Studios](https://www.disneyanimation.com/resources/moana-island-scene/).
 
 ## Deploy the vFXT and the CacheWarmer
 
@@ -91,7 +91,7 @@ cd ~/tf/src/terraform/examples/vfxt/cachewarmer/3.vfxtandcachewarmer
 ```bash
 mkdir -p ~/.terraform.d/plugins
 # install the vfxt released binary from https://github.com/Azure/Avere
-wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.13/terraform-provider-avere
+wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.17/terraform-provider-avere
 chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 ```
 

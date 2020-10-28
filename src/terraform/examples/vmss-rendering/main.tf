@@ -46,6 +46,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   instances           = local.vm_count
   admin_username      = local.vm_admin_username
   admin_password      = local.vm_ssh_key_data == null || local.vm_ssh_key_data == "" ? local.vm_admin_password : null
+  disable_password_authentication = local.vm_ssh_key_data == null || local.vm_ssh_key_data == "" ? false : true
 
   # use low-priority with Delete.  Stop Deallocate will be incompatible with OS Ephemeral disks
   priority            = "Spot"
@@ -78,7 +79,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
 
   os_disk {
     storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
+    caching              = local.use_ephemeral_os_disk == true ? "ReadOnly" : "ReadWrite"
 
     dynamic "diff_disk_settings" {
       for_each = local.use_ephemeral_os_disk == true ? [local.use_ephemeral_os_disk] : []
