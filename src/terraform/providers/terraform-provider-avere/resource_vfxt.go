@@ -303,6 +303,13 @@ func resourceVfxt() *schema.Resource {
 				ValidateFunc: ValidateOrganizationalUnit,
 				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_username, cifs_password},
 			},
+			cifs_trusted_active_directory_domains: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: validation.StringDoesNotContainAny("'\""),
+				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_username, cifs_password},
+			},
 			enable_extended_groups: {
 				Type:         schema.TypeBool,
 				Optional:     true,
@@ -1032,6 +1039,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(cifs_flatfile_passwd_b64z).(string),
 		d.Get(cifs_flatfile_group_b64z).(string),
 		d.Get(cifs_organizational_unit).(string),
+		d.Get(cifs_trusted_active_directory_domains).(string),
 		d.Get(enable_extended_groups).(bool),
 		d.Get(user_assigned_managed_identity).(string),
 		d.Get(ntp_servers).(string),
@@ -1695,7 +1703,8 @@ func updateCifs(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 		d.HasChange(cifs_flatfile_group_uri) ||
 		d.HasChange(cifs_flatfile_passwd_b64z) ||
 		d.HasChange(cifs_flatfile_group_b64z) ||
-		d.HasChange(cifs_organizational_unit) {
+		d.HasChange(cifs_organizational_unit) ||
+		d.HasChange(cifs_trusted_active_directory_domains) {
 		if err := averevfxt.DisableCIFS(); err != nil {
 			return err
 		}
