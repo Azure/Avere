@@ -38,16 +38,17 @@ type AvereVfxt struct {
 	FirstIPAddress         string
 	LastIPAddress          string
 
-	CifsAdDomain           string
-	CifsServerName         string
-	CifsUsername           string
-	CifsPassword           string
-	CifsFlatFilePasswdURI  string
-	CifsFlatFileGroupURI   string
-	CifsFlatFilePasswdB64z string
-	CifsFlatFileGroupB64z  string
-	CifsOrganizationalUnit string
-	EnableExtendedGroups   bool
+	CifsAdDomain                      string
+	CifsServerName                    string
+	CifsUsername                      string
+	CifsPassword                      string
+	CifsFlatFilePasswdURI             string
+	CifsFlatFileGroupURI              string
+	CifsFlatFilePasswdB64z            string
+	CifsFlatFileGroupB64z             string
+	CifsOrganizationalUnit            string
+	CifsTrustedActiveDirectoryDomains string
+	EnableExtendedGroups              bool
 
 	UserAssignedManagedIdentity string
 

@@ -43,6 +43,9 @@ var cifsShareRegexp = regexp.MustCompile(`^[A-Za-z0-9\._\-$]{1,}$`)
 var cifsOrganizationalUnitRegExp = regexp.MustCompile(`^(?:(?:CN|OU|DC)\=[^,'"]+,)*(?:CN|OU|DC)\=[^,'"]+$`)
 var cifsMaskRegexp = regexp.MustCompile(`^[0-7]{4}$`)
 
+// simple fqdn regex from O'Reilly https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch08s15.html
+var fqdnRegexp = regexp.MustCompile(`^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`)
+
 func (s *ShareAce) String() string {
 	return fmt.Sprintf("%s(%s), %s, %s", s.Name, s.Sid, s.Type, s.Permission)
 }
@@ -281,9 +284,28 @@ func ValidateCIFSMask(v interface{}, _ string) (warnings []string, errors []erro
 
 func ValidateCIFSUsername(v interface{}, _ string) (warnings []string, errors []error) {
 	cifsUsername := v.(string)
-	if !cifsUsernameRegexp.MatchString(cifsUsername) {
-		errors = append(errors, fmt.Errorf("invalid cifs username '%s'.  The name can include alphanumeric characters (a-z, A-Z, 0-9), '.', '\\', '#', hyphens(-), and underscores.", cifsUsername))
+	parseError := ""
+	if strings.Contains(cifsUsername, "@") {
+		parts := strings.Split(cifsUsername, "@")
+		if len(parts) == 2 {
+			if !cifsUsernameRegexp.MatchString(parts[0]) {
+				parseError = "bad username as subpart of full domain string"
+			} else if !fqdnRegexp.MatchString(parts[1]) {
+				parseError = "bad domain_fqdn"
+			}
+		} else {
+			parseError = "multiple @ symbols"
+		}
+	} else {
+		if !cifsUsernameRegexp.MatchString(cifsUsername) {
+			parseError = "bad username"
+		}
 	}
+
+	if len(parseError) > 0 {
+		errors = append(errors, fmt.Errorf("invalid cifs username '%s', failed with error '%s'.  The name can include alphanumeric characters (a-z, A-Z, 0-9), '.', '\\', '#', hyphens(-), and underscores and specified as username[@domain_fqdn] format.", cifsUsername, parseError))
+	}
+
 	return warnings, errors
 }
 
