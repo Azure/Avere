@@ -31,6 +31,8 @@ type AvereVfxt struct {
 	AvereAdminPassword     string
 	AvereSshKeyData        string
 	EnableSupportUploads   bool
+	EnableRollingTraceData bool
+	ActiveSupportUpload    bool
 	SecureProactiveSupport string
 	NodeCount              int
 	NodeSize               string
@@ -189,4 +191,10 @@ type CifsShare struct {
 	Suffix     string `json:"suffix"`
 	CreateMask string `json:"create mask"`
 	DirMask    string `json:"directory mask"`
+}
+
+type UploadStatus struct {
+	Status   string `json:"status"`
+	Nodename string `json:"nodename"`
+	Filename string `json:"filename"`
 }

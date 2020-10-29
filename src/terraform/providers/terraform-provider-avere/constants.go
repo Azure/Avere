@@ -101,6 +101,10 @@ const (
 	NodeChangeRetryCount        = 240
 	NodeChangeRetrySleepSeconds = 10
 
+	// only wait 10 minutes for support uploads
+	UploadGSIRetryCount        = 60
+	UploadGSIRetrySleepSeconds = 10
+
 	// status's returned from Activity
 	StatusComplete      = "complete"
 	StatusCompleted     = "completed"
@@ -171,6 +175,8 @@ const (
 	global_custom_settings                = "global_custom_settings"
 	vserver_settings                      = "vserver_settings"
 	enable_support_uploads                = "enable_support_uploads"
+	enable_rolling_trace_data             = "enable_rolling_trace_data"
+	active_support_upload                 = "active_support_upload"
 	enable_secure_proactive_support       = "enable_secure_proactive_support"
 	cifs_ad_domain                        = "cifs_ad_domain"
 	cifs_server_name                      = "cifs_server_name"
