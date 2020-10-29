@@ -44,6 +44,8 @@ func NewAvereVfxt(
 	avereAdminPassword string,
 	sshKeyData string,
 	enableSupportUploads bool,
+	enableRollingTraceData bool,
+	activeSupportUpload bool,
 	secureProactiveSupport string,
 	nodeCount int,
 	nodeSize string,
@@ -85,6 +87,8 @@ func NewAvereVfxt(
 		AvereAdminPassword:                avereAdminPassword,
 		AvereSshKeyData:                   sshKeyData,
 		EnableSupportUploads:              enableSupportUploads,
+		EnableRollingTraceData:            enableRollingTraceData,
+		ActiveSupportUpload:               activeSupportUpload,
 		SecureProactiveSupport:            secureProactiveSupport,
 		NodeCount:                         nodeCount,
 		NodeSize:                          nodeSize,
@@ -1681,6 +1685,83 @@ func (a *AvereVfxt) removeNodeFromCluster(nodeName string) error {
 	return nil
 }
 
+func (a *AvereVfxt) UploadSupportBundle() error {
+	log.Printf("[INFO] [UploadSupportBundle")
+	defer log.Printf("[INFO] UploadSupportBundle]")
+	if _, err := a.AvereCommand(a.getUploadSupportBundleCommand()); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *AvereVfxt) UploadSupportBundleAndBlock() error {
+	log.Printf("[INFO] [UploadSupportBundleAndBlock")
+	defer log.Printf("[INFO] UploadSupportBundleAndBlock]")
+	if err := a.UploadSupportBundle(); err != nil {
+		return err
+	}
+
+	for retries := 1; ; retries++ {
+		isUploading, err := a.IsUploadingGSI()
+		if err == nil && !isUploading {
+			return nil
+		}
+
+		if retries > UploadGSIRetryCount {
+			// don't wait longer than the specified time
+			return err
+		}
+		log.Printf("[INFO] [%d / %d ] still upload support bundle", retries, UploadGSIRetryCount)
+		time.Sleep(UploadGSIRetrySleepSeconds * time.Second)
+	}
+
+	return nil
+}
+
+func (a *AvereVfxt) IsUploadingGSI() (bool, error) {
+	uploadStatus, err := a.GetGSINodeStatus()
+	if err != nil {
+		return false, err
+	}
+
+	for _, s := range uploadStatus {
+		if strings.Contains(s.Status, "Uploading /") {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (a *AvereVfxt) GetGSINodeStatus() ([]UploadStatus, error) {
+	uploadStatusJson, err := a.AvereCommand(a.getGSINodeStatusJsonCommand())
+	if err != nil {
+		return nil, err
+	}
+
+	var outputParts [][]interface{}
+	if err := json.Unmarshal([]byte(uploadStatusJson), &outputParts); err != nil {
+		return nil, err
+	}
+
+	if len(outputParts) <= 1 && len(outputParts[1]) < 1 {
+		return nil, fmt.Errorf("json did not parse correctly and is less than two parts: '%v'", uploadStatusJson)
+	}
+
+	statuses := (outputParts[1][0]).([]interface{})
+
+	rawJson, err := json.Marshal(statuses)
+	if err != nil {
+		return nil, err
+	}
+
+	var results []UploadStatus
+	if err := json.Unmarshal(rawJson, &results); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
 func (a *AvereVfxt) getListNodesJsonCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json node.list", a.getBaseAvereCmd()), AverecmdLogFile)
 }
@@ -1895,10 +1976,14 @@ func (a *AvereVfxt) getAnalyticsCoreFilerSpaceCommand() string {
 // this updates support uploads per docs https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-enable-support
 func (a *AvereVfxt) getSupportModifyCustomerUploadInfoCommand() string {
 	isEnabled := "no"
+	rollingTrace := "no"
 	if a.EnableSupportUploads {
 		isEnabled = "yes"
+		if a.EnableRollingTraceData {
+			rollingTrace = "yes"
+		}
 	}
-	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'crashInfo':'%s','corePolicy':'overwriteOldest','statsMonitor':'%s','rollingTrace':'no','traceLevel':'0x1','memoryDebugging':'no','generalInfo':'%s','customerId':'%s'}\"", a.getBaseAvereCmd(), isEnabled, isEnabled, isEnabled, a.AvereVfxtName), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'crashInfo':'%s','corePolicy':'overwriteOldest','statsMonitor':'%s','rollingTrace':'%s','traceLevel':'0x1','memoryDebugging':'no','generalInfo':'%s','customerId':'%s'}\"", a.getBaseAvereCmd(), isEnabled, isEnabled, rollingTrace, isEnabled, a.AvereVfxtName), AverecmdLogFile)
 }
 
 // this updates SPS (Secure Proactive Support) per docs https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-enable-support
@@ -1983,6 +2068,14 @@ func (a *AvereVfxt) getEnableExtendedGroupsCommand() string {
 
 func (a *AvereVfxt) getDisableExtendedGroupsCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s nfs.modify \"%s\" \"{'extendedGroups':'no'}\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getUploadSupportBundleCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s support.executeNormalMode cluster gsisupportbundle", a.getBaseAvereCmd()), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getGSINodeStatusJsonCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json system.multicall \"[{'methodName':'system.enableAPI','params':['internal']},{'methodName':'support.getGSINodeStatus','params':[]}]\"", a.getBaseAvereCmd()), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getSetVServerSettingCommand(customSetting string, message string) string {

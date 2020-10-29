@@ -223,6 +223,18 @@ func resourceVfxt() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			enable_rolling_trace_data: {
+				Type:         schema.TypeBool,
+				Optional:     true,
+				Default:      false,
+				RequiredWith: []string{enable_support_uploads},
+			},
+			active_support_upload: {
+				Type:         schema.TypeBool,
+				Optional:     true,
+				Default:      false,
+				RequiredWith: []string{enable_support_uploads},
+			},
 			enable_secure_proactive_support: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -848,6 +860,14 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		if err != nil {
 			return err
 		}
+
+		// trigger a support bundle if there will be no more core filers
+		if len(coreFilersToAdd) == 0 && len(existingCoreFilers) == len(coreFilersToDelete) {
+			if err := avereVfxt.UploadSupportBundle(); err != nil {
+				return err
+			}
+		}
+
 		if err := deleteJunctions(junctionsToDelete, avereVfxt); err != nil {
 			return err
 		}
@@ -898,7 +918,7 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	if d.HasChange(enable_support_uploads) || d.HasChange(enable_secure_proactive_support) {
+	if d.HasChange(enable_support_uploads) || d.HasChange(enable_rolling_trace_data) || d.HasChange(enable_secure_proactive_support) {
 		if err := avereVfxt.ModifySupportUploads(); err != nil {
 			return err
 		}
@@ -919,6 +939,12 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 	if avereVfxt.RunLocal == false {
 		if err := VerifySSHConnection(avereVfxt.ControllerAddress, avereVfxt.ControllerUsename, avereVfxt.SshAuthMethod, avereVfxt.SshPort); err != nil {
 			return err
+		}
+	}
+
+	if avereVfxt.ActiveSupportUpload == true {
+		if err := avereVfxt.UploadSupportBundleAndBlock(); err != nil {
+			log.Printf("[ERROR] failed to upload support bundle: %v", err)
 		}
 	}
 
@@ -1024,6 +1050,8 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(vfxt_admin_password).(string),
 		d.Get(vfxt_ssh_key_data).(string),
 		d.Get(enable_support_uploads).(bool),
+		d.Get(enable_rolling_trace_data).(bool),
+		d.Get(active_support_upload).(bool),
 		d.Get(enable_secure_proactive_support).(string),
 		nodeCount,
 		d.Get(node_size).(string),
