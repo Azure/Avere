@@ -15,11 +15,15 @@ func (j *Junction) IsEqual(j2 *Junction) bool {
 		j.CoreFilerExport == j2.CoreFilerExport &&
 		j.ExportSubdirectory == j2.ExportSubdirectory &&
 		j.PolicyName == j2.PolicyName &&
-		ExportRulesEqual(j.ExportRules, j2.ExportRules) &&
-		j.CifsShareName == j2.CifsShareName &&
+		j.CifsShareName == j2.CifsShareName
+}
+
+func (j *Junction) RequiresUpdate(j2 *Junction) bool {
+	attributesAreEqual := ExportRulesEqual(j.ExportRules, j2.ExportRules) &&
 		ShareAcesEqual(j.CifsAces, j2.CifsAces) &&
 		j.CifsCreateMask == j2.CifsCreateMask &&
 		j.CifsDirMask == j2.CifsDirMask
+	return !attributesAreEqual
 }
 
 func NewJunction(

@@ -355,6 +355,11 @@ func GetShareAceAdjustments(existingShareAces map[string]*ShareAce, targetShareA
 			if ace, ok = normalizedTargetShareAces[key2]; !ok {
 				ace = nil
 			}
+			// try to use the sid as a key
+			key3 := v.Sid
+			if ace, ok = normalizedTargetShareAces[key3]; !ok {
+				ace = nil
+			}
 		}
 		if ace == nil || !(ace.Type == v.Type && ace.Permission == v.Permission) {
 			shareAcesToDelete = append(shareAcesToDelete, v)

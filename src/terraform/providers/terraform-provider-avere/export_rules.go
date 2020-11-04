@@ -48,6 +48,18 @@ type ExportRule struct {
 	ExportSquash   string `json:"squash"`
 	AllowSuid      string `json:"suid"`
 	AllowSubmounts string `json:"subdir"`
+	// only set during retrieval and helps with deletion
+	Id string `json:"id"`
+}
+
+func (e *ExportRule) IsEqual(e2 *ExportRule) bool {
+	// don't compare id
+	return e.Filter == e2.Filter &&
+		e.FilterScope == e2.FilterScope &&
+		e.ExportAccess == e2.ExportAccess &&
+		e.ExportSquash == e2.ExportSquash &&
+		e.AllowSuid == e2.AllowSuid &&
+		e.AllowSubmounts == e2.AllowSubmounts
 }
 
 var matchExportRuleRegexp = regexp.MustCompile(`^([^\s\(\)]+(\([^\(\)]*\))?\s?)*$`)
@@ -71,7 +83,7 @@ func ExportRulesEqual(a, b map[string]*ExportRule) bool {
 		if !ok {
 			return false
 		}
-		if *v != *vb {
+		if !v.IsEqual(vb) {
 			return false
 		}
 	}
@@ -195,4 +207,37 @@ func parseRules(rules string) (exportAccess string, exportSquash string, allowSu
 	}
 
 	return exportAccess, exportSquash, allowSuid, allowSubmounts, err
+}
+
+func GetExportRuleAdjustments(existingRules map[string]*ExportRule, targetRules map[string]*ExportRule) (map[string]*ExportRule, map[string]*ExportRule) {
+	rulesToDelete := make(map[string]*ExportRule)
+	rulesToCreate := make(map[string]*ExportRule)
+
+	for k, v := range existingRules {
+		var rule *ExportRule
+		var ok bool
+		if rule, ok = targetRules[k]; !ok {
+			rule = nil
+		}
+		if rule == nil || !rule.IsEqual(v) {
+			exportRule := ExportRule{}
+			exportRule = *v
+			rulesToDelete[k] = &exportRule
+		}
+	}
+
+	for k, v := range targetRules {
+		var rule *ExportRule
+		var ok bool
+		if rule, ok = existingRules[k]; !ok {
+			rule = nil
+		}
+		if rule == nil || !rule.IsEqual(v) {
+			exportRule := ExportRule{}
+			exportRule = *v
+			rulesToCreate[k] = &exportRule
+		}
+	}
+
+	return rulesToDelete, rulesToCreate
 }
