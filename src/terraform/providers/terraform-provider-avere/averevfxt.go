@@ -1276,31 +1276,56 @@ func (a *AvereVfxt) DeleteCifsShare(sharename string) error {
 	return nil
 }
 
-func (a *AvereVfxt) AddCifsShare(sharename string, namespaceName string, targetShareAces map[string]*ShareAce, cifsCreateMask string, cifsDirMask string) error {
-	log.Printf("[INFO] [AddCifsShare %s ns:%s with masks '%s' and '%s'", sharename, namespaceName, cifsCreateMask, cifsDirMask)
-	defer log.Printf("[INFO] AddCifsShare %s ns:%s]", sharename, namespaceName)
-	if _, err := a.AvereCommand(a.getAddCIFSShareCommand(sharename, namespaceName, cifsCreateMask, cifsDirMask)); err != nil {
+func (a *AvereVfxt) AddCifsShare(junction *Junction) error {
+	log.Printf("[INFO] [AddCifsShare %s ns:%s with masks '%s' and '%s'", junction.CifsShareName, junction.NameSpacePath, junction.CifsCreateMask, junction.CifsDirMask)
+	defer log.Printf("[INFO] AddCifsShare %s ns:%s]", junction.CifsShareName, junction.NameSpacePath)
+
+	if _, err := a.AvereCommand(a.getAddCIFSShareCommand(junction.CifsShareName, junction.NameSpacePath, junction.CifsCreateMask, junction.CifsDirMask)); err != nil {
 		return err
 	}
+
+	if err := a.UpdateCifsAces(junction); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *AvereVfxt) UpdateCifsAces(junction *Junction) error {
+	log.Printf("[INFO] [UpdateCifsAces %s", junction.CifsShareName)
+	defer log.Printf("[INFO] UpdateCifsAces %s]", junction.CifsShareName)
+
 	// get the aces
-	existingShareAces, err := a.GetCifShareAces(sharename)
+	existingShareAces, err := a.GetCifShareAces(junction.CifsShareName)
 	if err != nil {
 		return err
 	}
 
-	shareAcesToDelete, shareAcesToCreate := GetShareAceAdjustments(existingShareAces, targetShareAces)
+	shareAcesToDelete, shareAcesToCreate := GetShareAceAdjustments(existingShareAces, junction.CifsAces)
 	log.Printf("[INFO] deleting %d aces, adding %d aces", len(shareAcesToDelete), len(shareAcesToCreate))
 	for _, v := range shareAcesToDelete {
-		if _, err := a.AvereCommand(a.getGetRemoveShareAceCommand(sharename, v)); err != nil {
+		if _, err := a.AvereCommand(a.getGetRemoveShareAceCommand(junction.CifsShareName, v)); err != nil {
 			return err
 		}
 	}
 	for _, v := range shareAcesToCreate {
-		if _, err := a.AvereCommand(a.getGetAddShareAceCommand(sharename, v)); err != nil {
+		if _, err := a.AvereCommand(a.getGetAddShareAceCommand(junction.CifsShareName, v)); err != nil {
 			return err
 		}
 	}
 
+	return nil
+}
+
+func (a *AvereVfxt) UpdateCifsMasks(junction *Junction) error {
+	log.Printf("[INFO] [UpdateCifsMasks %s with masks '%s' and '%s'", junction.CifsShareName, junction.CifsCreateMask, junction.CifsDirMask)
+	defer log.Printf("[INFO] UpdateCifsMasks %s]", junction.CifsShareName)
+	// add the cifs share
+	if len(junction.CifsShareName) > 0 {
+		if _, err := a.AvereCommand(a.getUpdateCIFSShareCommand(junction.CifsShareName, junction.CifsCreateMask, junction.CifsDirMask)); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -1352,6 +1377,42 @@ func (a *AvereVfxt) AddExportRules(policyName string, exportRules map[string]*Ex
 	return nil
 }
 
+func (a *AvereVfxt) DeleteExportRules(policyName string, exportRules map[string]*ExportRule) error {
+	log.Printf("[INFO] [DeleteExportRules %s", policyName)
+	defer log.Printf("[INFO] DeleteExportRules %s]", policyName)
+	for _, v := range exportRules {
+		if len(v.Id) == 0 {
+			return fmt.Errorf("BUG: the export rule '%s' for policy '%s' cannot have an empty id, this should have come from function GetExportRules", v.Filter, policyName)
+		}
+		if _, err := a.AvereCommand(a.getDeleteExportRuleCommand(v.Id)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *AvereVfxt) UpdateExportRules(junction *Junction) error {
+	log.Printf("[INFO] [UpdateExportRules %s", junction.NameSpacePath)
+	defer log.Printf("[INFO] UpdateExportRules %s]", junction.NameSpacePath)
+
+	// get the aces
+	existingRules, err := a.GetExportRules(junction.PolicyName)
+	if err != nil {
+		return err
+	}
+
+	rulesToDelete, rulesToCreate := GetExportRuleAdjustments(existingRules, junction.ExportRules)
+	log.Printf("[INFO] deleting %d rules, adding %d rules", len(rulesToDelete), len(rulesToCreate))
+	if err := a.DeleteExportRules(junction.PolicyName, rulesToDelete); err != nil {
+		return err
+	}
+	if err := a.AddExportRules(junction.PolicyName, rulesToCreate); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (a *AvereVfxt) GetExportRules(policyName string) (map[string]*ExportRule, error) {
 	results := make(map[string]*ExportRule)
 	exportRulesJson, err := a.AvereCommand(a.getListExportRulesJsonCommand(policyName))
@@ -1394,7 +1455,7 @@ func (a *AvereVfxt) CreateJunction(junction *Junction) error {
 	}
 	// add the cifs share
 	if len(junction.CifsShareName) > 0 {
-		if err := a.AddCifsShare(junction.CifsShareName, junction.NameSpacePath, junction.CifsAces, junction.CifsCreateMask, junction.CifsDirMask); err != nil {
+		if err := a.AddCifsShare(junction); err != nil {
 			return err
 		}
 	}
@@ -1930,6 +1991,10 @@ func (a *AvereVfxt) getCreateExportRuleCommand(policyName string, exportRule *Ex
 	return WrapCommandForLogging(fmt.Sprintf("%s nfs.addRule \"%s\" \"%s\" %s", a.getBaseAvereCmd(), VServerName, policyName, exportRule.NfsAddRuleArgumentsString()), AverecmdLogFile)
 }
 
+func (a *AvereVfxt) getDeleteExportRuleCommand(exportRuleId string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s nfs.removeRule \"%s\"", a.getBaseAvereCmd(), exportRuleId), AverecmdLogFile)
+}
+
 func (a *AvereVfxt) getListJunctionsJsonCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json vserver.listJunctions \"%s\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
 }
@@ -2040,6 +2105,10 @@ func (a *AvereVfxt) getCIFSDisableCommand() string {
 
 func (a *AvereVfxt) getAddCIFSShareCommand(sharename string, namespaceName string, cifsCreateMask string, cifsDirMask string) string {
 	return WrapCommandForLogging(fmt.Sprintf("%s cifs.addShare \"%s\" \"%s\" \"/\" \"%s\" \"\" \"false\" \"{'create mask':'%s','security mask':'%s','directory mask':'%s','directory security mask':'%s'}\" ", a.getBaseAvereCmd(), VServerName, sharename, namespaceName, cifsCreateMask, cifsCreateMask, cifsDirMask, cifsDirMask), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getUpdateCIFSShareCommand(sharename string, cifsCreateMask string, cifsDirMask string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cifs.modifyShare \"%s\" \"%s\" \"{'create mask':'%s','security mask':'%s','directory mask':'%s','directory security mask':'%s'}\" ", a.getBaseAvereCmd(), VServerName, sharename, cifsCreateMask, cifsCreateMask, cifsDirMask, cifsDirMask), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getRemoveCIFSShareCommand(sharename string) string {

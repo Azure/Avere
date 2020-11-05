@@ -699,6 +699,11 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	log.Printf("[INFO] vfxt: ensure stable cluster after cluster creation")
+	if err := avereVfxt.EnsureClusterStable(); err != nil {
+		return err
+	}
+
 	return resourceVfxtRead(d, m)
 }
 
@@ -848,7 +853,7 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		if err != nil {
 			return err
 		}
-		junctionsToDelete, err := getJunctionsToDelete(d, avereVfxt, coreFilersToDelete, storageFilersToDelete)
+		junctionsToDelete, junctionsToUpdate, err := getJunctionsToDeleteOrUpdate(d, avereVfxt, coreFilersToDelete, storageFilersToDelete)
 		if err != nil {
 			return err
 		}
@@ -899,6 +904,9 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		if err := createJunctions(d, avereVfxt); err != nil {
 			return err
 		}
+		if err := updateJunctions(avereVfxt, junctionsToUpdate); err != nil {
+			return err
+		}
 	} else {
 		if err := updateCifs(d, avereVfxt); err != nil {
 			return err
@@ -922,6 +930,11 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		if err := avereVfxt.ModifySupportUploads(); err != nil {
 			return err
 		}
+	}
+
+	log.Printf("[INFO] vfxt: ensure stable cluster after cluster update")
+	if err := avereVfxt.EnsureClusterStable(); err != nil {
+		return err
 	}
 
 	return resourceVfxtRead(d, m)
@@ -1302,19 +1315,20 @@ func deleteAzureStorageFilers(azureStorageFilersToDelete map[string]*AzureStorag
 	return nil
 }
 
-func getJunctionsToDelete(d *schema.ResourceData, averevfxt *AvereVfxt, coreFilersToDelete map[string]*CoreFiler, storageFilersToDelete map[string]*AzureStorageFiler) (results map[string]*Junction, err error) {
+func getJunctionsToDeleteOrUpdate(d *schema.ResourceData, averevfxt *AvereVfxt, coreFilersToDelete map[string]*CoreFiler, storageFilersToDelete map[string]*AzureStorageFiler) (junctionsToDelete map[string]*Junction, junctionsToUpdate map[string]*Junction, err error) {
 	log.Printf("[INFO] [getJunctionsToDelete")
 	defer log.Printf("[INFO] getJunctionsToDelete]")
-	results = make(map[string]*Junction)
+	junctionsToDelete = make(map[string]*Junction)
+	junctionsToUpdate = make(map[string]*Junction)
 	newJunctions, err := expandAllJunctions(d)
 	if err != nil {
-		return results, err
+		return junctionsToDelete, junctionsToUpdate, err
 	}
 
 	// get the map of existing junctions
 	existingJunctions, err := averevfxt.GetExistingJunctions()
 	if err != nil {
-		return results, err
+		return junctionsToDelete, junctionsToUpdate, err
 	}
 
 	// delete any removed or updated junctions
@@ -1323,12 +1337,15 @@ func getJunctionsToDelete(d *schema.ResourceData, averevfxt *AvereVfxt, coreFile
 		_, deleteCoreFiler := coreFilersToDelete[existingJunction.CoreFilerName]
 		_, deleteStorageFiler := storageFilersToDelete[existingJunction.CoreFilerName]
 		if ok && newJunction.IsEqual(existingJunction) && !deleteCoreFiler && !deleteStorageFiler {
-			// the junction and the core file to which is belongs is not being deleted
+			// the junction and the core filer to which is belongs is not being deleted
+			if newJunction.RequiresUpdate(existingJunction) {
+				junctionsToUpdate[k] = newJunction
+			}
 			continue
 		}
-		results[k] = existingJunction
+		junctionsToDelete[k] = existingJunction
 	}
-	return results, nil
+	return junctionsToDelete, junctionsToUpdate, nil
 }
 
 func deleteJunctions(junctionsToDelete map[string]*Junction, averevfxt *AvereVfxt) error {
@@ -1714,6 +1731,25 @@ func createJunctions(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 			continue
 		}
 		if err := averevfxt.CreateJunction(v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func updateJunctions(averevfxt *AvereVfxt, junctionsToUpdate map[string]*Junction) error {
+	if junctionsRequireCifs(junctionsToUpdate) && !averevfxt.CIFSSettingsExist() {
+		return fmt.Errorf("one or more junctions to be updated requires a cifs share, but cifs not enabled")
+	}
+
+	for _, v := range junctionsToUpdate {
+		if err := averevfxt.UpdateCifsAces(v); err != nil {
+			return err
+		}
+		if err := averevfxt.UpdateCifsMasks(v); err != nil {
+			return err
+		}
+		if err := averevfxt.UpdateExportRules(v); err != nil {
 			return err
 		}
 	}
