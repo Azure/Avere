@@ -4,7 +4,18 @@ locals {
   addr_prefix = trimsuffix(var.avere_first_ip_addr, ".${local.last_octet}")
   # technique from article: https://forum.netgate.com/topic/120486/round-robin-for-dns-forwarder-network-address/3
   local_a_records = [for i in range(var.avere_ip_addr_count): "local-data: \"${var.avere_filer_fqdn} A ${local.addr_prefix}.${local.last_octet + i}\""]
-  local_a_records_str = "local-zone: \"${var.avere_filer_fqdn}\" transparent\n  ${join("\n  ", local.local_a_records)}"
+  
+  # alternate fqdn
+  local_alternate_a_records = flatten([
+    for i in range(length(var.avere_filer_alternate_fqdn)): [
+      for j in range(var.avere_ip_addr_count): 
+        "local-data: \"${var.avere_filer_alternate_fqdn[i]} A ${local.addr_prefix}.${local.last_octet + j}\""
+        ]
+  ])
+  
+  # join everything into the same string
+  all_a_records = concat(local.local_a_records, local.local_alternate_a_records)
+  local_a_records_str = "local-zone: \"${var.avere_filer_fqdn}\" transparent\n  ${join("\n  ", local.all_a_records)}"
 
   # create the dns forward lines  
   dns_servers = var.dns_server == null || var.dns_server == "" ? [] : split(" ", var.dns_server)

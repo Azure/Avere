@@ -68,6 +68,11 @@ variable "avere_filer_fqdn" {
   description = "the fqdn of the avere."
 }
 
+variable "avere_filer_alternate_fqdn" {
+  default = []
+  description = "alternate fqdn of the avere and is useful to point other names at Avere or can be used to emulate a domain search list."
+}
+
 variable "module_depends_on" {
   default = [""]
   description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
