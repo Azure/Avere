@@ -186,6 +186,7 @@ const (
 	cifs_flatfile_group_uri               = "cifs_flatfile_group_uri"
 	cifs_flatfile_passwd_b64z             = "cifs_flatfile_passwd_b64z"
 	cifs_flatfile_group_b64z              = "cifs_flatfile_group_b64z"
+	cifs_rid_mapping_base_integer         = "cifs_rid_mapping_base_integer"
 	cifs_organizational_unit              = "cifs_organizational_unit"
 	cifs_trusted_active_directory_domains = "cifs_trusted_active_directory_domains"
 	enable_extended_groups                = "enable_extended_groups"

@@ -48,6 +48,7 @@ type AvereVfxt struct {
 	CifsFlatFileGroupURI              string
 	CifsFlatFilePasswdB64z            string
 	CifsFlatFileGroupB64z             string
+	CifsRidMappingBaseInteger         int
 	CifsOrganizationalUnit            string
 	CifsTrustedActiveDirectoryDomains string
 	EnableExtendedGroups              bool

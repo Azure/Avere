@@ -60,6 +60,7 @@ func NewAvereVfxt(
 	cifsFlatFileGroupURI string,
 	cifsFlatFilePasswdB64z string,
 	cifsFlatFileGroupB64z string,
+	cifsRidMappingBaseInteger int,
 	cifsOrganizationalUnit string,
 	cifsTrustedActiveDirectoryDomains string,
 	enableExtendedGroups bool,
@@ -103,6 +104,7 @@ func NewAvereVfxt(
 		CifsFlatFileGroupURI:              cifsFlatFileGroupURI,
 		CifsFlatFilePasswdB64z:            cifsFlatFilePasswdB64z,
 		CifsFlatFileGroupB64z:             cifsFlatFileGroupB64z,
+		CifsRidMappingBaseInteger:         cifsRidMappingBaseInteger,
 		CifsOrganizationalUnit:            cifsOrganizationalUnit,
 		CifsTrustedActiveDirectoryDomains: cifsTrustedActiveDirectoryDomains,
 		EnableExtendedGroups:              enableExtendedGroups,
@@ -834,8 +836,12 @@ func (a *AvereVfxt) PrepareForVFXTNodeCommands() error {
 	return nil
 }
 
+func (a *AvereVfxt) IsUsingFlatFiles() bool {
+	return a.CifsRidMappingBaseInteger > 0 || (len(a.CifsFlatFilePasswdB64z) > 0 && len(a.CifsFlatFileGroupB64z) > 0)
+}
+
 func (a *AvereVfxt) UploadFlatFiles() error {
-	if len(a.CifsFlatFilePasswdB64z) == 0 || len(a.CifsFlatFileGroupB64z) == 0 {
+	if !a.IsUsingFlatFiles() {
 		return nil
 	}
 	log.Printf("[INFO] [uploading flat files")
@@ -845,20 +851,44 @@ func (a *AvereVfxt) UploadFlatFiles() error {
 		return err
 	}
 
-	log.Printf("[INFO] step 1 - put files on controller")
-	if _, err := a.ShellCommand(a.getPutPasswdFileCommand()); err != nil {
-		return fmt.Errorf("Error uploading passwd file: %v", err)
+	if a.CifsRidMappingBaseInteger > 0 {
+		log.Printf("[INFO] step 1 - upload rid generator")
+		ridGeneratorFileB64z, err := GetRidGeneratorB64z()
+		if err != nil {
+			return fmt.Errorf("Error create rid generator b64z file: %s", ridGeneratorFileB64z)
+		}
+		if _, err := a.ShellCommand(a.getPutRidGeneratorCommand(ridGeneratorFileB64z)); err != nil {
+			return fmt.Errorf("Error uploading rid generator file: %v", err)
+		}
+
+		log.Printf("[INFO] step 2 - copy rid generator to Avere and execute")
+		scpCmd := a.getRidGeneratorScpCommand()
+		if _, err := a.ShellCommand(scpCmd); err != nil {
+			return fmt.Errorf("Error running scp command for rid generator: %v", err)
+		}
+
+		log.Printf("[INFO] step 2.1 - Execute rid generator")
+		ridGeneratorCmd := a.getExecuteRidGeneratorCommand()
+		if _, err := a.ShellCommand(ridGeneratorCmd); err != nil {
+			return fmt.Errorf("Error running rid generator execution: %v", err)
+		}
+	} else {
+		log.Printf("[INFO] step 1 - put flat files on controller")
+		if _, err := a.ShellCommand(a.getPutPasswdFileCommand()); err != nil {
+			return fmt.Errorf("Error uploading passwd file: %v", err)
+		}
+
+		if _, err := a.ShellCommand(a.getPutGroupFileCommand()); err != nil {
+			return fmt.Errorf("Error uploading group file: %v", err)
+		}
+
+		log.Printf("[INFO] step 2 - copy to Avere webserver")
+		scpCmd := a.getFlatFileScpCommand()
+		if _, err := a.ShellCommand(scpCmd); err != nil {
+			return fmt.Errorf("Error running scp command: %v", err)
+		}
 	}
 
-	if _, err := a.ShellCommand(a.getPutGroupFileCommand()); err != nil {
-		return fmt.Errorf("Error uploading group file: %v", err)
-	}
-
-	log.Printf("[INFO] step 2 - copy to Avere webserver")
-	scpCmd := a.getFlatFileScpCommand()
-	if _, err := a.ShellCommand(scpCmd); err != nil {
-		return fmt.Errorf("Error running scp command: %v", err)
-	}
 	mountWritableCmd := a.getMakeVFXTWritableCommand()
 	if _, err := a.ShellCommand(mountWritableCmd); err != nil {
 		return fmt.Errorf("Error running mount writable command: %v", err)
@@ -1775,8 +1805,6 @@ func (a *AvereVfxt) UploadSupportBundleAndBlock() error {
 		log.Printf("[INFO] [%d / %d ] still upload support bundle", retries, UploadGSIRetryCount)
 		time.Sleep(UploadGSIRetrySleepSeconds * time.Second)
 	}
-
-	return nil
 }
 
 func (a *AvereVfxt) IsUploadingGSI() (bool, error) {
@@ -2065,7 +2093,7 @@ func (a *AvereVfxt) getDirServicesEnableCIFSCommand() string {
 	structSuffix := ""
 	flatFilePasswdUri := a.CifsFlatFilePasswdURI
 	flatFileGroupUri := a.CifsFlatFileGroupURI
-	if len(a.CifsFlatFilePasswdB64z) > 0 && len(a.CifsFlatFileGroupB64z) > 0 {
+	if a.IsUsingFlatFiles() {
 		flatFilePasswdUri = fmt.Sprintf(CIFSSelfPasswdUriStrFmt, a.ManagementIP)
 		flatFileGroupUri = fmt.Sprintf(CIFSSelfGroupUriStrFmt, a.ManagementIP)
 	}
@@ -2253,4 +2281,19 @@ func (a *AvereVfxt) getMakeVFXTReadonlyCommand() string {
 
 func (a *AvereVfxt) getSetServerAddrCommand(internalName string, coreFileIPStr string) string {
 	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"dbutil.py set %s serverAddr '\"'\"'%s'\"'\"' -x\"'", a.GetBaseVFXTNodeCommand(), internalName, coreFileIPStr), ShellLogFile)
+}
+
+func (a *AvereVfxt) getPutRidGeneratorCommand(ridGeneratorFileB64z string) string {
+	return WrapCommandForLogging(fmt.Sprintf("echo %s | base64 -d | gunzip > ~/generate-rid-avereflatfiles.py", ridGeneratorFileB64z), ShellLogFile)
+}
+
+func (a *AvereVfxt) getRidGeneratorScpCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s scp -oStrictHostKeyChecking=no ~/generate-rid-avereflatfiles.py admin@%s:/tmp ", a.GetSSHPassPrefix(), a.ManagementIP), ShellLogFile)
+}
+
+func (a *AvereVfxt) getExecuteRidGeneratorCommand() string {
+	nonSecretBase := fmt.Sprintf("%%s 'bash -l -c \"python /tmp/generate-rid-avereflatfiles.py %s '\"'\"'%s'\"'\"' '\"'\"'%%s'\"'\"' %d /tmp/avere-user.txt /tmp/avere-group.txt\"'", a.CifsAdDomain, a.CifsUsername, a.CifsRidMappingBaseInteger)
+	nonSecretCommand := fmt.Sprintf(nonSecretBase, a.GetBaseVFXTNodeCommand(), "***")
+	secretCommand := fmt.Sprintf(nonSecretBase, a.GetBaseVFXTNodeCommand(), a.CifsPassword)
+	return WrapCommandForLoggingSecretInput(nonSecretCommand, secretCommand, ShellLogFile)
 }

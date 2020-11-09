@@ -282,7 +282,7 @@ func resourceVfxt() *schema.Resource {
 				Default:       "",
 				ValidateFunc:  validation.StringDoesNotContainAny(" '\""),
 				RequiredWith:  []string{cifs_ad_domain, cifs_server_name, cifs_password, cifs_flatfile_group_uri},
-				ConflictsWith: []string{cifs_flatfile_passwd_b64z, cifs_flatfile_group_b64z},
+				ConflictsWith: []string{cifs_flatfile_passwd_b64z, cifs_flatfile_group_b64z, cifs_rid_mapping_base_integer},
 			},
 			cifs_flatfile_group_uri: {
 				Type:          schema.TypeString,
@@ -290,7 +290,7 @@ func resourceVfxt() *schema.Resource {
 				Default:       "",
 				ValidateFunc:  validation.StringDoesNotContainAny(" '\""),
 				RequiredWith:  []string{cifs_ad_domain, cifs_server_name, cifs_password, cifs_flatfile_passwd_uri},
-				ConflictsWith: []string{cifs_flatfile_passwd_b64z, cifs_flatfile_group_b64z},
+				ConflictsWith: []string{cifs_flatfile_passwd_b64z, cifs_flatfile_group_b64z, cifs_rid_mapping_base_integer},
 			},
 			cifs_flatfile_passwd_b64z: {
 				Type:          schema.TypeString,
@@ -298,7 +298,7 @@ func resourceVfxt() *schema.Resource {
 				Default:       "",
 				ValidateFunc:  validation.StringDoesNotContainAny(" '\""),
 				RequiredWith:  []string{cifs_ad_domain, cifs_server_name, cifs_password, cifs_flatfile_group_b64z},
-				ConflictsWith: []string{cifs_flatfile_passwd_uri, cifs_flatfile_group_uri},
+				ConflictsWith: []string{cifs_flatfile_passwd_uri, cifs_flatfile_group_uri, cifs_rid_mapping_base_integer},
 			},
 			cifs_flatfile_group_b64z: {
 				Type:          schema.TypeString,
@@ -306,7 +306,15 @@ func resourceVfxt() *schema.Resource {
 				Default:       "",
 				ValidateFunc:  validation.StringDoesNotContainAny(" '\""),
 				RequiredWith:  []string{cifs_ad_domain, cifs_server_name, cifs_password, cifs_flatfile_passwd_b64z},
-				ConflictsWith: []string{cifs_flatfile_passwd_uri, cifs_flatfile_group_uri},
+				ConflictsWith: []string{cifs_flatfile_passwd_uri, cifs_flatfile_group_uri, cifs_rid_mapping_base_integer},
+			},
+			cifs_rid_mapping_base_integer: {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Default:       0,
+				ValidateFunc:  validation.IntAtLeast(0),
+				RequiredWith:  []string{cifs_ad_domain, cifs_server_name, cifs_password},
+				ConflictsWith: []string{cifs_flatfile_passwd_uri, cifs_flatfile_group_uri, cifs_flatfile_passwd_b64z, cifs_flatfile_group_b64z},
 			},
 			cifs_organizational_unit: {
 				Type:         schema.TypeString,
@@ -1079,6 +1087,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(cifs_flatfile_group_uri).(string),
 		d.Get(cifs_flatfile_passwd_b64z).(string),
 		d.Get(cifs_flatfile_group_b64z).(string),
+		d.Get(cifs_rid_mapping_base_integer).(int),
 		d.Get(cifs_organizational_unit).(string),
 		d.Get(cifs_trusted_active_directory_domains).(string),
 		d.Get(enable_extended_groups).(bool),
@@ -1767,6 +1776,7 @@ func updateCifs(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 		d.HasChange(cifs_flatfile_group_uri) ||
 		d.HasChange(cifs_flatfile_passwd_b64z) ||
 		d.HasChange(cifs_flatfile_group_b64z) ||
+		d.HasChange(cifs_rid_mapping_base_integer) ||
 		d.HasChange(cifs_organizational_unit) ||
 		d.HasChange(cifs_trusted_active_directory_domains) {
 		if err := averevfxt.DisableCIFS(); err != nil {
