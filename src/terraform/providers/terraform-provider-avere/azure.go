@@ -26,7 +26,7 @@ const (
 	AverOperatorRole    = "Avere Operator"
 )
 
-var validVFXTCharExtractRegexp = regexp.MustCompile(`[^_-a-z0-9]+`)
+var validVFXTCharExtractRegexp = regexp.MustCompile(`[^_\-a-zA-Z0-9]+`)
 
 type Azure struct {
 	ResourceGroup        string
@@ -157,7 +157,7 @@ func (a Azure) GetSupportName(avereVfxt *AvereVfxt, uniqueName string) (string, 
 	supportNameParts := []string{SupportNamePrefix}
 
 	// 1. customer name
-	customerName := uniqueName
+	customerName := ExtractValidVFXTNameChars(uniqueName)
 	if len(customerName) == 0 {
 		subscriptionId, err := GetSubscriptionId(avereVfxt)
 		if err != nil {
@@ -178,7 +178,7 @@ func (a Azure) GetSupportName(avereVfxt *AvereVfxt, uniqueName string) (string, 
 	if len(resourceGroup) == 0 {
 		resourceGroup = SupportNameUnknown
 	}
-	supportNameParts = append(supportNameParts, fmt.Sprintf("%s%s", resourceGroup, avereVfxt.AvereVfxtName))
+	supportNameParts = append(supportNameParts, fmt.Sprintf("%s-%s", resourceGroup, avereVfxt.AvereVfxtName))
 
 	return strings.Join(supportNameParts, SupportNameSeparator), nil
 }
