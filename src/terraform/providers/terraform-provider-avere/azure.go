@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -24,6 +25,8 @@ const (
 	AvereInstanceD16s   = "Standard_D16s_v3"
 	AverOperatorRole    = "Avere Operator"
 )
+
+var validVFXTCharExtractRegexp = regexp.MustCompile(`[^_\-a-zA-Z0-9]+`)
 
 type Azure struct {
 	ResourceGroup        string
@@ -148,6 +151,43 @@ func (a Azure) DeleteVfxtIaasNode(avereVfxt *AvereVfxt, nodeName string) error {
 	return nil
 }
 
+// get the support name of format av0x2dCUSTOMER0x2dRESOURCE_GROUP-CLUSTER
+// as defined in https://github.com/Azure/Avere/issues/959
+func (a Azure) GetSupportName(avereVfxt *AvereVfxt, uniqueName string) (string, error) {
+	supportNameParts := []string{SupportNamePrefix}
+
+	// 1. customer name
+	customerName := ExtractValidVFXTNameChars(uniqueName)
+	if len(customerName) == 0 {
+		subscriptionId, err := GetSubscriptionId(avereVfxt)
+		if err != nil {
+			return "", err
+		}
+		parts := strings.Split(subscriptionId, "-")
+		if len(parts) > 0 && len(parts[0]) > 0 {
+			customerName = ExtractValidVFXTNameChars(parts[0])
+		}
+		if len(customerName) == 0 {
+			customerName = SupportNameUnknown
+		}
+	}
+	supportNameParts = append(supportNameParts, customerName)
+
+	// 2. resource group + cluster name
+	resourceGroup := ExtractValidVFXTNameChars(a.ResourceGroup)
+	if len(resourceGroup) == 0 {
+		resourceGroup = SupportNameUnknown
+	}
+	supportNameParts = append(supportNameParts, fmt.Sprintf("%s-%s", resourceGroup, avereVfxt.AvereVfxtName))
+
+	return strings.Join(supportNameParts, SupportNameSeparator), nil
+}
+
+func ExtractValidVFXTNameChars(name string) string {
+	noSpaceName := strings.ReplaceAll(name, " ", "_")
+	return validVFXTCharExtractRegexp.ReplaceAllString(noSpaceName, "")
+}
+
 func CreateBucket(avereVfxt *AvereVfxt, storageAccountName string, bucket string) error {
 	if err := VerifyAzLogin(avereVfxt); err != nil {
 		return fmt.Errorf("Error verifying login: %v", err)
@@ -222,11 +262,16 @@ func GetSubscriptionId(avereVfxt *AvereVfxt) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Error getting the subscription id: %s %s", err, stderrBuf.String())
 	}
-	var results string
-	if err := json.Unmarshal([]byte(stdinBuf.String()), &results); err != nil {
+	var subscriptionId string
+	if err := json.Unmarshal([]byte(stdinBuf.String()), &subscriptionId); err != nil {
 		return "", err
 	}
-	return results, nil
+
+	if _, err := uuid.Parse(subscriptionId); err != nil {
+		return "", fmt.Errorf("subscriptionId '%s' is an invalid UUID and fails with parse error: %v", subscriptionId, err)
+	}
+
+	return subscriptionId, nil
 }
 
 // VerifyAzLogin confirms that the auth was setup correctly.  The auth for

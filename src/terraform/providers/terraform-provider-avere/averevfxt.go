@@ -1574,6 +1574,13 @@ func (a *AvereVfxt) DeleteJunction(junctionNameSpacePath string) error {
 	return nil
 }
 
+func (a *AvereVfxt) SetSupportName() error {
+	if _, err := a.AvereCommand(a.getSupportModifySetCustomerIdCommand()); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (a *AvereVfxt) ModifySupportUploads() error {
 	if a.EnableSupportUploads {
 		if _, err := a.AvereCommand(a.getSupportAcceptTermsCommand()); err != nil {
@@ -2066,6 +2073,14 @@ func (a *AvereVfxt) getAnalyticsCoreFilerSpaceCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json system.multicall \"[{'methodName':'system.enableAPI','params':['internal']},{'methodName':'analytics.getCoreFilerCacheSpaceData','params':[]}]\"", a.getBaseAvereCmd()), AverecmdLogFile)
 }
 
+func (a *AvereVfxt) getSupportModifySetCustomerIdCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'customerId':'%s'}\"", a.getBaseAvereCmd(), a.AvereVfxtSupportName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getSetClusterNameCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s cluster.modify \"{'name':'%s'}\"", a.getBaseAvereCmd(), a.AvereVfxtName), AverecmdLogFile)
+}
+
 // this updates support uploads per docs https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-enable-support
 func (a *AvereVfxt) getSupportModifyCustomerUploadInfoCommand() string {
 	isEnabled := "no"
@@ -2076,7 +2091,7 @@ func (a *AvereVfxt) getSupportModifyCustomerUploadInfoCommand() string {
 			rollingTrace = "yes"
 		}
 	}
-	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'crashInfo':'%s','corePolicy':'overwriteOldest','statsMonitor':'%s','rollingTrace':'%s','traceLevel':'0x1','memoryDebugging':'no','generalInfo':'%s','customerId':'%s'}\"", a.getBaseAvereCmd(), isEnabled, isEnabled, rollingTrace, isEnabled, a.AvereVfxtName), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'crashInfo':'%s','corePolicy':'overwriteOldest','statsMonitor':'%s','rollingTrace':'%s','traceLevel':'0x1','memoryDebugging':'no','generalInfo':'%s','customerId':'%s'}\"", a.getBaseAvereCmd(), isEnabled, isEnabled, rollingTrace, isEnabled, a.AvereVfxtSupportName), AverecmdLogFile)
 }
 
 // this updates SPS (Secure Proactive Support) per docs https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-enable-support

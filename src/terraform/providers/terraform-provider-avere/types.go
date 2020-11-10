@@ -13,6 +13,7 @@ type IaasPlatform interface {
 	AddIaasNodeToCluster(avereVfxt *AvereVfxt) error
 	DestroyVfxt(avereVfxt *AvereVfxt) error
 	DeleteVfxtIaasNode(avereVfxt *AvereVfxt, nodeName string) error
+	GetSupportName(avereVfxt *AvereVfxt, uniqueName string) (string, error)
 }
 
 type AvereVfxt struct {
@@ -28,6 +29,7 @@ type AvereVfxt struct {
 	Platform IaasPlatform
 
 	AvereVfxtName          string
+	AvereVfxtSupportName   string
 	AvereAdminPassword     string
 	AvereSshKeyData        string
 	EnableSupportUploads   bool
