@@ -223,6 +223,13 @@ func resourceVfxt() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			support_uploads_company_name: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: validation.StringDoesNotContainAny("'\""),
+				RequiredWith: []string{enable_support_uploads},
+			},
 			enable_rolling_trace_data: {
 				Type:         schema.TypeBool,
 				Optional:     true,
@@ -634,6 +641,12 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 	// the management ip will uniquely identify the cluster in the VNET
 	d.SetId(avereVfxt.ManagementIP)
 
+	// the cluster is created initially with the support name, to initially set state for
+	// support uploads, the following method correctly sets the names to their correct values
+	if err := avereVfxt.SetSupportAndClusterNames(); err != nil {
+		return fmt.Errorf("ERROR: error while swapping cluster and names: %s", err)
+	}
+
 	if err := avereVfxt.CreateVServer(); err != nil {
 		return fmt.Errorf("ERROR: error while creating VServer: %s", err)
 	}
@@ -934,7 +947,10 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	if d.HasChange(enable_support_uploads) || d.HasChange(enable_rolling_trace_data) || d.HasChange(enable_secure_proactive_support) {
+	if d.HasChange(enable_support_uploads) ||
+		d.HasChange(support_uploads_company_name) ||
+		d.HasChange(enable_rolling_trace_data) ||
+		d.HasChange(enable_secure_proactive_support) {
 		if err := avereVfxt.ModifySupportUploads(); err != nil {
 			return err
 		}
@@ -1059,7 +1075,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		}
 	}
 
-	return NewAvereVfxt(
+	avereVfxt := NewAvereVfxt(
 		controllerAddress,
 		controllerAdminUsername,
 		authMethod,
@@ -1103,7 +1119,14 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		managementIP,
 		utils.ExpandStringSlice(vServerIPAddressesRaw),
 		utils.ExpandStringSlice(nodeNamesRaw),
-	), nil
+	)
+
+	if avereVfxt.AvereVfxtSupportName, err = iaasPlatform.GetSupportName(avereVfxt, d.Get(support_uploads_company_name).(string)); err != nil {
+		return nil, err
+	}
+	log.Printf("[INFO] cluster name: '%s', support name: '%s'", avereVfxt.AvereVfxtName, avereVfxt.AvereVfxtSupportName)
+
+	return avereVfxt, nil
 }
 
 func updateNtpServers(d *schema.ResourceData, avereVfxt *AvereVfxt) error {

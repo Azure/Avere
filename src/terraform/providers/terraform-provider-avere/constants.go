@@ -140,6 +140,9 @@ const (
 	ProactiveSupportSupport  = "Support"
 	ProactiveSupportAPI      = "API"
 	ProactiveSupportFull     = "Full"
+	SupportNamePrefix        = "av"
+	SupportNameSeparator     = "0x2d"
+	SupportNameUnknown       = "unknown"
 )
 
 // terraform schema constants - avoids bugs on schema name changes
@@ -175,6 +178,7 @@ const (
 	global_custom_settings                = "global_custom_settings"
 	vserver_settings                      = "vserver_settings"
 	enable_support_uploads                = "enable_support_uploads"
+	support_uploads_company_name          = "support_uploads_company_name"
 	enable_rolling_trace_data             = "enable_rolling_trace_data"
 	active_support_upload                 = "active_support_upload"
 	enable_secure_proactive_support       = "enable_secure_proactive_support"

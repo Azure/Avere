@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -24,6 +25,8 @@ const (
 	AvereInstanceD16s   = "Standard_D16s_v3"
 	AverOperatorRole    = "Avere Operator"
 )
+
+var validVFXTCharExtractRegexp = regexp.MustCompile(`[^-a-z0-9]+`)
 
 type Azure struct {
 	ResourceGroup        string
@@ -148,6 +151,46 @@ func (a Azure) DeleteVfxtIaasNode(avereVfxt *AvereVfxt, nodeName string) error {
 	return nil
 }
 
+// get the support name of format avCUSTOMER-RESOURCE_GROUP-CLUSTER
+// as defined in https://github.com/Azure/Avere/issues/959,
+// and separator '-' is defined as '0x2d' in constant SupportNameSeparator
+func (a Azure) GetSupportName(avereVfxt *AvereVfxt, uniqueName string) (string, error) {
+	supportNameParts := []string{}
+
+	// 1. customer name
+	customerName := uniqueName
+	if len(customerName) == 0 {
+		subscriptionId, err := GetSubscriptionId(avereVfxt)
+		if err != nil {
+			return "", err
+		}
+		parts := strings.Split(subscriptionId, "-")
+		if len(parts) > 0 && len(parts[0]) > 0 {
+			customerName = ExtractValidVFXTNameChars(parts[0])
+		}
+		if len(customerName) == 0 {
+			customerName = SupportNameUnknown
+		}
+	}
+	supportNameParts = append(supportNameParts, fmt.Sprintf("%s%s", SupportNamePrefix, customerName))
+
+	// 2. resource group
+	resourceGroup := ExtractValidVFXTNameChars(a.ResourceGroup)
+	if len(resourceGroup) == 0 {
+		resourceGroup = SupportNameUnknown
+	}
+	supportNameParts = append(supportNameParts, resourceGroup)
+
+	// 3. cluster name
+	supportNameParts = append(supportNameParts, avereVfxt.AvereVfxtName)
+
+	return strings.Join(supportNameParts, SupportNameSeparator), nil
+}
+
+func ExtractValidVFXTNameChars(name string) string {
+	return validVFXTCharExtractRegexp.ReplaceAllString(strings.ToLower(name), "")
+}
+
 func CreateBucket(avereVfxt *AvereVfxt, storageAccountName string, bucket string) error {
 	if err := VerifyAzLogin(avereVfxt); err != nil {
 		return fmt.Errorf("Error verifying login: %v", err)
@@ -222,11 +265,16 @@ func GetSubscriptionId(avereVfxt *AvereVfxt) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Error getting the subscription id: %s %s", err, stderrBuf.String())
 	}
-	var results string
-	if err := json.Unmarshal([]byte(stdinBuf.String()), &results); err != nil {
+	var subscriptionId string
+	if err := json.Unmarshal([]byte(stdinBuf.String()), &subscriptionId); err != nil {
 		return "", err
 	}
-	return results, nil
+
+	if _, err := uuid.Parse(subscriptionId); err != nil {
+		return "", fmt.Errorf("subscriptionId '%s' is an invalid UUID and fails with parse error: %v", subscriptionId, err)
+	}
+
+	return subscriptionId, nil
 }
 
 // VerifyAzLogin confirms that the auth was setup correctly.  The auth for
@@ -307,7 +355,7 @@ func (a Azure) getBaseVfxtCommand(avereVfxt *AvereVfxt) string {
 	}
 
 	// add the vfxt information
-	sb.WriteString(fmt.Sprintf("--cluster-name %s --admin-password '%s' ", avereVfxt.AvereVfxtName, avereVfxt.AvereAdminPassword))
+	sb.WriteString(fmt.Sprintf("--cluster-name %s --admin-password '%s' ", avereVfxt.AvereVfxtSupportName, avereVfxt.AvereAdminPassword))
 
 	if len(avereVfxt.AvereSshKeyData) > 0 {
 		sb.WriteString(fmt.Sprintf("--ssh-key %s ", VfxtKeyPubFile))
