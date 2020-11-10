@@ -1574,11 +1574,8 @@ func (a *AvereVfxt) DeleteJunction(junctionNameSpacePath string) error {
 	return nil
 }
 
-func (a *AvereVfxt) SetSupportAndClusterNames() error {
+func (a *AvereVfxt) SetSupportName() error {
 	if _, err := a.AvereCommand(a.getSupportModifySetCustomerIdCommand()); err != nil {
-		return err
-	}
-	if _, err := a.AvereCommand(a.getSetClusterNameCommand()); err != nil {
 		return err
 	}
 	return nil

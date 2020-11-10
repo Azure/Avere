@@ -643,7 +643,7 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 
 	// the cluster is created initially with the support name, to initially set state for
 	// support uploads, the following method correctly sets the names to their correct values
-	if err := avereVfxt.SetSupportAndClusterNames(); err != nil {
+	if err := avereVfxt.SetSupportName(); err != nil {
 		return fmt.Errorf("ERROR: error while swapping cluster and names: %s", err)
 	}
 

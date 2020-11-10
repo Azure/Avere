@@ -26,7 +26,7 @@ const (
 	AverOperatorRole    = "Avere Operator"
 )
 
-var validVFXTCharExtractRegexp = regexp.MustCompile(`[^-a-z0-9]+`)
+var validVFXTCharExtractRegexp = regexp.MustCompile(`[^_-a-z0-9]+`)
 
 type Azure struct {
 	ResourceGroup        string
@@ -151,11 +151,10 @@ func (a Azure) DeleteVfxtIaasNode(avereVfxt *AvereVfxt, nodeName string) error {
 	return nil
 }
 
-// get the support name of format avCUSTOMER-RESOURCE_GROUP-CLUSTER
-// as defined in https://github.com/Azure/Avere/issues/959,
-// and separator '-' is defined as '0x2d' in constant SupportNameSeparator
+// get the support name of format av0x2dCUSTOMER0x2dRESOURCE_GROUP-CLUSTER
+// as defined in https://github.com/Azure/Avere/issues/959
 func (a Azure) GetSupportName(avereVfxt *AvereVfxt, uniqueName string) (string, error) {
-	supportNameParts := []string{}
+	supportNameParts := []string{SupportNamePrefix}
 
 	// 1. customer name
 	customerName := uniqueName
@@ -172,23 +171,21 @@ func (a Azure) GetSupportName(avereVfxt *AvereVfxt, uniqueName string) (string, 
 			customerName = SupportNameUnknown
 		}
 	}
-	supportNameParts = append(supportNameParts, fmt.Sprintf("%s%s", SupportNamePrefix, customerName))
+	supportNameParts = append(supportNameParts, customerName)
 
-	// 2. resource group
+	// 2. resource group + cluster name
 	resourceGroup := ExtractValidVFXTNameChars(a.ResourceGroup)
 	if len(resourceGroup) == 0 {
 		resourceGroup = SupportNameUnknown
 	}
-	supportNameParts = append(supportNameParts, resourceGroup)
-
-	// 3. cluster name
-	supportNameParts = append(supportNameParts, avereVfxt.AvereVfxtName)
+	supportNameParts = append(supportNameParts, fmt.Sprintf("%s%s", resourceGroup, avereVfxt.AvereVfxtName))
 
 	return strings.Join(supportNameParts, SupportNameSeparator), nil
 }
 
 func ExtractValidVFXTNameChars(name string) string {
-	return validVFXTCharExtractRegexp.ReplaceAllString(strings.ToLower(name), "")
+	noSpaceName := strings.ReplaceAll(name, " ", "_")
+	return validVFXTCharExtractRegexp.ReplaceAllString(noSpaceName, "")
 }
 
 func CreateBucket(avereVfxt *AvereVfxt, storageAccountName string, bucket string) error {
@@ -355,7 +352,7 @@ func (a Azure) getBaseVfxtCommand(avereVfxt *AvereVfxt) string {
 	}
 
 	// add the vfxt information
-	sb.WriteString(fmt.Sprintf("--cluster-name %s --admin-password '%s' ", avereVfxt.AvereVfxtSupportName, avereVfxt.AvereAdminPassword))
+	sb.WriteString(fmt.Sprintf("--cluster-name %s --admin-password '%s' ", avereVfxt.AvereVfxtName, avereVfxt.AvereAdminPassword))
 
 	if len(avereVfxt.AvereSshKeyData) > 0 {
 		sb.WriteString(fmt.Sprintf("--ssh-key %s ", VfxtKeyPubFile))
