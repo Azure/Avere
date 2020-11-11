@@ -103,7 +103,7 @@ def convert(binary):
 
 def getADConnection(dnsDomain, user, password):
     logging.info('getADConnection for {}@{}'.format(user, dnsDomain))
-    conn = ldap.initialize('ldap://rendering.com')
+    conn = ldap.initialize("ldap://{}".format(dnsDomain))
     conn.protocol_version = 3
     conn.set_option(ldap.OPT_REFERRALS,0)
     conn.simple_bind_s('{}@{}'.format(user, dnsDomain),password)
