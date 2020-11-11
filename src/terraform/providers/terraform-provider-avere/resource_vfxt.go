@@ -641,11 +641,25 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 	// the management ip will uniquely identify the cluster in the VNET
 	d.SetId(avereVfxt.ManagementIP)
 
+	// prepare the environment to run commands for the newly created cluster
+	if err := avereVfxt.PrepareForVFXTNodeCommands(); err != nil {
+		return err
+	}
+
 	// the cluster is created initially with the support name, to initially set state for
 	// support uploads, the following method correctly sets the names to their correct values
 	if err := avereVfxt.SetSupportName(); err != nil {
 		return fmt.Errorf("ERROR: error while swapping cluster and names: %s", err)
 	}
+
+	// uncomment below for gsi testing
+	/*if false {
+		url := "GET_FROM_GSI_ENGINEERING"
+		log.Printf("[INFO] set alternate GSI url to %s", url)
+		if _, err := avereVfxt.ShellCommand(avereVfxt.getSetGSIUploadUrlCommand(url)); err != nil {
+			return fmt.Errorf("Error running dbutil.py command: %v", err)
+		}
+	}*/
 
 	if err := avereVfxt.CreateVServer(); err != nil {
 		return fmt.Errorf("ERROR: error while creating VServer: %s", err)
