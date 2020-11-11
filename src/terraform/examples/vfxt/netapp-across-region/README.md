@@ -32,7 +32,7 @@ To run the example, execute the following instructions.  This assumes use of Azu
 ```bash
 mkdir -p ~/.terraform.d/plugins
 # install the vfxt released binary from https://github.com/Azure/Avere
-wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.19/terraform-provider-avere
+wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.20/terraform-provider-avere
 chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 ```
 
