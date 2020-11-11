@@ -847,10 +847,6 @@ func (a *AvereVfxt) UploadFlatFiles() error {
 	log.Printf("[INFO] [uploading flat files")
 	defer log.Printf("[INFO] uploading flat files]")
 
-	if err := a.PrepareForVFXTNodeCommands(); err != nil {
-		return err
-	}
-
 	if a.CifsRidMappingBaseInteger > 0 {
 		log.Printf("[INFO] step 1 - upload rid generator")
 		ridGeneratorFileB64z, err := GetRidGeneratorB64z()
@@ -923,10 +919,6 @@ func (a *AvereVfxt) EnsureServerAddressCorrect(corefiler *CoreFiler) error {
 		return nil
 	}
 	log.Printf("[INFO] working around averecmd bug to set server addresses '%s'", corefiler.FqdnOrPrimaryIp)
-
-	if err := a.PrepareForVFXTNodeCommands(); err != nil {
-		return err
-	}
 
 	// get the mass
 	internalName, err := a.GetInternalName(corefiler.Name)
@@ -2311,4 +2303,8 @@ func (a *AvereVfxt) getExecuteRidGeneratorCommand() string {
 	nonSecretCommand := fmt.Sprintf(nonSecretBase, a.GetBaseVFXTNodeCommand(), "***")
 	secretCommand := fmt.Sprintf(nonSecretBase, a.GetBaseVFXTNodeCommand(), a.CifsPassword)
 	return WrapCommandForLoggingSecretInput(nonSecretCommand, secretCommand, ShellLogFile)
+}
+
+func (a *AvereVfxt) getSetGSIUploadUrlCommand(url string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"dbutil.py set gsiInfo url %s --user admin --case latency\"'", a.GetBaseVFXTNodeCommand(), url), ShellLogFile)
 }
