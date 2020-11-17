@@ -101,9 +101,9 @@ const (
 	NodeChangeRetryCount        = 240
 	NodeChangeRetrySleepSeconds = 10
 
-	// only wait 10 minutes for support uploads
-	UploadGSIRetryCount        = 60
-	UploadGSIRetrySleepSeconds = 10
+	// only wait 15 minutes for support uploads
+	UploadGSIRetryCount        = 45
+	UploadGSIRetrySleepSeconds = 20
 
 	// status's returned from Activity
 	StatusComplete      = "complete"

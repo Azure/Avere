@@ -1813,7 +1813,7 @@ func (a *AvereVfxt) IsUploadingGSI() (bool, error) {
 	}
 
 	for _, s := range uploadStatus {
-		if strings.Contains(s.Status, "Uploading /") {
+		if !strings.Contains(s.Status, "No support operations currently running") {
 			return true, nil
 		}
 	}
