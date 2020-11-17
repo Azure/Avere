@@ -45,6 +45,7 @@ func NewAvereVfxt(
 	sshKeyData string,
 	enableSupportUploads bool,
 	enableRollingTraceData bool,
+	rollingTraceFlag string,
 	activeSupportUpload bool,
 	secureProactiveSupport string,
 	nodeCount int,
@@ -89,6 +90,7 @@ func NewAvereVfxt(
 		AvereSshKeyData:                   sshKeyData,
 		EnableSupportUploads:              enableSupportUploads,
 		EnableRollingTraceData:            enableRollingTraceData,
+		RollingTraceFlag:                  rollingTraceFlag,
 		ActiveSupportUpload:               activeSupportUpload,
 		SecureProactiveSupport:            secureProactiveSupport,
 		NodeCount:                         nodeCount,
@@ -1791,8 +1793,25 @@ func (a *AvereVfxt) UploadSupportBundleAndBlock() error {
 		return err
 	}
 
+	return a.BlockOnUploadSupportFiles()
+}
+
+func (a *AvereVfxt) UploadRollingTraceAndBlock() error {
+	log.Printf("[INFO] [UploadRollingTrace")
+	defer log.Printf("[INFO] UploadRollingTrace]")
+	if a.EnableRollingTraceData {
+		epoch := time.Now().Unix()
+		if _, err := a.AvereCommand(a.getUploadRollingTraceCommand(epoch, RollingTraceTimeAfter, RollingTraceTimeBefore)); err != nil {
+			return err
+		}
+		return a.BlockOnUploadSupportFiles()
+	}
+	return nil
+}
+
+func (a *AvereVfxt) BlockOnUploadSupportFiles() error {
 	for retries := 1; ; retries++ {
-		isUploading, err := a.IsUploadingGSI()
+		isUploading, err := a.IsUploadingSupportFiles()
 		if err == nil && !isUploading {
 			return nil
 		}
@@ -1801,12 +1820,12 @@ func (a *AvereVfxt) UploadSupportBundleAndBlock() error {
 			// don't wait longer than the specified time
 			return err
 		}
-		log.Printf("[INFO] [%d / %d ] still upload support bundle", retries, UploadGSIRetryCount)
+		log.Printf("[INFO] [%d / %d ] still uploading support files", retries, UploadGSIRetryCount)
 		time.Sleep(UploadGSIRetrySleepSeconds * time.Second)
 	}
 }
 
-func (a *AvereVfxt) IsUploadingGSI() (bool, error) {
+func (a *AvereVfxt) IsUploadingSupportFiles() (bool, error) {
 	uploadStatus, err := a.GetGSINodeStatus()
 	if err != nil {
 		return false, err
@@ -2077,13 +2096,15 @@ func (a *AvereVfxt) getSetClusterNameCommand() string {
 func (a *AvereVfxt) getSupportModifyCustomerUploadInfoCommand() string {
 	isEnabled := "no"
 	rollingTrace := "no"
+	traceLevel := "0x1"
 	if a.EnableSupportUploads {
 		isEnabled = "yes"
 		if a.EnableRollingTraceData {
 			rollingTrace = "yes"
+			traceLevel = a.RollingTraceFlag
 		}
 	}
-	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'crashInfo':'%s','corePolicy':'overwriteOldest','statsMonitor':'%s','rollingTrace':'%s','traceLevel':'0x1','memoryDebugging':'no','generalInfo':'%s','customerId':'%s'}\"", a.getBaseAvereCmd(), isEnabled, isEnabled, rollingTrace, isEnabled, a.AvereVfxtSupportName), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'crashInfo':'%s','corePolicy':'overwriteOldest','statsMonitor':'%s','rollingTrace':'%s','traceLevel':'%s','memoryDebugging':'no','generalInfo':'%s','customerId':'%s'}\"", a.getBaseAvereCmd(), isEnabled, isEnabled, rollingTrace, traceLevel, isEnabled, a.AvereVfxtSupportName), AverecmdLogFile)
 }
 
 // this updates SPS (Secure Proactive Support) per docs https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-enable-support
@@ -2172,6 +2193,10 @@ func (a *AvereVfxt) getEnableExtendedGroupsCommand() string {
 
 func (a *AvereVfxt) getDisableExtendedGroupsCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s nfs.modify \"%s\" \"{'extendedGroups':'no'}\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getUploadRollingTraceCommand(secondsSinceEpoch int64, aftermin int, beforemin int) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s  support.executeNormalMode cluster gsirollingtrace \"\" \"{'eventtime':'%d','aftermin':'%d','beforemin':'%d'}\"", a.getBaseAvereCmd(), secondsSinceEpoch, aftermin, beforemin), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getUploadSupportBundleCommand() string {
