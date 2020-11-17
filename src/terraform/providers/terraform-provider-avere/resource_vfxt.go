@@ -239,7 +239,7 @@ func resourceVfxt() *schema.Resource {
 			rolling_trace_flag: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "0xef4001",
+				Default:      DefaultRollingTraceFlag,
 				ValidateFunc: validation.StringDoesNotContainAny("'\""),
 				RequiredWith: []string{enable_support_uploads, enable_rolling_trace_data},
 			},

@@ -145,6 +145,7 @@ const (
 	SupportNameUnknown       = "unknown"
 	RollingTraceTimeAfter    = 2
 	RollingTraceTimeBefore   = 10
+	DefaultRollingTraceFlag  = "0xef401"
 )
 
 // terraform schema constants - avoids bugs on schema name changes
