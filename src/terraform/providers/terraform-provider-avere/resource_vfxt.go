@@ -236,6 +236,13 @@ func resourceVfxt() *schema.Resource {
 				Default:      false,
 				RequiredWith: []string{enable_support_uploads},
 			},
+			rolling_trace_flag: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      DefaultRollingTraceFlag,
+				ValidateFunc: validation.StringDoesNotContainAny("'\""),
+				RequiredWith: []string{enable_support_uploads, enable_rolling_trace_data},
+			},
 			active_support_upload: {
 				Type:         schema.TypeBool,
 				Optional:     true,
@@ -903,6 +910,10 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 
 		// trigger a support bundle if there will be no more core filers
 		if len(coreFilersToAdd) == 0 && len(existingCoreFilers) == len(coreFilersToDelete) {
+			// block on rolling trace to avoid uploading files in parallel
+			if err := avereVfxt.UploadRollingTraceAndBlock(); err != nil {
+				return err
+			}
 			if err := avereVfxt.UploadSupportBundle(); err != nil {
 				return err
 			}
@@ -964,6 +975,7 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 	if d.HasChange(enable_support_uploads) ||
 		d.HasChange(support_uploads_company_name) ||
 		d.HasChange(enable_rolling_trace_data) ||
+		d.HasChange(rolling_trace_flag) ||
 		d.HasChange(enable_secure_proactive_support) {
 		if err := avereVfxt.ModifySupportUploads(); err != nil {
 			return err
@@ -994,6 +1006,9 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if avereVfxt.ActiveSupportUpload == true {
+		if err := avereVfxt.UploadRollingTraceAndBlock(); err != nil {
+			log.Printf("[ERROR] failed to upload rolling trace: %v", err)
+		}
 		if err := avereVfxt.UploadSupportBundleAndBlock(); err != nil {
 			log.Printf("[ERROR] failed to upload support bundle: %v", err)
 		}
@@ -1102,6 +1117,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(vfxt_ssh_key_data).(string),
 		d.Get(enable_support_uploads).(bool),
 		d.Get(enable_rolling_trace_data).(bool),
+		d.Get(rolling_trace_flag).(string),
 		d.Get(active_support_upload).(bool),
 		d.Get(enable_secure_proactive_support).(string),
 		nodeCount,

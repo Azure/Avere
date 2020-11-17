@@ -143,6 +143,9 @@ const (
 	SupportNamePrefix        = "av"
 	SupportNameSeparator     = "0x2d"
 	SupportNameUnknown       = "unknown"
+	RollingTraceTimeAfter    = 2
+	RollingTraceTimeBefore   = 10
+	DefaultRollingTraceFlag  = "0xef401"
 )
 
 // terraform schema constants - avoids bugs on schema name changes
@@ -180,6 +183,7 @@ const (
 	enable_support_uploads                = "enable_support_uploads"
 	support_uploads_company_name          = "support_uploads_company_name"
 	enable_rolling_trace_data             = "enable_rolling_trace_data"
+	rolling_trace_flag                    = "rolling_trace_flag"
 	active_support_upload                 = "active_support_upload"
 	enable_secure_proactive_support       = "enable_secure_proactive_support"
 	cifs_ad_domain                        = "cifs_ad_domain"

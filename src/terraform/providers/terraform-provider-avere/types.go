@@ -34,6 +34,7 @@ type AvereVfxt struct {
 	AvereSshKeyData        string
 	EnableSupportUploads   bool
 	EnableRollingTraceData bool
+	RollingTraceFlag       string
 	ActiveSupportUpload    bool
 	SecureProactiveSupport string
 	NodeCount              int
