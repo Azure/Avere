@@ -61,6 +61,16 @@ variable "caching" {
   default = "None"
 }
 
+variable "enable_root_login" {
+  description = "Enable the root login.  This is sometimes useful for running rsync. Requires ssh_key_data to be set"
+  default = false
+}
+
+variable "deploy_diagnostic_tools" {
+  description = "Enable performance diagnostic tools iotop, bwm-ng, iperf3."
+  default = false
+}
+
 variable "proxy" {
   description = "specify a proxy address if one exists in the format of http://PROXY_SERVER:PORT"
   default = null

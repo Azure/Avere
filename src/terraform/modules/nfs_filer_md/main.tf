@@ -12,7 +12,9 @@ locals {
   # send the script file to custom data, adding env vars
   script_file_b64 = base64gzip(replace(file("${path.module}/installnfs.sh"),"\r",""))
   proxy_env = (var.proxy == null || var.proxy == "") ? "" : "http_proxy=${var.proxy} https_proxy=${var.proxy} no_proxy=169.254.169.254"
-  cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { install_script = local.script_file_b64, export_path = var.nfs_export_path, export_options = var.nfs_export_options, proxy_env = local.proxy_env})
+  perf_diag_tools_str = var.deploy_diagnostic_tools ? " PERF_DIAG_TOOLS=true " : ""
+  enable_root_login_str = var.enable_root_login && var.ssh_key_data != null && var.ssh_key_data != "" ? " ALLOW_ROOT_LOGIN=true " : ""
+  cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { install_script = local.script_file_b64, export_path = var.nfs_export_path, export_options = var.nfs_export_options, proxy_env = local.proxy_env, perf_diag_tools_str = local.perf_diag_tools_str, enable_root_login_str = local.enable_root_login_str})
 }
 
 resource "azurerm_network_interface" "nfsfiler" {
@@ -67,4 +69,20 @@ resource "azurerm_virtual_machine_data_disk_attachment" "nfsfiler" {
   virtual_machine_id = azurerm_linux_virtual_machine.nfsfiler.id
   lun                = "0"
   caching            = var.caching
+}
+
+resource "azurerm_virtual_machine_extension" "cse" {
+  name = "${var.unique_name}-cse"
+  virtual_machine_id   = azurerm_linux_virtual_machine.nfsfiler.id
+  publisher            = "Microsoft.Azure.Extensions"
+  type                 = "CustomScript"
+  type_handler_version = "2.0"
+
+  settings = <<SETTINGS
+    {
+        "commandToExecute": "set -x && while :; do if [ -f '/opt/installnfs.complete' ]; then break; fi; sleep 5; done && set +x"
+    }
+SETTINGS
+
+  depends_on = [azurerm_virtual_machine_data_disk_attachment.nfsfiler]
 }
