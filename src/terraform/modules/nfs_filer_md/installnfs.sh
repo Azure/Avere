@@ -32,6 +32,18 @@ function yum_install() {
 function config_linux() {
     # try for 20 minutes
     yum_install 120 10 180 nfs-utils
+    # perf diagnostic tools
+    if [ ! -z "$PERF_DIAG_TOOLS" ]; then
+        yum_install 120 10 180 iotop iperf3
+        yum_install 120 10 180 epel-release
+        yum_install 120 10 180 bwm-ng
+    fi
+    # enable root login, sometimes useful for rsync
+    if [ ! -z "$ALLOW_ROOT_LOGIN" ]; then
+        sed -i 's/.* ssh-rsa/ssh-rsa/' /root/.ssh/authorized_keys
+        sed -i 's/^#PermitRootLogin.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+        systemctl restart sshd
+    fi
 }
 
 # source from https://github.com/Azure/azure-quickstart-templates/blob/master/shared_scripts/ubuntu/vm-disk-utils-0.1.sh
@@ -240,12 +252,14 @@ function main() {
     if [ -z "$EXPORT_PATH" ]; then
         echo "env var EXPORT_PATH is not defined, please define"
         touch /opt/installnfs.failed
+        touch /opt/installnfs.complete
         exit 1
     fi
 
     if [ -z "$EXPORT_OPTIONS" ]; then
         echo "env var EXPORT_OPTIONS is not defined, please define"
         touch /opt/installnfs.failed
+        touch /opt/installnfs.complete
         exit 1
     fi
 
@@ -263,6 +277,8 @@ function main() {
 
     if [ ${#PARTITION} -eq 0 ]; then
         echo "no unmounted file system exists"
+        touch /opt/installnfs.failed
+        touch /opt/installnfs.complete
         return 1
     fi
 
@@ -272,6 +288,7 @@ function main() {
     configure_nfs
     
     echo "installation complete"
+    touch /opt/installnfs.complete
 }
 
 main
