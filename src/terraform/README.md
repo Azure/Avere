@@ -111,7 +111,7 @@ These modules provide core components for use with HPC Cache or Avere vFXT for A
 1. [Controller](modules/controller) - the controller deploys a controller that is used to create and manage an Avere vFXT for Azure
 1. [Jumpbox](modules/jumpbox) - the jumpbox has the necessary environment for building the [terraform-provider-avere](providers/terraform-provider-avere).  It is also useful for when experimenting in virtual networks where there is no controller.
 1. [NFS Ephemeral Filer](modules/nfs_filer) - the NFS ephemeral filer provides a high IOPs, high throughput filer that can be used for scratch data.
-1. [NFS Managed Disk Filer](modules/nfs_filer) - the NFS managed disk filer provides NFS access to highly available storage.  There is an offline mode to destroy the VM and cool the storage for maximum cost savings when not in use.
+1. [NFS Managed Disk Filer](modules/nfs_filer_md) - the NFS managed disk filer provides NFS access to highly available storage.  There is an offline mode to destroy the VM and cool the storage for maximum cost savings when not in use.
 1. [Render Network](modules/render_network) - the render network module creates a sample render network complete with five subnets: cloud cache, filer, jumpbox, and two render node subnets
 1. [Secure Render Network](modules/render_network_secure) - the secure render network module where the internet is locked down to all subnets but the proxy subnet.  This module creates a sample render network complete with six subnets: cloud cache, filer, jumpbox, two render node subnets, and a proxy subnet.
 1. [Proxy](modules/proxy) - this installs a proxy VM running the Squid Proxy.
