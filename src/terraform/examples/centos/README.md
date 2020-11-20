@@ -10,6 +10,7 @@ Here are the steps to build an image on-premises, upload to Azure, and deploy on
 1. [Create and Deploy Image](#create-and-deploy-image)
 1. [Next Steps: Image Capture and Scaling](#next-steps-image-capture)
 1. [Next Steps: Use VMSS to Scale Deployment](#next-steps-use-vmss-to-scale-deployment)
+1. [Next Steps: Managing Render Nodes with Cycle Cloud](#next-steps-managing-render-nodes-with-azure-cyclecloud)
 
 # Build the Custom Image
 
@@ -204,5 +205,23 @@ Once the image is created, you can scale by using vmss.  The following template 
 1. execute `terraform init` in the directory of `main.tf`.
 
 1. execute `terraform apply -auto-approve` to build the Virtual Machine Scale Set
+
+Once you have tested and scaled the image, you can destroy by running `terraform destroy -auto-approve`.
+
+## Next Steps: Managing Render Nodes with Azure CycleCloud
+
+When you go beyond the size of a single VMSS you need to use a management tool like Azure CycleCloud for the management of multiple VMSSs and also have the ability to integrate into your render schedulers.
+
+To get started, run through the following steps:
+
+1. `cd ~/tf/src/terraform/examples/centos/cycle`
+
+1. `code main.tf` to edit the local variables section at the top of the file, populate the image resource group and image name created in the previous section.
+
+1. execute `terraform init` in the directory of `main.tf`.
+
+1. execute `terraform apply -auto-approve` to deploy the CycleCloud instance
+
+1. Complete the installation per the [Azure CycleCloud Initial Setup](https://docs.microsoft.com/en-us/azure/cyclecloud/how-to/install-manual?view=cyclecloud-8#configuration). 
 
 Once you have tested and scaled the image, you can destroy by running `terraform destroy -auto-approve`.

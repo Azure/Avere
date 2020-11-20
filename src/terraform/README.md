@@ -117,6 +117,7 @@ These modules provide core components for use with HPC Cache or Avere vFXT for A
 10. [VD Bench Config](modules/vdbench_config) - this module configures an NFS share with the VDBench install tools.
 11. [VMSS Config](modules/vmss_config) - this module configures an NFS share with a round robin mount script.
 12. [Mountable VMSS](modules/vmss_mountable) - this deploys a Linux based VMSS and runs a script off an NFS share.
+13. [Azure CycleCloud](modules/cyclecloud) - this deploys an Azure CycleCloud instance.
 
 ## Avere vFXT Terraform Provider
 
