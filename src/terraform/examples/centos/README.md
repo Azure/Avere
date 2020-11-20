@@ -20,6 +20,8 @@ Here are the important tips to follow when building the image:
 
 * remove swap partition, as this will eat up your ops on your OS disk.  As an alternative, the Azure Linux Agent (waagent) can configure a swap partition as outlined in the setup instructions
 
+* ensure you do not disable UDF as it is required for provisioning the VM.  This is described furtehr in the [linux installation notes](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/create-upload-generic#general-linux-installation-notes).
+
 * to enable cloud-init, follow the instructions for [preparing CentOS for cloud-init on Azure](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cloudinit-prepare-custom-image#preparing-rhel-76--centos-76)
 
 * to run without the WAAgent (and no cloud-init) follow the instructions [Creating generalized images without a provisioning agent](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/no-agent)
@@ -222,6 +224,6 @@ To get started, run through the following steps:
 
 1. execute `terraform apply -auto-approve` to deploy the CycleCloud instance
 
-1. Complete the installation per the [Azure CycleCloud Initial Setup](https://docs.microsoft.com/en-us/azure/cyclecloud/how-to/install-manual?view=cyclecloud-8#configuration). 
+1. Complete the installation per the [Azure CycleCloud Initial Setup](https://docs.microsoft.com/en-us/azure/cyclecloud/how-to/install-manual?view=cyclecloud-8#configuration).
 
 Once you have tested and scaled the image, you can destroy by running `terraform destroy -auto-approve`.
