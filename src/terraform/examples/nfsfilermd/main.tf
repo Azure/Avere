@@ -26,9 +26,13 @@ locals {
     // vm_size = "Standard_F48s_v2"
     vm_size = "Standard_DS14_v2"
 
-    #storage_account_type = "Standard_LRS"
-    #storage_account_type = "StandardSSD_LRS"
+    // storage_account_type = "Standard_LRS"
+    // storage_account_type = "StandardSSD_LRS"
     storage_account_type = "Premium_LRS"
+    
+    // set to true to preserve the disk, but destroy the VM
+    offline_mode = false
+    offline_storage_account_type = "Standard_LRS"
 
     // more disk sizes and pricing found here: https://azure.microsoft.com/en-us/pricing/details/managed-disks/
     // disk_size_gb = 127   //  P10, E10, S10
@@ -59,22 +63,25 @@ resource "azurerm_managed_disk" "nfsfiler" {
     name                 = "${local.unique_name}-disk1"
     resource_group_name  = azurerm_resource_group.nfsfiler.name
     location             = azurerm_resource_group.nfsfiler.location
-    storage_account_type = local.storage_account_type
+    storage_account_type = local.offline_mode ? local.offline_storage_account_type : local.storage_account_type
     create_option        = "Empty"
     disk_size_gb         = local.disk_size_gb
 }
 
 // the ephemeral filer
 module "nfsfiler" {
-    source              = "github.com/Azure/Avere/src/terraform/modules/nfs_filer_md"
-    resource_group_name = azurerm_resource_group.nfsfiler.name
-    location            = azurerm_resource_group.nfsfiler.location
-    admin_username      = local.vm_admin_username
-    admin_password      = local.vm_admin_password
-    ssh_key_data        = local.vm_ssh_key_data
-    vm_size             = local.vm_size
-    unique_name         = local.unique_name
-    caching             = local.caching
+    source                  = "github.com/Azure/Avere/src/terraform/modules/nfs_filer_md"
+    deploy_vm               = !local.offline_mode
+    resource_group_name     = azurerm_resource_group.nfsfiler.name
+    location                = azurerm_resource_group.nfsfiler.location
+    admin_username          = local.vm_admin_username
+    admin_password          = local.vm_admin_password
+    ssh_key_data            = local.vm_ssh_key_data
+    vm_size                 = local.vm_size
+    unique_name             = local.unique_name
+    caching                 = local.caching
+    enable_root_login       = false
+    deploy_diagnostic_tools = false
 
     // disk and export details
     managed_disk_id    = azurerm_managed_disk.nfsfiler.id

@@ -2,6 +2,8 @@
 
 This example shows how to use the nfs filer module to deploy Azure Terraform NFS based IaaS NAS Filer using a managed disk.
 
+The mode `offline_mode` can be set to true to destroy the VM and downgrade the disk to standard to ensure maximum cost savings during when there is no demand.  Then  set `offline_mode` back to true to create the disk and get it running again.
+
 ## Deployment Instructions
 
 To run the example, execute the following instructions.  This assumes use of Azure Cloud Shell.  If you are installing into your own environment, you will need to follow the [instructions to setup terraform for the Azure environment](https://docs.microsoft.com/en-us/azure/terraform/terraform-install-configure).
@@ -32,5 +34,7 @@ git pull origin main
 9. execute `terraform apply -auto-approve` to build the nfs filer
 
 Once installed you will be able to mount the nfs filer.
+
+Test toggling the `offline_mode` variable to see that it destroys the VM and downgrades the disk when turned off.
 
 When you are done using the filer, you can destroy it by running `terraform destroy -auto-approve`.
