@@ -57,7 +57,7 @@ variable "nfs_export_options" {
 }
 
 variable "caching" {
-  description = "This disk caching options."
+  description = "The disk caching options.  A disk above 4095 must be specified as None"
   default = "None"
 }
 

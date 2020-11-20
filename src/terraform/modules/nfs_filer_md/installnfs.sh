@@ -100,20 +100,19 @@ function do_partition() {
     _type=${2}
     if [ -z "${_type}" ]; then
         # default to Linux partition type (ie, ext3/ext4/xfs)
-        _type=83
+        _type=8300
     fi
     echo "n
-p
 1
 
 
-t
 ${_type}
-w"| fdisk "${_disk}"
+w
+y"| gdisk "${_disk}"
 
     #
     # Use the bash-specific $PIPESTATUS to ensure we get the correct exit code
-    # from fdisk and not from echo
+    # from gdisk and not from echo
     if [ ${PIPESTATUS[1]} -ne 0 ];
     then
         echo "An error occurred partitioning ${_disk}" >&2
@@ -148,7 +147,8 @@ function scan_partition_format()
         echo "${DISK} is not partitioned, partitioning"
         do_partition ${DISK}
     fi
-    PARTITION=$(fdisk -l ${DISK}|grep -A 1 Device|tail -n 1|awk '{print $1}')
+    PARTITION_NUM=$(gdisk -l ${DISK}|grep -A 1 Number|tail -n 1|awk '{print $1}')
+    PARTITION=${DISK}${PARTITION_NUM}
     has_filesystem ${PARTITION}
     if [ ${?} -ne 0 ];
     then
