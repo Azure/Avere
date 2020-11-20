@@ -24,7 +24,7 @@ locals {
     // vm_size = "Standard_F16s_v2"
     // vm_size = "Standard_F32s_v2"
     // vm_size = "Standard_F48s_v2"
-    vm_size = "Standard_D14_v2"
+    vm_size = "Standard_DS14_v2"
 
     #storage_account_type = "Standard_LRS"
     #storage_account_type = "StandardSSD_LRS"
