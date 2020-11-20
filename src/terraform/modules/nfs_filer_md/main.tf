@@ -22,6 +22,8 @@ resource "azurerm_network_interface" "nfsfiler" {
   resource_group_name = data.azurerm_resource_group.nfsfiler.name
   location            = data.azurerm_resource_group.nfsfiler.location
 
+  count = var.deploy_vm ? 1 : 0
+
   ip_configuration {
     name                          = "${var.unique_name}-ipconfig"
     subnet_id                     = data.azurerm_subnet.vnet.id
@@ -33,7 +35,7 @@ resource "azurerm_linux_virtual_machine" "nfsfiler" {
   name = "${var.unique_name}-vm"
   location = data.azurerm_resource_group.nfsfiler.location
   resource_group_name = data.azurerm_resource_group.nfsfiler.name
-  network_interface_ids = [azurerm_network_interface.nfsfiler.id]
+  network_interface_ids = [azurerm_network_interface.nfsfiler[0].id]
   computer_name  = var.unique_name
   custom_data = base64encode(local.cloud_init_file)
   size = var.vm_size
@@ -62,18 +64,22 @@ resource "azurerm_linux_virtual_machine" "nfsfiler" {
           public_key = var.ssh_key_data
       }
   }
+
+  count = var.deploy_vm ? 1 : 0
 }
 
 resource "azurerm_virtual_machine_data_disk_attachment" "nfsfiler" {
   managed_disk_id    = var.managed_disk_id
-  virtual_machine_id = azurerm_linux_virtual_machine.nfsfiler.id
+  virtual_machine_id = azurerm_linux_virtual_machine.nfsfiler[0].id
   lun                = "0"
   caching            = var.caching
+
+  count = var.deploy_vm ? 1 : 0
 }
 
 resource "azurerm_virtual_machine_extension" "cse" {
   name = "${var.unique_name}-cse"
-  virtual_machine_id   = azurerm_linux_virtual_machine.nfsfiler.id
+  virtual_machine_id   = azurerm_linux_virtual_machine.nfsfiler[0].id
   publisher            = "Microsoft.Azure.Extensions"
   type                 = "CustomScript"
   type_handler_version = "2.0"
@@ -84,5 +90,7 @@ resource "azurerm_virtual_machine_extension" "cse" {
     }
 SETTINGS
 
-  depends_on = [azurerm_virtual_machine_data_disk_attachment.nfsfiler]
+  count = var.deploy_vm ? 1 : 0
+
+  depends_on = [azurerm_virtual_machine_data_disk_attachment.nfsfiler[0]]
 }

@@ -1,5 +1,5 @@
 output "primary_ip" {
-  value = azurerm_network_interface.nfsfiler.ip_configuration[0].private_ip_address
+  value = var.deploy_vm ? azurerm_network_interface.nfsfiler[0].ip_configuration[0].private_ip_address : ""
 }
 
 output "admin_username" {
@@ -11,9 +11,9 @@ output "core_filer_export" {
 }
 
 output "nfs_mount" {
-  value = "${azurerm_network_interface.nfsfiler.ip_configuration[0].private_ip_address}:${var.nfs_export_path}"
+  value = var.deploy_vm ? "${azurerm_network_interface.nfsfiler[0].ip_configuration[0].private_ip_address}:${var.nfs_export_path}" : ""
 }
 
 output "ssh_string" {
-  value = "ssh ${var.admin_username}@${azurerm_network_interface.nfsfiler.ip_configuration[0].private_ip_address}"
+  value = var.deploy_vm ? "ssh ${var.admin_username}@${azurerm_network_interface.nfsfiler[0].ip_configuration[0].private_ip_address}" : ""
 }

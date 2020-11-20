@@ -1,3 +1,8 @@
+variable "deploy_vm" {
+  description = "Specifies to create the vm or not.  Specify false to delete the vm."
+  default = true
+}
+
 variable "resource_group_name" {
   description = "The resource group to contain the NFS filer."
 }
