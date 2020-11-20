@@ -106,18 +106,19 @@ Security.
 These modules provide core components for use with HPC Cache or Avere vFXT for Azure:
 
 1. [CacheWarmer Build](modules/cachewarmer_build) - build the cache warmer binaries, and build the bootstrap install directory for the CacheWarmer
-2. [CacheWarmer Manager Install](modules/cachewarmer_build) - install the cachewarmer manager using the bootstrap install directory created by the CacheWarmer build process.
-3. [CacheWarmer Submit Job](modules/cachewarmer_submitjob) - submit the path to warm, and block until it is warmed.
-4. [Controller](modules/controller) - the controller deploys a controller that is used to create and manage an Avere vFXT for Azure
-5. [Jumpbox](modules/jumpbox) - the jumpbox has the necessary environment for building the [terraform-provider-avere](providers/terraform-provider-avere).  It is also useful for when experimenting in virtual networks where there is no controller.
-6. [Ephemeral Filer](modules/nfs_filer) - the ephemeral filer provides a high IOPs, high throughput filer that can be used for scratch data.
-7. [Render Network](modules/render_network) - the render network module creates a sample render network complete with five subnets: cloud cache, filer, jumpbox, and two render node subnets
-8. [Secure Render Network](modules/render_network_secure) - the secure render network module where the internet is locked down to all subnets but the proxy subnet.  This module creates a sample render network complete with six subnets: cloud cache, filer, jumpbox, two render node subnets, and a proxy subnet.
-9. [Proxy](modules/proxy) - this installs a proxy VM running the Squid Proxy.
-10. [VD Bench Config](modules/vdbench_config) - this module configures an NFS share with the VDBench install tools.
-11. [VMSS Config](modules/vmss_config) - this module configures an NFS share with a round robin mount script.
-12. [Mountable VMSS](modules/vmss_mountable) - this deploys a Linux based VMSS and runs a script off an NFS share.
-13. [Azure CycleCloud](modules/cyclecloud) - this deploys an Azure CycleCloud instance.
+1. [CacheWarmer Manager Install](modules/cachewarmer_build) - install the cachewarmer manager using the bootstrap install directory created by the CacheWarmer build process.
+1. [CacheWarmer Submit Job](modules/cachewarmer_submitjob) - submit the path to warm, and block until it is warmed.
+1. [Controller](modules/controller) - the controller deploys a controller that is used to create and manage an Avere vFXT for Azure
+1. [Jumpbox](modules/jumpbox) - the jumpbox has the necessary environment for building the [terraform-provider-avere](providers/terraform-provider-avere).  It is also useful for when experimenting in virtual networks where there is no controller.
+1. [NFS Ephemeral Filer](modules/nfs_filer) - the NFS ephemeral filer provides a high IOPs, high throughput filer that can be used for scratch data.
+1. [NFS Managed Disk Filer](modules/nfs_filer) - the NFS managed disk filer provides NFS access to highly available storage.  There is an offline mode to destroy the VM and cool the storage for maximum cost savings when not in use.
+1. [Render Network](modules/render_network) - the render network module creates a sample render network complete with five subnets: cloud cache, filer, jumpbox, and two render node subnets
+1. [Secure Render Network](modules/render_network_secure) - the secure render network module where the internet is locked down to all subnets but the proxy subnet.  This module creates a sample render network complete with six subnets: cloud cache, filer, jumpbox, two render node subnets, and a proxy subnet.
+1. [Proxy](modules/proxy) - this installs a proxy VM running the Squid Proxy.
+1. [VD Bench Config](modules/vdbench_config) - this module configures an NFS share with the VDBench install tools.
+1. [VMSS Config](modules/vmss_config) - this module configures an NFS share with a round robin mount script.
+1. [Mountable VMSS](modules/vmss_mountable) - this deploys a Linux based VMSS and runs a script off an NFS share.
+1. [Azure CycleCloud](modules/cyclecloud) - this deploys an Azure CycleCloud instance.
 
 ## Avere vFXT Terraform Provider
 
