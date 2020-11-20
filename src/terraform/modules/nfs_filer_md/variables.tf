@@ -56,6 +56,11 @@ variable "nfs_export_options" {
   default = "*(rw,sync,no_root_squash)"
 }
 
+variable "caching" {
+  description = "This disk caching options."
+  default = "None"
+}
+
 variable "proxy" {
   description = "specify a proxy address if one exists in the format of http://PROXY_SERVER:PORT"
   default = null

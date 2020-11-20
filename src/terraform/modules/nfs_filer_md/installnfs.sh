@@ -129,18 +129,18 @@ function scan_partition_format()
 
     DISKS=($(scan_for_new_disks))
 
-	if [ "${#DISKS[@]}" -eq 0 ];
-	then
-	    echo "No unpartitioned disks without filesystems detected"
-	    return
-	fi
+    if [ "${#DISKS[@]}" -eq 0 ];
+    then
+        echo "No unpartitioned disks without filesystems detected"
+        return
+    fi
     if [ "${#DISKS[@]}" -gt 1 ];
     then
         echo "WARNING: there are ${#DISKS[@]} unformatted disks, only the first disk will be mounted"
-	fi
+    fi
     echo "Disks are ${DISKS[@]}"
     DISK=${DISKS[0]}
-	
+    
     echo "Working on ${DISK}"
     is_partitioned ${DISK}
     if [ ${?} -ne 0 ];

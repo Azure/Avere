@@ -66,5 +66,5 @@ resource "azurerm_virtual_machine_data_disk_attachment" "nfsfiler" {
   managed_disk_id    = var.managed_disk_id
   virtual_machine_id = azurerm_linux_virtual_machine.nfsfiler.id
   lun                = "0"
-  caching            = "ReadWrite"
+  caching            = var.caching
 }

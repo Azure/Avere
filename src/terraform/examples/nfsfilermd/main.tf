@@ -42,6 +42,7 @@ locals {
     disk_size_gb = 32767 //  P80, E80, S80
     nfs_export_path    = "/data"
     nfs_export_options = "*(rw,sync,no_root_squash)"
+    caching = local.disk_size_gb > 4095 ? "None" : "ReadWrite"
 }
 
 provider "azurerm" {
@@ -73,6 +74,7 @@ module "nfsfiler" {
     ssh_key_data        = local.vm_ssh_key_data
     vm_size             = local.vm_size
     unique_name         = local.unique_name
+    caching             = local.caching
 
     // disk and export details
     managed_disk_id    = azurerm_managed_disk.nfsfiler.id
