@@ -1,3 +1,8 @@
+variable "deploy_vm" {
+  description = "Specifies to create the vm or not.  Specify false to delete the vm."
+  default = true
+}
+
 variable "resource_group_name" {
   description = "The resource group to contain the NFS filer."
 }
@@ -27,7 +32,7 @@ variable "unique_name" {
 
 variable "vm_size" {
   description = "Size of the VM."
-  default = "Standard_L32s"
+  default = "Standard_D14_v2"
 }
 
 variable "virtual_network_resource_group" {
@@ -42,14 +47,28 @@ variable "virtual_network_subnet_name" {
   description = "The unique name used for the virtual network subnet."
 }
 
+variable "managed_disk_id" {
+  description = "The managed disk id for attaching to the VM."
+}
+
 variable "nfs_export_path" {
   description = "The nfs export path exposed in /etc/exports."
   default = "/data"
 }
 
-variable "nfs_export_options" {
-  description = "The mount options used in /etc/exports."
-  default = "*(rw,sync,no_root_squash)"
+variable "caching" {
+  description = "The disk caching options.  A disk above 4095 must be specified as None"
+  default = "None"
+}
+
+variable "enable_root_login" {
+  description = "Enable the root login.  This is sometimes useful for running rsync. Requires ssh_key_data to be set"
+  default = false
+}
+
+variable "deploy_diagnostic_tools" {
+  description = "Enable performance diagnostic tools iotop, bwm-ng, iperf3."
+  default = false
 }
 
 variable "proxy" {

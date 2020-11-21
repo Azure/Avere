@@ -27,21 +27,12 @@ There are multiple video resources to help with learning about burst rendering o
 | [Avere vFXT in a Proxy Environment](https://youtu.be/lxDDwu44OHM) - This example shows how to configure an Avere vFXT in a secured locked down internet environment where access to outside resources is via a proxy.  | [![Tutorial Video](examples/vfxt/proxy/proxyyoutube.png)](https://youtu.be/lxDDwu44OHM)  |
 
 The remainder of this page provides Terraform infrastructure examples to build out the rendering architecture:
-1. [Rendering Best Practices for Azure Compute, Network, and Storage](#rendering-best-practices-for-azure-compute-network-and-storage) - learn about the best practices for rendering to reduce TCO on Compute, Network, and Storage.
 1. [Full End-To-End Examples](#full-end-to-end-examples) - Full end to end examples in Linux and Windows.
+1. [Rendering Best Practices for Azure Compute, Network, and Storage](#rendering-best-practices-for-azure-compute-network-and-storage) - learn about the best practices for rendering to reduce TCO on Compute, Network, and Storage.
 1. [Storage Cache Infrastructure](#storage-cache-infrastructure) - Use HPC Cache 
 1. [Rendering Accessories Infrastructure](#rendering-accessories-infrastructure) - this provides examples of a dns server, NFS ephemeral filer, secure image, and jumpbox.
 1. [Terraform Modules](#terraform-modules) - these are the common infrastructure building blocks that make up the rendering architecture.
 1. [Avere vFXT Terraform Provider](#avere-vfxt-terraform-provider) - this is the resource page that provides the full reference to using the Avere vFXT Terraform provider.
-
-## Rendering Best Practices for Azure Compute, Network, and Storage
-
-The highest priority for VFX and Animation Studios is the lowest total cost of ownership (TCO).  The following best practices supplement existing Azure documentation with guidance on how to achieve the lowest TCO.
-
-1. [Best Practices for a New Subscription](examples/new-subscription) - it may be useful for a studio to create a subscription for each office, or each new show to separate out billing.  If this is the case, we recommend creating a one-time process described in this document.
-1. [Best Practices for using Azure Virtual Machine Scale Sets (VMSS) or Azure Cycle Cloud for Rendering](examples/vmss-rendering)
-1. [Networking Best Practices for Rendering](examples/network-rendering)
-1. [Storage Cache Best Practices for Rendering](examples/storagecache-rendering)
 
 ## Full End-To-End Examples
 
@@ -53,41 +44,55 @@ The following examples provide end-to-end examples that implement the burst rend
 1. [Create a CentOS Custom  Image and scale on Azure](examples/centos) - shows how to create, upload, and deploy a centos custom image and then scale the image using VMSS.
 1. [Create a Windows Render Farm On Azure](examples/houdinienvironment) - this walks through a deployment of a Houdini render environment on Azure.
 
+## Rendering Best Practices for Azure Compute, Network, and Storage
+
+The highest priority for VFX and Animation Studios is the lowest total cost of ownership (TCO).  The following best practices supplement existing Azure documentation with guidance on how to achieve the lowest TCO.
+
+1. [Best Practices for a New Subscription](examples/new-subscription) - it may be useful for a studio to create a subscription for each office, or each new show to separate out billing.  If this is the case, we recommend creating a one-time process described in this document.
+1. [Best Practices for using Azure Virtual Machine Scale Sets (VMSS) or Azure Cycle Cloud for Rendering](examples/vmss-rendering)
+1. [Networking Best Practices for Rendering](examples/network-rendering)
+1. [Storage Cache Best Practices for Rendering](examples/storagecache-rendering)
+
 ## Storage Cache Infrastructure
 
 **Important Note** Please use Terraform 0.12.x with the following examples.
 
 Both HPC Cache and Avere vFXT for Azure provide file caching for high-performance computing (HPC).  We recommend to always choose HPC Cache for greater user manageability and only choose Avere vFXT for Azure for custom scenarios where HPC is unable to fit.  If you need to use Avere vFXT for Azure because of a missing feature in HPC Cache, please submit an issue so we can track and add to HPC Cache.
 
-1. [HPC Cache](examples/HPC%20Cache)
+### HPC Cache
+
    1. [no-filer example](examples/HPC%20Cache/no-filers)
-   2. [HPC Cache mounting Azure Blob Storage cloud core filer example](examples/HPC%20Cache/azureblobfiler)
-   3. [HPC Cache mounting 1 IaaS NAS filer example](examples/HPC%20Cache/1-filer)
-   4. [HPC Cache mounting 3 IaaS NAS filers example](examples/HPC%20Cache/3-filers)
-   5. [HPC Cache mounting an Azure NetApp Files volume](examples/HPC%20Cache/netapp)
-   6. [HPC Cache extends Azure NetApp Files across regions](examples/HPC%20Cache/netapp-across-region)
-   7. [HPC Cache and VDBench example](examples/HPC%20Cache/vdbench)
-   8. [HPC Cache and VMSS example](examples/HPC%20Cache/vmss)
-   9. [HPC Cache and CacheWarmer](examples/HPC%20Cache/cachewarmer)
-2. [Avere vFXT for Azure](examples/vfxt)
+   1. [HPC Cache mounting Azure Blob Storage cloud core filer example](examples/HPC%20Cache/azureblobfiler)
+   1. [HPC Cache mounting 1 IaaS NAS filer example](examples/HPC%20Cache/1-filer)
+   1. [HPC Cache mounting 3 IaaS NAS filers example](examples/HPC%20Cache/3-filers)
+   1. [HPC Cache mounting an Azure NetApp Files volume](examples/HPC%20Cache/netapp)
+   1. [HPC Cache extends Azure NetApp Files across regions](examples/HPC%20Cache/netapp-across-region)
+   1. [HPC Cache and VDBench example](examples/HPC%20Cache/vdbench)
+   1. [HPC Cache and VMSS example](examples/HPC%20Cache/vmss)
+   1. [HPC Cache and CacheWarmer](examples/HPC%20Cache/cachewarmer)
+
+### Avere vFXT for Azure
+
    1. [no-filer example](examples/vfxt/no-filers)
-   2. [Avere vFXT mounting Azure Blob Storage cloud core filer example](examples/vfxt/azureblobfiler)
-   3. [Avere vFXT mounting 1 IaaS NAS filer example](examples/vfxt/1-filer)
-   4. [Avere vFXT mounting 3 IaaS NAS filers example](examples/vfxt/3-filers)
-   5. [Avere vFXT mounting an Azure NetApp Files volume](examples/vfxt/netapp)
-   6. [Avere vFXT extends Azure NetApp Files across regions](examples/vfxt/netapp-across-region)
-   7. [Avere vFXT and VDBench example](examples/vfxt/vdbench)
-   8. [Avere vFXT and VMSS example](examples/vfxt/vmss)
-   9. [Avere vFXT and CacheWarmer](examples/vfxt/cachewarmer)
-3. [Specialized Avere vFXT for Rendering and Artists](examples/vfxt)
+   1. [Avere vFXT mounting Azure Blob Storage cloud core filer example](examples/vfxt/azureblobfiler)
+   1. [Avere vFXT mounting 1 IaaS NAS filer example](examples/vfxt/1-filer)
+   1. [Avere vFXT mounting 3 IaaS NAS filers example](examples/vfxt/3-filers)
+   1. [Avere vFXT mounting an Azure NetApp Files volume](examples/vfxt/netapp)
+   1. [Avere vFXT extends Azure NetApp Files across regions](examples/vfxt/netapp-across-region)
+   1. [Avere vFXT and VDBench example](examples/vfxt/vdbench)
+   1. [Avere vFXT and VMSS example](examples/vfxt/vmss)
+   1. [Avere vFXT and CacheWarmer](examples/vfxt/cachewarmer)
+
+### Specialized Avere vFXT for Rendering and Artists](examples/vfxt)
+
    1. [Avere vFXT optimized for Houdini](examples/vfxt/HoudiniOptimized)
-   2. [Avere vFXT and Cloud Workstations](examples/vfxt/cloudworkstation)
-   3. [Avere vFXT only](examples/vfxt/vfxt-only) - this example is useful for when the cloud environment is already configured.
-   4. [Avere vFXT in a Proxy Environment](examples/vfxt/proxy) - this example shows how to deploy the Avere in a locked down internet environment, with a proxy.
-   5. [Deploy Avere vFXT directly from the controller](examples/vfxt/run-local) - this example shows how to deploy the Avere directly from the controller.
-   6. [Specify a custom VServer IP Range with the Avere vFXT](examples/vfxt/custom-vserver) - this example shows how to specify a custom VServer IP Range with the Avere vFXT.
-   7. [Avere vFXT using User Assigned Managed Identity](examples/vfxt/user-assigned-managed-identity) - this example shows how to use a user assigned managed identity with the Avere vFXT.
-1. [Backup Restore](examples/backuprestore) - Backup any FXT or vFXT cluster and build terraform to restore to HPC Cache or Avere vFXT for Azure.
+   1. [Avere vFXT and Cloud Workstations](examples/vfxt/cloudworkstation)
+   1. [Avere vFXT only](examples/vfxt/vfxt-only) - this example is useful for when the cloud environment is already configured.
+   1. [Avere vFXT in a Proxy Environment](examples/vfxt/proxy) - this example shows how to deploy the Avere in a locked down internet environment, with a proxy.
+   1. [Deploy Avere vFXT directly from the controller](examples/vfxt/run-local) - this example shows how to deploy the Avere directly from the controller.
+   1. [Specify a custom VServer IP Range with the Avere vFXT](examples/vfxt/custom-vserver) - this example shows how to specify a custom VServer IP Range with the Avere vFXT.
+   1. [Avere vFXT using User Assigned Managed Identity](examples/vfxt/user-assigned-managed-identity) - this example shows how to use a user assigned managed identity with the Avere vFXT.
+   1. [Backup Restore](examples/backuprestore) - Backup any FXT or vFXT cluster and build terraform to restore to HPC Cache or Avere vFXT for Azure.
 
 ## Rendering Accessories Infrastructure
 
@@ -95,8 +100,15 @@ Both HPC Cache and Avere vFXT for Azure provide file caching for high-performanc
 
 The following terraform examples build out accessory rendering infrastructure such as DNS Servers, high speed NFS ephemeral filers, and a jumpbox:
 
+### NFS Filers
+
+1. [NFS Ephemeral Filer](examples/nfsfiler) - builds a very high performance NFS filers for use as a scratch filer.
+1. [NFS Managed Disk Filer](examples/nfsfilermd) - builds an NFS Filer with highly available managed disk storage.
+1. [NFS Filer using NFS-Ganesha](examples/nfsfilerganesha) - builds high performance NFS filers.
+
+### DNS, Security, and Jumpbox 
+
 1. [DNS Server to Override Filer Address](examples/dnsserver) - This deploys an Azure virtual machine that installs and configures [Unbound](https://nlnetlabs.nl/projects/unbound/about/) and and configures it to override the address of an on-premises filer so that the render nodes mount the Avere to hide the latency.  All other dns requests are forwarded to pre-configured on-premises dns servers.
-1. [NFS Ephemeral Filer](examples/nfsfiler) - builds high performance NFS filers.
 1. [SecuredImage](examples/securedimage) - shows how to create, upload, and deploy a custom image with an introduction to RBAC, Azure Governance, and Network.
 1. [Jumpbox](examples/jumpbox) - this deploys a VM pre-installed with pre-installed with az cli, terraform, golang, and the built avere provider
 Security.
@@ -105,20 +117,40 @@ Security.
 
 These modules provide core components for use with HPC Cache or Avere vFXT for Azure:
 
-1. [CacheWarmer Build](modules/cachewarmer_build) - build the cache warmer binaries, and build the bootstrap install directory for the CacheWarmer
-1. [CacheWarmer Manager Install](modules/cachewarmer_build) - install the cachewarmer manager using the bootstrap install directory created by the CacheWarmer build process.
-1. [CacheWarmer Submit Job](modules/cachewarmer_submitjob) - submit the path to warm, and block until it is warmed.
-1. [Controller](modules/controller) - the controller deploys a controller that is used to create and manage an Avere vFXT for Azure
-1. [Jumpbox](modules/jumpbox) - the jumpbox has the necessary environment for building the [terraform-provider-avere](providers/terraform-provider-avere).  It is also useful for when experimenting in virtual networks where there is no controller.
-1. [NFS Ephemeral Filer](modules/nfs_filer) - the NFS ephemeral filer provides a high IOPs, high throughput filer that can be used for scratch data.
-1. [NFS Managed Disk Filer](modules/nfs_filer_md) - the NFS managed disk filer provides NFS access to highly available storage.  There is an offline mode to destroy the VM and cool the storage for maximum cost savings when not in use.
+### Network
+
 1. [Render Network](modules/render_network) - the render network module creates a sample render network complete with five subnets: cloud cache, filer, jumpbox, and two render node subnets
 1. [Secure Render Network](modules/render_network_secure) - the secure render network module where the internet is locked down to all subnets but the proxy subnet.  This module creates a sample render network complete with six subnets: cloud cache, filer, jumpbox, two render node subnets, and a proxy subnet.
 1. [Proxy](modules/proxy) - this installs a proxy VM running the Squid Proxy.
-1. [VD Bench Config](modules/vdbench_config) - this module configures an NFS share with the VDBench install tools.
-1. [VMSS Config](modules/vmss_config) - this module configures an NFS share with a round robin mount script.
+1. [DNS Server](modules/dnsserver) - this installs a DNS Server to be used with HPC Cache or Avere vFXT.
+
+### Compute
+
 1. [Mountable VMSS](modules/vmss_mountable) - this deploys a Linux based VMSS and runs a script off an NFS share.
 1. [Azure CycleCloud](modules/cyclecloud) - this deploys an Azure CycleCloud instance.
+1. [VMSS Mount Script](modules/mount_nfs) - This module installs the mount bootstrap script for VMSS.
+1. [VD Bench Config Script](modules/vdbench_config) - this module configures an NFS share with the VDBench install tools.
+1. [VMSS Config Script](modules/vmss_config) - this module configures an NFS share with a round robin mount script.
+1. [Opencue Config Script](modules/opencue_config) - this module sets up the OpenCue RQD clients module..
+
+### Controller and Jumpbox
+
+1. [Controller3](modules/controller3) - Deploys a python 3 controller that is used to create and manage an Avere vFXT for Azure.
+1. [Controller](modules/controller) - (Deprecated) Deploys a python 2 controller that is used to create and manage an Avere vFXT for Azure.
+1. [Jumpbox](modules/jumpbox) - the jumpbox has the necessary environment for building the [terraform-provider-avere](providers/terraform-provider-avere).  It is also useful for when experimenting in virtual networks where there is no controller.
+
+### NFS Filers
+
+1. [NFS Ephemeral Filer](modules/nfs_filer) - the NFS ephemeral filer provides a high IOPs, high throughput filer that can be used for scratch data.
+1. [NFS Managed Disk Filer](modules/nfs_filer_md) - the NFS managed disk filer provides NFS access to highly available storage.  There is an offline mode to destroy the VM and cool the storage for maximum cost savings when not in use.
+1. [NFS-Ganesha Filer](modules/nfs_filer_ganesha) - the NFS-Ganesha provides a user space NFS Server and provides NFS access to highly available storage.  There is an offline mode to destroy the VM and cool the storage for maximum cost savings when not in use.
+
+### Cache Warmer
+
+1. [CacheWarmer Build](modules/cachewarmer_build) - build the cache warmer binaries, and build the bootstrap install directory for the CacheWarmer
+1. [CacheWarmer Manager Install](modules/cachewarmer_manager_install) - install the cachewarmer manager using the bootstrap install directory created by the CacheWarmer build process.
+1. [CacheWarmer Submit Job](modules/cachewarmer_submitjob) - submit the path to warm, and block until it is warmed.
+1. [CacheWarmer Submit Multiple Jobs](modules/cachewarmer_submitmultiplejobs) - submit multiple jobs to the cachewarmer.
 
 ## Avere vFXT Terraform Provider
 
