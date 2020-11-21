@@ -12,12 +12,17 @@ locals {
   # send the script file to custom data, adding env vars
   script_file_b64 = base64gzip(replace(file("${path.module}/installnfs.sh"),"\r",""))
   proxy_env = (var.proxy == null || var.proxy == "") ? "" : "http_proxy=${var.proxy} https_proxy=${var.proxy} no_proxy=169.254.169.254"
+  perf_diag_tools_str = var.deploy_diagnostic_tools ? " PERF_DIAG_TOOLS=true " : ""
+  enable_root_login_str = var.enable_root_login && var.ssh_key_data != null && var.ssh_key_data != "" ? " ALLOW_ROOT_LOGIN=true " : ""
+  cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { install_script = local.script_file_b64, export_path = var.nfs_export_path, proxy_env = local.proxy_env, perf_diag_tools_str = local.perf_diag_tools_str, enable_root_login_str = local.enable_root_login_str})
 }
 
 resource "azurerm_network_interface" "nfsfiler" {
   name                = "${var.unique_name}-nic"
   resource_group_name = data.azurerm_resource_group.nfsfiler.name
   location            = data.azurerm_resource_group.nfsfiler.location
+
+  count = var.deploy_vm ? 1 : 0
 
   ip_configuration {
     name                          = "${var.unique_name}-ipconfig"
@@ -30,9 +35,9 @@ resource "azurerm_linux_virtual_machine" "nfsfiler" {
   name = "${var.unique_name}-vm"
   location = data.azurerm_resource_group.nfsfiler.location
   resource_group_name = data.azurerm_resource_group.nfsfiler.name
-  network_interface_ids = [azurerm_network_interface.nfsfiler.id]
+  network_interface_ids = [azurerm_network_interface.nfsfiler[0].id]
   computer_name  = var.unique_name
-  custom_data = local.script_file_b64
+  custom_data = base64encode(local.cloud_init_file)
   size = var.vm_size
   
   os_disk {
@@ -42,9 +47,9 @@ resource "azurerm_linux_virtual_machine" "nfsfiler" {
   }
 
   source_image_reference {
-    publisher = "OpenLogic"
-    offer     = "CentOS-CI"
-    sku       = "7.7"
+    publisher = "Canonical"
+    offer     = "UbuntuServer"
+    sku       = "18.04-LTS"
     version   = "latest"
   }
 
@@ -58,18 +63,33 @@ resource "azurerm_linux_virtual_machine" "nfsfiler" {
           public_key = var.ssh_key_data
       }
   }
+
+  count = var.deploy_vm ? 1 : 0
+}
+
+resource "azurerm_virtual_machine_data_disk_attachment" "nfsfiler" {
+  managed_disk_id    = var.managed_disk_id
+  virtual_machine_id = azurerm_linux_virtual_machine.nfsfiler[0].id
+  lun                = "0"
+  caching            = var.caching
+
+  count = var.deploy_vm ? 1 : 0
 }
 
 resource "azurerm_virtual_machine_extension" "cse" {
   name = "${var.unique_name}-cse"
-  virtual_machine_id   = azurerm_linux_virtual_machine.nfsfiler.id
+  virtual_machine_id   = azurerm_linux_virtual_machine.nfsfiler[0].id
   publisher            = "Microsoft.Azure.Extensions"
   type                 = "CustomScript"
   type_handler_version = "2.0"
 
   settings = <<SETTINGS
     {
-        "commandToExecute": "/bin/base64 -d /var/lib/waagent/CustomData | /bin/gunzip | EXPORT_PATH=${var.nfs_export_path} EXPORT_OPTIONS=\"${var.nfs_export_options}\" ${local.proxy_env} /bin/bash 2>&1 | tee -a /var/log/installnfs.log ; exit 0"
+        "commandToExecute": "set -x && while :; do if [ -f '/opt/installnfs.complete' ]; then break; fi; sleep 5; done && set +x"
     }
 SETTINGS
+
+  count = var.deploy_vm ? 1 : 0
+
+  depends_on = [azurerm_virtual_machine_data_disk_attachment.nfsfiler[0]]
 }
