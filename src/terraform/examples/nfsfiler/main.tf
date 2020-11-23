@@ -73,3 +73,7 @@ output "nfsfiler_address" {
 output "ssh_string" {
     value = module.nfsfiler.ssh_string
 }
+
+output "list_disks_az_cli" {
+    value = "az disk list --query \"[?resourceGroup=='${upper(azurerm_resource_group.nfsfiler.name)}'].id\""
+}
