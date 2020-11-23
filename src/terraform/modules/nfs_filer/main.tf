@@ -23,7 +23,8 @@ resource "azurerm_network_interface" "nfsfiler" {
   ip_configuration {
     name                          = "${var.unique_name}-ipconfig"
     subnet_id                     = data.azurerm_subnet.vnet.id
-    private_ip_address_allocation = "Dynamic"
+    private_ip_address_allocation = var.private_ip_address != null ? "Static" : "Dynamic"
+    private_ip_address            = var.private_ip_address != null ? var.private_ip_address : null
   }
 }
 

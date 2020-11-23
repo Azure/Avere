@@ -14,6 +14,7 @@ locals {
     network_resource_group_name  = "network_resource_group"
     virtual_network_name         = "rendervnet"
     subnet_name                  = "cloud_filers"
+    filer_static_ip              = null
 
     // nfs filer details
     filer_resource_group_name = "filer_resource_group"
@@ -57,8 +58,9 @@ module "nfsfiler" {
 
     // network details
     virtual_network_resource_group = local.network_resource_group_name
-    virtual_network_name = local.virtual_network_name
-    virtual_network_subnet_name = local.subnet_name
+    virtual_network_name           = local.virtual_network_name
+    virtual_network_subnet_name    = local.subnet_name
+    private_ip_address             = local.filer_static_ip
 }
 output "nfsfiler_username" {
   value = module.nfsfiler.admin_username
