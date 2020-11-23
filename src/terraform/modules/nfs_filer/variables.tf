@@ -42,6 +42,11 @@ variable "virtual_network_subnet_name" {
   description = "The unique name used for the virtual network subnet."
 }
 
+variable "private_ip_address" {
+  description = "specifies a static private ip address to use"
+  default = null
+}
+
 variable "nfs_export_path" {
   description = "The nfs export path exposed in /etc/exports."
   default = "/data"
