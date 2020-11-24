@@ -1,3 +1,8 @@
+variable "offline_mode" {
+  description = "Toggles the offline mode where offline mode destroys the VM and moves the disk to cool storage."
+  default = false
+}
+
 // customize the simple VM by editing the following local variables
 locals {
     // the region of the deployment
@@ -32,7 +37,7 @@ locals {
     storage_account_type = "Premium_LRS"
     
     // set to true to preserve the disk, but destroy the VM
-    offline_mode = false
+    offline_mode = var.offline_mode
     offline_storage_account_type = "Standard_LRS"
 
     // more disk sizes and pricing found here: https://azure.microsoft.com/en-us/pricing/details/managed-disks/
