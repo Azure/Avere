@@ -35,6 +35,6 @@ git pull origin main
 
 Once installed you will be able to mount the nfs filer.
 
-Test toggling the `offline_mode` variable to see that it destroys the VM and downgrades the disk when turned off.
+Test toggling the `offline_mode` variable to see that it destroys the VM and downgrades the disk when turned off. For example, execute `terraform apply -auto-approve -var="offline_mode=true"` to toggle, and then `terraform apply -auto-approve` to toggle back.
 
 When you are done using the filer, you can destroy it by running `terraform destroy -auto-approve`.
