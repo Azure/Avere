@@ -128,6 +128,7 @@ type CoreFilerGeneric struct {
 type CoreFiler struct {
 	Name                    string `json:"name"`
 	FqdnOrPrimaryIp         string `json:"networkName"`
+	FilerClass              string `json:"filerClass"`
 	CachePolicy             string `json:"policyName"`
 	Ordinal                 int
 	FixedQuotaPercent       int

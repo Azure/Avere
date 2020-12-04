@@ -6,6 +6,7 @@ func (c *CoreFilerGeneric) CreateCoreFiler() *CoreFiler {
 	return &CoreFiler{
 		Name:            c.Name,
 		FqdnOrPrimaryIp: c.NetworkName,
+		FilerClass:      c.FilerClass,
 		CachePolicy:     c.PolicyName,
 	}
 }
