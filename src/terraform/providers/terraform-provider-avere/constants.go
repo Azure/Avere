@@ -206,6 +206,7 @@ const (
 	core_filer                            = "core_filer"
 	core_filer_name                       = "name"
 	fqdn_or_primary_ip                    = "fqdn_or_primary_ip"
+	filer_class                           = "filer_class"
 	cache_policy                          = "cache_policy"
 	auto_wan_optimize                     = "auto_wan_optimize"
 	nfs_connection_multiplier             = "nfs_connection_multiplier"

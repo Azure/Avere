@@ -399,6 +399,17 @@ func resourceVfxt() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringIsNotWhiteSpace,
 						},
+						filer_class: {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  FilerClassOther,
+							ValidateFunc: validation.StringInSlice([]string{
+								FilerClassNetappNonClustered,
+								FilerClassNetappClustered,
+								FilerClassEMCIsilon,
+								FilerClassOther,
+							}, false),
+						},
 						cache_policy: {
 							Type:     schema.TypeString,
 							Required: true,
@@ -1327,7 +1338,7 @@ func getCoreFilersToDelete(d *schema.ResourceData, existingCoreFilers map[string
 	// any removed filers or filers with changed fqdn
 	for k, v := range existingCoreFilers {
 		n, ok := newFilers[k]
-		if ok && n.FqdnOrPrimaryIp == v.FqdnOrPrimaryIp && n.CachePolicy == v.CachePolicy {
+		if ok && n.FqdnOrPrimaryIp == v.FqdnOrPrimaryIp && n.FilerClass == v.FilerClass && n.CachePolicy == v.CachePolicy {
 			// no change to the existing filer
 			continue
 		}
@@ -1887,6 +1898,7 @@ func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 		// get the properties
 		name := input[core_filer_name].(string)
 		fqdnOrPrimaryIp := input[fqdn_or_primary_ip].(string)
+		filerClass := input[filer_class].(string)
 		cachePolicy := input[cache_policy].(string)
 		autoWanOptimize := input[auto_wan_optimize].(bool)
 		nfsConnectionMultiplier := input[nfs_connection_multiplier].(int)
@@ -1911,6 +1923,7 @@ func expandCoreFilers(l []interface{}) (map[string]*CoreFiler, error) {
 		output := &CoreFiler{
 			Name:                    name,
 			FqdnOrPrimaryIp:         fqdnOrPrimaryIp,
+			FilerClass:              filerClass,
 			CachePolicy:             cachePolicy,
 			AutoWanOptimize:         autoWanOptimize,
 			NfsConnectionMultiplier: nfsConnectionMultiplier,
@@ -2047,6 +2060,9 @@ func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
 		if v, ok := m[fqdn_or_primary_ip]; ok {
+			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
+		}
+		if v, ok := m[filer_class]; ok {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
 		if v, ok := m[cache_policy]; ok {
@@ -2188,6 +2204,7 @@ func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
 		corefilerSlice := []string{
 			input[core_filer_name].(string),
 			input[fqdn_or_primary_ip].(string),
+			input[filer_class].(string),
 			input[cache_policy].(string),
 		}
 		for _, parameter := range corefilerSlice {

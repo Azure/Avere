@@ -347,6 +347,7 @@ func getCoreFilerJunctions(coreFilers []CoreFiler, customSettings map[string][]s
 		sb.WriteString("    core_filer {\n")
 		sb.WriteString(fmt.Sprintf("        name = \"%s\"\n", coreFiler.Name))
 		sb.WriteString(fmt.Sprintf("        fqdn_or_primary_ip = \"%s\"\n", coreFiler.FqdnOrPrimaryIp))
+		sb.WriteString(fmt.Sprintf("        filer_class = \"%s\"\n", coreFiler.FilerClass))
 		sb.WriteString(fmt.Sprintf("        cache_policy = \"%s\"\n", coreFiler.CachePolicy))
 		if settings, ok := customSettings[coreFiler.Name]; ok {
 			sb.WriteString("        custom_settings = [\n")
@@ -597,17 +598,19 @@ func FillUsersFromBackupFile(lines []string) ([]User, error) {
 func FillCoreFilers(lines []string) ([]CoreFiler, error) {
 	results := make([]CoreFiler, 0)
 
-	coreFilerRegEx := regexp.MustCompile(`averecmd corefiler.create\s*"([^"]*)"\s*"([^"]*)".*'cachePolicy':'([^']*)'`)
+	coreFilerRegEx := regexp.MustCompile(`averecmd corefiler.create\s*"([^"]*)"\s*"([^"]*)".*'filerClass':'([^']*)'.*'cachePolicy':'([^']*)'`)
 
 	for _, line := range lines {
 		coreFilerMatches := coreFilerRegEx.FindStringSubmatch(line)
-		if len(coreFilerMatches) > 3 && len(coreFilerMatches[1]) > 0 && len(coreFilerMatches[2]) > 0 && len(coreFilerMatches[3]) > 0 {
+		if len(coreFilerMatches) > 4 && len(coreFilerMatches[1]) > 0 && len(coreFilerMatches[2]) > 0 && len(coreFilerMatches[3]) > 0 && len(coreFilerMatches[4]) > 0 {
 			filername := coreFilerMatches[1]
 			address := coreFilerMatches[2]
-			cachePolicy := coreFilerMatches[3]
+			filerClass := coreFilerMatches[3]
+			cachePolicy := coreFilerMatches[4]
 			coreFiler := CoreFiler{
 				Name:            filername,
 				FqdnOrPrimaryIp: address,
+				FilerClass:      filerClass,
 				CachePolicy:     cachePolicy,
 			}
 			results = append(results, coreFiler)
