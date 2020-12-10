@@ -488,6 +488,18 @@ func (a *AvereVfxt) EnsureClusterStable() error {
 		}
 
 		if healthy {
+			// verify vserver is pingable
+			result, err := a.VServerIPsPingable()
+			if err != nil {
+				return err
+			}
+			healthy = result
+			if !healthy {
+				log.Printf("[WARN] [%d/%d] vfxt: not all vserver IP addresses are pingable", retries, ClusterStableRetryCount)
+			}
+		}
+
+		if healthy {
 			// the cluster is stable
 			break
 		}
@@ -1351,6 +1363,32 @@ func (a *AvereVfxt) UpdateCifsMasks(junction *Junction) error {
 		}
 	}
 	return nil
+}
+
+func (a *AvereVfxt) VServerIPsPingable() (bool, error) {
+	log.Printf("[INFO] [VServerIPsPingable")
+	defer log.Printf("[INFO] VServerIPsPingable]")
+	firstQuartet, err := GetIPAddressLastQuartet(a.FirstIPAddress)
+	if err != nil {
+		return false, err
+	}
+	lastQuartet, err := GetIPAddressLastQuartet(a.LastIPAddress)
+	if err != nil {
+		return false, err
+	}
+	addressPrefix, err := GetIPAddress3QuartetPrefix(a.FirstIPAddress)
+	if err != nil {
+		return false, err
+	}
+
+	result, err := a.ShellCommand(GetPingIPAddressesCommand(firstQuartet, lastQuartet, addressPrefix))
+
+	if err != nil {
+		return false, fmt.Errorf("Error running ping vserver command: %v", err)
+	}
+	pingableResult := !strings.Contains(result, "timed out")
+	log.Printf("[INFO] VServerIP address %s%d-%d pingable result: %v", addressPrefix, firstQuartet, lastQuartet, pingableResult)
+	return pingableResult, nil
 }
 
 func (a *AvereVfxt) CreateVServer() error {
@@ -2264,6 +2302,12 @@ func getMassIndex(internalName string) int {
 		return s
 	}
 	return 0
+}
+
+func GetPingIPAddressesCommand(startQuartet int, endQuartet int, addressPrefix string) string {
+	// '|| true' is added to the end since we want the result to be 0
+	// and collect the resulting stdout
+	return WrapCommandForLogging(fmt.Sprintf("for ip in $(seq %d %d); do nc -n -v -z -w 1 %s$ip 443 2>&1 |grep timed; done || true", startQuartet, endQuartet, addressPrefix), ShellLogFile)
 }
 
 func getEnsureSSHPass() string {

@@ -299,7 +299,7 @@ func (a Azure) getEnsureAvereSshKeyData(publicKeyData string) string {
 
 func (a Azure) getCreateVfxtCommand(avereVfxt *AvereVfxt) string {
 	vServerStr := ""
-	if len(avereVfxt.FirstIPAddress) > 0 && len(avereVfxt.FirstIPAddress) > 0 {
+	if len(avereVfxt.FirstIPAddress) > 0 && len(avereVfxt.LastIPAddress) > 0 {
 		vServerStr = "--no-vserver"
 	}
 

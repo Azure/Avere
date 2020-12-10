@@ -32,3 +32,37 @@ func GetLastIPAddress(firstIp string, ipAddressCount int) (string, error) {
 	}
 	return ipv4.String(), nil
 }
+
+func GetIPAddressLastQuartet(ipAddress string) (int, error) {
+	// a.b.c.d where a==0, b==1, c==2, d==3
+	d := 3
+
+	ip := net.ParseIP(ipAddress)
+	if ip == nil {
+		return 0, fmt.Errorf("address '%s' is invalid", ipAddress)
+	}
+	ipv4 := ip.To4()
+	if ipv4 := ip.To4(); ipv4 == nil {
+		return 0, fmt.Errorf("address '%s' is an invalid IPv4 address", ipAddress)
+	}
+
+	return int(ipv4[d]), nil
+}
+
+func GetIPAddress3QuartetPrefix(ipAddress string) (string, error) {
+	// a.b.c.d where a==0, b==1, c==2, d==3
+	a := 0
+	b := 1
+	c := 2
+
+	ip := net.ParseIP(ipAddress)
+	if ip == nil {
+		return "", fmt.Errorf("address '%s' is invalid", ipAddress)
+	}
+	ipv4 := ip.To4()
+	if ipv4 := ip.To4(); ipv4 == nil {
+		return "", fmt.Errorf("address '%s' is an invalid IPv4 address", ipAddress)
+	}
+
+	return fmt.Sprintf("%d.%d.%d.", ipv4[a], ipv4[b], ipv4[c]), nil
+}
