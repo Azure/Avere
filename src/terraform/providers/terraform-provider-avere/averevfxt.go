@@ -429,13 +429,21 @@ func (a *AvereVfxt) GetAlerts() ([]Alert, error) {
 	return results, nil
 }
 
+func (a *AvereVfxt) BlockUntilClusterHealthy() error {
+	return a.BlockUntilHealthy(true)
+}
+
 func (a *AvereVfxt) EnsureClusterStable() error {
+	return a.BlockUntilHealthy(false)
+}
+
+func (a *AvereVfxt) BlockUntilHealthy(fullHealthCheck bool) error {
 	for retries := 0; ; retries++ {
 
 		healthy := true
 
 		if healthy {
-			// verify no activities
+			// verify no activities, needed for operations
 			activities, err := a.GetActivities()
 			if err != nil {
 				return err
@@ -457,7 +465,7 @@ func (a *AvereVfxt) EnsureClusterStable() error {
 		}
 
 		if healthy {
-			// verify no active alerts
+			// verify no active alerts, needed for operations
 			alerts, err := a.GetAlerts()
 			if err != nil {
 				return err
@@ -472,30 +480,34 @@ func (a *AvereVfxt) EnsureClusterStable() error {
 			}
 		}
 
-		if healthy {
-			// verify all nodes healthy
-			nodes, err := a.GetExistingNodes()
-			if err != nil {
-				return err
-			}
-			for _, node := range nodes {
-				if node.State != NodeUp {
-					log.Printf("[WARN] [%d/%d] node %v not up and in state %v", retries, ClusterStableRetryCount, node, node.State)
-					healthy = false
-					break
+		if fullHealthCheck {
+			// the following checks are useful to run before returning to customer
+
+			if healthy && fullHealthCheck {
+				// verify all nodes healthy
+				nodes, err := a.GetExistingNodes()
+				if err != nil {
+					return err
+				}
+				for _, node := range nodes {
+					if node.State != NodeUp {
+						log.Printf("[WARN] [%d/%d] node %v not up and in state %v", retries, ClusterStableRetryCount, node, node.State)
+						healthy = false
+						break
+					}
 				}
 			}
-		}
 
-		if healthy {
-			// verify vserver is pingable
-			result, err := a.VServerIPsPingable()
-			if err != nil {
-				return err
-			}
-			healthy = result
-			if !healthy {
-				log.Printf("[WARN] [%d/%d] vfxt: not all vserver IP addresses are pingable", retries, ClusterStableRetryCount)
+			if healthy && fullHealthCheck {
+				// verify vserver is pingable
+				result, err := a.VServerIPsPingable()
+				if err != nil {
+					return err
+				}
+				healthy = result
+				if !healthy {
+					log.Printf("[WARN] [%d/%d] vfxt: not all vserver IP addresses are pingable", retries, ClusterStableRetryCount)
+				}
 			}
 		}
 
@@ -1743,16 +1755,17 @@ func (a *AvereVfxt) scaleUpCluster(newNodeCount int) error {
 			}
 			time.Sleep(NodeChangeRetrySleepSeconds * time.Second)
 		}
-		log.Printf("[INFO] vfxt: ensure stable cluster")
-		err = a.EnsureClusterStable()
-		if err != nil {
-			return err
-		}
 	}
 }
 
 // scale-down the cluster to the newNodeCount
 func (a *AvereVfxt) scaleDownCluster(newNodeCount int) error {
+
+	// the cluster should be stable before and after the removal of the cluster node
+	if err := a.EnsureClusterStable(); err != nil {
+		return err
+	}
+
 	for {
 		currentNodeCount, err := a.GetCurrentNodeCount()
 		if err != nil {
@@ -1767,11 +1780,6 @@ func (a *AvereVfxt) scaleDownCluster(newNodeCount int) error {
 		// remove the last node
 		lastNode, err := a.GetLastNode()
 		if err != nil {
-			return err
-		}
-
-		// the cluster should be stable before and after the removal of the cluster node
-		if err = a.EnsureClusterStable(); err != nil {
 			return err
 		}
 
