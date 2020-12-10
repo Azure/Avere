@@ -124,32 +124,74 @@ def getUsers(conn, basedn, ridInteger):
     users               = {}
     usernamesWithGidKey = {}
     
-    results = conn.search_s(basedn,ldap.SCOPE_SUBTREE,"(&(objectclass=user))",["sAMAccountName","objectSid","distinguishedName","primaryGroupID"])
+    # paging technique from here: https://stackoverflow.com/questions/3378142/ldap-ldap-sizelimit-exceeded
+    searchFilter = "(&(objectclass=user))"
+    attributeList = ["sAMAccountName","objectSid","distinguishedName","primaryGroupID"]
+    pageSize = 500
+    resultsControl = ldap.controls.SimplePagedResultsControl(criticality=True, size=pageSize, cookie='')
+    msgid = conn.search_ext(base=basedn, scope=ldap.SCOPE_SUBTREE, filterstr=searchFilter, attrlist=attributeList, serverctrls=[resultsControl])
 
-    for dn, entry in results:
-        user = initializeUserFromEntry(dn, entry, ridInteger)
-        if user == None:
-            continue
-        users[user.distinguishedName] = user
-        if user.gid not in usernamesWithGidKey:
-            usernamesWithGidKey[user.gid]=[]
-        usernamesWithGidKey[user.gid].append(user.accountName)
-        
-    return users, usernamesWithGidKey
+    pages = 0
+    while True: # loop over all of the pages using the same cookie, otherwise the search will fail
+        pages += 1
+        rtype, rdata, rmsgid, serverctrls = conn.result3(msgid)
+        for dn, entry in rdata:
+            user = initializeUserFromEntry(dn, entry, ridInteger)
+            if user == None:
+                continue
+            users[user.distinguishedName] = user
+            if user.gid not in usernamesWithGidKey:
+                usernamesWithGidKey[user.gid]=[]
+            usernamesWithGidKey[user.gid].append(user.accountName)
+        # get the next page or exit loop
+        pctrls = [c for c in serverctrls if c.controlType == ldap.controls.SimplePagedResultsControl.controlType]
+        if pctrls:
+            if pctrls[0].cookie: # Copy cookie from response control to request control
+                resultsControl.cookie = pctrls[0].cookie
+                msgid = conn.search_ext(base=basedn, scope=ldap.SCOPE_SUBTREE, filterstr=searchFilter, attrlist=attributeList, serverctrls=[resultsControl])
+            else:
+                break
+        else:
+            break
+    
+    logging.info("found {} user(s) in {} page(s)".format(len(users), pages))
+
+    return users, usernamesWithGidKey 
 
 def getGroups(conn, basedn, ridInteger, avereUsers, usernamesWithGidKey):
     logging.info('get groups for {}'.format(basedn))
 
     groups = {}
     
-    results = conn.search_s(basedn,ldap.SCOPE_SUBTREE,"(&(objectclass=group))",["sAMAccountName","objectSid","distinguishedName","member"])
+    # paging technique from here: https://stackoverflow.com/questions/3378142/ldap-ldap-sizelimit-exceeded
+    searchFilter = "(&(objectclass=group))"
+    attributeList = ["sAMAccountName","objectSid","distinguishedName","member"]
+    pageSize = 500
+    resultsControl = ldap.controls.SimplePagedResultsControl(criticality=True, size=pageSize, cookie='')
+    msgid = conn.search_ext(base=basedn, scope=ldap.SCOPE_SUBTREE, filterstr=searchFilter, attrlist=attributeList, serverctrls=[resultsControl])
 
-    for dn,entry in results:
-        group = initializeGroupFromEntry(dn, entry, ridInteger, avereUsers, usernamesWithGidKey)
-        if group == None:
-            continue
-        groups[group.groupName] = group
-        
+    pages = 0
+    while True: # loop over all of the pages using the same cookie, otherwise the search will fail
+        pages += 1
+        rtype, rdata, rmsgid, serverctrls = conn.result3(msgid)
+        for dn,entry in rdata:
+            group = initializeGroupFromEntry(dn, entry, ridInteger, avereUsers, usernamesWithGidKey)
+            if group == None:
+                continue
+            groups[group.groupName] = group
+        # get the next page or exit loop
+        pctrls = [c for c in serverctrls if c.controlType == ldap.controls.SimplePagedResultsControl.controlType]
+        if pctrls:
+            if pctrls[0].cookie: # Copy cookie from response control to request control
+                resultsControl.cookie = pctrls[0].cookie
+                msgid = conn.search_ext(base=basedn, scope=ldap.SCOPE_SUBTREE, filterstr=searchFilter, attrlist=attributeList, serverctrls=[resultsControl])
+            else:
+                break
+        else:
+            break
+    
+    logging.info("found {} group(s) in {} page(s)".format(len(groups), pages))
+
     return groups
 
 def writeAvereFiles(conn, basedn, avereUsers, avereGroups, userFile, groupFile):
