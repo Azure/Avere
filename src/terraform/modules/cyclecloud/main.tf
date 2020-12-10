@@ -12,7 +12,7 @@ data "azurerm_subscription" "primary" {}
 
 locals {
   # send the script file to custom data, adding env vars
-  script_file_b64 = base64gzip(replace(file("${path.module}/installnfs.sh"),"\r",""))
+  script_file_b64 = base64gzip(replace(file("${path.module}/installcycle.sh"),"\r",""))
   proxy_env = (var.proxy == null || var.proxy == "") ? "" : "http_proxy=${var.proxy} https_proxy=${var.proxy} no_proxy=169.254.169.254"
   cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { install_script = local.script_file_b64})
 
@@ -123,7 +123,7 @@ resource "azurerm_virtual_machine_extension" "cse" {
 
   settings = <<SETTINGS
     {
-        "commandToExecute": " ${local.proxy_env} USE_MARKETPLACE=${var.use_marketplace} /bin/bash /opt/installcycle.sh 2>&1 | tee -a /var/log/installcycle.log"
+        "commandToExecute": " ${local.proxy_env} SUBSCRIPTION_ID=${data.azurerm_subscription.primary.id} USE_MARKETPLACE=${var.use_marketplace} /bin/bash /opt/installcycle.sh 2>&1 | tee -a /var/log/installcycle.log"
     }
 SETTINGS
 }
