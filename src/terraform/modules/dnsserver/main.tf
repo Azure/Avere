@@ -24,7 +24,7 @@ locals {
 
   # send the script file to custom data, adding env vars
   script_file_b64 = base64gzip(replace(file("${path.module}/install.sh"),"\r",""))
-  unbound_conf_file_b64 = base64gzip(replace(templatefile("${path.module}/unbound.conf", { arecord_lines = local.local_a_records_str, forward_addr_lines = local.foward_lines_str }),"\r",""))
+  unbound_conf_file_b64 = base64gzip(replace(templatefile("${path.module}/unbound.conf", { max_ttl = var.dns_max_ttl_seconds, arecord_lines = local.local_a_records_str, forward_addr_lines = local.foward_lines_str }),"\r",""))
   cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { installcmd = local.script_file_b64, unboundconf = local.unbound_conf_file_b64, ssh_port = var.ssh_port })
 }
 
