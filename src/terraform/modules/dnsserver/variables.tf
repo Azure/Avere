@@ -68,6 +68,11 @@ variable "avere_filer_fqdn" {
   description = "the fqdn of the avere."
 }
 
+variable "dns_max_ttl_seconds" {
+  description = "The max ttl in seconds of the dns records, the default is 5 minutes.  This will cap larger TTLS, and TTLs set lower than this value will still be respected."
+  default = 300
+}
+
 variable "avere_filer_alternate_fqdn" {
   default = []
   description = "alternate fqdn of the avere and is useful to point other names at Avere or can be used to emulate a domain search list."
