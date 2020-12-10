@@ -752,8 +752,8 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	log.Printf("[INFO] vfxt: ensure stable cluster after cluster creation")
-	if err := avereVfxt.EnsureClusterStable(); err != nil {
+	log.Printf("[INFO] vfxt: ensure healthy and stable cluster after cluster creation")
+	if err := avereVfxt.BlockUntilClusterHealthy(); err != nil {
 		return err
 	}
 
@@ -993,8 +993,8 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	log.Printf("[INFO] vfxt: ensure stable cluster after cluster update")
-	if err := avereVfxt.EnsureClusterStable(); err != nil {
+	log.Printf("[INFO] vfxt: ensure healthy and stable cluster after cluster update")
+	if err := avereVfxt.BlockUntilClusterHealthy(); err != nil {
 		return err
 	}
 
