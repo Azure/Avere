@@ -873,6 +873,11 @@ func (a *AvereVfxt) UploadFlatFiles() error {
 	log.Printf("[INFO] [uploading flat files")
 	defer log.Printf("[INFO] uploading flat files]")
 
+	// cleanup any existing flat files, this avoids failed copy or generation because of incorrect permissions
+	if _, err := a.ShellCommand(a.getCleanFlatFileCommand()); err != nil {
+		return fmt.Errorf("Error cleaning up flat files: %v", err)
+	}
+
 	if a.CifsRidMappingBaseInteger > 0 {
 		log.Printf("[INFO] step 1 - upload rid generator")
 		ridGeneratorFileB64z, err := GetRidGeneratorB64z()
@@ -2345,6 +2350,10 @@ func (a *AvereVfxt) getPutGroupFileCommand() string {
 
 func (a *AvereVfxt) getFlatFileScpCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s scp -oStrictHostKeyChecking=no ~/avere-* admin@%s:/tmp ", a.GetSSHPassPrefix(), a.ManagementIP), ShellLogFile)
+}
+
+func (a *AvereVfxt) getCleanFlatFileCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"rm -f /tmp/avere-*.txt\"'", a.GetBaseVFXTNodeCommand()), ShellLogFile)
 }
 
 func (a *AvereVfxt) getCopyPasswdFileCommand() string {
