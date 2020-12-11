@@ -33,6 +33,15 @@ git pull origin main
 
 10. use the output DNS ip address to populate the dns servers on your vnet.
 
+Here are some dig commands to test your records:
+```bash
+# to lookup the A record for nfs1.rendering.com to unbound server 10.0.3.253
+dig A @10.0.3.253 nfs1.rendering.com
+
+# to do a reverse lookup to one of the vfxt addresses to unbound server 10.0.3.253
+dig  @10.0.3.253 -x 10.0.1.200
+```
+
 Once installed you will be able to point all the cloud nodes using avere at the DNS server.
 
 When you are done, you can destroy all resources by running `terraform destroy -auto-approve`.

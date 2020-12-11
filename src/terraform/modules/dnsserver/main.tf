@@ -3,18 +3,26 @@ locals {
   last_octet = split(".", var.avere_first_ip_addr)[3]
   addr_prefix = trimsuffix(var.avere_first_ip_addr, ".${local.last_octet}")
   # technique from article: https://forum.netgate.com/topic/120486/round-robin-for-dns-forwarder-network-address/3
-  local_a_records = [for i in range(var.avere_ip_addr_count): "local-data: \"${var.avere_filer_fqdn} A ${local.addr_prefix}.${local.last_octet + i}\""]
+  local_a_records = [for i in range(var.avere_ip_addr_count): "local-data: \"${var.avere_filer_fqdn} ${var.dns_max_ttl_seconds} A ${local.addr_prefix}.${local.last_octet + i}\""]
+  local_a_records_reverse = [for i in range(var.avere_ip_addr_count): "local-data-ptr: \"${local.addr_prefix}.${local.last_octet + i} ${var.dns_max_ttl_seconds} ${var.avere_filer_fqdn}\""]
   
   # alternate fqdn
   local_alternate_a_records = flatten([
     for i in range(length(var.avere_filer_alternate_fqdn)): [
       for j in range(var.avere_ip_addr_count): 
-        "local-data: \"${var.avere_filer_alternate_fqdn[i]} A ${local.addr_prefix}.${local.last_octet + j}\""
+        "local-data: \"${var.avere_filer_alternate_fqdn[i]} ${var.dns_max_ttl_seconds} A ${local.addr_prefix}.${local.last_octet + j}\""
+        ]
+  ])
+  # reverse records
+  local_alternate_a_records_reverse = flatten([
+    for i in range(length(var.avere_filer_alternate_fqdn)): [
+      for j in range(var.avere_ip_addr_count): 
+        "local-data-ptr: \"${local.addr_prefix}.${local.last_octet + j} ${var.dns_max_ttl_seconds} ${var.avere_filer_alternate_fqdn[i]}\""
         ]
   ])
   
   # join everything into the same string
-  all_a_records = concat(local.local_a_records, local.local_alternate_a_records)
+  all_a_records = concat(local.local_a_records, local.local_a_records_reverse, local.local_alternate_a_records, local.local_alternate_a_records_reverse)
   local_a_records_str = "local-zone: \"${var.avere_filer_fqdn}\" transparent\n  ${join("\n  ", local.all_a_records)}"
 
   # create the dns forward lines  
