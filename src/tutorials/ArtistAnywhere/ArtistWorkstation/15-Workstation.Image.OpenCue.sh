@@ -43,17 +43,34 @@ curl -L -o $fileName $downloadUrl/$fileName
 tar -xzf $fileName
 
 find . -type f -name *.pyc -delete
-pip install --upgrade pip
-pip install --upgrade setuptools
-pip install --requirement 'opencue-requirements.txt' --ignore-installed
-pip install --requirement 'opencue-requirements-gui.txt'
-cd pycue-*
-python setup.py install
-cd ../pyoutline-*
-python setup.py install
-cd ../cueadmin-*
-python setup.py install
-cd ../cuesubmit-*
-python setup.py install
-cd ../cuegui-*
-python setup.py install
+if [ "$(cat /etc/os-release | grep 'CentOS-7')" ]; then
+    pip install --upgrade pip
+    pip install --upgrade setuptools
+    pip install --requirement 'opencue-requirements.txt' --ignore-installed
+    pip install --requirement 'opencue-requirements-gui.txt'
+    cd pycue-*
+    python setup.py install
+    cd ../pyoutline-*
+    python setup.py install
+    cd ../cueadmin-*
+    python setup.py install
+    cd ../cuesubmit-*
+    python setup.py install
+    cd ../cuegui-*
+    python setup.py install
+elif [ "$(cat /etc/os-release | grep 'CentOS-8')" ]; then
+    pip3 install --upgrade pip
+    pip3 install --upgrade setuptools
+    pip3 install --requirement 'opencue-requirements.txt' --ignore-installed
+    pip3 install --requirement 'opencue-requirements-gui.txt'
+    cd pycue-*
+    python3 setup.py install
+    cd ../pyoutline-*
+    python3 setup.py install
+    cd ../cueadmin-*
+    python3 setup.py install
+    cd ../cuesubmit-*
+    python3 setup.py install
+    cd ../cuegui-*
+    python3 setup.py install
+fi

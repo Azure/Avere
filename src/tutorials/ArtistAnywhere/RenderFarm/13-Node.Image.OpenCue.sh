@@ -35,12 +35,24 @@ fileName='opencue-rqd.service'
 curl -L -o $fileName $downloadUrl/$fileName
 
 find . -type f -name *.pyc -delete
-pip install --upgrade pip
-pip install --upgrade setuptools
-pip install --requirement 'opencue-requirements.txt' --ignore-installed
-cd pycue-*
-python setup.py install
-cd ../pyoutline-*
-python setup.py install
-cd ../rqd-*
-python setup.py install
+if [ "$(cat /etc/os-release | grep 'CentOS-7')" ]; then
+    pip install --upgrade pip
+    pip install --upgrade setuptools
+    pip install --requirement 'opencue-requirements.txt' --ignore-installed
+    cd pycue-*
+    python setup.py install
+    cd ../pyoutline-*
+    python setup.py install
+    cd ../rqd-*
+    python setup.py install
+elif [ "$(cat /etc/os-release | grep 'CentOS-8')" ]; then
+    pip3 install --upgrade pip
+    pip3 install --upgrade setuptools
+    pip3 install --requirement 'opencue-requirements.txt' --ignore-installed
+    cd pycue-*
+    python3 setup.py install
+    cd ../pyoutline-*
+    python3 setup.py install
+    cd ../rqd-*
+    python3 setup.py install
+fi

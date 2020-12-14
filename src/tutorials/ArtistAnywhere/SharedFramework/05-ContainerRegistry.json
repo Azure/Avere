@@ -22,8 +22,8 @@
     }
   },
   "variables": {
-    "containerRegistryApiVersion": "2019-12-01-preview",
-    "privateEndpointApiVersion": "2020-07-01"
+    "containerRegistryApiVersion": "2020-11-01-preview",
+    "privateEndpointApiVersion": "2020-08-01"
   },
   "resources": [
     {

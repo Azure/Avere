@@ -30,7 +30,7 @@
   "variables": {
     "keyVaultApiVersion": "2019-09-01",
     "batchAccountApiVersion": "2020-09-01",
-    "privateEndpointApiVersion": "2020-07-01",
+    "privateEndpointApiVersion": "2020-08-01",
     "privateEndpointNameVault": "[concat(parameters('keyVault').name, '-vault')]",
     "privateEndpointNameBatch": "[concat(parameters('batchAccount').name, '-batch')]"
   },

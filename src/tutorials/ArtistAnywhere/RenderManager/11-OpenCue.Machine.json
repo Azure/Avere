@@ -40,13 +40,13 @@
     }
   },
   "variables": {
-    "virtualNetworkApiVersion": "2020-07-01",
-    "virtualMachineApiVersion": "2020-06-01",
-    "networkInterfaceApiVersion": "2020-07-01",
-    "loadBalancerApiVersion": "2020-07-01",
+    "virtualNetworkApiVersion": "2020-08-01",
+    "virtualMachineApiVersion": "2020-12-01",
+    "networkInterfaceApiVersion": "2020-08-01",
+    "loadBalancerApiVersion": "2020-08-01",
     "operationalInsightsApiVersion": "2020-08-01",
-    "availabilitySetName": "RenderManagers",
-    "loadBalancerName": "[variables('availabilitySetName')]",
+    "availabilitySetApiVersion": "2020-12-01",
+    "loadBalancerName": "RenderManagers",
     "loadBalancerRuleName": "lbRule",
     "loadBalancerProbeName": "lbProbe",
     "loadBalancerFrontendName": "lbFrontendConfig",
@@ -99,8 +99,8 @@
   "resources": [
     {
       "type": "Microsoft.Compute/availabilitySets",
-      "name": "[variables('availabilitySetName')]",
-      "apiVersion": "[variables('virtualMachineApiVersion')]",
+      "name": "[variables('loadBalancerName')]",
+      "apiVersion": "[variables('availabilitySetApiVersion')]",
       "location": "[resourceGroup().location]",
       "sku": {
         "name": "Aligned"
@@ -198,7 +198,7 @@
       "apiVersion": "[variables('virtualMachineApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]",
+        "[resourceId('Microsoft.Compute/availabilitySets', variables('loadBalancerName'))]",
         "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('renderManager').machines.namePrefix, copyIndex()))]"
       ],
       "identity": {
@@ -210,7 +210,7 @@
       },
       "properties": {
         "availabilitySet": {
-          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('loadBalancerName'))]"
         },
         "hardwareProfile": {
           "vmSize": "[parameters('renderManager').machines.size]"

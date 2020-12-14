@@ -40,7 +40,7 @@
     }
   },
   "variables": {
-    "virtualMachineApiVersion": "2020-06-01",
+    "virtualMachineScaleSetApiVersion": "2020-12-01",
     "operationalInsightsApiVersion": "2020-08-01"
   },
   "functions": [
@@ -87,7 +87,7 @@
       "condition": "[parameters('renderFarms')[copyIndex()].deploy]",
       "type": "Microsoft.Compute/virtualMachineScaleSets",
       "name": "[parameters('renderFarms')[copyIndex()].name]",
-      "apiVersion": "[variables('virtualMachineApiVersion')]",
+      "apiVersion": "[variables('virtualMachineScaleSetApiVersion')]",
       "location": "[resourceGroup().location]",
       "sku": {
         "name": "[parameters('renderFarms')[copyIndex()].machine.size]",
@@ -176,7 +176,7 @@
       "condition": "[and(parameters('renderFarms')[copyIndex()].deploy, not(equals(parameters('renderFarms')[copyIndex()].machine.graphics.type, '')))]",
       "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
       "name": "[concat(parameters('renderFarms')[copyIndex()].name, '/Graphics')]",
-      "apiVersion": "[variables('virtualMachineApiVersion')]",
+      "apiVersion": "[variables('virtualMachineScaleSetApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('renderFarms')[copyIndex()].name)]"
@@ -196,7 +196,7 @@
       "condition": "[parameters('logAnalytics').deploy]",
       "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
       "name": "[concat(parameters('renderFarms')[copyIndex()].name, '/Monitor')]",
-      "apiVersion": "[variables('virtualMachineApiVersion')]",
+      "apiVersion": "[variables('virtualMachineScaleSetApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('renderFarms')[copyIndex()].name)]"

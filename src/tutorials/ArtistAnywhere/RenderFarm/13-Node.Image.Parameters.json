@@ -57,7 +57,7 @@
             {
               "type": "Shell",
               "scriptUri": "https://mediaasset.blob.core.windows.net/script/13-Node.Image.OpenCue.sh",
-              "sha256Checksum": "156e1b66a89879997e31feaf933f1681d8dc49bc64e4c30623824fe7143b673d"
+              "sha256Checksum": "3f9b3ef3e3f52af6916a479948e5340d57d25421be3283e9ff268c6e03a220fa"
             },
             {
               "type": "File",

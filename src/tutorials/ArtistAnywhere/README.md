@@ -2,7 +2,7 @@
 
 Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/azure/azure-resource-manager/management/overview) templates for automated deployment of an end-to-end rendering solution architecture in Microsoft Azure. Azure Artist Anywhere provides a lightweight and extensible deployment framework that can be configured as needed to meet various integration requirements, including burst rendering with caching of on-premises storage.
 
-Azure Artist Anywhere provides the following mutually-exclusive render manager deployment configuration modes
+Azure Artist Anywhere provides the following mutually-exclusive render manager deployment configuration modes.
 
 * [*CycleCloud*](https://docs.microsoft.com/azure/cyclecloud/overview) - render job management via integration of [OpenCue](https://www.opencue.io) with the [Azure CycleCloud](https://docs.microsoft.com/azure/cyclecloud/overview) cluster management service
 
