@@ -1,4 +1,4 @@
-﻿param (
+param (
     # Set a naming prefix for the Azure resource groups that are created by this deployment script
     [string] $resourceGroupNamePrefix = "Azure.Media.Pipeline",
 
@@ -22,8 +22,22 @@ $templateDirectory = $PSScriptRoot
 
 Import-Module "$templateDirectory/Deploy.psm1"
 
+# Shared Framework
 $sharedFramework = Get-SharedFramework $resourceGroupNamePrefix $sharedRegionName $computeRegionName $storageRegionName
-ConvertTo-Json -InputObject $sharedFramework -Depth 3 | Write-Host
 
+# Storage Cache
 $storageCache = Get-StorageCache $sharedFramework $resourceGroupNamePrefix $computeRegionName $cacheRegionName $storageRegionName $storageNetAppDeploy
-ConvertTo-Json -InputObject $storageCache -Depth 4 | Write-Host
+
+# Artist Workstation Image Job
+$moduleName = "Artist Workstation Image Job"
+New-TraceMessage $moduleName $false
+$workstationImageJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistWorkstation.Image.ps1" -ArgumentList $resourceGroupNamePrefix, $sharedRegionName, $computeRegionName, $cacheRegionName, $storageRegionName, $storageNetAppDeploy, $sharedFramework, $storageCache
+Receive-Job -Job $workstationImageJob -Wait
+New-TraceMessage $moduleName $true
+
+# Artist Workstation Machine Job
+$moduleName = "Artist Workstation Machine Job"
+New-TraceMessage $moduleName $false
+$workstationMachineJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistWorkstation.Machine.ps1" -ArgumentList $resourceGroupNamePrefix, $sharedRegionName, $computeRegionName, $cacheRegionName, $storageRegionName, $storageNetAppDeploy, $sharedFramework, $storageCache
+Receive-Job -Job $workstationMachineJob -Wait
+New-TraceMessage $moduleName $true

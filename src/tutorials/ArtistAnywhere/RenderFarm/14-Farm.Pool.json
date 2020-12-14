@@ -1,0 +1,97 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "imageGallery": {
+      "type": "object",
+      "metadata": {
+        "description": "The shared image gallery."
+      }
+    },
+    "containerRegistry": {
+      "type": "object",
+      "metadata": {
+        "description": "The container registry."
+      }
+    },
+    "renderManager": {
+      "type": "object",
+      "metadata": {
+        "description": "The render job manager."
+      }
+    },
+    "renderFarms": {
+      "type": "array",
+      "metadata": {
+        "description": "The render farm machines."
+      }
+    },
+    "virtualNetwork": {
+      "type": "object",
+      "metadata": {
+        "description": "The virtual network."
+      }
+    }
+  },
+  "variables": {
+    "batchAccountApiVersion": "2020-09-01"
+  },
+  "resources": [
+    {
+      "condition": "[parameters('renderFarms')[copyIndex()].deploy]",
+      "type": "Microsoft.Batch/batchAccounts/pools",
+      "name": "[concat(parameters('renderManager').name, '/', parameters('renderFarms')[copyIndex()].name)]",
+      "apiVersion": "[variables('batchAccountApiVersion')]",
+      "properties": {
+        "displayName": "[if(equals(parameters('renderFarms')[copyIndex()].displayName, ''), json('null'), parameters('renderFarms')[copyIndex()].displayName)]",
+        "vmSize": "[parameters('renderFarms')[copyIndex()].machine.size]",
+        "interNodeCommunication": "[parameters('renderFarms')[copyIndex()].machine.interNodeCommunication]",
+        "networkConfiguration": {
+          "subnetId": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]",
+          "publicIPAddressConfiguration": {
+            "provision": "NoPublicIPAddresses"
+          }
+        },
+        "deploymentConfiguration": {
+          "virtualMachineConfiguration": {
+            "nodeAgentSkuId": "[parameters('renderFarms')[copyIndex()].machine.agentId]",
+            "imageReference": {
+              "id": "[resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images/versions', parameters('imageGallery').name, parameters('renderFarms')[copyIndex()].image.definitionName, parameters('renderFarms')[copyIndex()].image.versionId)]"
+            },
+            "windowsConfiguration": "[if(parameters('renderFarms')[copyIndex()].machine.autoUpdates, json(concat('{\"enableAutomaticUpdates\": true}')), json('null'))]"
+          }
+        },
+        "taskSchedulingPolicy": {
+          "nodeFillType": "[parameters('renderFarms')[copyIndex()].task.nodeFillType]"
+        },
+        "taskSlotsPerNode": "[parameters('renderFarms')[copyIndex()].task.slotsPerNode]",
+        "scaleSettings": {
+          "fixedScale": {
+            "targetDedicatedNodes": "[parameters('renderFarms')[copyIndex()].scale.fixed.targetDedicatedNodes]",
+            "targetLowPriorityNodes": "[parameters('renderFarms')[copyIndex()].scale.fixed.targetLowPriorityNodes]",
+            "nodeDeallocationOption": "[parameters('renderFarms')[copyIndex()].scale.fixed.nodeDeallocationOption]",
+            "resizeTimeout": "[parameters('renderFarms')[copyIndex()].scale.fixed.resizeTimeout]"
+          },
+          "autoScale": "[if(equals(parameters('renderFarms')[copyIndex()].scale.auto.triggerFormula, ''), json('null'), json(concat('{\"formula\": \"', parameters('renderFarms')[copyIndex()].scale.auto.triggerFormula, '\", \"evaluationInterval\": \"', parameters('renderFarms')[copyIndex()].scale.auto.evaluationInterval, '\"}')))]"
+        },
+        "userAccounts": [
+          {
+            "name": "[parameters('renderFarms')[copyIndex()].login.adminUsername]",
+            "password": "[parameters('renderFarms')[copyIndex()].login.adminPassword]",
+            "elevationLevel": "Admin"
+          }
+        ]
+      },
+      "copy": {
+        "name": "renderFarms",
+        "count": "[length(parameters('renderFarms'))]"
+      }
+    }
+  ],
+  "outputs": {
+    "renderFarms": {
+      "type": "array",
+      "value": "[parameters('renderFarms')]"
+    }
+  }
+}

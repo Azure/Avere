@@ -1,0 +1,265 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageNetwork": {
+      "type": "object",
+      "metadata": {
+        "description": "The storage network."
+      }
+    },
+    "computeNetworks": {
+      "type": "array",
+      "metadata": {
+        "description": "The compute networks."
+      }
+    },
+    "domainName": {
+      "type": "object",
+      "metadata": {
+        "description": "The DNS domain names."
+      }
+    },
+    "networkGateway": {
+      "type": "object",
+      "metadata": {
+        "description": "The virtual network gateway."
+      }
+    }
+  },
+  "variables": {
+    "virtualNetworkApiVersion": "2020-07-01",
+    "virtualNetworkGatewayApiVersion": "2020-07-01",
+    "publicIpAddressApiVersion": "2020-07-01",
+    "privateDnsZoneApiVersion": "2020-06-01",
+    "bastianHostApiVersion": "2020-07-01",
+    "virtualNetworks": "[concat(array(parameters('storageNetwork')), parameters('computeNetworks'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('virtualNetworks')[copyIndex()].name]",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
+      "location": "[variables('virtualNetworks')[copyIndex()].regionName]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('virtualNetworks')[copyIndex()].addressSpace]"
+          ]
+        },
+        "copy": [
+          {
+            "name": "subnets",
+            "count": "[length(variables('virtualNetworks')[copyIndex()].subnets)]",
+            "input": {
+              "name": "[variables('virtualNetworks')[copyIndex()].subnets[copyIndex('subnets')].name]",
+              "properties": "[variables('virtualNetworks')[copyIndex()].subnets[copyIndex('subnets')].properties]"
+            }
+          }
+        ]
+      },
+      "copy": {
+        "name": "virtualNetworks",
+        "count": "[length(variables('virtualNetworks'))]"
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones",
+      "name": "[parameters('domainName').zone]",
+      "apiVersion": "[variables('privateDnsZoneApiVersion')]",
+      "location": "global",
+      "properties": {
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+      "name": "[concat(parameters('domainName').zone, '/', variables('virtualNetworks')[copyIndex()].name)]",
+      "apiVersion": "[variables('privateDnsZoneApiVersion')]",
+      "location": "global",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/privateDnsZones', parameters('domainName').zone)]",
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworks')[copyIndex()].name)]"
+      ],
+      "properties": {
+        "virtualNetwork": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworks')[copyIndex()].name)]"
+        },
+        "registrationEnabled": true
+      },
+      "copy": {
+        "name": "virtualNetworks",
+        "count": "[length(variables('virtualNetworks'))]"
+      }
+    },
+    {
+      "condition": "[parameters('computeNetworks')[copyIndex()].networkPeering.deploy]",
+      "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+      "name": "[concat(parameters('computeNetworks')[copyIndex()].name, '/', parameters('storageNetwork').name)]",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
+      "location": "[parameters('computeNetworks')[copyIndex()].regionName]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('computeNetworks')[copyIndex()].name)]"
+      ],
+      "properties": {
+        "remoteVirtualNetwork": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('storageNetwork').name)]"
+        },
+        "allowVirtualNetworkAccess": "[parameters('computeNetworks')[copyIndex()].networkPeering.allowVirtualNetworkAccess]",
+        "allowForwardedTraffic": "[parameters('computeNetworks')[copyIndex()].networkPeering.allowForwardedTraffic]",
+        "allowGatewayTransit": "[parameters('computeNetworks')[copyIndex()].networkPeering.allowGatewayTransit]",
+        "useRemoteGateways": "[parameters('computeNetworks')[copyIndex()].networkPeering.useRemoteGateways]"
+      },
+      "copy": {
+        "name": "computeNetworks",
+        "count": "[length(parameters('computeNetworks'))]"
+      }
+    },
+    {
+      "condition": "[parameters('computeNetworks')[copyIndex()].networkPeering.deploy]",
+      "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+      "name": "[concat(parameters('storageNetwork').name, '/', parameters('computeNetworks')[copyIndex()].name)]",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
+      "location": "[parameters('storageNetwork').regionName]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('storageNetwork').name)]"
+      ],
+      "properties": {
+        "remoteVirtualNetwork": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('computeNetworks')[copyIndex()].name)]"
+        },
+        "allowVirtualNetworkAccess": "[parameters('computeNetworks')[copyIndex()].networkPeering.allowVirtualNetworkAccess]",
+        "allowForwardedTraffic": "[parameters('computeNetworks')[copyIndex()].networkPeering.allowForwardedTraffic]",
+        "allowGatewayTransit": "[parameters('computeNetworks')[copyIndex()].networkPeering.allowGatewayTransit]",
+        "useRemoteGateways": "[parameters('computeNetworks')[copyIndex()].networkPeering.useRemoteGateways]"
+      },
+      "copy": {
+        "name": "computeNetworks",
+        "count": "[length(parameters('computeNetworks'))]"
+      }
+    },
+    {
+      "condition": "[or(parameters('computeNetworks')[copyIndex()].remoteAccess.deployBastian, parameters('computeNetworks')[copyIndex()].remoteAccess.deployGateway)]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[parameters('computeNetworks')[copyIndex()].name]",
+      "apiVersion": "[variables('publicIpAddressApiVersion')]",
+      "location": "[parameters('computeNetworks')[copyIndex()].regionName]",
+      "sku": {
+        "name": "[parameters('computeNetworks')[copyIndex()].remoteAccess.publicAddress.type]"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "[parameters('computeNetworks')[copyIndex()].remoteAccess.publicAddress.allocationMethod]"
+      },
+      "copy": {
+        "name": "computeNetworks",
+        "count": "[length(parameters('computeNetworks'))]"
+      }
+    },
+    {
+      "condition": "[parameters('computeNetworks')[copyIndex()].remoteAccess.deployBastian]",
+      "type": "Microsoft.Network/bastionHosts",
+      "name": "[parameters('computeNetworks')[copyIndex()].name]",
+      "apiVersion": "[variables('bastianHostApiVersion')]",
+      "location": "[parameters('computeNetworks')[copyIndex()].regionName]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('computeNetworks')[copyIndex()].name)]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('computeNetworks')[copyIndex()].name)]"
+      ],
+      "properties": {
+        "dnsName": "[parameters('domainName').bastian]",
+        "ipConfigurations": [
+          {
+            "name": "ipConfig",
+            "properties": {
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('computeNetworks')[copyIndex()].name, 'AzureBastionSubnet')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('computeNetworks')[copyIndex()].name)]"
+              }
+            }
+          }
+        ]
+      },
+      "copy": {
+        "name": "computeNetworks",
+        "count": "[length(parameters('computeNetworks'))]"
+      }
+    },
+    {
+      "condition": "[parameters('computeNetworks')[copyIndex()].remoteAccess.deployGateway]",
+      "type": "Microsoft.Network/virtualNetworkGateways",
+      "name": "[parameters('computeNetworks')[copyIndex()].name]",
+      "apiVersion": "[variables('virtualNetworkGatewayApiVersion')]",
+      "location": "[parameters('computeNetworks')[copyIndex()].regionName]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('computeNetworks')[copyIndex()].name)]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('computeNetworks')[copyIndex()].name)]"
+      ],
+      "properties": {
+        "sku": {
+          "name": "[parameters('networkGateway').vpnTier]",
+          "tier": "[parameters('networkGateway').vpnTier]"
+        },
+        "vpnGatewayGeneration": "[parameters('networkGateway').vpnGeneration]",
+        "vpnType": "[parameters('networkGateway').vpnType]",
+        "gatewayType": "[parameters('networkGateway').type]",
+        "enablePrivateIpAddress": "[parameters('networkGateway').privateAddress]",
+        "ipConfigurations": [
+          {
+            "name": "ipConfig",
+            "properties": {
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('computeNetworks')[copyIndex()].name, 'GatewaySubnet')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('computeNetworks')[copyIndex()].name)]"
+              }
+            }
+          }
+        ],
+        "vpnClientConfiguration": {
+          "vpnClientProtocols": "[parameters('networkGateway').vpnClient.protocols]",
+          "vpnClientAddressPool": {
+            "addressPrefixes": [
+              "[parameters('networkGateway').vpnClient.addressSpace]"
+            ]
+          },
+          "vpnClientRootCertificates": [
+            {
+              "name": "[parameters('networkGateway').vpnClient.rootCertificateName]",
+              "properties": {
+                "publicCertData": "[parameters('networkGateway').vpnClient.rootCertificateData]"
+              }
+            }
+          ]
+        }
+      },
+      "copy": {
+        "name": "computeNetworks",
+        "count": "[length(parameters('computeNetworks'))]"
+      }
+    }
+  ],
+  "outputs": {
+    "storageNetwork": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('storageNetwork').name]",
+        "resourceGroupName": "[resourceGroup().name]",
+        "regionName": "[parameters('storageNetwork').regionName]"
+      }
+    },
+    "computeNetworks": {
+      "type": "array",
+      "copy": {
+        "count": "[length(parameters('computeNetworks'))]",
+        "input": {
+          "name": "[parameters('computeNetworks')[copyIndex()].name]",
+          "resourceGroupName": "[resourceGroup().name]",
+          "regionName": "[parameters('computeNetworks')[copyIndex()].regionName]",
+          "domainName": "[parameters('domainName').zone]"
+        }
+      }
+    }
+  }
+}

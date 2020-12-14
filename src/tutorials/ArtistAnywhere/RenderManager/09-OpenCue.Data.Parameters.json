@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "renderManager": {
+      "value": {
+        "name": "rendermanager",
+        "tier": "MemoryOptimized",
+        "size": "Standard_E4s_v3",
+        "sqlVersion": 12,
+        "storage": {
+          "sizeMB": 32768,
+          "backupRetentionDays": 7
+        },
+        "admin": {
+          "name": "az",
+          "password": "P@ssword1234"
+        }
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "MediaPipelineEast",
+        "subnetName": "Data",
+        "resourceGroupName": "Azure.Media.Pipeline.Network"
+      }
+    }
+  }
+}

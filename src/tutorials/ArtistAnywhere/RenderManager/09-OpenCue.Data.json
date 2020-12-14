@@ -1,0 +1,62 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "renderManager": {
+      "type": "object",
+      "metadata": {
+        "description": "The render job manager."
+      }
+    },
+    "virtualNetwork": {
+      "type": "object",
+      "metadata": {
+        "description": "The virtual network."
+      }
+    }
+  },
+  "variables": {
+    "databaseServerApiVersion": "2020-02-14-preview"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers",
+      "name": "[parameters('renderManager').name]",
+      "apiVersion": "[variables('databaseServerApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "[parameters('renderManager').size]",
+        "tier": "[parameters('renderManager').tier]"
+      },
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "version": "[parameters('renderManager').sqlVersion]",
+        "storageProfile": {
+          "storageMB": "[parameters('renderManager').storage.sizeMB]",
+          "backupRetentionDays": "[parameters('renderManager').storage.backupRetentionDays]"
+        },
+        "administratorLogin": "[parameters('renderManager').admin.name]",
+        "administratorLoginPassword": "[parameters('renderManager').admin.password]",
+        "delegatedSubnetArguments": {
+          "subnetArmResourceId": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "managerDataServerHost": {
+      "type": "string",
+      "value": "[concat(parameters('renderManager').name, '.postgres.database.azure.com')]"
+    },
+    "managerDataServerPort": {
+      "type": "string",
+      "value": "5432"
+    },
+    "managerDataServerAuth": {
+      "type": "string",
+      "value": "[concat('user=', parameters('renderManager').admin.name, ' password=', parameters('renderManager').admin.password)]"
+    }
+  }
+}

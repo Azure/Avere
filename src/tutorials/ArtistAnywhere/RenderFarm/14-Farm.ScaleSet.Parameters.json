@@ -1,0 +1,97 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "managedIdentity": {
+      "value": {
+        "name": "MediaPipeline",
+        "resourceGroupName": "Azure.Media.Pipeline"
+      }
+    },
+    "imageGallery": {
+      "value": {
+        "name": "MediaPipeline",
+        "resourceGroupName": "Azure.Media.Pipeline.Gallery"
+      }
+    },
+    "renderFarms": {
+      "value": [
+        {
+          "deploy": true,
+          "name": "cpuMachines",
+          "image": {
+            "definitionName": "ServerLinux",
+            "versionId": "1.1.0"
+          },
+          "machine": {
+            "size": "Standard_F64s_v2",
+            "count": 0,
+            "osEphemeralDisk": true,
+            "graphics": {
+              "type": "",
+              "version": ""
+            },
+            "priority": "Spot",
+            "maxPrice": ""
+          },
+          "login": {
+            "adminUsername": "az",
+            "adminPassword": "P@ssword1234",
+            "sshPublicKeyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0rSgH3dwDtBI5U2WBqpYkO7KZadaN34qpgl0IpYSui+ctFYG7bH0QHAz1p2Taznbf/5Qsh8/exmcoEcWHQzURLmqr0llVarbnqQykCp2cpGBH6adPWHMBh/OsR5ZCPL2IMr6eCdKj6mpf9dALB/ieUgCYNGNv20RwK1fBBicQN9oBE6N+KI7ko4cdFRGE66DX9m8DhlPdOO03Zd40e0ZiDdyxpxp2+aI087pXtDkO2tJbanDYToJhrA4hXx+z8qSS1pfaTSXZvTQ83uHClTmxCs8TGLw3l2K7vUf0v8E/7jGFtmHxeNCXBZuSw27M7PoT8EeHbq876pSzgEQvNzgj"
+          },
+          "upgradePolicy": "Manual"
+        },
+        {
+          "deploy": false,
+          "name": "gpuMachines",
+          "image": {
+            "definitionName": "ServerLinux",
+            "versionId": "1.1.0"
+          },
+          "machine": {
+            "size": "Standard_NV6",
+            "count": 0,
+            "osEphemeralDisk": false,
+            "graphics": {
+              "type": "NvidiaGpuDriverLinux",
+              "version": "1.3"
+            },
+            "priority": "Spot",
+            "maxPrice": ""
+          },
+          "login": {
+            "adminUsername": "az",
+            "adminPassword": "P@ssword1234",
+            "sshPublicKeyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0rSgH3dwDtBI5U2WBqpYkO7KZadaN34qpgl0IpYSui+ctFYG7bH0QHAz1p2Taznbf/5Qsh8/exmcoEcWHQzURLmqr0llVarbnqQykCp2cpGBH6adPWHMBh/OsR5ZCPL2IMr6eCdKj6mpf9dALB/ieUgCYNGNv20RwK1fBBicQN9oBE6N+KI7ko4cdFRGE66DX9m8DhlPdOO03Zd40e0ZiDdyxpxp2+aI087pXtDkO2tJbanDYToJhrA4hXx+z8qSS1pfaTSXZvTQ83uHClTmxCs8TGLw3l2K7vUf0v8E/7jGFtmHxeNCXBZuSw27M7PoT8EeHbq876pSzgEQvNzgj"
+          },
+          "upgradePolicy": "Manual"
+        }
+      ]
+    },
+    "scriptExtension": {
+      "value": {
+        "linux": {
+          "filePath": "/tmp/14-Farm.ScaleSet.sh",
+          "fileParameters": "RENDER_MANAGER_HOST='10.1.0.7'",
+          "scriptParameters": {
+            "RENDER_MANAGER_HOST": "10.1.0.7"
+          }
+        }
+      }
+    },
+    "logAnalytics": {
+      "value": {
+        "deploy": false,
+        "name": "MediaPipeline",
+        "resourceGroupName": "Azure.Media.Pipeline"
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "MediaPipelineEast",
+        "subnetName": "Compute",
+        "resourceGroupName": "Azure.Media.Pipeline.Network"
+      }
+    }
+  }
+}

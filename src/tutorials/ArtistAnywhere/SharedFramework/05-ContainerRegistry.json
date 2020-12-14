@@ -1,0 +1,87 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "managedIdentity": {
+      "type": "object",
+      "metadata": {
+        "description": "The managed identity."
+      }
+    },
+    "containerRegistry": {
+      "type": "object",
+      "metadata": {
+        "description": "The container registry."
+      }
+    },
+    "virtualNetwork": {
+      "type": "object",
+      "metadata": {
+        "description": "The virtual network."
+      }
+    }
+  },
+  "variables": {
+    "containerRegistryApiVersion": "2019-12-01-preview",
+    "privateEndpointApiVersion": "2020-07-01"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.ContainerRegistry/registries",
+      "name": "[parameters('containerRegistry').name]",
+      "apiVersion": "[variables('containerRegistryApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "[parameters('containerRegistry').tier]"
+      },
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceId(parameters('managedIdentity').resourceGroupName, 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentity').name)]": {
+          }
+        }
+      },
+      "properties": {
+        "dataEndpointEnabled": "[parameters('containerRegistry').dataEndpointEnabled]",
+        "adminUserEnabled": "[parameters('containerRegistry').adminUserEnabled]",
+        "publicNetworkAccess": "[parameters('virtualNetwork').publicNetworkAccess]"
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints",
+      "name": "[parameters('containerRegistry').name]",
+      "apiVersion": "[variables('privateEndpointApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('containerRegistry').name)]"
+      ],
+      "properties": {
+        "subnet": {
+          "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "[parameters('containerRegistry').name]",
+            "properties": {
+              "privateLinkServiceId": "[resourceId('Microsoft.ContainerRegistry/registries', parameters('containerRegistry').name)]",
+              "groupIds": [
+                "registry"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "containerRegistry": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('containerRegistry').name]",
+        "resourceGroupName": "[resourceGroup().name]",
+        "loginEndpoint": "[reference(resourceId('Microsoft.ContainerRegistry/registries', parameters('containerRegistry').name), variables('containerRegistryApiVersion')).loginServer]",
+        "loginPassword": "[listCredentials(resourceId('Microsoft.ContainerRegistry/registries', parameters('containerRegistry').name), variables('containerRegistryApiVersion')).passwords[1].value]"
+      }
+    }
+  }
+}
