@@ -6,7 +6,12 @@ locals {
   # choose one of the following windows versions
   source_image_reference = local.windows_server_2016
   #source_image_reference = local.windows_server_2019
+  # uncommenting below for win10 confirms an eligible Windows 10 license with multi-tenant hosting rights
   #source_image_reference = local.windows_10
+  # choose the license_type
+  license_type = "None"
+  # license_type = "Windows_Client"
+  # license_type = "Windows_Server"
   add_public_ip = true
   vm_admin_username = "azureuser"
   // use either SSH Key data or admin password, if ssh_key_data is specified
@@ -35,7 +40,8 @@ locals {
 
   // load the powershell file, you can substitute kv pairs as you need them, but 
   // use arguments where possible
-  powershell_script = file("${path.module}/../setupMachine.ps1")
+  powershell_script = null
+  #powershell_script = file("${path.module}/../setupMachine.ps1")
 
   windows_server_2016 = {
     publisher = "MicrosoftWindowsServer"
@@ -52,9 +58,10 @@ locals {
   }
 
   windows_10 = {
-    publisher = "microsoftvisualstudio"
-    offer     = "Windows"
-    sku       = "Windows-10-N-x64"
+    publisher = "MicrosoftWindowsDesktop"
+    offer     = "Windows-10"
+    sku       = "20h2-pro"
+    #sku       = "20h1-entn" // uncomment for 2004
     version   = "latest"
   }
 }
@@ -85,7 +92,7 @@ resource "azurerm_network_interface" "vm" {
 
   ip_configuration {
     name                          = "internal"
-    subnet_id                     = local.vnet_jumpbox_subnet_id
+    subnet_id                     = local.vnet_render_clients1_subnet_id
     private_ip_address_allocation = local.use_static_private_ip_address ? "Static" : "Dynamic"
     private_ip_address            = local.use_static_private_ip_address ? local.private_ip_address : null
     public_ip_address_id          = local.add_public_ip ? azurerm_public_ip.vm[0].id : ""
@@ -97,11 +104,12 @@ resource "azurerm_windows_virtual_machine" "vm" {
   location              = azurerm_resource_group.win.location
   resource_group_name   = azurerm_resource_group.win.name
   computer_name         = local.unique_name
-  custom_data           = base64gzip(local.powershell_script)
+  custom_data           = local.powershell_script == null ? null : base64gzip(local.powershell_script)
   admin_username        = local.vm_admin_username
   admin_password        = local.vm_admin_password
   size                  = local.vm_size
   network_interface_ids = [azurerm_network_interface.vm.id]
+  license_type          = local.license_type
   
   os_disk {
     name                 = "${local.unique_name}-osdisk"
@@ -137,6 +145,8 @@ resource "azurerm_virtual_machine_extension" "cse" {
         "commandToExecute": "${local.windows_custom_script} > %SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.log 2>&1"
     }
 SETTINGS
+
+  count = local.powershell_script == null ? 0 : 1
 }
 
 output "username" {
