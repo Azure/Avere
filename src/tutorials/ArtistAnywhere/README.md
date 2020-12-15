@@ -30,9 +30,9 @@ The following Microsoft Azure resource templates and scripts define the Azure Ar
 
 | *Artist Workstation Image* | *Artist Workstation Machine* |
 | :------------------------- | :--------------------------- |
-| 15 - [Workstation Image Templates](ArtistWorkstation/15-Workstation.Image.json) ([Parameters](ArtistWorkstation/15-Workstation.Image.Parameters.json)) | 16 - [Workstation Machine](ArtistWorkstation/16-Workstation.Image.json) ([Parameters](ArtistWorkstation/15-Workstation.Image.Parameters.json)) |
-| 15 - [Workstation Image Customize Linux](ArtistWorkstation/15-Workstation.Image.sh) ([Unreal](ArtistWorkstation/15-Workstation.Image.Unreal.sh), [Blender](RenderFarm/13-Node.Image.Blender.sh), [OpenCue](ArtistWorkstation/15-Workstation.Image.OpenCue.sh), [Teradici](ArtistWorkstation/15-Workstation.Image.Teradici.sh)) | 16 - [Workstation Machine Initialize Linux](ArtistWorkstation/16-Workstation.Machines.sh) |
-| 15 - [Workstation Image Customize Windows](ArtistWorkstation/15-Workstation.Image.ps1) ([Unreal](ArtistWorkstation/15-Workstation.Image.Unreal.ps1), [Blender](ArtistWorkstation/15-Workstation.Image.Blender.ps1), [OpenCue](ArtistWorkstation/15-Workstation.Image.OpenCue.ps1), [Teradici](ArtistWorkstation/15-Workstation.Image.Teradici.ps1)) | 16 - [Workstation Machine Initialize Windows](ArtistWorkstation/16-Workstation.Machines.ps1) |
+| 15 - [Workstation Image Templates](ArtistWorkstation/15-Workstation.Image.json) ([Parameters](ArtistWorkstation/15-Workstation.Image.Parameters.json)) | 16 - [Workstation Machine](ArtistWorkstation/16-Workstation.Machine.json) ([Parameters](ArtistWorkstation/16-Workstation.Machine.Parameters.json)) |
+| 15 - [Workstation Image Customize Linux](ArtistWorkstation/15-Workstation.Image.sh) ([Unreal](ArtistWorkstation/15-Workstation.Image.Unreal.sh), [Blender](RenderFarm/13-Node.Image.Blender.sh), [OpenCue](ArtistWorkstation/15-Workstation.Image.OpenCue.sh), [Teradici](ArtistWorkstation/15-Workstation.Image.Teradici.sh)) | 16 - [Workstation Machine Initialize Linux](ArtistWorkstation/16-Workstation.Machine.sh) |
+| 15 - [Workstation Image Customize Windows](ArtistWorkstation/15-Workstation.Image.ps1) ([Unreal](ArtistWorkstation/15-Workstation.Image.Unreal.ps1), [Blender](ArtistWorkstation/15-Workstation.Image.Blender.ps1), [OpenCue](ArtistWorkstation/15-Workstation.Image.OpenCue.ps1), [Teradici](ArtistWorkstation/15-Workstation.Image.Teradici.ps1)) | 16 - [Workstation Machine Initialize Windows](ArtistWorkstation/16-Workstation.Machine.ps1) |
 
 <!-- | *Stream Edge* |
 | :------------ |
