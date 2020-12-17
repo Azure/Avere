@@ -10,13 +10,19 @@
 [CmdletBinding(DefaultParameterSetName="Standard")]
 param(
     [string]
-    $MountAddressesCSV = "",
+    $RenameVMPrefix = "",
     
     [string]
-    $MountPath = "",
+    $ADDomain = "",
 
     [string]
-    $TargetPath = "",
+    $OUPath = "",
+
+    [string]
+    $DomainUser = "",
+
+    [string]
+    $DomainPassword = "",
 
     [int]
     $RDPPort = 3389
@@ -52,29 +58,6 @@ DownloadFileOverHttp($Url, $DestinationPath)
     Write-Log "$DestinationPath updated"
 }
 
-function
-Install-NFS
-{
-    # only set if we have a the mount information and path
-    if ($MountAddressesCSV -gt 0 -And $MountPath -gt 0 -And $TargetPath -gt 0 )
-    {
-        # install NFS
-        New-ItemProperty -Path HKLM:'\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System' -Name EnableLinkedConnections -Value 1 -Type DWord
-        Enable-WindowsOptionalFeature -Online -FeatureName "ServicesForNFS-ClientOnly" -All
-        Enable-WindowsOptionalFeature -Online -FeatureName "NFS-Administration" -All
-        Enable-WindowsOptionalFeature -Online -FeatureName "ClientForNFS-Infrastructure" -All
-
-        # get the mount address, round robin across ip addresses
-        $mount_addresses = $MountAddressesCSV -split ","
-        $ipV4full = Test-Connection -ComputerName (hostname) -Count 1
-        $octets = $ipV4full.IPV4Address.IPAddressToString -split "\."
-        $mount_index = $octets[3] % $mount_addresses.Length
-        $mount_address = $mount_addresses[$mount_index]
-        
-        cmd /c mklink /D ${TargetPath} "\\${mount_address}${MountPath}".replace("/","\\")
-    }
-}
-
 function 
 Update-RDPPort
 {
@@ -104,6 +87,60 @@ Update-RDPPort
     }
 }
 
+function 
+Disable-NonGateway-NICs
+{
+    $nics = Get-NetIPConfiguration |Where-Object {$_.IPv4DefaultGateway -eq $null}
+    foreach ($nic in $nics)
+    {
+        $nicName = $nic.InterfaceAlias
+        Write-Log "disabling nic $nicName"
+        Disable-NetAdapter -Name $nicName -Confirm:$False
+    }
+}
+
+function
+Rename-VM
+{
+    $newName = ""
+    if ($RenameVMPrefix -ne "")
+    {
+        $getip = (Get-NetIPConfiguration | Where-Object { $_.IPv4DefaultGateway -ne $null -and $_.NetAdapter.Status -ne "Disconnected"}).IPv4Address.IPAddress
+        $ip2 = $getip.split('.')
+        $newName = $RenameVMPrefix + $ip2[2] + "-" + $ip2[3]
+        Rename-Computer -NewName $newName -Force
+    }
+    return $newName
+}
+
+function
+DomainJoin-VM($newName)
+{
+    $joinCred = New-Object pscredential -ArgumentList ([pscustomobject]@{UserName = $DomainUser; Password = (ConvertTo-SecureString -String $DomainPassword -AsPlainText -Force)[0]})
+    if ($newName -ne "")
+    {
+        if ($OUPath -ne "")
+        {
+            Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -NewName $newName -OUPath $OUPath
+        }
+        else
+        {
+            Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -NewName $newName
+        }
+    }
+    else
+    {
+        if ($OUPath -ne "")
+        {
+            Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -OUPath $OUPath
+        }
+        else
+        {
+            Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force
+        }
+    }
+}
+
 try
 {
     # Set to false for debugging.  This will output the start script to
@@ -112,10 +149,16 @@ try
     # the output.
     if ($true)
     {
-        # call function Write-TestFile to output to c:\AzureData\helloworld.txt
-        Install-NFS
-
         Update-RDPPort
+
+        Disable-NonGateway-NICs
+
+        $newName = Rename-VM
+
+        DomainJoin-VM -newName $newName
+
+        # shutdown after joining VM
+        shutdown /r /t 30
 
         Write-Log "Complete"
     }
@@ -123,7 +166,7 @@ try
     {
         # keep for debugging purposes
         Write-Log "Set-ExecutionPolicy -ExecutionPolicy Unrestricted"
-        Write-Log ".\CustomDataSetupScript.ps1 -MountAddressesCSV '$MountAddressesCSV' -MountPath $MountPath -TargetPath $TargetPath -RDPPort $RDPPort  "
+        Write-Log ".\CustomDataSetupScript.ps1 -RenameVMPrefix '$RenameVMPrefix' -ADDomain $ADDomain -DomainUser '$DomainUser' -DomainPassword '$DomainPassword' -RDPPort $RDPPort "
     }
 }
 catch
