@@ -13,21 +13,21 @@ locals {
     // then admin_password is ignored
     vm_admin_password = "ReplacePassword$"
 
-    // replace below variables with the infrastructure variables from 0.network
-    location = ""
-    vnet_render_clients1_subnet_id = ""
-  
-    // replace below variables with the cache variables from 3.cache
-    mount_addresses = []
-    mount_path = ""
+    // update the below with information about the domain
+    ad_domain = "" // example "rendering.com"
+    // leave blank to add machine to default location
+    ou_path = ""
+    ad_username = "" 
+    ad_password = ""
     
-    // advanced scenarios: the below variables rarely need to change  
-    mount_address_csv = join(",", tolist(local.mount_addresses))
-    target_path = "c:\\\\cloudcache"
+    // leave blank to not rename VM, otherwise it will be named "VMPREFIX-OCTET3-OCTET4" where the octets are from the IPv4 address of the machine
+    vmPrefix = "vm"
+
+    // update if you need to change the RDP port
     rdp_port = 3389
 
     // the following are the arguments to be passed to the custom script
-    windows_custom_script_arguments = "$arguments = ' -MountAddressesCSV ''${local.mount_address_csv}'' -MountPath ''${local.mount_path}'' -TargetPath ''${local.target_path}'' -RDPPort ${local.rdp_port} '  ; "
+    windows_custom_script_arguments = "$arguments = ' -RenameVMPrefix ''${local.vmPrefix}'' -ADDomain ''${local.ad_domain}'' -OUPath ''${local.ou_path}'' ''${local.ad_username}'' -DomainPassword ''${local.ad_password}'' -RDPPort ${local.rdp_port} '  ; "
 
     // load the powershell file, you can substitute kv pairs as you need them, but 
     // use arguments where possible
