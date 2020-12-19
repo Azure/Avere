@@ -58,6 +58,13 @@ DownloadFileOverHttp($Url, $DestinationPath)
     Write-Log "$DestinationPath updated"
 }
 
+function
+Disable-PrivacyExperience
+{
+    $TSPath = 'HKLM:\Software\Policies\Microsoft\Windows\OOBE'
+    Set-ItemProperty -Path $TSPath -name 'DisablePrivacyExperience' -Value 1 -Type DWord
+}
+
 function 
 Update-RDPPort
 {
@@ -149,12 +156,16 @@ try
     # the output.
     if ($true)
     {
+        Disable-PrivacyExperience
+
         Update-RDPPort
 
         Disable-NonGateway-NICs
 
+        Write-Log "Renaming VM"
         $newName = Rename-VM
 
+        Write-Log "Joining Domain with rename to '$newName'"
         DomainJoin-VM -newName $newName
 
         # shutdown after joining VM
@@ -166,7 +177,7 @@ try
     {
         # keep for debugging purposes
         Write-Log "Set-ExecutionPolicy -ExecutionPolicy Unrestricted"
-        Write-Log ".\CustomDataSetupScript.ps1 -RenameVMPrefix '$RenameVMPrefix' -ADDomain $ADDomain -DomainUser '$DomainUser' -DomainPassword '$DomainPassword' -RDPPort $RDPPort "
+        Write-Log ".\CustomDataSetupScript.ps1 -RenameVMPrefix '$RenameVMPrefix' -ADDomain $ADDomain -OUPath '$OUPath' -DomainUser '$DomainUser' -DomainPassword '$DomainPassword' -RDPPort $RDPPort "
     }
 }
 catch
