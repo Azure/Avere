@@ -13,6 +13,10 @@ locals {
     // then admin_password is ignored
     vm_admin_password = "ReplacePassword$"
 
+    // replace below variables with the infrastructure variables from 0.network
+    location = ""
+    vnet_render_clients1_subnet_id = ""
+
     // update the below with information about the domain
     ad_domain = "" // example "rendering.com"
     // leave blank to add machine to default location
