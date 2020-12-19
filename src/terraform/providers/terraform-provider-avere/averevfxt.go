@@ -480,23 +480,23 @@ func (a *AvereVfxt) BlockUntilHealthy(fullHealthCheck bool) error {
 			}
 		}
 
-		if fullHealthCheck {
-			// the following checks are useful to run before returning to customer
-
-			if healthy && fullHealthCheck {
-				// verify all nodes healthy
-				nodes, err := a.GetExistingNodes()
-				if err != nil {
-					return err
-				}
-				for _, node := range nodes {
-					if node.State != NodeUp {
-						log.Printf("[WARN] [%d/%d] node %v not up and in state %v", retries, ClusterStableRetryCount, node, node.State)
-						healthy = false
-						break
-					}
+		if healthy && fullHealthCheck {
+			// verify all nodes healthy
+			nodes, err := a.GetExistingNodes()
+			if err != nil {
+				return err
+			}
+			for _, node := range nodes {
+				if node.State != NodeUp {
+					log.Printf("[WARN] [%d/%d] node %v not up and in state %v", retries, ClusterStableRetryCount, node, node.State)
+					healthy = false
+					break
 				}
 			}
+		}
+
+		if fullHealthCheck {
+			// the following checks are useful to run before returning to customer
 
 			if healthy && fullHealthCheck {
 				// verify vserver is pingable
@@ -2164,7 +2164,7 @@ func (a *AvereVfxt) getSupportSecureProactiveSupportCommand() string {
 	if a.EnableSupportUploads {
 		isEnabled = "yes"
 	}
-	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'remoteCommandEnabled':'%s','SPSLinkInterval':'300','SPSLinkEnabled':'%s','remoteCommandExpiration':''}\"", a.getBaseAvereCmd(), a.SecureProactiveSupport, isEnabled), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'remoteCommandEnabled':'%s','SPSLinkInterval':'60','SPSLinkEnabled':'%s','remoteCommandExpiration':''}\"", a.getBaseAvereCmd(), a.SecureProactiveSupport, isEnabled), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getDirServicesEnableCIFSCommand() string {
