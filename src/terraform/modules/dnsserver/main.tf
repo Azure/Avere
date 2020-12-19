@@ -1,5 +1,5 @@
 locals {
-  # create the A record lines
+  # create the A record lines for the first Avere
   last_octet = split(".", var.avere_first_ip_addr)[3]
   addr_prefix = trimsuffix(var.avere_first_ip_addr, ".${local.last_octet}")
   # technique from article: https://forum.netgate.com/topic/120486/round-robin-for-dns-forwarder-network-address/3
@@ -20,9 +20,31 @@ locals {
         "local-data-ptr: \"${local.addr_prefix}.${local.last_octet + j} ${var.dns_max_ttl_seconds} ${var.avere_filer_alternate_fqdn[i]}\""
         ]
   ])
+
+  # create the A record lines for the second Avere
+  last_octet2 = split(".", var.avere_first_ip_addr2)[3]
+  addr_prefix2 = trimsuffix(var.avere_first_ip_addr2, ".${local.last_octet2}")
+
+  local_a_records2 = [for i in range(var.avere_ip_addr_count2): "local-data: \"${var.avere_filer_fqdn} ${var.dns_max_ttl_seconds} A ${local.addr_prefix2}.${local.last_octet2 + i}\""]
+  local_a_records_reverse2 = [for i in range(var.avere_ip_addr_count2): "local-data-ptr: \"${local.addr_prefix2}.${local.last_octet2 + i} ${var.dns_max_ttl_seconds} ${var.avere_filer_fqdn}\""]
+
+  # alternate fqdn
+  local_alternate_a_records2 = flatten([
+    for i in range(length(var.avere_filer_alternate_fqdn)): [
+      for j in range(var.avere_ip_addr_count2): 
+        "local-data: \"${var.avere_filer_alternate_fqdn[i]} ${var.dns_max_ttl_seconds} A ${local.addr_prefix2}.${local.last_octet2 + j}\""
+        ]
+  ])
+  # reverse records
+  local_alternate_a_records_reverse2 = flatten([
+    for i in range(length(var.avere_filer_alternate_fqdn)): [
+      for j in range(var.avere_ip_addr_count2): 
+        "local-data-ptr: \"${local.addr_prefix2}.${local.last_octet2 + j} ${var.dns_max_ttl_seconds} ${var.avere_filer_alternate_fqdn[i]}\""
+        ]
+  ])
   
   # join everything into the same string
-  all_a_records = concat(local.local_a_records, local.local_a_records_reverse, local.local_alternate_a_records, local.local_alternate_a_records_reverse)
+  all_a_records = concat(local.local_a_records, local.local_a_records_reverse, local.local_alternate_a_records, local.local_alternate_a_records_reverse, local.local_a_records2, local.local_a_records_reverse2, local.local_alternate_a_records2, local.local_alternate_a_records_reverse2)
   local_a_records_str = "local-zone: \"${var.avere_filer_fqdn}\" transparent\n  ${join("\n  ", local.all_a_records)}"
 
   # create the dns forward lines  
