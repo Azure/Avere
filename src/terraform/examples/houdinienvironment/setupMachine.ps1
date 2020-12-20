@@ -1,11 +1,11 @@
 <#
     .SYNOPSIS
-        Configure Windows 10 Workstation with Media.
+        Configure Windows 10 Workstation with Domain Join.
 
     .DESCRIPTION
-        Configure Windows 10 Workstation with Media.
+        Configure Windows 10 Workstation with Domain Join.
 
-        Example command line: .\startupAvere azureuser 172.16.0.15 172.16.0.22 msazure
+        Example command line: .\setupMachine.ps1 -RenameVMPrefix 'eus' -ADDomain 'rendering.com' -OUPath 'OU=anthony,DC=rendering,DC=com' -DomainUser 'azureuser' -DomainPassword 'ReplacePassword1$' -RDPPort 3389
 #>
 [CmdletBinding(DefaultParameterSetName="Standard")]
 param(
@@ -161,7 +161,8 @@ DomainJoin-VM($newName)
         Remove-DomainNameIfExists
 
         $securepw = ConvertTo-SecureString $DomainPassword -AsPlainText -Force
-        $joinCred = New-Object System.Management.Automation.PSCredential('azureuser', $securepw)
+        # during automation, you must use FQDN: https://stackoverflow.com/questions/32076717/failed-to-join-domain-with-automated-powershell-script-unable-to-update-pass
+        $joinCred = New-Object System.Management.Automation.PSCredential("$DomainUser@$ADDomain", $securepw)
         if ($newName -ne "")
         {
             if ($OUPath -ne "")
