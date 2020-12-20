@@ -62,7 +62,17 @@ function
 Disable-PrivacyExperience
 {
     $TSPath = 'HKLM:\Software\Policies\Microsoft\Windows\OOBE'
-    Set-ItemProperty -Path $TSPath -name 'DisablePrivacyExperience' -Value 1 -Type DWord
+    if (Test-Path $TSPath)
+    {
+        Write-Log "Updating Property $TSPath"
+        Set-ItemProperty -Path $TSPath -name DisablePrivacyExperience -Value 1 -Type DWord
+    }
+    else
+    {
+        Write-Log "Creating Property $TSPath"
+        New-Item -Path $TSPath
+        New-ItemProperty -Path $TSPath -Name DisablePrivacyExperience -Value 1 -Type DWord
+    }
 }
 
 function 
@@ -121,30 +131,63 @@ Rename-VM
 }
 
 function
-DomainJoin-VM($newName)
+Remove-DomainNameIfExists
 {
-    $joinCred = New-Object pscredential -ArgumentList ([pscustomobject]@{UserName = $DomainUser; Password = (ConvertTo-SecureString -String $DomainPassword -AsPlainText -Force)[0]})
-    if ($newName -ne "")
+    if ($DomainUser -ne "" -And $DomainPassword -ne "" -And $ADDomain -ne "" )
     {
-        if ($OUPath -ne "")
-        {
-            Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -NewName $newName -OUPath $OUPath
-        }
-        else
-        {
-            Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -NewName $newName
+        # remove domain if it already exists
+        $computerName  = if ($newName) { $newName } else { $env:computername }
+        $DomainInfo    = New-Object DirectoryServices.DirectoryEntry("LDAP://$ADDomain", $DomainUser, $DomainPassword)
+        $Search        = New-Object DirectoryServices.DirectorySearcher($DomainInfo)
+        $Search.Filter = "(samAccountName=$($computerName)$)"
+
+        if ($Comp = $Search.FindOne()) {
+            Write-Log "removing existing entry $computerName"
+            $Comp.GetDirectoryEntry().DeleteTree()
+            Start-Sleep -Seconds 5
         }
     }
     else
     {
-        if ($OUPath -ne "")
+        Write-Log "Unable to remove domain name, one of domain, user, password is empty"
+    }
+}
+
+function
+DomainJoin-VM($newName)
+{
+    if ($DomainUser -ne "" -And $DomainPassword -ne "" -And $ADDomain -ne "" )
+    {
+        Remove-DomainNameIfExists
+
+        $securepw = ConvertTo-SecureString $DomainPassword -AsPlainText -Force
+        $joinCred = New-Object System.Management.Automation.PSCredential('azureuser', $securepw)
+        if ($newName -ne "")
         {
-            Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -OUPath $OUPath
+            if ($OUPath -ne "")
+            {
+                Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -NewName $newName -OUPath $OUPath
+            }
+            else
+            {
+                Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -NewName $newName
+            }
         }
         else
         {
-            Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force
+            if ($OUPath -ne "")
+            {
+                Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -OUPath $OUPath
+            }
+            else
+            {
+                Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force
+            }
         }
+    }
+    else
+    {
+        Write-Log "Unable to join domain, one of domain, user, password is empty"
     }
 }
 
