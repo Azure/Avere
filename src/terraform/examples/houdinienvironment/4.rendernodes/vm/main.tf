@@ -4,6 +4,8 @@ locals {
   unique_name = "unique"
   // paste in the id of the full custom image
   source_image_id = ""
+  // can be any of the following None, Windows_Client and Windows_Server
+  license_type = "None"
   vm_size = "Standard_D4s_v3"
   add_public_ip = true
   vm_admin_username = "azureuser"
@@ -86,6 +88,7 @@ resource "azurerm_windows_virtual_machine" "vm" {
     storage_account_type = "Standard_LRS"
   }
 
+  license_type = local.license_type
 }
 
 locals {
@@ -103,7 +106,8 @@ resource "azurerm_virtual_machine_extension" "cse" {
   type                 = "CustomScriptExtension"
   type_handler_version = "1.10"
 
-  settings = <<SETTINGS
+  // protected_settings necessary to pass secrets
+  protected_settings = <<SETTINGS
     {
         "commandToExecute": "${local.windows_custom_script} > %SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.log 2>&1"
     }
