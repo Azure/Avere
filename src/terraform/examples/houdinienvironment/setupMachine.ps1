@@ -58,6 +58,42 @@ DownloadFileOverHttp($Url, $DestinationPath)
     Write-Log "$DestinationPath updated"
 }
 
+# technique from here https://stackoverflow.com/questions/45470999/powershell-try-catch-and-retry
+function Retry-Command {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Position=0, Mandatory=$true)]
+        [scriptblock]$ScriptBlock,
+
+        [Parameter(Position=1, Mandatory=$false)]
+        [int]$Maximum = 120,
+
+        [Parameter(Position=2, Mandatory=$false)]
+        [int]$Delay = 5000
+    )
+
+    Begin {
+        $cnt = 0
+    }
+
+    Process {
+        do {
+            $cnt++
+            try {
+                $ScriptBlock.Invoke()
+                return
+            } catch {
+                Write-Error $_.Exception.InnerException.Message -ErrorAction Continue
+                Start-Sleep -Milliseconds $Delay
+            }
+        } while ($cnt -lt $Maximum)
+
+        # Throw an error after $Maximum unsuccessful invocations. Doesn't need
+        # a condition, since the function returns upon successful invocation.
+        throw 'Execution failed.'
+    }
+}
+
 function
 Disable-PrivacyExperience
 {
@@ -131,20 +167,21 @@ Rename-VM
 }
 
 function
-Remove-DomainNameIfExists
+Remove-DomainNameIfExists($computerName)
 {
     if ($DomainUser -ne "" -And $DomainPassword -ne "" -And $ADDomain -ne "" )
     {
         # remove domain if it already exists
-        $computerName  = if ($newName) { $newName } else { $env:computername }
         $DomainInfo    = New-Object DirectoryServices.DirectoryEntry("LDAP://$ADDomain", $DomainUser, $DomainPassword)
         $Search        = New-Object DirectoryServices.DirectorySearcher($DomainInfo)
         $Search.Filter = "(samAccountName=$($computerName)$)"
 
-        if ($Comp = $Search.FindOne()) {
-            Write-Log "removing existing entry $computerName"
-            $Comp.GetDirectoryEntry().DeleteTree()
-            Start-Sleep -Seconds 5
+        Retry-Command -ScriptBlock {
+            if ($Comp = $Search.FindOne()) {
+                Write-Log "removing existing entry $computerName"
+                $Comp.GetDirectoryEntry().DeleteTree()
+                Start-Sleep -Seconds 5
+            }
         }
     }
     else
@@ -154,35 +191,46 @@ Remove-DomainNameIfExists
 }
 
 function
-DomainJoin-VM($newName)
+DomainJoin-VM($originalName, $newName)
 {
     if ($DomainUser -ne "" -And $DomainPassword -ne "" -And $ADDomain -ne "" )
     {
-        Remove-DomainNameIfExists
-
         $securepw = ConvertTo-SecureString $DomainPassword -AsPlainText -Force
         # during automation, you must use FQDN: https://stackoverflow.com/questions/32076717/failed-to-join-domain-with-automated-powershell-script-unable-to-update-pass
         $joinCred = New-Object System.Management.Automation.PSCredential("$DomainUser@$ADDomain", $securepw)
-        if ($newName -ne "")
-        {
-            if ($OUPath -ne "")
+
+        Retry-Command -ScriptBlock {
+            # Try to remove existing names in the following two cases:
+            # 1. Remove the existing names if they already exist because of a previous scale-up
+            # 2. It is possible Add-Computer hits 'The directory service is busy' 
+            #    so we have to remove the name before retrying Add-Computer
+            Remove-DomainNameIfExists -computerName $originalName
+            if ($newName -ne "")
             {
-                Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -NewName $newName -OUPath $OUPath
+                Remove-DomainNameIfExists -computerName $newName
+            }
+            # add computer to domain
+            if ($newName -ne "")
+            {
+                if ($OUPath -ne "")
+                {
+                    Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -ErrorAction Stop -NewName $newName -OUPath $OUPath
+                }
+                else
+                {
+                    Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -ErrorAction Stop -NewName $newName
+                }
             }
             else
             {
-                Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -NewName $newName
-            }
-        }
-        else
-        {
-            if ($OUPath -ne "")
-            {
-                Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -OUPath $OUPath
-            }
-            else
-            {
-                Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force
+                if ($OUPath -ne "")
+                {
+                    Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -ErrorAction Stop -OUPath $OUPath
+                }
+                else
+                {
+                    Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -ErrorAction Stop
+                }
             }
         }
     }
@@ -206,11 +254,12 @@ try
 
         Disable-NonGateway-NICs
 
-        Write-Log "Renaming VM"
+        $originalName = $env:computername
+        Write-Log "Renaming VM from $originalName"
         $newName = Rename-VM
 
         Write-Log "Joining Domain with rename to '$newName'"
-        DomainJoin-VM -newName $newName
+        DomainJoin-VM -originalName $originalName -newName $newName
 
         # shutdown after joining VM
         shutdown /r /t 30
