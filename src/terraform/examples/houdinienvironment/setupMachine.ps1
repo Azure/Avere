@@ -1,22 +1,28 @@
 <#
     .SYNOPSIS
-        Configure Windows 10 Workstation with Media.
+        Configure Windows 10 Workstation with Domain Join.
 
     .DESCRIPTION
-        Configure Windows 10 Workstation with Media.
+        Configure Windows 10 Workstation with Domain Join.
 
-        Example command line: .\startupAvere azureuser 172.16.0.15 172.16.0.22 msazure
+        Example command line: .\setupMachine.ps1 -RenameVMPrefix 'eus' -ADDomain 'rendering.com' -OUPath 'OU=anthony,DC=rendering,DC=com' -DomainUser 'azureuser' -DomainPassword 'ReplacePassword1$' -RDPPort 3389
 #>
 [CmdletBinding(DefaultParameterSetName="Standard")]
 param(
     [string]
-    $MountAddressesCSV = "",
+    $RenameVMPrefix = "",
     
     [string]
-    $MountPath = "",
+    $ADDomain = "",
 
     [string]
-    $TargetPath = "",
+    $OUPath = "",
+
+    [string]
+    $DomainUser = "",
+
+    [string]
+    $DomainPassword = "",
 
     [int]
     $RDPPort = 3389
@@ -52,26 +58,56 @@ DownloadFileOverHttp($Url, $DestinationPath)
     Write-Log "$DestinationPath updated"
 }
 
-function
-Install-NFS
-{
-    # only set if we have a the mount information and path
-    if ($MountAddressesCSV -gt 0 -And $MountPath -gt 0 -And $TargetPath -gt 0 )
-    {
-        # install NFS
-        New-ItemProperty -Path HKLM:'\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System' -Name EnableLinkedConnections -Value 1 -Type DWord
-        Enable-WindowsOptionalFeature -Online -FeatureName "ServicesForNFS-ClientOnly" -All
-        Enable-WindowsOptionalFeature -Online -FeatureName "NFS-Administration" -All
-        Enable-WindowsOptionalFeature -Online -FeatureName "ClientForNFS-Infrastructure" -All
+# technique from here https://stackoverflow.com/questions/45470999/powershell-try-catch-and-retry
+function Retry-Command {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Position=0, Mandatory=$true)]
+        [scriptblock]$ScriptBlock,
 
-        # get the mount address, round robin across ip addresses
-        $mount_addresses = $MountAddressesCSV -split ","
-        $ipV4full = Test-Connection -ComputerName (hostname) -Count 1
-        $octets = $ipV4full.IPV4Address.IPAddressToString -split "\."
-        $mount_index = $octets[3] % $mount_addresses.Length
-        $mount_address = $mount_addresses[$mount_index]
-        
-        cmd /c mklink /D ${TargetPath} "\\${mount_address}${MountPath}".replace("/","\\")
+        [Parameter(Position=1, Mandatory=$false)]
+        [int]$Maximum = 120,
+
+        [Parameter(Position=2, Mandatory=$false)]
+        [int]$Delay = 5000
+    )
+
+    Begin {
+        $cnt = 0
+    }
+
+    Process {
+        do {
+            $cnt++
+            try {
+                $ScriptBlock.Invoke()
+                return
+            } catch {
+                Write-Error $_.Exception.InnerException.Message -ErrorAction Continue
+                Start-Sleep -Milliseconds $Delay
+            }
+        } while ($cnt -lt $Maximum)
+
+        # Throw an error after $Maximum unsuccessful invocations. Doesn't need
+        # a condition, since the function returns upon successful invocation.
+        throw 'Execution failed.'
+    }
+}
+
+function
+Disable-PrivacyExperience
+{
+    $TSPath = 'HKLM:\Software\Policies\Microsoft\Windows\OOBE'
+    if (Test-Path $TSPath)
+    {
+        Write-Log "Updating Property $TSPath"
+        Set-ItemProperty -Path $TSPath -name DisablePrivacyExperience -Value 1 -Type DWord
+    }
+    else
+    {
+        Write-Log "Creating Property $TSPath"
+        New-Item -Path $TSPath
+        New-ItemProperty -Path $TSPath -Name DisablePrivacyExperience -Value 1 -Type DWord
     }
 }
 
@@ -104,6 +140,106 @@ Update-RDPPort
     }
 }
 
+function 
+Disable-NonGateway-NICs
+{
+    $nics = Get-NetIPConfiguration |Where-Object {$_.IPv4DefaultGateway -eq $null}
+    foreach ($nic in $nics)
+    {
+        $nicName = $nic.InterfaceAlias
+        Write-Log "disabling nic $nicName"
+        Disable-NetAdapter -Name $nicName -Confirm:$False
+    }
+}
+
+function
+Rename-VM
+{
+    $newName = ""
+    if ($RenameVMPrefix -ne "")
+    {
+        $getip = (Get-NetIPConfiguration | Where-Object { $_.IPv4DefaultGateway -ne $null -and $_.NetAdapter.Status -ne "Disconnected"}).IPv4Address.IPAddress
+        $ip2 = $getip.split('.')
+        $newName = $RenameVMPrefix + $ip2[2] + "-" + $ip2[3]
+        Rename-Computer -NewName $newName -Force
+    }
+    return $newName
+}
+
+function
+Remove-DomainNameIfExists($computerName)
+{
+    if ($DomainUser -ne "" -And $DomainPassword -ne "" -And $ADDomain -ne "" )
+    {
+        # remove domain if it already exists
+        $DomainInfo    = New-Object DirectoryServices.DirectoryEntry("LDAP://$ADDomain", $DomainUser, $DomainPassword)
+        $Search        = New-Object DirectoryServices.DirectorySearcher($DomainInfo)
+        $Search.Filter = "(samAccountName=$($computerName)$)"
+
+        Retry-Command -ScriptBlock {
+            if ($Comp = $Search.FindOne()) {
+                Write-Log "removing existing entry $computerName"
+                $Comp.GetDirectoryEntry().DeleteTree()
+                Start-Sleep -Seconds 5
+            }
+        }
+    }
+    else
+    {
+        Write-Log "Unable to remove domain name, one of domain, user, password is empty"
+    }
+}
+
+function
+DomainJoin-VM($originalName, $newName)
+{
+    if ($DomainUser -ne "" -And $DomainPassword -ne "" -And $ADDomain -ne "" )
+    {
+        $securepw = ConvertTo-SecureString $DomainPassword -AsPlainText -Force
+        # during automation, you must use FQDN: https://stackoverflow.com/questions/32076717/failed-to-join-domain-with-automated-powershell-script-unable-to-update-pass
+        $joinCred = New-Object System.Management.Automation.PSCredential("$DomainUser@$ADDomain", $securepw)
+
+        Retry-Command -ScriptBlock {
+            # Try to remove existing names in the following two cases:
+            # 1. Remove the existing names if they already exist because of a previous scale-up
+            # 2. It is possible Add-Computer hits 'The directory service is busy' 
+            #    so we have to remove the name before retrying Add-Computer
+            Remove-DomainNameIfExists -computerName $originalName
+            if ($newName -ne "")
+            {
+                Remove-DomainNameIfExists -computerName $newName
+            }
+            # add computer to domain
+            if ($newName -ne "")
+            {
+                if ($OUPath -ne "")
+                {
+                    Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -ErrorAction Stop -NewName $newName -OUPath $OUPath
+                }
+                else
+                {
+                    Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -ErrorAction Stop -NewName $newName
+                }
+            }
+            else
+            {
+                if ($OUPath -ne "")
+                {
+                    Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -ErrorAction Stop -OUPath $OUPath
+                }
+                else
+                {
+                    Add-Computer -DomainName $ADDomain -PassThru -Verbose -Credential $joinCred -Force -ErrorAction Stop
+                }
+            }
+        }
+    }
+    else
+    {
+        Write-Log "Unable to join domain, one of domain, user, password is empty"
+    }
+}
+
 try
 {
     # Set to false for debugging.  This will output the start script to
@@ -112,10 +248,21 @@ try
     # the output.
     if ($true)
     {
-        # call function Write-TestFile to output to c:\AzureData\helloworld.txt
-        Install-NFS
+        Disable-PrivacyExperience
 
         Update-RDPPort
+
+        Disable-NonGateway-NICs
+
+        $originalName = $env:computername
+        Write-Log "Renaming VM from $originalName"
+        $newName = Rename-VM
+
+        Write-Log "Joining Domain with rename to '$newName'"
+        DomainJoin-VM -originalName $originalName -newName $newName
+
+        # shutdown after joining VM
+        shutdown /r /t 30
 
         Write-Log "Complete"
     }
@@ -123,7 +270,7 @@ try
     {
         # keep for debugging purposes
         Write-Log "Set-ExecutionPolicy -ExecutionPolicy Unrestricted"
-        Write-Log ".\CustomDataSetupScript.ps1 -MountAddressesCSV '$MountAddressesCSV' -MountPath $MountPath -TargetPath $TargetPath -RDPPort $RDPPort  "
+        Write-Log ".\CustomDataSetupScript.ps1 -RenameVMPrefix '$RenameVMPrefix' -ADDomain $ADDomain -OUPath '$OUPath' -DomainUser '$DomainUser' -DomainPassword '$DomainPassword' -RDPPort $RDPPort "
     }
 }
 catch

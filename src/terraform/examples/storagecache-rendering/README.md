@@ -30,7 +30,14 @@ The following is a checklist of items to confirm before connecting an HPC Cache 
 
 # SMB
 
-For SMB ensure you set the UID / GID attributes according to the [Avere SMB document](https://azure.github.io/Avere/legacy/pdf/ADAdminCIFSACLsGuide_20140716.pdf).
+For SMB ensure you set the UID / GID attributes according to the [Avere SMB document](https://azure.github.io/Avere/legacy/pdf/ADAdminCIFSACLsGuide_20140716.pdf).  SMB is only supported on NetApp and Isilon.  SMB is unqualified but working on PixStor and Qumulo.  Use the following documents to help you with these core file types:
+* [PixStor](Avere%20and%20PixStor%20with%20SMB%20Shares.pdf) - shows how to configure Avere with PixStor.
+* [Qumulo](Avere%20and%20Qumulo%20with%20SMB%20Shares.pdf) - shows how to configure Avere with Qumulo.
+
+For SMB the Avere cluster configuration should be:
+1. 3-node cluster only.  To scale, add multiple 3-node clusters and ensure cache policy set to '`Clients Bypassing the Cluster`'.
+1. vserver should be configured to have single IP address per node
+1. set domain controller override to ensure Avere only accesses the domain controllers that are allowed by the firewall.
 
 If you are using a system that requires RID, use the [RID Generation Script](../houdinienvironment/Get-AvereFlatFiles.ps1), and copy the files alongside main.tf, and pass them in as `cifs_flatfile_passwd_b64z` and `cifs_flatfile_group_b64z` as shown in the [Houdini cache example](../houdinienvironment/3.cache/main.tf).
 

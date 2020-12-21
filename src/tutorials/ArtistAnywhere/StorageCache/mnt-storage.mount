@@ -1,0 +1,10 @@
+[Unit]
+
+[Mount]
+What=10.0.1.4:/volume-a
+Where=/mnt/storage
+Type=nfs
+Options=rw,hard,rsize=1048576,wsize=1048576,vers=3,tcp
+
+[Install]
+WantedBy=multi-user.target

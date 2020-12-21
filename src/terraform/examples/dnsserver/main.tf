@@ -168,6 +168,9 @@ module "dnsserver" {
     avere_first_ip_addr = avere_vfxt.vfxt.vserver_first_ip
     avere_ip_addr_count = avere_vfxt.vfxt.vserver_ip_count
     avere_filer_fqdn = local.onprem_filer_fqdn
+    
+    // set the TTL
+    dns_max_ttl_seconds = 300
 
     module_depends_on = [module.network.module_depends_on_ids]
 }

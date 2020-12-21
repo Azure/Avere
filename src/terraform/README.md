@@ -25,6 +25,8 @@ There are multiple video resources to help with learning about burst rendering o
 | [Siggraph 2020 Videos](https://siggraph.event.microsoft.com/) - Six videos from Siggraph 2020 review customer solutions and why render on Azure.  | [![Siggraph 2020 Videos](siggraph2020.png)](https://siggraph.event.microsoft.com/)   |
 | [Securing a custom image](https://youtu.be/CNiQU9qbMDk) - This example shows an Azure administrator how to take an on-prem image, upload it to Azure, and then provide secure access to a contributor.  | [![Tutorial Video](examples/securedimage/renderpilot.png)](https://youtu.be/CNiQU9qbMDk)  |
 | [Avere vFXT in a Proxy Environment](https://youtu.be/lxDDwu44OHM) - This example shows how to configure an Avere vFXT in a secured locked down internet environment where access to outside resources is via a proxy.  | [![Tutorial Video](examples/vfxt/proxy/proxyyoutube.png)](https://youtu.be/lxDDwu44OHM)  |
+| [Visual Effects and Animation Rendering in Azure](https://azure.microsoft.com/en-us/resources/visual-effects-and-animation-rendering-in-azure/) | [Whitepaper](https://azure.microsoft.com/en-us/resources/visual-effects-and-animation-rendering-in-azure/) |
+| [Head-Turning Animation: ‘Bobbleheads: The Movie’ First Feature Completed Remotely on Microsoft Azure Using NVIDIA GPUs](https://blogs.nvidia.com/blog/2020/12/09/bobbleheads-the-movie/) - With post-production struck by the COVID-19 pandemic, Threshold Entertainment and Incessant Rain Studios use the cloud to bring 3D animators and VFX artists together from around the world. | [Blog Link](https://blogs.nvidia.com/blog/2020/12/09/bobbleheads-the-movie/) |
 
 The remainder of this page provides Terraform infrastructure examples to build out the rendering architecture:
 1. [Full End-To-End Examples](#full-end-to-end-examples) - Full end to end examples in Linux and Windows.
@@ -108,6 +110,7 @@ The following terraform examples build out accessory rendering infrastructure su
 
 ### DNS, Security, and Jumpbox 
 
+1. [Secure VNET](examples/securevnet) - shows how to create a simple secure VNET that has locked down internet for burst render.
 1. [DNS Server to Override Filer Address](examples/dnsserver) - This deploys an Azure virtual machine that installs and configures [Unbound](https://nlnetlabs.nl/projects/unbound/about/) and and configures it to override the address of an on-premises filer so that the render nodes mount the Avere to hide the latency.  All other dns requests are forwarded to pre-configured on-premises dns servers.
 1. [SecuredImage](examples/securedimage) - shows how to create, upload, and deploy a custom image with an introduction to RBAC, Azure Governance, and Network.
 1. [Jumpbox](examples/jumpbox) - this deploys a VM pre-installed with pre-installed with az cli, terraform, golang, and the built avere provider

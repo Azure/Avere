@@ -64,8 +64,21 @@ variable "avere_ip_addr_count" {
   description = "the count of ip addresses on the vserver."
 }
 
+variable "avere_first_ip_addr2" {
+  description = "the first ip address of the Avere vserver2."
+}
+
+variable "avere_ip_addr_count2" {
+  description = "the count of ip addresses on the vserver2."
+}
+
 variable "avere_filer_fqdn" {
   description = "the fqdn of the avere."
+}
+
+variable "dns_max_ttl_seconds" {
+  description = "The max ttl in seconds of the dns records, the default is 5 minutes.  This will cap larger TTLS, and TTLs set lower than this value will still be respected."
+  default = 300
 }
 
 variable "avere_filer_alternate_fqdn" {

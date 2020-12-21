@@ -1,20 +1,50 @@
 locals {
-  # create the A record lines
+  # create the A record lines for the first Avere
   last_octet = split(".", var.avere_first_ip_addr)[3]
   addr_prefix = trimsuffix(var.avere_first_ip_addr, ".${local.last_octet}")
   # technique from article: https://forum.netgate.com/topic/120486/round-robin-for-dns-forwarder-network-address/3
-  local_a_records = [for i in range(var.avere_ip_addr_count): "local-data: \"${var.avere_filer_fqdn} A ${local.addr_prefix}.${local.last_octet + i}\""]
+  local_a_records = [for i in range(var.avere_ip_addr_count): "local-data: \"${var.avere_filer_fqdn} ${var.dns_max_ttl_seconds} A ${local.addr_prefix}.${local.last_octet + i}\""]
+  local_a_records_reverse = [for i in range(var.avere_ip_addr_count): "local-data-ptr: \"${local.addr_prefix}.${local.last_octet + i} ${var.dns_max_ttl_seconds} ${var.avere_filer_fqdn}\""]
   
   # alternate fqdn
   local_alternate_a_records = flatten([
     for i in range(length(var.avere_filer_alternate_fqdn)): [
       for j in range(var.avere_ip_addr_count): 
-        "local-data: \"${var.avere_filer_alternate_fqdn[i]} A ${local.addr_prefix}.${local.last_octet + j}\""
+        "local-data: \"${var.avere_filer_alternate_fqdn[i]} ${var.dns_max_ttl_seconds} A ${local.addr_prefix}.${local.last_octet + j}\""
+        ]
+  ])
+  # reverse records
+  local_alternate_a_records_reverse = flatten([
+    for i in range(length(var.avere_filer_alternate_fqdn)): [
+      for j in range(var.avere_ip_addr_count): 
+        "local-data-ptr: \"${local.addr_prefix}.${local.last_octet + j} ${var.dns_max_ttl_seconds} ${var.avere_filer_alternate_fqdn[i]}\""
+        ]
+  ])
+
+  # create the A record lines for the second Avere
+  last_octet2 = split(".", var.avere_first_ip_addr2)[3]
+  addr_prefix2 = trimsuffix(var.avere_first_ip_addr2, ".${local.last_octet2}")
+
+  local_a_records2 = [for i in range(var.avere_ip_addr_count2): "local-data: \"${var.avere_filer_fqdn} ${var.dns_max_ttl_seconds} A ${local.addr_prefix2}.${local.last_octet2 + i}\""]
+  local_a_records_reverse2 = [for i in range(var.avere_ip_addr_count2): "local-data-ptr: \"${local.addr_prefix2}.${local.last_octet2 + i} ${var.dns_max_ttl_seconds} ${var.avere_filer_fqdn}\""]
+
+  # alternate fqdn
+  local_alternate_a_records2 = flatten([
+    for i in range(length(var.avere_filer_alternate_fqdn)): [
+      for j in range(var.avere_ip_addr_count2): 
+        "local-data: \"${var.avere_filer_alternate_fqdn[i]} ${var.dns_max_ttl_seconds} A ${local.addr_prefix2}.${local.last_octet2 + j}\""
+        ]
+  ])
+  # reverse records
+  local_alternate_a_records_reverse2 = flatten([
+    for i in range(length(var.avere_filer_alternate_fqdn)): [
+      for j in range(var.avere_ip_addr_count2): 
+        "local-data-ptr: \"${local.addr_prefix2}.${local.last_octet2 + j} ${var.dns_max_ttl_seconds} ${var.avere_filer_alternate_fqdn[i]}\""
         ]
   ])
   
   # join everything into the same string
-  all_a_records = concat(local.local_a_records, local.local_alternate_a_records)
+  all_a_records = concat(local.local_a_records, local.local_a_records_reverse, local.local_alternate_a_records, local.local_alternate_a_records_reverse, local.local_a_records2, local.local_a_records_reverse2, local.local_alternate_a_records2, local.local_alternate_a_records_reverse2)
   local_a_records_str = "local-zone: \"${var.avere_filer_fqdn}\" transparent\n  ${join("\n  ", local.all_a_records)}"
 
   # create the dns forward lines  
@@ -24,7 +54,7 @@ locals {
 
   # send the script file to custom data, adding env vars
   script_file_b64 = base64gzip(replace(file("${path.module}/install.sh"),"\r",""))
-  unbound_conf_file_b64 = base64gzip(replace(templatefile("${path.module}/unbound.conf", { arecord_lines = local.local_a_records_str, forward_addr_lines = local.foward_lines_str }),"\r",""))
+  unbound_conf_file_b64 = base64gzip(replace(templatefile("${path.module}/unbound.conf", { max_ttl = var.dns_max_ttl_seconds, arecord_lines = local.local_a_records_str, forward_addr_lines = local.foward_lines_str }),"\r",""))
   cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { installcmd = local.script_file_b64, unboundconf = local.unbound_conf_file_b64, ssh_port = var.ssh_port })
 }
 

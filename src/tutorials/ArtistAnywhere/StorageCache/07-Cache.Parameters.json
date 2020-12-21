@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "cacheName": {
+      "value": "RenderPipeline"
+    },
+    "cacheThroughput": {
+      "value": "Standard_2G"
+    },
+    "cacheSize": {
+      "value": 3072
+    },
+    "cacheConfig": {
+      "value": {
+        "mtuSize": 1400,
+        "rootSquash": true,
+        "mountOptions": "ro,hard,proto=tcp,mountproto=tcp,retry=30"
+      }
+    },
+    "storageTargets": {
+      "value": [
+        {
+          "junctions": [
+            {
+              "namespacePath": "/storage/volume-a",
+              "nfsExport": "/volume-a",
+              "targetPath": "/"
+            },
+            {
+              "namespacePath": "/storage/volume-b",
+              "nfsExport": "/volume-b",
+              "targetPath": "/"
+            }
+          ],
+          "name": "Azure-NetApp-Files-NFSv3",
+          "protocols": [
+            "NFSv3"
+          ],
+          "source": "10.0.1.4"
+        }
+      ]
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "MediaPipelineEast",
+        "subnetName": "Cache",
+        "resourceGroupName": "Azure.Media.Pipeline.Network"
+      }
+    }
+  }
+}

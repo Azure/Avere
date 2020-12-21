@@ -429,13 +429,21 @@ func (a *AvereVfxt) GetAlerts() ([]Alert, error) {
 	return results, nil
 }
 
+func (a *AvereVfxt) BlockUntilClusterHealthy() error {
+	return a.BlockUntilHealthy(true)
+}
+
 func (a *AvereVfxt) EnsureClusterStable() error {
+	return a.BlockUntilHealthy(false)
+}
+
+func (a *AvereVfxt) BlockUntilHealthy(fullHealthCheck bool) error {
 	for retries := 0; ; retries++ {
 
 		healthy := true
 
 		if healthy {
-			// verify no activities
+			// verify no activities, needed for operations
 			activities, err := a.GetActivities()
 			if err != nil {
 				return err
@@ -457,7 +465,7 @@ func (a *AvereVfxt) EnsureClusterStable() error {
 		}
 
 		if healthy {
-			// verify no active alerts
+			// verify no active alerts, needed for operations
 			alerts, err := a.GetAlerts()
 			if err != nil {
 				return err
@@ -472,7 +480,7 @@ func (a *AvereVfxt) EnsureClusterStable() error {
 			}
 		}
 
-		if healthy {
+		if healthy && fullHealthCheck {
 			// verify all nodes healthy
 			nodes, err := a.GetExistingNodes()
 			if err != nil {
@@ -483,6 +491,22 @@ func (a *AvereVfxt) EnsureClusterStable() error {
 					log.Printf("[WARN] [%d/%d] node %v not up and in state %v", retries, ClusterStableRetryCount, node, node.State)
 					healthy = false
 					break
+				}
+			}
+		}
+
+		if fullHealthCheck {
+			// the following checks are useful to run before returning to customer
+
+			if healthy && fullHealthCheck {
+				// verify vserver is pingable
+				result, err := a.VServerIPsPingable()
+				if err != nil {
+					return err
+				}
+				healthy = result
+				if !healthy {
+					log.Printf("[WARN] [%d/%d] vfxt: not all vserver IP addresses are pingable", retries, ClusterStableRetryCount)
 				}
 			}
 		}
@@ -848,6 +872,11 @@ func (a *AvereVfxt) UploadFlatFiles() error {
 	}
 	log.Printf("[INFO] [uploading flat files")
 	defer log.Printf("[INFO] uploading flat files]")
+
+	// cleanup any existing flat files, this avoids failed copy or generation because of incorrect permissions
+	if _, err := a.ShellCommand(a.getCleanFlatFileCommand()); err != nil {
+		return fmt.Errorf("Error cleaning up flat files: %v", err)
+	}
 
 	if a.CifsRidMappingBaseInteger > 0 {
 		log.Printf("[INFO] step 1 - upload rid generator")
@@ -1353,6 +1382,32 @@ func (a *AvereVfxt) UpdateCifsMasks(junction *Junction) error {
 	return nil
 }
 
+func (a *AvereVfxt) VServerIPsPingable() (bool, error) {
+	log.Printf("[INFO] [VServerIPsPingable")
+	defer log.Printf("[INFO] VServerIPsPingable]")
+	firstQuartet, err := GetIPAddressLastQuartet(a.FirstIPAddress)
+	if err != nil {
+		return false, err
+	}
+	lastQuartet, err := GetIPAddressLastQuartet(a.LastIPAddress)
+	if err != nil {
+		return false, err
+	}
+	addressPrefix, err := GetIPAddress3QuartetPrefix(a.FirstIPAddress)
+	if err != nil {
+		return false, err
+	}
+
+	result, err := a.ShellCommand(GetPingIPAddressesCommand(firstQuartet, lastQuartet, addressPrefix))
+
+	if err != nil {
+		return false, fmt.Errorf("Error running ping vserver command: %v", err)
+	}
+	pingableResult := !strings.Contains(result, "timed out")
+	log.Printf("[INFO] VServerIP address %s%d-%d pingable result: %v", addressPrefix, firstQuartet, lastQuartet, pingableResult)
+	return pingableResult, nil
+}
+
 func (a *AvereVfxt) CreateVServer() error {
 	if len(a.FirstIPAddress) == 0 || len(a.LastIPAddress) == 0 {
 		// no first ip or last ip address.  This means the vServer would have been automatically created, just return.
@@ -1705,16 +1760,17 @@ func (a *AvereVfxt) scaleUpCluster(newNodeCount int) error {
 			}
 			time.Sleep(NodeChangeRetrySleepSeconds * time.Second)
 		}
-		log.Printf("[INFO] vfxt: ensure stable cluster")
-		err = a.EnsureClusterStable()
-		if err != nil {
-			return err
-		}
 	}
 }
 
 // scale-down the cluster to the newNodeCount
 func (a *AvereVfxt) scaleDownCluster(newNodeCount int) error {
+
+	// the cluster should be stable before and after the removal of the cluster node
+	if err := a.EnsureClusterStable(); err != nil {
+		return err
+	}
+
 	for {
 		currentNodeCount, err := a.GetCurrentNodeCount()
 		if err != nil {
@@ -1729,11 +1785,6 @@ func (a *AvereVfxt) scaleDownCluster(newNodeCount int) error {
 		// remove the last node
 		lastNode, err := a.GetLastNode()
 		if err != nil {
-			return err
-		}
-
-		// the cluster should be stable before and after the removal of the cluster node
-		if err = a.EnsureClusterStable(); err != nil {
 			return err
 		}
 
@@ -1964,7 +2015,7 @@ func (a *AvereVfxt) getFilerJsonCommand(filer string) string {
 }
 
 func (a *AvereVfxt) getCreateCoreFilerCommand(coreFiler *CoreFiler) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.create \"%s\" \"%s\" true \"{'filerNetwork':'cluster','filerClass':'Other','cachePolicy':'%s',}\"", a.getBaseAvereCmd(), coreFiler.Name, coreFiler.FqdnOrPrimaryIp, coreFiler.CachePolicy), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s corefiler.create \"%s\" \"%s\" true \"{'filerNetwork':'cluster','filerClass':'%s','cachePolicy':'%s',}\"", a.getBaseAvereCmd(), coreFiler.Name, coreFiler.FqdnOrPrimaryIp, coreFiler.FilerClass, coreFiler.CachePolicy), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getCreateAzureStorageFilerCommand(azureStorageFiler *AzureStorageFiler) (string, error) {
@@ -2113,7 +2164,7 @@ func (a *AvereVfxt) getSupportSecureProactiveSupportCommand() string {
 	if a.EnableSupportUploads {
 		isEnabled = "yes"
 	}
-	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'remoteCommandEnabled':'%s','SPSLinkInterval':'300','SPSLinkEnabled':'%s','remoteCommandExpiration':''}\"", a.getBaseAvereCmd(), a.SecureProactiveSupport, isEnabled), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'remoteCommandEnabled':'%s','SPSLinkInterval':'60','SPSLinkEnabled':'%s','remoteCommandExpiration':''}\"", a.getBaseAvereCmd(), a.SecureProactiveSupport, isEnabled), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getDirServicesEnableCIFSCommand() string {
@@ -2266,6 +2317,12 @@ func getMassIndex(internalName string) int {
 	return 0
 }
 
+func GetPingIPAddressesCommand(startQuartet int, endQuartet int, addressPrefix string) string {
+	// '|| true' is added to the end since we want the result to be 0
+	// and collect the resulting stdout
+	return WrapCommandForLogging(fmt.Sprintf("for ip in $(seq %d %d); do nc -n -v -z -w 1 %s$ip 443 2>&1 |grep timed; done || true", startQuartet, endQuartet, addressPrefix), ShellLogFile)
+}
+
 func getEnsureSSHPass() string {
 	return WrapCommandForLogging("which sshpass || sudo apt-get install -y sshpass", ShellLogFile)
 }
@@ -2293,6 +2350,10 @@ func (a *AvereVfxt) getPutGroupFileCommand() string {
 
 func (a *AvereVfxt) getFlatFileScpCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s scp -oStrictHostKeyChecking=no ~/avere-* admin@%s:/tmp ", a.GetSSHPassPrefix(), a.ManagementIP), ShellLogFile)
+}
+
+func (a *AvereVfxt) getCleanFlatFileCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"rm -f /tmp/avere-*.txt\"'", a.GetBaseVFXTNodeCommand()), ShellLogFile)
 }
 
 func (a *AvereVfxt) getCopyPasswdFileCommand() string {

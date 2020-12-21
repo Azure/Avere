@@ -158,6 +158,11 @@ A <a name="azure_storage_filer"></a>`azure_storage_filer` block supports the fol
 A <a name="core_filer"></a>`core_filer` block supports the following:
 * <a name="name"></a>[name](#name) - (Required) the unique name for the core filer
 * <a name="fqdn_or_primary_ip"></a>[fqdn_or_primary_ip](#fqdn_or_primary_ip) - (Required)  The primary IP address or fully qualified domain name of the core filer.  This may also be a space-separated list of IP addresses or domain names, where subsequent network names are used in advanced networking configurations.
+* <a name="filer_class"></a>[filer_class](#filer_class) - (Optional) One of the following predefined values that describes this core filer. If no CIFS ACL junctions will exist to the core filer then the default of "Other" may be used.  NetApp clusters newer than 2016 generally use C-mode or `NetappClustered`; to confirm run `showmount -e` against the ip , and it shows `'/'` then it is a clustered netapp.
+    * NetappNonClustered
+    * NetappClustered
+    * EmcIsilon
+    * Other
 * <a name="cache_policy"></a>[cache_policy](#cache_policy) - (Required) the cache policy for the core filer. and can be any of the following values:
     | Cache_policy string | Description |
     | --- | --- |

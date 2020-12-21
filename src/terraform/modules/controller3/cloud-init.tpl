@@ -6,8 +6,16 @@ write_files:
     content: !!binary |
             ${msazure_patchidentity}
     path: /usr/local/lib/python3.6/dist-packages/vFXT/msazure.py.patchidentity
+    permissions: '0755'
+ -  encoding: gzip
+    owner: root:root
+    content: !!binary |
+            ${service_patchtimeout}
+    path: /usr/local/lib/python3.6/dist-packages/vFXT/service.py.patchtimeout
+    permissions: '0755'
 
 runcmd:
  - set -x
  - patch --quiet --forward /usr/local/lib/python3.6/dist-packages/vFXT/msazure.py /usr/local/lib/python3.6/dist-packages/vFXT/msazure.py.patchidentity
+ - patch --quiet --forward /usr/local/lib/python3.6/dist-packages/vFXT/service.py /usr/local/lib/python3.6/dist-packages/vFXT/service.py.patchtimeout
  - if [ "${ssh_port}" -ne "22" ]; then sed -i 's/^#\?Port .*/Port ${ssh_port}/' /etc/ssh/sshd_config && systemctl restart sshd ; fi

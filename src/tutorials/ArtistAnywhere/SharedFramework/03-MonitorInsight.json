@@ -1,0 +1,107 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "logAnalytics": {
+      "type": "object",
+      "metadata": {
+        "description": "The monitor log analytics."
+      }
+    },
+    "automationAccount": {
+      "type": "object",
+      "metadata": {
+        "description": "The automation account."
+      }
+    }
+  },
+  "variables": {
+    "operationalInsightsApiVersion": "2020-08-01",
+    "diagnosticSettingsApiVersion": "2017-05-01-preview",
+    "automationApiVersion": "2020-01-13-preview"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "name": "[parameters('logAnalytics').name]",
+      "apiVersion": "[variables('operationalInsightsApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "sku": {
+          "name": "[parameters('logAnalytics').tier]"
+        },
+        "retentionInDays": "[parameters('logAnalytics').dataRetentionDays]",
+        "publicNetworkAccessForIngestion": "[parameters('logAnalytics').networkAccess.publicIngest]",
+        "publicNetworkAccessForQuery": "[parameters('logAnalytics').networkAccess.publicQuery]"
+      },
+      "resources": [
+        {
+          "type": "linkedServices",
+          "name": "automation",
+          "apiVersion": "[variables('operationalInsightsApiVersion')]",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalytics').name)]",
+            "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccount').name)]"
+          ],
+          "properties": {
+            "resourceId": "[resourceId('Microsoft.Automation/automationAccounts/', parameters('automationAccount').name)]"
+          }
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.Automation/automationAccounts",
+      "name": "[parameters('automationAccount').name]",
+      "apiVersion": "[variables('automationApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "sku": {
+          "name": "[parameters('automationAccount').tier]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Automation/automationAccounts/providers/diagnosticSettings",
+      "name": "[concat(parameters('automationAccount').name, '/Microsoft.Insights/', parameters('logAnalytics').name)]",
+      "apiVersion": "[variables('diagnosticSettingsApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccount').name)]",
+        "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalytics').name)]"
+      ],
+      "properties": {
+        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalytics').name)]",
+        "logs": [
+          {
+            "category": "JobLogs",
+            "enabled": true
+          },
+          {
+            "category": "JobStreams",
+            "enabled": true
+          },
+          {
+            "category": "DscNodeStatus",
+            "enabled": true
+          }
+        ],
+        "metrics": [
+          {
+            "category": "AllMetrics",
+            "enabled": true
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "logAnalytics": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('logAnalytics').name]",
+        "resourceGroupName": "[resourceGroup().name]"
+      }
+    }
+  }
+}
