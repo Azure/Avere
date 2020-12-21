@@ -2,6 +2,8 @@
 locals {
     vmss_resource_group_name = "houdini_vmss_rg"
     unique_name = "unique"
+    // leave blank to not rename VM, otherwise it will be named "VMPREFIX-OCTET3-OCTET4" where the octets are from the IPv4 address of the machine
+    vmPrefix = local.unique_name
     // paste in the id of the full custom image
     source_image_id = ""
     // can be any of the following None, Windows_Client and Windows_Server
@@ -27,9 +29,6 @@ locals {
     ou_path = ""
     ad_username = "" 
     ad_password = ""
-    
-    // leave blank to not rename VM, otherwise it will be named "VMPREFIX-OCTET3-OCTET4" where the octets are from the IPv4 address of the machine
-    vmPrefix = "vm"
 
     // update if you need to change the RDP port
     rdp_port = 3389
