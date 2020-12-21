@@ -10,9 +10,9 @@ locals {
     vmss_size = "Standard_D4s_v3"
     // Specify to use 'Regular' or 'Low'
     vmss_priority = "Regular"
+    // Only used if "Low" is set.  Specify "Delete" or "Deallocate"
+    vmss_spot_eviction_policy = "Delete"
     vm_admin_username = "azureuser"
-    // can be any of the following None, Windows_Client and Windows_Server
-    license_type = "None"
     // use either SSH Key data or admin password, if ssh_key_data is specified
     // then admin_password is ignored
     vm_admin_password = "ReplacePassword$"
@@ -66,7 +66,7 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
   location            = azurerm_resource_group.vmss.location
   upgrade_policy_mode = "Manual"
   priority            = local.vmss_priority
-  eviction_policy     = local.vmss_priority == "Low" ? "Delete" : null
+  eviction_policy     = local.vmss_priority == "Low" ? local.vmss_spot_eviction_policy : null
   // avoid overprovision as it can create race conditions with render managers
   overprovision       = false
   // avoid use of zones so you get maximum spread of machines, and have > 100 nodes
