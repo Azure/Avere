@@ -8,11 +8,16 @@ locals {
     license_type = "None"
     vm_count = 2
     vmss_size = "Standard_D4s_v3"
-    // Specify to use 'Regular' or 'Low'
-    vmss_priority = "Regular"
+    // Specify to use 'Regular' or 'Spot'
+    vmss_priority = "Spot"
+    // Only used if "SPOT" is set.  Specify "Delete" or "Deallocate"
+    vmss_spot_eviction_policy = "Delete"
+    use_ephemeral_os_disk = true
+    // customize the os disk size if needed 
+    os_disk_size_gb = null
+    // Standard_LRS, StandardSSD_LRS, Premium_LRS and UltraSSD_LRS
+    managed_disk_type = "Standard_LRS"
     vm_admin_username = "azureuser"
-    // can be any of the following None, Windows_Client and Windows_Server
-    license_type = "None"
     // use either SSH Key data or admin password, if ssh_key_data is specified
     // then admin_password is ignored
     vm_admin_password = "ReplacePassword$"
@@ -43,7 +48,7 @@ locals {
 }
 
 provider "azurerm" {
-    version = "~>2.12.0"
+    version = "~>2.42.0"
     features {}
 }
 
@@ -60,44 +65,49 @@ locals {
   windows_custom_script = "powershell.exe -ExecutionPolicy Unrestricted -command \\\"${local.windows_custom_script_arguments} ${local.windows_custom_script_suffix}\\\""
 }
 
-resource "azurerm_virtual_machine_scale_set" "vmss" {
+resource "azurerm_windows_virtual_machine_scale_set" "vmss" {
   name                = local.unique_name
   resource_group_name = azurerm_resource_group.vmss.name
   location            = azurerm_resource_group.vmss.location
-  upgrade_policy_mode = "Manual"
+
+  sku                 = local.vmss_size
+  instances           = local.vm_count
+  admin_username      = local.vm_admin_username
+  admin_password      = local.vm_admin_password
+
+  custom_data           = base64gzip(local.powershell_script)
+  source_image_id       = local.source_image_id
+
+  # use low-priority with Delete.  Stop Deallocate will be incompatible with OS Ephemeral disks
   priority            = local.vmss_priority
-  eviction_policy     = local.vmss_priority == "Low" ? "Delete" : null
+  eviction_policy     = local.vmss_priority == "Spot" ? local.vmss_spot_eviction_policy : null
   // avoid overprovision as it can create race conditions with render managers
   overprovision       = false
   // avoid use of zones so you get maximum spread of machines, and have > 100 nodes
   single_placement_group = false
+  // avoid use of zones so you get maximum spread of machines
+  zone_balance = false
+  zones = []
+  // avoid use proximity groups so you get maximum spread of machines
+  // proximity_placement_group_id
+  
+  os_disk {
+    storage_account_type = local.managed_disk_type
+    caching              = local.use_ephemeral_os_disk == true ? "ReadOnly" : "ReadWrite"
+    disk_size_gb         = local.os_disk_size_gb
 
-  sku {
-    name = local.vmss_size
-    tier = "Standard"
-    capacity = local.vm_count
-  }
-    
-  os_profile {
-    computer_name_prefix = local.unique_name
-    admin_username       = local.vm_admin_username
-    admin_password       = local.vm_admin_password
-    custom_data          = base64gzip(local.powershell_script)
-  }
-
-  storage_profile_image_reference {
-    id = local.source_image_id
-  }
-
-  storage_profile_os_disk  {
-    caching           = "ReadWrite"
-    managed_disk_type = "Standard_LRS"
-    create_option     = "FromImage"
+    dynamic "diff_disk_settings" {
+      for_each = local.use_ephemeral_os_disk == true ? [local.use_ephemeral_os_disk] : []
+      content {
+          option = "Local"
+      }
+    }
   }
 
-  network_profile {
+  network_interface {
     name    = "vminic-${local.unique_name}"
     primary = true
+    enable_accelerated_networking = false
 
     ip_configuration {
       name      = "internal"
@@ -124,7 +134,7 @@ SETTINGS
 }
 
 output "vmss_id" {
-  value = azurerm_virtual_machine_scale_set.vmss.id
+  value = azurerm_windows_virtual_machine_scale_set.vmss.id
 }
 
 output "vmss_resource_group" {
@@ -132,7 +142,7 @@ output "vmss_resource_group" {
 }
 
 output "vmss_name" {
-  value = azurerm_virtual_machine_scale_set.vmss.name
+  value = azurerm_windows_virtual_machine_scale_set.vmss.name
 }
 
 output "vmss_addresses_command" {
@@ -140,5 +150,5 @@ output "vmss_addresses_command" {
     // try to get the output is follow advice from https://stackoverflow.com/questions/49136537/obtain-ip-of-internal-load-balancer-in-app-service-environment/49436100#49436100
     // in the meantime just provide the az cli command to
     // the customer
-    value = "az vmss nic list -g ${azurerm_resource_group.vmss.name} --vmss-name ${azurerm_virtual_machine_scale_set.vmss.name} --query \"[].ipConfigurations[].privateIpAddress\""
+    value = "az vmss nic list -g ${azurerm_resource_group.vmss.name} --vmss-name ${azurerm_windows_virtual_machine_scale_set.vmss.name} --query \"[].ipConfigurations[].privateIpAddress\""
 }
