@@ -37,7 +37,7 @@ var matchAceRegexp = regexp.MustCompile(`^([^\s\(\)]+(\([^\(\)]*\))?\s?)*$`)
 var matchAcePartsRexexp = regexp.MustCompile(`(?:([^\s\(\)]+)(\([^\(\)]*\))?)`)
 
 // from https://stackoverflow.com/questions/24095272/netbios-name-regular-expression
-var cifsNetbiosNameRegexp = regexp.MustCompile(`^A-Za-z[A-Za-z\d_!@#$%^()\-'{}\.~]{0,14}$`)
+var cifsNetbiosNameRegexp = regexp.MustCompile(`^[A-Za-z][A-Za-z\d_!@#$%^()\-'{}\.~]{0,14}$`)
 
 // from https://stackoverflow.com/questions/42205107/regex-for-computer-name-validation-cannot-be-more-than-15-characters-long-be-e
 var cifsServerNameRegexp = regexp.MustCompile(`^[a-zA-Z0-9-]{1,15}$`)

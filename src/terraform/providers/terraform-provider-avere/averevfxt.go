@@ -870,6 +870,8 @@ func (a *AvereVfxt) PrepareForVFXTNodeCommands() error {
 }
 
 func (a *AvereVfxt) GetExistingDCAddressOverrides() ([]AdOverride, error) {
+	log.Printf("[INFO] [GetExistingDCAddressOverrides")
+	defer log.Printf("[INFO] GetExistingDCAddressOverrides]")
 	dcAddressOverridesJson, err := a.AvereCommand(a.getListAdOverrideJSONCommand())
 	if err != nil {
 		return nil, err
@@ -882,11 +884,13 @@ func (a *AvereVfxt) GetExistingDCAddressOverrides() ([]AdOverride, error) {
 }
 
 func (a *AvereVfxt) GetDCAddressOverridesToAddandDelete(adOverrides []AdOverride) ([]AdOverride, []AdOverride) {
+	log.Printf("[INFO] [GetDCAddressOverridesToAddandDelete")
+	defer log.Printf("[INFO] GetDCAddressOverridesToAddandDelete]")
 	var overridesToAdd []AdOverride
 	var overridesToDelete []AdOverride
 
 	overrideExists := false
-	for _, o := range overridesToDelete {
+	for _, o := range adOverrides {
 		if o.IsEqual(a.CifsNetbiosDomainName, a.CifsAdDomain, a.CifsDCAddresses) {
 			overrideExists = true
 		} else {
