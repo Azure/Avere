@@ -187,6 +187,8 @@ const (
 	active_support_upload                 = "active_support_upload"
 	enable_secure_proactive_support       = "enable_secure_proactive_support"
 	cifs_ad_domain                        = "cifs_ad_domain"
+	cifs_netbios_domain_name              = "cifs_netbios_domain_name"
+	cifs_dc_addreses                      = "cifs_dc_addreses"
 	cifs_server_name                      = "cifs_server_name"
 	cifs_username                         = "cifs_username"
 	cifs_password                         = "cifs_password"
