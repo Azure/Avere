@@ -266,21 +266,35 @@ func resourceVfxt() *schema.Resource {
 				Optional:     true,
 				Default:      "",
 				ValidateFunc: ValidateCIFSDomain,
-				RequiredWith: []string{cifs_server_name, cifs_username, cifs_password},
+				RequiredWith: []string{cifs_netbios_domain_name, cifs_dc_addreses, cifs_server_name, cifs_username, cifs_password},
+			},
+			cifs_netbios_domain_name: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: ValidateNetbiosNameRegexp,
+				RequiredWith: []string{cifs_ad_domain, cifs_dc_addreses, cifs_server_name, cifs_username, cifs_password},
+			},
+			cifs_dc_addreses: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: ValidateDnsServers,
+				RequiredWith: []string{cifs_ad_domain, cifs_netbios_domain_name, cifs_server_name, cifs_username, cifs_password},
 			},
 			cifs_server_name: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "",
 				ValidateFunc: ValidateCIFSServerName,
-				RequiredWith: []string{cifs_ad_domain, cifs_username, cifs_password},
+				RequiredWith: []string{cifs_ad_domain, cifs_netbios_domain_name, cifs_dc_addreses, cifs_username, cifs_password},
 			},
 			cifs_username: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "",
 				ValidateFunc: ValidateCIFSUsername,
-				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_password},
+				RequiredWith: []string{cifs_ad_domain, cifs_netbios_domain_name, cifs_dc_addreses, cifs_server_name, cifs_password},
 			},
 			cifs_password: {
 				Type:         schema.TypeString,
@@ -288,7 +302,7 @@ func resourceVfxt() *schema.Resource {
 				Sensitive:    true,
 				Default:      "",
 				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
-				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_username},
+				RequiredWith: []string{cifs_ad_domain, cifs_netbios_domain_name, cifs_dc_addreses, cifs_server_name, cifs_username},
 			},
 			cifs_flatfile_passwd_uri: {
 				Type:          schema.TypeString,
@@ -1137,6 +1151,8 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		firstIPAddress,
 		lastIPAddress,
 		d.Get(cifs_ad_domain).(string),
+		d.Get(cifs_netbios_domain_name).(string),
+		d.Get(cifs_dc_addreses).(string),
 		d.Get(cifs_server_name).(string),
 		d.Get(cifs_username).(string),
 		d.Get(cifs_password).(string),
@@ -1833,6 +1849,8 @@ func updateCifs(d *schema.ResourceData, averevfxt *AvereVfxt) error {
 	// CIFS must be updated after the last possible CIF shares have been removed, but
 	// before new shares are added
 	if d.HasChange(cifs_ad_domain) ||
+		d.HasChange(cifs_netbios_domain_name) ||
+		d.HasChange(cifs_dc_addreses) ||
 		d.HasChange(cifs_server_name) ||
 		d.HasChange(cifs_username) ||
 		d.HasChange(cifs_password) ||

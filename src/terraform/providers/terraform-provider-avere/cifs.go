@@ -36,6 +36,9 @@ type ShareAce struct {
 var matchAceRegexp = regexp.MustCompile(`^([^\s\(\)]+(\([^\(\)]*\))?\s?)*$`)
 var matchAcePartsRexexp = regexp.MustCompile(`(?:([^\s\(\)]+)(\([^\(\)]*\))?)`)
 
+// from https://stackoverflow.com/questions/24095272/netbios-name-regular-expression
+var cifsNetbiosNameRegexp = regexp.MustCompile(`^A-Za-z[A-Za-z\d_!@#$%^()\-'{}\.~]{0,14}$`)
+
 // from https://stackoverflow.com/questions/42205107/regex-for-computer-name-validation-cannot-be-more-than-15-characters-long-be-e
 var cifsServerNameRegexp = regexp.MustCompile(`^[a-zA-Z0-9-]{1,15}$`)
 var cifsUsernameRegexp = regexp.MustCompile(`^[A-Za-z0-9\\\._\-#]{2,}$`)
@@ -266,6 +269,14 @@ func ValidateCIFSDomain(v interface{}, _ string) (warnings []string, errors []er
 	return warnings, errors
 }
 
+func ValidateNetbiosNameRegexp(v interface{}, _ string) (warnings []string, errors []error) {
+	netbiosName := v.(string)
+	if !cifsNetbiosNameRegexp.MatchString(netbiosName) {
+		errors = append(errors, fmt.Errorf("invalid netbios name '%s'", netbiosName))
+	}
+	return warnings, errors
+}
+
 func ValidateCIFSServerName(v interface{}, _ string) (warnings []string, errors []error) {
 	cifsServerName := v.(string)
 	if !cifsServerNameRegexp.MatchString(cifsServerName) {
@@ -382,4 +393,27 @@ func GetShareAceAdjustments(existingShareAces map[string]*ShareAce, targetShareA
 	}
 
 	return shareAcesToDelete, shareAcesToCreate
+}
+
+func (a *AdOverride) IsEqual(netbiosDomainName string, adFqdn string, dcAddresses string) bool {
+	if a.Netbios != netbiosDomainName {
+		return false
+	}
+	if a.Fqdn != adFqdn {
+		return false
+	}
+
+	sourceIpAddressList := GetOrderedIPAddressList(a.Addresses)
+	targetIpAddressList := GetOrderedIPAddressList(dcAddresses)
+	if len(sourceIpAddressList) != len(targetIpAddressList) {
+		return false
+	} else {
+		for i := 0; i < len(sourceIpAddressList); i++ {
+			if sourceIpAddressList[i] != targetIpAddressList[i] {
+				return false
+			}
+		}
+	}
+
+	return true
 }

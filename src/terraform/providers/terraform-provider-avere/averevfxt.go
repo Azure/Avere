@@ -54,6 +54,8 @@ func NewAvereVfxt(
 	firstIPAddress string,
 	lastIPAddress string,
 	cifsAdDomain string,
+	cifsNetbiosDomainName string,
+	cifsDCAddresses string,
 	cifsServerName string,
 	cifsUserName string,
 	cifsPassword string,
@@ -99,6 +101,8 @@ func NewAvereVfxt(
 		FirstIPAddress:                    firstIPAddress,
 		LastIPAddress:                     lastIPAddress,
 		CifsAdDomain:                      cifsAdDomain,
+		CifsNetbiosDomainName:             cifsNetbiosDomainName,
+		CifsDCAddresses:                   cifsDCAddresses,
 		CifsServerName:                    cifsServerName,
 		CifsUsername:                      cifsUserName,
 		CifsPassword:                      cifsPassword,
@@ -525,13 +529,16 @@ func (a *AvereVfxt) BlockUntilHealthy(fullHealthCheck bool) error {
 }
 
 func (a *AvereVfxt) CIFSSettingsExist() bool {
-	return len(a.CifsAdDomain) > 0 && len(a.CifsServerName) > 0 && len(a.CifsUsername) > 0 && len(a.CifsPassword) > 0
+	return len(a.CifsAdDomain) > 0 && len(a.CifsNetbiosDomainName) > 0 && len(a.CifsDCAddresses) > 0 && len(a.CifsServerName) > 0 && len(a.CifsUsername) > 0 && len(a.CifsPassword) > 0
 }
 
 func (a *AvereVfxt) EnableCIFS() error {
 	log.Printf("[INFO] [EnableCIFS")
 	defer log.Printf("[INFO] EnableCIFS]")
 	if a.CIFSSettingsExist() {
+		if err := a.UpdateDCAddressOverrides(); err != nil {
+			return fmt.Errorf("error adding the DC overrides")
+		}
 		if err := a.UploadFlatFiles(); err != nil {
 			return fmt.Errorf("uploading flat files failed with error: %v", err)
 		}
@@ -857,6 +864,75 @@ func (a *AvereVfxt) PrepareForVFXTNodeCommands() error {
 	// the Avere management ip address can change from node to node, so we need to clear the known hosts files
 	if _, err := a.ShellCommand(getEnsureNoKnownHosts()); err != nil {
 		return fmt.Errorf("Error removing known hosts file: %v", err)
+	}
+
+	return nil
+}
+
+func (a *AvereVfxt) GetExistingDCAddressOverrides() ([]AdOverride, error) {
+	dcAddressOverridesJson, err := a.AvereCommand(a.getListAdOverrideJSONCommand())
+	if err != nil {
+		return nil, err
+	}
+	var results []AdOverride
+	if err := json.Unmarshal([]byte(dcAddressOverridesJson), &results); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+func (a *AvereVfxt) GetDCAddressOverridesToAddandDelete(adOverrides []AdOverride) ([]AdOverride, []AdOverride) {
+	var overridesToAdd []AdOverride
+	var overridesToDelete []AdOverride
+
+	overrideExists := false
+	for _, o := range overridesToDelete {
+		if o.IsEqual(a.CifsNetbiosDomainName, a.CifsAdDomain, a.CifsDCAddresses) {
+			overrideExists = true
+		} else {
+			overridesToDelete = append(overridesToDelete, o)
+		}
+	}
+	if !overrideExists {
+		o := AdOverride{
+			Netbios:   a.CifsNetbiosDomainName,
+			Fqdn:      a.CifsAdDomain,
+			Addresses: a.CifsDCAddresses,
+		}
+		overridesToAdd = append(overridesToAdd, o)
+	}
+
+	return overridesToAdd, overridesToDelete
+}
+
+func (a *AvereVfxt) UpdateDCAddressOverrides() error {
+	log.Printf("[INFO] [updating DC Address Overrides")
+	defer log.Printf("[INFO] updating DC Address Overrides]")
+
+	adOverrides, err := a.GetExistingDCAddressOverrides()
+	if err != nil {
+		return err
+	}
+
+	overridesToAdd, overridesToDelete := a.GetDCAddressOverridesToAddandDelete(adOverrides)
+	if err != nil {
+		return err
+	}
+
+	// delete override
+	for _, o := range overridesToDelete {
+		log.Printf("[INFO] removing DC Override %s, %s", o.Netbios, o.Fqdn)
+		if _, err := a.AvereCommand(a.getRemoveAdOverrideCommand(o.Netbios, o.Fqdn)); err != nil {
+			return err
+		}
+	}
+
+	// add override
+	for _, o := range overridesToAdd {
+		log.Printf("[INFO] adding DC Override %s, %s, '%s'", o.Netbios, o.Fqdn, o.Addresses)
+		if _, err := a.AvereCommand(a.getAddAdOverrideCommand(o.Netbios, o.Fqdn, o.Addresses)); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -2186,6 +2262,18 @@ func (a *AvereVfxt) getDirServicesEnableCIFSCommand() string {
 
 func (a *AvereVfxt) getDirServicesPollUserGroupCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s dirServices.usernamePoll \"%s\"", a.getBaseAvereCmd(), DefaultDirectoryServiceName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getAddAdOverrideCommand(netbiosDomainName string, adFqdn string, dcAddresses string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s dirServices.addAdOverride \"%s\" \"%s\" \"%s\" \"%s\"", a.getBaseAvereCmd(), DefaultDirectoryServiceName, netbiosDomainName, adFqdn, dcAddresses), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getRemoveAdOverrideCommand(netbiosDomainName string, adFqdn string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s dirServices.removeAdOverride \"%s\" \"%s\" \"%s\"", a.getBaseAvereCmd(), DefaultDirectoryServiceName, netbiosDomainName, adFqdn), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getListAdOverrideJSONCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json dirServices.listAdOverrides \"%s\"", a.getBaseAvereCmd(), DefaultDirectoryServiceName), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getCIFSConfigureCommand() string {

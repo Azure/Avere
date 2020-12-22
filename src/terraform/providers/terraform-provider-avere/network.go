@@ -5,6 +5,8 @@ package main
 import (
 	"fmt"
 	"net"
+	"sort"
+	"strings"
 )
 
 func GetLastIPAddress(firstIp string, ipAddressCount int) (string, error) {
@@ -65,4 +67,19 @@ func GetIPAddress3QuartetPrefix(ipAddress string) (string, error) {
 	}
 
 	return fmt.Sprintf("%d.%d.%d.", ipv4[a], ipv4[b], ipv4[c]), nil
+}
+
+func GetOrderedIPAddressList(ipAddressString string) []string {
+	results := []string{}
+
+	for _, ipAddr := range strings.Split(ipAddressString, " ") {
+		trimmedIpAddr := strings.TrimSpace(ipAddr)
+		if len(trimmedIpAddr) > 0 {
+			results = append(results, trimmedIpAddr)
+		}
+	}
+
+	sort.Strings(results)
+
+	return results
 }
