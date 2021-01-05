@@ -43,7 +43,7 @@ locals {
         ]
   ])
 
-  # create the A record lines for the second Avere
+  # create the A record lines for the third Avere
   last_octet3 = var.avere_first_ip_addr3 == "" ? "" : split(".", var.avere_first_ip_addr3)[3]
   addr_prefix3 = var.avere_first_ip_addr3 == "" ? "" : trimsuffix(var.avere_first_ip_addr3, ".${local.last_octet3}")
 
@@ -64,9 +64,31 @@ locals {
         "local-data-ptr: \"${local.addr_prefix2}.${local.last_octet3 + j} ${var.dns_max_ttl_seconds} ${var.avere_filer_alternate_fqdn[i]}\""
         ]
   ])
+
+   # create the A record lines for the fourth Avere
+  last_octet4 = var.avere_first_ip_addr4 == "" ? "" : split(".", var.avere_first_ip_addr4)[3]
+  addr_prefix4 = var.avere_first_ip_addr4 == "" ? "" : trimsuffix(var.avere_first_ip_addr4, ".${local.last_octet4}")
+
+  local_a_records4 = var.avere_first_ip_addr4 == "" ? [] : [for i in range(var.avere_ip_addr_count4): "local-data: \"${var.avere_filer_fqdn} ${var.dns_max_ttl_seconds} A ${local.addr_prefix4}.${local.last_octet4 + i}\""]
+  local_a_records_reverse4 = var.avere_first_ip_addr4 == "" ? [] : [for i in range(var.avere_ip_addr_count4): "local-data-ptr: \"${local.addr_prefix2}.${local.last_octet4 + i} ${var.dns_max_ttl_seconds} ${var.avere_filer_fqdn}\""]
+
+  # alternate fqdn
+  local_alternate_a_records4 = var.avere_first_ip_addr4 == "" ? [] : flatten([
+    for i in range(length(var.avere_filer_alternate_fqdn)): [
+      for j in range(var.avere_ip_addr_count4): 
+        "local-data: \"${var.avere_filer_alternate_fqdn[i]} ${var.dns_max_ttl_seconds} A ${local.addr_prefix4}.${local.last_octet4 + j}\""
+        ]
+  ])
+  # reverse records
+  local_alternate_a_records_reverse4 = var.avere_first_ip_addr4 == "" ? [] : flatten([
+    for i in range(length(var.avere_filer_alternate_fqdn)): [
+      for j in range(var.avere_ip_addr_count4): 
+        "local-data-ptr: \"${local.addr_prefix2}.${local.last_octet4 + j} ${var.dns_max_ttl_seconds} ${var.avere_filer_alternate_fqdn[i]}\""
+        ]
+  ])
   
   # join everything into the same string
-  all_a_records = concat(local.local_a_records, local.local_a_records_reverse, local.local_alternate_a_records, local.local_alternate_a_records_reverse, local.local_a_records2, local.local_a_records_reverse2, local.local_alternate_a_records2, local.local_alternate_a_records_reverse2, local.local_a_records3, local.local_a_records_reverse3, local.local_alternate_a_records3, local.local_alternate_a_records_reverse3)
+  all_a_records = concat(local.local_a_records, local.local_a_records_reverse, local.local_alternate_a_records, local.local_alternate_a_records_reverse, local.local_a_records2, local.local_a_records_reverse2, local.local_alternate_a_records2, local.local_alternate_a_records_reverse2, local.local_a_records3, local.local_a_records_reverse3, local.local_alternate_a_records3, local.local_alternate_a_records_reverse3, local.local_a_records4, local.local_a_records_reverse4, local.local_alternate_a_records4, local.local_alternate_a_records_reverse4)
   local_a_records_str = "local-zone: \"${var.avere_filer_fqdn}\" transparent\n  ${join("\n  ", local.all_a_records)}"
 
   # create the dns forward lines  
