@@ -44,6 +44,8 @@ type AvereVfxt struct {
 	LastIPAddress          string
 
 	CifsAdDomain                      string
+	CifsNetbiosDomainName             string
+	CifsDCAddresses                   string
 	CifsServerName                    string
 	CifsUsername                      string
 	CifsPassword                      string
@@ -202,4 +204,10 @@ type UploadStatus struct {
 	Status   string `json:"status"`
 	Nodename string `json:"nodename"`
 	Filename string `json:"filename"`
+}
+
+type AdOverride struct {
+	Netbios   string `json:"netbios"`
+	Fqdn      string `json:"fqdn"`
+	Addresses string `json:"addresses"`
 }
