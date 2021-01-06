@@ -33,7 +33,7 @@
             "versionId": "1.1.0"
           },
           "machine": {
-            "size": "Standard_F64s_v2",
+            "size": "Standard_F16s_v2",
             "agentId": "batch.node.centos 8",
             "interNodeCommunication": "Disabled",
             "autoUpdates": false
@@ -65,10 +65,10 @@
           "displayName": "",
           "image": {
             "definitionName": "ServerLinux",
-            "versionId": "1.1.0"
+            "versionId": "1.2.0"
           },
           "node": {
-            "machineSize": "Standard_NV6",
+            "machineSize": "Standard_NV12",
             "agentId": "batch.node.centos 8",
             "interNodeCommunication": "Disabled",
             "autoUpdates": false

@@ -118,16 +118,16 @@
           "capacityPoolName": "Asset",
           "accountName": "MediaStorage",
           "options": "rw,hard,rsize=1048576,wsize=1048576,vers=3,tcp",
-          "path": "/mnt/storage",
-          "drive": "S"
+          "path": "/mnt/storage/read",
+          "drive": "R"
         },
         {
           "volumeName": "Volume-B",
           "capacityPoolName": "Asset",
           "accountName": "MediaStorage",
           "options": "rw,hard,rsize=1048576,wsize=1048576,vers=3,tcp",
-          "path": "/mnt/render",
-          "drive": "R"
+          "path": "/mnt/storage/write",
+          "drive": "W"
         }
       ]
     },

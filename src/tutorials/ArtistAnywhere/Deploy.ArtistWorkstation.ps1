@@ -8,14 +8,14 @@ param (
     # Set the Azure region name for compute resources (e.g., Image Gallery, Virtual Machines, Batch Accounts, etc.)
     [string] $computeRegionName = "EastUS",
 
-    # Set the Azure region name for storage cache resources (e.g., HPC Cache, Storage Targets, Namespace Paths, etc.)
-    [string] $cacheRegionName = "",
-
     # Set the Azure region name for storage resources (e.g., Storage Accounts, File Shares, Object Containers, etc.)
     [string] $storageRegionName = "EastUS",
 
     # Set to true to deploy Azure NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
-    [boolean] $storageNetAppDeploy = $false
+    [boolean] $storageNetAppDeploy = $false,
+
+    # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in Azure compute region
+    [boolean] $storageCacheDeploy = $false
 )
 
 $templateDirectory = $PSScriptRoot
@@ -26,18 +26,36 @@ Import-Module "$templateDirectory/Deploy.psm1"
 $sharedFramework = Get-SharedFramework $resourceGroupNamePrefix $sharedRegionName $computeRegionName $storageRegionName
 
 # Storage Cache
-$storageCache = Get-StorageCache $sharedFramework $resourceGroupNamePrefix $computeRegionName $cacheRegionName $storageRegionName $storageNetAppDeploy
+$storageCache = Get-StorageCache $sharedFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageNetAppDeploy $storageCacheDeploy
 
-# Artist Workstation Image Job
-$moduleName = "Artist Workstation Image Job"
-New-TraceMessage $moduleName $false
-$workstationImageJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistWorkstation.Image.ps1" -ArgumentList $resourceGroupNamePrefix, $sharedRegionName, $computeRegionName, $cacheRegionName, $storageRegionName, $storageNetAppDeploy, $sharedFramework, $storageCache
-Receive-Job -Job $workstationImageJob -Wait
-New-TraceMessage $moduleName $true
+# Artist Workstation Image [Linux] Job
+$moduleNameImageLinux = "Artist Workstation Image [Linux] Job"
+New-TraceMessage $moduleNameImageLinux $false
+$workstationImageLinuxJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistWorkstation.Image.Linux.ps1" -ArgumentList $resourceGroupNamePrefix, $sharedRegionName, $computeRegionName, $storageRegionName, $storageNetAppDeploy, $storageCacheDeploy, $sharedFramework, $storageCache
 
-# Artist Workstation Machine Job
-$moduleName = "Artist Workstation Machine Job"
-New-TraceMessage $moduleName $false
-$workstationMachineJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistWorkstation.Machine.ps1" -ArgumentList $resourceGroupNamePrefix, $sharedRegionName, $computeRegionName, $cacheRegionName, $storageRegionName, $storageNetAppDeploy, $sharedFramework, $storageCache
-Receive-Job -Job $workstationMachineJob -Wait
-New-TraceMessage $moduleName $true
+# Artist Workstation Image [Windows] Job
+$moduleNameImageWindows = "Artist Workstation Image [Windows] Job"
+New-TraceMessage $moduleNameImageWindows $false
+$workstationImageWindowsJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistWorkstation.Image.Windows.ps1" -ArgumentList $resourceGroupNamePrefix, $sharedRegionName, $computeRegionName, $storageRegionName, $storageNetAppDeploy, $storageCacheDeploy, $sharedFramework, $storageCache
+
+Receive-Job -Job $workstationImageLinuxJob -Wait
+New-TraceMessage $moduleNameImageLinux $true
+
+# Artist Workstation Machine [Linux] Job
+$moduleNameMachineLinux = "Artist Workstation Machine [Linux] Job"
+New-TraceMessage $moduleNameMachineLinux $false
+$workstationMachineLinuxJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistWorkstation.Machine.Linux.ps1" -ArgumentList $resourceGroupNamePrefix, $sharedRegionName, $computeRegionName, $storageRegionName, $storageNetAppDeploy, $storageCacheDeploy, $sharedFramework, $storageCache
+
+Receive-Job -Job $workstationImageWindowsJob -Wait
+New-TraceMessage $moduleNameImageWindows $true
+
+# Artist Workstation Machine [Windows] Job
+$moduleNameMachineWindows = "Artist Workstation Machine [Windows] Job"
+New-TraceMessage $moduleNameMachineWindows $false
+$workstationMachineWindowsJob = Start-Job -FilePath "$templateDirectory/Deploy.ArtistWorkstation.Machine.Windows.ps1" -ArgumentList $resourceGroupNamePrefix, $sharedRegionName, $computeRegionName, $storageRegionName, $storageNetAppDeploy, $storageCacheDeploy, $sharedFramework, $storageCache
+
+Receive-Job -Job $workstationMachineLinuxJob -Wait
+New-TraceMessage $moduleNameMachineLinux $true
+
+Receive-Job -Job $workstationMachineWindowsJob -Wait
+New-TraceMessage $moduleNameMachineWindows $true

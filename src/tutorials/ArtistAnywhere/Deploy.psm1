@@ -162,7 +162,7 @@ function Get-SharedFramework ($resourceGroupNamePrefix, $sharedRegionName, $comp
     return $sharedFramework
 }
 
-function Get-StorageCache ($sharedFramework, $resourceGroupNamePrefix, $computeRegionName, $cacheRegionName, $storageRegionName, $storageNetAppDeploy) {
+function Get-StorageCache ($sharedFramework, $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $storageNetAppDeploy, $storageCacheDeploy) {
     $moduleDirectory = "StorageCache"
 
     $storageNetwork = $sharedFramework.storageNetwork
@@ -222,8 +222,9 @@ function Get-StorageCache ($sharedFramework, $resourceGroupNamePrefix, $computeR
                     $sourceAddress = $netAppVolume.mountTargets[0].ipAddress
                     foreach ($netAppTarget in $netAppTargets) {
                         if ($netAppTarget.source -eq $sourceAddress) {
-                            $nfsExport = "/" + $netAppVolume.name.ToLower()
-                            $namespacePath = "/storage" + $nfsExport
+                            $volumeName = Split-Path -Path $netAppVolume.name.ToLower() -Leaf
+                            $nfsExport = "/$volumeName"
+                            $namespacePath = "/storage$nfsExport"
                             $junction = New-Object PSObject
                             $junction | Add-Member -MemberType NoteProperty -Name "namespacePath" -Value $namespacePath
                             $junction | Add-Member -MemberType NoteProperty -Name "nfsExport" -Value $nfsExport
@@ -241,8 +242,8 @@ function Get-StorageCache ($sharedFramework, $resourceGroupNamePrefix, $computeR
 
     # 07 - Cache
     $cacheMounts = @()
-    if ($cacheRegionName -ne "") {
-        $cacheNetwork = Get-VirtualNetwork $sharedFramework.computeNetworks $cacheRegionName
+    if ($storageCacheDeploy) {
+        $cacheNetwork = Get-VirtualNetwork $sharedFramework.computeNetworks $computeRegionName
         $moduleName = "07 - Cache"
         New-TraceMessage $moduleName $false $cacheNetwork.regionName
         $resourceGroupNameSuffix = ".Cache"
@@ -274,7 +275,7 @@ function Get-StorageCache ($sharedFramework, $resourceGroupNamePrefix, $computeR
             $cacheMount = New-Object PSObject
             $cacheMount | Add-Member -MemberType NoteProperty -Name "source" -Value $cacheMountSource
             $cacheMount | Add-Member -MemberType NoteProperty -Name "options" -Value $cacheMountOptions
-            $cacheMount | Add-Member -MemberType NoteProperty -Name "path" -Value "cache"
+            $cacheMount | Add-Member -MemberType NoteProperty -Name "path" -Value "/mnt/cache"
             $cacheMounts += $cacheMount
         }
         New-TraceMessage $moduleName $true $cacheNetwork.regionName
@@ -352,21 +353,21 @@ function Set-StorageScripts ($storageAccountName, $storageMounts, $cacheMounts) 
     $blobUpload = az storage blob upload-batch --account-name $storageAccountName --destination $storageContainerName --source $sourceDirectory --pattern '*.mount' --auth-mode login --no-progress
     New-TraceMessage $moduleName $true
 
-    $moduleName = "Scripts Upload (Render Manager)"
+    $moduleName = "Scripts Upload [Render Manager]"
     $moduleDirectory = "RenderManager"
     New-TraceMessage $moduleName $false
     $sourceDirectory = "$templateDirectory/$moduleDirectory"
     $blobUpload = az storage blob upload-batch --account-name $storageAccountName --destination $storageContainerName --source $sourceDirectory --pattern '*.sh' --auth-mode login --no-progress
     New-TraceMessage $moduleName $true
 
-    $moduleName = "Scripts Upload (Render Farm)"
+    $moduleName = "Scripts Upload [Render Farm]"
     $moduleDirectory = "RenderFarm"
     New-TraceMessage $moduleName $false
     $sourceDirectory = "$templateDirectory/$moduleDirectory"
     $blobUpload = az storage blob upload-batch --account-name $storageAccountName --destination $storageContainerName --source $sourceDirectory --pattern '*.sh' --auth-mode login --no-progress
     New-TraceMessage $moduleName $true
 
-    $moduleName = "Scripts Upload (Artist Workstation)"
+    $moduleName = "Scripts Upload [Artist Workstation]"
     $moduleDirectory = "ArtistWorkstation"
     New-TraceMessage $moduleName $false
     $sourceDirectory = "$templateDirectory/$moduleDirectory"

@@ -2,12 +2,14 @@
 
 set -ex
 
-if [ "$(cat /etc/os-release | grep 'CentOS-7')" ]; then
+grep 'centos:7' /etc/os-release && centOS7=true || centOS7=false
+
+if $centOS7; then
     yum -y install gcc
     yum -y install python-devel
     yum -y install epel-release
     yum -y install python-pip
-elif [ "$(cat /etc/os-release | grep 'CentOS-8')" ]; then
+else # CentOS8
     dnf -y install gcc
     dnf -y install python3-devel
 fi
@@ -35,7 +37,7 @@ fileName='opencue-rqd.service'
 curl -L -o $fileName $downloadUrl/$fileName
 
 find . -type f -name *.pyc -delete
-if [ "$(cat /etc/os-release | grep 'CentOS-7')" ]; then
+if $centOS7; then
     pip install --upgrade pip
     pip install --upgrade setuptools
     pip install --requirement 'opencue-requirements.txt' --ignore-installed
@@ -45,7 +47,7 @@ if [ "$(cat /etc/os-release | grep 'CentOS-7')" ]; then
     python setup.py install
     cd ../rqd-*
     python setup.py install
-elif [ "$(cat /etc/os-release | grep 'CentOS-8')" ]; then
+else # CentOS8
     pip3 install --upgrade pip
     pip3 install --upgrade setuptools
     pip3 install --requirement 'opencue-requirements.txt' --ignore-installed

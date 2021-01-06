@@ -30,9 +30,9 @@ The following Microsoft Azure resource templates and scripts define the Azure Ar
 
 | *Artist Workstation Image* | *Artist Workstation Machine* |
 | :------------------------- | :--------------------------- |
-| 15 - [Workstation Image Templates](ArtistWorkstation/15-Workstation.Image.json) ([Parameters](ArtistWorkstation/15-Workstation.Image.Parameters.json)) | 16 - [Workstation Machine](ArtistWorkstation/16-Workstation.Machine.json) ([Parameters](ArtistWorkstation/16-Workstation.Machine.Parameters.json)) |
-| 15 - [Workstation Image Customize Linux](ArtistWorkstation/15-Workstation.Image.sh) ([Blender](RenderFarm/13-Node.Image.Blender.sh), [OpenCue](ArtistWorkstation/15-Workstation.Image.OpenCue.sh), [Teradici](ArtistWorkstation/15-Workstation.Image.Teradici.sh)) | 16 - [Workstation Machine Initialize Linux](ArtistWorkstation/16-Workstation.Machine.sh) |
-| 15 - [Workstation Image Customize Windows](ArtistWorkstation/15-Workstation.Image.ps1) ([Blender](ArtistWorkstation/15-Workstation.Image.Blender.ps1), [OpenCue](ArtistWorkstation/15-Workstation.Image.OpenCue.ps1), [Teradici](ArtistWorkstation/15-Workstation.Image.Teradici.ps1)) | 16 - [Workstation Machine Initialize Windows](ArtistWorkstation/16-Workstation.Machine.ps1) |
+| 15 - [Workstation Image Template](ArtistWorkstation/15-Linux.Workstation.Image.json) ([Linux Parameters](ArtistWorkstation/15-Linux.Workstation.Image.Parameters.json), [Windows Parameters](ArtistWorkstation/15-Windows.Workstation.Image.Parameters.json)) | 16 - [Workstation Machine](ArtistWorkstation/16-Linux.Workstation.Machine.json) ([Linux Parameters](ArtistWorkstation/16-Linux.Workstation.Machine.Parameters.json), [Windows Parameters](ArtistWorkstation/16-Windows.Workstation.Machine.Parameters.json)) |
+| 15 - [Linux Workstation Image Customize](ArtistWorkstation/15-Linux.Workstation.Image.sh) ([Blender](RenderFarm/13-Node.Image.Blender.sh), [OpenCue](ArtistWorkstation/15-Linux.Workstation.Image.OpenCue.sh), [Teradici](ArtistWorkstation/15-Linux.Workstation.Image.Teradici.sh)) | 16 - [Linux Workstation Machine Initialize](ArtistWorkstation/16-Linux.Workstation.Machine.sh) |
+| 15 - [Windows Workstation Image Customize](ArtistWorkstation/15-Windows.Workstation.Image.ps1) ([Blender](ArtistWorkstation/15-Windows.Workstation.Image.Blender.ps1), [OpenCue](ArtistWorkstation/15-Windows.Workstation.Image.OpenCue.ps1), [Teradici](ArtistWorkstation/15-Windows.Workstation.Image.Teradici.ps1)) | 16 - [Windows Workstation Machine Initialize](ArtistWorkstation/16-Windows.Workstation.Machine.ps1) |
 
 <!-- | *Stream Edge* |
 | :------------ |
@@ -75,7 +75,7 @@ The following Microsoft Azure services and open-source software comprise the Azu
             <a href="https://docs.microsoft.com/azure/private-link/private-link-overview" target="_blank">Azure Private Link</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/en-us/azure/event-grid/overview" target="_blank">Azure Event Grid</a>
+            <a href="https://docs.microsoft.com/azure/event-grid/overview" target="_blank">Azure Event Grid</a>
         </td>
     </tr>
     <tr>
@@ -154,9 +154,13 @@ The following list describes each of the Azure Artist Anywhere deployment script
 
 * [*Deploy.ArtistWorkstation.ps1*](Deploy.ArtistWorkstation.ps1) - orchestration script that deploys artist workstations (Linux, Windows)
 
-* [*Deploy.ArtistWorkstation.Image.ps1*](Deploy.ArtistWorkstation.Image.ps1) - background job script that deploys artist workstation images
+* [*Deploy.ArtistWorkstation.Image.Linux.ps1*](Deploy.ArtistWorkstation.Image.Linux.ps1) - background job script that deploys artist workstation Linux images
 
-* [*Deploy.ArtistWorkstation.Machine.ps1*](Deploy.ArtistWorkstation.Machine.ps1) - background job script that deploys artist workstation machines
+* [*Deploy.ArtistWorkstation.Image.Windows.ps1*](Deploy.ArtistWorkstation.Image.Windows.ps1) - background job script that deploys artist workstation Windows images
+
+* [*Deploy.ArtistWorkstation.Machine.Linux.ps1*](Deploy.ArtistWorkstation.Machine.Linux.ps1) - background job script that deploys artist workstation Linux machines
+
+* [*Deploy.ArtistWorkstation.Machine.Windows.ps1*](Deploy.ArtistWorkstation.Machine.Windows.ps1) - background job script that deploys artist workstation Windows machines
 
 As an example deployment, the following output is from the [*Deploy.ps1*](Deploy.ps1) script within Azure Cloud Shell.
 

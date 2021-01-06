@@ -8,14 +8,14 @@ param (
     # Set the Azure region name for compute resources (e.g., Image Gallery, Virtual Machines, Batch Accounts, etc.)
     [string] $computeRegionName = "EastUS",
 
-    # Set the Azure region name for storage cache resources (e.g., HPC Cache, Storage Targets, Namespace Paths, etc.)
-    [string] $cacheRegionName = "",
-
     # Set the Azure region name for storage resources (e.g., Storage Accounts, File Shares, Object Containers, etc.)
     [string] $storageRegionName = "EastUS",
 
     # Set to true to deploy Azure NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
     [boolean] $storageNetAppDeploy = $false,
+
+    # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in Azure compute region
+    [boolean] $storageCacheDeploy = $false,
 
     # Set to the target Azure render manager deployment configuration mode (i.e., CycleCloud, OpenCue, or Batch)
     [string] $renderManagerMode = "CycleCloud",
@@ -45,7 +45,7 @@ $imageGallery = $sharedFramework.imageGallery
 
 # Storage Cache
 if (!$storageCache) {
-    $storageCache = Get-StorageCache $sharedFramework $resourceGroupNamePrefix $computeRegionName $cacheRegionName $storageRegionName $storageNetAppDeploy
+    $storageCache = Get-StorageCache $sharedFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageNetAppDeploy $storageCacheDeploy
 }
 $storageAccount = $storageCache.storageAccounts[0]
 
@@ -154,12 +154,12 @@ if ($renderManagerMode -ne "Batch") {
     $templateConfig.parameters.imageGallery.value.name = $imageGallery.name
     $templateConfig.parameters.imageGallery.value.resourceGroupName = $imageGallery.resourceGroupName
 
-    $scriptParameters = $templateConfig.parameters.scriptExtension.value.linux.scriptParameters
+    $scriptParameters = $templateConfig.parameters.scriptExtension.value.scriptParameters
     $scriptParameters.DATA_HOST = $managerDataServerHost
     $scriptParameters.DATA_PORT = $managerDataServerPort
     $scriptParameters.ADMIN_AUTH = $managerDataServerAuth
     $fileParameters = Get-ObjectProperties $scriptParameters $false
-    $templateConfig.parameters.scriptExtension.value.linux.fileParameters = $fileParameters
+    $templateConfig.parameters.scriptExtension.value.fileParameters = $fileParameters
 
     $templateConfig.parameters.logAnalytics.value.name = $logAnalytics.name
     $templateConfig.parameters.logAnalytics.value.resourceGroupName = $logAnalytics.resourceGroupName

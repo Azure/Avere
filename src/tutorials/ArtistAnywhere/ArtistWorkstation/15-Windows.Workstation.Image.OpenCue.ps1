@@ -7,44 +7,36 @@ Set-Location -Path $localDirectory
 $downloadUrl = 'https://mediasolutions.blob.core.windows.net/bin/Python'
 
 $fileName = 'python-3.7.9-amd64.exe'
-$fileUrl = "$downloadUrl/$fileName"
-Invoke-WebRequest -OutFile $fileName -Uri $fileUrl
+Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl/$fileName
 
 Start-Process -FilePath $fileName -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1' -Wait
 
 $downloadUrl = 'https://mediasolutions.blob.core.windows.net/bin/OpenCue/v0.4.95'
 
 $fileName = 'opencue-requirements.txt'
-$fileUrl = "$downloadUrl/$fileName"
-Invoke-WebRequest -OutFile $fileName -Uri $fileUrl
+Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl/$fileName
 
 $fileName = 'opencue-requirements-gui.txt'
-$fileUrl = "$downloadUrl/$fileName"
-Invoke-WebRequest -OutFile $fileName -Uri $fileUrl
+Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl/$fileName
 
 $fileName = 'opencue-pycue.tar.gz'
-$fileUrl = "$downloadUrl/$fileName"
-Invoke-WebRequest -OutFile $fileName -Uri $fileUrl
+Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl/$fileName
 tar -xzf $fileName
 
 $fileName = 'opencue-pyoutline.tar.gz'
-$fileUrl = "$downloadUrl/$fileName"
-Invoke-WebRequest -OutFile $fileName -Uri $fileUrl
+Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl/$fileName
 tar -xzf $fileName
 
 $fileName = 'opencue-admin.tar.gz'
-$fileUrl = "$downloadUrl/$fileName"
-Invoke-WebRequest -OutFile $fileName -Uri $fileUrl
+Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl/$fileName
 tar -xzf $fileName
 
 $fileName = 'opencue-submit.tar.gz'
-$fileUrl = "$downloadUrl/$fileName"
-Invoke-WebRequest -OutFile $fileName -Uri $fileUrl
+Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl/$fileName
 tar -xzf $fileName
 
 $fileName = 'opencue-gui.tar.gz'
-$fileUrl = "$downloadUrl/$fileName"
-Invoke-WebRequest -OutFile $fileName -Uri $fileUrl
+Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl/$fileName
 # tar -xzf $fileName
 
 pip install --upgrade pip

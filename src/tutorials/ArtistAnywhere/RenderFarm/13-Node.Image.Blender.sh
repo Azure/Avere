@@ -2,13 +2,15 @@
 
 set -ex
 
-if [ "$(cat /etc/os-release | grep 'CentOS-7')" ]; then
+grep 'centos:7' /etc/os-release && centOS7=true || centOS7=false
+
+if $centOS7; then
     yum -y install libXi
     yum -y install libXxf86vm
     yum -y install libXfixes
     yum -y install libXrender
     yum -y install libGL
-elif [ "$(cat /etc/os-release | grep 'CentOS-8')" ]; then
+else # CentOS8
     dnf -y install libXi
     dnf -y install libXxf86vm
     dnf -y install libXfixes
