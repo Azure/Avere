@@ -8,6 +8,10 @@ Animation and VFX Rendering have two major requirements for networking:
 
 For lowest TCO, on [Azure Virtual Network](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview):
 * Avoid peering VNETs in the same region, as this will lead to inter-peering same region cross charges, as the VMs reach across to the storage appliance.  Instead fit all render workloads into the same VNET, and use subnets to separate them. 
+* An example configuration for a rendering Virtual Network configuration with rules are the following:
+    1. [Render Network](../../modules/render_network/) - describes a standard render network
+    2. [Secure Network](../../modules/render_network_secure/) - describes a secure render network where internet traffic only goes over internet.
+* For a VPN Gateway or ExpressRoute Gateway you will need to define a subnet named `GatewaySubnet`, and it can be [as small as a /28](https://docs.microsoft.com/en-us/azure/vpn-gateway/tutorial-site-to-site-portal#create-the-gateway).
 
 ## Azure VPN Gateway
 
@@ -38,6 +42,7 @@ The [Azure ExpressRoute](https://azure.microsoft.com/en-us/services/expressroute
 ### Pre-requisites:
 * Ensure your on-premises switch support [QinQ VLAN Tagging](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-erdirect-about#vlan-tagging) or [Dot1Q VLAN Tagging](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-erdirect-about#vlan-tagging)
 * For installations larger than 10Gbps, work with the Microsoft Rendering and ExpressRoute teams to ensure the established architecture will provide the best performance.
+* For LOA preparation for ExpressRoute Direct, if you are not familiar with Windows or Powershell, use the cloudshell instructions described in the [github documentation enhancement](https://github.com/MicrosoftDocs/azure-docs/issues/67305) to send the [LOA to your service provider](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-howto-erdirect).
 
 ### For TCO considerations, the here is the cost break down of ExpressRoute
 * consider [ExpressRoute Direct](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-erdirect-about), as this may save you the cost of ExpressRoute + connectivity partner.  [ExpressRoute Direct](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-erdirect-about) is based on the concept of physical port pairs. ER Direct is available with port pairs at 10Gbps or 100Gbps.  Over the ExpressRoute port pair is [possible to configure multiple ExpressRoute circuits at different bandwidths](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-erdirect-about).  One of key features that ExpressRoute Direct provides is the Massive Data Ingestion through dedicated port pair with the Microsoft Enterprise Edge (MSEE) routers.
