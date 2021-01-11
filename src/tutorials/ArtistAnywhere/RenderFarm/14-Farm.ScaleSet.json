@@ -20,12 +20,6 @@
         "description": "The render farm nodes."
       }
     },
-    "scriptExtension": {
-      "type": "object",
-      "metadata": {
-        "description": "The custom script extension."
-      }
-    },
     "logAnalytics": {
       "type": "object",
       "metadata": {
@@ -146,12 +140,12 @@
               {
                 "name": "extension",
                 "properties": {
-                  "publisher": "Microsoft.Azure.Extensions",
-                  "type": "CustomScript",
-                  "typeHandlerVersion": "2.1",
+                  "publisher": "[parameters('renderFarms')[copyIndex()].customExtension.publisher]",
+                  "type": "[parameters('renderFarms')[copyIndex()].customExtension.type]",
+                  "typeHandlerVersion": "[parameters('renderFarms')[copyIndex()].customExtension.version]",
                   "autoUpgradeMinorVersion": true,
                   "protectedSettings": {
-                    "commandToExecute": "[fx.GetExtensionCommand(parameters('scriptExtension').filePath, parameters('scriptExtension').fileParameters)]"
+                    "commandToExecute": "[fx.GetExtensionCommand(parameters('renderFarms')[copyIndex()].customExtension.filePath, parameters('renderFarms')[copyIndex()].customExtension.fileParameters)]"
                   }
                 }
               }

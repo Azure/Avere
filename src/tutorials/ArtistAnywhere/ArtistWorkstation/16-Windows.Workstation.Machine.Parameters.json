@@ -49,9 +49,9 @@
     "scriptExtension": {
       "value": {
         "filePath": "C:\\Users\\Public\\Downloads\\16-Workstation.Machine.ps1",
-        "fileParameters": "",
+        "fileParameters": "-renderManagerHost '10.1.0.10'",
         "scriptParameters": {
-          "renderManagerHost": "",
+          "renderManagerHost": "10.1.0.10",
           "teradiciLicenseKey": ""
         }
       }

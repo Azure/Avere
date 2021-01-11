@@ -2,6 +2,12 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "renderFarm": {
+      "value": {
+        "deployLinux": false,
+        "deployWindows": false
+      }
+    },
     "managedIdentity": {
       "value": {
         "name": "MediaPipeline",
@@ -17,8 +23,9 @@
     "imageTemplates": {
       "value": [
         {
-          "deploy": true,
-          "name": "RenderNodeCPU",
+          "deploy": false,
+          "name": "RenderNodeLinux",
+          "imageOperatingSystemType": "Linux",
           "imageDefinitionName": "ServerLinux",
           "imageSourceType": "PlatformImage",
           "imageSourceVersion": "latest",
@@ -45,12 +52,6 @@
               "sha256Checksum": "fa810f75b1fda2ae152579d1fc24ef0fa9e998a1ecab503f7c5c036e7dd4e1e2"
             },
             {
-              "type": "File",
-              "sourceUri": "https://mediaasset.blob.core.windows.net/script/mnt-cache.mount",
-              "destination": "/tmp/mnt-cache.mount",
-              "sha256Checksum": "2727af52057212742dda562aa4cc1dfdc54dec04e79cb4c3f4841828fc476bb5"
-            },
-            {
               "type": "Shell",
               "scriptUri": "https://mediaasset.blob.core.windows.net/script/13-Node.Image.sh",
               "sha256Checksum": "8f23e499e66bf885a201a79b95228c475ceb493f563eaea594e417794d14e65a"
@@ -59,11 +60,6 @@
               "type": "Shell",
               "scriptUri": "https://mediaasset.blob.core.windows.net/script/13-Node.Image.Blender.sh",
               "sha256Checksum": "564c8b0d14e0bb8acc446d7acda08d38022bad88775c220f19366142a0efd6ea"
-            },
-            {
-              "type": "Shell",
-              "scriptUri": "https://mediaasset.blob.core.windows.net/script/13-Node.Image.OpenCue.sh",
-              "sha256Checksum": "b4ee50c8d069c7836c9bdd97adb7476eeb26f59914550718ab038530535d2235"
             },
             {
               "type": "File",
@@ -75,16 +71,17 @@
         },
         {
           "deploy": true,
-          "name": "RenderNodeGPU",
-          "imageDefinitionName": "ServerLinux",
+          "name": "RenderNodeWindows",
+          "imageOperatingSystemType": "Windows",
+          "imageDefinitionName": "ServerWindows",
           "imageSourceType": "PlatformImage",
           "imageSourceVersion": "latest",
-          "imageOutputVersion": "1.2.0",
+          "imageOutputVersion": "1.1.0",
           "imageStorageAccount": {
             "type": "Standard_LRS"
           },
           "machineProfile": {
-            "size": "Standard_NV12",
+            "size": "Standard_F16s_v2",
             "osDiskSizeGB": 0
           },
           "buildTimeoutMinutes": 120,
@@ -92,41 +89,30 @@
             {
               "type": "File",
               "sourceUri": "https://mediaasset.blob.core.windows.net/script/mnt-storage-read.mount",
-              "destination": "/tmp/mnt-storage-read.mount",
+              "destination": "C:\\Windows\\Temp\\mnt-storage-read.mount",
               "sha256Checksum": "3621db7b1ed23bd7d47f82323a0a33f4a226951a97a315476718a4fd4dfcb82a"
             },
             {
               "type": "File",
               "sourceUri": "https://mediaasset.blob.core.windows.net/script/mnt-storage-write.mount",
-              "destination": "/tmp/mnt-storage-write.mount",
+              "destination": "C:\\Windows\\Temp\\mnt-storage-write.mount",
               "sha256Checksum": "fa810f75b1fda2ae152579d1fc24ef0fa9e998a1ecab503f7c5c036e7dd4e1e2"
             },
             {
-              "type": "File",
-              "sourceUri": "https://mediaasset.blob.core.windows.net/script/mnt-cache.mount",
-              "destination": "/tmp/mnt-cache.mount",
-              "sha256Checksum": "2727af52057212742dda562aa4cc1dfdc54dec04e79cb4c3f4841828fc476bb5"
+              "type": "PowerShell",
+              "scriptUri": "https://mediaasset.blob.core.windows.net/script/13-Node.Image.ps1",
+              "sha256Checksum": "0d45ce6cbcf9812ddc7eb213e5f1d473bce3e3bbaf619583f0d54dca3a3e67c6"
             },
             {
-              "type": "Shell",
-              "scriptUri": "https://mediaasset.blob.core.windows.net/script/13-Node.Image.sh",
-              "sha256Checksum": "8f23e499e66bf885a201a79b95228c475ceb493f563eaea594e417794d14e65a"
-            },
-            {
-              "type": "Shell",
-              "scriptUri": "https://mediaasset.blob.core.windows.net/script/13-Node.Image.Blender.sh",
-              "sha256Checksum": "564c8b0d14e0bb8acc446d7acda08d38022bad88775c220f19366142a0efd6ea"
-            },
-            {
-              "type": "Shell",
-              "scriptUri": "https://mediaasset.blob.core.windows.net/script/13-Node.Image.OpenCue.sh",
-              "sha256Checksum": "b4ee50c8d069c7836c9bdd97adb7476eeb26f59914550718ab038530535d2235"
+              "type": "PowerShell",
+              "scriptUri": "https://mediaasset.blob.core.windows.net/script/13-Node.Image.Blender.ps1",
+              "sha256Checksum": "07c47738953abeaacabc9f3ce891fb02a2099b9c87b2c2a73c5cafe76c2f43ef"
             },
             {
               "type": "File",
-              "sourceUri": "https://mediaasset.blob.core.windows.net/script/14-Farm.ScaleSet.sh",
-              "destination": "/tmp/14-Farm.ScaleSet.sh",
-              "sha256Checksum": "1eb34febe08bfe8a2584ed64a820cf402f8077f2d57526cb9666af29b79e4113"
+              "sourceUri": "https://mediaasset.blob.core.windows.net/script/14-Farm.ScaleSet.ps1",
+              "destination": "C:\\Windows\\Temp\\14-Farm.ScaleSet.ps1",
+              "sha256Checksum": "07c47738953abeaacabc9f3ce891fb02a2099b9c87b2c2a73c5cafe76c2f43ef"
             }
           ]
         }

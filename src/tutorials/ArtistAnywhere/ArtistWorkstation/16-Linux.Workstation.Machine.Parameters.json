@@ -35,9 +35,9 @@
     "scriptExtension": {
       "value": {
         "filePath": "/tmp/16-Workstation.Machine.sh",
-        "fileParameters": "",
+        "fileParameters": "RENDER_MANAGER_HOST='10.1.0.10'",
         "scriptParameters": {
-          "RENDER_MANAGER_HOST": "",
+          "RENDER_MANAGER_HOST": "10.1.0.10",
           "TERADICI_LICENSE_KEY": ""
         }
       }

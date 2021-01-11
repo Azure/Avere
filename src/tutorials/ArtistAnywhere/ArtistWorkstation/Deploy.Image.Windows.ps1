@@ -24,12 +24,10 @@ param (
     [object] $storageCache
 )
 
-$templateDirectory = $PSScriptRoot
-if (!$templateDirectory) {
-    $templateDirectory = $using:templateDirectory
-}
+$rootDirectory = !$PSScriptRoot ? $using:rootDirectory : "$PSScriptRoot/.."
+$moduleDirectory = "ArtistWorkstation"
 
-Import-Module "$templateDirectory/Deploy.psm1"
+Import-Module "$rootDirectory/Deploy.psm1"
 
 # Shared Framework
 if (!$sharedFramework) {
@@ -44,19 +42,17 @@ if (!$storageCache) {
     $storageCache = Get-StorageCache $sharedFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageNetAppDeploy $storageCacheDeploy
 }
 
-$moduleDirectory = "ArtistWorkstation"
-
-# 15.0 - Artist Workstation Image Templates [Linux]
-$moduleName = "15.0 - Artist Workstation Image Templates [Linux]"
+# 15.2 - Artist Workstation Image Templates [Windows]
+$moduleName = "15.2 - Artist Workstation Image Templates [Windows]"
 New-TraceMessage $moduleName $false $computeRegionName
 $resourceGroupNameSuffix = ".Gallery"
 $resourceGroupName = New-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
-$imageTemplates = (Get-Content "$templateDirectory/$moduleDirectory/15-Linux.Workstation.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters.imageTemplates.value
+$imageTemplates = (Get-Content "$rootDirectory/$moduleDirectory/15-Windows.Workstation.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters.imageTemplates.value
 
 if (Confirm-ImageTemplates $resourceGroupName $imageTemplates) {
-    $templateFile = "$templateDirectory/$moduleDirectory/15-Linux.Workstation.Image.json"
-    $templateParameters = "$templateDirectory/$moduleDirectory/15-Linux.Workstation.Image.Parameters.json"
+    $templateFile = "$rootDirectory/$moduleDirectory/15-Windows.Workstation.Image.json"
+    $templateParameters = "$rootDirectory/$moduleDirectory/15-Windows.Workstation.Image.Parameters.json"
 
     $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
     $templateConfig.parameters.managedIdentity.value.name = $managedIdentity.name
@@ -71,15 +67,6 @@ if (Confirm-ImageTemplates $resourceGroupName $imageTemplates) {
 }
 New-TraceMessage $moduleName $true $computeRegionName
 
-# 15.1 - Artist Workstation Image Build [Linux]
-$moduleName = "15.1 - Artist Workstation Image Build [Linux]"
-New-TraceMessage $moduleName $false $computeRegionName
-foreach ($imageTemplate in $imageTemplates) {
-    $imageVersion = Get-ImageVersion $imageGallery $imageTemplate
-    if (!$imageVersion -and $imageTemplate.deploy) {
-        New-TraceMessage "$moduleName [$($imageTemplate.name)]" $false $computeRegionName
-        $imageBuild = az image builder run --resource-group $resourceGroupName --name $imageTemplate.name
-        New-TraceMessage "$moduleName [$($imageTemplate.name)]" $true $computeRegionName
-    }
-}
-New-TraceMessage $moduleName $true $computeRegionName
+# 15.3 - Artist Workstation Image Build [Windows]
+$moduleName = "15.3 - Artist Workstation Image Build [Windows]"
+Build-ImageTemplates $moduleName $computeRegionName $imageGallery $imageTemplates

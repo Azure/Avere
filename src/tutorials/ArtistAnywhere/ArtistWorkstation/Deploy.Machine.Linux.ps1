@@ -27,12 +27,10 @@ param (
     [object] $renderManager
 )
 
-$templateDirectory = $PSScriptRoot
-if (!$templateDirectory) {
-    $templateDirectory = $using:templateDirectory
-}
+$rootDirectory = !$PSScriptRoot ? $using:rootDirectory : "$PSScriptRoot/.."
+$moduleDirectory = "ArtistWorkstation"
 
-Import-Module "$templateDirectory/Deploy.psm1"
+Import-Module "$rootDirectory/Deploy.psm1"
 
 # Shared Framework
 if (!$sharedFramework) {
@@ -47,16 +45,14 @@ $imageGallery = $sharedFramework.imageGallery
 #     $storageCache = Get-StorageCache $sharedFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageNetAppDeploy $storageCacheDeploy
 # }
 
-$moduleDirectory = "ArtistWorkstation"
-
 # 16.0 - Artist Workstation Machine [Linux]
 $moduleName = "16.0 - Artist Workstation Machine [Linux]"
 New-TraceMessage $moduleName $false $computeRegionName
 $resourceGroupNameSuffix = ".Workstation"
 $resourceGroupName = New-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
-$templateFile = "$templateDirectory/$moduleDirectory/16-Linux.Workstation.Machine.json"
-$templateParameters = "$templateDirectory/$moduleDirectory/16-Linux.Workstation.Machine.Parameters.json"
+$templateFile = "$rootDirectory/$moduleDirectory/16-Linux.Workstation.Machine.json"
+$templateParameters = "$rootDirectory/$moduleDirectory/16-Linux.Workstation.Machine.Parameters.json"
 
 $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
 $templateConfig.parameters.managedIdentity.value.name = $managedIdentity.name
@@ -65,9 +61,7 @@ $templateConfig.parameters.imageGallery.value.name = $imageGallery.name
 $templateConfig.parameters.imageGallery.value.resourceGroupName = $imageGallery.resourceGroupName
 
 $scriptParameters = $templateConfig.parameters.scriptExtension.value.scriptParameters
-if ($renderManager) {
-    $scriptParameters.RENDER_MANAGER_HOST = $renderManager.host
-}
+$scriptParameters.RENDER_MANAGER_HOST = $renderManager.host ?? ""
 $fileParameters = Get-ObjectProperties $scriptParameters $false
 $templateConfig.parameters.scriptExtension.value.fileParameters = $fileParameters
 

@@ -4,11 +4,13 @@ Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager 
 
 Azure Artist Anywhere provides the following mutually-exclusive render manager deployment configuration modes.
 
-* [*CycleCloud*](https://docs.microsoft.com/azure/cyclecloud/overview) - render job management via integration of [OpenCue](https://www.opencue.io) with the [Azure CycleCloud](https://docs.microsoft.com/azure/cyclecloud/overview) cluster management service
+* [*OpenCue*](https://www.opencue.io) - enables [OpenCue](https://www.opencue.io) integration with the [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) service
 
-* [*OpenCue*](https://www.opencue.io) - render job management via integration of [OpenCue](https://www.opencue.io) with the [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) service
+* [*VRay*](https://www.chaosgroup.com/vray) - enables [V-Ray Blender](https://www.chaosgroup.com/vray/blender) integration with the [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) service
 
-* [*Batch*](https://docs.microsoft.com/azure/batch/batch-technical-overview) - render job managment via the [Azure Batch](https://docs.microsoft.com/azure/batch/batch-technical-overview) platform service, which is Azure's native job scheduler service
+* [*CycleCloud*](https://docs.microsoft.com/azure/cyclecloud/overview) - enables [OpenCue](https://www.opencue.io) integration with the [Azure CycleCloud](https://docs.microsoft.com/azure/cyclecloud/overview) cluster management service
+
+* [*Batch*](https://docs.microsoft.com/azure/batch/batch-technical-overview) - enables the [Azure Batch](https://docs.microsoft.com/azure/batch/batch-technical-overview) platform service, which is Azure's native HPC job scheduler service
 
 The following sample output frame was rendered on Azure using [Blender](https://www.blender.org), which is an open-source 3D content creation suite.
 
@@ -18,15 +20,28 @@ The following sample output frame was rendered on Azure using [Blender](https://
 
 The following Microsoft Azure resource templates and scripts define the Azure Artist Anywhere deployment modules.
 
-| *Shared Framework* | *Storage Cache* | *Render Manager* | *Render Farm* |
-| :----------------- | :-------------- | :--------------- | :------------ |
-| 00 - [Virtual Network](SharedFramework/00-VirtualNetwork.json) ([Parameters](SharedFramework/00-VirtualNetwork.Parameters.json)) | 06 - [Storage](StorageCache/06-Storage.json) ([Parameters](StorageCache/06-Storage.Parameters.json)) | 08 - [Batch Account](RenderManager/08-BatchAccount.json) ([Parameters](RenderManager/08-BatchAccount.Parameters.json)) | 13 - [Node Image](RenderFarm/13-Node.Image.json) ([Parameters](RenderFarm/13-Node.Image.Parameters.json)) |
-| 01 - [Managed Identity](SharedFramework/01-ManagedIdentity.json) ([Parameters](SharedFramework/01-ManagedIdentity.Parameters.json)) | 06 - [Storage NetApp](StorageCache/06-Storage.NetApp.json) ([Parameters](StorageCache/06-Storage.NetApp.Parameters.json)) | 09 - [OpenCue Data](RenderManager/09-OpenCue.Data.json) ([Parameters](RenderManager/09-OpenCue.Data.Parameters.json)) | 13 - [Node Image Customize](RenderFarm/13-Node.Image.sh) |
-| 02 - [Key Vault](SharedFramework/02-KeyVault.json) ([Parameters](SharedFramework/02-KeyVault.Parameters.json)) | 07 - [Cache](StorageCache/07-Cache.json) ([Parameters](StorageCache/07-Cache.Parameters.json)) | 10 - [OpenCue Image](RenderManager/10-OpenCue.Image.json) ([Parameters](RenderManager/10-OpenCue.Image.Parameters.json)) | 13 - [Node Image Customize (Blender)](RenderFarm/13-Node.Image.Blender.sh) |
-| 03 - [Monitor Insight](SharedFramework/03-MonitorInsight.json) ([Parameters](SharedFramework/03-MonitorInsight.Parameters.json)) | | 10 - [OpenCue Image Customize](RenderManager/10-OpenCue.Image.sh) | 13 - [Node Image Customize (OpenCue)](RenderFarm/13-Node.Image.OpenCue.sh) |
-| 04 - [Image Gallery](SharedFramework/04-ImageGallery.json) ([Parameters](SharedFramework/04-ImageGallery.Parameters.json)) | | 11 - [OpenCue Machine](RenderManager/11-OpenCue.Machine.json) ([Parameters](RenderManager/11-OpenCue.Machine.Parameters.json)) | 14 - [Farm Pool](RenderFarm/14-Farm.Pool.json) ([Parameters](RenderFarm/14-Farm.Pool.Parameters.json)) |
-| 05 - [Container Registry](SharedFramework/05-ContainerRegistry.json) ([Parameters](SharedFramework/05-ContainerRegistry.Parameters.json)) | | 11 - [OpenCue Machine Initialize](RenderManager/11-OpenCue.Machine.sh) | 14 - [Farm Scale Set](RenderFarm/14-Farm.ScaleSet.json) ([Parameters](RenderFarm/14-Farm.ScaleSet.Parameters.json)) |
-| | | 12 - [CycleCloud Machine](RenderManager/12-CycleCloud.Machine.json) ([Parameters](RenderManager/12-CycleCloud.Machine.Parameters.json)) | 14 - [Farm Scale Set Initialize](RenderFarm/14-Farm.ScaleSet.sh) |
+| *Shared Framework* | *Storage Cache* | *Render Manager* |
+| :----------------- | :-------------- | :--------------- |
+| 00 - [Virtual Network](SharedFramework/00-VirtualNetwork.json) ([Parameters](SharedFramework/00-VirtualNetwork.Parameters.json)) | 06 - [Storage](StorageCache/06-Storage.json) ([Parameters](StorageCache/06-Storage.Parameters.json)) | 08 - [Batch Account](RenderManager/08-BatchAccount.json) ([Parameters](RenderManager/08-BatchAccount.Parameters.json)) |
+| 01 - [Managed Identity](SharedFramework/01-ManagedIdentity.json) ([Parameters](SharedFramework/01-ManagedIdentity.Parameters.json)) | 06 - [Storage NetApp](StorageCache/06-Storage.NetApp.json) ([Parameters](StorageCache/06-Storage.NetApp.Parameters.json)) | 09 - [OpenCue Data](RenderManager/09-OpenCue.Data.json) ([Parameters](RenderManager/09-OpenCue.Data.Parameters.json)) |
+| 02 - [Key Vault](SharedFramework/02-KeyVault.json) ([Parameters](SharedFramework/02-KeyVault.Parameters.json)) | 07 - [Cache](StorageCache/07-Cache.json) ([Parameters](StorageCache/07-Cache.Parameters.json)) | 10 - [OpenCue Image](RenderManager/10-OpenCue.Image.json) ([Parameters](RenderManager/10-OpenCue.Image.Parameters.json)) |
+| 03 - [Monitor Insight](SharedFramework/03-MonitorInsight.json) ([Parameters](SharedFramework/03-MonitorInsight.Parameters.json)) | | 10 - [OpenCue Image Customize](RenderManager/10-OpenCue.Image.sh) |
+| 04 - [Image Gallery](SharedFramework/04-ImageGallery.json) ([Parameters](SharedFramework/04-ImageGallery.Parameters.json)) | | 11 - [OpenCue Machine](RenderManager/11-OpenCue.Machine.json) ([Parameters](RenderManager/11-OpenCue.Machine.Parameters.json)) |
+| 05 - [Container Registry](SharedFramework/05-ContainerRegistry.json) ([Parameters](SharedFramework/05-ContainerRegistry.Parameters.json)) | | 11 - [OpenCue Machine Initialize](RenderManager/11-OpenCue.Machine.sh) |
+| | | 12 - [CycleCloud Machine](RenderManager/12-CycleCloud.Machine.json) ([Parameters](RenderManager/12-CycleCloud.Machine.Parameters.json)) |
+
+| *Render Farm (Linux)* | *Render Farm (Windows)* |
+| :-------------------- | :---------------------- |
+| 13 - [Node Image](RenderFarm/13-Node.Image.json) ([Parameters](RenderFarm/13-Node.Image.Parameters.json)) | 13 - [Node Image](RenderFarm/13-Node.Image.json) ([Parameters](RenderFarm/13-Node.Image.Parameters.json)) |
+| 13 - [Node Image Customize](RenderFarm/13-Node.Image.sh) | 13 - [Node Image Customize](RenderFarm/13-Node.Image.ps1) |
+| 13 - [Node Image Customize (Blender)](RenderFarm/13-Node.Image.Blender.sh) | 13 - [Node Image Customize (Blender)](RenderFarm/13-Node.Image.Blender.ps1) |
+| 13 - [Node Image Customize (OpenCue)](RenderFarm/13-Node.Image.OpenCue.sh) | 13 - [Node Image Customize (OpenCue)](RenderFarm/13-Node.Image.OpenCue.ps1) |
+| | 13 - [Node Image Customize (Maya / V-Ray)](RenderFarm/13-Node.Image.MayaVRay.ps1) |
+| 14 - [Farm Pool](RenderFarm/14-Farm.Pool.json) ([Parameters](RenderFarm/14-Farm.Pool.Parameters.json)) | 14 - [Farm Pool](RenderFarm/14-Farm.Pool.json) ([Parameters](RenderFarm/14-Farm.Pool.Parameters.json)) |
+| 14 - [Farm Scale Set](RenderFarm/14-Farm.ScaleSet.json) ([Parameters](RenderFarm/14-Farm.ScaleSet.Parameters.json)) | 14 - [Farm Scale Set](RenderFarm/14-Farm.ScaleSet.json) ([Parameters](RenderFarm/14-Farm.ScaleSet.Parameters.json)) |
+| 14 - [Farm Scale Set Initialize](RenderFarm/14-Farm.ScaleSet.sh) | 14 - [Farm Scale Set Initialize](RenderFarm/14-Farm.ScaleSet.ps1) |
+
+
 
 | *Artist Workstation Image* | *Artist Workstation Machine* |
 | :------------------------- | :--------------------------- |
@@ -139,28 +154,6 @@ The following Microsoft Azure services and open-source software comprise the Azu
 The following diagram defines the Azure Artist Anywhere deployment modules along with their dependency relationships.
 
 ![](https://mediasolutions.blob.core.windows.net/bin/AzureArtistAnywhere.ModuleDependency.2020-12-01.png)
-
-The following list describes each of the Azure Artist Anywhere deployment script files.
-
-* [*Deploy.ps1*](Deploy.ps1) - main script that orchestrates the solution deployment process
-
-* [*Deploy.psm1*](Deploy.psm1) - shared module that is referenced from each deployment script
-
-* [*Deploy.SharedFramework.ps1*](Deploy.SharedFramework.ps1) - core script that deploys the shared framework services
-
-* [*Deploy.StorageCache.ps1*](Deploy.StorageCache.ps1) - core script that deploys file and object storage and cache services
-
-* [*Deploy.RenderManager.ps1*](Deploy.RenderManager.ps1) - background job script that deploys render management services
-
-* [*Deploy.ArtistWorkstation.ps1*](Deploy.ArtistWorkstation.ps1) - orchestration script that deploys artist workstations (Linux, Windows)
-
-* [*Deploy.ArtistWorkstation.Image.Linux.ps1*](Deploy.ArtistWorkstation.Image.Linux.ps1) - background job script that deploys artist workstation Linux images
-
-* [*Deploy.ArtistWorkstation.Image.Windows.ps1*](Deploy.ArtistWorkstation.Image.Windows.ps1) - background job script that deploys artist workstation Windows images
-
-* [*Deploy.ArtistWorkstation.Machine.Linux.ps1*](Deploy.ArtistWorkstation.Machine.Linux.ps1) - background job script that deploys artist workstation Linux machines
-
-* [*Deploy.ArtistWorkstation.Machine.Windows.ps1*](Deploy.ArtistWorkstation.Machine.Windows.ps1) - background job script that deploys artist workstation Windows machines
 
 As an example deployment, the following output is from the [*Deploy.ps1*](Deploy.ps1) script within Azure Cloud Shell.
 

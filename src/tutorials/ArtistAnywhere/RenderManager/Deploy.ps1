@@ -17,8 +17,8 @@ param (
     # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in Azure compute region
     [boolean] $storageCacheDeploy = $false,
 
-    # Set to the target Azure render manager deployment configuration mode (i.e., CycleCloud, OpenCue, or Batch)
-    [string] $renderManagerMode = "CycleCloud",
+    # Set to the target Azure render manager deployment mode (i.e., OpenCue, VRay, CycleCloud or Batch)
+    [string] $renderManagerMode = "OpenCue",
 
     # The Azure shared services framework (e.g., Virtual Network, Managed Identity, Key Vault, etc.)
     [object] $sharedFramework,
@@ -27,12 +27,10 @@ param (
     [object] $storageCache
 )
 
-$templateDirectory = $PSScriptRoot
-if (!$templateDirectory) {
-    $templateDirectory = $using:templateDirectory
-}
+$rootDirectory = !$PSScriptRoot ? $using:rootDirectory : "$PSScriptRoot/.."
+$moduleDirectory = "RenderManager"
 
-Import-Module "$templateDirectory/Deploy.psm1"
+Import-Module "$rootDirectory/Deploy.psm1"
 
 # Shared Framework
 if (!$sharedFramework) {
@@ -49,8 +47,6 @@ if (!$storageCache) {
 }
 $storageAccount = $storageCache.storageAccounts[0]
 
-$moduleDirectory = "RenderManager"
-
 # 08 - Batch Account
 if ($renderManagerMode -eq "Batch") {
     $moduleName = "08 - Batch Account"
@@ -65,8 +61,8 @@ if ($renderManagerMode -eq "Batch") {
     $subscriptionId = "/subscriptions/$subscriptionId"
     $roleAssignment = az role assignment create --role $roleId --scope $subscriptionId --assignee-object-id $principalId --assignee-principal-type $principalType
 
-    $templateFile = "$templateDirectory/$moduleDirectory/08-BatchAccount.json"
-    $templateParameters = "$templateDirectory/$moduleDirectory/08-BatchAccount.Parameters.json"
+    $templateFile = "$rootDirectory/$moduleDirectory/08-BatchAccount.json"
+    $templateParameters = "$rootDirectory/$moduleDirectory/08-BatchAccount.Parameters.json"
 
     $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
     $templateConfig.parameters.storageAccount.value.name = $storageAccount.name
@@ -81,14 +77,14 @@ if ($renderManagerMode -eq "Batch") {
 }
 
 # 09 - OpenCue Data
-if ($renderManagerMode -ne "Batch") {
+if ($renderManagerMode -eq "CycleCloud" -or $renderManagerMode -eq "OpenCue") {
     $moduleName = "09 - OpenCue Data"
     New-TraceMessage $moduleName $false $computeRegionName
     $resourceGroupNameSuffix = ".Manager"
     $resourceGroupName = New-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
-    $templateFile = "$templateDirectory/$moduleDirectory/09-OpenCue.Data.json"
-    $templateParameters = "$templateDirectory/$moduleDirectory/09-OpenCue.Data.Parameters.json"
+    $templateFile = "$rootDirectory/$moduleDirectory/09-OpenCue.Data.json"
+    $templateParameters = "$rootDirectory/$moduleDirectory/09-OpenCue.Data.Parameters.json"
 
     $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
     $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
@@ -107,11 +103,11 @@ if ($renderManagerMode -ne "Batch") {
     $resourceGroupNameSuffix = ".Gallery"
     $resourceGroupName = New-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
-    $imageTemplates = (Get-Content "$templateDirectory/$moduleDirectory/10-OpenCue.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters.imageTemplates.value
+    $imageTemplates = (Get-Content "$rootDirectory/$moduleDirectory/10-OpenCue.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters.imageTemplates.value
 
     if (Confirm-ImageTemplates $resourceGroupName $imageTemplates) {
-        $templateFile = "$templateDirectory/$moduleDirectory/10-OpenCue.Image.json"
-        $templateParameters = "$templateDirectory/$moduleDirectory/10-OpenCue.Image.Parameters.json"
+        $templateFile = "$rootDirectory/$moduleDirectory/10-OpenCue.Image.json"
+        $templateParameters = "$rootDirectory/$moduleDirectory/10-OpenCue.Image.Parameters.json"
 
         $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
         $templateConfig.parameters.managedIdentity.value.name = $managedIdentity.name
@@ -128,16 +124,7 @@ if ($renderManagerMode -ne "Batch") {
 
     # 10.1 - OpenCue Image Build
     $moduleName = "10.1 - OpenCue Image Build"
-    New-TraceMessage $moduleName $false $computeRegionName
-    foreach ($imageTemplate in $imageTemplates) {
-        $imageVersion = Get-ImageVersion $imageGallery $imageTemplate
-        if (!$imageVersion) {
-            New-TraceMessage "$moduleName [$($imageTemplate.name)]" $false $computeRegionName
-            $imageBuild = az image builder run --resource-group $resourceGroupName --name $imageTemplate.name
-            New-TraceMessage "$moduleName [$($imageTemplate.name)]" $true $computeRegionName
-        }
-    }
-    New-TraceMessage $moduleName $true $computeRegionName
+    Build-ImageTemplates $moduleName $computeRegionName $imageGallery $imageTemplates
 
     # 11 - OpenCue Machine
     $moduleName = "11 - OpenCue Machine"
@@ -145,8 +132,8 @@ if ($renderManagerMode -ne "Batch") {
     $resourceGroupNameSuffix = ".Manager"
     $resourceGroupName = New-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
-    $templateFile = "$templateDirectory/$moduleDirectory/11-OpenCue.Machine.json"
-    $templateParameters = "$templateDirectory/$moduleDirectory/11-OpenCue.Machine.Parameters.json"
+    $templateFile = "$rootDirectory/$moduleDirectory/11-OpenCue.Machine.json"
+    $templateParameters = "$rootDirectory/$moduleDirectory/11-OpenCue.Machine.Parameters.json"
 
     $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
     $templateConfig.parameters.managedIdentity.value.name = $managedIdentity.name
@@ -181,8 +168,8 @@ if ($renderManagerMode -eq "CycleCloud") {
     $resourceGroupNameSuffix = ".Manager"
     $resourceGroupName = New-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
-    $templateFile = "$templateDirectory/$moduleDirectory/12-CycleCloud.Machine.json"
-    $templateParameters = "$templateDirectory/$moduleDirectory/12-CycleCloud.Machine.Parameters.json"
+    $templateFile = "$rootDirectory/$moduleDirectory/12-CycleCloud.Machine.json"
+    $templateParameters = "$rootDirectory/$moduleDirectory/12-CycleCloud.Machine.Parameters.json"
 
     $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
     $templateConfig.parameters.managedIdentity.value.name = $managedIdentity.name

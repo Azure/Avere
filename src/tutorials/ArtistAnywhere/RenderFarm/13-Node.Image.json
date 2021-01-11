@@ -2,6 +2,12 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "renderFarm": {
+      "type": "object",
+      "metadata": {
+        "description": "The render farm."
+      }
+    },
     "managedIdentity": {
       "type": "object",
       "metadata": {
@@ -31,9 +37,32 @@
     "imageBuilderApiVersion": "2020-02-14",
     "imageGalleryApiVersion": "2020-09-30"
   },
+  "functions": [
+    {
+      "namespace": "fx",
+      "members": {
+        "DeployEnabled": {
+          "parameters": [
+            {
+              "name": "renderFarm",
+              "type": "object"
+            },
+            {
+              "name": "osType",
+              "type": "string"
+            }
+          ],
+          "output": {
+            "type": "int",
+            "value": "[if(and(parameters('renderFarm').deployLinux, equals(parameters('osType'), 'Linux')), 1, if(and(parameters('renderFarm').deployWindows, equals(parameters('osType'), 'Windows')), 1, 0))]"
+          }
+        }
+      }
+    }
+  ],
   "resources": [
     {
-      "condition": "[parameters('imageTemplates')[copyIndex()].deploy]",
+      "condition": "[equals(fx.DeployEnabled(parameters('renderFarm'), parameters('imageTemplates')[copyIndex()].imageOperatingSystemType), 1)]",
       "type": "Microsoft.VirtualMachineImages/imageTemplates",
       "name": "[parameters('imageTemplates')[copyIndex()].name]",
       "apiVersion": "[variables('imageBuilderApiVersion')]",
