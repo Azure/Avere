@@ -48,7 +48,7 @@ locals {
   addr_prefix3 = var.avere_first_ip_addr3 == "" ? "" : trimsuffix(var.avere_first_ip_addr3, ".${local.last_octet3}")
 
   local_a_records3 = var.avere_first_ip_addr3 == "" ? [] : [for i in range(var.avere_ip_addr_count3): "local-data: \"${var.avere_filer_fqdn} ${var.dns_max_ttl_seconds} A ${local.addr_prefix3}.${local.last_octet3 + i}\""]
-  local_a_records_reverse3 = var.avere_first_ip_addr3 == "" ? [] : [for i in range(var.avere_ip_addr_count3): "local-data-ptr: \"${local.addr_prefix2}.${local.last_octet3 + i} ${var.dns_max_ttl_seconds} ${var.avere_filer_fqdn}\""]
+  local_a_records_reverse3 = var.avere_first_ip_addr3 == "" ? [] : [for i in range(var.avere_ip_addr_count3): "local-data-ptr: \"${local.addr_prefix3}.${local.last_octet3 + i} ${var.dns_max_ttl_seconds} ${var.avere_filer_fqdn}\""]
 
   # alternate fqdn
   local_alternate_a_records3 = var.avere_first_ip_addr3 == "" ? [] : flatten([
@@ -61,7 +61,7 @@ locals {
   local_alternate_a_records_reverse3 = var.avere_first_ip_addr3 == "" ? [] : flatten([
     for i in range(length(var.avere_filer_alternate_fqdn)): [
       for j in range(var.avere_ip_addr_count3): 
-        "local-data-ptr: \"${local.addr_prefix2}.${local.last_octet3 + j} ${var.dns_max_ttl_seconds} ${var.avere_filer_alternate_fqdn[i]}\""
+        "local-data-ptr: \"${local.addr_prefix3}.${local.last_octet3 + j} ${var.dns_max_ttl_seconds} ${var.avere_filer_alternate_fqdn[i]}\""
         ]
   ])
 
@@ -70,7 +70,7 @@ locals {
   addr_prefix4 = var.avere_first_ip_addr4 == "" ? "" : trimsuffix(var.avere_first_ip_addr4, ".${local.last_octet4}")
 
   local_a_records4 = var.avere_first_ip_addr4 == "" ? [] : [for i in range(var.avere_ip_addr_count4): "local-data: \"${var.avere_filer_fqdn} ${var.dns_max_ttl_seconds} A ${local.addr_prefix4}.${local.last_octet4 + i}\""]
-  local_a_records_reverse4 = var.avere_first_ip_addr4 == "" ? [] : [for i in range(var.avere_ip_addr_count4): "local-data-ptr: \"${local.addr_prefix2}.${local.last_octet4 + i} ${var.dns_max_ttl_seconds} ${var.avere_filer_fqdn}\""]
+  local_a_records_reverse4 = var.avere_first_ip_addr4 == "" ? [] : [for i in range(var.avere_ip_addr_count4): "local-data-ptr: \"${local.ddr_prefix4}.${local.last_octet4 + i} ${var.dns_max_ttl_seconds} ${var.avere_filer_fqdn}\""]
 
   # alternate fqdn
   local_alternate_a_records4 = var.avere_first_ip_addr4 == "" ? [] : flatten([
@@ -83,7 +83,7 @@ locals {
   local_alternate_a_records_reverse4 = var.avere_first_ip_addr4 == "" ? [] : flatten([
     for i in range(length(var.avere_filer_alternate_fqdn)): [
       for j in range(var.avere_ip_addr_count4): 
-        "local-data-ptr: \"${local.addr_prefix2}.${local.last_octet4 + j} ${var.dns_max_ttl_seconds} ${var.avere_filer_alternate_fqdn[i]}\""
+        "local-data-ptr: \"${local.addr_prefix4}.${local.last_octet4 + j} ${var.dns_max_ttl_seconds} ${var.avere_filer_alternate_fqdn[i]}\""
         ]
   ])
   
