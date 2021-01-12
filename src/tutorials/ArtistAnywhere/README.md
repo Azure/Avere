@@ -4,13 +4,11 @@ Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager 
 
 Azure Artist Anywhere provides the following mutually-exclusive render manager deployment configuration modes.
 
-* [*OpenCue*](https://www.opencue.io) - enables [OpenCue](https://www.opencue.io) integration with the [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) service
-
-* [*VRay*](https://www.chaosgroup.com/vray) - enables [V-Ray Blender](https://www.chaosgroup.com/vray/blender) integration with the [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) service
-
 * [*CycleCloud*](https://docs.microsoft.com/azure/cyclecloud/overview) - enables [OpenCue](https://www.opencue.io) integration with the [Azure CycleCloud](https://docs.microsoft.com/azure/cyclecloud/overview) cluster management service
 
-* [*Batch*](https://docs.microsoft.com/azure/batch/batch-technical-overview) - enables the [Azure Batch](https://docs.microsoft.com/azure/batch/batch-technical-overview) platform service, which is Azure's native HPC job scheduler service
+* [*OpenCue*](https://www.opencue.io) - enables [OpenCue](https://www.opencue.io) integration with the [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) service
+
+* [*VRayDR*](https://www.chaosgroup.com/vray) - enables [V-Ray Distributed Rendering](https://docs.chaosgroup.com/display/VMAYA/Distributed+Rendering) with the [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) service
 
 The following sample output frame was rendered on Azure using [Blender](https://www.blender.org), which is an open-source 3D content creation suite.
 
@@ -36,7 +34,7 @@ The following Microsoft Azure resource templates and scripts define the Azure Ar
 | 13 - [Node Image Customize](RenderFarm/13-Node.Image.sh) | 13 - [Node Image Customize](RenderFarm/13-Node.Image.ps1) |
 | 13 - [Node Image Customize (Blender)](RenderFarm/13-Node.Image.Blender.sh) | 13 - [Node Image Customize (Blender)](RenderFarm/13-Node.Image.Blender.ps1) |
 | 13 - [Node Image Customize (OpenCue)](RenderFarm/13-Node.Image.OpenCue.sh) | 13 - [Node Image Customize (OpenCue)](RenderFarm/13-Node.Image.OpenCue.ps1) |
-| 13 - [Node Image Customize (V-Ray for Maya)](RenderFarm/13-Node.Image.VRayMaya.sh) | 13 - [Node Image Customize (V-Ray for Maya)](RenderFarm/13-Node.Image.VRayMaya.ps1) |
+| 13 - [Node Image Customize (V-Ray DR)](RenderFarm/13-Node.Image.VRayDR.sh) | 13 - [Node Image Customize (V-Ray DR)](RenderFarm/13-Node.Image.VRayDR.ps1) |
 | 14 - [Farm Pool](RenderFarm/14-Farm.Pool.json) ([Parameters](RenderFarm/14-Farm.Pool.Parameters.json)) | 14 - [Farm Pool](RenderFarm/14-Farm.Pool.json) ([Parameters](RenderFarm/14-Farm.Pool.Parameters.json)) |
 | 14 - [Farm Scale Set](RenderFarm/14-Farm.ScaleSet.json) ([Parameters](RenderFarm/14-Farm.ScaleSet.Parameters.json)) | 14 - [Farm Scale Set](RenderFarm/14-Farm.ScaleSet.json) ([Parameters](RenderFarm/14-Farm.ScaleSet.Parameters.json)) |
 | 14 - [Farm Scale Set Initialize](RenderFarm/14-Farm.ScaleSet.sh) | 14 - [Farm Scale Set Initialize](RenderFarm/14-Farm.ScaleSet.ps1) |

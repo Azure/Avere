@@ -17,7 +17,7 @@ param (
     # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in Azure compute region
     [boolean] $storageCacheDeploy = $false,
 
-    # Set to the target Azure render manager deployment mode (i.e., OpenCue, VRay, CycleCloud or Batch)
+    # Set to the target Azure render manager deployment mode (i.e., OpenCue, VRayDR, CycleCloud or Batch)
     [string] $renderManagerMode = "OpenCue",
 
     # The Azure shared services framework (e.g., Virtual Network, Managed Identity, Key Vault, etc.)
