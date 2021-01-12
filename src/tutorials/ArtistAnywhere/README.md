@@ -10,7 +10,7 @@ Azure Artist Anywhere provides the following mutually-exclusive render manager d
 
 * [*VRayDR*](https://www.chaosgroup.com/vray) - enables [V-Ray Distributed Rendering](https://docs.chaosgroup.com/display/VMAYA/Distributed+Rendering) with the [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) service
 
-The following sample output frame was rendered on Azure using [Blender](https://www.blender.org), which is an open-source 3D content creation suite.
+The following sample output frame was rendered on Azure using [Blender's](https://www.blender.org) open-source 3D content creation suite.
 
 ![](https://mediasolutions.blob.core.windows.net/bin/Blender/classroom.png)
 
