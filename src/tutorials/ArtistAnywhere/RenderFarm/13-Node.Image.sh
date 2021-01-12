@@ -7,7 +7,6 @@ lshw -class 'display' | grep 'NVIDIA' && nvidiaGPU=true || nvidiaGPU=false
 
 if $centOS7; then
     yum -y install nfs-utils
-    yum -y install unzip
 else # CentOS8
     dnf -y install nfs-utils
 fi

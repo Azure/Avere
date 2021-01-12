@@ -36,7 +36,7 @@ The following Microsoft Azure resource templates and scripts define the Azure Ar
 | 13 - [Node Image Customize](RenderFarm/13-Node.Image.sh) | 13 - [Node Image Customize](RenderFarm/13-Node.Image.ps1) |
 | 13 - [Node Image Customize (Blender)](RenderFarm/13-Node.Image.Blender.sh) | 13 - [Node Image Customize (Blender)](RenderFarm/13-Node.Image.Blender.ps1) |
 | 13 - [Node Image Customize (OpenCue)](RenderFarm/13-Node.Image.OpenCue.sh) | 13 - [Node Image Customize (OpenCue)](RenderFarm/13-Node.Image.OpenCue.ps1) |
-| | 13 - [Node Image Customize (Maya / V-Ray)](RenderFarm/13-Node.Image.MayaVRay.ps1) |
+| 13 - [Node Image Customize (V-Ray for Maya)](RenderFarm/13-Node.Image.VRayMaya.sh) | 13 - [Node Image Customize (V-Ray for Maya)](RenderFarm/13-Node.Image.VRayMaya.ps1) |
 | 14 - [Farm Pool](RenderFarm/14-Farm.Pool.json) ([Parameters](RenderFarm/14-Farm.Pool.Parameters.json)) | 14 - [Farm Pool](RenderFarm/14-Farm.Pool.json) ([Parameters](RenderFarm/14-Farm.Pool.Parameters.json)) |
 | 14 - [Farm Scale Set](RenderFarm/14-Farm.ScaleSet.json) ([Parameters](RenderFarm/14-Farm.ScaleSet.Parameters.json)) | 14 - [Farm Scale Set](RenderFarm/14-Farm.ScaleSet.json) ([Parameters](RenderFarm/14-Farm.ScaleSet.Parameters.json)) |
 | 14 - [Farm Scale Set Initialize](RenderFarm/14-Farm.ScaleSet.sh) | 14 - [Farm Scale Set Initialize](RenderFarm/14-Farm.ScaleSet.ps1) |

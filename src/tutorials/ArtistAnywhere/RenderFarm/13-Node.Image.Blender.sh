@@ -22,7 +22,7 @@ cd /usr/local/bin
 
 downloadUrl='https://mediasolutions.blob.core.windows.net/bin/Blender'
 
-fileName='blender2910.tar.xz'
-curl -L -o $fileName $downloadUrl/blender-2.91.0-linux64.tar.xz
+fileName='blender-2.91.0-linux64.tar.xz'
+curl -L -o $fileName $downloadUrl/$fileName
 tar -xJf $fileName
 mv blender-*/* .

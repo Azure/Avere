@@ -17,7 +17,7 @@ param (
     # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in Azure compute region
     [boolean] $storageCacheDeploy = $false,
 
-    # Set to the target Azure render manager deployment mode (i.e., OpenCue, VRay, CycleCloud or Batch)
+    # Set to the target Azure render manager deployment mode (i.e., OpenCue, VRayMaya, CycleCloud or Batch)
     [string] $renderManagerMode = "OpenCue",
 
     # Set to true to deploy Azure Linux custom images and virtual machines for the render farm nodes
@@ -126,8 +126,8 @@ if (Confirm-ImageTemplates $resourceGroupName $imageTemplates) {
         $buildCustomizer | Add-Member -MemberType NoteProperty -Name "scriptUri" -Value $scriptUri
         $buildCustomizer | Add-Member -MemberType NoteProperty -Name "sha256Checksum" -Value $scriptChecksum
         $imageTemplate.buildCustomization += $buildCustomizer
-        if ($renderManagerMode -eq "VRay" -and $imageTemplate.imageOperatingSystemType -eq "Windows") {
-            $scriptFile = "13-Node.Image.MayaVRay$scriptFileExtension"
+        if ($renderManagerMode -eq "VRayMaya") {
+            $scriptFile = "13-Node.Image.VRayMaya$scriptFileExtension"
             $scriptUri = Get-ScriptUri $storageAccounts $scriptFile
             $scriptChecksum = Get-ScriptChecksum $moduleDirectory $scriptFile
             $buildCustomizer = New-Object PSObject
@@ -155,7 +155,7 @@ if (Confirm-ImageTemplates $resourceGroupName $imageTemplates) {
             $buildCustomizer | Add-Member -MemberType NoteProperty -Name "sha256Checksum" -Value $scriptChecksum
             $imageTemplate.buildCustomization += $buildCustomizer
         }
-        if ($renderManagerMode -eq "OpenCue" -or $renderManagerMode -eq "VRay") {
+        if ($renderManagerMode -eq "OpenCue" -or $renderManagerMode -eq "VRayMaya") {
             $scriptFile = "14-Farm.ScaleSet$scriptFileExtension"
             $scriptUri = Get-ScriptUri $storageAccounts $scriptFile
             $scriptChecksum = Get-ScriptChecksum $moduleDirectory $scriptFile
@@ -228,7 +228,7 @@ if ($renderManagerMode -eq "Batch") {
 }
 
 # 14 - Farm Scale Set
-if ($renderManagerMode -eq "OpenCue" -or $renderManagerMode -eq "VRay") {
+if ($renderManagerMode -eq "OpenCue" -or $renderManagerMode -eq "VRayMaya") {
     $moduleName = "14 - Farm Scale Set"
     New-TraceMessage $moduleName $false $computeRegionName
     $resourceGroupNameSuffix = ".Farm"
