@@ -70,7 +70,7 @@ locals {
   addr_prefix4 = var.avere_first_ip_addr4 == "" ? "" : trimsuffix(var.avere_first_ip_addr4, ".${local.last_octet4}")
 
   local_a_records4 = var.avere_first_ip_addr4 == "" ? [] : [for i in range(var.avere_ip_addr_count4): "local-data: \"${var.avere_filer_fqdn} ${var.dns_max_ttl_seconds} A ${local.addr_prefix4}.${local.last_octet4 + i}\""]
-  local_a_records_reverse4 = var.avere_first_ip_addr4 == "" ? [] : [for i in range(var.avere_ip_addr_count4): "local-data-ptr: \"${local.ddr_prefix4}.${local.last_octet4 + i} ${var.dns_max_ttl_seconds} ${var.avere_filer_fqdn}\""]
+  local_a_records_reverse4 = var.avere_first_ip_addr4 == "" ? [] : [for i in range(var.avere_ip_addr_count4): "local-data-ptr: \"${local.addr_prefix4}.${local.last_octet4 + i} ${var.dns_max_ttl_seconds} ${var.avere_filer_fqdn}\""]
 
   # alternate fqdn
   local_alternate_a_records4 = var.avere_first_ip_addr4 == "" ? [] : flatten([
