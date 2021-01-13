@@ -127,12 +127,12 @@ def initializeGroupFromEntry(distinguishedName, entry, ridInteger, avereUsers, u
 
 # need for SID conversion, from https://stackoverflow.com/questions/33188413/python-code-to-convert-from-objectsid-to-sid-representation
 def convert(binary):
-    version = struct.unpack('B', binary[0])[0]
-    length = struct.unpack('B', binary[1])[0]
-    authority = struct.unpack('>Q', '\x00\x00' + binary[2:8])[0]
+    version = struct.unpack('B', binary[0:1])[0]
+    length = struct.unpack('B', binary[1:2])[0]
+    authority = struct.unpack(b'>Q', b'\x00\x00' + binary[2:8])[0]
     string = 'S-%d-%d' % (version, authority)
     binary = binary[8:]
-    for i in xrange(length):
+    for i in range(length):
         value = struct.unpack('<L', binary[4*i:4*(i+1)])[0]
         string += '-%d' % value
     return string
@@ -236,14 +236,22 @@ def writeAvereFiles(conn, basedn, avereUsers, avereGroups, userFile, groupFile):
     with open(userFile,'w') as f:
         userKeys = sorted(avereUsers.keys(), key=lambda s: s.lower()) 
         for u in userKeys:
-            f.write("{}:*:{}:{}:::\n".format(avereUsers[u].accountName,avereUsers[u].uid,avereUsers[u].gid)) 
+            accountName = avereUsers[u].accountName.decode('ascii')
+            uid = avereUsers[u].uid
+            gid = avereUsers[u].gid
+            f.write("{}:*:{}:{}:::\n".format(accountName, uid, gid)) 
     
     logging.info("write file {} for {} group(s)".format(groupFile,len(avereGroups)))
     
     with open(groupFile,'w') as f:
         groupKeys = sorted(avereGroups.keys(), key=lambda s: s.lower()) 
         for g in groupKeys:
-            f.write("{}:*:{}:{}\n".format(avereGroups[g].groupName,avereGroups[g].gid,",".join(avereGroups[g].members))) 
+            groupName = avereGroups[g].groupName.decode('ascii')
+            gid = avereGroups[g].gid
+            avereGroupMembers = []
+            for groupMember in avereGroups[g].members:
+                avereGroupMembers.append(groupMember.decode('ascii'))
+            f.write("{}:*:{}:{}\n".format(groupName,gid,",".join(avereGroupMembers))) 
 
 def usage():
     logging.info("usage: {} AD_DOMAIN USER PASSWORD RID_INTEGER [USER_FILENAME] [GROUP_FILENAME]".format(sys.argv[0]))
