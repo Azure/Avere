@@ -794,6 +794,11 @@ func resourceVfxtRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("The vfxt management IP '%s' is not reachable.  Please confirm the cluster is alive and not stopped.", avereVfxt.ManagementIP)
 	}
 
+	// since the management IP may change nodes, prepare the environment to run commands for the newly created cluster
+	if err := avereVfxt.PrepareForVFXTNodeCommands(); err != nil {
+		return err
+	}
+
 	currentVServerIPAddresses, err := avereVfxt.GetVServerIPAddresses()
 	if err != nil {
 		return fmt.Errorf("error encountered while getting vserver addresses '%v'", err)
