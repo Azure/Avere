@@ -15,12 +15,17 @@ jobs:
       export REGION=westus
       cd src/terraform/examples/resource-group
       terraform init 
-      terraform apply -auto-approve -var="rg_name=${RESOURCE_GROUP_NAME}" -var="rg_location=${REGION}"
-      terraform destroy -auto-approve
+      terraform apply -auto-approve -var="rg_name=${RESOURCE_GROUP_NAME}" \
+        -var="rg_location=${REGION}" \
+        -var="subscription_id=${AZURE_SUBSCRIPTION_ID}" \
+        -var="client_id=${AZURE_CLIENT_ID}" \
+        -var="client_secret=${AZURE_CLIENT_SECRET}" \
+        -var="tenant_id=${AZURE_TENANT_ID}"
+      
+        terraform destroy -auto-approve
     displayName: 'TEST: test'
     condition: always()
     env:
-      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
