@@ -22,7 +22,12 @@ jobs:
         -var="client_secret=${AZURE_CLIENT_SECRET}" \
         -var="tenant_id=${AZURE_TENANT_ID}"
       
-        terraform destroy -auto-approve
+        terraform destroy -auto-approve -var="rg_name=${RESOURCE_GROUP_NAME}" \
+        -var="rg_location=${REGION}" \
+        -var="subscription_id=${AZURE_SUBSCRIPTION_ID}" \
+        -var="client_id=${AZURE_CLIENT_ID}" \
+        -var="client_secret=${AZURE_CLIENT_SECRET}" \
+        -var="tenant_id=${AZURE_TENANT_ID}"
     displayName: 'TEST: test'
     condition: always()
     env:
