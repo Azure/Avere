@@ -1,0 +1,19 @@
+jobs:
+- job: Terraform_example
+  timeoutInMinutes: 60
+  pool:
+    vmImage: ubuntu-latest
+  steps:  
+  - script: |
+      az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+    
+    displayName: 'TEST: test
+    condition: always()
+    env:
+      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
+      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
+      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+      GIT_UN: $(GIT-UN)
+      GIT_PAT: $(GIT-PAT)
