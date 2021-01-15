@@ -6,7 +6,17 @@ jobs:
   steps:  
   - script: |
       az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-    
+      wget https://releases.hashicorp.com/terraform/0.12.25/terraform_0.12.25_linux_amd64.zip
+      unzip terraform_0.12.25_linux_amd64.zip
+      sudo mv terraform /usr/local/bin
+      sudo chmod 755 /usr/local/bin/terraform
+      
+      export RESOURCE_GROUP_NAME="tf$(date -u +'%m%dx%H%M%S')"
+      export REGION=westus
+      cd src/terraform/examples/resource-group
+      terraform init 
+      terraform apply -auto-approve -var="rg_name=${RESOURCE_GROUP_NAME}" -var="rg_location=${REGION}"
+      terraform destroy -auto-approve
     displayName: 'TEST: test
     condition: always()
     env:
@@ -15,5 +25,3 @@ jobs:
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      GIT_UN: $(GIT-UN)
-      GIT_PAT: $(GIT-PAT)
