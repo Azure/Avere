@@ -38,13 +38,13 @@ jobs:
       cd src/terraform/examples/vfxt/1-filer
       sshkey=$(cat ~/.ssh/id_rsa.pub)
       echo "##vso[task.setvariable variable=secret.SSH_KEY;issecret=true]${sshkey}"
-      sed -i 's/vm_ssh_key_data = null/vm_ssh_key_data = "${SSH_KEY}"/' main.tf
-      sed -i 's/location = "eastus"/location = "${REGION}"/' main.tf
+      sed -i "s/vm_ssh_key_data = null/vm_ssh_key_data = \"${SSH_KEY}\"/" main.tf
+      sed -i "s/location = \"eastus\"/location = \"${REGION}\"/" main.tf
       
-      sed -i 's/network_resource_group_name = "network_resource_group"/network_resource_group_name = "${RESOURCE_GROUP_NAME}-network"/' main.tf
-      sed -i 's/filer_resource_group_name = "filer_resource_group"/filer_resource_group_name = "${RESOURCE_GROUP_NAME}-filer"/' main.tf
-      sed -i 's/vfxt_resource_group_name = "vfxt_resource_group"/vfxt_resource_group_name = "${RESOURCE_GROUP_NAME}-vfxt"/' main.tf
-      sed -i 's/vfxt_cluster_password = "VFXT_PASSWORD"/vfxt_cluster_password = "${AVERE_ADMIN_PW}"/' main.tf
+      sed -i "s/network_resource_group_name = \"network_resource_group\"/network_resource_group_name = \"${RESOURCE_GROUP_NAME}-network\"/" main.tf
+      sed -i "s/filer_resource_group_name = \"filer_resource_group\"/filer_resource_group_name = \"${RESOURCE_GROUP_NAME}-filer\"/" main.tf
+      sed -i "s/vfxt_resource_group_name = \"vfxt_resource_group\"/vfxt_resource_group_name = \"${RESOURCE_GROUP_NAME}-vfxt\"/" main.tf
+      sed -i "s/vfxt_cluster_password = \"VFXT_PASSWORD\"/vfxt_cluster_password = \"${AVERE_ADMIN_PW}\"/" main.tf
 
       sed -i 's/vfxt_node_count = 3/vfxt_node_count = 3\n    node_cache_size = 1024\n    node_size = "unsupported_test_SKU"/' main.tf
 
