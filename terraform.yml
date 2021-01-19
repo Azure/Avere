@@ -1,6 +1,6 @@
 parameters:
   - name: ORIGINAL_NODE_COUNT
-    displayName: "original node count"
+    displayName: "Original Node Count"
     type: number
     default: 3
     values:
@@ -8,12 +8,44 @@ parameters:
       - 14
   
   - name: SCALE_UP_NODE_COUNT
-    displayName: "scale up node count"
+    displayName: "Scale Up Node Count +"
     type: number
     default: 2
     values:
       - 2
   
+  - name: P_RUN_Terraform
+    displayName: "Select terraform example to run"
+    type: string
+    default: "1-filer"
+    values:
+      - "1-filer"
+      - "proxy"
+  
+  # - name: P_RUN_1Filer
+  #   displayName: "Run 1Filer example"
+  #   type: boolean
+  #   default: true
+
+  # - name: P_RUN_Scale_Up
+  #   displayName: "Run scale-up"
+  #   type: boolean
+  #   default: true
+
+  - name: P_RUN_Scale_Down
+    displayName: "Run scale-down"
+    type: boolean
+    default: true
+  
+variables:
+  # _RUN_1Filer: $[lower('${{ parameters.P_RUN_1Filer }}')]
+  # _RUN_Proxy: $[lower('${{ parameters.P_RUN_PROXY }}')]
+  _RUN_Scale_Up: $[lower('${{ parameters.P_RUN_Scale_Up }}')]
+  _RUN_Scale_Down: $[lower('${{ parameters.P_RUN_Scale_Down }}')]
+  _path_for_test:  $[lower('${{ parameters.P_RUN_Terraform }}')]
+
+  #_RUN_1Filer: $[lower(coalesce(variables['RUN_1Filer'], '${{ parameters.P_RUN_1Filer }}'))]
+  #_RUN_1Filer: $[lower(coalesce(variables['RUN_1Filer'], '${{ parameters.P_RUN_1Filer }}'))]
 
 jobs:
 - job: Terraform_example
@@ -50,9 +82,21 @@ jobs:
       wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.29/terraform-provider-avere
       chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 
+    displayName: 'Terraform Download'
+    condition: succeeded()
+    env:
+      ARM_TENANT_ID: $(AZURE-TENANT-ID)
+      ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+      ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+      ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+
+  - script: |
+      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+      
       export RESOURCE_GROUP_NAME="tf$(date -u +'%m%dx%H%M%S')"
       export REGION=westus
-      cd src/terraform/examples/vfxt/1-filer
+      cd src/terraform/examples/vfxt/${_path_for_test}
       sshkey="$(cat ~/.ssh/id_rsa.pub) azureuser@linuxvm"
       echo "key length: ${#sshkey}"
       echo "dir `ls -al ~/.ssh/id_rsa.pub`"
@@ -73,8 +117,45 @@ jobs:
 
       terraform init 
       terraform apply -auto-approve
-    displayName: 'Terraform Apply'
-    condition: always()
+    displayName: 'Terraform Apply: 1-Filer'
+    condition: and(not(or(failed(), canceled())), eq(variables['_path_for_test'], '1-filer'))
+    env:
+      ARM_TENANT_ID: $(AZURE-TENANT-ID)
+      ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+      ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+      ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+
+  - script: |
+      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+      
+      export RESOURCE_GROUP_NAME="tf$(date -u +'%m%dx%H%M%S')"
+      export REGION=westus
+      cd src/terraform/examples/vfxt/${_path_for_test}
+      sshkey="$(cat ~/.ssh/id_rsa.pub) azureuser@linuxvm"
+      echo "key length: ${#sshkey}"
+      echo "dir `ls -al ~/.ssh/id_rsa.pub`"
+
+      echo "##vso[task.setvariable variable=secret.SSH_KEY;issecret=true]${sshkey}"
+
+      sed -i "s:vm_ssh_key_data = null:vm_ssh_key_data = \"${sshkey}\":" main.tf
+      sed -i "s/location = \"eastus\"/location = \"${RESOURCE_GROUP_NAME}\"/" main.tf
+      sed -i "s/storage_account_name = \"storageaccount\"/storage_account_name = \"${REGION}\"/" main.tf
+      sed -i "s/proxy_resource_group_name = \"proxy_resource_group\"/proxy_resource_group_name = \"${RESOURCE_GROUP_NAME}-proxy\"/" main.tf
+      sed -i "s/storage_resource_group_name = \"storage_resource_group\"/storage_resource_group_name = \"${RESOURCE_GROUP_NAME}-storage\"/" main.tf
+      sed -i "s/network_resource_group_name = \"network_resource_group\"/network_resource_group_name = \"${RESOURCE_GROUP_NAME}-network\"/" main.tf
+      sed -i "s/filer_resource_group_name = \"filer_resource_group\"/filer_resource_group_name = \"${RESOURCE_GROUP_NAME}-filer\"/" main.tf
+      sed -i "s/vfxt_resource_group_name = \"vfxt_resource_group\"/vfxt_resource_group_name = \"${RESOURCE_GROUP_NAME}-vfxt\"/" main.tf
+      sed -i "s/vfxt_cluster_password = \"VFXT_PASSWORD\"/vfxt_cluster_password = \"${AVERE_ADMIN_PW}\"/" main.tf
+
+      sed -i 's/vfxt_node_count = 3/vfxt_node_count = 3\n    node_cache_size = 1024\n    node_size = "unsupported_test_SKU"/' main.tf
+    
+      cat main.tf
+
+      terraform init 
+      terraform apply -auto-approve
+    displayName: 'Terraform Apply: Proxy'
+    condition: and(not(or(failed(), canceled())), eq(variables['_path_for_test'], 'proxy'))
     env:
       ARM_TENANT_ID: $(AZURE-TENANT-ID)
       ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
@@ -83,12 +164,12 @@ jobs:
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
   
   - script: |
-      cd ~/src/terraform/examples/vfxt/1-filer
+      cd src/terraform/examples/vfxt/${_path_for_test}
       new_node_count = $((${{ parameters.ORIGINAL_NODE_COUNT }} + ${{ parameters.SCALE_UP_NODE_COUNT }}))
       sed -i 's/vfxt_node_count = ${{ parameters.ORIGINAL_NODE_COUNT }}/vfxt_node_count = ${new_node_count}/' main.tf
       terraform apply -auto-approve
     displayName: 'Terraform - scale up'
-    condition: always()
+    condition: and(not(or(failed(), canceled())), eq(variables['_RUN_Scale_Up'], 'true'))
     env:
       ARM_TENANT_ID: $(AZURE-TENANT-ID)
       ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
@@ -96,12 +177,12 @@ jobs:
       ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
-      cd ~/src/terraform/examples/vfxt/1-filer
+      cd src/terraform/examples/vfxt/${_path_for_test}
       new_node_count = $((${{ parameters.ORIGINAL_NODE_COUNT }} + ${{ parameters.SCALE_UP_NODE_COUNT }}))
       sed -i 's/vfxt_node_count = ${new_node_count}/vfxt_node_count = ${{ parameters.ORIGINAL_NODE_COUNT }}/' main.tf
       terraform apply -auto-approve
     displayName: 'Terraform - scale down'
-    condition: always()
+    condition: and(not(or(failed(), canceled())), eq(variables['_RUN_Scale_Down'], 'true'))
     env:
       ARM_TENANT_ID: $(AZURE-TENANT-ID)
       ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
@@ -110,7 +191,7 @@ jobs:
 
 
   - script: |
-      cd ~/src/terraform/examples/vfxt/1-filer
+      cd src/terraform/examples/vfxt/${_path_for_test}
       terraform destroy -auto-approve
     displayName: 'Terraform Destroy'
     condition: always()
