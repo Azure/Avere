@@ -17,20 +17,17 @@
     "renderFarms": {
       "value": [
         {
-          "deploy": true,
-          "name": "cpuMachines",
+          "deploy": false,
+          "name": "lnxFarmC",
           "image": {
+            "osType": "Linux",
             "definitionName": "ServerLinux",
             "versionId": "1.1.0"
           },
           "machine": {
-            "size": "Standard_F64s_v2",
+            "size": "Standard_F16s_v2",
             "count": 0,
             "osEphemeralDisk": true,
-            "graphics": {
-              "type": "",
-              "version": ""
-            },
             "priority": "Spot",
             "maxPrice": ""
           },
@@ -39,23 +36,30 @@
             "adminPassword": "P@ssword1234",
             "sshPublicKeyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0rSgH3dwDtBI5U2WBqpYkO7KZadaN34qpgl0IpYSui+ctFYG7bH0QHAz1p2Taznbf/5Qsh8/exmcoEcWHQzURLmqr0llVarbnqQykCp2cpGBH6adPWHMBh/OsR5ZCPL2IMr6eCdKj6mpf9dALB/ieUgCYNGNv20RwK1fBBicQN9oBE6N+KI7ko4cdFRGE66DX9m8DhlPdOO03Zd40e0ZiDdyxpxp2+aI087pXtDkO2tJbanDYToJhrA4hXx+z8qSS1pfaTSXZvTQ83uHClTmxCs8TGLw3l2K7vUf0v8E/7jGFtmHxeNCXBZuSw27M7PoT8EeHbq876pSzgEQvNzgj"
           },
-          "upgradePolicy": "Manual"
+          "upgradePolicy": "Manual",
+          "customExtension": {
+            "publisher": "Microsoft.Azure.Extensions",
+            "type": "CustomScript",
+            "version": "2.1",
+            "filePath": "/tmp/14-Farm.ScaleSet.sh",
+            "fileParameters": "",
+            "scriptParameters": {
+              "RENDER_MANAGER_HOST": ""
+            }
+          }
         },
         {
           "deploy": false,
-          "name": "gpuMachines",
+          "name": "lnxFarmG",
           "image": {
+            "osType": "Linux",
             "definitionName": "ServerLinux",
-            "versionId": "1.1.0"
+            "versionId": "1.2.0"
           },
           "machine": {
-            "size": "Standard_NV6",
+            "size": "Standard_NV12",
             "count": 0,
             "osEphemeralDisk": false,
-            "graphics": {
-              "type": "NvidiaGpuDriverLinux",
-              "version": "1.3"
-            },
             "priority": "Spot",
             "maxPrice": ""
           },
@@ -64,20 +68,83 @@
             "adminPassword": "P@ssword1234",
             "sshPublicKeyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0rSgH3dwDtBI5U2WBqpYkO7KZadaN34qpgl0IpYSui+ctFYG7bH0QHAz1p2Taznbf/5Qsh8/exmcoEcWHQzURLmqr0llVarbnqQykCp2cpGBH6adPWHMBh/OsR5ZCPL2IMr6eCdKj6mpf9dALB/ieUgCYNGNv20RwK1fBBicQN9oBE6N+KI7ko4cdFRGE66DX9m8DhlPdOO03Zd40e0ZiDdyxpxp2+aI087pXtDkO2tJbanDYToJhrA4hXx+z8qSS1pfaTSXZvTQ83uHClTmxCs8TGLw3l2K7vUf0v8E/7jGFtmHxeNCXBZuSw27M7PoT8EeHbq876pSzgEQvNzgj"
           },
-          "upgradePolicy": "Manual"
-        }
-      ]
-    },
-    "scriptExtension": {
-      "value": {
-        "linux": {
-          "filePath": "/tmp/14-Farm.ScaleSet.sh",
-          "fileParameters": "RENDER_MANAGER_HOST='10.1.0.7'",
-          "scriptParameters": {
-            "RENDER_MANAGER_HOST": "10.1.0.7"
+          "upgradePolicy": "Manual",
+          "customExtension": {
+            "publisher": "Microsoft.Azure.Extensions",
+            "type": "CustomScript",
+            "version": "2.1",
+            "filePath": "/tmp/14-Farm.ScaleSet.sh",
+            "fileParameters": "",
+            "scriptParameters": {
+              "RENDER_MANAGER_HOST": ""
+            }
+          }
+        },
+        {
+          "deploy": true,
+          "name": "winFarmC",
+          "image": {
+            "osType": "Windows",
+            "definitionName": "ServerWindows",
+            "versionId": "1.1.0"
+          },
+          "machine": {
+            "size": "Standard_F16s_v2",
+            "count": 0,
+            "osEphemeralDisk": true,
+            "priority": "Spot",
+            "maxPrice": ""
+          },
+          "login": {
+            "adminUsername": "az",
+            "adminPassword": "P@ssword1234",
+            "sshPublicKeyData": ""
+          },
+          "upgradePolicy": "Manual",
+          "customExtension": {
+            "publisher": "Microsoft.Compute",
+            "type": "CustomScriptExtension",
+            "version": "1.10",
+            "filePath": "C:\\Windows\\Temp\\14-Farm.ScaleSet.ps1",
+            "fileParameters": "",
+            "scriptParameters": {
+              "renderManagerHost": ""
+            }
+          }
+        },
+        {
+          "deploy": false,
+          "name": "winFarmG",
+          "image": {
+            "osType": "Windows",
+            "definitionName": "ServerWindows",
+            "versionId": "1.2.0"
+          },
+          "machine": {
+            "size": "Standard_NV12",
+            "count": 0,
+            "osEphemeralDisk": false,
+            "priority": "Spot",
+            "maxPrice": ""
+          },
+          "login": {
+            "adminUsername": "az",
+            "adminPassword": "P@ssword1234",
+            "sshPublicKeyData": ""
+          },
+          "upgradePolicy": "Manual",
+          "customExtension": {
+            "publisher": "Microsoft.Compute",
+            "type": "CustomScriptExtension",
+            "version": "1.10",
+            "filePath": "C:\\Windows\\Temp\\14-Farm.ScaleSet.ps1",
+            "fileParameters": "",
+            "scriptParameters": {
+              "renderManagerHost": ""
+            }
           }
         }
-      }
+      ]
     },
     "logAnalytics": {
       "value": {

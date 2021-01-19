@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 	"sort"
@@ -18,7 +19,7 @@ func GetLastIPAddress(firstIp string, ipAddressCount int) (string, error) {
 		return "", fmt.Errorf("expected first IP '%s' to contain a valid IP address", firstIp)
 	}
 	ipv4 := ip.To4()
-	if ipv4 := ip.To4(); ipv4 == nil {
+	if ipv4 == nil {
 		return "", fmt.Errorf("expected first IP '%s' to contain a valid IPv4 address", firstIp)
 	}
 
@@ -44,7 +45,7 @@ func GetIPAddressLastQuartet(ipAddress string) (int, error) {
 		return 0, fmt.Errorf("address '%s' is invalid", ipAddress)
 	}
 	ipv4 := ip.To4()
-	if ipv4 := ip.To4(); ipv4 == nil {
+	if ipv4 == nil {
 		return 0, fmt.Errorf("address '%s' is an invalid IPv4 address", ipAddress)
 	}
 
@@ -62,7 +63,7 @@ func GetIPAddress3QuartetPrefix(ipAddress string) (string, error) {
 		return "", fmt.Errorf("address '%s' is invalid", ipAddress)
 	}
 	ipv4 := ip.To4()
-	if ipv4 := ip.To4(); ipv4 == nil {
+	if ipv4 == nil {
 		return "", fmt.Errorf("address '%s' is an invalid IPv4 address", ipAddress)
 	}
 
@@ -79,7 +80,63 @@ func GetOrderedIPAddressList(ipAddressString string) []string {
 		}
 	}
 
-	sort.Strings(results)
+	return SortIPv4s(results)
+}
+
+// sort IPv4s, silently drop bad ips, and return a list of IPv4s
+func SortIPv4s(ips []string) []string {
+	sort.Strings(ips)
+
+	ipAddresses := make([]net.IP, 0, len(ips))
+	for _, s := range ips {
+		ip := net.ParseIP(s)
+		if ip != nil {
+			if ipv4 := ip.To4(); ipv4 != nil {
+				ipAddresses = append(ipAddresses, ip)
+			}
+		}
+	}
+
+	sort.Slice(ipAddresses, func(i, j int) bool {
+		return bytes.Compare(ipAddresses[i], ipAddresses[j]) < 0
+	})
+
+	results := make([]string, 0, len(ips))
+	for _, i := range ipAddresses {
+		results = append(results, i.String())
+	}
+	return results
+}
+
+func GetContiguousIPSlices(ips []string) [][]string {
+	// a.b.c.d where a==0, b==1, c==2, d==3
+	a := 0
+	b := 1
+	c := 2
+	d := 3
+
+	sortedIPs := SortIPv4s(ips)
+
+	results := make([][]string, 0, len(sortedIPs))
+
+	if len(sortedIPs) > 0 {
+		firstIPStr := sortedIPs[0]
+		lastIPStr := firstIPStr
+		firstIP := net.ParseIP(firstIPStr).To4() // no check for nil, b/c SortIPv4s returns correct list
+		lastIP := firstIP
+		for i := 1; i < len(sortedIPs); i++ {
+			newLastIPStr := sortedIPs[i]
+			newLastIp := net.ParseIP(newLastIPStr).To4() // no check for nil, b/c SortIPv4s returns correct list
+			if lastIP[a] != newLastIp[a] || lastIP[b] != newLastIp[b] || lastIP[c] != newLastIp[c] || (newLastIp[d]-lastIP[d]) > 1 {
+				results = append(results, []string{firstIPStr, lastIPStr})
+				firstIPStr = newLastIPStr
+				firstIP = newLastIp
+			}
+			lastIPStr = newLastIPStr
+			lastIP = newLastIp
+		}
+		results = append(results, []string{firstIPStr, lastIPStr})
+	}
 
 	return results
 }

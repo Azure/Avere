@@ -52,7 +52,7 @@
     }
   },
   "variables": {
-    "cacheApiVersion": "2020-03-01"
+    "cacheApiVersion": "2020-10-01"
   },
   "functions": [
     {
@@ -95,9 +95,6 @@
         "subnet": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]",
         "networkSettings": {
           "mtu": "[parameters('cacheConfig').mtuSize]"
-        },
-        "securitySettings": {
-          "rootSquash": "[parameters('cacheConfig').rootSquash]"
         }
       }
     },

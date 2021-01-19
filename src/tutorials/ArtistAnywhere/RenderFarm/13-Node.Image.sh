@@ -2,19 +2,29 @@
 
 set -ex
 
-if [ "$(cat /etc/os-release | grep 'CentOS-7')" ]; then
+grep 'centos:7' /etc/os-release && centOS7=true || centOS7=false
+lshw -class 'display' | grep 'NVIDIA' && nvidiaGPU=true || nvidiaGPU=false
+
+if $centOS7; then
     yum -y install nfs-utils
-    yum -y install unzip
-elif [ "$(cat /etc/os-release | grep 'CentOS-8')" ]; then
+else # CentOS8
     dnf -y install nfs-utils
-    dnf -y install unzip
 fi
 
 cd /usr/local/bin
 
+if $nvidiaGPU; then
+    dnf -y install gcc
+    downloadUrl='https://mediasolutions.blob.core.windows.net/bin/GPU'
+    fileName='NVIDIA-Linux-x86_64-450.89-grid-azure.run'
+    curl -L -o $fileName $downloadUrl/$fileName
+    chmod +x $fileName
+    #./$fileName -s
+fi
+
 downloadUrl='https://mediasolutions.blob.core.windows.net/bin/Blender'
 
-mountDirectory='/mnt/storage'
+mountDirectory='/mnt/storage/read'
 
 mkdir -p $mountDirectory
 

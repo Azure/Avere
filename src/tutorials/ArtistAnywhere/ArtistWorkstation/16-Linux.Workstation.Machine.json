@@ -34,6 +34,7 @@
     }
   },
   "variables": {
+    "imageGalleryApiVersion": "2020-09-30",
     "virtualMachineApiVersion": "2020-12-01",
     "networkInterfaceApiVersion": "2020-08-01"
   },
@@ -148,36 +149,19 @@
         {
           "condition": "[parameters('artistWorkstations')[copyIndex()].deploy]",
           "type": "extensions",
-          "name": "[parameters('artistWorkstations')[copyIndex()].extensions[0].name]",
+          "name": "extension",
           "apiVersion": "[variables('virtualMachineApiVersion')]",
           "location": "[resourceGroup().location]",
           "dependsOn": [
             "[resourceId('Microsoft.Compute/virtualMachines', parameters('artistWorkstations')[copyIndex()].name)]"
           ],
           "properties": {
-            "publisher": "[parameters('artistWorkstations')[copyIndex()].extensions[0].publisher]",
-            "type": "[parameters('artistWorkstations')[copyIndex()].extensions[0].type]",
-            "typeHandlerVersion": "[parameters('artistWorkstations')[copyIndex()].extensions[0].version]",
-            "autoUpgradeMinorVersion": "[parameters('artistWorkstations')[copyIndex()].extensions[0].autoUpgrade]"
-          }
-        },
-        {
-          "condition": "[parameters('artistWorkstations')[copyIndex()].deploy]",
-          "type": "extensions",
-          "name": "[parameters('artistWorkstations')[copyIndex()].extensions[1].name]",
-          "apiVersion": "[variables('virtualMachineApiVersion')]",
-          "location": "[resourceGroup().location]",
-          "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', parameters('artistWorkstations')[copyIndex()].name)]",
-            "[resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('artistWorkstations')[copyIndex()].name, parameters('artistWorkstations')[copyIndex()].extensions[0].name)]"
-          ],
-          "properties": {
-            "publisher": "[parameters('artistWorkstations')[copyIndex()].extensions[1].publisher]",
-            "type": "[parameters('artistWorkstations')[copyIndex()].extensions[1].type]",
-            "typeHandlerVersion": "[parameters('artistWorkstations')[copyIndex()].extensions[1].version]",
-            "autoUpgradeMinorVersion": "[parameters('artistWorkstations')[copyIndex()].extensions[1].autoUpgrade]",
+            "publisher": "[if(equals(reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('artistWorkstations')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), 'Microsoft.Compute', 'Microsoft.Azure.Extensions')]",
+            "type": "[if(equals(reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('artistWorkstations')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), 'CustomScriptExtension', 'CustomScript')]",
+            "typeHandlerVersion": "[if(equals(reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('artistWorkstations')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), '1.10', '2.1')]",
+            "autoUpgradeMinorVersion": true,
             "protectedSettings": {
-              "commandToExecute": "[if(equals(parameters('artistWorkstations')[copyIndex()].extensions[1].type, 'CustomScriptExtension'), fx.GetExtensionCommand(parameters('scriptExtension').windows.filePath, parameters('scriptExtension').windows.fileParameters), fx.GetExtensionCommand(parameters('scriptExtension').linux.filePath, parameters('scriptExtension').linux.fileParameters))]"
+              "commandToExecute": "[fx.GetExtensionCommand(parameters('scriptExtension').filePath, parameters('scriptExtension').fileParameters)]"
             }
           }
         }

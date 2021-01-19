@@ -8,14 +8,14 @@ param (
     # Set the Azure region name for compute resources (e.g., Image Gallery, Virtual Machines, Batch Accounts, etc.)
     [string] $computeRegionName = "EastUS",
 
-    # Set the Azure region name for storage cache resources (e.g., HPC Cache, Storage Targets, Namespace Paths, etc.)
-    [string] $cacheRegionName = "",
-
     # Set the Azure region name for storage resources (e.g., Storage Accounts, File Shares, Object Containers, etc.)
     [string] $storageRegionName = "EastUS",
 
     # Set to true to deploy Azure NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
     [boolean] $storageNetAppDeploy = $false,
+
+    # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in Azure compute region
+    [boolean] $storageCacheDeploy = $false,
 
     # The Azure shared services framework (e.g., Virtual Network, Managed Identity, Key Vault, etc.)
     [object] $sharedFramework,
@@ -24,12 +24,10 @@ param (
     [object] $storageCache
 )
 
-$templateDirectory = $PSScriptRoot
-if (!$templateDirectory) {
-    $templateDirectory = $using:templateDirectory
-}
+$rootDirectory = !$PSScriptRoot ? $using:rootDirectory : "$PSScriptRoot/.."
+$moduleDirectory = "ArtistWorkstation"
 
-Import-Module "$templateDirectory/Deploy.psm1"
+Import-Module "$rootDirectory/Deploy.psm1"
 
 # Shared Framework
 if (!$sharedFramework) {
@@ -41,22 +39,20 @@ $imageGallery = $sharedFramework.imageGallery
 
 # Storage Cache
 if (!$storageCache) {
-    $storageCache = Get-StorageCache $sharedFramework $resourceGroupNamePrefix $computeRegionName $cacheRegionName $storageRegionName $storageNetAppDeploy
+    $storageCache = Get-StorageCache $sharedFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageNetAppDeploy $storageCacheDeploy
 }
 
-$moduleDirectory = "ArtistWorkstation"
-
-# 15.0 - Artist Workstation Image Templates
-$moduleName = "15.0 - Artist Workstation Image Templates"
+# 15.2 - Artist Workstation Image Templates [Windows]
+$moduleName = "15.2 - Artist Workstation Image Templates [Windows]"
 New-TraceMessage $moduleName $false $computeRegionName
 $resourceGroupNameSuffix = ".Gallery"
 $resourceGroupName = New-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
-$imageTemplates = (Get-Content "$templateDirectory/$moduleDirectory/15-Workstation.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters.imageTemplates.value
+$imageTemplates = (Get-Content "$rootDirectory/$moduleDirectory/15-Windows.Workstation.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters.imageTemplates.value
 
 if (Confirm-ImageTemplates $resourceGroupName $imageTemplates) {
-    $templateFile = "$templateDirectory/$moduleDirectory/15-Workstation.Image.json"
-    $templateParameters = "$templateDirectory/$moduleDirectory/15-Workstation.Image.Parameters.json"
+    $templateFile = "$rootDirectory/$moduleDirectory/15-Windows.Workstation.Image.json"
+    $templateParameters = "$rootDirectory/$moduleDirectory/15-Windows.Workstation.Image.Parameters.json"
 
     $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
     $templateConfig.parameters.managedIdentity.value.name = $managedIdentity.name
@@ -71,17 +67,6 @@ if (Confirm-ImageTemplates $resourceGroupName $imageTemplates) {
 }
 New-TraceMessage $moduleName $true $computeRegionName
 
-# 15.1 - Artist Workstation Image Build
-$moduleName = "15.1 - Artist Workstation Image Build"
-New-TraceMessage $moduleName $false $computeRegionName
-foreach ($imageTemplate in $imageTemplates) {
-    $imageVersion = Get-ImageVersion $imageGallery $imageTemplate
-    if (!$imageVersion -and $imageTemplate.deploy) {
-        New-TraceMessage "$moduleName [$($imageTemplate.name)]" $false $computeRegionName
-        $imageBuild = az image builder run --resource-group $resourceGroupName --name $imageTemplate.name
-        New-TraceMessage "$moduleName [$($imageTemplate.name)]" $true $computeRegionName
-    }
-}
-New-TraceMessage $moduleName $true $computeRegionName
-
-Write-Output -InputObject $imageTemplates -NoEnumerate
+# 15.3 - Artist Workstation Image Build [Windows]
+$moduleName = "15.3 - Artist Workstation Image Build [Windows]"
+Build-ImageTemplates $moduleName $computeRegionName $imageGallery $imageTemplates

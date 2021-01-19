@@ -18,50 +18,6 @@
       "value": [
         {
           "deploy": true,
-          "name": "WorkstationLinux",
-          "imageDefinitionName": "WorkstationLinux",
-          "imageSourceType": "PlatformImage",
-          "imageSourceVersion": "latest",
-          "imageOutputVersion": "1.0.0",
-          "imageStorageAccount": {
-            "type": "Standard_LRS"
-          },
-          "machineProfile": {
-            "size": "Standard_NV6",
-            "osDiskSizeGB": 0
-          },
-          "buildTimeoutMinutes": 120,
-          "buildCustomization": [
-            {
-              "type": "Shell",
-              "scriptUri": "https://mediaasset.blob.core.windows.net/script/15-Workstation.Image.sh",
-              "sha256Checksum": ""
-            },
-            {
-              "type": "Shell",
-              "scriptUri": "https://mediaasset.blob.core.windows.net/script/13-Node.Image.Blender.sh",
-              "sha256Checksum": ""
-            },
-            {
-              "type": "Shell",
-              "scriptUri": "https://mediaasset.blob.core.windows.net/script/15-Workstation.Image.OpenCue.sh",
-              "sha256Checksum": ""
-            },
-            {
-              "type": "Shell",
-              "scriptUri": "https://mediaasset.blob.core.windows.net/script/15-Workstation.Image.Teradici.sh",
-              "sha256Checksum": ""
-            },
-            {
-              "type": "File",
-              "sourceUri": "https://mediaasset.blob.core.windows.net/script/16-Workstation.Machine.sh",
-              "destination": "/tmp/16-Workstation.Machine.sh",
-              "sha256Checksum": ""
-            }
-          ]
-        },
-        {
-          "deploy": false,
           "name": "WorkstationWindows",
           "imageDefinitionName": "WorkstationWindows",
           "imageSourceType": "PlatformImage",
@@ -71,7 +27,7 @@
             "type": "Standard_LRS"
           },
           "machineProfile": {
-            "size": "Standard_NV6",
+            "size": "Standard_NV12",
             "osDiskSizeGB": 0
           },
           "buildTimeoutMinutes": 120,

@@ -40,17 +40,15 @@
     },
     "scriptExtension": {
       "value": {
-        "linux": {
-          "filePath": "/tmp/11-OpenCue.Machine.sh",
-          "fileParameters": "DATA_HOST='rendermanager.postgres.database.azure.com' DATA_PORT='5432' ADMIN_AUTH='user=az password=P@ssword1234' DB_NAME='OpenCue' DB_USER_NAME='wrangler' DB_USER_PASSWORD='P@ssword1234'",
-          "scriptParameters": {
-            "DATA_HOST": "rendermanager.postgres.database.azure.com",
-            "DATA_PORT": "5432",
-            "ADMIN_AUTH": "user=az password=P@ssword1234",
-            "DB_NAME": "OpenCue",
-            "DB_USER_NAME": "wrangler",
-            "DB_USER_PASSWORD": "P@ssword1234"
-          }
+        "filePath": "/tmp/11-OpenCue.Machine.sh",
+        "fileParameters": "DATA_HOST='rendermanager.postgres.database.azure.com' DATA_PORT='5432' ADMIN_AUTH='user=az password=P@ssword1234' DB_NAME='OpenCue' DB_USER_NAME='wrangler' DB_USER_PASSWORD='P@ssword1234'",
+        "scriptParameters": {
+          "DATA_HOST": "rendermanager.postgres.database.azure.com",
+          "DATA_PORT": "5432",
+          "ADMIN_AUTH": "user=az password=P@ssword1234",
+          "DB_NAME": "OpenCue",
+          "DB_USER_NAME": "wrangler",
+          "DB_USER_PASSWORD": "P@ssword1234"
         }
       }
     },

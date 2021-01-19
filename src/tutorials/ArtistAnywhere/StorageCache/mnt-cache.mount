@@ -1,0 +1,10 @@
+[Unit]
+
+[Mount]
+What=cache.media.studio.:/storage/volume-a
+Where=/mnt/cache
+Type=nfs
+Options=ro,hard,proto=tcp,mountproto=tcp,retry=30
+
+[Install]
+WantedBy=multi-user.target

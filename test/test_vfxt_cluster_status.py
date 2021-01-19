@@ -216,7 +216,7 @@ class TestVfxtSupport:
                             "/var/log/xmlrpc.log",
 
                             # assumes rolling trace was enabled during deploy
-                            "/support/trace/rolling",
+                            # "/support/trace/rolling",
 
                             # TODO: 2019-0219: turned off for now
                             # "/support/gsi",

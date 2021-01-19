@@ -20,12 +20,6 @@
         "description": "The render farm nodes."
       }
     },
-    "scriptExtension": {
-      "type": "object",
-      "metadata": {
-        "description": "The custom script extension."
-      }
-    },
     "logAnalytics": {
       "type": "object",
       "metadata": {
@@ -144,14 +138,14 @@
           "extensionProfile": {
             "extensions": [
               {
-                "name": "Custom",
+                "name": "extension",
                 "properties": {
-                  "publisher": "Microsoft.Azure.Extensions",
-                  "type": "CustomScript",
-                  "typeHandlerVersion": "2.1",
+                  "publisher": "[parameters('renderFarms')[copyIndex()].customExtension.publisher]",
+                  "type": "[parameters('renderFarms')[copyIndex()].customExtension.type]",
+                  "typeHandlerVersion": "[parameters('renderFarms')[copyIndex()].customExtension.version]",
                   "autoUpgradeMinorVersion": true,
                   "protectedSettings": {
-                    "commandToExecute": "[fx.GetExtensionCommand(parameters('scriptExtension').linux.filePath, parameters('scriptExtension').linux.fileParameters)]"
+                    "commandToExecute": "[fx.GetExtensionCommand(parameters('renderFarms')[copyIndex()].customExtension.filePath, parameters('renderFarms')[copyIndex()].customExtension.fileParameters)]"
                   }
                 }
               }
@@ -166,26 +160,6 @@
         "platformFaultDomainCount": 1,
         "singlePlacementGroup": false,
         "overprovision": false
-      },
-      "copy": {
-        "name": "renderFarms",
-        "count": "[length(parameters('renderFarms'))]"
-      }
-    },
-    {
-      "condition": "[and(parameters('renderFarms')[copyIndex()].deploy, not(equals(parameters('renderFarms')[copyIndex()].machine.graphics.type, '')))]",
-      "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
-      "name": "[concat(parameters('renderFarms')[copyIndex()].name, '/Graphics')]",
-      "apiVersion": "[variables('virtualMachineScaleSetApiVersion')]",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('renderFarms')[copyIndex()].name)]"
-      ],
-      "properties": {
-        "publisher": "Microsoft.HpcCompute",
-        "type": "[parameters('renderFarms')[copyIndex()].machine.graphics.type]",
-        "typeHandlerVersion": "[parameters('renderFarms')[copyIndex()].machine.graphics.version]",
-        "autoUpgradeMinorVersion": true
       },
       "copy": {
         "name": "renderFarms",

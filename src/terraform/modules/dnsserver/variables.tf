@@ -84,6 +84,16 @@ variable "avere_ip_addr_count3" {
   default = 0
 }
 
+variable "avere_first_ip_addr4" {
+  description = "the first ip address of the Avere vserver4."
+  default = ""
+}
+
+variable "avere_ip_addr_count4" {
+  description = "the count of ip addresses on the vserver4."
+  default = 0
+}
+
 variable "avere_filer_fqdn" {
   description = "the fqdn of the avere."
 }

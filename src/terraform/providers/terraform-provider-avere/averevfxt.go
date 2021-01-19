@@ -379,7 +379,7 @@ func (a *AvereVfxt) GetVServerIPAddresses() ([]string, error) {
 			results = append(results, v.String())
 		}
 		if len(results) > 0 {
-			return results, nil
+			return SortIPv4s(results), nil
 		}
 		if retries > VServerRetryCount {
 			return nil, fmt.Errorf("Failure to get VServer IP Addresses after %d retries", retries)
@@ -1428,22 +1428,24 @@ func (a *AvereVfxt) UpdateCifsAces(junction *Junction) error {
 	log.Printf("[INFO] [UpdateCifsAces %s", junction.CifsShareName)
 	defer log.Printf("[INFO] UpdateCifsAces %s]", junction.CifsShareName)
 
-	// get the aces
-	existingShareAces, err := a.GetCifShareAces(junction.CifsShareName)
-	if err != nil {
-		return err
-	}
-
-	shareAcesToDelete, shareAcesToCreate := GetShareAceAdjustments(existingShareAces, junction.CifsAces)
-	log.Printf("[INFO] deleting %d aces, adding %d aces", len(shareAcesToDelete), len(shareAcesToCreate))
-	for _, v := range shareAcesToDelete {
-		if _, err := a.AvereCommand(a.getGetRemoveShareAceCommand(junction.CifsShareName, v)); err != nil {
+	if len(junction.CifsShareName) > 0 {
+		// get the aces
+		existingShareAces, err := a.GetCifShareAces(junction.CifsShareName)
+		if err != nil {
 			return err
 		}
-	}
-	for _, v := range shareAcesToCreate {
-		if _, err := a.AvereCommand(a.getGetAddShareAceCommand(junction.CifsShareName, v)); err != nil {
-			return err
+
+		shareAcesToDelete, shareAcesToCreate := GetShareAceAdjustments(existingShareAces, junction.CifsAces)
+		log.Printf("[INFO] deleting %d aces, adding %d aces", len(shareAcesToDelete), len(shareAcesToCreate))
+		for _, v := range shareAcesToDelete {
+			if _, err := a.AvereCommand(a.getGetRemoveShareAceCommand(junction.CifsShareName, v)); err != nil {
+				return err
+			}
+		}
+		for _, v := range shareAcesToCreate {
+			if _, err := a.AvereCommand(a.getGetAddShareAceCommand(junction.CifsShareName, v)); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -1465,27 +1467,46 @@ func (a *AvereVfxt) UpdateCifsMasks(junction *Junction) error {
 func (a *AvereVfxt) VServerIPsPingable() (bool, error) {
 	log.Printf("[INFO] [VServerIPsPingable")
 	defer log.Printf("[INFO] VServerIPsPingable]")
-	firstQuartet, err := GetIPAddressLastQuartet(a.FirstIPAddress)
-	if err != nil {
-		return false, err
-	}
-	lastQuartet, err := GetIPAddressLastQuartet(a.LastIPAddress)
-	if err != nil {
-		return false, err
-	}
-	addressPrefix, err := GetIPAddress3QuartetPrefix(a.FirstIPAddress)
-	if err != nil {
-		return false, err
+
+	var contiguousIPAddressList [][]string
+	if len(a.FirstIPAddress) == 0 {
+		currentVServerIPAddresses, err := a.GetVServerIPAddresses()
+		if err != nil {
+			return false, fmt.Errorf("error encountered while getting vserver addresses '%v'", err)
+		}
+		vServerIPAddressCount := len(currentVServerIPAddresses)
+		if vServerIPAddressCount == 0 {
+			return false, fmt.Errorf("error: no vserver addresses exist")
+		}
+		contiguousIPAddressList = GetContiguousIPSlices(currentVServerIPAddresses)
+	} else {
+		firstVServerIPAddress := a.FirstIPAddress
+		lastVServerIPAddress := a.LastIPAddress
+		contiguousIPAddressList = make([][]string, 0)
+		contiguousIPAddressList = append(contiguousIPAddressList, []string{firstVServerIPAddress, lastVServerIPAddress})
 	}
 
-	result, err := a.ShellCommand(GetPingIPAddressesCommand(firstQuartet, lastQuartet, addressPrefix))
+	success := true
+	for _, ipPair := range contiguousIPAddressList {
+		firstQuartet, err := GetIPAddressLastQuartet(ipPair[0])
+		if err != nil {
+			return false, err
+		}
+		lastQuartet, err := GetIPAddressLastQuartet(ipPair[1])
+		if err != nil {
+			return false, err
+		}
+		addressPrefix, err := GetIPAddress3QuartetPrefix(ipPair[0])
+		if err != nil {
+			return false, err
+		}
 
-	if err != nil {
-		return false, fmt.Errorf("Error running ping vserver command: %v", err)
+		result, err := a.ShellCommand(GetPingIPAddressesCommand(firstQuartet, lastQuartet, addressPrefix))
+		pingableResult := !strings.Contains(result, "timed out")
+		log.Printf("[INFO] VServerIP address %s%d-%d pingable result: %v", addressPrefix, firstQuartet, lastQuartet, pingableResult)
+		success = success && pingableResult
 	}
-	pingableResult := !strings.Contains(result, "timed out")
-	log.Printf("[INFO] VServerIP address %s%d-%d pingable result: %v", addressPrefix, firstQuartet, lastQuartet, pingableResult)
-	return pingableResult, nil
+	return success, nil
 }
 
 func (a *AvereVfxt) CreateVServer() error {

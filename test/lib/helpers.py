@@ -200,7 +200,7 @@ def upload_gsi(averecmd_params):
                           args='cluster gsimin')
     log.debug("GSI upload job ID: {}".format(job_id))
 
-    timeout_secs = 60 * 10
+    timeout_secs = 120 * 10
     time_start = time()
     time_end = time_start + timeout_secs
     gsi_upload_done = False

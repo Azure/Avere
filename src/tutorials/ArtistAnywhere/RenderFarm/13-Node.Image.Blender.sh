@@ -2,13 +2,15 @@
 
 set -ex
 
-if [ "$(cat /etc/os-release | grep 'CentOS-7')" ]; then
+grep 'centos:7' /etc/os-release && centOS7=true || centOS7=false
+
+if $centOS7; then
     yum -y install libXi
     yum -y install libXxf86vm
     yum -y install libXfixes
     yum -y install libXrender
     yum -y install libGL
-elif [ "$(cat /etc/os-release | grep 'CentOS-8')" ]; then
+else # CentOS8
     dnf -y install libXi
     dnf -y install libXxf86vm
     dnf -y install libXfixes
@@ -20,7 +22,7 @@ cd /usr/local/bin
 
 downloadUrl='https://mediasolutions.blob.core.windows.net/bin/Blender'
 
-fileName='blender2910.tar.xz'
-curl -L -o $fileName $downloadUrl/blender-2.91.0-linux64.tar.xz
+fileName='blender-2.91.0-linux64.tar.xz'
+curl -L -o $fileName $downloadUrl/$fileName
 tar -xJf $fileName
 mv blender-*/* .

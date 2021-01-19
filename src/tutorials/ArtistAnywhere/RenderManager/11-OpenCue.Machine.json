@@ -241,7 +241,7 @@
       "resources": [
         {
           "type": "extensions",
-          "name": "Custom",
+          "name": "extension",
           "apiVersion": "[variables('virtualMachineApiVersion')]",
           "location": "[resourceGroup().location]",
           "dependsOn": [
@@ -253,7 +253,7 @@
             "typeHandlerVersion": "2.1",
             "autoUpgradeMinorVersion": true,
             "protectedSettings": {
-              "commandToExecute": "[fx.GetExtensionCommand(parameters('scriptExtension').linux.filePath, parameters('scriptExtension').linux.fileParameters)]"
+              "commandToExecute": "[fx.GetExtensionCommand(parameters('scriptExtension').filePath, parameters('scriptExtension').fileParameters)]"
             }
           }
         },

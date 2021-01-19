@@ -13,8 +13,7 @@
     },
     "cacheConfig": {
       "value": {
-        "mtuSize": 1400,
-        "rootSquash": true,
+        "mtuSize": 1500,
         "mountOptions": "ro,hard,proto=tcp,mountproto=tcp,retry=30"
       }
     },

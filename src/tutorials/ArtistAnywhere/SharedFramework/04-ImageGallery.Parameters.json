@@ -13,7 +13,7 @@
             "state": "Generalized",
             "publisher": "OpenLogic",
             "offer": "CentOS",
-            "sku": "7_8"
+            "sku": "7_9"
           },
           {
             "name": "WorkstationWindows",
@@ -31,7 +31,7 @@
             "state": "Generalized",
             "publisher": "OpenLogic",
             "offer": "CentOS",
-            "sku": "8_2"
+            "sku": "8_3"
           },
           {
             "name": "ServerWindows",

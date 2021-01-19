@@ -5,7 +5,7 @@ set -ex
 localDirectory='/usr/local/bin'
 cd $localDirectory
 
-dbName=$(echo "${DB_NAME,,}")
+dbName=$(echo $DB_NAME | tr '[:upper:]' '[:lower:]')
 
 pgAdmin="host=$DATA_HOST port=$DATA_PORT sslmode=require dbname=postgres $ADMIN_AUTH"
 dbAdmin="host=$DATA_HOST port=$DATA_PORT sslmode=require dbname=$dbName $ADMIN_AUTH"
