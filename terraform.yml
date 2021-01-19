@@ -1,18 +1,18 @@
 parameters:
   - name: ORIGINAL_NODE_COUNT
-  displayName: "original node count"
-  type: number
-  default: 3
-  values:
-    - 3
-    - 14
+    displayName: "original node count"
+    type: number
+    default: 3
+    values:
+      - 3
+      - 14
   
   - name: SCALE_UP_NODE_COUNT
-  displayName: "scale up node count"
-  type: number
-  default: 2
-  values:
-    - 2
+    displayName: "scale up node count"
+    type: number
+    default: 2
+    values:
+      - 2
   
 
 jobs:
