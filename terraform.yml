@@ -1,3 +1,20 @@
+parameters:
+  - name: ORIGINAL_NODE_COUNT
+  displayName: "original node count"
+  type: number
+  default: 3
+  values:
+    - 3
+    - 14
+  
+  - name: SCALE_UP_NODE_COUNT
+  displayName: "scale up node count"
+  type: number
+  default: 2
+  values:
+    - 2
+  
+
 jobs:
 - job: Terraform_example
   timeoutInMinutes: 60
@@ -66,9 +83,8 @@ jobs:
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
   
   - script: |
-      old_node_count=3
-      new_node_count=5
-      sed -i 's/vfxt_node_count = ${old_node_count}/vfxt_node_count = ${new_node_count}/' main.tf
+      new_node_count = $((${{ parameters.ORIGINAL_NODE_COUNT }} + ${{ parameters.SCALE_UP_NODE_COUNT }}))
+      sed -i 's/vfxt_node_count = ${{ parameters.ORIGINAL_NODE_COUNT }}/vfxt_node_count = ${new_node_count}/' main.tf
       terraform apply -auto-approve
     displayName: 'Terraform - scale up'
     condition: always()
@@ -79,9 +95,8 @@ jobs:
       ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
-      old_node_count=3
-      new_node_count=5
-      sed -i 's/vfxt_node_count = ${new_node_count}/vfxt_node_count = ${old_node_count}/' main.tf
+      new_node_count = $((${{ parameters.ORIGINAL_NODE_COUNT }} + ${{ parameters.SCALE_UP_NODE_COUNT }}))
+      sed -i 's/vfxt_node_count = ${new_node_count}/vfxt_node_count = ${{ parameters.ORIGINAL_NODE_COUNT }}/' main.tf
       terraform apply -auto-approve
     displayName: 'Terraform - scale down'
     condition: always()
