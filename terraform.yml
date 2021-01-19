@@ -36,11 +36,13 @@ jobs:
       export RESOURCE_GROUP_NAME="tf$(date -u +'%m%dx%H%M%S')"
       export REGION=westus
       cd src/terraform/examples/vfxt/1-filer
-      sshkey=$(cat ~/.ssh/id_rsa.pub)
+      sshkey="$(cat ~/.ssh/id_rsa.pub) azureuser@linuxvm"
       echo "key length: ${#sshkey}"
       echo "dir `ls -al ~/.ssh/id_rsa.pub`"
 
       echo "##vso[task.setvariable variable=secret.SSH_KEY;issecret=true]${sshkey}"
+      echo "key length: ${#SSH_KEY}"
+
       sed -i "s/vm_ssh_key_data = null/vm_ssh_key_data = \"${SSH_KEY}\"/" main.tf
       sed -i "s/location = \"eastus\"/location = \"${REGION}\"/" main.tf
       
