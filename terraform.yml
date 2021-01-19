@@ -83,6 +83,7 @@ jobs:
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
   
   - script: |
+      cd ~/src/terraform/examples/vfxt/1-filer
       new_node_count = $((${{ parameters.ORIGINAL_NODE_COUNT }} + ${{ parameters.SCALE_UP_NODE_COUNT }}))
       sed -i 's/vfxt_node_count = ${{ parameters.ORIGINAL_NODE_COUNT }}/vfxt_node_count = ${new_node_count}/' main.tf
       terraform apply -auto-approve
@@ -95,6 +96,7 @@ jobs:
       ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
+      cd ~/src/terraform/examples/vfxt/1-filer
       new_node_count = $((${{ parameters.ORIGINAL_NODE_COUNT }} + ${{ parameters.SCALE_UP_NODE_COUNT }}))
       sed -i 's/vfxt_node_count = ${new_node_count}/vfxt_node_count = ${{ parameters.ORIGINAL_NODE_COUNT }}/' main.tf
       terraform apply -auto-approve
@@ -108,6 +110,7 @@ jobs:
 
 
   - script: |
+      cd ~/src/terraform/examples/vfxt/1-filer
       terraform destroy -auto-approve
     displayName: 'Terraform Destroy'
     condition: always()
