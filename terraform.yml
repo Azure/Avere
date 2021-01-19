@@ -64,6 +64,33 @@ jobs:
       ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+  
+  - script: |
+      old_node_count=3
+      new_node_count=5
+      sed -i 's/vfxt_node_count = ${old_node_count}/vfxt_node_count = ${new_node_count}/' main.tf
+      terraform apply -auto-approve
+    displayName: 'Terraform - scale up'
+    condition: always()
+    env:
+      ARM_TENANT_ID: $(AZURE-TENANT-ID)
+      ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+      ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+      ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+
+  - script: |
+      old_node_count=3
+      new_node_count=5
+      sed -i 's/vfxt_node_count = ${new_node_count}/vfxt_node_count = ${old_node_count}/' main.tf
+      terraform apply -auto-approve
+    displayName: 'Terraform - scale down'
+    condition: always()
+    env:
+      ARM_TENANT_ID: $(AZURE-TENANT-ID)
+      ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+      ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+      ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+
 
   - script: |
       terraform destroy -auto-approve
