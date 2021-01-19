@@ -934,7 +934,7 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 
 		// trigger a support bundle if there will be no more core filers
-		if len(coreFilersToAdd) == 0 && len(existingCoreFilers) == len(coreFilersToDelete) {
+		if avereVfxt.EnableSupportUploads == true && avereVfxt.ActiveSupportUpload == true && len(coreFilersToAdd) == 0 && len(existingCoreFilers) == len(coreFilersToDelete) {
 			// block on rolling trace to avoid uploading files in parallel
 			if err := avereVfxt.UploadRollingTraceAndBlock(); err != nil {
 				return err
@@ -1030,7 +1030,7 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	if avereVfxt.ActiveSupportUpload == true {
+	if avereVfxt.EnableSupportUploads == true && avereVfxt.ActiveSupportUpload == true {
 		if err := avereVfxt.UploadRollingTraceAndBlock(); err != nil {
 			log.Printf("[ERROR] failed to upload rolling trace: %v", err)
 		}
