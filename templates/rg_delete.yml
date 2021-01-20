@@ -24,5 +24,5 @@ steps:
     else
       echo "Resource groups successfully deleted."
     fi
-    
   displayName: 'CLEANUP: Delete resource group'
+  condition: always()
