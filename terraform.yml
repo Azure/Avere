@@ -89,78 +89,77 @@ jobs:
       ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+  - ${{ if eq(parameters.run_terraform, '1-filer') }}:
+    - script: |
+        az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+        
+        export RESOURCE_GROUP_NAME="tf$(date -u +'%m%dx%H%M%S')"
+        export REGION=westus
+        cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
+        sshkey="$(cat ~/.ssh/id_rsa.pub) azureuser@linuxvm"
+        echo "key length: ${#sshkey}"
+        echo "dir `ls -al ~/.ssh/id_rsa.pub`"
 
-  - script: |
-      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+        echo "##vso[task.setvariable variable=secret.SSH_KEY;issecret=true]${sshkey}"
+
+        sed -i "s:vm_ssh_key_data = null:vm_ssh_key_data = \"${sshkey}\":" main.tf
+        sed -i "s/location = \"eastus\"/location = \"${REGION}\"/" main.tf
+        
+        sed -i "s/network_resource_group_name = \"network_resource_group\"/network_resource_group_name = \"${RESOURCE_GROUP_NAME}-network\"/" main.tf
+        sed -i "s/filer_resource_group_name = \"filer_resource_group\"/filer_resource_group_name = \"${RESOURCE_GROUP_NAME}-filer\"/" main.tf
+        sed -i "s/vfxt_resource_group_name = \"vfxt_resource_group\"/vfxt_resource_group_name = \"${RESOURCE_GROUP_NAME}-vfxt\"/" main.tf
+        sed -i "s/vfxt_cluster_password = \"VFXT_PASSWORD\"/vfxt_cluster_password = \"${AVERE_ADMIN_PW}\"/" main.tf
+
+        sed -i 's/vfxt_node_count = 3/vfxt_node_count = 3\n    node_cache_size = 1024\n    node_size = "unsupported_test_SKU"/' main.tf
+
+        cat main.tf
+
+        terraform init 
+        terraform apply -auto-approve
+      displayName: 'Terraform Apply: 1-Filer'
+      env:
+        ARM_TENANT_ID: $(AZURE-TENANT-ID)
+        ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+        ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+        ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+        AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+  
+  - ${{ if eq(parameters.run_terraform, 'proxy') }}:
+    - script: |
+        az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+        
+        export RESOURCE_GROUP_NAME="tf$(date -u +'%m%dx%H%M%S')"
+        export REGION=westus
+        cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
+        sshkey="$(cat ~/.ssh/id_rsa.pub) azureuser@linuxvm"
+        echo "key length: ${#sshkey}"
+        echo "dir `ls -al ~/.ssh/id_rsa.pub`"
+
+        echo "##vso[task.setvariable variable=secret.SSH_KEY;issecret=true]${sshkey}"
+
+        sed -i "s:vm_ssh_key_data = null:vm_ssh_key_data = \"${sshkey}\":" main.tf
+        sed -i "s/location = \"eastus\"/location = \"${RESOURCE_GROUP_NAME}\"/" main.tf
+        sed -i "s/storage_account_name = \"storageaccount\"/storage_account_name = \"${REGION}\"/" main.tf
+        sed -i "s/proxy_resource_group_name = \"proxy_resource_group\"/proxy_resource_group_name = \"${RESOURCE_GROUP_NAME}-proxy\"/" main.tf
+        sed -i "s/storage_resource_group_name = \"storage_resource_group\"/storage_resource_group_name = \"${RESOURCE_GROUP_NAME}-storage\"/" main.tf
+        sed -i "s/network_resource_group_name = \"network_resource_group\"/network_resource_group_name = \"${RESOURCE_GROUP_NAME}-network\"/" main.tf
+        sed -i "s/filer_resource_group_name = \"filer_resource_group\"/filer_resource_group_name = \"${RESOURCE_GROUP_NAME}-filer\"/" main.tf
+        sed -i "s/vfxt_resource_group_name = \"vfxt_resource_group\"/vfxt_resource_group_name = \"${RESOURCE_GROUP_NAME}-vfxt\"/" main.tf
+        sed -i "s/vfxt_cluster_password = \"VFXT_PASSWORD\"/vfxt_cluster_password = \"${AVERE_ADMIN_PW}\"/" main.tf
+
+        sed -i 's/vfxt_node_count = 3/vfxt_node_count = 3\n    node_cache_size = 1024\n    node_size = "unsupported_test_SKU"/' main.tf
       
-      export RESOURCE_GROUP_NAME="tf$(date -u +'%m%dx%H%M%S')"
-      export REGION=westus
-      cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
-      sshkey="$(cat ~/.ssh/id_rsa.pub) azureuser@linuxvm"
-      echo "key length: ${#sshkey}"
-      echo "dir `ls -al ~/.ssh/id_rsa.pub`"
+        cat main.tf
 
-      echo "##vso[task.setvariable variable=secret.SSH_KEY;issecret=true]${sshkey}"
-
-      sed -i "s:vm_ssh_key_data = null:vm_ssh_key_data = \"${sshkey}\":" main.tf
-      sed -i "s/location = \"eastus\"/location = \"${REGION}\"/" main.tf
-      
-      sed -i "s/network_resource_group_name = \"network_resource_group\"/network_resource_group_name = \"${RESOURCE_GROUP_NAME}-network\"/" main.tf
-      sed -i "s/filer_resource_group_name = \"filer_resource_group\"/filer_resource_group_name = \"${RESOURCE_GROUP_NAME}-filer\"/" main.tf
-      sed -i "s/vfxt_resource_group_name = \"vfxt_resource_group\"/vfxt_resource_group_name = \"${RESOURCE_GROUP_NAME}-vfxt\"/" main.tf
-      sed -i "s/vfxt_cluster_password = \"VFXT_PASSWORD\"/vfxt_cluster_password = \"${AVERE_ADMIN_PW}\"/" main.tf
-
-      sed -i 's/vfxt_node_count = 3/vfxt_node_count = 3\n    node_cache_size = 1024\n    node_size = "unsupported_test_SKU"/' main.tf
-
-      cat main.tf
-
-      terraform init 
-      terraform apply -auto-approve
-    displayName: 'Terraform Apply: 1-Filer'
-    condition: and(not(or(failed(), canceled())), eq(parameters.run_terraform, '1-filer'))
-    env:
-      ARM_TENANT_ID: $(AZURE-TENANT-ID)
-      ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
-      ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
-
-  - script: |
-      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
-      
-      export RESOURCE_GROUP_NAME="tf$(date -u +'%m%dx%H%M%S')"
-      export REGION=westus
-      cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
-      sshkey="$(cat ~/.ssh/id_rsa.pub) azureuser@linuxvm"
-      echo "key length: ${#sshkey}"
-      echo "dir `ls -al ~/.ssh/id_rsa.pub`"
-
-      echo "##vso[task.setvariable variable=secret.SSH_KEY;issecret=true]${sshkey}"
-
-      sed -i "s:vm_ssh_key_data = null:vm_ssh_key_data = \"${sshkey}\":" main.tf
-      sed -i "s/location = \"eastus\"/location = \"${RESOURCE_GROUP_NAME}\"/" main.tf
-      sed -i "s/storage_account_name = \"storageaccount\"/storage_account_name = \"${REGION}\"/" main.tf
-      sed -i "s/proxy_resource_group_name = \"proxy_resource_group\"/proxy_resource_group_name = \"${RESOURCE_GROUP_NAME}-proxy\"/" main.tf
-      sed -i "s/storage_resource_group_name = \"storage_resource_group\"/storage_resource_group_name = \"${RESOURCE_GROUP_NAME}-storage\"/" main.tf
-      sed -i "s/network_resource_group_name = \"network_resource_group\"/network_resource_group_name = \"${RESOURCE_GROUP_NAME}-network\"/" main.tf
-      sed -i "s/filer_resource_group_name = \"filer_resource_group\"/filer_resource_group_name = \"${RESOURCE_GROUP_NAME}-filer\"/" main.tf
-      sed -i "s/vfxt_resource_group_name = \"vfxt_resource_group\"/vfxt_resource_group_name = \"${RESOURCE_GROUP_NAME}-vfxt\"/" main.tf
-      sed -i "s/vfxt_cluster_password = \"VFXT_PASSWORD\"/vfxt_cluster_password = \"${AVERE_ADMIN_PW}\"/" main.tf
-
-      sed -i 's/vfxt_node_count = 3/vfxt_node_count = 3\n    node_cache_size = 1024\n    node_size = "unsupported_test_SKU"/' main.tf
-    
-      cat main.tf
-
-      terraform init 
-      terraform apply -auto-approve
-    displayName: 'Terraform Apply: Proxy'
-    condition: and(not(or(failed(), canceled())), eq(parameters.run_terraform, 'proxy'))
-    env:
-      ARM_TENANT_ID: $(AZURE-TENANT-ID)
-      ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
-      ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+        terraform init 
+        terraform apply -auto-approve
+      displayName: 'Terraform Apply: Proxy'
+      env:
+        ARM_TENANT_ID: $(AZURE-TENANT-ID)
+        ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+        ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+        ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+        AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
   
   - script: |
       cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
