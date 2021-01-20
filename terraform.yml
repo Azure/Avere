@@ -154,7 +154,7 @@ jobs:
       terraform init 
       terraform apply -auto-approve
     displayName: 'Terraform Apply: Proxy'
-    condition: and(not(or(failed(), canceled())), eq(${{ parameters.run_terraform }}, 'proxy'))
+    condition: and(not(or(failed(), canceled())), eq(parameters.run_terraform, 'proxy'))
     env:
       ARM_TENANT_ID: $(AZURE-TENANT-ID)
       ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
