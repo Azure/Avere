@@ -87,7 +87,7 @@ jobs:
       sed -i "s/vfxt_cluster_password = \"VFXT_PASSWORD\"/vfxt_cluster_password = \"${AVERE_ADMIN_PW}\"/" main.tf
       sed -i 's/vfxt_node_count = 3/vfxt_node_count = 3\n    node_cache_size = 1024\n    node_size = "unsupported_test_SKU"/' main.tf
 
-      export new_node_count = $(( ${{ parameters.ORIGINAL_NODE_COUNT }} + ${{ parameters.SCALE_UP_NODE_COUNT }} ))
+      export new_node_count=$(( parameters.ORIGINAL_NODE_COUNT + parameters.SCALE_UP_NODE_COUNT ))
       echo $new_node_count
     displayName: 'Terraform Setup'
     name: setup
