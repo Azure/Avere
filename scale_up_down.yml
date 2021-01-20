@@ -1,0 +1,25 @@
+parameters:
+- name: ORIGINAL_NODE_COUNT
+  type: string
+- name: SCALE_UP_NODE_COUNT
+  type: string
+- name: scale
+  type: string
+  values:
+  - "up"
+  - "down"
+- name: run_terraform
+  type: string
+
+steps:
+- script: |
+      cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
+      export new_node_count=$(( ${{ parameters.ORIGINAL_NODE_COUNT }} + ${{ parameters.SCALE_UP_NODE_COUNT }} ))
+      if [ "up" = "${{ parameters.scale }}" ]; then
+        sed -i "s/vfxt_node_count = ${{ parameters.ORIGINAL_NODE_COUNT }}/vfxt_node_count = ${new_node_count}/" main.tf
+      elif [ "down" = "${{ parameters.scale }}" ]; then
+        sed -i "s/vfxt_node_count = ${new_node_count}/vfxt_node_count = ${{ parameters.ORIGINAL_NODE_COUNT }}/" main.tf
+      fi
+
+      terraform apply -auto-approve
+  displayName: 'Terraform - Scale "${{ parameters.scale }}"

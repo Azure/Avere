@@ -1,0 +1,9 @@
+parameters:
+- name: run_terraform
+  type: string
+
+steps:
+- script: |
+        cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
+        sed -i "s/storage_account_name = \"storageaccount\"/storage_account_name = \"$RESOURCE_GROUP_NAME\"/" main.tf
+  displayName: 'Terraform ${{ parameters.run_terraform }} setup'
