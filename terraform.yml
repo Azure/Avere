@@ -172,7 +172,17 @@ jobs:
 
   - script: |
       cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
-      terraform destroy -auto-approve
+      
+      tf_destroy_rc=111111
+      for i in {1..5}; do
+        terraform destroy -auto-approve
+        tf_destroy_rc=$?
+        if [ "${tf_destroy_rc}" -ne 0 ]; then
+          echo "##vso[task.logissue type=warning;]Terraform destroy did not work. Attempt $i of 5."
+        else
+          break
+        fi
+      done
     displayName: 'Terraform Destroy'
     condition: always()
     env:
