@@ -1,0 +1,13 @@
+steps:
+- task: DownloadSecureFile@1
+    inputs:
+      secureFile: 'id_rsa'
+
+  - script: |
+      set -e
+      ln -s $AGENT_TEMPDIRECTORY ~/.ssh
+      chmod 600 ~/.ssh/id_rsa
+      ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
+    displayName: 'SETUP: SSH keys'
+    condition: succeeded()
+    failOnStderr: true

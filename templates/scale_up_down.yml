@@ -8,8 +8,6 @@ parameters:
   values:
   - "up"
   - "down"
-- name: run_terraform
-  type: string
 
 steps:
 - script: |

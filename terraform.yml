@@ -6,14 +6,12 @@ parameters:
     values:
       - 3
       - 14
-  
   - name: SCALE_UP_NODE_COUNT
     displayName: "Scale Up Node Count +"
     type: number
     default: 2
     values:
       - 2
-  
   - name: run_terraform
     displayName: "Select terraform example to run"
     type: string
@@ -22,12 +20,10 @@ parameters:
       - "1-filer"
       - "proxy"
       - "azureblobfiler"
-  
   - name: run_scale_up
     displayName: "Run scale-up"
     type: boolean
     default: true
-
   - name: run_scale_down
     displayName: "Run scale-down"
     type: boolean
@@ -39,111 +35,40 @@ jobs:
   pool:
     vmImage: ubuntu-latest
   steps:  
-  - task: DownloadSecureFile@1
-    inputs:
-      secureFile: 'id_rsa'
-
-  - script: |
-      set -e
-      ln -s $AGENT_TEMPDIRECTORY ~/.ssh
-      chmod 600 ~/.ssh/id_rsa
-      ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
-    displayName: 'SETUP: SSH keys'
-    condition: succeeded()
-    failOnStderr: true
-  
-  - template: cred.yml
+  - template: templates/ssh_setup.yml
+  - template: templates/cred.yml
     parameters:
       run_terraform: ${{ parameters.run_terraform }}
-  - template: terraform_setup.yml
+  - template: templates/terraform_setup.yml
     parameters:
-      run_terraform: ${{ parameters.run_terraform }}
       ORIGINAL_NODE_COUNT: ${{ parameters.ORIGINAL_NODE_COUNT }}
   
   - ${{ if eq(parameters.run_terraform, 'proxy') }}:
-    - template: terraform_additional_setup.yml
+    - template: templates/terraform_additional_setup.yml
       parameters:
         run_terraform: ${{ parameters.run_terraform }}
   
   - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
-    - template: terraform_additional_setup.yml
+    - template: templates/terraform_additional_setup.yml
       parameters:
         run_terraform: ${{ parameters.run_terraform }}'
   
-  - template: terraform_apply.yml
+  - template: templates/terraform_apply.yml
     parameters: 
       run_terraform: ${{ parameters.run_terraform }}
 
   - ${{ if eq(parameters.run_scale_up, true) }}:
-    - template: scale_up_down.yml
+    - template: templates/scale_up_down.yml
       parameters:
-        run_terraform: ${{ parameters.run_terraform }}
         ORIGINAL_NODE_COUNT: ${{ parameters.ORIGINAL_NODE_COUNT }}
         SCALE_UP_NODE_COUNT: ${{ parameters.SCALE_UP_NODE_COUNT }}
         scale: "up"
 
   - ${{ if eq(parameters.run_scale_down, true) }}:
-    - template: scale_up_down.yml
+    - template: templates/scale_up_down.yml
       parameters:
-        run_terraform: ${{ parameters.run_terraform }}
         ORIGINAL_NODE_COUNT: ${{ parameters.ORIGINAL_NODE_COUNT }}
         SCALE_UP_NODE_COUNT: ${{ parameters.SCALE_UP_NODE_COUNT }}
         scale: "down"
 
-  - script: |
-      cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
-      
-      tf_destroy_rc=111111
-      for i in {1..5}; do
-        terraform destroy -auto-approve
-        tf_destroy_rc=$?
-        if [ "${tf_destroy_rc}" -ne 0 ]; then
-          sleep 20
-          echo "##vso[task.logissue type=warning;]Terraform destroy did not work. Attempt $i of 5."
-        else
-          break
-        fi
-      done
-    displayName: 'Terraform Destroy'
-    condition: always()
-  
-
-# - script: |
-#         cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
-#         sed -i "s/storage_account_name = \"storageaccount\"/storage_account_name = \"$RESOURCE_GROUP_NAME\"/" main.tf
-#       displayName: 'Terraform Proxy setup'
-#  - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
-#     - script: |
-#         cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
-#         sed -i "s/storage_account_name = \"storageaccount\"/storage_account_name = \"$RESOURCE_GROUP_NAME\"/" main.tf
-#       displayName: 'Terraform Azureblobfiler setup'
-# - script: |
-  #     az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
-  #     cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
-  #     cat main.tf
-
-  #     terraform init 
-  #     terraform apply -auto-approve
-  #   displayName: 'Terraform Apply'
-    # env:
-    #   ARM_TENANT_ID: $(AZURE-TENANT-ID)
-    #   ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
-    #   ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-    #   ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-    #   AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
-
-# - script: |
-#       cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
-#       export new_node_count=$(( ${{ parameters.ORIGINAL_NODE_COUNT }} + ${{ parameters.SCALE_UP_NODE_COUNT }} ))
-#       sed -i "s/vfxt_node_count = ${{ parameters.ORIGINAL_NODE_COUNT }}/vfxt_node_count = ${new_node_count}/" main.tf
-#       terraform apply -auto-approve
-#     displayName: 'Terraform - scale up - set up'
-#     condition: and(not(or(failed(), canceled())), eq(variables['_RUN_Scale_Up'], 'true'))
-
-#   - script: |
-#       cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
-#       export new_node_count=$(( ${{ parameters.ORIGINAL_NODE_COUNT }} + ${{ parameters.SCALE_UP_NODE_COUNT }} ))
-#       sed -i "s/vfxt_node_count = ${new_node_count}/vfxt_node_count = ${{ parameters.ORIGINAL_NODE_COUNT }}/" main.tf
-#       terraform apply -auto-approve
-#     displayName: 'Terraform - scale down - set up'
-#     condition: and(not(or(failed(), canceled())), eq(variables['_RUN_Scale_Down'], 'true'))
+  - template: templates/terraform_destroy.yml
