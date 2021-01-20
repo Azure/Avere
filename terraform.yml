@@ -14,7 +14,7 @@ parameters:
     values:
       - 2
   
-  - name: P_RUN_Terraform
+  - name: run_terraform
     displayName: "Select terraform example to run"
     type: string
     default: "1-filer"
@@ -42,7 +42,6 @@ variables:
   # _RUN_Proxy: $[lower('${{ parameters.P_RUN_PROXY }}')]
   _RUN_Scale_Up: $[lower('${{ parameters.P_RUN_Scale_Up }}')]
   _RUN_Scale_Down: $[lower('${{ parameters.P_RUN_Scale_Down }}')]
-  _path_for_test:  $[lower('${{ parameters.P_RUN_Terraform }}')]
 
   #_RUN_1Filer: $[lower(coalesce(variables['RUN_1Filer'], '${{ parameters.P_RUN_1Filer }}'))]
   #_RUN_1Filer: $[lower(coalesce(variables['RUN_1Filer'], '${{ parameters.P_RUN_1Filer }}'))]
@@ -96,7 +95,7 @@ jobs:
       
       export RESOURCE_GROUP_NAME="tf$(date -u +'%m%dx%H%M%S')"
       export REGION=westus
-      cd src/terraform/examples/vfxt/${_path_for_test}
+      cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
       sshkey="$(cat ~/.ssh/id_rsa.pub) azureuser@linuxvm"
       echo "key length: ${#sshkey}"
       echo "dir `ls -al ~/.ssh/id_rsa.pub`"
@@ -118,7 +117,7 @@ jobs:
       terraform init 
       terraform apply -auto-approve
     displayName: 'Terraform Apply: 1-Filer'
-    condition: and(not(or(failed(), canceled())), eq(variables['_path_for_test'], '1-filer'))
+    condition: and(not(or(failed(), canceled())), eq(parameters.run_terraform, '1-filer'))
     env:
       ARM_TENANT_ID: $(AZURE-TENANT-ID)
       ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
@@ -131,7 +130,7 @@ jobs:
       
       export RESOURCE_GROUP_NAME="tf$(date -u +'%m%dx%H%M%S')"
       export REGION=westus
-      cd src/terraform/examples/vfxt/${_path_for_test}
+      cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
       sshkey="$(cat ~/.ssh/id_rsa.pub) azureuser@linuxvm"
       echo "key length: ${#sshkey}"
       echo "dir `ls -al ~/.ssh/id_rsa.pub`"
@@ -155,7 +154,7 @@ jobs:
       terraform init 
       terraform apply -auto-approve
     displayName: 'Terraform Apply: Proxy'
-    condition: and(not(or(failed(), canceled())), eq(variables['_path_for_test'], 'proxy'))
+    condition: and(not(or(failed(), canceled())), eq(${{ parameters.run_terraform }}, 'proxy'))
     env:
       ARM_TENANT_ID: $(AZURE-TENANT-ID)
       ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
@@ -164,7 +163,7 @@ jobs:
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
   
   - script: |
-      cd src/terraform/examples/vfxt/${_path_for_test}
+      cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
       new_node_count = $((${{ parameters.ORIGINAL_NODE_COUNT }} + ${{ parameters.SCALE_UP_NODE_COUNT }}))
       sed -i 's/vfxt_node_count = ${{ parameters.ORIGINAL_NODE_COUNT }}/vfxt_node_count = ${new_node_count}/' main.tf
       terraform apply -auto-approve
@@ -177,7 +176,7 @@ jobs:
       ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
-      cd src/terraform/examples/vfxt/${_path_for_test}
+      cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
       new_node_count = $((${{ parameters.ORIGINAL_NODE_COUNT }} + ${{ parameters.SCALE_UP_NODE_COUNT }}))
       sed -i 's/vfxt_node_count = ${new_node_count}/vfxt_node_count = ${{ parameters.ORIGINAL_NODE_COUNT }}/' main.tf
       terraform apply -auto-approve
@@ -191,7 +190,7 @@ jobs:
 
 
   - script: |
-      cd src/terraform/examples/vfxt/${_path_for_test}
+      cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
       terraform destroy -auto-approve
     displayName: 'Terraform Destroy'
     condition: always()
