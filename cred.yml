@@ -1,0 +1,15 @@
+steps:
+  - bash: |
+        echo "##vso[task.setvariable variable=ARM_SUBSCRIPTION_ID]${ARM_SUBSCRIPTION_ID}"
+        echo "##vso[task.setvariable variable=ARM_CLIENT_ID]${ARM_CLIENT_ID}"
+        echo "##vso[task.setvariable variable=ARM_CLIENT_SECRET]${ARM_CLIENT_SECRET}"
+        echo "##vso[task.setvariable variable=ARM_TENANT_ID]${ARM_TENANT_ID}"
+        echo "Subscription and Credentials set as task variables"
+        az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+    displayName: "Select Subscription and Credentials"
+    condition: always()
+    env: 
+      ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+      ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+      ARM_TENANT_ID: $(AZURE-TENANT-ID)
+      ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
