@@ -58,6 +58,8 @@ jobs:
   
   - template: cred.yml
   - template: terraform_setup.yml
+    parameters:
+        run_terraform: ${{ parameters.run_terraform }}
   
   - ${{ if eq(parameters.run_terraform, 'proxy') }}:
     - template: terraform_additional_setup.yml
