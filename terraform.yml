@@ -32,10 +32,6 @@ parameters:
     displayName: "Run scale-down"
     type: boolean
     default: true
-  
-# variables:
-#   _RUN_Scale_Up: $[lower('${{ parameters.P_RUN_Scale_Up }}')]
-#   _RUN_Scale_Down: $[lower('${{ parameters.P_RUN_Scale_Down }}')]
 
 jobs:
 - job: Terraform_vfxt

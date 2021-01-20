@@ -22,4 +22,4 @@ steps:
       fi
 
       terraform apply -auto-approve
-  displayName: 'Terraform - Scale "${{ parameters.scale }}"
+  displayName: 'Terraform - Scale "${{ parameters.scale }}" '
