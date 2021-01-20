@@ -1,9 +1,14 @@
+parameters:
+- name: run_terraform
+  type: string
+
 steps:
   - bash: |
         echo "##vso[task.setvariable variable=ARM_SUBSCRIPTION_ID]${ARM_SUBSCRIPTION_ID}"
         echo "##vso[task.setvariable variable=ARM_CLIENT_ID]${ARM_CLIENT_ID}"
         echo "##vso[task.setvariable variable=ARM_CLIENT_SECRET]${ARM_CLIENT_SECRET}"
         echo "##vso[task.setvariable variable=ARM_TENANT_ID]${ARM_TENANT_ID}"
+        echo "##vso[task.setvariable variable=RUN_TERRAFORM_FILE]${{ parameters.run_terraform }}"
         echo "Subscription and Credentials set as task variables"
         az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
     displayName: "Select Subscription and Credentials"

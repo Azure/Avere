@@ -13,7 +13,7 @@ parameters:
 
 steps:
 - script: |
-      cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
+      cd src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
       export new_node_count=$(( ${{ parameters.ORIGINAL_NODE_COUNT }} + ${{ parameters.SCALE_UP_NODE_COUNT }} ))
       if [ "up" = "${{ parameters.scale }}" ]; then
         sed -i "s/vfxt_node_count = ${{ parameters.ORIGINAL_NODE_COUNT }}/vfxt_node_count = ${new_node_count}/" main.tf
@@ -22,4 +22,4 @@ steps:
       fi
 
       terraform apply -auto-approve
-  displayName: 'Terraform - Scale "${{ parameters.scale }}" '
+  displayName: 'Terraform - Scale ${{ parameters.scale }} '
