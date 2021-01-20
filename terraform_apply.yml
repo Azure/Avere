@@ -1,6 +1,8 @@
 parameters:
 - name: run_terraform
   type: string
+
+steps:
 - script: |
       az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
       cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
@@ -8,4 +10,4 @@ parameters:
 
       terraform init 
       terraform apply -auto-approve
-    displayName: 'Terraform Apply'
+  displayName: 'Terraform Apply'
