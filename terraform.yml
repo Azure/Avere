@@ -27,10 +27,10 @@ parameters:
   #   type: boolean
   #   default: true
 
-  # - name: P_RUN_Scale_Up
-  #   displayName: "Run scale-up"
-  #   type: boolean
-  #   default: true
+  - name: P_RUN_Scale_Up
+    displayName: "Run scale-up"
+    type: boolean
+    default: true
 
   - name: P_RUN_Scale_Down
     displayName: "Run scale-down"
