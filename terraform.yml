@@ -21,6 +21,7 @@ parameters:
     values:
       - "1-filer"
       - "proxy"
+      - "azureblobfiler"
   
 
   - name: P_RUN_Scale_Up
@@ -79,16 +80,7 @@ jobs:
       sshkey="$(cat ~/.ssh/id_rsa.pub) azureuser@linuxvm"
 
       echo "##vso[task.setvariable variable=secret.SSH_KEY;issecret=true]${sshkey}"
-      
-
-      # sed -i "s:vm_ssh_key_data = null:vm_ssh_key_data = \"${sshkey}\":" main.tf
-      # sed -i "s/location = \"eastus\"/location = \"${REGION}\"/" main.tf
-      # sed -i "s/network_resource_group_name = \"network_resource_group\"/network_resource_group_name = \"${RESOURCE_GROUP_NAME}-network\"/" main.tf
-      # sed -i "s/filer_resource_group_name = \"filer_resource_group\"/filer_resource_group_name = \"${RESOURCE_GROUP_NAME}-filer\"/" main.tf
-      # sed -i "s/vfxt_resource_group_name = \"vfxt_resource_group\"/vfxt_resource_group_name = \"${RESOURCE_GROUP_NAME}-vfxt\"/" main.tf
-      # sed -i "s/vfxt_cluster_password = \"VFXT_PASSWORD\"/vfxt_cluster_password = \"${AVERE_ADMIN_PW}\"/" main.tf
-      # sed -i 's/vfxt_node_count = 3/vfxt_node_count = ${{ parameters.ORIGINAL_NODE_COUNT }}\n    node_cache_size = 1024\n    node_size = "unsupported_test_SKU"/' main.tf
-      
+           
       sed -i -E -e "s:vm_ssh_key_data = null:vm_ssh_key_data = \"${sshkey}\":" \
         -e "s/location = \"eastus\"/location = \"${REGION}\"/" \
         -e "s/(([a-z]+)_resource_group_name) = \"[^\"]+\"/\1 = \"${RESOURCE_GROUP_NAME}-\2\"/" \
@@ -104,43 +96,34 @@ jobs:
       ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
   
-  - ${{ if eq(parameters.run_terraform, '1-filer') }}:
-    - script: |
-        az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
-        cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
-        cat main.tf
-
-        terraform init 
-        terraform apply -auto-approve
-      displayName: 'Terraform Apply: 1-Filer'
-      env:
-        ARM_TENANT_ID: $(AZURE-TENANT-ID)
-        ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
-        ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-        ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-        AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
   
   - ${{ if eq(parameters.run_terraform, 'proxy') }}:
     - script: |
-        az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
         cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
-
         sed -i "s/storage_account_name = \"storageaccount\"/storage_account_name = \"$RESOURCE_GROUP_NAME\"/" main.tf
-        # sed -i "s/proxy_resource_group_name = \"proxy_resource_group\"/proxy_resource_group_name = \"$RESOURCE_GROUP_NAME-proxy\"/" main.tf
-        # sed -i "s/storage_resource_group_name = \"storage_resource_group\"/storage_resource_group_name = \"$RESOURCE_GROUP_NAME-storage\"/" main.tf
-        
-        cat main.tf
-
-        terraform init 
-        terraform apply -auto-approve
-      displayName: 'Terraform Apply: Proxy'
-      env:
-        ARM_TENANT_ID: $(AZURE-TENANT-ID)
-        ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
-        ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-        ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-        AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+      displayName: 'Terraform Proxy setup'
   
+  - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
+    - script: |
+        cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
+        sed -i "s/storage_account_name = \"storageaccount\"/storage_account_name = \"$RESOURCE_GROUP_NAME\"/" main.tf
+      displayName: 'Terraform Azureblobfiler setup'
+  
+  - script: |
+      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+      cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
+      cat main.tf
+
+      terraform init 
+      terraform apply -auto-approve
+    displayName: 'Terraform Apply'
+    env:
+      ARM_TENANT_ID: $(AZURE-TENANT-ID)
+      ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+      ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+      ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+
   - script: |
       cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
       export new_node_count=$(( ${{ parameters.ORIGINAL_NODE_COUNT }} + ${{ parameters.SCALE_UP_NODE_COUNT }} ))
@@ -178,6 +161,7 @@ jobs:
         terraform destroy -auto-approve
         tf_destroy_rc=$?
         if [ "${tf_destroy_rc}" -ne 0 ]; then
+          sleep 20
           echo "##vso[task.logissue type=warning;]Terraform destroy did not work. Attempt $i of 5."
         else
           break
