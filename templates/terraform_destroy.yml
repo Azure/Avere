@@ -13,5 +13,5 @@ steps:
           break
         fi
       done
-    displayName: 'Terraform Destroy'
-    condition: always()
+  displayName: 'Terraform Destroy'
+  condition: always()
