@@ -72,3 +72,4 @@ jobs:
         scale: "down"
 
   - template: templates/terraform_destroy.yml
+  - template: templates/rg_delete.yml

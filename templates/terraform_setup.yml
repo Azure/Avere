@@ -9,8 +9,9 @@ steps:
       sudo mv terraform /usr/local/bin
       sudo chmod 755 /usr/local/bin/terraform
       
+      browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[].browser_download_url)
       mkdir -p ~/.terraform.d/plugins
-      wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.29/terraform-provider-avere
+      wget -O ~/.terraform.d/plugins/terraform-provider-avere $browser_download_url
       chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 
       export RESOURCE_GROUP_NAME="tf$(date -u +'%m%dx%H%M%S')"

@@ -4,7 +4,7 @@ steps:
       
       tf_destroy_rc=111111
       for i in {1..5}; do
-        terraform destroy -auto-approve
+        TF_LOG=INFO terraform destroy -auto-approve
         tf_destroy_rc=$?
         if [ "${tf_destroy_rc}" -ne 0 ]; then
           sleep 20

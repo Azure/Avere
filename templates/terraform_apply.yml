@@ -9,5 +9,5 @@ steps:
       cat main.tf
 
       terraform init 
-      terraform apply -auto-approve
+      TF_LOG=INFO terraform apply -auto-approve
   displayName: 'Terraform Apply for ${{ parameters.run_terraform }}'
