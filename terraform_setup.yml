@@ -1,6 +1,8 @@
 parameters:
 - name: run_terraform
   type: string
+- name: ORIGINAL_NODE_COUNT
+  type: string
 
 steps:
 - script: |

@@ -60,6 +60,7 @@ jobs:
   - template: terraform_setup.yml
     parameters:
         run_terraform: ${{ parameters.run_terraform }}
+        ORIGINAL_NODE_COUNT: ${{ parameters.ORIGINAL_NODE_COUNT }}
   
   - ${{ if eq(parameters.run_terraform, 'proxy') }}:
     - template: terraform_additional_setup.yml
