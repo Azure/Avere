@@ -85,11 +85,8 @@ jobs:
       sed -i "s/filer_resource_group_name = \"filer_resource_group\"/filer_resource_group_name = \"${RESOURCE_GROUP_NAME}-filer\"/" main.tf
       sed -i "s/vfxt_resource_group_name = \"vfxt_resource_group\"/vfxt_resource_group_name = \"${RESOURCE_GROUP_NAME}-vfxt\"/" main.tf
       sed -i "s/vfxt_cluster_password = \"VFXT_PASSWORD\"/vfxt_cluster_password = \"${AVERE_ADMIN_PW}\"/" main.tf
-      sed -i 's/vfxt_node_count = 3/vfxt_node_count = 3\n    node_cache_size = 1024\n    node_size = "unsupported_test_SKU"/' main.tf
-      orig_node=${{ parameters.ORIGINAL_NODE_COUNT }}
-      scale_up=${{ parameters.SCALE_UP_NODE_COUNT }}
-      export new_node_count=$(( $orig_node + $scale_up ))
-      echo $new_node_count
+      sed -i 's/vfxt_node_count = 3/vfxt_node_count = ${{ parameters.ORIGINAL_NODE_COUNT }}\n    node_cache_size = 1024\n    node_size = "unsupported_test_SKU"/' main.tf
+      
     displayName: 'Terraform Setup'
     name: setup
     condition: succeeded()
@@ -139,8 +136,10 @@ jobs:
   
   - script: |
       cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
-      # export new_node_count = $(( ${{ parameters.ORIGINAL_NODE_COUNT }} + ${{ parameters.SCALE_UP_NODE_COUNT }} ))
-      sed -i 's/vfxt_node_count = ${{ parameters.ORIGINAL_NODE_COUNT }}/vfxt_node_count = $(setup.new_node_count)/' main.tf
+      orig_node=${{ parameters.ORIGINAL_NODE_COUNT }}
+      scale_up=${{ parameters.SCALE_UP_NODE_COUNT }}
+      export new_node_count=$(( $orig_node + $scale_up ))
+      sed -i 's/vfxt_node_count = ${{ parameters.ORIGINAL_NODE_COUNT }}/vfxt_node_count = ${new_node_count}/' main.tf
       terraform apply -auto-approve
     displayName: 'Terraform - scale up'
     condition: and(not(or(failed(), canceled())), eq(variables['_RUN_Scale_Up'], 'true'))
@@ -152,9 +151,10 @@ jobs:
 
   - script: |
       cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
-      # export new_node_count = $(( ${{ parameters.ORIGINAL_NODE_COUNT }} + ${{ parameters.SCALE_UP_NODE_COUNT }} ))
-      echo $new_node_count
-      sed -i 's/vfxt_node_count = $(setup.new_node_count)/vfxt_node_count = ${{ parameters.ORIGINAL_NODE_COUNT }}/' main.tf
+      orig_node=${{ parameters.ORIGINAL_NODE_COUNT }}
+      scale_up=${{ parameters.SCALE_UP_NODE_COUNT }}
+      export new_node_count=$(( $orig_node + $scale_up ))
+      sed -i 's/vfxt_node_count = ${new_node_count}/vfxt_node_count = ${{ parameters.ORIGINAL_NODE_COUNT }}/' main.tf
       terraform apply -auto-approve
     displayName: 'Terraform - scale down'
     condition: and(not(or(failed(), canceled())), eq(variables['_RUN_Scale_Down'], 'true'))
