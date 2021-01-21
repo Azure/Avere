@@ -17,6 +17,7 @@ Write-Log($message)
 {
     $msg = $message | Timestamp
     Write-Output $msg
+    [Console]::Out.Flush() 
 }
 
 function
@@ -48,14 +49,25 @@ Get-NSSM
         Write-Log "NSSM is already installed"
     } else {
         Write-Log "This script uses a third party tool: NSSM. For more information, see https://nssm.cc/usage"
-        Write-Log "Downloading NSSM..."
-        $nssmUri = "https://nssm.cc/release/nssm-2.24.zip"
-        $nssmZip = "$($env:temp)\$(Split-Path $nssmUri -Leaf)"
-
+        # clean-up residue
+        Remove-Item "$($env:temp)\nssm" -Recurse -ErrorAction Ignore
+        Remove-Item "$($env:temp)\nssm-2.24.zip" -Recurse -ErrorAction Ignore
+        
+        # download and extract
+        $nssmZip = "$($env:temp)\nssm-2.24.zip"
+        if ($true) {
+            Write-Log "Downloading NSSM..."
+            $nssmUri = "https://nssm.cc/release/nssm-2.24.zip"
+            DownloadFileOverHttp -Url $nssmUri -DestinationPath $nssmZip
+        } else {
+            Write-Log "Copy NSSM..."
+            $nssmFile = "\\somepath\sw\nssm-2.24.zip"
+            Copy-Item -Path "$($tempDirectory.FullName)\nssm-2.24\win64\nssm.exe" -Destination "$($env:SystemRoot)\System32"
+        }
+        
         Write-Verbose "Creating working directory..."
         $tempDirectory = New-Item -ItemType Directory -Force -Path "$($env:temp)\nssm"
-
-        DownloadFileOverHttp -Url $nssmUri -DestinationPath $nssmZip
+        
         Expand-Archive -Path $nssmZip -DestinationPath $tempDirectory.FullName
         Remove-Item $nssmZip
         Copy-Item -Path "$($tempDirectory.FullName)\nssm-2.24\win64\nssm.exe" -Destination "$($env:SystemRoot)\System32"
@@ -76,6 +88,7 @@ Write-Log(`$message)
 {
     `$msg = `$message | Timestamp
     Write-Output `$msg
+    [Console]::Out.Flush()
 }
 
 function 
@@ -95,8 +108,8 @@ try
     while(`$true) {
         # Write-Log "confirm nic disabled `$nicName"
         Disable-NonGateway-NICs
-        # sleep 10 minutes, before checking again
-        Start-Sleep -Milliseconds 600000
+        # sleep 60 seconds, before checking again
+        Start-Sleep -Milliseconds 60000
     }
     
 }
@@ -112,6 +125,13 @@ catch
 function
 Create-NSSMService($NicServiceFile)
 {
+    $ConfigureNicServiceName = "DisableInfinibandNics"
+    $existingService = Get-Service | Where-Object {$_.Name -eq "$ConfigureNicServiceName"}
+    if ($existingService.Length -eq 1)
+    {
+        Start-Process -Wait "nssm" -ArgumentList "remove $ConfigureNicServiceName"
+    }
+
     #Set-ExecutionPolicy -ExecutionPolicy Unrestricted
     $Binary = (Get-Command Powershell).Source
     $Arguments = '-ExecutionPolicy Bypass -NoProfile -File "' + $NicServiceFile + '"'
@@ -119,7 +139,6 @@ Create-NSSMService($NicServiceFile)
     $configureNicServiceLog = "$azureBasePath\nicservice.log"
     New-Item -ItemType Directory -Force -Path $azureBasePath
     Write-Log "Configuring NSSM for ConfigureNIC service..."
-    $ConfigureNicServiceName = "DisableInfinibandNics"
     Start-Process -Wait "nssm" -ArgumentList "install $ConfigureNicServiceName $Binary $Arguments"
     Start-Process -Wait "nssm" -ArgumentList "set $ConfigureNicServiceName DisplayName Disable Infiniband NICs"
     Start-Process -Wait "nssm" -ArgumentList "set $ConfigureNicServiceName Description Disable Infiniband NICs because they collide with on-prem networks"
