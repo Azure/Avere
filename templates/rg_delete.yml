@@ -4,7 +4,7 @@ steps:
     rg_del_rc=111111
     for i in "-vfxt" "-filer" "-storage" "-proxy" "-network"; do  
       exists=$(az group exists --name ${RESOURCE_GROUP_NAME}$i)
-      if [ $exists = "true" ]; then
+      if [ "${exists}" = "true" ]; then
         for i in {1..3}; do
           az group delete --yes --name ${RESOURCE_GROUP_NAME}$i --subscription ${ARM_SUBSCRIPTION_ID}
           rg_del_rc=$?
@@ -15,14 +15,12 @@ steps:
           fi
         done
       fi
+      if [ "${rg_del_rc}" -ne 0 ]; then
+        echo "##vso[task.logissue type=error;]Deleting resource group failed. See log for details."
+        echo "##vso[task.complete result=Failed;]"
+      else
+        echo "Resource groups successfully deleted."
+      fi
     done
-
-    if [ "${rg_del_rc}" -ne 0 ]; then
-      echo "##vso[task.logissue type=error;]Deleting resource group failed. See log for details."
-      echo "##vso[task.complete result=Failed;]"
-      echo "##vso[build.addbuildtag]FAIL RG_cleanup"
-    else
-      echo "Resource groups successfully deleted."
-    fi
   displayName: 'CLEANUP: Delete resource group'
   condition: always()
