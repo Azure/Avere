@@ -145,4 +145,10 @@ At this point you are now ready to deploy your custom images previously created.
 
 1. execute `terraform apply -auto-approve` to build the windows VM
 
+Tip: if you are running infiniband SKUS (with 'r') you may need to disable the nics so they don't collide with your network.  Copy the file `` to your current directory and run the following command to do this:
+
+```bash
+powershell -ExecutionPolicy Bypass -NoProfile -File .\ConfigureNetworkService.ps1
+```
+
 At this point you should have a complete rendering environment where you can run scale tests.
