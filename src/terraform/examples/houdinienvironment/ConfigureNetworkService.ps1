@@ -127,28 +127,26 @@ Create-NSSMService($NicServiceFile)
 {
     $ConfigureNicServiceName = "DisableInfinibandNics"
     $existingService = Get-Service | Where-Object {$_.Name -eq "$ConfigureNicServiceName"}
-    if ($existingService.Length -eq 1)
+    if ($existingService.Length -eq 0)
     {
-        Start-Process -Wait "nssm" -ArgumentList "remove $ConfigureNicServiceName"
+        #Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+        $Binary = (Get-Command Powershell).Source
+        $Arguments = '-ExecutionPolicy Bypass -NoProfile -File "' + $NicServiceFile + '"'
+        $azureBasePath = "C:\AzureData"
+        $configureNicServiceLog = "$azureBasePath\nicservice.log"
+        New-Item -ItemType Directory -Force -Path $azureBasePath
+        Write-Log "Configuring NSSM for ConfigureNIC service..."
+        Start-Process -Wait "nssm" -ArgumentList "install $ConfigureNicServiceName $Binary $Arguments"
+        Start-Process -Wait "nssm" -ArgumentList "set $ConfigureNicServiceName DisplayName Disable Infiniband NICs"
+        Start-Process -Wait "nssm" -ArgumentList "set $ConfigureNicServiceName Description Disable Infiniband NICs because they collide with on-prem networks"
+        # Pipe output to daemon.log
+        Start-Process -Wait "nssm" -ArgumentList "set $ConfigureNicServiceName AppStderr $configureNicServiceLog"
+        Start-Process -Wait "nssm" -ArgumentList "set $ConfigureNicServiceName AppStdout $configureNicServiceLog"
+        # Allow 10 seconds for graceful shutdown before process is terminated
+        Start-Process -Wait "nssm" -ArgumentList "set $ConfigureNicServiceName AppStopMethodConsole 10000"
+
+        Start-Service -Name $ConfigureNicServiceName   
     }
-
-    #Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-    $Binary = (Get-Command Powershell).Source
-    $Arguments = '-ExecutionPolicy Bypass -NoProfile -File "' + $NicServiceFile + '"'
-    $azureBasePath = "C:\AzureData"
-    $configureNicServiceLog = "$azureBasePath\nicservice.log"
-    New-Item -ItemType Directory -Force -Path $azureBasePath
-    Write-Log "Configuring NSSM for ConfigureNIC service..."
-    Start-Process -Wait "nssm" -ArgumentList "install $ConfigureNicServiceName $Binary $Arguments"
-    Start-Process -Wait "nssm" -ArgumentList "set $ConfigureNicServiceName DisplayName Disable Infiniband NICs"
-    Start-Process -Wait "nssm" -ArgumentList "set $ConfigureNicServiceName Description Disable Infiniband NICs because they collide with on-prem networks"
-    # Pipe output to daemon.log
-    Start-Process -Wait "nssm" -ArgumentList "set $ConfigureNicServiceName AppStderr $configureNicServiceLog"
-    Start-Process -Wait "nssm" -ArgumentList "set $ConfigureNicServiceName AppStdout $configureNicServiceLog"
-    # Allow 10 seconds for graceful shutdown before process is terminated
-    Start-Process -Wait "nssm" -ArgumentList "set $ConfigureNicServiceName AppStopMethodConsole 10000"
-
-    Start-Service -Name $ConfigureNicServiceName
 }
 
 try
