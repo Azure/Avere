@@ -4,10 +4,10 @@ parameters:
 
 steps:
 - script: |
-      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
-      cd src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
-      cat main.tf
+    az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+    cd src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
+    cat main.tf
 
-      terraform init 
-      TF_LOG=INFO terraform apply -auto-approve
+    terraform init 
+    TF_LOG=INFO terraform apply -auto-approve
   displayName: 'Terraform: Apply - ${{ parameters.run_terraform }}'

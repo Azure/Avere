@@ -4,10 +4,10 @@ steps:
     secureFile: 'id_rsa'
 
 - script: |
-      set -e
-      ln -s $AGENT_TEMPDIRECTORY ~/.ssh
-      chmod 600 ~/.ssh/id_rsa
-      ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
+    set -e
+    ln -s $AGENT_TEMPDIRECTORY ~/.ssh
+    chmod 600 ~/.ssh/id_rsa
+    ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
   displayName: 'Setup: SSH keys'
   condition: succeeded()
   failOnStderr: true

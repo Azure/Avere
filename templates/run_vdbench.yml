@@ -1,0 +1,16 @@
+steps:
+- script: |
+    CONTROLLER_ADDRESS=''
+    ADMIN_USERNAME=''
+    NFS_ADDRESS=''
+    NFS_EXPORT=''
+    VDBENCH_URL=''
+    
+    terraform apply -auto-approve -var="controlleraddress=${CONTROLLER_ADDRESS}" \
+      -var="admin_username=${ADMIN_USERNAME}" \
+      -var="vm_ssh_key_data=${SSH_KEY}" \
+      -var="nfs_address=${NFS_ADDRESS}" \
+      -var="nfs_export_path=${NFS_EXPORT}" \
+      -var="vdbench_url=${VDBENCH_URL}" 
+    
+  displayName: 'Run vdbench'
