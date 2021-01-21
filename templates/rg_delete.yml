@@ -17,5 +17,5 @@ steps:
         done
       fi
     done
-  displayName: 'CLEANUP: Delete resource group'
+  displayName: 'RG Delete Check'
   condition: always()

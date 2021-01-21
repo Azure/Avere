@@ -10,4 +10,4 @@ steps:
 
       terraform init 
       TF_LOG=INFO terraform apply -auto-approve
-  displayName: 'Terraform Apply for ${{ parameters.run_terraform }}'
+  displayName: 'Terraform: Apply - ${{ parameters.run_terraform }}'

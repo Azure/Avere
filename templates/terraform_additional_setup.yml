@@ -6,4 +6,4 @@ steps:
 - script: |
         cd src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
         sed -i "s/storage_account_name = \"storageaccount\"/storage_account_name = \"$RESOURCE_GROUP_NAME\"/" main.tf
-  displayName: 'Terraform ${{ parameters.run_terraform }} setup'
+  displayName: 'Terraform: Additional Setup for ${{ parameters.run_terraform }}'

@@ -1,17 +1,26 @@
 parameters:
-  - name: ORIGINAL_NODE_COUNT
+  - name: original_node_count
     displayName: "Original Node Count"
     type: number
     default: 3
     values:
       - 3
       - 14
-  - name: SCALE_UP_NODE_COUNT
+  - name: scale_up_node_count
     displayName: "Scale Up Node Count +"
     type: number
     default: 2
     values:
       - 2
+  - name: region
+    displayName: "Region to run pipeline"
+    type: string
+    default: "westus"
+    values:
+      - "eastus"
+      - "eastus2"
+      - "westus"
+      - "westus2"
   - name: run_terraform
     displayName: "Select terraform example to run"
     type: string
@@ -30,18 +39,19 @@ parameters:
     default: true
 
 jobs:
-- job: Terraform_vfxt
+- job: Terraform_vFXT
   timeoutInMinutes: 120
   pool:
     vmImage: ubuntu-latest
   steps:  
-  - template: templates/ssh_setup.yml
-  - template: templates/cred.yml
+  - template: templates/setup_ssh.yml
+  - template: templates/setup_envars.yml
     parameters:
       run_terraform: ${{ parameters.run_terraform }}
+      region: ${{ parameters.region }}
   - template: templates/terraform_setup.yml
     parameters:
-      ORIGINAL_NODE_COUNT: ${{ parameters.ORIGINAL_NODE_COUNT }}
+      original_node_count: ${{ parameters.original_node_count }}
   
   - ${{ if eq(parameters.run_terraform, 'proxy') }}:
     - template: templates/terraform_additional_setup.yml
@@ -58,17 +68,17 @@ jobs:
       run_terraform: ${{ parameters.run_terraform }}
 
   - ${{ if eq(parameters.run_scale_up, true) }}:
-    - template: templates/scale_up_down.yml
+    - template: templates/terraform_scale_up_down.yml
       parameters:
-        ORIGINAL_NODE_COUNT: ${{ parameters.ORIGINAL_NODE_COUNT }}
-        SCALE_UP_NODE_COUNT: ${{ parameters.SCALE_UP_NODE_COUNT }}
+        original_node_count: ${{ parameters.original_node_count }}
+        scale_up_node_count: ${{ parameters.scale_up_node_count }}
         scale: "up"
 
   - ${{ if eq(parameters.run_scale_down, true) }}:
-    - template: templates/scale_up_down.yml
+    - template: templates/terraform_scale_up_down.yml
       parameters:
-        ORIGINAL_NODE_COUNT: ${{ parameters.ORIGINAL_NODE_COUNT }}
-        SCALE_UP_NODE_COUNT: ${{ parameters.SCALE_UP_NODE_COUNT }}
+        original_node_count: ${{ parameters.original_node_count }}
+        scale_up_node_count: ${{ parameters.scale_up_node_count }}
         scale: "down"
 
   - template: templates/terraform_destroy.yml
