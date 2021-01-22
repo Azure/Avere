@@ -14,17 +14,14 @@ steps:
     cd ../vdbench
     
     terraform init
-    terraform apply -auto-approve -var="controlleraddress=${CONTROLLER_ADDRESS}" \
+    TF_LOG=INFO terraform apply -auto-approve -var="controller_address=${CONTROLLER_ADDRESS}" \
       -var="controller_username=${USERNAME}" \
-      -var="vm_ssh_key_data=${SSH_KEY}" \
-      -var="nfs_address=${VSERVER_IP_ADDRESSES}" \
-      -var="nfs_export_path=${nfs_export_pNFS_EXPORT_PATHath}" \
+      -var="ssh_key_data=${SSH_KEY}" \
+      -var="vserver_ip_addresses=${VSERVER_IP_ADDRESSES}" \
+      -var="nfs_export_path=${NFS_EXPORT_PATH}" \
       -var="vdbench_url=${VDBENCH_URL}" \
-      -var="location=${REGION}" \
       -var="vmss_resource_group_name=vmss-${RESOURCE_GROUP_NAME}" \
-      -var="vnet_resource_group=vmss-${RESOURCE_GROUP_NAME}" \
-      -var="vnet_name=vnet-vmss-${RESOURCE_GROUP_NAME} "\
-      -var="subnet_name=1${RESOURCE_GROUP_NAME}"
+      -var="vnet_resource_group=vmss-${RESOURCE_GROUP_NAME}" 
 
     IP_ADDRESS=$(terraform output -json | jq ".vmss_address_command.value") 
     scp ~/.ssh/id_rsa ${USERNAME}@${IP_ADDRESS}:.ssh/.
