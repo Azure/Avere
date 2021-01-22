@@ -1,16 +1,30 @@
 steps:
 - script: |
-    CONTROLLER_ADDRESS=''
-    ADMIN_USERNAME=''
-    NFS_ADDRESS=''
-    NFS_EXPORT=''
-    VDBENCH_URL=''
+    az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+    cd src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
+    CONTROLLER_ADDRESS=$(terraform output -json | jq ".controller_address.value")
+    USERNAME=$(terraform output -json | jq ".controller_username.value")
+    VSERVER_IP_ADDRESSES=$(terraform output -json | jq ".mount_addresses.value")
+    NFS_EXPORT_PATH=$(terraform output -json | jq ".filer_export.value")
+    cd ../vdbench
     
+    terraform init
     terraform apply -auto-approve -var="controlleraddress=${CONTROLLER_ADDRESS}" \
-      -var="admin_username=${ADMIN_USERNAME}" \
+      -var="controller_username=${USERNAME}" \
       -var="vm_ssh_key_data=${SSH_KEY}" \
-      -var="nfs_address=${NFS_ADDRESS}" \
-      -var="nfs_export_path=${NFS_EXPORT}" \
-      -var="vdbench_url=${VDBENCH_URL}" 
+      -var="nfs_address=${VSERVER_IP_ADDRESSES}" \
+      -var="nfs_export_path=${nfs_export_pNFS_EXPORT_PATHath}" \
+      -var="vdbench_url=${VDBENCH_URL}" \
+      -var="location=${REGION}" \
+      -var="vmss_resource_group_name=vmss-${RESOURCE_GROUP_NAME}"\
+      -var="vnet_resource_group="
+
+    IP_ADDRESS=$(terraform output -json | jq ".vmss_address_command.value") 
+    scp ~/.ssh/id_rsa ${USERNAME}@${IP_ADDRESS}:.ssh/.
+    ssh ${USERNAME}@${IP_ADDRESS} /home/${USERNAME}/copy_idrsa.sh
+
+    ssh USERNAME@IP_ADDRESS "/usr/bin/nohup /bin/bash -c \"/bin/bash /home/${USERNAME}/run_vdbench.sh inmem.conf uniquestring1 &\" &""
     
   displayName: 'Run vdbench'
+  env:
+    VDBENCH_URL: $(VDBENCH-URL)
