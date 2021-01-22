@@ -23,4 +23,4 @@ steps:
         break
       fi
     done
-  displayName: 'Terraform: ${{ parameters.cmd_terraform }} - ${{ parameters.run_terraform }}'
+  displayName: 'Terraform: ${{ parameters.cmd_terraform }} ${{ parameters.run_terraform }}'

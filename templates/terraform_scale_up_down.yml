@@ -18,4 +18,4 @@ steps:
     elif [ "down" = "${{ parameters.scale }}" ]; then
       sed -i "s/vfxt_node_count = ${new_node_count}/vfxt_node_count = ${{ parameters.original_node_count }}/" main.tf
     fi
-  displayName: 'Terraform: Scale ${{ parameters.scale }} - setup'
+  displayName: 'Terraform: scale ${{ parameters.scale }} setup'
