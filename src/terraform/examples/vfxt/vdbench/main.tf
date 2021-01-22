@@ -64,7 +64,7 @@ module "vdbench_configure" {
     node_address = var.controller_address
     admin_username = var.controller_username 
     ssh_key_data = var.ssh_key_data
-    nfs_address = var.vserver_ip_addresses[0]
+    nfs_address = tolist(var.vserver_ip_addresses)[0]
     nfs_export_path = var.nfs_export_path
     vdbench_url = var.vdbench_url
 }
@@ -84,7 +84,7 @@ module "vmss" {
     virtual_network_name = var.vnet_name
     virtual_network_subnet_name = var.subnet_name
     mount_target = local.mount_target
-    nfs_export_addresses = var.vserver_ip_addresses
+    nfs_export_addresses = tolist(var.vserver_ip_addresses)
     nfs_export_path = var.nfs_export_path
     bootstrap_script_path = module.vdbench_configure.bootstrap_script_path
     module_depends_on = [module.vdbench_configure.module_depends_on_id]
