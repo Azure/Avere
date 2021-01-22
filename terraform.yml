@@ -33,11 +33,11 @@ parameters:
   - name: run_vdbench
     displayName: "Run vdbench"
     type: boolean
-    default: false
+    default: true
   - name: run_scale_up
     displayName: "Run scale-up"
     type: boolean
-    default: false
+    default: true
   - name: run_scale_down
     displayName: "Run scale-down (only runs if scale-up is selected)"
     type: boolean
