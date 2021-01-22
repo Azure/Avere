@@ -63,7 +63,7 @@ module "vdbench_configure" {
 
     node_address = var.controller_address
     admin_username = var.controller_username 
-    ssh_key_data = local.ssh_key_data
+    ssh_key_data = var.ssh_key_data
     nfs_address = tolist(var.vserver_ip_addresses)[0]
     nfs_export_path = var.nfs_export_path
     vdbench_url = var.vdbench_url
