@@ -15,7 +15,7 @@ parameters:
   - name: region
     displayName: "Region to run pipeline"
     type: string
-    default: "westus"
+    default: "eastus"
     values:
       - "eastus"
       - "eastus2"
@@ -25,7 +25,7 @@ parameters:
   - name: run_terraform
     displayName: "Select terraform example to run"
     type: string
-    default: "1-filer"
+    default: "azureblobfiler"
     values:
       - "1-filer"
       - "proxy"
@@ -33,7 +33,7 @@ parameters:
   - name: run_vdbench
     displayName: "Run vdbench"
     type: boolean
-    default: false
+    default: true
   - name: run_scale_up
     displayName: "Run scale-up"
     type: boolean
@@ -61,7 +61,10 @@ jobs:
       run_terraform: ${{ parameters.run_terraform }}
   
   - ${{ if eq(parameters.run_vdbench, true) }}:
+    - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
     - template: templates/run_vdbench.yml
+      parameters:
+        run_terraform: ${{ parameters.run_terraform }}
 
   - ${{ if eq(parameters.run_scale_up, true) }}:
     - template: templates/terraform_scale_up_down.yml
