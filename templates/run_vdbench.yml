@@ -10,14 +10,15 @@ steps:
     cd ../vdbench
     
     terraform init
-    TF_LOG=INFO terraform apply -auto-approve -var="controller_address=${CONTROLLER_ADDRESS}" \
+    TF_LOG=INFO terraform apply -auto-approve -var="location=${REGION}" \
+      -var="vmss_resource_group_name=${RESOURCE_GROUP_NAME}-vmss" \
+      -var="controller_address=${CONTROLLER_ADDRESS}" \
       -var="controller_username=${USERNAME}" \
       -var="ssh_key_data=${ssh_key}" \
       -var="vserver_ip_addresses=${VSERVER_IP_ADDRESSES}" \
       -var="nfs_export_path=${NFS_EXPORT_PATH}" \
       -var="vdbench_url=${VDBENCH_URL}" \
-      -var="vmss_resource_group_name=${RESOURCE_GROUP_NAME}-vmss" \
-      -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network" 
+      -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network"
 
     IP_ADDRESS_COMMAND=$(terraform output -json | jq ".vmss_addresses_command.value") 
     IP_ADDRESS=$(${IP_ADDRESS_COMMAND} | jq -r '.[0]')
