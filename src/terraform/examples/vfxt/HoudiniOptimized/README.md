@@ -4,6 +4,8 @@ This examples configures a render network, controller, and vfxt with 1 filer as 
 
 ![The architecture](../../../../../docs/images/terraform/1filer.png)
 
+If you need a full end-to-end example, please visit the example named [Create a Houdini Render Farm On Azure](../../houdinienvironment).
+
 ## Deployment Instructions
 
 To run the example, execute the following instructions.  This assumes use of Azure Cloud Shell, but you can use in your own environment, ensure you install the vfxt provider as described in the [build provider instructions](../../../providers/terraform-provider-avere#build-the-terraform-provider-binary).  However, if you are installing into your own environment, you will need to follow the [instructions to setup terraform for the Azure environment](https://docs.microsoft.com/en-us/azure/terraform/terraform-install-configure).
@@ -18,7 +20,7 @@ To run the example, execute the following instructions.  This assumes use of Azu
 ```bash
 mkdir -p ~/.terraform.d/plugins
 # install the vfxt released binary from https://github.com/Azure/Avere
-wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.28/terraform-provider-avere
+wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.29/terraform-provider-avere
 chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 ```
 

@@ -794,6 +794,11 @@ func resourceVfxtRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("The vfxt management IP '%s' is not reachable.  Please confirm the cluster is alive and not stopped.", avereVfxt.ManagementIP)
 	}
 
+	// since the management IP may change nodes, prepare the environment to run commands for the newly created cluster
+	if err := avereVfxt.PrepareForVFXTNodeCommands(); err != nil {
+		return err
+	}
+
 	currentVServerIPAddresses, err := avereVfxt.GetVServerIPAddresses()
 	if err != nil {
 		return fmt.Errorf("error encountered while getting vserver addresses '%v'", err)
@@ -934,7 +939,7 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 
 		// trigger a support bundle if there will be no more core filers
-		if len(coreFilersToAdd) == 0 && len(existingCoreFilers) == len(coreFilersToDelete) {
+		if avereVfxt.EnableSupportUploads == true && avereVfxt.ActiveSupportUpload == true && len(coreFilersToAdd) == 0 && len(existingCoreFilers) == len(coreFilersToDelete) {
 			// block on rolling trace to avoid uploading files in parallel
 			if err := avereVfxt.UploadRollingTraceAndBlock(); err != nil {
 				return err
@@ -1030,7 +1035,7 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	if avereVfxt.ActiveSupportUpload == true {
+	if avereVfxt.EnableSupportUploads == true && avereVfxt.ActiveSupportUpload == true {
 		if err := avereVfxt.UploadRollingTraceAndBlock(); err != nil {
 			log.Printf("[ERROR] failed to upload rolling trace: %v", err)
 		}

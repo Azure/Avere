@@ -12,6 +12,9 @@ The following is a checklist of items to confirm before connecting an HPC Cache 
 * ensure the on-prem firewall is open to the HPC Cache or vFXT subnets
 * ensure an NFSv3 endpoint is enabled
 * ensure you put a vFXT or HPC Cache into its own subnet.  The smallest subnet may be a /27.  The HPC Cache and Avere vFXT have HA models where they migrate IP addresses in HA events, and it is important that another cluster or another vm does not grab those IP addresses during migration.
+* if you need to deploy a different image from default, there are two possible methods:
+    1. get the SAS URL from Avere support and follow [the steps to create a custom image](../vfxtvfxt#create-vfxt-controller-from-custom-images) and populate the variable `image_id` with the URL of the image
+    1. Alternatively, you can use an older version from the marketplace by running the following command and using the "urn" as the value to the `image_id`: `az vm image list --location westeurope -p microsoft-avere -f vfxt -s avere-vfxt-node --all`.  For example, the following specifies an older urn `image_id = "microsoft-avere:vfxt:avere-vfxt-node:5.3.61"`.
 
 # Reducing TCO
 
@@ -36,6 +39,7 @@ For SMB ensure you set the UID / GID attributes according to the [Avere SMB docu
 
 For SMB the Avere cluster configuration should be:
 1. 3-node cluster only.  To scale, add multiple 3-node clusters and ensure cache policy set to '`Clients Bypassing the Cluster`'.
+1. Ensure global custom setting `"cluster.pruneNsmMonitorEnabled UO false"` is added to clusters running SMB.
 1. vserver should be configured to have single IP address per node
 1. set domain controller override to ensure Avere only accesses the domain controllers that are allowed by the firewall.
 
