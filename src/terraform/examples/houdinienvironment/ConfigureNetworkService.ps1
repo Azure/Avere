@@ -8,7 +8,11 @@
         Example command line: .\setupMachine.ps1 -RenameVMPrefix 'eus' -ADDomain 'rendering.com' -OUPath 'OU=anthony,DC=rendering,DC=com' -DomainUser 'azureuser' -DomainPassword 'ReplacePassword1$' -RDPPort 3389
 #>
 [CmdletBinding(DefaultParameterSetName="Standard")]
-param()
+param(
+    [string]
+    [ValidateNotNullOrEmpty()]
+    $NSSMPath = "https://nssm.cc/release/nssm-2.24.zip"
+)
 
 filter Timestamp {"$(Get-Date -Format o): $_"}
 
@@ -42,6 +46,38 @@ DownloadFileOverHttp($Url, $DestinationPath)
 }
 
 function
+Copy-File
+{
+    [CmdletBinding()]
+    param(
+        [string]
+        $SourcePath,
+
+        [string]
+        $DestinationPath
+    )
+
+    if ($SourcePath -eq $DestinationPath)
+    {
+        return
+    }
+
+    if (Test-Path $SourcePath)
+    {
+        Copy-Item -Path $SourcePath -Destination $DestinationPath
+    }
+    elseif (($SourcePath -as [System.URI]).AbsoluteURI -ne $null)
+    {
+        Write-Log "Downloading $SourcePath..."
+        DownloadFileOverHttp -Url $SourcePath -DestinationPath $DestinationPath
+    }
+    else
+    {
+        throw "Cannot copy from $SourcePath"
+    }
+}
+
+function
 Get-NSSM
 {
     if (Test-Path "$($env:SystemRoot)\System32\nssm.exe")
@@ -49,27 +85,20 @@ Get-NSSM
         Write-Log "NSSM is already installed"
     } else {
         Write-Log "This script uses a third party tool: NSSM. For more information, see https://nssm.cc/usage"
-        # clean-up residue
-        Remove-Item "$($env:temp)\nssm" -Recurse -ErrorAction Ignore
-        Remove-Item "$($env:temp)\nssm-2.24.zip" -Recurse -ErrorAction Ignore
         
-        # download and extract
+        Write-Log "Clean up previous artifacts..."
         $nssmZip = "$($env:temp)\nssm-2.24.zip"
-        if ($true) {
-            Write-Log "Downloading NSSM..."
-            $nssmUri = "https://nssm.cc/release/nssm-2.24.zip"
-            DownloadFileOverHttp -Url $nssmUri -DestinationPath $nssmZip
-        } else {
-            Write-Log "Copy NSSM..."
-            $nssmFile = "\\somepath\sw\nssm-2.24.zip"
-            Copy-Item -Path "$($tempDirectory.FullName)\nssm-2.24\win64\nssm.exe" -Destination "$($env:SystemRoot)\System32"
-        }
+        $nssmExtractDir = "$($env:temp)\nssm"
+        Remove-Item "$nssmZip" -Recurse -ErrorAction Ignore
+        Remove-Item "$nssmExtractDir" -Recurse -ErrorAction Ignore
         
-        Write-Verbose "Creating working directory..."
-        $tempDirectory = New-Item -ItemType Directory -Force -Path "$($env:temp)\nssm"
-        
+        Write-Log "Copy NSSM from source..."
+        Copy-File -SourcePath $NSSMPath -DestinationPath $nssmZip
+                
+        Write-Log "Expand NSSM and copy ..."
+        $tempDirectory = New-Item -ItemType Directory -Force -Path "$nssmExtractDir"
         Expand-Archive -Path $nssmZip -DestinationPath $tempDirectory.FullName
-        Remove-Item $nssmZip
+        Remove-Item "$nssmZip" -Recurse -ErrorAction Ignore
         Copy-Item -Path "$($tempDirectory.FullName)\nssm-2.24\win64\nssm.exe" -Destination "$($env:SystemRoot)\System32"
     }
 }
