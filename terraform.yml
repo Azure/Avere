@@ -60,6 +60,11 @@ jobs:
       original_node_count: ${{ parameters.original_node_count }}
       run_terraform: ${{ parameters.run_terraform }}
   
+  - template: templates/terraform_cmd.yml
+        parameters: 
+          run_terraform: ${{ parameters.run_terraform }}
+          cmd_terraform: 'apply'
+  
   - ${{ if eq(parameters.run_vdbench, true) }}:
     - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
     - template: templates/run_vdbench.yml
