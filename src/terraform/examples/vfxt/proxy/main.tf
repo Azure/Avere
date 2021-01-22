@@ -36,6 +36,7 @@ locals {
     vfxt_cluster_name = "vfxt"
     vfxt_cluster_password = "VFXT_PASSWORD"
     vfxt_ssh_key_data = local.vm_ssh_key_data
+    namespace_path = "/nfs1data"
     // vfxt cache polies
     //  "Clients Bypassing the Cluster"
     //  "Read Caching"
@@ -195,7 +196,7 @@ resource "avere_vfxt" "vfxt" {
         fqdn_or_primary_ip = module.nasfiler1.primary_ip
         cache_policy = local.cache_policy
         junction {
-            namespace_path = "/nfs1data"
+            namespace_path = local.namespace_path
             core_filer_export = module.nasfiler1.core_filer_export
         }
     }
@@ -219,4 +220,8 @@ output "management_ip" {
 
 output "mount_addresses" {
     value = tolist(avere_vfxt.vfxt.vserver_ip_addresses)
+}
+
+output "mount_namespace_path" {
+    value = local.namespace_path
 }

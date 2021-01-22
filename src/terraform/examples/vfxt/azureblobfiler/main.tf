@@ -26,6 +26,7 @@ locals {
     vfxt_cluster_name = "vfxt"
     vfxt_cluster_password = "VFXT_PASSWORD"
     vfxt_ssh_key_data = local.vm_ssh_key_data
+    namespace_path = "/storagevfxt"
 
     // advanced scenario: vfxt and controller image ids, leave this null, unless not using default marketplace
     controller_image_id = null
@@ -125,7 +126,7 @@ resource "avere_vfxt" "vfxt" {
     azure_storage_filer {
         account_name = azurerm_storage_account.storage.name
         container_name = local.avere_storage_container_name
-        junction_namespace_path = "/storagevfxt"
+        junction_namespace_path = local.namespace_path
     }
 }
 
@@ -147,4 +148,8 @@ output "management_ip" {
 
 output "mount_addresses" {
     value = tolist(avere_vfxt.vfxt.vserver_ip_addresses)
+}
+
+output "mount_namespace_path" {
+    value = local.namespace_path
 }
