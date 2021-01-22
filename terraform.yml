@@ -61,9 +61,9 @@ jobs:
       run_terraform: ${{ parameters.run_terraform }}
   
   - template: templates/terraform_cmd.yml
-        parameters: 
-          run_terraform: ${{ parameters.run_terraform }}
-          cmd_terraform: 'apply'
+    parameters: 
+      run_terraform: ${{ parameters.run_terraform }}
+      cmd_terraform: 'apply'
   
   - ${{ if eq(parameters.run_vdbench, true) }}:
     - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
