@@ -25,7 +25,7 @@ parameters:
   - name: run_terraform
     displayName: "Select terraform example to run"
     type: string
-    default: "azureblobfiler"
+    default: "1-filer"
     values:
       - "1-filer"
       - "proxy"
@@ -33,11 +33,11 @@ parameters:
   - name: run_vdbench
     displayName: "Run vdbench"
     type: boolean
-    default: true
+    default: false
   - name: run_scale_up
     displayName: "Run scale-up"
     type: boolean
-    default: true
+    default: false
   - name: run_scale_down
     displayName: "Run scale-down (only runs if scale-up is selected)"
     type: boolean
@@ -66,10 +66,7 @@ jobs:
       cmd_terraform: 'apply'
   
   - ${{ if eq(parameters.run_vdbench, true) }}:
-    - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
-      - template: templates/run_vdbench.yml
-        parameters:
-          run_terraform: ${{ parameters.run_terraform }}
+    - template: templates/run_vdbench.yml
 
   - ${{ if eq(parameters.run_scale_up, true) }}:
     - template: templates/terraform_scale_up_down.yml
@@ -93,7 +90,13 @@ jobs:
         parameters: 
           run_terraform: ${{ parameters.run_terraform }}
           cmd_terraform: 'apply'
-        
+  
+  - ${{ if eq(parameters.run_vdbench, true) }}:
+    - template: templates/terraform_cmd.yml
+      parameters: 
+        run_terraform: 'vdbench'
+        cmd_terraform: 'destroy'
+  
   - template: templates/terraform_cmd.yml
     parameters: 
       run_terraform: ${{ parameters.run_terraform }}

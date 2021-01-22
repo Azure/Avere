@@ -1,6 +1,6 @@
 steps:
 - bash: |
-    for x in "-vfxt" "-filer" "-storage" "-proxy" "-network"; do  
+    for x in "-vmss" "-vfxt" "-filer" "-storage" "-proxy" "-network"; do  
       rg_del_rc=111111
       exists=$(az group exists --name ${RESOURCE_GROUP_NAME}$x)
       if [ "${exists}" = "true" ]; then

@@ -10,7 +10,7 @@ parameters:
 steps:
 - script: |
     az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
-    cd src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
+    cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
     terraform init 
 
     tf_rc=111111

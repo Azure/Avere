@@ -1,7 +1,3 @@
-parameters:
-- name: run_terraform
-  type: string
-
 steps:
 - script: |
     az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
@@ -9,7 +5,7 @@ steps:
     CONTROLLER_ADDRESS=$(terraform output -json | jq ".controller_address.value")
     USERNAME=$(terraform output -json | jq ".controller_username.value")
     VSERVER_IP_ADDRESSES=$(terraform output -json | jq ".mount_addresses.value")
-    NFS_EXPORT_PATH=$(terraform output -json | jq ".filer_export.value")
+    NFS_EXPORT_PATH=$(terraform output -json | jq ".mount_namespace_path.value")
     sshkey="$(cat ~/.ssh/id_rsa.pub) azureuser@linuxvm"
     cd ../vdbench
     
@@ -20,15 +16,15 @@ steps:
       -var="vserver_ip_addresses=${VSERVER_IP_ADDRESSES}" \
       -var="nfs_export_path=${NFS_EXPORT_PATH}" \
       -var="vdbench_url=${VDBENCH_URL}" \
-      -var="vmss_resource_group_name=vmss-${RESOURCE_GROUP_NAME}" \
-      -var="vnet_resource_group=vmss-${RESOURCE_GROUP_NAME}" 
+      -var="vmss_resource_group_name=${RESOURCE_GROUP_NAME}-vmss" \
+      -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network" 
 
     IP_ADDRESS_COMMAND=$(terraform output -json | jq ".vmss_addresses_command.value") 
-    IP_ADDRESS=$(echo ${IP_ADDRESS_COMMAND} | jq '.[0]')
+    IP_ADDRESS=$(${IP_ADDRESS_COMMAND} | jq -r '.[0]')
     scp ~/.ssh/id_rsa ${USERNAME}@${IP_ADDRESS}:.ssh/.
     ssh ${USERNAME}@${IP_ADDRESS} /home/${USERNAME}/copy_idrsa.sh
 
-    ssh USERNAME@IP_ADDRESS "/usr/bin/nohup /bin/bash -c \"/bin/bash /home/${USERNAME}/run_vdbench.sh inmem.conf uniquestring1 &\" &""
+    ssh USERNAME@IP_ADDRESS "/usr/bin/nohup /bin/bash -c \"/bin/bash /home/${USERNAME}/run_vdbench.sh inmem.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1 &\" &""
     
   displayName: 'Run vdbench'
   env:
