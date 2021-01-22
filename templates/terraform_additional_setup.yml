@@ -18,7 +18,6 @@ steps:
   displayName: 'Terraform: setup ${{ parameters.run_terraform }}'
   condition: not(or(eq('${{ parameters.scale }}', 'up'), eq('${{ parameters.scale }}', 'down')))
 
-steps:
 - script: |
     cd src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
     export new_node_count=$(( ${{ parameters.original_node_count }} + ${{ parameters.scale_up_node_count }} ))
