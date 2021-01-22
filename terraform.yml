@@ -67,9 +67,9 @@ jobs:
   
   - ${{ if eq(parameters.run_vdbench, true) }}:
     - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
-    - template: templates/run_vdbench.yml
-      parameters:
-        run_terraform: ${{ parameters.run_terraform }}
+      - template: templates/run_vdbench.yml
+        parameters:
+          run_terraform: ${{ parameters.run_terraform }}
 
   - ${{ if eq(parameters.run_scale_up, true) }}:
     - template: templates/terraform_scale_up_down.yml
