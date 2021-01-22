@@ -16,14 +16,15 @@ steps:
     terraform init
     TF_LOG=INFO terraform apply -auto-approve -var="controller_address=${CONTROLLER_ADDRESS}" \
       -var="controller_username=${USERNAME}" \
-      -var="ssh_key_data=${SSH_KEY}" \
+      -var="ssh_key_data=${ssh_key}" \
       -var="vserver_ip_addresses=${VSERVER_IP_ADDRESSES}" \
       -var="nfs_export_path=${NFS_EXPORT_PATH}" \
       -var="vdbench_url=${VDBENCH_URL}" \
       -var="vmss_resource_group_name=vmss-${RESOURCE_GROUP_NAME}" \
       -var="vnet_resource_group=vmss-${RESOURCE_GROUP_NAME}" 
 
-    IP_ADDRESS=$(terraform output -json | jq ".vmss_address_command.value") 
+    IP_ADDRESS_COMMAND=$(terraform output -json | jq ".vmss_addresses_command.value") 
+    IP_ADDRESS=$(echo ${IP_ADDRESS_COMMAND} | jq '.[0]')
     scp ~/.ssh/id_rsa ${USERNAME}@${IP_ADDRESS}:.ssh/.
     ssh ${USERNAME}@${IP_ADDRESS} /home/${USERNAME}/copy_idrsa.sh
 
