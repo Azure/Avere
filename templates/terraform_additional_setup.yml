@@ -1,6 +1,7 @@
 parameters:
 - name: run_terraform
   type: string
+  default: ${{ parameters.run_terraform }}
 - name: original_node_count
   type: string
 - name: scale_up_node_count
