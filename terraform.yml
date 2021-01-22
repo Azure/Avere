@@ -69,9 +69,10 @@ jobs:
       parameters:
         run_terraform: ${{ parameters.run_terraform }}'
   
-  - template: templates/terraform_apply.yml
+  - template: templates/terraform_cmd.yml
     parameters: 
       run_terraform: ${{ parameters.run_terraform }}
+      cmd_terraform: 'apply'
   
   - ${{ if eq(parameters.run_vdbench, true) }}:
     - template: templates/run_vdbench.yml
@@ -82,7 +83,11 @@ jobs:
         original_node_count: ${{ parameters.original_node_count }}
         scale_up_node_count: ${{ parameters.scale_up_node_count }}
         scale: "up"
-  
+    - template: templates/terraform_cmd.yml
+      parameters: 
+        run_terraform: ${{ parameters.run_terraform }}
+        cmd_terraform: 'apply'
+    
   - ${{ if eq(parameters.run_scale_up, true) }}:
     - ${{ if eq(parameters.run_scale_down, true) }}:
       - template: templates/terraform_scale_up_down.yml
@@ -90,6 +95,14 @@ jobs:
           original_node_count: ${{ parameters.original_node_count }}
           scale_up_node_count: ${{ parameters.scale_up_node_count }}
           scale: "down"
+      - template: templates/terraform_cmd.yml
+        parameters: 
+          run_terraform: ${{ parameters.run_terraform }}
+          cmd_terraform: 'apply'
         
-  - template: templates/terraform_destroy.yml
+  - template: templates/terraform_cmd.yml
+    parameters: 
+      run_terraform: ${{ parameters.run_terraform }}
+      cmd_terraform: 'destroy'
+
   - template: templates/rg_delete.yml
