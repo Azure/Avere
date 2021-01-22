@@ -19,6 +19,7 @@ variable "ssh_key_data" {
 }
 
 variable "vserver_ip_addresses" {
+  type=list(string)
   description = "sets the vserver ip addresses"
 }
 
