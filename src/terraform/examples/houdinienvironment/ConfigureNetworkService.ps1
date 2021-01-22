@@ -1,11 +1,17 @@
 <#
     .SYNOPSIS
-        Configure Windows 10 Workstation with Domain Join.
+        Remove the RDMA / Infiniband NICs so they don't collide with on-prem networks.
 
     .DESCRIPTION
-        Configure Windows 10 Workstation with Domain Join.
+        This will install the NSSM service, that will remove the RDMA / Infiniband NICs so they don't collide with on-prem networks.
+        Disabling NICs is not good enough since a stop deallocate / start will bring back the NICs with new MAC addresses.  This 
+        service will stop those additional NICs.
 
-        Example command line: .\setupMachine.ps1 -RenameVMPrefix 'eus' -ADDomain 'rendering.com' -OUPath 'OU=anthony,DC=rendering,DC=com' -DomainUser 'azureuser' -DomainPassword 'ReplacePassword1$' -RDPPort 3389
+        Example command line if there is access to internet: 
+            powershell -ExecutionPolicy Bypass -NoProfile -File .\ConfigureNetworkService.ps1
+
+        Example command line if there is no access to network, but access to SMB share: 
+            powershell -ExecutionPolicy Bypass -NoProfile -File .\ConfigureNetworkService.ps1 -NSSMPath \\software\software\nssm\nssm-2.24.zip
 #>
 [CmdletBinding(DefaultParameterSetName="Standard")]
 param(
