@@ -24,9 +24,9 @@ steps:
     IP_ADDRESS_COMMAND=$(terraform output -json | jq -r ".vmss_addresses_command.value") 
     IP_ADDRESS=$(${IP_ADDRESS_COMMAND} | jq -r '.[0]')
     scp ~/.ssh/id_rsa ${USERNAME}@${IP_ADDRESS}:.ssh/.
-    ssh ${USERNAME}@${IP_ADDRESS} /home/${USERNAME}/copy_idrsa.sh
+    ssh -J ${USERNAME}@${IP_ADDRESS} /home/${USERNAME}/copy_idrsa.sh
 
-    ssh ${USERNAME}@${IP_ADDRESS} "/usr/bin/nohup /bin/bash -c \"/bin/bash /home/${USERNAME}/run_vdbench.sh inmem.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1 &\" &"
+    ssh -J ${USERNAME}@${IP_ADDRESS} "/usr/bin/nohup /bin/bash -c \"/bin/bash /home/${USERNAME}/run_vdbench.sh inmem.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1 &\" &"
     
   displayName: 'Run vdbench'
   env:
