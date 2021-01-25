@@ -21,7 +21,7 @@ steps:
       -var="vdbench_url=${VDBENCH_URL}" \
       -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network"
 
-    IP_ADDRESS_COMMAND=$(terraform output -json | jq ".vmss_addresses_command.value") 
+    IP_ADDRESS_COMMAND=$(terraform output -json | jq -r ".vmss_addresses_command.value") 
     IP_ADDRESS=$(${IP_ADDRESS_COMMAND} | jq -r '.[0]')
     scp ~/.ssh/id_rsa ${USERNAME}@${IP_ADDRESS}:.ssh/.
     ssh ${USERNAME}@${IP_ADDRESS} /home/${USERNAME}/copy_idrsa.sh
