@@ -15,7 +15,7 @@ parameters:
   - name: region
     displayName: "Region to run pipeline"
     type: string
-    default: "eastus"
+    default: "westus"
     values:
       - "eastus"
       - "eastus2"
@@ -25,7 +25,7 @@ parameters:
   - name: run_terraform
     displayName: "Select terraform example to run"
     type: string
-    default: "1-filer"
+    default: "azureblobfiler"
     values:
       - "1-filer"
       - "proxy"
