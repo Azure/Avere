@@ -34,7 +34,8 @@ steps:
     ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} /home/azureuser/copy_idrsa.sh
     
     echo ">> runvdbench"
-    ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "/usr/bin/nohup /bin/bash -c \"/bin/bash /home/${USERNAME}/run_vdbench.sh inmem.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1 &\" "
+    
+    ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "/usr/bin/nohup /bin/bash -c \"/bin/bash /home/${USERNAME}/run_vdbench.sh ondisk.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1 &\" "
     
     # export _CMD_OK_MSG="CMD_OK_$(head /dev/urandom | tr -dc a-zA-Z0-9 | head -c5)"
     # export _CMD_LOG="cmd_output.log"
