@@ -92,7 +92,7 @@ jobs:
           cmd_terraform: 'apply'
   
   - ${{ if eq(parameters.run_vdbench, true) }}:
-    - template: templates/terraform_cmd.yml
+    - template: templates/destroy_vdbench.yml
       parameters: 
         run_terraform: 'vdbench'
         cmd_terraform: 'destroy'

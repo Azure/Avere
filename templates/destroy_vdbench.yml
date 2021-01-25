@@ -1,0 +1,31 @@
+parameters:
+- name: run_terraform
+  type: string
+- name: cmd_terraform
+  type: string
+  values:
+  - "destroy"
+
+steps:
+- script: |
+    az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+    cd src/terraform/examples/vfxt/azureblobfiler
+    CONTROLLER_ADDRESS=$(terraform output -json | jq -r ".controller_address.value")
+    USERNAME=$(terraform output -json | jq -r ".controller_username.value")
+    VSERVER_IP_ADDRESSES=$(terraform output -json | jq -c ".mount_addresses.value")
+    NFS_EXPORT_PATH=$(terraform output -json | jq -r ".mount_namespace_path.value")
+    ssh_key_data="$(cat ~/.ssh/id_rsa.pub) azureuser@linuxvm"
+    echo "##vso[task.setvariable variable=secret.SSH_KEY_DATA;issecret=true]${ssh_key_data}"
+    cd ../vdbench
+
+    terraform init
+    TF_LOG=INFO terraform ${{ parameters.cmd_terraform }} -auto-approve -var="location=${REGION}" \
+      -var="vmss_resource_group_name=${RESOURCE_GROUP_NAME}-vmss" \
+      -var="controller_address=${CONTROLLER_ADDRESS}" \
+      -var="controller_username=${USERNAME}" \
+      -var="ssh_key_data=${ssh_key_data}" \
+      -var="vserver_ip_addresses=${VSERVER_IP_ADDRESSES}" \
+      -var="nfs_export_path=${NFS_EXPORT_PATH}" \
+      -var="vdbench_url=${VDBENCH_URL}" \
+      -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network"
+  displayName: 'Terraform: ${{ parameters.cmd_terraform }} ${{ parameters.run_terraform }}'
