@@ -30,10 +30,10 @@ steps:
     scp -o "ProxyJump ${USERNAME}@${CONTROLLER_ADDRESS}" ~/.ssh/id_rsa ${USERNAME}@${IP_ADDRESS}:.ssh/id_rsa
     
     echo ">> COPY_IDARSA.SH"
-    ssh -o "StrictHostKeyChecking=no" -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} /home/azureuser/copy_idrsa.sh
+    ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} /home/azureuser/copy_idrsa.sh
     
     echo ">> runvdbench"
-    ssh -o "StrictHostKeyChecking=no" -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "/usr/bin/nohup /bin/bash -c \"/bin/bash /home/${USERNAME}/run_vdbench.sh inmem.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1 &\" "
+    ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "/usr/bin/nohup /bin/bash -c \"/bin/bash /home/${USERNAME}/run_vdbench.sh inmem.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1 &\" "
     
     export _CMD_OK_MSG="CMD_OK_$(head /dev/urandom | tr -dc a-zA-Z0-9 | head -c5)"
     export _CMD_LOG="cmd_output.log"
