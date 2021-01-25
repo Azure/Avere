@@ -50,11 +50,19 @@ steps:
     echo "> _VMSS_INSTANCE_ID_0: ${_VMSS_INSTANCE_ID_0}"
 
     echo
+    echo ">about to LS the dir"
+    az vmss run-command invoke     \
+      --command-id RunShellScript  \
+      --ids ${_VMSS_INSTANCE_ID_0} \
+      --scripts "ls && echo ${_CMD_OK_MSG}" | tee ${_CMD_LOG} 2>&1
+    grep -q ${_CMD_OK_MSG} ${_CMD_LOG} || (echo "${_FAIL_MSG}")
+
+    echo
     echo "> Copy id_rsa"
     az vmss run-command invoke     \
       --command-id RunShellScript  \
       --ids ${_VMSS_INSTANCE_ID_0} \
-      --scripts "/home/${USERNAME}/copy_idrsa.sh && echo ${_CMD_OK_MSG}" | tee ${_CMD_LOG} 2>&1
+      --scripts "./copy_idrsa.sh && echo ${_CMD_OK_MSG}" | tee ${_CMD_LOG} 2>&1
     grep -q ${_CMD_OK_MSG} ${_CMD_LOG} || (echo "${_FAIL_MSG}")
 
     echo
@@ -62,7 +70,10 @@ steps:
     az vmss run-command invoke       \
         --command-id RunShellScript  \
         --ids ${_VMSS_INSTANCE_ID_0} \
-        --scripts "/usr/bin/nohup /bin/bash -c \"/bin/bash /home/${USERNAME}/run_vdbench.sh inmem.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1 &\" "
+        --scripts "./run_vdbench.sh inmem.conf uniquestring1  && echo ${_CMD_OK_MSG}" | tee ${_CMD_LOG} 2>&1
+    grep -q ${_CMD_OK_MSG} ${_CMD_LOG} || (echo "${_FAIL_MSG}")
+  
+    # --scripts "/usr/bin/nohup /bin/bash -c \"/bin/bash /home/${USERNAME}/run_vdbench.sh inmem.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1 &\" "
   displayName: 'Run vdbench'
   env:
     VDBENCH_URL: $(VDBENCH-URL)
