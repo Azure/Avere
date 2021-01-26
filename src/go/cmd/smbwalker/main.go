@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net"
 	"os"
 	"os/signal"
@@ -234,18 +235,18 @@ func (w *Walker) RunWalker(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
 				if dirEntry.IsDir() {
 					folderSlice = append(folderSlice, path.Join(folder, dirEntry.Name()))
 				} else {
-					filename := path.Join(folder, dirEntry.Name())
 					// only scan file if it matches filter
 					if w.FileFilter != DefaultFileFilter {
-						if isMatch, err := filepath.Match(w.FileFilter, filename); err != nil {
-							Error.Printf("error matching filename %s: %v", filename, err)
+						if isMatch, err := filepath.Match(w.FileFilter, dirEntry.Name()); err != nil {
+							Error.Printf("error matching filename %s: %v", dirEntry.Name(), err)
 							continue
 						} else if !isMatch {
 							continue
 						}
 					}
+					filename := path.Join(folder, dirEntry.Name())
 					// DEBUG
-					Info.Printf("checking filename %s", filename)
+					//Info.Printf("checking filename %s", filename)
 
 					f, err := os.Open(filename)
 					if err != nil {
@@ -256,7 +257,11 @@ func (w *Walker) RunWalker(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
 					}
 					w.StatsCollector.IncrFileOpenCount()
 
-					_, err = f.ReadAt(buffer, 0)
+					start := int64(0)
+					if dirEntry.Size() > 0 {
+						start = rand.Int63n(dirEntry.Size())
+					}
+					_, err = f.ReadAt(buffer, start)
 					if err != nil {
 						if err != io.EOF {
 							w.StatsCollector.IncrFileReadFailureCount()
@@ -291,7 +296,7 @@ func InitializeVariables() ([]string, int, string) {
 
 	walkersPerShare := DefaultWalkersPerShare
 	if len(os.Args) > 2 {
-		if i, err := strconv.Atoi(os.Args[2]); err != nil {
+		if i, err := strconv.Atoi(os.Args[2]); err == nil {
 			walkersPerShare = i
 		} else {
 			fmt.Fprintf(os.Stderr, "ERROR: incorrect value specified for walker count %s\n", os.Args[2])
