@@ -25,11 +25,10 @@ steps:
     done
 
     if [ "${tf_rc}" -ne 0 ]; then
-        echo "##vso[task.logissue type=error;]Terraform ${{ parameters.cmd_terraform }} failed. See log for details."
-        echo "##vso[task.complete result=Failed;]"
-        echo "##vso[build.addbuildtag]FAIL Terraform"
-      else
-        echo " ${{ parameters.cmd_terraform }} ${{ parameters.run_terraform }} successfully completed."
-      fi
+      echo "##vso[task.logissue type=error;]Terraform ${{ parameters.cmd_terraform }} failed. See log for details."
+      echo "##vso[task.complete result=Failed;]"
+      echo "##vso[build.addbuildtag]FAIL Terraform"
+    else
+      echo " ${{ parameters.cmd_terraform }} ${{ parameters.run_terraform }} successfully completed."
     fi
   displayName: 'Terraform: ${{ parameters.cmd_terraform }} ${{ parameters.run_terraform }}'
