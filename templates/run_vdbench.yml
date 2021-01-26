@@ -1,3 +1,10 @@
+parameters:
+- name: cmd_terraform
+  type: string
+  values:
+  - "apply"
+  - "destroy"
+
 steps:
 - script: |
     az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
@@ -11,7 +18,7 @@ steps:
     cd ../vdbench
 
     terraform init
-    TF_LOG=INFO terraform apply -auto-approve -var="location=${REGION}" \
+    TF_LOG=INFO terraform ${{ parameters.cmd_terraform }} -auto-approve -var="location=${REGION}" \
       -var="vmss_resource_group_name=${RESOURCE_GROUP_NAME}-vmss" \
       -var="controller_address=${CONTROLLER_ADDRESS}" \
       -var="controller_username=${USERNAME}" \
@@ -21,61 +28,20 @@ steps:
       -var="vdbench_url=${VDBENCH_URL}" \
       -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network"
 
-    IP_ADDRESS_COMMAND=$(terraform output -json | jq -r ".vmss_addresses_command.value") 
-    IP_ADDRESS=$(${IP_ADDRESS_COMMAND} | jq -r '.[0]')
-    ID=$(terraform output -json | jq -r ".vmss_id.value")
-    VMSNAME=$(terraform output -json | jq -r ".vmss_name.value")
-    
-    ssh -o "StrictHostKeyChecking=no" -oProxyCommand="ssh -oStrictHostKeyChecking=no -W %h:%p  ${USERNAME}@${CONTROLLER_ADDRESS}" ${USERNAME}@${IP_ADDRESS} ls
-    echo ">> SCP CMD"
-    scp -o "ProxyJump ${USERNAME}@${CONTROLLER_ADDRESS}" ~/.ssh/id_rsa ${USERNAME}@${IP_ADDRESS}:.ssh/id_rsa
-    
-    echo ">> COPY_IDARSA.SH"
-    ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} /home/azureuser/copy_idrsa.sh
-    
-    echo ">> runvdbench"
-    
-    ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "/usr/bin/nohup /bin/bash -c \"/bin/bash /home/${USERNAME}/run_vdbench.sh ondisk.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1 &\" "
-    
-    # export _CMD_OK_MSG="CMD_OK_$(head /dev/urandom | tr -dc a-zA-Z0-9 | head -c5)"
-    # export _CMD_LOG="cmd_output.log"
-    # export _FAIL_MSG="##vso[task.logissue type=error;]VMSS run-command failure. See log for details."
-
-    # # Save list of VMSS instances' reference IDs.
-    # _VMSS_INSTANCE_IDS=$(az vmss list-instances   \
-    #   --resource-group ${RESOURCE_GROUP_NAME}-vmss   \
-    #   --name ${VMSNAME}                      \
-    #   --query "[].id" --output tsv)
-    # echo "> _VMSS_INSTANCE_IDS: ${_VMSS_INSTANCE_IDS}"
-
-    # _VMSS_INSTANCE_ID_0=$(echo ${_VMSS_INSTANCE_IDS} | sed 's/ .*$//')
-    # echo "> _VMSS_INSTANCE_ID_0: ${_VMSS_INSTANCE_ID_0}"
-
-    # echo
-    # echo ">about to LS the dir"
-    # az vmss run-command invoke     \
-    #   --command-id RunShellScript  \
-    #   --ids ${_VMSS_INSTANCE_ID_0} \
-    #   --scripts "ls && echo ${_CMD_OK_MSG}" | tee ${_CMD_LOG} 2>&1
-    # grep -q ${_CMD_OK_MSG} ${_CMD_LOG} || (echo "${_FAIL_MSG}")
-
-    # echo
-    # echo "> Copy id_rsa"
-    # az vmss run-command invoke     \
-    #   --command-id RunShellScript  \
-    #   --ids ${_VMSS_INSTANCE_ID_0} \
-    #   --scripts "./copy_idrsa.sh && echo ${_CMD_OK_MSG}" | tee ${_CMD_LOG} 2>&1
-    # grep -q ${_CMD_OK_MSG} ${_CMD_LOG} || (echo "${_FAIL_MSG}")
-
-    # echo
-    # echo "> VM-0: Run vdbench"
-    # az vmss run-command invoke       \
-    #     --command-id RunShellScript  \
-    #     --ids ${_VMSS_INSTANCE_ID_0} \
-    #     --scripts "./run_vdbench.sh inmem.conf uniquestring1  && echo ${_CMD_OK_MSG}" | tee ${_CMD_LOG} 2>&1
-    # grep -q ${_CMD_OK_MSG} ${_CMD_LOG} || (echo "${_FAIL_MSG}")
-  
-    # --scripts "/usr/bin/nohup /bin/bash -c \"/bin/bash /home/${USERNAME}/run_vdbench.sh inmem.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1 &\" "
-  displayName: 'Run vdbench'
+    if [ "apply" = "${{ parameters.cmd_terraform }}" ]; then
+      IP_ADDRESS_COMMAND=$(terraform output -json | jq -r ".vmss_addresses_command.value") 
+      IP_ADDRESS=$(${IP_ADDRESS_COMMAND} | jq -r '.[0]')
+      
+      ssh -o "StrictHostKeyChecking=no" -oProxyCommand="ssh -oStrictHostKeyChecking=no -W %h:%p  ${USERNAME}@${CONTROLLER_ADDRESS}" ${USERNAME}@${IP_ADDRESS} ls
+      echo ">> SCP CMD"
+      scp -o "ProxyJump ${USERNAME}@${CONTROLLER_ADDRESS}" ~/.ssh/id_rsa ${USERNAME}@${IP_ADDRESS}:.ssh/id_rsa
+      
+      echo ">> COPY_IDARSA.SH"
+      ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} /home/azureuser/copy_idrsa.sh
+      
+      echo ">> RUN VDBENCH"
+      ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "/usr/bin/nohup /bin/bash -c \"/bin/bash /home/${USERNAME}/run_vdbench.sh ondisk.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1 &\" "
+    fi
+  displayName: 'VDBENCH: ${{ parameters.cmd_terraform }}'
   env:
     VDBENCH_URL: $(VDBENCH-URL)

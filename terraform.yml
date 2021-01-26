@@ -68,6 +68,8 @@ jobs:
   - ${{ if eq(parameters.run_vdbench, true) }}:
     - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
       - template: templates/run_vdbench.yml
+        parameters: 
+          cmd_terraform: 'apply'
 
   - ${{ if eq(parameters.run_scale_up, true) }}:
     - template: templates/terraform_scale_up_down.yml
@@ -93,10 +95,10 @@ jobs:
           cmd_terraform: 'apply'
   
   - ${{ if eq(parameters.run_vdbench, true) }}:
-    - template: templates/destroy_vdbench.yml
-      parameters: 
-        run_terraform: 'vdbench'
-        cmd_terraform: 'destroy'
+    - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
+      - template: templates/run_vdbench.yml
+        parameters: 
+          cmd_terraform: 'destroy'
   
   - template: templates/terraform_cmd.yml
     parameters: 
