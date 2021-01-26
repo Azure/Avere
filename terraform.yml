@@ -64,6 +64,7 @@ jobs:
     parameters: 
       run_terraform: ${{ parameters.run_terraform }}
       cmd_terraform: 'apply'
+      condition: "succeeded()"
   
   - ${{ if eq(parameters.run_vdbench, true) }}:
     - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
@@ -81,6 +82,7 @@ jobs:
       parameters: 
         run_terraform: ${{ parameters.run_terraform }}
         cmd_terraform: 'apply'
+        condition: "succeeded()"
     
   - ${{ if eq(parameters.run_scale_up, true) }}:
     - ${{ if eq(parameters.run_scale_down, true) }}:

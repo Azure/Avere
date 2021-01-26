@@ -6,6 +6,15 @@ parameters:
   values:
   - "apply"
   - "destroy"
+- name: condition
+  type: string
+  default: "always()"
+  values:
+    - "always()"
+    - "succeededOrFailed()"
+    - "succeeded()"
+    - "failed()"
+
 
 steps:
 - script: |
@@ -32,3 +41,4 @@ steps:
       echo " ${{ parameters.cmd_terraform }} ${{ parameters.run_terraform }} successfully completed."
     fi
   displayName: 'Terraform: ${{ parameters.cmd_terraform }} ${{ parameters.run_terraform }}'
+  condition: ${{ parameters.condition }}
