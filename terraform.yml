@@ -121,6 +121,7 @@ jobs:
       - template: templates/run_vdbench.yml
         parameters: 
           cmd_terraform: 'destroy'
+          vdbench_config: ${{ parameters.vdbench_config }}
   
   - template: templates/terraform_cmd.yml
     parameters: 
