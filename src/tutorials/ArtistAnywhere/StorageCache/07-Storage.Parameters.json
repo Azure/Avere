@@ -82,13 +82,6 @@
         },
         {
           "deploy": true,
-          "name": "doc",
-          "publicAccess": "Blob",
-          "accountName": "usawest",
-          "useComputeRegion": true
-        },
-        {
-          "deploy": true,
           "name": "show",
           "publicAccess": "None",
           "accountName": "usaeast",

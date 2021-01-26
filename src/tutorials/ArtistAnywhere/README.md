@@ -2,9 +2,9 @@
 
 Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/azure/azure-resource-manager/management/overview) templates for automated deployment of an end-to-end rendering solution architecture in Microsoft Azure. Azure Artist Anywhere provides a lightweight and extensible deployment framework that can be configured as needed to meet various integration requirements, including burst rendering with caching of on-premises storage.
 
-As an sample, the following image was rendered in an [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) using [V-Ray for Maya](https://www.chaosgroup.com/vray/maya)
+As a sample, the following image was rendered on [Azure HPC VMs](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-hpc) via an [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) using [V-Ray for Maya](https://www.chaosgroup.com/vray/maya).
 
-![](https://usawest.blob.core.windows.net/doc/SuspensionBridge.jpg)
+![](https://amp.blob.core.windows.net/doc/AzureArtistAnywhere.SuspensionBridge.jpg)
 
 The following Microsoft Azure services and 3rd-party software are integrated within the Azure Artist Anywhere rendering solution.
 
@@ -101,7 +101,7 @@ The following Microsoft Azure services and 3rd-party software are integrated wit
 
 The following overview diagram depicts the Azure Artist Anywhere solution architecture, including on-premises storage asset caching.
 
-![](https://usawest.blob.core.windows.net/doc/AzureArtistAnywhere.SolutionArchitecture.2020-12-01.png)
+![](https://amp.blob.core.windows.net/doc/AzureArtistAnywhere.SolutionArchitecture.png)
 
 ## Deployment Modules
 
@@ -122,12 +122,12 @@ The following Microsoft Azure resource templates and scripts define the Azure Ar
 | *Render Farm (Linux)* | *Render Farm (Windows)* |
 | :-------------------- | :---------------------- |
 | 15 - [Node Image](RenderFarm/15-Node.Image.json) ([Parameters](RenderFarm/15-Node.Image.Parameters.json)) | 15 - [Node Image](RenderFarm/15-Node.Image.json) ([Parameters](RenderFarm/15-Node.Image.Parameters.json)) |
-| 15 - [Node Image Customize](RenderFarm/15-Node.Image.sh) | 15 - [Node Image Customize](RenderFarm/15-Node.Image.ps1) |
+| 15 - [Node Image Customize](RenderFarm/Linux/15-Node.Image.sh) | 15 - [Node Image Customize](RenderFarm/Windows/15-Node.Image.ps1) |
 | 15 - [Node Image Customize (Blender)](RenderFarm/Linux/15-Node.Image.Blender.sh) | 15 - [Node Image Customize (Blender)](RenderFarm/Windows/15-Node.Image.Blender.ps1) |
 | 15 - [Node Image Customize (OpenCue)](RenderFarm/Linux/15-Node.Image.OpenCue.sh) | 15 - [Node Image Customize (OpenCue)](RenderFarm/Windows/15-Node.Image.OpenCue.ps1) |
 | 15 - [* Node Image Customize (Deadline)](RenderFarm/Linux/15-Node.Image.Deadline.sh) | 15 - [* Node Image Customize (Deadline)](RenderFarm/Windows/15-Node.Image.Deadline.ps1) |
 | 16 - [Farm Pool](RenderFarm/16-Farm.Pool.json) ([Parameters](RenderFarm/16-Farm.Pool.Parameters.json)) | 16 - [Farm Pool](RenderFarm/16-Farm.Pool.json) ([Parameters](RenderFarm/16-Farm.Pool.Parameters.json)) |
-| 16 - [Farm Scale Set](RenderFarm/16-Farm.ScaleSet.json) ([Parameters](RenderFarm/16-Farm.ScaleSet.Parameters.json)) | 16 - [Farm Scale Set](RenderFarm/Windows/16-Farm.ScaleSet.json) ([Parameters](RenderFarm/Windows/16-Farm.ScaleSet.Parameters.json)) |
+| 16 - [Farm Scale Set](RenderFarm/16-Farm.ScaleSet.json) ([Parameters](RenderFarm/16-Farm.ScaleSet.Parameters.json)) | 16 - [Farm Scale Set](RenderFarm/16-Farm.ScaleSet.json) ([Parameters](RenderFarm/16-Farm.ScaleSet.Parameters.json)) |
 | 16 - [Farm Scale Set Initialize](RenderFarm/Linux/16-Farm.ScaleSet.sh) | 16 - [Farm Scale Set Initialize](RenderFarm/Windows/16-Farm.ScaleSet.ps1) |
 
 \* = TBD
@@ -138,7 +138,7 @@ The following Microsoft Azure resource templates and scripts define the Azure Ar
 17 - [Image Customize](ArtistWorkstation/Linux/17-Image.sh) | 17 - [Image Customize](ArtistWorkstation/Windows/17-Image.ps1) |
 17 - [Image Customize (Blender)](RenderFarm/Linux/15-Node.Image.Blender.sh) | 17 - [Image Customize (Blender)](RenderFarm/Windows/15-Node.Image.Blender.ps1) |
 17 - [Image Customize (OpenCue)](ArtistWorkstation/Linux/17-Image.OpenCue.sh) | 17 - [Image Customize (OpenCue)](ArtistWorkstation/Windows/17-Image.OpenCue.ps1) |
-17 - [* Image Customize (Deadline)](ArtistWorkstation/Linux/17-Image.Deadline.sh) | 17 - [* Image Customize (Deadline)](ArtistWorkstation/Windows/17-Image.Deadline.ps1) |
+17 - [* Image Customize (Deadline)](RenderFarm/Linux/15-Node.Image.Deadline.sh) | 17 - [* Image Customize (Deadline)](RenderFarm/Windows/15-Node.Image.Deadline.ps1) |
 17 - [Image Customize (Teradici)](ArtistWorkstation/Linux/17-Image.Teradici.sh) | 17 - [Image Customize (Teradici)](ArtistWorkstation/Windows/17-Image.Teradici.ps1) |
 18 - [Machine](ArtistWorkstation/18-Machine.json) ([Parameters](ArtistWorkstation/18-Machine.Parameters.json)) | 18 - [Machine](ArtistWorkstation/18-Machine.json) ([Parameters](ArtistWorkstation/18-Machine.Parameters.json)) |
 18 - [Machine Initialize](ArtistWorkstation/Linux/18-Machine.sh) | 18 - [Machine Initialize](ArtistWorkstation/Windows/18-Machine.ps1) |
