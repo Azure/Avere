@@ -28,6 +28,10 @@ steps:
       tf_rc=$?
       if [ "${tf_rc}" -ne 0 ]; then
         echo "##vso[task.logissue type=warning;]Terraform ${{ parameters.cmd_terraform }} did not work. Attempt $i of 3."
+        # Adding sleep if terraform destroy so locks can clear up.
+        if [ "destroy" = "${{ parameters.cmd_terraform }}" ]; then
+          sleep 30
+        fi
       else
         break
       fi
