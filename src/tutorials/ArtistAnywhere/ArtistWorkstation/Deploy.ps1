@@ -1,61 +1,46 @@
 param (
-    # Set a naming prefix for the Azure resource groups that are created by this deployment script
-    [string] $resourceGroupNamePrefix = "Azure.Media.Pipeline",
+    # Set a name prefix for the Azure resource groups that are created by this automated deployment script
+    [string] $resourceGroupNamePrefix = "ArtistAnywhere",
 
-    # Set the Azure region name for shared resources (e.g., Managed Identity, Key Vault, Monitor Insight, etc.)
-    [string] $sharedRegionName = "WestUS2",
+    # Set the Azure region name for compute resources (e.g., Image Gallery, Virtual Machine Scale Set, HPC Cache, etc.)
+    [string] $computeRegionName = "WestUS2",
 
-    # Set the Azure region name for compute resources (e.g., Image Gallery, Virtual Machines, Batch Accounts, etc.)
-    [string] $computeRegionName = "EastUS",
+    # Set the Azure region name for storage resources (e.g., Storage Network, Storage Account, File Share / Container, etc.)
+    [string] $storageRegionName = "EastUS2",
 
-    # Set the Azure region name for storage resources (e.g., Storage Accounts, File Shares, Object Containers, etc.)
-    [string] $storageRegionName = "EastUS",
+    # Set to true to deploy Azure VPN Gateway services (https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways)
+    [boolean] $networkGatewayDeploy = $false,
 
     # Set to true to deploy Azure NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
     [boolean] $storageNetAppDeploy = $false,
 
-    # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in Azure compute region
-    [boolean] $storageCacheDeploy = $false
+    # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in the compute region
+    [boolean] $storageCacheDeploy = $false,
+
+    # Set to "Linux" or "Windows" for the Azure workstation image and virtual machine type for remote artists
+    [string] $artistWorkstationType = "Linux"
 )
 
 $rootDirectory = "$PSScriptRoot/.."
 
 Import-Module "$rootDirectory/Deploy.psm1"
 
-# Shared Framework
-$sharedFramework = Get-SharedFramework $resourceGroupNamePrefix $sharedRegionName $computeRegionName $storageRegionName
+# Base Framework
+$baseFramework = Get-BaseFramework $rootDirectory $resourceGroupNamePrefix $computeRegionName $storageRegionName $networkGatewayDeploy
 
 # Storage Cache
-$storageCache = Get-StorageCache $sharedFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageNetAppDeploy $storageCacheDeploy
+$storageCache = Get-StorageCache $baseFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageNetAppDeploy $storageCacheDeploy
 
-# Artist Workstation Image [Linux] Job
-$workstationImageLinuxModuleName = "Artist Workstation Image [Linux] Job"
-New-TraceMessage $workstationImageLinuxModuleName $false
-$workstationImageLinuxJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Image.Linux.ps1" -ArgumentList $resourceGroupNamePrefix, $sharedRegionName, $computeRegionName, $storageRegionName, $storageNetAppDeploy, $storageCacheDeploy, $sharedFramework, $storageCache
+# Artist Workstation Image Job
+$moduleName = "Artist Workstation Image [$artistWorkstationType] Job"
+New-TraceMessage $moduleName $false
+$workstationImageJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Image.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $networkGatewayDeploy, $storageNetAppDeploy, $storageCacheDeploy, $baseFramework, $storageCache, $artistWorkstationType
+Receive-Job -Job $workstationImageJob -Wait
+New-TraceMessage $moduleName $true
 
-# Artist Workstation Image [Windows] Job
-$workstationImageWindowsModuleName = "Artist Workstation Image [Windows] Job"
-New-TraceMessage $workstationImageWindowsModuleName $false
-$workstationImageWindowsJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Image.Windows.ps1" -ArgumentList $resourceGroupNamePrefix, $sharedRegionName, $computeRegionName, $storageRegionName, $storageNetAppDeploy, $storageCacheDeploy, $sharedFramework, $storageCache
-
-Receive-Job -Job $workstationImageLinuxJob -Wait
-New-TraceMessage $workstationImageLinuxModuleName $true
-
-# Artist Workstation Machine [Linux] Job
-$workstationMachineLinuxModuleName = "Artist Workstation Machine [Linux] Job"
-New-TraceMessage $workstationMachineLinuxModuleName $false
-$workstationMachineLinuxJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Machine.Linux.ps1" -ArgumentList $resourceGroupNamePrefix, $sharedRegionName, $computeRegionName, $storageRegionName, $storageNetAppDeploy, $storageCacheDeploy, $sharedFramework, $storageCache
-
-Receive-Job -Job $workstationImageWindowsJob -Wait
-New-TraceMessage $workstationImageWindowsModuleName $true
-
-# Artist Workstation Machine [Windows] Job
-$workstationMachineWindowsModuleName = "Artist Workstation Machine [Windows] Job"
-New-TraceMessage $workstationMachineWindowsModuleName $false
-$workstationMachineWindowsJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Machine.Windows.ps1" -ArgumentList $resourceGroupNamePrefix, $sharedRegionName, $computeRegionName, $storageRegionName, $storageNetAppDeploy, $storageCacheDeploy, $sharedFramework, $storageCache
-
-Receive-Job -Job $workstationMachineLinuxJob -Wait
-New-TraceMessage $workstationMachineLinuxModuleName $true
-
-Receive-Job -Job $workstationMachineWindowsJob -Wait
-New-TraceMessage $workstationMachineWindowsModuleName $true
+# Artist Workstation Machine Job
+$moduleName = "Artist Workstation Machine [$artistWorkstationType] Job"
+New-TraceMessage $moduleName $false
+$workstationMachineJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Machine.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $networkGatewayDeploy, $storageNetAppDeploy, $storageCacheDeploy, $baseFramework, $storageCache, $artistWorkstationType
+Receive-Job -Job $workstationMachineJob -Wait
+New-TraceMessage $moduleName $true

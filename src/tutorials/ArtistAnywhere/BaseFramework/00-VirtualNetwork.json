@@ -1,0 +1,94 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageNetwork": {
+      "type": "object"
+    },
+    "computeNetwork": {
+      "type": "object"
+    },
+    "dnsZone": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "virtualNetworkApiVersion": "2020-08-01",
+    "privateDnsZoneApiVersion": "2020-06-01",
+    "virtualNetworks": "[createArray(parameters('storageNetwork'), parameters('computeNetwork'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('virtualNetworks')[copyIndex()].name]",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
+      "location": "[variables('virtualNetworks')[copyIndex()].regionName]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('virtualNetworks')[copyIndex()].addressSpace]"
+          ]
+        },
+        "copy": [
+          {
+            "name": "subnets",
+            "count": "[length(variables('virtualNetworks')[copyIndex()].subnets)]",
+            "input": {
+              "name": "[variables('virtualNetworks')[copyIndex()].subnets[copyIndex('subnets')].name]",
+              "properties": "[variables('virtualNetworks')[copyIndex()].subnets[copyIndex('subnets')].properties]"
+            }
+          }
+        ]
+      },
+      "copy": {
+        "name": "virtualNetworks",
+        "count": "[length(variables('virtualNetworks'))]"
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones",
+      "name": "[parameters('dnsZone').name]",
+      "apiVersion": "[variables('privateDnsZoneApiVersion')]",
+      "location": "global",
+      "properties": {
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+      "name": "[concat(parameters('dnsZone').name, '/', variables('virtualNetworks')[copyIndex()].name)]",
+      "apiVersion": "[variables('privateDnsZoneApiVersion')]",
+      "location": "global",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/privateDnsZones', parameters('dnsZone').name)]",
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworks')[copyIndex()].name)]"
+      ],
+      "properties": {
+        "virtualNetwork": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworks')[copyIndex()].name)]"
+        },
+        "registrationEnabled": "[variables('virtualNetworks')[copyIndex()].dnsRegistrationEnabled]"
+      },
+      "copy": {
+        "name": "virtualNetworks",
+        "count": "[length(variables('virtualNetworks'))]"
+      }
+    }
+  ],
+  "outputs": {
+    "storageNetwork": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('storageNetwork').name]",
+        "resourceGroupName": "[resourceGroup().name]"
+      }
+    },
+    "computeNetwork": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('computeNetwork').name]",
+        "resourceGroupName": "[resourceGroup().name]",
+        "domainName": "[parameters('dnsZone').name]"
+      }
+    }
+  }
+}

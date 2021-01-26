@@ -1,0 +1,74 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "logAnalytics": {
+      "type": "object"
+    },
+    "cognitiveAccount": {
+      "type": "object"
+    },
+    "virtualNetwork": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "operationalInsightApiVersion": "2020-10-01",
+    "cognitiveAccountApiVersion": "2017-04-18"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "name": "[parameters('logAnalytics').name]",
+      "apiVersion": "[variables('operationalInsightApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "sku": {
+          "name": "[parameters('logAnalytics').tier]"
+        },
+        "retentionInDays": "[parameters('logAnalytics').dataRetentionDays]",
+        "publicNetworkAccessForIngestion": "[parameters('logAnalytics').networkAccess.publicIngest]",
+        "publicNetworkAccessForQuery": "[parameters('logAnalytics').networkAccess.publicQuery]"
+      }
+    },
+    {
+      "condition": "[parameters('cognitiveAccount').deploy]",
+      "type": "Microsoft.CognitiveServices/accounts",
+      "name": "[parameters('cognitiveAccount').name]",
+      "apiVersion": "[variables('cognitiveAccountApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "kind": "[parameters('cognitiveAccount').type]",
+      "sku": {
+        "name": "[parameters('cognitiveAccount').tier]"
+      },
+      "properties": {
+        "networkAcls": {
+          "defaultAction": "Deny",
+          "bypass": "AzureServices",
+          "ipRules": "[parameters('cognitiveAccount').firewallAddressRules]",
+          "virtualNetworkRules": [
+            {
+              "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "logAnalytics": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('logAnalytics').name]",
+        "resourceGroupName": "[resourceGroup().name]"
+      }
+    },
+    "cognitiveAccount": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('cognitiveAccount').name]",
+        "resourceGroupName": "[resourceGroup().name]"
+      }
+    }
+  }
+}

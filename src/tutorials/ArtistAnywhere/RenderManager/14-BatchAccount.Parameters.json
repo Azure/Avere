@@ -1,0 +1,32 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "batchAccount": {
+      "value": {
+        "name": "rendermanager",
+        "poolAllocationMode": "UserSubscription",
+        "enablePrivateEndpoint": false
+      }
+    },
+    "storageAccount": {
+      "value": {
+        "name": "usawest",
+        "resourceGroupName": "ArtistAnywhere.Storage"
+      }
+    },
+    "keyVault": {
+      "value": {
+        "name": "MediaPipeline",
+        "resourceGroupName": "ArtistAnywhere"
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "MediaPipeline",
+        "subnetName": "Compute",
+        "resourceGroupName": "ArtistAnywhere.Network"
+      }
+    }
+  }
+}

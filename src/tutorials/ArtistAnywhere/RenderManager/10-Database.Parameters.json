@@ -1,0 +1,43 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "postgreSql": {
+      "value": {
+        "deploy": false,
+        "name": "rendermanager",
+        "tier": "MemoryOptimized",
+        "size": "Standard_E4s_v3",
+        "sqlVersion": 12,
+        "storage": {
+          "sizeMB": 32768,
+          "backupRetentionDays": 7
+        },
+        "admin": {
+          "name": "az",
+          "password": "P@ssword1234"
+        }
+      }
+    },
+    "mongoDb": {
+      "value": {
+        "deploy": false,
+        "name": "rendermanager",
+        "serverVersion": "3.6",
+        "firewallAddressRules": [
+          {
+            "ipAddressOrRange": "47.153.27.205"
+          }
+        ],
+        "databaseName": "Deadline"
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "MediaPipeline",
+        "subnetName": "Data",
+        "resourceGroupName": "ArtistAnywhere.Network"
+      }
+    }
+  }
+}

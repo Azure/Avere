@@ -1,0 +1,288 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "managedIdentity": {
+      "type": "object"
+    },
+    "imageGallery": {
+      "type": "object"
+    },
+    "renderManager": {
+      "type": "object"
+    },
+    "scriptExtension": {
+      "type": "object"
+    },
+    "logAnalytics": {
+      "type": "object"
+    },
+    "virtualNetwork": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "virtualNetworkApiVersion": "2020-08-01",
+    "virtualMachineApiVersion": "2020-12-01",
+    "networkInterfaceApiVersion": "2020-08-01",
+    "loadBalancerApiVersion": "2020-08-01",
+    "operationalInsightApiVersion": "2020-10-01",
+    "availabilitySetApiVersion": "2020-12-01",
+    "loadBalancerName": "RenderManagers",
+    "loadBalancerRuleName": "lbRule",
+    "loadBalancerProbeName": "lbProbe",
+    "loadBalancerFrontendName": "lbFrontendConfig",
+    "loadBalancerBackendName": "lbBackendPool",
+    "loadBalancerBackendPools": [
+      {
+        "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), variables('loadBalancerBackendName'))]"
+      }
+    ]
+  },
+  "functions": [
+    {
+      "namespace": "fx",
+      "members": {
+        "GetLinuxConfig": {
+          "parameters": [
+            {
+              "name": "sshPublicKeyData",
+              "type": "string"
+            },
+            {
+              "name": "adminUserName",
+              "type": "string"
+            }
+          ],
+          "output": {
+            "type": "string",
+            "value": "[if(equals(parameters('sshPublicKeyData'), ''), 'null', concat('{\"ssh\": {\"publicKeys\": [{\"path\": \"/home/', parameters('adminUsername'), '/.ssh/authorized_keys\", \"keyData\": \"', parameters('sshPublicKeyData'), '\"}]}}'))]"
+          }
+        },
+        "GetExtensionCommand": {
+          "parameters": [
+            {
+              "name": "filePath",
+              "type": "string"
+            },
+            {
+              "name": "fileParameters",
+              "type": "string"
+            }
+          ],
+          "output": {
+            "type": "string",
+            "value": "[if(endsWith(parameters('filePath'), '.ps1'), format('PowerShell.exe -ExecutionPolicy Unrestricted -File {0} {1}', parameters('filePath'), parameters('fileParameters')), format('cat {0} | tr -d \r | {1} /bin/bash', parameters('filePath'), parameters('fileParameters')))]"
+          }
+        }
+      }
+    }
+  ],
+  "resources": [
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[variables('loadBalancerName')]",
+      "apiVersion": "[variables('availabilitySetApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Aligned"
+      },
+      "properties": {
+        "platformFaultDomainCount": "[parameters('renderManager').availabilitySet.faultDomains]",
+        "platformUpdateDomainCount": "[parameters('renderManager').availabilitySet.updateDomains]"
+      }
+    },
+    {
+      "condition": "[greater(parameters('renderManager').machines.count, 1)]",
+      "type": "Microsoft.Network/loadBalancers",
+      "name": "[variables('loadBalancerName')]",
+      "apiVersion": "[variables('loadBalancerApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "backendAddressPools": [
+          {
+            "name": "[variables('loadBalancerBackendName')]"
+          }
+        ],
+        "frontendIPConfigurations": [
+          {
+            "name": "[variables('loadBalancerFrontendName')]",
+            "properties": {
+              "subnet": {
+                "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+              }
+            }
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "[variables('loadBalancerRuleName')]",
+            "properties": {
+              "backendAddressPool": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), variables('loadBalancerBackendName'))]"
+              },
+              "frontendIPConfiguration": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', variables('loadBalancerName'), variables('loadBalancerFrontendName'))]"
+              },
+              "probe": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/probes', variables('loadBalancerName'), variables('loadBalancerProbeName'))]"
+              },
+              "backendPort": "[parameters('renderManager').loadBalancer.port]",
+              "frontendPort": "[parameters('renderManager').loadBalancer.port]",
+              "protocol": "[parameters('renderManager').loadBalancer.protocol]"
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "[variables('loadBalancerProbeName')]",
+            "properties": {
+              "port": "[parameters('renderManager').loadBalancer.port]",
+              "protocol": "[parameters('renderManager').loadBalancer.protocol]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(parameters('renderManager').machines.namePrefix, copyIndex())]",
+      "apiVersion": "[variables('networkInterfaceApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName'))]"
+      ],
+      "properties": {
+        "primary": true,
+        "ipConfigurations": [
+          {
+            "name": "ipConfig",
+            "properties": {
+              "subnet": {
+                "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+              },
+              "loadBalancerBackendAddressPools": "[if(greater(parameters('renderManager').machines.count, 1), variables('loadBalancerBackendPools'), json('null'))]"
+            }
+          }
+        ]
+      },
+      "copy": {
+        "name": "renderManagers",
+        "count": "[parameters('renderManager').machines.count]"
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(parameters('renderManager').machines.namePrefix, copyIndex())]",
+      "apiVersion": "[variables('virtualMachineApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/availabilitySets', variables('loadBalancerName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('renderManager').machines.namePrefix, copyIndex()))]"
+      ],
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceId(parameters('managedIdentity').resourceGroupName, 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentity').name)]": {
+          }
+        }
+      },
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('loadBalancerName'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[parameters('renderManager').machines.size]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('renderManager').machines.namePrefix, copyIndex()))]"
+            }
+          ]
+        },
+        "storageProfile": {
+          "imageReference": {
+            "id": "[resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images/versions', parameters('imageGallery').name, parameters('renderManager').image.definitionName, parameters('renderManager').image.versionId)]"
+          },
+          "osDisk": {
+            "caching": "ReadOnly",
+            "createOption": "FromImage"
+          }
+        },
+        "osProfile": {
+          "computerName": "[concat(parameters('renderManager').machines.namePrefix, copyIndex())]",
+          "adminUsername": "[parameters('renderManager').machines.adminUsername]",
+          "adminPassword": "[parameters('renderManager').machines.adminPassword]",
+          "linuxConfiguration": "[json(fx.GetLinuxConfig(parameters('renderManager').machines.sshPublicKeyData, parameters('renderManager').machines.adminUsername))]"
+        }
+      },
+      "copy": {
+        "mode": "Serial",
+        "name": "renderManagers",
+        "count": "[parameters('renderManager').machines.count]"
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(parameters('renderManager').machines.namePrefix, copyIndex(), '/extension')]",
+      "apiVersion": "[variables('virtualMachineApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', concat(parameters('renderManager').machines.namePrefix, copyIndex()))]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.1",
+        "autoUpgradeMinorVersion": true,
+        "protectedSettings": {
+          "commandToExecute": "[fx.GetExtensionCommand(parameters('scriptExtension').filePath, parameters('scriptExtension').fileParameters)]"
+        }
+      },
+      "copy": {
+        "mode": "Serial",
+        "name": "renderManagers",
+        "count": "[parameters('renderManager').machines.count]"
+      }
+    },
+    {
+      "condition": "[parameters('logAnalytics').deploy]",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(parameters('renderManager').machines.namePrefix, copyIndex(), '/monitor')]",
+      "apiVersion": "[variables('virtualMachineApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', concat(parameters('renderManager').machines.namePrefix, copyIndex()))]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+        "type": "OmsAgentForLinux",
+        "typeHandlerVersion": "1.13",
+        "autoUpgradeMinorVersion": true,
+        "protectedSettings": {
+          "workspaceKey": "[listKeys(resourceId(parameters('logAnalytics').resourceGroupName, 'Microsoft.OperationalInsights/workspaces', parameters('logAnalytics').name), variables('operationalInsightApiVersion')).primarySharedKey]"
+        },
+        "settings": {
+          "workspaceId": "[reference(resourceId(parameters('logAnalytics').resourceGroupName, 'Microsoft.OperationalInsights/workspaces', parameters('logAnalytics').name), variables('operationalInsightApiVersion')).customerId]"
+        }
+      },
+      "copy": {
+        "mode": "Serial",
+        "name": "renderManagers",
+        "count": "[parameters('renderManager').machines.count]"
+      }
+    }
+  ],
+  "outputs": {
+    "renderManager": {
+      "type": "object",
+      "value": {
+        "host": "[if(greater(parameters('renderManager').machines.count, 1), reference(resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', variables('loadBalancerName'), variables('loadBalancerFrontendName')), variables('virtualNetworkApiVersion')).privateIPAddress, reference(resourceId('Microsoft.Network/networkInterfaces', concat(parameters('renderManager').machines.namePrefix, '0')), variables('virtualNetworkApiVersion')).ipConfigurations[0].properties.privateIPAddress)]"
+      }
+    }
+  }
+}

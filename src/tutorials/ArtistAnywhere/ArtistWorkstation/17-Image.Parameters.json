@@ -1,0 +1,119 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "managedIdentity": {
+      "value": {
+        "name": "MediaPipeline",
+        "resourceGroupName": "ArtistAnywhere"
+      }
+    },
+    "imageGallery": {
+      "value": {
+        "name": "MediaPipeline",
+        "resourceGroupName": "ArtistAnywhere.Gallery"
+      }
+    },
+    "imageTemplates": {
+      "value": [
+        {
+          "deploy": false,
+          "name": "WorkstationLinux",
+          "imageOperatingSystemType": "Linux",
+          "imageDefinitionName": "WorkstationLinux",
+          "imageSourceType": "PlatformImage",
+          "imageSourceVersion": "latest",
+          "imageOutputVersion": "1.0.0",
+          "imageStorageAccount": {
+            "type": "Standard_LRS"
+          },
+          "machineProfile": {
+            "size": "Standard_NV12",
+            "osDiskSizeGB": 0
+          },
+          "buildTimeoutMinutes": 120,
+          "buildCustomization": [
+            {
+              "type": "Shell",
+              "scriptUri": "https://mediaasset.blob.core.windows.net/script/ArtistWorkstation/Linux/15-Image.sh",
+              "sha256Checksum": ""
+            },
+            {
+              "type": "Shell",
+              "scriptUri": "https://mediaasset.blob.core.windows.net/script/ArtistWorkstation/Linux/15-Image.Blender.sh",
+              "sha256Checksum": ""
+            },
+            {
+              "type": "Shell",
+              "scriptUri": "https://mediaasset.blob.core.windows.net/script/ArtistWorkstation/Linux/15-Image.OpenCue.sh",
+              "sha256Checksum": ""
+            },
+            {
+              "type": "Shell",
+              "scriptUri": "https://mediaasset.blob.core.windows.net/script/ArtistWorkstation/Linux/15-Image.Teradici.sh",
+              "sha256Checksum": ""
+            },
+            {
+              "type": "File",
+              "sourceUri": "https://mediaasset.blob.core.windows.net/script/ArtistWorkstation/Linux/16-Machine.sh",
+              "destination": "/tmp/16-Workstation.Machine.sh",
+              "sha256Checksum": ""
+            }
+          ]
+        },
+        {
+          "deploy": false,
+          "name": "WorkstationWindows",
+          "imageOperatingSystemType": "Windows",
+          "imageDefinitionName": "WorkstationWindows",
+          "imageSourceType": "PlatformImage",
+          "imageSourceVersion": "latest",
+          "imageOutputVersion": "1.0.0",
+          "imageStorageAccount": {
+            "type": "Standard_LRS"
+          },
+          "machineProfile": {
+            "size": "Standard_NV12",
+            "osDiskSizeGB": 0
+          },
+          "buildTimeoutMinutes": 120,
+          "buildCustomization": [
+            {
+              "type": "PowerShell",
+              "scriptUri": "https://mediaasset.blob.core.windows.net/script/ArtistWorkstation/Windows/15-Image.ps1",
+              "sha256Checksum": ""
+            },
+            {
+              "type": "PowerShell",
+              "scriptUri": "https://mediaasset.blob.core.windows.net/script/ArtistWorkstation/Windows/15-Image.Blender.ps1",
+              "sha256Checksum": ""
+            },
+            {
+              "type": "PowerShell",
+              "scriptUri": "https://mediaasset.blob.core.windows.net/script/ArtistWorkstation/Windows/15-Image.OpenCue.ps1",
+              "sha256Checksum": ""
+            },
+            {
+              "type": "PowerShell",
+              "scriptUri": "https://mediaasset.blob.core.windows.net/script/ArtistWorkstation/Windows/15-Image.Teradici.ps1",
+              "sha256Checksum": ""
+            },
+            {
+              "type": "File",
+              "sourceUri": "https://mediaasset.blob.core.windows.net/script/ArtistWorkstation/Windows/16-Machine.ps1",
+              "destination": "C:\\Windows\\Temp\\16-Workstation.Machine.ps1",
+              "sha256Checksum": ""
+            }
+          ]
+        }
+      ]
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "MediaPipeline",
+        "subnetName": "Workstation",
+        "resourceGroupName": "ArtistAnywhere.Network"
+      }
+    }
+  }
+}
