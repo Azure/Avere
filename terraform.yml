@@ -63,6 +63,10 @@ parameters:
     displayName: "Run terraform destroy and rg cleanup."
     type: boolean
     default: true
+  - name: pass_in_ssh_key
+    displayName: "Pass in public ssh key - make sure to add variable: PUBLIC_KEY"
+    type: boolean
+    default: false
   
 jobs:
 - job: Terraform_vFXT
@@ -88,6 +92,9 @@ jobs:
       cmd_terraform: 'apply'
       condition: "succeeded()"
   
+  - ${{ if eq(parameters.pass_in_ssh_key, true) }}:
+    - template: templates/add_sshkey.yml
+
   - ${{ if eq(parameters.run_vdbench, true) }}:
     - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
       - template: templates/run_vdbench.yml
