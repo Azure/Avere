@@ -12,15 +12,17 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"sync"
 	"time"
 )
 
 const (
-	DefaultFileFilter = "*"
-	DefaultReadBytes  = 21383
-	timeBetweenPrints = time.Duration(1) * time.Second
-	tick              = time.Duration(10) * time.Millisecond // 10ms
+	DefaultFileFilter      = "*"
+	DefaultWalkersPerShare = 1
+	DefaultReadBytes       = 21383
+	timeBetweenPrints      = time.Duration(1) * time.Second
+	tick                   = time.Duration(10) * time.Millisecond // 10ms
 )
 
 var matchSMB = regexp.MustCompile(`^\\\\([^\\]*)(\\.*)$`)
@@ -70,6 +72,8 @@ func initloggers(
 
 type StatsCollector struct {
 	mux                  sync.Mutex
+	FileOpenCount        int
+	FileOpenFailureCount int
 	FileReadCount        int
 	FileReadFailureCount int
 	DirReadCount         int
@@ -117,6 +121,8 @@ func (s *StatsCollector) PrintSummary() {
 	fmt.Printf("\n")
 	fmt.Printf("Summary\n")
 	fmt.Printf("=========\n")
+	fmt.Printf("FileOpenCount       : %d\n", s.FileOpenCount)
+	fmt.Printf("FileOpenFailureCount: %d\n", s.FileOpenFailureCount)
 	fmt.Printf("FileReadCount       : %d\n", s.FileReadCount)
 	fmt.Printf("FileReadFailureCount: %d\n", s.FileReadFailureCount)
 	fmt.Printf("DirReadCount        : %d\n", s.DirReadCount)
@@ -139,6 +145,18 @@ func (s *StatsCollector) GetRunningThreads() int {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	return s.RunningThreads
+}
+
+func (s *StatsCollector) IncrFileOpenCount() {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	s.FileOpenCount++
+}
+
+func (s *StatsCollector) IncrFileOpenFailureCount() {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	s.FileOpenFailureCount++
 }
 
 func (s *StatsCollector) IncrFileReadCount() {
@@ -205,8 +223,10 @@ func (w *Walker) RunWalker(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
 			dirEntries, err := ioutil.ReadDir(folder)
 			if err != nil {
 				Error.Printf("error encountered reading directory '%s': %v", folder, err)
+				w.StatsCollector.IncrDirReadFailureCount()
 				continue
 			}
+			w.StatsCollector.IncrDirReadCount()
 			for _, dirEntry := range dirEntries {
 				if isCancelled(ctx) {
 					return
@@ -229,15 +249,23 @@ func (w *Walker) RunWalker(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
 
 					f, err := os.Open(filename)
 					if err != nil {
+						w.StatsCollector.IncrFileOpenFailureCount()
 						Error.Printf("error opening file %s: %v", filename, err)
 						f.Close()
+						continue
 					}
+					w.StatsCollector.IncrFileOpenCount()
+
 					_, err = f.ReadAt(buffer, 0)
 					if err != nil {
 						if err != io.EOF {
+							w.StatsCollector.IncrFileReadFailureCount()
 							Error.Printf("error reading %d bytes of file %s: %v", DefaultReadBytes, filename, err)
+							f.Close()
+							continue
 						}
 					}
+					w.StatsCollector.IncrFileReadCount()
 					f.Close()
 				}
 			}
@@ -250,10 +278,10 @@ func (w *Walker) RunWalker(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
 ////////////////////////////////////////////////////////////////
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "usage: %s BASE_SMB_PATH [FILE_FILTER]\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "usage: %s BASE_SMB_PATH [WALKERS_PER_SHARE] [FILE_FILTER]\n", os.Args[0])
 }
 
-func InitializeVariables() ([]string, string) {
+func InitializeVariables() ([]string, int, string) {
 	if len(os.Args) <= 1 {
 		fmt.Fprintf(os.Stderr, "ERROR: no base SMB PATH specified\n")
 		usage()
@@ -261,9 +289,20 @@ func InitializeVariables() ([]string, string) {
 	}
 	baseSMBPath := os.Args[1]
 
-	fileExtension := DefaultFileFilter
+	walkersPerShare := DefaultWalkersPerShare
 	if len(os.Args) > 2 {
-		fileExtension = os.Args[2]
+		if i, err := strconv.Atoi(os.Args[2]); err != nil {
+			walkersPerShare = i
+		} else {
+			fmt.Fprintf(os.Stderr, "ERROR: incorrect value specified for walker count %s\n", os.Args[2])
+			usage()
+			os.Exit(4)
+		}
+	}
+
+	fileExtension := DefaultFileFilter
+	if len(os.Args) > 3 {
+		fileExtension = os.Args[3]
 	}
 
 	// validate the smb path
@@ -278,7 +317,7 @@ func InitializeVariables() ([]string, string) {
 
 	ip := net.ParseIP(filer)
 	if ip != nil {
-		return []string{baseSMBPath}, fileExtension
+		return []string{baseSMBPath}, walkersPerShare, fileExtension
 	}
 
 	// perform a dns lookup on the name to resolve all IP addresses
@@ -294,14 +333,14 @@ func InitializeVariables() ([]string, string) {
 		Info.Printf("add path %s", fullPath)
 		result = append(result, fullPath)
 	}
-	return result, fileExtension
+	return result, walkersPerShare, fileExtension
 }
 
 func main() {
 	// setup the shared context
 	ctx, cancel := context.WithCancel(context.Background())
 
-	targetSMBPaths, fileFilter := InitializeVariables()
+	targetSMBPaths, walkersPerShare, fileFilter := InitializeVariables()
 
 	for _, s := range targetSMBPaths {
 		Info.Printf("SMB Path: %s", s)
@@ -315,11 +354,14 @@ func main() {
 	statsCollector := InitializeStatsCollector()
 	go statsCollector.RunStatsPrinter(ctx, &syncWaitGroup)
 
-	walkers := make([]*Walker, 0, len(targetSMBPaths))
-	for _, s := range targetSMBPaths {
-		walker := InitializeWalker(statsCollector, s, fileFilter)
-		walkers = append(walkers, walker)
-		go walker.RunWalker(ctx, &syncWaitGroup)
+	walkers := make([]*Walker, 0, len(targetSMBPaths)*walkersPerShare)
+	for i := 0; i < walkersPerShare; i++ {
+		for _, s := range targetSMBPaths {
+			walker := InitializeWalker(statsCollector, s, fileFilter)
+			walkers = append(walkers, walker)
+			syncWaitGroup.Add(1)
+			go walker.RunWalker(ctx, &syncWaitGroup)
+		}
 	}
 
 	Info.Printf("wait for finish or ctrl-c")
