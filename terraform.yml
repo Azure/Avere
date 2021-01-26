@@ -59,6 +59,10 @@ parameters:
     displayName: "Run scale-down (only runs if scale-up is selected)"
     type: boolean
     default: false
+  - name: run_destory_and_cleanup
+    displayName: "Run terraform destroy and rg cleanup."
+    type: boolean
+    default: true
   
 jobs:
 - job: Terraform_vFXT
@@ -115,17 +119,15 @@ jobs:
           run_terraform: ${{ parameters.run_terraform }}
           cmd_terraform: 'apply'
           condition: "succeeded()"
-  
-  - ${{ if eq(parameters.run_vdbench, true) }}:
-    - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
-      - template: templates/run_vdbench.yml
-        parameters: 
-          cmd_terraform: 'destroy'
-          vdbench_config: ${{ parameters.vdbench_config }}
-  
-  - template: templates/terraform_cmd.yml
-    parameters: 
-      run_terraform: ${{ parameters.run_terraform }}
-      cmd_terraform: 'destroy'
-
-  - template: templates/rg_delete.yml
+  - ${{ if eq(parameters.run_destory_and_cleanup, true) }}:
+    - ${{ if eq(parameters.run_vdbench, true) }}:
+      - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
+        - template: templates/run_vdbench.yml
+          parameters: 
+            cmd_terraform: 'destroy'
+            vdbench_config: ${{ parameters.vdbench_config }}
+    - template: templates/terraform_cmd.yml
+      parameters: 
+        run_terraform: ${{ parameters.run_terraform }}
+        cmd_terraform: 'destroy'
+    - template: templates/rg_delete.yml
