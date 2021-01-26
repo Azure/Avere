@@ -15,7 +15,7 @@ parameters:
   - name: region
     displayName: "Region to run pipeline"
     type: string
-    default: "westus"
+    default: "eastus"
     values:
       - "eastus"
       - "eastus2"
