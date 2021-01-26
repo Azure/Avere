@@ -31,7 +31,7 @@ parameters:
       - "proxy"
       - "azureblobfiler"
   - name: run_vdbench
-    displayName: "Run vdbench"
+    displayName: "Run vdbench - only runs with azureblobfiler"
     type: boolean
     default: true
   - name: run_scale_up
@@ -66,7 +66,8 @@ jobs:
       cmd_terraform: 'apply'
   
   - ${{ if eq(parameters.run_vdbench, true) }}:
-    - template: templates/run_vdbench.yml
+    - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
+      - template: templates/run_vdbench.yml
 
   - ${{ if eq(parameters.run_scale_up, true) }}:
     - template: templates/terraform_scale_up_down.yml
