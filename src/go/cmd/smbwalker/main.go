@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -26,7 +27,7 @@ const (
 	tick                   = time.Duration(10) * time.Millisecond // 10ms
 )
 
-var matchSMB = regexp.MustCompile(`^\\\\([^\\]*)(\\.*)$`)
+var matchSMB = regexp.MustCompile(`^\\\\([^\\]*)\\(.*)$`)
 
 func isCancelled(ctx context.Context) bool {
 	select {
@@ -293,6 +294,8 @@ func InitializeVariables() ([]string, int, string) {
 		os.Exit(1)
 	}
 	baseSMBPath := os.Args[1]
+	baseSMBPath = strings.ReplaceAll(baseSMBPath, "/", "\\")
+	baseSMBPath = strings.TrimSuffix(baseSMBPath, "\\")
 
 	walkersPerShare := DefaultWalkersPerShare
 	if len(os.Args) > 2 {
