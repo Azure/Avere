@@ -45,7 +45,7 @@ parameters:
   
 jobs:
 - job: Terraform_vFXT
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   cancelTimeoutInMinutes: 40
   pool:
     vmImage: ubuntu-latest
