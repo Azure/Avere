@@ -1,9 +1,10 @@
 # SMB Walker
 
-The SMB Walker walks all the SMB frontends of an Avere vFXT.  It is driven by dns, so in the following call, it will spawn a thread for each ip address resolved from "assetfiler.rendering.com", and read bytes from each png file found.  
+The SMB Walker walks all the SMB frontends of an Avere vFXT.  It gets all the VServer IP address from the DNS.  In the following call, it will spawn a thread for each ip address resolved from "assetfiler.rendering.com", and read bytes from each png file found.  
 
 ```bash
-smbwalker \\assetfiler.rendering.com\assets\scene1 *.png
+# USAGE .\smbwalker.exe BASE_SMB_PATH [WALKERS_PER_SHARE] [FILE_FILTER]
+.\smbwalker.exe \\assetfiler.rendering.com\assets\scene1 1 *.png
 ```
 
 # Install instructions
@@ -38,5 +39,6 @@ go build
 
 1. once installed run the walker against your avere.  The following command will walk all shares of the Avere and read bytes from all *.png files
 ```powershell
-.\smbwalker.exe \\assetfiler.rendering.com\assets\scene1 *.png
+# USAGE .\smbwalker.exe BASE_SMB_PATH [WALKERS_PER_SHARE] [FILE_FILTER]
+.\smbwalker.exe \\assetfiler.rendering.com\assets\scene1 1 *.png
 ```

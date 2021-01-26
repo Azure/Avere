@@ -9,6 +9,10 @@ The following is a checklist of items to confirm before connecting an HPC Cache 
     * `no_root_squash` - this is needed because HPC Cache or vFXT works at the root level
     * `rw` - read/write is needed for the HPC Cache or vFXT to write files
     * **ip range is open** - ensure the HPC Cache or vFXT subnet is specified in the export.  Also, if any render clients are writing around, you will also need to open up the subnet range of the render clients, otherwise this is not needed.
+* to choose a different vFXT image version, run the following command and use the value from the "urn" key:
+```bash
+az vm image list --location eastus -p microsoft-avere -f vfxt -s avere-vfxt-node --all
+```
 * ensure the on-prem firewall is open to the HPC Cache or vFXT subnets
 * ensure an NFSv3 endpoint is enabled
 * ensure you put a vFXT or HPC Cache into its own subnet.  The smallest subnet may be a /27.  The HPC Cache and Avere vFXT have HA models where they migrate IP addresses in HA events, and it is important that another cluster or another vm does not grab those IP addresses during migration.
@@ -58,6 +62,8 @@ To ensure the best operability between POSIX and NTFS ACLS, ensure you have inve
 ## Troubleshooting SMB
 
 To troubleshoot the ACL problem the following two scenarios show a write from on-prem and a write from a render node in the cloud.
+
+Also, use the [SMB Walker](..\..\go\cmd\smbwalker) that will walk all shares, to help troubleshoot issues.
 
 ### Problem #1 - Writing from a Windows Machine on-prem
 
