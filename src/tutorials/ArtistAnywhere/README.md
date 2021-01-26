@@ -1,6 +1,6 @@
 # Azure Artist Anywhere ([aka.ms/aaa](http://aka.ms/aaa))
 
-Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/azure/azure-resource-manager/management/overview) templates for automated deployment of an end-to-end rendering solution architecture in Microsoft Azure. Azure Artist Anywhere provides a lightweight and extensible deployment framework that can be configured as needed to meet various integration requirements, including burst rendering with caching of on-premises storage.
+Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/azure/azure-resource-manager/management/overview) templates for automated deployment of an end-to-end rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight and extensible framework with the storage tier in Azure or storage on-premises with integration via [Azure HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview).
 
 As a sample, the following image was rendered on [Azure HPC VMs](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-hpc) via an [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) using [V-Ray for Maya](https://www.chaosgroup.com/vray/maya).
 
