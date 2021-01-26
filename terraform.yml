@@ -30,10 +30,24 @@ parameters:
       - "1-filer"
       - "proxy"
       - "azureblobfiler"
+  - name: image
+    displayName: "Select vfxt image to run. Defaults to latest."
+    type: string
+    default: "microsoft-avere:vfxt:avere-vfxt-node:latest"
+    values:
+      - "microsoft-avere:vfxt:avere-vfxt-node:latest"
+      - "microsoft-avere:vfxt:avere-vfxt-node:5.3.61"
   - name: run_vdbench
     displayName: "Run vdbench - only runs with azureblobfiler"
     type: boolean
     default: true
+  - name: vdbench_config
+    displayName: "vdbench config - only runs with azureblobfiler"
+    type: string
+    default: "inmem"
+    values:
+      - "ondisk"
+      - "inmem"
   - name: run_scale_up
     displayName: "Run scale-up"
     type: boolean
@@ -59,6 +73,7 @@ jobs:
     parameters:
       original_node_count: ${{ parameters.original_node_count }}
       run_terraform: ${{ parameters.run_terraform }}
+      image: ${{ parameters.image }}
   
   - template: templates/terraform_cmd.yml
     parameters: 
@@ -71,6 +86,7 @@ jobs:
       - template: templates/run_vdbench.yml
         parameters: 
           cmd_terraform: 'apply'
+          vdbench_config: ${{ parameters.vdbench_config }}
 
   - ${{ if eq(parameters.run_scale_up, true) }}:
     - template: templates/terraform_scale_up_down.yml
@@ -95,6 +111,7 @@ jobs:
         parameters: 
           run_terraform: ${{ parameters.run_terraform }}
           cmd_terraform: 'apply'
+          condition: "succeeded()"
   
   - ${{ if eq(parameters.run_vdbench, true) }}:
     - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:

@@ -3,6 +3,12 @@ parameters:
   type: string
 - name: run_terraform
   type: string
+- name: image
+  type: string
+  default: "microsoft-avere:vfxt:avere-vfxt-node:latest"
+  values:
+    - "microsoft-avere:vfxt:avere-vfxt-node:latest"
+    - "microsoft-avere:vfxt:avere-vfxt-node:5.3.61"
 
 steps:
 - script: |
@@ -22,7 +28,7 @@ steps:
     cd src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
     sed -i -E -e "s:vm_ssh_key_data = null:vm_ssh_key_data = \"${sshkey}\":" \
       -e "s/location = \"eastus\"/location = \"${REGION}\"/" \
-      -e "s/vfxt_image_id\s*= null/vfxt_image_id = \"microsoft-avere:vfxt:avere-vfxt-node:5.3.61\"/" \
+      -e "s/vfxt_image_id\s*= null/vfxt_image_id = \"${{ parameters.image }}\"/" \
       -e "s/(([a-z]+)_resource_group_name) = \"[^\"]+\"/\1 = \"${RESOURCE_GROUP_NAME}-\2\"/" \
       -e "s/vfxt_cluster_password = \"VFXT_PASSWORD\"/vfxt_cluster_password = \"${AVERE_ADMIN_PW}\"/" \
       -e 's/vfxt_node_count = 3/vfxt_node_count = ${{ parameters.original_node_count }}\n    node_cache_size = 1024\n    node_size = "unsupported_test_SKU"/' main.tf
