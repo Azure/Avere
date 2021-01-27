@@ -43,7 +43,7 @@ parameters:
   - name: run_vdbench
     displayName: "Run vdbench - only runs with azureblobfiler"
     type: boolean
-    default: false
+    default: true
   - name: vdbench_config
     displayName: "vdbench config - only runs with azureblobfiler"
     type: string
@@ -54,7 +54,7 @@ parameters:
   - name: run_scale_up
     displayName: "Run scale-up"
     type: boolean
-    default: false
+    default: true
   - name: run_scale_down
     displayName: "Run scale-down (only runs if scale-up is selected)"
     type: boolean
