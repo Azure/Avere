@@ -63,7 +63,7 @@ To ensure the best operability between POSIX and NTFS ACLS, ensure you have inve
 
 To troubleshoot the ACL problem the following two scenarios show a write from on-prem and a write from a render node in the cloud.
 
-Also, use the [SMB Walker](..\..\go\cmd\smbwalker) that will walk all shares, to help troubleshoot issues.
+Also, use the [SMB Walker](../../../go/cmd/smbwalker) that will walk all shares, to help troubleshoot issues.
 
 ### Problem #1 - Writing from a Windows Machine on-prem
 
