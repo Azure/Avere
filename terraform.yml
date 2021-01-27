@@ -15,7 +15,7 @@ parameters:
   - name: region
     displayName: "Region to run pipeline"
     type: string
-    default: "eastus"
+    default: "westus"
     values:
       - "eastus"
       - "eastus2"
@@ -62,7 +62,7 @@ parameters:
   - name: run_destory_and_cleanup
     displayName: "Run terraform destroy and rg cleanup."
     type: boolean
-    default: true
+    default: false
   - name: pass_in_ssh_key
     displayName: "Pass in public ssh key - make sure to add variable: PUBLIC_KEY"
     type: boolean
