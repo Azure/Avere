@@ -6,6 +6,5 @@ steps:
     USERNAME=$(terraform output -json | jq -r ".controller_username.value")
 
     echo "##vso[task.setvariable variable=secret.PUBLIC_KEY;issecret=true]${PUBLIC_KEY}"
-    echo "ssh-rsa ${PUBLIC_KEY}" >> /home/$USERNAME/.ssh/authorized_keys
     ssh -o "StrictHostKeyChecking=no" ${USERNAME}@${CONTROLLER_ADDRESS} "echo \"$PUBLIC_KEY\" >> /home/$USERNAME/.ssh/authorized_keys"
   displayName: 'Pass in public ssh key'
