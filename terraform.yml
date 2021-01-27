@@ -43,7 +43,7 @@ parameters:
   - name: run_vdbench
     displayName: "Run vdbench - only runs with azureblobfiler"
     type: boolean
-    default: true
+    default: false
   - name: vdbench_config
     displayName: "vdbench config - only runs with azureblobfiler"
     type: string
