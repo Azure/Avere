@@ -46,7 +46,7 @@ steps:
       ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} /home/azureuser/copy_idrsa.sh
       
       echo ">> RUN VDBENCH"
-      ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "/usr/bin/nohup /bin/bash -c \"/bin/bash /home/${USERNAME}/run_vdbench.sh ${{ parameters.vdbench_config }}.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1 &\" &"
+      ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "tmux new-session -d \"/home/${USERNAME}/run_vdbench.sh ${{ parameters.vdbench_config }}.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1\""
     fi
   displayName: 'VDBENCH: ${{ parameters.cmd_terraform }} - ${{ parameters.vdbench_config }}'
   condition: always()
