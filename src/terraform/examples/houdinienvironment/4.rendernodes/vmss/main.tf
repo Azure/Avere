@@ -32,9 +32,11 @@ locals {
 
     // update if you need to change the RDP port
     rdp_port = 3389
+    
+    nmss_path = "https://nssm.cc/release/nssm-2.24.zip"
 
     // the following are the arguments to be passed to the custom script
-    windows_custom_script_arguments = "$arguments = ' -RenameVMPrefix ''${local.vmPrefix}'' -ADDomain ''${local.ad_domain}'' -OUPath ''${local.ou_path}'' ''${local.ad_username}'' -DomainPassword ''${local.ad_password}'' -RDPPort ${local.rdp_port} '  ; "
+    windows_custom_script_arguments = "$arguments = ' -NSSMPath ''${local.vmPrefix}'' -RenameVMPrefix ''${local.vmPrefix}'' -ADDomain ''${local.ad_domain}'' -OUPath ''${local.ou_path}'' ''${local.ad_username}'' -DomainPassword ''${local.ad_password}'' -RDPPort ${local.rdp_port} '  ; "
 
     // load the powershell file, you can substitute kv pairs as you need them, but 
     // use arguments where possible
