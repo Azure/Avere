@@ -36,6 +36,8 @@ steps:
       -e "s/vfxt_cluster_password = \"VFXT_PASSWORD\"/vfxt_cluster_password = \"${AVERE_ADMIN_PW}\"/" \
       -e 's/vfxt_node_count = 3/vfxt_node_count = ${{ parameters.original_node_count }}/' main.tf
 
+      # Used for using Dseries, but does not work with vdbench, needed to use Eseries. 
+      # Leaving commented out incase we do need to use testing sku
       # -e 's/vfxt_node_count = 3/vfxt_node_count = ${{ parameters.original_node_count }}\n    node_cache_size = 1024\n    node_size = "unsupported_test_SKU"/' main.tf
     
       if [ "proxy" = "${{ parameters.run_terraform }}" ] || [ "azureblobfiler" = "${{ parameters.run_terraform }}" ]; then

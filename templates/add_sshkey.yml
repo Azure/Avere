@@ -1,6 +1,5 @@
 steps:
 - script: |
-    az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
     cd src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
     CONTROLLER_ADDRESS=$(terraform output -json | jq -r ".controller_address.value")
     USERNAME=$(terraform output -json | jq -r ".controller_username.value")
