@@ -101,9 +101,6 @@
               }
             ]
           },
-          "billingProfile": {
-            "maxPrice": "[parameters('renderFarms')[copyIndex()].machine.maxPrice]"
-          },
           "storageProfile": {
             "imageReference": {
               "id": "[resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images/versions', parameters('imageGallery').name, parameters('renderFarms')[copyIndex()].image.definitionName, parameters('renderFarms')[copyIndex()].image.versionId)]"
@@ -137,7 +134,10 @@
             ]
           },
           "priority": "[parameters('renderFarms')[copyIndex()].machine.priority]",
-          "evictionPolicy": "Delete"
+          "evictionPolicy": "Delete",
+          "billingProfile": {
+            "maxPrice": "[parameters('renderFarms')[copyIndex()].machine.maxPrice]"
+          }
         },
         "upgradePolicy": {
           "mode": "[parameters('renderFarms')[copyIndex()].upgradePolicy]"

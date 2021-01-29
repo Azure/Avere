@@ -4,7 +4,7 @@
   "parameters": {
     "batchAccount": {
       "value": {
-        "name": "rendermanager",
+        "name": "render",
         "poolAllocationMode": "UserSubscription",
         "enablePrivateEndpoint": false
       }

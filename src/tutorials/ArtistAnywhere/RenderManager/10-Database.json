@@ -47,11 +47,16 @@
       "apiVersion": "[variables('cosmosMongoDbApiVersion')]",
       "location": "[resourceGroup().location]",
       "kind": "MongoDB",
+      "tags": {
+        "cosmosAccountType": "[parameters('mongoDb').userInterfaceType]",
+        "defaultExperience": "[parameters('mongoDb').defaultExperience]"
+      },
       "properties": {
-        "databaseAccountOfferType": "Standard",
+        "databaseAccountOfferType": "[parameters('mongoDb').offerType]",
         "apiProperties": {
           "serverVersion": "[parameters('mongoDb').serverVersion]"
         },
+        "capabilities": "[parameters('mongoDb').capabilities]",
         "isVirtualNetworkFilterEnabled": true,
         "virtualNetworkRules": [
           {
@@ -70,24 +75,52 @@
         "[resourceId('Microsoft.DocumentDB/databaseAccounts/', parameters('mongoDb').name)]"
       ],
       "properties": {
-        "resource": {
-          "id": "[parameters('mongoDb').databaseName]"
-        }
+      }
+    },
+    {
+      "condition": "[parameters('mongoDb').deploy]",
+      "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections",
+      "name": "[concat(parameters('mongoDb').name, '/', parameters('mongoDb').databaseName, '/', parameters('mongoDb').collectionName)]",
+      "apiVersion": "[variables('cosmosMongoDbApiVersion')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/mongodbDatabases', parameters('mongoDb').name, parameters('mongoDb').databaseName)]"
+      ],
+      "properties": {
       }
     }
   ],
   "outputs": {
-    "managerDataServerHost": {
+    "postgreSqlHost": {
       "type": "string",
       "value": "[concat(parameters('postgreSql').name, '.postgres.database.azure.com')]"
     },
-    "managerDataServerPort": {
-      "type": "string",
-      "value": "5432"
+    "postgreSqlPort": {
+      "type": "int",
+      "value": 5432
     },
-    "managerDataServerAuth": {
+    "postgreSqlAdminUserName": {
       "type": "string",
-      "value": "[concat('user=', parameters('postgreSql').admin.name, ' password=', parameters('postgreSql').admin.password)]"
+      "value": "[parameters('postgreSql').admin.name]"
+    },
+    "postgreSqlAdminPassword": {
+      "type": "string",
+      "value": "[parameters('postgreSql').admin.password]"
+    },
+    "mongoDbHost": {
+      "type": "string",
+      "value": "[concat(parameters('mongoDb').name, '.mongo.cosmos.azure.com')]"
+    },
+    "mongoDbPort": {
+      "type": "int",
+      "value": 10255
+    },
+    "mongoDbAdminUserName": {
+      "type": "string",
+      "value": "[parameters('mongoDb').name]"
+    },
+    "mongoDbAdminPassword": {
+      "type": "string",
+      "value": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('mongoDb').name), variables('cosmosMongoDbApiVersion')).primaryMasterKey]"
     }
   }
 }

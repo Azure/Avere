@@ -17,7 +17,7 @@ param (
     # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in the compute region
     [boolean] $storageCacheDeploy = $false,
 
-    # Set to "Linux" or "Windows" for the Azure workstation image and virtual machine type for remote artists
+    # Set the operating system type (i.e., Linux or Windows) for the Azure artist workstation image and virtual machines
     [string] $artistWorkstationType = "Linux"
 )
 

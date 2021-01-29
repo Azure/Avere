@@ -1,7 +1,4 @@
-$directoryName = "Teradici"
-$localDirectory = "C:\Users\Public\Downloads\$directoryName"
-
-New-Item -ItemType "Directory" -Path $localDirectory
+$localDirectory = "C:\Users\Default\Downloads"
 Set-Location -Path $localDirectory
 
 $fileName = "Teradici-Graphics-Agent-20102.exe"

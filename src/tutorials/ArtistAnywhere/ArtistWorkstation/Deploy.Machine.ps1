@@ -17,14 +17,14 @@ param (
     # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in the compute region
     [boolean] $storageCacheDeploy = $false,
 
+    # Set the operating system type (i.e., Linux or Windows) for the Azure artist workstation image and virtual machines
+    [string] $artistWorkstationType = "Linux",
+
     # The base Azure services framework (e.g., Virtual Network, Managed Identity, Key Vault, etc.)
     [object] $baseFramework,
 
-    # The Azure storage and cache service resources (e.g., accounts, mounts, etc.)
+    # The Azure storage and cache service resources (e.g., storage account, cache mount, etc.)
     [object] $storageCache,
-
-    # The Azure artist workstation operating system type (i.e., Linux or Windows)
-    [string] $osType,
 
     # The Azure render manager
     [object] $renderManager
@@ -70,7 +70,7 @@ $templateConfig.parameters.scriptExtension.value.fileParameters = $fileParameter
 
 $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
 $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
-$templateConfig | ConvertTo-Json -Depth 6 | Out-File $templateParameters
+$templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
 $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
 $artistWorkstations = $groupDeployment.properties.outputs.artistWorkstations.value

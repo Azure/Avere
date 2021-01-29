@@ -40,15 +40,37 @@
     },
     "scriptExtension": {
       "value": {
-        "filePath": "/tmp/11-OpenCue.Machine.sh",
-        "fileParameters": "DATA_HOST='rendermanager.postgres.database.azure.com' DATA_PORT='5432' ADMIN_AUTH='user=az password=P@ssword1234' DB_NAME='OpenCue' DB_USER_NAME='wrangler' DB_USER_PASSWORD='P@ssword1234'",
-        "scriptParameters": {
-          "DATA_HOST": "rendermanager.postgres.database.azure.com",
-          "DATA_PORT": "5432",
-          "ADMIN_AUTH": "user=az password=P@ssword1234",
-          "DB_NAME": "OpenCue",
-          "DB_USER_NAME": "wrangler",
-          "DB_USER_PASSWORD": "P@ssword1234"
+        "openCue": {
+          "filePath": {
+            "linux": "/tmp/11-Machine.OpenCue.sh",
+            "windows": "C:\\Users\\Default\\Downloads\\11-Machine.OpenCue.ps1"
+          },
+          "fileParameters": "",
+          "scriptParameters": {
+            "host": "render.postgres.database.azure.com",
+            "port": 5432,
+            "adminUsername": "az",
+            "adminPassword": "P@ssword1234",
+            "dbName": "OpenCue",
+            "dbUsername": "wrangler",
+            "dbPassword": "P@ssword1234"
+          }
+        },
+        "deadline": {
+          "filePath": {
+            "linux": "/tmp/11-Machine.Deadline.sh",
+            "windows": "C:\\Users\\Default\\Downloads\\11-Machine.Deadline.ps1"
+          },
+          "fileParameters": "",
+          "scriptParameters": {
+            "host": "render.mongo.cosmos.azure.com",
+            "port": 10255,
+            "adminUsername": "az",
+            "adminPassword": "P@ssword1234",
+            "dbName": "Deadline",
+            "dbUsername": "wrangler",
+            "dbPassword": "P@ssword1234"
+          }
         }
       }
     },

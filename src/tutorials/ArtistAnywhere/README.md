@@ -1,6 +1,6 @@
-# Azure Artist Anywhere ([aka.ms/aaa](http://aka.ms/aaa))
+# Azure Artist Anywhere ([aka.ms/aaa](https://aka.ms/aaa))
 
-Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/azure/azure-resource-manager/management/overview) templates for automated deployment of an end-to-end rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight and customizable deployment framework with the storage tier in Azure and/or storage located on-premises with Azure compute integration via [Azure HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview).
+Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/azure/azure-resource-manager/management/overview) templates for automated deployment of an end-to-end rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight and customizable deployment framework with the storage tier in Azure and/or storage located on-premises with Azure compute integration via the [Azure HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) managed service.
 
 As a sample, the following image was rendered on [Azure HPC VMs](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-hpc) via an [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) using [V-Ray for Maya](https://www.chaosgroup.com/vray/maya).
 
@@ -22,7 +22,7 @@ The following Microsoft Azure services and 3rd-party software are integrated wit
             <a href="https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview" target="_blank">Azure HPC Cache</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/azure/cyclecloud/overview" target="_blank">Azure Cycle Cloud</a>
+            <a href="https://docs.microsoft.com/azure/cyclecloud/overview" target="_blank">Azure CycleCloud</a>
         </td>
     </tr>
     <tr>
@@ -107,15 +107,28 @@ The following overview diagram depicts the Azure Artist Anywhere solution archit
 
 The following Microsoft Azure resource templates and scripts define the Azure Artist Anywhere deployment modules.
 
-| *Base Framework* | *Storage Cache* | *Render Manager* |
-| :----------------- | :-------------- | :--------------- |
-| 00 - [Virtual Network](BaseFramework/00-VirtualNetwork.json) ([Parameters](BaseFramework/00-VirtualNetwork.Parameters.json)) | 07 - [Storage](StorageCache/07-Storage.json) ([Parameters](StorageCache/07-Storage.Parameters.json)) | 10 - [Database](RenderManager/10-Database.json) ([Parameters](RenderManager/10-Database.Parameters.json)) |
-| 01 - [Managed Identity](BaseFramework/01-ManagedIdentity.json) ([Parameters](BaseFramework/01-ManagedIdentity.Parameters.json)) | 07 - [Storage NetApp](StorageCache/07-Storage.NetApp.json) ([Parameters](StorageCache/07-Storage.NetApp.Parameters.json)) | 11 - [Image](RenderManager/11-Image.json) ([Parameters](RenderManager/11-Image.Parameters.json)) |
-| 02 - [Key Vault](BaseFramework/02-KeyVault.json) ([Parameters](BaseFramework/02-KeyVault.Parameters.json)) | 07 - [* Storage Qumulo](StorageCache/07-Storage.Qumulo.json) ([Parameters](StorageCache/07-Storage.Qumulo.Parameters.json)) | 11 - Image Customize ([Linux](RenderManager/11-Image.sh), [Windows](RenderManager/11-Image.ps1)) |
-| 03 - [Network Gateway](BaseFramework/03-NetworkGateway.json) ([Parameters](BaseFramework/03-NetworkGateway.Parameters.json)) | 07 - [* Storage Scality](StorageCache/07-Storage.Scality.json) ([Parameters](StorageCache/07-Storage.Scality.Parameters.json)) | 12 - [Machine](RenderManager/12-Machine.json) ([Parameters](RenderManager/12-Machine.Parameters.json)) |
-| 04 - [Pipeline Insight](BaseFramework/04-PipelineInsight.json) ([Parameters](BaseFramework/04-PipelineInsight.Parameters.json)) | 08 - [HPC Cache](StorageCache/08-HPCCache.json) ([Parameters](StorageCache/08-HPCCache.Parameters.json)) | 12 - Machine Initialize ([Linux](RenderManager/12-Machine.sh), [Windows](RenderManager/12-Machine.ps1)) |
-| 05 - [Image Gallery](BaseFramework/05-ImageGallery.json) ([Parameters](BaseFramework/05-ImageGallery.Parameters.json)) | 09 - [Event Grid](StorageCache/09-EventGrid.json) ([Parameters](StorageCache/09-EventGrid.Parameters.json)) | 13 - [Cycle Cloud](RenderManager/13-CycleCloud.json) ([Parameters](RenderManager/13-CycleCloud.Parameters.json)) |
-| 06 - [Container Registry](BaseFramework/06-ContainerRegistry.json) ([Parameters](BaseFramework/06-ContainerRegistry.Parameters.json)) | | 14 - [Batch Account](RenderManager/14-BatchAccount.json) ([Parameters](RenderManager/14-BatchAccount.Parameters.json)) |
+| *Base Framework* | *Storage Cache* |
+| :--------------- | :-------------- |
+| 00 - [Virtual Network](BaseFramework/00-VirtualNetwork.json) ([Parameters](BaseFramework/00-VirtualNetwork.Parameters.json)) | 07 - [Storage](StorageCache/07-Storage.json) ([Parameters](StorageCache/07-Storage.Parameters.json)) |
+| 01 - [Managed Identity](BaseFramework/01-ManagedIdentity.json) ([Parameters](BaseFramework/01-ManagedIdentity.Parameters.json)) | 07 - [Storage NetApp](StorageCache/07-Storage.NetApp.json) ([Parameters](StorageCache/07-Storage.NetApp.Parameters.json)) |
+| 02 - [Key Vault](BaseFramework/02-KeyVault.json) ([Parameters](BaseFramework/02-KeyVault.Parameters.json)) | 07 - [* Storage Hammerspace](StorageCache/07-Storage.Hammerspace.json) ([Parameters](StorageCache/07-Storage.Hammerspace.Parameters.json)) |
+| 03 - [Network Gateway](BaseFramework/03-NetworkGateway.json) ([Parameters](BaseFramework/03-NetworkGateway.Parameters.json)) | 07 - [* Storage Qumulo](StorageCache/07-Storage.Qumulo.json) ([Parameters](StorageCache/07-Storage.Qumulo.Parameters.json)) |
+| 04 - [Pipeline Insight](BaseFramework/04-PipelineInsight.json) ([Parameters](BaseFramework/04-PipelineInsight.Parameters.json)) | 07 - [* Storage Scality](StorageCache/07-Storage.Scality.json) ([Parameters](StorageCache/07-Storage.Scality.Parameters.json)) |
+| 05 - [Image Gallery](BaseFramework/05-ImageGallery.json) ([Parameters](BaseFramework/05-ImageGallery.Parameters.json)) | 08 - [HPC Cache](StorageCache/08-HPCCache.json) ([Parameters](StorageCache/08-HPCCache.Parameters.json)) |
+| 06 - [Container Registry](BaseFramework/06-ContainerRegistry.json) ([Parameters](BaseFramework/06-ContainerRegistry.Parameters.json)) | 09 - [Event Grid](StorageCache/09-EventGrid.json) ([Parameters](StorageCache/09-EventGrid.Parameters.json)) |
+
+\* = TBD
+
+| *Render Manager (Linux)* | *Render Manager (Windows)* |
+| :----------------------- | :------------------------- |
+| 10 - [Database](RenderManager/10-Database.json) ([Parameters](RenderManager/10-Database.Parameters.json)) | 10 - [Database](RenderManager/10-Database.json) ([Parameters](RenderManager/10-Database.Parameters.json)) |
+| 11 - [Image](RenderManager/11-Image.json) ([Parameters](RenderManager/11-Image.Parameters.json)) | 11 - [Image](RenderManager/11-Image.json) ([Parameters](RenderManager/11-Image.Parameters.json)) |
+| 11 - [Image Customize (OpenCue)](RenderManager/11-Image.OpenCue.sh) | 11 - [* Image Customize (OpenCue)](RenderManager/11-Image.OpenCue.ps1) |
+| 11 - [* Image Customize (Deadline)](RenderManager/11-Image.Deadline.sh) | 11 - [* Image Customize (Deadline)](RenderManager/11-Image.Deadline.ps1) |
+| 12 - [Machine](RenderManager/12-Machine.json) ([Parameters](RenderManager/12-Machine.Parameters.json)) | 12 - [Machine](RenderManager/12-Machine.json) ([Parameters](RenderManager/12-Machine.Parameters.json)) |
+| 12 - [Machine Initialize](RenderManager/12-Machine.sh) | 12 - [Machine Initialize](RenderManager/12-Machine.ps1) |
+| 13 - [CycleCloud](RenderManager/13-CycleCloud.json) ([Parameters](RenderManager/13-CycleCloud.Parameters.json)) | 13 - [CycleCloud](RenderManager/13-CycleCloud.json) ([Parameters](RenderManager/13-CycleCloud.Parameters.json)) |
+| 14 - [Batch Account](RenderManager/14-BatchAccount.json) ([Parameters](RenderManager/14-BatchAccount.Parameters.json)) | 14 - [Batch Account](RenderManager/14-BatchAccount.json) ([Parameters](RenderManager/14-BatchAccount.Parameters.json)) |
 
 \* = TBD
 

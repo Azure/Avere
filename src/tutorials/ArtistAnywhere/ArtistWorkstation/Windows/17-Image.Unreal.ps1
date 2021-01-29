@@ -1,7 +1,4 @@
-$directoryName = "Unreal"
-$localDirectory = "C:\Users\Public\Downloads\$directoryName"
-
-New-Item -ItemType "Directory" -Path $localDirectory
+$localDirectory = "C:\Users\Default\Downloads"
 Set-Location -Path $localDirectory
 
 $fileName = "EpicInstaller-10.19.2-enterprise"

@@ -1,1 +1,2 @@
-Set-Location -Path 'C:\Users\Public\Downloads'
+$localDirectory = "C:\Users\Default\Downloads"
+Set-Location -Path $localDirectory

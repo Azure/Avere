@@ -2,6 +2,8 @@
 
 set -ex
 
+cd /usr/local/bin
+
 grep 'centos:7' /etc/os-release && centOS7=true || centOS7=false
 lshw -class 'display' | grep 'NVIDIA' && nvidiaGPU=true || nvidiaGPU=false
 
@@ -21,8 +23,6 @@ for mountFile in *.mount; do
     cp $mountFile /etc/systemd/system
     systemctl enable $mountFile
 done
-
-cd /usr/local/bin
 
 if $nvidiaGPU; then
     dnf -y install gcc

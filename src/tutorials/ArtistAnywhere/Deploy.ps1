@@ -17,13 +17,13 @@ param (
     # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in the compute region
     [boolean] $storageCacheDeploy = $false,
 
-    # Set to the target Azure render manager deployment mode (i.e., OpenCue[.CycleCloud], Deadline[.CycleCloud] or Batch)
+    # Set to the target Azure render management deployment mode (i.e., OpenCue[.CycleCloud], Deadline[.CycleCloud] or Batch)
     [string] $renderManagerMode = "OpenCue",
 
-    # Set to "Linux" or "Windows" for the Azure server image and virtual machine type for the render farm
-    [boolean] $renderFarmType = "Linux",
+    # Set the operating system type (i.e., Linux or Windows) for the Azure render manager/node images and virtual machines
+    [string] $renderFarmType = "Linux",
 
-    # Set to "Linux" or "Windows" for the Azure workstation image and virtual machine type for remote artists
+    # Set the operating system type (i.e., Linux or Windows) for the Azure artist workstation image and virtual machines
     [string] $artistWorkstationType = "Linux"
 )
 
@@ -48,12 +48,12 @@ $cacheMount = $storageCache.cacheMount
 # Render Manager Job
 $renderManagerModuleName = "Render Manager Job"
 New-TraceMessage $renderManagerModuleName $false
-$renderManagerJob = Start-Job -FilePath "$rootDirectory/RenderManager/Deploy.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $storageNetAppDeploy, $storageCacheDeploy, $renderManagerMode, $baseFramework, $storageCache, $renderFarmType
+$renderManagerJob = Start-Job -FilePath "$rootDirectory/RenderManager/Deploy.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $storageNetAppDeploy, $storageCacheDeploy, $renderManagerMode, $renderFarmType, $baseFramework, $storageCache
 
 # Artist Workstation Image Job
 $workstationImageModuleName = "Artist Workstation Image [$artistWorkstationType] Job"
 New-TraceMessage $workstationImageModuleName $false
-$workstationImageJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Image.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $storageNetAppDeploy, $storageCacheDeploy, $baseFramework, $storageCache, $artistWorkstationType
+$workstationImageJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Image.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $storageNetAppDeploy, $storageCacheDeploy, $artistWorkstationType, $baseFramework, $storageCache
 
 # 15.0 - Render Node Image Template
 $moduleName = "15.0 - Render Node Image Template"
@@ -161,7 +161,7 @@ if ($deployEnabled) {
     }
     $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
     $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
-    $templateConfig | ConvertTo-Json -Depth 7 | Out-File $templateParameters
+    $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
     $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
 }
@@ -203,7 +203,7 @@ if ($renderManagerMode -eq "Batch") {
     $templateConfig.parameters.renderManager.value.resourceGroupName = $renderManager.resourceGroupName
     $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
     $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
-    $templateConfig | ConvertTo-Json -Depth 6 | Out-File $templateParameters
+    $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
     $groupDeployment = (az deployment group create --resource-group $renderManager.resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
     New-TraceMessage $moduleName $true $computeRegionName
@@ -241,7 +241,7 @@ if ($renderManagerMode -eq "OpenCue" -or $renderManagerMode -eq "Deadline") {
     $templateConfig.parameters.logAnalytics.value.resourceGroupName = $logAnalytics.resourceGroupName
     $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
     $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
-    $templateConfig | ConvertTo-Json -Depth 7 | Out-File $templateParameters
+    $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
     $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
     New-TraceMessage $moduleName $true $computeRegionName

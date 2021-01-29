@@ -17,17 +17,17 @@ param (
     # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in the compute region
     [boolean] $storageCacheDeploy = $false,
 
-    # Set to the target Azure render manager deployment mode (i.e., OpenCue[.CycleCloud], Deadline[.CycleCloud] or Batch)
+    # Set to the target Azure render management deployment mode (i.e., OpenCue[.CycleCloud], Deadline[.CycleCloud] or Batch)
     [string] $renderManagerMode = "OpenCue",
+
+    # Set the operating system type (i.e., Linux or Windows) for the Azure render manager/node images and virtual machines
+    [string] $renderFarmType = "Linux",
 
     # The base Azure services framework (e.g., Virtual Network, Managed Identity, Key Vault, etc.)
     [object] $baseFramework,
 
-    # The Azure storage and cache service resources (e.g., accounts, mounts, etc.)
-    [object] $storageCache,
-
-    # The Azure render manager operating system type (i.e., Linux or Windows)
-    [string] $osType
+    # The Azure storage and cache service resources (e.g., storage account, cache mount, etc.)
+    [object] $storageCache
 )
 
 $rootDirectory = !$PSScriptRoot ? $using:rootDirectory : "$PSScriptRoot/.."
@@ -54,7 +54,31 @@ $storageAccount = $storageCache.storageAccount
 $moduleGroupName = "Render Manager"
 New-TraceMessage $moduleGroupName $false
 
-if ($renderManagerMode -ne "Batch") {
+if ($renderManagerMode -eq "Batch") {
+    Set-RoleAssignments "Batch" $null $computeNetwork $managedIdentity $keyVault $imageGallery
+
+    # 14 - Batch Account
+    $moduleName = "14 - Batch Account"
+    New-TraceMessage $moduleName $false $computeRegionName
+    $resourceGroupNameSuffix = ".Manager"
+    $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
+
+    $templateFile = "$rootDirectory/$moduleDirectory/14-BatchAccount.json"
+    $templateParameters = "$rootDirectory/$moduleDirectory/14-BatchAccount.Parameters.json"
+
+    $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
+    $templateConfig.parameters.storageAccount.value.name = $storageAccount.name
+    $templateConfig.parameters.storageAccount.value.resourceGroupName = $storageAccount.resourceGroupName
+    $templateConfig.parameters.keyVault.value.name = $keyVault.name
+    $templateConfig.parameters.keyVault.value.resourceGroupName = $keyVault.resourceGroupName
+    $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
+    $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
+    $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
+
+    $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
+    $renderManager = $groupDeployment.properties.outputs.renderManager.value
+    New-TraceMessage $moduleName $true $computeRegionName
+} else {
     # 10 - Database
     $moduleName = "10 - Database"
     New-TraceMessage $moduleName $false $computeRegionName
@@ -65,20 +89,21 @@ if ($renderManagerMode -ne "Batch") {
     $templateParameters = "$rootDirectory/$moduleDirectory/10-Database.Parameters.json"
 
     $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
-    if ($renderManagerMode.Contains("OpenCue")) {
-        $templateConfig.parameters.postgreSql.value.deploy = $true
-    }
-    if ($renderManagerMode.Contains("Deadline")) {
-        $templateConfig.parameters.mongoDb.value.deploy = $true
-    }
+    $templateConfig.parameters.postgreSql.value.deploy = $renderManagerMode.Contains("OpenCue")
+    $templateConfig.parameters.mongoDb.value.deploy = $renderManagerMode.Contains("Deadline")
     $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
     $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
-    $templateConfig | ConvertTo-Json -Depth 5 | Out-File $templateParameters
+    $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
     $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
-    $managerDataServerHost = $groupDeployment.properties.outputs.managerDataServerHost.value
-    $managerDataServerPort = $groupDeployment.properties.outputs.managerDataServerPort.value
-    $managerDataServerAuth = $groupDeployment.properties.outputs.managerDataServerAuth.value
+    $postgreSqlHost = $groupDeployment.properties.outputs.postgreSqlHost.value
+    $postgreSqlPort = $groupDeployment.properties.outputs.postgreSqlPort.value
+    $postgreSqlAdminUsername = $groupDeployment.properties.outputs.postgreSqlAdminUsername.value
+    $postgreSqlAdminPassword = $groupDeployment.properties.outputs.postgreSqlAdminPassword.value
+    $mongoDbHost = $groupDeployment.properties.outputs.mongoDbHost.value
+    $mongoDbPort = $groupDeployment.properties.outputs.mongoDbPort.value
+    $mongoDbAdminUsername = $groupDeployment.properties.outputs.mongoDbAdminUsername.value
+    $mongoDbAdminPassword = $groupDeployment.properties.outputs.mongoDbAdminPassword.value
     New-TraceMessage $moduleName $true $computeRegionName
 
     # 11.0 - Image Template
@@ -88,7 +113,7 @@ if ($renderManagerMode -ne "Batch") {
     $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
     $imageTemplates = (Get-Content "$rootDirectory/$moduleDirectory/11-Image.Parameters.json" -Raw | ConvertFrom-Json).parameters.imageTemplates.value
-    $deployEnabled = Set-ImageTemplates $resourceGroupName $imageTemplates $osType
+    $deployEnabled = Set-ImageTemplates $resourceGroupName $imageTemplates $renderFarmType
 
     if ($deployEnabled) {
         $templateFile = "$rootDirectory/$moduleDirectory/11-Image.json"
@@ -101,7 +126,7 @@ if ($renderManagerMode -ne "Batch") {
         $templateConfig.parameters.imageGallery.value.resourceGroupName = $imageGallery.resourceGroupName
         $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
         $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
-        $templateConfig | ConvertTo-Json -Depth 6 | Out-File $templateParameters
+        $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
         $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
     }
@@ -127,9 +152,14 @@ if ($renderManagerMode -ne "Batch") {
     $templateConfig.parameters.imageGallery.value.resourceGroupName = $imageGallery.resourceGroupName
 
     $scriptParameters = $templateConfig.parameters.scriptExtension.value.scriptParameters
-    $scriptParameters.DATA_HOST = $managerDataServerHost
-    $scriptParameters.DATA_PORT = $managerDataServerPort
-    $scriptParameters.ADMIN_AUTH = $managerDataServerAuth
+    $scriptParameters.postgreSqlHost = $postgreSqlHost
+    $scriptParameters.postgreSqlPort = $postgreSqlPort
+    $scriptParameters.postgreSqlAdminUsername = $postgreSqlAdminUsername
+    $scriptParameters.postgreSqlAdminPassword = $postgreSqlAdminPassword
+    $scriptParameters.mongoDbHost = $mongoDbHost
+    $scriptParameters.mongoDbPort = $mongoDbPort
+    $scriptParameters.mongoDbAdminUsername = $mongoDbAdminUsername
+    $scriptParameters.mongoDbAdminPassword = $mongoDbAdminPassword
     $fileParameters = Get-ObjectProperties $scriptParameters $false
     $templateConfig.parameters.scriptExtension.value.fileParameters = $fileParameters
 
@@ -137,7 +167,7 @@ if ($renderManagerMode -ne "Batch") {
     $templateConfig.parameters.logAnalytics.value.resourceGroupName = $logAnalytics.resourceGroupName
     $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
     $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
-    $templateConfig | ConvertTo-Json -Depth 6 | Out-File $templateParameters
+    $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
     $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
 
@@ -145,9 +175,9 @@ if ($renderManagerMode -ne "Batch") {
     $renderManager.host ??= ""
     New-TraceMessage $moduleName $true $computeRegionName
 
-    # 13 - Cycle Cloud
+    # 13 - CycleCloud
     if ($renderManagerMode.Contains("CycleCloud")) {
-        $moduleName = "13 - Cycle Cloud"
+        $moduleName = "13 - CycleCloud"
         New-TraceMessage $moduleName $false $computeRegionName
         $resourceGroupNameSuffix = ".Manager"
         $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
@@ -162,53 +192,16 @@ if ($renderManagerMode -ne "Batch") {
         $templateConfig.parameters.logAnalytics.value.resourceGroupName = $logAnalytics.resourceGroupName
         $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
         $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
-        $templateConfig | ConvertTo-Json -Depth 6 | Out-File $templateParameters
+        $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
         az vm image terms accept --publisher $templateConfig.parameters.computeManager.value.image.publisher --offer $templateConfig.parameters.computeManager.value.image.offer --plan $templateConfig.parameters.computeManager.value.image.sku
 
         $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
         $eventGridTopicId = $groupDeployment.properties.outputs.eventGridTopicId.value
-
-        $principalType = "ServicePrincipal"
-
-        $roleId = "b24988ac-6180-42a0-ab88-20f7382dd24c" # Contributor
-        $subscriptionId = az account show --query "id"
-        Set-RoleAssignment $roleId $managedIdentity.principalId $principalType "/subscriptions/$subscriptionId" $false $false
-
-        $roleId = "acdd72a7-3385-48ef-bd42-f606fba81ae7" # Reader
-        Set-RoleAssignment $roleId $managedIdentity.principalId $principalType $eventGridTopicId $false $false
-
         New-TraceMessage $moduleName $true $computeRegionName
+
+        Set-RoleAssignments "CycleCloud" $null $computeNetwork $managedIdentity $keyVault $imageGallery $eventGridTopicId
     }
-} else {
-    # 14 - Batch Account
-    $moduleName = "14 - Batch Account"
-    New-TraceMessage $moduleName $false $computeRegionName
-    $resourceGroupNameSuffix = ".Manager"
-    $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
-
-    $principalType = "ServicePrincipal"
-    $principalId = "f520d84c-3fd3-4cc8-88d4-2ed25b00d27a" # Microsoft Azure Batch
-    $roleId = "b24988ac-6180-42a0-ab88-20f7382dd24c"      # Contributor
-    $subscriptionId = az account show --query "id"
-    $subscriptionId = "/subscriptions/$subscriptionId"
-    Set-RoleAssignment $roleId $principalId $principalType $subscriptionId $false $false
-
-    $templateFile = "$rootDirectory/$moduleDirectory/14-BatchAccount.json"
-    $templateParameters = "$rootDirectory/$moduleDirectory/14-BatchAccount.Parameters.json"
-
-    $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
-    $templateConfig.parameters.storageAccount.value.name = $storageAccount.name
-    $templateConfig.parameters.storageAccount.value.resourceGroupName = $storageAccount.resourceGroupName
-    $templateConfig.parameters.keyVault.value.name = $keyVault.name
-    $templateConfig.parameters.keyVault.value.resourceGroupName = $keyVault.resourceGroupName
-    $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
-    $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
-    $templateConfig | ConvertTo-Json -Depth 5 | Out-File $templateParameters
-
-    $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
-    $renderManager = $groupDeployment.properties.outputs.renderManager.value
-    New-TraceMessage $moduleName $true $computeRegionName
 }
 
 New-TraceMessage $moduleGroupName $true

@@ -32,7 +32,7 @@
           "storageAccountId": "[resourceId(parameters('storageAccount').resourceGroupName, 'Microsoft.Storage/storageAccounts', parameters('storageAccount').name)]"
         },
         "keyVaultReference": {
-          "id": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name)]",
+          "id": "[resourceId(parameters('keyVault').resourceGroupName, 'Microsoft.KeyVault/vaults', parameters('keyVault').name)]",
           "url": "[reference(resourceId(parameters('keyVault').resourceGroupName, 'Microsoft.KeyVault/vaults', parameters('keyVault').name), variables('keyVaultApiVersion')).vaultUri]"
         },
         "encryption": {

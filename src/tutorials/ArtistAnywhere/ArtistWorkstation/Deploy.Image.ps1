@@ -17,14 +17,14 @@ param (
     # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in the compute region
     [boolean] $storageCacheDeploy = $false,
 
+    # Set the operating system type (i.e., Linux or Windows) for the Azure artist workstation image and virtual machines
+    [string] $artistWorkstationType = "Linux",
+
     # The base Azure services framework (e.g., Virtual Network, Managed Identity, Key Vault, etc.)
     [object] $baseFramework,
 
-    # The Azure storage and cache service resources (e.g., accounts, mounts, etc.)
-    [object] $storageCache,
-
-    # The Azure artist workstation operating system type (i.e., Linux or Windows)
-    [string] $osType
+    # The Azure storage and cache service resources (e.g., storage account, cache mount, etc.)
+    [object] $storageCache
 )
 
 $rootDirectory = !$PSScriptRoot ? $using:rootDirectory : "$PSScriptRoot/.."
@@ -52,7 +52,7 @@ $resourceGroupNameSuffix = ".Gallery"
 $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
 $imageTemplates = (Get-Content "$rootDirectory/$moduleDirectory/17-Image.Parameters.json" -Raw | ConvertFrom-Json).parameters.imageTemplates.value
-$deployEnabled = Set-ImageTemplates $resourceGroupName $imageTemplates $osType
+$deployEnabled = Set-ImageTemplates $resourceGroupName $imageTemplates $artistWorkstationType
 
 if ($deployEnabled) {
     $templateFile = "$rootDirectory/$moduleDirectory/17-Image.json"
@@ -65,7 +65,7 @@ if ($deployEnabled) {
     $templateConfig.parameters.imageGallery.value.resourceGroupName = $imageGallery.resourceGroupName
     $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
     $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
-    $templateConfig | ConvertTo-Json -Depth 6 | Out-File $templateParameters
+    $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
     $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
 }

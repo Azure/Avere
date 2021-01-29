@@ -1,7 +1,4 @@
-$directoryName = "Blender"
-$localDirectory = "C:\Users\Public\Downloads\$directoryName"
-
-New-Item -ItemType "Directory" -Path $localDirectory
+$localDirectory = "C:\Users\Default\Downloads"
 Set-Location -Path $localDirectory
 
 $downloadUrl = "https://usawest.blob.core.windows.net/bin/Blender"

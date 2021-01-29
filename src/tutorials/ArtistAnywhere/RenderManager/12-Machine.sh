@@ -7,8 +7,8 @@ cd $localDirectory
 
 dbName=$(echo $DB_NAME | tr '[:upper:]' '[:lower:]')
 
-pgAdmin="host=$DATA_HOST port=$DATA_PORT sslmode=require dbname=postgres $ADMIN_AUTH"
-dbAdmin="host=$DATA_HOST port=$DATA_PORT sslmode=require dbname=$dbName $ADMIN_AUTH"
+pgAdmin="host=$DATA_TIER_HOST port=$DATA_TIER_PORT sslmode=require user=$DATA_TIER_ADMIN_USERNAME password=$DATA_TIER_ADMIN_PASSWORD dbname=postgres"
+dbAdmin="host=$DATA_TIER_HOST port=$DATA_TIER_PORT sslmode=require user=$DATA_TIER_ADMIN_USERNAME password=$DATA_TIER_ADMIN_PASSWORD dbname=$dbName"
 
 databaseExists=$(psql "$pgAdmin" -t -c "select datname from pg_catalog.pg_database where lower(datname) = '$dbName'")
 if [ ! $databaseExists ]; then
@@ -21,7 +21,7 @@ fi
 
 systemService='opencue-bot.service'
 
-dbUrl="jdbc:postgresql://$DATA_HOST:$DATA_PORT/$dbName?sslmode=require"
+dbUrl="jdbc:postgresql://$DATA_TIER_HOST:$DATA_TIER_PORT/$dbName?sslmode=require"
 sed -i "/Environment=DB_URL/c Environment=DB_URL=$dbUrl" $systemService
 sed -i "/Environment=DB_USER/c Environment=DB_USER=$DB_USER_NAME" $systemService
 sed -i "/Environment=DB_PASS/c Environment=DB_PASS=$DB_USER_PASSWORD" $systemService
