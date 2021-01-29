@@ -74,6 +74,7 @@ parameters:
   - name: ssh_pub_key
     displayName: "Optional: Pass in public ssh key, it would be placed on controller."
     type: string
+    default: ''
 
 variables:
   SSH_PUBLIC_KEY: '${{ parameters.ssh_pub_key}}'
