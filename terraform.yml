@@ -38,11 +38,10 @@ parameters:
       - "proxy"
       - "azureblobfiler"
   - name: image
-    displayName: "Select vfxt image to run. Defaults to latest."
+    displayName: "Select vfxt image to run. Defaults to 6.0.0."
     type: string
-    default: "microsoft-avere:vfxt:avere-vfxt-node:latest"
+    default: "microsoft-avere:vfxt:avere-vfxt-node:6.0.0"
     values:
-      - "microsoft-avere:vfxt:avere-vfxt-node:latest"
       - "microsoft-avere:vfxt:avere-vfxt-node:6.0.0"
       - "microsoft-avere:vfxt:avere-vfxt-node:5.3.61"
       - "microsoft-avere:vfxt:avere-vfxt-node:5.3.51"
