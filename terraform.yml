@@ -1,3 +1,5 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# https://aka.ms/yaml
 parameters:
   - name: original_node_count
     displayName: "Original Node Count"
@@ -11,7 +13,12 @@ parameters:
     type: number
     default: 2
     values:
+      - 1
       - 2
+      - 3
+      - 4
+      - 5
+      - 6
   - name: region
     displayName: "Region to run pipeline"
     type: string
@@ -33,8 +40,9 @@ parameters:
   - name: image
     displayName: "Select vfxt image to run. Defaults to latest."
     type: string
-    default: "microsoft-avere:vfxt:avere-vfxt-node:6.0.0"
+    default: "microsoft-avere:vfxt:avere-vfxt-node:latest"
     values:
+      - "microsoft-avere:vfxt:avere-vfxt-node:latest"
       - "microsoft-avere:vfxt:avere-vfxt-node:6.0.0"
       - "microsoft-avere:vfxt:avere-vfxt-node:5.3.61"
       - "microsoft-avere:vfxt:avere-vfxt-node:5.3.51"
@@ -59,14 +67,16 @@ parameters:
     displayName: "Run scale-down (only runs if scale-up is selected)"
     type: boolean
     default: false
-  - name: run_destory_and_cleanup
+  - name: run_destroy_and_cleanup
     displayName: "Run terraform destroy and rg cleanup."
     type: boolean
     default: true
-  - name: pass_in_ssh_key
-    displayName: "Pass in public ssh key - make sure to add variable: PUBLIC_KEY"
-    type: boolean
-    default: false
+  - name: ssh_pub_key
+    displayName: "Optional: Pass in public ssh key, it would be placed on controller."
+    type: string
+
+variables:
+  SSH_PUBLIC_KEY: '${{ parameters.ssh_pub_key}}'
   
 jobs:
 - job: Terraform_vFXT
@@ -89,17 +99,17 @@ jobs:
   - template: templates/terraform_cmd.yml
     parameters: 
       run_terraform: ${{ parameters.run_terraform }}
-      cmd_terraform: 'apply'
-      condition: "succeeded()"
+      cmd_terraform: apply
+      condition: succeeded()
   
-  - ${{ if eq(parameters.pass_in_ssh_key, true) }}:
+  - ${{ if ne(length(parameters.ssh_pub_key), 0) }}:
     - template: templates/add_sshkey.yml
 
   - ${{ if eq(parameters.run_vdbench, true) }}:
     - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
       - template: templates/run_vdbench.yml
         parameters: 
-          cmd_terraform: 'apply'
+          cmd_terraform: apply
           vdbench_config: ${{ parameters.vdbench_config }}
 
   - ${{ if eq(parameters.run_scale_up, true) }}:
@@ -107,12 +117,12 @@ jobs:
       parameters:
         original_node_count: ${{ parameters.original_node_count }}
         scale_up_node_count: ${{ parameters.scale_up_node_count }}
-        scale: "up"
+        scale: up
     - template: templates/terraform_cmd.yml
       parameters: 
         run_terraform: ${{ parameters.run_terraform }}
-        cmd_terraform: 'apply'
-        condition: "succeeded()"
+        cmd_terraform: apply
+        condition: succeeded()
     
   - ${{ if eq(parameters.run_scale_up, true) }}:
     - ${{ if eq(parameters.run_scale_down, true) }}:
@@ -124,17 +134,17 @@ jobs:
       - template: templates/terraform_cmd.yml
         parameters: 
           run_terraform: ${{ parameters.run_terraform }}
-          cmd_terraform: 'apply'
-          condition: "succeeded()"
-  - ${{ if eq(parameters.run_destory_and_cleanup, true) }}:
+          cmd_terraform: apply
+          condition: succeeded()
+  - ${{ if eq(parameters.run_destroy_and_cleanup, true) }}:
     - ${{ if eq(parameters.run_vdbench, true) }}:
       - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
         - template: templates/run_vdbench.yml
           parameters: 
-            cmd_terraform: 'destroy'
+            cmd_terraform: destroy
             vdbench_config: ${{ parameters.vdbench_config }}
     - template: templates/terraform_cmd.yml
       parameters: 
         run_terraform: ${{ parameters.run_terraform }}
-        cmd_terraform: 'destroy'
+        cmd_terraform: destroy
     - template: templates/rg_delete.yml

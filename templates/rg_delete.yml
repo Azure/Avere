@@ -1,3 +1,5 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# https://aka.ms/yaml
 steps:
 - bash: |
     for x in "-vmss" "-vfxt" "-filer" "-storage" "-proxy" "-network"; do  

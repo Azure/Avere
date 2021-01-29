@@ -1,9 +1,11 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# https://aka.ms/yaml
 steps:
 - script: |
     cd src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
     CONTROLLER_ADDRESS=$(terraform output -json | jq -r ".controller_address.value")
     USERNAME=$(terraform output -json | jq -r ".controller_username.value")
 
-    echo "##vso[task.setvariable variable=secret.PUBLIC_KEY;issecret=true]${PUBLIC_KEY}"
-    ssh -o "StrictHostKeyChecking=no" ${USERNAME}@${CONTROLLER_ADDRESS} "echo \"$PUBLIC_KEY\" >> /home/$USERNAME/.ssh/authorized_keys"
+    echo "##vso[task.setvariable variable=secret.SSH_PUBLIC_KEY;issecret=true]${SSH_PUBLIC_KEY}"
+    ssh -o "StrictHostKeyChecking=no" ${USERNAME}@${CONTROLLER_ADDRESS} "echo \"$SSH_PUBLIC_KEY\" >> /home/$USERNAME/.ssh/authorized_keys"
   displayName: 'Pass in public ssh key'
