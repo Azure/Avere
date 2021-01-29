@@ -79,7 +79,8 @@
       "type": "object",
       "value": {
         "name": "[parameters('storageNetwork').name]",
-        "resourceGroupName": "[resourceGroup().name]"
+        "resourceGroupName": "[resourceGroup().name]",
+        "regionName": "[parameters('storageNetwork').regionName]"
       }
     },
     "computeNetwork": {
@@ -87,6 +88,7 @@
       "value": {
         "name": "[parameters('computeNetwork').name]",
         "resourceGroupName": "[resourceGroup().name]",
+        "regionName": "[parameters('computeNetwork').regionName]",
         "domainName": "[parameters('dnsZone').name]"
       }
     }

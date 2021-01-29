@@ -83,7 +83,7 @@
         "count": "[length(parameters('storageMounts'))]",
         "input": {
           "type": "[parameters('storageMounts')[copyIndex()].type]",
-          "endpoint": "[concat(reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('storageAccount').name, parameters('storageMounts')[copyIndex()].capacityPoolName, parameters('storageMounts')[copyIndex()].volumeName), variables('netAppApiVersion')).mountTargets[0].ipAddress, ':/', toLower(parameters('storageMounts')[copyIndex()].volumeName))]",
+          "host": "[concat(reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('storageAccount').name, parameters('storageMounts')[copyIndex()].capacityPoolName, parameters('storageMounts')[copyIndex()].volumeName), variables('netAppApiVersion')).mountTargets[0].ipAddress, ':/', toLower(parameters('storageMounts')[copyIndex()].volumeName))]",
           "options": "[parameters('storageMounts')[copyIndex()].options]",
           "path": "[parameters('storageMounts')[copyIndex()].path]",
           "drive": "[parameters('storageMounts')[copyIndex()].drive]"
@@ -97,7 +97,7 @@
         "input": {
           "name": "[parameters('storageTargets')[copyIndex()].name]",
           "type": "[parameters('storageTargets')[copyIndex()].type]",
-          "endpoint": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('storageAccount').name, parameters('storageVolumes')[copyIndex()].capacityPoolName, parameters('storageVolumes')[copyIndex()].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
+          "host": "[reference(resourceId('Microsoft.NetApp/netAppAccounts/capacityPools/volumes', parameters('storageAccount').name, parameters('storageVolumes')[copyIndex()].capacityPoolName, parameters('storageVolumes')[copyIndex()].name), variables('netAppApiVersion')).mountTargets[0].ipAddress]",
           "usageModel": "[parameters('storageTargets')[copyIndex()].usageModel]",
           "junctions": "[parameters('storageTargets')[copyIndex()].junctions]"
         }

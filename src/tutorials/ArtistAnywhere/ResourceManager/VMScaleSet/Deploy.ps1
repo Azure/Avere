@@ -37,8 +37,8 @@ param (
     },
 
     $joinDomain = @{
-        "name" = "azure.com"
-        "ouPath" = "OU=render,DC=azure,DC=com"
+        "name" = "media.studio"
+        "ouPath" = "OU=render,DC=media,DC=studio"
         "options" = 3 # https://docs.microsoft.com/windows/win32/cimwin32prov/joindomainorworkgroup-method-in-class-win32-computersystem
         "username" = ""
         "password" = ""
@@ -47,8 +47,8 @@ param (
 
 az group create --name $resourceGroup.name --location $resourceGroup.regionName
 
-$templateFile = "$PSScriptRoot/ResourceTemplate.json"
-$templateParameters = "$PSScriptRoot/ResourceTemplate.Parameters.json"
+$templateFile = "$PSScriptRoot/Template.json"
+$templateParameters = "$PSScriptRoot/Template.Parameters.json"
 
 $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
 $templateConfig.parameters.managedImage.value = $managedImage

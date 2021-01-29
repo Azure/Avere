@@ -2,28 +2,7 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "cacheName": {
-      "type": "string"
-    },
-    "cacheThroughput": {
-      "type": "string",
-      "allowedValues": [
-        "Standard_2G",
-        "Standard_4G",
-        "Standard_8G"
-      ]
-    },
-    "cacheSize": {
-      "type": "int",
-      "allowedValues": [
-        3072,
-        6144,
-        12288,
-        24576,
-        49152
-      ]
-    },
-    "cacheConfig": {
+    "hpcCache": {
       "type": "object"
     },
     "storageTargets": {
@@ -34,7 +13,7 @@
     }
   },
   "variables": {
-    "cacheApiVersion": "2020-10-01"
+    "apiVersion": "2020-10-01"
   },
   "functions": [
     {
@@ -66,28 +45,28 @@
   "resources": [
     {
       "type": "Microsoft.StorageCache/caches",
-      "name": "[parameters('cacheName')]",
-      "apiVersion": "[variables('cacheApiVersion')]",
+      "name": "[parameters('hpcCache').name]",
+      "apiVersion": "[variables('apiVersion')]",
       "location": "[resourceGroup().location]",
       "sku": {
-        "name": "[parameters('cacheThroughput')]"
+        "name": "[parameters('hpcCache').throughput]"
       },
       "properties": {
-        "cacheSizeGB": "[parameters('cacheSize')]",
+        "cacheSizeGB": "[parameters('hpcCache').size]",
         "subnet": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]",
         "networkSettings": {
-          "mtu": "[parameters('cacheConfig').mtuSize]"
+          "mtu": "[parameters('hpcCache').mtuSize]"
         }
       }
     },
     {
       "condition": "[greater(length(parameters('storageTargets')), 0)]",
       "type": "Microsoft.StorageCache/caches/storageTargets",
-      "name": "[fx.GetStorageTargetName(parameters('cacheName'), parameters('storageTargets'), copyIndex())]",
-      "apiVersion": "[variables('cacheApiVersion')]",
+      "name": "[fx.GetStorageTargetName(parameters('hpcCache').name, parameters('storageTargets'), copyIndex())]",
+      "apiVersion": "[variables('apiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.StorageCache/caches', parameters('cacheName'))]"
+        "[resourceId('Microsoft.StorageCache/caches', parameters('hpcCache').name)]"
       ],
       "properties": {
         "targetType": "[parameters('storageTargets')[copyIndex()].type]",
@@ -106,15 +85,7 @@
   "outputs": {
     "mountAddresses": {
       "type": "array",
-      "value": "[reference(resourceId('Microsoft.StorageCache/caches', parameters('cacheName')), variables('cacheApiVersion')).mountAddresses]"
-    },
-    "mountOptions": {
-      "type": "string",
-      "value": "[parameters('cacheConfig').mountOptions]"
-    },
-    "virtualNetwork": {
-      "type": "object",
-      "value": "[parameters('virtualNetwork')]"
+      "value": "[reference(resourceId('Microsoft.StorageCache/caches', parameters('hpcCache').name), variables('apiVersion')).mountAddresses]"
     }
   }
 }

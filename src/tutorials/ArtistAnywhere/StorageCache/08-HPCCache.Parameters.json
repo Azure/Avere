@@ -20,14 +20,14 @@
     "storageTargets": {
       "value": [
         {
-          "endpoint": "mediaasset3.blob.core.windows.net",
+          "host": "mediaasset3.blob.core.windows.net",
           "junctions": [],
           "name": "Azure-Storage-Objects",
           "type": "nfs3",
           "usageModel": "WRITE_AROUND"
         },
         {
-          "endpoint": "10.0.1.4",
+          "host": "10.0.1.4",
           "junctions": [
             {
               "namespacePath": "/mnt/cache/netapp",

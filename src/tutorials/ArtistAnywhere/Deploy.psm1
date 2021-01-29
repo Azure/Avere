@@ -175,7 +175,6 @@ function Get-BaseFramework ($rootDirectory, $resourceGroupNamePrefix, $computeRe
         $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
         $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
-        $managedIdentity = $groupDeployment.properties.outputs.managedIdentity.value
         New-TraceMessage $moduleName $true $computeRegionName
     }
 
@@ -330,7 +329,7 @@ function Get-StorageCache ($baseFramework, $resourceGroupNamePrefix, $computeReg
 
         $cacheMount = New-Object PSObject
         $cacheMount | Add-Member -MemberType NoteProperty -Name "type" -Value "nfs"
-        $cacheMount | Add-Member -MemberType NoteProperty -Name "endpoint" -Value ($dnsRecord.fqdn + ":/")
+        $cacheMount | Add-Member -MemberType NoteProperty -Name "host" -Value ($dnsRecord.fqdn + ":/")
         $cacheMount | Add-Member -MemberType NoteProperty -Name "path" -Value "/mnt/cache"
         $cacheMount | Add-Member -MemberType NoteProperty -Name "options" -Value $cacheMountOptions
         New-TraceMessage $moduleName $true $computeRegionName
@@ -427,7 +426,7 @@ function Set-MountUnitFile ($outputDirectory, $mount) {
     Out-File -FilePath $filePath -InputObject "" -Append
     Out-File -FilePath $filePath -InputObject "[Mount]" -Append
     Out-File -FilePath $filePath -InputObject ("Type=" + $mount.type) -Append
-    Out-File -FilePath $filePath -InputObject ("What=" + $mount.endpoint) -Append
+    Out-File -FilePath $filePath -InputObject ("What=" + $mount.host) -Append
     Out-File -FilePath $filePath -InputObject ("Where=" + $mount.path) -Append
     Out-File -FilePath $filePath -InputObject ("Options=" + $mount.options) -Append
     Out-File -FilePath $filePath -InputObject "" -Append

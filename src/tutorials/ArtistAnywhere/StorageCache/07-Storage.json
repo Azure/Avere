@@ -160,7 +160,7 @@
         "count": "[length(parameters('storageMounts'))]",
         "input": {
           "type": "[parameters('storageMounts')[copyIndex()].type]",
-          "endpoint": "[parameters('storageMounts')[copyIndex()].endpoint]",
+          "host": "[parameters('storageMounts')[copyIndex()].host]",
           "options": "[parameters('storageMounts')[copyIndex()].options]",
           "path": "[parameters('storageMounts')[copyIndex()].path]",
           "drive": "[parameters('storageMounts')[copyIndex()].drive]"
@@ -174,7 +174,7 @@
         "input": {
           "name": "[parameters('storageTargets')[copyIndex()].name]",
           "type": "[parameters('storageTargets')[copyIndex()].type]",
-          "endpoint": "[parameters('storageTargets')[copyIndex()].endpoint]",
+          "host": "[parameters('storageTargets')[copyIndex()].host]",
           "usageModel": "[parameters('storageTargets')[copyIndex()].usageModel]",
           "junctions": "[parameters('storageTargets')[copyIndex()].junctions]"
         }

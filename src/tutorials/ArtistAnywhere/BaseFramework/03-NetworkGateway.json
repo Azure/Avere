@@ -15,7 +15,7 @@
   "variables": {
     "virtualNetworkGatewayApiVersion": "2020-08-01",
     "networkConnectionApiVersion": "2020-08-01",
-    "publicIpAddressApiVersion": "2020-08-01",
+    "publicIPAddressApiVersion": "2020-08-01",
     "virtualNetworks": "[createArray(parameters('storageNetwork'), parameters('computeNetwork'))]"
   },
   "functions": [
@@ -45,7 +45,7 @@
     {
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[variables('virtualNetworks')[copyIndex()].name]",
-      "apiVersion": "[variables('publicIpAddressApiVersion')]",
+      "apiVersion": "[variables('publicIPAddressApiVersion')]",
       "location": "[variables('virtualNetworks')[copyIndex()].regionName]",
       "sku": {
         "name": "[parameters('networkGateway').publicAddress.type]"
@@ -64,7 +64,6 @@
       "apiVersion": "[variables('virtualNetworkGatewayApiVersion')]",
       "location": "[variables('virtualNetworks')[copyIndex()].regionName]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworks')[copyIndex()].name)]",
         "[resourceId('Microsoft.Network/publicIPAddresses', variables('virtualNetworks')[copyIndex()].name)]"
       ],
       "properties": {

@@ -103,7 +103,7 @@
       "value": [
         {
           "type": "nfs",
-          "endpoint": "usaeast.blob.core.windows.net:/usaeast/show",
+          "host": "usaeast.blob.core.windows.net:/usaeast/show",
           "options": "sec=sys,vers=3,proto=tcp,nolock",
           "path": "/mnt/storage/object",
           "drive": "X"
@@ -115,7 +115,7 @@
         {
           "name": "Azure-Storage-Objects",
           "type": "nfs3",
-          "endpoint": "usaeast.blob.core.windows.net",
+          "host": "usaeast.blob.core.windows.net",
           "usageModel": "WRITE_AROUND",
           "junctions": [
           ]

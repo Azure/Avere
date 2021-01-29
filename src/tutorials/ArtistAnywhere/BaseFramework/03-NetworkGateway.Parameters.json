@@ -4,10 +4,17 @@
   "parameters": {
     "storageNetwork": {
       "value": {
+        "name": "MediaStorage",
+        "regionName": "EastUS2",
+        "resourceGroupName": "ArtistAnywhere.Network"
       }
     },
     "computeNetwork": {
       "value": {
+        "domainName": "media.studio",
+        "name": "MediaPipeline",
+        "regionName": "WestUS2",
+        "resourceGroupName": "ArtistAnywhere.Network"
       }
     },
     "networkGateway": {

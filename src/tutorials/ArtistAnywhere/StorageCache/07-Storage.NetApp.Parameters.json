@@ -68,7 +68,7 @@
           "volumeName": "Volume-A",
           "capacityPoolName": "Asset",
           "type": "nfs",
-          "endpoint": "",
+          "host": "",
           "options": "rw,hard,rsize=1048576,wsize=1048576,vers=3,tcp",
           "path": "/mnt/storage/netapp",
           "drive": "N"
@@ -80,7 +80,7 @@
         {
           "name": "Azure-NetApp-Files",
           "type": "nfs3",
-          "endpoint": "",
+          "host": "",
           "usageModel": "WRITE_AROUND",
           "junctions": [
             {
