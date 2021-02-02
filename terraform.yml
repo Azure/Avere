@@ -73,7 +73,7 @@ parameters:
   - name: ssh_pub_key
     displayName: "Optional: Pass in public ssh key, it would be placed on controller."
     type: string
-    default: ''
+    default: "."
 
 variables:
   SSH_PUBLIC_KEY: '${{ parameters.ssh_pub_key}}'
@@ -102,7 +102,7 @@ jobs:
       cmd_terraform: apply
       condition: succeeded()
   
-  - ${{ if ne(length(parameters.ssh_pub_key), 0) }}:
+  - ${{ if ne(parameters.ssh_pub_key, '.') }}:
     - template: templates/add_sshkey.yml
 
   - ${{ if eq(parameters.run_vdbench, true) }}:
