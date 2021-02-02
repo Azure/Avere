@@ -9,4 +9,4 @@ steps:
     echo "##vso[task.setvariable variable=secret.SSH_PUBLIC_KEY;issecret=true]${SSH_PUBLIC_KEY}"
     ssh -o "StrictHostKeyChecking=no" ${USERNAME}@${CONTROLLER_ADDRESS} "echo \"$SSH_PUBLIC_KEY\" >> /home/$USERNAME/.ssh/authorized_keys"
   displayName: 'Pass in public ssh key'
-  
+
