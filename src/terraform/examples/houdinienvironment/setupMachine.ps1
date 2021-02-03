@@ -25,7 +25,7 @@ param(
     $DomainPassword = "",
 
     [int]
-    $RDPPort = 3389
+    $RDPPort = 3389,
 
     [string]
     [ValidateNotNullOrEmpty()]
