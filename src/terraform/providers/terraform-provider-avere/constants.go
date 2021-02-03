@@ -28,8 +28,9 @@ const (
 	PlatformAzure = "azure"
 
 	// cluster sizes
-	ClusterSkuUnsupportedTest = "unsupported_test_SKU"
-	ClusterSkuProd            = "prod_sku"
+	ClusterSkuUnsupportedTestFast = "unsupported_test_SKU_fast"
+	ClusterSkuUnsupportedTest     = "unsupported_test_SKU"
+	ClusterSkuProd                = "prod_sku"
 
 	// cache policies
 	CachePolicyClientsBypass                 = "Clients Bypassing the Cluster"

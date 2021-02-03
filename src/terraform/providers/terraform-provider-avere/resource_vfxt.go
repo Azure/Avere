@@ -171,6 +171,7 @@ func resourceVfxt() *schema.Resource {
 				ForceNew: true,
 				Default:  ClusterSkuProd,
 				ValidateFunc: validation.StringInSlice([]string{
+					ClusterSkuUnsupportedTestFast,
 					ClusterSkuUnsupportedTest,
 					ClusterSkuProd,
 				}, false),
@@ -1036,11 +1037,17 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if avereVfxt.EnableSupportUploads == true && avereVfxt.ActiveSupportUpload == true {
-		if err := avereVfxt.UploadRollingTraceAndBlock(); err != nil {
+		// in case there was failure, enable the support uploads before, but
+		// don't let it block the deletion
+		if err := avereVfxt.EnableSupport(); err != nil {
 			log.Printf("[ERROR] failed to upload rolling trace: %v", err)
-		}
-		if err := avereVfxt.UploadSupportBundleAndBlock(); err != nil {
-			log.Printf("[ERROR] failed to upload support bundle: %v", err)
+		} else {
+			if err := avereVfxt.UploadRollingTraceAndBlock(); err != nil {
+				log.Printf("[ERROR] failed to upload rolling trace: %v", err)
+			}
+			if err := avereVfxt.UploadSupportBundleAndBlock(); err != nil {
+				log.Printf("[ERROR] failed to upload support bundle: %v", err)
+			}
 		}
 	}
 
@@ -1069,6 +1076,16 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	if !allowNonAscii {
 		if err := validateSchemaforOnlyAscii(d); err != nil {
 			return nil, err
+		}
+	}
+
+	// validate there are only read-only test SKUs set
+	if d.Get(node_size).(string) == ClusterSkuUnsupportedTestFast {
+		for _, v := range d.Get(core_filer).(*schema.Set).List() {
+			input := v.(map[string]interface{})
+			if !IsCachePolicyReadOnly(input[cache_policy].(string)) {
+				return nil, fmt.Errorf("cache policy '%s' is not read-only, and must be read-only when using %s", input[cache_policy].(string), ClusterSkuUnsupportedTestFast)
+			}
 		}
 	}
 

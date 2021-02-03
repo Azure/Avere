@@ -832,6 +832,19 @@ func (a *AvereVfxt) EnsureCachePolicy(corefiler *CoreFiler) error {
 	}
 }
 
+func IsCachePolicyReadOnly(cachingPolicy string) bool {
+	switch cachingPolicy {
+	case CachePolicyClientsBypass:
+		return true
+	case CachePolicyReadCaching:
+		return true
+	case CachePolicyReadOnlyHighVerificationTime:
+		return true
+	default:
+		return false
+	}
+}
+
 // Create an NFS filer
 func (a *AvereVfxt) CreateCoreFiler(corefiler *CoreFiler) error {
 	if err := a.EnsureCachePolicy(corefiler); err != nil {
@@ -1731,7 +1744,7 @@ func (a *AvereVfxt) SetSupportName() error {
 	return nil
 }
 
-func (a *AvereVfxt) ModifySupportUploads() error {
+func (a *AvereVfxt) EnableSupport() error {
 	if a.EnableSupportUploads {
 		if _, err := a.AvereCommand(a.getSupportAcceptTermsCommand()); err != nil {
 			return err
@@ -1739,6 +1752,13 @@ func (a *AvereVfxt) ModifySupportUploads() error {
 		if _, err := a.AvereCommand(a.getSupportSupportTestUploadCommand()); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (a *AvereVfxt) ModifySupportUploads() error {
+	if err := a.EnableSupport(); err != nil {
+		return err
 	}
 	if _, err := a.AvereCommand(a.getSupportModifyCustomerUploadInfoCommand()); err != nil {
 		return err
