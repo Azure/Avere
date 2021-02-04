@@ -485,6 +485,12 @@ func resourceVfxt() *schema.Resource {
 										Default:      "",
 										ValidateFunc: ValidateCIFSShareName,
 									},
+									core_filer_cifs_share_name: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "",
+										ValidateFunc: ValidateCIFSShareName,
+									},
 									cifs_share_ace: {
 										Type:         schema.TypeString,
 										Optional:     true,
@@ -2020,6 +2026,7 @@ func expandCoreFilerJunctions(l []interface{}, results map[string]*Junction) err
 				PermissionsPreserve,
 				junctionRaw[export_rule].(string),
 				junctionRaw[cifs_share_name].(string),
+				junctionRaw[core_filer_cifs_share_name].(string),
 				junctionRaw[cifs_share_ace].(string),
 				junctionRaw[cifs_create_mask].(string),
 				junctionRaw[cifs_dir_mask].(string))
@@ -2050,6 +2057,7 @@ func expandAzureStorageFilerJunctions(l []interface{}, results map[string]*Junct
 			PermissionsModebits,
 			input[export_rule].(string),
 			input[cifs_share_name].(string),
+			"",
 			input[cifs_share_ace].(string),
 			input[cifs_create_mask].(string),
 			input[cifs_dir_mask].(string))

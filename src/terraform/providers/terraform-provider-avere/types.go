@@ -149,17 +149,18 @@ type AzureStorageFiler struct {
 }
 
 type Junction struct {
-	NameSpacePath      string `json:"path"`
-	CoreFilerName      string `json:"mass"`
-	CoreFilerExport    string `json:"export"`
-	ExportSubdirectory string `json:"subdir"`
-	PolicyName         string `json:"policy"`
-	SharePermissions   string
-	ExportRules        map[string]*ExportRule
-	CifsShareName      string
-	CifsAces           map[string]*ShareAce
-	CifsCreateMask     string
-	CifsDirMask        string
+	NameSpacePath          string `json:"path"`
+	CoreFilerName          string `json:"mass"`
+	CoreFilerExport        string `json:"export"`
+	ExportSubdirectory     string `json:"subdir"`
+	PolicyName             string `json:"policy"`
+	SharePermissions       string
+	ExportRules            map[string]*ExportRule
+	CifsShareName          string
+	CoreFilerCifsShareName string `json:"sharename"`
+	CifsAces               map[string]*ShareAce
+	CifsCreateMask         string
+	CifsDirMask            string
 }
 
 type CustomSetting struct {

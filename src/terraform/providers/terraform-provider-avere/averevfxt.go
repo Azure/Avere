@@ -1354,7 +1354,7 @@ func (a *AvereVfxt) GetExistingJunctions() (map[string]*Junction, error) {
 			newJunction.CifsCreateMask = ""
 			newJunction.CifsDirMask = ""
 		}
-		log.Printf("[INFO] CIFS Share %s, masks '%s' '%s'", newJunction.CifsShareName, newJunction.CifsCreateMask, newJunction.CifsDirMask)
+		log.Printf("[INFO] CIFS Share %s, masks '%s' '%s' (corefiler cifs share '%s')", newJunction.CifsShareName, newJunction.CifsCreateMask, newJunction.CifsDirMask, newJunction.CoreFilerCifsShareName)
 		results[newJunction.NameSpacePath] = &newJunction
 	}
 
@@ -2197,12 +2197,23 @@ func (a *AvereVfxt) getListJunctionsJsonCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json vserver.listJunctions \"%s\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
 }
 
+func getAccessControl(junction *Junction) (string, string) {
+	sharename := ""
+	mode := JunctionPolicyPosix
+	if len(junction.CoreFilerCifsShareName) > 0 {
+		sharename = junction.CoreFilerCifsShareName
+		mode = JunctionPolicyCifs
+	}
+	return sharename, mode
+}
+
 func (a *AvereVfxt) getCreateJunctionCommand(junction *Junction, policyName string) string {
 	inheritPolicy := "yes"
 	if len(policyName) > 0 {
 		inheritPolicy = "no"
 	}
-	return WrapCommandForLogging(fmt.Sprintf("%s vserver.addJunction \"%s\" \"%s\" \"%s\" \"%s\" \"{'sharesubdir':'','inheritPolicy':'%s','sharename':'','access':'posix','createSubdirs':'yes','subdir':'%s','policy':'%s','permissions':'%s'}\"", a.getBaseAvereCmd(), VServerName, junction.NameSpacePath, junction.CoreFilerName, junction.CoreFilerExport, inheritPolicy, junction.ExportSubdirectory, policyName, junction.SharePermissions), AverecmdLogFile)
+	sharename, mode := getAccessControl(junction)
+	return WrapCommandForLogging(fmt.Sprintf("%s vserver.addJunction \"%s\" \"%s\" \"%s\" \"%s\" \"{'sharesubdir':'','inheritPolicy':'%s','sharename':'%s','access':'%s','createSubdirs':'yes','subdir':'%s','policy':'%s','permissions':'%s'}\"", a.getBaseAvereCmd(), VServerName, junction.NameSpacePath, junction.CoreFilerName, junction.CoreFilerExport, inheritPolicy, sharename, mode, junction.ExportSubdirectory, policyName, junction.SharePermissions), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getDeleteJunctionCommand(junctionNameSpacePath string) string {
