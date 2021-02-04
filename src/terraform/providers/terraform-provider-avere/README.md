@@ -305,7 +305,7 @@ In addition to all arguments above, the following attributes are exported:
 * <a name="primary_cluster_ips"></a>[primary_cluster_ips](#primary_cluster_ips) - these are the static primary ip addresses of the cluster that do not move.
 * <a name="mass_filer_mappings"></a>[mass_filer_mappings](#mass_filer_mappings) - these are the static primary ip addresses of the cluster that do not move.
 
-# Build the Terraform Provider binary
+# Build the Terraform Provider binary on Linux
 
 There are three approaches to access the provider binary:
 1. Download from the [releases page](https://github.com/Azure/Avere/releases).
@@ -347,3 +347,25 @@ The following build instructions work in https://shell.azure.com, Centos, or Ubu
     ```
 
 4. Install the provider `~/.terraform.d/plugins/terraform-provider-avere` to the ~/.terraform.d/plugins directory of your terraform environment.
+
+# Build the Terraform Provider binary on Windows
+
+Here are the instructions for building the windows binary:
+
+1. browse to https://git-scm.com/download/win and install git.
+
+1. browse to https://golang.org/doc/install and install golang.
+
+1. open a new powershell command prompt and type the following to checkout the code:
+
+```powershell
+mkdir $env:GOPATH -Force
+cd $env:GOPATH
+go get -v github.com/Azure/Avere/src/terraform/providers/terraform-provider-avere
+cd $env:GOPATH\src\github.com\Azure\Avere\src\terraform\providers\terraform-provider-avere
+go mod download
+go mod tidy
+go build
+```
+
+1. copy the .exe to the source directory
