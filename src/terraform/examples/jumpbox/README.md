@@ -30,7 +30,7 @@ git pull origin main
 
 8. execute `terraform init` in the directory of `main.tf`.
 
-9. execute `terraform apply -auto-approve` to build the HPC Cache cluster
+9. execute `terraform apply -auto-approve` to build the jumpbox
 
 Once installed you will be able to login and use the jumpbox.
 
