@@ -53,7 +53,7 @@ For SMB ensure you set the UID / GID attributes according to the [Avere SMB docu
 
 For SMB the Avere cluster configuration should be:
 1. 3-node cluster only.  To scale, add multiple 3-node clusters and ensure cache policy set to '`Clients Bypassing the Cluster`'.
-1. Ensure global custom setting `"cluster.pruneNsmMonitorEnabled UO false"` is added to clusters running SMB.
+1. In SMB only environments, ensure global custom setting `"cluster.pruneNsmMonitorEnabled UO false"` is added to clusters running SMB.  Advice void after July 1, 2021.
 1. vserver should be configured to have single IP address per node
 1. set domain controller override to ensure Avere only accesses the domain controllers that are allowed by the firewall.
 
