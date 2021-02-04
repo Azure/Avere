@@ -23,6 +23,7 @@ const (
 	AzLoginSleepSeconds = 10
 	AvereInstanceE32s   = "Standard_E32s_v3"
 	AvereInstanceD16s   = "Standard_D16s_v3"
+	AvereInstanceL32s   = "Standard_L32s_v2"
 	AverOperatorRole    = "Avere Operator"
 )
 
@@ -319,9 +320,9 @@ func (a Azure) getBaseVfxtCommand(avereVfxt *AvereVfxt) string {
 	var sb strings.Builder
 
 	// add the values consistent across all commands
-	sb.WriteString(fmt.Sprintf("vfxt.py --cloud-type azure --on-instance --instance-type %s --node-cache-size %d --azure-role '%s' --debug ",
-		convertSku(avereVfxt.NodeSize),
-		avereVfxt.NodeCacheSize,
+	sb.WriteString(fmt.Sprintf("vfxt.py --cloud-type azure --on-instance %s %s --azure-role '%s' --debug ",
+		getVfxtpyInstanceSizeParameter(avereVfxt.NodeSize),
+		getVfxtpyCacheSizeParameters(avereVfxt.NodeSize, avereVfxt.NodeCacheSize),
 		AverOperatorRole))
 
 	// add the resource group and location
@@ -466,9 +467,26 @@ func getLastVfxtValue(stderrBuf bytes.Buffer, vfxtRegex *regexp.Regexp) string {
 	return lastVfxtAddr
 }
 
-func convertSku(sku string) string {
-	if sku == ClusterSkuUnsupportedTest {
-		return AvereInstanceD16s
+func getVfxtpyInstanceSizeParameter(sku string) string {
+	instanceSize := ""
+	switch sku {
+	case ClusterSkuUnsupportedTest:
+		instanceSize = AvereInstanceD16s
+	case ClusterSkuUnsupportedTestFast:
+		instanceSize = AvereInstanceL32s
+	default:
+		instanceSize = AvereInstanceE32s
 	}
-	return AvereInstanceE32s
+	return fmt.Sprintf("--instance-type %s", instanceSize)
+}
+
+func getVfxtpyCacheSizeParameters(sku string, customerCacheSizeHint int) string {
+	result := ""
+	switch sku {
+	case ClusterSkuUnsupportedTestFast:
+		result = "--data-disk-count 0"
+	default:
+		result = fmt.Sprintf("--node-cache-size %d", customerCacheSizeHint)
+	}
+	return result
 }

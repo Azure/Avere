@@ -28,8 +28,9 @@ const (
 	PlatformAzure = "azure"
 
 	// cluster sizes
-	ClusterSkuUnsupportedTest = "unsupported_test_SKU"
-	ClusterSkuProd            = "prod_sku"
+	ClusterSkuUnsupportedTestFast = "unsupported_test_SKU_fast"
+	ClusterSkuUnsupportedTest     = "unsupported_test_SKU"
+	ClusterSkuProd                = "prod_sku"
 
 	// cache policies
 	CachePolicyClientsBypass                 = "Clients Bypassing the Cluster"
@@ -131,6 +132,9 @@ const (
 	FaultCode   = "faultCode"
 	MultiCall   = "--json system.multicall"
 
+	JunctionPolicyPosix = "posix"
+	JunctionPolicyCifs  = "cifs"
+
 	CIFSUsernameSourceAD    = "AD"
 	CIFSUsernameSourceFile  = "File"
 	CIFSSelfPasswdUriStrFmt = "https://%s/avere/avere-user.txt"
@@ -218,6 +222,7 @@ const (
 	junction                              = "junction"
 	namespace_path                        = "namespace_path"
 	cifs_share_name                       = "cifs_share_name"
+	core_filer_cifs_share_name            = "core_filer_cifs_share_name"
 	cifs_share_ace                        = "cifs_share_ace"
 	cifs_create_mask                      = "cifs_create_mask"
 	cifs_dir_mask                         = "cifs_dir_mask"

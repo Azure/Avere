@@ -30,7 +30,7 @@ Before running the examples you will need to setup the following pre-requisites:
     ```bash
     mkdir -p ~/.terraform.d/plugins
     # install the vfxt released binary from https://github.com/Azure/Avere
-    wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.28/terraform-provider-avere
+    wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.30/terraform-provider-avere
     chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
     ```
 
@@ -144,5 +144,11 @@ At this point you are now ready to deploy your custom images previously created.
 1. execute `terraform init` in the directory of `main.tf`.
 
 1. execute `terraform apply -auto-approve` to build the windows VM
+
+Tip: if you are running infiniband SKUS (with 'r') you may need to disable the nics so they don't collide with your network.  Copy the file `` to your current directory and run the following command to do this:
+
+```bash
+powershell -ExecutionPolicy Bypass -NoProfile -File .\ConfigureNetworkService.ps1
+```
 
 At this point you should have a complete rendering environment where you can run scale tests.

@@ -1,0 +1,136 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageAccounts": {
+      "value": [
+        {
+          "deploy": true,
+          "name": "usawest",
+          "type": "StorageV2",
+          "replication": "Standard_RAGRS",
+          "useComputeRegion": true,
+          "httpsTrafficOnly": false,
+          "namespaceHierarchy": false,
+          "networkFileSystemV3": false,
+          "allowBlobAccessLists": true,
+          "enablePrivateEndpoint": false,
+          "firewallAddressRules": [
+            {
+              "action": "Allow",
+              "value": "47.153.27.205"
+            }
+          ],
+          "virtualNetwork": {
+            "name": "MediaPipeline",
+            "subnetName": "Data",
+            "resourceGroupName": "ArtistAnywhere.Network"
+          }
+        },
+        {
+          "deploy": true,
+          "name": "usaeast",
+          "type": "StorageV2",
+          "replication": "Standard_RAGRS",
+          "useComputeRegion": false,
+          "httpsTrafficOnly": false,
+          "namespaceHierarchy": false,
+          "networkFileSystemV3": false,
+          "allowBlobAccessLists": false,
+          "enablePrivateEndpoint": false,
+          "firewallAddressRules": [
+            {
+              "action": "Allow",
+              "value": "47.153.27.205"
+            }
+          ],
+          "virtualNetwork": {
+            "name": "MediaStorage",
+            "subnetName": "Storage",
+            "resourceGroupName": "ArtistAnywhere.Network"
+          }
+        }
+      ]
+    },
+    "storageShares": {
+      "value": [
+        {
+          "deploy": false,
+          "name": "show",
+          "accountName": "usaeast",
+          "useComputeRegion": false,
+          "protocols": "NFS",
+          "size": 5120
+        }
+      ]
+    },
+    "storageContainers": {
+      "value": [
+        {
+          "deploy": true,
+          "name": "script",
+          "publicAccess": "None",
+          "accountName": "usawest",
+          "useComputeRegion": true
+        },
+        {
+          "deploy": true,
+          "name": "bin",
+          "publicAccess": "None",
+          "accountName": "usawest",
+          "useComputeRegion": true
+        },
+        {
+          "deploy": true,
+          "name": "show",
+          "publicAccess": "None",
+          "accountName": "usaeast",
+          "useComputeRegion": false
+        }
+      ]
+    },
+    "storageQueues": {
+      "value": [
+        {
+          "deploy": true,
+          "name": "artist-anywhere",
+          "accountName": "usawest",
+          "useComputeRegion": true
+        }
+      ]
+    },
+    "storageMounts": {
+      "value": [
+        {
+          "type": "nfs",
+          "host": "usaeast.blob.core.windows.net:/usaeast/show",
+          "options": "sec=sys,vers=3,proto=tcp,nolock",
+          "path": "/mnt/storage/object",
+          "drive": "X"
+        }
+      ]
+    },
+    "storageTargets": {
+      "value": [
+        {
+          "name": "Azure-Storage-Objects",
+          "type": "nfs3",
+          "host": "usaeast.blob.core.windows.net",
+          "usageModel": "WRITE_AROUND",
+          "junctions": [
+          ]
+        }
+      ]
+    },
+    "computeRegionName": {
+      "value": "WestUS2"
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "MediaStorage",
+        "subnetName": "Storage",
+        "resourceGroupName": "ArtistAnywhere.Network"
+      }
+    }
+  }
+}

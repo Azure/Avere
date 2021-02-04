@@ -1,0 +1,187 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "managedIdentity": {
+      "type": "object"
+    },
+    "imageGallery": {
+      "type": "object"
+    },
+    "renderFarms": {
+      "type": "array"
+    },
+    "logAnalytics": {
+      "type": "object"
+    },
+    "virtualNetwork": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "virtualMachineScaleSetApiVersion": "2020-12-01",
+    "operationalInsightApiVersion": "2020-10-01"
+  },
+  "functions": [
+    {
+      "namespace": "fx",
+      "members": {
+        "GetLinuxConfig": {
+          "parameters": [
+            {
+              "name": "sshPublicKeyData",
+              "type": "string"
+            },
+            {
+              "name": "adminUserName",
+              "type": "string"
+            }
+          ],
+          "output": {
+            "type": "string",
+            "value": "[if(equals(parameters('sshPublicKeyData'), ''), 'null', concat('{\"ssh\": {\"publicKeys\": [{\"path\": \"/home/', parameters('adminUsername'), '/.ssh/authorized_keys\", \"keyData\": \"', parameters('sshPublicKeyData'), '\"}]}}'))]"
+          }
+        },
+        "GetExtensionCommand": {
+          "parameters": [
+            {
+              "name": "filePath",
+              "type": "string"
+            },
+            {
+              "name": "fileParameters",
+              "type": "string"
+            }
+          ],
+          "output": {
+            "type": "string",
+            "value": "[if(endsWith(parameters('filePath'), '.ps1'), format('PowerShell.exe -ExecutionPolicy Unrestricted -File {0} {1}', parameters('filePath'), parameters('fileParameters')), format('cat {0} | tr -d \r | {1} /bin/bash', parameters('filePath'), parameters('fileParameters')))]"
+          }
+        }
+      }
+    }
+  ],
+  "resources": [
+    {
+      "condition": "[parameters('renderFarms')[copyIndex()].deploy]",
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "[parameters('renderFarms')[copyIndex()].name]",
+      "apiVersion": "[variables('virtualMachineScaleSetApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "[parameters('renderFarms')[copyIndex()].machine.size]",
+        "capacity": "[parameters('renderFarms')[copyIndex()].machine.count]"
+      },
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceId(parameters('managedIdentity').resourceGroupName, 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentity').name)]": {
+          }
+        }
+      },
+      "properties": {
+        "virtualMachineProfile": {
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "networkInterface",
+                "properties": {
+                  "primary": true,
+                  "ipConfigurations": [
+                    {
+                      "name": "ipConfig",
+                      "properties": {
+                        "subnet": {
+                          "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "storageProfile": {
+            "imageReference": {
+              "id": "[resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images/versions', parameters('imageGallery').name, parameters('renderFarms')[copyIndex()].image.definitionName, parameters('renderFarms')[copyIndex()].image.versionId)]"
+            },
+            "osDisk": {
+              "caching": "ReadOnly",
+              "createOption": "FromImage",
+              "diffDiskSettings": "[if(parameters('renderFarms')[copyIndex()].machine.osEphemeralDisk, json('{\"option\": \"Local\"}'), json('null'))]"
+            }
+          },
+          "osProfile": {
+            "computerNamePrefix": "[parameters('renderFarms')[copyIndex()].name]",
+            "adminUsername": "[parameters('renderFarms')[copyIndex()].login.adminUsername]",
+            "adminPassword": "[parameters('renderFarms')[copyIndex()].login.adminPassword]",
+            "linuxConfiguration": "[json(fx.GetLinuxConfig(parameters('renderFarms')[copyIndex()].login.sshPublicKeyData, parameters('renderFarms')[copyIndex()].login.adminUsername))]"
+          },
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "extension",
+                "properties": {
+                  "publisher": "[parameters('renderFarms')[copyIndex()].customExtension.publisher]",
+                  "type": "[parameters('renderFarms')[copyIndex()].customExtension.type]",
+                  "typeHandlerVersion": "[parameters('renderFarms')[copyIndex()].customExtension.version]",
+                  "autoUpgradeMinorVersion": true,
+                  "protectedSettings": {
+                    "commandToExecute": "[fx.GetExtensionCommand(parameters('renderFarms')[copyIndex()].customExtension.filePath, parameters('renderFarms')[copyIndex()].customExtension.fileParameters)]"
+                  }
+                }
+              }
+            ]
+          },
+          "priority": "[parameters('renderFarms')[copyIndex()].machine.priority]",
+          "evictionPolicy": "Delete",
+          "billingProfile": {
+            "maxPrice": "[parameters('renderFarms')[copyIndex()].machine.maxPrice]"
+          }
+        },
+        "upgradePolicy": {
+          "mode": "[parameters('renderFarms')[copyIndex()].upgradePolicy]"
+        },
+        "platformFaultDomainCount": 1,
+        "singlePlacementGroup": false,
+        "overprovision": false
+      },
+      "copy": {
+        "name": "renderFarms",
+        "count": "[length(parameters('renderFarms'))]"
+      }
+    },
+    {
+      "condition": "[parameters('logAnalytics').deploy]",
+      "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
+      "name": "[concat(parameters('renderFarms')[copyIndex()].name, '/Monitor')]",
+      "apiVersion": "[variables('virtualMachineScaleSetApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('renderFarms')[copyIndex()].name)]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+        "type": "OmsAgentForLinux",
+        "typeHandlerVersion": "1.13",
+        "autoUpgradeMinorVersion": true,
+        "protectedSettings": {
+          "workspaceKey": "[listKeys(resourceId(parameters('logAnalytics').resourceGroupName, 'Microsoft.OperationalInsights/workspaces', parameters('logAnalytics').name), variables('operationalInsightApiVersion')).primarySharedKey]"
+        },
+        "settings": {
+          "workspaceId": "[reference(resourceId(parameters('logAnalytics').resourceGroupName, 'Microsoft.OperationalInsights/workspaces', parameters('logAnalytics').name), variables('operationalInsightApiVersion')).customerId]"
+        }
+      },
+      "copy": {
+        "name": "renderFarms",
+        "count": "[length(parameters('renderFarms'))]"
+      }
+    }
+  ],
+  "outputs": {
+    "renderFarms": {
+      "type": "array",
+      "value": "[parameters('renderFarms')]"
+    }
+  }
+}

@@ -89,7 +89,7 @@ The following arguments are supported:
 * <a name="dns_search"></a>[dns_search](#dns_search) - (Optional) A space separated list of up to 6 domains to search during host-name resolution.
 * <a name="proxy_uri"></a>[proxy_uri](#proxy_uri) - specify the proxy used by `vfxt.py` for the cluster deployment.  The format is usually `https://PROXY_ADDRESS:3128`.  A working example that uses the proxy is described in the [Avere vFXT in a Proxy Environment Example](../../examples/vfxt/proxy).    Note: cluster re-created if modified.
 * <a name="cluster_proxy_uri"></a>[cluster_proxy_uri](#cluster_proxy_uri) - (Optional) specify the proxy used be used by the Avere vFXT cluster.  The format is usually `https://PROXY_ADDRESS:3128`.  A working example that uses the proxy is described in the [Avere vFXT in a Proxy Environment Example](../../examples/vfxt/proxy).  Note: cluster re-created if modified.
-* <a name="image_id"></a>[image_id](#image_id) - (Optional) specify a custom image id for the vFXT.  This is useful when needing to use a bug fix or there is a marketplace outage.  For more information see the [docs on how to create a custom image for the conroller and vfxt](../../examples/vfxt#create-vfxt-controller-from-custom-images).  Note: cluster re-created if modified.
+* <a name="image_id"></a>[image_id](#image_id) - (Optional) specify a custom image id for the vFXT.  This is useful when needing to use a bug fix or there is a marketplace outage.  For more information see the [docs on how to create a custom image for the controller and vfxt](../../examples/vfxt#create-vfxt-controller-from-custom-images).  Alternatively, you can use an older version from the marketplace by running the following command and using the "urn" as the value to the `image_id`: `az vm image list --location westeurope -p microsoft-avere -f vfxt -s avere-vfxt-node --all`.  For example, the following specifies an older urn `image_id = "microsoft-avere:vfxt:avere-vfxt-node:5.3.61"`.  Note: cluster re-created if modified.
 * <a name="vfxt_cluster_name"></a>[vfxt_cluster_name](#vfxt_cluster_name) - (Required) this is the name of the vFXT cluster that is shown when you browse to the management ip.  To help Avere support, choose a name that matches the Avere's purpose.  Note: cluster re-created if modified.
 * <a name="vfxt_admin_password"></a>[vfxt_admin_password](#vfxt_admin_password) - (Required) the password for the vFXT cluster.  Note: cluster re-created if modified.
 * <a name="vfxt_ssh_key_data"></a>[vfxt_ssh_key_data](#vfxt_ssh_key_data) - (Optional) deploy the cluster using the ssh public key for authentication instead of the password, this is useful to align with policies.
@@ -187,6 +187,7 @@ A <a name="core_filer"></a>`core_filer` block supports the following:
 A <a name="junction"></a>`junction` block supports the following:
 * <a name="namespace_path"></a>[namespace_path](#namespace_path) - (Required) this is the exported namespace from the Avere vFXT. 
 * <a name="cifs_share_name_2"></a>[cifs_share_name](#cifs_share_name_2) - (Optional) this is an SMB2 share exported from the Avere vFXT. 
+* <a name="core_filer_cifs_share_name"></a>[core_filer_cifs_share_name](#core_filer_cifs_share_name) - (Optional) this is the CIFS share name on the core filer, and may only be specified for the Netapp* and EmcIsilon modes.  Specifying this automatically causes the junction to use 'cifs' access instead of 'posix' access. 
 * <a name="cifs_share_ace_2"></a>[cifs_share_ace](#cifs_share_ace_2) - (Optional) this is an export rule described in the [CIFS Share ACE section](#cifs-share-ace).  If not specified, the junction uses the most permissive access set to `Everyone`.
 * <a name="cifs_create_mask_2"></a>[cifs_create_mask](#cifs_create_mask_2) - (Optional) An octal value specifying the bitwise mask for the UNIX permissions for a newly created file.  If not specified, the default is 0744 for file create, and 0777 when modified from a native Windows NT security dialog box.
 * <a name="cifs_dir_mask_2"></a>[cifs_dir_mask](#cifs_dir_mask_2) - (Optional) An octal value specifying the bitwise mask for the UNIX permissions for a newly created directory.  If not specified, the default is 0755 for directory create, and 0777 when modified from a native Windows NT security dialog box.
@@ -304,7 +305,7 @@ In addition to all arguments above, the following attributes are exported:
 * <a name="primary_cluster_ips"></a>[primary_cluster_ips](#primary_cluster_ips) - these are the static primary ip addresses of the cluster that do not move.
 * <a name="mass_filer_mappings"></a>[mass_filer_mappings](#mass_filer_mappings) - these are the static primary ip addresses of the cluster that do not move.
 
-# Build the Terraform Provider binary
+# Build the Terraform Provider binary on Linux
 
 There are three approaches to access the provider binary:
 1. Download from the [releases page](https://github.com/Azure/Avere/releases).
@@ -346,3 +347,25 @@ The following build instructions work in https://shell.azure.com, Centos, or Ubu
     ```
 
 4. Install the provider `~/.terraform.d/plugins/terraform-provider-avere` to the ~/.terraform.d/plugins directory of your terraform environment.
+
+# Build the Terraform Provider binary on Windows
+
+Here are the instructions for building the windows binary:
+
+1. browse to https://git-scm.com/download/win and install git.
+
+1. browse to https://golang.org/doc/install and install golang.
+
+1. open a new powershell command prompt and type the following to checkout the code:
+
+```powershell
+mkdir $env:GOPATH -Force
+cd $env:GOPATH
+go get -v github.com/Azure/Avere/src/terraform/providers/terraform-provider-avere
+cd $env:GOPATH\src\github.com\Azure\Avere\src\terraform\providers\terraform-provider-avere
+go mod download
+go mod tidy
+go build
+```
+
+1. copy the .exe to the source directory

@@ -832,6 +832,19 @@ func (a *AvereVfxt) EnsureCachePolicy(corefiler *CoreFiler) error {
 	}
 }
 
+func IsCachePolicyReadOnly(cachingPolicy string) bool {
+	switch cachingPolicy {
+	case CachePolicyClientsBypass:
+		return true
+	case CachePolicyReadCaching:
+		return true
+	case CachePolicyReadOnlyHighVerificationTime:
+		return true
+	default:
+		return false
+	}
+}
+
 // Create an NFS filer
 func (a *AvereVfxt) CreateCoreFiler(corefiler *CoreFiler) error {
 	if err := a.EnsureCachePolicy(corefiler); err != nil {
@@ -1354,7 +1367,7 @@ func (a *AvereVfxt) GetExistingJunctions() (map[string]*Junction, error) {
 			newJunction.CifsCreateMask = ""
 			newJunction.CifsDirMask = ""
 		}
-		log.Printf("[INFO] CIFS Share %s, masks '%s' '%s'", newJunction.CifsShareName, newJunction.CifsCreateMask, newJunction.CifsDirMask)
+		log.Printf("[INFO] CIFS Share %s, masks '%s' '%s' (corefiler cifs share '%s')", newJunction.CifsShareName, newJunction.CifsCreateMask, newJunction.CifsDirMask, newJunction.CoreFilerCifsShareName)
 		results[newJunction.NameSpacePath] = &newJunction
 	}
 
@@ -1731,7 +1744,7 @@ func (a *AvereVfxt) SetSupportName() error {
 	return nil
 }
 
-func (a *AvereVfxt) ModifySupportUploads() error {
+func (a *AvereVfxt) EnableSupport() error {
 	if a.EnableSupportUploads {
 		if _, err := a.AvereCommand(a.getSupportAcceptTermsCommand()); err != nil {
 			return err
@@ -1739,6 +1752,13 @@ func (a *AvereVfxt) ModifySupportUploads() error {
 		if _, err := a.AvereCommand(a.getSupportSupportTestUploadCommand()); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (a *AvereVfxt) ModifySupportUploads() error {
+	if err := a.EnableSupport(); err != nil {
+		return err
 	}
 	if _, err := a.AvereCommand(a.getSupportModifyCustomerUploadInfoCommand()); err != nil {
 		return err
@@ -2197,12 +2217,23 @@ func (a *AvereVfxt) getListJunctionsJsonCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s --json vserver.listJunctions \"%s\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
 }
 
+func getAccessControl(junction *Junction) (string, string) {
+	sharename := ""
+	mode := JunctionPolicyPosix
+	if len(junction.CoreFilerCifsShareName) > 0 {
+		sharename = junction.CoreFilerCifsShareName
+		mode = JunctionPolicyCifs
+	}
+	return sharename, mode
+}
+
 func (a *AvereVfxt) getCreateJunctionCommand(junction *Junction, policyName string) string {
 	inheritPolicy := "yes"
 	if len(policyName) > 0 {
 		inheritPolicy = "no"
 	}
-	return WrapCommandForLogging(fmt.Sprintf("%s vserver.addJunction \"%s\" \"%s\" \"%s\" \"%s\" \"{'sharesubdir':'','inheritPolicy':'%s','sharename':'','access':'posix','createSubdirs':'yes','subdir':'%s','policy':'%s','permissions':'%s'}\"", a.getBaseAvereCmd(), VServerName, junction.NameSpacePath, junction.CoreFilerName, junction.CoreFilerExport, inheritPolicy, junction.ExportSubdirectory, policyName, junction.SharePermissions), AverecmdLogFile)
+	sharename, mode := getAccessControl(junction)
+	return WrapCommandForLogging(fmt.Sprintf("%s vserver.addJunction \"%s\" \"%s\" \"%s\" \"%s\" \"{'sharesubdir':'','inheritPolicy':'%s','sharename':'%s','access':'%s','createSubdirs':'yes','subdir':'%s','policy':'%s','permissions':'%s'}\"", a.getBaseAvereCmd(), VServerName, junction.NameSpacePath, junction.CoreFilerName, junction.CoreFilerExport, inheritPolicy, sharename, mode, junction.ExportSubdirectory, policyName, junction.SharePermissions), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getDeleteJunctionCommand(junctionNameSpacePath string) string {

@@ -9,9 +9,16 @@ The following is a checklist of items to confirm before connecting an HPC Cache 
     * `no_root_squash` - this is needed because HPC Cache or vFXT works at the root level
     * `rw` - read/write is needed for the HPC Cache or vFXT to write files
     * **ip range is open** - ensure the HPC Cache or vFXT subnet is specified in the export.  Also, if any render clients are writing around, you will also need to open up the subnet range of the render clients, otherwise this is not needed.
+* to choose a different vFXT image version, run the following command and use the value from the "urn" key:
+```bash
+az vm image list --location eastus -p microsoft-avere -f vfxt -s avere-vfxt-node --all
+```
 * ensure the on-prem firewall is open to the HPC Cache or vFXT subnets
 * ensure an NFSv3 endpoint is enabled
 * ensure you put a vFXT or HPC Cache into its own subnet.  The smallest subnet may be a /27.  The HPC Cache and Avere vFXT have HA models where they migrate IP addresses in HA events, and it is important that another cluster or another vm does not grab those IP addresses during migration.
+* if you need to deploy a different image from default, there are two possible methods:
+    1. get the SAS URL from Avere support and follow [the steps to create a custom image](../vfxt#create-vfxt-controller-from-custom-images) and populate the variable `image_id` with the URL of the image
+    1. Alternatively, you can use an older version from the marketplace by running the following command and using the "urn" as the value to the `image_id`: `az vm image list --location westeurope -p microsoft-avere -f vfxt -s avere-vfxt-node --all`.  For example, the following specifies an older urn `image_id = "microsoft-avere:vfxt:avere-vfxt-node:5.3.61"`.
 
 # Reducing TCO
 
@@ -28,6 +35,16 @@ The following is a checklist of items to confirm before connecting an HPC Cache 
     node_size = "unsupported_test_SKU"
 ```
 
+# Mapping Shares
+
+When designing your architecture, you will need to consider how to map the drives between on-prem and cloud.  The cloud render nodes will map to the Avere, and the on-prem render nodes will map to the core filer.
+
+The easiest way to ensure consistency across on-prem and cloud is to "Spoof" the dns name using a solution similar to binding the [unbound](../dnsserver) DNS server to your VNET.  For NFS and SMB shares with posix access the render nodes and cloud nodes can use the same domain name for mapping.
+
+However, the mapping becomes more challenging when using mixed Windows / Linux environments, or using constrained delegation with SMB.  Here are some possible solutions to work around this:
+1. Use the render software organization.  Formats like the Maya Ascii format (.ma files) allow for specification of project path, and this will rewrite the base.  This is probably the best solution for mixed Windows / Linux environments.
+1. If Windows only, and using constrained delegation, map a drive letter, or create a directory symbolic link (mklink /D).
+
 # SMB
 
 For SMB ensure you set the UID / GID attributes according to the [Avere SMB document](https://azure.github.io/Avere/legacy/pdf/ADAdminCIFSACLsGuide_20140716.pdf).  SMB is only supported on NetApp and Isilon.  SMB is unqualified but working on PixStor and Qumulo.  Use the following documents to help you with these core file types:
@@ -36,6 +53,7 @@ For SMB ensure you set the UID / GID attributes according to the [Avere SMB docu
 
 For SMB the Avere cluster configuration should be:
 1. 3-node cluster only.  To scale, add multiple 3-node clusters and ensure cache policy set to '`Clients Bypassing the Cluster`'.
+1. In SMB only environments, ensure global custom setting `"cluster.pruneNsmMonitorEnabled UO false"` is added to clusters running SMB.  Advice void after July 1, 2021.
 1. vserver should be configured to have single IP address per node
 1. set domain controller override to ensure Avere only accesses the domain controllers that are allowed by the firewall.
 
@@ -54,6 +72,8 @@ To ensure the best operability between POSIX and NTFS ACLS, ensure you have inve
 ## Troubleshooting SMB
 
 To troubleshoot the ACL problem the following two scenarios show a write from on-prem and a write from a render node in the cloud.
+
+Also, use the [SMB Walker](../../../go/cmd/smbwalker) that will walk all shares, to help troubleshoot issues.
 
 ### Problem #1 - Writing from a Windows Machine on-prem
 

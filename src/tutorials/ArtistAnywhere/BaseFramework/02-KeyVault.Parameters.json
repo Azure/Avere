@@ -1,0 +1,31 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "keyVault": {
+      "value": {
+        "name": "MediaPipeline",
+        "tier": "Standard",
+        "enableDeployment": true,
+        "enableDiskEncryption": true,
+        "enableTemplateDeployment": true,
+        "enableRbacAuthorization": true,
+        "enablePrivateEndpoint": false,
+        "softDeleteRetentionDays": 90,
+        "firewallAddressRules": [
+          {
+            "action": "Allow",
+            "value": "47.153.27.205"
+          }
+        ]
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "MediaPipeline",
+        "subnetName": "Compute",
+        "resourceGroupName": "ArtistAnywhere.Network"
+      }
+    }
+  }
+}

@@ -1,265 +1,323 @@
 function New-TraceMessage ($moduleName, $moduleEnd, $regionName) {
-    $message = Get-Date -Format "hh:mm:ss"
+    $traceMessage = Get-Date -Format "hh:mm:ss"
     if ($regionName) {
-        $message += " ($regionName)"
+        $traceMessage += " ($regionName)"
     }
-    $message += " $moduleName"
-    if (!$moduleName.Contains("Build") -and !$moduleName.Contains("Job")) {
-        $message += " Deployment"
+    $traceMessage += " $moduleName"
+    if ($moduleName -notMatch "Assignment|Build|Job") {
+        $traceMessage += " Deployment"
     }
     if ($moduleEnd) {
-        $message += " End"
+        $traceMessage += " End"
     } else {
-        $message += " Start"
+        $traceMessage += " Start"
     }
-    Write-Host $message
+    Write-Host $traceMessage
 }
 
-function New-ResourceGroup ($resourceGroupNamePrefix, $resourceGroupNameSuffix, $regionName) {
-    $resourceGroupName = $resourceGroupNamePrefix
-    if ($resourceGroupNameSuffix -ne "") {
-        $resourceGroupName += $resourceGroupNameSuffix
-    }
-    $resourceGroupExists = az group exists --name $resourceGroupName
-    if ($resourceGroupExists -eq $false) {
-        $resourceGroup = az group create --name $resourceGroupName --location $regionName
-    }
+function Set-ResourceGroup ($resourceGroupNamePrefix, $resourceGroupNameSuffix, $regionName) {
+    $resourceGroupName = $resourceGroupNamePrefix + $resourceGroupNameSuffix
+    az group create --name $resourceGroupName --location $regionName --output none
     return $resourceGroupName
 }
 
-function Get-VirtualNetwork ($virtualNetworks, $regionName) {
-    foreach ($virtualNetwork in $virtualNetworks) {
-        if ($virtualNetwork.regionName -eq $regionName) {
-            return $virtualNetwork
+function Set-RoleAssignment ($roleId, $principalId, $principalType, $scopeId, $scopeResourceGroup, $assignmentPropagationWait) {
+    $roleAssigned = $false
+    do {
+        try {
+            if ($scopeResourceGroup) {
+                az role assignment create --role $roleId --assignee-object-id $principalId --assignee-principal-type $principalType --output none --resource-group $scopeId
+            } else {
+                az role assignment create --role $roleId --assignee-object-id $principalId --assignee-principal-type $principalType --output none --scope $scopeId
+            }
+            $roleAssigned = $true
+        } catch {
+            Write-Warning -Message $Error[0]
         }
+    } while (!$roleAssigned)
+    if ($assignmentPropagationWait) {
+        Start-Sleep -Seconds 180
     }
-    return $virtualNetworks[0]
 }
 
-function Get-SharedFramework ($resourceGroupNamePrefix, $sharedRegionName, $computeRegionName, $storageRegionName) {
-    $moduleDirectory = "SharedFramework"
-    $moduleGroupName = "Shared Framework"
+function Set-RoleAssignments ($moduleType, $storageAccountName, $computeNetwork, $managedIdentity, $keyVault, $imageGallery, $eventGridTopicId) {
+    $moduleName = "$moduleType Role Assignment"
+    New-TraceMessage $moduleName $false
+    switch ($moduleType) {
+        "Storage" {
+            $userId = az ad signed-in-user show --query "objectId"
+            $storageId = az storage account show --name $storageAccountName --query "id"
+
+            $principalType = "User"
+            $roleId = "974c5e8b-45b9-4653-ba55-5f855dd0fb88"        # Storage Queue Data Contributor
+            Set-RoleAssignment $roleId $userId $principalType $storageId $false $false
+
+            $roleId = "ba92f5b4-2d11-453d-a403-e96b0029c9fe"        # Storage Object Data Contributor
+            Set-RoleAssignment $roleId $userId $principalType $storageId $false $false
+
+            $principalType = "ServicePrincipal"
+            $roleId = "2a2b9908-6ea1-4ae2-8e65-a410df84e7d1"        # Storage Object Data Reader
+            Set-RoleAssignment $roleId $managedIdentity.principalId $principalType $storageId $false $false
+
+            $roleId = "acdd72a7-3385-48ef-bd42-f606fba81ae7"        # Reader
+            Set-RoleAssignment $roleId $managedIdentity.principalId $principalType $storageId $false $true
+        }
+        "Image Builder" {
+            $principalType = "ServicePrincipal"
+
+            $roleId = "b24988ac-6180-42a0-ab88-20f7382dd24c"        # Contributor
+            Set-RoleAssignment $roleId $managedIdentity.principalId $principalType $imageGallery.resourceGroupName $true $false
+
+            $roleId = "9980e02c-c2be-4d73-94e8-173b1dc7cf3c"        # Virtual Machine Contributor
+            Set-RoleAssignment $roleId $managedIdentity.principalId $principalType $computeNetwork.resourceGroupName $true $false
+        }
+        "CycleCloud" {
+            $principalType = "ServicePrincipal"
+
+            $roleId = "b24988ac-6180-42a0-ab88-20f7382dd24c"        # Contributor
+            $subscriptionId = az account show --query "id"
+            Set-RoleAssignment $roleId $managedIdentity.principalId $principalType "/subscriptions/$subscriptionId" $false $false
+
+            $roleId = "acdd72a7-3385-48ef-bd42-f606fba81ae7"        # Reader
+            Set-RoleAssignment $roleId $managedIdentity.principalId $principalType $eventGridTopicId $false $false
+         }
+        "Batch" {
+            $principalType = "ServicePrincipal"
+
+            $principalId = "f520d84c-3fd3-4cc8-88d4-2ed25b00d27a"   # Microsoft Azure Batch
+            $roleId = "b24988ac-6180-42a0-ab88-20f7382dd24c"        # Contributor
+
+            $subscriptionId = az account show --query "id"
+            $subscriptionId = "/subscriptions/$subscriptionId"
+
+            Set-RoleAssignment $roleId $principalId $principalType $subscriptionId $false $false
+
+            az keyvault update --resource-group $keyVault.resourceGroupName --name $keyVault.name --enable-rbac-authorization $false --output none --only-show-errors
+            az keyvault set-policy --resource-group $keyVault.resourceGroupName --name $keyVault.name --object-id $principalId --secret-permissions Get List Set Delete --output none
+            az keyvault update --resource-group $keyVault.resourceGroupName --name $keyVault.name --enable-rbac-authorization $true --output none --only-show-errors
+        }
+    }
+    New-TraceMessage $moduleName $true
+}
+
+function Get-ModuleName ($moduleDirectory) {
+    return ($moduleDirectory -creplace '[A-Z]', ' $0').Trim()
+}
+
+function Get-BaseFramework ($rootDirectory, $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $networkGatewayDeploy) {
+    $moduleDirectory = "BaseFramework"
+    $moduleGroupName = Get-ModuleName $moduleDirectory
     New-TraceMessage $moduleGroupName $false
 
     # 00 - Virtual Network
     $moduleName = "00 - Virtual Network"
-    New-TraceMessage $moduleName $false $sharedRegionName
+    New-TraceMessage $moduleName $false $computeRegionName
     $resourceGroupNameSuffix = ".Network"
-    $resourceGroupName = New-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $sharedRegionName
+    $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
     $templateFile = "$rootDirectory/$moduleDirectory/00-VirtualNetwork.json"
     $templateParameters = "$rootDirectory/$moduleDirectory/00-VirtualNetwork.Parameters.json"
 
     $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
     $templateConfig.parameters.storageNetwork.value.regionName = $storageRegionName
+    $templateConfig.parameters.computeNetwork.value.regionName = $computeRegionName
     $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
     $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
     $storageNetwork = $groupDeployment.properties.outputs.storageNetwork.value
-    $computeNetworks = $groupDeployment.properties.outputs.computeNetworks.value
-    $sharedNetwork = Get-VirtualNetwork $computeNetworks $sharedRegionName
-    $computeNetwork = Get-VirtualNetwork $computeNetworks $computeRegionName
-    New-TraceMessage $moduleName $true $sharedRegionName
+    $computeNetwork = $groupDeployment.properties.outputs.computeNetwork.value
+    New-TraceMessage $moduleName $true $computeRegionName
 
     # 01 - Managed Identity
     $moduleName = "01 - Managed Identity"
-    New-TraceMessage $moduleName $false $sharedRegionName
+    New-TraceMessage $moduleName $false $computeRegionName
     $resourceGroupNameSuffix = ""
-    $resourceGroupName = New-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $sharedRegionName
+    $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
     $templateFile = "$rootDirectory/$moduleDirectory/01-ManagedIdentity.json"
     $templateParameters = "$rootDirectory/$moduleDirectory/01-ManagedIdentity.Parameters.json"
 
     $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
     $managedIdentity = $groupDeployment.properties.outputs.managedIdentity.value
-    New-TraceMessage $moduleName $true $sharedRegionName
+    New-TraceMessage $moduleName $true $computeRegionName
 
     # 02 - Key Vault
     $moduleName = "02 - Key Vault"
-    New-TraceMessage $moduleName $false $sharedRegionName
+    New-TraceMessage $moduleName $false $computeRegionName
     $resourceGroupNameSuffix = ""
-    $resourceGroupName = New-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $sharedRegionName
+    $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
     $templateFile = "$rootDirectory/$moduleDirectory/02-KeyVault.json"
     $templateParameters = "$rootDirectory/$moduleDirectory/02-KeyVault.Parameters.json"
 
     $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
-    $templateConfig.parameters.virtualNetwork.value.name = $sharedNetwork.name
-    $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $sharedNetwork.resourceGroupName
-    $templateConfig | ConvertTo-Json -Depth 3 | Out-File $templateParameters
+    $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
+    $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
+    $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
     $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
     $keyVault = $groupDeployment.properties.outputs.keyVault.value
-    New-TraceMessage $moduleName $true $sharedRegionName
+    New-TraceMessage $moduleName $true $computeRegionName
 
-    # 03 - Monitor Insight
-    $moduleName = "03 - Monitor Insight"
-    New-TraceMessage $moduleName $false $sharedRegionName
+    # 03 - Network Gateway
+    if ($networkGatewayDeploy) {
+        $moduleName = "03 - Network Gateway"
+        New-TraceMessage $moduleName $false $computeRegionName
+        $resourceGroupNameSuffix = ".Network"
+        $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
+
+        $templateFile = "$rootDirectory/$moduleDirectory/03-NetworkGateway.json"
+        $templateParameters = "$rootDirectory/$moduleDirectory/03-NetworkGateway.Parameters.json"
+
+        $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
+        $templateConfig.parameters.storageNetwork.value = $storageNetwork
+        $templateConfig.parameters.computeNetwork.value = $computeNetwork
+        $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
+
+        $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
+        New-TraceMessage $moduleName $true $computeRegionName
+    }
+
+    # 04 - Pipeline Insight
+    $moduleName = "04 - Pipeline Insight"
+    New-TraceMessage $moduleName $false $computeRegionName
     $resourceGroupNameSuffix = ""
-    $resourceGroupName = New-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $sharedRegionName
+    $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
-    $templateFile = "$rootDirectory/$moduleDirectory/03-MonitorInsight.json"
-    $templateParameters = "$rootDirectory/$moduleDirectory/03-MonitorInsight.Parameters.json"
+    $templateFile = "$rootDirectory/$moduleDirectory/04-PipelineInsight.json"
+    $templateParameters = "$rootDirectory/$moduleDirectory/04-PipelineInsight.Parameters.json"
+
+    $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
+    $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
+    $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
+    $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
     $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
     $logAnalytics = $groupDeployment.properties.outputs.logAnalytics.value
-    New-TraceMessage $moduleName $true $sharedRegionName
+    $cognitiveAccount = $groupDeployment.properties.outputs.cognitiveAccount.value
+    New-TraceMessage $moduleName $true $computeRegionName
 
-    # 04 - Image Gallery
-    $moduleName = "04 - Image Gallery"
+    # 05 - Image Gallery
+    $moduleName = "05 - Image Gallery"
     New-TraceMessage $moduleName $false $computeRegionName
     $resourceGroupNameSuffix = ".Gallery"
-    $resourceGroupName = New-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
+    $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
-    $templateFile = "$rootDirectory/$moduleDirectory/04-ImageGallery.json"
-    $templateParameters = "$rootDirectory/$moduleDirectory/04-ImageGallery.Parameters.json"
+    $templateFile = "$rootDirectory/$moduleDirectory/05-ImageGallery.json"
+    $templateParameters = "$rootDirectory/$moduleDirectory/05-ImageGallery.Parameters.json"
 
     $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
     $imageGallery = $groupDeployment.properties.outputs.imageGallery.value
-
-    $principalType = "ServicePrincipal"
-
-    # Azure Image Builder (AIB) Role Assignment
-    $roleId = "b24988ac-6180-42a0-ab88-20f7382dd24c" # Contributor
-    $roleAssignment = az role assignment create --role $roleId --resource-group $imageGallery.resourceGroupName --assignee-object-id $managedIdentity.principalId --assignee-principal-type $principalType
-
-    # Azure Image Builder (AIB) Role Assignment
-    $roleId = "9980e02c-c2be-4d73-94e8-173b1dc7cf3c" # Virtual Machine Contributor
-    $roleAssignment = az role assignment create --role $roleId --resource-group $computeNetwork.resourceGroupName --assignee-object-id $managedIdentity.principalId --assignee-principal-type $principalType
-
     New-TraceMessage $moduleName $true $computeRegionName
 
-    # 05 - Container Registry
-    $moduleName = "05 - Container Registry"
+    Set-RoleAssignments "Image Builder" $null $computeNetwork $managedIdentity $keyVault $imageGallery
+
+    # 06 - Container Registry
+    $moduleName = "06 - Container Registry"
     New-TraceMessage $moduleName $false $computeRegionName
     $resourceGroupNameSuffix = ".Registry"
-    $resourceGroupName = New-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
+    $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
-    $templateFile = "$rootDirectory/$moduleDirectory/05-ContainerRegistry.json"
-    $templateParameters = "$rootDirectory/$moduleDirectory/05-ContainerRegistry.Parameters.json"
+    $templateFile = "$rootDirectory/$moduleDirectory/06-ContainerRegistry.json"
+    $templateParameters = "$rootDirectory/$moduleDirectory/06-ContainerRegistry.Parameters.json"
 
     $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
     $templateConfig.parameters.managedIdentity.value.name = $managedIdentity.name
     $templateConfig.parameters.managedIdentity.value.resourceGroupName = $managedIdentity.resourceGroupName
     $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
     $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
-    $templateConfig | ConvertTo-Json -Depth 3 | Out-File $templateParameters
+    $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
     $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
     $containerRegistry = $groupDeployment.properties.outputs.containerRegistry.value
     New-TraceMessage $moduleName $true $computeRegionName
 
-    $sharedFramework = New-Object PSObject
-    $sharedFramework | Add-Member -MemberType NoteProperty -Name "storageNetwork" -Value $storageNetwork
-    $sharedFramework | Add-Member -MemberType NoteProperty -Name "computeNetworks" -Value $computeNetworks
-    $sharedFramework | Add-Member -MemberType NoteProperty -Name "managedIdentity" -Value $managedIdentity
-    $sharedFramework | Add-Member -MemberType NoteProperty -Name "keyVault" -Value $keyVault
-    $sharedFramework | Add-Member -MemberType NoteProperty -Name "logAnalytics" -Value $logAnalytics
-    $sharedFramework | Add-Member -MemberType NoteProperty -Name "imageGallery" -Value $imageGallery
-    $sharedFramework | Add-Member -MemberType NoteProperty -Name "containerRegistry" -Value $containerRegistry
+    $baseFramework = New-Object PSObject
+    $baseFramework | Add-Member -MemberType NoteProperty -Name "storageNetwork" -Value $storageNetwork
+    $baseFramework | Add-Member -MemberType NoteProperty -Name "computeNetwork" -Value $computeNetwork
+    $baseFramework | Add-Member -MemberType NoteProperty -Name "managedIdentity" -Value $managedIdentity
+    $baseFramework | Add-Member -MemberType NoteProperty -Name "keyVault" -Value $keyVault
+    $baseFramework | Add-Member -MemberType NoteProperty -Name "logAnalytics" -Value $logAnalytics
+    $baseFramework | Add-Member -MemberType NoteProperty -Name "cognitiveAccount" -Value $cognitiveAccount
+    $baseFramework | Add-Member -MemberType NoteProperty -Name "imageGallery" -Value $imageGallery
+    $baseFramework | Add-Member -MemberType NoteProperty -Name "containerRegistry" -Value $containerRegistry
 
     New-TraceMessage $moduleGroupName $true
-    return $sharedFramework
+    return $baseFramework
 }
 
-function Get-StorageCache ($sharedFramework, $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $storageNetAppDeploy, $storageCacheDeploy) {
+function Get-StorageCache ($baseFramework, $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $storageNetAppDeploy, $storageCacheDeploy) {
+    $storageNetwork = $baseFramework.storageNetwork
+    $computeNetwork = $baseFramework.computeNetwork
+    $managedIdentity = $baseFramework.managedIdentity
+
     $moduleDirectory = "StorageCache"
-
-    $storageNetwork = $sharedFramework.storageNetwork
-    $computeNetwork = Get-VirtualNetwork $sharedFramework.computeNetworks $computeRegionName
-    $managedIdentity = $sharedFramework.managedIdentity
-
-    $moduleGroupName = "Storage Cache"
+    $moduleGroupName = Get-ModuleName $moduleDirectory
     New-TraceMessage $moduleGroupName $false
 
-    # 06 - Storage
-    $moduleName = "06 - Storage"
+    # 07 - Storage
+    $moduleName = "07 - Storage"
     New-TraceMessage $moduleName $false $storageRegionName
     $resourceGroupNameSuffix = ".Storage"
-    $resourceGroupName = New-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $storageRegionName
+    $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $storageRegionName
 
-    $templateFile = "$rootDirectory/$moduleDirectory/06-Storage.json"
-    $templateParameters = "$rootDirectory/$moduleDirectory/06-Storage.Parameters.json"
+    $templateFile = "$rootDirectory/$moduleDirectory/07-Storage.json"
+    $templateParameters = "$rootDirectory/$moduleDirectory/07-Storage.Parameters.json"
 
     $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
+    $templateConfig.parameters.computeRegionName.value = $computeRegionName
     $templateConfig.parameters.virtualNetwork.value.name = $storageNetwork.name
     $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $storageNetwork.resourceGroupName
-    $templateConfig | ConvertTo-Json -Depth 7 | Out-File $templateParameters
+    $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
     $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
-    $storageAccounts = $groupDeployment.properties.outputs.storageAccounts.value
+    $storageAccount = $groupDeployment.properties.outputs.storageAccount.value
     $storageMounts = $groupDeployment.properties.outputs.storageMounts.value
     $storageTargets = $groupDeployment.properties.outputs.storageTargets.value
     New-TraceMessage $moduleName $true $storageRegionName
 
-    # 06 - Storage [NetApp]
+    # 07 - Storage [NetApp]
     if ($storageNetAppDeploy) {
-        $moduleName = "06 - Storage [NetApp]"
+        $moduleName = "07 - Storage [NetApp]"
         New-TraceMessage $moduleName $false $storageRegionName
         $resourceGroupNameSuffix = ".Storage"
-        $resourceGroupName = New-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $storageRegionName
+        $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $storageRegionName
 
-        $templateFile = "$rootDirectory/$moduleDirectory/06-Storage.NetApp.json"
-        $templateParameters = "$rootDirectory/$moduleDirectory/06-Storage.NetApp.Parameters.json"
+        $templateFile = "$rootDirectory/$moduleDirectory/07-Storage.NetApp.json"
+        $templateParameters = "$rootDirectory/$moduleDirectory/07-Storage.NetApp.Parameters.json"
 
         $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
         $templateConfig.parameters.virtualNetwork.value.name = $storageNetwork.name
         $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $storageNetwork.resourceGroupName
-        $templateConfig | ConvertTo-Json -Depth 6 | Out-File $templateParameters
+        $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
         $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
-        $storageAccounts += $groupDeployment.properties.outputs.storageAccounts.value
         $storageMounts += $groupDeployment.properties.outputs.storageMounts.value
-        $netAppTargets = Get-UniqueTargets $groupDeployment.properties.outputs.storageTargets.value "NFSv3"
-
-        $netAppAccounts = (az netappfiles account list --resource-group $resourceGroupName) | ConvertFrom-Json
-        foreach ($netAppAccount in $netAppAccounts) {
-            $netAppPools = (az netappfiles pool list --resource-group $resourceGroupName --account-name $netAppAccount.name) | ConvertFrom-Json
-            foreach ($netAppPool in $netAppPools) {
-                $netAppPoolName = $netAppPool.name.Substring($netAppAccount.name.length + 1)
-                $netAppVolumes = (az netappfiles volume list --resource-group $resourceGroupName --account-name $netAppAccount.name --pool-name $netAppPoolName) | ConvertFrom-Json -AsHashTable
-                foreach ($netAppVolume in $netAppVolumes) {
-                    $sourceAddress = $netAppVolume.mountTargets[0].ipAddress
-                    foreach ($netAppTarget in $netAppTargets) {
-                        if ($netAppTarget.source -eq $sourceAddress) {
-                            $volumeName = Split-Path -Path $netAppVolume.name.ToLower() -Leaf
-                            $nfsExport = "/$volumeName"
-                            $namespacePath = "/storage$nfsExport"
-                            $junction = New-Object PSObject
-                            $junction | Add-Member -MemberType NoteProperty -Name "namespacePath" -Value $namespacePath
-                            $junction | Add-Member -MemberType NoteProperty -Name "nfsExport" -Value $nfsExport
-                            $junction | Add-Member -MemberType NoteProperty -Name "targetPath" -Value "/"
-                            $netAppTarget.junctions += $junction
-                        }
-                    }
-                }
-            }
-        }
-
-        $storageTargets += $netAppTargets
+        $storageTargets += $groupDeployment.properties.outputs.storageTargets.value
         New-TraceMessage $moduleName $true $storageRegionName
     }
 
-    # 07 - Cache
-    $cacheMounts = @()
-    if ($storageCacheDeploy) {
-        $cacheNetwork = Get-VirtualNetwork $sharedFramework.computeNetworks $computeRegionName
-        $moduleName = "07 - Cache"
-        New-TraceMessage $moduleName $false $cacheNetwork.regionName
-        $resourceGroupNameSuffix = ".Cache"
-        $resourceGroupName = New-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $cacheNetwork.regionName
+    Set-RoleAssignments "Storage" $storageAccount.name $computeNetwork $managedIdentity $keyVault $imageGallery
 
-        $templateFile = "$rootDirectory/$moduleDirectory/07-Cache.json"
-        $templateParameters = "$rootDirectory/$moduleDirectory/07-Cache.Parameters.json"
+    Set-StorageFiles $rootDirectory $storageAccount.name $storageMounts $cacheMount
+
+    # 08 - HPC Cache
+    if ($storageCacheDeploy) {
+        $moduleName = "08 - HPC Cache"
+        New-TraceMessage $moduleName $false $computeRegionName
+        $resourceGroupNameSuffix = ".Cache"
+        $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
+
+        $templateFile = "$rootDirectory/$moduleDirectory/08-HPCCache.json"
+        $templateParameters = "$rootDirectory/$moduleDirectory/08-HPCCache.Parameters.json"
 
         $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
         $templateConfig.parameters.storageTargets.value = $storageTargets
-        $templateConfig.parameters.virtualNetwork.value.name = $cacheNetwork.name
-        $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $cacheNetwork.resourceGroupName
-        $templateConfig | ConvertTo-Json -Depth 6 | Out-File $templateParameters
+        $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
+        $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
+        $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
         $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
-        $cacheName = $groupDeployment.properties.outputs.cacheName.value
         $cacheMountAddresses = $groupDeployment.properties.outputs.mountAddresses.value
         $cacheMountOptions = $groupDeployment.properties.outputs.mountOptions.value
 
@@ -269,163 +327,135 @@ function Get-StorageCache ($sharedFramework, $resourceGroupNamePrefix, $computeR
             $dnsRecord = (az network private-dns record-set a add-record --resource-group $computeNetwork.resourceGroupName --zone-name $computeNetwork.domainName --record-set-name $dnsRecordName --ipv4-address $cacheMountAddress) | ConvertFrom-Json
         }
 
-        $storageTargets = (az hpc-cache storage-target list --resource-group $resourceGroupName --cache-name $cacheName) | ConvertFrom-Json
-        if ($storageTargets.length -gt 0) {
-            $cacheMountSource = $dnsRecord.fqdn + ":" + $storageTargets[0].junctions[0].namespacePath
-            $cacheMount = New-Object PSObject
-            $cacheMount | Add-Member -MemberType NoteProperty -Name "source" -Value $cacheMountSource
-            $cacheMount | Add-Member -MemberType NoteProperty -Name "options" -Value $cacheMountOptions
-            $cacheMount | Add-Member -MemberType NoteProperty -Name "path" -Value "/mnt/cache"
-            $cacheMounts += $cacheMount
-        }
-        New-TraceMessage $moduleName $true $cacheNetwork.regionName
+        $cacheMount = New-Object PSObject
+        $cacheMount | Add-Member -MemberType NoteProperty -Name "type" -Value "nfs"
+        $cacheMount | Add-Member -MemberType NoteProperty -Name "host" -Value ($dnsRecord.fqdn + ":/")
+        $cacheMount | Add-Member -MemberType NoteProperty -Name "path" -Value "/mnt/cache"
+        $cacheMount | Add-Member -MemberType NoteProperty -Name "options" -Value $cacheMountOptions
+        New-TraceMessage $moduleName $true $computeRegionName
     }
 
-    $storageAccount = $storageAccounts[0]
-    Set-StorageAccess $storageAccount.name $managedIdentity
-    Set-StorageScripts $storageAccount.name $storageMounts $cacheMounts
+    # 09 - Event Grid
+    $moduleName = "09 - Event Grid"
+    New-TraceMessage $moduleName $false $computeRegionName
+    $resourceGroupNameSuffix = ""
+    $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
+
+    $templateFile = "$rootDirectory/$moduleDirectory/09-EventGrid.json"
+    $templateParameters = "$rootDirectory/$moduleDirectory/09-EventGrid.Parameters.json"
+
+    $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
+    $templateConfig.parameters.storageAccount.value.name = $storageAccount.name
+    $templateConfig.parameters.storageAccount.value.resourceGroupName = $storageAccount.resourceGroupName
+    $templateConfig.parameters.storageAccount.value.queueName = $storageAccount.queueName
+    $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
+    $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
+    $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
+
+    $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
+    New-TraceMessage $moduleName $true $computeRegionName
 
     $storageCache = New-Object PSObject
-    $storageCache | Add-Member -MemberType NoteProperty -Name "storageAccounts" -Value $storageAccounts
+    $storageCache | Add-Member -MemberType NoteProperty -Name "storageAccount" -Value $storageAccount
     $storageCache | Add-Member -MemberType NoteProperty -Name "storageMounts" -Value $storageMounts
-    $storageCache | Add-Member -MemberType NoteProperty -Name "cacheMounts" -Value $cacheMounts
+    $storageCache | Add-Member -MemberType NoteProperty -Name "cacheMount" -Value $cacheMount
 
     New-TraceMessage $moduleGroupName $true
     return $storageCache
 }
 
-function Set-StorageAccess ($storageAccountName, $managedIdentity) {
-    $userId = az ad signed-in-user show --query "objectId"
-    $storageId = az storage account show --name $storageAccountName --query "id"
-
-    $principalType = "User"
-    $roleId = "974c5e8b-45b9-4653-ba55-5f855dd0fb88" # Storage Queue Data Contributor
-    $roleAssignment = az role assignment create --role $roleId --scope $storageId --assignee-object-id $userId --assignee-principal-type $principalType
-
-    $roleId = "ba92f5b4-2d11-453d-a403-e96b0029c9fe" # Storage Object Data Contributor
-    $roleAssignment = az role assignment create --role $roleId --scope $storageId --assignee-object-id $userId --assignee-principal-type $principalType
-
-    $principalType = "ServicePrincipal"
-    $roleId = "2a2b9908-6ea1-4ae2-8e65-a410df84e7d1" # Storage Object Data Reader
-    $roleAssignment = az role assignment create --role $roleId --scope $storageId --assignee-object-id $managedIdentity.principalId --assignee-principal-type $principalType
-
-    $roleId = "acdd72a7-3385-48ef-bd42-f606fba81ae7" # Reader
-    $roleAssignment = az role assignment create --role $roleId --scope $storageId --assignee-object-id $managedIdentity.principalId --assignee-principal-type $principalType
-
-    Start-Sleep -Seconds 180 # Ensures role assignment propagation
-}
-
-function Build-ImageTemplates ($moduleName, $computeRegionName, $imageGallery, $imageTemplates) {
-    New-TraceMessage $moduleName $false $computeRegionName
-    foreach ($imageTemplate in $imageTemplates) {
-        if ($imageTemplate.deploy) {
-            $imageVersion = Get-ImageVersion $imageGallery $imageTemplate
-            if (!$imageVersion) {
-                New-TraceMessage "$moduleName [$($imageTemplate.name)]" $false $computeRegionName
-                $imageBuild = az image builder run --resource-group $resourceGroupName --name $imageTemplate.name
-                New-TraceMessage "$moduleName [$($imageTemplate.name)]" $true $computeRegionName
-            }
-        }
-    }
-    New-TraceMessage $moduleName $true $computeRegionName
-}
-function Get-MountUnitFileName ($mount) {
-    return $mount.path.Substring(1).Replace('/', '-') + ".mount"
-}
-
-function New-MountUnitFile ($sourceDirectory, $mount) {
-    $fileName = Get-MountUnitFileName $mount
-    $filePath = "$sourceDirectory/$fileName"
-    Out-File -FilePath $filePath -InputObject "[Unit]"
-    Out-File -FilePath $filePath -InputObject "" -Append
-    Out-File -FilePath $filePath -InputObject "[Mount]" -Append
-    $unitInput = "What=" + $mount.source
-    Out-File -FilePath $filePath -InputObject $unitInput -Append
-    $unitInput = "Where=" + $mount.path
-    Out-File -FilePath $filePath -InputObject $unitInput -Append
-    Out-File -FilePath $filePath -InputObject "Type=nfs" -Append
-    $unitInput = "Options=" + $mount.options
-    Out-File -FilePath $filePath -InputObject $unitInput -Append
-    Out-File -FilePath $filePath -InputObject "" -Append
-    Out-File -FilePath $filePath -InputObject "[Install]" -Append
-    Out-File -FilePath $filePath -InputObject "WantedBy=multi-user.target" -Append
-}
-
-function Set-StorageScripts ($storageAccountName, $storageMounts, $cacheMounts) {
+function Set-StorageFiles ($rootDirectory, $storageAccountName, $storageMounts, $cacheMount) {
     $storageContainerName = "script"
+    $mountFilePatternLinux = "*.mount"
+    $mountFilePatternWindows = "*.bat"
+    $scriptFilePatternLinux = "*-*.sh"
+    $scriptFilePatternWindows = "*-*.ps1"
 
     $moduleName = "Storage Cache Mounts"
     $moduleDirectory = "StorageCache"
     $sourceDirectory = "$rootDirectory/$moduleDirectory"
+    $destinationDirectory = "$storageContainerName/$moduleDirectory"
     New-TraceMessage $moduleName $false
-    foreach ($storageMount in $storageMounts) {
-        New-MountUnitFile $sourceDirectory $storageMount
-    }
-    foreach ($cacheMount in $cacheMounts) {
-        New-MountUnitFile $sourceDirectory $cacheMount
-    }
-    $blobUpload = az storage blob upload-batch --account-name $storageAccountName --destination $storageContainerName --source $sourceDirectory --pattern '*.mount' --auth-mode login --no-progress
+    Set-MountUnitFiles $sourceDirectory $storageMounts $cacheMount
+    az storage blob upload-batch --account-name $storageAccountName --destination $destinationDirectory --source $sourceDirectory --pattern $mountFilePatternLinux --auth-mode login --no-progress --output none
+    az storage blob upload-batch --account-name $storageAccountName --destination $destinationDirectory --source $sourceDirectory --pattern $mountFilePatternWindows --auth-mode login --no-progress --output none
     New-TraceMessage $moduleName $true
 
     $moduleName = "Scripts Upload [Render Manager]"
     $moduleDirectory = "RenderManager"
     New-TraceMessage $moduleName $false
     $sourceDirectory = "$rootDirectory/$moduleDirectory"
-    $blobUpload = az storage blob upload-batch --account-name $storageAccountName --destination $storageContainerName --source $sourceDirectory --pattern '*.sh' --auth-mode login --no-progress
-    $blobUpload = az storage blob upload-batch --account-name $storageAccountName --destination $storageContainerName --source $sourceDirectory --pattern '*.ps1' --auth-mode login --no-progress
+    $destinationDirectory = "$storageContainerName/$moduleDirectory"
+    az storage blob upload-batch --account-name $storageAccountName --destination $destinationDirectory --source $sourceDirectory --pattern $scriptFilePatternLinux --auth-mode login --no-progress --output none
+    az storage blob upload-batch --account-name $storageAccountName --destination $destinationDirectory --source $sourceDirectory --pattern $scriptFilePatternWindows --auth-mode login --no-progress --output none
     New-TraceMessage $moduleName $true
 
     $moduleName = "Scripts Upload [Render Farm]"
     $moduleDirectory = "RenderFarm"
     New-TraceMessage $moduleName $false
     $sourceDirectory = "$rootDirectory/$moduleDirectory"
-    $blobUpload = az storage blob upload-batch --account-name $storageAccountName --destination $storageContainerName --source $sourceDirectory --pattern '*.sh' --auth-mode login --no-progress
-    $blobUpload = az storage blob upload-batch --account-name $storageAccountName --destination $storageContainerName --source $sourceDirectory --pattern '*.ps1' --auth-mode login --no-progress
+    $destinationDirectory = "$storageContainerName/$moduleDirectory"
+    az storage blob upload-batch --account-name $storageAccountName --destination $destinationDirectory --source $sourceDirectory --pattern $scriptFilePatternLinux --auth-mode login --no-progress --output none
+    az storage blob upload-batch --account-name $storageAccountName --destination $destinationDirectory --source $sourceDirectory --pattern $scriptFilePatternWindows --auth-mode login --no-progress --output none
     New-TraceMessage $moduleName $true
 
     $moduleName = "Scripts Upload [Artist Workstation]"
     $moduleDirectory = "ArtistWorkstation"
     New-TraceMessage $moduleName $false
     $sourceDirectory = "$rootDirectory/$moduleDirectory"
-    $blobUpload = az storage blob upload-batch --account-name $storageAccountName --destination $storageContainerName --source $sourceDirectory --pattern '*.sh' --auth-mode login --no-progress
-    $blobUpload = az storage blob upload-batch --account-name $storageAccountName --destination $storageContainerName --source $sourceDirectory --pattern '*.ps1' --auth-mode login --no-progress
+    $destinationDirectory = "$storageContainerName/$moduleDirectory"
+    az storage blob upload-batch --account-name $storageAccountName --destination $destinationDirectory --source $sourceDirectory --pattern $scriptFilePatternLinux --auth-mode login --no-progress --output none
+    az storage blob upload-batch --account-name $storageAccountName --destination $destinationDirectory --source $sourceDirectory --pattern $scriptFilePatternWindows --auth-mode login --no-progress --output none
     New-TraceMessage $moduleName $true
 }
 
-function Get-UniqueTargets ($storageTargets, $requiredProtocol) {
-    $uniqueTargets = ""
-    foreach ($storageTarget in $storageTargets) {
-        $storageTargetJson = ConvertTo-Json -InputObject $storageTarget
-        if (!$uniqueTargets.Contains($storageTargetJson) -and $storageTargetJson.Contains($requiredProtocol)) {
-            if ($uniqueTargets -ne "") {
-                $uniqueTargets += ","
-            }
-            $uniqueTargets += $storageTargetJson
-        }
+function Get-MountUnitFileName ($mount) {
+    if ($mount.junctions) {
+        $path = $mount.junctions[0].namespacePath
+    } else {
+        $path = $mount.path
     }
-    return ConvertFrom-Json -InputObject "[$uniqueTargets]"
+    return $path.Substring(1).Replace('/', '-') + ".mount"
 }
 
-function Get-ScriptUri ($storageAccounts, $scriptFile) {
+function Set-MountUnitFile ($outputDirectory, $mount) {
+    $fileName = Get-MountUnitFileName $mount
+    $filePath = "$outputDirectory/$fileName"
+    Out-File -FilePath $filePath -InputObject "[Unit]"
+    Out-File -FilePath $filePath -InputObject "After=network-online.target" -Append
+    Out-File -FilePath $filePath -InputObject "" -Append
+    Out-File -FilePath $filePath -InputObject "[Mount]" -Append
+    Out-File -FilePath $filePath -InputObject ("Type=" + $mount.type) -Append
+    Out-File -FilePath $filePath -InputObject ("What=" + $mount.host) -Append
+    Out-File -FilePath $filePath -InputObject ("Where=" + $mount.path) -Append
+    Out-File -FilePath $filePath -InputObject ("Options=" + $mount.options) -Append
+    Out-File -FilePath $filePath -InputObject "" -Append
+    Out-File -FilePath $filePath -InputObject "[Install]" -Append
+    Out-File -FilePath $filePath -InputObject "WantedBy=multi-user.target" -Append
+}
+
+function Set-MountUnitFiles ($outputDirectory, $storageMounts, $cacheMount) {
+    foreach ($storageMount in $storageMounts) {
+        Set-MountUnitFile $sourceDirectory $storageMount
+    }
+    if ($cacheMount) {
+        Set-MountUnitFile $sourceDirectory $cacheMount
+    }
+}
+
+function Get-ScriptUri ($storageAccounts, $scriptDirectory, $scriptFile) {
     $storageAccount = $storageAccounts[0]
-    return "https://" + $storageAccount.name + ".blob.core.windows.net/script/" + $scriptFile
+    return "https://" + $storageAccount.name + ".blob.core.windows.net/script/$scriptDirectory/$scriptFile"
 }
 
-function Get-ScriptChecksum ($moduleDirectory, $scriptFile) {
-    $filePath = "$rootDirectory/$moduleDirectory/$scriptFile"
+function Get-ScriptChecksum ($rootDirectory, $moduleDirectory, $scriptDirectory, $scriptFile) {
+    $filePath = "$rootDirectory/$moduleDirectory"
+    if ($scriptDirectory -ne "") {
+        $filePath = "$filePath/$scriptDirectory"
+    }
+    $filePath = "$filePath/$scriptFile"
     $fileHash = Get-FileHash -Path $filePath -Algorithm "SHA256"
     return $fileHash.hash.ToLower()
-}
-
-function Confirm-ImageTemplates ($resourceGroupName, $imageTemplates) {
-    foreach ($imageTemplate in $imageTemplates) {
-        $templateName = $imageTemplate.name
-        $templates = (az image builder list --resource-group $resourceGroupName --query "[?contains(name, '$templateName')]") | ConvertFrom-Json
-        if ($templates.length -eq 0) {
-            return $true
-        }
-    }
-    return $false
 }
 
 function Get-ImageVersion ($imageGallery, $imageTemplate) {
@@ -435,6 +465,36 @@ function Get-ImageVersion ($imageGallery, $imageTemplate) {
             return $imageVersion
         }
     }
+}
+
+function Set-ImageTemplates ($resourceGroupName, $imageTemplates, $osType) {
+    $deployEnabled = $false
+    foreach ($imageTemplate in $imageTemplates) {
+        if ($imageTemplate.imageOperatingSystemType -eq $osType) {
+            $imageTemplate.deploy = $true
+            $templateName = $imageTemplate.name
+            $templates = (az image builder list --resource-group $resourceGroupName --query "[?contains(name, '$templateName')]") | ConvertFrom-Json
+            if ($templates.length -eq 0) {
+                $deployEnabled = $true
+            }
+        }
+    }
+    return $deployEnabled
+}
+
+function Build-ImageTemplates ($moduleName, $computeRegionName, $imageGallery, $imageTemplates) {
+    New-TraceMessage $moduleName $false $computeRegionName
+    foreach ($imageTemplate in $imageTemplates) {
+        if ($imageTemplate.deploy) {
+            $imageVersion = Get-ImageVersion $imageGallery $imageTemplate
+            if (!$imageVersion) {
+                New-TraceMessage "$moduleName [$($imageTemplate.name)]" $false $computeRegionName
+                az image builder run --resource-group $resourceGroupName --name $imageTemplate.name --output none
+                New-TraceMessage "$moduleName [$($imageTemplate.name)]" $true $computeRegionName
+            }
+        }
+    }
+    New-TraceMessage $moduleName $true $computeRegionName
 }
 
 function Get-ObjectProperties ($object, $windows) {

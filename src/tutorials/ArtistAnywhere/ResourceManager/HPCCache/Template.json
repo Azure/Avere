@@ -1,0 +1,91 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "hpcCache": {
+      "type": "object"
+    },
+    "storageTargets": {
+      "type": "array"
+    },
+    "virtualNetwork": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "apiVersion": "2020-10-01"
+  },
+  "functions": [
+    {
+      "namespace": "fx",
+      "members": {
+        "GetStorageTargetName": {
+          "parameters": [
+            {
+              "name": "cacheName",
+              "type": "string"
+            },
+            {
+              "name": "storageTargets",
+              "type": "array"
+            },
+            {
+              "name": "copyIndex",
+              "type": "int"
+            }
+          ],
+          "output": {
+            "type": "string",
+            "value": "[concat(parameters('cacheName'), '/', if(equals(length(parameters('storageTargets')), 0), 'storage', parameters('storageTargets')[parameters('copyIndex')].name))]"
+          }
+        }
+      }
+    }
+  ],
+  "resources": [
+    {
+      "type": "Microsoft.StorageCache/caches",
+      "name": "[parameters('hpcCache').name]",
+      "apiVersion": "[variables('apiVersion')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "[parameters('hpcCache').throughput]"
+      },
+      "properties": {
+        "cacheSizeGB": "[parameters('hpcCache').size]",
+        "subnet": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]",
+        "networkSettings": {
+          "mtu": "[parameters('hpcCache').mtuSize]"
+        }
+      }
+    },
+    {
+      "condition": "[greater(length(parameters('storageTargets')), 0)]",
+      "type": "Microsoft.StorageCache/caches/storageTargets",
+      "name": "[fx.GetStorageTargetName(parameters('hpcCache').name, parameters('storageTargets'), copyIndex())]",
+      "apiVersion": "[variables('apiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.StorageCache/caches', parameters('hpcCache').name)]"
+      ],
+      "properties": {
+        "targetType": "[parameters('storageTargets')[copyIndex()].type]",
+        "nfs3": {
+          "target": "[parameters('storageTargets')[copyIndex()].host]",
+          "usageModel": "[parameters('storageTargets')[copyIndex()].usageModel]"
+        },
+        "junctions": "[parameters('storageTargets')[copyIndex()].junctions]"
+      },
+      "copy": {
+        "name": "storageTargets",
+        "count": "[length(parameters('storageTargets'))]"
+      }
+    }
+  ],
+  "outputs": {
+    "mountAddresses": {
+      "type": "array",
+      "value": "[reference(resourceId('Microsoft.StorageCache/caches', parameters('hpcCache').name), variables('apiVersion')).mountAddresses]"
+    }
+  }
+}

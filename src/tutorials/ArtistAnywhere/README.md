@@ -1,64 +1,12 @@
-# Azure Artist Anywhere ([aka.ms/aaa](http://aka.ms/aaa))
+# Azure Artist Anywhere ([aka.ms/aaa](https://aka.ms/aaa))
 
-Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/azure/azure-resource-manager/management/overview) templates for automated deployment of an end-to-end rendering solution architecture in Microsoft Azure. Azure Artist Anywhere provides a lightweight and extensible deployment framework that can be configured as needed to meet various integration requirements, including burst rendering with caching of on-premises storage.
+Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/azure/azure-resource-manager/management/overview) templates for automated deployment of an end-to-end rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight and customizable deployment framework with the storage tier in Azure and/or storage located on-premises with Azure compute integration via the [Azure HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) managed service.
 
-Azure Artist Anywhere provides the following mutually-exclusive render manager deployment configuration modes.
+As a sample, the following image was rendered on [Azure HPC VMs](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-hpc) via an [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) using [V-Ray for Maya](https://www.chaosgroup.com/vray/maya).
 
-* [*CycleCloud*](https://docs.microsoft.com/azure/cyclecloud/overview) - enables [OpenCue](https://www.opencue.io) integration with the [Azure CycleCloud](https://docs.microsoft.com/azure/cyclecloud/overview) cluster management service
+![](https://amp.blob.core.windows.net/doc/AzureArtistAnywhere.SuspensionBridge.jpg)
 
-* [*OpenCue*](https://www.opencue.io) - enables [OpenCue](https://www.opencue.io) integration with the [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) service
-
-* [*VRayDR*](https://www.chaosgroup.com/vray) - enables [V-Ray Distributed Rendering](https://docs.chaosgroup.com/display/VMAYA/Distributed+Rendering) with the [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) service
-
-The following sample output frame was rendered on Azure using [Blender's](https://www.blender.org) open-source 3D content creation suite.
-
-![](https://mediasolutions.blob.core.windows.net/bin/Blender/classroom.png)
-
-## Deployment Modules
-
-The following Microsoft Azure resource templates and scripts define the Azure Artist Anywhere deployment modules.
-
-| *Shared Framework* | *Storage Cache* | *Render Manager* |
-| :----------------- | :-------------- | :--------------- |
-| 00 - [Virtual Network](SharedFramework/00-VirtualNetwork.json) ([Parameters](SharedFramework/00-VirtualNetwork.Parameters.json)) | 06 - [Storage](StorageCache/06-Storage.json) ([Parameters](StorageCache/06-Storage.Parameters.json)) | 08 - [Batch Account](RenderManager/08-BatchAccount.json) ([Parameters](RenderManager/08-BatchAccount.Parameters.json)) |
-| 01 - [Managed Identity](SharedFramework/01-ManagedIdentity.json) ([Parameters](SharedFramework/01-ManagedIdentity.Parameters.json)) | 06 - [Storage NetApp](StorageCache/06-Storage.NetApp.json) ([Parameters](StorageCache/06-Storage.NetApp.Parameters.json)) | 09 - [OpenCue Data](RenderManager/09-OpenCue.Data.json) ([Parameters](RenderManager/09-OpenCue.Data.Parameters.json)) |
-| 02 - [Key Vault](SharedFramework/02-KeyVault.json) ([Parameters](SharedFramework/02-KeyVault.Parameters.json)) | 07 - [Cache](StorageCache/07-Cache.json) ([Parameters](StorageCache/07-Cache.Parameters.json)) | 10 - [OpenCue Image](RenderManager/10-OpenCue.Image.json) ([Parameters](RenderManager/10-OpenCue.Image.Parameters.json)) |
-| 03 - [Monitor Insight](SharedFramework/03-MonitorInsight.json) ([Parameters](SharedFramework/03-MonitorInsight.Parameters.json)) | | 10 - [OpenCue Image Customize](RenderManager/10-OpenCue.Image.sh) |
-| 04 - [Image Gallery](SharedFramework/04-ImageGallery.json) ([Parameters](SharedFramework/04-ImageGallery.Parameters.json)) | | 11 - [OpenCue Machine](RenderManager/11-OpenCue.Machine.json) ([Parameters](RenderManager/11-OpenCue.Machine.Parameters.json)) |
-| 05 - [Container Registry](SharedFramework/05-ContainerRegistry.json) ([Parameters](SharedFramework/05-ContainerRegistry.Parameters.json)) | | 11 - [OpenCue Machine Initialize](RenderManager/11-OpenCue.Machine.sh) |
-| | | 12 - [CycleCloud Machine](RenderManager/12-CycleCloud.Machine.json) ([Parameters](RenderManager/12-CycleCloud.Machine.Parameters.json)) |
-
-| *Render Farm (Linux)* | *Render Farm (Windows)* |
-| :-------------------- | :---------------------- |
-| 13 - [Node Image](RenderFarm/13-Node.Image.json) ([Parameters](RenderFarm/13-Node.Image.Parameters.json)) | 13 - [Node Image](RenderFarm/13-Node.Image.json) ([Parameters](RenderFarm/13-Node.Image.Parameters.json)) |
-| 13 - [Node Image Customize](RenderFarm/13-Node.Image.sh) | 13 - [Node Image Customize](RenderFarm/13-Node.Image.ps1) |
-| 13 - [Node Image Customize (Blender)](RenderFarm/13-Node.Image.Blender.sh) | 13 - [Node Image Customize (Blender)](RenderFarm/13-Node.Image.Blender.ps1) |
-| 13 - [Node Image Customize (OpenCue)](RenderFarm/13-Node.Image.OpenCue.sh) | 13 - [Node Image Customize (OpenCue)](RenderFarm/13-Node.Image.OpenCue.ps1) |
-| 13 - [Node Image Customize (V-Ray DR)](RenderFarm/13-Node.Image.VRayDR.sh) | 13 - [Node Image Customize (V-Ray DR)](RenderFarm/13-Node.Image.VRayDR.ps1) |
-| 14 - [Farm Pool](RenderFarm/14-Farm.Pool.json) ([Parameters](RenderFarm/14-Farm.Pool.Parameters.json)) | 14 - [Farm Pool](RenderFarm/14-Farm.Pool.json) ([Parameters](RenderFarm/14-Farm.Pool.Parameters.json)) |
-| 14 - [Farm Scale Set](RenderFarm/14-Farm.ScaleSet.json) ([Parameters](RenderFarm/14-Farm.ScaleSet.Parameters.json)) | 14 - [Farm Scale Set](RenderFarm/14-Farm.ScaleSet.json) ([Parameters](RenderFarm/14-Farm.ScaleSet.Parameters.json)) |
-| 14 - [Farm Scale Set Initialize](RenderFarm/14-Farm.ScaleSet.sh) | 14 - [Farm Scale Set Initialize](RenderFarm/14-Farm.ScaleSet.ps1) |
-
-
-
-| *Artist Workstation Image* | *Artist Workstation Machine* |
-| :------------------------- | :--------------------------- |
-| 15 - [Workstation Image Template](ArtistWorkstation/15-Linux.Workstation.Image.json) ([Linux Parameters](ArtistWorkstation/15-Linux.Workstation.Image.Parameters.json), [Windows Parameters](ArtistWorkstation/15-Windows.Workstation.Image.Parameters.json)) | 16 - [Workstation Machine](ArtistWorkstation/16-Linux.Workstation.Machine.json) ([Linux Parameters](ArtistWorkstation/16-Linux.Workstation.Machine.Parameters.json), [Windows Parameters](ArtistWorkstation/16-Windows.Workstation.Machine.Parameters.json)) |
-| 15 - [Linux Workstation Image Customize](ArtistWorkstation/15-Linux.Workstation.Image.sh) ([Blender](RenderFarm/13-Node.Image.Blender.sh), [OpenCue](ArtistWorkstation/15-Linux.Workstation.Image.OpenCue.sh), [Teradici](ArtistWorkstation/15-Linux.Workstation.Image.Teradici.sh)) | 16 - [Linux Workstation Machine Initialize](ArtistWorkstation/16-Linux.Workstation.Machine.sh) |
-| 15 - [Windows Workstation Image Customize](ArtistWorkstation/15-Windows.Workstation.Image.ps1) ([Blender](ArtistWorkstation/15-Windows.Workstation.Image.Blender.ps1), [OpenCue](ArtistWorkstation/15-Windows.Workstation.Image.OpenCue.ps1), [Teradici](ArtistWorkstation/15-Windows.Workstation.Image.Teradici.ps1)) | 16 - [Windows Workstation Machine Initialize](ArtistWorkstation/16-Windows.Workstation.Machine.ps1) |
-
-<!-- | *Stream Edge* |
-| :------------ |
-| 17 - [Remote Render](StreamEdge/17-RemoteRender.json) ([Parameters](StreamEdge/17-RemoteRender.Parameters.json)) |
-| 18 - [Media Services](StreamEdge/18-MediaServices.json) ([Parameters](StreamEdge/18-MediaServices.Parameters.json)) | -->
-
-## Solution Architecture
-
-The following overview diagram depicts the Azure Artist Anywhere solution architecture with on-premises storage.
-
-![](https://mediasolutions.blob.core.windows.net/bin/AzureArtistAnywhere.SolutionArchitecture.2020-12-01.png)
-
-The following Microsoft Azure services and open-source software comprise the Azure Artist Anywhere solution.
+The following Microsoft Azure services and 3rd-party software are integrated within the Azure Artist Anywhere rendering solution.
 
 <table>
     <tr>
@@ -88,7 +36,7 @@ The following Microsoft Azure services and open-source software comprise the Azu
             <a href="https://docs.microsoft.com/azure/private-link/private-link-overview" target="_blank">Azure Private Link</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/azure/event-grid/overview" target="_blank">Azure Event Grid</a>
+            <a href="https://docs.microsoft.com/azure/batch/batch-technical-overview" target="_blank">Azure Batch</a>
         </td>
     </tr>
     <tr>
@@ -102,7 +50,7 @@ The following Microsoft Azure services and open-source software comprise the Azu
             <a href="https://docs.microsoft.com/azure/dns/private-dns-overview" target="_blank">Azure Private DNS</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/azure/bastion/bastion-overview" target="_blank">Azure Bastian</a>
+            <a href="https://docs.microsoft.com/azure/azure-functions/functions-overview" target="_blank">Azure Functions</a>
         </td>
     </tr>
     <tr>
@@ -113,10 +61,10 @@ The following Microsoft Azure services and open-source software comprise the Azu
             <a href="https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-overview" target="_blank">Azure Image Builder</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/azure/postgresql/overview" target="_blank">Azure Database for PostgreSQL</a>
+            <a href="https://docs.microsoft.com/azure/container-registry/container-registry-intro" target="_blank">Azure Container Registry</a>
         </td>
         <td>
-            <a href="https://www.opencue.io/" target="_blank">OpenCue Render Manager</a>
+            <a href="https://www.blender.org/" target="_blank">Blender Content Creation Suite</a>
         </td>
     </tr>
     <tr>
@@ -127,34 +75,87 @@ The following Microsoft Azure services and open-source software comprise the Azu
             <a href="https://docs.microsoft.com/azure/virtual-machines/linux/overview" target="_blank">Azure Virtual Machines</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/azure/container-registry/container-registry-intro" target="_blank">Azure Container Registry</a>
+            <a href="https://docs.microsoft.com/azure/cosmos-db/introduction" target="_blank">Azure Cosmos (Mongo) DB</a>
         </td>
         <td>
-            <a href="https://www.blender.org/" target="_blank">Blender 3D Content Creation</a>
+            <a href="https://www.opencue.io/" target="_blank">OpenCue Render Management</a>
         </td>
     </tr>
     <tr>
         <td>
-            <a href="https://docs.microsoft.com/azure/automation/automation-intro" target="_blank">Azure Automation</a>
+            <a href="https://docs.microsoft.com/azure/event-grid/overview" target="_blank">Azure Event Grid</a>
         </td>
         <td>
             <a href="https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview" target="_blank">Azure Virtual Machine Scale Sets</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/azure/batch/batch-technical-overview" target="_blank">Azure Batch</a>
+            <a href="https://docs.microsoft.com/azure/postgresql/overview" target="_blank">Azure Database for PostgreSQL</a>
         </td>
         <td>
-            <a href="https://docs.teradici.com/find/product/cloud-access-software" target="_blank">Teradici PCoIP Remote Access</a>
+            <a href="https://docs.teradici.com/find/product/cloud-access-software" target="_blank">Teradici Remote Access (PCoIP)</a>
         </td>
     </tr>
 </table>
 
-The following diagram defines the Azure Artist Anywhere deployment modules along with their dependency relationships.
+## Solution Architecture
 
-![](https://mediasolutions.blob.core.windows.net/bin/AzureArtistAnywhere.ModuleDependency.2020-12-01.png)
+The following overview diagram depicts the Azure Artist Anywhere solution architecture, including on-premises storage asset caching.
 
-As an example deployment, the following output is from the [*Deploy.ps1*](Deploy.ps1) script within Azure Cloud Shell.
+![](https://amp.blob.core.windows.net/doc/AzureArtistAnywhere.SolutionArchitecture.png)
 
-![](https://mediasolutions.blob.core.windows.net/bin/AzureArtistAnywhere.ModuleDeployment.2020-08-01.png)
+## Deployment Modules
+
+The following Microsoft Azure resource templates and scripts define the Azure Artist Anywhere deployment modules.
+
+| *Base Framework* | *Storage Cache* |
+| :--------------- | :-------------- |
+| 00 - [Virtual Network](BaseFramework/00-VirtualNetwork.json) ([Parameters](BaseFramework/00-VirtualNetwork.Parameters.json)) | 07 - [Storage](StorageCache/07-Storage.json) ([Parameters](StorageCache/07-Storage.Parameters.json)) |
+| 01 - [Managed Identity](BaseFramework/01-ManagedIdentity.json) ([Parameters](BaseFramework/01-ManagedIdentity.Parameters.json)) | 07 - [Storage NetApp](StorageCache/07-Storage.NetApp.json) ([Parameters](StorageCache/07-Storage.NetApp.Parameters.json)) |
+| 02 - [Key Vault](BaseFramework/02-KeyVault.json) ([Parameters](BaseFramework/02-KeyVault.Parameters.json)) | 07 - [* Storage Hammerspace](StorageCache/07-Storage.Hammerspace.json) ([Parameters](StorageCache/07-Storage.Hammerspace.Parameters.json)) |
+| 03 - [Network Gateway](BaseFramework/03-NetworkGateway.json) ([Parameters](BaseFramework/03-NetworkGateway.Parameters.json)) | 07 - [* Storage Qumulo](StorageCache/07-Storage.Qumulo.json) ([Parameters](StorageCache/07-Storage.Qumulo.Parameters.json)) |
+| 04 - [Pipeline Insight](BaseFramework/04-PipelineInsight.json) ([Parameters](BaseFramework/04-PipelineInsight.Parameters.json)) | 07 - [* Storage Scality](StorageCache/07-Storage.Scality.json) ([Parameters](StorageCache/07-Storage.Scality.Parameters.json)) |
+| 05 - [Image Gallery](BaseFramework/05-ImageGallery.json) ([Parameters](BaseFramework/05-ImageGallery.Parameters.json)) | 08 - [HPC Cache](StorageCache/08-HPCCache.json) ([Parameters](StorageCache/08-HPCCache.Parameters.json)) |
+| 06 - [Container Registry](BaseFramework/06-ContainerRegistry.json) ([Parameters](BaseFramework/06-ContainerRegistry.Parameters.json)) | 09 - [Event Grid](StorageCache/09-EventGrid.json) ([Parameters](StorageCache/09-EventGrid.Parameters.json)) |
+
+\* = TBD
+
+| *Render Manager (Linux)* | *Render Manager (Windows)* |
+| :----------------------- | :------------------------- |
+| 10 - [Database](RenderManager/10-Database.json) ([Parameters](RenderManager/10-Database.Parameters.json)) | 10 - [Database](RenderManager/10-Database.json) ([Parameters](RenderManager/10-Database.Parameters.json)) |
+| 11 - [Image](RenderManager/11-Image.json) ([Parameters](RenderManager/11-Image.Parameters.json)) | 11 - [Image](RenderManager/11-Image.json) ([Parameters](RenderManager/11-Image.Parameters.json)) |
+| 11 - [Image Customize (OpenCue)](RenderManager/11-Image.OpenCue.sh) | 11 - [* Image Customize (OpenCue)](RenderManager/11-Image.OpenCue.ps1) |
+| 11 - [* Image Customize (Deadline)](RenderManager/11-Image.Deadline.sh) | 11 - [* Image Customize (Deadline)](RenderManager/11-Image.Deadline.ps1) |
+| 12 - [Machine](RenderManager/12-Machine.json) ([Parameters](RenderManager/12-Machine.Parameters.json)) | 12 - [Machine](RenderManager/12-Machine.json) ([Parameters](RenderManager/12-Machine.Parameters.json)) |
+| 12 - [Machine Initialize](RenderManager/12-Machine.sh) | 12 - [Machine Initialize](RenderManager/12-Machine.ps1) |
+| 13 - [CycleCloud](RenderManager/13-CycleCloud.json) ([Parameters](RenderManager/13-CycleCloud.Parameters.json)) | 13 - [CycleCloud](RenderManager/13-CycleCloud.json) ([Parameters](RenderManager/13-CycleCloud.Parameters.json)) |
+| 14 - [Batch Account](RenderManager/14-BatchAccount.json) ([Parameters](RenderManager/14-BatchAccount.Parameters.json)) | 14 - [Batch Account](RenderManager/14-BatchAccount.json) ([Parameters](RenderManager/14-BatchAccount.Parameters.json)) |
+
+\* = TBD
+
+| *Render Farm (Linux)* | *Render Farm (Windows)* |
+| :-------------------- | :---------------------- |
+| 15 - [Node Image](RenderFarm/15-Node.Image.json) ([Parameters](RenderFarm/15-Node.Image.Parameters.json)) | 15 - [Node Image](RenderFarm/15-Node.Image.json) ([Parameters](RenderFarm/15-Node.Image.Parameters.json)) |
+| 15 - [Node Image Customize](RenderFarm/Linux/15-Node.Image.sh) | 15 - [Node Image Customize](RenderFarm/Windows/15-Node.Image.ps1) |
+| 15 - [Node Image Customize (Blender)](RenderFarm/Linux/15-Node.Image.Blender.sh) | 15 - [Node Image Customize (Blender)](RenderFarm/Windows/15-Node.Image.Blender.ps1) |
+| 15 - [Node Image Customize (OpenCue)](RenderFarm/Linux/15-Node.Image.OpenCue.sh) | 15 - [Node Image Customize (OpenCue)](RenderFarm/Windows/15-Node.Image.OpenCue.ps1) |
+| 15 - [* Node Image Customize (Deadline)](RenderFarm/Linux/15-Node.Image.Deadline.sh) | 15 - [* Node Image Customize (Deadline)](RenderFarm/Windows/15-Node.Image.Deadline.ps1) |
+| 16 - [Farm Pool](RenderFarm/16-Farm.Pool.json) ([Parameters](RenderFarm/16-Farm.Pool.Parameters.json)) | 16 - [Farm Pool](RenderFarm/16-Farm.Pool.json) ([Parameters](RenderFarm/16-Farm.Pool.Parameters.json)) |
+| 16 - [Farm Scale Set](RenderFarm/16-Farm.ScaleSet.json) ([Parameters](RenderFarm/16-Farm.ScaleSet.Parameters.json)) | 16 - [Farm Scale Set](RenderFarm/16-Farm.ScaleSet.json) ([Parameters](RenderFarm/16-Farm.ScaleSet.Parameters.json)) |
+| 16 - [Farm Scale Set Initialize](RenderFarm/Linux/16-Farm.ScaleSet.sh) | 16 - [Farm Scale Set Initialize](RenderFarm/Windows/16-Farm.ScaleSet.ps1) |
+
+\* = TBD
+
+| *Artist Workstation (Linux)* | *Artist Workstation (Windows)* |
+| :--------------------------- | :----------------------------- |
+| 17 - [Image](ArtistWorkstation/17-Image.json) ([Parameters](ArtistWorkstation/17-Image.Parameters.json)) | 17 - [Image](ArtistWorkstation/17-Image.json) ([Parameters](ArtistWorkstation/17-Image.Parameters.json)) |
+17 - [Image Customize](ArtistWorkstation/Linux/17-Image.sh) | 17 - [Image Customize](ArtistWorkstation/Windows/17-Image.ps1) |
+17 - [Image Customize (Blender)](RenderFarm/Linux/15-Node.Image.Blender.sh) | 17 - [Image Customize (Blender)](RenderFarm/Windows/15-Node.Image.Blender.ps1) |
+17 - [Image Customize (OpenCue)](ArtistWorkstation/Linux/17-Image.OpenCue.sh) | 17 - [Image Customize (OpenCue)](ArtistWorkstation/Windows/17-Image.OpenCue.ps1) |
+17 - [* Image Customize (Deadline)](RenderFarm/Linux/15-Node.Image.Deadline.sh) | 17 - [* Image Customize (Deadline)](RenderFarm/Windows/15-Node.Image.Deadline.ps1) |
+17 - [Image Customize (Teradici)](ArtistWorkstation/Linux/17-Image.Teradici.sh) | 17 - [Image Customize (Teradici)](ArtistWorkstation/Windows/17-Image.Teradici.ps1) |
+18 - [Machine](ArtistWorkstation/18-Machine.json) ([Parameters](ArtistWorkstation/18-Machine.Parameters.json)) | 18 - [Machine](ArtistWorkstation/18-Machine.json) ([Parameters](ArtistWorkstation/18-Machine.Parameters.json)) |
+18 - [Machine Initialize](ArtistWorkstation/Linux/18-Machine.sh) | 18 - [Machine Initialize](ArtistWorkstation/Windows/18-Machine.ps1) |
+
+\* = TBD
 
 For more information, contact Rick Shahid (rick.shahid@microsoft.com)

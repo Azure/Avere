@@ -1,0 +1,80 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "batchAccount": {
+      "type": "object"
+    },
+    "storageAccount": {
+      "type": "object"
+    },
+    "keyVault": {
+      "type": "object"
+    },
+    "virtualNetwork": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "keyVaultApiVersion": "2019-09-01",
+    "batchAccountApiVersion": "2021-01-01",
+    "privateEndpointApiVersion": "2020-08-01"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Batch/batchAccounts",
+      "name": "[parameters('batchAccount').name]",
+      "apiVersion": "[variables('batchAccountApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "poolAllocationMode": "[parameters('batchAccount').poolAllocationMode]",
+        "autoStorage": {
+          "storageAccountId": "[resourceId(parameters('storageAccount').resourceGroupName, 'Microsoft.Storage/storageAccounts', parameters('storageAccount').name)]"
+        },
+        "keyVaultReference": {
+          "id": "[resourceId(parameters('keyVault').resourceGroupName, 'Microsoft.KeyVault/vaults', parameters('keyVault').name)]",
+          "url": "[reference(resourceId(parameters('keyVault').resourceGroupName, 'Microsoft.KeyVault/vaults', parameters('keyVault').name), variables('keyVaultApiVersion')).vaultUri]"
+        },
+        "encryption": {
+          "keySource": "Microsoft.Batch"
+        }
+      }
+    },
+    {
+      "condition": "[parameters('batchAccount').enablePrivateEndpoint]",
+      "type": "Microsoft.Network/privateEndpoints",
+      "name": "[parameters('batchAccount').name]",
+      "apiVersion": "[variables('privateEndpointApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Batch/batchAccounts', parameters('batchAccount').name)]"
+      ],
+      "properties": {
+        "subnet": {
+          "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "[concat(parameters('batchAccount').name, '.Batch')]",
+            "properties": {
+              "privateLinkServiceId": "[resourceId('Microsoft.Batch/batchAccounts', parameters('batchAccount').name)]",
+              "groupIds": [
+                "batchAccount"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "renderManager": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('batchAccount').name]",
+        "resourceGroupName": "[resourceGroup().name]",
+        "host": "[reference(resourceId('Microsoft.Batch/batchAccounts', parameters('batchAccount').name), variables('batchAccountApiVersion')).accountEndpoint]"
+      }
+    }
+  }
+}

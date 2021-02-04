@@ -1,20 +1,20 @@
 ﻿param (
-    # Set a naming prefix for the Azure resource groups that are created by this deployment script
-    [string] $resourceGroupNamePrefix = "Azure.Media.Pipeline",
+    # Set a name prefix for the Azure resource groups that are created by this automated deployment script
+    [string] $resourceGroupNamePrefix = "ArtistAnywhere",
 
-    # Set the Azure region name for shared resources (e.g., Managed Identity, Key Vault, Monitor Insight, etc.)
-    [string] $sharedRegionName = "WestUS2",
+    # Set the Azure region name for compute resources (e.g., Image Gallery, Virtual Machine Scale Set, HPC Cache, etc.)
+    [string] $computeRegionName = "WestUS2",
 
-    # Set the Azure region name for compute resources (e.g., Image Gallery, Virtual Machines, Batch Accounts, etc.)
-    [string] $computeRegionName = "EastUS",
+    # Set the Azure region name for storage resources (e.g., Storage Network, Storage Account, File Share / Container, etc.)
+    [string] $storageRegionName = "EastUS2",
 
-    # Set the Azure region name for storage resources (e.g., Storage Accounts, File Shares, Object Containers, etc.)
-    [string] $storageRegionName = "EastUS",
+    # Set to true to deploy Azure VPN Gateway services (https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways)
+    [boolean] $networkGatewayDeploy = $false,
 
     # Set to true to deploy Azure NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
     [boolean] $storageNetAppDeploy = $false,
 
-    # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in Azure compute region
+    # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in the compute region
     [boolean] $storageCacheDeploy = $false
 )
 
@@ -22,8 +22,8 @@ $rootDirectory = "$PSScriptRoot/.."
 
 Import-Module "$rootDirectory/Deploy.psm1"
 
-$sharedFramework = Get-SharedFramework $resourceGroupNamePrefix $sharedRegionName $computeRegionName $storageRegionName
-ConvertTo-Json -InputObject $sharedFramework -Depth 3 | Write-Host
+$baseFramework = Get-BaseFramework $rootDirectory $resourceGroupNamePrefix $computeRegionName $storageRegionName $networkGatewayDeploy
+ConvertTo-Json -InputObject $baseFramework | Write-Host
 
-$storageCache = Get-StorageCache $sharedFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageNetAppDeploy $storageCacheDeploy
-ConvertTo-Json -InputObject $storageCache -Depth 4 | Write-Host
+$storageCache = Get-StorageCache $baseFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageNetAppDeploy $storageCacheDeploy
+ConvertTo-Json -InputObject $storageCache | Write-Host

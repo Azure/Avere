@@ -153,7 +153,7 @@ function apt_get_install() {
 function config_linux() {
     export DEBIAN_FRONTEND=noninteractive
     apt_get_update
-    apt_get_install 20 10 180 default-jre zip csh unzip
+    apt_get_install 20 10 180 default-jre zip csh unzip tmux
 }
 
 function mount_avere() {
