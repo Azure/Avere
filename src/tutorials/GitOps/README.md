@@ -1,12 +1,12 @@
-![](https://mediasolutions.blob.core.windows.net/bin/AzureRenderingGitOps.SolutionArchitecture.2020-07-01.png)
+![](Images/AzureRenderingGitOpsSolutionArchitecture.png)
 
 ## GitHub App Pull Request Check Run (Terraform Plan)
 
-![](https://mediasolutions.blob.core.windows.net/bin/AzureRenderingGitOps.GitHubPullRequestCheckRun.TerraformPlan.2020-07-01.png)
+![](Images/GitHubPullRequestCheckRunTerraformPlan.png)
 
 ## GitHub App Pull Request Comment (Terraform Apply)
 
-![](https://mediasolutions.blob.core.windows.net/bin/AzureRenderingGitOps.GitHubPullRequestComment.TerraformApply.2020-07-01.png)
+![](Images/GitHubPullRequestCommentTerraformApply.png)
 
 ### GitHub App Dev - https://developer.github.com/apps/
 
