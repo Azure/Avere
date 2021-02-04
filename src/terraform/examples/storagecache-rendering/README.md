@@ -35,6 +35,16 @@ az vm image list --location eastus -p microsoft-avere -f vfxt -s avere-vfxt-node
     node_size = "unsupported_test_SKU"
 ```
 
+# Mapping Shares
+
+When designing your architecture, you will need to consider how to map the drives between on-prem and cloud.  The cloud render nodes will map to the Avere, and the on-prem render nodes will map to the core filer.
+
+The easiest way to ensure consistency across on-prem and cloud is to "Spoof" the dns name using a solution similar to binding the [unbound](../dnsserver) DNS server to your VNET.  For NFS and SMB shares with posix access the render nodes and cloud nodes can use the same domain name for mapping.
+
+However, the mapping becomes more challenging when using mixed Windows / Linux environments, or using constrained delegation with SMB.  Here are some possible solutions to work around this:
+1. Use the render software organization.  Formats like the Maya Ascii format (.ma files) allow for specification of project path, and this will rewrite the base.  This is probably the best solution for mixed Windows / Linux environments.
+1. If Windows only, and using constrained delegation, map a drive letter, or create a directory symbolic link (mklink /D).
+
 # SMB
 
 For SMB ensure you set the UID / GID attributes according to the [Avere SMB document](https://azure.github.io/Avere/legacy/pdf/ADAdminCIFSACLsGuide_20140716.pdf).  SMB is only supported on NetApp and Isilon.  SMB is unqualified but working on PixStor and Qumulo.  Use the following documents to help you with these core file types:

@@ -15,7 +15,8 @@ func (j *Junction) IsEqual(j2 *Junction) bool {
 		j.CoreFilerExport == j2.CoreFilerExport &&
 		j.ExportSubdirectory == j2.ExportSubdirectory &&
 		j.PolicyName == j2.PolicyName &&
-		j.CifsShareName == j2.CifsShareName
+		j.CifsShareName == j2.CifsShareName &&
+		j.CoreFilerCifsShareName == j2.CoreFilerCifsShareName
 }
 
 func (j *Junction) RequiresUpdate(j2 *Junction) bool {
@@ -34,6 +35,7 @@ func NewJunction(
 	sharePermissions string,
 	exportRulesRaw string,
 	cifsShareName string,
+	coreFilerCifsShareName string,
 	cifsAcesRaw string,
 	cifsCreateMask string,
 	cifsDirMask string) (*Junction, error) {
@@ -50,17 +52,18 @@ func NewJunction(
 		policyName = GenerateExportPolicyName(nameSpacePath)
 	}
 	return &Junction{
-		NameSpacePath:      nameSpacePath,
-		CoreFilerName:      coreFilerName,
-		CoreFilerExport:    coreFilerExport,
-		ExportSubdirectory: exportSubdirectory,
-		PolicyName:         policyName,
-		SharePermissions:   sharePermissions,
-		ExportRules:        exportRules,
-		CifsShareName:      cifsShareName,
-		CifsAces:           cifsAces,
-		CifsCreateMask:     cifsCreateMask,
-		CifsDirMask:        cifsDirMask,
+		NameSpacePath:          nameSpacePath,
+		CoreFilerName:          coreFilerName,
+		CoreFilerExport:        coreFilerExport,
+		ExportSubdirectory:     exportSubdirectory,
+		PolicyName:             policyName,
+		SharePermissions:       sharePermissions,
+		ExportRules:            exportRules,
+		CifsShareName:          cifsShareName,
+		CoreFilerCifsShareName: coreFilerCifsShareName,
+		CifsAces:               cifsAces,
+		CifsCreateMask:         cifsCreateMask,
+		CifsDirMask:            cifsDirMask,
 	}, nil
 }
 

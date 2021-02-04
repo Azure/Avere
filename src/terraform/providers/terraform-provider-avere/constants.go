@@ -132,6 +132,9 @@ const (
 	FaultCode   = "faultCode"
 	MultiCall   = "--json system.multicall"
 
+	JunctionPolicyPosix = "posix"
+	JunctionPolicyCifs  = "cifs"
+
 	CIFSUsernameSourceAD    = "AD"
 	CIFSUsernameSourceFile  = "File"
 	CIFSSelfPasswdUriStrFmt = "https://%s/avere/avere-user.txt"
@@ -219,6 +222,7 @@ const (
 	junction                              = "junction"
 	namespace_path                        = "namespace_path"
 	cifs_share_name                       = "cifs_share_name"
+	core_filer_cifs_share_name            = "core_filer_cifs_share_name"
 	cifs_share_ace                        = "cifs_share_ace"
 	cifs_create_mask                      = "cifs_create_mask"
 	cifs_dir_mask                         = "cifs_dir_mask"
