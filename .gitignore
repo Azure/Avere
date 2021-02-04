@@ -334,3 +334,10 @@ ASALocalRun/
 
 # Local pytest config file
 pytest.ini
+
+# Local .terraform directories
+**/.terraform/*
+
+# Terraform .tfstate files
+*.tfstate
+*.tfstate.*
