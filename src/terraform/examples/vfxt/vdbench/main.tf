@@ -19,6 +19,7 @@ variable "ssh_key_data" {
 }
 
 variable "vserver_ip_addresses" {
+  type=list(string)
   description = "sets the vserver ip addresses"
 }
 
@@ -63,7 +64,7 @@ module "vdbench_configure" {
 
     node_address = var.controller_address
     admin_username = var.controller_username 
-    ssh_key_data = local.ssh_key_data
+    ssh_key_data = var.ssh_key_data
     nfs_address = tolist(var.vserver_ip_addresses)[0]
     nfs_export_path = var.nfs_export_path
     vdbench_url = var.vdbench_url
@@ -107,5 +108,5 @@ output "vmss_addresses_command" {
     // try to get the output is follow advice from https://stackoverflow.com/questions/49136537/obtain-ip-of-internal-load-balancer-in-app-service-environment/49436100#49436100
     // in the meantime just provide the az cli command to
     // the customer
-    value = "az vmss nic list -g ${module.vmss.vmss_resource_group} --vmss-name ${module.vmss.vmss_name} --query \"[].ipConfigurations[].privateIpAddress\""
+    value = "az vmss nic list -g ${module.vmss.vmss_resource_group} --vmss-name ${module.vmss.vmss_name} --query [].ipConfigurations[].privateIpAddress"
 }

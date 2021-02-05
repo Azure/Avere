@@ -1,0 +1,23 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# https://aka.ms/yaml
+steps:
+- bash: |
+    for x in "-vmss" "-vfxt" "-filer" "-storage" "-proxy" "-network"; do  
+      rg_del_rc=111111
+      exists=$(az group exists --name ${RESOURCE_GROUP_NAME}$x)
+      if [ "${exists}" = "true" ]; then
+        echo "${RESOURCE_GROUP_NAME}$x exists"
+        for i in {1..3}; do
+          az group delete --yes --name ${RESOURCE_GROUP_NAME}$x --subscription ${ARM_SUBSCRIPTION_ID}
+          rg_del_rc=$?
+          if [ "${rg_del_rc}" -ne 0 ]; then
+            echo "##vso[task.logissue type=error;]Deleting resource group ${RESOURCE_GROUP_NAME}$x failed. Attempt $i of 3."
+            echo "##vso[task.complete result=Failed;]"
+          else
+            break
+          fi
+        done
+      fi
+    done
+  displayName: 'RG Delete Check'
+  condition: always()

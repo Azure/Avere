@@ -1,0 +1,15 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# https://aka.ms/yaml
+steps:
+- task: DownloadSecureFile@1
+  inputs:
+    secureFile: 'id_rsa'
+
+- script: |
+    set -e
+    ln -s $AGENT_TEMPDIRECTORY ~/.ssh
+    chmod 600 ~/.ssh/id_rsa
+    ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
+  displayName: 'Setup: SSH keys'
+  condition: succeeded()
+  failOnStderr: true
