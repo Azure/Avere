@@ -1,3 +1,5 @@
+[![Build Status - Terraform](https://dev.azure.com/averevfxt/vfxt-github/_apis/build/status/Terraform%20vFXT?branchName=main)](https://dev.azure.com/averevfxt/vfxt-github/_build/latest?definitionId=3&branchName=main)
+
 # VFX and Animation Rendering with HPC Cache and Avere vFXT on Azure
 
 To meet tight deadlines and reduce total cost of ownership (TCO), VFX and Animation studios use Azure for on-demand access to compute capacity for their render workloads.  Avere technology enables the cloud burst rendering scenario and makes it easy to extend an on-premises rendering pipeline to Azure with minimal workflow changes.
