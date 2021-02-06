@@ -1,0 +1,84 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "keyVault": {
+      "type": "object"
+    },
+    "virtualNetwork": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "keyVaultApiVersion": "2019-09-01",
+    "privateEndpointApiVersion": "2020-11-01"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "name": "[parameters('keyVault').name]",
+      "apiVersion": "[variables('keyVaultApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "sku": {
+          "name": "[parameters('keyVault').tier]",
+          "family": "A"
+        },
+        "tenantId": "[subscription().tenantId]",
+        "enabledForDeployment": "[parameters('keyVault').enableDeployment]",
+        "enabledForDiskEncryption": "[parameters('keyVault').enableDiskEncryption]",
+        "enabledForTemplateDeployment": "[parameters('keyVault').enableTemplateDeployment]",
+        "enableRbacAuthorization": "[parameters('keyVault').enableRbacAuthorization]",
+        "enablePurgeProtection": "[if(parameters('keyVault').enablePurgeProtection, true(), json('null'))]",
+        "softDeleteRetentionInDays": "[parameters('keyVault').softDeleteRetentionDays]",
+        "networkAcls": {
+          "defaultAction": "Deny",
+          "bypass": "AzureServices",
+          "ipRules": "[parameters('keyVault').firewallAddressRules]",
+          "virtualNetworkRules": [
+            {
+              "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "condition": "[parameters('keyVault').enablePrivateEndpoint]",
+      "type": "Microsoft.Network/privateEndpoints",
+      "name": "[parameters('keyVault').name]",
+      "apiVersion": "[variables('privateEndpointApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name)]"
+      ],
+      "properties": {
+        "subnet": {
+          "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "[concat(parameters('keyVault').name, '.KeyVault')]",
+            "properties": {
+              "privateLinkServiceId": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name)]",
+              "groupIds": [
+                "vault"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "keyVault": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('keyVault').name]",
+        "resourceGroupName": "[resourceGroup().name]",
+        "id": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name)]",
+        "url": "[reference(resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name), variables('keyVaultApiVersion')).vaultUri]"
+      }
+    }
+  }
+}

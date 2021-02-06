@@ -1,0 +1,184 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageAccounts": {
+      "type": "array"
+    },
+    "storageShares": {
+      "type": "array"
+    },
+    "storageContainers": {
+      "type": "array"
+    },
+    "storageQueues": {
+      "type": "array"
+    },
+    "storageMounts": {
+      "type": "array"
+    },
+    "storageTargets": {
+      "type": "array"
+    },
+    "computeRegionName": {
+      "type": "string"
+    },
+    "virtualNetwork": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "storageAccountApiVersion": "2020-08-01-preview",
+    "privateEndpointApiVersion": "2020-11-01"
+  },
+  "resources": [
+    {
+      "condition": "[parameters('storageAccounts')[copyIndex()].deploy]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[parameters('storageAccounts')[copyIndex()].name]",
+      "apiVersion": "[variables('storageAccountApiVersion')]",
+      "location": "[if(parameters('storageAccounts')[copyIndex()].useComputeRegion, parameters('computeRegionName'), resourceGroup().location)]",
+      "kind": "[parameters('storageAccounts')[copyIndex()].type]",
+      "sku": {
+        "name": "[parameters('storageAccounts')[copyIndex()].replication]"
+      },
+      "properties": {
+        "isHnsEnabled": "[parameters('storageAccounts')[copyIndex()].namespaceHierarchy]",
+        "isNfsV3Enabled": "[parameters('storageAccounts')[copyIndex()].networkFileSystemV3]",
+        "supportsHttpsTrafficOnly": "[parameters('storageAccounts')[copyIndex()].httpsTrafficOnly]",
+        "allowBlobPublicAccess": "[parameters('storageAccounts')[copyIndex()].allowBlobAccessLists]",
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "defaultAction": "[if(parameters('storageAccounts')[copyIndex()].allowBlobAccessLists, 'Allow', 'Deny')]",
+          "ipRules": "[parameters('storageAccounts')[copyIndex()].firewallAddressRules]",
+          "virtualNetworkRules": [
+            {
+              "id": "[resourceId(parameters('storageAccounts')[copyIndex()].virtualNetwork.resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('storageAccounts')[copyIndex()].virtualNetwork.name, parameters('storageAccounts')[copyIndex()].virtualNetwork.subnetName)]"
+            }
+          ]
+        }
+      },
+      "copy": {
+        "name": "storageAccounts",
+        "count": "[length(parameters('storageAccounts'))]"
+      }
+    },
+    {
+      "condition": "[and(parameters('storageAccounts')[copyIndex()].deploy, parameters('storageAccounts')[copyIndex()].enablePrivateEndpoint)]",
+      "type": "Microsoft.Network/privateEndpoints",
+      "name": "[parameters('storageAccounts')[copyIndex()].name]",
+      "apiVersion": "[variables('privateEndpointApiVersion')]",
+      "location": "[if(parameters('storageAccounts')[copyIndex()].useComputeRegion, parameters('computeRegionName'), resourceGroup().location)]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts')[copyIndex()].name)]"
+      ],
+      "properties": {
+        "subnet": {
+          "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "[concat(parameters('storageAccounts')[copyIndex()].name, '.Storage')]",
+            "properties": {
+              "privateLinkServiceId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts')[copyIndex()].name)]",
+              "groupIds": [
+                "blob"
+              ]
+            }
+          }
+        ]
+      },
+      "copy": {
+        "name": "storageAccounts",
+        "count": "[length(parameters('storageAccounts'))]"
+      }
+    },
+    {
+      "condition": "[parameters('storageShares')[copyIndex()].deploy]",
+      "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
+      "name": "[concat(parameters('storageShares')[copyIndex()].accountName, '/default/', parameters('storageShares')[copyIndex()].name)]",
+      "apiVersion": "[variables('storageAccountApiVersion')]",
+      "location": "[if(parameters('storageShares')[copyIndex()].useComputeRegion, parameters('computeRegionName'), resourceGroup().location)]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageShares')[copyIndex()].accountName)]"
+      ],
+      "properties": {
+        "shareQuota": "[parameters('storageShares')[copyIndex()].size]",
+        "enabledProtocols": "[parameters('storageShares')[copyIndex()].protocols]"
+      },
+      "copy": {
+        "name": "storageShares",
+        "count": "[length(parameters('storageShares'))]"
+      }
+    },
+    {
+      "condition": "[parameters('storageContainers')[copyIndex()].deploy]",
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "name": "[concat(parameters('storageContainers')[copyIndex()].accountName, '/default/', parameters('storageContainers')[copyIndex()].name)]",
+      "apiVersion": "[variables('storageAccountApiVersion')]",
+      "location": "[if(parameters('storageContainers')[copyIndex()].useComputeRegion, parameters('computeRegionName'), resourceGroup().location)]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageContainers')[copyIndex()].accountName)]"
+      ],
+      "properties": {
+        "publicAccess": "[parameters('storageContainers')[copyIndex()].publicAccess]"
+      },
+      "copy": {
+        "name": "storageContainers",
+        "count": "[length(parameters('storageContainers'))]"
+      }
+    },
+    {
+      "condition": "[parameters('storageQueues')[copyIndex()].deploy]",
+      "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
+      "name": "[concat(parameters('storageQueues')[copyIndex()].accountName, '/default/', parameters('storageQueues')[copyIndex()].name)]",
+      "apiVersion": "[variables('storageAccountApiVersion')]",
+      "location": "[if(parameters('storageQueues')[copyIndex()].useComputeRegion, parameters('computeRegionName'), resourceGroup().location)]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageQueues')[copyIndex()].accountName)]"
+      ],
+      "properties": {
+      },
+      "copy": {
+        "name": "storageQueues",
+        "count": "[length(parameters('storageQueues'))]"
+      }
+    }
+  ],
+  "outputs": {
+    "storageAccount": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('storageAccounts')[0].name]",
+        "resourceGroupName": "[resourceGroup().name]",
+        "queueName": "[parameters('storageQueues')[0].name]"
+      }
+    },
+    "storageMounts": {
+      "type": "array",
+      "copy": {
+        "count": "[length(parameters('storageMounts'))]",
+        "input": {
+          "type": "[parameters('storageMounts')[copyIndex()].type]",
+          "host": "[parameters('storageMounts')[copyIndex()].host]",
+          "options": "[parameters('storageMounts')[copyIndex()].options]",
+          "path": "[parameters('storageMounts')[copyIndex()].path]",
+          "drive": "[parameters('storageMounts')[copyIndex()].drive]"
+        }
+      }
+    },
+    "storageTargets": {
+      "type": "array",
+      "copy": {
+        "count": "[length(parameters('storageTargets'))]",
+        "input": {
+          "name": "[parameters('storageTargets')[copyIndex()].name]",
+          "type": "[parameters('storageTargets')[copyIndex()].type]",
+          "host": "[parameters('storageTargets')[copyIndex()].host]",
+          "usageModel": "[parameters('storageTargets')[copyIndex()].usageModel]",
+          "junctions": "[parameters('storageTargets')[copyIndex()].junctions]"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "eventGrid": {
+      "value": {
+        "name": "MediaPipeline",
+        "inputSchema": "EventGridSchema",
+        "enablePrivateEndpoint": false
+      }
+    },
+    "storageAccount": {
+      "value": {
+        "name": "usawest",
+        "queueName": "artist-anywhere",
+        "resourceGroupName": "Azure.Artist.Anywhere-Storage"
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "MediaPipeline",
+        "subnetName": "Compute",
+        "resourceGroupName": "Azure.Artist.Anywhere-Network"
+      }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "functionApp": {
+      "type": "object"
+    },
+    "hostingPlan": {
+      "type": "object"
+    },
+    "storageAccount": {
+      "type": "object"
+    },
+    "appInsights": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "webFarmApiVersion": "2020-09-01",
+    "webSiteApiVersion": "2020-09-01"
+  },
+  "resources": [
+  ],
+  "outputs": {
+  }
+}

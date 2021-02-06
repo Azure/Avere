@@ -1,0 +1,81 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "insightAccount": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "operationalInsightApiVersion": "2020-10-01",
+    "appInsightApiVersion": "2020-02-02-preview"
+  },
+  "functions": [
+    {
+      "namespace": "fx",
+      "members": {
+        "GetNetworkAccess": {
+          "parameters": [
+            {
+              "name": "isEnabled",
+              "type": "bool"
+            }
+          ],
+          "output": {
+            "type": "string",
+            "value": "[if(parameters('isEnabled'), 'Enabled', 'Disabled')]"
+          }
+        }
+      }
+    }
+  ],
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "name": "[parameters('insightAccount').name]",
+      "apiVersion": "[variables('operationalInsightApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "sku": {
+          "name": "[parameters('insightAccount').type]"
+        },
+        "publicNetworkAccessForIngestion": "[fx.GetNetworkAccess(parameters('insightAccount').networkAccess.publicIngest)]",
+        "publicNetworkAccessForQuery": "[fx.GetNetworkAccess(parameters('insightAccount').networkAccess.publicQuery)]",
+        "retentionInDays": "[parameters('insightAccount').dataRetentionDays]"
+      }
+    },
+    {
+      "type": "Microsoft.Insights/components",
+      "name": "[parameters('insightAccount').name]",
+      "apiVersion": "[variables('appInsightApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('insightAccount').name)]"
+      ],
+      "properties": {
+        "workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('insightAccount').name)]",
+        "publicNetworkAccessForIngestion": "[fx.GetNetworkAccess(parameters('insightAccount').networkAccess.publicIngest)]",
+        "publicNetworkAccessForQuery": "[fx.GetNetworkAccess(parameters('insightAccount').networkAccess.publicQuery)]",
+        "retentionInDays": "[parameters('insightAccount').dataRetentionDays]"
+      }
+    }
+  ],
+  "outputs": {
+    "logAnalytics": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('insightAccount').name]",
+        "workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('insightAccount').name), variables('operationalInsightApiVersion')).customerId]",
+        "workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('insightAccount').name), variables('operationalInsightApiVersion')).primarySharedKey]"
+      }
+    },
+    "appInsights": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('insightAccount').name]",
+        "applicationId": "[reference(resourceId('Microsoft.Insights/components', parameters('insightAccount').name), variables('appInsightApiVersion')).appId]",
+        "instrumentationKey": "[reference(resourceId('Microsoft.Insights/components', parameters('insightAccount').name), variables('appInsightApiVersion')).instrumentationKey]"
+      }
+    }
+  }
+}

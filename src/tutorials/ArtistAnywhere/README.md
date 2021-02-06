@@ -1,10 +1,10 @@
 # Azure Artist Anywhere ([aka.ms/aaa](https://aka.ms/aaa))
 
-Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/azure/azure-resource-manager/management/overview) templates for automated deployment of an end-to-end rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight and customizable deployment framework with the storage tier in Azure and/or storage located on-premises with Azure compute integration via the [Azure HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) managed service.
+Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/azure/azure-resource-manager/management/overview) templates for automated deployment of an end-to-end rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight and customizable deployment framework with the storage tier in Azure and/or asset storage located on-premises with Azure compute integration via the [Azure HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) managed service.
 
-As a sample, the following image was rendered on [Azure HPC VMs](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-hpc) via an [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) using [V-Ray for Maya](https://www.chaosgroup.com/vray/maya).
+As a sample, the following image was rendered via [Azure HPC Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-hpc) within an [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview).
 
-![](https://amp.blob.core.windows.net/doc/AzureArtistAnywhere.SuspensionBridge.jpg)
+![](https://bit.blob.core.windows.net/doc/AzureArtistAnywhere/SuspensionBridge.jpg)
 
 The following Microsoft Azure services and 3rd-party software are integrated within the Azure Artist Anywhere rendering solution.
 
@@ -19,10 +19,10 @@ The following Microsoft Azure services and 3rd-party software are integrated wit
             <a href="https://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview" target="_blank">Objects</a>)
         </td>
         <td>
-            <a href="https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview" target="_blank">Azure HPC Cache</a>
+            <a href="https://docs.microsoft.com/azure/event-grid/overview" target="_blank">Azure Event Grid</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/azure/cyclecloud/overview" target="_blank">Azure CycleCloud</a>
+            <a href="https://docs.microsoft.com/azure/azure-functions/functions-overview" target="_blank">Azure Functions</a>
         </td>
     </tr>
     <tr>
@@ -33,10 +33,10 @@ The following Microsoft Azure services and 3rd-party software are integrated wit
             <a href="https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction" target="_blank">Azure NetApp Files</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/azure/private-link/private-link-overview" target="_blank">Azure Private Link</a>
+            <a href="https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview" target="_blank">Azure HPC Cache</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/azure/batch/batch-technical-overview" target="_blank">Azure Batch</a>
+            <a href="https://docs.microsoft.com/azure/cyclecloud/overview" target="_blank">Azure CycleCloud</a>
         </td>
     </tr>
     <tr>
@@ -47,10 +47,10 @@ The following Microsoft Azure services and 3rd-party software are integrated wit
             <a href="https://docs.microsoft.com/azure/virtual-machines/linux/shared-image-galleries" target="_blank">Azure Shared Image Gallery</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/azure/dns/private-dns-overview" target="_blank">Azure Private DNS</a>
+            <a href="https://docs.microsoft.com/azure/private-link/private-link-overview" target="_blank">Azure Private Link</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/azure/azure-functions/functions-overview" target="_blank">Azure Functions</a>
+            <a href="https://docs.microsoft.com/azure/batch/batch-technical-overview" target="_blank">Azure Batch</a>
         </td>
     </tr>
     <tr>
@@ -61,7 +61,7 @@ The following Microsoft Azure services and 3rd-party software are integrated wit
             <a href="https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-overview" target="_blank">Azure Image Builder</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/azure/container-registry/container-registry-intro" target="_blank">Azure Container Registry</a>
+            <a href="https://docs.microsoft.com/azure/dns/private-dns-overview" target="_blank">Azure Private DNS</a>
         </td>
         <td>
             <a href="https://www.blender.org/" target="_blank">Blender Content Creation Suite</a>
@@ -75,7 +75,7 @@ The following Microsoft Azure services and 3rd-party software are integrated wit
             <a href="https://docs.microsoft.com/azure/virtual-machines/linux/overview" target="_blank">Azure Virtual Machines</a>
         </td>
         <td>
-            <a href="https://docs.microsoft.com/azure/cosmos-db/introduction" target="_blank">Azure Cosmos (Mongo) DB</a>
+            <a href="https://docs.microsoft.com/azure/container-registry/container-registry-intro" target="_blank">Azure Container Registry</a>
         </td>
         <td>
             <a href="https://www.opencue.io/" target="_blank">OpenCue Render Management</a>
@@ -83,7 +83,7 @@ The following Microsoft Azure services and 3rd-party software are integrated wit
     </tr>
     <tr>
         <td>
-            <a href="https://docs.microsoft.com/azure/event-grid/overview" target="_blank">Azure Event Grid</a>
+            <a href="https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview" target="_blank">Azure App Insight</a>
         </td>
         <td>
             <a href="https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview" target="_blank">Azure Virtual Machine Scale Sets</a>
@@ -101,7 +101,7 @@ The following Microsoft Azure services and 3rd-party software are integrated wit
 
 The following overview diagram depicts the Azure Artist Anywhere solution architecture, including on-premises storage asset caching.
 
-![](https://amp.blob.core.windows.net/doc/AzureArtistAnywhere.SolutionArchitecture.png)
+![](https://bit.blob.core.windows.net/doc/AzureArtistAnywhere/SolutionArchitecture.png)
 
 ## Deployment Modules
 
@@ -109,52 +109,53 @@ The following Microsoft Azure resource templates and scripts define the Azure Ar
 
 | *Base Framework* | *Storage Cache* |
 | :--------------- | :-------------- |
-| 00 - [Virtual Network](BaseFramework/00-VirtualNetwork.json) ([Parameters](BaseFramework/00-VirtualNetwork.Parameters.json)) | 07 - [Storage](StorageCache/07-Storage.json) ([Parameters](StorageCache/07-Storage.Parameters.json)) |
-| 01 - [Managed Identity](BaseFramework/01-ManagedIdentity.json) ([Parameters](BaseFramework/01-ManagedIdentity.Parameters.json)) | 07 - [Storage NetApp](StorageCache/07-Storage.NetApp.json) ([Parameters](StorageCache/07-Storage.NetApp.Parameters.json)) |
-| 02 - [Key Vault](BaseFramework/02-KeyVault.json) ([Parameters](BaseFramework/02-KeyVault.Parameters.json)) | 07 - [* Storage Hammerspace](StorageCache/07-Storage.Hammerspace.json) ([Parameters](StorageCache/07-Storage.Hammerspace.Parameters.json)) |
-| 03 - [Network Gateway](BaseFramework/03-NetworkGateway.json) ([Parameters](BaseFramework/03-NetworkGateway.Parameters.json)) | 07 - [* Storage Qumulo](StorageCache/07-Storage.Qumulo.json) ([Parameters](StorageCache/07-Storage.Qumulo.Parameters.json)) |
-| 04 - [Pipeline Insight](BaseFramework/04-PipelineInsight.json) ([Parameters](BaseFramework/04-PipelineInsight.Parameters.json)) | 07 - [* Storage Scality](StorageCache/07-Storage.Scality.json) ([Parameters](StorageCache/07-Storage.Scality.Parameters.json)) |
-| 05 - [Image Gallery](BaseFramework/05-ImageGallery.json) ([Parameters](BaseFramework/05-ImageGallery.Parameters.json)) | 08 - [HPC Cache](StorageCache/08-HPCCache.json) ([Parameters](StorageCache/08-HPCCache.Parameters.json)) |
-| 06 - [Container Registry](BaseFramework/06-ContainerRegistry.json) ([Parameters](BaseFramework/06-ContainerRegistry.Parameters.json)) | 09 - [Event Grid](StorageCache/09-EventGrid.json) ([Parameters](StorageCache/09-EventGrid.Parameters.json)) |
+| (01) [Virtual Network](BaseFramework/01-VirtualNetwork.json) ([Parameters](BaseFramework/01-VirtualNetwork.Parameters.json)) | (09) [Storage](StorageCache/09-Storage.json) ([Parameters](StorageCache/09-Storage.Parameters.json)) |
+| (02) [* Active Directory](BaseFramework/02-ActiveDirectory.json) ([Parameters](BaseFramework/02-ActiveDirectory.Parameters.json)) | (09) [Storage NetApp](StorageCache/09-Storage.NetApp.json) ([Parameters](StorageCache/09-Storage.NetApp.Parameters.json)) |
+| (03) [Managed Identity](BaseFramework/03-ManagedIdentity.json) ([Parameters](BaseFramework/03-ManagedIdentity.Parameters.json)) | (09) [* Storage Hammerspace](StorageCache/09-Storage.Hammerspace.json) ([Parameters](StorageCache/09-Storage.Hammerspace.Parameters.json)) |
+| (04) [Key Vault](BaseFramework/04-KeyVault.json) ([Parameters](BaseFramework/04-KeyVault.Parameters.json)) | (09) [* Storage Qumulo](StorageCache/09-Storage.Qumulo.json) ([Parameters](StorageCache/09-Storage.Qumulo.Parameters.json)) |
+| (05) [Network Gateway](BaseFramework/05-NetworkGateway.json) ([Parameters](BaseFramework/05-NetworkGateway.Parameters.json)) | (09) [* Storage Scality](StorageCache/09-Storage.Scality.json) ([Parameters](StorageCache/09-Storage.Scality.Parameters.json)) |
+| (06) [Monitor Insight](BaseFramework/06-MonitorInsight.json) ([Parameters](BaseFramework/06-MonitorInsight.Parameters.json)) | (10) [HPC Cache](StorageCache/10-HPCCache.json) ([Parameters](StorageCache/10-HPCCache.Parameters.json)) |
+| (07) [Image Gallery](BaseFramework/07-ImageGallery.json) ([Parameters](BaseFramework/07-ImageGallery.Parameters.json)) | (11) [Event Grid](StorageCache/11-EventGrid.json) ([Parameters](StorageCache/11-EventGrid.Parameters.json)) |
+| (08) [Container Registry](BaseFramework/08-ContainerRegistry.json) ([Parameters](BaseFramework/08-ContainerRegistry.Parameters.json)) | (12) [Function App](StorageCache/12-FunctionApp.json) ([Parameters](StorageCache/12-FunctionApp.Parameters.json)) |
 
 \* = TBD
 
 | *Render Manager (Linux)* | *Render Manager (Windows)* |
 | :----------------------- | :------------------------- |
-| 10 - [Database](RenderManager/10-Database.json) ([Parameters](RenderManager/10-Database.Parameters.json)) | 10 - [Database](RenderManager/10-Database.json) ([Parameters](RenderManager/10-Database.Parameters.json)) |
-| 11 - [Image](RenderManager/11-Image.json) ([Parameters](RenderManager/11-Image.Parameters.json)) | 11 - [Image](RenderManager/11-Image.json) ([Parameters](RenderManager/11-Image.Parameters.json)) |
-| 11 - [Image Customize (OpenCue)](RenderManager/11-Image.OpenCue.sh) | 11 - [* Image Customize (OpenCue)](RenderManager/11-Image.OpenCue.ps1) |
-| 11 - [* Image Customize (Deadline)](RenderManager/11-Image.Deadline.sh) | 11 - [* Image Customize (Deadline)](RenderManager/11-Image.Deadline.ps1) |
-| 12 - [Machine](RenderManager/12-Machine.json) ([Parameters](RenderManager/12-Machine.Parameters.json)) | 12 - [Machine](RenderManager/12-Machine.json) ([Parameters](RenderManager/12-Machine.Parameters.json)) |
-| 12 - [Machine Initialize](RenderManager/12-Machine.sh) | 12 - [Machine Initialize](RenderManager/12-Machine.ps1) |
-| 13 - [CycleCloud](RenderManager/13-CycleCloud.json) ([Parameters](RenderManager/13-CycleCloud.Parameters.json)) | 13 - [CycleCloud](RenderManager/13-CycleCloud.json) ([Parameters](RenderManager/13-CycleCloud.Parameters.json)) |
-| 14 - [Batch Account](RenderManager/14-BatchAccount.json) ([Parameters](RenderManager/14-BatchAccount.Parameters.json)) | 14 - [Batch Account](RenderManager/14-BatchAccount.json) ([Parameters](RenderManager/14-BatchAccount.Parameters.json)) |
+| (13) [Database](RenderManager/13-Database.json) ([Parameters](RenderManager/13-Database.Parameters.json)) | (13) [Database](RenderManager/13-Database.json) ([Parameters](RenderManager/13-Database.Parameters.json)) |
+| (14) [Image](RenderManager/14-Image.json) ([Parameters](RenderManager/14-Image.Parameters.json)) | (14) [Image](RenderManager/14-Image.json) ([Parameters](RenderManager/14-Image.Parameters.json)) |
+| (14) [Image Customize (OpenCue)](RenderManager/Linux/14-Image.OpenCue.sh) | (14) [* Image Customize (OpenCue)](RenderManager/Windows/14-Image.OpenCue.ps1) |
+| (14) [* Image Customize (Royal Render)](RenderManager/Linux/14-Image.RoyalRender.sh) | (14) [* Image Customize (Royal Render)](RenderManager/Windows/14-Image.RoyalRender.ps1) |
+| (15) [Machine](RenderManager/15-Machine.json) ([Parameters](RenderManager/15-Machine.Parameters.json)) | (15) [Machine](RenderManager/15-Machine.json) ([Parameters](RenderManager/15-Machine.Parameters.json)) |
+| (15) [Machine Initialize](RenderManager/Linux/15-Machine.sh) | (15) [Machine Initialize](RenderManager/Windows/15-Machine.ps1) |
+| (16) [CycleCloud](RenderManager/16-CycleCloud.json) ([Parameters](RenderManager/16-CycleCloud.Parameters.json)) | (16) [CycleCloud](RenderManager/16-CycleCloud.json) ([Parameters](RenderManager/16-CycleCloud.Parameters.json)) |
+| (17) [Batch Account](RenderManager/17-BatchAccount.json) ([Parameters](RenderManager/17-BatchAccount.Parameters.json)) | (17) [Batch Account](RenderManager/17-BatchAccount.json) ([Parameters](RenderManager/17-BatchAccount.Parameters.json)) |
 
 \* = TBD
 
 | *Render Farm (Linux)* | *Render Farm (Windows)* |
 | :-------------------- | :---------------------- |
-| 15 - [Node Image](RenderFarm/15-Node.Image.json) ([Parameters](RenderFarm/15-Node.Image.Parameters.json)) | 15 - [Node Image](RenderFarm/15-Node.Image.json) ([Parameters](RenderFarm/15-Node.Image.Parameters.json)) |
-| 15 - [Node Image Customize](RenderFarm/Linux/15-Node.Image.sh) | 15 - [Node Image Customize](RenderFarm/Windows/15-Node.Image.ps1) |
-| 15 - [Node Image Customize (Blender)](RenderFarm/Linux/15-Node.Image.Blender.sh) | 15 - [Node Image Customize (Blender)](RenderFarm/Windows/15-Node.Image.Blender.ps1) |
-| 15 - [Node Image Customize (OpenCue)](RenderFarm/Linux/15-Node.Image.OpenCue.sh) | 15 - [Node Image Customize (OpenCue)](RenderFarm/Windows/15-Node.Image.OpenCue.ps1) |
-| 15 - [* Node Image Customize (Deadline)](RenderFarm/Linux/15-Node.Image.Deadline.sh) | 15 - [* Node Image Customize (Deadline)](RenderFarm/Windows/15-Node.Image.Deadline.ps1) |
-| 16 - [Farm Pool](RenderFarm/16-Farm.Pool.json) ([Parameters](RenderFarm/16-Farm.Pool.Parameters.json)) | 16 - [Farm Pool](RenderFarm/16-Farm.Pool.json) ([Parameters](RenderFarm/16-Farm.Pool.Parameters.json)) |
-| 16 - [Farm Scale Set](RenderFarm/16-Farm.ScaleSet.json) ([Parameters](RenderFarm/16-Farm.ScaleSet.Parameters.json)) | 16 - [Farm Scale Set](RenderFarm/16-Farm.ScaleSet.json) ([Parameters](RenderFarm/16-Farm.ScaleSet.Parameters.json)) |
-| 16 - [Farm Scale Set Initialize](RenderFarm/Linux/16-Farm.ScaleSet.sh) | 16 - [Farm Scale Set Initialize](RenderFarm/Windows/16-Farm.ScaleSet.ps1) |
+| (18) [Node Image](RenderFarm/18-Node.Image.json) ([Parameters](RenderFarm/18-Node.Image.Parameters.json)) | (18) [Node Image](RenderFarm/18-Node.Image.json) ([Parameters](RenderFarm/18-Node.Image.Parameters.json)) |
+| (18) [Node Image Customize](RenderFarm/Linux/18-Node.Image.sh) | (18) [Node Image Customize](RenderFarm/Windows/18-Node.Image.ps1) |
+| (18) [Node Image Customize (Blender)](RenderFarm/Linux/18-Node.Image.Blender.sh) | (18) [Node Image Customize (Blender)](RenderFarm/Windows/18-Node.Image.Blender.ps1) |
+| (18) [Node Image Customize (OpenCue)](RenderFarm/Linux/18-Node.Image.OpenCue.sh) | (18) [Node Image Customize (OpenCue)](RenderFarm/Windows/18-Node.Image.OpenCue.ps1) |
+| (18) [* Node Image Customize (Royal Render)](RenderFarm/Linux/18-Node.Image.RoyalRender.sh) | (18) [* Node Image Customize (RoyalRender)](RenderFarm/Windows/18-Node.Image.RoyalRender.ps1) |
+| (19)- [Farm Pool](RenderFarm/19-Farm.Pool.json) ([Parameters](RenderFarm/19-Farm.Pool.Parameters.json)) | (19) [Farm Pool](RenderFarm/19-Farm.Pool.json) ([Parameters](RenderFarm/19-Farm.Pool.Parameters.json)) |
+| (19) [Farm Scale Set](RenderFarm/19-Farm.ScaleSet.json) ([Parameters](RenderFarm/19-Farm.ScaleSet.Parameters.json)) | (19) [Farm Scale Set](RenderFarm/19-Farm.ScaleSet.json) ([Parameters](RenderFarm/19-Farm.ScaleSet.Parameters.json)) |
+| (19) [Farm Scale Set Initialize](RenderFarm/Linux/19-Farm.ScaleSet.sh) | (19) [Farm Scale Set Initialize](RenderFarm/Windows/19-Farm.ScaleSet.ps1) |
 
 \* = TBD
 
 | *Artist Workstation (Linux)* | *Artist Workstation (Windows)* |
 | :--------------------------- | :----------------------------- |
-| 17 - [Image](ArtistWorkstation/17-Image.json) ([Parameters](ArtistWorkstation/17-Image.Parameters.json)) | 17 - [Image](ArtistWorkstation/17-Image.json) ([Parameters](ArtistWorkstation/17-Image.Parameters.json)) |
-17 - [Image Customize](ArtistWorkstation/Linux/17-Image.sh) | 17 - [Image Customize](ArtistWorkstation/Windows/17-Image.ps1) |
-17 - [Image Customize (Blender)](RenderFarm/Linux/15-Node.Image.Blender.sh) | 17 - [Image Customize (Blender)](RenderFarm/Windows/15-Node.Image.Blender.ps1) |
-17 - [Image Customize (OpenCue)](ArtistWorkstation/Linux/17-Image.OpenCue.sh) | 17 - [Image Customize (OpenCue)](ArtistWorkstation/Windows/17-Image.OpenCue.ps1) |
-17 - [* Image Customize (Deadline)](RenderFarm/Linux/15-Node.Image.Deadline.sh) | 17 - [* Image Customize (Deadline)](RenderFarm/Windows/15-Node.Image.Deadline.ps1) |
-17 - [Image Customize (Teradici)](ArtistWorkstation/Linux/17-Image.Teradici.sh) | 17 - [Image Customize (Teradici)](ArtistWorkstation/Windows/17-Image.Teradici.ps1) |
-18 - [Machine](ArtistWorkstation/18-Machine.json) ([Parameters](ArtistWorkstation/18-Machine.Parameters.json)) | 18 - [Machine](ArtistWorkstation/18-Machine.json) ([Parameters](ArtistWorkstation/18-Machine.Parameters.json)) |
-18 - [Machine Initialize](ArtistWorkstation/Linux/18-Machine.sh) | 18 - [Machine Initialize](ArtistWorkstation/Windows/18-Machine.ps1) |
+| (20) [Image](ArtistWorkstation/20-Image.json) ([Parameters](ArtistWorkstation/20-Image.Parameters.json)) | (20) [Image](ArtistWorkstation/20-Image.json) ([Parameters](ArtistWorkstation/20-Image.Parameters.json)) |
+(20) [Image Customize](ArtistWorkstation/Linux/20-Image.sh) | (20) [Image Customize](ArtistWorkstation/Windows/20-Image.ps1) |
+(20) [Image Customize (Blender)](RenderFarm/Linux/18-Node.Image.Blender.sh) | (20) [Image Customize (Blender)](RenderFarm/Windows/18-Node.Image.Blender.ps1) |
+(20) [Image Customize (OpenCue)](ArtistWorkstation/Linux/20-Image.OpenCue.sh) | (20) [Image Customize (OpenCue)](ArtistWorkstation/Windows/20-Image.OpenCue.ps1) |
+(20) [* Image Customize (Royal Render)](ArtistWorkstation/Linux/20-Image.RoyalRender.sh) | (20) [* Image Customize (Royal Render)](ArtistWorkstation/Windows/20-Image.RoyalRender.ps1) |
+(20) [Image Customize (Teradici)](ArtistWorkstation/Linux/20-Image.Teradici.sh) | (20) [Image Customize (Teradici)](ArtistWorkstation/Windows/20-Image.Teradici.ps1) |
+(21) [Machine](ArtistWorkstation/21-Machine.json) ([Parameters](ArtistWorkstation/21-Machine.Parameters.json)) | (21) [Machine](ArtistWorkstation/21-Machine.json) ([Parameters](ArtistWorkstation/21-Machine.Parameters.json)) |
+(21) [Machine Initialize](ArtistWorkstation/Linux/21-Machine.sh) | (21) [Machine Initialize](ArtistWorkstation/Windows/21-Machine.ps1) |
 
 \* = TBD
 

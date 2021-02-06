@@ -1,0 +1,32 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "quantumWorkspace": {
+      "type": "object"
+    },
+    "storageAccount": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "quantumWorkspaceApiVersion": "2019-11-04-preview"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Quantum/workspaces",
+      "name": "[parameters('quantumWorkspace').name]",
+      "apiVersion": "[variables('quantumWorkspaceApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "storageAccount": "[resourceId(parameters('storageAccount').resourceGroupName, 'Microsoft.Storage/storageAccounts', parameters('storageAccount').name)]",
+        "providers": "[parameters('quantumWorkspace').providers]"
+      }
+    }
+  ],
+  "outputs": {
+  }
+}

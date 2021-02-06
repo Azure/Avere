@@ -1,17 +1,15 @@
 param (
     $resourceGroup = @{
         "name" = ""
-        "regionName" = "WestUS2" # https://azure.microsoft.com/global-infrastructure/geographies/
+        "regionName" = "WestUS2"        # https://azure.microsoft.com/global-infrastructure/geographies/
     },
-
     $hpcCache = @{
         "name" = ""
-        "size" = 3072                # 3072, 6144, 12288, 24576, 49152
-        "throughput" = "Standard_2G" # Standard_2G, Standard_4G, Standard_8G
-        "mtuSize" = 1500             # https://docs.microsoft.com/azure/hpc-cache/configuration#adjust-mtu-value
+        "size" = 3072                   # 3072, 6144, 12288, 24576, 49152
+        "throughput" = "Standard_2G"    # Standard_2G, Standard_4G, Standard_8G
+        "mtuSize" = 1500                # https://docs.microsoft.com/azure/hpc-cache/configuration#adjust-mtu-value
     },
-
-    $storageTargets = @(
+    $storageTargets = @(                # https://docs.microsoft.com/azure/hpc-cache/hpc-cache-add-storage
         # @{
         #     "name" = "Azure-NetApp-Files"
         #     "type" = "nfs3"
@@ -26,8 +24,7 @@ param (
         #     )
         # }
     ),
-
-    $virtualNetwork = @{
+    $virtualNetwork = @{                # https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview
         "name" = ""
         "subnetName" = ""
         "resourceGroupName" = ""
@@ -43,6 +40,6 @@ $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
 $templateConfig.parameters.hpcCache.value = $hpcCache
 $templateConfig.parameters.storageTargets.value = $storageTargets
 $templateConfig.parameters.virtualNetwork.value = $virtualNetwork
-$templateConfig | ConvertTo-Json -Depth 6 | Out-File $templateParameters
+$templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
 az deployment group create --resource-group $resourceGroup.name --template-file $templateFile --parameters $templateParameters

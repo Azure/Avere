@@ -1,14 +1,14 @@
 param (
-    # Set a name prefix for the Azure resource groups that are created by this automated deployment script
-    [string] $resourceGroupNamePrefix = "ArtistAnywhere",
+    # Set a name prefix for the Azure resource groups that are created by this resource deployment script
+    [string] $resourceGroupNamePrefix = "Azure.Artist.Anywhere",
 
     # Set the Azure region name for compute resources (e.g., Image Gallery, Virtual Machine Scale Set, HPC Cache, etc.)
     [string] $computeRegionName = "WestUS2",
 
-    # Set the Azure region name for storage resources (e.g., Storage Network, Storage Account, File Share / Container, etc.)
+    # Set the Azure region name for storage resources (e.g., Storage Network, Storage Account, File Share/Container, etc.)
     [string] $storageRegionName = "EastUS2",
 
-    # Set to true to deploy Azure VPN Gateway services (https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways)
+    # Set to true to deploy Azure VPN Gateway (https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways)
     [boolean] $networkGatewayDeploy = $false,
 
     # Set to true to deploy Azure NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
@@ -17,20 +17,22 @@ param (
     # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in the compute region
     [boolean] $storageCacheDeploy = $false,
 
-    # Set to the target Azure render management deployment mode (i.e., OpenCue[.CycleCloud], Deadline[.CycleCloud] or Batch)
+    # Set to the target Azure render manager deployment mode (i.e., OpenCue[.HPC], RoyalRender[.HPC] or Batch)
     [string] $renderManagerMode = "OpenCue",
 
-    # Set the operating system type (i.e., Linux or Windows) for the Azure render manager/node images and virtual machines
-    [string] $renderFarmType = "Linux",
+    # Set the operating system types for the Azure render manager/node image builds and virtual machines
+    [string[]] $renderFarmTypes = @("Linux", "Windows"),
 
-    # Set the operating system type (i.e., Linux or Windows) for the Azure artist workstation image and virtual machines
-    [string] $artistWorkstationType = "Linux"
+    # Set the operating system types for the Azure artist workstation image builds and virtual machines
+    [string[]] $artistWorkstationTypes = @()
 )
 
-$rootDirectory = $PSScriptRoot
+$rootDirectory = (Get-Item -Path $PSScriptRoot).FullName
 $moduleDirectory = "RenderFarm"
 
 Import-Module "$rootDirectory/Deploy.psm1"
+Import-Module "$rootDirectory/BaseFramework/Deploy.psm1"
+Import-Module "$rootDirectory/StorageCache/Deploy.psm1"
 
 # Base Framework
 $baseFramework = Get-BaseFramework $rootDirectory $resourceGroupNamePrefix $computeRegionName $storageRegionName $networkGatewayDeploy
@@ -41,156 +43,108 @@ $imageGallery = $baseFramework.imageGallery
 $containerRegistry = $baseFramework.containerRegistry
 
 # Storage Cache
-$storageCache = Get-StorageCache $baseFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageNetAppDeploy $storageCacheDeploy
+$storageCache = Get-StorageCache $rootDirectory $baseFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageNetAppDeploy $storageCacheDeploy
+$storageAccount = $storageCache.storageAccount
 $storageMounts = $storageCache.storageMounts
 $cacheMount = $storageCache.cacheMount
 
 # Render Manager Job
 $renderManagerModuleName = "Render Manager Job"
 New-TraceMessage $renderManagerModuleName $false
-$renderManagerJob = Start-Job -FilePath "$rootDirectory/RenderManager/Deploy.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $storageNetAppDeploy, $storageCacheDeploy, $renderManagerMode, $renderFarmType, $baseFramework, $storageCache
+$renderManagerJob = Start-Job -FilePath "$rootDirectory/RenderManager/Deploy.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $networkGatewayDeploy, $storageNetAppDeploy, $storageCacheDeploy, $renderManagerMode, $renderFarmTypes, $baseFramework, $storageCache
 
 # Artist Workstation Image Job
-$workstationImageModuleName = "Artist Workstation Image [$artistWorkstationType] Job"
-New-TraceMessage $workstationImageModuleName $false
-$workstationImageJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Image.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $storageNetAppDeploy, $storageCacheDeploy, $artistWorkstationType, $baseFramework, $storageCache
+if ($artistWorkstationTypes.length -gt 0) {
+    $artistWorkstationImageModuleName = "Artist Workstation Image Job"
+    New-TraceMessage $artistWorkstationImageModuleName $false
+    $artistWorkstationImageJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Image.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $networkGatewayDeploy, $storageNetAppDeploy, $storageCacheDeploy, $artistWorkstationTypes, $baseFramework, $storageCache
+}
 
-# 15.0 - Render Node Image Template
-$moduleName = "15.0 - Render Node Image Template"
-New-TraceMessage $moduleName $false $computeRegionName
-$resourceGroupNameSuffix = ".Gallery"
+# (18.1) Render Node Image Template
+$moduleName = "(18.1) Render Node Image Template"
+New-TraceMessage $moduleName $false
+$resourceGroupNameSuffix = "-Gallery"
 $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
-$imageTemplates = (Get-Content "$rootDirectory/$moduleDirectory/15-Node.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters.imageTemplates.value
-$deployEnabled = Set-ImageTemplates $resourceGroupName $imageTemplates $renderFarmType
+$templateFile = "$rootDirectory/$moduleDirectory/18-Node.Image.json"
+$templateParameters = "$rootDirectory/$moduleDirectory/18-Node.Image.Parameters.json"
+$templateConfig = Set-ImageTemplates $resourceGroupName $templateParameters $renderFarmTypes
 
-if ($deployEnabled) {
-    $templateFile = "$rootDirectory/$moduleDirectory/15-Node.Image.json"
-    $templateParameters = "$rootDirectory/$moduleDirectory/15-Node.Image.Parameters.json"
-
-    $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
-    $templateConfig.parameters.managedIdentity.value.name = $managedIdentity.name
-    $templateConfig.parameters.managedIdentity.value.resourceGroupName = $managedIdentity.resourceGroupName
-    $templateConfig.parameters.imageGallery.value.name = $imageGallery.name
-    $templateConfig.parameters.imageGallery.value.resourceGroupName = $imageGallery.resourceGroupName
-    foreach ($imageTemplate in $templateConfig.parameters.imageTemplates.value) {
-        if ($imageTemplate.imageOperatingSystemType -eq "Windows") {
-            $scriptDirectory = "Windows"
-            $scriptFileType = "PowerShell"
-            $scriptFileExtension = ".ps1"
-            $downloadsPath = "C:\Windows\Temp\"
-        } else {
-            $scriptDirectory = "Linux"
-            $scriptFileType = "Shell"
-            $scriptFileExtension = ".sh"
-            $downloadsPath = "/tmp/"
-        }
-        $imageTemplate.buildCustomization = @()
-        foreach ($storageMount in $storageMounts) {
-            $scriptFile = Get-MountUnitFileName $storageMount
-            $scriptUri = Get-ScriptUri $storageAccounts $scriptFile
-            $scriptChecksum = Get-ScriptChecksum $rootDirectory "StorageCache" "" $scriptFile
-            $buildCustomizer = New-Object PSObject
-            $buildCustomizer | Add-Member -MemberType NoteProperty -Name "type" -Value "File"
-            $buildCustomizer | Add-Member -MemberType NoteProperty -Name "sourceUri" -Value $scriptUri
-            $buildCustomizer | Add-Member -MemberType NoteProperty -Name "destination" -Value "$downloadsPath$scriptFile"
-            $buildCustomizer | Add-Member -MemberType NoteProperty -Name "sha256Checksum" -Value $scriptChecksum
-            $imageTemplate.buildCustomization += $buildCustomizer
-        }
-        $scriptFile = Get-MountUnitFileName $cacheMount
-        $scriptUri = Get-ScriptUri $storageAccounts $scriptFile
-        $scriptChecksum = Get-ScriptChecksum $rootDirectory "StorageCache" "" $scriptFile
-        $buildCustomizer = New-Object PSObject
-        $buildCustomizer | Add-Member -MemberType NoteProperty -Name "type" -Value "File"
-        $buildCustomizer | Add-Member -MemberType NoteProperty -Name "sourceUri" -Value $scriptUri
-        $buildCustomizer | Add-Member -MemberType NoteProperty -Name "destination" -Value "$downloadsPath$scriptFile"
-        $buildCustomizer | Add-Member -MemberType NoteProperty -Name "sha256Checksum" -Value $scriptChecksum
-        $imageTemplate.buildCustomization += $buildCustomizer
-
-        $scriptFile = "13-Node.Image$scriptFileExtension"
-        $scriptUri = Get-ScriptUri $storageAccounts $scriptDirectory $scriptFile
-        $scriptChecksum = Get-ScriptChecksum $rootDirectory $moduleDirectory $scriptDirectory $scriptFile
-        $buildCustomizer = New-Object PSObject
-        $buildCustomizer | Add-Member -MemberType NoteProperty -Name "type" -Value $scriptFileType
-        $buildCustomizer | Add-Member -MemberType NoteProperty -Name "scriptUri" -Value $scriptUri
-        $buildCustomizer | Add-Member -MemberType NoteProperty -Name "sha256Checksum" -Value $scriptChecksum
-        $imageTemplate.buildCustomization += $buildCustomizer
-
-        $scriptFile = "13-Node.Image.Blender$scriptFileExtension"
-        $scriptUri = Get-ScriptUri $storageAccounts $scriptDirectory $scriptFile
-        $scriptChecksum = Get-ScriptChecksum $rootDirectory $moduleDirectory $scriptDirectory $scriptFile
-        $buildCustomizer = New-Object PSObject
-        $buildCustomizer | Add-Member -MemberType NoteProperty -Name "type" -Value $scriptFileType
-        $buildCustomizer | Add-Member -MemberType NoteProperty -Name "scriptUri" -Value $scriptUri
-        $buildCustomizer | Add-Member -MemberType NoteProperty -Name "sha256Checksum" -Value $scriptChecksum
-        $imageTemplate.buildCustomization += $buildCustomizer
-
-        if ($renderManagerMode.Contains("OpenCue")) {
-            $scriptFile = "13-Node.Image.OpenCue$scriptFileExtension"
-            $scriptUri = Get-ScriptUri $storageAccounts $scriptDirectory $scriptFile
-            $scriptChecksum = Get-ScriptChecksum $rootDirectory $moduleDirectory $scriptDirectory $scriptFile
-            $buildCustomizer = New-Object PSObject
-            $buildCustomizer | Add-Member -MemberType NoteProperty -Name "type" -Value $scriptFileType
-            $buildCustomizer | Add-Member -MemberType NoteProperty -Name "scriptUri" -Value $scriptUri
-            $buildCustomizer | Add-Member -MemberType NoteProperty -Name "sha256Checksum" -Value $scriptChecksum
-            $imageTemplate.buildCustomization += $buildCustomizer
-        }
-
-        if ($renderManagerMode.Contains("Deadline")) {
-            $scriptFile = "13-Node.Image.Deadline$scriptFileExtension"
-            $scriptUri = Get-ScriptUri $storageAccounts $scriptDirectory $scriptFile
-            $scriptChecksum = Get-ScriptChecksum $rootDirectory $moduleDirectory $scriptDirectory $scriptFile
-            $buildCustomizer = New-Object PSObject
-            $buildCustomizer | Add-Member -MemberType NoteProperty -Name "type" -Value $scriptFileType
-            $buildCustomizer | Add-Member -MemberType NoteProperty -Name "scriptUri" -Value $scriptUri
-            $buildCustomizer | Add-Member -MemberType NoteProperty -Name "sha256Checksum" -Value $scriptChecksum
-            $imageTemplate.buildCustomization += $buildCustomizer
-        }
-
-        if (!$renderManagerMode.Contains("CycleCloud") -and $renderManagerMode -ne "Batch") {
-            $scriptFile = "14-Farm.ScaleSet$scriptFileExtension"
-            $scriptUri = Get-ScriptUri $storageAccounts $scriptDirectory $scriptFile
-            $scriptChecksum = Get-ScriptChecksum $rootDirectory $moduleDirectory $scriptDirectory $scriptFile
-            $buildCustomizer = New-Object PSObject
-            $buildCustomizer | Add-Member -MemberType NoteProperty -Name "type" -Value "File"
-            $buildCustomizer | Add-Member -MemberType NoteProperty -Name "sourceUri" -Value $scriptUri
-            $buildCustomizer | Add-Member -MemberType NoteProperty -Name "destination" -Value "$downloadsPath$scriptFile"
-            $buildCustomizer | Add-Member -MemberType NoteProperty -Name "sha256Checksum" -Value $scriptChecksum
-            $imageTemplate.buildCustomization += $buildCustomizer
-        }
+$templateConfig.parameters.managedIdentity.value.name = $managedIdentity.name
+$templateConfig.parameters.managedIdentity.value.resourceGroupName = $managedIdentity.resourceGroupName
+$templateConfig.parameters.imageGallery.value.name = $imageGallery.name
+$templateConfig.parameters.imageGallery.value.resourceGroupName = $imageGallery.resourceGroupName
+foreach ($imageTemplate in $templateConfig.parameters.imageTemplates.value) {
+    $imageTemplate.buildCustomization = @()
+    foreach ($storageMount in $storageMounts) {
+        $scriptFile = Get-MountUnitFileName $storageMount
+        $customizeCommand = Get-ImageCustomizeCommand $rootDirectory "StorageCache" $storageAccount $null $scriptFile
+        $imageTemplate.buildCustomization += $customizeCommand
     }
-    $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
-    $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
-    $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
+    if ($cacheMount) {
+        $scriptFile = Get-MountUnitFileName $cacheMount
+        $customizeCommand = Get-ImageCustomizeCommand $rootDirectory "StorageCache" $storageAccount $null $scriptFile
+        $imageTemplate.buildCustomization += $customizeCommand
+    }
 
-    $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
+    $scriptFile = "18-Node.Image"
+    $customizeCommand = Get-ImageCustomizeCommand $rootDirectory $moduleDirectory $storageAccount $imageTemplate.imageOperatingSystemType $scriptFile
+    $imageTemplate.buildCustomization += $customizeCommand
+
+    $scriptFile = "18-Node.Image.Blender"
+    $customizeCommand = Get-ImageCustomizeCommand $rootDirectory $moduleDirectory $storageAccount $imageTemplate.imageOperatingSystemType $scriptFile
+    $imageTemplate.buildCustomization += $customizeCommand
+
+    if ($renderManagerMode.Contains("OpenCue")) {
+        $scriptFile = "18-Node.Image.OpenCue"
+        $customizeCommand = Get-ImageCustomizeCommand $rootDirectory $moduleDirectory $storageAccount $imageTemplate.imageOperatingSystemType $scriptFile
+        $imageTemplate.buildCustomization += $customizeCommand
+    }
+
+    if ($renderManagerMode.Contains("RoyalRender")) {
+        $scriptFile = "18-Node.Image.RoyalRender"
+        $customizeCommand = Get-ImageCustomizeCommand $rootDirectory $moduleDirectory $storageAccount $imageTemplate.imageOperatingSystemType $scriptFile
+        $imageTemplate.buildCustomization += $customizeCommand
+    }
+
+    if (!$renderManagerMode.Contains("HPC") -and $renderManagerMode -ne "Batch") {
+        $scriptFile = "19-Farm.ScaleSet"
+        $customizeCommand = Get-ImageCustomizeCommand $rootDirectory $moduleDirectory $storageAccount $imageTemplate.imageOperatingSystemType $scriptFile
+        $imageTemplate.buildCustomization += $customizeCommand
+    }
 }
-New-TraceMessage $moduleName $true $computeRegionName
+$templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
+$templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
+$templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
-# 15.1 - Render Node Image Build
-$moduleName = "15.1 - Render Node Image Build"
-$imageTemplates = (Get-Content "$rootDirectory/$moduleDirectory/15-Node.Image.Parameters.json" -Raw | ConvertFrom-Json).parameters.imageTemplates.value
-Build-ImageTemplates $moduleName $computeRegionName $imageGallery $imageTemplates
+$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
+New-TraceMessage $moduleName $true
+
+# (18.2) Render Node Image Build
+$moduleName = "(18.2) Render Node Image Build"
+Build-ImageTemplates $moduleName $computeRegionName $imageGallery $templateConfig.parameters.imageTemplates.value
 
 # Render Manager Job
 $renderManager = Receive-Job -Job $renderManagerJob -Wait
 New-TraceMessage $renderManagerModuleName $true
 
-Receive-Job -Job $workstationImageJob -Wait
-New-TraceMessage $workstationImageModuleName $true
+Receive-Job -Job $artistWorkstationImageJob -Wait
+New-TraceMessage $artistWorkstationImageModuleName $true
 
 # Artist Workstation Machine Job
-$workstationMachineModuleName = "Artist Workstation Machine [$artistWorkstationType] Job"
-New-TraceMessage $workstationMachineModuleName $false
-$workstationMachineJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Machine.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $storageNetAppDeploy, $storageCacheDeploy, $baseFramework, $storageCache, $artistWorkstationType, $renderManager
+if ($artistWorkstationTypes.length -gt 0) {
+    $artistWorkstationMachineModuleName = "Artist Workstation Machine Job"
+    New-TraceMessage $artistWorkstationMachineModuleName $false
+    $artistWorkstationMachineJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Machine.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $networkGatewayDeploy, $storageNetAppDeploy, $storageCacheDeploy, $baseFramework, $storageCache, $artistWorkstationTypes, $renderManager
+}
 
-# 16 - Farm Pool
+# (19) Farm Pool
 if ($renderManagerMode -eq "Batch") {
-    $moduleName = "16 - Farm Pool"
-    New-TraceMessage $moduleName $false $computeRegionName
+    $moduleName = "(19) Farm Pool"
+    New-TraceMessage $moduleName $false
 
-    $templateFile = "$rootDirectory/$moduleDirectory/16-Farm.Pool.json"
-    $templateParameters = "$rootDirectory/$moduleDirectory/16-Farm.Pool.Parameters.json"
+    $templateFile = "$rootDirectory/$moduleDirectory/19-Farm.Pool.json"
+    $templateParameters = "$rootDirectory/$moduleDirectory/19-Farm.Pool.Parameters.json"
 
     $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
     $templateConfig.parameters.imageGallery.value.name = $imageGallery.name
@@ -206,18 +160,18 @@ if ($renderManagerMode -eq "Batch") {
     $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
     $groupDeployment = (az deployment group create --resource-group $renderManager.resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
-    New-TraceMessage $moduleName $true $computeRegionName
+    New-TraceMessage $moduleName $true
 }
 
-# 16 - Farm Scale Set
-if ($renderManagerMode -eq "OpenCue" -or $renderManagerMode -eq "Deadline") {
-    $moduleName = "16 - Farm Scale Set"
-    New-TraceMessage $moduleName $false $computeRegionName
-    $resourceGroupNameSuffix = ".Farm"
+# (19) Farm Scale Set
+if ($renderManagerMode -eq "OpenCue" -or $renderManagerMode -eq "RoyalRender") {
+    $moduleName = "(19) Farm Scale Set"
+    New-TraceMessage $moduleName $false
+    $resourceGroupNameSuffix = "-Farm"
     $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
-    $templateFile = "$rootDirectory/$moduleDirectory/16-Farm.ScaleSet.json"
-    $templateParameters = "$rootDirectory/$moduleDirectory/16-Farm.ScaleSet.Parameters.json"
+    $templateFile = "$rootDirectory/$moduleDirectory/19-Farm.ScaleSet.json"
+    $templateParameters = "$rootDirectory/$moduleDirectory/19-Farm.ScaleSet.Parameters.json"
 
     $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
     $templateConfig.parameters.managedIdentity.value.name = $managedIdentity.name
@@ -244,8 +198,10 @@ if ($renderManagerMode -eq "OpenCue" -or $renderManagerMode -eq "Deadline") {
     $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
     $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
-    New-TraceMessage $moduleName $true $computeRegionName
+    New-TraceMessage $moduleName $true
 }
 
-Receive-Job -Job $workstationMachineJob -Wait
-New-TraceMessage $workstationMachineModuleName $true
+if ($artistWorkstationTypes.length -gt 0) {
+    Receive-Job -Job $artistWorkstationMachineJob -Wait
+    New-TraceMessage $artistWorkstationMachineModuleName $true
+}

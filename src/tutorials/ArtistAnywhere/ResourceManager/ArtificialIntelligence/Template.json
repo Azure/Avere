@@ -1,0 +1,20 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "cognitiveServices": {
+      "type": "object"
+    },
+    "machineLearning": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "cognitiveServiceApiVersion": "2017-04-18",
+    "machineLearningApiVersion": "2021-01-01"
+  },
+  "resources": [
+  ],
+  "outputs": {
+  }
+}
