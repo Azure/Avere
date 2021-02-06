@@ -45,6 +45,7 @@ const (
 	CachePolicyIsolatedCloudWorkstationCheckAttributes      = "{}"
 	CachePolicyCollaboratingCloudWorkstationCheckAttributes = "{'checkAttrPeriod':30,'checkDirAttrPeriod':30}"
 	CachePolicyReadOnlyHighVerificationTimeCheckAttributes  = "{'checkAttrPeriod':10800,'checkDirAttrPeriod':10800}"
+	CachePolicyClientsBypassCustomCheckAttributes           = "{'checkAttrPeriod':%d}"
 
 	QuotaCacheMoveMax = "cfs.quotaCacheMoveMax DN 50" // 50 is the max
 	QuotaDivisorFloor = "cfs.quotaCacheDivisorFloor CQ %d"
