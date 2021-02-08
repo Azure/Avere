@@ -169,6 +169,7 @@ A <a name="core_filer"></a>`core_filer` block supports the following:
     | Cache_policy string | Description |
     | --- | --- |
     | "Clients Bypassing the Cluster" | Use this cache policy when some of your clients are mounting the Avere cluster and others are mounting the core filer directly. |
+    | "Clients Bypassing the Cluster**N**" | This uses "Clients Bypassing the Cluster" as the foundation, but then allows you to set an integer number for N greater than or equal to 0 for the check attribute period. |
     | "Read Caching" | Use this cache policy when file read performance is the most critical resource of your workflow. |
     | "Read and Write Caching" | Use this cache policy when a balance of read and write performance is desired. |
     | "Full Caching" | Use this cache policy with cloud core filers or to optimize for op reduction to the core filer. |
