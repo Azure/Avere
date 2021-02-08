@@ -56,6 +56,8 @@ function pull_avere_github() {
     go mod download
     go mod tidy
     go build
+    # build windows
+    GOOS=windows GOARCH=amd64 go build
     mkdir -p $AZURE_HOME_DIR/.terraform.d/plugins
     cp terraform-provider-avere $AZURE_HOME_DIR/.terraform.d/plugins
     export HOME=$OLD_HOME
