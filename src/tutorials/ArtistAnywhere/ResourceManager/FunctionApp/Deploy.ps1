@@ -36,7 +36,7 @@ if ($insightAccount.name -ne "") {
 
     $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
     $templateConfig.parameters.insightAccount.value = $insightAccount
-    $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
+    $templateConfig | ConvertTo-Json -Depth 5 | Out-File $templateParameters
 
     $groupDeployment = (az deployment group create --resource-group $resourceGroup.name --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
     $appInsights = $groupDeployment.properties.outputs.appInsights.value

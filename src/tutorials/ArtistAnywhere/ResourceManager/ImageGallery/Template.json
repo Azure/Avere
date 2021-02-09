@@ -45,10 +45,7 @@
   "outputs": {
     "imageGallery": {
       "type": "object",
-      "value": {
-        "name": "[parameters('imageGallery').name]",
-        "resourceGroupName": "[resourceGroup().name]"
-      }
+      "value": "[parameters('imageGallery')]"
     }
   }
 }

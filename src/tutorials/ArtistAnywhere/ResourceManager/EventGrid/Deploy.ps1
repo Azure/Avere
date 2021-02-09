@@ -3,11 +3,14 @@ param (
         "name" = ""
         "regionName" = "WestUS2"    # https://azure.microsoft.com/global-infrastructure/geographies/
     },
-    $cognitiveServices = @{
+    $eventTopic = @{                # https://docs.microsoft.com/azure/event-grid/overview
         "name" = ""
+        "schema" = "EventGridSchema"
     },
-    $machineLearning = @{
+    $storageAccount = @{
         "name" = ""
+        "resourceGroupName" = ""
+        "queueName" = ""
     }
 )
 
@@ -17,8 +20,8 @@ $templateFile = "$PSScriptRoot/Template.json"
 $templateParameters = "$PSScriptRoot/Template.Parameters.json"
 
 $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
-$templateConfig.parameters.cognitiveServices.value = $cognitiveServices
-$templateConfig.parameters.machineLearning.value = $machineLearning
-$templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
+$templateConfig.parameters.eventTopic.value = $eventTopic
+$templateConfig.parameters.storageAccount.value = $storageAccount
+$templateConfig | ConvertTo-Json -Depth 5 | Out-File $templateParameters
 
 az deployment group create --resource-group $resourceGroup.name --template-file $templateFile --parameters $templateParameters

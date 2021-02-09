@@ -1,20 +1,29 @@
 param (
     $resourceGroup = @{
         "name" = ""
-        "regionName" = "WestUS"     # https://azure.microsoft.com/global-infrastructure/geographies/
+        "regionName" = "WestUS2"    # https://azure.microsoft.com/global-infrastructure/geographies/
     },
-    $quantumWorkspace = @{          # https://docs.microsoft.com/azure/quantum/overview-azure-quantum
+    $storageAccount = @{            # https://docs.microsoft.com/azure/storage/common/storage-account-overview
         "name" = ""
-        "providers" = @(
+        "type" = "StorageV2"
+        "replication" = "Standard_LRS"
+        "blobContainers" = @(
             @{
-                "providerId" = "Microsoft"
-                "providerSku" = "DZH3178M639F"
+                "name" = ""
+                "publicAccess" = "None"
             }
         )
-    },
-    $storageAccount = @{
-        "name" = ""
-        "resourceGroupName" = ""
+        "fileShares" = @(
+            @{
+                "name" = ""
+                "size" = 5120
+            }
+        )
+        "messageQueues" = @(
+            @{
+                "name" = ""
+            }
+        )
     }
 )
 
@@ -24,7 +33,6 @@ $templateFile = "$PSScriptRoot/Template.json"
 $templateParameters = "$PSScriptRoot/Template.Parameters.json"
 
 $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
-$templateConfig.parameters.quantumWorkspace.value = $quantumWorkspace
 $templateConfig.parameters.storageAccount.value = $storageAccount
 $templateConfig | ConvertTo-Json -Depth 5 | Out-File $templateParameters
 

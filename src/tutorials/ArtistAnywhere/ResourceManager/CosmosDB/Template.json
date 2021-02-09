@@ -7,7 +7,7 @@
     }
   },
   "variables": {
-    "cosmosApiVersion": "2020-09-01"
+    "cosmosApiVersion": "2021-01-15"
   },
   "resources": [
     {

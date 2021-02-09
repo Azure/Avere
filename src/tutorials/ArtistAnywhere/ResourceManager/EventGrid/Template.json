@@ -7,14 +7,10 @@
     },
     "storageAccount": {
       "type": "object"
-    },
-    "virtualNetwork": {
-      "type": "object"
     }
   },
   "variables": {
-    "eventGridApiVersion": "2020-06-01",
-    "privateEndpointApiVersion": "2020-11-01"
+    "eventGridApiVersion": "2020-06-01"
   },
   "resources": [
     {
@@ -24,32 +20,6 @@
       "location": "[resourceGroup().location]",
       "properties": {
         "inputSchema": "[parameters('eventTopic').schema]"
-      }
-    },
-    {
-      "condition": "[parameters('eventTopic').enablePrivateEndpoint]",
-      "type": "Microsoft.Network/privateEndpoints",
-      "name": "[parameters('eventTopic').name]",
-      "apiVersion": "[variables('privateEndpointApiVersion')]",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[resourceId('Microsoft.EventGrid/topics', parameters('eventTopic').name)]"
-      ],
-      "properties": {
-        "subnet": {
-          "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
-        },
-        "privateLinkServiceConnections": [
-          {
-            "name": "[concat(parameters('eventTopic').name, '.EventGrid')]",
-            "properties": {
-              "privateLinkServiceId": "[resourceId('Microsoft.EventGrid/topics', parameters('eventTopic').name)]",
-              "groupIds": [
-                "topic"
-              ]
-            }
-          }
-        ]
       }
     },
     {

@@ -54,7 +54,7 @@
           {
             "type": "SharedImage",
             "runOutputName": "SharedImage",
-            "galleryImageId": "[concat(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('imageTemplates')[copyIndex()].imageDefinitionName), '/versions/', parameters('imageTemplates')[copyIndex()].imageOutputVersion)]",
+            "galleryImageId": "[resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images/versions', parameters('imageGallery').name, parameters('imageTemplates')[copyIndex()].imageDefinitionName, parameters('imageTemplates')[copyIndex()].imageOutputVersion)]",
             "storageAccountType": "[parameters('imageTemplates')[copyIndex()].imageStorageAccount.type]",
             "replicationRegions": [
               "[resourceGroup().location]"

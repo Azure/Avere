@@ -2,16 +2,13 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "managedIdentity": {
+    "imageTemplate": {
       "type": "object"
     },
     "imageGallery": {
       "type": "object"
     },
-    "imageTemplates": {
-      "type": "array"
-    },
-    "virtualNetwork": {
+    "managedIdentity": {
       "type": "object"
     }
   },
@@ -21,9 +18,8 @@
   },
   "resources": [
     {
-      "condition": "[parameters('imageTemplates')[copyIndex()].deploy]",
       "type": "Microsoft.VirtualMachineImages/imageTemplates",
-      "name": "[parameters('imageTemplates')[copyIndex()].name]",
+      "name": "[parameters('imageTemplate').name]",
       "apiVersion": "[variables('imageBuilderApiVersion')]",
       "location": "[resourceGroup().location]",
       "identity": {
@@ -34,47 +30,38 @@
         }
       },
       "properties": {
-        "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].buildTimeoutMinutes]",
+        "buildTimeoutInMinutes": "[parameters('imageTemplate').buildTimeoutMinutes]",
         "vmProfile": {
-          "vmSize": "[parameters('imageTemplates')[copyIndex()].machineProfile.size]",
-          "osDiskSizeGB": "[parameters('imageTemplates')[copyIndex()].machineProfile.osDiskSizeGB]",
-          "vnetConfig": {
-            "subnetId": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
-          }
+          "vmSize": "[parameters('imageTemplate').machineSize]"
         },
         "source": {
-          "type": "[parameters('imageTemplates')[copyIndex()].imageSourceType]",
-          "version": "[parameters('imageTemplates')[copyIndex()].imageSourceVersion]",
-          "publisher": "[reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).identifier.publisher]",
-          "offer": "[reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).identifier.offer]",
-          "sku": "[reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).identifier.sku]"
+          "type": "[parameters('imageTemplate').imageSourceType]",
+          "version": "[parameters('imageTemplate').imageSourceVersion]",
+          "publisher": "[reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('imageGallery').imageDefinitionName), variables('imageGalleryApiVersion')).identifier.publisher]",
+          "offer": "[reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('imageGallery').imageDefinitionName), variables('imageGalleryApiVersion')).identifier.offer]",
+          "sku": "[reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('imageGallery').imageDefinitionName), variables('imageGalleryApiVersion')).identifier.sku]"
         },
-        "customize": "[parameters('imageTemplates')[copyIndex()].buildCustomization]",
+        "customize": "[parameters('imageTemplate').buildCustomizeCommands]",
         "distribute": [
           {
             "type": "SharedImage",
             "runOutputName": "SharedImage",
-            "galleryImageId": "[concat(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('imageTemplates')[copyIndex()].imageDefinitionName), '/versions/', parameters('imageTemplates')[copyIndex()].imageOutputVersion)]",
-            "storageAccountType": "[parameters('imageTemplates')[copyIndex()].imageStorageAccount.type]",
+            "galleryImageId": "[resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images/versions', parameters('imageGallery').name, parameters('imageGallery').imageDefinitionName, parameters('imageTemplate').imageOutputVersion)]",
             "replicationRegions": [
               "[resourceGroup().location]"
             ],
             "artifactTags": {
-              "imageTemplateName": "[parameters('imageTemplates')[copyIndex()].name]"
+              "imageTemplateName": "[parameters('imageTemplate').name]"
             }
           }
         ]
-      },
-      "copy": {
-        "name": "imageTemplates",
-        "count": "[length(parameters('imageTemplates'))]"
       }
     }
   ],
   "outputs": {
-    "imageTemplates": {
-      "type": "array",
-      "value": "[parameters('imageTemplates')]"
+    "imageTemplate": {
+      "type": "object",
+      "value": "[parameters('imageTemplate')]"
     }
   }
 }

@@ -56,6 +56,6 @@ $templateConfig.parameters.imageGallery.value = $imageGallery
 $templateConfig.parameters.virtualMachine.value = $virtualMachine
 $templateConfig.parameters.virtualNetwork.value = $virtualNetwork
 $templateConfig.parameters.joinDomain.value = $joinDomain
-$templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
+$templateConfig | ConvertTo-Json -Depth 5 | Out-File $templateParameters
 
 az deployment group create --resource-group $resourceGroup.name --template-file $templateFile --parameters $templateParameters

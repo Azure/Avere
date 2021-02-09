@@ -17,6 +17,6 @@ $templateParameters = "$PSScriptRoot/Template.Parameters.json"
 
 $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
 $templateConfig.parameters.cosmosAccount.value = $cosmosAccount
-$templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
+$templateConfig | ConvertTo-Json -Depth 5 | Out-File $templateParameters
 
 az deployment group create --resource-group $resourceGroup.name --template-file $templateFile --parameters $templateParameters
