@@ -149,7 +149,7 @@ jobs:
         parameters: 
           run_terraform: ${{ parameters.run_terraform }}
           cmd_terraform: destroy
-    - ${{ if ne(parameters.run_terraform, 'user-assigned-managed-identity' )}}:
+    - ${{ if eq(parameters.run_terraform, 'user-assigned-managed-identity' )}}:
       - template: templates/terraform_managed_identity.yml
         parameters:
           original_node_count: ${{ parameters.original_node_count }}
