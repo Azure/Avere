@@ -15,7 +15,6 @@ parameters:
 
 steps:
 - script: |
-    set -x
     az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
     wget https://releases.hashicorp.com/terraform/0.12.25/terraform_0.12.25_linux_amd64.zip
     unzip terraform_0.12.25_linux_amd64.zip
@@ -51,7 +50,7 @@ steps:
     az group create --location $LOCATION --resource-group $Storage_RG
 
     # create the service principal
-    az ad sp create-for-rbac --skip-assignment | sp.txt
+    az ad sp create-for-rbac --skip-assignment | tee sp.txt
     export SP_APP_ID=$(jq -r '.appId' sp.txt)
     export SP_APP_ID_SECRET=$(jq -r '.password' sp.txt)
     export SP_APP_ID_TENANT=$(jq -r '.tenant' sp.txt)
@@ -89,7 +88,7 @@ steps:
     create_role_assignment "Network Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Avere_RG $SP_APP_ID
 
     # create the controller managed identity
-    az identity create --resource-group $MI_RG --name controllermi | cmi.txt
+    az identity create --resource-group $MI_RG --name controllermi | tee cmi.txt
     export controllerMI_ID=$(jq -r '.clientId' cmi.txt)
     export controllermi_ARMID=$(jq -r '.id' cmi.txt)
 
@@ -100,7 +99,7 @@ steps:
     create_role_assignment "Avere Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Storage_RG $controllerMI_ID 
 
     # create the vfxt managed identity
-    az identity create --resource-group $MI_RG --name vfxtmi | vfxtmi.txt
+    az identity create --resource-group $MI_RG --name vfxtmi | tee vfxtmi.txt
     export vfxtmi_ID=$(jq -r '.clientId' vfxtmi.txt)
     export vfxtmi_ARMID=$(jq -r '.id' vfxtmi.txt)
 
@@ -126,7 +125,7 @@ steps:
       terraform init 
       TF_LOG=INFO terraform apply -auto-approve
       sleep 10
-      
+
       TF_LOG=INFO terraform destroy -auto-approve
       
       az ad sp delete -id $SP_APP_ID
