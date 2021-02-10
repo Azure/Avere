@@ -149,10 +149,10 @@ jobs:
         parameters: 
           run_terraform: ${{ parameters.run_terraform }}
           cmd_terraform: destroy
-    - ${{ if eq(parameters.run_terraform, 'user-assigned-managed-identity' )}}:
-      - template: templates/terraform_managed_identity.yml
-        parameters:
-          original_node_count: ${{ parameters.original_node_count }}
-          run_terraform: ${{ parameters.run_terraform }}
-          image: ${{ parameters.image }}
-    - template: templates/rg_delete.yml
+  - ${{ if eq(parameters.run_terraform, 'user-assigned-managed-identity' )}}:
+    - template: templates/terraform_managed_identity.yml
+      parameters:
+        original_node_count: ${{ parameters.original_node_count }}
+        run_terraform: ${{ parameters.run_terraform }}
+        image: ${{ parameters.image }}
+  - template: templates/rg_delete.yml

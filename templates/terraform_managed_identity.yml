@@ -126,11 +126,17 @@ steps:
       terraform init 
       TF_LOG=INFO terraform apply -auto-approve
       sleep 10
-
+      
       TF_LOG=INFO terraform destroy -auto-approve
       
       az ad sp delete -id $SP_APP_ID
       az ad sp delete --id $SP_APP_ID
+
+      az group delete --location $LOCATION --resource-group $MI_RG
+      az group delete --location $LOCATION --resource-group $Network_RG
+      az group delete --location $LOCATION --resource-group $Avere_RG
+      az group delete --location $LOCATION --resource-group $Storage_RG
+
 
   displayName: 'Terraform: Managed Identity'
   condition: always()
