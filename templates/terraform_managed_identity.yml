@@ -1,0 +1,142 @@
+parameters:
+- name: original_node_count
+  type: string
+- name: run_terraform
+  type: string
+- name: image
+  type: string
+  default: "microsoft-avere:vfxt:avere-vfxt-node:latest"
+  values:
+    - "microsoft-avere:vfxt:avere-vfxt-node:latest"
+    - "microsoft-avere:vfxt:avere-vfxt-node:6.0.0"
+    - "microsoft-avere:vfxt:avere-vfxt-node:5.3.61"
+    - "microsoft-avere:vfxt:avere-vfxt-node:5.3.51"
+    - "microsoft-avere:vfxt:avere-vfxt-node:5.3.43"
+
+steps:
+- script: |
+    set -x
+    az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+    wget https://releases.hashicorp.com/terraform/0.12.25/terraform_0.12.25_linux_amd64.zip
+    unzip terraform_0.12.25_linux_amd64.zip
+    sudo mv terraform /usr/local/bin
+    sudo chmod 755 /usr/local/bin/terraform
+    
+    browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[].browser_download_url)
+    mkdir -p ~/.terraform.d/plugins
+    wget -O ~/.terraform.d/plugins/terraform-provider-avere $browser_download_url
+    chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
+
+    sshkey="$(cat ~/.ssh/id_rsa.pub) azureuser@linuxvm"
+    echo "##vso[task.setvariable variable=secret.SSH_KEY;issecret=true]${sshkey}"
+    cd src/terraform/examples/vfxt/${{ parameters.run_terraform }}
+
+    ##################################################
+    # update the following variables with your own variables
+    export LOCATION=eastus
+    export SUBSCRIPTION=${ARM_SUBSCRIPTION_ID}
+
+    # the resource group where your VNET is stored
+    export Network_RG=${RESOURCE_GROUP_NAME}-network
+
+    # the following may be the same resource group
+    export MI_RG=${RESOURCE_GROUP_NAME}-managed_identity
+    export Avere_RG=${RESOURCE_GROUP_NAME}-vfxt
+    export Storage_RG=${RG_PREFIX}-storage
+
+    # create the resource groups
+    az group create --location $LOCATION --resource-group $MI_RG
+    az group create --location $LOCATION --resource-group $Network_RG
+    az group create --location $LOCATION --resource-group $Avere_RG
+    az group create --location $LOCATION --resource-group $Storage_RG
+
+    # create the service principal
+    az ad sp create-for-rbac --skip-assignment | sp.txt
+    export SP_APP_ID=$(jq -r '.appId' sp.txt)
+    export SP_APP_ID_SECRET=$(jq -r '.password' sp.txt)
+    export SP_APP_ID_TENANT=$(jq -r '.tenant' sp.txt)
+
+    # the following function will retry on failures due to propagation delays
+    function create_role_assignment() {
+        retries=12; sleep_seconds=10
+        role=$1; scope=$2; assignee=$3
+        for i in $(seq 1 $retries); do
+            az role assignment create --role "${role}" --scope $scope --assignee $assignee
+            [ $? -eq 0  ] && break || \
+            if [ $i -eq $retries ]; then
+                echo Executed \"az role assignment create --role \"${role}\" --scope $scope --assignee $assignee\" $i times;
+                return 1
+            else
+                sleep $sleep_seconds
+            fi
+        done
+    }
+
+    # assign the "Managed Identity Operator"
+    create_role_assignment "Managed Identity Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/$MI_RG $SP_APP_ID
+    create_role_assignment "Managed Identity Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/$Avere_RG $SP_APP_ID
+
+    # assign the "Network Contributor"
+    create_role_assignment "Network Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Network_RG $SP_APP_ID
+
+    # assign the "Storage Account Contributor" for storage accounts and "Virtual Machine Contributor" for NFS Filers
+    create_role_assignment "Storage Account Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Storage_RG $SP_APP_ID
+    create_role_assignment "Virtual Machine Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Storage_RG $SP_APP_ID
+
+    # assign the "Avere Contributor"
+    create_role_assignment "Avere Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Avere_RG $SP_APP_ID
+    create_role_assignment "Virtual Machine Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Avere_RG $SP_APP_ID
+    create_role_assignment "Network Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Avere_RG $SP_APP_ID
+
+    # create the controller managed identity
+    az identity create --resource-group $MI_RG --name controllermi | cmi.txt
+    export controllerMI_ID=$(jq -r '.clientId' cmi.txt)
+    export controllermi_ARMID=$(jq -r '.id' cmi.txt)
+
+    create_role_assignment "Avere Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Avere_RG $controllerMI_ID
+    create_role_assignment "Avere Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Network_RG $controllerMI_ID 
+    create_role_assignment "Managed Identity Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/$Avere_RG $controllerMI_ID 
+    create_role_assignment "Managed Identity Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/$MI_RG $controllerMI_ID 
+    create_role_assignment "Avere Contributor" /subscriptions/$SUBSCRIPTION/resourceGroups/$Storage_RG $controllerMI_ID 
+
+    # create the vfxt managed identity
+    az identity create --resource-group $MI_RG --name vfxtmi | vfxtmi.txt
+    export vfxtmi_ID=$(jq -r '.clientId' vfxtmi.txt)
+    export vfxtmi_ARMID=$(jq -r '.id' vfxtmi.txt)
+
+    create_role_assignment "Avere Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/$Avere_RG $vfxtmi_ID
+    create_role_assignment "Avere Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/$Network_RG $vfxtmi_ID 
+    create_role_assignment "Avere Operator" /subscriptions/$SUBSCRIPTION/resourceGroups/$Storage_RG $vfxtmi_ID 
+
+    sed -i -E -e "s:vm_ssh_key_data = null:vm_ssh_key_data = \"${sshkey}\":" \
+      -e "s/location = \"eastus\"/location = \"${REGION}\"/" \
+      -e "s/subscription_id\s*= \"00000000-0000-0000-0000-000000000000\"/subscription_id = \"${SUBSCRIPTION}\"/" \
+      -e "s/client_id\s*= \"00000000-0000-0000-0000-000000000000\"/client_id = \"${SP_APP_ID}\"/" \
+      -e "s/client_secret\s*= \"00000000-0000-0000-0000-000000000000\"/client_secret = \"${SP_APP_ID_SECRET}\"/" \
+      -e "s/tenant_id\s*= \"00000000-0000-0000-0000-000000000000\"/tenant_id = \"${SP_APP_ID_TENANT}\"/" \
+      -e "s:controller_managed_identity_id = \"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/aaa_managed_identity/providers/Microsoft.ManagedIdentity/userAssignedIdentities/controllermi\":controller_managed_identity_id = \"${controllermi_ARMID}\":" \
+      -e "s:vfxt_managed_identity_id = \"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/aaa_managed_identity/providers/Microsoft.ManagedIdentity/userAssignedIdentities/vfxtmi\":vfxt_managed_identity_id = \"${vfxtmi_ARMID}\":" \
+      -e "s/(([a-z]+)_resource_group_name) = \"[^\"]+\"/\1 = \"${RESOURCE_GROUP_NAME}-\2\"/" \
+      -e "s/vfxt_image_id\s*= null/vfxt_image_id = \"${{ parameters.image }}\"/" \
+      -e "s/vfxt_cluster_password = \"VFXT_PASSWORD\"/vfxt_cluster_password = \"${AVERE_ADMIN_PW}\"/" \
+      -e "s/storage_account_name = \"storageaccount\"/storage_account_name = \"$RESOURCE_GROUP_NAME\"/" \
+      -e 's/vfxt_node_count = 3/vfxt_node_count = ${{ parameters.original_node_count }}/' main.tf
+
+
+      terraform init 
+      TF_LOG=INFO terraform apply -auto-approve
+      sleep 10
+
+      TF_LOG=INFO terraform destroy -auto-approve
+      
+      az ad sp delete -id $SP_APP_ID
+      az ad sp delete --id $SP_APP_ID
+
+  displayName: 'Terraform: Managed Identity'
+  condition: always()
+  env: 
+    ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+    ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+    ARM_TENANT_ID: $(AZURE-TENANT-ID)
+    ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+

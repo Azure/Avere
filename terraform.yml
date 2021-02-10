@@ -37,6 +37,7 @@ parameters:
       - "1-filer"
       - "proxy"
       - "azureblobfiler"
+      - "user-assigned-managed-identity"
   - name: image
     displayName: "Select vfxt image to run. Defaults to latest"
     type: string
@@ -90,61 +91,68 @@ jobs:
     parameters:
       run_terraform: ${{ parameters.run_terraform }}
       region: ${{ parameters.region }}
-  - template: templates/terraform_setup.yml
-    parameters:
-      original_node_count: ${{ parameters.original_node_count }}
-      run_terraform: ${{ parameters.run_terraform }}
-      image: ${{ parameters.image }}
-  
-  - template: templates/terraform_cmd.yml
-    parameters: 
-      run_terraform: ${{ parameters.run_terraform }}
-      cmd_terraform: apply
-      condition: succeeded()
-  
-  - ${{ if ne(parameters.ssh_pub_key, '.') }}:
-    - template: templates/add_sshkey.yml
-
-  - ${{ if eq(parameters.run_vdbench, true) }}:
-    - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
-      - template: templates/run_vdbench.yml
-        parameters: 
-          cmd_terraform: apply
-          vdbench_config: ${{ parameters.vdbench_config }}
-
-  - ${{ if eq(parameters.run_scale_up, true) }}:
-    - template: templates/terraform_scale_up_down.yml
+  - ${{ if ne(parameters.run_terraform, 'user-assigned-managed-identity' )}}:
+    - template: templates/terraform_setup.yml
       parameters:
         original_node_count: ${{ parameters.original_node_count }}
-        scale_up_node_count: ${{ parameters.scale_up_node_count }}
-        scale: up
+        run_terraform: ${{ parameters.run_terraform }}
+        image: ${{ parameters.image }}
+    
     - template: templates/terraform_cmd.yml
       parameters: 
         run_terraform: ${{ parameters.run_terraform }}
         cmd_terraform: apply
         condition: succeeded()
     
-  - ${{ if eq(parameters.run_scale_up, true) }}:
-    - ${{ if eq(parameters.run_scale_down, true) }}:
+    - ${{ if ne(parameters.ssh_pub_key, '.') }}:
+      - template: templates/add_sshkey.yml
+
+    - ${{ if eq(parameters.run_vdbench, true) }}:
+      - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
+        - template: templates/run_vdbench.yml
+          parameters: 
+            cmd_terraform: apply
+            vdbench_config: ${{ parameters.vdbench_config }}
+
+    - ${{ if eq(parameters.run_scale_up, true) }}:
       - template: templates/terraform_scale_up_down.yml
         parameters:
           original_node_count: ${{ parameters.original_node_count }}
           scale_up_node_count: ${{ parameters.scale_up_node_count }}
-          scale: "down"
+          scale: up
       - template: templates/terraform_cmd.yml
         parameters: 
           run_terraform: ${{ parameters.run_terraform }}
           cmd_terraform: apply
           condition: succeeded()
-  - ${{ if eq(parameters.run_destroy_and_cleanup, true) }}:
-    - ${{ if eq(parameters.run_vdbench, true) }}:
-      - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
-        - template: templates/run_vdbench.yml
+      
+    - ${{ if eq(parameters.run_scale_up, true) }}:
+      - ${{ if eq(parameters.run_scale_down, true) }}:
+        - template: templates/terraform_scale_up_down.yml
+          parameters:
+            original_node_count: ${{ parameters.original_node_count }}
+            scale_up_node_count: ${{ parameters.scale_up_node_count }}
+            scale: "down"
+        - template: templates/terraform_cmd.yml
           parameters: 
-            cmd_terraform: destroy
-            vdbench_config: ${{ parameters.vdbench_config }}
-    - template: templates/terraform_cmd.yml
-      parameters: 
-        run_terraform: ${{ parameters.run_terraform }}
-        cmd_terraform: destroy
+            run_terraform: ${{ parameters.run_terraform }}
+            cmd_terraform: apply
+            condition: succeeded()
+    - ${{ if eq(parameters.run_destroy_and_cleanup, true) }}:
+      - ${{ if eq(parameters.run_vdbench, true) }}:
+        - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
+          - template: templates/run_vdbench.yml
+            parameters: 
+              cmd_terraform: destroy
+              vdbench_config: ${{ parameters.vdbench_config }}
+      - template: templates/terraform_cmd.yml
+        parameters: 
+          run_terraform: ${{ parameters.run_terraform }}
+          cmd_terraform: destroy
+    - ${{ if ne(parameters.run_terraform, 'user-assigned-managed-identity' )}}:
+      - template: templates/terraform_managed_identity.yml
+        parameters:
+          original_node_count: ${{ parameters.original_node_count }}
+          run_terraform: ${{ parameters.run_terraform }}
+          image: ${{ parameters.image }}
     - template: templates/rg_delete.yml
