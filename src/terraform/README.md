@@ -57,6 +57,7 @@ The highest priority for VFX and Animation Studios is the lowest total cost of o
 1. [Best Practices for using Azure Virtual Machine Scale Sets (VMSS) or Azure Cycle Cloud for Rendering](examples/vmss-rendering)
 1. [Networking Best Practices for Rendering](examples/network-rendering)
 1. [Storage Cache Best Practices for Rendering](examples/storagecache-rendering)
+1. [Security Best Practices for Rendering](examples/security)
 
 ## Storage Cache Infrastructure
 
