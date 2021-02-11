@@ -87,6 +87,18 @@ resource "azurerm_subnet_network_security_group_association" "cloud_filers" {
   network_security_group_id = azurerm_network_security_group.no_internet_nsg.id
 }
 
+resource "azurerm_subnet" "cloud_filers_ha" {
+    name                 = var.subnet_cloud_filers_ha_subnet_name
+    virtual_network_name = azurerm_virtual_network.vnet.name
+    resource_group_name = var.resource_group_name
+    address_prefixes     = [var.subnet_cloud_filers_ha_address_prefix]
+}
+
+resource "azurerm_subnet_network_security_group_association" "cloud_filers_ha" {
+  subnet_id                 = azurerm_subnet.cloud_filers_ha.id
+  network_security_group_id = azurerm_network_security_group.no_internet_nsg.id
+}
+
 resource "azurerm_subnet" "jumpbox" {
     name                 = var.subnet_jumpbox_subnet_name
     virtual_network_name = azurerm_virtual_network.vnet.name
