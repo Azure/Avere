@@ -33,8 +33,19 @@ variable "subnet_cloud_filers_subnet_name" {
 
 variable "subnet_cloud_filers_address_prefix" {
     description = "The address prefix used for the cloud filers subnet."
-    default = "10.0.2.0/24"
+    default = "10.0.2.0/25"
 }
+
+variable "subnet_cloud_filers_ha_subnet_name" {
+    description = "The name for the cloud filers subnet."
+    default = "cloud_filers_ha"
+}
+
+variable "subnet_cloud_filers_ha_address_prefix" {
+    description = "The address prefix used for the cloud filers ha subnet."
+    default = "10.0.2.128/25"
+}
+
 
 variable "subnet_jumpbox_subnet_name" {
     description = "The name for the jumpbox subnet."
