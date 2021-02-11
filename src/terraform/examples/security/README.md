@@ -1,6 +1,12 @@
 # Security Best Practices for Rendering
 
-We recommend a multiple phased approach related to the [Microsoft Security Development LifeCycle](https://www.microsoft.com/en-us/securityengineering/sdl):
+As you build out your cloud burst render solution it is important to understand the security responsibility between you and Microsoft.  The [Shared Responsibility in the cloud](https://docs.microsoft.com/en-us/azure/security/fundamentals/shared-responsibility) document describes in detail the division of responsibility between you and Microsoft:
+
+[![Division of responsibility](https://docs.microsoft.com/en-us/azure/security/fundamentals/media/shared-responsibility/shared-responsibility.png)](https://docs.microsoft.com/en-us/azure/security/fundamentals/shared-responsibility#division-of-responsibility)
+
+# Phase Approach
+
+As you build out your security posture for your division of responsibility described previously, we recommend a multi-phased approach related to the [Microsoft Security Development LifeCycle](https://www.microsoft.com/en-us/securityengineering/sdl):
 
 1. **Learn and Understand**
     1. **Organization** - Learn about your organization's security and what security priorities are most important for your organization.  For example, data exfiltration of artist content may take priority over source code exfiltration.  This includes meeting with the security experts in your organization, learning the existing tools, systems, and practices in place.
