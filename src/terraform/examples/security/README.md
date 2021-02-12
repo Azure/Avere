@@ -4,7 +4,7 @@ As you build out your cloud burst render solution it is important to understand 
 
 [![Division of responsibility](https://docs.microsoft.com/en-us/azure/security/fundamentals/media/shared-responsibility/shared-responsibility.png)](https://docs.microsoft.com/en-us/azure/security/fundamentals/shared-responsibility#division-of-responsibility)
 
-# Phase Approach
+# Multi-phased Approach to Security
 
 As you build out your security posture for your division of responsibility described previously, we recommend a multi-phased approach related to the [Microsoft Security Development LifeCycle](https://www.microsoft.com/en-us/securityengineering/sdl):
 

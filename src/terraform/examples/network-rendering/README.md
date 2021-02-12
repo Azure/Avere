@@ -12,6 +12,7 @@ For lowest TCO, on [Azure Virtual Network](https://docs.microsoft.com/en-us/azur
     1. [Render Network](../../modules/render_network/) - describes a standard render network
     2. [Secure Network](../../modules/render_network_secure/) - describes a secure render network where internet traffic only goes over internet.
 * For a VPN Gateway or ExpressRoute Gateway you will need to define a subnet named `GatewaySubnet`, and it can be [as small as a /28](https://docs.microsoft.com/en-us/azure/vpn-gateway/tutorial-site-to-site-portal#create-the-gateway).
+* One common scenario for rendering customers is to peer VNETs across different subscriptions, where the subscriptions belong to different AD Tenants.  This is useful to share rendered content on trusted networks for quality check (QC) or final review.  The technique for doing this is described in the document [Create a virtual network peering - Resource Manager, different subscriptions and Azure Active Directory tenants](https://docs.microsoft.com/en-us/azure/virtual-network/create-peering-different-subscriptions).
 
 ## Azure VPN Gateway
 
