@@ -24,7 +24,7 @@ Before running the examples you will need to setup the following pre-requisites:
 
     1. Specify your subscription by running this command with your subscription ID:  ```az account set --subscription YOUR_SUBSCRIPTION_ID```.  You will need to run this every time after restarting your shell, otherwise it may default you to the wrong subscription, and you will see an error similar to `azurerm_public_ip.vm is empty tuple`.
 
-    1. to enable the ability to run the cache, execute the following `az vm image accept-terms --urn microsoft-avere:vfxt:avere-vfxt-controller:latest`: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs
+    1. to enable the ability to run the cache, execute the following `az vm image terms accept --urn microsoft-avere:vfxt:avere-vfxt-controller:latest`: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs
 
     1. If not already installed, run the following commands to install the Avere vFXT provider for Azure:
     ```bash
