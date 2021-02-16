@@ -1,0 +1,77 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "eventTopic": {
+      "type": "object"
+    },
+    "storageAccount": {
+      "type": "object"
+    },
+    "virtualNetwork": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "eventGridApiVersion": "2020-06-01",
+    "privateEndpointApiVersion": "2020-11-01"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.EventGrid/topics",
+      "name": "[parameters('eventTopic').name]",
+      "apiVersion": "[variables('eventGridApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "inputSchema": "[parameters('eventTopic').schema]"
+      }
+    },
+    {
+      "condition": "[parameters('eventTopic').enablePrivateEndpoint]",
+      "type": "Microsoft.Network/privateEndpoints",
+      "name": "[parameters('eventTopic').name]",
+      "apiVersion": "[variables('privateEndpointApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.EventGrid/topics', parameters('eventTopic').name)]"
+      ],
+      "properties": {
+        "subnet": {
+          "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "[concat(parameters('eventTopic').name, '.EventGrid')]",
+            "properties": {
+              "privateLinkServiceId": "[resourceId('Microsoft.EventGrid/topics', parameters('eventTopic').name)]",
+              "groupIds": [
+                "topic"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.EventGrid/topics/providers/eventSubscriptions",
+      "name": "[concat(parameters('eventTopic').name, '/Microsoft.EventGrid/storageQueue')]",
+      "apiVersion": "[variables('eventGridApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.EventGrid/topics', parameters('eventTopic').name)]"
+      ],
+      "properties": {
+        "eventDeliverySchema": "[parameters('eventTopic').schema]",
+        "destination": {
+          "endpointType": "StorageQueue",
+          "properties": {
+            "resourceId": "[resourceId(parameters('storageAccount').resourceGroupName, 'Microsoft.Storage/storageAccounts', parameters('storageAccount').name)]",
+            "queueName": "[parameters('storageAccount').queueName]"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "cosmosAccount": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "cosmosApiVersion": "2021-01-15"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "name": "[parameters('cosmosAccount').name]",
+      "apiVersion": "[variables('cosmosApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "cosmosAccountType": "[parameters('cosmosAccount').uiType]"
+      },
+      "properties": {
+        "databaseAccountOfferType": "[parameters('cosmosAccount').offerType]"
+      }
+    }
+  ],
+  "outputs": {
+  }
+}

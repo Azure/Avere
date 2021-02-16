@@ -1,5 +1,5 @@
 [![Build Status](https://dev.azure.com/averevfxt/vfxt-github/_apis/build/status/Azure.Avere?branchName=main)](https://dev.azure.com/averevfxt/vfxt-github/_build?definitionId=1)
-
+[![Build Status - Terraform](https://dev.azure.com/averevfxt/vfxt-github/_apis/build/status/Terraform%20vFXT?branchName=main)](https://dev.azure.com/averevfxt/vfxt-github/_build/latest?definitionId=3&branchName=main)
 <img src="docs/images/avere_vfxt.png">
 
 # Avere vFXT  

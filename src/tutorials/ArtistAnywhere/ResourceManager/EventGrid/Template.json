@@ -1,0 +1,47 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "eventTopic": {
+      "type": "object"
+    },
+    "storageAccount": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "eventGridApiVersion": "2020-06-01"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.EventGrid/topics",
+      "name": "[parameters('eventTopic').name]",
+      "apiVersion": "[variables('eventGridApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "inputSchema": "[parameters('eventTopic').schema]"
+      }
+    },
+    {
+      "type": "Microsoft.EventGrid/topics/providers/eventSubscriptions",
+      "name": "[concat(parameters('eventTopic').name, '/Microsoft.EventGrid/storageQueue')]",
+      "apiVersion": "[variables('eventGridApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.EventGrid/topics', parameters('eventTopic').name)]"
+      ],
+      "properties": {
+        "eventDeliverySchema": "[parameters('eventTopic').schema]",
+        "destination": {
+          "endpointType": "StorageQueue",
+          "properties": {
+            "resourceId": "[resourceId(parameters('storageAccount').resourceGroupName, 'Microsoft.Storage/storageAccounts', parameters('storageAccount').name)]",
+            "queueName": "[parameters('storageAccount').queueName]"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+  }
+}

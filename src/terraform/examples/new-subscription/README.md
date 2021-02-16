@@ -29,7 +29,7 @@ If you have created a new subscription, you will need to perform the following s
     1. `terraform destroy -auto-approve`
     1. `cd && rm -rf ~/registerrpfirsttimesub`
 
-1. If you are deploying the Avere vFXT, register the controller `az vm image accept-terms --urn microsoft-avere:vfxt:avere-vfxt-controller:latest`
+1. If you are deploying the Avere vFXT, register the controller `az vm image terms accept --urn microsoft-avere:vfxt:avere-vfxt-controller:latest`
 
 1. If you are deploying the Avere vFXT, and using a user assigned managed identity, as "Owner" follow the process to create the [managed identity](../vfxt/user-assigned-managed-identity#create-the-resource-groups-service-principal-and-managed-identities)
 

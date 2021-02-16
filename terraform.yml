@@ -1,0 +1,150 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# https://aka.ms/yaml
+parameters:
+  - name: original_node_count
+    displayName: "Original Node Count"
+    type: number
+    default: 3
+    values:
+      - 3
+      - 14
+  - name: scale_up_node_count
+    displayName: "Scale Up Node Count +"
+    type: number
+    default: 2
+    values:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+  - name: region
+    displayName: "Region to run pipeline"
+    type: string
+    default: "eastus"
+    values:
+      - "eastus"
+      - "eastus2"
+      - "westus"
+      - "westus2"
+      - "westeurope"
+  - name: run_terraform
+    displayName: "Select terraform example to run"
+    type: string
+    default: "azureblobfiler"
+    values:
+      - "1-filer"
+      - "proxy"
+      - "azureblobfiler"
+  - name: image
+    displayName: "Select vfxt image to run. Defaults to latest"
+    type: string
+    default: "microsoft-avere:vfxt:avere-vfxt-node:latest"
+    values:
+      - "microsoft-avere:vfxt:avere-vfxt-node:latest"
+      - "microsoft-avere:vfxt:avere-vfxt-node:6.0.0"
+      - "microsoft-avere:vfxt:avere-vfxt-node:5.3.61"
+      - "microsoft-avere:vfxt:avere-vfxt-node:5.3.51"
+      - "microsoft-avere:vfxt:avere-vfxt-node:5.3.43"
+  - name: run_vdbench
+    displayName: "Run vdbench - only runs with azureblobfiler"
+    type: boolean
+    default: true
+  - name: vdbench_config
+    displayName: "vdbench config - only runs with azureblobfiler"
+    type: string
+    default: "inmem"
+    values:
+      - "ondisk"
+      - "inmem"
+  - name: run_scale_up
+    displayName: "Run scale-up"
+    type: boolean
+    default: true
+  - name: run_scale_down
+    displayName: "Run scale-down (only runs if scale-up is selected)"
+    type: boolean
+    default: false
+  - name: run_destroy_and_cleanup
+    displayName: "Run terraform destroy and rg cleanup."
+    type: boolean
+    default: true
+  - name: ssh_pub_key
+    displayName: "Optional: Pass in public ssh key, it would be placed on controller."
+    type: string
+    default: "."
+
+variables:
+  SSH_PUBLIC_KEY: '${{ parameters.ssh_pub_key}}'
+  
+jobs:
+- job: Terraform_vFXT
+  timeoutInMinutes: 180
+  cancelTimeoutInMinutes: 40
+  pool:
+    vmImage: ubuntu-latest
+  steps:  
+  - template: templates/setup_ssh.yml
+  - template: templates/setup_envars.yml
+    parameters:
+      run_terraform: ${{ parameters.run_terraform }}
+      region: ${{ parameters.region }}
+  - template: templates/terraform_setup.yml
+    parameters:
+      original_node_count: ${{ parameters.original_node_count }}
+      run_terraform: ${{ parameters.run_terraform }}
+      image: ${{ parameters.image }}
+  
+  - template: templates/terraform_cmd.yml
+    parameters: 
+      run_terraform: ${{ parameters.run_terraform }}
+      cmd_terraform: apply
+      condition: succeeded()
+  
+  - ${{ if ne(parameters.ssh_pub_key, '.') }}:
+    - template: templates/add_sshkey.yml
+
+  - ${{ if eq(parameters.run_vdbench, true) }}:
+    - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
+      - template: templates/run_vdbench.yml
+        parameters: 
+          cmd_terraform: apply
+          vdbench_config: ${{ parameters.vdbench_config }}
+
+  - ${{ if eq(parameters.run_scale_up, true) }}:
+    - template: templates/terraform_scale_up_down.yml
+      parameters:
+        original_node_count: ${{ parameters.original_node_count }}
+        scale_up_node_count: ${{ parameters.scale_up_node_count }}
+        scale: up
+    - template: templates/terraform_cmd.yml
+      parameters: 
+        run_terraform: ${{ parameters.run_terraform }}
+        cmd_terraform: apply
+        condition: succeeded()
+    
+  - ${{ if eq(parameters.run_scale_up, true) }}:
+    - ${{ if eq(parameters.run_scale_down, true) }}:
+      - template: templates/terraform_scale_up_down.yml
+        parameters:
+          original_node_count: ${{ parameters.original_node_count }}
+          scale_up_node_count: ${{ parameters.scale_up_node_count }}
+          scale: "down"
+      - template: templates/terraform_cmd.yml
+        parameters: 
+          run_terraform: ${{ parameters.run_terraform }}
+          cmd_terraform: apply
+          condition: succeeded()
+  - ${{ if eq(parameters.run_destroy_and_cleanup, true) }}:
+    - ${{ if eq(parameters.run_vdbench, true) }}:
+      - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
+        - template: templates/run_vdbench.yml
+          parameters: 
+            cmd_terraform: destroy
+            vdbench_config: ${{ parameters.vdbench_config }}
+    - template: templates/terraform_cmd.yml
+      parameters: 
+        run_terraform: ${{ parameters.run_terraform }}
+        cmd_terraform: destroy
+    - template: templates/rg_delete.yml

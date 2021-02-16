@@ -1,0 +1,58 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "functionApp": {
+      "type": "object"
+    },
+    "hostingPlan": {
+      "type": "object"
+    },
+    "storageAccount": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "webFarmApiVersion": "2020-10-01",
+    "webSiteApiVersion": "2020-10-01"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/serverFarms",
+      "name": "[parameters('hostingPlan').name]",
+      "apiVersion": "[variables('webFarmApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "tier": "[parameters('hostingPlan').tier]",
+        "name": "[parameters('hostingPlan').size]"
+      },
+      "properties": {
+        "reserved": "[if(equals(parameters('functionApp').runtime, ''), false(), true())]"
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "name": "[parameters('functionApp').name]",
+      "apiVersion": "[variables('webSiteApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "kind": "functionapp",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverFarms', parameters('hostingPlan').name)]"
+      ],
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverFarms', parameters('hostingPlan').name)]",
+        "siteConfig": {
+          "linuxFxVersion": "[if(equals(parameters('functionApp').runtime, ''), json('null'), parameters('functionApp').runtime)]",
+          "appSettings": [
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "latest"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "outputs": {
+  }
+}

@@ -426,18 +426,9 @@ func resourceVfxt() *schema.Resource {
 							}, false),
 						},
 						cache_policy: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								CachePolicyClientsBypass,
-								CachePolicyReadCaching,
-								CachePolicyReadWriteCaching,
-								CachePolicyFullCaching,
-								CachePolicyTransitioningClients,
-								CachePolicyIsolatedCloudWorkstation,
-								CachePolicyCollaboratingCloudWorkstation,
-								CachePolicyReadOnlyHighVerificationTime,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: ValidateCachePolicy,
 						},
 						auto_wan_optimize: {
 							Type:     schema.TypeBool,

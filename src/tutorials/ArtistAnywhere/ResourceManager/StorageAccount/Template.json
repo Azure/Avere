@@ -1,0 +1,117 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageAccount": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "storageAccountApiVersion": "2021-01-01"
+  },
+  "functions": [
+    {
+      "namespace": "fx",
+      "members": {
+        "GetResourceName": {
+          "parameters": [
+            {
+              "name": "resource",
+              "type": "object"
+            }
+          ],
+          "output": {
+            "type": "string",
+            "value": "[if(equals(parameters('resource').name, ''), uniqueString(string(parameters('resource'))), parameters('resource').name)]"
+          }
+        }
+      }
+    }
+  ],
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[parameters('storageAccount').name]",
+      "apiVersion": "[variables('storageAccountApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "kind": "[parameters('storageAccount').type]",
+      "sku": {
+        "name": "[parameters('storageAccount').replication]"
+      },
+      "properties": {
+      }
+    },
+    {
+      "condition": "[not(equals(parameters('storageAccount').blobContainers[copyIndex()].name, ''))]",
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "name": "[concat(parameters('storageAccount').name, '/default/', fx.GetResourceName(parameters('storageAccount').blobContainers[copyIndex()]))]",
+      "apiVersion": "[variables('storageAccountApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccount').name)]"
+      ],
+      "properties": {
+        "publicAccess": "[parameters('storageAccount').blobContainers[copyIndex()].publicAccess]"
+      },
+      "copy": {
+        "name": "blobContainers",
+        "count": "[length(parameters('storageAccount').blobContainers)]"
+      }
+    },
+    {
+      "condition": "[not(equals(parameters('storageAccount').fileShares[copyIndex()].name, ''))]",
+      "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
+      "name": "[concat(parameters('storageAccount').name, '/default/', fx.GetResourceName(parameters('storageAccount').fileShares[copyIndex()]))]",
+      "apiVersion": "[variables('storageAccountApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccount').name)]"
+      ],
+      "properties": {
+        "shareQuota": "[parameters('storageAccount').fileShares[copyIndex()].sizeGBs]"
+      },
+      "copy": {
+        "name": "fileShares",
+        "count": "[length(parameters('storageAccount').fileShares)]"
+      }
+    },
+    {
+      "condition": "[not(equals(parameters('storageAccount').entityTables[copyIndex()].name, ''))]",
+      "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+      "name": "[concat(parameters('storageAccount').name, '/default/', fx.GetResourceName(parameters('storageAccount').entityTables[copyIndex()]))]",
+      "apiVersion": "[variables('storageAccountApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccount').name)]"
+      ],
+      "properties": {
+      },
+      "copy": {
+        "name": "entityTables",
+        "count": "[length(parameters('storageAccount').entityTables)]"
+      }
+    },
+    {
+      "condition": "[not(equals(parameters('storageAccount').messageQueues[copyIndex()].name, ''))]",
+      "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
+      "name": "[concat(parameters('storageAccount').name, '/default/', fx.GetResourceName(parameters('storageAccount').messageQueues[copyIndex()]))]",
+      "apiVersion": "[variables('storageAccountApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccount').name)]"
+      ],
+      "properties": {
+      },
+      "copy": {
+        "name": "messageQueues",
+        "count": "[length(parameters('storageAccount').messageQueues)]"
+      }
+    }
+  ],
+  "outputs": {
+    "storageAccount": {
+      "type": "object",
+      "value": "[parameters('storageAccount')]"
+    }
+  }
+}

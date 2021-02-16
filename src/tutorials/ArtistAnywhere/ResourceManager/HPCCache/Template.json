@@ -13,7 +13,7 @@
     }
   },
   "variables": {
-    "apiVersion": "2020-10-01"
+    "hpcCacheApiVersion": "2020-10-01"
   },
   "functions": [
     {
@@ -46,7 +46,7 @@
     {
       "type": "Microsoft.StorageCache/caches",
       "name": "[parameters('hpcCache').name]",
-      "apiVersion": "[variables('apiVersion')]",
+      "apiVersion": "[variables('hpcCacheApiVersion')]",
       "location": "[resourceGroup().location]",
       "sku": {
         "name": "[parameters('hpcCache').throughput]"
@@ -63,7 +63,7 @@
       "condition": "[greater(length(parameters('storageTargets')), 0)]",
       "type": "Microsoft.StorageCache/caches/storageTargets",
       "name": "[fx.GetStorageTargetName(parameters('hpcCache').name, parameters('storageTargets'), copyIndex())]",
-      "apiVersion": "[variables('apiVersion')]",
+      "apiVersion": "[variables('hpcCacheApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.StorageCache/caches', parameters('hpcCache').name)]"

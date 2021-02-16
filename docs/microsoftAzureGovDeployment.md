@@ -27,7 +27,7 @@ https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs#accept-soft
 
 ```
 az account set --subscription abc123de-f456-abc7-89de-f01234567890
-az vm image accept-terms --urn microsoft-avere:vfxt:avere-vfxt-controller:latest
+az vm image terms accept --urn microsoft-avere:vfxt:avere-vfxt-controller:latest
 ```
 
 ## Create role:

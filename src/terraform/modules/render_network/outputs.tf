@@ -38,6 +38,16 @@ output "cloud_filers_subnet_id" {
   value       = azurerm_subnet.cloud_filers.id
 }
 
+output "cloud_filers_ha_subnet_name" {
+  description = "The name of the cloud filers ha subnet."
+  value       = azurerm_subnet.cloud_filers_ha.name
+}
+
+output "cloud_filers_ha_subnet_id" {
+  description = "The full id of the cloud filers ha subnet."
+  value       = azurerm_subnet.cloud_filers_ha.id
+}
+
 output "jumpbox_subnet_name" {
   description = "The name of the jumpbox subnet."
   value       = azurerm_subnet.jumpbox.name

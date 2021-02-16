@@ -1,14 +1,14 @@
 param (
-    # Set a name prefix for the Azure resource groups that are created by this automated deployment script
-    [string] $resourceGroupNamePrefix = "ArtistAnywhere",
+    # Set a name prefix for the Azure resource groups that are created by this resource deployment script
+    [string] $resourceGroupNamePrefix = "Azure.Artist.Anywhere",
 
     # Set the Azure region name for compute resources (e.g., Image Gallery, Virtual Machine Scale Set, HPC Cache, etc.)
     [string] $computeRegionName = "WestUS2",
 
-    # Set the Azure region name for storage resources (e.g., Storage Network, Storage Account, File Share / Container, etc.)
+    # Set the Azure region name for storage resources (e.g., Storage Network, Storage Account, File Share/Container, etc.)
     [string] $storageRegionName = "EastUS2",
 
-    # Set to true to deploy Azure VPN Gateway services (https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways)
+    # Set to true to deploy Azure VPN Gateway (https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways)
     [boolean] $networkGatewayDeploy = $false,
 
     # Set to true to deploy Azure NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
@@ -17,8 +17,8 @@ param (
     # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in the compute region
     [boolean] $storageCacheDeploy = $false,
 
-    # Set the operating system type (i.e., Linux or Windows) for the Azure artist workstation image and virtual machines
-    [string] $artistWorkstationType = "Linux",
+    # Set the operating system types for the Azure artist workstation image builds and virtual machines
+    [string[]] $artistWorkstationTypes = @("Linux", "Windows"),
 
     # The base Azure services framework (e.g., Virtual Network, Managed Identity, Key Vault, etc.)
     [object] $baseFramework,
@@ -27,10 +27,12 @@ param (
     [object] $storageCache
 )
 
-$rootDirectory = !$PSScriptRoot ? $using:rootDirectory : "$PSScriptRoot/.."
+$rootDirectory = !$PSScriptRoot ? $using:rootDirectory : (Get-Item -Path $PSScriptRoot).Parent.FullName
 $moduleDirectory = "ArtistWorkstation"
 
 Import-Module "$rootDirectory/Deploy.psm1"
+Import-Module "$rootDirectory/BaseFramework/Deploy.psm1"
+Import-Module "$rootDirectory/StorageCache/Deploy.psm1"
 
 # Base Framework
 if (!$baseFramework) {
@@ -42,35 +44,30 @@ $imageGallery = $baseFramework.imageGallery
 
 # Storage Cache
 if (!$storageCache) {
-    $storageCache = Get-StorageCache $baseFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageNetAppDeploy $storageCacheDeploy
+    $storageCache = Get-StorageCache $rootDirectory $baseFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageNetAppDeploy $storageCacheDeploy
 }
 
-# 17.0 - Artist Workstation Image Templates
-$moduleName = "17.0 - Artist Workstation Image Templates"
-New-TraceMessage $moduleName $false $computeRegionName
-$resourceGroupNameSuffix = ".Gallery"
+# (20.1) Artist Workstation Image Template
+$moduleName = "(20.1) Artist Workstation Image Template [" + ($artistWorkstationTypes -join ",") + "]"
+New-TraceMessage $moduleName $false
+$resourceGroupNameSuffix = "-Gallery"
 $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
-$imageTemplates = (Get-Content "$rootDirectory/$moduleDirectory/17-Image.Parameters.json" -Raw | ConvertFrom-Json).parameters.imageTemplates.value
-$deployEnabled = Set-ImageTemplates $resourceGroupName $imageTemplates $artistWorkstationType
+$templateFile = "$rootDirectory/$moduleDirectory/20-Image.json"
+$templateParameters = "$rootDirectory/$moduleDirectory/20-Image.Parameters.json"
+$templateConfig = Set-ImageTemplates $resourceGroupName $templateParameters $artistWorkstationTypes
 
-if ($deployEnabled) {
-    $templateFile = "$rootDirectory/$moduleDirectory/17-Image.json"
-    $templateParameters = "$rootDirectory/$moduleDirectory/17-Image.Parameters.json"
+$templateConfig.parameters.managedIdentity.value.name = $managedIdentity.name
+$templateConfig.parameters.managedIdentity.value.resourceGroupName = $managedIdentity.resourceGroupName
+$templateConfig.parameters.imageGallery.value.name = $imageGallery.name
+$templateConfig.parameters.imageGallery.value.resourceGroupName = $imageGallery.resourceGroupName
+$templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
+$templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
+$templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
-    $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
-    $templateConfig.parameters.managedIdentity.value.name = $managedIdentity.name
-    $templateConfig.parameters.managedIdentity.value.resourceGroupName = $managedIdentity.resourceGroupName
-    $templateConfig.parameters.imageGallery.value.name = $imageGallery.name
-    $templateConfig.parameters.imageGallery.value.resourceGroupName = $imageGallery.resourceGroupName
-    $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
-    $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
-    $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
+$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
+New-TraceMessage $moduleName $true
 
-    $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
-}
-New-TraceMessage $moduleName $true $computeRegionName
-
-# 17.1 - Artist Workstation Image Build
-$moduleName = "17.1 - Artist Workstation Image Build"
-Build-ImageTemplates $moduleName $computeRegionName $imageGallery $imageTemplates
+# (20.2) Artist Workstation Image Build
+$moduleName = "(20.2) Artist Workstation Image Build [" + ($artistWorkstationTypes -join ",") + "]"
+Build-ImageTemplates $moduleName $computeRegionName $imageGallery $templateConfig.parameters.imageTemplates.value

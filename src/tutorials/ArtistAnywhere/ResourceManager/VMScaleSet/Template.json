@@ -19,13 +19,13 @@
     }
   },
   "variables": {
-    "apiVersion": "2020-12-01"
+    "vmScaleSetApiVersion": "2020-12-01"
   },
   "resources": [
     {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
       "name": "[parameters('virtualMachine').scaleSetName]",
-      "apiVersion": "[variables('apiVersion')]",
+      "apiVersion": "[variables('vmScaleSetApiVersion')]",
       "location": "[resourceGroup().location]",
       "sku": {
         "name": "[parameters('virtualMachine').instanceSize]",
@@ -85,7 +85,7 @@
       "condition": "[not(equals(parameters('joinDomain').username, ''))]",
       "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
       "name": "[concat(parameters('virtualMachine').scaleSetName, '/JoinDomain')]",
-      "apiVersion": "[variables('apiVersion')]",
+      "apiVersion": "[variables('vmScaleSetApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachine').scaleSetName)]"

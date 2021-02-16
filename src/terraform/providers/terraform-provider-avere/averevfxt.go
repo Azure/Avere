@@ -809,6 +809,37 @@ func (a *AvereVfxt) RemoveUser(user *User) error {
 	return err
 }
 
+func ValidateCachePolicy(v interface{}, _ string) (warnings []string, errors []error) {
+	cachePolicy := v.(string)
+
+	switch cachePolicy {
+	case CachePolicyClientsBypass,
+		CachePolicyReadCaching,
+		CachePolicyReadWriteCaching,
+		CachePolicyFullCaching,
+		CachePolicyTransitioningClients,
+		CachePolicyIsolatedCloudWorkstation,
+		CachePolicyCollaboratingCloudWorkstation,
+		CachePolicyReadOnlyHighVerificationTime:
+		break
+	default:
+		if cachePolicyClientsBypassCustom, timeout := isCachePolicyClientsBypassCustom(cachePolicy); cachePolicyClientsBypassCustom {
+			if timeout < 0 {
+				errors = append(errors, fmt.Errorf("Error: timeout for cache policy '%s' must be greater than 0", cachePolicy))
+			}
+			break
+		} else {
+			if strings.Contains(cachePolicy, CachePolicyClientsBypass) {
+				errors = append(errors, fmt.Errorf("Error: incorrect format for custom client bypass. Example format for 20s '%s%d'", CachePolicyClientsBypass, 20))
+			} else {
+				errors = append(errors, fmt.Errorf("Error: unknown cache policy '%s'", cachePolicy))
+			}
+		}
+	}
+
+	return warnings, errors
+}
+
 func (a *AvereVfxt) EnsureCachePolicy(corefiler *CoreFiler) error {
 	switch corefiler.CachePolicy {
 	case CachePolicyClientsBypass:
@@ -828,12 +859,28 @@ func (a *AvereVfxt) EnsureCachePolicy(corefiler *CoreFiler) error {
 	case CachePolicyReadOnlyHighVerificationTime:
 		return a.EnsureCachePolicyExists(CachePolicyReadOnlyHighVerificationTime, CacheModeReadOnly, CachePolicyReadOnlyHighVerificationTimeCheckAttributes, 0)
 	default:
-		return fmt.Errorf("Error: core filer '%s' specifies unknown cache policy '%s'", corefiler.Name, corefiler.CachePolicy)
+		if cachePolicyClientsBypassCustom, timeout := isCachePolicyClientsBypassCustom(corefiler.CachePolicy); cachePolicyClientsBypassCustom {
+			return a.EnsureCachePolicyExists(corefiler.CachePolicy, CacheModeReadOnly, getCachePolicyClientsBypassCustomCheckAttributes(timeout), 0)
+		} else {
+			return fmt.Errorf("Error: core filer '%s' specifies unknown cache policy '%s'", corefiler.Name, corefiler.CachePolicy)
+		}
 	}
 }
 
-func IsCachePolicyReadOnly(cachingPolicy string) bool {
-	switch cachingPolicy {
+func isCachePolicyClientsBypassCustom(cachePolicy string) (bool, int) {
+	timeoutStr := strings.TrimPrefix(cachePolicy, CachePolicyClientsBypass)
+	if timeout, err := strconv.Atoi(timeoutStr); err == nil {
+		return true, timeout
+	}
+	return false, 0
+}
+
+func getCachePolicyClientsBypassCustomCheckAttributes(timeout int) string {
+	return fmt.Sprintf(CachePolicyClientsBypassCustomCheckAttributes, timeout)
+}
+
+func IsCachePolicyReadOnly(cachePolicy string) bool {
+	switch cachePolicy {
 	case CachePolicyClientsBypass:
 		return true
 	case CachePolicyReadCaching:
@@ -841,7 +888,12 @@ func IsCachePolicyReadOnly(cachingPolicy string) bool {
 	case CachePolicyReadOnlyHighVerificationTime:
 		return true
 	default:
-		return false
+		if cachePolicyClientsBypassCustom, _ := isCachePolicyClientsBypassCustom(cachePolicy); cachePolicyClientsBypassCustom {
+			return true
+		} else {
+			return false
+		}
+
 	}
 }
 

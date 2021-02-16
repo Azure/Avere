@@ -8,6 +8,7 @@ Animation and VFX Rendering have two major requirements for networking:
 
 For lowest TCO, on [Azure Virtual Network](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview):
 * Avoid peering VNETs in the same region, as this will lead to inter-peering same region cross charges, as the VMs reach across to the storage appliance.  Instead fit all render workloads into the same VNET, and use subnets to separate them. 
+* However, to contradict the previous statement, there are valid scenarios to peer VNETs.  Two common scenarios is to share content across trusted networks with a partner for scenarios such as quality check (QC) or final review.  The technique for doing this is described in the document [Create a virtual network peering - Resource Manager, different subscriptions and Azure Active Directory tenants](https://docs.microsoft.com/en-us/azure/virtual-network/create-peering-different-subscriptions).
 * An example configuration for a rendering Virtual Network configuration with rules are the following:
     1. [Render Network](../../modules/render_network/) - describes a standard render network
     2. [Secure Network](../../modules/render_network_secure/) - describes a secure render network where internet traffic only goes over internet.
