@@ -7,22 +7,22 @@
     }
   },
   "variables": {
-    "storageApiVersion": "2020-08-01-preview"
+    "storageAccountApiVersion": "2021-01-01"
   },
   "functions": [
     {
       "namespace": "fx",
       "members": {
-        "GetChildName": {
+        "GetResourceName": {
           "parameters": [
             {
-              "name": "resourceName",
-              "type": "string"
+              "name": "resource",
+              "type": "object"
             }
           ],
           "output": {
             "type": "string",
-            "value": "[if(equals(parameters('resourceName'), ''), 'child', parameters('resourceName'))]"
+            "value": "[if(equals(parameters('resource').name, ''), uniqueString(string(parameters('resource'))), parameters('resource').name)]"
           }
         }
       }
@@ -32,7 +32,7 @@
     {
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[parameters('storageAccount').name]",
-      "apiVersion": "[variables('storageApiVersion')]",
+      "apiVersion": "[variables('storageAccountApiVersion')]",
       "location": "[resourceGroup().location]",
       "kind": "[parameters('storageAccount').type]",
       "sku": {
@@ -44,8 +44,8 @@
     {
       "condition": "[not(equals(parameters('storageAccount').blobContainers[copyIndex()].name, ''))]",
       "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
-      "name": "[concat(parameters('storageAccount').name, '/default/', fx.GetChildName(parameters('storageAccount').blobContainers[copyIndex()].name))]",
-      "apiVersion": "[variables('storageApiVersion')]",
+      "name": "[concat(parameters('storageAccount').name, '/default/', fx.GetResourceName(parameters('storageAccount').blobContainers[copyIndex()]))]",
+      "apiVersion": "[variables('storageAccountApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccount').name)]"
@@ -61,14 +61,14 @@
     {
       "condition": "[not(equals(parameters('storageAccount').fileShares[copyIndex()].name, ''))]",
       "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
-      "name": "[concat(parameters('storageAccount').name, '/default/', fx.GetChildName(parameters('storageAccount').fileShares[copyIndex()].name))]",
-      "apiVersion": "[variables('storageApiVersion')]",
+      "name": "[concat(parameters('storageAccount').name, '/default/', fx.GetResourceName(parameters('storageAccount').fileShares[copyIndex()]))]",
+      "apiVersion": "[variables('storageAccountApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccount').name)]"
       ],
       "properties": {
-        "shareQuota": "[parameters('storageAccount').fileShares[copyIndex()].size]"
+        "shareQuota": "[parameters('storageAccount').fileShares[copyIndex()].sizeGBs]"
       },
       "copy": {
         "name": "fileShares",
@@ -76,10 +76,26 @@
       }
     },
     {
+      "condition": "[not(equals(parameters('storageAccount').entityTables[copyIndex()].name, ''))]",
+      "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+      "name": "[concat(parameters('storageAccount').name, '/default/', fx.GetResourceName(parameters('storageAccount').entityTables[copyIndex()]))]",
+      "apiVersion": "[variables('storageAccountApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccount').name)]"
+      ],
+      "properties": {
+      },
+      "copy": {
+        "name": "entityTables",
+        "count": "[length(parameters('storageAccount').entityTables)]"
+      }
+    },
+    {
       "condition": "[not(equals(parameters('storageAccount').messageQueues[copyIndex()].name, ''))]",
       "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
-      "name": "[concat(parameters('storageAccount').name, '/default/', fx.GetChildName(parameters('storageAccount').messageQueues[copyIndex()].name))]",
-      "apiVersion": "[variables('storageApiVersion')]",
+      "name": "[concat(parameters('storageAccount').name, '/default/', fx.GetResourceName(parameters('storageAccount').messageQueues[copyIndex()]))]",
+      "apiVersion": "[variables('storageAccountApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccount').name)]"

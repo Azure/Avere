@@ -2,24 +2,43 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "imageTemplate": {
+    "managedIdentity": {
       "type": "object"
+    },
+    "imageTemplates": {
+      "type": "array"
     },
     "imageGallery": {
-      "type": "object"
-    },
-    "managedIdentity": {
       "type": "object"
     }
   },
   "variables": {
-    "imageBuilderApiVersion": "2020-02-14",
-    "imageGalleryApiVersion": "2020-09-30"
+    "imageBuilderApiVersion": "2020-02-14"
   },
+  "functions": [
+    {
+      "namespace": "fx",
+      "members": {
+        "GetResourceName": {
+          "parameters": [
+            {
+              "name": "resource",
+              "type": "object"
+            }
+          ],
+          "output": {
+            "type": "string",
+            "value": "[if(equals(parameters('resource').name, ''), uniqueString(string(parameters('resource'))), parameters('resource').name)]"
+          }
+        }
+      }
+    }
+  ],
   "resources": [
     {
+      "condition": "[not(equals(parameters('imageTemplates')[copyIndex()].name, ''))]",
       "type": "Microsoft.VirtualMachineImages/imageTemplates",
-      "name": "[parameters('imageTemplate').name]",
+      "name": "[fx.GetResourceName(parameters('imageTemplates')[copyIndex()])]",
       "apiVersion": "[variables('imageBuilderApiVersion')]",
       "location": "[resourceGroup().location]",
       "identity": {
@@ -30,38 +49,44 @@
         }
       },
       "properties": {
-        "buildTimeoutInMinutes": "[parameters('imageTemplate').buildTimeoutMinutes]",
+        "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].imageBuild.timeoutMinutes]",
         "vmProfile": {
-          "vmSize": "[parameters('imageTemplate').machineSize]"
+          "vmSize": "[parameters('imageTemplates')[copyIndex()].machineSize]"
         },
         "source": {
-          "type": "[parameters('imageTemplate').imageSourceType]",
-          "version": "[parameters('imageTemplate').imageSourceVersion]",
-          "publisher": "[reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('imageGallery').imageDefinitionName), variables('imageGalleryApiVersion')).identifier.publisher]",
-          "offer": "[reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('imageGallery').imageDefinitionName), variables('imageGalleryApiVersion')).identifier.offer]",
-          "sku": "[reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('imageGallery').imageDefinitionName), variables('imageGalleryApiVersion')).identifier.sku]"
+          "type": "[parameters('imageTemplates')[copyIndex()].imageSource.type]",
+          "publisher": "[parameters('imageTemplates')[copyIndex()].imageSource.publisher]",
+          "offer": "[parameters('imageTemplates')[copyIndex()].imageSource.offer]",
+          "sku": "[parameters('imageTemplates')[copyIndex()].imageSource.sku]",
+          "version": "[parameters('imageTemplates')[copyIndex()].imageSource.version]"
         },
-        "customize": "[parameters('imageTemplate').buildCustomizeCommands]",
+        "customize": "[parameters('imageTemplates')[copyIndex()].imageBuild.customizeCommands]",
         "distribute": [
           {
-            "type": "SharedImage",
-            "runOutputName": "SharedImage",
-            "galleryImageId": "[resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images/versions', parameters('imageGallery').name, parameters('imageGallery').imageDefinitionName, parameters('imageTemplate').imageOutputVersion)]",
+            "type": "[if(equals(parameters('imageGallery').name, ''), 'ManagedImage', 'SharedImage')]",
+            "runOutputName": "[parameters('imageTemplates')[copyIndex()].name]",
+            "imageId": "[if(equals(parameters('imageGallery').name, ''), resourceId('Microsoft.Compute/images', parameters('imageTemplates')[copyIndex()].name), Json('null'))]",
+            "galleryImageId": "[if(equals(parameters('imageGallery').name, ''), Json('null'), resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images/versions', parameters('imageGallery').name, parameters('imageTemplates')[copyIndex()].imageGallery.imageDefinitionName, parameters('imageTemplates')[copyIndex()].imageGallery.imageOutputVersion))]",
+            "location": "[resourceGroup().location]",
             "replicationRegions": [
               "[resourceGroup().location]"
             ],
             "artifactTags": {
-              "imageTemplateName": "[parameters('imageTemplate').name]"
+              "imageTemplateName": "[parameters('imageTemplates')[copyIndex()].name]"
             }
           }
         ]
+      },
+      "copy": {
+        "name": "imageTemplates",
+        "count": "[length(parameters('imageTemplates'))]"
       }
     }
   ],
   "outputs": {
-    "imageTemplate": {
-      "type": "object",
-      "value": "[parameters('imageTemplate')]"
+    "imageTemplates": {
+      "type": "array",
+      "value": "[parameters('imageTemplates')]"
     }
   }
 }

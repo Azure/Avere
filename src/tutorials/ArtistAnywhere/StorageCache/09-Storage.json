@@ -28,7 +28,7 @@
     }
   },
   "variables": {
-    "storageAccountApiVersion": "2020-08-01-preview",
+    "storageAccountApiVersion": "2021-01-01",
     "privateEndpointApiVersion": "2020-11-01"
   },
   "resources": [

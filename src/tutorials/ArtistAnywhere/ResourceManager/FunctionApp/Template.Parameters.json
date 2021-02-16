@@ -13,10 +13,6 @@
     "storageAccount": {
       "value": {
       }
-    },
-    "appInsights": {
-      "value": {
-      }
     }
   }
 }

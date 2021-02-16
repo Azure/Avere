@@ -19,19 +19,20 @@ function Set-ResourceGroup ($resourceGroupNamePrefix, $resourceGroupNameSuffix, 
 }
 
 function Set-RoleAssignment ($roleId, $principalId, $principalType, $scopeId, $scopeResourceGroup, $assignmentPropagationWait) {
+    $retryCount = 0
     $roleAssigned = $false
     do {
-        try {
-            if ($scopeResourceGroup) {
-                az role assignment create --role $roleId --assignee-object-id $principalId --assignee-principal-type $principalType --output none --resource-group $scopeId
-            } else {
-                az role assignment create --role $roleId --assignee-object-id $principalId --assignee-principal-type $principalType --output none --scope $scopeId
-            }
-            $roleAssigned = $true
-        } catch {
-            Write-Warning -Message $Error[0]
+        if ($scopeResourceGroup) {
+            $roleAssignment = (az role assignment create --role $roleId --assignee-object-id $principalId --assignee-principal-type $principalType --resource-group $scopeId) | ConvertFrom-Json
+        } else {
+            $roleAssignment = (az role assignment create --role $roleId --assignee-object-id $principalId --assignee-principal-type $principalType --scope $scopeId) | ConvertFrom-Json
         }
-    } while (!$roleAssigned)
+        if ($roleAssignment) {
+            $roleAssigned = $true
+        } else {
+            $retryCount++
+        }
+    } while (!$roleAssigned -and $retryCount -lt 3)
     if ($assignmentPropagationWait) {
         Start-Sleep -Seconds 180
     }
@@ -41,54 +42,54 @@ function Set-RoleAssignments ($moduleType, $storageAccountName, $computeNetwork,
     switch ($moduleType) {
         "Key Vault" {
             $principalType = "User"
-            $userId = az ad signed-in-user show --query "objectId"
-            $roleId = "00482a5a-887f-4fb3-b363-3b7fe8e74483"        # Key Vault Admnistrator
+            $userId = az ad signed-in-user show --query "objectId" --output "tsv"
+            $roleId = "00482a5a-887f-4fb3-b363-3b7fe8e74483" # Key Vault Admnistrator
             Set-RoleAssignment $roleId $userId $principalType $keyVault.id $false $false
         }
         "Storage" {
-            $userId = az ad signed-in-user show --query "objectId"
-            $storageId = az storage account show --name $storageAccountName --query "id"
+            $userId = az ad signed-in-user show --query "objectId" --output "tsv"
+            $storageId = az storage account show --name $storageAccountName --query "id" --output "tsv"
 
             $principalType = "User"
-            $roleId = "974c5e8b-45b9-4653-ba55-5f855dd0fb88"        # Storage Queue Data Contributor
+            $roleId = "974c5e8b-45b9-4653-ba55-5f855dd0fb88" # Storage Queue Data Contributor
             Set-RoleAssignment $roleId $userId $principalType $storageId $false $false
 
-            $roleId = "ba92f5b4-2d11-453d-a403-e96b0029c9fe"        # Storage Object Data Contributor
+            $roleId = "ba92f5b4-2d11-453d-a403-e96b0029c9fe" # Storage Object Data Contributor
             Set-RoleAssignment $roleId $userId $principalType $storageId $false $false
 
             $principalType = "ServicePrincipal"
-            $roleId = "2a2b9908-6ea1-4ae2-8e65-a410df84e7d1"        # Storage Object Data Reader
+            $roleId = "2a2b9908-6ea1-4ae2-8e65-a410df84e7d1" # Storage Object Data Reader
             Set-RoleAssignment $roleId $managedIdentity.principalId $principalType $storageId $false $false
 
-            $roleId = "acdd72a7-3385-48ef-bd42-f606fba81ae7"        # Reader
+            $roleId = "acdd72a7-3385-48ef-bd42-f606fba81ae7" # Reader
             Set-RoleAssignment $roleId $managedIdentity.principalId $principalType $storageId $false $true
         }
         "Image Builder" {
             $principalType = "ServicePrincipal"
 
-            $roleId = "b24988ac-6180-42a0-ab88-20f7382dd24c"        # Contributor
+            $roleId = "b24988ac-6180-42a0-ab88-20f7382dd24c" # Contributor
             Set-RoleAssignment $roleId $managedIdentity.principalId $principalType $imageGallery.resourceGroupName $true $false
 
-            $roleId = "9980e02c-c2be-4d73-94e8-173b1dc7cf3c"        # Virtual Machine Contributor
+            $roleId = "9980e02c-c2be-4d73-94e8-173b1dc7cf3c" # Virtual Machine Contributor
             Set-RoleAssignment $roleId $managedIdentity.principalId $principalType $computeNetwork.resourceGroupName $true $false
         }
         "CycleCloud" {
             $principalType = "ServicePrincipal"
 
-            $roleId = "b24988ac-6180-42a0-ab88-20f7382dd24c"        # Contributor
-            $subscriptionId = az account show --query "id"
+            $roleId = "b24988ac-6180-42a0-ab88-20f7382dd24c" # Contributor
+            $subscriptionId = az account show --query "id" --output "tsv"
             Set-RoleAssignment $roleId $managedIdentity.principalId $principalType "/subscriptions/$subscriptionId" $false $false
 
-            $roleId = "acdd72a7-3385-48ef-bd42-f606fba81ae7"        # Reader
+            $roleId = "acdd72a7-3385-48ef-bd42-f606fba81ae7" # Reader
             Set-RoleAssignment $roleId $managedIdentity.principalId $principalType $eventGridTopicId $false $false
          }
         "Batch" {
             $principalType = "ServicePrincipal"
 
-            $principalId = "f520d84c-3fd3-4cc8-88d4-2ed25b00d27a"   # Microsoft Azure Batch
-            $roleId = "b24988ac-6180-42a0-ab88-20f7382dd24c"        # Contributor
+            $principalId = "f520d84c-3fd3-4cc8-88d4-2ed25b00d27a" # Microsoft Azure Batch
+            $roleId = "b24988ac-6180-42a0-ab88-20f7382dd24c"      # Contributor
 
-            $subscriptionId = az account show --query "id"
+            $subscriptionId = az account show --query "id" --output "tsv"
             $subscriptionId = "/subscriptions/$subscriptionId"
 
             Set-RoleAssignment $roleId $principalId $principalType $subscriptionId $false $false
