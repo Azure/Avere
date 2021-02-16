@@ -24,10 +24,8 @@ const (
 	MinimumJobsOnDirRead = 128
 	PrimeIndexIncr       = 59
 
-	// a warm job specifies a full path warm job
-	DefaultCacheJobSubmitterDir = ".cachewarmjob"
-	// a warm worker job describes the files to warm in a path
-	DefaultCacheWorkerJobsDir = ".cachewarmworkerjobs"
+	WarmPathJobQueueSuffix = "job"
+	WorkQueueSuffix        = "work"
 
 	// the base mount path
 	DefaultCacheWarmerMountPath = "/mnt/cachewarmer"
@@ -37,6 +35,9 @@ const (
 	jobCheckInterval    = time.Duration(5) * time.Second  // check for jobs every 5 seconds
 	refreshWorkInterval = time.Duration(10) * time.Second // update job timestamp every 30s
 	staleFileAge        = time.Duration(60) * time.Second // take a work file if not updated for 60s
+
+	NumberOfMessagesToDequeue    = 1
+	CacheWarmerVisibilityTimeout = time.Duration(60) * time.Second // 10 minute visibility timeout
 
 	// retry mounting for 10 minutes
 	MountRetryCount        = 60

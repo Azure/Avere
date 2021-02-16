@@ -21,14 +21,10 @@ import (
 // WarmPathManager contains the information for the manager
 type WarmPathManager struct {
 	AzureClients          *AzureClients
-	JobSubmitterPath      string
-	JobWorkerPath         string
+	Queues                *CacheWarmerQueues
 	bootstrapMountAddress string
 	bootstrapExportPath   string
 	bootstrapScriptPath   string
-	jobMountAddress       string
-	jobExportPath         string
-	jobBasePath           string
 	vmssUserName          string
 	vmssPassword          string
 	vmssSshPublicKey      string
@@ -38,28 +34,20 @@ type WarmPathManager struct {
 // InitializeWarmPathManager initializes the job submitter structure
 func InitializeWarmPathManager(
 	azureClients *AzureClients,
-	jobSubmitterPath string,
-	jobWorkerPath string,
+	queues *CacheWarmerQueues,
 	bootstrapMountAddress string,
 	bootstrapExportPath string,
 	bootstrapScriptPath string,
-	jobMountAddress string,
-	jobExportPath string,
-	jobBasePath string,
 	vmssUserName string,
 	vmssPassword string,
 	vmssSshPublicKey string,
 	vmssSubnet string) *WarmPathManager {
 	return &WarmPathManager{
 		AzureClients:          azureClients,
-		JobSubmitterPath:      jobSubmitterPath,
-		JobWorkerPath:         jobWorkerPath,
+		Queues:                queues,
 		bootstrapMountAddress: bootstrapMountAddress,
 		bootstrapExportPath:   bootstrapExportPath,
 		bootstrapScriptPath:   bootstrapScriptPath,
-		jobMountAddress:       jobMountAddress,
-		jobExportPath:         jobExportPath,
-		jobBasePath:           jobBasePath,
 		vmssUserName:          vmssUserName,
 		vmssPassword:          vmssPassword,
 		vmssSshPublicKey:      vmssSshPublicKey,
@@ -87,7 +75,14 @@ func (m *WarmPathManager) RunJobGenerator(ctx context.Context, syncWaitGroup *sy
 		case <-ticker.C:
 			if time.Since(lastJobCheckTime) > timeBetweenJobCheck {
 				lastJobCheckTime = time.Now()
-				log.Info.Printf("check jobs in path %s", m.JobSubmitterPath)
+				log.Info.Printf("check jobs in queue")
+
+				if isEmpty, err := m.Queues.IsJobQueueEmpty(); err != nil {
+					log.Error.Printf("error checking if job queue was empty: %v", err)
+				} else if isEmpty == false {
+					// process the job
+
+				}
 
 				files, err := ioutil.ReadDir(m.JobSubmitterPath)
 				if err != nil {

@@ -3,12 +3,13 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Azure/Avere/src/go/pkg/cachewarmer"
@@ -30,14 +31,19 @@ func usage(errs ...error) {
 	flag.PrintDefaults()
 }
 
-func initializeApplicationVariables() (*cachewarmer.WarmPathJob, bool) {
+func initializeApplicationVariables(ctx Context) (*cachewarmer.WarmPathJob, *cachewarmer.CacheWarmerQueues, bool) {
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
 	var warmTargetMountAddresses = flag.String("warmTargetMountAddresses", "", "the warm target cache filer mount addresses separated by commas")
 	var warmTargetExportPath = flag.String("warmTargetExportPath", "", "the warm target export path")
 	var warmTargetPath = flag.String("warmTargetPath", "", "the warm target path")
-	var jobMountAddress = flag.String("jobMountAddress", "", "the mount address for warm job processing")
-	var jobExportPath = flag.String("jobExportPath", "", "the export path for warm job processing")
-	var jobBasePath = flag.String("jobBasePath", "", "the warm job processing path")
+
+	var inclusionCsv = flag.String("inclusionCsv", "", "the inclusion list of file match strings per https://golang.org/pkg/path/filepath/#Match.  Leave blank to include everything.")
+	var exclusionCsv = flag.String("inclusionCsv", "", "the exclusion list of file match strings per https://golang.org/pkg/path/filepath/#Match.  Leave blank to not exlude anything.")
+
+	var storageAccount = flag.String("storageAccountName", "", "the storage account name to host the queue")
+	var storageKey = flag.String("storageKey", "", "the storage key to access the queue")
+	var queueNamePrefix = flag.String("queueNamePrefix", "", "the queue name to be used for organizing the work. The queues will be created automatically")
+
 	var blockUntilWarm = flag.Bool("blockUntilWarm", false, "the job submitter will not return until there are no more jobs")
 
 	flag.Parse()
@@ -65,38 +71,55 @@ func initializeApplicationVariables() (*cachewarmer.WarmPathJob, bool) {
 		os.Exit(1)
 	}
 
-	if len(*jobMountAddress) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: jobMountAddress is not specified\n")
+	if len(*storageAccount) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: storageAccount is not specified\n")
 		usage()
 		os.Exit(1)
 	}
 
-	if len(*jobExportPath) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: jobExportPath is not specified\n")
+	if len(*storageKey) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: storageKey is not specified\n")
 		usage()
 		os.Exit(1)
 	}
 
-	if len(*jobBasePath) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: jobBasePath is not specified\n")
+	if len(*queueNamePrefix) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: queueNamePrefix is not specified\n")
 		usage()
 		os.Exit(1)
 	}
 
-	return cachewarmer.InitializeWarmPathJob(
+	if isValid, errorMessage := ValidateQueueName(*queueNamePrefix); isValid == false {
+		fmt.Fprintf(os.Stderr, "ERROR: queueNamePrefix is not valid: %s\n", errorMessage)
+		usage()
+		os.Exit(1)
+	}
+
+	warmJobPath := cachewarmer.InitializeWarmPathJob(
+		ctx,
 		targetMountAddessSlice,
 		*warmTargetExportPath,
 		*warmTargetPath,
-		*jobMountAddress,
-		*jobExportPath,
-		*jobBasePath), *blockUntilWarm
+		*inclusionCsv,
+		*exclusionCsv)
+
+	cacheWarmerQueues, err := cachewarmer.InitializeCacheWarmerQueues(
+		ctx,
+		*storageAccount,
+		*storageKey,
+		*queueNamePrefix)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: error initializing queue %v\n", err)
+		os.Exit(1)
+	}
+
+	return warmJobPath, cacheWarmerQueues, *blockUntilWarm
 }
 
-func BlockUntilWarm(jobSubmitterPath string, jobWorkerPath string) {
-	log.Status.Printf("blocking until warm")
-	// wait on ctrl-c
-	sigchan := make(chan os.Signal, 10)
-	signal.Notify(sigchan, os.Interrupt)
+func BlockUntilWarm(ctx context.Context, syncWaitGroup *sync.WaitGroup, cacheWarmerQueues *cachewarmer.CacheWarmerQueues) {
+	defer syncWaitGroup.Done()
+	log.Debug.Printf("[BlockUntilWarm")
+	defer log.Debug.Printf("BlockUntilWarm]")
 
 	lastCheckTime := time.Now().Add(-timeBetweenBlockCheck)
 	ticker := time.NewTicker(tick)
@@ -105,30 +128,22 @@ func BlockUntilWarm(jobSubmitterPath string, jobWorkerPath string) {
 	jobDirectoryEmpty := false
 	for {
 		select {
-		case <-sigchan:
-			log.Info.Printf("Received ctrl-c, stopping...")
+		case <-ctx.Done():
 			return
 		case <-ticker.C:
 			if time.Since(lastCheckTime) > timeBetweenBlockCheck {
 				lastCheckTime = time.Now()
-				if !jobDirectoryEmpty {
-					// check the job directory
-					files, err := ioutil.ReadDir(jobSubmitterPath)
-					if err != nil {
-						log.Error.Printf("error reading path %s: %v", jobSubmitterPath, err)
-						continue
-					}
-					if len(files) == 0 {
+				if jobDirectoryEmpty {
+					if isEmpty, err := cacheWarmerQueues.IsJobQueueEmpty(); err != nil {
+						log.Error.Printf("error checking if job queue was empty: %v", err)
+					} else if isEmpty == true {
 						log.Status.Printf("job directory empty, now checking worker job directory")
 						jobDirectoryEmpty = true
 					}
 				} else {
-					// check the worker job directory
-					exists, _, err := cachewarmer.JobsExist(jobWorkerPath)
-					if err != nil {
-						log.Error.Printf("error encountered checking for job existence: %v", err)
-					}
-					if !exists {
+					if isEmpty, err := cacheWarmerQueues.IsWorkQueueEmpty(); err != nil {
+						log.Error.Printf("error checking if work queue was empty: %v", err)
+					} else if isEmpty == true {
 						log.Status.Printf("warming complete")
 						return
 					}
@@ -139,25 +154,34 @@ func BlockUntilWarm(jobSubmitterPath string, jobWorkerPath string) {
 }
 
 func main() {
+	// setup the shared context
+	ctx, cancel := context.WithCancel(context.Background())
 
 	// initialize the variables
-	jobSubmitter, blockUntilWarm := initializeApplicationVariables()
-
-	log.Status.Printf("job submitter started: %v", jobSubmitter)
+	warmPathJob, cacheWarmerQueues, blockUntilWarm := initializeApplicationVariables(ctx)
 
 	// write the job to the warm path
-	if err := jobSubmitter.WriteJob(); err != nil {
+	if err := cacheWarmerQueues.WriteJob(warmPathJob); err != nil {
 		log.Error.Printf("ERROR: encountered error while writing job: %v", err)
 		os.Exit(1)
 	}
 
 	if blockUntilWarm {
-		jobSubmitterPath, jobWorkerPath, err := jobSubmitter.GetJobPaths()
-		if err != nil {
-			log.Error.Printf("ERROR: encountered while getting job paths %v", err)
-			os.Exit(1)
-		}
-		BlockUntilWarm(jobSubmitterPath, jobWorkerPath)
+		syncWaitGroup.Add(1)
+		go BlockUntilWarm(ctx, &syncWaitGroup, cacheWarmerQueues)
+
+		log.Info.Printf("wait for ctrl-c")
+		// wait on ctrl-c
+		sigchan := make(chan os.Signal, 10)
+		// catch all signals will cause cancellation when mounted, we need to
+		// filter out better
+		// signal.Notify(sigchan)
+		signal.Notify(sigchan, os.Interrupt)
+		<-sigchan
+		log.Info.Printf("Received ctrl-c, stopping services...")
+		cancel()
+		log.Info.Printf("Waiting for all processes to finish")
+		syncWaitGroup.Wait()
 	}
 
 	log.Status.Printf("job submitter finished")
