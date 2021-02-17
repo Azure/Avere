@@ -23,6 +23,7 @@ const (
 // Queue represents a single azure storage queue
 // The implementation has been influenced by https://github.com/Azure/azure-storage-queue-go/blob/master/azqueue/zt_examples_test.go
 type Queue struct {
+	QueueURL    azqueue.QueueURL
 	MessagesURL azqueue.MessagesURL
 	Context     context.Context
 }
@@ -52,14 +53,23 @@ func ValidateQueueName(queueName string) (bool, string) {
 	return true, ""
 }
 
-// InitializeQueue creates a Queue to represent the Azure Storage Queue
+// InitializeQueue creates a Queue to represent the Azure Storage Queue, panic if error
 func InitializeQueue(ctx context.Context, storageAccount string, storageAccountKey string, queueName string) *Queue {
+	queue, err := InitializeQueueNonFatal(ctx, storageAccount, storageAccountKey, queueName)
+	if err != nil {
+		log.Error.Printf("unable to initialize the queue, failure with error: %v", err)
+		panic(err)
+	}
+	return queue
+}
+
+// InitializeQueueNonFatal creates a Queue to represent the Azure Storage Queue
+func InitializeQueueNonFatal(ctx context.Context, storageAccount string, storageAccountKey string, queueName string) (*Queue, error) {
 
 	credential, err := azqueue.NewSharedKeyCredential(storageAccount, storageAccountKey)
 
 	if err != nil {
-		log.Error.Printf("unable to get the credentials: %v", err)
-		panic(err)
+		return nil, fmt.Errorf("unable to get the credentials: %v", err)
 	}
 
 	p := azqueue.NewPipeline(credential, azqueue.PipelineOptions{})
@@ -74,7 +84,7 @@ func InitializeQueue(ctx context.Context, storageAccount string, storageAccountK
 	// create the queue if it does not already exist
 	if queueCreateResponse, err := queueURL.Create(ctx, azqueue.Metadata{}); err != nil {
 		if serr, ok := err.(azqueue.StorageError); !ok || serr.ServiceCode() != azqueue.ServiceCodeQueueAlreadyExists {
-			log.Error.Printf("error encountered: %v", serr.ServiceCode())
+			return nil, fmt.Errorf("error encountered: %v", serr.ServiceCode())
 		}
 	} else if queueCreateResponse.StatusCode() == 201 {
 		log.Info.Printf("successfully created queue '%s'", queueName)
@@ -83,9 +93,18 @@ func InitializeQueue(ctx context.Context, storageAccount string, storageAccountK
 	messagesURL := queueURL.NewMessagesURL()
 
 	return &Queue{
+		QueueURL:    queueURL,
 		MessagesURL: messagesURL,
 		Context:     ctx,
+	}, nil
+}
+
+func (q *Queue) IsQueueEmpty() (bool, error) {
+	response, err := q.QueueURL.GetProperties(q.Context)
+	if err != nil {
+		return false, err
 	}
+	return response.ApproximateMessagesCount() == 0, nil
 }
 
 // Enqueue enqueues the message to the queue
@@ -99,8 +118,17 @@ func (q *Queue) Dequeue(maxMessages int32, visibilityTimeout time.Duration) (*az
 	return q.MessagesURL.Dequeue(q.Context, maxMessages, visibilityTimeout)
 }
 
+func (q *Queue) Peek(maxMessages int32) (*azqueue.PeekedMessagesResponse, error) {
+	return q.MessagesURL.Peek(q.Context, maxMessages)
+}
+
 // DeleteMessage deletes the message from the queue
 func (q *Queue) DeleteMessage(messageID azqueue.MessageID, popReceipt azqueue.PopReceipt) (*azqueue.MessageIDDeleteResponse, error) {
 	msgIDURL := q.MessagesURL.NewMessageIDURL(messageID)
 	return msgIDURL.Delete(q.Context, popReceipt)
+}
+
+func (q *Queue) UpdateVisibilityTimeout(messageID azqueue.MessageID, popReceipt azqueue.PopReceipt, visibilityTimeout time.Duration, message string) (*azqueue.UpdatedMessageResponse, error) {
+	msgIDURL := q.MessagesURL.NewMessageIDURL(messageID)
+	return msgIDURL.Update(q.Context, popReceipt, visibilityTimeout, message)
 }

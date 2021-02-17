@@ -4,12 +4,9 @@ package cachewarmer
 
 import (
 	"encoding/json"
-	"fmt"
-	"hash/fnv"
-	"path"
-	"time"
+	"strings"
 
-	"github.com/Azure/Avere/src/go/pkg/log"
+	"github.com/Azure/azure-storage-queue-go/azqueue"
 )
 
 // WarmPathJob contains the information for a new job item
@@ -17,26 +14,30 @@ type WarmPathJob struct {
 	WarmTargetMountAddresses []string
 	WarmTargetExportPath     string
 	WarmTargetPath           string
-	jobMountAddress          string
-	jobExportPath            string
-	jobBasePath              string
+	InclusionList            []string
+	ExclusionList            []string
+	queueMessageID           *azqueue.MessageID
+	queuePopReceipt          *azqueue.PopReceipt
+}
+
+func (j *WarmPathJob) FileMatches(filename string) bool {
+	return FileMatches(j.InclusionList, j.ExclusionList, filename)
 }
 
 // InitializeWarmPathJob initializes the job submitter structure
 func InitializeWarmPathJob(
-	warmTargetMountAddresses []string,
+	warmTargetMountAddresses string,
 	warmTargetExportPath string,
 	warmTargetPath string,
-	jobMountAddress string,
-	jobExportPath string,
-	jobBasePath string) *WarmPathJob {
+	inclusionCsv string,
+	exclusionCsv string) *WarmPathJob {
+
 	return &WarmPathJob{
-		WarmTargetMountAddresses: warmTargetMountAddresses,
+		WarmTargetMountAddresses: prepareCsvList(warmTargetMountAddresses),
 		WarmTargetExportPath:     warmTargetExportPath,
 		WarmTargetPath:           warmTargetPath,
-		jobMountAddress:          jobMountAddress,
-		jobExportPath:            jobExportPath,
-		jobBasePath:              jobBasePath,
+		InclusionList:            prepareCsvList(inclusionCsv),
+		ExclusionList:            prepareCsvList(exclusionCsv),
 	}
 }
 
@@ -50,42 +51,6 @@ func InitializeWarmPathJobFromString(warmPathJobContents string) (*WarmPathJob, 
 	return &result, nil
 }
 
-// WriteJob outputs a JSON file
-func (j *WarmPathJob) WriteJob() error {
-	// create the job path if not exists
-	jobSubmitterPath, err := EnsureJobSubmitterPath(j.jobMountAddress, j.jobExportPath, j.jobBasePath)
-	if err != nil {
-		return fmt.Errorf("encountered error while ensuring path %s: %v", jobSubmitterPath, err)
-	}
-
-	// get the JSON output
-	fileContents, err := j.GetWarmPathJobFileContents()
-	if err != nil {
-		return err
-	}
-
-	// write the file
-	jobFile := j.GenerateWarmPathJobFilename(jobSubmitterPath)
-	log.Debug.Printf("write warm job file %s", jobFile)
-	if err := WriteFile(jobFile, fileContents); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (j *WarmPathJob) GetJobPaths() (string, string, error) {
-	jobSubmitterPath, err := EnsureJobSubmitterPath(j.jobMountAddress, j.jobExportPath, j.jobBasePath)
-	if err != nil {
-		return "", "", fmt.Errorf("encountered error while ensuring path %s: %v", jobSubmitterPath, err)
-	}
-	workerJobPath, err := EnsureWorkerJobPath(j.jobMountAddress, j.jobExportPath, j.jobBasePath)
-	if err != nil {
-		return "", "", fmt.Errorf("encountered error while ensuring path %s: %v", jobSubmitterPath, err)
-	}
-	return jobSubmitterPath, workerJobPath, nil
-}
-
 // GetWarmPathJobFileContents returns the contents of the file
 func (j *WarmPathJob) GetWarmPathJobFileContents() (string, error) {
 	data, err := json.Marshal(j)
@@ -95,12 +60,22 @@ func (j *WarmPathJob) GetWarmPathJobFileContents() (string, error) {
 	return string(data), nil
 }
 
-// GenerateJobFilename generates a file name based on time, and the warm path
-func (j *WarmPathJob) GenerateWarmPathJobFilename(jobSubmitterPath string) string {
-	// generate a hashcode of the string
-	h := fnv.New32a()
-	h.Write([]byte(j.WarmTargetPath))
+func (j *WarmPathJob) SetQueueMessageInfo(id *azqueue.MessageID, popReceipt *azqueue.PopReceipt) {
+	j.queueMessageID = id
+	j.queuePopReceipt = popReceipt
+}
 
-	t := time.Now()
-	return path.Join(jobSubmitterPath, fmt.Sprintf("%02d-%02d-%02d-%02d%02d%02d-%d.job", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), h.Sum32()))
+func (j *WarmPathJob) GetQueueMessageInfo() (*azqueue.MessageID, *azqueue.PopReceipt) {
+	return j.queueMessageID, j.queuePopReceipt
+}
+
+func prepareCsvList(csv string) []string {
+	result := []string{}
+	for _, s := range strings.Split(csv, ",") {
+		trim := strings.TrimSpace(s)
+		if len(trim) > 0 {
+			result = append(result, trim)
+		}
+	}
+	return result
 }

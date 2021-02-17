@@ -15,9 +15,9 @@ module "cachewarmer_submitmultipejobs" {
   ssh_key_data = local.vm_ssh_key_data
   
   // the job path
-  jobMount_address = "10.0.1.11"
-  job_export_path = "/data"
-  job_base_path = "/"
+  storage_account = "REPLACE"
+  storage_key = "REPLACE"
+  queue_name_prefix = "isilonfiler1"
 
   // the path to warm
   warm_mount_addresses = join(",", tolist([

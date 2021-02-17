@@ -31,14 +31,16 @@ func usage(errs ...error) {
 	flag.PrintDefaults()
 }
 
-func initializeApplicationVariables() *cachewarmer.WarmPathManager {
+func initializeApplicationVariables(ctx context.Context) *cachewarmer.WarmPathManager {
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
 	var bootstrapMountAddress = flag.String("bootstrapMountAddress", "", "the mount address that hosts the worker bootstrap script")
 	var bootstrapExportPath = flag.String("bootstrapExportPath", "", "the export path that hosts the worker bootstrap script")
 	var bootstrapScriptPath = flag.String("bootstrapScriptPath", "", "the path to the worker bootstrap script")
-	var jobMountAddress = flag.String("jobMountAddress", "", "the mount address for warm job processing")
-	var jobExportPath = flag.String("jobExportPath", "", "the export path for warm job processing")
-	var jobBasePath = flag.String("jobBasePath", "", fmt.Sprintf("the warm job processing path, writeable by the manager for job queueing.  The manager will create the subpaths '%s' and '%s' to hold the jobs", cachewarmer.DefaultCacheJobSubmitterDir, cachewarmer.DefaultCacheWorkerJobsDir))
+
+	var storageAccount = flag.String("storageAccountName", "", "the storage account name to host the queue")
+	var storageKey = flag.String("storageKey", "", "the storage key to access the queue")
+	var queueNamePrefix = flag.String("queueNamePrefix", "", "the queue name to be used for organizing the work. The queues will be created automatically")
+
 	var vmssUserName = flag.String("vmssUserName", "", "the username for the vmss vms")
 	var vmssPassword = flag.String("vmssPassword", "", "(optional) the password for the vmss vms, this is unused if the public key is specified")
 	var vmssSshPublicKey = flag.String("vmssSshPublicKey", "", "(optional) the ssh public key for the vmss vms, this will be used by default, however if this is blank, the password will be used")
@@ -68,20 +70,26 @@ func initializeApplicationVariables() *cachewarmer.WarmPathManager {
 		os.Exit(1)
 	}
 
-	if len(*jobMountAddress) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: jobMountAddress is not specified\n")
+	if len(*storageAccount) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: storageAccount is not specified\n")
 		usage()
 		os.Exit(1)
 	}
 
-	if len(*jobExportPath) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: jobExportPath is not specified\n")
+	if len(*storageKey) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: storageKey is not specified\n")
 		usage()
 		os.Exit(1)
 	}
 
-	if len(*jobBasePath) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: jobBasePath is not specified\n")
+	if len(*queueNamePrefix) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: queueNamePrefix is not specified\n")
+		usage()
+		os.Exit(1)
+	}
+
+	if isValid, errorMessage := azure.ValidateQueueName(*queueNamePrefix); isValid == false {
+		fmt.Fprintf(os.Stderr, "ERROR: queueNamePrefix is not valid: %s\n", errorMessage)
 		usage()
 		os.Exit(1)
 	}
@@ -104,32 +112,29 @@ func initializeApplicationVariables() *cachewarmer.WarmPathManager {
 		os.Exit(1)
 	}
 
-	jobSubmitterPath, err := cachewarmer.EnsureJobSubmitterPath(*jobMountAddress, *jobExportPath, *jobBasePath)
+	cacheWarmerQueues, err := cachewarmer.InitializeCacheWarmerQueues(
+		ctx,
+		*storageAccount,
+		*storageKey,
+		*queueNamePrefix)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: error ensuring job submitter path %v", err)
-		os.Exit(1)
-	}
-
-	jobWorkerPath, err := cachewarmer.EnsureWorkerJobPath(*jobMountAddress, *jobExportPath, *jobBasePath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: error ensuring job worker path %v", err)
+		fmt.Fprintf(os.Stderr, "ERROR: error initializing queue %v\n", err)
 		os.Exit(1)
 	}
 
 	return cachewarmer.InitializeWarmPathManager(
 		azureClients,
-		jobSubmitterPath,
-		jobWorkerPath,
+		cacheWarmerQueues,
 		*bootstrapMountAddress,
 		*bootstrapExportPath,
 		*bootstrapScriptPath,
-		*jobMountAddress,
-		*jobExportPath,
-		*jobBasePath,
 		*vmssUserName,
 		*vmssPassword,
 		*vmssSshPublicKey,
 		*vmssSubnetName,
+		*storageAccount,
+		*storageKey,
+		*queueNamePrefix,
 	)
 }
 
@@ -138,7 +143,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// initialize the variables
-	warmPathManager := initializeApplicationVariables()
+	warmPathManager := initializeApplicationVariables(ctx)
 
 	// initialize the sync wait group
 	syncWaitGroup := sync.WaitGroup{}

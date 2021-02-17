@@ -6,9 +6,9 @@ set -x
 # NEED following ENV VARS
 # BOOTSTRAP_PATH
 # BOOTSTRAP_SCRIPT
-# JOB_MOUNT_ADDRESS - the nfs address of the filer hosting cache warmer jobs
-# JOB_EXPORT_PATH - the nfs export path for the cache warmer jobs
-# JOB_BASE_PATH - the job base path, usually '/'
+# STORAGE_ACCOUNT - the storage account hosting the job queue
+# STORAGE_KEY - the key to the storage account
+# QUEUE_PREFIX - the queue prefix
 
 SERVICE_USER=root
 RSYSLOG_FILE="36-cachewarmer-worker.conf"
@@ -32,9 +32,9 @@ function write_system_files() {
     cp $SRC_FILE $DST_FILE
     sed -i "s/USERREPLACE/$SERVICE_USER/g" $DST_FILE
     sed -i "s/GROUPREPLACE/$SERVICE_USER/g" $DST_FILE
-    sed -i "s/JOBMOUNTADDRESSREPLACE/$JOB_MOUNT_ADDRESS/g" $DST_FILE
-    sed -i "s:JOBEXPORTREPLACE:$JOB_EXPORT_PATH:g" $DST_FILE
-    sed -i "s:JOBBASEREPLACE:$JOB_BASE_PATH:g" $DST_FILE
+    sed -i "s/STORAGEACCOUNTREPLACE/$STORAGE_ACCOUNT/g" $DST_FILE
+    sed -i "s:STORAGEKEYREPLACE:$STORAGE_KEY:g" $DST_FILE
+    sed -i "s:QUEUEPREFIXREPLACE:$QUEUE_PREFIX:g" $DST_FILE
 
     if [ -f '/etc/centos-release' ]; then 
         sed -i "s/chown syslog:adm/chown root:root/g" $DST_FILE

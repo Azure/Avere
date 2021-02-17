@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"sync"
 
+	"github.com/Azure/Avere/src/go/pkg/azure"
 	"github.com/Azure/Avere/src/go/pkg/cachewarmer"
 	"github.com/Azure/Avere/src/go/pkg/log"
 )
@@ -25,11 +26,11 @@ func usage(errs ...error) {
 	flag.PrintDefaults()
 }
 
-func initializeApplicationVariables() *cachewarmer.Worker {
+func initializeApplicationVariables(ctx context.Context) *cachewarmer.Worker {
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
-	var jobMountAddress = flag.String("jobMountAddress", "", "the mount address for warm job processing")
-	var jobExportPath = flag.String("jobExportPath", "", "the export path for warm job processing")
-	var jobBasePath = flag.String("jobBasePath", "", "the warm job processing path")
+	var storageAccount = flag.String("storageAccountName", "", "the storage account name to host the queue")
+	var storageKey = flag.String("storageKey", "", "the storage key to access the queue")
+	var queueNamePrefix = flag.String("queueNamePrefix", "", "the queue name to be used for organizing the work. The queues will be created automatically")
 
 	flag.Parse()
 
@@ -37,31 +38,41 @@ func initializeApplicationVariables() *cachewarmer.Worker {
 		log.EnableDebugging()
 	}
 
-	if len(*jobMountAddress) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: jobMountAddress is not specified\n")
+	if len(*storageAccount) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: storageAccount is not specified\n")
 		usage()
 		os.Exit(1)
 	}
 
-	if len(*jobExportPath) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: jobExportPath is not specified\n")
+	if len(*storageKey) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: storageKey is not specified\n")
 		usage()
 		os.Exit(1)
 	}
 
-	if len(*jobBasePath) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: jobBasePath is not specified\n")
+	if len(*queueNamePrefix) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: queueNamePrefix is not specified\n")
 		usage()
 		os.Exit(1)
 	}
 
-	jobWorkerPath, err := cachewarmer.EnsureWorkerJobPath(*jobMountAddress, *jobExportPath, *jobBasePath)
+	if isValid, errorMessage := azure.ValidateQueueName(*queueNamePrefix); isValid == false {
+		fmt.Fprintf(os.Stderr, "ERROR: queueNamePrefix is not valid: %s\n", errorMessage)
+		usage()
+		os.Exit(1)
+	}
+
+	cacheWarmerQueues, err := cachewarmer.InitializeCacheWarmerQueues(
+		ctx,
+		*storageAccount,
+		*storageKey,
+		*queueNamePrefix)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: error ensuring job worker path %v", err)
+		fmt.Fprintf(os.Stderr, "ERROR: error initializing queue %v\n", err)
 		os.Exit(1)
 	}
 
-	return cachewarmer.InitializeWorker(jobWorkerPath)
+	return cachewarmer.InitializeWorker(cacheWarmerQueues)
 }
 
 func main() {
@@ -69,7 +80,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// initialize the variables
-	warmPathManager := initializeApplicationVariables()
+	warmPathManager := initializeApplicationVariables(ctx)
 
 	// initialize the sync wait group
 	syncWaitGroup := sync.WaitGroup{}
