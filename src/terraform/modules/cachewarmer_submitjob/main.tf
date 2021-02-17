@@ -16,7 +16,7 @@ resource "null_resource" "cachewarmer_submitjob" {
   provisioner "remote-exec" {
     inline = [
       "set -x",
-      "sudo /usr/local/bin/cachewarmer-jobsubmitter -jobBasePath ${var.job_base_path} -jobExportPath ${var.job_export_path} -jobMountAddress ${var.jobMount_address} -warmTargetExportPath ${var.warm_target_export_path} -warmTargetMountAddresses \"${var.warm_mount_addresses}\" -warmTargetPath \"${var.warm_target_path}\" ${local.block_flag}",
+      "sudo /usr/local/bin/cachewarmer-jobsubmitter -storageAccountName ${var.storage_account} -storageKey ${var.storage_key} -queueNamePrefix ${var.queue_name_prefix} -warmTargetExportPath ${var.warm_target_export_path} -warmTargetMountAddresses \"${var.warm_mount_addresses}\" -warmTargetPath \"${var.warm_target_path}\" ${local.block_flag}",
     ]
   }
 

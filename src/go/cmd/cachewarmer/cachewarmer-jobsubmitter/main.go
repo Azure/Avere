@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
 	"sync"
 	"time"
 
@@ -58,7 +57,6 @@ func initializeApplicationVariables(ctx context.Context) (*cachewarmer.WarmPathJ
 		usage()
 		os.Exit(1)
 	}
-	targetMountAddessSlice := strings.Split(*warmTargetMountAddresses, ",")
 
 	if len(*warmTargetExportPath) == 0 {
 		fmt.Fprintf(os.Stderr, "ERROR: warmTargetExportPath not specified\n")
@@ -97,7 +95,7 @@ func initializeApplicationVariables(ctx context.Context) (*cachewarmer.WarmPathJ
 	}
 
 	warmJobPath := cachewarmer.InitializeWarmPathJob(
-		targetMountAddessSlice,
+		*warmTargetMountAddresses,
 		*warmTargetExportPath,
 		*warmTargetPath,
 		*inclusionCsv,

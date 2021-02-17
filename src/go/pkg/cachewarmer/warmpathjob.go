@@ -26,14 +26,14 @@ func (j *WarmPathJob) FileMatches(filename string) bool {
 
 // InitializeWarmPathJob initializes the job submitter structure
 func InitializeWarmPathJob(
-	warmTargetMountAddresses []string,
+	warmTargetMountAddresses string,
 	warmTargetExportPath string,
 	warmTargetPath string,
 	inclusionCsv string,
 	exclusionCsv string) *WarmPathJob {
 
 	return &WarmPathJob{
-		WarmTargetMountAddresses: warmTargetMountAddresses,
+		WarmTargetMountAddresses: prepareCsvList(warmTargetMountAddresses),
 		WarmTargetExportPath:     warmTargetExportPath,
 		WarmTargetPath:           warmTargetPath,
 		InclusionList:            prepareCsvList(inclusionCsv),
