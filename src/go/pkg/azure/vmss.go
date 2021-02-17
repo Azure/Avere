@@ -189,7 +189,7 @@ func (v *VmssOperationManager) IsComplete(vmssName string) bool {
 	return !ok
 }
 
-func (v *VmssOperationManager) AddWatchOperation(vmssName string, futureAPI azure.FutureApi) {
+func (v *VmssOperationManager) AddWatchOperation(vmssName string, futureAPI azure.FutureAPI) {
 	log.Debug.Printf("[vmss.AddWatchOperation")
 	defer log.Debug.Printf("vmss.AddWatchOperation]")
 	v.mux.Lock()
@@ -204,6 +204,6 @@ func (v *VmssOperationManager) AddWatchOperation(vmssName string, futureAPI azur
 	v.vmssFutureMap[vmssName] = &VmssOperation{
 		LastQuery:    time.Now(),
 		WaitDuration: delay,
-		FutureApi:    futureAPI,
+		FutureAPI:    futureAPI,
 	}
 }
