@@ -7,9 +7,9 @@ param (
         "name" = ""
         "type" = "GlobalDocumentDB"
         "offerType" = "Standard"
-        "userInterfaceType" = "Non-Production"
         "defaultExperience" = "Core (SQL)"
-        "capabilities" = @(
+        "userInterfaceType" = "Non-Production"
+        "capabilities" = @(         # https://docs.microsoft.com/azure/cosmos-db/serverless
             @{
                 "name" = "EnableServerless"
             }
@@ -20,7 +20,7 @@ param (
         "containers" = @(
             @{
                 "name" = ""
-                "partitionKey" = @{
+                "partitionKey" = @{ # https://docs.microsoft.com/azure/cosmos-db/partitioning-overview
                     "type" = "Hash"
                     "path" = "/id"
                 }
