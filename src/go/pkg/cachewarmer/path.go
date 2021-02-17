@@ -35,7 +35,8 @@ func FileMatches(inclusionList []string, exclusionList []string, filename string
 			return true
 		}
 	}
-	return false
+	// only return true if there is a non-empty exclusion list, and empty inclusion list
+	return len(inclusionList) == 0 && len(exclusionList) > 0
 }
 
 // EnsureWarmPath ensures that the path is mounted and exists

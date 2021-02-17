@@ -37,16 +37,16 @@ variable "bootstrap_worker_script_path" {
     description = "the script path that hosts the manager bootstrap script"
 }
 
-variable "jobMount_address" {
-    description = "the mount address for warm job processing"
+variable "storage_account" {
+    description = "the storage account holding the queue"
 }
 
-variable "job_export_path" {
-    description = "the export path for warm job processing"
+variable "storage_key" {
+    description = "the storage key"
 }
 
-variable "job_base_path" {
-    description = "the warm job processing path, writeable by the manager for job queueing."
+variable "queue_name_prefix" {
+    description = "the queue name prefix for the job management"
 }
 
 variable "vmss_user_name" {
