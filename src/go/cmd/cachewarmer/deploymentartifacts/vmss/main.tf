@@ -51,7 +51,7 @@ locals {
     bootstrap_path = "/b"
     cachewarmer_worker_bootstrap_script_path = "/bootstrap/bootstrap.cachewarmer-worker.sh"
     env_vars = " BOOTSTRAP_PATH=\"${local.bootstrap_path}\" BOOTSTRAP_SCRIPT=\"${local.cachewarmer_worker_bootstrap_script_path}\" STORAGE_ACCOUNT=\"${local.storage_account}\" STORAGE_KEY=\"${local.storage_key}\" QUEUE_PREFIX=\"${local.queue_prefix}\" "
-    cloud_init_file = templatefile("cloud-init.tpl", { bootstrap_address = local.boostrap_address, export_path = local.bootstrap_export_path, bootstrap_path = local.bootstrap_path, bootstrap_script_path = local.cachewarmer_worker_bootstrap_script_path, env_vars=local.env_vars})
+    cloud_init_file = templatefile("cloud-init.tpl", { bootstrap_address = local.bootstrap_address, export_path = local.bootstrap_export_path, bootstrap_path = local.bootstrap_path, bootstrap_script_path = local.cachewarmer_worker_bootstrap_script_path, env_vars=local.env_vars})
 }
 
 resource "azurerm_linux_virtual_machine_scale_set" "vmss" {

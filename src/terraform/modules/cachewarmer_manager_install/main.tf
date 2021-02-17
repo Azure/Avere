@@ -5,7 +5,7 @@ locals {
     vmss_ssh_public_key_str = var.vmss_ssh_public_key == null ? "" : var.vmss_ssh_public_key
     vmss_subnet_name_str = var.vmss_subnet_name == null ? "" : var.vmss_subnet_name 
     manager_bootstrap_path= "/${local.bootstrap_dir}/bootstrap.cachewarmer-manager.sh"
-    env_vars = "export BOOTSTRAP_PATH=${local.mount_dir} && export JOB_MOUNT_ADDRESS=${var.jobMount_address} && export JOB_EXPORT_PATH=${var.job_export_path} && export JOB_BASE_PATH=${var.job_base_path} && export BOOTSTRAP_EXPORT_PATH=${var.bootstrap_export_path} && export BOOTSTRAP_MOUNT_ADDRESS=${var.bootstrap_mount_address} && export BOOTSTRAP_SCRIPT=${var.bootstrap_worker_script_path} && export VMSS_USERNAME=${var.vmss_user_name} && export VMSS_SSHPUBLICKEY='${local.vmss_ssh_public_key_str}' && export VMSS_PASSWORD='${local.vmss_password_str}' && export VMSS_SUBNET=${local.vmss_subnet_name_str}"
+    env_vars = "export BOOTSTRAP_PATH=${local.mount_dir} && export STORAGE_ACCOUNT=${var.storage_account} && export STORAGE_KEY='${var.storage_key}' && export QUEUE_PREFIX=${var.queue_name_prefix} && export BOOTSTRAP_EXPORT_PATH=${var.bootstrap_export_path} && export BOOTSTRAP_MOUNT_ADDRESS=${var.bootstrap_mount_address} && export BOOTSTRAP_SCRIPT=${var.bootstrap_worker_script_path} && export VMSS_USERNAME=${var.vmss_user_name} && export VMSS_SSHPUBLICKEY='${local.vmss_ssh_public_key_str}' && export VMSS_PASSWORD='${local.vmss_password_str}' && export VMSS_SUBNET=${local.vmss_subnet_name_str}"
 }
 
 resource "null_resource" "install_cachewarmer_manager" {

@@ -8,6 +8,11 @@ locals {
   // populated where you are running terraform
   vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
   
+  // storage account hosting the queue
+  storage_resource_group_name = "storage_resource_group"
+  storage_account_name = "storageaccount"
+  queue_prefix_name = "cachewarmer"
+
   // vfxt details
   vfxt_cluster_name = "vfxt"
   vfxt_cluster_password = "VFXT_PASSWORD"
@@ -39,6 +44,15 @@ provider "azurerm" {
     features {}
 }
 
+resource "azurerm_storage_account" "storage" {
+  name                     = local.storage_account_name
+  resource_group_name      = azurerm_resource_group.storage.name
+  location                 = azurerm_resource_group.storage.location
+  account_kind             = "Storage" // set to storage v1 for cheapest cost on queue transactions
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
 // the vfxt
 resource "avere_vfxt" "vfxt" {
     controller_address = local.controller_address
@@ -55,19 +69,11 @@ resource "avere_vfxt" "vfxt" {
     vfxt_admin_password = local.vfxt_cluster_password
     vfxt_ssh_key_data = local.vfxt_ssh_key_data
     vfxt_node_count = 3
-    global_custom_settings = [
-      "cluster.ctcConnMult CE 25"
-    ]
     
     core_filer {
         name = "nfs1"
         fqdn_or_primary_ip = local.filer_address
         cache_policy = local.cache_policy
-        custom_settings = [
-          "always_forward OZ 1", // only a single copy, ensures cluster capacity is the cache capacity
-          "autoWanOptimize YF 2", // over WAN (via VPN or express route)
-          "nfsConnMult YW 16", // put against heavy duty nfs
-        ]
         junction {
             namespace_path = local.filer_export
             core_filer_export = local.filer_export
@@ -107,9 +113,9 @@ module "cachewarmer_manager_install" {
   bootstrap_worker_script_path = module.cachewarmer_build.cachewarmer_worker_bootstrap_script_path
     
   // the job path
-  jobMount_address = tolist(avere_vfxt.vfxt.vserver_ip_addresses)[0]
-  job_export_path = local.filer_export
-  job_base_path = "/"
+  storage_account = tolist(avere_vfxt.vfxt.vserver_ip_addresses)[0]
+  storage_key = local.filer_export
+  queue_name_prefix = local.queue_prefix_name
 
   // the cachewarmer VMSS auth details
   vmss_user_name = local.controller_username
@@ -130,9 +136,9 @@ module "cachewarmer_submitjob" {
   ssh_key_data = local.vm_ssh_key_data
   
   // the job path
-  jobMount_address = module.cachewarmer_manager_install.job_mount_address
-  job_export_path = module.cachewarmer_manager_install.job_export_path
-  job_base_path = module.cachewarmer_manager_install.job_path
+  storage_account = tolist(avere_vfxt.vfxt.vserver_ip_addresses)[0]
+  storage_key = local.filer_export
+  queue_name_prefix = local.queue_prefix_name
 
   // the path to warm
   warm_mount_addresses = join(",", tolist(avere_vfxt.vfxt.vserver_ip_addresses))
