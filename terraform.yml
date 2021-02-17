@@ -29,6 +29,14 @@ parameters:
       - "westus"
       - "westus2"
       - "westeurope"
+      - "canadacentral"
+      - "eastasia"
+      - "japaneast"
+      - "japanwest"
+      - "koreacentral"
+      - "northeurope"
+      - "southeastasia"
+      - "uksouth"
   - name: run_terraform
     displayName: "Select terraform example to run"
     type: string
