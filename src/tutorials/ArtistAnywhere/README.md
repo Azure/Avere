@@ -6,6 +6,12 @@ As a sample, the following image was rendered via [Azure HPC Virtual Machines](h
 
 ![](https://bit.blob.core.windows.net/doc/AzureArtistAnywhere/SuspensionBridge.jpg)
 
+## Solution Architecture
+
+The following overview diagram depicts the Azure Artist Anywhere solution architecture, including on-premises storage asset caching.
+
+![](https://bit.blob.core.windows.net/doc/AzureArtistAnywhere/SolutionArchitecture.png)
+
 The following Microsoft Azure services and 3rd-party software are integrated within the Azure Artist Anywhere rendering solution.
 
 <table>
@@ -96,12 +102,6 @@ The following Microsoft Azure services and 3rd-party software are integrated wit
         </td>
     </tr>
 </table>
-
-## Solution Architecture
-
-The following overview diagram depicts the Azure Artist Anywhere solution architecture, including on-premises storage asset caching.
-
-![](https://bit.blob.core.windows.net/doc/AzureArtistAnywhere/SolutionArchitecture.png)
 
 ## Deployment Modules
 
