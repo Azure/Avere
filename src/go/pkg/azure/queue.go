@@ -118,6 +118,10 @@ func (q *Queue) Dequeue(maxMessages int32, visibilityTimeout time.Duration) (*az
 	return q.MessagesURL.Dequeue(q.Context, maxMessages, visibilityTimeout)
 }
 
+func (q *Queue) Peek(maxMessages int32) (*azqueue.PeekedMessagesResponse, error) {
+	return q.MessagesURL.Peek(q.Context, maxMessages)
+}
+
 // DeleteMessage deletes the message from the queue
 func (q *Queue) DeleteMessage(messageID azqueue.MessageID, popReceipt azqueue.PopReceipt) (*azqueue.MessageIDDeleteResponse, error) {
 	msgIDURL := q.MessagesURL.NewMessageIDURL(messageID)

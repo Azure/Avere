@@ -31,7 +31,7 @@ func usage(errs ...error) {
 	flag.PrintDefaults()
 }
 
-func initializeApplicationVariables() *cachewarmer.WarmPathManager {
+func initializeApplicationVariables(ctx context.Context) *cachewarmer.WarmPathManager {
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
 	var bootstrapMountAddress = flag.String("bootstrapMountAddress", "", "the mount address that hosts the worker bootstrap script")
 	var bootstrapExportPath = flag.String("bootstrapExportPath", "", "the export path that hosts the worker bootstrap script")
@@ -88,7 +88,7 @@ func initializeApplicationVariables() *cachewarmer.WarmPathManager {
 		os.Exit(1)
 	}
 
-	if isValid, errorMessage := ValidateQueueName(*queueNamePrefix); isValid == false {
+	if isValid, errorMessage := azure.ValidateQueueName(*queueNamePrefix); isValid == false {
 		fmt.Fprintf(os.Stderr, "ERROR: queueNamePrefix is not valid: %s\n", errorMessage)
 		usage()
 		os.Exit(1)
@@ -124,6 +124,7 @@ func initializeApplicationVariables() *cachewarmer.WarmPathManager {
 
 	return cachewarmer.InitializeWarmPathManager(
 		azureClients,
+		cacheWarmerQueues,
 		*bootstrapMountAddress,
 		*bootstrapExportPath,
 		*bootstrapScriptPath,
@@ -131,7 +132,9 @@ func initializeApplicationVariables() *cachewarmer.WarmPathManager {
 		*vmssPassword,
 		*vmssSshPublicKey,
 		*vmssSubnetName,
-		cacheWarmerQueues,
+		*storageAccount,
+		*storageKey,
+		*queueNamePrefix,
 	)
 }
 
@@ -140,7 +143,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// initialize the variables
-	warmPathManager := initializeApplicationVariables()
+	warmPathManager := initializeApplicationVariables(ctx)
 
 	// initialize the sync wait group
 	syncWaitGroup := sync.WaitGroup{}

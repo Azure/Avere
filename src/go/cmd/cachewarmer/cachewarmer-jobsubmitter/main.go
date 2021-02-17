@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Azure/Avere/src/go/pkg/azure"
 	"github.com/Azure/Avere/src/go/pkg/cachewarmer"
 	"github.com/Azure/Avere/src/go/pkg/log"
 )
@@ -31,7 +32,7 @@ func usage(errs ...error) {
 	flag.PrintDefaults()
 }
 
-func initializeApplicationVariables(ctx Context) (*cachewarmer.WarmPathJob, *cachewarmer.CacheWarmerQueues, bool) {
+func initializeApplicationVariables(ctx context.Context) (*cachewarmer.WarmPathJob, *cachewarmer.CacheWarmerQueues, bool) {
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
 	var warmTargetMountAddresses = flag.String("warmTargetMountAddresses", "", "the warm target cache filer mount addresses separated by commas")
 	var warmTargetExportPath = flag.String("warmTargetExportPath", "", "the warm target export path")
@@ -89,14 +90,13 @@ func initializeApplicationVariables(ctx Context) (*cachewarmer.WarmPathJob, *cac
 		os.Exit(1)
 	}
 
-	if isValid, errorMessage := ValidateQueueName(*queueNamePrefix); isValid == false {
+	if isValid, errorMessage := azure.ValidateQueueName(*queueNamePrefix); isValid == false {
 		fmt.Fprintf(os.Stderr, "ERROR: queueNamePrefix is not valid: %s\n", errorMessage)
 		usage()
 		os.Exit(1)
 	}
 
 	warmJobPath := cachewarmer.InitializeWarmPathJob(
-		ctx,
 		targetMountAddessSlice,
 		*warmTargetExportPath,
 		*warmTargetPath,
@@ -161,12 +161,15 @@ func main() {
 	warmPathJob, cacheWarmerQueues, blockUntilWarm := initializeApplicationVariables(ctx)
 
 	// write the job to the warm path
-	if err := cacheWarmerQueues.WriteJob(warmPathJob); err != nil {
+	if err := cacheWarmerQueues.WriteWarmPathJob(*warmPathJob); err != nil {
 		log.Error.Printf("ERROR: encountered error while writing job: %v", err)
 		os.Exit(1)
 	}
 
 	if blockUntilWarm {
+		// initialize the sync wait group
+		syncWaitGroup := sync.WaitGroup{}
+
 		syncWaitGroup.Add(1)
 		go BlockUntilWarm(ctx, &syncWaitGroup, cacheWarmerQueues)
 

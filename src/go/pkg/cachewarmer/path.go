@@ -9,23 +9,11 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/Azure/Avere/src/go/pkg/log"
 )
-
-// EnsureJobSubmitterPath mounts and creates the job queue path if necessary
-func EnsureJobSubmitterPath(jobMountAddress string, jobExportPath string, jobBasePath string) (string, error) {
-	return ensureJobPath(jobMountAddress, jobExportPath, jobBasePath, DefaultCacheJobSubmitterDir, true)
-}
-
-// EnsureWorkerJobPath mounts and creates the job queue path if necessary
-func EnsureWorkerJobPath(jobMountAddress string, jobExportPath string, jobBasePath string) (string, error) {
-	return ensureJobPath(jobMountAddress, jobExportPath, jobBasePath, DefaultCacheWorkerJobsDir, true)
-}
 
 // EnsureWarmPath ensures that the path is mounted and exists
 func EnsureWarmPath(jobMountAddress string, jobExportPath string, jobBasePath string) (string, error) {
@@ -84,56 +72,6 @@ func MountPath(address string, exportPath string, localPath string) error {
 	}
 }
 
-func IsStale(filePath string) bool {
-	info, err := os.Stat(filePath)
-	if err != nil {
-		log.Error.Printf("expected error checking for file stale '%s': '%v'", filePath, err)
-		return false
-	}
-	return time.Since(info.ModTime()) > staleFileAge
-}
-
-func Locked(filePath string) bool {
-	fileName := path.Base(filePath)
-	return strings.Index(fileName, ".") == 0
-}
-
-func LockPath(filePath string) (string, bool) {
-	dirName, fileName := path.Split(filePath)
-	newFileName := ""
-	if Locked(filePath) {
-		// overtaking the file, the vm may have been evicted
-		// update the integer at the end
-		position := strings.LastIndex(fileName, ".")
-		if position > 0 || position < (len(fileName)-1) {
-			intStr := fileName[position+1:]
-			i, err := strconv.Atoi(intStr)
-			if err != nil {
-				log.Error.Printf("error converting filename '%s': '%v'", fileName, err)
-				return "", false
-			}
-			newFileName = fmt.Sprintf("%s%d", fileName[:position+1], (i + 1))
-		} else {
-			log.Error.Printf("lock file '%s' is missing integer at end", fileName)
-		}
-	} else {
-		newFileName = fmt.Sprintf(".%s.0", fileName)
-	}
-	newFilePath := path.Join(dirName, newFileName)
-	if err := os.Rename(filePath, newFilePath); err != nil {
-		log.Error.Printf("expected error renaming file '%s'=>'%s': '%v'", filePath, newFilePath, err)
-		return "", false
-	}
-	return newFilePath, true
-}
-
-func TouchFile(fileName string) {
-	currentTime := time.Now().Local()
-	if err := os.Chtimes(fileName, currentTime, currentTime); err != nil {
-		log.Error.Printf("error touching file '%s': '%v'", fileName, err)
-	}
-}
-
 func AlreadyMounted(mountPath string) bool {
 	checkMountCmd := fmt.Sprintf("/bin/mountpoint -q %s", mountPath)
 	if _, _, err := BashCommand(checkMountCmd); err != nil {
@@ -187,21 +125,6 @@ func BashCommand(cmdstr string) (bytes.Buffer, bytes.Buffer, error) {
 	}
 
 	return stdoutBuf, stderrBuf, nil
-}
-
-// WriteFile writes file bytes to the file
-func WriteFile(filename string, data string) error {
-	f, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-
-	if _, err := f.Write([]byte(data)); err != nil {
-		f.Close()
-		return err
-	}
-
-	return f.Close()
 }
 
 func IsDirectory(path string) (bool, error) {

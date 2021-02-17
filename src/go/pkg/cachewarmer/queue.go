@@ -35,7 +35,7 @@ func InitializeCacheWarmerQueues(
 	}, nil
 }
 
-func (q *CacheWarmerQueues) WriteJob(job WarmPathJob) error {
+func (q *CacheWarmerQueues) WriteWarmPathJob(job WarmPathJob) error {
 	content, err := job.GetWarmPathJobFileContents()
 	if err != nil {
 		return err
@@ -48,6 +48,7 @@ func (q *CacheWarmerQueues) WriteJob(job WarmPathJob) error {
 	return nil
 }
 
+// IsJobQueueEmpty returns true if there are one or more visible or invisible items in the queue
 func (q *CacheWarmerQueues) IsJobQueueEmpty() (bool, error) {
 	if isEmpty, err := q.jobQueue.IsQueueEmpty(); err != nil {
 		return false, fmt.Errorf("error checking if job queue was empty: %v", err)
@@ -57,12 +58,11 @@ func (q *CacheWarmerQueues) IsJobQueueEmpty() (bool, error) {
 }
 
 func (q *CacheWarmerQueues) GetWarmPathJob() (*WarmPathJob, error) {
-	const singleJob = 1
-	queueMessage, err := q.jobQueue.Dequeue(singleJob, CacheWarmerVisibilityTimeout)
+	queueMessage, err := q.jobQueue.Dequeue(NumberOfMessagesToDequeue, CacheWarmerVisibilityTimeout)
 	if err != nil {
 		return nil, fmt.Errorf("error dequeueing message %v", err)
 	}
-	if queueMessage.NumMessages() == singleJob {
+	if queueMessage.NumMessages() == NumberOfMessagesToDequeue {
 		msg := queueMessage.Message(0)
 		warmPathJob, err := InitializeWarmPathJobFromString(msg.Text)
 		if err != nil {
@@ -106,4 +106,77 @@ func (q *CacheWarmerQueues) IsWorkQueueEmpty() (bool, error) {
 	} else {
 		return isEmpty, nil
 	}
+}
+
+func (q *CacheWarmerQueues) WriteWorkerJob(workerjob *WorkerJob) error {
+	content, err := workerjob.GetWorkerJobFileContents()
+	if err != nil {
+		return err
+	}
+
+	if err := q.workQueue.Enqueue(content); err != nil {
+		return fmt.Errorf("Error writing job: %v", err)
+	}
+
+	return nil
+}
+
+func (q *CacheWarmerQueues) PeekWorkerJob() (*WorkerJob, error) {
+	peekMessage, err := q.workQueue.Peek(NumberOfMessagesToDequeue)
+	if err != nil {
+		return nil, fmt.Errorf("error dequeueing message %v", err)
+	}
+	if peekMessage.NumMessages() == NumberOfMessagesToDequeue {
+		msg := peekMessage.Message(0)
+		workerJob, err := InitializeWorkerJobFromString(msg.Text)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing message text '%s': '%v'", msg.Text, err)
+		}
+		workerJob.SetQueueMessageInfo(&(msg.ID), nil)
+		return workerJob, nil
+	}
+	return nil, nil
+}
+
+func (q *CacheWarmerQueues) GetWorkerJob() (*WorkerJob, error) {
+	queueMessage, err := q.workQueue.Dequeue(NumberOfMessagesToDequeue, CacheWarmerVisibilityTimeout)
+	if err != nil {
+		return nil, fmt.Errorf("error dequeueing message %v", err)
+	}
+	if queueMessage.NumMessages() == NumberOfMessagesToDequeue {
+		msg := queueMessage.Message(0)
+		workerJob, err := InitializeWorkerJobFromString(msg.Text)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing message text '%s': '%v'", msg.Text, err)
+		}
+		workerJob.SetQueueMessageInfo(&(msg.ID), &(msg.PopReceipt))
+		return workerJob, nil
+	}
+	return nil, nil
+}
+
+func (q *CacheWarmerQueues) StillProcessingWorkerJob(workerJob *WorkerJob) error {
+	id, popReceipt := workerJob.GetQueueMessageInfo()
+	if id == nil || popReceipt == nil {
+		return fmt.Errorf("queue message id incorrectly set for workerjob")
+	}
+	message, err := workerJob.GetWorkerJobFileContents()
+	if err != nil {
+		return err
+	}
+	if _, err := q.workQueue.UpdateVisibilityTimeout(*id, *popReceipt, CacheWarmerVisibilityTimeout, message); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (q *CacheWarmerQueues) DeleteWorkerJob(workerJob *WorkerJob) error {
+	id, popReceipt := workerJob.GetQueueMessageInfo()
+	if id == nil || popReceipt == nil {
+		return fmt.Errorf("queue message id incorrectly set for workerjob")
+	}
+	if _, err := q.workQueue.DeleteMessage(*id, *popReceipt); err != nil {
+		return err
+	}
+	return nil
 }

@@ -29,6 +29,9 @@ type WarmPathManager struct {
 	vmssPassword          string
 	vmssSshPublicKey      string
 	vmssSubnet            string
+	storageAccount        string
+	storageKey            string
+	queueNamePrefix       string
 }
 
 // InitializeWarmPathManager initializes the job submitter structure
@@ -41,7 +44,10 @@ func InitializeWarmPathManager(
 	vmssUserName string,
 	vmssPassword string,
 	vmssSshPublicKey string,
-	vmssSubnet string) *WarmPathManager {
+	vmssSubnet string,
+	storageAccount string,
+	storageKey string,
+	queueNamePrefix string) *WarmPathManager {
 	return &WarmPathManager{
 		AzureClients:          azureClients,
 		Queues:                queues,
@@ -52,6 +58,9 @@ func InitializeWarmPathManager(
 		vmssPassword:          vmssPassword,
 		vmssSshPublicKey:      vmssSshPublicKey,
 		vmssSubnet:            vmssSubnet,
+		storageAccount:        storageAccount,
+		storageKey:            storageKey,
+		queueNamePrefix:       queueNamePrefix,
 	}
 }
 
@@ -76,24 +85,18 @@ func (m *WarmPathManager) RunJobGenerator(ctx context.Context, syncWaitGroup *sy
 			if time.Since(lastJobCheckTime) > timeBetweenJobCheck {
 				lastJobCheckTime = time.Now()
 				log.Info.Printf("check jobs in queue")
-
-				if isEmpty, err := m.Queues.IsJobQueueEmpty(); err != nil {
-					log.Error.Printf("error checking if job queue was empty: %v", err)
-				} else if isEmpty == false {
-					// process the job
-
-				}
-
-				files, err := ioutil.ReadDir(m.JobSubmitterPath)
-				if err != nil {
-					log.Error.Printf("error reading path %s: %v", m.JobSubmitterPath, err)
-					continue
-				}
-
-				for _, file := range files {
-					filename := path.Join(m.JobSubmitterPath, file.Name())
-					if err := m.processJobFile(ctx, filename); err != nil {
-						log.Error.Printf("error encountered processing file %s: %v", file.Name(), err)
+				for {
+					warmPathJob, err := m.Queues.GetWarmPathJob()
+					if err != nil {
+						log.Error.Printf("error checking job queue: %v", err)
+						break
+					}
+					if warmPathJob == nil {
+						break
+					}
+					if err := m.processJob(ctx, warmPathJob); err != nil {
+						log.Error.Printf("error encountered processing job: %v", err)
+						break
 					}
 					if isCancelled(ctx) {
 						log.Info.Printf("cancelation occurred while processing job files")
@@ -105,28 +108,15 @@ func (m *WarmPathManager) RunJobGenerator(ctx context.Context, syncWaitGroup *sy
 	}
 }
 
-func (m *WarmPathManager) processJobFile(ctx context.Context, filename string) error {
-	log.Debug.Printf("[WarmPathManager.processJobFile %s", filename)
-	defer log.Debug.Printf("WarmPathManager.processJobFile %s]", filename)
-
-	byteContent, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return fmt.Errorf("error processing job file: %v", err)
-	}
-
-	warmPathJob, err := InitializeWarmPathJobFromString(string(byteContent))
-	if err != nil {
-		if err2 := os.Remove(filename); err != nil {
-			log.Error.Printf("error removing file %s: %v", filename, err2)
-		}
-		return fmt.Errorf("error parsing file into warmPathJob, file %s removed: %v", filename, err)
-	}
+func (m *WarmPathManager) processJob(ctx context.Context, warmPathJob *WarmPathJob) error {
+	log.Debug.Printf("[WarmPathManager.processJob")
+	defer log.Debug.Printf("WarmPathManager.processJob]")
 
 	if len(warmPathJob.WarmTargetMountAddresses) == 0 {
-		if err2 := os.Remove(filename); err != nil {
-			log.Error.Printf("error removing file %s: %v", filename, err2)
+		if err := m.Queues.DeleteWarmPathJob(warmPathJob); err != nil {
+			log.Error.Printf("error removing job: %v", err)
 		}
-		return fmt.Errorf("there are no mount addresses specified in the file")
+		return fmt.Errorf("there are no mount addresses specified in the job")
 	}
 
 	localMountPath := GetLocalMountPath(warmPathJob.WarmTargetMountAddresses[0], warmPathJob.WarmTargetExportPath)
@@ -137,6 +127,7 @@ func (m *WarmPathManager) processJobFile(ctx context.Context, filename string) e
 	log.Status.Printf("start processing %s", warmPathJob.WarmTargetPath)
 	defer log.Status.Printf("stop processing %s", warmPathJob.WarmTargetPath)
 
+	lastRefreshVisibility := time.Now()
 	folderSlice := []string{warmPathJob.WarmTargetPath}
 	for len(folderSlice) > 0 {
 		// check for cancelation between files
@@ -144,6 +135,12 @@ func (m *WarmPathManager) processJobFile(ctx context.Context, filename string) e
 			log.Info.Printf("cancelation occurred while processing job files")
 			return nil
 		}
+		if time.Since(lastRefreshVisibility) > refreshWorkInterval {
+			lastRefreshVisibility = time.Now()
+			m.Queues.StillProcessingWarmPathJob(warmPathJob)
+		}
+
+		// dequeue the next folder
 		warmFolder := folderSlice[len(folderSlice)-1]
 		folderSlice[len(folderSlice)-1] = ""
 		folderSlice = folderSlice[:len(folderSlice)-1]
@@ -160,9 +157,7 @@ func (m *WarmPathManager) processJobFile(ctx context.Context, filename string) e
 
 		// queue the directories
 		for _, dir := range dirs {
-			if !isCacheWarmerFolder(dir.Name()) {
-				folderSlice = append(folderSlice, path.Join(warmFolder, dir.Name()))
-			}
+			folderSlice = append(folderSlice, path.Join(warmFolder, dir.Name()))
 		}
 
 		// write a job for each large file
@@ -175,9 +170,11 @@ func (m *WarmPathManager) processJobFile(ctx context.Context, filename string) e
 				if end > fileSize {
 					end = fileSize
 				}
-				log.Info.Printf("queuing job for file %s [%d,%d)", fullPath, i, end)
+				log.Info.Printf("queuing worker job for file %s [%d,%d)", fullPath, i, end)
 				workerJob := InitializeWorkerJobForLargeFile(warmPathJob.WarmTargetMountAddresses, warmPathJob.WarmTargetExportPath, fullPath, i, end)
-				go writeJob(workerJob, m.JobWorkerPath)
+				if err := m.Queues.WriteWorkerJob(workerJob); err != nil {
+					log.Error.Printf("error encountered writing worker job '%s': %v", fullPath, err)
+				}
 			}
 		}
 
@@ -186,7 +183,9 @@ func (m *WarmPathManager) processJobFile(ctx context.Context, filename string) e
 			if len(files) < MaximumFilesToRead {
 				log.Info.Printf("queuing job for path %s", warmFolder)
 				workerJob := InitializeWorkerJob(warmPathJob.WarmTargetMountAddresses, warmPathJob.WarmTargetExportPath, warmFolder)
-				go writeJob(workerJob, m.JobWorkerPath)
+				if err := m.Queues.WriteWorkerJob(workerJob); err != nil {
+					log.Error.Printf("error encountered writing worker job '%s': %v", warmFolder, err)
+				}
 			} else {
 				for i := 0; i < len(files); i += MaximumFilesToRead {
 					end := i + MaximumFilesToRead
@@ -195,15 +194,17 @@ func (m *WarmPathManager) processJobFile(ctx context.Context, filename string) e
 					}
 					log.Info.Printf("queuing job for path %s [%s,%s]", warmFolder, files[i].Name(), files[end].Name())
 					workerJob := InitializeWorkerJobWithFilter(warmPathJob.WarmTargetMountAddresses, warmPathJob.WarmTargetExportPath, warmFolder, files[i].Name(), files[end].Name())
-					go writeJob(workerJob, m.JobWorkerPath)
+					if err := m.Queues.WriteWorkerJob(workerJob); err != nil {
+						log.Error.Printf("error encountered writing worker job %s [%s,%s]: %v", warmFolder, files[i].Name(), files[end].Name(), err)
+					}
 				}
 			}
 		}
 	}
 
 	// remove the job file
-	if err := os.Remove(filename); err != nil {
-		return fmt.Errorf("error removing file %v", err)
+	if err := m.Queues.DeleteWarmPathJob(warmPathJob); err != nil {
+		log.Error.Printf("error removing job at end of processing: %v", err)
 	}
 
 	return nil
@@ -260,23 +261,13 @@ func printStats(fileSizes []int64, dirCount int) {
 		fileSizes[len(fileSizes)-1])
 }
 
-func writeJob(workerJob *WorkerJob, jobPath string) {
-	if err := workerJob.WriteJob(jobPath); err != nil {
-		log.Error.Printf("error writing worker job to %s: %v", jobPath, err)
-	}
-}
-
-func isCacheWarmerFolder(folder string) bool {
-	return folder == DefaultCacheJobSubmitterDir || folder == DefaultCacheWorkerJobsDir
-}
-
 func (m *WarmPathManager) RunVMSSManager(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
 	log.Debug.Printf("[WarmPathManager.RunVMSSManager")
 	defer log.Debug.Printf("WarmPathManager.RunVMSSManager]")
 	defer syncWaitGroup.Done()
 
-	lastWorkerJobCheckTime := time.Now().Add(-timeBetweenWorkerJobCheck)
-	lastReadDirSuccess := time.Now()
+	lastWorkerJobCheckTime := time.Now().Add(-timeBetweenJobCheck)
+	lastReadQueueSuccess := time.Now()
 	lastJobSeen := time.Now()
 	ticker := time.NewTicker(tick)
 	defer ticker.Stop()
@@ -288,31 +279,35 @@ func (m *WarmPathManager) RunVMSSManager(ctx context.Context, syncWaitGroup *syn
 			log.Info.Printf("cancelation received")
 			return
 		case <-ticker.C:
-			if time.Since(lastWorkerJobCheckTime) > timeBetweenWorkerJobCheck {
+			if time.Since(lastWorkerJobCheckTime) > timeBetweenJobCheck {
 				lastWorkerJobCheckTime = time.Now()
-				log.Info.Printf("check jobs in path %s", m.JobWorkerPath)
-				jobsExist, mountCount, err := JobsExist(m.JobWorkerPath)
-				if err != nil {
-					log.Error.Printf("error reading path %s: %v, ", m.JobWorkerPath, err)
-					if time.Since(lastReadDirSuccess) > failureTimeToDeleteVMSS {
-						log.Error.Printf("read directory has not been successful for 15 minutes, ensure vmss deleted")
+				log.Info.Printf("VMSS Manager check if worker jobs exist")
+				if isEmpty, err := m.Queues.IsWorkQueueEmpty(); err != nil {
+					log.Error.Printf("error checking if work queue was empty: %v", err)
+					if time.Since(lastReadQueueSuccess) > failureTimeToDeleteVMSS {
+						log.Error.Printf("read worker queue has not been successful for 15 minutes, ensure vmss deleted")
 						m.EnsureVmssDeleted(ctx)
 						// reset the last read dir success
-						lastReadDirSuccess = time.Now()
+						lastReadQueueSuccess = time.Now()
+						continue
 					}
-					continue
-				}
-				log.Info.Printf("jobsExist %v", jobsExist)
-				lastReadDirSuccess = time.Now()
-
-				if jobsExist {
-					m.EnsureVmssRunning(ctx, mountCount)
-					lastJobSeen = time.Now()
-				} else {
+				} else if isEmpty == true {
+					// jobs do not exist, delete vmss if not already deleted
 					if time.Since(lastJobSeen) > timeToDeleteVMSSAfterNoJobs {
 						m.EnsureVmssDeleted(ctx)
 					}
+				} else {
+					// jobs exist
+					workerJob, err := m.Queues.PeekWorkerJob()
+					if err != nil {
+						log.Error.Printf("error peeking at a worker job: %v", err)
+						continue
+					}
+					mountCount := len(workerJob.WarmTargetMountAddresses)
+					m.EnsureVmssRunning(ctx, mountCount)
+					lastJobSeen = time.Now()
 				}
+				lastReadQueueSuccess = time.Now()
 			}
 		}
 	}
@@ -344,9 +339,9 @@ func (m *WarmPathManager) EnsureVmssRunning(ctx context.Context, mountCount int)
 		m.bootstrapMountAddress, // bootstrapAddress string,
 		m.bootstrapExportPath,   // exportPath string,
 		m.bootstrapScriptPath,   // bootstrapScriptPath string,
-		m.jobMountAddress,       // jobMountAddress string,
-		m.jobExportPath,         // jobExportPath string,
-		m.jobBasePath,           //jobBasePath string
+		m.storageAccount,        // storageAccount string,
+		m.storageKey,            // storageKey string,
+		m.queueNamePrefix,       // queueNamePrefix string
 	)
 
 	customData, err := cacheWarmerCloudInit.GetCacheWarmerCloudInit()
