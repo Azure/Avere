@@ -9,7 +9,6 @@ locals {
   vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
   
   // storage account hosting the queue
-  storage_resource_group_name = "storage_resource_group"
   storage_account_name = "storageaccount"
   queue_prefix_name = "cachewarmer"
 
@@ -46,8 +45,8 @@ provider "azurerm" {
 
 resource "azurerm_storage_account" "storage" {
   name                     = local.storage_account_name
-  resource_group_name      = azurerm_resource_group.storage.name
-  location                 = azurerm_resource_group.storage.location
+  resource_group_name      = local.vfxt_resource_group_name
+  location                 = local.location
   account_kind             = "Storage" // set to storage v1 for cheapest cost on queue transactions
   account_tier             = "Standard"
   account_replication_type = "LRS"
