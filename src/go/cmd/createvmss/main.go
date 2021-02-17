@@ -254,7 +254,7 @@ func createCacheWarmerVmssModel(
 		VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{
 			Overprovision: to.BoolPtr(false),
 			UpgradePolicy: &compute.UpgradePolicy{
-				Mode: compute.UpgradeModeManual,
+				Mode: compute.Manual,
 			},
 			SinglePlacementGroup: to.BoolPtr(false),
 			VirtualMachineProfile: &compute.VirtualMachineScaleSetVMProfile{
@@ -337,7 +337,8 @@ func DeleteVmss(ctx context.Context, azureClients *AzureClients, name string) er
 	defer log.Info.Printf(" %s %s DeleteVmss]", azureClients.LocalMetadata.ResourceGroup, name)
 
 	// passing nil instance ids will deallocate all VMs in the VMSS
-	future, err := azureClients.VMSSClient.Delete(ctx, azureClients.LocalMetadata.ResourceGroup, name)
+	forceDelete := true
+	future, err := azureClients.VMSSClient.Delete(ctx, azureClients.LocalMetadata.ResourceGroup, name, &forceDelete)
 	if err != nil {
 		return fmt.Errorf("cannot delete vmss (%s %s): %v", azureClients.LocalMetadata.ResourceGroup, name, err)
 	}
