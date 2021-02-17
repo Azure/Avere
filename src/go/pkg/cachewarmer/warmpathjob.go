@@ -20,6 +20,10 @@ type WarmPathJob struct {
 	queuePopReceipt          *azqueue.PopReceipt
 }
 
+func (j *WarmPathJob) FileMatches(filename string) bool {
+	return FileMatches(j.InclusionList, j.ExclusionList, filename)
+}
+
 // InitializeWarmPathJob initializes the job submitter structure
 func InitializeWarmPathJob(
 	warmTargetMountAddresses []string,

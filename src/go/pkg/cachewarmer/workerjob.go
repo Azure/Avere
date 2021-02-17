@@ -19,6 +19,8 @@ type WorkerJob struct {
 	ApplyFilter              bool
 	StartFileFilter          string
 	EndFileFilter            string
+	InclusionList            []string
+	ExclusionList            []string
 	queueMessageID           *azqueue.MessageID
 	queuePopReceipt          *azqueue.PopReceipt
 }
@@ -36,7 +38,9 @@ func (j *WorkerJob) GetQueueMessageInfo() (*azqueue.MessageID, *azqueue.PopRecei
 func InitializeWorkerJob(
 	warmTargetMountAddresses []string,
 	warmTargetExportPath string,
-	warmTargetPath string) *WorkerJob {
+	warmTargetPath string,
+	inclusionList []string,
+	exclusionList []string) *WorkerJob {
 	return &WorkerJob{
 		WarmTargetMountAddresses: warmTargetMountAddresses,
 		WarmTargetExportPath:     warmTargetExportPath,
@@ -46,6 +50,8 @@ func InitializeWorkerJob(
 		ApplyFilter:              false,
 		StartFileFilter:          "",
 		EndFileFilter:            "",
+		InclusionList:            inclusionList,
+		ExclusionList:            exclusionList,
 	}
 }
 
@@ -55,7 +61,9 @@ func InitializeWorkerJobForLargeFile(
 	warmTargetExportPath string,
 	warmTargetPath string,
 	startByte int64,
-	stopByte int64) *WorkerJob {
+	stopByte int64,
+	inclusionList []string,
+	exclusionList []string) *WorkerJob {
 	return &WorkerJob{
 		WarmTargetMountAddresses: warmTargetMountAddresses,
 		WarmTargetExportPath:     warmTargetExportPath,
@@ -65,6 +73,8 @@ func InitializeWorkerJobForLargeFile(
 		ApplyFilter:              false,
 		StartFileFilter:          "",
 		EndFileFilter:            "",
+		InclusionList:            inclusionList,
+		ExclusionList:            exclusionList,
 	}
 }
 
@@ -74,7 +84,9 @@ func InitializeWorkerJobWithFilter(
 	warmTargetExportPath string,
 	warmTargetPath string,
 	startFileFilter string,
-	endFileFilter string) *WorkerJob {
+	endFileFilter string,
+	inclusionList []string,
+	exclusionList []string) *WorkerJob {
 	return &WorkerJob{
 		WarmTargetMountAddresses: warmTargetMountAddresses,
 		WarmTargetExportPath:     warmTargetExportPath,
@@ -84,6 +96,8 @@ func InitializeWorkerJobWithFilter(
 		ApplyFilter:              true,
 		StartFileFilter:          startFileFilter,
 		EndFileFilter:            endFileFilter,
+		InclusionList:            inclusionList,
+		ExclusionList:            exclusionList,
 	}
 }
 
@@ -116,7 +130,9 @@ func (j *WorkerJob) FilterFiles(filenames []string) []string {
 	for _, filename := range filenames {
 		compareStart := strings.Compare(filename, j.StartFileFilter)
 		if compareStart == 0 || (compareStart > 0 && strings.Compare(filename, j.EndFileFilter) <= 0) {
-			filteredFileNames = append(filteredFileNames, filename)
+			if FileMatches(j.InclusionList, j.ExclusionList, filename) {
+				filteredFileNames = append(filteredFileNames, filename)
+			}
 		}
 	}
 

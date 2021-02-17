@@ -39,7 +39,7 @@ func initializeApplicationVariables(ctx context.Context) (*cachewarmer.WarmPathJ
 	var warmTargetPath = flag.String("warmTargetPath", "", "the warm target path")
 
 	var inclusionCsv = flag.String("inclusionCsv", "", "the inclusion list of file match strings per https://golang.org/pkg/path/filepath/#Match.  Leave blank to include everything.")
-	var exclusionCsv = flag.String("inclusionCsv", "", "the exclusion list of file match strings per https://golang.org/pkg/path/filepath/#Match.  Leave blank to not exlude anything.")
+	var exclusionCsv = flag.String("exclusionCsv", "", "the exclusion list of file match strings per https://golang.org/pkg/path/filepath/#Match.  Leave blank to not exlude anything.")
 
 	var storageAccount = flag.String("storageAccountName", "", "the storage account name to host the queue")
 	var storageKey = flag.String("storageKey", "", "the storage key to access the queue")

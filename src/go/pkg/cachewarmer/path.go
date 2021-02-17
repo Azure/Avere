@@ -9,11 +9,34 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"sync"
 	"time"
 
 	"github.com/Azure/Avere/src/go/pkg/log"
 )
+
+func FileMatches(inclusionList []string, exclusionList []string, filename string) bool {
+	// if the lists are empty, include everything
+	if len(inclusionList) == 0 && len(exclusionList) == 0 {
+		return true
+	}
+
+	// exclusion takes priority
+	for _, excludeStr := range exclusionList {
+		if matched, err := filepath.Match(excludeStr, filename); err == nil && matched == true {
+			return false
+		}
+	}
+
+	// inclusion
+	for _, includeStr := range inclusionList {
+		if matched, err := filepath.Match(includeStr, filename); err == nil && matched == true {
+			return true
+		}
+	}
+	return false
+}
 
 // EnsureWarmPath ensures that the path is mounted and exists
 func EnsureWarmPath(jobMountAddress string, jobExportPath string, jobBasePath string) (string, error) {
