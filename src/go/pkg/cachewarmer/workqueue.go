@@ -10,14 +10,11 @@ type FileToWarm struct {
 	WarmFileFullPath string
 	StartByte        int64
 	StopByte         int64
-	ParentJobFile    *WorkingFile
 }
 
-func InitializeFileToWarm(warmFilePath string, parentJobFile *WorkingFile, startByte int64, stopByte int64) FileToWarm {
-	parentJobFile.IncrementFileToProcess()
+func InitializeFileToWarm(warmFilePath string, startByte int64, stopByte int64) FileToWarm {
 	return FileToWarm{
 		WarmFileFullPath: warmFilePath,
-		ParentJobFile:    parentJobFile,
 		StartByte:        startByte,
 		StopByte:         stopByte,
 	}

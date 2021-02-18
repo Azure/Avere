@@ -196,7 +196,7 @@ func (b *BlobContainer) UploadBlob(blobname string, data []byte) error {
 // DownloadBlob downloads the bytes of the blob
 func (b *BlobContainer) DownloadBlob(blobname string) ([]byte, error) {
 	blobURL := b.ContainerURL.NewBlobURL(blobname)
-	blobProperties, err := blobURL.GetProperties(b.Context, azblob.BlobAccessConditions{})
+	blobProperties, err := blobURL.GetProperties(b.Context, azblob.BlobAccessConditions{}, azblob.ClientProvidedKeyOptions{})
 	if err != nil {
 		log.Error.Printf("encountered error getting blob properties for '%s': '%v'", blobname, err)
 		return nil, err

@@ -1,12 +1,31 @@
 param (
     $resourceGroup = @{
         "name" = ""
-        "regionName" = "WestUS2"        # https://azure.microsoft.com/global-infrastructure/geographies/
+        "regionName" = "WestUS2"    # https://azure.microsoft.com/global-infrastructure/geographies/
     },
-    $cosmosAccount = @{                 # https://docs.microsoft.com/azure/cosmos-db/introduction
+    $cosmosAccount = @{             # https://docs.microsoft.com/azure/cosmos-db/introduction
         "name" = ""
+        "type" = "GlobalDocumentDB"
         "offerType" = "Standard"
-        "uiType" = "Non-Production"
+        "defaultExperience" = "Core (SQL)"
+        "userInterfaceType" = "Non-Production"
+        "capabilities" = @(         # https://docs.microsoft.com/azure/cosmos-db/serverless
+            @{
+                "name" = "EnableServerless"
+            }
+        )
+    },
+    $sqlDatabase = @{
+        "name" = ""
+        "containers" = @(
+            @{
+                "name" = ""
+                "partitionKey" = @{ # https://docs.microsoft.com/azure/cosmos-db/partitioning-overview
+                    "type" = "Hash"
+                    "path" = "/id"
+                }
+            }
+        )
     }
 )
 
@@ -17,6 +36,7 @@ $templateParameters = "$PSScriptRoot/Template.Parameters.json"
 
 $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
 $templateConfig.parameters.cosmosAccount.value = $cosmosAccount
-$templateConfig | ConvertTo-Json -Depth 5 | Out-File $templateParameters
+$templateConfig.parameters.sqlDatabase.value = $sqlDatabase
+$templateConfig | ConvertTo-Json -Depth 6 | Out-File $templateParameters
 
 az deployment group create --resource-group $resourceGroup.name --template-file $templateFile --parameters $templateParameters

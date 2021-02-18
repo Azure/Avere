@@ -16,7 +16,12 @@ param (
         "fileShares" = @(
             @{
                 "name" = ""
-                "size" = 5120
+                "sizeGBs" = 5120
+            }
+        )
+        "entityTables" = @(
+            @{
+                "name" = ""
             }
         )
         "messageQueues" = @(

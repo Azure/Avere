@@ -3,93 +3,220 @@ param (
         "name" = ""
         "regionName" = "WestUS2"    # https://azure.microsoft.com/global-infrastructure/geographies/
     },
-    $imageTemplate = @{             # https://docs.microsoft.com/azure/virtual-machines/image-builder-overview
-        "name" = ""
-        "machineType" = "Linux"
-        "machineSize" = "Standard_HB120rs_v2"
-        "imageSourceType" = "PlatformImage"
-        "imageSourceVersion" = "latest"
-        "imageOutputVersion" = "1.0.0"
-        "buildTimeoutMinutes" = 120
-        "buildCustomizeCommands" = @(
-            @{
-                "type" = ""
-                "scriptUri" = ""
-                "sha256Checksum" = ""
-            }
-        )
-    },
-    $imageGallery = @{              # https://docs.microsoft.com/azure/virtual-machines/shared-image-galleries
-        "name" = ""
-        "resourceGroupName" = ""
-        "imageDefinitionName" = ""
-    },
-    $storageAccount = @{            # https://docs.microsoft.com/azure/storage/common/storage-account-overview
-        "name" = ""
-        "containerName" = ""
-    },
     $managedIdentity = @{           # https://docs.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview
-        "name" = $imageTemplate.Name
+        "name" = "ImageBuilder"
         "resourceGroupName" = $resourceGroup.name
+    },
+    $scriptStorage = @{             # https://docs.microsoft.com/azure/storage/common/storage-account-overview
+        "accountName" = ""
+        "containerName" = ""
+        "resourceGroupName" = $resourceGroup.name
+    },
+    $imageTemplates = @(            # https://docs.microsoft.com/azure/virtual-machines/image-builder-overview
+        @{
+            "name" = ""
+            "machineSize" = "Standard_NV24s_v3"
+            "imageSource" = @{
+                "type" = "PlatformImage"
+                "publisher" = "OpenLogic"
+                "offer" = "CentOS"
+                "sku" = "8_3"
+                "version" = "latest"
+            }
+            "imageBuild" = @{
+                "timeoutMinutes" = 60
+                "customizeCommands" = @(
+                    @{
+                        "type" = ""
+                        "scriptUri" = ""
+                        "sha256Checksum" = ""
+                    }
+                )
+            }
+            "imageGallery" = @{
+                "imageDefinitionName" = ""  # Optional image distribution target
+                "imageOutputVersion"= "1.0.0"
+            }
+        },
+        @{
+            "name" = ""
+            "machineSize" = "Standard_NV24s_v3"
+            "imageSource" = @{
+                "type" = "PlatformImage"
+                "publisher" = "OpenLogic"
+                "offer" = "CentOS"
+                "sku" = "7_9"
+                "version" = "latest"
+            }
+            "imageBuild" = @{
+                "timeoutMinutes" = 60
+                "customizeCommands" = @(
+                    @{
+                        "type" = ""
+                        "scriptUri" = ""
+                        "sha256Checksum" = ""
+                    }
+                )
+            }
+            "imageGallery" = @{
+                "imageDefinitionName" = ""  # Optional image distribution target
+                "imageOutputVersion"= "1.0.0"
+            }
+        },
+        @{
+            "name" = ""
+            "machineSize" = "Standard_NV24s_v3"
+            "imageSource" = @{
+                "type" = "PlatformImage"
+                "publisher" = "MicrosoftWindowsServer"
+                "offer" = "WindowsServer"
+                "sku" = "2019-Datacenter"
+                "version" = "latest"
+            }
+            "imageBuild" = @{
+                "timeoutMinutes" = 60
+                "customizeCommands" = @(
+                    @{
+                        "type" = ""
+                        "scriptUri" = ""
+                        "sha256Checksum" = ""
+                    }
+                )
+            }
+            "imageGallery" = @{
+                "imageDefinitionName" = ""  # Optional image distribution target
+                "imageOutputVersion"= "1.0.0"
+            }
+        },
+        @{
+            "name" = ""
+            "machineSize" = "Standard_NV24s_v3"
+            "imageSource" = @{
+                "type" = "PlatformImage"
+                "publisher" = "MicrosoftWindowsDesktop"
+                "offer" = "Windows-10"
+                "sku" = "20H2-Pro"
+                "version" = "latest"
+            }
+            "imageBuild" = @{
+                "timeoutMinutes" = 60
+                "customizeCommands" = @(
+                    @{
+                        "type" = ""
+                        "scriptUri" = ""
+                        "sha256Checksum" = ""
+                    }
+                )
+            }
+            "imageGallery" = @{
+                "imageDefinitionName" = ""  # Optional image distribution target
+                "imageOutputVersion"= "1.0.0"
+            }
+        }
+    ),
+    $imageGallery = @{                      # https://docs.microsoft.com/azure/virtual-machines/shared-image-galleries
+        "name" = ""                         # Optional image distribution target
+        "resourceGroupName" = ""
     }
 )
 
-$currentUserId = az ad signed-in-user show --query "objectId"
-$storageAccountId = az storage account show --name $storageAccount.name --query "id"
-$managedIdentityId = az identity create --resource-group $managedIdentity.resourceGroupName --name $managedIdentity.name --query "principalId"
+function Set-RoleAssignment ($roleId, $principalId, $principalType, $scopeId, $scopeResourceGroup) {
+    $retryCount = 0
+    $roleAssigned = $false
+    do {
+        Write-Host "Set-RoleAssignment $roleId $principalId $principalType $scopeId"
+        if ($scopeResourceGroup) {
+            $roleAssignment = (az role assignment create --role $roleId --assignee-object-id $principalId --assignee-principal-type $principalType --resource-group $scopeId) | ConvertFrom-Json
+        } else {
+            $roleAssignment = (az role assignment create --role $roleId --assignee-object-id $principalId --assignee-principal-type $principalType --scope $scopeId) | ConvertFrom-Json
+        }
+        if ($roleAssignment) {
+            $roleAssigned = $true
+        } else {
+            $retryCount++
+        }
+    } while (!$roleAssigned -and $retryCount -lt 3)
+}
+
+function Set-ScriptFile ($scriptStorage, $scriptFile) {
+    $retryCount = 0
+    $blobUploaded = $false
+    do {
+        Write-Host "Set-ScriptFile $scriptFile"
+        $blobUpload = (az storage blob upload --account-name $scriptStorage.accountName --container-name $scriptStorage.containerName --file "$PSScriptRoot/$scriptFile" --name $scriptFile --auth-mode login) | ConvertFrom-Json
+        if ($blobUpload) {
+            $blobUploaded = $true
+        } else {
+            $retryCount++
+            Start-Sleep -Seconds 60
+        }
+    } while (!$blobUploaded -and $retryCount -lt 3)
+}
+
+az group create --name $resourceGroup.name --location $resourceGroup.regionName
+
+az storage account create --resource-group $scriptStorage.resourceGroupName --name $scriptStorage.accountName
+az storage container create --account-name $scriptStorage.accountName --name $scriptStorage.containerName --auth-mode login
+
+$managedIdentityId = az identity create --resource-group $managedIdentity.resourceGroupName --name $managedIdentity.name --query "principalId" --output "tsv"
+
+$currentUserId = az ad signed-in-user show --query "objectId" --output "tsv"
+$storageAccountId = az storage account show --name $scriptStorage.accountName --query "id" --output "tsv"
 
 $roleId = "ba92f5b4-2d11-453d-a403-e96b0029c9fe" # Storage Object Data Contributor
-az role assignment create --scope $storageAccountId --role $roleId --assignee-object-id $currentUserId --assignee-principal-type "User"
+Set-RoleAssignment $roleId $currentUserId "User" $storageAccountId $false
 
 $roleId = "2a2b9908-6ea1-4ae2-8e65-a410df84e7d1" # Storage Object Data Reader
-az role assignment create --scope $storageAccountId --role $roleId --assignee-object-id $managedIdentityId --assignee-principal-type "ServicePrincipal"
+Set-RoleAssignment $roleId $managedIdentityId "ServicePrincipal" $storageAccountId $false
 
 $roleId = "acdd72a7-3385-48ef-bd42-f606fba81ae7" # Reader
-az role assignment create --scope $storageAccountId --role $roleId --assignee-object-id $managedIdentityId --assignee-principal-type "ServicePrincipal"
+Set-RoleAssignment $roleId $managedIdentityId "ServicePrincipal" $storageAccountId $false
 
 $roleId = "b24988ac-6180-42a0-ab88-20f7382dd24c" # Contributor
-az role assignment create --resource-group $imageGallery.resourceGroupName --role $roleId --assignee-object-id $managedIdentityId --assignee-principal-type "ServicePrincipal"
+$resourceGroupName = $imageGallery.resourceGroupName -eq "" ? $resourceGroup.name : $imageGallery.resourceGroupName
+Set-RoleAssignment $roleId $managedIdentityId "ServicePrincipal" $resourceGroupName $true
+
+Start-Sleep -Seconds 180 # Role assignment replication delay
 
 $scriptFileLinux = "Customize.sh"
 $scriptFileWindows = "Customize.ps1"
 
-az storage container create --account-name $storageAccount.name --name $storageAccount.containerName --auth-mode login
-az storage blob upload --account-name $storageAccount.name --container-name $storageAccount.containerName --file "$PSScriptRoot/$scriptFileLinux" --name $scriptFileLinux --auth-mode login
-az storage blob upload --account-name $storageAccount.name --container-name $storageAccount.containerName --file "$PSScriptRoot/$scriptFileWindows" --name $scriptFileWindows --auth-mode login
+Set-ScriptFile $scriptStorage $scriptFileLinux
+Set-ScriptFile $scriptStorage $scriptFileWindows
 
-if ($imageTemplate.machineType -eq "Windows") {
-    $scriptType = "PowerShell"
-    $scriptFile = $scriptFileWindows
-} else {
-    $scriptType = "Shell"
-    $scriptFile = $scriptFileLinux
+foreach ($imageTemplate in $imageTemplates) {
+    $imageSource = (az vm image show --urn ($imageTemplate.imageSource.publisher + ":" + $imageTemplate.imageSource.offer + ":" + $imageTemplate.imageSource.sku + ":" + $imageTemplate.imageSource.version)) | ConvertFrom-Json
+    if ($imageSource.osDiskImage.operatingSystem -eq "Windows") {
+        $scriptType = "PowerShell"
+        $scriptFile = $scriptFileWindows
+    } else {
+        $scriptType = "Shell"
+        $scriptFile = $scriptFileLinux
+    }
+    $customizeCommand = $imageTemplate.imageBuild.customizeCommands[0]
+    if ($customizeCommand.type -eq "") {
+        $customizeCommand.type = $scriptType
+    }
+    if ($customizeCommand.scriptUri -eq "") {
+        $scriptFileHash = Get-FileHash -Path "$PSScriptRoot/$scriptFile" -Algorithm "SHA256"
+        $customizeCommand.scriptUri = "https://" + $scriptStorage.accountName + ".blob.core.windows.net/" + $scriptStorage.containerName + "/$scriptFile"
+        $customizeCommand.sha256Checksum = $scriptFileHash.hash.ToLower()
+    }
 }
-if ($imageTemplate.buildCustomizeCommands[0].type -eq "") {
-    $imageTemplate.buildCustomizeCommands[0].type = $scriptType
-}
-if ($imageTemplate.buildCustomizeCommands[0].scriptUri -eq "") {
-    $scriptUri = "https://" + $storageAccount.name + ".blob.core.windows.net/" + $storageAccount.containerName + "/$scriptFile"
-    $scriptFileHash = Get-FileHash -Path "$PSScriptRoot/$scriptFile" -Algorithm "SHA256"
-    $imageTemplate.buildCustomizeCommands[0].scriptUri = $scriptUri
-    $imageTemplate.buildCustomizeCommands[0].sha256Checksum = $scriptFileHash.hash.ToLower()
-}
-
-az group create --name $resourceGroup.name --location $resourceGroup.regionName
 
 $templateFile = "$PSScriptRoot/Template.json"
 $templateParameters = "$PSScriptRoot/Template.Parameters.json"
 
 $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
-$templateConfig.parameters.imageTemplate.value = $imageTemplate
-$templateConfig.parameters.imageGallery.value = $imageGallery
 $templateConfig.parameters.managedIdentity.value = $managedIdentity
-$templateConfig | ConvertTo-Json -Depth 5 | Out-File $templateParameters
+$templateConfig.parameters.imageTemplates.value = $imageTemplates
+$templateConfig.parameters.imageGallery.value = $imageGallery
+$templateConfig | ConvertTo-Json -Depth 7 | Out-File $templateParameters
 
-$timeFormat = "hh:mm:ss"
-Write-Host (Get-Date -Format $timeFormat) "Image Template Deployment Start"
 az deployment group create --resource-group $resourceGroup.name --template-file $templateFile --parameters $templateParameters
-Write-Host (Get-Date -Format $timeFormat) "Image Template Deployment End"
 
-Write-Host (Get-Date -Format $timeFormat) "Image Template Build Start"
-az image builder run --resource-group $resourceGroup.name --name $imageTemplate.name
-Write-Host (Get-Date -Format $timeFormat) "Image Template Build End"
+foreach ($imageTemplate in $imageTemplates) {
+    if ($imageTemplate.name -ne "") {
+        az image builder run --resource-group $resourceGroup.name --name $imageTemplate.name --no-wait
+    }
+}

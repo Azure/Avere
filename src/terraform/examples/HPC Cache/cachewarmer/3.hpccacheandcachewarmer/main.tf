@@ -31,6 +31,10 @@ locals {
   //    WRITE_WORKLOAD_15
   usage_model = "READ_HEAVY_INFREQ"
 
+  // storage account hosting the queue
+  storage_account_name = "storageaccount"
+  queue_prefix_name = "cachewarmer"
+
   // paste the values below from the output of setting up network and filer
   filer_address = ""
   filer_export = ""
@@ -50,12 +54,20 @@ provider "azurerm" {
     features {}
 }
 
+resource "azurerm_storage_account" "storage" {
+  name                     = local.storage_account_name
+  resource_group_name      = local.hpccache_resource_group_name
+  location                 = local.location
+  account_kind             = "Storage" // set to storage v1 for cheapest cost on queue transactions
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
 data "azurerm_subnet" "vnet" {
   name                 = local.hpccache_cache_subnet_name
   virtual_network_name = local.hpccache_network_name
   resource_group_name  = local.hpccache_network_resource_group_name
 }
-
 resource "azurerm_hpc_cache" "hpc_cache" {
   name                = local.cache_name
   resource_group_name = local.hpccache_resource_group_name
@@ -110,9 +122,9 @@ module "cachewarmer_manager_install" {
   bootstrap_worker_script_path = module.cachewarmer_build.cachewarmer_worker_bootstrap_script_path
     
   // the job path
-  jobMount_address = tolist(azurerm_hpc_cache.hpc_cache.mount_addresses)[0]
-  job_export_path = local.filer_export
-  job_base_path = "/"
+  storage_account = local.storage_account_name
+  storage_key = azurerm_storage_account.storage.primary_access_key
+  queue_name_prefix = local.queue_prefix_name
 
   // the cachewarmer VMSS auth details
   vmss_user_name = local.jumpbox_username
@@ -133,9 +145,9 @@ module "cachewarmer_submitjob" {
   ssh_key_data = local.vm_ssh_key_data
   
   // the job path
-  jobMount_address = module.cachewarmer_manager_install.job_mount_address
-  job_export_path = module.cachewarmer_manager_install.job_export_path
-  job_base_path = module.cachewarmer_manager_install.job_path
+  storage_account = local.storage_account_name
+  storage_key = azurerm_storage_account.storage.primary_access_key
+  queue_name_prefix = local.queue_prefix_name
 
   // the path to warm
   warm_mount_addresses = join(",", tolist(azurerm_hpc_cache.hpc_cache.mount_addresses))
