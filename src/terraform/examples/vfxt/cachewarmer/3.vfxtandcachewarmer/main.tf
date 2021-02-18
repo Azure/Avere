@@ -46,8 +46,8 @@ provider "azurerm" {
 
 resource "azurerm_storage_account" "storage" {
   name                     = local.storage_account_name
-  resource_group_name      = azurerm_resource_group.storage.name
-  location                 = azurerm_resource_group.storage.location
+  resource_group_name      = local.vfxt_resource_group_name
+  location                 = local.location
   account_kind             = "Storage" // set to storage v1 for cheapest cost on queue transactions
   account_tier             = "Standard"
   account_replication_type = "LRS"
@@ -113,8 +113,8 @@ module "cachewarmer_manager_install" {
   bootstrap_worker_script_path = module.cachewarmer_build.cachewarmer_worker_bootstrap_script_path
     
   // the job path
-  storage_account = tolist(avere_vfxt.vfxt.vserver_ip_addresses)[0]
-  storage_key = local.filer_export
+  storage_account = local.storage_account_name
+  storage_key = azurerm_storage_account.storage.primary_access_key
   queue_name_prefix = local.queue_prefix_name
 
   // the cachewarmer VMSS auth details
@@ -136,8 +136,8 @@ module "cachewarmer_submitjob" {
   ssh_key_data = local.vm_ssh_key_data
   
   // the job path
-  storage_account = tolist(avere_vfxt.vfxt.vserver_ip_addresses)[0]
-  storage_key = local.filer_export
+  storage_account = local.storage_account_name
+  storage_key = azurerm_storage_account.storage.primary_access_key
   queue_name_prefix = local.queue_prefix_name
 
   // the path to warm

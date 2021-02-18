@@ -68,7 +68,7 @@ func (q *CacheWarmerQueues) GetWarmPathJob() (*WarmPathJob, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error parsing message text '%s': '%v'", msg.Text, err)
 		}
-		warmPathJob.SetQueueMessageInfo(&(msg.ID), &(msg.PopReceipt))
+		warmPathJob.SetQueueMessageInfo(msg.ID, msg.PopReceipt)
 		return warmPathJob, nil
 	}
 	return nil, nil
@@ -76,25 +76,27 @@ func (q *CacheWarmerQueues) GetWarmPathJob() (*WarmPathJob, error) {
 
 func (q *CacheWarmerQueues) StillProcessingWarmPathJob(warmPathJob *WarmPathJob) error {
 	id, popReceipt := warmPathJob.GetQueueMessageInfo()
-	if id == nil || popReceipt == nil {
+	if len(id) == 0 || len(popReceipt) == 0 {
 		return fmt.Errorf("queue message id incorrectly set for warmpathjob")
 	}
 	message, err := warmPathJob.GetWarmPathJobFileContents()
 	if err != nil {
 		return err
 	}
-	if _, err := q.jobQueue.UpdateVisibilityTimeout(*id, *popReceipt, CacheWarmerVisibilityTimeout, message); err != nil {
+	resp, err := q.jobQueue.UpdateVisibilityTimeout(id, popReceipt, CacheWarmerVisibilityTimeout, message)
+	if err != nil {
 		return err
 	}
+	warmPathJob.SetQueueMessageInfo(id, resp.PopReceipt)
 	return nil
 }
 
 func (q *CacheWarmerQueues) DeleteWarmPathJob(warmPathJob *WarmPathJob) error {
 	id, popReceipt := warmPathJob.GetQueueMessageInfo()
-	if id == nil || popReceipt == nil {
+	if len(id) == 0 || len(popReceipt) == 0 {
 		return fmt.Errorf("queue message id incorrectly set for warmpathjob")
 	}
-	if _, err := q.jobQueue.DeleteMessage(*id, *popReceipt); err != nil {
+	if _, err := q.jobQueue.DeleteMessage(id, popReceipt); err != nil {
 		return err
 	}
 	return nil
@@ -132,7 +134,7 @@ func (q *CacheWarmerQueues) PeekWorkerJob() (*WorkerJob, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error parsing message text '%s': '%v'", msg.Text, err)
 		}
-		workerJob.SetQueueMessageInfo(&(msg.ID), nil)
+		workerJob.SetQueueMessageInfo(msg.ID, "")
 		return workerJob, nil
 	}
 	return nil, nil
@@ -149,7 +151,7 @@ func (q *CacheWarmerQueues) GetWorkerJob() (*WorkerJob, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error parsing message text '%s': '%v'", msg.Text, err)
 		}
-		workerJob.SetQueueMessageInfo(&(msg.ID), &(msg.PopReceipt))
+		workerJob.SetQueueMessageInfo(msg.ID, msg.PopReceipt)
 		return workerJob, nil
 	}
 	return nil, nil
@@ -157,25 +159,27 @@ func (q *CacheWarmerQueues) GetWorkerJob() (*WorkerJob, error) {
 
 func (q *CacheWarmerQueues) StillProcessingWorkerJob(workerJob *WorkerJob) error {
 	id, popReceipt := workerJob.GetQueueMessageInfo()
-	if id == nil || popReceipt == nil {
+	if len(id) == 0 || len(popReceipt) == 0 {
 		return fmt.Errorf("queue message id incorrectly set for workerjob")
 	}
 	message, err := workerJob.GetWorkerJobFileContents()
 	if err != nil {
 		return err
 	}
-	if _, err := q.workQueue.UpdateVisibilityTimeout(*id, *popReceipt, CacheWarmerVisibilityTimeout, message); err != nil {
+	resp, err := q.workQueue.UpdateVisibilityTimeout(id, popReceipt, CacheWarmerVisibilityTimeout, message)
+	if err != nil {
 		return err
 	}
+	workerJob.SetQueueMessageInfo(id, resp.PopReceipt)
 	return nil
 }
 
 func (q *CacheWarmerQueues) DeleteWorkerJob(workerJob *WorkerJob) error {
 	id, popReceipt := workerJob.GetQueueMessageInfo()
-	if id == nil || popReceipt == nil {
+	if len(id) == 0 || len(popReceipt) == 0 {
 		return fmt.Errorf("queue message id incorrectly set for workerjob")
 	}
-	if _, err := q.workQueue.DeleteMessage(*id, *popReceipt); err != nil {
+	if _, err := q.workQueue.DeleteMessage(id, popReceipt); err != nil {
 		return err
 	}
 	return nil
