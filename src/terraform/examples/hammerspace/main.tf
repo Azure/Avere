@@ -4,7 +4,7 @@ locals {
     location = "eastus"
     admin_username = "azureuser"
     admin_password = "ReplacePassword$"
-    
+
     unique_name = "hammerspace1"
     hammerspace_image_id = ""
     use_highly_available = false
@@ -16,6 +16,7 @@ locals {
     ha_subnet_name                       = "cloud_filers_ha"
     data_subnet_name                     = "cloud_filers"
     anvil_data_cluster_ip                = "" // leave blank to be dynamic
+    dsx_instance_count                   = 1
 
     // nfs filer details
     filer_resource_group_name = "filer_resource_group"
