@@ -16,8 +16,8 @@ type WarmPathJob struct {
 	WarmTargetPath           string
 	InclusionList            []string
 	ExclusionList            []string
-	queueMessageID           *azqueue.MessageID
-	queuePopReceipt          *azqueue.PopReceipt
+	queueMessageID           azqueue.MessageID
+	queuePopReceipt          azqueue.PopReceipt
 }
 
 func (j *WarmPathJob) FileMatches(filename string) bool {
@@ -60,12 +60,12 @@ func (j *WarmPathJob) GetWarmPathJobFileContents() (string, error) {
 	return string(data), nil
 }
 
-func (j *WarmPathJob) SetQueueMessageInfo(id *azqueue.MessageID, popReceipt *azqueue.PopReceipt) {
+func (j *WarmPathJob) SetQueueMessageInfo(id azqueue.MessageID, popReceipt azqueue.PopReceipt) {
 	j.queueMessageID = id
 	j.queuePopReceipt = popReceipt
 }
 
-func (j *WarmPathJob) GetQueueMessageInfo() (*azqueue.MessageID, *azqueue.PopReceipt) {
+func (j *WarmPathJob) GetQueueMessageInfo() (azqueue.MessageID, azqueue.PopReceipt) {
 	return j.queueMessageID, j.queuePopReceipt
 }
 

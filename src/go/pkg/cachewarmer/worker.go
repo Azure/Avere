@@ -66,6 +66,9 @@ func (w *Worker) RunWorkerManager(ctx context.Context, syncWaitGroup *sync.WaitG
 						log.Error.Printf("error checking worker job queue: %v", err)
 						continue
 					}
+					if workerJob == nil {
+						continue
+					}
 					if err := w.processWorkerJob(ctx, workerJob); err != nil {
 						log.Error.Printf("error processing worker job: %v", err)
 						continue

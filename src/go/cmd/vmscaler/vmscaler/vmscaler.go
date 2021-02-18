@@ -495,7 +495,7 @@ func (v *VMScaler) executePlan(p *Plan) error {
 
 	// delete 0 capacity vmss instances
 	for _, element := range p.VMSSToDelete {
-		forceDelete := true
+		forceDelete := false
 		future, err := v.vmssClient.VmssClient.Delete(v.Context, v.ResourceGroup, element, &forceDelete)
 		if err != nil {
 			log.Error.Printf("error deleting '%s': %v, %v", element, err, future)

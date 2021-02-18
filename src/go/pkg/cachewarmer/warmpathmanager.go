@@ -109,8 +109,9 @@ func (m *WarmPathManager) RunJobGenerator(ctx context.Context, syncWaitGroup *sy
 }
 
 func (m *WarmPathManager) processJob(ctx context.Context, warmPathJob *WarmPathJob) error {
-	log.Debug.Printf("[WarmPathManager.processJob")
-	defer log.Debug.Printf("WarmPathManager.processJob]")
+	id, popReceipt := warmPathJob.GetQueueMessageInfo()
+	log.Info.Printf("[WarmPathManager.processJob '%s' '%s'", id, popReceipt)
+	defer log.Info.Printf("WarmPathManager.processJob '%s' '%s']", id, popReceipt)
 
 	if len(warmPathJob.WarmTargetMountAddresses) == 0 {
 		if err := m.Queues.DeleteWarmPathJob(warmPathJob); err != nil {
@@ -204,7 +205,7 @@ func (m *WarmPathManager) processJob(ctx context.Context, warmPathJob *WarmPathJ
 
 	// remove the job file
 	if err := m.Queues.DeleteWarmPathJob(warmPathJob); err != nil {
-		log.Error.Printf("error removing job at end of processing: %v", err)
+		log.Error.Printf("error removing job '%s' '%s' at end of processing: %v", id, popReceipt, err)
 	}
 
 	return nil
@@ -304,6 +305,9 @@ func (m *WarmPathManager) RunVMSSManager(ctx context.Context, syncWaitGroup *syn
 					workerJob, err := m.Queues.PeekWorkerJob()
 					if err != nil {
 						log.Error.Printf("error peeking at a worker job: %v", err)
+						continue
+					}
+					if workerJob == nil {
 						continue
 					}
 					mountCount := len(workerJob.WarmTargetMountAddresses)
