@@ -6,6 +6,7 @@ data "azurerm_subnet" "vnet" {
 
 data "azurerm_resource_group" "nfsfiler" {
   name     = var.resource_group_name
+  depends_on = [var.module_depends_on]
 }
 
 locals {
