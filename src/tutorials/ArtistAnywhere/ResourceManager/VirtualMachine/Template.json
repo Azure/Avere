@@ -2,11 +2,18 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "virtualMachine": {
+      "type": "object"
+    }
   },
   "variables": {
   },
   "resources": [
   ],
   "outputs": {
+    "virtualMachine": {
+      "type": "object",
+      "value": "[parameters('virtualMachine')]"
+    }
   }
 }

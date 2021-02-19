@@ -11,10 +11,15 @@ param (
     # Set to true to deploy Azure VPN Gateway (https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways)
     [boolean] $networkGatewayDeploy = $false,
 
-    # Set to true to deploy Azure NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
-    [boolean] $storageNetAppDeploy = $false,
+    # Set to true to deploy one or more Azure 1st-party and/or 3rd-party storage services within the Azure storage region
+    [object] $storageServiceDeploy = @{
+        "blobStorage" = $false  # https://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview
+        "netAppFiles" = $false  # https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction
+        "hammerspace" = $false
+        "qumulo" = $false
+    },
 
-    # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in the compute region
+    # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) service
     [boolean] $storageCacheDeploy = $false,
 
     # Set to the target Azure render manager deployment mode (i.e., OpenCue[.HPC], RoyalRender[.HPC] or Batch)
@@ -49,7 +54,7 @@ $imageGallery = $baseFramework.imageGallery
 
 # Storage Cache
 if (!$storageCache) {
-    $storageCache = Get-StorageCache $rootDirectory $baseFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageNetAppDeploy $storageCacheDeploy
+    $storageCache = Get-StorageCache $rootDirectory $baseFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageServiceDeploy $storageCacheDeploy
 }
 $storageAccount = $storageCache.storageAccount
 

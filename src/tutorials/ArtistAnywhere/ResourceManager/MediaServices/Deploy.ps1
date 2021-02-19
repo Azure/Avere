@@ -3,14 +3,8 @@ param (
         "name" = ""
         "regionName" = "WestUS2"    # https://azure.microsoft.com/global-infrastructure/geographies/
     },
-    $quantumWorkspace = @{          # https://docs.microsoft.com/azure/quantum/overview-azure-quantum
+    $mediaAccount = @{              # https://docs.microsoft.com/azure/media-services/latest/media-services-overview
         "name" = ""
-        "providers" = @(
-            @{
-                "providerId" = "Microsoft"
-                "providerSku" = "DZH3178M639F"
-            }
-        )
     },
     $storageAccount = @{            # https://docs.microsoft.com/azure/storage/common/storage-account-overview
         "name" = ""
@@ -24,7 +18,7 @@ $templateFile = "$PSScriptRoot/Template.json"
 $templateParameters = "$PSScriptRoot/Template.Parameters.json"
 
 $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
-$templateConfig.parameters.quantumWorkspace.value = $quantumWorkspace
+$templateConfig.parameters.mediaAccount.value = $mediaAccount
 $templateConfig.parameters.storageAccount.value = $storageAccount
 $templateConfig | ConvertTo-Json -Depth 5 | Out-File $templateParameters
 

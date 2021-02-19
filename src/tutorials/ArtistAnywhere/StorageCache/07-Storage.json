@@ -151,6 +151,7 @@
       "value": {
         "name": "[parameters('storageAccounts')[0].name]",
         "resourceGroupName": "[resourceGroup().name]",
+        "containerName": "[parameters('storageContainers')[0].name]",
         "queueName": "[parameters('storageQueues')[0].name]"
       }
     },

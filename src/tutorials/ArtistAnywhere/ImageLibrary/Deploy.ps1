@@ -1,4 +1,4 @@
-﻿param (
+param (
     # Set a name prefix for the Azure resource groups that are created by this resource deployment script
     [string] $resourceGroupNamePrefix = "Azure.Artist.Anywhere",
 
@@ -9,28 +9,17 @@
     [string] $storageRegionName = "EastUS2",
 
     # Set to true to deploy Azure VPN Gateway (https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways)
-    [boolean] $networkGatewayDeploy = $false,
-
-    # Set to true to deploy one or more Azure 1st-party and/or 3rd-party storage services within the Azure storage region
-    [object] $storageServiceDeploy = @{
-        "blobStorage" = $false  # https://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview
-        "netAppFiles" = $false  # https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction
-        "hammerspace" = $false
-        "qumulo" = $false
-    },
-
-    # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) service
-    [boolean] $storageCacheDeploy = $false
+    [boolean] $networkGatewayDeploy = $false
 )
 
 $rootDirectory = (Get-Item -Path $PSScriptRoot).Parent.FullName
 
 Import-Module "$rootDirectory/Deploy.psm1"
 Import-Module "$rootDirectory/BaseFramework/Deploy.psm1"
-Import-Module "$rootDirectory/StorageCache/Deploy.psm1"
+Import-Module "$rootDirectory/ImageLibrary/Deploy.psm1"
 
 $baseFramework = Get-BaseFramework $rootDirectory $resourceGroupNamePrefix $computeRegionName $storageRegionName $networkGatewayDeploy
 ConvertTo-Json -InputObject $baseFramework | Write-Host
 
-$storageCache = Get-StorageCache $rootDirectory $baseFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageServiceDeploy $storageCacheDeploy
-ConvertTo-Json -InputObject $storageCache | Write-Host
+$imageLibrary = Get-ImageLibrary $rootDirectory $baseFramework $resourceGroupNamePrefix $computeRegionName
+ConvertTo-Json -InputObject $imageLibrary | Write-Host

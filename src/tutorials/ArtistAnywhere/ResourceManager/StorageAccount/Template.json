@@ -4,6 +4,9 @@
   "parameters": {
     "storageAccount": {
       "type": "object"
+    },
+    "virtualNetwork": {
+      "type": "object"
     }
   },
   "variables": {
@@ -24,6 +27,18 @@
             "type": "string",
             "value": "[if(equals(parameters('resource').name, ''), uniqueString(string(parameters('resource'))), parameters('resource').name)]"
           }
+        },
+        "GetVirtualNetworkRules": {
+          "parameters": [
+            {
+              "name": "virtualNetwork",
+              "type": "object"
+            }
+          ],
+          "output": {
+            "type": "string",
+            "value": "[if(equals(parameters('virtualNetwork').name, ''), 'null', concat('[{\"id\": \"', resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName), '\"}]'))]"
+          }
         }
       }
     }
@@ -39,6 +54,14 @@
         "name": "[parameters('storageAccount').replication]"
       },
       "properties": {
+        "isHnsEnabled": "[parameters('storageAccount').enableNfsV3]",
+        "isNfsV3Enabled": "[parameters('storageAccount').enableNfsV3]",
+        "supportsHttpsTrafficOnly": "[not(parameters('storageAccount').enableNfsV3)]",
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "defaultAction": "[if(equals(parameters('virtualNetwork').name, ''), 'Allow', 'Deny')]",
+          "virtualNetworkRules": "[json(fx.GetVirtualNetworkRules(parameters('virtualNetwork')))]"
+        }
       }
     },
     {

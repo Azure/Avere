@@ -13,8 +13,8 @@
     }
   },
   "variables": {
-    "virtualNetworkApiVersion": "2020-11-01",
     "privateDnsZoneApiVersion": "2020-06-01",
+    "virtualNetworkApiVersion": "2020-11-01",
     "virtualNetworks": "[createArray(parameters('storageNetwork'), parameters('computeNetwork'))]"
   },
   "resources": [
@@ -66,7 +66,7 @@
         "virtualNetwork": {
           "id": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworks')[copyIndex()].name)]"
         },
-        "registrationEnabled": "[variables('virtualNetworks')[copyIndex()].dnsRegistrationEnabled]"
+        "registrationEnabled": "[variables('virtualNetworks')[copyIndex()].enableDomainRegistration]"
       },
       "copy": {
         "name": "virtualNetworks",

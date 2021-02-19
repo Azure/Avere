@@ -28,9 +28,13 @@ $rootDirectory = (Get-Item -Path $PSScriptRoot).Parent.FullName
 Import-Module "$rootDirectory/Deploy.psm1"
 Import-Module "$rootDirectory/BaseFramework/Deploy.psm1"
 Import-Module "$rootDirectory/StorageCache/Deploy.psm1"
+Import-Module "$rootDirectory/EventFramework/Deploy.psm1"
 
 $baseFramework = Get-BaseFramework $rootDirectory $resourceGroupNamePrefix $computeRegionName $storageRegionName $networkGatewayDeploy
 ConvertTo-Json -InputObject $baseFramework | Write-Host
 
 $storageCache = Get-StorageCache $rootDirectory $baseFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageServiceDeploy $storageCacheDeploy
 ConvertTo-Json -InputObject $storageCache | Write-Host
+
+$eventFramework = Get-EventFramework $rootDirectory $baseFramework $resourceGroupNamePrefix $computeRegionName
+ConvertTo-Json -InputObject $eventFramework | Write-Host
