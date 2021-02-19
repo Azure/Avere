@@ -21,16 +21,16 @@ type WorkerJob struct {
 	EndFileFilter            string
 	InclusionList            []string
 	ExclusionList            []string
-	queueMessageID           *azqueue.MessageID
-	queuePopReceipt          *azqueue.PopReceipt
+	queueMessageID           azqueue.MessageID
+	queuePopReceipt          azqueue.PopReceipt
 }
 
-func (j *WorkerJob) SetQueueMessageInfo(id *azqueue.MessageID, popReceipt *azqueue.PopReceipt) {
+func (j *WorkerJob) SetQueueMessageInfo(id azqueue.MessageID, popReceipt azqueue.PopReceipt) {
 	j.queueMessageID = id
 	j.queuePopReceipt = popReceipt
 }
 
-func (j *WorkerJob) GetQueueMessageInfo() (*azqueue.MessageID, *azqueue.PopReceipt) {
+func (j *WorkerJob) GetQueueMessageInfo() (azqueue.MessageID, azqueue.PopReceipt) {
 	return j.queueMessageID, j.queuePopReceipt
 }
 
