@@ -10,29 +10,27 @@ function Get-StorageCache ($rootDirectory, $baseFramework, $resourceGroupNamePre
     $storageTargets = @()
 
     # (07.1) Storage
-    if ($storageServiceDeploy.blobStorage) {
-        $moduleName = "(07.1) Storage"
-        New-TraceMessage $moduleName $false
-        $resourceGroupNameSuffix = "-Storage"
-        $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $storageRegionName
+    $moduleName = "(07.1) Storage"
+    New-TraceMessage $moduleName $false
+    $resourceGroupNameSuffix = "-Storage"
+    $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $storageRegionName
 
-        $templateFile = "$rootDirectory/$moduleDirectory/07-Storage.json"
-        $templateParameters = "$rootDirectory/$moduleDirectory/07-Storage.Parameters.json"
+    $templateFile = "$rootDirectory/$moduleDirectory/07-Storage.json"
+    $templateParameters = "$rootDirectory/$moduleDirectory/07-Storage.Parameters.json"
 
-        $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
-        $templateConfig.parameters.computeRegionName.value = $computeRegionName
-        $templateConfig.parameters.virtualNetwork.value.name = $storageNetwork.name
-        $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $storageNetwork.resourceGroupName
-        $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
+    $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
+    $templateConfig.parameters.computeRegionName.value = $computeRegionName
+    $templateConfig.parameters.virtualNetwork.value.name = $storageNetwork.name
+    $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $storageNetwork.resourceGroupName
+    $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
 
-        $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
-        $storageAccount = $groupDeployment.properties.outputs.storageAccount.value
-        $storageMounts += $groupDeployment.properties.outputs.storageMounts.value
-        $storageTargets += $groupDeployment.properties.outputs.storageTargets.value
+    $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
+    $storageAccount = $groupDeployment.properties.outputs.storageAccount.value
+    $storageMounts += $groupDeployment.properties.outputs.storageMounts.value
+    $storageTargets += $groupDeployment.properties.outputs.storageTargets.value
 
-        Set-RoleAssignments "Storage" $storageAccount.name $computeNetwork $managedIdentity $keyVault $imageGallery
-        New-TraceMessage $moduleName $true
-    }
+    Set-RoleAssignments "Storage" $storageAccount.name $computeNetwork $managedIdentity $keyVault $imageGallery
+    New-TraceMessage $moduleName $true
 
     # (07.2) Storage [NetApp]
     if ($storageServiceDeploy.netAppFiles) {
@@ -97,9 +95,7 @@ function Get-StorageCache ($rootDirectory, $baseFramework, $resourceGroupNamePre
         New-TraceMessage $moduleName $true
     }
 
-    if ($storageAccount) {
-        Set-StorageFiles "(07.5)" $rootDirectory $storageAccount $storageMounts $cacheMount
-    }
+    Set-StorageScripts "(07.5)" $rootDirectory $storageAccount $storageMounts $cacheMount
 
     # (08) HPC Cache
     if ($storageCacheDeploy) {
@@ -142,7 +138,7 @@ function Get-StorageCache ($rootDirectory, $baseFramework, $resourceGroupNamePre
     return $storageCache
 }
 
-function Set-StorageFiles ($modulePrefix, $rootDirectory, $storageAccount, $storageMounts, $cacheMount) {
+function Set-StorageScripts ($modulePrefix, $rootDirectory, $storageAccount, $storageMounts, $cacheMount) {
     $mountFilePatternLinux = "*.mount"
     $mountFilePatternWindows = "*.bat"
     $scriptFilePatternLinux = "*-*.sh"

@@ -5,6 +5,10 @@
     "virtualMachine": {
       "value": {
       }
+    },
+    "virtualNetwork": {
+      "value": {
+      }
     }
   }
 }

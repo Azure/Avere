@@ -5,7 +5,7 @@
     "managedIdentity": {
       "value": {
         "name": "MediaPipeline",
-        "resourceGroupName": "Azure.Artist.Anywhere"
+        "resourceGroupName": "Azure.Artist.Anywhere-Identity"
       }
     },
     "containerRegistry": {

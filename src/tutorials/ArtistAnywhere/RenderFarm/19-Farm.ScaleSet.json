@@ -44,17 +44,17 @@
         "GetExtensionCommand": {
           "parameters": [
             {
-              "name": "filePath",
+              "name": "scriptFilePath",
               "type": "string"
             },
             {
-              "name": "fileParameters",
+              "name": "scriptParameters",
               "type": "string"
             }
           ],
           "output": {
             "type": "string",
-            "value": "[if(endsWith(parameters('filePath'), '.ps1'), format('PowerShell.exe -ExecutionPolicy Unrestricted -File {0} {1}', parameters('filePath'), parameters('fileParameters')), format('cat {0} | tr -d \r | {1} /bin/bash', parameters('filePath'), parameters('fileParameters')))]"
+            "value": "[if(endsWith(parameters('scriptFilePath'), '.ps1'), format('PowerShell.exe -ExecutionPolicy Unrestricted -File {0} {1}', parameters('scriptFilePath'), parameters('scriptParameters')), format('cat {0} | tr -d \r | {1} /bin/bash', parameters('scriptFilePath'), parameters('scriptParameters')))]"
           }
         }
       }

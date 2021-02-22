@@ -5,7 +5,7 @@
     "postgreSql": {
       "value": {
         "deploy": false,
-        "name": "amp",
+        "name": "rendermanager",
         "tier": "MemoryOptimized",
         "size": "Standard_E4s_v3",
         "sqlVersion": 12,
@@ -22,7 +22,7 @@
     "mongoDb": {
       "value": {
         "deploy": false,
-        "name": "amp",
+        "name": "rendermanager",
         "serverVersion": "3.6",
         "offerType": "Standard",
         "userInterfaceType": "Non-Production",

@@ -60,23 +60,19 @@
         }
       ]
     },
-    "scriptExtension": {
+    "customExtension": {
       "value": {
         "linux": {
-          "filePath": "/tmp/16-Workstation.Machine.sh",
-          "fileParameters": "",
-          "scriptParameters": {
-            "RENDER_MANAGER_HOST": "",
-            "TERADICI_LICENSE_KEY": ""
-          }
+          "scriptFilePath": "/tmp/16-Workstation.Machine.sh",
+          "scriptParameters": ""
         },
         "windows": {
-          "filePath": "C:\\Windows\\Temp\\16-Workstation.Machine.ps1",
-          "fileParameters": "",
-          "scriptParameters": {
-            "renderManagerHost": "",
-            "teradiciLicenseKey": ""
-          }
+          "scriptFilePath": "C:\\Windows\\Temp\\16-Workstation.Machine.ps1",
+          "scriptParameters": ""
+        },
+        "scriptParameters": {
+          "renderManagerHost": "",
+          "teradiciLicenseKey": ""
         }
       }
     },

@@ -13,8 +13,7 @@
 
     # Set to true to deploy one or more Azure 1st-party and/or 3rd-party storage services within the Azure storage region
     [object] $storageServiceDeploy = @{
-        "blobStorage" = $false  # https://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview
-        "netAppFiles" = $false  # https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction
+        "netAppFiles" = $false # https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction
         "hammerspace" = $false
         "qumulo" = $false
     },
@@ -28,7 +27,7 @@ $rootDirectory = (Get-Item -Path $PSScriptRoot).Parent.FullName
 Import-Module "$rootDirectory/Deploy.psm1"
 Import-Module "$rootDirectory/BaseFramework/Deploy.psm1"
 Import-Module "$rootDirectory/StorageCache/Deploy.psm1"
-Import-Module "$rootDirectory/EventFramework/Deploy.psm1"
+Import-Module "$rootDirectory/EventIntegration/Deploy.psm1"
 
 $baseFramework = Get-BaseFramework $rootDirectory $resourceGroupNamePrefix $computeRegionName $storageRegionName $networkGatewayDeploy
 ConvertTo-Json -InputObject $baseFramework | Write-Host
@@ -36,5 +35,5 @@ ConvertTo-Json -InputObject $baseFramework | Write-Host
 $storageCache = Get-StorageCache $rootDirectory $baseFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageServiceDeploy $storageCacheDeploy
 ConvertTo-Json -InputObject $storageCache | Write-Host
 
-$eventFramework = Get-EventFramework $rootDirectory $baseFramework $resourceGroupNamePrefix $computeRegionName
-ConvertTo-Json -InputObject $eventFramework | Write-Host
+$eventIntegration = Get-EventIntegration $rootDirectory $baseFramework $storageCache $resourceGroupNamePrefix $computeRegionName
+ConvertTo-Json -InputObject $eventIntegration | Write-Host

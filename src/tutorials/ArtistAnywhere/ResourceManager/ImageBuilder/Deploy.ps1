@@ -24,7 +24,7 @@ param (
                 "version" = "latest"
             }
             "imageBuild" = @{
-                "timeoutMinutes" = 60
+                "timeoutMinutes" = 90
                 "customizeCommands" = @(
                     @{
                         "type" = ""
@@ -49,7 +49,7 @@ param (
                 "version" = "latest"
             }
             "imageBuild" = @{
-                "timeoutMinutes" = 60
+                "timeoutMinutes" = 90
                 "customizeCommands" = @(
                     @{
                         "type" = ""
@@ -74,7 +74,7 @@ param (
                 "version" = "latest"
             }
             "imageBuild" = @{
-                "timeoutMinutes" = 60
+                "timeoutMinutes" = 90
                 "customizeCommands" = @(
                     @{
                         "type" = ""
@@ -99,7 +99,7 @@ param (
                 "version" = "latest"
             }
             "imageBuild" = @{
-                "timeoutMinutes" = 60
+                "timeoutMinutes" = 90
                 "customizeCommands" = @(
                     @{
                         "type" = ""

@@ -13,8 +13,7 @@
 
     # Set to true to deploy one or more Azure 1st-party and/or 3rd-party storage services within the Azure storage region
     [object] $storageServiceDeploy = @{
-        "blobStorage" = $false  # https://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview
-        "netAppFiles" = $false  # https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction
+        "netAppFiles" = $false # https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction
         "hammerspace" = $false
         "qumulo" = $false
     },

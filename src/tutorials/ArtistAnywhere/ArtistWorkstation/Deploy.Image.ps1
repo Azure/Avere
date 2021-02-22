@@ -13,8 +13,7 @@ param (
 
     # Set to true to deploy one or more Azure 1st-party and/or 3rd-party storage services within the Azure storage region
     [object] $storageServiceDeploy = @{
-        "blobStorage" = $false  # https://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview
-        "netAppFiles" = $false  # https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction
+        "netAppFiles" = $false # https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction
         "hammerspace" = $false
         "qumulo" = $false
     },
@@ -28,8 +27,11 @@ param (
     # The base Azure services framework (e.g., Virtual Network, Managed Identity, Key Vault, etc.)
     [object] $baseFramework,
 
-    # The Azure storage and cache service resources (e.g., storage account, cache mount, etc.)
-    [object] $storageCache
+    # The Azure storage and cache resources (e.g., storage account, storage / cache mounts, etc.)
+    [object] $storageCache,
+
+    # The Azure image library resources (e.g., Image Gallery, Container Registry, etc.)
+    [object] $imageLibrary
 )
 
 $rootDirectory = !$PSScriptRoot ? $using:rootDirectory : (Get-Item -Path $PSScriptRoot).Parent.FullName
@@ -38,6 +40,7 @@ $moduleDirectory = "ArtistWorkstation"
 Import-Module "$rootDirectory/Deploy.psm1"
 Import-Module "$rootDirectory/BaseFramework/Deploy.psm1"
 Import-Module "$rootDirectory/StorageCache/Deploy.psm1"
+Import-Module "$rootDirectory/ImageLibrary/Deploy.psm1"
 
 # Base Framework
 if (!$baseFramework) {
@@ -45,22 +48,27 @@ if (!$baseFramework) {
 }
 $computeNetwork = $baseFramework.computeNetwork
 $managedIdentity = $baseFramework.managedIdentity
-$imageGallery = $baseFramework.imageGallery
 
 # Storage Cache
 if (!$storageCache) {
     $storageCache = Get-StorageCache $rootDirectory $baseFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageServiceDeploy $storageCacheDeploy
 }
 
+# Image Library
+if (!$imageLibrary) {
+    $imageLibrary = Get-ImageLibrary $rootDirectory $baseFramework $resourceGroupNamePrefix $computeRegionName
+}
+$imageGallery = $imageLibrary.imageGallery
+
 # (20.1) Artist Workstation Image Template
-$moduleName = "(20.1) Artist Workstation Image Template [" + ($artistWorkstationTypes -join ",") + "]"
+$moduleName = "(20.1) Artist Workstation Image Template"
 New-TraceMessage $moduleName $false
 $resourceGroupNameSuffix = "-Gallery"
 $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
 $templateFile = "$rootDirectory/$moduleDirectory/20-Image.json"
 $templateParameters = "$rootDirectory/$moduleDirectory/20-Image.Parameters.json"
-$templateConfig = Set-ImageTemplates $resourceGroupName $templateParameters $artistWorkstationTypes
+$templateConfig = Set-ImageTemplates $imageGallery $templateParameters $artistWorkstationTypes
 
 $templateConfig.parameters.managedIdentity.value.name = $managedIdentity.name
 $templateConfig.parameters.managedIdentity.value.resourceGroupName = $managedIdentity.resourceGroupName
@@ -74,5 +82,5 @@ $groupDeployment = (az deployment group create --resource-group $resourceGroupNa
 New-TraceMessage $moduleName $true
 
 # (20.2) Artist Workstation Image Build
-$moduleName = "(20.2) Artist Workstation Image Build [" + ($artistWorkstationTypes -join ",") + "]"
+$moduleName = "(20.2) Artist Workstation Image Build"
 Build-ImageTemplates $moduleName $computeRegionName $imageGallery $templateConfig.parameters.imageTemplates.value

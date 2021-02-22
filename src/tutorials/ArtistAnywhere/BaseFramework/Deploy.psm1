@@ -38,7 +38,7 @@ function Get-BaseFramework ($rootDirectory, $resourceGroupNamePrefix, $computeRe
     # (03) Active Directory
     $moduleName = "(03) Active Directory"
     New-TraceMessage $moduleName $false
-    $resourceGroupNameSuffix = ""
+    $resourceGroupNameSuffix = "-Identity"
     $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
     $templateFile = "$rootDirectory/$moduleDirectory/03-ActiveDirectory.json"
@@ -51,7 +51,7 @@ function Get-BaseFramework ($rootDirectory, $resourceGroupNamePrefix, $computeRe
     # (04) Managed Identity
     $moduleName = "(04) Managed Identity"
     New-TraceMessage $moduleName $false
-    $resourceGroupNameSuffix = ""
+    $resourceGroupNameSuffix = "-Identity"
     $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
     $templateFile = "$rootDirectory/$moduleDirectory/04-ManagedIdentity.json"

@@ -101,18 +101,22 @@ function Set-RoleAssignments ($moduleType, $storageAccountName, $computeNetwork,
     }
 }
 
-function Get-ImageCustomizeCommand ($rootDirectory, $moduleDirectory, $storageAccount, $osType, $scriptFile) {
-    $commandType = "File"
+function Get-ImageCustomizeCommand ($rootDirectory, $moduleDirectory, $storageAccount, $imageGallery, $imageTemplate, $commandType, $scriptFile) {
     $scriptDirectory = $moduleDirectory
-    switch ($osType) {
+    $imageDefinition = (az sig image-definition show --resource-group $imageGallery.resourceGroupName --gallery-name $imageGallery.name --gallery-image-definition $imageTemplate.imageDefinitionName) | ConvertFrom-Json
+    switch ($imageDefinition.osType) {
         "Linux" {
-            $commandType = "Shell"
+            if (!$commandType) {
+                $commandType = "Shell"
+            }
             $scriptDirectory += "/Linux"
             $scriptFile = "$scriptFile.sh"
             $downloadsPath = "/tmp/"
         }
         "Windows" {
-            $commandType = "PowerShell"
+            if (!$commandType) {
+                $commandType = "PowerShell"
+            }
             $scriptDirectory += "/Windows"
             $scriptFile = "$scriptFile.ps1"
             $downloadsPath = "C:\Windows\Temp\"
@@ -143,11 +147,12 @@ function Get-ImageVersion ($imageGallery, $imageTemplate) {
     }
 }
 
-function Set-ImageTemplates ($resourceGroupName, $templateParameters, $osTypes) {
+function Set-ImageTemplates ($imageGallery, $templateParameters, $osTypes) {
     $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
     foreach ($imageTemplate in $templateConfig.parameters.imageTemplates.value) {
-        if ($imageTemplate.imageOperatingSystemType -in $osTypes) {
-            az image builder delete --resource-group $resourceGroupName --name $imageTemplate.name --output none
+        $imageDefinition = (az sig image-definition show --resource-group $imageGallery.resourceGroupName --gallery-name $imageGallery.name --gallery-image-definition $imageTemplate.imageDefinitionName) | ConvertFrom-Json
+        if ($imageDefinition.osType -in $osTypes) {
+            az image builder delete --resource-group $imageGallery.resourceGroupName --name $imageTemplate.name --output none
             $imageTemplate.deploy = $true
         }
     }
@@ -169,19 +174,17 @@ function Build-ImageTemplates ($moduleName, $computeRegionName, $imageGallery, $
     New-TraceMessage $moduleName $true
 }
 
-function Get-ObjectProperties ($object, $windows) {
-    $objectProperties = ""
-    foreach ($property in $object.PSObject.Properties) {
-        if ($property.Value -is [string] -and $property.Value -ne "") {
-            if ($objectProperties -ne "") {
-                $objectProperties += " "
-            }
-            if ($windows) {
-                $objectProperties += "-" + $property.Name + " '" + $property.Value + "'"
-            } else {
-                $objectProperties += $property.Name + "='" + $property.Value + "'"
-            }
+function Get-ExtensionParameters ($scriptFilePath, $scriptParameters) {
+    $extensionParameters = ""
+    foreach ($property in $scriptParameters.PSObject.Properties) {
+        if ($extensionParameters -ne "") {
+            $extensionParameters += " "
+        }
+        if ($scriptFilePath.EndsWith(".ps1")) {
+            $extensionParameters += "-" + $property.Name + " '" + $property.Value + "'"
+        } else {
+            $extensionParameters += $property.Name + "='" + $property.Value + "'"
         }
     }
-    return $objectProperties
+    return $extensionParameters
 }

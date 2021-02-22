@@ -124,7 +124,7 @@
     },
     "mongoDbAdminPassword": {
       "type": "string",
-      "value": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('mongoDb').name), variables('cosmosDbApiVersion')).primaryMasterKey]"
+      "value": "[if(parameters('mongoDb').deploy, listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('mongoDb').name), variables('cosmosDbApiVersion')).primaryMasterKey, '')]"
     }
   }
 }

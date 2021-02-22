@@ -16,7 +16,7 @@ else # CentOS8
     dnf -y install python3-devel
 fi
 
-fileName="OpenCue-v0.4.95.zip"
+fileName="OpenCue-v0.8.8.zip"
 downloadUrl="https://bit.blob.core.windows.net/bin/OpenCue/$fileName"
 curl -L -o $fileName $downloadUrl/$fileName
 unzip $fileName

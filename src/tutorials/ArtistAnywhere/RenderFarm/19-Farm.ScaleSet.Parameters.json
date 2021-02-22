@@ -18,9 +18,8 @@
       "value": [
         {
           "deploy": false,
-          "name": "lnxFarmC",
+          "name": "RenderFarmLC",
           "image": {
-            "osType": "Linux",
             "definitionName": "ServerLinux",
             "versionId": "1.1.0"
           },
@@ -36,23 +35,12 @@
             "adminPassword": "P@ssword1234",
             "sshPublicKeyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0rSgH3dwDtBI5U2WBqpYkO7KZadaN34qpgl0IpYSui+ctFYG7bH0QHAz1p2Taznbf/5Qsh8/exmcoEcWHQzURLmqr0llVarbnqQykCp2cpGBH6adPWHMBh/OsR5ZCPL2IMr6eCdKj6mpf9dALB/ieUgCYNGNv20RwK1fBBicQN9oBE6N+KI7ko4cdFRGE66DX9m8DhlPdOO03Zd40e0ZiDdyxpxp2+aI087pXtDkO2tJbanDYToJhrA4hXx+z8qSS1pfaTSXZvTQ83uHClTmxCs8TGLw3l2K7vUf0v8E/7jGFtmHxeNCXBZuSw27M7PoT8EeHbq876pSzgEQvNzgj"
           },
-          "upgradePolicy": "Manual",
-          "customExtension": {
-            "publisher": "Microsoft.Azure.Extensions",
-            "type": "CustomScript",
-            "version": "2.1",
-            "filePath": "/tmp/14-Farm.ScaleSet.sh",
-            "fileParameters": "",
-            "scriptParameters": {
-              "RENDER_MANAGER_HOST": ""
-            }
-          }
+          "upgradePolicy": "Manual"
         },
         {
           "deploy": false,
-          "name": "lnxFarmG",
+          "name": "RenderFarmLG",
           "image": {
-            "osType": "Linux",
             "definitionName": "ServerLinux",
             "versionId": "1.2.0"
           },
@@ -68,23 +56,12 @@
             "adminPassword": "P@ssword1234",
             "sshPublicKeyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0rSgH3dwDtBI5U2WBqpYkO7KZadaN34qpgl0IpYSui+ctFYG7bH0QHAz1p2Taznbf/5Qsh8/exmcoEcWHQzURLmqr0llVarbnqQykCp2cpGBH6adPWHMBh/OsR5ZCPL2IMr6eCdKj6mpf9dALB/ieUgCYNGNv20RwK1fBBicQN9oBE6N+KI7ko4cdFRGE66DX9m8DhlPdOO03Zd40e0ZiDdyxpxp2+aI087pXtDkO2tJbanDYToJhrA4hXx+z8qSS1pfaTSXZvTQ83uHClTmxCs8TGLw3l2K7vUf0v8E/7jGFtmHxeNCXBZuSw27M7PoT8EeHbq876pSzgEQvNzgj"
           },
-          "upgradePolicy": "Manual",
-          "customExtension": {
-            "publisher": "Microsoft.Azure.Extensions",
-            "type": "CustomScript",
-            "version": "2.1",
-            "filePath": "/tmp/14-Farm.ScaleSet.sh",
-            "fileParameters": "",
-            "scriptParameters": {
-              "RENDER_MANAGER_HOST": ""
-            }
-          }
+          "upgradePolicy": "Manual"
         },
         {
           "deploy": false,
-          "name": "winFarmC",
+          "name": "RenderFarmWC",
           "image": {
-            "osType": "Windows",
             "definitionName": "ServerWindows",
             "versionId": "1.1.0"
           },
@@ -100,23 +77,12 @@
             "adminPassword": "P@ssword1234",
             "sshPublicKeyData": ""
           },
-          "upgradePolicy": "Manual",
-          "customExtension": {
-            "publisher": "Microsoft.Compute",
-            "type": "CustomScriptExtension",
-            "version": "1.10",
-            "filePath": "C:\\Windows\\Temp\\14-Farm.ScaleSet.ps1",
-            "fileParameters": "",
-            "scriptParameters": {
-              "renderManagerHost": ""
-            }
-          }
+          "upgradePolicy": "Manual"
         },
         {
           "deploy": false,
-          "name": "winFarmG",
+          "name": "RenderFarmWG",
           "image": {
-            "osType": "Windows",
             "definitionName": "ServerWindows",
             "versionId": "1.2.0"
           },
@@ -132,19 +98,24 @@
             "adminPassword": "P@ssword1234",
             "sshPublicKeyData": ""
           },
-          "upgradePolicy": "Manual",
-          "customExtension": {
-            "publisher": "Microsoft.Compute",
-            "type": "CustomScriptExtension",
-            "version": "1.10",
-            "filePath": "C:\\Windows\\Temp\\14-Farm.ScaleSet.ps1",
-            "fileParameters": "",
-            "scriptParameters": {
-              "renderManagerHost": ""
-            }
-          }
+          "upgradePolicy": "Manual"
         }
       ]
+    },
+    "customExtension": {
+      "value": {
+        "linux": {
+          "scriptFilePath": "/tmp/19-Farm.ScaleSet.sh",
+          "scriptParameters": ""
+        },
+        "windows": {
+          "scriptFilePath": "C:\\Windows\\Temp\\19-Farm.ScaleSet.ps1",
+          "scriptParameters": ""
+        },
+        "scriptParameters": {
+          "renderManagerHost": ""
+        }
+      }
     },
     "logAnalytics": {
       "value": {

@@ -22,6 +22,6 @@ fi
 
 downloadUrl="https://bit.blob.core.windows.net/bin/OpenCue"
 
-fileName="OpenCue-v0.4.95.zip"
+fileName="OpenCue-v0.8.8.zip"
 curl -L -o $fileName $downloadUrl/$fileName
 unzip $fileName
