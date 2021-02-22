@@ -31,6 +31,8 @@ Here are the important tips to follow when building the image:
 SEARCH="rendering.com artists.rendering.com"
 ```
 
+**TIP** if you need to create a VHD from following the instructions [Creating VHD Azure blob SAS URL from Azure Managed Image](https://arsenvlad.medium.com/creating-vhd-azure-blob-sas-url-from-azure-managed-image-2be0e7c287f4)
+
 # Prepare Image Size and Format for Azure
 
 Azure requires the following image file requirements:

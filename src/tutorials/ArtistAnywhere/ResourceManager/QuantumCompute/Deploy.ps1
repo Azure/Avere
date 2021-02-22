@@ -1,7 +1,7 @@
 param (
     $resourceGroup = @{
         "name" = ""
-        "regionName" = "WestUS"     # https://azure.microsoft.com/global-infrastructure/geographies/
+        "regionName" = "WestUS2"    # https://azure.microsoft.com/global-infrastructure/geographies/
     },
     $quantumWorkspace = @{          # https://docs.microsoft.com/azure/quantum/overview-azure-quantum
         "name" = ""
@@ -12,9 +12,9 @@ param (
             }
         )
     },
-    $storageAccount = @{
+    $storageAccount = @{            # https://docs.microsoft.com/azure/storage/common/storage-account-overview
         "name" = ""
-        "resourceGroupName" = ""
+        "resourceGroupName" = $resourceGroup.name
     }
 )
 

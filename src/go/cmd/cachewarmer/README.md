@@ -95,9 +95,9 @@ On the controller or jumpbox, execute the following steps
 ```bash
 export BOOTSTRAP_PATH=/nfs/node0
 
-export JOB_MOUNT_ADDRESS=10.0.1.11
-export JOB_EXPORT_PATH=/nfs1data
-export JOB_BASE_PATH=/
+export STORAGE_ACCOUNT=
+export STORAGE_KEY=''
+export QUEUE_PREFIX=
 
 export BOOTSTRAP_EXPORT_PATH=/nfs1data
 export BOOTSTRAP_MOUNT_ADDRESS=10.0.1.11
@@ -123,9 +123,9 @@ On the controller or jumpbox, execute the following steps
 ```bash
 export BOOTSTRAP_PATH=/nfs/node0/bootstrap/
 export BOOTSTRAP_SCRIPT=bootstrap.cachewarmer-worker.sh
-export JOB_MOUNT_ADDRESS=10.0.1.11
-export JOB_EXPORT_PATH=/nfs1data
-export JOB_BASE_PATH=/
+export STORAGE_ACCOUNT=
+export STORAGE_KEY=''
+export QUEUE_PREFIX=
 ```
 2. Run the following script:
 ```bash
@@ -137,5 +137,5 @@ bash /nfs/node0/bootstrap/bootstrap.cachewarmer-worker.sh
 To submit a job, run a command similar to the following command, where the warm target variables are the Avere junction to warm:
 
 ```bash
-sudo /usr/local/bin/cachewarmer-jobsubmitter -enableDebugging -jobBasePath "/" -jobExportPath "/nfs1data" -jobMountAddress "10.0.1.11" -warmTargetExportPath "/nfs1data" -warmTargetMountAddresses "10.0.1.11,10.0.1.12,10.0.1.13" -warmTargetPath "/island"
+sudo /usr/local/bin/cachewarmer-jobsubmitter -enableDebugging -storageAccountName "STORAGEACCOUNTREPLACE" -storageKey "STORAGEKEYREPLACE" -queueNamePrefix "QUEUEPREFIXREPLACE" -warmTargetExportPath "/nfs1data" -warmTargetMountAddresses "10.0.1.11,10.0.1.12,10.0.1.13" -warmTargetPath "/island"
 ```

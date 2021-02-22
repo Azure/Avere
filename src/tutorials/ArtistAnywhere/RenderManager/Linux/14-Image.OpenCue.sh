@@ -5,7 +5,6 @@ set -ex
 cd /usr/local/bin
 
 grep "centos:7" /etc/os-release && centOS7=true || centOS7=false
-
 if $centOS7; then
     yum -y install epel-release
     yum -y install jq
@@ -22,6 +21,6 @@ fi
 
 downloadUrl="https://bit.blob.core.windows.net/bin/OpenCue"
 
-fileName="OpenCue-v0.4.95.zip"
+fileName="OpenCue-v0.8.8.zip"
 curl -L -o $fileName $downloadUrl/$fileName
 unzip $fileName

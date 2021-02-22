@@ -6,6 +6,7 @@ data "azurerm_subnet" "vnet" {
 
 data "azurerm_resource_group" "nfsfiler" {
   name     = var.resource_group_name
+  depends_on = [var.module_depends_on]
 }
 
 locals {
@@ -26,6 +27,8 @@ resource "azurerm_network_interface" "nfsfiler" {
     private_ip_address_allocation = var.private_ip_address != null ? "Static" : "Dynamic"
     private_ip_address            = var.private_ip_address != null ? var.private_ip_address : null
   }
+  
+  depends_on = [var.module_depends_on]
 }
 
 resource "azurerm_linux_virtual_machine" "nfsfiler" {
@@ -61,4 +64,6 @@ resource "azurerm_linux_virtual_machine" "nfsfiler" {
           public_key = var.ssh_key_data
       }
   }
+  
+  depends_on = [var.module_depends_on]
 }

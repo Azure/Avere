@@ -24,7 +24,7 @@ param (
                 "version" = "latest"
             }
             "imageBuild" = @{
-                "timeoutMinutes" = 60
+                "timeoutMinutes" = 90
                 "customizeCommands" = @(
                     @{
                         "type" = ""
@@ -49,7 +49,7 @@ param (
                 "version" = "latest"
             }
             "imageBuild" = @{
-                "timeoutMinutes" = 60
+                "timeoutMinutes" = 90
                 "customizeCommands" = @(
                     @{
                         "type" = ""
@@ -74,7 +74,7 @@ param (
                 "version" = "latest"
             }
             "imageBuild" = @{
-                "timeoutMinutes" = 60
+                "timeoutMinutes" = 90
                 "customizeCommands" = @(
                     @{
                         "type" = ""
@@ -99,7 +99,7 @@ param (
                 "version" = "latest"
             }
             "imageBuild" = @{
-                "timeoutMinutes" = 60
+                "timeoutMinutes" = 90
                 "customizeCommands" = @(
                     @{
                         "type" = ""
@@ -184,7 +184,7 @@ $scriptFileWindows = "Customize.ps1"
 Set-ScriptFile $scriptStorage $scriptFileLinux
 Set-ScriptFile $scriptStorage $scriptFileWindows
 
-foreach ($imageTemlate in $imageTemplates) {
+foreach ($imageTemplate in $imageTemplates) {
     $imageSource = (az vm image show --urn ($imageTemplate.imageSource.publisher + ":" + $imageTemplate.imageSource.offer + ":" + $imageTemplate.imageSource.sku + ":" + $imageTemplate.imageSource.version)) | ConvertFrom-Json
     if ($imageSource.osDiskImage.operatingSystem -eq "Windows") {
         $scriptType = "PowerShell"

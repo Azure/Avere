@@ -27,27 +27,24 @@ type CacheWarmerCloudInit struct {
 	BootstrapExportPath string
 	BootstrapScriptPath string
 	EnvVars             string
-	JobMountAddress     string
-	JobExportPath       string
-	JobBasePath         string
 }
 
 func InitializeCloutInit(
 	bootstrapAddress string,
 	bootstrapExportPath string,
 	bootstrapScriptPath string,
-	jobMountAddress string,
-	jobExportPath string,
-	jobBasePath string) *CacheWarmerCloudInit {
+	storageAccount string,
+	storageKey string,
+	queueNamePrefix string) *CacheWarmerCloudInit {
 
 	localMountPath := "/b" // this is a temporary mount on the filesystem
 	envVars := fmt.Sprintf(
-		" BOOTSTRAP_PATH='%s' BOOTSTRAP_SCRIPT='%s' JOB_MOUNT_ADDRESS='%s' JOB_EXPORT_PATH='%s' JOB_BASE_PATH='%s' ",
+		" BOOTSTRAP_PATH='%s' BOOTSTRAP_SCRIPT='%s' STORAGE_ACCOUNT='%s' STORAGE_KEY='%s' QUEUE_PREFIX='%s' ",
 		localMountPath,
 		bootstrapScriptPath,
-		jobMountAddress,
-		jobExportPath,
-		jobBasePath)
+		storageAccount,
+		storageKey,
+		queueNamePrefix)
 
 	return &CacheWarmerCloudInit{
 		LocalMountPath:      localMountPath,
@@ -55,9 +52,6 @@ func InitializeCloutInit(
 		BootstrapExportPath: bootstrapExportPath,
 		BootstrapScriptPath: bootstrapScriptPath,
 		EnvVars:             envVars,
-		JobMountAddress:     jobMountAddress,
-		JobExportPath:       jobExportPath,
-		JobBasePath:         jobBasePath,
 	}
 }
 
@@ -253,7 +247,7 @@ func createCacheWarmerVmssModel(
 		VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{
 			Overprovision: to.BoolPtr(false),
 			UpgradePolicy: &compute.UpgradePolicy{
-				Mode: compute.UpgradeModeManual,
+				Mode: compute.Manual,
 			},
 			SinglePlacementGroup: to.BoolPtr(false),
 			VirtualMachineProfile: &compute.VirtualMachineScaleSetVMProfile{
@@ -337,7 +331,8 @@ func DeleteVmss(ctx context.Context, azureClients *AzureClients, name string) er
 	defer log.Info.Printf(" %s %s DeleteVmss]", azureClients.LocalMetadata.ResourceGroup, name)
 
 	// passing nil instance ids will deallocate all VMs in the VMSS
-	future, err := azureClients.VMSSClient.Delete(ctx, azureClients.LocalMetadata.ResourceGroup, name)
+	forceDeletion := false
+	future, err := azureClients.VMSSClient.Delete(ctx, azureClients.LocalMetadata.ResourceGroup, name, &forceDeletion)
 	if err != nil {
 		return fmt.Errorf("cannot delete vmss (%s %s): %v", azureClients.LocalMetadata.ResourceGroup, name, err)
 	}

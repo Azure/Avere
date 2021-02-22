@@ -5,6 +5,10 @@
     "storageAccount": {
       "value": {
       }
+    },
+    "virtualNetwork": {
+      "value": {
+      }
     }
   }
 }

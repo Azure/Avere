@@ -5,7 +5,7 @@
     "managedIdentity": {
       "value": {
         "name": "MediaPipeline",
-        "resourceGroupName": "Azure.Artist.Anywhere"
+        "resourceGroupName": "Azure.Artist.Anywhere-Identity"
       }
     },
     "imageGallery": {
@@ -19,7 +19,6 @@
         {
           "deploy": false,
           "name": "RenderManagerLinux",
-          "imageOperatingSystemType": "Linux",
           "imageDefinitionName": "ServerLinux",
           "imageSourceType": "PlatformImage",
           "imageSourceVersion": "latest",
@@ -31,14 +30,13 @@
             "size": "",
             "osDiskSizeGB": 0
           },
-          "buildTimeoutMinutes": 120,
+          "buildTimeoutMinutes": 90,
           "buildCustomization": [
           ]
         },
         {
           "deploy": false,
           "name": "RenderManagerWindows",
-          "imageOperatingSystemType": "Windows",
           "imageDefinitionName": "ServerWindows",
           "imageSourceType": "PlatformImage",
           "imageSourceVersion": "latest",
@@ -50,7 +48,7 @@
             "size": "",
             "osDiskSizeGB": 0
           },
-          "buildTimeoutMinutes": 120,
+          "buildTimeoutMinutes": 90,
           "buildCustomization": [
           ]
         }

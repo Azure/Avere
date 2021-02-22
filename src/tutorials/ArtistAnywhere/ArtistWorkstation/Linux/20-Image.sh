@@ -4,11 +4,11 @@ set -ex
 
 cd /usr/local/bin
 
-grep "centos:8" /etc/os-release && centOS8=true || centOS8=false
-if $centOS8; then
-    dnf -y install nfs-utils
-else # CentOS7
+grep "centos:7" /etc/os-release && centOS7=true || centOS7=false
+if $centOS7; then
     yum -y install nfs-utils
+else # CentOS8
+    dnf -y install nfs-utils
 fi
 
 lshw -class "display" | grep "NVIDIA" && gpuNVIDIA=true || gpuNVIDIA=false

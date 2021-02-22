@@ -8,10 +8,8 @@ net stop nfsrdr
 net start nfsrdr
 net start nfsclnt
 
-$downloadUrl = "https://bit.blob.core.windows.net/bin/Graphics"
-
 $fileName = "452.57_grid_win10_server2016_server2019_64bit_international.exe"
 #$fileName = "AMD-Azure-NVv4-Driver-20Q1-Hotfix3.exe"
+$downloadUrl = "https://bit.blob.core.windows.net/bin/Graphics"
 Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl/$fileName
-
 Start-Process -FilePath $fileName -ArgumentList "/s" -Wait

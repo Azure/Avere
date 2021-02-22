@@ -1558,21 +1558,21 @@ func addCoreFilersWithBalancedQuota(corefilers []*CoreFiler, averevfxt *AvereVfx
 	var lastCoreFiler *CoreFiler
 	lastIndex := len(corefilers)
 
-	// increase speed of dynamic block allocation
-	if err := startFixedQuotaPercent(corefilers, averevfxt); err != nil {
-		return fmt.Errorf("error encountered while starting setting of fixed quota: %v", err)
-	}
-
 	// There is an undesired behavior in Avere vFXT where the first core filer is added and
 	// it receives all the quota space.  To speed up balancing, add the last core filer, and
 	// then delete it after added the other core filers.  This releases the space.
 	if QuotaSpeedUpDeleteFirstFiler {
 		lastIndex = lastIndex - 1
 		lastCoreFiler = corefilers[lastIndex]
-		log.Printf("[INFO] add last core filer '%s'", lastCoreFiler.Name)
-		if err := createCoreFilerWithFixedQuota(lastCoreFiler, averevfxt); err != nil {
+		log.Printf("[INFO] add last core filer '%s', without fixed quota", lastCoreFiler.Name)
+		if err := averevfxt.CreateCoreFiler(lastCoreFiler); err != nil {
 			return err
 		}
+	}
+
+	// increase speed of dynamic block allocation
+	if err := startFixedQuotaPercent(corefilers, averevfxt); err != nil {
+		return fmt.Errorf("error encountered while starting setting of fixed quota: %v", err)
 	}
 
 	// add the core filer and quota percent first (not adding last core filer if used for quota speedup)
@@ -1589,7 +1589,7 @@ func addCoreFilersWithBalancedQuota(corefilers []*CoreFiler, averevfxt *AvereVfx
 			return err
 		}
 
-		log.Printf("[INFO] add last core filer '%s'", lastCoreFiler.Name)
+		log.Printf("[INFO] add last core filer '%s', with fixed quota", lastCoreFiler.Name)
 		if err := createCoreFilerWithFixedQuota(lastCoreFiler, averevfxt); err != nil {
 			return err
 		}
