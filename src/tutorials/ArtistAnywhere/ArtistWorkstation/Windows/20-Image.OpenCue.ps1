@@ -10,34 +10,17 @@ $downloadUrl = "https://bit.blob.core.windows.net/bin/OpenCue"
 Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl/$fileName
 Expand-Archive -Path $fileName
 
-Set-Location -Path "OpenCue*"
+Set-Location -Path "OpenCue*/cuegui-*"
+pip install --requirement "requirements.txt"
+pip install --requirement "requirements_gui.txt"
 
-$fileName = "opencue-pycue.tar.gz"
-tar -xzf $fileName
-
-$fileName = "opencue-pyoutline.tar.gz"
-tar -xzf $fileName
-
-$fileName = "opencue-admin.tar.gz"
-tar -xzf $fileName
-
-$fileName = "opencue-submit.tar.gz"
-tar -xzf $fileName
-
-$fileName = "opencue-gui.tar.gz"
-# tar -xzf $fileName
-
-pip install --upgrade pip
-pip install --requirement "opencue-requirements.txt"
-pip install --requirement "opencue-requirements-gui.txt"
-
-Set-Location -Path "pycue-*"
+Set-Location -Path "../pycue-*"
 python setup.py install
-Set-Location -Path ""../pyoutline-*"
+Set-Location -Path "../pyoutline-*"
 python setup.py install
 Set-Location -Path "../cueadmin-*"
 python setup.py install
-Set-Location -Path ""../cuesubmit-*"
+Set-Location -Path "../cuesubmit-*"
 python setup.py install
-# Set-Location -Path "../cuegui-*"
-# python setup.py install
+Set-Location -Path "../cuegui-*"
+python setup.py install
