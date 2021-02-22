@@ -13,15 +13,15 @@
     }
   },
   "variables": {
-    "postgreSqlServerApiVersion": "2020-11-05-preview",
-    "cosmosMongoDbApiVersion": "2021-01-15"
+    "postgreSqlApiVersion": "2020-11-05-preview",
+    "cosmosDbApiVersion": "2021-01-15"
   },
   "resources": [
     {
       "condition": "[parameters('postgreSql').deploy]",
       "type": "Microsoft.DBforPostgreSQL/flexibleServers",
       "name": "[parameters('postgreSql').name]",
-      "apiVersion": "[variables('postgreSqlServerApiVersion')]",
+      "apiVersion": "[variables('postgreSqlApiVersion')]",
       "location": "[resourceGroup().location]",
       "sku": {
         "name": "[parameters('postgreSql').size]",
@@ -44,7 +44,7 @@
       "condition": "[parameters('mongoDb').deploy]",
       "type": "Microsoft.DocumentDB/databaseAccounts",
       "name": "[parameters('mongoDb').name]",
-      "apiVersion": "[variables('cosmosMongoDbApiVersion')]",
+      "apiVersion": "[variables('cosmosDbApiVersion')]",
       "location": "[resourceGroup().location]",
       "kind": "MongoDB",
       "tags": {
@@ -70,7 +70,7 @@
       "condition": "[parameters('mongoDb').deploy]",
       "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases",
       "name": "[concat(parameters('mongoDb').name, '/', parameters('mongoDb').databaseName)]",
-      "apiVersion": "[variables('cosmosMongoDbApiVersion')]",
+      "apiVersion": "[variables('cosmosDbApiVersion')]",
       "dependsOn": [
         "[resourceId('Microsoft.DocumentDB/databaseAccounts/', parameters('mongoDb').name)]"
       ],
@@ -81,7 +81,7 @@
       "condition": "[parameters('mongoDb').deploy]",
       "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections",
       "name": "[concat(parameters('mongoDb').name, '/', parameters('mongoDb').databaseName, '/', parameters('mongoDb').collectionNames[copyIndex()])]",
-      "apiVersion": "[variables('cosmosMongoDbApiVersion')]",
+      "apiVersion": "[variables('cosmosDbApiVersion')]",
       "dependsOn": [
         "[resourceId('Microsoft.DocumentDB/databaseAccounts/mongodbDatabases', parameters('mongoDb').name, parameters('mongoDb').databaseName)]"
       ],
@@ -124,7 +124,7 @@
     },
     "mongoDbAdminPassword": {
       "type": "string",
-      "value": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('mongoDb').name), variables('cosmosMongoDbApiVersion')).primaryMasterKey]"
+      "value": "[if(parameters('mongoDb').deploy, listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('mongoDb').name), variables('cosmosDbApiVersion')).primaryMasterKey, '')]"
     }
   }
 }

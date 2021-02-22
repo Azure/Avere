@@ -19,7 +19,6 @@
         {
           "deploy": false,
           "name": "RenderNodeLinux",
-          "imageOperatingSystemType": "Linux",
           "imageDefinitionName": "ServerLinux",
           "imageSourceType": "PlatformImage",
           "imageSourceVersion": "latest",
@@ -31,14 +30,13 @@
             "size": "Standard_F16s_v2",
             "osDiskSizeGB": 0
           },
-          "buildTimeoutMinutes": 120,
+          "buildTimeoutMinutes": 90,
           "buildCustomization": [
           ]
         },
         {
           "deploy": false,
           "name": "RenderNodeWindows",
-          "imageOperatingSystemType": "Windows",
           "imageDefinitionName": "ServerWindows",
           "imageSourceType": "PlatformImage",
           "imageSourceVersion": "latest",
@@ -50,7 +48,7 @@
             "size": "Standard_F16s_v2",
             "osDiskSizeGB": 0
           },
-          "buildTimeoutMinutes": 120,
+          "buildTimeoutMinutes": 90,
           "buildCustomization": [
           ]
         }

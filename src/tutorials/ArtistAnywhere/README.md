@@ -2,9 +2,15 @@
 
 Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager (ARM)](https://docs.microsoft.com/azure/azure-resource-manager/management/overview) templates for automated deployment of an end-to-end rendering solution in Microsoft Azure. Azure Artist Anywhere provides a lightweight and customizable deployment framework with the storage tier in Azure and/or asset storage located on-premises with Azure compute integration via the [Azure HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) managed service.
 
-As a sample, the following image was rendered via [Azure HPC Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-hpc) within an [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview).
+As a simple example, the following 3D image was rendered via [Azure HPC Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-hpc) in an [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview).
 
 ![](https://bit.blob.core.windows.net/doc/AzureArtistAnywhere/SuspensionBridge.jpg)
+
+## Solution Architecture
+
+The following overview diagram depicts the Azure Artist Anywhere solution architecture, including on-premises storage asset caching.
+
+![](https://bit.blob.core.windows.net/doc/AzureArtistAnywhere/SolutionArchitecture.png)
 
 The following Microsoft Azure services and 3rd-party software are integrated within the Azure Artist Anywhere rendering solution.
 
@@ -97,26 +103,18 @@ The following Microsoft Azure services and 3rd-party software are integrated wit
     </tr>
 </table>
 
-## Solution Architecture
-
-The following overview diagram depicts the Azure Artist Anywhere solution architecture, including on-premises storage asset caching.
-
-![](https://bit.blob.core.windows.net/doc/AzureArtistAnywhere/SolutionArchitecture.png)
-
 ## Deployment Modules
 
 The following Microsoft Azure resource templates and scripts define the Azure Artist Anywhere deployment modules.
 
-| *Base Framework* | *Storage Cache* |
-| :--------------- | :-------------- |
-| (01) [Virtual Network](BaseFramework/01-VirtualNetwork.json) ([Parameters](BaseFramework/01-VirtualNetwork.Parameters.json)) | (09) [Storage](StorageCache/09-Storage.json) ([Parameters](StorageCache/09-Storage.Parameters.json)) |
-| (02) [* Active Directory](BaseFramework/02-ActiveDirectory.json) ([Parameters](BaseFramework/02-ActiveDirectory.Parameters.json)) | (09) [Storage NetApp](StorageCache/09-Storage.NetApp.json) ([Parameters](StorageCache/09-Storage.NetApp.Parameters.json)) |
-| (03) [Managed Identity](BaseFramework/03-ManagedIdentity.json) ([Parameters](BaseFramework/03-ManagedIdentity.Parameters.json)) | (09) [* Storage Hammerspace](StorageCache/09-Storage.Hammerspace.json) ([Parameters](StorageCache/09-Storage.Hammerspace.Parameters.json)) |
-| (04) [Key Vault](BaseFramework/04-KeyVault.json) ([Parameters](BaseFramework/04-KeyVault.Parameters.json)) | (09) [* Storage Qumulo](StorageCache/09-Storage.Qumulo.json) ([Parameters](StorageCache/09-Storage.Qumulo.Parameters.json)) |
-| (05) [Network Gateway](BaseFramework/05-NetworkGateway.json) ([Parameters](BaseFramework/05-NetworkGateway.Parameters.json)) | (09) [* Storage Scality](StorageCache/09-Storage.Scality.json) ([Parameters](StorageCache/09-Storage.Scality.Parameters.json)) |
-| (06) [Monitor Insight](BaseFramework/06-MonitorInsight.json) ([Parameters](BaseFramework/06-MonitorInsight.Parameters.json)) | (10) [HPC Cache](StorageCache/10-HPCCache.json) ([Parameters](StorageCache/10-HPCCache.Parameters.json)) |
-| (07) [Image Gallery](BaseFramework/07-ImageGallery.json) ([Parameters](BaseFramework/07-ImageGallery.Parameters.json)) | (11) [Event Grid](StorageCache/11-EventGrid.json) ([Parameters](StorageCache/11-EventGrid.Parameters.json)) |
-| (08) [Container Registry](BaseFramework/08-ContainerRegistry.json) ([Parameters](BaseFramework/08-ContainerRegistry.Parameters.json)) | (12) [Function App](StorageCache/12-FunctionApp.json) ([Parameters](StorageCache/12-FunctionApp.Parameters.json)) |
+| *Base Framework* | *Storage Cache* | *Event Integration* | *Image Library* |
+| :--------------- | :-------------- | :---------------- | :-------------- |
+| (01) [Virtual Network](BaseFramework/01-VirtualNetwork.json) ([Parameters](BaseFramework/01-VirtualNetwork.Parameters.json)) | (07) [Storage](StorageCache/07-Storage.json) ([Parameters](StorageCache/07-Storage.Parameters.json)) | (09) [* Event Grid](EventIntegration/09-EventGrid.json) ([Parameters](EventIntegration/09-EventGrid.Parameters.json)) | (11) [Image Gallery](ImageLibrary/11-ImageGallery.json) ([Parameters](ImageLibrary/11-ImageGallery.Parameters.json)) |
+| (02) [Monitor Insight](BaseFramework/02-MonitorInsight.json) ([Parameters](BaseFramework/02-MonitorInsight.Parameters.json)) | (07) [Storage NetApp](StorageCache/07-Storage.NetApp.json) ([Parameters](StorageCache/07-Storage.NetApp.Parameters.json)) | (10) [* Function App](EventIntegration/10-FunctionApp.json) ([Parameters](EventIntegration/10-FunctionApp.Parameters.json)) | (12) [Container Registry](ImageLibrary/12-ContainerRegistry.json) ([Parameters](ImageLibrary/12-ContainerRegistry.Parameters.json)) |
+| (03) [* Active Directory](BaseFramework/03-ActiveDirectory.json) ([Parameters](BaseFramework/03-ActiveDirectory.Parameters.json)) | (07) [* Storage Qumulo](StorageCache/07-Storage.Qumulo.json) ([Parameters](StorageCache/07-Storage.Qumulo.Parameters.json)) | | |
+| (04) [Managed Identity](BaseFramework/04-ManagedIdentity.json) ([Parameters](BaseFramework/04-ManagedIdentity.Parameters.json)) | (07) [* Storage Hammerspace](StorageCache/07-Storage.Hammerspace.json) ([Parameters](StorageCache/07-Storage.Hammerspace.Parameters.json)) | | |
+| (05) [Key Vault](BaseFramework/05-KeyVault.json) ([Parameters](BaseFramework/05-KeyVault.Parameters.json)) | (08) [HPC Cache](StorageCache/08-HPCCache.json) ([Parameters](StorageCache/08-HPCCache.Parameters.json)) |
+| (06) [Network Gateway](BaseFramework/06-NetworkGateway.json) ([Parameters](BaseFramework/06-NetworkGateway.Parameters.json)) | | | |
 
 \* = TBD
 
@@ -140,7 +138,7 @@ The following Microsoft Azure resource templates and scripts define the Azure Ar
 | (18) [Node Image Customize (Blender)](RenderFarm/Linux/18-Node.Image.Blender.sh) | (18) [Node Image Customize (Blender)](RenderFarm/Windows/18-Node.Image.Blender.ps1) |
 | (18) [Node Image Customize (OpenCue)](RenderFarm/Linux/18-Node.Image.OpenCue.sh) | (18) [Node Image Customize (OpenCue)](RenderFarm/Windows/18-Node.Image.OpenCue.ps1) |
 | (18) [* Node Image Customize (Royal Render)](RenderFarm/Linux/18-Node.Image.RoyalRender.sh) | (18) [* Node Image Customize (RoyalRender)](RenderFarm/Windows/18-Node.Image.RoyalRender.ps1) |
-| (19)- [Farm Pool](RenderFarm/19-Farm.Pool.json) ([Parameters](RenderFarm/19-Farm.Pool.Parameters.json)) | (19) [Farm Pool](RenderFarm/19-Farm.Pool.json) ([Parameters](RenderFarm/19-Farm.Pool.Parameters.json)) |
+| (19) [Farm Pool](RenderFarm/19-Farm.Pool.json) ([Parameters](RenderFarm/19-Farm.Pool.Parameters.json)) | (19) [Farm Pool](RenderFarm/19-Farm.Pool.json) ([Parameters](RenderFarm/19-Farm.Pool.Parameters.json)) |
 | (19) [Farm Scale Set](RenderFarm/19-Farm.ScaleSet.json) ([Parameters](RenderFarm/19-Farm.ScaleSet.Parameters.json)) | (19) [Farm Scale Set](RenderFarm/19-Farm.ScaleSet.json) ([Parameters](RenderFarm/19-Farm.ScaleSet.Parameters.json)) |
 | (19) [Farm Scale Set Initialize](RenderFarm/Linux/19-Farm.ScaleSet.sh) | (19) [Farm Scale Set Initialize](RenderFarm/Windows/19-Farm.ScaleSet.ps1) |
 

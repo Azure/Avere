@@ -11,23 +11,30 @@ param (
     # Set to true to deploy Azure VPN Gateway (https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways)
     [boolean] $networkGatewayDeploy = $false,
 
-    # Set to true to deploy Azure NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
-    [boolean] $storageNetAppDeploy = $false,
+    # Set to true to deploy one or more Azure 1st-party and/or 3rd-party storage services within the Azure storage region
+    [object] $storageServiceDeploy = @{
+        "netAppFiles" = $false # https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction
+        "hammerspace" = $false
+        "qumulo" = $false
+    },
 
-    # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in the compute region
+    # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) service
     [boolean] $storageCacheDeploy = $false,
 
-    # Set to the target Azure render manager deployment mode (i.e., OpenCue[.HPC], RoyalRender[.HPC] or Batch)
-    [string] $renderManagerMode = "OpenCue",
-
-    # Set the operating system types for the Azure render manager/node image builds and virtual machines
-    [string[]] $renderFarmTypes = @("Linux", "Windows"),
+    # Set to the target Azure render farm deployment model, which will determine the image customization process
+    [object] $renderFarm = @{
+        "managerType" = "OpenCue" # OpenCue[.HPC], RoyalRender[.HPC] or Batch
+        "nodeTypes" = @("Linux", "Windows")
+    },
 
     # The base Azure services framework (e.g., Virtual Network, Managed Identity, Key Vault, etc.)
     [object] $baseFramework,
 
-    # The Azure storage and cache service resources (e.g., storage account, cache mount, etc.)
-    [object] $storageCache
+    # The Azure storage and cache resources (e.g., storage account, storage / cache mounts, etc.)
+    [object] $storageCache,
+
+    # The Azure image library resources (e.g., Image Gallery, Container Registry, etc.)
+    [object] $imageLibrary
 )
 
 $rootDirectory = !$PSScriptRoot ? $using:rootDirectory : (Get-Item -Path $PSScriptRoot).Parent.FullName
@@ -36,24 +43,30 @@ $moduleDirectory = "RenderManager"
 Import-Module "$rootDirectory/Deploy.psm1"
 Import-Module "$rootDirectory/BaseFramework/Deploy.psm1"
 Import-Module "$rootDirectory/StorageCache/Deploy.psm1"
+Import-Module "$rootDirectory/ImageLibrary/Deploy.psm1"
 
 # Base Framework
 if (!$baseFramework) {
     $baseFramework = Get-BaseFramework $rootDirectory $resourceGroupNamePrefix $computeRegionName $storageRegionName
 }
 $computeNetwork = $baseFramework.computeNetwork
+$logAnalytics = $baseFramework.logAnalytics
 $managedIdentity = $baseFramework.managedIdentity
 $keyVault = $baseFramework.keyVault
-$logAnalytics = $baseFramework.logAnalytics
-$imageGallery = $baseFramework.imageGallery
 
 # Storage Cache
 if (!$storageCache) {
-    $storageCache = Get-StorageCache $rootDirectory $baseFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageNetAppDeploy $storageCacheDeploy
+    $storageCache = Get-StorageCache $rootDirectory $baseFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageServiceDeploy $storageCacheDeploy
 }
 $storageAccount = $storageCache.storageAccount
 
-if ($renderManagerMode -eq "Batch") {
+# Image Library
+if (!$imageLibrary) {
+    $imageLibrary = Get-ImageLibrary $rootDirectory $baseFramework $resourceGroupNamePrefix $computeRegionName
+}
+$imageGallery = $imageLibrary.imageGallery
+
+if ($renderFarm.managerType -eq "Batch") {
     Set-RoleAssignments "Batch" $null $computeNetwork $managedIdentity $keyVault $imageGallery
 
     # (17) Render Manager Batch Account
@@ -88,8 +101,8 @@ if ($renderManagerMode -eq "Batch") {
     $templateParameters = "$rootDirectory/$moduleDirectory/13-Database.Parameters.json"
 
     $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
-    $templateConfig.parameters.postgreSql.value.deploy = $renderManagerMode.Contains("OpenCue")
-    $templateConfig.parameters.mongoDb.value.deploy = $renderManagerMode.Contains("OpenCue")
+    $templateConfig.parameters.postgreSql.value.deploy = $renderFarm.managerType.Contains("OpenCue")
+    $templateConfig.parameters.mongoDb.value.deploy = $false
     $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
     $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName
     $templateConfig | ConvertTo-Json -Depth 10 | Out-File $templateParameters
@@ -106,30 +119,30 @@ if ($renderManagerMode -eq "Batch") {
     New-TraceMessage $moduleName $true
 
     # (14.1) Render Manager Image Template
-    $moduleName = "(14.1) Render Manager Image Template [" + ($renderFarmTypes -join ",") + "]"
+    $moduleName = "(14.1) Render Manager Image Template"
     New-TraceMessage $moduleName $false
     $resourceGroupNameSuffix = "-Gallery"
     $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
     $templateFile = "$rootDirectory/$moduleDirectory/14-Image.json"
     $templateParameters = "$rootDirectory/$moduleDirectory/14-Image.Parameters.json"
-    $templateConfig = Set-ImageTemplates $resourceGroupName $templateParameters $renderFarmTypes
+    $templateConfig = Set-ImageTemplates $imageGallery $templateParameters $renderFarm.nodeTypes
 
     foreach ($imageTemplate in $templateConfig.parameters.imageTemplates.value) {
         if ($imageTemplate.deploy) {
             $imageTemplate.buildCustomization = @()
-            if ($renderManagerMode.Contains("OpenCue")) {
+            if ($renderFarm.managerType.Contains("OpenCue")) {
                 $scriptFile = "14-Image.OpenCue"
-                $customizeCommand = Get-ImageCustomizeCommand $rootDirectory $moduleDirectory $storageAccount $imageTemplate.imageOperatingSystemType $scriptFile
+                $customizeCommand = Get-ImageCustomizeCommand $rootDirectory $moduleDirectory $storageAccount $imageGallery $imageTemplate $null $scriptFile
                 $imageTemplate.buildCustomization += $customizeCommand
             }
-            if ($renderManagerMode.Contains("RoyalRender")) {
+            if ($renderFarm.managerType.Contains("RoyalRender")) {
                 $scriptFile = "14-Image.RoyalRender"
-                $customizeCommand = Get-ImageCustomizeCommand $rootDirectory $moduleDirectory $storageAccount $imageTemplate.imageOperatingSystemType $scriptFile
+                $customizeCommand = Get-ImageCustomizeCommand $rootDirectory $moduleDirectory $storageAccount $imageGallery $imageTemplate $null $scriptFile
                 $imageTemplate.buildCustomization += $customizeCommand
             }
             $scriptFile = "15-Machine"
-            $customizeCommand = Get-ImageCustomizeCommand $rootDirectory $moduleDirectory $storageAccount $imageTemplate.imageOperatingSystemType $scriptFile
+            $customizeCommand = Get-ImageCustomizeCommand $rootDirectory $moduleDirectory $storageAccount $imageGallery $imageTemplate "File" $scriptFile
             $imageTemplate.buildCustomization += $customizeCommand
         }
     }
@@ -146,11 +159,11 @@ if ($renderManagerMode -eq "Batch") {
     New-TraceMessage $moduleName $true
 
     # (14.2) Render Manager Image Build
-    $moduleName = "(14.2) Render Manager Image Build [" + ($renderFarmTypes -join ",") + "]"
+    $moduleName = "(14.2) Render Manager Image Build"
     Build-ImageTemplates $moduleName $computeRegionName $imageGallery $templateConfig.parameters.imageTemplates.value
 
     # (15) Render Manager Machine
-    $moduleName = "(15) Render Manager Machine [" + ($renderFarmTypes -join ",") + "]"
+    $moduleName = "(15) Render Manager Machine"
     New-TraceMessage $moduleName $false
     $resourceGroupNameSuffix = "-Manager.Compute"
     $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
@@ -164,17 +177,19 @@ if ($renderManagerMode -eq "Batch") {
     $templateConfig.parameters.imageGallery.value.name = $imageGallery.name
     $templateConfig.parameters.imageGallery.value.resourceGroupName = $imageGallery.resourceGroupName
 
-    $scriptParameters = $templateConfig.parameters.scriptExtension.value.scriptParameters
-    $scriptParameters.postgreSqlHost = $postgreSqlHost
-    $scriptParameters.postgreSqlPort = $postgreSqlPort
-    $scriptParameters.postgreSqlAdminUsername = $postgreSqlAdminUsername
-    $scriptParameters.postgreSqlAdminPassword = $postgreSqlAdminPassword
-    $scriptParameters.mongoDbHost = $mongoDbHost
-    $scriptParameters.mongoDbPort = $mongoDbPort
-    $scriptParameters.mongoDbAdminUsername = $mongoDbAdminUsername
-    $scriptParameters.mongoDbAdminPassword = $mongoDbAdminPassword
-    $fileParameters = Get-ObjectProperties $scriptParameters $false
-    $templateConfig.parameters.scriptExtension.value.fileParameters = $fileParameters
+    $customExtension = $templateConfig.parameters.customExtension.value
+    $customExtension.scriptParameters.dataTierHost = $postgreSqlHost
+    $customExtension.scriptParameters.dataTierPort = $postgreSqlPort
+    $customExtension.scriptParameters.adminUsername = $postgreSqlAdminUsername
+    $customExtension.scriptParameters.adminPassword = $postgreSqlAdminPassword
+
+    $scriptFilePath = $customExtension.linux.scriptFilePath
+    $scriptParameters = Get-ExtensionParameters $scriptFilePath $customExtension.scriptParameters
+    $customExtension.linux.scriptParameters = $scriptParameters
+
+    $scriptFilePath = $customExtension.windows.scriptFilePath
+    $scriptParameters = Get-ExtensionParameters $scriptFilePath $customExtension.scriptParameters
+    $customExtension.windows.scriptParameters = $scriptParameters
 
     $templateConfig.parameters.logAnalytics.value.name = $logAnalytics.name
     $templateConfig.parameters.logAnalytics.value.resourceGroupName = $logAnalytics.resourceGroupName
@@ -189,7 +204,7 @@ if ($renderManagerMode -eq "Batch") {
     New-TraceMessage $moduleName $true
 
     # (16) Render Manager CycleCloud
-    if ($renderManagerMode.Contains("HPC")) {
+    if ($renderFarm.managerType.Contains("HPC")) {
         $moduleName = "(16) Render Manager CycleCloud"
         New-TraceMessage $moduleName $false
         $resourceGroupNameSuffix = "-Manager.Compute"

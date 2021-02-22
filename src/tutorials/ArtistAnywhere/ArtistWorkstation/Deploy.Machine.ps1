@@ -11,10 +11,14 @@ param (
     # Set to true to deploy Azure VPN Gateway (https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways)
     [boolean] $networkGatewayDeploy = $false,
 
-    # Set to true to deploy Azure NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
-    [boolean] $storageNetAppDeploy = $false,
+    # Set to true to deploy one or more Azure 1st-party and/or 3rd-party storage services within the Azure storage region
+    [object] $storageServiceDeploy = @{
+        "netAppFiles" = $false # https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction
+        "hammerspace" = $false
+        "qumulo" = $false
+    },
 
-    # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) in the compute region
+    # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) service
     [boolean] $storageCacheDeploy = $false,
 
     # Set the operating system types for the Azure artist workstation image builds and virtual machines
@@ -23,11 +27,11 @@ param (
     # The base Azure services framework (e.g., Virtual Network, Managed Identity, Key Vault, etc.)
     [object] $baseFramework,
 
-    # The Azure storage and cache service resources (e.g., storage account, cache mount, etc.)
+    # The Azure storage and cache resources (e.g., storage account, storage / cache mounts, etc.)
     [object] $storageCache,
 
-    # The Azure render manager
-    [object] $renderManager
+    # The Azure image library resources (e.g., Image Gallery, Container Registry, etc.)
+    [object] $imageLibrary
 )
 
 $rootDirectory = !$PSScriptRoot ? $using:rootDirectory : (Get-Item -Path $PSScriptRoot).Parent.FullName
@@ -36,6 +40,7 @@ $moduleDirectory = "ArtistWorkstation"
 Import-Module "$rootDirectory/Deploy.psm1"
 Import-Module "$rootDirectory/BaseFramework/Deploy.psm1"
 # Import-Module "$rootDirectory/StorageCache/Deploy.psm1"
+Import-Module "$rootDirectory/ImageLibrary/Deploy.psm1"
 
 # Base Framework
 if (!$baseFramework) {
@@ -43,15 +48,20 @@ if (!$baseFramework) {
 }
 $computeNetwork = $baseFramework.computeNetwork
 $managedIdentity = $baseFramework.managedIdentity
-$imageGallery = $baseFramework.imageGallery
 
 # Storage Cache
 # if (!$storageCache) {
-#     $storageCache = Get-StorageCache $rootDirectory $baseFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageNetAppDeploy $storageCacheDeploy
+#     $storageCache = Get-StorageCache $rootDirectory $baseFramework $resourceGroupNamePrefix $computeRegionName $storageRegionName $storageServiceDeploy $storageCacheDeploy
 # }
 
+# Image Library
+if (!$imageLibrary) {
+    $imageLibrary = Get-ImageLibrary $rootDirectory $baseFramework $resourceGroupNamePrefix $computeRegionName
+}
+$imageGallery = $imageLibrary.imageGallery
+
 # (21) Artist Workstation Machine
-$moduleName = "(21) Artist Workstation Machine [" + ($artistWorkstationTypes -join ",") + "]"
+$moduleName = "(21) Artist Workstation Machine"
 New-TraceMessage $moduleName $false
 $resourceGroupNameSuffix = "-Workstation"
 $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
@@ -65,10 +75,16 @@ $templateConfig.parameters.managedIdentity.value.resourceGroupName = $managedIde
 $templateConfig.parameters.imageGallery.value.name = $imageGallery.name
 $templateConfig.parameters.imageGallery.value.resourceGroupName = $imageGallery.resourceGroupName
 
-$scriptParameters = $templateConfig.parameters.scriptExtension.value.scriptParameters
-$scriptParameters.RENDER_MANAGER_HOST = $renderManager.host ?? ""
-$fileParameters = Get-ObjectProperties $scriptParameters $false
-$templateConfig.parameters.scriptExtension.value.fileParameters = $fileParameters
+$customExtension = $templateConfig.parameters.customExtension.value
+#$customExtension.scriptParameters.renderManagerHost = $renderManager.host ?? ""
+
+$scriptFilePath = $customExtension.linux.scriptFilePath
+$scriptParameters = Get-ExtensionParameters $scriptFilePath $customExtension.scriptParameters
+$customExtension.linux.scriptParameters = $scriptParameters
+
+$scriptFilePath = $customExtension.windows.scriptFilePath
+$scriptParameters = Get-ExtensionParameters $scriptFilePath $customExtension.scriptParameters
+$customExtension.windows.scriptParameters = $scriptParameters
 
 $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
 $templateConfig.parameters.virtualNetwork.value.resourceGroupName = $computeNetwork.resourceGroupName

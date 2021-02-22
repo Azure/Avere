@@ -19,7 +19,6 @@
         {
           "deploy": false,
           "name": "WorkstationLinux",
-          "imageOperatingSystemType": "Linux",
           "imageDefinitionName": "WorkstationLinux",
           "imageSourceType": "PlatformImage",
           "imageSourceVersion": "latest",
@@ -31,14 +30,13 @@
             "size": "Standard_NV12",
             "osDiskSizeGB": 0
           },
-          "buildTimeoutMinutes": 120,
+          "buildTimeoutMinutes": 90,
           "buildCustomization": [
           ]
         },
         {
           "deploy": false,
           "name": "WorkstationWindows",
-          "imageOperatingSystemType": "Windows",
           "imageDefinitionName": "WorkstationWindows",
           "imageSourceType": "PlatformImage",
           "imageSourceVersion": "latest",
@@ -50,7 +48,7 @@
             "size": "Standard_NV12",
             "osDiskSizeGB": 0
           },
-          "buildTimeoutMinutes": 120,
+          "buildTimeoutMinutes": 90,
           "buildCustomization": [
           ]
         }

@@ -11,7 +11,7 @@
     "artistWorkstations": {
       "type": "array"
     },
-    "scriptExtension": {
+    "customExtension": {
       "type": "object"
     },
     "virtualNetwork": {
@@ -46,17 +46,17 @@
         "GetExtensionCommand": {
           "parameters": [
             {
-              "name": "filePath",
+              "name": "scriptFilePath",
               "type": "string"
             },
             {
-              "name": "fileParameters",
+              "name": "scriptParameters",
               "type": "string"
             }
           ],
           "output": {
             "type": "string",
-            "value": "[if(endsWith(parameters('filePath'), '.ps1'), format('PowerShell.exe -ExecutionPolicy Unrestricted -File {0} {1}', parameters('filePath'), parameters('fileParameters')), format('cat {0} | tr -d \r | {1} /bin/bash', parameters('filePath'), parameters('fileParameters')))]"
+            "value": "[if(endsWith(parameters('scriptFilePath'), '.ps1'), format('PowerShell.exe -ExecutionPolicy Unrestricted -File {0} {1}', parameters('scriptFilePath'), parameters('scriptParameters')), format('cat {0} | tr -d \r | {1} /bin/bash', parameters('scriptFilePath'), parameters('scriptParameters')))]"
           }
         }
       }
@@ -150,7 +150,7 @@
         "typeHandlerVersion": "[if(equals(reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('artistWorkstations')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), '1.10', '2.1')]",
         "autoUpgradeMinorVersion": true,
         "protectedSettings": {
-          "commandToExecute": "[if(equals(reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('artistWorkstations')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetExtensionCommand(parameters('scriptExtension').windows.filePath, parameters('scriptExtension').windows.fileParameters), fx.GetExtensionCommand(parameters('scriptExtension').linux.filePath, parameters('scriptExtension').linux.fileParameters))]"
+          "commandToExecute": "[if(equals(reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('artistWorkstations')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetExtensionCommand(parameters('customExtension').windows.scriptFilePath, parameters('customExtension').windows.scriptParameters), fx.GetExtensionCommand(parameters('customExtension').linux.scriptFilePath, parameters('customExtension').linux.scriptParameters))]"
         }
       },
       "copy": {
