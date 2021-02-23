@@ -20,6 +20,19 @@ locals {
   user_access_administrator_role = "User Access Administrator"
   # needed for creating various compute resources
   create_compute_role = "Virtual Machine Contributor"
+
+  # publisher / offer / sku
+  image_parts = var.image_id == null ? [] : split(":", var.image_id)
+  is_custom_image = var.image_id == null ? false : (length(local.image_parts) < 4 && length(var.image_id) > 0)
+  publisher = length(local.image_parts) >= 4 ? local.image_parts[0] : "microsoft-avere"
+  offer = length(local.image_parts) >= 4 ? local.image_parts[1] : "vfxt" 
+  sku = length(local.image_parts) >= 4 ? local.image_parts[2] : "avere-vfxt-controller"
+  version = length(local.image_parts) >= 4 ? local.image_parts[3] : "latest"
+
+  # the plan details are the same for all marketplace controller images
+  plan_name = "avere-vfxt-controller"
+  plan_publisher = "microsoft-avere"
+  plan_product = "vfxt"
 }
 
 resource "azurerm_resource_group" "vm" {
@@ -74,7 +87,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   computer_name  = var.unique_name
   custom_data = var.apply_patch ? base64encode(local.cloud_init_file) : null
   size = var.vm_size
-  source_image_id = var.image_id
+  source_image_id = local.is_custom_image ? var.image_id : null
   
   identity {
     type = var.user_assigned_managed_identity_id == null ? "SystemAssigned" : "UserAssigned"
@@ -88,21 +101,21 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 
   dynamic "source_image_reference" {
-    for_each = var.image_id == null ? ["microsoft-avere"] : []
+    for_each = local.is_custom_image ? [] : ["microsoft-avere"]
     content {
-      publisher = "microsoft-avere"
-      offer     = "vfxt"
-      sku       = "avere-vfxt-controller"
-      version   = "latest"
+      publisher = local.publisher
+      offer     = local.offer
+      sku       = local.sku
+      version   = local.version
     }
   }
 
   dynamic "plan" {
-    for_each = var.image_id == null ? ["microsoft-avere"] : []
+    for_each = local.is_custom_image ? [] : ["microsoft-avere"]
     content {
-      name = "avere-vfxt-controller"
-      publisher = "microsoft-avere"
-      product = "vfxt"
+      name = local.plan_name
+      publisher = local.plan_publisher
+      product = local.plan_product
     }
   }
 
