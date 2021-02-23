@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"net"
 	"os"
 	"os/signal"
@@ -20,11 +19,21 @@ import (
 )
 
 const (
+	B = 1 << (10 * iota)
+	KB
+	MB
+	GB
+)
+
+const (
 	DefaultFileFilter      = "*"
 	DefaultWalkersPerShare = 1
 	DefaultReadBytes       = 21383
 	timeBetweenPrints      = time.Duration(1) * time.Second
 	tick                   = time.Duration(10) * time.Millisecond // 10ms
+	ReadPageSize           = 10 * MB
+	timeBetweenCancelCheck = time.Duration(100) * time.Millisecond  // 100ms
+	timeBetweenStatusCheck = time.Duration(1000) * time.Millisecond // 1s
 )
 
 var matchSMB = regexp.MustCompile(`^\\\\([^\\]*)\\(.*)$`)
@@ -203,7 +212,7 @@ func InitializeWalker(statsCollector *StatsCollector, smbPath string, fileFilter
 	}
 }
 
-func (w *Walker) RunWalker(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
+func (w *Walker) RunWalker(ctx context.Context, syncWaitGroup *sync.WaitGroup, runForever bool) {
 	w.StatsCollector.RunningThreadIncr()
 	defer w.StatsCollector.RunningThreadDecr()
 
@@ -211,70 +220,91 @@ func (w *Walker) RunWalker(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
 	Info.Printf("[Walker %s", w.Smbpath)
 	defer Info.Printf("Walker %s]", w.Smbpath)
 
-	buffer := make([]byte, DefaultReadBytes)
-	folderSlice := []string{w.Smbpath}
-	for len(folderSlice) > 0 {
-		select {
-		case <-ctx.Done():
+	for {
+		folderSlice := []string{w.Smbpath}
+		for len(folderSlice) > 0 {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				folder := folderSlice[len(folderSlice)-1]
+				folderSlice[len(folderSlice)-1] = ""
+				folderSlice = folderSlice[:len(folderSlice)-1]
+
+				dirEntries, err := ioutil.ReadDir(folder)
+				if err != nil {
+					Error.Printf("error encountered reading directory '%s': %v", folder, err)
+					w.StatsCollector.IncrDirReadFailureCount()
+					continue
+				}
+				w.StatsCollector.IncrDirReadCount()
+				for _, dirEntry := range dirEntries {
+					if isCancelled(ctx) {
+						return
+					}
+					if dirEntry.IsDir() {
+						folderSlice = append(folderSlice, path.Join(folder, dirEntry.Name()))
+					} else {
+						// only scan file if it matches filter
+						if w.FileFilter != DefaultFileFilter {
+							if isMatch, err := filepath.Match(w.FileFilter, dirEntry.Name()); err != nil {
+								Error.Printf("error matching filename %s: %v", dirEntry.Name(), err)
+								continue
+							} else if !isMatch {
+								continue
+							}
+						}
+						filename := path.Join(folder, dirEntry.Name())
+						// DEBUG
+						//Info.Printf("checking filename %s", filename)
+						w.readFileFull(ctx, filename)
+					}
+				}
+			}
+		}
+		if !runForever {
+			break
+		}
+	}
+
+}
+
+func (w *Walker) readFileFull(ctx context.Context, filename string) {
+	var readBytes int
+	file, err := os.Open(filename)
+	if err != nil {
+		w.StatsCollector.IncrFileReadFailureCount()
+		Error.Printf("error opening file %s: %v", filename, err)
+		return
+	}
+	defer file.Close()
+	w.StatsCollector.IncrFileOpenCount()
+	buffer := make([]byte, ReadPageSize)
+	lastCancelCheckTime := time.Now()
+	lastStatusTime := time.Now()
+	for {
+		count, err := file.Read(buffer)
+		readBytes += count
+		if err != nil {
+			if err != io.EOF {
+				w.StatsCollector.IncrFileReadFailureCount()
+				Error.Printf("error reading file %s: %v", filename, err)
+			}
+			w.StatsCollector.IncrFileReadCount()
+			lastStatusTime = time.Now()
+			Info.Printf("read %d bytes from filepath %s", readBytes, filename)
 			return
-		default:
-			folder := folderSlice[len(folderSlice)-1]
-			folderSlice[len(folderSlice)-1] = ""
-			folderSlice = folderSlice[:len(folderSlice)-1]
-
-			dirEntries, err := ioutil.ReadDir(folder)
-			if err != nil {
-				Error.Printf("error encountered reading directory '%s': %v", folder, err)
-				w.StatsCollector.IncrDirReadFailureCount()
-				continue
+		}
+		// ensure no cancel
+		if time.Since(lastCancelCheckTime) > timeBetweenCancelCheck {
+			lastCancelCheckTime = time.Now()
+			if isCancelled(ctx) {
+				return
 			}
-			w.StatsCollector.IncrDirReadCount()
-			for _, dirEntry := range dirEntries {
-				if isCancelled(ctx) {
-					return
-				}
-				if dirEntry.IsDir() {
-					folderSlice = append(folderSlice, path.Join(folder, dirEntry.Name()))
-				} else {
-					// only scan file if it matches filter
-					if w.FileFilter != DefaultFileFilter {
-						if isMatch, err := filepath.Match(w.FileFilter, dirEntry.Name()); err != nil {
-							Error.Printf("error matching filename %s: %v", dirEntry.Name(), err)
-							continue
-						} else if !isMatch {
-							continue
-						}
-					}
-					filename := path.Join(folder, dirEntry.Name())
-					// DEBUG
-					//Info.Printf("checking filename %s", filename)
-
-					f, err := os.Open(filename)
-					if err != nil {
-						w.StatsCollector.IncrFileOpenFailureCount()
-						Error.Printf("error opening file %s: %v", filename, err)
-						f.Close()
-						continue
-					}
-					w.StatsCollector.IncrFileOpenCount()
-
-					start := int64(0)
-					if dirEntry.Size() > 0 {
-						start = rand.Int63n(dirEntry.Size())
-					}
-					_, err = f.ReadAt(buffer, start)
-					if err != nil {
-						if err != io.EOF {
-							w.StatsCollector.IncrFileReadFailureCount()
-							Error.Printf("error reading %d bytes of file %s: %v", DefaultReadBytes, filename, err)
-							f.Close()
-							continue
-						}
-					}
-					w.StatsCollector.IncrFileReadCount()
-					f.Close()
-				}
-			}
+		}
+		if time.Since(lastStatusTime) > timeBetweenStatusCheck {
+			lastStatusTime = time.Now()
+			Info.Printf("reading %d bytes from large file %s", readBytes, filename)
 		}
 	}
 }
@@ -284,10 +314,10 @@ func (w *Walker) RunWalker(ctx context.Context, syncWaitGroup *sync.WaitGroup) {
 ////////////////////////////////////////////////////////////////
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "usage: %s BASE_SMB_PATH [WALKERS_PER_SHARE] [FILE_FILTER]\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "usage: %s BASE_SMB_PATH [WALKERS_PER_SHARE] [FILE_FILTER] [RUN_FOREVER(true|*false*)]\n", os.Args[0])
 }
 
-func InitializeVariables() ([]string, int, string) {
+func InitializeVariables() ([]string, int, string, bool) {
 	if len(os.Args) <= 1 {
 		fmt.Fprintf(os.Stderr, "ERROR: no base SMB PATH specified\n")
 		usage()
@@ -313,6 +343,11 @@ func InitializeVariables() ([]string, int, string) {
 		fileExtension = os.Args[3]
 	}
 
+	runForever := false
+	if len(os.Args) > 4 {
+		runForever = (os.Args[4] == "true")
+	}
+
 	// validate the smb path
 	matches := matchSMB.FindAllStringSubmatch(baseSMBPath, -1)
 	if len(matches) == 0 || len(matches[0]) < 3 {
@@ -325,7 +360,7 @@ func InitializeVariables() ([]string, int, string) {
 
 	ip := net.ParseIP(filer)
 	if ip != nil {
-		return []string{baseSMBPath}, walkersPerShare, fileExtension
+		return []string{baseSMBPath}, walkersPerShare, fileExtension, runForever
 	}
 
 	// perform a dns lookup on the name to resolve all IP addresses
@@ -341,14 +376,14 @@ func InitializeVariables() ([]string, int, string) {
 		Info.Printf("add path %s", fullPath)
 		result = append(result, fullPath)
 	}
-	return result, walkersPerShare, fileExtension
+	return result, walkersPerShare, fileExtension, runForever
 }
 
 func main() {
 	// setup the shared context
 	ctx, cancel := context.WithCancel(context.Background())
 
-	targetSMBPaths, walkersPerShare, fileFilter := InitializeVariables()
+	targetSMBPaths, walkersPerShare, fileFilter, runForever := InitializeVariables()
 
 	for _, s := range targetSMBPaths {
 		Info.Printf("SMB Path: %s", s)
@@ -368,7 +403,7 @@ func main() {
 			walker := InitializeWalker(statsCollector, s, fileFilter)
 			walkers = append(walkers, walker)
 			syncWaitGroup.Add(1)
-			go walker.RunWalker(ctx, &syncWaitGroup)
+			go walker.RunWalker(ctx, &syncWaitGroup, runForever)
 		}
 	}
 
