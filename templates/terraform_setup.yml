@@ -14,6 +14,7 @@ parameters:
     - "microsoft-avere:vfxt:avere-vfxt-node:5.3.61"
     - "microsoft-avere:vfxt:avere-vfxt-node:5.3.51"
     - "microsoft-avere:vfxt:avere-vfxt-node:5.3.43"
+    - "microsoft-avere:vfxt-preview:avere-vfxt-node:latest"
 
 steps:
 - script: |
@@ -22,7 +23,7 @@ steps:
     unzip terraform_0.12.25_linux_amd64.zip
     sudo mv terraform /usr/local/bin
     sudo chmod 755 /usr/local/bin/terraform
-    
+
     browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[].browser_download_url)
     mkdir -p ~/.terraform.d/plugins
     wget -O ~/.terraform.d/plugins/terraform-provider-avere $browser_download_url
@@ -30,7 +31,7 @@ steps:
 
     sshkey="$(cat ~/.ssh/id_rsa.pub) azureuser@linuxvm"
     echo "##vso[task.setvariable variable=secret.SSH_KEY;issecret=true]${sshkey}"
-    
+
     cd src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
     sed -i -E -e "s:vm_ssh_key_data = null:vm_ssh_key_data = \"${sshkey}\":" \
       -e "s/location = \"eastus\"/location = \"${REGION}\"/" \
@@ -39,10 +40,10 @@ steps:
       -e "s/vfxt_cluster_password = \"VFXT_PASSWORD\"/vfxt_cluster_password = \"${AVERE_ADMIN_PW}\"/" \
       -e 's/vfxt_node_count = 3/vfxt_node_count = ${{ parameters.original_node_count }}/' main.tf
 
-      # Used for using Dseries, but does not work with vdbench, needed to use Eseries. 
+      # Used for using Dseries, but does not work with vdbench, needed to use Eseries.
       # Leaving commented out incase we do need to use testing sku
       # -e 's/vfxt_node_count = 3/vfxt_node_count = ${{ parameters.original_node_count }}\n    node_cache_size = 1024\n    node_size = "unsupported_test_SKU"/' main.tf
-    
+
     if [ "proxy" = "${{ parameters.run_terraform }}" ] || [ "azureblobfiler" = "${{ parameters.run_terraform }}" ]; then
       sed -i "s/storage_account_name = \"storageaccount\"/storage_account_name = \"$RESOURCE_GROUP_NAME\"/" main.tf
     fi
