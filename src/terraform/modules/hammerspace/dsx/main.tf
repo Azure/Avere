@@ -2,6 +2,8 @@ data "azurerm_subnet" "data_subnet" {
   name                 = var.virtual_network_data_subnet_name
   virtual_network_name = var.virtual_network_name
   resource_group_name  = var.virtual_network_resource_group
+
+  depends_on = [var.module_depends_on]
 }
 
 locals {
@@ -18,7 +20,8 @@ locals {
             "ips": [
                 "${var.anvil_data_cluster_ip}/${var.anvil_data_cluster_ip_mask_bits}"
             ]
-        }
+        },
+        "password": "${var.anvil_password}"
     },
     "node": {
         "features": [
@@ -85,4 +88,25 @@ resource "azurerm_virtual_machine_data_disk_attachment" "dsxvm" {
   virtual_machine_id = azurerm_linux_virtual_machine.dsxvm[count.index].id
   lun                = "1"
   caching            = azurerm_managed_disk.dsxvm[count.index].disk_size_gb > 4095 ? "None" : "ReadWrite"
+}
+
+resource "azurerm_virtual_machine_extension" "cse" {
+  count                = var.dsx_instance_count
+  name                 = "${ local.dsx_host_names[count.index]}-cse"
+  virtual_machine_id   = azurerm_linux_virtual_machine.dsxvm[count.index].id
+  publisher            = "Microsoft.Azure.Extensions"
+  type                 = "CustomScript"
+  type_handler_version = "2.0"
+
+  // sleep 30 to ensure the disk has attached, and restart the pd service
+  settings = <<SETTINGS
+    {
+        "commandToExecute": "sleep 30 && systemctl restart pd-first-boot"
+    }
+SETTINGS
+
+  // unable to use the depends on clause, so using tags to create the same effect
+  tags = {
+      dependson = azurerm_virtual_machine_data_disk_attachment.dsxvm[count.index].id
+  }
 }

@@ -6,8 +6,9 @@ output "web_ui_username" {
   value = "admin"
 }
 
+// TODO - which password works?
 output "web_ui_password" {
-  value = azurerm_linux_virtual_machine.anvilvm == null || length(azurerm_linux_virtual_machine.anvilvm) == 0 ? "" : "${azurerm_linux_virtual_machine.anvilvm[0].virtual_machine_id}${local.is_high_availability ? " or " : ""}${local.is_high_availability ? azurerm_linux_virtual_machine.anvilvm[1].virtual_machine_id : ""}"
+  value = azurerm_linux_virtual_machine.anvilvm == null || length(azurerm_linux_virtual_machine.anvilvm) == 0 ? "" : local.is_high_availability ? azurerm_linux_virtual_machine.anvilvm[1].virtual_machine_id : azurerm_linux_virtual_machine.anvilvm[0].virtual_machine_id
 }
 
 output "deployment_name" {
@@ -26,3 +27,7 @@ output "anvil_domain" {
   value = local.domain
 }
 
+output "module_depends_on_id" {
+  description = "the id(s) to force others to wait"
+  value = azurerm_virtual_machine_extension.cse == null || length(azurerm_virtual_machine_extension.cse) == 0 ? data.azurerm_subnet.data_subnet.id : azurerm_virtual_machine_extension.cse[0].id
+}

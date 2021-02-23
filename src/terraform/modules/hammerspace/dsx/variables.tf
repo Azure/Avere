@@ -45,6 +45,10 @@ variable "virtual_network_data_subnet_name" {
   description = "The unique name used for the data virtual network subnet."
 }
 
+variable "anvil_password" {
+  description = "Anvil Cluster Data IP."
+}
+
 variable "anvil_data_cluster_ip" {
   description = "Anvil Cluster Data IP."
 }
@@ -55,6 +59,11 @@ variable "anvil_data_cluster_ip_mask_bits" {
 
 variable "anvil_domain" {
   description = "The domain used by the anvil nodes."
+}
+
+variable "module_depends_on" {
+  default = [""]
+  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
 }
 
 ////////////////////////////////////////////////////////////////

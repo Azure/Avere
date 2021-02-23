@@ -51,6 +51,11 @@ variable "virtual_network_data_subnet_name" {
   description = "The unique name used for the data virtual network subnet."
 }
 
+variable "module_depends_on" {
+  default = [""]
+  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
+}
+
 ////////////////////////////////////////////////////////////////
 // Advanced Configuration
 ////////////////////////////////////////////////////////////////
