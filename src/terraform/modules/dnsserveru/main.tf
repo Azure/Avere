@@ -147,6 +147,10 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 
   source_image_reference {
+    //publisher = "Canonical"
+    //offer     = "0001-com-ubuntu-server-focal"
+    //sku       = "20_04-lts"
+    //version   = "latest"
     publisher = "Canonical"
     offer     = "UbuntuServer"
     sku       = "18.04-LTS"
