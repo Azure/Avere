@@ -25,7 +25,7 @@ function retrycmd_if_failure() {
 }
 
 function update_linux() {
-    retrycmd_if_failure 12 5 apt update
+    retrycmd_if_failure 12 5 apt update -y
     retrycmd_if_failure 12 5 apt install -y unbound
 }
 
