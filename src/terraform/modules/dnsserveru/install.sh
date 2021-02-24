@@ -30,6 +30,11 @@ function update_linux() {
 }
 
 function configure_unbound() {
+    # first disable systemd-resolved
+    systemctl stop systemd-resolved
+    systemctl disable systemd-resolved
+    ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+
     UNBOUND_CONF_FILE=/etc/unbound/unbound.conf
     cp $UNBOUND_CONF_FILE $UNBOUND_CONF_FILE.bak
     cp /opt/unbound.conf $UNBOUND_CONF_FILE
