@@ -55,6 +55,14 @@ parameters:
       - "microsoft-avere:vfxt:avere-vfxt-node:5.3.61"
       - "microsoft-avere:vfxt:avere-vfxt-node:5.3.51"
       - "microsoft-avere:vfxt:avere-vfxt-node:5.3.43"
+      - "microsoft-avere:vfxt-preview:avere-vfxt-node:latest"
+  - name: controller_image
+    displayName: "Controller Image Offering (default: latest public)"
+    type: string
+    default: "microsoft-avere:vfxt:avere-vfxt-controller:latest"
+    values:
+      - "microsoft-avere:vfxt:avere-vfxt-controller:latest"
+      - "microsoft-avere:vfxt-preview:avere-vfxt-controller:latest"
   - name: run_vdbench
     displayName: "Run vdbench - only runs with azureblobfiler"
     type: boolean
@@ -85,14 +93,14 @@ parameters:
 
 variables:
   SSH_PUBLIC_KEY: '${{ parameters.ssh_pub_key}}'
-  
+
 jobs:
 - job: Terraform_vFXT
   timeoutInMinutes: 180
   cancelTimeoutInMinutes: 40
   pool:
     vmImage: ubuntu-latest
-  steps:  
+  steps:
   - template: templates/setup_ssh.yml
   - template: templates/setup_envars.yml
     parameters:
@@ -103,20 +111,21 @@ jobs:
       original_node_count: ${{ parameters.original_node_count }}
       run_terraform: ${{ parameters.run_terraform }}
       image: ${{ parameters.image }}
-  
+      controller_image: ${{ parameters.controller_image }}
+
   - template: templates/terraform_cmd.yml
-    parameters: 
+    parameters:
       run_terraform: ${{ parameters.run_terraform }}
       cmd_terraform: apply
       condition: succeeded()
-  
+
   - ${{ if ne(parameters.ssh_pub_key, '.') }}:
     - template: templates/add_sshkey.yml
 
   - ${{ if eq(parameters.run_vdbench, true) }}:
     - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
       - template: templates/run_vdbench.yml
-        parameters: 
+        parameters:
           cmd_terraform: apply
           vdbench_config: ${{ parameters.vdbench_config }}
 
@@ -127,11 +136,11 @@ jobs:
         scale_up_node_count: ${{ parameters.scale_up_node_count }}
         scale: up
     - template: templates/terraform_cmd.yml
-      parameters: 
+      parameters:
         run_terraform: ${{ parameters.run_terraform }}
         cmd_terraform: apply
         condition: succeeded()
-    
+
   - ${{ if eq(parameters.run_scale_up, true) }}:
     - ${{ if eq(parameters.run_scale_down, true) }}:
       - template: templates/terraform_scale_up_down.yml
@@ -140,7 +149,7 @@ jobs:
           scale_up_node_count: ${{ parameters.scale_up_node_count }}
           scale: "down"
       - template: templates/terraform_cmd.yml
-        parameters: 
+        parameters:
           run_terraform: ${{ parameters.run_terraform }}
           cmd_terraform: apply
           condition: succeeded()
@@ -148,11 +157,11 @@ jobs:
     - ${{ if eq(parameters.run_vdbench, true) }}:
       - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
         - template: templates/run_vdbench.yml
-          parameters: 
+          parameters:
             cmd_terraform: destroy
             vdbench_config: ${{ parameters.vdbench_config }}
     - template: templates/terraform_cmd.yml
-      parameters: 
+      parameters:
         run_terraform: ${{ parameters.run_terraform }}
         cmd_terraform: destroy
     - template: templates/rg_delete.yml
