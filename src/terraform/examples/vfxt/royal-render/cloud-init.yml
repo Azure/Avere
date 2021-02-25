@@ -1,0 +1,20 @@
+#cloud-config
+package_upgrade: false
+packages:
+  - python3
+  - python3-pip
+  - nfs-common
+  - xfce4
+  - xfce4-goodies
+  - tightvncserver
+runcmd:
+  - set -x
+  - if [ "${ssh_port}" -ne "22" ]; then sed -i 's/^#\?Port .*/Port ${ssh_port}/' /etc/ssh/sshd_config && systemctl restart sshd ; fi
+  - mkdir -p /nfs/rr
+  - mkdir -p /tmp/rr
+  - mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' ${nfsfiler} /nfs/rr
+  - cd /nfs/rr
+  - wget --tries=12 --wait=5 https://www.royalrender.de/download/RoyalRender__8.2.39__installer.zip
+  - cp RoyalRender__8.2.39__installer.zip /tmp/rr
+  - cd /tmp/rr
+  - unzip RoyalRender__8.2.39__installer.zip
