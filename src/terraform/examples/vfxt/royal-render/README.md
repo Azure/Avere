@@ -1,9 +1,3 @@
-# IN PROGRESS
-TODO:
-  - Update opencue refs to RR
-  - New module for RR server install and set up
-  - New module for rrClient install and set up on render nodes
-
 # Royal Render End to End Example
 
 The example in this folder deploys a Royal Render server on Azure and a Virtual Machine Scale Set (VMSS) with Royal Render agents (rCloud rrClient) to pick up jobs.
@@ -40,7 +34,7 @@ echo "src/terraform/*" >> .git/info/sparse-checkout
 git pull origin main
 ```
 
-6. `cd src/terraform/examples/vfxt/opencue/new-storage`
+6. `cd src/terraform/examples/vfxt/royal-render`
 
 7. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  If you are using an [ssh key](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/mac-create-ssh-keys), ensure that ~/.ssh/id_rsa is populated.
 
@@ -50,11 +44,11 @@ git pull origin main
 
 When you are done using the cluster, you can destroy it by running `terraform destroy -auto-approve` or just delete the three resource groups created.
 
-## CueBot Server
+## Royal Render Server
 
 ### VNC
 
-If you plan to VNC into the CueBot server, you will need to [open a port](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/nsg-quickstart-portal), e.g. port 5901, in the 'ssh_nsg' Network Security Group to set up the tunnel to the VM. `tightvncserver` is installed on the CueBot VM, these are sample commands to configure VNC:
+If you plan to VNC into the Royal Render server, you will need to [open a port](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/nsg-quickstart-portal), e.g. port 5901, in the 'ssh_nsg' Network Security Group to set up the tunnel to the VM. `tightvncserver` is installed on the CueBot VM, these are sample commands to configure VNC:
 ```
 vncserver
 vncserver -kill :1
@@ -81,19 +75,3 @@ ssh -I <path to private key> -L 5901:127.0.0.1:5901 -C -N -l azureuser <cuebot V
 ```
 
 Connect to your server by using a local VNC app, e.g. Screen Sharing on OS X, and use the address `127.0.0.1:5901`
-
-### CueGui and CueSubmit
-
-Once connected to the CueBot VM, you can start CueGui in the terminal with the following command:
-
-```
-CUEBOT_HOSTS=localhost cuegui
-```
-
-To start CueSubmit use the following command:
-
-```
-CUEBOT_HOSTS=$CUEBOT_HOSTNAME_OR_IP cuesubmit
-```
-
-Sample scripts to render several different shots from the [moana island scene](https://www.disneyanimation.com/resources/moana-island-scene/) are available in the [opencue scripts](../../../../../clientapps/opencue/scripts/moanaislandscene) directory. These scripts make use of [pbrt](https://github.com/mmp/pbrt-v3/) to render the shots. You will need to ensure you have the [moana island scene](https://www.disneyanimation.com/resources/moana-island-scene/) assets downloaded and stored on a core filer accessible by your vFXT/HPC Cache.
