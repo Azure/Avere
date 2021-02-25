@@ -39,7 +39,7 @@ If you have created a new subscription, you will need to perform the following s
     az provider register --namespace Microsoft.Capacity
     az provider show -n Microsoft.Capacity -o table
     # Use 'az rest' to call the Azure Quota API
-    az rest -u https://management.azure.com/subscriptions/2b82274c-a71a-4088-9e0b-d503825a2b2a/providers/Microsoft.Capacity/resourceProviders/Microsoft.Compute/locations/westeurope/serviceLimits/standardESv3Family?api-version=2020-10-25 --query "[name, properties.currentValue, properties.limit]" -o table
+    az rest -u https://management.azure.com/subscriptions/{YOUR SUBSCRIPTION ID>/providers/Microsoft.Capacity/resourceProviders/Microsoft.Compute/locations/westeurope/serviceLimits/standardESv3Family?api-version=2020-10-25 --query "[name, properties.currentValue, properties.limit]" -o table
     ```
     
     1. To get resource names:
@@ -51,5 +51,5 @@ If you have created a new subscription, you will need to perform the following s
     Example quota check in westeurope region for Spot cores:
     
     ```
-    az rest -u https://management.azure.com/subscriptions/2b82274c-a71a-4088-9e0b-d503825a2b2a/providers/Microsoft.Capacity/resourceProviders/Microsoft.Compute/locations/westeurope/serviceLimits/lowPriorityCores?api-version=2020-10-25 --query "[name, properties.currentValue, properties.limit]" -o table
+    az rest -u https://management.azure.com/subscriptions/{YOUR SUBSCRIPTION ID>/providers/Microsoft.Capacity/resourceProviders/Microsoft.Compute/locations/westeurope/serviceLimits/lowPriorityCores?api-version=2020-10-25 --query "[name, properties.currentValue, properties.limit]" -o table
     ```
