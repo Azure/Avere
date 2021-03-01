@@ -134,7 +134,10 @@
   "outputs": {
     "storageAccount": {
       "type": "object",
-      "value": "[parameters('storageAccount')]"
+      "value": {
+        "name": "[parameters('storageAccount').name]",
+        "resourceGroupName": "[resourceGroup().name]"
+      }
     }
   }
 }

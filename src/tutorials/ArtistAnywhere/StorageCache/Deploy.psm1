@@ -9,14 +9,14 @@ function Get-StorageCache ($rootDirectory, $baseFramework, $resourceGroupNamePre
     $storageMounts = @()
     $storageTargets = @()
 
-    # (07.1) Storage
-    $moduleName = "(07.1) Storage"
+    # (06.1) Storage
+    $moduleName = "(06.1) Storage"
     New-TraceMessage $moduleName $false
     $resourceGroupNameSuffix = "-Storage"
     $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $storageRegionName
 
-    $templateFile = "$rootDirectory/$moduleDirectory/07-Storage.json"
-    $templateParameters = "$rootDirectory/$moduleDirectory/07-Storage.Parameters.json"
+    $templateFile = "$rootDirectory/$moduleDirectory/06-Storage.json"
+    $templateParameters = "$rootDirectory/$moduleDirectory/06-Storage.Parameters.json"
 
     $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
     $templateConfig.parameters.computeRegionName.value = $computeRegionName
@@ -32,15 +32,15 @@ function Get-StorageCache ($rootDirectory, $baseFramework, $resourceGroupNamePre
     Set-RoleAssignments "Storage" $storageAccount.name $computeNetwork $managedIdentity $keyVault $imageGallery
     New-TraceMessage $moduleName $true
 
-    # (07.2) Storage [NetApp]
+    # (06.2) Storage [NetApp]
     if ($storageServiceDeploy.netAppFiles) {
-        $moduleName = "(07.2) Storage [NetApp]"
+        $moduleName = "(06.2) Storage [NetApp]"
         New-TraceMessage $moduleName $false
         $resourceGroupNameSuffix = "-Storage"
         $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $storageRegionName
 
-        $templateFile = "$rootDirectory/$moduleDirectory/07-Storage.NetApp.json"
-        $templateParameters = "$rootDirectory/$moduleDirectory/07-Storage.NetApp.Parameters.json"
+        $templateFile = "$rootDirectory/$moduleDirectory/06-Storage.NetApp.json"
+        $templateParameters = "$rootDirectory/$moduleDirectory/06-Storage.NetApp.Parameters.json"
 
         $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
         $templateConfig.parameters.virtualNetwork.value.name = $storageNetwork.name
@@ -53,15 +53,15 @@ function Get-StorageCache ($rootDirectory, $baseFramework, $resourceGroupNamePre
         New-TraceMessage $moduleName $true
     }
 
-    # (07.3) Storage [Qumulo]
+    # (06.3) Storage [Qumulo]
     if ($storageServiceDeploy.qumulo) {
-        $moduleName = "(07.3) Storage [Qumulo]"
+        $moduleName = "(06.3) Storage [Qumulo]"
         New-TraceMessage $moduleName $false
         $resourceGroupNameSuffix = "-Storage"
         $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $storageRegionName
 
-        $templateFile = "$rootDirectory/$moduleDirectory/07-Storage.Qumulo.json"
-        $templateParameters = "$rootDirectory/$moduleDirectory/07-Storage.Qumulo.Parameters.json"
+        $templateFile = "$rootDirectory/$moduleDirectory/06-Storage.Qumulo.json"
+        $templateParameters = "$rootDirectory/$moduleDirectory/06-Storage.Qumulo.Parameters.json"
 
         $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
         $templateConfig.parameters.virtualNetwork.value.name = $storageNetwork.name
@@ -74,15 +74,15 @@ function Get-StorageCache ($rootDirectory, $baseFramework, $resourceGroupNamePre
         New-TraceMessage $moduleName $true
     }
 
-    # (07.4) Storage [Hammerspace]
+    # (06.4) Storage [Hammerspace]
     if ($storageServiceDeploy.hammerspace) {
-        $moduleName = "(07.4) Storage [Hammerspace]"
+        $moduleName = "(06.4) Storage [Hammerspace]"
         New-TraceMessage $moduleName $false
         $resourceGroupNameSuffix = "-Storage"
         $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $storageRegionName
 
-        $templateFile = "$rootDirectory/$moduleDirectory/07-Storage.Hammerspace.json"
-        $templateParameters = "$rootDirectory/$moduleDirectory/07-Storage.Hammerspace.Parameters.json"
+        $templateFile = "$rootDirectory/$moduleDirectory/06-Storage.Hammerspace.json"
+        $templateParameters = "$rootDirectory/$moduleDirectory/06-Storage.Hammerspace.Parameters.json"
 
         $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
         $templateConfig.parameters.virtualNetwork.value.name = $storageNetwork.name
@@ -95,17 +95,17 @@ function Get-StorageCache ($rootDirectory, $baseFramework, $resourceGroupNamePre
         New-TraceMessage $moduleName $true
     }
 
-    Set-StorageScripts "(07.5)" $rootDirectory $storageAccount $storageMounts $cacheMount
+    Set-StorageScripts "(06.5)" $rootDirectory $storageAccount $storageMounts $cacheMount
 
-    # (08) HPC Cache
+    # (07) HPC Cache
     if ($storageCacheDeploy) {
-        $moduleName = "(08) HPC Cache"
+        $moduleName = "(07) HPC Cache"
         New-TraceMessage $moduleName $false
         $resourceGroupNameSuffix = "-Cache"
         $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
-        $templateFile = "$rootDirectory/$moduleDirectory/08-HPCCache.json"
-        $templateParameters = "$rootDirectory/$moduleDirectory/08-HPCCache.Parameters.json"
+        $templateFile = "$rootDirectory/$moduleDirectory/07-HPCCache.json"
+        $templateParameters = "$rootDirectory/$moduleDirectory/07-HPCCache.Parameters.json"
 
         $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
         $templateConfig.parameters.storageTargets.value = $storageTargets
@@ -139,46 +139,41 @@ function Get-StorageCache ($rootDirectory, $baseFramework, $resourceGroupNamePre
 }
 
 function Set-StorageScripts ($modulePrefix, $rootDirectory, $storageAccount, $storageMounts, $cacheMount) {
-    $mountFilePatternLinux = "*.mount"
-    $mountFilePatternWindows = "*.bat"
+    $mountFilePattern = "*.mount"
     $scriptFilePatternLinux = "*-*.sh"
     $scriptFilePatternWindows = "*-*.ps1"
 
-    $moduleName = "$modulePrefix Storage Cache Mounts Upload"
+    $moduleName = "$modulePrefix Storage Scripts Upload"
+    New-TraceMessage $moduleName $false
+
     $moduleDirectory = "StorageCache"
-    $sourceDirectory = "$rootDirectory/$moduleDirectory"
-    $destinationDirectory = $storageAccount.containerName + "/$moduleDirectory"
-    New-TraceMessage $moduleName $false
+    $sourceDirectory = "$rootDirectory/$moduleDirectory/Linux"
     Set-MountUnitFiles $sourceDirectory $storageMounts $cacheMount
-    az storage blob upload-batch --account-name $storageAccount.name --destination $destinationDirectory --source $sourceDirectory --pattern $mountFilePatternLinux --auth-mode login --no-progress --output none
-    az storage blob upload-batch --account-name $storageAccount.name --destination $destinationDirectory --source $sourceDirectory --pattern $mountFilePatternWindows --auth-mode login --no-progress --output none
-    New-TraceMessage $moduleName $true
+    $destinationDirectory = $storageAccount.containerName + "/$moduleDirectory/Linux"
+    az storage blob upload-batch --account-name $storageAccount.name --destination $destinationDirectory --source $sourceDirectory --pattern $mountFilePattern --auth-mode login --no-progress --output none
+    $sourceDirectory = "$rootDirectory/$moduleDirectory/Windows"
+    Set-MountUnitFiles $sourceDirectory $storageMounts $cacheMount
+    $destinationDirectory = $storageAccount.containerName + "/$moduleDirectory/Windows"
+    az storage blob upload-batch --account-name $storageAccount.name --destination $destinationDirectory --source $sourceDirectory --pattern $mountFilePattern --auth-mode login --no-progress --output none
 
-    $moduleName = "$modulePrefix Scripts Upload [Render Manager]"
     $moduleDirectory = "RenderManager"
-    New-TraceMessage $moduleName $false
     $sourceDirectory = "$rootDirectory/$moduleDirectory"
     $destinationDirectory = $storageAccount.containerName + "/$moduleDirectory"
     az storage blob upload-batch --account-name $storageAccount.name --destination $destinationDirectory --source $sourceDirectory --pattern $scriptFilePatternLinux --auth-mode login --no-progress --output none
     az storage blob upload-batch --account-name $storageAccount.name --destination $destinationDirectory --source $sourceDirectory --pattern $scriptFilePatternWindows --auth-mode login --no-progress --output none
-    New-TraceMessage $moduleName $true
 
-    $moduleName = "$modulePrefix Scripts Upload [Render Farm]"
     $moduleDirectory = "RenderFarm"
-    New-TraceMessage $moduleName $false
     $sourceDirectory = "$rootDirectory/$moduleDirectory"
     $destinationDirectory = $storageAccount.containerName + "/$moduleDirectory"
     az storage blob upload-batch --account-name $storageAccount.name --destination $destinationDirectory --source $sourceDirectory --pattern $scriptFilePatternLinux --auth-mode login --no-progress --output none
     az storage blob upload-batch --account-name $storageAccount.name --destination $destinationDirectory --source $sourceDirectory --pattern $scriptFilePatternWindows --auth-mode login --no-progress --output none
-    New-TraceMessage $moduleName $true
 
-    $moduleName = "$modulePrefix Scripts Upload [Artist Workstation]"
     $moduleDirectory = "ArtistWorkstation"
-    New-TraceMessage $moduleName $false
     $sourceDirectory = "$rootDirectory/$moduleDirectory"
     $destinationDirectory = $storageAccount.containerName + "/$moduleDirectory"
     az storage blob upload-batch --account-name $storageAccount.name --destination $destinationDirectory --source $sourceDirectory --pattern $scriptFilePatternLinux --auth-mode login --no-progress --output none
     az storage blob upload-batch --account-name $storageAccount.name --destination $destinationDirectory --source $sourceDirectory --pattern $scriptFilePatternWindows --auth-mode login --no-progress --output none
+
     New-TraceMessage $moduleName $true
 }
 

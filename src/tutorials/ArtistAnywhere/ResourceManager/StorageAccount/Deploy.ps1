@@ -1,9 +1,9 @@
 param (
     $resourceGroup = @{
         "name" = ""
-        "regionName" = "WestUS2"    # https://azure.microsoft.com/global-infrastructure/geographies/
+        "regionName" = "WestUS" # https://azure.microsoft.com/global-infrastructure/geographies/
     },
-    $storageAccount = @{            # https://docs.microsoft.com/azure/storage/common/storage-account-overview
+    $storageAccount = @{        # https://docs.microsoft.com/azure/storage/common/storage-account-overview
         "name" = ""
         "type" = "StorageV2"
         "replication" = "Standard_LRS"
@@ -34,7 +34,7 @@ param (
     $virtualNetwork = @{            # https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview
         "name" = ""
         "subnetName" = ""
-        "resourceGroupName" = $resourceGroup.name
+        "resourceGroupName" = ""
     }
 )
 

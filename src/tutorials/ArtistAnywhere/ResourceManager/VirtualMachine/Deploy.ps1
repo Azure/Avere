@@ -1,15 +1,15 @@
 param (
     $resourceGroup = @{
         "name" = ""
-        "regionName" = "WestUS2"    # https://azure.microsoft.com/global-infrastructure/geographies/
+        "regionName" = "WestUS" # https://azure.microsoft.com/global-infrastructure/geographies/
     },
-    $virtualMachine = @{            # https://docs.microsoft.com/azure/virtual-machines/
+    $virtualMachine = @{        # https://docs.microsoft.com/azure/virtual-machines/
         "name" = ""
     },
-    $virtualNetwork = @{            # https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview
+    $virtualNetwork = @{        # https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview
         "name" = ""
         "subnetName" = ""
-        "resourceGroupName" = $resourceGroup.name
+        "resourceGroupName" = ""
     }
 )
 

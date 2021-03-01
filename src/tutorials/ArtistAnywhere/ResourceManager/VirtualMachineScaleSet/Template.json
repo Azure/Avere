@@ -21,6 +21,8 @@
   "variables": {
     "vmScaleSetApiVersion": "2020-12-01"
   },
+  "functions": [
+  ],
   "resources": [
     {
       "type": "Microsoft.Compute/virtualMachineScaleSets",

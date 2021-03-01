@@ -7,11 +7,15 @@
     },
     "virtualNetworkGateway": {
       "type": "object"
+    },
+    "localNetworkGateway": {
+      "type": "object"
     }
   },
   "variables": {
     "virtualNetworkApiVersion": "2020-11-01",
     "virtualNetworkGatewayApiVersion": "2020-11-01",
+    "localNetworkGatewayApiVersion": "2020-11-01",
     "publicIPAddressApiVersion": "2020-11-01"
   },
   "functions": [
@@ -71,17 +75,6 @@
       }
     },
     {
-      "type": "Microsoft.Network/virtualNetworkGateways",
-      "name": "[fx.GetResourceName(parameters('virtualNetworkGateway'))]",
-      "apiVersion": "[variables('virtualNetworkGatewayApiVersion')]",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('virtualNetworkGateway').name)]"
-      ],
-      "properties": {
-      }
-    },
-    {
       "condition": "[not(equals(parameters('virtualNetworkGateway').name, ''))]",
       "type": "Microsoft.Network/virtualNetworkGateways",
       "name": "[fx.GetResourceName(parameters('virtualNetworkGateway'))]",
@@ -89,7 +82,7 @@
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetwork').name)]",
-        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('virtualNetworkGateway').name)]"
+        "[resourceId('Microsoft.Network/publicIPAddresses', fx.GetResourceName(parameters('virtualNetworkGateway')))]"
       ],
       "properties": {
         "sku": {
@@ -113,16 +106,39 @@
           }
         ]
       }
+    },
+    {
+      "condition": "[not(equals(parameters('localNetworkGateway').name, ''))]",
+      "type": "Microsoft.Network/localNetworkGateways",
+      "name": "[fx.GetResourceName(parameters('localNetworkGateway'))]",
+      "apiVersion": "[variables('localNetworkGatewayApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "gatewayIpAddress": "[parameters('localNetworkGateway').ipAddress]"
+      }
     }
   ],
   "outputs": {
     "virtualNetwork": {
       "type": "object",
-      "value": "[parameters('virtualNetwork')]"
+      "value": {
+        "name": "[parameters('virtualNetwork').name]",
+        "resourceGroupName": "[resourceGroup().name]"
+      }
     },
     "virtualNetworkGateway": {
       "type": "object",
-      "value": "[parameters('virtualNetworkGateway')]"
+      "value": {
+        "name": "[parameters('virtualNetworkGateway').name]",
+        "resourceGroupName": "[resourceGroup().name]"
+      }
+    },
+    "localNetworkGateway": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('localNetworkGateway').name]",
+        "resourceGroupName": "[resourceGroup().name]"
+      }
     }
   }
 }

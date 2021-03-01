@@ -1,18 +1,18 @@
 param (
     $resourceGroup = @{
         "name" = ""
-        "regionName" = "WestUS2"    # https://azure.microsoft.com/global-infrastructure/geographies/
+        "regionName" = "WestUS" # https://azure.microsoft.com/global-infrastructure/geographies/
     },
-    $managedIdentity = @{           # https://docs.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview
+    $managedIdentity = @{       # https://docs.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview
         "name" = "ImageBuilder"
-        "resourceGroupName" = $resourceGroup.name
+        "resourceGroupName" = ""
     },
-    $scriptStorage = @{             # https://docs.microsoft.com/azure/storage/common/storage-account-overview
+    $scriptStorage = @{         # https://docs.microsoft.com/azure/storage/common/storage-account-overview
         "accountName" = ""
         "containerName" = ""
-        "resourceGroupName" = $resourceGroup.name
+        "resourceGroupName" = ""
     },
-    $imageTemplates = @(            # https://docs.microsoft.com/azure/virtual-machines/image-builder-overview
+    $imageTemplates = @(        # https://docs.microsoft.com/azure/virtual-machines/image-builder-overview
         @{
             "name" = ""
             "machineSize" = "Standard_NV24s_v3"

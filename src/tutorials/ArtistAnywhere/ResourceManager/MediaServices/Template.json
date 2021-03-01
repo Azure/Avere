@@ -12,12 +12,17 @@
   "variables": {
     "mediaServiceApiVersion": "2020-05-01"
   },
+  "functions": [
+  ],
   "resources": [
     {
       "type": "Microsoft.Media/mediaServices",
       "name": "[parameters('mediaAccount').name]",
       "apiVersion": "[variables('mediaServiceApiVersion')]",
       "location": "[resourceGroup().location]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
       "properties": {
         "storageAccounts": [
           {

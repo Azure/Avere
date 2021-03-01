@@ -35,40 +35,27 @@ function Get-BaseFramework ($rootDirectory, $resourceGroupNamePrefix, $computeRe
     $appInsights = $groupDeployment.properties.outputs.appInsights.value
     New-TraceMessage $moduleName $true
 
-    # (03) Active Directory
-    $moduleName = "(03) Active Directory"
+    # (03) Managed Identity
+    $moduleName = "(03) Managed Identity"
     New-TraceMessage $moduleName $false
     $resourceGroupNameSuffix = "-Identity"
     $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
-    $templateFile = "$rootDirectory/$moduleDirectory/03-ActiveDirectory.json"
-    $templateParameters = "$rootDirectory/$moduleDirectory/03-ActiveDirectory.Parameters.json"
-
-    $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
-    $activeDirectory = $groupDeployment.properties.outputs.activeDirectory.value
-    New-TraceMessage $moduleName $true
-
-    # (04) Managed Identity
-    $moduleName = "(04) Managed Identity"
-    New-TraceMessage $moduleName $false
-    $resourceGroupNameSuffix = "-Identity"
-    $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
-
-    $templateFile = "$rootDirectory/$moduleDirectory/04-ManagedIdentity.json"
-    $templateParameters = "$rootDirectory/$moduleDirectory/04-ManagedIdentity.Parameters.json"
+    $templateFile = "$rootDirectory/$moduleDirectory/03-ManagedIdentity.json"
+    $templateParameters = "$rootDirectory/$moduleDirectory/03-ManagedIdentity.Parameters.json"
 
     $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
     $managedIdentity = $groupDeployment.properties.outputs.managedIdentity.value
     New-TraceMessage $moduleName $true
 
-    # (05) Key Vault
-    $moduleName = "(05) Key Vault"
+    # (04) Key Vault
+    $moduleName = "(04) Key Vault"
     New-TraceMessage $moduleName $false
     $resourceGroupNameSuffix = ""
     $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
-    $templateFile = "$rootDirectory/$moduleDirectory/05-KeyVault.json"
-    $templateParameters = "$rootDirectory/$moduleDirectory/05-KeyVault.Parameters.json"
+    $templateFile = "$rootDirectory/$moduleDirectory/04-KeyVault.json"
+    $templateParameters = "$rootDirectory/$moduleDirectory/04-KeyVault.Parameters.json"
 
     $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
     $templateConfig.parameters.virtualNetwork.value.name = $computeNetwork.name
@@ -81,15 +68,15 @@ function Get-BaseFramework ($rootDirectory, $resourceGroupNamePrefix, $computeRe
 
     Set-RoleAssignments "Key Vault" $null $computeNetwork $managedIdentity $keyVault
 
-    # (06) Network Gateway
+    # (05) Network Gateway
     if ($networkGatewayDeploy) {
-        $moduleName = "(06) Network Gateway"
+        $moduleName = "(05) Network Gateway"
         New-TraceMessage $moduleName $false
         $resourceGroupNameSuffix = "-Network"
         $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
-        $templateFile = "$rootDirectory/$moduleDirectory/06-NetworkGateway.json"
-        $templateParameters = "$rootDirectory/$moduleDirectory/06-NetworkGateway.Parameters.json"
+        $templateFile = "$rootDirectory/$moduleDirectory/05-NetworkGateway.json"
+        $templateParameters = "$rootDirectory/$moduleDirectory/05-NetworkGateway.Parameters.json"
 
         $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
         $templateConfig.parameters.storageNetwork.value = $storageNetwork
@@ -106,7 +93,6 @@ function Get-BaseFramework ($rootDirectory, $resourceGroupNamePrefix, $computeRe
     $baseFramework | Add-Member -MemberType NoteProperty -Name "networkDomain" -Value $networkDomain
     $baseFramework | Add-Member -MemberType NoteProperty -Name "logAnalytics" -Value $logAnalytics
     $baseFramework | Add-Member -MemberType NoteProperty -Name "appInsights" -Value $appInsights
-    $baseFramework | Add-Member -MemberType NoteProperty -Name "activeDirectory" -Value $activeDirectory
     $baseFramework | Add-Member -MemberType NoteProperty -Name "managedIdentity" -Value $managedIdentity
     $baseFramework | Add-Member -MemberType NoteProperty -Name "keyVault" -Value $keyVault
     return $baseFramework

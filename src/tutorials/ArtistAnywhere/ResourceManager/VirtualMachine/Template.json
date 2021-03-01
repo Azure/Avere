@@ -14,6 +14,8 @@
     "virtualMachineApiVersion": "2020-12-01",
     "networkInterfaceApiVersion": "2020-11-01"
   },
+  "functions": [
+  ],
   "resources": [
     {
       "type": "Microsoft.Network/networkInterfaces",
@@ -38,11 +40,18 @@
   "outputs": {
     "virtualMachine": {
       "type": "object",
-      "value": "[parameters('virtualMachine')]"
+      "value": {
+        "name": "[parameters('virtualMachine').name]",
+        "resourceGroupName": "[resourceGroup().name]"
+      }
     },
     "virtualNetwork": {
       "type": "object",
-      "value": "[parameters('virtualNetwork')]"
+      "value": {
+        "name": "[parameters('virtualNetwork').name]",
+        "subnetName": "[parameters('virtualNetwork').subnetName]",
+        "resourceGroupName": "[parameters('virtualNetwork').resourceGroupName]"
+      }
     }
   }
 }

@@ -1,14 +1,14 @@
 param (
     $resourceGroup = @{
         "name" = ""
-        "regionName" = "WestUS2"    # https://azure.microsoft.com/global-infrastructure/geographies/
+        "regionName" = "WestUS" # https://azure.microsoft.com/global-infrastructure/geographies/
     },
-    $mediaAccount = @{              # https://docs.microsoft.com/azure/media-services/latest/media-services-overview
+    $mediaAccount = @{          # https://docs.microsoft.com/azure/media-services/latest/media-services-overview
         "name" = ""
     },
-    $storageAccount = @{            # https://docs.microsoft.com/azure/storage/common/storage-account-overview
+    $storageAccount = @{        # https://docs.microsoft.com/azure/storage/common/storage-account-overview
         "name" = ""
-        "resourceGroupName" = $resourceGroup.name
+        "resourceGroupName" = ""
     }
 )
 

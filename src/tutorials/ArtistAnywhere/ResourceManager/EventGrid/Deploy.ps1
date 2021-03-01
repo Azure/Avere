@@ -1,9 +1,9 @@
 param (
     $resourceGroup = @{
         "name" = ""
-        "regionName" = "WestUS2"    # https://azure.microsoft.com/global-infrastructure/geographies/
+        "regionName" = "WestUS" # https://azure.microsoft.com/global-infrastructure/geographies/
     },
-    $eventTopic = @{                # https://docs.microsoft.com/azure/event-grid/overview
+    $eventTopic = @{            # https://docs.microsoft.com/azure/event-grid/overview
         "name" = ""
         "schema" = "EventGridSchema"
     },

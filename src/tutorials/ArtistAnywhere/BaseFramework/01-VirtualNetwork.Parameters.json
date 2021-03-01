@@ -73,7 +73,9 @@
           {
             "name": "Workstation",
             "properties": {
-              "addressPrefix": "10.1.128.0/18"
+              "addressPrefix": "10.1.128.0/18",
+              "privateEndpointNetworkPolicies": "Disabled",
+              "privateLinkServiceNetworkPolicies": "Disabled"
             }
           },
           {

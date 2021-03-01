@@ -1,0 +1,11 @@
+[Unit]
+After=network-online.target
+
+[Mount]
+Type=nfs
+What=usa0.blob.core.windows.net:/usa0/show
+Where=/mnt/storage/object
+Options=sec=sys,vers=3,proto=tcp,nolock
+
+[Install]
+WantedBy=multi-user.target
