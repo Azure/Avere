@@ -13,11 +13,11 @@ if $gpuNVIDIA; then
         dnf -y install kernel-devel
         dnf -y install epel-release
         dnf -y install dkms
-    else # CentOS7
+    else # centOS7
         yum -y install gcc
         yum -y install kernel-devel
     fi
-    downloadUrl="https://bit.blob.core.windows.net/bin/Graphics/Linux"
+    downloadUrl="https://bit1.blob.core.windows.net/bin/Graphics/Linux"
     fileName="NVIDIA-Linux-x86_64-460.32.03-grid-azure.run"
     curl -L -o $fileName $downloadUrl/$fileName
     chmod +x $fileName

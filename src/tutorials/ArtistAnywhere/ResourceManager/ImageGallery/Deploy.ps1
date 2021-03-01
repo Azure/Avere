@@ -1,9 +1,9 @@
 param (
     $resourceGroup = @{
         "name" = ""
-        "regionName" = "WestUS2"    # https://azure.microsoft.com/global-infrastructure/geographies/
+        "regionName" = "WestUS" # https://azure.microsoft.com/global-infrastructure/geographies/
     },
-    $imageGallery = @{              # https://docs.microsoft.com/azure/virtual-machines/shared-image-galleries
+    $imageGallery = @{          # https://docs.microsoft.com/azure/virtual-machines/shared-image-galleries
         "name" = ""
         "imageDefinitions" = @(
             @{

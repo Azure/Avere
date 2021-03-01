@@ -7,7 +7,7 @@
         "name": "MediaStorage",
         "regionName": "EastUS2",
         "addressSpace": "10.0.0.0/22",
-        "dnsRegistrationEnabled": true,
+        "enableDomainRegistration": true,
         "subnets": [
           {
             "name": "Storage",
@@ -38,7 +38,7 @@
           {
             "name": "GatewaySubnet",
             "properties": {
-              "addressPrefix": "10.0.3.192/26"
+              "addressPrefix": "10.0.3.0/24"
             }
           }
         ]
@@ -49,7 +49,7 @@
         "name": "MediaPipeline",
         "regionName": "WestUS2",
         "addressSpace": "10.1.0.0/16",
-        "dnsRegistrationEnabled": true,
+        "enableDomainRegistration": true,
         "subnets": [
           {
             "name": "Compute",
@@ -73,7 +73,9 @@
           {
             "name": "Workstation",
             "properties": {
-              "addressPrefix": "10.1.128.0/18"
+              "addressPrefix": "10.1.128.0/18",
+              "privateEndpointNetworkPolicies": "Disabled",
+              "privateLinkServiceNetworkPolicies": "Disabled"
             }
           },
           {
@@ -108,7 +110,7 @@
           {
             "name": "GatewaySubnet",
             "properties": {
-              "addressPrefix": "10.1.255.192/26"
+              "addressPrefix": "10.1.255.0/24"
             }
           }
         ]

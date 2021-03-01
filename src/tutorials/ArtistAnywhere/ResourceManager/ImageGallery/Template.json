@@ -9,6 +9,8 @@
   "variables": {
     "imageGalleryApiVersion": "2020-09-30"
   },
+  "functions": [
+  ],
   "resources": [
     {
       "type": "Microsoft.Compute/galleries",
@@ -45,7 +47,10 @@
   "outputs": {
     "imageGallery": {
       "type": "object",
-      "value": "[parameters('imageGallery')]"
+      "value": {
+        "name": "[parameters('imageGallery').name]",
+        "resourceGroupName": "[resourceGroup().name]"
+      }
     }
   }
 }

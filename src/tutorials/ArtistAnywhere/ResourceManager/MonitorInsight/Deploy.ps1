@@ -1,9 +1,9 @@
 param (
     $resourceGroup = @{
         "name" = ""
-        "regionName" = "WestUS2" # https://azure.microsoft.com/global-infrastructure/geographies/
+        "regionName" = "WestUS" # https://azure.microsoft.com/global-infrastructure/geographies/
     },
-    $insightAccount = @{         # https://docs.microsoft.com/azure/azure-monitor/overview
+    $insightAccount = @{        # https://docs.microsoft.com/azure/azure-monitor/overview
         "name" = ""
         "type" = "PerGB2018"
         "dataRetentionDays" = 90

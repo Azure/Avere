@@ -1,0 +1,57 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualMachine": {
+      "type": "object"
+    },
+    "virtualNetwork": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "virtualNetworkApiVersion": "2020-11-01",
+    "virtualMachineApiVersion": "2020-12-01",
+    "networkInterfaceApiVersion": "2020-11-01"
+  },
+  "functions": [
+  ],
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[parameters('virtualMachine').name]",
+      "apiVersion": "[variables('networkInterfaceApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "primary": true,
+        "ipConfigurations": [
+          {
+            "name": "ipConfig",
+            "properties": {
+              "subnet": {
+                "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "virtualMachine": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('virtualMachine').name]",
+        "resourceGroupName": "[resourceGroup().name]"
+      }
+    },
+    "virtualNetwork": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('virtualNetwork').name]",
+        "subnetName": "[parameters('virtualNetwork').subnetName]",
+        "resourceGroupName": "[parameters('virtualNetwork').resourceGroupName]"
+      }
+    }
+  }
+}

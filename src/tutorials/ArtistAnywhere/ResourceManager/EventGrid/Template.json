@@ -12,6 +12,8 @@
   "variables": {
     "eventGridApiVersion": "2020-06-01"
   },
+  "functions": [
+  ],
   "resources": [
     {
       "type": "Microsoft.EventGrid/topics",

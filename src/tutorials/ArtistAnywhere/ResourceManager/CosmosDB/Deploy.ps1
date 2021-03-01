@@ -1,15 +1,15 @@
 param (
     $resourceGroup = @{
         "name" = ""
-        "regionName" = "WestUS2"    # https://azure.microsoft.com/global-infrastructure/geographies/
+        "regionName" = "WestUS" # https://azure.microsoft.com/global-infrastructure/geographies/
     },
-    $cosmosAccount = @{             # https://docs.microsoft.com/azure/cosmos-db/introduction
+    $cosmosAccount = @{         # https://docs.microsoft.com/azure/cosmos-db/introduction
         "name" = ""
         "type" = "GlobalDocumentDB"
         "offerType" = "Standard"
         "defaultExperience" = "Core (SQL)"
         "userInterfaceType" = "Non-Production"
-        "capabilities" = @(         # https://docs.microsoft.com/azure/cosmos-db/serverless
+        "capabilities" = @(     # https://docs.microsoft.com/azure/cosmos-db/serverless
             @{
                 "name" = "EnableServerless"
             }

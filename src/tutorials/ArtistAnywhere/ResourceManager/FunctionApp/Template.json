@@ -16,6 +16,8 @@
     "webFarmApiVersion": "2020-10-01",
     "webSiteApiVersion": "2020-10-01"
   },
+  "functions": [
+  ],
   "resources": [
     {
       "type": "Microsoft.Web/serverFarms",

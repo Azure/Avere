@@ -6,14 +6,14 @@
       "value": {
         "name": "MediaStorage",
         "regionName": "EastUS2",
-        "resourceGroupName": "Azure.Artist.Anywhere-Network"
+        "resourceGroupName": "Artist.Anywhere-Network"
       }
     },
     "computeNetwork": {
       "value": {
         "name": "MediaPipeline",
         "regionName": "WestUS2",
-        "resourceGroupName": "Azure.Artist.Anywhere-Network"
+        "resourceGroupName": "Artist.Anywhere-Network"
       }
     },
     "networkGateway": {

@@ -33,3 +33,23 @@ If you have created a new subscription, you will need to perform the following s
 
 1. If you are deploying the Avere vFXT, and using a user assigned managed identity, as "Owner" follow the process to create the [managed identity](../vfxt/user-assigned-managed-identity#create-the-resource-groups-service-principal-and-managed-identities)
 
+1. You can confirm quota on your subscription in the [Azure Portal](https://portal.azure.com) or via the [Azure Quota REST API](https://docs.microsoft.com/en-gb/rest/api/reserved-vm-instances/quotaapi). You will need to ensure you have the required quota for compute render nodes, and compute for vFXT (not required if you are using HPC Cache). Example quota check in West Europe for vFXT:
+    ```
+    # Register the Microsoft Capacity resource provider on your subscription. This step only has to be completed once per subscription.
+    az provider register --namespace Microsoft.Capacity
+    az provider show -n Microsoft.Capacity -o table
+    # Use 'az rest' to call the Azure Quota API
+    az rest -u https://management.azure.com/subscriptions/{YOUR SUBSCRIPTION ID>/providers/Microsoft.Capacity/resourceProviders/Microsoft.Compute/locations/westeurope/serviceLimits/standardESv3Family?api-version=2020-10-25 --query "[name, properties.currentValue, properties.limit]" -o table
+    ```
+    
+    1. To get resource names:
+    `az vm list-skus -l westeurope -r virtualMachines --query "[].[name, family]" -o table`
+
+    1. To get locations:
+    `az account list-locations --query "[?metadata.regionType == 'Physical'].[name, metadata.latitude, metadata.longitude]" -o table`
+    
+    Example quota check in westeurope region for Spot cores:
+    
+    ```
+    az rest -u https://management.azure.com/subscriptions/{YOUR SUBSCRIPTION ID>/providers/Microsoft.Capacity/resourceProviders/Microsoft.Compute/locations/westeurope/serviceLimits/lowPriorityCores?api-version=2020-10-25 --query "[name, properties.currentValue, properties.limit]" -o table
+    ```

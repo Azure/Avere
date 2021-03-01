@@ -25,7 +25,7 @@
       "value": {
         "name": "MediaPipeline",
         "subnetName": "Compute",
-        "resourceGroupName": "Azure.Artist.Anywhere-Network"
+        "resourceGroupName": "Artist.Anywhere-Network"
       }
     }
   }

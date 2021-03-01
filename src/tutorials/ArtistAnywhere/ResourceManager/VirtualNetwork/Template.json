@@ -1,0 +1,144 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualNetwork": {
+      "type": "object"
+    },
+    "virtualNetworkGateway": {
+      "type": "object"
+    },
+    "localNetworkGateway": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "virtualNetworkApiVersion": "2020-11-01",
+    "virtualNetworkGatewayApiVersion": "2020-11-01",
+    "localNetworkGatewayApiVersion": "2020-11-01",
+    "publicIPAddressApiVersion": "2020-11-01"
+  },
+  "functions": [
+    {
+      "namespace": "fx",
+      "members": {
+        "GetResourceName": {
+          "parameters": [
+            {
+              "name": "resource",
+              "type": "object"
+            }
+          ],
+          "output": {
+            "type": "string",
+            "value": "[if(equals(parameters('resource').name, ''), uniqueString(string(parameters('resource'))), parameters('resource').name)]"
+          }
+        }
+      }
+    }
+  ],
+  "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('virtualNetwork').name]",
+      "apiVersion": "[variables('virtualNetworkApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('virtualNetwork').addressSpace]"
+          ]
+        },
+        "copy": [
+          {
+            "name": "subnets",
+            "count": "[length(parameters('virtualNetwork').subnets)]",
+            "input": {
+              "name": "[parameters('virtualNetwork').subnets[copyIndex('subnets')].name]",
+              "properties": "[parameters('virtualNetwork').subnets[copyIndex('subnets')].properties]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "condition": "[not(equals(parameters('virtualNetworkGateway').name, ''))]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[fx.GetResourceName(parameters('virtualNetworkGateway'))]",
+      "apiVersion": "[variables('publicIPAddressApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "[parameters('virtualNetworkGateway').publicAddress.type]"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "[parameters('virtualNetworkGateway').publicAddress.allocationMethod]"
+      }
+    },
+    {
+      "condition": "[not(equals(parameters('virtualNetworkGateway').name, ''))]",
+      "type": "Microsoft.Network/virtualNetworkGateways",
+      "name": "[fx.GetResourceName(parameters('virtualNetworkGateway'))]",
+      "apiVersion": "[variables('virtualNetworkGatewayApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetwork').name)]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', fx.GetResourceName(parameters('virtualNetworkGateway')))]"
+      ],
+      "properties": {
+        "sku": {
+          "name": "[parameters('virtualNetworkGateway').vpnTier]",
+          "tier": "[parameters('virtualNetworkGateway').vpnTier]"
+        },
+        "vpnGatewayGeneration": "[parameters('virtualNetworkGateway').vpnGeneration]",
+        "vpnType": "[parameters('virtualNetworkGateway').vpnType]",
+        "gatewayType": "[parameters('virtualNetworkGateway').type]",
+        "ipConfigurations": [
+          {
+            "name": "ipConfig",
+            "properties": {
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, 'GatewaySubnet')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('virtualNetworkGateway').name)]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "condition": "[not(equals(parameters('localNetworkGateway').name, ''))]",
+      "type": "Microsoft.Network/localNetworkGateways",
+      "name": "[fx.GetResourceName(parameters('localNetworkGateway'))]",
+      "apiVersion": "[variables('localNetworkGatewayApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "gatewayIpAddress": "[parameters('localNetworkGateway').ipAddress]"
+      }
+    }
+  ],
+  "outputs": {
+    "virtualNetwork": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('virtualNetwork').name]",
+        "resourceGroupName": "[resourceGroup().name]"
+      }
+    },
+    "virtualNetworkGateway": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('virtualNetworkGateway').name]",
+        "resourceGroupName": "[resourceGroup().name]"
+      }
+    },
+    "localNetworkGateway": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('localNetworkGateway').name]",
+        "resourceGroupName": "[resourceGroup().name]"
+      }
+    }
+  }
+}

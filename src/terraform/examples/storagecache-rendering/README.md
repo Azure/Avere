@@ -69,6 +69,32 @@ To ensure the best operability between POSIX and NTFS ACLS, ensure you have inve
 
 3. On Avere, ensure 0770 for file and dir masks, remove Everyone ACE.
 
+To mount SMB from Linux, run a command similar to the following:
+
+```bash
+# please update:
+#   AVEREVFXTADDRESS - replace with Avere vFXT dns name
+#   uid=0 - replace with the most appropriate UID 
+#   gid=1000 - replace with the group that you want to use
+#   file_mode=0770,dir_mode=0770 - replace with the correct modes, eg 775
+sudo mount -t cifs -o credentials=/secret.txt,vers=2.0,rw,sec=ntlmssp,cache=strict,uid=0,noforceuid,gid=1000,noforcegid,file_mode=0770,dir_mode=0770,nounix,serverino,mapposix \\\\AVEREVFXTADDRESS\\assets /mnt/assets
+```
+
+## SMB Performance and Latency
+
+The following table shows the performance of a single threaded download of the [Moana Island Scene](https://www.disneyanimation.com/resources/moana-island-scene/) with SMB.  The scene included 339 pbrt files and a total of 15 GB.
+
+| Description | Latency | Time (minutes:seconds) |
+| --- | --- | --- |
+| SMB2.0.2 cloud direct to onprem NAS | 26 ms | 9:22 |
+| SMB3.1.1 cloud direct to onprem NAS | 26 ms | 2:22 |
+| SMB2.0.2 to Avere vFXT (cold) to onprem NAS | <1ms (26ms from vFXT to on-prem) | 5:45 |
+| SMB2.0.2 to Avere vFXT (warm) to onprem NAS | <1ms (26ms from vFXT to on-prem) | 1:25 |
+
+The conclusions that can be made:
+1. SMB 3.1.1 performs much better over a high latency link than SMB 2.0.2
+1. Avere hides the latency, preserves bandwidth, and a warm cache will perform better than SMB 3.1.1 over a high latency link.
+
 ## Troubleshooting SMB
 
 To troubleshoot the ACL problem the following two scenarios show a write from on-prem and a write from a render node in the cloud.
