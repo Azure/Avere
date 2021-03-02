@@ -132,6 +132,8 @@ module "anvil" {
     anvil_data_cluster_ip            = local.anvil_data_cluster_ip
     anvil_metadata_disk_storage_type = local.storage_account_type
     anvil_metadata_disk_size         = local.metadata_disk_size_gb
+
+    module_depends_on = [azurerm_resource_group.nfsfiler.id]
 }
 
 // the ephemeral filer
@@ -148,6 +150,7 @@ module "dsx" {
     virtual_network_resource_group   = local.network_resource_group_name
     virtual_network_name             = module.network.cloud_filers_ha_subnet_name
     virtual_network_data_subnet_name = module.network.cloud_filers_subnet_name
+    anvil_password                   = module.anvil.web_ui_password
     anvil_data_cluster_ip            = module.anvil.anvil_data_cluster_ip
     anvil_data_cluster_ip_mask_bits  = module.anvil.anvil_data_cluster_ip_mask_bits
     anvil_domain                     = module.anvil.anvil_domain
