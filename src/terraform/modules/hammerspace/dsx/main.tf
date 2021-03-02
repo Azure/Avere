@@ -101,7 +101,7 @@ resource "azurerm_virtual_machine_extension" "cse" {
   // sleep 30 to ensure the disk has attached, and restart the pd service
   settings = <<SETTINGS
     {
-        "commandToExecute": "systemctl restart pd-first-boot"
+        "commandToExecute": "systemctl try-restart pd-first-boot"
     }
 SETTINGS
 
