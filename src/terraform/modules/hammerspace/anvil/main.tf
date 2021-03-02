@@ -234,25 +234,3 @@ resource "azurerm_virtual_machine_data_disk_attachment" "anvilvm" {
   lun                = "1"
   caching            = azurerm_managed_disk.anvilvm[count.index].disk_size_gb > 4095 ? "None" : "ReadWrite"
 }
-
-resource "azurerm_virtual_machine_extension" "cse" {
-  count                = local.is_high_availability ? 2 : 1
-  name                 = "${local.anvil_host_names[count.index]}-cse"
-  virtual_machine_id   = azurerm_linux_virtual_machine.anvilvm[count.index].id
-  publisher            = "Microsoft.Azure.Extensions"
-  type                 = "CustomScript"
-  type_handler_version = "2.0"
-
-  // sleep 30 to ensure the disk has attached, and restart the pd service
-  // sleep 30 && systemctl restart pd-first-boot
-  settings = <<SETTINGS
-    {
-        "commandToExecute": "sleep 30"
-    }
-SETTINGS
-
-  // unable to use the depends on clause, so using tags to create the same effect
-  tags = {
-      dependson = azurerm_virtual_machine_data_disk_attachment.anvilvm[count.index].id
-  }
-}

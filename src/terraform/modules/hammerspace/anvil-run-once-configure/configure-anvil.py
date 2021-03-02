@@ -16,14 +16,17 @@ DEFAULT_EXPORTOPTIONS_ACCESSPERMS = "RW"
 DEFAULT_EXPORTOPTIONS_ROOTSSQUASH = False
 DEFAULT_MAX_SHARE_SIZE = 0
 
+def verifyKey(key, jsonObj):
+    return key in jsonObj and jsonObj[key] is not None
+
 def createAnvilNode(jsonObj):
     name = ""
     address = ""
-    if hasattr(jsonObj, "keys") and "name" in jsonObj:
+    if hasattr(jsonObj, "keys") and verifyKey("name",jsonObj):
         name = jsonObj["name"]
     else:
         return None
-    if hasattr(jsonObj, "keys") and "mgmtIpAddress" in jsonObj and "address" in jsonObj["mgmtIpAddress"]:
+    if hasattr(jsonObj, "keys") and verifyKey("mgmtIpAddress",jsonObj) and verifyKey("address",jsonObj["mgmtIpAddress"]):
         address = jsonObj["mgmtIpAddress"]["address"]
     else:
         return None
@@ -32,7 +35,7 @@ def createAnvilNode(jsonObj):
 def createAnvilVolume(jsonObj):
     name = ""
     address = ""
-    if hasattr(jsonObj, "keys") and "name" in jsonObj:
+    if hasattr(jsonObj, "keys") and verifyKey("name",jsonObj):
         name = jsonObj["name"]
     else:
         return None
@@ -45,17 +48,17 @@ def createAnvilShare(jsonObj):
     exportOptions = []
 
     if hasattr(jsonObj, "keys"):
-        if "name" in jsonObj:
+        if verifyKey("name",jsonObj):
             name = jsonObj["name"]
         else:
             return None
-        if "path" in jsonObj:
+        if verifyKey("path",jsonObj):
             path = jsonObj["path"]
         else:
             return None
-        if "shareSizeLimit" in jsonObj:
+        if verifyKey("shareSizeLimit",jsonObj):
             shareSizeLimit = int(jsonObj["shareSizeLimit"])
-        if "exportOptions" in jsonObj:
+        if verifyKey("exportOptions",jsonObj):
             for eo in exportOptions:
                 anvilExportOption = createAnvilExportOption(eo)
                 if anvilExportOption is not None:
@@ -69,15 +72,15 @@ def createAnvilExportOption(jsonObj):
     accessPermissions = ""
     rootSquash = False
     if hasattr(jsonObj, "keys"):
-        if "subnet" in jsonObj:
+        if verifyKey("subnet",jsonObj):
             subnet = jsonObj["subnet"]
         else:
             return None
-        if "accessPermissions" in jsonObj:
+        if verifyKey("accessPermissions",jsonObj):
             accessPermissions = jsonObj["accessPermissions"]
         else:
             return None
-        if "rootSquash" in jsonObj:
+        if verifyKey("rootSquash",jsonObj):
             rootSquash = bool(jsonObj["rootSquash"])
         else:
             return None
@@ -90,16 +93,14 @@ def createAnvilObjective(jsonObj):
     comment = ""
     expression = False
     if hasattr(jsonObj, "keys"):
-        if "name" in jsonObj:
+        if verifyKey("name",jsonObj):
             name = jsonObj["name"]
         else:
             return None
-        if "comment" in jsonObj:
+        if verifyKey("comment",jsonObj):
             comment = jsonObj["comment"]
-        else:
-            return None
-        if "expression" in jsonObj:
-            expression = bool(jsonObj["expression"])
+        if verifyKey("expression",jsonObj):
+            expression = jsonObj["expression"]
         else:
             return None
     else:
@@ -216,7 +217,7 @@ class AnvilRest:
             if n is not None:
                 volumeList.append(n)
             else:
-                logging.error("unable to parse node {}".format(j))
+                logging.error("unable to parse volume {}".format(j))
         return volumeList
     
     def getSharenames(self):
@@ -229,7 +230,7 @@ class AnvilRest:
             if n is not None:
                 shareList.append(n)
             else:
-                logging.error("unable to parse node {}".format(j))
+                logging.error("unable to parse share {}".format(j))
         return shareList
 
     def getObjectives(self):
@@ -242,7 +243,7 @@ class AnvilRest:
             if o is not None:
                 objectives[o.name] = o
             else:
-                logging.error("unable to parse node {}".format(j))
+                logging.error("unable to parse objective {}".format(j))
         return objectives
 
     def createShare(self, anvilShare):
