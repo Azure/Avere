@@ -76,6 +76,7 @@ Both HPC Cache and Avere vFXT for Azure provide file caching for high-performanc
    1. [HPC Cache and VDBench example](examples/HPC%20Cache/vdbench)
    1. [HPC Cache and VMSS example](examples/HPC%20Cache/vmss)
    1. [HPC Cache and CacheWarmer](examples/HPC%20Cache/cachewarmer)
+   1. [HPC Cache mounting Hammerspace filer example](examples/HPC%20Cache/hammerspace)
 
 ### Avere vFXT for Azure
 
@@ -88,6 +89,7 @@ Both HPC Cache and Avere vFXT for Azure provide file caching for high-performanc
    1. [Avere vFXT and VDBench example](examples/vfxt/vdbench)
    1. [Avere vFXT and VMSS example](examples/vfxt/vmss)
    1. [Avere vFXT and CacheWarmer](examples/vfxt/cachewarmer)
+   1. [Avere vFXT mounting Hammerspace filer example](examples/vfxt/hammerspace)
 
 ### Specialized Avere vFXT for Rendering and Artists](examples/vfxt)
 
@@ -111,6 +113,7 @@ The following terraform examples build out accessory rendering infrastructure su
 1. [NFS Ephemeral Filer](examples/nfsfiler) - builds a very high performance NFS filers for use as a scratch filer.
 1. [NFS Managed Disk Filer](examples/nfsfilermd) - builds an NFS Filer with highly available managed disk storage.
 1. [NFS Filer using NFS-Ganesha](examples/nfsfilerganesha) - builds high performance NFS filers.
+1. [NFS Filer using Hammerspace](examples/hammerspace) - builds a Hammerspace filer capable of spanning across multiple regions.
 
 ### DNS, Security, and Jumpbox 
 
@@ -151,6 +154,8 @@ These modules provide core components for use with HPC Cache or Avere vFXT for A
 1. [NFS Ephemeral Filer](modules/nfs_filer) - the NFS ephemeral filer provides a high IOPs, high throughput filer that can be used for scratch data.
 1. [NFS Managed Disk Filer](modules/nfs_filer_md) - the NFS managed disk filer provides NFS access to highly available storage.  There is an offline mode to destroy the VM and cool the storage for maximum cost savings when not in use.
 1. [NFS-Ganesha Filer](modules/nfs_filer_ganesha) - the NFS-Ganesha provides a user space NFS Server and provides NFS access to highly available storage.  There is an offline mode to destroy the VM and cool the storage for maximum cost savings when not in use.
+1. [Hammerspace Anvil](modules/hammerspace/anvil) - the Hammerspace Anvil module deploys a Standalone or Highly Available Hammerspace Anvil cluster.
+1. [Hammerspace DSX](modules/hammerspace/dsx) - the Hammerspace DSX module deploys a configurable number of Hammerspace DSX nodes.
 
 ### Cache Warmer
 
