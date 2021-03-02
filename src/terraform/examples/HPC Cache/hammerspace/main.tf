@@ -79,6 +79,8 @@ locals {
     // disk_size_gb = 8191  //  P60, E60, S60
     // disk_size_gb = 16383 //  P70, E70, S70
     // data_disk_size_gb = 32767 //  P80, E80, S80
+
+    hammerspace_filer_nfs_export_path = "/data"
 }
 
 provider "azurerm" {
@@ -139,8 +141,8 @@ module "dsx" {
     location                         = azurerm_resource_group.nfsfiler.location
     hammerspace_image_id             = local.hammerspace_image_id
     unique_name                      = local.unique_name
-    admin_username                   = local.admin_username
-    admin_password                   = local.admin_password
+    admin_username                   = local.vm_admin_username
+    admin_password                   = local.vm_admin_password
     dsx_instance_count               = local.dsx_instance_count
     dsx_instance_type                = local.dsx_instance_type
     virtual_network_resource_group   = local.network_resource_group_name
@@ -153,6 +155,18 @@ module "dsx" {
     dsx_data_disk_size               = local.datadisk_size_gb
 }
 
+module "anvil_configure" {
+    source                       = "github.com/Azure/Avere/src/terraform/modules/hammerspace/anvil-run-once-configure"
+    anvil_arm_virtual_machine_id = length(module.anvil.arm_virtual_machine_ids) == 0 ? "" : module.anvil.arm_virtual_machine_ids[0]
+    anvil_data_cluster_ip        = module.anvil.anvil_data_cluster_ip
+    web_ui_password              = module.anvil.web_ui_password
+    dsx_count                    = local.dsx_instance_count
+    nfs_export_path              = local.hammerspace_filer_nfs_export_path
+    anvil_hostname               = length(module.anvil.anvil_host_names) == 0 ? "" : module.anvil.anvil_host_names[0]
+
+    module_depends_on = module.anvil.module_depends_on_ids
+}
+
 resource "azurerm_hpc_cache_nfs_target" "nfs_targets" {
   name                = "nfs_targets"
   resource_group_name = azurerm_resource_group.hpc_cache_rg.name
@@ -161,9 +175,11 @@ resource "azurerm_hpc_cache_nfs_target" "nfs_targets" {
   usage_model         = local.usage_model
   namespace_junction {
     namespace_path = "/nfs1data"
-    nfs_export     = module.anvil.anvil_data_cluster_ip.core_filer_export
+    nfs_export     = local.hammerspace_filer_nfs_export_path
     target_path    = ""
   }
+
+  depends_on = [module.anvil_configure.module_depends_on_id]
 }
 
 output "hammerspace_filer_address" {
@@ -171,7 +187,7 @@ output "hammerspace_filer_address" {
 }
 
 output "hammerspace_filer_export" {
-  value = module.anvil.anvil_data_cluster_ip.core_filer_export
+  value = local.hammerspace_filer_nfs_export_path
 }
 
 output "hammerspace_webui_username" {

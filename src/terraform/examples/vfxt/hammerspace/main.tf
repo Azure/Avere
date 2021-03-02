@@ -57,6 +57,8 @@ locals {
     // disk_size_gb = 16383 //  P70, E70, S70
     // data_disk_size_gb = 32767 //  P80, E80, S80
     
+    hammerspace_filer_nfs_export_path = "/data"
+    
     // vfxt details
     vfxt_resource_group_name = "vfxt_resource_group"
     // if you are running a locked down network, set controller_add_public_ip to false
@@ -132,8 +134,8 @@ module "dsx" {
     location                         = azurerm_resource_group.nfsfiler.location
     hammerspace_image_id             = local.hammerspace_image_id
     unique_name                      = local.unique_name
-    admin_username                   = local.admin_username
-    admin_password                   = local.admin_password
+    admin_username                   = local.vm_admin_username
+    admin_password                   = local.vm_admin_password
     dsx_instance_count               = local.dsx_instance_count
     dsx_instance_type                = local.dsx_instance_type
     virtual_network_resource_group   = local.network_resource_group_name
@@ -144,6 +146,18 @@ module "dsx" {
     anvil_domain                     = module.anvil.anvil_domain
     dsx_data_disk_storage_type       = local.storage_account_type
     dsx_data_disk_size               = local.datadisk_size_gb
+}
+
+module "anvil_configure" {
+    source                       = "github.com/Azure/Avere/src/terraform/modules/hammerspace/anvil-run-once-configure"
+    anvil_arm_virtual_machine_id = length(module.anvil.arm_virtual_machine_ids) == 0 ? "" : module.anvil.arm_virtual_machine_ids[0]
+    anvil_data_cluster_ip        = module.anvil.anvil_data_cluster_ip
+    web_ui_password              = module.anvil.web_ui_password
+    dsx_count                    = local.dsx_instance_count
+    nfs_export_path              = local.hammerspace_filer_nfs_export_path
+    anvil_hostname               = length(module.anvil.anvil_host_names) == 0 ? "" : module.anvil.anvil_host_names[0]
+
+    module_depends_on = module.anvil.module_depends_on_ids
 }
 
 // the vfxt controller
@@ -177,7 +191,7 @@ resource "avere_vfxt" "vfxt" {
     // terraform is not creating the implicit dependency on the controller module
     // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
     // to work around, add the explicit dependency
-    depends_on = [module.vfxtcontroller]
+    depends_on = [module.vfxtcontroller, module.anvil_configure.module_depends_on_id]
     
     location = local.location
     azure_resource_group = local.vfxt_resource_group_name
@@ -196,14 +210,8 @@ resource "avere_vfxt" "vfxt" {
         cache_policy = local.cache_policy
         junction {
             namespace_path = local.namespace_path
-            core_filer_export = module.anvil.anvil_data_cluster_ip.core_filer_export
+            core_filer_export = local.hammerspace_filer_nfs_export_path
         }
-        /* add additional junctions by adding another junction block shown below
-        junction {
-            namespace_path = "/nfsdata2"
-            core_filer_export = "/data2"
-        }
-        */
     }
 } 
 
@@ -212,7 +220,7 @@ output "hammerspace_filer_address" {
 }
 
 output "hammerspace_filer_export" {
-  value = module.anvil.anvil_data_cluster_ip.core_filer_export
+  value = local.hammerspace_filer_nfs_export_path
 }
 
 output "hammerspace_webui_username" {
