@@ -199,6 +199,7 @@
       "copy": {
         "count": "[length(parameters('virtualMachines'))]",
         "input": {
+          "type": "[reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('virtualMachines')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType]",
           "host": "[if(parameters('virtualMachines')[copyIndex()].deploy, reference(resourceId('Microsoft.Network/networkInterfaces', parameters('virtualMachines')[copyIndex()].name), variables('virtualNetworkApiVersion')).ipConfigurations[0].properties.privateIPAddress, '')]"
         }
       }

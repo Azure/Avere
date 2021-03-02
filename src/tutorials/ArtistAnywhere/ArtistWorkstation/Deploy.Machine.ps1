@@ -24,13 +24,9 @@ param (
     # Set the Azure artist workstation deployment model, which defines the machine image customization process
     [object] $artistWorkstation = @{
         "types" = @("Linux", "Windows")
+        "teradiciLicenseKey" = ""
+        "renderManagers" = @()
     },
-
-    # The optional Teradici host agent license key. If the key is blank, Teradici deployment is skipped
-    [string] $teradiciLicenseKey = "",
-
-    # The Azure render managers for job submission from an artist workstation content creation app
-    [object[]] $renderManagers = @(),
 
     # The base Azure services framework (e.g., Virtual Network, Managed Identity, Key Vault, etc.)
     [object] $baseFramework,
@@ -84,8 +80,10 @@ $templateConfig.parameters.imageGallery.value.name = $imageGallery.name
 $templateConfig.parameters.imageGallery.value.resourceGroupName = $imageGallery.resourceGroupName
 
 $customExtension = $templateConfig.parameters.customExtension.value
-$customExtension.scriptParameters.teradiciLicenseKey = $teradiciLicenseKey
-$customExtension.scriptParameters.renderManagerHost = $renderManagerHost
+$customExtension.scriptParameters.teradiciLicenseKey = $artistWorkstation.teradiciLicenseKey
+if ($artistWorkstation.renderManagers.length -gt 0) {
+    $customExtension.scriptParameters.renderManagerHost = $artistWorkstation.renderManagers[0].host
+}
 
 $scriptFilePath = $customExtension.linux.scriptFilePath
 $scriptParameters = Get-ExtensionParameters $scriptFilePath $customExtension.scriptParameters

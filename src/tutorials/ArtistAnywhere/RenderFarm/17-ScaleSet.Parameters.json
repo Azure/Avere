@@ -14,39 +14,18 @@
         "resourceGroupName": "Artist.Anywhere-Gallery"
       }
     },
-    "renderFarms": {
+    "virtualMachines": {
       "value": [
         {
           "deploy": false,
-          "name": "RenderFarmLC",
+          "name": "RenderLC",
           "image": {
             "definitionName": "ServerLinux",
             "versionId": "1.1.0"
           },
           "machine": {
             "size": "Standard_HB120rs_v2",
-            "count": 2,
-            "osEphemeralDisk": true,
-            "priority": "Spot",
-            "maxPrice": ""
-          },
-          "login": {
-            "adminUsername": "az",
-            "adminPassword": "P@ssword1234",
-            "sshPublicKeyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0rSgH3dwDtBI5U2WBqpYkO7KZadaN34qpgl0IpYSui+ctFYG7bH0QHAz1p2Taznbf/5Qsh8/exmcoEcWHQzURLmqr0llVarbnqQykCp2cpGBH6adPWHMBh/OsR5ZCPL2IMr6eCdKj6mpf9dALB/ieUgCYNGNv20RwK1fBBicQN9oBE6N+KI7ko4cdFRGE66DX9m8DhlPdOO03Zd40e0ZiDdyxpxp2+aI087pXtDkO2tJbanDYToJhrA4hXx+z8qSS1pfaTSXZvTQ83uHClTmxCs8TGLw3l2K7vUf0v8E/7jGFtmHxeNCXBZuSw27M7PoT8EeHbq876pSzgEQvNzgj"
-          },
-          "upgradePolicy": "Manual"
-        },
-        {
-          "deploy": false,
-          "name": "RenderFarmLG",
-          "image": {
-            "definitionName": "ServerLinux",
-            "versionId": "1.2.0"
-          },
-          "machine": {
-            "size": "Standard_NV24",
-            "count": 2,
+            "count": 0,
             "osEphemeralDisk": false,
             "priority": "Spot",
             "maxPrice": ""
@@ -60,15 +39,36 @@
         },
         {
           "deploy": false,
-          "name": "RenderFarmWC",
+          "name": "RenderLG",
+          "image": {
+            "definitionName": "ServerLinux",
+            "versionId": "1.2.0"
+          },
+          "machine": {
+            "size": "Standard_NV24",
+            "count": 0,
+            "osEphemeralDisk": false,
+            "priority": "Spot",
+            "maxPrice": ""
+          },
+          "login": {
+            "adminUsername": "az",
+            "adminPassword": "P@ssword1234",
+            "sshPublicKeyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0rSgH3dwDtBI5U2WBqpYkO7KZadaN34qpgl0IpYSui+ctFYG7bH0QHAz1p2Taznbf/5Qsh8/exmcoEcWHQzURLmqr0llVarbnqQykCp2cpGBH6adPWHMBh/OsR5ZCPL2IMr6eCdKj6mpf9dALB/ieUgCYNGNv20RwK1fBBicQN9oBE6N+KI7ko4cdFRGE66DX9m8DhlPdOO03Zd40e0ZiDdyxpxp2+aI087pXtDkO2tJbanDYToJhrA4hXx+z8qSS1pfaTSXZvTQ83uHClTmxCs8TGLw3l2K7vUf0v8E/7jGFtmHxeNCXBZuSw27M7PoT8EeHbq876pSzgEQvNzgj"
+          },
+          "upgradePolicy": "Manual"
+        },
+        {
+          "deploy": false,
+          "name": "RenderWC",
           "image": {
             "definitionName": "ServerWindows",
             "versionId": "1.1.0"
           },
           "machine": {
             "size": "Standard_HB120rs_v2",
-            "count": 2,
-            "osEphemeralDisk": true,
+            "count": 0,
+            "osEphemeralDisk": false,
             "priority": "Spot",
             "maxPrice": ""
           },
@@ -81,14 +81,14 @@
         },
         {
           "deploy": false,
-          "name": "RenderFarmWG",
+          "name": "RenderWG",
           "image": {
             "definitionName": "ServerWindows",
             "versionId": "1.2.0"
           },
           "machine": {
             "size": "Standard_NV24",
-            "count": 2,
+            "count": 0,
             "osEphemeralDisk": false,
             "priority": "Spot",
             "maxPrice": ""

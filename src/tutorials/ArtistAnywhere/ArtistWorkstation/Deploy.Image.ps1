@@ -30,10 +30,9 @@ param (
     # Set the Azure artist workstation deployment model, which defines the machine image customization process
     [object] $artistWorkstation = @{
         "types" = @("Linux", "Windows")
+        "teradiciLicenseKey" = ""
+        "renderManagers" = @()
     },
-
-    # The optional Teradici host agent license key. If the key is blank, Teradici deployment is skipped
-    [string] $teradiciLicenseKey = "",
 
     # The base Azure services framework (e.g., Virtual Network, Managed Identity, Key Vault, etc.)
     [object] $baseFramework,
@@ -102,7 +101,7 @@ foreach ($imageTemplate in $templateConfig.parameters.imageTemplates.value) {
             $customizeCommand = Get-ImageCustomizeCommand $rootDirectory $moduleDirectory $storageAccount $imageGallery $imageTemplate $null $scriptFile $true
             $imageTemplate.buildCustomization += $customizeCommand
         }
-        if ($teradiciLicenseKey -ne "") {
+        if ($artistWorkstation.teradiciLicenseKey -ne "") {
             $scriptFile = "18-Image.Teradici"
             $customizeCommand = Get-ImageCustomizeCommand $rootDirectory $moduleDirectory $storageAccount $imageGallery $imageTemplate $null $scriptFile $true
             $imageTemplate.buildCustomization += $customizeCommand

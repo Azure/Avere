@@ -30,10 +30,9 @@ param (
     # Set the Azure artist workstation deployment model, which defines the machine image customization process
     [object] $artistWorkstation = @{
         "types" = @("Linux", "Windows")
-    },
-
-    # The optional Teradici host agent license key. If the key is blank, Teradici deployment is skipped
-    [string] $teradiciLicenseKey = ""
+        "teradiciLicenseKey" = ""
+        "renderManagers" = @()
+    }
 )
 
 $rootDirectory = (Get-Item -Path $PSScriptRoot).FullName
@@ -69,7 +68,7 @@ $renderManagerJob = Start-Job -FilePath "$rootDirectory/RenderManager/Deploy.ps1
 if ($artistWorkstation.types.length -gt 0) {
     $artistWorkstationImageModuleName = "Artist Workstation Image Job"
     New-TraceMessage $artistWorkstationImageModuleName $false
-    $artistWorkstationImageJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Image.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $networkGatewayDeploy, $storageServiceDeploy, $storageCacheDeploy, $renderFarm, $artistWorkstation, $teradiciLicenseKey, $baseFramework, $storageCache, $imageLibrary
+    $artistWorkstationImageJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Image.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $networkGatewayDeploy, $storageServiceDeploy, $storageCacheDeploy, $renderFarm, $artistWorkstation, $baseFramework, $storageCache, $imageLibrary
 }
 
 # (16.1) Render Node Image Template
@@ -139,7 +138,7 @@ $moduleName = "(16.2) Render Node Image Build"
 Build-ImageTemplates $moduleName $computeRegionName $imageGallery $templateConfig.parameters.imageTemplates.value
 
 # Render Manager Job
-$renderManagers = Receive-Job -Job $renderManagerJob -Wait
+$artistWorkstation.renderManagers = Receive-Job -Job $renderManagerJob -Wait
 New-TraceMessage $renderManagerModuleName $true
 
 if ($artistWorkstation.types.length -gt 0) {
@@ -149,7 +148,7 @@ if ($artistWorkstation.types.length -gt 0) {
     # Artist Workstation Machine Job
     $artistWorkstationMachineModuleName = "Artist Workstation Machine Job"
     New-TraceMessage $artistWorkstationMachineModuleName $false
-    $artistWorkstationMachineJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Machine.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $networkGatewayDeploy, $storageServiceDeploy, $storageCacheDeploy, $artistWorkstation, $teradiciLicenseKey, $renderManagers, $baseFramework, $storageCache, $imageLibrary
+    $artistWorkstationMachineJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Machine.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $networkGatewayDeploy, $storageServiceDeploy, $storageCacheDeploy, $artistWorkstation, $baseFramework, $storageCache, $imageLibrary
 }
 
 # (17) Render Farm Scale Set

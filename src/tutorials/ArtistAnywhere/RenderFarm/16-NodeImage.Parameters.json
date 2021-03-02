@@ -18,7 +18,7 @@
       "value": [
         {
           "deploy": false,
-          "name": "RenderNodeLinux",
+          "name": "RenderNodeLC",
           "imageDefinitionName": "ServerLinux",
           "imageSourceType": "PlatformImage",
           "imageSourceVersion": "latest",
@@ -36,7 +36,25 @@
         },
         {
           "deploy": false,
-          "name": "RenderNodeWindows",
+          "name": "RenderNodeLG",
+          "imageDefinitionName": "ServerLinux",
+          "imageSourceType": "PlatformImage",
+          "imageSourceVersion": "latest",
+          "imageOutputVersion": "1.2.0",
+          "imageStorageAccount": {
+            "type": "Standard_LRS"
+          },
+          "machineProfile": {
+            "size": "Standard_NV12",
+            "osDiskSizeGB": 0
+          },
+          "buildTimeoutMinutes": 90,
+          "buildCustomization": [
+          ]
+        },
+        {
+          "deploy": false,
+          "name": "RenderNodeWC",
           "imageDefinitionName": "ServerWindows",
           "imageSourceType": "PlatformImage",
           "imageSourceVersion": "latest",
@@ -46,6 +64,24 @@
           },
           "machineProfile": {
             "size": "Standard_F16s_v2",
+            "osDiskSizeGB": 0
+          },
+          "buildTimeoutMinutes": 90,
+          "buildCustomization": [
+          ]
+        },
+        {
+          "deploy": false,
+          "name": "RenderNodeWG",
+          "imageDefinitionName": "ServerWindows",
+          "imageSourceType": "PlatformImage",
+          "imageSourceVersion": "latest",
+          "imageOutputVersion": "1.2.0",
+          "imageStorageAccount": {
+            "type": "Standard_LRS"
+          },
+          "machineProfile": {
+            "size": "Standard_NV12",
             "osDiskSizeGB": 0
           },
           "buildTimeoutMinutes": 90,

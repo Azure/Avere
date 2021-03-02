@@ -30,13 +30,9 @@ param (
     # Set the Azure artist workstation deployment model, which defines the machine image customization process
     [object] $artistWorkstation = @{
         "types" = @("Linux", "Windows")
-    },
-
-    # The optional Teradici host agent license key. If the key is blank, Teradici deployment is skipped
-    [string] $teradiciLicenseKey = "",
-
-    # The Azure render managers for job submission from an artist workstation content creation app
-    [object[]] $renderManagers = @()
+        "teradiciLicenseKey" = ""
+        "renderManagers" = @()
+    }
 )
 
 $rootDirectory = (Get-Item -Path $PSScriptRoot).Parent.FullName
@@ -58,13 +54,13 @@ $imageLibrary = Get-ImageLibrary $rootDirectory $baseFramework $resourceGroupNam
 # Artist Workstation Image Job
 $moduleName = "Artist Workstation Image Job"
 New-TraceMessage $moduleName $false
-$imageJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Image.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $networkGatewayDeploy, $storageServiceDeploy, $storageCacheDeploy, $renderFarm, $artistWorkstation, $teradiciLicenseKey, $baseFramework, $storageCache, $imageLibrary
+$imageJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Image.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $networkGatewayDeploy, $storageServiceDeploy, $storageCacheDeploy, $renderFarm, $artistWorkstation, $baseFramework, $storageCache, $imageLibrary
 Receive-Job -Job $imageJob -Wait
 New-TraceMessage $moduleName $true
 
 # Artist Workstation Machine Job
 $moduleName = "Artist Workstation Machine Job"
 New-TraceMessage $moduleName $false
-$machineJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Machine.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $networkGatewayDeploy, $storageServiceDeploy, $storageCacheDeploy, $artistWorkstation, $teradiciLicenseKey, $renderManagerHost, $baseFramework, $storageCache, $imageLibrary
+$machineJob = Start-Job -FilePath "$rootDirectory/ArtistWorkstation/Deploy.Machine.ps1" -ArgumentList $resourceGroupNamePrefix, $computeRegionName, $storageRegionName, $networkGatewayDeploy, $storageServiceDeploy, $storageCacheDeploy, $artistWorkstation, $baseFramework, $storageCache, $imageLibrary
 Receive-Job -Job $machineJob -Wait
 New-TraceMessage $moduleName $true
