@@ -71,9 +71,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
 
   source_image_reference {
     publisher = "OpenLogic"
-    offer     = "CentOS-CI"
-    # only 7-CI supports cloud-init https://docs.microsoft.com/en-us/azure/virtual-machines/linux/using-cloud-init
-    sku       = "7-CI"
+    offer     = "CentOS"
+    sku       = "7.7"
     version   = "latest"
   }
 

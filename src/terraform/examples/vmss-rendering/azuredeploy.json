@@ -71,8 +71,8 @@
     "sshKeyPath": "[concat('/home/',variables('adminUsername'),'/.ssh/authorized_keys')]",
     "imageReference": {
         "publisher": "OpenLogic",
-        "offer": "CentOS-CI",
-        "sku": "7-CI",
+        "offer": "CentOS",
+        "sku": "7.7",
         "version": "latest"
     }
   },
