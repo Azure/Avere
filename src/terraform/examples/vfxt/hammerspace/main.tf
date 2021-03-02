@@ -143,7 +143,7 @@ module "dsx" {
     dsx_instance_count               = local.dsx_instance_count
     dsx_instance_type                = local.dsx_instance_type
     virtual_network_resource_group   = local.network_resource_group_name
-    virtual_network_name             = module.network.cloud_filers_ha_subnet_name
+    virtual_network_name             = module.network.vnet_name
     virtual_network_data_subnet_name = module.network.cloud_filers_subnet_name
     anvil_password                   = module.anvil.web_ui_password
     anvil_data_cluster_ip            = module.anvil.anvil_data_cluster_ip
