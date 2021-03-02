@@ -39,10 +39,12 @@ locals {
     // then admin_password is ignored
     vm_admin_password = "ReplacePassword$"
     
-    unique_name = "hammerspace1"
-    hammerspace_image_id = ""
-    use_highly_available = false
-    anvil_configuration = local.use_highly_available ? "High Availability" : "Standalone"
+    unique_name           = "hammerspace1"
+    hammerspace_image_id  = ""
+    use_highly_available  = false
+    anvil_configuration   = local.use_highly_available ? "High Availability" : "Standalone"
+    anvil_data_cluster_ip = "" // leave blank to be dynamic
+    dsx_instance_count    = 1
     // More sizes found here: https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
     // vm_size = "Standard_F16s_v2"
     // vm_size = "Standard_F32s_v2"
@@ -133,7 +135,7 @@ module "anvil" {
     anvil_metadata_disk_storage_type = local.storage_account_type
     anvil_metadata_disk_size         = local.metadata_disk_size_gb
 
-    module_depends_on = [azurerm_resource_group.nfsfiler.id]
+    module_depends_on = concat(module.network.module_depends_on_ids, [azurerm_resource_group.nfsfiler.id])
 }
 
 // the ephemeral filer
@@ -156,6 +158,8 @@ module "dsx" {
     anvil_domain                     = module.anvil.anvil_domain
     dsx_data_disk_storage_type       = local.storage_account_type
     dsx_data_disk_size               = local.datadisk_size_gb
+
+    module_depends_on = concat(module.network.module_depends_on_ids, [azurerm_resource_group.nfsfiler.id])
 }
 
 module "anvil_configure" {
