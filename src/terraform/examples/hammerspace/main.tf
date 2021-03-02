@@ -57,6 +57,7 @@ locals {
     // disk_size_gb = 8191  //  P60, E60, S60
     // disk_size_gb = 16383 //  P70, E70, S70
     // data_disk_size_gb = 32767 //  P80, E80, S80
+    nfs_export_path = "/data"
 }
 
 provider "azurerm" {
@@ -108,6 +109,18 @@ module "dsx" {
     anvil_domain                     = module.anvil.anvil_domain
     dsx_data_disk_storage_type       = local.storage_account_type
     dsx_data_disk_size               = local.datadisk_size_gb
+}
+
+module "anvil_configure" {
+    source                       = "github.com/Azure/Avere/src/terraform/modules/hammerspace/anvil-run-once-configure"
+    anvil_arm_virtual_machine_id = length(module.anvil.arm_virtual_machine_ids) == 0 ? "" : module.anvil.arm_virtual_machine_ids[0]
+    anvil_data_cluster_ip        = module.anvil.anvil_data_cluster_ip
+    web_ui_password              = module.anvil.web_ui_password
+    dsx_count                    = local.dsx_instance_count
+    nfs_export_path              = local.nfs_export_path
+    anvil_hostname               = length(module.anvil.anvil_host_names) == 0 ? "" : module.anvil.anvil_host_names[0]
+
+    module_depends_on = module.anvil.module_depends_on_ids
 }
 
 output "hammerspace_username" {
