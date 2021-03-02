@@ -57,6 +57,8 @@ locals {
     // disk_size_gb = 8191  //  P60, E60, S60
     // disk_size_gb = 16383 //  P70, E70, S70
     // data_disk_size_gb = 32767 //  P80, E80, S80
+
+    // the nfs export path exported from hammerspace
     nfs_export_path = "/data"
 }
 
