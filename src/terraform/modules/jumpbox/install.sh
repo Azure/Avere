@@ -25,7 +25,7 @@ function retrycmd_if_failure() {
 }
 
 function update_linux() {
-    retrycmd_if_failure 12 5 yum -y install wget unzip git nfs-utils tmux
+    retrycmd_if_failure 12 5 yum -y install wget unzip git nfs-utils tmux nc
 }
 
 function install_golang() {
