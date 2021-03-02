@@ -18,6 +18,8 @@ locals {
     jumpbox_resource_group_name = "jumpbox_resource_group"
     // if you are running a locked down network, set jumpbox_add_public_ip to false
     jumpbox_add_public_ip = true
+    // only build terraform provider if needed
+    build_vfxt_terraform_provider = true
 }
 
 provider "azurerm" {
@@ -46,6 +48,7 @@ module "jumpbox" {
     ssh_key_data = local.vm_ssh_key_data
     add_public_ip = local.jumpbox_add_public_ip
     ssh_port = local.ssh_port
+    build_vfxt_terraform_provider = local.build_vfxt_terraform_provider
 
     // network details
     virtual_network_resource_group = local.network_resource_group_name
