@@ -43,7 +43,7 @@ type AvereVfxt struct {
 	EnableNlm              bool
 	FirstIPAddress         string
 	LastIPAddress          string
-	
+
 	CifsAdDomain                      string
 	CifsNetbiosDomainName             string
 	CifsDCAddresses                   string

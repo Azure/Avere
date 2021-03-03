@@ -1532,6 +1532,7 @@ func (a *AvereVfxt) UpdateCifsMasks(junction *Junction) error {
 	return nil
 }
 
+// Approach derived from Avere document "Disable NLM Locking Version 1.0", 2019-09-18
 func (a *AvereVfxt) SetNlm() error {
 	log.Printf("[INFO] [SetNlm(%v)", a.EnableNlm)
 	defer log.Printf("[INFO] SetNlm]")
@@ -2739,7 +2740,7 @@ func (a *AvereVfxt) getVServerInternalNamesCommand() string {
 }
 
 func (a *AvereVfxt) getVServerNameCommand(internalVServerName string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"lsu %s name|cut -d '\"'\"' '\"'\"' -f 2\"'", a.GetBaseVFXTNodeCommand()), ShellLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"lsu %s name|cut -d '\"'\"' '\"'\"' -f 2\"'", a.GetBaseVFXTNodeCommand(), internalVServerName), ShellLogFile)
 }
 
 func (a *AvereVfxt) getServerNlmNoProbeCommand(internalVServerName string) string {
