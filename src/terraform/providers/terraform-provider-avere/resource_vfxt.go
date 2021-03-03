@@ -186,6 +186,11 @@ func resourceVfxt() *schema.Resource {
 					4096,
 				}),
 			},
+			enable_nlm: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			vserver_first_ip: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -695,6 +700,12 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("ERROR: error while creating VServer: %s", err)
 	}
 
+	if !avereVfxt.EnableNlm {
+		if err := avereVfxt.SetNlm(); err != nil {
+			fmt.Errorf("ERROR: error while disabling Nlm: %s", err)
+		}
+	}
+
 	if avereVfxt.Timezone != DefaultTimezone || len(avereVfxt.DnsServer) > 0 || len(avereVfxt.DnsDomain) > 0 || len(avereVfxt.DnsSearch) > 0 {
 		if err := avereVfxt.UpdateCluster(); err != nil {
 			return err
@@ -860,18 +871,25 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 
 	//
 	// The cluster will be updated in the following order
-	//  1. Timezone and DNS changes
-	//  2. NTP Servers
-	//  3. Global and Vserver Custom Support settings
-	//  4. Update Users
-	//  5. Delete Junctions
-	//  6. Update CIFs
-	//  7. Update Core Filers including Core Filer custom settings
-	//  8. Add Junctions
-	//  9. Update Extended Groups
-	// 10. Scale cluster
-	// 11. Update Support Uploads
+	//  1. Disable NLM
+	//  2. Timezone and DNS changes
+	//  3. NTP Servers
+	//  4. Global and Vserver Custom Support settings
+	//  5. Update Users
+	//  6. Delete Junctions
+	//  7. Update CIFs
+	//  8. Update Core Filers including Core Filer custom settings
+	//  9. Add Junctions
+	// 10. Update Extended Groups
+	// 11. Scale cluster
+	// 12. Update Support Uploads
 	//
+
+	if d.HasChange(enable_nlm) {
+		if err := avereVfxt.SetNlm(); err != nil {
+			return err
+		}
+	}
 
 	if d.HasChange(timezone) || d.HasChange(dns_server) || d.HasChange(dns_domain) || d.HasChange(dns_search) {
 		if err := avereVfxt.UpdateCluster(); err != nil {
@@ -1167,6 +1185,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		nodeCount,
 		d.Get(node_size).(string),
 		d.Get(node_cache_size).(int),
+		d.Get(enable_nlm).(bool),
 		firstIPAddress,
 		lastIPAddress,
 		d.Get(cifs_ad_domain).(string),

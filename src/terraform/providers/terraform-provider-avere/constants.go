@@ -21,6 +21,8 @@ const (
 	ClusterAliveRetrySleepSeconds = 5
 	AverecmdLogFile               = "~/averecmd.log"
 	VServerName                   = "vserver"
+	DBUtilYes                     = "yes"
+	DBUtilNo                      = "no"
 	VfxtKeyPubFile                = "~/vfxt_ssh_key_data.pub"
 	ShellLogFile                  = "~/shell.log"
 
@@ -181,6 +183,7 @@ const (
 	vfxt_node_count                       = "vfxt_node_count"
 	node_size                             = "node_size"
 	node_cache_size                       = "node_cache_size"
+	enable_nlm                            = "enable_nlm"
 	vserver_first_ip                      = "vserver_first_ip"
 	vserver_ip_count                      = "vserver_ip_count"
 	global_custom_settings                = "global_custom_settings"

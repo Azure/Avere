@@ -40,9 +40,10 @@ type AvereVfxt struct {
 	NodeCount              int
 	NodeSize               string
 	NodeCacheSize          int
+	EnableNlm              bool
 	FirstIPAddress         string
 	LastIPAddress          string
-
+	
 	CifsAdDomain                      string
 	CifsNetbiosDomainName             string
 	CifsDCAddresses                   string
