@@ -1638,7 +1638,7 @@ func (a *AvereVfxt) GetVServerInternalNames() ([]string, error) {
 		}
 		trimmedLine := strings.TrimSpace(parts[0])
 		if len(trimmedLine) > 0 {
-			results = append(results, strings.TrimSpace(line))
+			results = append(results, trimmedLine)
 		}
 	}
 
@@ -2748,11 +2748,11 @@ func (a *AvereVfxt) getServerNlmNoProbeCommand(internalVServerName string) strin
 }
 
 func (a *AvereVfxt) getSetServerNlmNoProbeCommand(internalVServerName string, dbutilValue string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"dbutil.py set %s serverNlmNoProbe %s\"'", a.GetBaseVFXTNodeCommand(), internalVServerName, dbutilValue), ShellLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"dbutil.py set %s serverNlmNoProbe %s --user admin --case nlmadjust\"'", a.GetBaseVFXTNodeCommand(), internalVServerName, dbutilValue), ShellLogFile)
 }
 
 func (a *AvereVfxt) getSetServerNlm(internalVServerName string, dbutilValue string) string {
-	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"dbutil.py set %s serverNlm %s\"'", a.GetBaseVFXTNodeCommand(), internalVServerName, dbutilValue), ShellLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"dbutil.py set %s serverNlm %s --user admin --case nlmadjust\"'", a.GetBaseVFXTNodeCommand(), internalVServerName, dbutilValue), ShellLogFile)
 }
 
 func (a *AvereVfxt) getRestartArmadaCommand(staticIP string) string {
