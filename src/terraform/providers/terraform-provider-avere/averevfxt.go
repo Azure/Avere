@@ -1592,7 +1592,16 @@ func (a *AvereVfxt) RestartArmada() error {
 	}
 	staticIp := primaryIPs[0]
 
+	// since we are using a non-mgmt IP clear the known hosts before and after the restart
+	if err := a.PrepareForVFXTNodeCommands(); err != nil {
+		return err
+	}
+
 	if _, err := a.ShellCommand(a.getRestartArmadaCommand(staticIp)); err != nil {
+		return err
+	}
+
+	if err := a.PrepareForVFXTNodeCommands(); err != nil {
 		return err
 	}
 
@@ -1612,7 +1621,14 @@ func (a *AvereVfxt) IsNLMEnabled(internalVServerName string) (bool, error) {
 		return enabledResult, err
 	}
 
-	return rawResult != DBUtilYes, nil
+	// parse a result similar to vserver1.serverNlmNoProbe: yes
+	parts := strings.Split(rawResult, ":")
+	if len(parts) < 2 {
+		return true, nil
+	}
+	result := strings.TrimSpace(parts[1])
+
+	return result != DBUtilYes, nil
 }
 
 func (a *AvereVfxt) GetVServerInternalNames() ([]string, error) {
