@@ -20,7 +20,7 @@ locals {
 resource "azurerm_network_interface" "nfsfiler" {
   name                = "${var.unique_name}-nic"
   resource_group_name = data.azurerm_resource_group.nfsfiler.name
-  location            = data.azurerm_resource_group.nfsfiler.location
+  location            = var.location
 
   count = var.deploy_vm ? 1 : 0
 
@@ -34,7 +34,7 @@ resource "azurerm_network_interface" "nfsfiler" {
 
 resource "azurerm_linux_virtual_machine" "nfsfiler" {
   name = "${var.unique_name}-vm"
-  location = data.azurerm_resource_group.nfsfiler.location
+  location = var.location
   resource_group_name = data.azurerm_resource_group.nfsfiler.name
   network_interface_ids = [azurerm_network_interface.nfsfiler[0].id]
   computer_name  = var.unique_name
