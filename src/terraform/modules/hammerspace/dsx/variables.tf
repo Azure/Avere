@@ -45,6 +45,10 @@ variable "virtual_network_data_subnet_name" {
   description = "The unique name used for the data virtual network subnet."
 }
 
+variable "virtual_network_data_subnet_mask_bits" {
+  description = "The mask bits of the data subnet (must be the same as anvil)."
+}
+
 variable "anvil_password" {
   description = "Anvil Cluster Data IP."
 }

@@ -51,6 +51,10 @@ variable "virtual_network_data_subnet_name" {
   description = "The unique name used for the data virtual network subnet."
 }
 
+variable "virtual_network_data_subnet_mask_bits" {
+  description = "The mask bits of the data subnet."
+}
+
 variable "anvil_data_cluster_ip" {
   description = "High Availability Anvil Cluster IP on the Data Subnet, or leave blank to get dynamic address, but this will mean DSX nodes will always get recreated because they depend on this address."
   default = ""
