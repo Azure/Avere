@@ -43,7 +43,7 @@ locals {
     hammerspace_image_id  = ""
     use_highly_available  = false
     anvil_configuration   = local.use_highly_available ? "High Availability" : "Standalone"
-    anvil_data_cluster_ip = "" // leave blank to be dynamic
+    anvil_data_cluster_ip = "10.0.2.110" // leave blank to be dynamic
     dsx_instance_count    = 1
     // More sizes found here: https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
     // vm_size = "Standard_F16s_v2"
@@ -154,7 +154,6 @@ module "dsx" {
     virtual_network_data_subnet_name = module.network.cloud_filers_subnet_name
     anvil_password                   = module.anvil.web_ui_password
     anvil_data_cluster_ip            = module.anvil.anvil_data_cluster_ip
-    anvil_data_cluster_ip_mask_bits  = module.anvil.anvil_data_cluster_ip_mask_bits
     anvil_domain                     = module.anvil.anvil_domain
     dsx_data_disk_storage_type       = local.storage_account_type
     dsx_data_disk_size               = local.datadisk_size_gb
@@ -178,7 +177,7 @@ resource "azurerm_hpc_cache_nfs_target" "nfs_targets" {
   name                = "nfs_targets"
   resource_group_name = azurerm_resource_group.hpc_cache_rg.name
   cache_name          = azurerm_hpc_cache.hpc_cache.name
-  target_host_name    = module.anvil.anvil_data_cluster_ip
+  target_host_name    = module.dsx.dsx_ip_addresses[0]
   usage_model         = local.usage_model
   namespace_junction {
     namespace_path = "/nfs1data"
@@ -189,7 +188,15 @@ resource "azurerm_hpc_cache_nfs_target" "nfs_targets" {
   depends_on = [module.anvil_configure.module_depends_on_id]
 }
 
-output "hammerspace_filer_address" {
+output "hammerspace_filer_addresses" {
+  value = module.dsx.dsx_ip_addresses
+}
+
+output "hammerspace_webui_address" {
+  value = module.anvil.anvil_data_cluster_ip
+}
+
+output "hammerspace_webui_address" {
   value = module.anvil.anvil_data_cluster_ip
 }
 
