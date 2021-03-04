@@ -85,7 +85,10 @@ locals {
     "${var.unique_name}anvil${i}"
   ]
 
-  data_mask_bits = reverse(split("/", data.azurerm_subnet.data_subnet.address_prefixes[0]))[0]
+  //data_mask_bits = reverse(split("/", data.azurerm_subnet.data_subnet.address_prefixes[0]))[0]
+  // must use a hardcoded number so it doesn't recreate the vms, otherwise 
+  // the functions above force custom_data to be unknown, causing re-creation
+  data_mask_bits = var.virtual_network_data_subnet_mask_bits
 
   anvil_lb_ip = local.is_high_availability ? azurerm_lb.anvilloadbalancer[0].frontend_ip_configuration[0].private_ip_address : ""
 

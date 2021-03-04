@@ -51,6 +51,15 @@ variable "virtual_network_data_subnet_name" {
   description = "The unique name used for the data virtual network subnet."
 }
 
+variable "virtual_network_data_subnet_mask_bits" {
+  description = "The mask bits of the data subnet."
+}
+
+variable "anvil_data_cluster_ip" {
+  description = "High Availability Anvil Cluster IP on the Data Subnet, or leave blank to get dynamic address, but this will mean DSX nodes will always get recreated because they depend on this address."
+  default = ""
+}
+
 variable "module_depends_on" {
   default = [""]
   description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
@@ -59,11 +68,6 @@ variable "module_depends_on" {
 ////////////////////////////////////////////////////////////////
 // Advanced Configuration
 ////////////////////////////////////////////////////////////////
-
-variable "anvil_data_cluster_ip" {
-  description = "High Availability Anvil Cluster IP on the Data Subnet, or leave blank to get dynamic address."
-  default = ""
-}
 
 variable "ntp_server" {
   description = "The ntp server to be used by Hammerspace."

@@ -12,6 +12,8 @@ Once you have the Hammerspace Image ID, use the [Hammerspace Image copy instruct
 
 ## Deployment Instructions
 
+***Important Note*** HPC Cache needs to release a feature to disable NLM for it to mount a Hammerspace filer.  In the meantime, please consider the [Avere vFXT Hammerspace example](../../vfxt/hammerspace).
+
 To run the example, execute the following instructions.  This assumes use of Azure Cloud Shell.  If you are installing into your own environment, you will need to follow the [instructions to setup terraform for the Azure environment](https://docs.microsoft.com/en-us/azure/terraform/terraform-install-configure).
 
 1. browse to https://shell.azure.com

@@ -20,7 +20,8 @@ locals {
     hammerspace_image_id      = ""
     use_highly_available      = false
     anvil_configuration       = local.use_highly_available ? "High Availability" : "Standalone"
-    anvil_data_cluster_ip     = "" // leave blank to be dynamic
+    data_subnet_mask_bits     = 25
+    anvil_data_cluster_ip     = "10.0.2.110" // leave blank to be dynamic
     dsx_instance_count        = 1
     // More sizes found here: https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
     // vm_size = "Standard_F16s_v2"
@@ -59,7 +60,7 @@ locals {
     // disk_size_gb = 16383 //  P70, E70, S70
     // data_disk_size_gb = 32767 //  P80, E80, S80
     
-    hammerspace_filer_nfs_export_path = "/data"
+    hammerspace_filer_nfs_export_path = "/assets"
     
     // vfxt details
     vfxt_resource_group_name = "vfxt_resource_group"
@@ -68,7 +69,7 @@ locals {
     vfxt_cluster_name = "vfxt"
     vfxt_cluster_password = "VFXT_PASSWORD"
     vfxt_ssh_key_data = local.vm_ssh_key_data
-    namespace_path = "/nfs1data"
+    namespace_path = "/assets"
     // vfxt cache polies
     //  "Clients Bypassing the Cluster"
     //  "Read Caching"
@@ -111,46 +112,47 @@ resource "azurerm_resource_group" "nfsfiler" {
 
 // the ephemeral filer
 module "anvil" {
-    source                           = "github.com/Azure/Avere/src/terraform/modules/hammerspace/anvil"
-    resource_group_name              = azurerm_resource_group.nfsfiler.name
-    location                         = azurerm_resource_group.nfsfiler.location
-    hammerspace_image_id             = local.hammerspace_image_id
-    unique_name                      = local.unique_name
-    admin_username                   = local.vm_admin_username
-    admin_password                   = local.vm_admin_password
-    anvil_configuration              = local.anvil_configuration
-    anvil_instance_type              = local.anvil_instance_type
-    virtual_network_resource_group   = local.network_resource_group_name
-    virtual_network_name             = module.network.vnet_name
-    virtual_network_ha_subnet_name   = module.network.cloud_filers_ha_subnet_name
-    virtual_network_data_subnet_name = module.network.cloud_filers_subnet_name
-    anvil_data_cluster_ip            = local.anvil_data_cluster_ip
-    anvil_metadata_disk_storage_type = local.storage_account_type
-    anvil_metadata_disk_size         = local.metadata_disk_size_gb
+    source                                = "github.com/Azure/Avere/src/terraform/modules/hammerspace/anvil"
+    resource_group_name                   = azurerm_resource_group.nfsfiler.name
+    location                              = azurerm_resource_group.nfsfiler.location
+    hammerspace_image_id                  = local.hammerspace_image_id
+    unique_name                           = local.unique_name
+    admin_username                        = local.vm_admin_username
+    admin_password                        = local.vm_admin_password
+    anvil_configuration                   = local.anvil_configuration
+    anvil_instance_type                   = local.anvil_instance_type
+    virtual_network_resource_group        = local.network_resource_group_name
+    virtual_network_name                  = module.network.vnet_name
+    virtual_network_ha_subnet_name        = module.network.cloud_filers_ha_subnet_name
+    virtual_network_data_subnet_name      = module.network.cloud_filers_subnet_name
+    virtual_network_data_subnet_mask_bits = local.data_subnet_mask_bits
+    anvil_data_cluster_ip                 = local.anvil_data_cluster_ip
+    anvil_metadata_disk_storage_type      = local.storage_account_type
+    anvil_metadata_disk_size              = local.metadata_disk_size_gb
 
     module_depends_on = concat(module.network.module_depends_on_ids, [azurerm_resource_group.nfsfiler.id])
 }
 
 // the ephemeral filer
 module "dsx" {
-    source                           = "github.com/Azure/Avere/src/terraform/modules/hammerspace/dsx"
-    resource_group_name              = azurerm_resource_group.nfsfiler.name
-    location                         = azurerm_resource_group.nfsfiler.location
-    hammerspace_image_id             = local.hammerspace_image_id
-    unique_name                      = local.unique_name
-    admin_username                   = local.vm_admin_username
-    admin_password                   = local.vm_admin_password
-    dsx_instance_count               = local.dsx_instance_count
-    dsx_instance_type                = local.dsx_instance_type
-    virtual_network_resource_group   = local.network_resource_group_name
-    virtual_network_name             = module.network.vnet_name
-    virtual_network_data_subnet_name = module.network.cloud_filers_subnet_name
-    anvil_password                   = module.anvil.web_ui_password
-    anvil_data_cluster_ip            = module.anvil.anvil_data_cluster_ip
-    anvil_data_cluster_ip_mask_bits  = module.anvil.anvil_data_cluster_ip_mask_bits
-    anvil_domain                     = module.anvil.anvil_domain
-    dsx_data_disk_storage_type       = local.storage_account_type
-    dsx_data_disk_size               = local.datadisk_size_gb
+    source                                = "github.com/Azure/Avere/src/terraform/modules/hammerspace/dsx"
+    resource_group_name                   = azurerm_resource_group.nfsfiler.name
+    location                              = azurerm_resource_group.nfsfiler.location
+    hammerspace_image_id                  = local.hammerspace_image_id
+    unique_name                           = local.unique_name
+    admin_username                        = local.vm_admin_username
+    admin_password                        = local.vm_admin_password
+    dsx_instance_count                    = local.dsx_instance_count
+    dsx_instance_type                     = local.dsx_instance_type
+    virtual_network_resource_group        = local.network_resource_group_name
+    virtual_network_name                  = module.network.vnet_name
+    virtual_network_data_subnet_name      = module.network.cloud_filers_subnet_name
+    virtual_network_data_subnet_mask_bits = local.data_subnet_mask_bits
+    anvil_password                        = module.anvil.web_ui_password
+    anvil_data_cluster_ip                 = module.anvil.anvil_data_cluster_ip
+    anvil_domain                          = module.anvil.anvil_domain
+    dsx_data_disk_storage_type            = local.storage_account_type
+    dsx_data_disk_size                    = local.datadisk_size_gb
 
     module_depends_on = concat(module.network.module_depends_on_ids, [azurerm_resource_group.nfsfiler.id])
 }
@@ -195,6 +197,7 @@ resource "avere_vfxt" "vfxt" {
     // ssh key takes precedence over controller password
     controller_admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
     controller_ssh_port = local.ssh_port
+    enable_nlm = false
     // terraform is not creating the implicit dependency on the controller module
     // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
     // to work around, add the explicit dependency
@@ -213,7 +216,7 @@ resource "avere_vfxt" "vfxt" {
 
     core_filer {
         name = "nfs1"
-        fqdn_or_primary_ip = module.anvil.anvil_data_cluster_ip
+        fqdn_or_primary_ip = join(" ", module.dsx.dsx_ip_addresses)
         cache_policy = local.cache_policy
         junction {
             namespace_path = local.namespace_path
@@ -222,12 +225,16 @@ resource "avere_vfxt" "vfxt" {
     }
 } 
 
-output "hammerspace_filer_address" {
-  value = module.anvil.anvil_data_cluster_ip
+output "hammerspace_filer_addresses" {
+  value = module.dsx.dsx_ip_addresses
 }
 
 output "hammerspace_filer_export" {
   value = local.hammerspace_filer_nfs_export_path
+}
+
+output "hammerspace_webui_address" {
+  value = module.anvil.anvil_data_cluster_ip
 }
 
 output "hammerspace_webui_username" {

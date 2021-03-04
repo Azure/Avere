@@ -2,7 +2,9 @@
 import base64
 import json
 import logging
+import select
 import ssl
+import subprocess
 import sys
 import time
 import urllib2
@@ -10,11 +12,15 @@ import urllib2
 ANVIL_USERNAME = "admin"
 MAX_RETRIES = 60
 SLEEP_TIME = 10
+# rest to try for 
+REST_MAX_RETRIES = 6
+REST_SLEEP_TIME = 10
 # default export options
 DEFAULT_EXPORTOPTIONS_SUBNET = "*"
 DEFAULT_EXPORTOPTIONS_ACCESSPERMS = "RW"
 DEFAULT_EXPORTOPTIONS_ROOTSSQUASH = False
 DEFAULT_MAX_SHARE_SIZE = 0
+PLATFORM_LOGS = "/var/log/pd/platform.log"
 
 def verifyKey(key, jsonObj):
     return key in jsonObj and jsonObj[key] is not None
@@ -197,8 +203,10 @@ class AnvilRest:
     def getNodes(self):
         logging.info("getting nodes")
         data = self.submitRetryableRequest(GetRequest, "nodes", "")
-        jsonObj = json.loads(data)
         nodeList = []
+        if data is None:
+            return nodeList
+        jsonObj = json.loads(data)
         for j in jsonObj:
             n = createAnvilNode(j)
             if n is not None:
@@ -210,8 +218,10 @@ class AnvilRest:
     def getVolumes(self):
         logging.info("getting volumes")
         data = self.submitRetryableRequest(GetRequest, "base-storage-volumes", "")
-        jsonObj = json.loads(data)
         volumeList = []
+        if data is None:
+            return volumeList
+        jsonObj = json.loads(data)
         for j in jsonObj:
             n = createAnvilVolume(j)
             if n is not None:
@@ -223,8 +233,10 @@ class AnvilRest:
     def getSharenames(self):
         logging.info("getting volumes")
         data = self.submitRetryableRequest(GetRequest, "shares", "")
-        jsonObj = json.loads(data)
         shareList = []
+        if data is None:
+            return shareList
+        jsonObj = json.loads(data)
         for j in jsonObj:
             n = createAnvilShare(j)
             if n is not None:
@@ -236,8 +248,10 @@ class AnvilRest:
     def getObjectives(self):
         logging.info("getting objectives")
         data = self.submitRetryableRequest(GetRequest, "objectives", "")
-        jsonObj = json.loads(data)
         objectives = {}
+        if data is None:
+            return objectives
+        jsonObj = json.loads(data)
         for j in jsonObj:
             o = createAnvilObjective(j)
             if o is not None:
@@ -266,7 +280,13 @@ class AnvilRest:
         return self.submitRequest(request, resource, data, 1)
 
     def submitRetryableRequest(self, request, resource, data):
-        return self.submitRequest(request, resource, data, MAX_RETRIES)
+        return self.submitRequest(request, resource, data, REST_MAX_RETRIES)
+
+    def testConnection(self, retryable):
+        if retryable:
+            return self.submitRequest(GetRequest, "nodes", "", REST_MAX_RETRIES) != None
+        else:
+            return self.submitRequest(GetRequest, "nodes", "", 1) != None
 
     def submitRequest(self, request, resource, data, retryCount):
         #self.configurePasswordManager()
@@ -287,7 +307,6 @@ class AnvilRest:
             except urllib2.URLError as e:
                 if hasattr(e, 'reason'):
                     logging.error("We failed to reach a server.  Reason {}".format(e.reason))
-                    logging.info("{} {}".format(self.username, self.anvilPassword))
                 elif hasattr(e, 'code'):
                     logging.error("The server couldn't fulfill the request.  Error code {}".format(e.code))
             else:
@@ -296,9 +315,9 @@ class AnvilRest:
                 #logging.info("response data {}".format(data))
                 response.close()
                 return data
-            logging.info("try {} of {}, sleeping for {} seconds".format(i, MAX_RETRIES, SLEEP_TIME))
-            if (i+1) != MAX_RETRIES:
-                time.sleep(SLEEP_TIME)
+            if (i+1) != retryCount:
+                logging.info("try {} of {}, sleeping for {} seconds".format(i+1, retryCount, REST_SLEEP_TIME))
+                time.sleep(REST_SLEEP_TIME)
 
         return None
 
@@ -307,6 +326,72 @@ def listNodes(anvilRest):
     nodes = anvilRest.getNodes()
     for n in nodes:
         logging.info("{}".format(n))
+
+# technique from https://stackoverflow.com/a/12523371
+class BootStorageWatcher:
+    def __init__(self):
+        self.fileScanned = False
+        self.storageErrorSeen = False
+        self.finished = False
+        self.f = subprocess.Popen(['tail','-F',PLATFORM_LOGS],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        self.p = select.poll()
+        self.p.register(self.f.stdout)
+        self.targetMessage = "Anvil nodes require an additional storage device of at least 2 GB"
+    
+    def handleBootError(self):
+        logging.info("error seen!")
+        self.storageErrorSeen = True
+        try:
+            retcode = subprocess.call("/bin/systemctl try-restart pd-first-boot", shell=True)
+            if retcode < 0:
+                logging.error("Child was terminated by signal {}".format(-retcode))
+            else:
+                logging.info("Child returned {}".format(retcode))
+        except OSError as e:
+            logging.error("Execution failed {}".format(e))
+
+    def scanFile(self):
+        if self.fileScanned:
+            return
+        self.fileScanned = True
+        with open(PLATFORM_LOGS, 'r') as f:
+            for line in f:
+                if self.targetMessage in line:
+                    self.handleBootError()
+                    break
+
+    def fixIfErrorSeen(self):
+        if not self.fileScanned:
+            self.scanFile()
+
+        if not self.finished and not self.storageErrorSeen:
+            while self.p.poll(1):
+                line = self.f.stdout.readline()
+                if self.targetMessage in line:
+                    self.handleBootError()
+                    break
+                    
+    def finish(self):
+        if not self.finished:
+            self.finished = True
+            self.p.unregister(self.f.stdout)
+            self.f.kill()
+
+def waitForRestPort(anvilRest):
+    logging.info("waiting for the rest port to become avaible")
+    if not anvilRest.testConnection(retryable=False):
+        bootWatcher = BootStorageWatcher()
+        bootWatcher.fixIfErrorSeen()
+
+        for i in xrange(MAX_RETRIES):
+            count = 0
+            result = anvilRest.testConnection(retryable=True)
+            if result:
+                break
+            bootWatcher.fixIfErrorSeen()
+            logging.info("try {} of {} waiting for connection".format(i+1, MAX_RETRIES))
+
+        bootWatcher.finish()
 
 def waitForDSXStorage(anvilRest, dsxCount):
     logging.info("waiting for {} dsx node(s)".format(dsxCount))
@@ -317,9 +402,10 @@ def waitForDSXStorage(anvilRest, dsxCount):
             if "dsx" in n.name:
                 count = count + 1
         if count >= dsxCount:
-            return
-        logging.info("try {} of {} waiting for {} dsx nodes, sleeping for {} seconds".format(i, MAX_RETRIES, dsxCount, SLEEP_TIME))
+            return True
+        logging.info("try {} of {} waiting for {} dsx nodes, sleeping for {} seconds".format(i+1, MAX_RETRIES, dsxCount, SLEEP_TIME))
         time.sleep(SLEEP_TIME)
+    return False
 
 def waitForDSXVolumes(anvilRest, dsxCount):
     logging.info("waiting for {} dsx node(s)".format(dsxCount))
@@ -330,9 +416,10 @@ def waitForDSXVolumes(anvilRest, dsxCount):
             if "dsx" in n.name:
                 count = count + 1
         if count >= dsxCount:
-            return
-        logging.info("try {} of {} waiting for {} dsx volumes, sleeping for {} seconds".format(i, MAX_RETRIES, dsxCount, SLEEP_TIME))
+            return True
+        logging.info("try {} of {} waiting for {} dsx volumes, sleeping for {} seconds".format(i+1, MAX_RETRIES, dsxCount, SLEEP_TIME))
         time.sleep(SLEEP_TIME)
+    return False
 
 def addStorageShare(anvilRest, sharePath):
     logging.info("add storage share '{}'".format(sharePath))
@@ -388,11 +475,20 @@ def main():
     
     anvilRest = AnvilRest(anvilAddress, anvilPassword)
 
+    # wait for the port
+    waitForRestPort(anvilRest)
+    
     # wait for the storage to be added
-    waitForDSXStorage(anvilRest, dsxCount)
+    success = waitForDSXStorage(anvilRest, dsxCount)
+    if not success:
+        logging.error("ERROR: timed out waiting for DSX Storage")
+        sys.exit(2)
 
     # wait for the volumes to be added
-    waitForDSXVolumes(anvilRest, dsxCount)
+    success = waitForDSXVolumes(anvilRest, dsxCount)
+    if not success:
+        logging.error("ERROR: timed out waiting for DSX volumes")
+        sys.exit(3)
 
     # create a share
     addStorageShare(anvilRest, sharePath)
