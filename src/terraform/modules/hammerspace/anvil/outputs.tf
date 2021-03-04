@@ -23,10 +23,6 @@ output "anvil_data_cluster_ip" {
   value = azurerm_linux_virtual_machine.anvilvm == null || length(azurerm_linux_virtual_machine.anvilvm) == 0 ? "" : local.is_high_availability ? azurerm_lb.anvilloadbalancer[0].frontend_ip_configuration[0].private_ip_address : azurerm_network_interface.anvildata[0].ip_configuration[0].private_ip_address
 }
 
-output "anvil_data_cluster_ip_mask_bits" {
-  value = local.data_mask_bits
-}
-
 output "anvil_domain" {
   value = local.domain
 }

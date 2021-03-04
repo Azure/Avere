@@ -15,7 +15,7 @@ locals {
     virtual_network_name                 = "rendervnet"
     ha_subnet_name                       = "cloud_filers_ha"
     data_subnet_name                     = "cloud_filers"
-    anvil_data_cluster_ip                = "" // leave blank to be dynamic
+    anvil_data_cluster_ip                = "10.0.2.110" // leave blank to be dynamic
     dsx_instance_count                   = 1
 
     // nfs filer details
@@ -110,7 +110,6 @@ module "dsx" {
     virtual_network_data_subnet_name = local.data_subnet_name
     anvil_password                   = module.anvil.web_ui_password
     anvil_data_cluster_ip            = module.anvil.anvil_data_cluster_ip
-    anvil_data_cluster_ip_mask_bits  = module.anvil.anvil_data_cluster_ip_mask_bits
     anvil_domain                     = module.anvil.anvil_domain
     dsx_data_disk_storage_type       = local.storage_account_type
     dsx_data_disk_size               = local.datadisk_size_gb
@@ -142,6 +141,10 @@ output "hammerspace_webui_password" {
 
 output "anvil_data_cluster_ip" {
     value = module.anvil.anvil_data_cluster_ip
+}
+
+output "nfs_mountable_ips" {
+    value = module.dsx.dsx_ip_addresses
 }
 
 output "nfs_export_path" {

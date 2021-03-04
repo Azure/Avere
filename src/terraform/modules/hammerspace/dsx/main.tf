@@ -11,6 +11,8 @@ locals {
     "${var.unique_name}dsx${i}"
   ]
 
+  data_mask_bits = reverse(split("/", data.azurerm_subnet.data_subnet.address_prefixes[0]))[0]
+
   dsx_custom_data = [for i in range(var.dsx_instance_count): 
     <<EOT
 {
@@ -18,7 +20,7 @@ locals {
         "domainname": "${var.anvil_domain}",
         "metadata": {
             "ips": [
-                "${var.anvil_data_cluster_ip}/${var.anvil_data_cluster_ip_mask_bits}"
+                "${var.anvil_data_cluster_ip}/${local.data_mask_bits}"
             ]
         },
         "password": "${var.anvil_password}"

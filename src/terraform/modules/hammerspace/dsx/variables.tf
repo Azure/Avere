@@ -53,10 +53,6 @@ variable "anvil_data_cluster_ip" {
   description = "Anvil Cluster Data IP."
 }
 
-variable "anvil_data_cluster_ip_mask_bits" {
-  description = "The mask bits of the Anvil Cluster Data IP."
-}
-
 variable "anvil_domain" {
   description = "The domain used by the anvil nodes."
 }
