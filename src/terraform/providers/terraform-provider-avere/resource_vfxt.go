@@ -1066,6 +1066,11 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	log.Printf("[INFO] vfxt: ensure cluster is stable before deletion so vfxt.py will have a smooth deletion")
+	if err := avereVfxt.EnsureClusterStable(); err != nil {
+		return err
+	}
+
 	if err := avereVfxt.Platform.DestroyVfxt(avereVfxt); err != nil {
 		return fmt.Errorf("failed to destroy cluster: %s\n", err)
 	}
