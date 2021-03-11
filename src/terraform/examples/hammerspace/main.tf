@@ -10,6 +10,10 @@ locals {
     use_highly_available = false
     anvil_configuration = local.use_highly_available ? "High Availability" : "Standalone"
     
+    // add a globally uniquename
+    storage_account_name = "REPLACE_WITH_GLOBALLY_UNIQUE_NAME"
+    storage_container_name = "hammerspace"
+
     // virtual network and subnet details
     virtual_network_resource_group_name  = "network_resource_group"
     virtual_network_name                 = "rendervnet"
@@ -71,6 +75,21 @@ provider "azurerm" {
 resource "azurerm_resource_group" "nfsfiler" {
     name     = local.filer_resource_group_name
     location = local.location
+}
+
+resource "azurerm_storage_account" "storage" {
+  name                     = local.storage_account_name
+  resource_group_name      = azurerm_resource_group.nfsfiler.name
+  location                 = local.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+
+  depends_on = [azurerm_resource_group.nfsfiler]
+}
+
+resource "azurerm_storage_container" "blob_container" {
+  name                 = local.storage_container_name
+  storage_account_name = azurerm_storage_account.storage.name
 }
 
 // the ephemeral filer

@@ -1,4 +1,4 @@
-#!/usr/local/bin/python2
+#!/usr/bin/env python2
 import base64
 import json
 import logging
@@ -453,6 +453,8 @@ def addDefaultObjectives(anvilRest):
     objectives.append(AnvilObjective("WORM protection after 10 minutes","Turn on WORM protection after 10 minutes","IF MODIFY_AGE >10MINUTES THEN {SLO('deny-write'),SLO('deny-delete')}"))
     objectives.append(AnvilObjective("Prevent file deletion after 10 minutes","Prevent file deletion only after 10 minutes","IF MODIFY_AGE>10MINUTES THEN {SLO('deny-delete')}"))
     objectives.append(AnvilObjective("Block file access until keyword is set","Block file access until keyword scanned is set"," IF NOT HAS_KEYWORD(\"scanned\") THEN {SLO('block-read')}"))
+    objectives.append(AnvilObjective("keeponline","Keep Live Files Online","IF IS_LIVE THEN {SLO('keep-online')}"))
+    objectives.append(AnvilObjective("placeonsharedobjectvolume","Place Live Files On shared volumes","IF IS_LIVE THEN {SLO('place-on-shared-object-volumes')}"))
 
     for o in objectives:
         if not existingObjectives.has_key(o.name):
@@ -464,15 +466,19 @@ def usage():
 def main():
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
 
-    if len(sys.argv) <= 4:
+    if len(sys.argv) <= 3:
         logging.error("ERROR: incorrect number of arguments")
         usage()
         sys.exit(1)
     anvilAddress = sys.argv[1]
     anvilPassword = sys.argv[2]
     dsxCount = int(sys.argv[3])
-    sharePath = sys.argv[4]
-    
+
+    if len(sys.argv) <= 4:
+        sharePath = ""
+    else:
+        sharePath = sys.argv[4]
+
     anvilRest = AnvilRest(anvilAddress, anvilPassword)
 
     # wait for the port
@@ -491,7 +497,8 @@ def main():
         sys.exit(3)
 
     # create a share
-    addStorageShare(anvilRest, sharePath)
+    if sharePath != "":
+        addStorageShare(anvilRest, sharePath)
 
     # configure default objectives
     addDefaultObjectives(anvilRest)

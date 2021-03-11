@@ -16,6 +16,7 @@ variable "dsx_count" {
 
 variable "nfs_export_path" {
   description = "the nfs export path to export from the Hammerspace filer."
+  default = ""
 }
 
 variable "anvil_hostname" {
