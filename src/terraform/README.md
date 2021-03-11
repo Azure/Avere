@@ -48,6 +48,7 @@ The following examples provide end-to-end examples that implement the burst rend
 1. [Create a Linux based OpenCue managed render farm on Azure](examples/vfxt/opencue) - deploy an end to end render solution on Azure using OpenCue as your render manager.
 1. [Create a CentOS Custom  Image and scale on Azure](examples/centos) - shows how to create, upload, and deploy a centos custom image and then scale the image using VMSS.
 1. [Create a Windows Render Farm On Azure](examples/houdinienvironment) - this walks through a deployment of a Houdini render environment on Azure.
+1. [Create a multi-region render farm with a Hammerspace global file system on Azure](examples/hammerspace-multi-region) - this walks through a deployment of a Houdini render environment on Azure.
 
 ## Rendering Best Practices for Azure Compute, Network, and Storage
 

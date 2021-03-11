@@ -57,8 +57,9 @@ The machine is now ready to configure.
        <img src="images/attributeeditor.png" width="800">
     </p>
 
-1. Set the `uidNumber` and `gidNumber` to `1000` for azureuser since that is what is set for uid and gid in centos.
+1. For the user azureuser, set the `uidNumber` to an appropriate value, eg. `10000`.
 
+1. For the group `Domain Users`, set to `10513`.  This is the "primary group" of azureuser
 
 ## Add core NFS filer to DNS
 
