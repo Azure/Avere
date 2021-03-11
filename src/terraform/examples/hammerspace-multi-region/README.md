@@ -134,4 +134,3 @@ Use the windows templates to deploy into each region, and follow the steps:
 1. execute `terraform init` in the directory of `main.tf`.
 
 1. execute `terraform apply -auto-approve` to deploy the storage.
-
