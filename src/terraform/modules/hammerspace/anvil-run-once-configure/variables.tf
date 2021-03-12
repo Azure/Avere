@@ -15,7 +15,27 @@ variable "dsx_count" {
 }
 
 variable "nfs_export_path" {
-  description = "the nfs export path to export from the Hammerspace filer."
+  description = "the nfs export path to export from the Hammerspace filer, leave blank to not set"
+  default = ""
+}
+
+variable "local_site_name" {
+  description = "the local site name, leave blank to not set"
+  default = ""
+}
+
+variable "ad_domain" {
+  description = "the ad domainname, leave blank to not set"
+  default = ""
+}
+
+variable "ad_user" {
+  description = "the ad user, leave blank to not set"
+  default = ""
+}
+
+variable "ad_user_password" {
+  description = "the ad user password, leave blank to not set"
   default = ""
 }
 

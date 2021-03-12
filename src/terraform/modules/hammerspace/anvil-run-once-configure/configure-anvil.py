@@ -2,6 +2,7 @@
 import base64
 import json
 import logging
+import optparse
 import select
 import ssl
 import subprocess
@@ -259,6 +260,34 @@ class AnvilRest:
             else:
                 logging.error("unable to parse objective {}".format(j))
         return objectives
+    
+    def getAD(self):
+        logging.info("getting ad")
+        data = self.submitRetryableRequest(GetRequest, "ad", "")
+        if data is None:
+            return data
+        return json.loads(data)
+
+    def putAD(self, uuid, jsonObj):
+        logging.info("putting ad")
+        jsonText = json.dumps(jsonObj)
+        target = "ad/{}".format(uuid)
+        logging.info("PUT to {} '{}'".format(target, jsonText))
+        data = self.submitRetryableRequest(PutRequest, target, jsonText)
+
+    def getLocalSite(self):
+        logging.info("getting local site data")
+        data = self.submitRetryableRequest(GetRequest, "sites/local", "")
+        if data is None:
+            return data
+        return json.loads(data)
+
+    def putSite(self, uuid, jsonObj):
+        logging.info("putting local site data")
+        jsonText = json.dumps(jsonObj)
+        target = "sites/{}".format(uuid)
+        logging.info("PUT to {} '{}'".format(target, jsonText))
+        data = self.submitRetryableRequest(PutRequest, target, jsonText)
 
     def createShare(self, anvilShare):
         logging.info("creating share path '{}'".format(anvilShare))
@@ -436,6 +465,42 @@ def addStorageShare(anvilRest, sharePath):
     anvilSharePath = AnvilShare(name, sharePath, exportOptions, DEFAULT_MAX_SHARE_SIZE)
     anvilRest.createShare(anvilSharePath)
 
+def joinDomain(anvilRest, adName, adUser, adPassword):
+    logging.info("join domain '{}' with user '{}'".format(adName, adUser))
+    adConfigData = anvilRest.getAD()
+    if adConfigData is None:
+        logging.error("nothing returned from AD")
+        return
+    if len(adConfigData) == 0 or not adConfigData[0].has_key('joined') or not adConfigData[0].has_key('uoid') or not adConfigData[0]['uoid'].has_key('uuid'):
+        logging.error("missing keys returned from ad '{}'".format(adConfigData))
+        return
+    if adConfigData[0]['joined'] == True:
+        logging.info("already domain joined")
+        return
+    
+    uuid = adConfigData[0]['uoid']['uuid']
+    adConfigData[0]['joined'] = True
+    adConfigData[0]['domain'] = adName
+    adConfigData[0]['username'] = adUser
+    adConfigData[0]['password'] = adPassword
+    anvilRest.putAD(uuid, adConfigData[0])
+
+def updateSiteDisplayName(anvilRest, siteName):
+    logging.info("updating site display name to '{}'".format(siteName))
+    localSiteData = anvilRest.getLocalSite()
+    if localSiteData is None:
+        logging.error("nothing returned from local site data")
+        return
+    if len(localSiteData) == 0 or not localSiteData.has_key("uoid") or not localSiteData['uoid'].has_key('uuid') or not localSiteData.has_key('name'):
+        logging.error("missing keys returned from localSiteData '{}'".format(localSiteData))
+        return
+    if localSiteData['name'] == siteName:
+        logging.info("site name already set to {}".format(siteName))
+        return
+    uuid = localSiteData['uoid']['uuid']
+    localSiteData['name'] = siteName
+    anvilRest.putSite(uuid, localSiteData)
+
 def addDefaultObjectives(anvilRest):
     logging.info("add default objectives")
     existingObjectives = anvilRest.getObjectives()
@@ -460,25 +525,34 @@ def addDefaultObjectives(anvilRest):
         if not existingObjectives.has_key(o.name):
             anvilRest.createObjective(o)
 
-def usage():
-    logging.info("usage: {} ANVIL_ADDRESS ANVIL_PASSWORD DSX_COUNT SHARENAME".format(sys.argv[0]))
-
 def main():
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
 
-    if len(sys.argv) <= 3:
-        logging.error("ERROR: incorrect number of arguments")
-        usage()
+    # parse the options
+    usage = "usage: %prog [options] ANVIL_ADDRESS ANVIL_PASSWORD DSX_COUNT"
+    parser = optparse.OptionParser(usage)
+    parser.add_option("-s", "--share-name", dest="sharename", help="print the sharename", default="")
+    parser.add_option("-a", "--ad-name", dest="activeDirectoryName", help="the active directory to join", default="")
+    parser.add_option("-u", "--ad-user", dest="activeDirectoryUser", help="the active directory user", default="")
+    parser.add_option("-p", "--ad-password", dest="activeDirectoryPassword", help="the active directory password", default="")
+    parser.add_option("-n", "--name", dest="name", help="the visible name of the site", default="")
+    (options, args) = parser.parse_args()
+
+    if len(args) < 3:
+        parser.error("incorrect number of arguments")
         sys.exit(1)
-    anvilAddress = sys.argv[1]
-    anvilPassword = sys.argv[2]
-    dsxCount = int(sys.argv[3])
 
-    if len(sys.argv) <= 4:
-        sharePath = ""
-    else:
-        sharePath = sys.argv[4]
+    anvilAddress = args[0]
+    anvilPassword = args[1]
+    dsxCount = int(args[2])
 
+    sharePath = options.sharename
+    adName = options.activeDirectoryName
+    adUser = options.activeDirectoryUser
+    adPassword = options.activeDirectoryPassword
+    siteName = options.name
+    
+    # configure the rest API
     anvilRest = AnvilRest(anvilAddress, anvilPassword)
 
     # wait for the port
@@ -499,6 +573,13 @@ def main():
     # create a share
     if sharePath != "":
         addStorageShare(anvilRest, sharePath)
+
+    # domain join
+    if adName != "" and adUser != "" and adPassword != "":
+        joinDomain(anvilRest, adName, adUser, adPassword)
+
+    if siteName != "":
+        updateSiteDisplayName(anvilRest, siteName)
 
     # configure default objectives
     addDefaultObjectives(anvilRest)

@@ -40,6 +40,10 @@ locals {
     hammerspace_image_id_1 = ""
     hammerspace_image_id_2 = ""
     hammerspace_image_id_3 = ""
+    site1_sharename = ""
+    ad_domain = ""
+    ad_user = ""
+    ad_password = ""
     unique_name_1 = local.location1
     unique_name_2 = local.location2
     unique_name_3 = local.location3
@@ -222,6 +226,12 @@ module "anvil_configure1" {
     dsx_count                    = local.dsx_instance_count
     anvil_hostname               = length(module.anvil1.anvil_host_names) == 0 ? "" : module.anvil1.anvil_host_names[0]
 
+    nfs_export_path  = local.site1_sharename
+    local_site_name  = local.unique_name_1
+    ad_domain        = local.ad_domain
+    ad_user          = local.ad_user
+    ad_user_password = local.ad_password
+
     module_depends_on = module.anvil1.module_depends_on_ids
 }
 
@@ -278,6 +288,11 @@ module "anvil_configure2" {
     dsx_count                    = local.dsx_instance_count
     anvil_hostname               = length(module.anvil2.anvil_host_names) == 0 ? "" : module.anvil2.anvil_host_names[0]
 
+    local_site_name  = local.unique_name_2
+    ad_domain        = local.ad_domain
+    ad_user          = local.ad_user
+    ad_user_password = local.ad_password
+
     module_depends_on = module.anvil2.module_depends_on_ids
 }
 
@@ -333,6 +348,11 @@ module "anvil_configure3" {
     web_ui_password              = module.anvil3.web_ui_password
     dsx_count                    = local.dsx_instance_count
     anvil_hostname               = length(module.anvil3.anvil_host_names) == 0 ? "" : module.anvil3.anvil_host_names[0]
+
+    local_site_name  = local.unique_name_3
+    ad_domain        = local.ad_domain
+    ad_user          = local.ad_user
+    ad_user_password = local.ad_password
 
     module_depends_on = module.anvil3.module_depends_on_ids
 }

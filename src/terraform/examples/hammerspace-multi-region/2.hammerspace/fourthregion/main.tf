@@ -16,12 +16,15 @@ locals {
     storage_rg4_name = "${local.resource_group_unique_prefix}stgregion4"
     
     hammerspace_image_id_4 = ""
+    ad_domain = ""
+    ad_user = ""
+    ad_password = ""
     unique_name_4 = local.location4
     use_highly_available = false
     anvil_configuration = local.use_highly_available ? "High Availability" : "Standalone"
     // virtual network and subnet details
     data_subnet_mask_bits                = 25
-    anvil_data_cluster_ip_3              = "10.3.2.240" // leave blank to be dynamic
+    anvil_data_cluster_ip_4              = "10.3.2.240" // leave blank to be dynamic
     dsx_instance_count                   = 1
 
     // More sizes found here: https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
@@ -141,6 +144,11 @@ module "anvil_configure4" {
     web_ui_password              = module.anvil4.web_ui_password
     dsx_count                    = local.dsx_instance_count
     anvil_hostname               = length(module.anvil4.anvil_host_names) == 0 ? "" : module.anvil4.anvil_host_names[0]
+
+    local_site_name  = local.unique_name_4
+    ad_domain        = local.ad_domain
+    ad_user          = local.ad_user
+    ad_user_password = local.ad_password
 
     module_depends_on = module.anvil4.module_depends_on_ids
 }
