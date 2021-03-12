@@ -17,7 +17,7 @@ The deployment instructions configure the following in phases:
 1. **1.domaincontroller** - build a windows domain controller.
 1. **2.storage** - build hammerspace instances in each region.
 1. **3.cache** - build out the Avere Cache in one region and mount the storage.
-1. **4.workstations** - build out windows workstations in each region, and join the domain
+1. **4.windowsclient** - build out windows workstations in each region, and join the domain
 
 ## Pre-requisites
 
