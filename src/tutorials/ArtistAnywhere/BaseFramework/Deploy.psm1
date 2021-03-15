@@ -21,14 +21,14 @@ function Get-BaseFramework ($rootDirectory, $resourceGroupNamePrefix, $computeRe
     $networkDomain = $groupDeployment.properties.outputs.networkDomain.value
     New-TraceMessage $moduleName $true
 
-    # (02) Monitor Insight
-    $moduleName = "(02) Monitor Insight"
+    # (02) Monitor Insights
+    $moduleName = "(02) Monitor Insights"
     New-TraceMessage $moduleName $false
     $resourceGroupNameSuffix = ""
     $resourceGroupName = Set-ResourceGroup $resourceGroupNamePrefix $resourceGroupNameSuffix $computeRegionName
 
-    $templateFile = "$rootDirectory/$moduleDirectory/02-MonitorInsight.json"
-    $templateParameters = "$rootDirectory/$moduleDirectory/02-MonitorInsight.Parameters.json"
+    $templateFile = "$rootDirectory/$moduleDirectory/02-MonitorInsights.json"
+    $templateParameters = "$rootDirectory/$moduleDirectory/02-MonitorInsights.Parameters.json"
 
     $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateFile --parameters $templateParameters) | ConvertFrom-Json
     $logAnalytics = $groupDeployment.properties.outputs.logAnalytics.value

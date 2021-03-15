@@ -45,7 +45,7 @@
             "versionId": "1.2.0"
           },
           "machine": {
-            "size": "Standard_NV24",
+            "size": "Standard_NV12s_v3",
             "count": 0,
             "osEphemeralDisk": false,
             "priority": "Spot",
@@ -87,7 +87,7 @@
             "versionId": "1.2.0"
           },
           "machine": {
-            "size": "Standard_NV24",
+            "size": "Standard_NV12s_v3",
             "count": 0,
             "osEphemeralDisk": false,
             "priority": "Spot",

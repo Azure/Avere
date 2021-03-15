@@ -20,7 +20,7 @@ else # centOS7
 fi
 
 fileName="blender-2.92.0-linux64.tar.xz"
-downloadUrl="https://bit1.blob.core.windows.net/bin/Blender"
-curl -L -o $fileName $downloadUrl/$fileName
+containerUrl="https://bit1.blob.core.windows.net/bin/Blender"
+curl -L -o $fileName $containerUrl/$fileName
 tar -xJf $fileName
 mv blender-*/* .

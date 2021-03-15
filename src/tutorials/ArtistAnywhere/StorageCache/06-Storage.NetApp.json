@@ -22,7 +22,7 @@
     }
   },
   "variables": {
-    "netAppApiVersion": "2020-11-01",
+    "netAppApiVersion": "2020-12-01",
     "bytesPerTebibyte": 1099511627776,
     "bytesPerGibibyte": 1073741824
   },

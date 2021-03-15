@@ -9,6 +9,10 @@
     "virtualNetworkGateway": {
       "value": {
       }
+    },
+    "localNetworkGateway": {
+      "value": {
+      }
     }
   }
 }

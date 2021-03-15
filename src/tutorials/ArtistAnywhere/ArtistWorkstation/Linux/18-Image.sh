@@ -23,9 +23,9 @@ if $gpuNVIDIA; then
         yum -y install gcc
         yum -y install kernel-devel
     fi
-    downloadUrl="https://bit1.blob.core.windows.net/bin/Graphics/Linux"
     fileName="NVIDIA-Linux-x86_64-460.32.03-grid-azure.run"
-    curl -L -o $fileName $downloadUrl/$fileName
+    containerUrl="https://bit1.blob.core.windows.net/bin/Graphics/Linux"
+    curl -L -o $fileName $containerUrl/$fileName
     chmod +x $fileName
     ./$fileName -s
 fi

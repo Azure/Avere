@@ -18,7 +18,7 @@
       "value": [
         {
           "deploy": false,
-          "name": "RenderManagerL",
+          "name": "RenderManagerLC",
           "imageDefinitionName": "ServerLinux",
           "imageSourceType": "PlatformImage",
           "imageSourceVersion": "latest",
@@ -36,7 +36,7 @@
         },
         {
           "deploy": false,
-          "name": "RenderManagerW",
+          "name": "RenderManagerWC",
           "imageDefinitionName": "ServerWindows",
           "imageSourceType": "PlatformImage",
           "imageSourceVersion": "latest",

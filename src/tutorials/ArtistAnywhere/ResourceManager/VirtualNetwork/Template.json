@@ -16,6 +16,7 @@
     "virtualNetworkApiVersion": "2020-11-01",
     "virtualNetworkGatewayApiVersion": "2020-11-01",
     "localNetworkGatewayApiVersion": "2020-11-01",
+    "networkConnectionApiVersion": "2020-11-01",
     "publicIPAddressApiVersion": "2020-11-01"
   },
   "functions": [
@@ -94,7 +95,7 @@
         "gatewayType": "[parameters('virtualNetworkGateway').type]",
         "ipConfigurations": [
           {
-            "name": "ipConfig",
+            "name": "primary",
             "properties": {
               "subnet": {
                 "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, 'GatewaySubnet')]"
@@ -114,7 +115,32 @@
       "apiVersion": "[variables('localNetworkGatewayApiVersion')]",
       "location": "[resourceGroup().location]",
       "properties": {
-        "gatewayIpAddress": "[parameters('localNetworkGateway').ipAddress]"
+        "fqdn": "[parameters('localNetworkGateway').fqdn]",
+        "gatewayIpAddress": "[parameters('localNetworkGateway').ipAddress]",
+        "localNetworkAddressSpace": {
+          "addressPrefixes": "[parameters('localNetworkGateway').addressSpace]"
+        }
+      }
+    },
+    {
+      "condition": "[not(equals(parameters('localNetworkGateway').name, ''))]",
+      "type": "Microsoft.Network/connections",
+      "name": "[fx.GetResourceName(parameters('localNetworkGateway'))]",
+      "apiVersion": "[variables('networkConnectionApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworkGateways', fx.GetResourceName(parameters('virtualNetworkGateway')))]",
+        "[resourceId('Microsoft.Network/localNetworkGateways', fx.GetResourceName(parameters('localNetworkGateway')))]"
+      ],
+      "properties": {
+        "connectionType": "IPsec",
+        "sharedKey": "[parameters('localNetworkGateway').connectionKey]",
+        "virtualNetworkGateway1": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('virtualNetworkGateway').name)]"
+        },
+        "localNetworkGateway2": {
+          "id": "[resourceId('Microsoft.Network/localNetworkGateways', parameters('localNetworkGateway').name)]"
+        }
       }
     }
   ],

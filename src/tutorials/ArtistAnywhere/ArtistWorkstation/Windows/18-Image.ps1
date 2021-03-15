@@ -1,20 +1,26 @@
-Set-Location -Path "C:\Users\Default\Downloads"
+param (
+    [string] $gpuDriversUrl = "https://bit1.blob.core.windows.net/bin/Graphics/Windows",
+    [string] $gpuDriverNVIDIA = "461.09_grid_win10_server2016_server2019_64bit_azure_swl.exe",
+    [string] $gpuDriverAMD = "AMD-Azure-NVv4-Driver-20Q4.exe"
+)
 
-$keyName = "OOBE"
-$keyPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows"
-New-Item –Path $keyPath –Name $keyName -Force
-New-ItemProperty -Path "$keyPath\$keyName" -PropertyType "DWORD" -Name "DisablePrivacyExperience" -Value 1 -Force
+Set-Location -Path "C:\Users\Public\Downloads"
 
-DISM /Online /Enable-Feature /FeatureName:ClientForNFS-Infrastructure /All
-New-ItemProperty -Path HKLM:\\SOFTWARE\\Microsoft\\ClientForNFS\\CurrentVersion\\Default -Name AnonymousUid -PropertyType DWord -Value 0
-New-ItemProperty -Path HKLM:\\SOFTWARE\\Microsoft\\ClientForNFS\\CurrentVersion\\Default -Name AnonymousGid -PropertyType DWord -Value 0
-net stop nfsclnt
-net stop nfsrdr
-net start nfsrdr
-net start nfsclnt
+# $registryKeyName = "OOBE"
+# $registryKeyPath = "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows"
+# New-Item –Path $registryKeyPath –Name $registryKeyName -Force
+# New-ItemProperty -Path $registryKeyPath\$registryKeyName -PropertyType DWORD -Name "DisablePrivacyExperience" -Value 1 -Force
 
-$fileName = "452.57_grid_win10_server2016_server2019_64bit_international.exe"
-#$fileName = "AMD-Azure-NVv4-Driver-20Q1-Hotfix3.exe"
-$downloadUrl = "https://bit1.blob.core.windows.net/bin/Graphics"
-Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl/$fileName
-Start-Process -FilePath $fileName -ArgumentList "/s" -Wait
+# DISM /Online /Enable-Feature /FeatureName:ClientForNFS-Infrastructure /All
+# $registryKeyPath = "HKLM:\\SOFTWARE\\Microsoft\\ClientForNFS\\CurrentVersion\\Default"
+# New-ItemProperty -Path $registryKeyPath -Name AnonymousUid -PropertyType DWORD -Value 0
+# New-ItemProperty -Path $registryKeyPath -Name AnonymousGid -PropertyType DWORD -Value 0
+
+$processorInfo = Get-ComputerInfo | Select-Object -ExpandProperty "CsProcessors"
+if ($processorInfo.Manufacturer.Contains("AMD")) {
+    $fileName = $gpuDriverAMD
+} else {
+    $fileName = $gpuDriverNVIDIA
+}
+Invoke-WebRequest -OutFile $fileName -Uri $gpuDriversUrl/$fileName
+Start-Process -FilePath $fileName -ArgumentList "/S /NoReboot" -Wait

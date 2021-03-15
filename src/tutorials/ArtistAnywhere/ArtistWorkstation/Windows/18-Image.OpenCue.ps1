@@ -1,13 +1,13 @@
-Set-Location -Path "C:\Users\Default\Downloads"
+Set-Location -Path "C:\Users\Public\Downloads"
 
 $fileName = "python-3.7.9-amd64.exe"
-$downloadUrl = "https://bit1.blob.core.windows.net/bin/Python"
-Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl/$fileName
+$containerUrl = "https://bit1.blob.core.windows.net/bin/Python"
+Invoke-WebRequest -OutFile $fileName -Uri $containerUrl/$fileName
 Start-Process -FilePath $fileName -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1" -Wait
 
 $fileName = "OpenCue-v0.8.8.zip"
-$downloadUrl = "https://bit1.blob.core.windows.net/bin/OpenCue"
-Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl/$fileName
+$containerUrl = "https://bit1.blob.core.windows.net/bin/OpenCue"
+Invoke-WebRequest -OutFile $fileName -Uri $containerUrl/$fileName
 Expand-Archive -Path $fileName
 
 Set-Location -Path "OpenCue*/cuegui-*"

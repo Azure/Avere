@@ -14,8 +14,8 @@ param (
     # Set to true to optionally deploy an Azure 1st-party and/or 3rd-party storage service in the Azure storage region
     [object] $storageServiceDeploy = @{
         "netAppFiles" = $false # https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction
-        "hammerspace" = $false
-        "qumulo" = $false
+        "hammerspace" = $false # TBD
+        "qumulo" = $false      # TBD
     },
 
     # Set to true to deploy Azure HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) service
@@ -24,7 +24,7 @@ param (
     # Set the target Azure render farm deployment model, which defines the machine image customization process
     [object] $renderFarm = @{
         "managerType" = "OpenCue" # OpenCue[.HPC] or RoyalRender[.HPC]
-        "nodeTypes" = @("Linux", "Windows")
+        "nodeTypes" = @("Linux")
     },
 
     # The base Azure services framework (e.g., Virtual Network, Managed Identity, Key Vault, etc.)

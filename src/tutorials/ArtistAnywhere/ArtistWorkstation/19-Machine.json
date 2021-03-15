@@ -56,7 +56,7 @@
           ],
           "output": {
             "type": "string",
-            "value": "[if(endsWith(parameters('scriptFilePath'), '.ps1'), format('PowerShell.exe -ExecutionPolicy Unrestricted -File {0} {1}', parameters('scriptFilePath'), parameters('scriptParameters')), format('cat {0} | tr -d \r | {1} /bin/bash', parameters('scriptFilePath'), parameters('scriptParameters')))]"
+            "value": "[if(endsWith(parameters('scriptFilePath'), '.ps1'), format('PowerShell -ExecutionPolicy Unrestricted -File {0} {1}', parameters('scriptFilePath'), parameters('scriptParameters')), format('cat {0} | tr -d \r | {1} /bin/bash', parameters('scriptFilePath'), parameters('scriptParameters')))]"
           }
         }
       }
@@ -70,10 +70,9 @@
       "apiVersion": "[variables('networkInterfaceApiVersion')]",
       "location": "[resourceGroup().location]",
       "properties": {
-        "primary": true,
         "ipConfigurations": [
           {
-            "name": "ipConfig",
+            "name": "primary",
             "properties": {
               "subnet": {
                 "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"

@@ -76,7 +76,7 @@
         "gatewayType": "[parameters('networkGateway').type]",
         "ipConfigurations": [
           {
-            "name": "ipConfig",
+            "name": "primary",
             "properties": {
               "subnet": {
                 "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworks')[copyIndex()].name, 'GatewaySubnet')]"

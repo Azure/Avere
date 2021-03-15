@@ -10,7 +10,7 @@
     }
   },
   "variables": {
-    "cosmosDbApiVersion": "2021-01-15"
+    "cosmosDbApiVersion": "2021-03-01-preview"
   },
   "functions": [
     {

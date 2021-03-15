@@ -8,3 +8,11 @@ if $centOS8; then
 else # centOS7
     yum -y install nfs-utils
 fi
+
+if [ $teradiciLicenseKey != "" ]; then
+    yum -y install https://downloads.teradici.com/rhel/teradici-repo-latest.noarch.rpm
+    yum -y install epel-release
+    yum -y install usb-vhci
+    yum -y install pcoip-agent-graphics
+    pcoip-register-host --registration-code=$teradiciLicenseKey
+fi

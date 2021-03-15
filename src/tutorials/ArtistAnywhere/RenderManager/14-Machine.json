@@ -60,7 +60,7 @@
           ],
           "output": {
             "type": "string",
-            "value": "[if(endsWith(parameters('scriptFilePath'), '.ps1'), format('PowerShell.exe -ExecutionPolicy Unrestricted -File {0} {1}', parameters('scriptFilePath'), parameters('scriptParameters')), format('cat {0} | tr -d \r | {1} /bin/bash', parameters('scriptFilePath'), parameters('scriptParameters')))]"
+            "value": "[if(endsWith(parameters('scriptFilePath'), '.ps1'), format('PowerShell -ExecutionPolicy Unrestricted -File {0} {1}', parameters('scriptFilePath'), parameters('scriptParameters')), format('cat {0} | tr -d \r | {1} /bin/bash', parameters('scriptFilePath'), parameters('scriptParameters')))]"
           }
         }
       }
@@ -74,10 +74,9 @@
       "apiVersion": "[variables('networkInterfaceApiVersion')]",
       "location": "[resourceGroup().location]",
       "properties": {
-        "primary": true,
         "ipConfigurations": [
           {
-            "name": "ipConfig",
+            "name": "primary",
             "properties": {
               "subnet": {
                 "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
@@ -199,6 +198,7 @@
       "copy": {
         "count": "[length(parameters('virtualMachines'))]",
         "input": {
+          "name": "[parameters('virtualMachines')[copyIndex()].name]",
           "type": "[reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('virtualMachines')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType]",
           "host": "[if(parameters('virtualMachines')[copyIndex()].deploy, reference(resourceId('Microsoft.Network/networkInterfaces', parameters('virtualMachines')[copyIndex()].name), variables('virtualNetworkApiVersion')).ipConfigurations[0].properties.privateIPAddress, '')]"
         }

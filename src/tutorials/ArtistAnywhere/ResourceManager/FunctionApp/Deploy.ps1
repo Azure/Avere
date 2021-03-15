@@ -14,7 +14,7 @@ param (
     },
     $storageAccount = @{            # https://docs.microsoft.com/azure/storage/common/storage-introduction
         "name" = ""
-        "resourceGroupName" = ""
+        "resourceGroupName" = $resourceGroup.name
     }
 )
 

@@ -10,7 +10,7 @@
     }
   },
   "variables": {
-    "eventGridApiVersion": "2020-06-01"
+    "eventGridApiVersion": "2020-10-15-preview"
   },
   "functions": [
   ],

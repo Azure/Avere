@@ -18,7 +18,7 @@
       "value": [
         {
           "deploy": false,
-          "name": "RenderManagerL",
+          "name": "RenderManagerLC",
           "size": "Standard_D4s_v3",
           "image": {
             "definitionName": "ServerLinux",
@@ -32,7 +32,7 @@
         },
         {
           "deploy": false,
-          "name": "RenderManagerW",
+          "name": "RenderManagerWC",
           "size": "Standard_D4s_v3",
           "image": {
             "definitionName": "ServerWindows",
@@ -50,11 +50,11 @@
       "value": {
         "linux": {
           "scriptFilePath": "/tmp/14-Machine.sh",
-          "scriptParameters": "dataTierHost='rendermanager.postgres.database.azure.com' dataTierPort='5432' adminUsername='az' adminPassword='P@ssword1234' databaseName='OpenCue' databaseUsername='wrangler' databasePassword='P@ssword1234'"
+          "scriptParameters": "dataTierHost=rendermanager.postgres.database.azure.com dataTierPort=5432 adminUsername=az adminPassword=P@ssword1234 databaseName=OpenCue databaseUsername=wrangler databasePassword=P@ssword1234"
         },
         "windows": {
           "scriptFilePath": "C:\\Windows\\Temp\\14-Machine.ps1",
-          "scriptParameters": "-dataTierHost 'rendermanager.postgres.database.azure.com' -dataTierPort '5432' -adminUsername 'az' -adminPassword 'P@ssword1234' -databaseName 'OpenCue' -databaseUsername 'wrangler' -databasePassword 'P@ssword1234'"
+          "scriptParameters": "-dataTierHost rendermanager.postgres.database.azure.com -dataTierPort 5432 -adminUsername az -adminPassword P@ssword1234 -databaseName OpenCue -databaseUsername wrangler -databasePassword P@ssword1234"
         },
         "scriptParameters": {
           "dataTierHost": "rendermanager.postgres.database.azure.com",

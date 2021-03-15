@@ -36,16 +36,21 @@ param (
         "name" = ""
         "type" = "Vpn"
         "vpnGeneration" = "Generation2"
-        "vpnTier" = "VpnGw2"
+        "vpnTier" = "VpnGw2AZ"
         "vpnType" = "RouteBased"
         "publicAddress" = @{
-            "type" = "Basic"
-            "allocationMethod" = "Dynamic"
+            "type" = "Standard"
+            "allocationMethod" = "Static"
         }
     },
-    $localNetworkGateway = @{
+    $localNetworkGateway = @{   # https://docs.microsoft.com/azure/vpn-gateway/tutorial-site-to-site-portal#LocalNetworkGateway
         "name" = ""
+        "fqdn" = ""
         "ipAddress" = ""
+        "addressSpace" = @(
+            "0.0.0.0/32"
+        )
+        "connectionKey" = ""
     }
 )
 

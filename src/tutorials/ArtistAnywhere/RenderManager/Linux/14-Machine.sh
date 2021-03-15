@@ -10,13 +10,13 @@ dbName=$(echo $databaseName | tr "[:upper:]" "[:lower:]")
 pgAdmin="host=$dataTierHost port=$dataTierPort sslmode=require user=$adminUsername password=$adminPassword dbname=postgres"
 dbAdmin="host=$dataTierHost port=$dataTierPort sslmode=require user=$adminUsername password=$adminPassword dbname=$dbName"
 
-databaseExists=$(psql "$pgAdmin" -t -c "select datname from pg_catalog.pg_database where lower(datname) = '$dbName'")
-if [ ! $databaseExists ]; then
-    psql "$pgAdmin" -c "create database $dbName"
-    psql "$dbAdmin" -c "create user $databaseUsername with password '$databasePassword'"
-    psql "$dbAdmin" -c "alter default privileges in schema public grant all privileges on tables to $databaseUsername"
-    psql "$dbAdmin" -f opencue-bot-schema.sql
-    psql "$dbAdmin" -f opencue-bot-data.sql
+dbExists=$(psql -t -c "select datname from pg_catalog.pg_database where lower(datname) = '$dbName';" "$pgAdmin")
+if [ ! $dbExists ]; then
+    psql -c "create database $dbName;" "$pgAdmin"
+    psql -c "create user $databaseUsername with password '$databasePassword';" "$dbAdmin"
+    psql -c "alter default privileges in schema public grant all privileges on tables to $databaseUsername;" "$dbAdmin"
+    psql -f opencue-bot-schema.sql "$dbAdmin"
+    psql -f opencue-bot-data.sql "$dbAdmin"
 fi
 
 systemService="opencue-bot.service"

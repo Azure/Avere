@@ -6,14 +6,14 @@ param (
 
     $imageGallery = @{
         "name" = ""
-        "resourceGroupName" = ""
+        "resourceGroupName" = $resourceGroup.name
         "imageDefinitionName" = ""
         "imageVersionId" = "1.0.0"
     },
     # OR
     $managedImage = @{
         "name" = ""
-        "resourceGroupName" = ""
+        "resourceGroupName" = $resourceGroup.name
     },
 
     $virtualMachine = @{
@@ -33,7 +33,7 @@ param (
     $virtualNetwork = @{
         "name" = ""
         "subnetName" = ""
-        "resourceGroupName" = ""
+        "resourceGroupName" = $resourceGroup.name
     },
 
     $joinDomain = @{

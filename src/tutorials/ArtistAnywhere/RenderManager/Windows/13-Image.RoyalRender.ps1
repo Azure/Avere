@@ -1,1 +1,1 @@
-Set-Location -Path "C:\Users\Default\Downloads"
+Set-Location -Path "C:\Users\Public\Downloads"

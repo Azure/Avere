@@ -34,7 +34,7 @@ param (
     $virtualNetwork = @{            # https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview
         "name" = ""
         "subnetName" = ""
-        "resourceGroupName" = ""
+        "resourceGroupName" = $resourceGroup.name
     }
 )
 

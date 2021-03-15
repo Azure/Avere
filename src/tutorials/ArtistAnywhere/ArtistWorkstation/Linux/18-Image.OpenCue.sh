@@ -14,8 +14,8 @@ else # centOS7
 fi
 
 fileName="OpenCue-v0.8.8.zip"
-downloadUrl="https://bit1.blob.core.windows.net/bin/OpenCue"
-curl -L -o $fileName $downloadUrl/$fileName
+containerUrl="https://bit1.blob.core.windows.net/bin/OpenCue"
+curl -L -o $fileName $containerUrl/$fileName
 unzip $fileName
 
 pip3 install --upgrade pip

@@ -179,9 +179,17 @@ function Get-ExtensionParameters ($scriptFilePath, $scriptParameters) {
             $extensionParameters += " "
         }
         if ($scriptFilePath.EndsWith(".ps1")) {
-            $extensionParameters += "-" + $property.Name + " '" + $property.Value + "'"
+            if ($property.Value.ToString().Contains(" ")) {
+                $extensionParameters += "-" + $property.Name + " '" + $property.Value + "'"
+            } else {
+                $extensionParameters += "-" + $property.Name + " " + $property.Value
+            }
         } else {
-            $extensionParameters += $property.Name + "='" + $property.Value + "'"
+            if ($property.Value.ToString().Contains(" ")) {
+                $extensionParameters += $property.Name + "='" + $property.Value + "'"
+            } else {
+                $extensionParameters += $property.Name + "=" + $property.Value
+            }
         }
     }
     return $extensionParameters

@@ -133,10 +133,9 @@
         "[resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName'))]"
       ],
       "properties": {
-        "primary": true,
         "ipConfigurations": [
           {
-            "name": "ipConfig",
+            "name": "primary",
             "properties": {
               "subnet": {
                 "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"

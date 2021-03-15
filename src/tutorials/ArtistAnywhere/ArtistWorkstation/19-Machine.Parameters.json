@@ -19,7 +19,7 @@
         {
           "deploy": false,
           "name": "ArtistNL",
-          "size": "Standard_NV12",
+          "size": "Standard_NV12s_v3",
           "image": {
             "definitionName": "WorkstationLinux",
             "versionId": "1.0.0"
@@ -33,7 +33,7 @@
         {
           "deploy": false,
           "name": "ArtistNW",
-          "size": "Standard_NV12",
+          "size": "Standard_NV12s_v3",
           "image": {
             "definitionName": "WorkstationWindows",
             "versionId": "1.0.0"
