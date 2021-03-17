@@ -30,6 +30,7 @@ There are multiple video resources to help with learning about burst rendering o
 | [Making movie magic more affordable](https://customers.microsoft.com/en-us/story/jellyfishpictures) - By using Azure HPC resources, Jellyfish can bid on bigger jobs, better meet deadlines, and reduce capital and labor costs. | [![Making movie magic more affordable](https://ms-f7-sites-01-cdn.azureedge.net/docs/stories/jellyfishpictures/resources/6601324a-047e-488b-bbc5-bad3173f1b0f/1105644140099490900)](https://customers.microsoft.com/en-us/story/jellyfishpictures) |
 | [Visual Effects and Animation Rendering in Azure](https://azure.microsoft.com/en-us/resources/visual-effects-and-animation-rendering-in-azure/) | [Whitepaper](https://azure.microsoft.com/en-us/resources/visual-effects-and-animation-rendering-in-azure/) |
 | [Head-Turning Animation: ‘Bobbleheads: The Movie’ First Feature Completed Remotely on Microsoft Azure Using NVIDIA GPUs](https://blogs.nvidia.com/blog/2020/12/09/bobbleheads-the-movie/) - With post-production struck by the COVID-19 pandemic, Threshold Entertainment and Incessant Rain Studios use the cloud to bring 3D animators and VFX artists together from around the world. | [Blog Link](https://blogs.nvidia.com/blog/2020/12/09/bobbleheads-the-movie/) |
+| [GitOps for Azure Rendering](https://techcommunity.microsoft.com/t5/azure-storage/gitops-for-azure-rendering/ba-p/1326920) | [Blog](https://techcommunity.microsoft.com/t5/azure-storage/gitops-for-azure-rendering/ba-p/132692) |
 
 The remainder of this page provides Terraform infrastructure examples to build out the rendering architecture:
 1. [Full End-To-End Examples](#full-end-to-end-examples) - Full end to end examples in Linux and Windows.
@@ -123,6 +124,7 @@ The following terraform examples build out accessory rendering infrastructure su
 1. [SecuredImage](examples/securedimage) - shows how to create, upload, and deploy a custom image with an introduction to RBAC, Azure Governance, and Network.
 1. [Jumpbox](examples/jumpbox) - this deploys a VM pre-installed with pre-installed with az cli, terraform, golang, and the built avere provider
 Security.
+1. [Gnome + Nvidia Grid + Teradici PCoIP](examples/centosgridgpu) - this example deploys Gnome + Nvidia Grid + Teradici PCoIP.
 
 ## Terraform Modules
 
@@ -142,7 +144,8 @@ These modules provide core components for use with HPC Cache or Avere vFXT for A
 1. [VMSS Mount Script](modules/mount_nfs) - This module installs the mount bootstrap script for VMSS.
 1. [VD Bench Config Script](modules/vdbench_config) - this module configures an NFS share with the VDBench install tools.
 1. [VMSS Config Script](modules/vmss_config) - this module configures an NFS share with a round robin mount script.
-1. [Opencue Config Script](modules/opencue_config) - this module sets up the OpenCue RQD clients module..
+1. [Opencue Config Script](modules/opencue_config) - this module sets up the OpenCue RQD clients module.
+1. [Gnome + Nvidia Grid + Teradici PCoIP](modules/centosgridgpu) - this module deploys Gnome + Nvidia Grid + Teradici PCoIP.
 
 ### Controller and Jumpbox
 
