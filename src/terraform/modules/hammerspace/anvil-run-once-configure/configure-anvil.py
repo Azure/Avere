@@ -35,6 +35,8 @@ def createAnvilNode(jsonObj):
         return None
     if hasattr(jsonObj, "keys") and verifyKey("mgmtIpAddress",jsonObj) and verifyKey("address",jsonObj["mgmtIpAddress"]):
         address = jsonObj["mgmtIpAddress"]["address"]
+    elif hasattr(jsonObj, "keys") and verifyKey("endpoint",jsonObj):
+        address = jsonObj["endpoint"]
     else:
         return None
     return AnvilNode(name, address)
@@ -230,7 +232,7 @@ class AnvilRest:
             else:
                 logging.error("unable to parse volume {}".format(j))
         return volumeList
-    
+
     def getSharenames(self):
         logging.info("getting volumes")
         data = self.submitRetryableRequest(GetRequest, "shares", "")
@@ -288,6 +290,14 @@ class AnvilRest:
         target = "sites/{}".format(uuid)
         logging.info("PUT to {} '{}'".format(target, jsonText))
         data = self.submitRetryableRequest(PutRequest, target, jsonText)
+
+    def putAzureStorageAccount(self, storageAccount, storageAccountKey):
+        logging.info("putting local site data")
+        jsonObj = {"name":storageAccount,"nodeType":"AZURE","comment":"","mgmtIpAddress":{"address":""},"mgmtNodeCredentials":{"username":storageAccount,"password":storageAccountKey,"cert":""},"_type":"NODE","endpoint":None,"trustCertificate":False,"useVirtualHostNaming":False,"s3SigningType":None,"proxyInfo":None}
+        jsonText = json.dumps(jsonObj)
+        target = "nodes"
+        logging.info("POST to {} ".format(target))
+        data = self.submitNonRetryableRequest(PostRequest, target, jsonText)
 
     def createShare(self, anvilShare):
         logging.info("creating share path '{}'".format(anvilShare))
@@ -501,6 +511,31 @@ def updateSiteDisplayName(anvilRest, siteName):
     localSiteData['name'] = siteName
     anvilRest.putSite(uuid, localSiteData)
 
+def waitForAzureStorage(anvilRest, storageAccount):
+    logging.info("waiting for storage account {}".format(storageAccount))
+    for i in xrange(MAX_RETRIES):
+        count = 0
+        nodes = anvilRest.getNodes()
+        for n in nodes:
+            if storageAccount in n.name:
+                return
+        logging.info("try {} of {} waiting for storage account {}".format(i+1, MAX_RETRIES, storageAccount))
+        time.sleep(SLEEP_TIME)
+
+def addAzureStorage(anvilRest, storageAccount, storageAccountKey, storageAccountContainer):
+    logging.info("adding azure storage account '{}'".format(storageAccount))
+    nodes = anvilRest.getNodes()
+    for node in nodes:
+        if node.name == storageAccount:
+            logging.info("storage account already exists {}".format(storageAccount))
+            return
+    
+    anvilRest.putAzureStorageAccount(storageAccount, storageAccountKey)
+    waitForAzureStorage(anvilRest, storageAccount)
+    # best effort run to add the volume
+    if storageAccountContainer != "":
+        os.system("/bin/pdcli object-volume-add --native --no-compression --node-name {} --shared --logical-volume-name {}".format(storageAccount, storageAccountContainer))
+    
 def addDefaultObjectives(anvilRest):
     logging.info("add default objectives")
     existingObjectives = anvilRest.getObjectives()
@@ -536,6 +571,9 @@ def main():
     parser.add_option("-u", "--ad-user", dest="activeDirectoryUser", help="the active directory user", default="")
     parser.add_option("-p", "--ad-password", dest="activeDirectoryPassword", help="the active directory password", default="")
     parser.add_option("-n", "--name", dest="name", help="the visible name of the site", default="")
+    parser.add_option("--azure-account", dest="azureAccount", help="the azure storage account name", default="")
+    parser.add_option("--azure-account-key", dest="azureAccountKey", help="the azure storage account key", default="")
+    parser.add_option("--azure-account-container", dest="azureAccountContainer", help="the azure storage account container", default="")
     (options, args) = parser.parse_args()
 
     if len(args) < 3:
@@ -551,6 +589,9 @@ def main():
     adUser = options.activeDirectoryUser
     adPassword = options.activeDirectoryPassword
     siteName = options.name
+    azureAccount = options.azureAccount
+    azureAccountKey = options.azureAccountKey
+    azureAccountContainer = options.azureAccountContainer
     
     # configure the rest API
     anvilRest = AnvilRest(anvilAddress, anvilPassword)
@@ -580,6 +621,9 @@ def main():
 
     if siteName != "":
         updateSiteDisplayName(anvilRest, siteName)
+
+    if azureAccount != "" and azureAccountKey != "":
+        addAzureStorage(anvilRest, azureAccount, azureAccountKey, azureAccountContainer)
 
     # configure default objectives
     addDefaultObjectives(anvilRest)

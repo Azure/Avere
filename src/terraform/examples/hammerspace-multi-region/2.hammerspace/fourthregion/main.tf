@@ -7,6 +7,13 @@ locals {
     network-region4-cloud_filers_ha_subnet_name = ""
     network-region4-cloud_filers_subnet_name = ""
     resource_group_unique_prefix = ""
+    storage_account_name1_rg = ""
+    storage_account_name1 = ""
+    storage_container_name = ""
+
+    // add the shared storage accounta globally uniquename
+    storage_account_name1 = "${local.storage_account_unique_name}${local.location1}"
+    storage_container_name = "sharedglobalstorage"
     
     // set the following variables to appropriate values
     admin_username = "azureuser"
@@ -88,6 +95,11 @@ resource "azurerm_resource_group" "nfsfiler4" {
     location = local.location4
 }
 
+data "azurerm_storage_account" "sharedstorageaccount" {
+  name                = local.storage_account_name1
+  resource_group_name = local.storage_account_name1_rg
+}
+
 ////////////////////////////////////////////////////////////////
 // Hammerspace
 ////////////////////////////////////////////////////////////////
@@ -149,6 +161,10 @@ module "anvil_configure4" {
     ad_domain        = local.ad_domain
     ad_user          = local.ad_user
     ad_user_password = local.ad_password
+
+    azure_storage_account = local.storage_account_name1
+    azure_storage_account_key = data.azurerm_storage_account.sharedstorageaccount.primary_access_key
+    azure_storage_account_container = local.storage_container_name
 
     module_depends_on = module.anvil4.module_depends_on_ids
 }

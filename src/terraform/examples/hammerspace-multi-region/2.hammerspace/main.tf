@@ -232,6 +232,10 @@ module "anvil_configure1" {
     ad_user          = local.ad_user
     ad_user_password = local.ad_password
 
+    azure_storage_account = local.storage_account_name1
+    azure_storage_account_key = azurerm_storage_account.storage1.primary_access_key
+    azure_storage_account_container = local.storage_container_name
+
     module_depends_on = module.anvil1.module_depends_on_ids
 }
 
@@ -292,6 +296,10 @@ module "anvil_configure2" {
     ad_domain        = local.ad_domain
     ad_user          = local.ad_user
     ad_user_password = local.ad_password
+
+    azure_storage_account = local.storage_account_name1
+    azure_storage_account_key = azurerm_storage_account.storage1.primary_access_key
+    azure_storage_account_container = local.storage_container_name
 
     module_depends_on = module.anvil2.module_depends_on_ids
 }
@@ -354,6 +362,10 @@ module "anvil_configure3" {
     ad_user          = local.ad_user
     ad_user_password = local.ad_password
 
+    azure_storage_account = local.storage_account_name1
+    azure_storage_account_key = azurerm_storage_account.storage1.primary_access_key
+    azure_storage_account_container = local.storage_container_name
+
     module_depends_on = module.anvil3.module_depends_on_ids
 }
 
@@ -399,4 +411,16 @@ output "nfs_mountable_ips_3" {
 
 output "ssh_command_jb1" {
     value = "ssh ${module.jumpbox1.jumpbox_username}@${module.jumpbox1.jumpbox_address}"
+}
+
+output "storage_account_name1_rg" {
+    value = azurerm_resource_group.nfsfiler1.name
+}
+
+output "storage_account_name1" {
+    value = local.storage_account_name1
+}
+
+output "storage_container_name" {
+    value = local.storage_container_name
 }
