@@ -3,6 +3,7 @@ import base64
 import json
 import logging
 import optparse
+import os
 import select
 import ssl
 import subprocess
