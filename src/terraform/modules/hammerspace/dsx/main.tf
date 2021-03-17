@@ -78,7 +78,7 @@ resource "azurerm_linux_virtual_machine" "dsxvm" {
 }
 
 resource "azurerm_managed_disk" "dsxvm" {
-  count                = var.dsx_instance_count
+  count                = var.dsx_data_disk_size == 0 ? 0 : var.dsx_instance_count
   name                 = "${local.dsx_host_names[count.index]}-datadisk"
   location             = var.location
   resource_group_name  = var.resource_group_name
@@ -88,7 +88,7 @@ resource "azurerm_managed_disk" "dsxvm" {
 }
 
 resource "azurerm_virtual_machine_data_disk_attachment" "dsxvm" {
-  count              = var.dsx_instance_count
+  count              = var.dsx_data_disk_size == 0 ? 0 : var.dsx_instance_count
   managed_disk_id    = azurerm_managed_disk.dsxvm[count.index].id
   virtual_machine_id = azurerm_linux_virtual_machine.dsxvm[count.index].id
   lun                = "1"
@@ -112,6 +112,6 @@ SETTINGS
 
   // unable to use the depends on clause, so using tags to create the same effect
   tags = {
-      dependson = azurerm_virtual_machine_data_disk_attachment.dsxvm[count.index].id
+      dependson = var.dsx_data_disk_size == 0 ? "nodepends" : azurerm_virtual_machine_data_disk_attachment.dsxvm[count.index].id
   }
 }

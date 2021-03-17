@@ -10,6 +10,8 @@ To use this example, please contact a [Hammerspace representative](https://hamme
 
 Once you have the Hammerspace Image ID, use the [Hammerspace Image copy instructions](HammerspaceCopyImage.md) to copy the image, and now you will be ready to deploy, and can proceed to the deployment instructions.
 
+Visit the Rendering SKUs page to see the recommended [Hammerspace SKUs for rendering](../../modules/hammerspace/hammerspaceskus.md).
+
 ## Deployment Instructions
 
 The deployment instructions configure the following in phases:
@@ -55,7 +57,7 @@ The first step is to setup the Virtual Network, subnets, and network security gr
 
 1. continuing from the previous instructions browse to the houdini network directory: `cd ~/tf/src/terraform/examples/hammerspace-multi-region/0.network`
 
-1. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.
+1. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  Visit the Rendering SKUs page to see the recommended [Hammerspace SKUs for rendering](../../modules/hammerspace/hammerspaceskus.md).
 
 1. execute `terraform init` in the directory of `main.tf`.
 
