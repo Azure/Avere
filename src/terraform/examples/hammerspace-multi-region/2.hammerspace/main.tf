@@ -56,6 +56,52 @@ locals {
     anvil_data_cluster_ip_3              = "10.2.2.240" // leave blank to be dynamic
     dsx_instance_count                   = 1
 
+    region1_configuration = local.render_configuration
+    region2_configuration = local.artist_configuration
+    region3_configuration = local.artist_configuration
+
+    test_configuration = {
+        use_highly_available  = false
+        anvil_instance_type   = "Standard_F8s_v2"
+        metadata_disk_size_gb = 127
+        
+        dsx_instance_count    = 1
+        dsx_instance_type     = "Standard_F8s_v2"
+        datadisk_size_gb      = 511
+
+        storage_account_type = "Standard_LRS"
+        // storage_account_type = "StandardSSD_LRS"
+        // storage_account_type = "Premium_LRS"
+    }
+
+    artist_configuration = {
+        use_highly_available  = false
+        anvil_instance_type   = "Standard_F16s_v2"
+        dsx_instance_count    = 3
+        
+        dsx_instance_type     = "Standard_DS14_v2"
+        metadata_disk_size_gb = 256
+        datadisk_size_gb      = 1024
+
+        // storage_account_type = "Standard_LRS"
+        // storage_account_type = "StandardSSD_LRS"
+        storage_account_type = "Premium_LRS"
+    }
+
+    render_configuration = {
+        use_highly_available  = false
+        anvil_instance_type   = "Standard_F16s_v2"
+        metadata_disk_size_gb = 256
+        
+        dsx_instance_count    = 3
+        dsx_instance_type     = "Standard_L32s_v2"
+        datadisk_size_gb      = 0
+
+        // storage_account_type = "Standard_LRS"
+        // storage_account_type = "StandardSSD_LRS"
+        storage_account_type = "Premium_LRS"
+    }
+
     // More sizes found here: https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
     anvil_instance_type = "Standard_F8s_v2"
     // anvil_instance_type = "Standard_F16s_v2"
