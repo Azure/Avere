@@ -39,6 +39,21 @@ variable "ad_user_password" {
   default = ""
 }
 
+variable "azure_storage_account" {
+  description = "the azure storage account name"
+  default = ""
+}
+
+variable "azure_storage_account_key" {
+  description = "the azure storage account key"
+  default = ""
+}
+
+variable "azure_storage_account_container" {
+  description = "the azure storage account container"
+  default = ""
+}
+
 variable "anvil_hostname" {
   description = "the anvil hostname"
 }
