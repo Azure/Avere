@@ -20,17 +20,15 @@ param (
             "version" = "latest"
         }
         "osDisk" = @{
-            "caching" = "ReadOnly"
             "storageAccountType" = "Premium_LRS"
         }
         "login" = @{
             "adminUsername" = ""
             "adminPassword" = ""
         }
-        "managedIdentity" = @{
-            "type" = "None"             # None, SystemAssigned or UserAssigned
-            "name" = ""
-            "resourceGroupName" = $resourceGroup.name
+        "managedIdentity" = @{          # https://docs.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview
+            "name" = $virtualMachine.name
+            "type" = "UserAssigned"     # None, SystemAssigned or UserAssigned
         }
         "scriptExtension" = @{          # https://docs.microsoft.com/azure/virtual-machines/extensions/custom-script-linux
             "enable" = $false           # https://docs.microsoft.com/azure/virtual-machines/extensions/custom-script-windows
@@ -91,7 +89,7 @@ function Get-ScriptCommand ($scriptFile, $scriptParameters) {
 az group create --name $resourceGroup.name --location $resourceGroup.regionName
 
 if ($virtualMachine.managedIdentity.type -eq "UserAssigned") {
-    az identity create --resource-group $virtualMachine.managedIdentity.resourceGroupName --name $virtualMachine.managedIdentity.name
+    az identity create --resource-group $resourceGroup.name --name $virtualMachine.managedIdentity.name
 }
 
 $templateFile = "$PSScriptRoot/Template.json"

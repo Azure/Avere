@@ -24,7 +24,7 @@
   "variables": {
     "imageGalleryApiVersion": "2020-09-30",
     "virtualNetworkApiVersion": "2020-11-01",
-    "virtualMachineApiVersion": "2020-12-01",
+    "virtualMachineApiVersion": "2021-03-01",
     "networkInterfaceApiVersion": "2020-11-01"
   },
   "functions": [
@@ -123,7 +123,6 @@
             "id": "[resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images/versions', parameters('imageGallery').name, parameters('virtualMachines')[copyIndex()].image.definitionName, parameters('virtualMachines')[copyIndex()].image.versionId)]"
           },
           "osDisk": {
-            "caching": "ReadOnly",
             "createOption": "FromImage"
           }
         },

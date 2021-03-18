@@ -1,61 +1,108 @@
 param (
     $resourceGroup = @{
         "name" = ""
-        "regionName" = "WestUS" # https://azure.microsoft.com/global-infrastructure/geographies/
+        "regionName" = "WestUS"         # https://azure.microsoft.com/global-infrastructure/geographies/
     },
-
-    $imageGallery = @{
+    $virtualMachineScaleSet = @{        # https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview
         "name" = ""
-        "resourceGroupName" = $resourceGroup.name
-        "imageDefinitionName" = ""
-        "imageVersionId" = "1.0.0"
-    },
-    # OR
-    $managedImage = @{
-        "name" = ""
-        "resourceGroupName" = $resourceGroup.name
-    },
-
-    $virtualMachine = @{
-        "scaleSetName" = "renderFarm"
-        "namePrefix" = "render"
-        "instanceCount" = 0
-        "instanceSize" = "Standard_HB120rs_v2"
-        "osEphemeralDisk" = $false
-        "evictionPolicy" = "Delete"
+        "image" = @{
+            "name" = ""
+            "resourceGroupName" = $resourceGroup.name
+            # OR
+            "galleryName" = ""
+            "definitionName" = ""
+            "versionId" = "1.0.0"
+            # OR
+            "publisher" = ""
+            "offer" = ""
+            "sku" = ""
+            "version" = "latest"
+        }
+        "machine" = @{
+            "size" = ""
+            "count" = 0
+            "priority" = "Spot"
+            "evictionPolicy" = "Delete"
+            "maxPrice" = ""
+        }
+        "osDisk" = @{
+            "storageAccountType" = "Standard_LRS"
+            "enableEphemeral" = $false
+        }
+        "login" = @{
+            "adminUsername" = ""
+            "adminPassword" = ""
+            "sshPublicKeyData" = ""
+        }
+        "managedIdentity" = @{          # https://docs.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview
+            "name" = $virtualMachineScaleSet.name
+            "type" = "UserAssigned"     # None, SystemAssigned or UserAssigned
+        }
+        "scriptExtension" = @{          # https://docs.microsoft.com/azure/virtual-machines/extensions/custom-script-linux
+            "enable" = $false           # https://docs.microsoft.com/azure/virtual-machines/extensions/custom-script-windows
+            "command" = ""
+            "parameters" = ""
+            "domainName" = ""
+        }
+        "faultDomainCount" = 1
         "upgradePolicy" = "Manual"
-        "priority" = "Spot"
-        "maxPrice" = ""
-        "username" = "az"
-        "password" = "P@ssword1234"
+        "singlePlacementGroup" = $false
+        "overprovision" = $false
     },
-
-    $virtualNetwork = @{
+    $virtualNetwork = @{                # https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview
         "name" = ""
         "subnetName" = ""
         "resourceGroupName" = $resourceGroup.name
-    },
-
-    $joinDomain = @{
-        "name" = "media.studio"
-        "ouPath" = "OU=render,DC=media,DC=studio"
-        "options" = 3 # https://docs.microsoft.com/windows/win32/cimwin32prov/joindomainorworkgroup-method-in-class-win32-computersystem
-        "username" = ""
-        "password" = ""
     }
 )
 
+function Get-ScriptCommand ($scriptFile, $scriptParameters) {
+    $scriptText = Get-Content $scriptFile -Raw
+    if ($scriptFile.EndsWith(".ps1")) {
+        $scriptText = "& {" + $scriptText + "} " + $scriptParameters
+    } else {
+        $scriptCommand = $scriptText
+    }
+    $scriptCommand = [System.Text.Encoding]::Unicode.GetBytes($scriptText)
+    return [Convert]::ToBase64String($scriptCommand)
+}
+
 az group create --name $resourceGroup.name --location $resourceGroup.regionName
+
+if ($virtualMachineScaleSet.managedIdentity.type -eq "UserAssigned") {
+    az identity create --resource-group $resourceGroup.name --name $virtualMachineScaleSet.managedIdentity.name
+}
 
 $templateFile = "$PSScriptRoot/Template.json"
 $templateParameters = "$PSScriptRoot/Template.Parameters.json"
 
+if ($virtualMachineScaleSet.image.name -ne "") {
+    $image = (az image show --resource-group $virtualMachineScaleSet.image.resourceGroupName --name $virtualMachineScaleSet.image.name) | ConvertFrom-Json
+    $osType = $image.storageProfile.osDisk.osType
+} elseif ($virtualMachineScaleSet.image.galleryName -ne "") {
+    $imageDefinition = (az sig image-definition show --resource-group $virtualMachineScaleSet.image.resourceGroupName --gallery-name $virtualMachineScaleSet.image.galleryName --gallery-image-definition $virtualMachineScaleSet.image.definitionName) | ConvertFrom-Json
+    $osType = $imageDefinition.osType
+} else {
+    $imageId = $virtualMachineScaleSet.image.publisher + ":" + $virtualMachineScaleSet.image.offer + ":" + $virtualMachineScaleSet.image.sku + ":" + $virtualMachineScaleSet.image.version
+    $image = (az vm image show --urn $imageId) | ConvertFrom-Json
+    $osType = $image.osDiskImage.operatingSystem
+}
+
+if ($virtualMachineScaleSet.scriptExtension.enable) {
+    if ($osType -eq "Windows") {
+        $scriptParameters = "-domainName " + $virtualMachineScaleSet.scriptExtension.domainName
+        $scriptCommand = Get-ScriptCommand "$PSScriptRoot/Customize.ps1" $scriptParameters
+    } else {
+        $scriptParameters = "domainName=" + $virtualMachineScaleSet.scriptExtension.domainName
+        $scriptCommand = Get-ScriptCommand "$PSScriptRoot/Customize.sh" $scriptParameters
+    }
+    $virtualMachineScaleSet.scriptExtension.command = $scriptCommand
+    $virtualMachineScaleSet.scriptExtension.parameters = $scriptParameters
+}
+
 $templateConfig = Get-Content -Path $templateParameters -Raw | ConvertFrom-Json
-$templateConfig.parameters.managedImage.value = $managedImage
-$templateConfig.parameters.imageGallery.value = $imageGallery
-$templateConfig.parameters.virtualMachine.value = $virtualMachine
+$templateConfig.parameters.virtualMachineScaleSet.value = $virtualMachineScaleSet
 $templateConfig.parameters.virtualNetwork.value = $virtualNetwork
-$templateConfig.parameters.joinDomain.value = $joinDomain
 $templateConfig | ConvertTo-Json -Depth 5 | Out-File $templateParameters
 
 az deployment group create --resource-group $resourceGroup.name --template-file $templateFile --parameters $templateParameters

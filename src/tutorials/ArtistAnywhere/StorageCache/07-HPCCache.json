@@ -34,7 +34,7 @@
     }
   },
   "variables": {
-    "cacheApiVersion": "2020-10-01"
+    "cacheApiVersion": "2021-03-01"
   },
   "functions": [
     {

@@ -23,7 +23,7 @@
   },
   "variables": {
     "imageGalleryApiVersion": "2020-09-30",
-    "virtualMachineScaleSetApiVersion": "2020-12-01"
+    "virtualMachineScaleSetApiVersion": "2021-03-01"
   },
   "functions": [
     {
@@ -89,6 +89,7 @@
               {
                 "name": "networkInterface",
                 "properties": {
+                  "primary": true,
                   "ipConfigurations": [
                     {
                       "name": "primary",
@@ -108,7 +109,6 @@
               "id": "[resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images/versions', parameters('imageGallery').name, parameters('virtualMachines')[copyIndex()].image.definitionName, parameters('virtualMachines')[copyIndex()].image.versionId)]"
             },
             "osDisk": {
-              "caching": "ReadOnly",
               "createOption": "FromImage",
               "diffDiskSettings": "[if(parameters('virtualMachines')[copyIndex()].machine.osEphemeralDisk, json('{\"option\": \"Local\"}'), json('null'))]"
             }

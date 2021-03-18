@@ -18,35 +18,86 @@
   "variables": {
     "keyVaultApiVersion": "2019-09-01",
     "batchAccountApiVersion": "2021-01-01",
-    "privateEndpointApiVersion": "2020-11-01"
+    "storageAccountApiVersion": "2021-01-01",
+    "networkEndpointApiVersion": "2020-11-01"
   },
   "functions": [
   ],
   "resources": [
     {
+      "condition": "[parameters('batchAccount').userSubscriptionMode]",
+      "type": "Microsoft.KeyVault/vaults",
+      "name": "[parameters('keyVault').name]",
+      "apiVersion": "[variables('keyVaultApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "sku": {
+          "name": "[parameters('keyVault').tier]",
+          "family": "A"
+        },
+        "tenantId": "[subscription().tenantId]",
+        "enabledForDeployment": "[parameters('keyVault').enableDeployment]",
+        "enabledForDiskEncryption": "[parameters('keyVault').enableDiskEncryption]",
+        "enabledForTemplateDeployment": "[parameters('keyVault').enableTemplateDeployment]",
+        "enableRbacAuthorization": "[parameters('keyVault').enableRbacAuthorization]",
+        "enablePurgeProtection": "[if(parameters('keyVault').enablePurgeProtection, true(), json('null'))]",
+        "softDeleteRetentionInDays": "[parameters('keyVault').softDeleteRetentionDays]",
+        "accessPolicies": [
+          {
+            "tenantId": "[subscription().tenantId]",
+            "objectId": "f520d84c-3fd3-4cc8-88d4-2ed25b00d27a",
+            "permissions": {
+              "secrets": [
+                "Get",
+                "List",
+                "Set",
+                "Delete"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[parameters('storageAccount').name]",
+      "apiVersion": "[variables('storageAccountApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "kind": "[parameters('storageAccount').type]",
+      "sku": {
+        "name": "[parameters('storageAccount').replication]"
+      },
+      "properties": {
+      }
+    },
+    {
       "type": "Microsoft.Batch/batchAccounts",
       "name": "[parameters('batchAccount').name]",
       "apiVersion": "[variables('batchAccountApiVersion')]",
       "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name)]",
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccount').name)]"
+      ],
+      "identity": {
+        "type": "[parameters('batchAccount').managedIdentity.type]",
+        "userAssignedIdentities": "[if(equals(parameters('batchAccount').managedIdentity.type, 'UserAssigned'), json(concat('{\"', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('batchAccount').managedIdentity.name), '\": {}}')), json('null'))]"
+      },
       "properties": {
-        "poolAllocationMode": "[parameters('batchAccount').poolAllocationMode]",
+        "poolAllocationMode": "[if(parameters('batchAccount').userSubscriptionMode, 'UserSubscription', 'BatchService')]",
+        "publicNetworkAccess": "[if(parameters('batchAccount').publicNetworkAccess, 'Enabled', 'Disabled')]",
         "autoStorage": {
-          "storageAccountId": "[resourceId(parameters('storageAccount').resourceGroupName, 'Microsoft.Storage/storageAccounts', parameters('storageAccount').name)]"
+          "storageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccount').name)]"
         },
-        "keyVaultReference": {
-          "id": "[resourceId(parameters('keyVault').resourceGroupName, 'Microsoft.KeyVault/vaults', parameters('keyVault').name)]",
-          "url": "[reference(resourceId(parameters('keyVault').resourceGroupName, 'Microsoft.KeyVault/vaults', parameters('keyVault').name), variables('keyVaultApiVersion')).vaultUri]"
-        },
-        "encryption": {
-          "keySource": "Microsoft.Batch"
-        }
+        "keyVaultReference": "[if(parameters('batchAccount').userSubscriptionMode, json(concat('{\"id\": \"', resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name), '\", \"url\": \"', reference(resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name), variables('keyVaultApiVersion')).vaultUri, '\"}')), json('null'))]",
+        "encryption": "[if(parameters('batchAccount').userSubscriptionMode, json(concat('{\"keySource\": \"Microsoft.Batch\"}')), json('null'))]"
       }
     },
     {
-      "condition": "[parameters('batchAccount').enablePrivateEndpoint]",
+      "condition": "[not(parameters('batchAccount').publicNetworkAccess)]",
       "type": "Microsoft.Network/privateEndpoints",
       "name": "[parameters('batchAccount').name]",
-      "apiVersion": "[variables('privateEndpointApiVersion')]",
+      "apiVersion": "[variables('networkEndpointApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Batch/batchAccounts', parameters('batchAccount').name)]"
@@ -57,7 +108,7 @@
         },
         "privateLinkServiceConnections": [
           {
-            "name": "[concat(parameters('batchAccount').name, '.Batch')]",
+            "name": "[parameters('batchAccount').name]",
             "properties": {
               "privateLinkServiceId": "[resourceId('Microsoft.Batch/batchAccounts', parameters('batchAccount').name)]",
               "groupIds": [
@@ -70,7 +121,7 @@
     }
   ],
   "outputs": {
-    "renderManager": {
+    "batchAccount": {
       "type": "object",
       "value": {
         "name": "[parameters('batchAccount').name]",
