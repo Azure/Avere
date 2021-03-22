@@ -13,3 +13,5 @@ pcoip-register-host --registration-code='REPLACE_WITH_LICENSE_KEY'
 ```
 
 To connect, you must download the Teradici PCoIP client from https://docs.teradici.com/find/product/cloud-access-software.
+
+To use the client you will connectivity to TCP Ports **443,4172,60443**, and **UDP port 4172**.

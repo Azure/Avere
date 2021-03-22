@@ -88,8 +88,17 @@ variable "module_depends_on" {
 }
 
 variable "open_external_ports" {
-    default = [22]
-    description = "these are the ports to open externally on the jumpbox subnet, default is 22"
+    default = [22,3389]
+    # ports 443, 4172, 60443 required for terradici
+    # default = [22,3389,443,4172,60443]
+    description = "these are the tcp ports to open externally on the jumpbox subnet"
+}
+
+variable "open_external_udp_ports" {
+    default = []
+    # ports 4172 required for terradici
+    # default = [4172]
+    description = "these are the udp ports to open externally on the jumpbox subnet"
 }
 
 variable "open_external_sources" {
