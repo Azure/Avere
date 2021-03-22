@@ -152,7 +152,7 @@ idna==2.8
 invoke==1.2.0
 ipaddress==1.0.22
 isodate==0.6.0
-Jinja2==2.10.1
+Jinja2==2.11.3
 jmespath==0.9.3
 keyring==13.2.1
 knack==0.6.2
