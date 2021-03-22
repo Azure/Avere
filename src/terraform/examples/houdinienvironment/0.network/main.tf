@@ -30,7 +30,8 @@ module "network" {
     open_external_sources                 = local.open_external_sources
     vnet_address_space                    = "10.0.0.0/16"
     subnet_cloud_cache_address_prefix     = "10.0.1.0/24"
-    subnet_cloud_filers_address_prefix    = "10.0.2.0/24"
+    subnet_cloud_filers_address_prefix    = "10.0.2.0/25"
+    subnet_cloud_filers_ha_address_prefix = "10.0.2.128/25"
     subnet_jumpbox_address_prefix         = "10.0.3.0/24"
     subnet_render_clients1_address_prefix = "10.0.4.0/23"
     subnet_render_clients2_address_prefix = "10.0.6.0/23"

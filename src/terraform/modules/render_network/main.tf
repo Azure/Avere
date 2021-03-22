@@ -7,7 +7,6 @@ resource "azurerm_resource_group" "render_rg" {
     depends_on = [var.module_depends_on]
 }
 
-// the following is only needed if you need to ssh to the controller
 resource "azurerm_network_security_group" "ssh_nsg" {
     name                = "ssh_nsg"
     location            = var.location
@@ -23,6 +22,21 @@ resource "azurerm_network_security_group" "ssh_nsg" {
             protocol                   = "Tcp"
             source_port_range          = "*"
             destination_port_ranges    = var.open_external_ports
+            source_address_prefix      = security_rule.value
+            destination_address_prefix = "*"
+        }
+    }
+
+    dynamic "security_rule" {
+        for_each = length(var.open_external_udp_ports) > 0 ? var.open_external_sources : []
+        content {
+            name                       = "udp-${security_rule.key + 121}"
+            priority                   = security_rule.key + 121
+            direction                  = "Inbound"
+            access                     = "Allow"
+            protocol                   = "Tcp"
+            source_port_range          = "*"
+            destination_port_ranges    = var.open_external_udp_ports
             source_address_prefix      = security_rule.value
             destination_address_prefix = "*"
         }
