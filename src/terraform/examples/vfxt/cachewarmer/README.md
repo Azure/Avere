@@ -2,7 +2,7 @@
 
 This is an example of how to setup the CacheWarmer for [Avere vFXT for Azure](https://docs.microsoft.com/en-us/azure/avere-vfxt/).  The CacheWarmer is a golang program that runs as a systemd service on the controller and the source code is located under the [golang source](../../../../go/cmd/cachewarmer).
 
-The CacheWarmer watches a pre-defined directory for a job file.  The job file describes the HPC Cache mount addresses, export path, and path to warm.  For example, the following file is an example of a job file:
+The CacheWarmer runs as a service on the jumpbox, and watches the azure storage queue for a job entry.  The job entry describes the HPC Cache mount addresses, export path, and path to warm.  For example, the following file is an example of a job entry:
 
 ```bash
 {
