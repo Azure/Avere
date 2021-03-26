@@ -26,7 +26,7 @@ done
 
 3. mark the file as execute: `chmod +x ~/findarmendpoints.sh`
 
-4. execute `~/findarmurls.sh | sort | uniq`, and you should get a list similar to the following:
+4. execute `~/findarmendpoints.sh | sort | uniq`, and you should get a list similar to the following:
 ```bash
 australiacentral2.management.azure.com
 australiacentral.management.azure.com
