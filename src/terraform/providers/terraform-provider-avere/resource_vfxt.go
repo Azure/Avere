@@ -184,6 +184,8 @@ func resourceVfxt() *schema.Resource {
 				ValidateFunc: validation.IntInSlice([]int{
 					1024,
 					4096,
+					// per documentation: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-deploy-plan#vfxt-node-size
+					8192,
 				}),
 			},
 			enable_nlm: {
