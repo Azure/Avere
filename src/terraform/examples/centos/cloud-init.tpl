@@ -10,4 +10,4 @@ write_files:
 
 runcmd:
  - set -x
- - /bin/bash /opt/installnfs.sh 2>&1 | tee -a /var/log/installnfs.log
+ - SEARCH_DOMAIN="${search_domain}" /bin/bash /opt/installnfs.sh 2>&1 | tee -a /var/log/installnfs.log

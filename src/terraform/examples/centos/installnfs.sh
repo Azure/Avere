@@ -32,12 +32,29 @@ function update_hostname() {
     hostnamectl set-hostname "vm${OCTET3}_${OCTET4}"
 }
 
+function update_search_domain() {
+    if [[ ! -z "$SEARCH_DOMAIN" ]]; then
+        NETWORK_FILE=/etc/sysconfig/network-scripts/ifcfg-eth0
+        if grep --quiet "DOMAIN=" $NETWORK_FILE; then
+            sed -i 's/^#\s*DOMAIN=/DOMAIN=/g' $NETWORK_FILE
+            sed -i "s/^DOMAIN=.*$/DOMAIN=\"${SEARCH_DOMAIN}\"/g"  $NETWORK_FILE
+        else
+            echo "DOMAIN=\"${SEARCH_DOMAIN}\"" >> $NETWORK_FILE
+        fi
+        # restart network to take effect
+        systemctl restart network
+    fi
+}
+
 function main() {
     echo "config Linux"
     config_linux
 
     echo "update hostname"
     update_hostname
+
+    echo "update search domain"
+    update_search_domain
 
     echo "installation complete"
 

@@ -22,12 +22,15 @@ locals {
     virtual_network_name = "rendervnet"
     virtual_network_subnet_name = "render_clients2"
 
+    // update search domain with space separated list of search domains, leave blank to not set
+    search_domain = ""
+
     // this value for OS Disk resize must be between 20GB and 1023GB,
     // after this you will need to repartition the disk
     os_disk_size_gb = 32 
 
     script_file_b64 = base64gzip(replace(file("${path.module}/installnfs.sh"),"\r",""))
-    cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { install_script = local.script_file_b64})
+    cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { install_script = local.script_file_b64, search_domain = local.search_domain})
 }
 
 provider "azurerm" {
