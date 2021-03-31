@@ -4,6 +4,8 @@ locals {
 }
 
 resource "null_resource" "cachewarmer_submitjob" {
+  count = var.deploy_cachewarmer ? 1 : 0
+  
   connection {
       type  = "ssh"
       port  = var.ssh_port
