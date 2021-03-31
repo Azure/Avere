@@ -1,3 +1,8 @@
+variable "deploy_cachewarmer" {
+  description = "specifies to create the cachewarmer or not"
+  default = true
+}
+
 variable "node_address" {
     description = "The address of controller or jumpbox"
 }

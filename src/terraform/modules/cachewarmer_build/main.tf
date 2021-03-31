@@ -6,6 +6,8 @@ locals {
 }
 
 resource "null_resource" "build_cachewarmer_bootstrap" {
+  count = var.deploy_cachewarmer ? 1 : 0
+
   connection {
       type  = "ssh"
       port  = var.ssh_port
