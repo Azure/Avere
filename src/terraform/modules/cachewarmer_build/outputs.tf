@@ -20,5 +20,5 @@ output "cachewarmer_manager_bootstrap_script_path" {
 
 output "module_depends_on_id" {
   description = "the id(s) to force others to wait"
-  value = null_resource.build_cachewarmer_bootstrap.id
+  value = null_resource.build_cachewarmer_bootstrap[0].id
 }
