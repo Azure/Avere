@@ -39,11 +39,11 @@ To use the client you will connectivity to TCP Ports **443,4172,60443**, and **U
 
 ## Capture Image
 
-After you have deployed you can capture the image using the following steps:
+After you have deployed and configured your VM you can [capture the VM to an image](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/capture-image-resource).  In summary, the steps are:
+1. sysprep the VM with generalize and shutdown options.
+2. In the Portal, on the page for the VM, Click the "Capture" button.
 
-[Capture the VM to an Image](../houdinienvironment#phase-1-single-frame-render-step-2b-test-single-frame-render-and-capture-images)
-
-During the capture phase, you may capture to a custom managed image or a [Shared Image Gallery](https://docs.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries).  The Shared Image Gallery allows for easier management across regions.
+During the capture phase, you may capture to a custom managed image or a [Shared Image Gallery](https://docs.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries).  The Shared Image Gallery allows for easier management of the image across regions.
 
 Next, you can deploy using the script under the winimage directory:
 
