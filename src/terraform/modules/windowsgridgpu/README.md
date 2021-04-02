@@ -5,7 +5,7 @@ This Terraform module deploys an Azure virtual machine that installs Windows 10 
 The [windowsgridgpu](../../examples/windowsgridgpu) example shows how to deploy this module using Terraform.  The deployment requires access to the internet to download the Nvidia Grid, and Teradici software and takes about 30 minutes to install.
 
 After you have deployed run you can do either of the following:
-1. [Capture the VM to an Image](../../examples/houdinienvironment#phase-1-single-frame-render-step-2b-test-single-frame-render-and-capture-images), 
+1. [capture the VM to an image](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/capture-image-resource), 
 2. or register the the Teradici license with the following powershell: 
 
 ```powershell
