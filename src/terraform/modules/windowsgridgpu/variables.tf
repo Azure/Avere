@@ -69,7 +69,7 @@ variable "image_id" {
 }
 
 variable "install_pcoip" {
-  description = "specifies a custom image id, if not use marketplace"
+  description = "specifies true or false to install pcoip"
   default = true
 }
 
