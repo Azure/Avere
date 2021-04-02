@@ -1,6 +1,8 @@
-# Azure Virtual Machine Running Windows 10 + Nvidia Grid + Teradici PCoIP
+# Artist Workstation running Windows 10 + Nvidia Grid + Teradici PCoIP
 
-This deploys an Azure virtual machine that installs Windows 10 + Nvidia Grid + Teradici PCoIP.
+This deploys an Azure virtual machine that builds a Windows 10 artist workstation with Nvidia Grid + Teradici PCoIP.
+
+As you build out this destop for artists review the [ISE Hardening Guide for the Virtual Desktop Infrastructure Workflows](To harden your desktop, please review the following guide).
 
 ## Deployment Instructions
 
@@ -27,7 +29,7 @@ git pull origin main
 
 8. execute `terraform init` in the directory of `main.tf`.
 
-9. execute `terraform apply -auto-approve` to deploy the windows. The deployment requires access to the internet to download the Nvidia Grid, and Teradici software, and domain registrations and takes about 30 minutes to install.
+9. execute `terraform apply -auto-approve` to deploy the windows. The deployment requires access to the internet to download the Nvidia Grid, and Teradici software, and domain registrations and takes about 15 minutes to install.
 
 ## Connecting
 
@@ -45,10 +47,10 @@ During the capture phase, you may capture to a custom managed image or a [Shared
 
 Next, you can deploy using the script under the winimage directory:
 
-1. `cd src/terraform/examples/windowsgridgpu`
+1. `cd src/terraform/examples/windowsgridgpu/winimage`
 
-2. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences
+2. `code main.tf` to edit the local variables section at the top of the file, add your image, and customize your preferences
 
 3. execute `terraform init` in the directory of `main.tf`.
 
-4. execute `terraform apply -auto-approve` to deploy the windows. The deployment requires access to the internet to download the Nvidia Grid, and Teradici software, and domain registrations and takes about 30 minutes to install.
+4. execute `terraform apply -auto-approve` to deploy the windows. The deployment requires access to the internet to download the Nvidia Grid, and Teradici software, and domain registrations and takes about 10 minutes to install.

@@ -25,11 +25,9 @@ param(
     $TeradiciLicenseKey = "",
 
     [string]
-    [ValidateNotNullOrEmpty()]
     $GridUrl = "",
 
     [string]
-    [ValidateNotNullOrEmpty()]
     $TeradiciPcoipAgentUrl = ""
 )
 
@@ -280,9 +278,9 @@ Configure-Teradici
 
     if ($TeradiciLicenseKey -ne "")
     {
-        $path = "c:\Program Files\Teradici\PCoIP Agent\pcoip-register-host.ps1"
-        $path = $path -replace ' ', '` '
-        Invoke-Expression("$path -RegistrationCode $TeradiciLicenseKey")
+        # arguments must be cleared, otherwise these will be appended to the powershell
+        $arguments = ""
+        & "c:\Program Files\Teradici\PCoIP Agent\pcoip-register-host.ps1" -RegistrationCode $TeradiciLicenseKey
     }
 }
 
