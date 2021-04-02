@@ -110,6 +110,10 @@ Both HPC Cache and Avere vFXT for Azure provide file caching for high-performanc
 
 The following terraform examples build out accessory rendering infrastructure such as DNS Servers, high speed NFS ephemeral filers, and a jumpbox:
 
+### Workstations
+1. [Windows 10 + Nvidia Grid + Teradici PCoIP](examples/windowsgridgpu) - this example deploys Windows 10 + Nvidia Grid + Teradici PCoIP.
+1. [CentOS7 + Gnome + Nvidia Grid + Teradici PCoIP](examples/centosgridgpu) - this example deploys CentOS7 with Gnome + Nvidia Grid + Teradici PCoIP.
+
 ### NFS Filers
 
 1. [NFS Ephemeral Filer](examples/nfsfiler) - builds a very high performance NFS filers for use as a scratch filer.
@@ -124,7 +128,6 @@ The following terraform examples build out accessory rendering infrastructure su
 1. [SecuredImage](examples/securedimage) - shows how to create, upload, and deploy a custom image with an introduction to RBAC, Azure Governance, and Network.
 1. [Jumpbox](examples/jumpbox) - this deploys a VM pre-installed with pre-installed with az cli, terraform, golang, and the built avere provider
 Security.
-1. [Gnome + Nvidia Grid + Teradici PCoIP](examples/centosgridgpu) - this example deploys Gnome + Nvidia Grid + Teradici PCoIP.
 
 ## Terraform Modules
 
