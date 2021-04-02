@@ -1,6 +1,6 @@
-# Artist Workstation running Windows 10 + Nvidia Grid + Teradici PCoIP
+# Azure Virtual Machine running Windows 10 + Nvidia Grid + Teradici PCoIP
 
-This deploys an Azure virtual machine that builds a Windows 10 artist workstation with Nvidia Grid + Teradici PCoIP.
+This deploys an Azure virtual machine that builds a Windows 10 workstation with Nvidia Grid + Teradici PCoIP.
 
 As you build out this destop for artists review the [ISE Hardening Guide for the Virtual Desktop Infrastructure Workflows](https://azure.microsoft.com/mediahandler/files/resourcefiles/azure-virtual-desktop-infrastructure-hardening-guide/azure-virtual_desktop_infrastructure-hardening_guide.pdf).
 

@@ -52,6 +52,26 @@ variable "private_ip_address" {
   default = null
 }
 
+variable "image_id" {
+  description = "specifies a custom image id, if not use marketplace"
+  default = null
+}
+
+variable "install_pcoip" {
+  description = "specifies true or false to install pcoip"
+  default = true
+}
+
+variable "search_domain" {
+  description = "specifies a default search domain to use, if more than one separate by spaces"
+  default = ""
+}
+
+variable "teradici_license_key" {
+  description = "specifies the teradici pcoipagent license key"
+  default = ""
+}
+
 variable "module_depends_on" {
   default = [""]
   description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"

@@ -48,11 +48,16 @@ resource "azurerm_linux_virtual_machine" "vm" {
     storage_account_type = "Standard_LRS"
   }
 
-  source_image_reference {
-    publisher = "OpenLogic"
-    offer     = "CentOS"
-    sku       = "7_9"
-    version   = "latest"
+  source_image_id = var.image_id != null && var.image_id != "" ? var.image_id : null
+
+  dynamic "source_image_reference" {
+    for_each = var.image_id != null && var.image_id != "" ? [] : ["gnome desktop"]
+    content {
+      publisher = "OpenLogic"
+      offer     = "CentOS"
+      sku       = "7_9"
+      version   = "latest"
+    }
   }
 
   admin_username = var.admin_username
@@ -76,7 +81,7 @@ resource "azurerm_virtual_machine_extension" "cse" {
 
   settings = <<SETTINGS
     {
-        "commandToExecute": " /bin/bash /opt/install.sh"
+        "commandToExecute": " INSTALL_PCOIP=${var.install_pcoip} TERADICI_KEY='${var.teradici_license_key}' SEARCH_DOMAIN='${var.search_domain}' /bin/bash /opt/install.sh"
     }
 SETTINGS
 }
