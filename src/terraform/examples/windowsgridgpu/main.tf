@@ -3,9 +3,12 @@ locals {
     // the region of the deployment
     location       = "westus2"
     resource_group = "windowsgridgpu"
+
     admin_username = "azureuser"
     admin_password = "ReplacePassword$"
+
     vm_size        = "Standard_NV6"
+    unique_name    = "wingrid"
 
     // update the below with information about the domain
     ad_domain   = "" // example "rendering.com"
@@ -25,9 +28,7 @@ locals {
     // network details
     virtual_network_resource_group = "network_resource_group"
     virtual_network_name           = "rendervnet"
-    virtual_network_subnet_name    = "jumpbox"
-
-    unique_name = "wingrid"
+    virtual_network_subnet_name    = "jumpbox"  
 }
 
 provider "azurerm" {

@@ -8,6 +8,7 @@ locals {
     admin_password = "ReplacePassword$"
    
     vm_size        = "Standard_NV6"
+    unique_name    = "wingrid"
     // populate with the custom managed image id, and 
     image_id       = "" 
 
@@ -30,8 +31,6 @@ locals {
     virtual_network_resource_group = "network_resource_group"
     virtual_network_name           = "rendervnet"
     virtual_network_subnet_name    = "jumpbox"
-
-    unique_name = "wingrid"
 }
 
 provider "azurerm" {
