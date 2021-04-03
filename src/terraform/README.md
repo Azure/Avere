@@ -175,4 +175,8 @@ These modules provide core components for use with HPC Cache or Avere vFXT for A
 
 The following provider creates, destroys, and manages an Avere vFXT for Azure:
 
-1. [terraform-provider-avere](providers/terraform-provider-avere)
+* [terraform-provider-avere](providers/terraform-provider-avere)
+
+To add the provider to a pipeline on either Ubuntu or CentOS read the following examples:
+
+* [Building a Pipeline for the vFXT Provider](examples/vfxt/pipeline)
