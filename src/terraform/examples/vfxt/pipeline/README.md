@@ -18,7 +18,9 @@ Note: when you are done using the service principal delete it with the command `
 
 ## Target Environments
 
-Choose either environment:
+Choose any environment:
 
-1. [Ubuntu Pipeline](ubuntu)
-1. [CentOS Pipeline](centos)
+1. [Ubuntu Pipeline + Terraform 0.12.*](ubuntu)
+1. [CentOS Pipeline + Terraform 0.12.*](centos)
+1. [Ubuntu Pipeline + Terraform 0.13.*](ubuntu/ubuntutf013.md)
+1. [CentOS Pipeline + Terraform 0.13.*](centos/centostf013.md)
