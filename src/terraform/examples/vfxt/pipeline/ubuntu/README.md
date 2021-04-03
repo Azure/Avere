@@ -1,4 +1,4 @@
-# Ubuntu Pipeline
+# Ubuntu Pipeline with Terraform 0.12.*
 
 These instructions show the pipeline steps to deploy a vFXT on a newly deployed Ubuntu
 
