@@ -10,7 +10,7 @@
     }
   },
   "variables": {
-    "storageAccountApiVersion": "2021-01-01"
+    "storageAccountApiVersion": "2021-02-01"
   },
   "functions": [
     {

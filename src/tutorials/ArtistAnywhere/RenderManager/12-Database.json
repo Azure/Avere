@@ -14,7 +14,7 @@
   },
   "variables": {
     "postgreSqlApiVersion": "2020-11-05-preview",
-    "cosmosDbApiVersion": "2021-03-01-preview"
+    "cosmosDbApiVersion": "2021-03-15"
   },
   "resources": [
     {

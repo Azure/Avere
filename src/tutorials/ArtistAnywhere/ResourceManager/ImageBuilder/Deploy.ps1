@@ -105,16 +105,15 @@ function Set-ScriptFile ($scriptStorage, $scriptFile) {
 
 az group create --name $resourceGroup.name --location $resourceGroup.regionName
 
+$managedIdentityId = az identity create --resource-group $managedIdentity.resourceGroupName --name $managedIdentity.name --query "principalId" --output "tsv"
+
 if ($scriptStorage.accountName -ne "") {
     az storage account create --resource-group $scriptStorage.resourceGroupName --name $scriptStorage.accountName
     az storage container create --account-name $scriptStorage.accountName --name $scriptStorage.containerName --auth-mode login
 }
 
-$managedIdentityId = az identity create --resource-group $managedIdentity.resourceGroupName --name $managedIdentity.name --query "principalId" --output "tsv"
-
-$currentUserId = az ad signed-in-user show --query "objectId" --output "tsv"
-
 if ($scriptStorage.accountName -ne "") {
+    $currentUserId = az ad signed-in-user show --query "objectId" --output "tsv"
     $storageAccountId = az storage account show --name $scriptStorage.accountName --query "id" --output "tsv"
 
     $roleId = "ba92f5b4-2d11-453d-a403-e96b0029c9fe" # Storage Object Data Contributor

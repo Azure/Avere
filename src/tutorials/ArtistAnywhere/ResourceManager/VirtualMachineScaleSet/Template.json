@@ -47,7 +47,7 @@
       },
       "identity": {
         "type": "[parameters('virtualMachineScaleSet').managedIdentity.type]",
-        "userAssignedIdentities": "[if(equals(parameters('virtualMachineScaleSet').managedIdentity.type, 'UserAssigned'), json(concat('{\"', resourceId(parameters('virtualMachineScaleSet').managedIdentity.resourceGroupName, 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('virtualMachineScaleSet').managedIdentity.name), '\": {}}')), json('null'))]"
+        "userAssignedIdentities": "[if(equals(parameters('virtualMachineScaleSet').managedIdentity.type, 'UserAssigned'), json(concat('{\"', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('virtualMachineScaleSet').managedIdentity.name), '\": {}}')), json('null'))]"
       },
       "properties": {
         "virtualMachineProfile": {

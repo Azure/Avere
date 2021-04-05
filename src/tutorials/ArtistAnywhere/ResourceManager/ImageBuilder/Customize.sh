@@ -13,14 +13,14 @@ if $gpuNVIDIA; then
     if $centOS8; then
         dnf -y install gcc
         dnf -y install make
-        dnf -y install kernel-devel
+        dnf -y install "kernel-devel-uname-r == $(uname -r)"
         dnf -y install epel-release
         dnf -y install dkms
-        dnf -y groups install 'Workstation'
+        dnf -y groups install "Workstation"
     else # centOS7
         yum -y install gcc
-        yum -y install kernel-devel
-        yum -y groups install 'GNOME Desktop'
+        yum -y install "kernel-devel-uname-r == $(uname -r)"
+        yum -y groups install "GNOME Desktop"
     fi
     curl -L -o $gpuDriver $gpuDriverUrl/$gpuDriver
     chmod +x $gpuDriver

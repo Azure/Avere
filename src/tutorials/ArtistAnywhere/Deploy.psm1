@@ -22,7 +22,7 @@ function Set-RoleAssignment ($roleId, $principalId, $principalType, $scopeId, $w
     $retryCount = 0
     $roleAssigned = $false
     do {
-        $roleAssignment = (az role assignment create --role $roleId --assignee-object-id $principalId --assignee-principal-type $principalType --scope $scopeId) | ConvertFrom-Json
+        $roleAssignment = az role assignment create --role $roleId --assignee-object-id $principalId --assignee-principal-type $principalType --scope $scopeId
         if ($roleAssignment) {
             $roleAssigned = $true
         } else {

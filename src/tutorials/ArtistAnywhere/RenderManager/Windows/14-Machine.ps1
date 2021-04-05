@@ -24,12 +24,3 @@ if (!$dbExists) {
     .\psql -f "$openCuePath\opencue-bot-schema.sql" $dbAdmin
     .\psql -f "$openCuePath\opencue-bot-data.sql" $dbAdmin
 }
-
-# $serviceName = "OpenCue Render Manager"
-# $serviceApp = "java -jar $openCuePath\opencue-bot.jar --datasource.cue-data-source.jdbc-url=jdbc:postgresql://rendermanager.postgres.database.azure.com:5432/opencue?sslmode=require --datasource.cue-data-source.username=wrangler --datasource.cue-data-source.password=P@ssword1234"
-# New-Service -Name $serviceName -BinaryPathName $serviceApp
-
-# $serviceName = "OpenCue Render Manager"
-# $dbUrl = "jdbc:postgresql://${dataTierHost}:${dataTierPort}/${dbName}?sslmode=require"
-# New-Service -Name $serviceName -BinaryPathName "java -jar opencue-bot.jar --datasource.cue-data-source.jdbc-url=$dbUrl --datasource.cue-data-source.username=$databaseUsername --datasource.cue-data-source.password=$databasePassword"
-# Start-Service -Name $serviceName

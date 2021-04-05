@@ -1,6 +1,6 @@
 param (
     [string] $teradiciUrl = "https://bit1.blob.core.windows.net/bin/Teradici",
-    [string] $teradiciAgent = "pcoip-agent-graphics_21.01.4.exe",
+    [string] $teradiciAgent = "pcoip-agent-graphics_21.03.0.exe",
     [string] $teradiciLicenseKey = ""
 )
 

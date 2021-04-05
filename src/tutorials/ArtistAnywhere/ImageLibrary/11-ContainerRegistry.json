@@ -80,7 +80,7 @@
         "name": "[parameters('containerRegistry').name]",
         "resourceGroupName": "[resourceGroup().name]",
         "loginEndpoint": "[reference(resourceId('Microsoft.ContainerRegistry/registries', parameters('containerRegistry').name), variables('containerRegistryApiVersion')).loginServer]",
-        "loginPassword": "[listCredentials(resourceId('Microsoft.ContainerRegistry/registries', parameters('containerRegistry').name), variables('containerRegistryApiVersion')).passwords[1].value]"
+        "loginPasswords": "[listCredentials(resourceId('Microsoft.ContainerRegistry/registries', parameters('containerRegistry').name), variables('containerRegistryApiVersion')).passwords]"
       }
     }
   }

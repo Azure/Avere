@@ -5,8 +5,8 @@ param (
     },
     $batchAccount = @{              # https://docs.microsoft.com/azure/batch/batch-technical-overview
         "name" = ""
-        "userSubscriptionMode" = $true
-        "publicNetworkAccess" = $false
+        "enableUserSubscription" = $true
+        "enablePublicNetwork" = $false
         "managedIdentity" = @{
             "name" = $batchAccount.name
             "type" = "UserAssigned" # None, SystemAssigned or UserAssigned

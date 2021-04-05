@@ -15,7 +15,19 @@ $containerUrl = "https://bit1.blob.core.windows.net/bin/Java"
 Invoke-WebRequest -OutFile $fileName -Uri $containerUrl/$fileName
 Start-Process -FilePath $fileName -ArgumentList "/s" -Wait
 
+$containerUrl = "https://bit1.blob.core.windows.net/bin/WinSW"
+
+$fileName = "WinSW-x64.xml"
+Invoke-WebRequest -OutFile $fileName -Uri $containerUrl/$fileName
+
+$fileName = "WinSW-x64.exe"
+Invoke-WebRequest -OutFile $fileName -Uri $containerUrl/$fileName
+Start-Process -FilePath $fileName -ArgumentList "install" -Wait
+
 $fileName = "OpenCue-v0.8.8.zip"
 $containerUrl = "https://bit1.blob.core.windows.net/bin/OpenCue"
 Invoke-WebRequest -OutFile $fileName -Uri $containerUrl/$fileName
 Expand-Archive -Path $fileName
+
+Set-Location -Path "OpenCue-*"
+Copy-Item -Path "opencue-bot.jar" -Destination ".."

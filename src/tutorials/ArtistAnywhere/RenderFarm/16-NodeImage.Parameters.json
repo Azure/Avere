@@ -45,7 +45,7 @@
             "type": "Standard_LRS"
           },
           "machineProfile": {
-            "size": "Standard_NV12s_v3",
+            "size": "Standard_NV6",
             "osDiskSizeGB": 0
           },
           "buildTimeoutMinutes": 90,
@@ -81,7 +81,7 @@
             "type": "Standard_LRS"
           },
           "machineProfile": {
-            "size": "Standard_NV12s_v3",
+            "size": "Standard_NV6",
             "osDiskSizeGB": 0
           },
           "buildTimeoutMinutes": 90,

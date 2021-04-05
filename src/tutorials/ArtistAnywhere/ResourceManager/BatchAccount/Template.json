@@ -18,14 +18,14 @@
   "variables": {
     "keyVaultApiVersion": "2019-09-01",
     "batchAccountApiVersion": "2021-01-01",
-    "storageAccountApiVersion": "2021-01-01",
-    "networkEndpointApiVersion": "2020-11-01"
+    "storageAccountApiVersion": "2021-02-01",
+    "privateEndpointApiVersion": "2020-11-01"
   },
   "functions": [
   ],
   "resources": [
     {
-      "condition": "[parameters('batchAccount').userSubscriptionMode]",
+      "condition": "[parameters('batchAccount').enableUserSubscription]",
       "type": "Microsoft.KeyVault/vaults",
       "name": "[parameters('keyVault').name]",
       "apiVersion": "[variables('keyVaultApiVersion')]",
@@ -84,20 +84,20 @@
         "userAssignedIdentities": "[if(equals(parameters('batchAccount').managedIdentity.type, 'UserAssigned'), json(concat('{\"', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('batchAccount').managedIdentity.name), '\": {}}')), json('null'))]"
       },
       "properties": {
-        "poolAllocationMode": "[if(parameters('batchAccount').userSubscriptionMode, 'UserSubscription', 'BatchService')]",
-        "publicNetworkAccess": "[if(parameters('batchAccount').publicNetworkAccess, 'Enabled', 'Disabled')]",
+        "poolAllocationMode": "[if(parameters('batchAccount').enableUserSubscription, 'UserSubscription', 'BatchService')]",
+        "publicNetworkAccess": "[if(parameters('batchAccount').enablePublicNetwork, 'Enabled', 'Disabled')]",
         "autoStorage": {
           "storageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccount').name)]"
         },
-        "keyVaultReference": "[if(parameters('batchAccount').userSubscriptionMode, json(concat('{\"id\": \"', resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name), '\", \"url\": \"', reference(resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name), variables('keyVaultApiVersion')).vaultUri, '\"}')), json('null'))]",
-        "encryption": "[if(parameters('batchAccount').userSubscriptionMode, json(concat('{\"keySource\": \"Microsoft.Batch\"}')), json('null'))]"
+        "keyVaultReference": "[if(parameters('batchAccount').enableUserSubscription, json(concat('{\"id\": \"', resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name), '\", \"url\": \"', reference(resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name), variables('keyVaultApiVersion')).vaultUri, '\"}')), json('null'))]",
+        "encryption": "[if(parameters('batchAccount').enableUserSubscription, json(concat('{\"keySource\": \"Microsoft.Batch\"}')), json('null'))]"
       }
     },
     {
-      "condition": "[not(parameters('batchAccount').publicNetworkAccess)]",
+      "condition": "[not(parameters('batchAccount').enablePublicNetwork)]",
       "type": "Microsoft.Network/privateEndpoints",
       "name": "[parameters('batchAccount').name]",
-      "apiVersion": "[variables('networkEndpointApiVersion')]",
+      "apiVersion": "[variables('privateEndpointApiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Batch/batchAccounts', parameters('batchAccount').name)]"

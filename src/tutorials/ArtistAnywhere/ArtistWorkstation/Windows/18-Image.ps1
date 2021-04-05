@@ -23,4 +23,4 @@ if ($processorInfo.Manufacturer.Contains("AMD")) {
     $fileName = $gpuDriverNVIDIA
 }
 Invoke-WebRequest -OutFile $fileName -Uri $gpuDriversUrl/$fileName
-Start-Process -FilePath $fileName -ArgumentList "/S /NoReboot" -Wait
+Start-Process -FilePath $fileName -ArgumentList "/s /noreboot" -Wait

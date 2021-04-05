@@ -94,7 +94,7 @@
       ],
       "identity": {
         "type": "[parameters('virtualMachine').managedIdentity.type]",
-        "userAssignedIdentities": "[if(equals(parameters('virtualMachine').managedIdentity.type, 'UserAssigned'), json(concat('{\"', resourceId(parameters('virtualMachine').managedIdentity.resourceGroupName, 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('virtualMachine').managedIdentity.name), '\": {}}')), json('null'))]"
+        "userAssignedIdentities": "[if(equals(parameters('virtualMachine').managedIdentity.type, 'UserAssigned'), json(concat('{\"', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('virtualMachine').managedIdentity.name), '\": {}}')), json('null'))]"
       },
       "properties": {
         "hardwareProfile": {

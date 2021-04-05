@@ -16,12 +16,12 @@ if $gpuNVIDIA; then
     if $centOS8; then
         dnf -y install gcc
         dnf -y install make
-        dnf -y install kernel-devel
+        dnf -y install "kernel-devel-uname-r == $(uname -r)"
         dnf -y install epel-release
         dnf -y install dkms
     else # centOS7
         yum -y install gcc
-        yum -y install kernel-devel
+        yum -y install "kernel-devel-uname-r == $(uname -r)"
     fi
     fileName="NVIDIA-Linux-x86_64-460.32.03-grid-azure.run"
     containerUrl="https://bit1.blob.core.windows.net/bin/Graphics/Linux"

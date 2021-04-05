@@ -85,7 +85,7 @@
   "outputs": {
     "mountAddresses": {
       "type": "array",
-      "value": "[reference(resourceId('Microsoft.StorageCache/caches', parameters('hpcCache').name), variables('apiVersion')).mountAddresses]"
+      "value": "[reference(resourceId('Microsoft.StorageCache/caches', parameters('hpcCache').name), variables('hpcCacheApiVersion')).mountAddresses]"
     }
   }
 }
