@@ -1,20 +1,39 @@
 locals {
+
+  local_list_a_records = length(var.avere_address_list) == 0 ? [] : [for i in range(length(var.avere_address_list)): "local-data: \"${var.avere_filer_fqdn} ${var.dns_max_ttl_seconds} A ${var.avere_address_list[i]}\""]
+  local_list_a_records_reverse = length(var.avere_address_list) == 0 ? [] : [for i in range(length(var.avere_address_list)): "local-data-ptr: \"${var.avere_address_list[i]} ${var.dns_max_ttl_seconds} ${var.avere_filer_fqdn}\""]
+
+  # alternate fqdn
+  local_alternate_list_a_records =  length(var.avere_address_list) == 0 ? [] : flatten([
+    for i in range(length(var.avere_filer_alternate_fqdn)): [
+      for j in range(length(var.avere_address_list)): 
+        "local-data: \"${var.avere_filer_alternate_fqdn[i]} ${var.dns_max_ttl_seconds} A ${var.avere_address_list[j]}\""
+        ]
+  ])
+  # reverse records
+  local_alternate_list_a_records_reverse = length(var.avere_address_list) == 0 ? [] : flatten([
+    for i in range(length(var.avere_filer_alternate_fqdn)): [
+      for j in range(length(var.avere_address_list)): 
+        "local-data-ptr: \"${var.avere_address_list[j]} ${var.dns_max_ttl_seconds} ${var.avere_filer_alternate_fqdn[i]}\""
+        ]
+  ])
+
   # create the A record lines for the first Avere
-  last_octet = split(".", var.avere_first_ip_addr)[3]
-  addr_prefix = trimsuffix(var.avere_first_ip_addr, ".${local.last_octet}")
+  last_octet = var.avere_first_ip_addr == "" ? "" : split(".", var.avere_first_ip_addr)[3]
+  addr_prefix = var.avere_first_ip_addr == "" ? "" : trimsuffix(var.avere_first_ip_addr, ".${local.last_octet}")
   # technique from article: https://forum.netgate.com/topic/120486/round-robin-for-dns-forwarder-network-address/3
-  local_a_records = [for i in range(var.avere_ip_addr_count): "local-data: \"${var.avere_filer_fqdn} ${var.dns_max_ttl_seconds} A ${local.addr_prefix}.${local.last_octet + i}\""]
-  local_a_records_reverse = [for i in range(var.avere_ip_addr_count): "local-data-ptr: \"${local.addr_prefix}.${local.last_octet + i} ${var.dns_max_ttl_seconds} ${var.avere_filer_fqdn}\""]
+  local_a_records = var.avere_first_ip_addr == "" ? [] : [for i in range(var.avere_ip_addr_count): "local-data: \"${var.avere_filer_fqdn} ${var.dns_max_ttl_seconds} A ${local.addr_prefix}.${local.last_octet + i}\""]
+  local_a_records_reverse = var.avere_first_ip_addr == "" ? [] : [for i in range(var.avere_ip_addr_count): "local-data-ptr: \"${local.addr_prefix}.${local.last_octet + i} ${var.dns_max_ttl_seconds} ${var.avere_filer_fqdn}\""]
   
   # alternate fqdn
-  local_alternate_a_records = flatten([
+  local_alternate_a_records =  var.avere_first_ip_addr == "" ? [] : flatten([
     for i in range(length(var.avere_filer_alternate_fqdn)): [
       for j in range(var.avere_ip_addr_count): 
         "local-data: \"${var.avere_filer_alternate_fqdn[i]} ${var.dns_max_ttl_seconds} A ${local.addr_prefix}.${local.last_octet + j}\""
         ]
   ])
   # reverse records
-  local_alternate_a_records_reverse = flatten([
+  local_alternate_a_records_reverse = var.avere_first_ip_addr == "" ? [] : flatten([
     for i in range(length(var.avere_filer_alternate_fqdn)): [
       for j in range(var.avere_ip_addr_count): 
         "local-data-ptr: \"${local.addr_prefix}.${local.last_octet + j} ${var.dns_max_ttl_seconds} ${var.avere_filer_alternate_fqdn[i]}\""
@@ -88,17 +107,21 @@ locals {
   ])
   
   # join everything into the same string
-  all_a_records = concat(local.local_a_records, local.local_a_records_reverse, local.local_alternate_a_records, local.local_alternate_a_records_reverse, local.local_a_records2, local.local_a_records_reverse2, local.local_alternate_a_records2, local.local_alternate_a_records_reverse2, local.local_a_records3, local.local_a_records_reverse3, local.local_alternate_a_records3, local.local_alternate_a_records_reverse3, local.local_a_records4, local.local_a_records_reverse4, local.local_alternate_a_records4, local.local_alternate_a_records_reverse4)
-  local_a_records_str = "local-zone: \"${var.avere_filer_fqdn}\" transparent\n  ${join("\n  ", local.all_a_records)}"
+  all_a_records = concat(local.local_list_a_records, local.local_list_a_records_reverse, local.local_alternate_list_a_records, local.local_alternate_list_a_records_reverse, local.local_a_records, local.local_a_records_reverse, local.local_alternate_a_records, local.local_alternate_a_records_reverse, local.local_a_records2, local.local_a_records_reverse2, local.local_alternate_a_records2, local.local_alternate_a_records_reverse2, local.local_a_records3, local.local_a_records_reverse3, local.local_alternate_a_records3, local.local_alternate_a_records_reverse3, local.local_a_records4, local.local_a_records_reverse4, local.local_alternate_a_records4, local.local_alternate_a_records_reverse4)
+  local_zone_record_str = "local-zone: \"${var.avere_filer_fqdn}\" transparent"
+  local_a_records_str = join("\n  ", local.all_a_records)
 
   # create the dns forward lines  
   dns_servers = var.dns_server == null || var.dns_server == "" ? [] : split(" ", var.dns_server)
-  forward_lines = [for s in local.dns_servers : "forward-addr: ${s}"]
+  forward_lines = [for s in local.dns_servers : "forward-addr: ${s}" if trimspace("${s}") != ""]
   foward_lines_str = join("\n  ", local.forward_lines)
+
+  excluded_subnets = [for s in var.excluded_subnet_cidrs : "access-control-view: ${s} excludedsubnetview" if trimspace("${s}") != ""]
+  excluded_subnets_str = join("\n  ", local.excluded_subnets)
 
   # send the script file to custom data, adding env vars
   script_file_b64 = base64gzip(replace(file("${path.module}/install.sh"),"\r",""))
-  unbound_conf_file_b64 = base64gzip(replace(templatefile("${path.module}/unbound.conf", { max_ttl = var.dns_max_ttl_seconds, arecord_lines = local.local_a_records_str, forward_addr_lines = local.foward_lines_str }),"\r",""))
+  unbound_conf_file_b64 = base64gzip(replace(templatefile("${path.module}/unbound.conf", { max_ttl = var.dns_max_ttl_seconds, excluded_subnets = local.excluded_subnets_str, local_zone_line = local.local_zone_record_str,   arecord_lines = local.local_a_records_str, forward_addr_lines = local.foward_lines_str }),"\r",""))
   cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { installcmd = local.script_file_b64, unboundconf = local.unbound_conf_file_b64, ssh_port = var.ssh_port })
 }
 
