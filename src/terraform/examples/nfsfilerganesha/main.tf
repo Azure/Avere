@@ -54,9 +54,17 @@ locals {
     caching = local.disk_size_gb > 4095 ? "None" : "ReadWrite"
 }
 
+terraform {
+	required_providers {
+		azurerm = {
+			source  = "hashicorp/azurerm"
+			version = "~>2.12.0"
+		}
+	}
+}
+
 provider "azurerm" {
-    version = "~>2.12.0"
-    features {}
+	features {}
 }
 
 resource "azurerm_resource_group" "nfsfiler" {

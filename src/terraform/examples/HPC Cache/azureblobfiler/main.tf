@@ -35,7 +35,7 @@ locals {
     // storage details
     storage_resource_group_name = "storage_resource_group"
     // create a globally unique name for the storage account
-    storage_account_name = ""
+    storage_account_name = "gdgdgdgdgdg"
     avere_storage_container_name = "hpccache"
 
     // per the hpc cache documentation: https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-add-storage
@@ -48,9 +48,17 @@ locals {
     hpc_cache_principal_name = "HPC Cache Resource Provider"
 }
 
+terraform {
+	required_providers {
+		azurerm = {
+			source  = "hashicorp/azurerm"
+			version = "~>2.12.0"
+		}
+	}
+}
+
 provider "azurerm" {
-    version = "~>2.12.0"
-    features {}
+	features {}
 }
 
 // the render network

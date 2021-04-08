@@ -40,9 +40,17 @@ locals {
     onprem_filer_fqdn           = "nfs1.rendering.com" // the name of the filer to spoof
 }
 
+terraform {
+	required_providers {
+		azurerm = {
+			source  = "hashicorp/azurerm"
+			version = "~>2.12.0"
+		}
+	}
+}
+
 provider "azurerm" {
-    version = "~>2.12.0"
-    features {}
+	features {}
 }
 
 data "azurerm_subnet" "cachesubnet" {

@@ -22,9 +22,17 @@ locals {
     image_name = "image_name"
 }
 
+terraform {
+	required_providers {
+		azurerm = {
+			source  = "hashicorp/azurerm"
+			version = "~>2.12.0"
+		}
+	}
+}
+
 provider "azurerm" {
-    version = "~>2.12.0"
-    features {}
+	features {}
 }
 
 data "azurerm_resource_group" "main" {

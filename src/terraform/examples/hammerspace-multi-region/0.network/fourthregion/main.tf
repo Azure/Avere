@@ -25,9 +25,17 @@ locals {
     dns_servers = null // set this to the dc, for example ["10.0.3.254"] could be use for domain controller
 }
 
+terraform {
+	required_providers {
+		azurerm = {
+			source  = "hashicorp/azurerm"
+			version = "~>2.12.0"
+		}
+	}
+}
+
 provider "azurerm" {
-    version = "~>2.12.0"
-    features {}
+	features {}
 }
 
 ////////////////////////////////////////////////////////////////

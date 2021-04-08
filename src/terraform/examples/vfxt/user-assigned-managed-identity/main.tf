@@ -58,9 +58,16 @@ locals {
     open_external_sources = ["*"]
 }
 
-provider "azurerm" {
-    version = "~>2.12.0"
+terraform {
+	required_providers {
+		azurerm = {
+			source  = "hashicorp/azurerm"
+			version = "~>2.12.0"
+		}
+	}
+}
 
+provider "azurerm" {
     subscription_id = local.subscription_id
     client_id       = local.client_id
     client_secret   = local.client_secret

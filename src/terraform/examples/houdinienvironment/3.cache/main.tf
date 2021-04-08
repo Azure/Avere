@@ -74,9 +74,17 @@ locals {
     cifs_share_ace = "" // leave empty for Everyone, otherwise example "azureuser(ALLOW,FULL) azureuser2(ALLOW,READ)"
 }
 
+terraform {
+	required_providers {
+		azurerm = {
+			source  = "hashicorp/azurerm"
+			version = "~>2.12.0"
+		}
+	}
+}
+
 provider "azurerm" {
-    version = "~>2.12.0"
-    features {}
+	features {}
 }
 
 // the vfxt controller
