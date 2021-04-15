@@ -221,7 +221,7 @@ resource "azurerm_linux_virtual_machine" "anvilvm" {
 }
 
 resource "azurerm_managed_disk" "anvilvm" {
-  count                = local.is_high_availability ? 2 : 1
+  count                = var.anvil_metadata_disk_size == 0 ? 0 : local.is_high_availability ? 2 : 1
   name                 = "${local.anvil_host_names[count.index]}-disk1"
   location             = var.location
   resource_group_name  = var.resource_group_name
@@ -231,7 +231,7 @@ resource "azurerm_managed_disk" "anvilvm" {
 }
 
 resource "azurerm_virtual_machine_data_disk_attachment" "anvilvm" {
-  count              = local.is_high_availability ? 2 : 1
+  count              = var.anvil_metadata_disk_size == 0 ? 0 : local.is_high_availability ? 2 : 1
   managed_disk_id    = azurerm_managed_disk.anvilvm[count.index].id
   virtual_machine_id = azurerm_linux_virtual_machine.anvilvm[count.index].id
   lun                = "1"
