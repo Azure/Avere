@@ -365,7 +365,7 @@ func (a Azure) getBaseVfxtCommand(avereVfxt *AvereVfxt) string {
 // used when multiple commands piped together
 func getAzCliProxyExports(proxyUri string) string {
 	if len(proxyUri) > 0 {
-		return fmt.Sprintf(" export HTTPS_PROXY=\"%s\" && export NO_PROXY=\"169.254.169.254\" && ", proxyUri)
+		return fmt.Sprintf(" export HTTP_PROXY=\"%s\" && export HTTPS_PROXY=\"%s\" && export NO_PROXY=\"169.254.169.254\" && ", proxyUri, proxyUri)
 	}
 	return ""
 }
@@ -373,7 +373,7 @@ func getAzCliProxyExports(proxyUri string) string {
 // used when single command
 func getAzCliProxyExportsInline(proxyUri string) string {
 	if len(proxyUri) > 0 {
-		return fmt.Sprintf(" HTTPS_PROXY=\"%s\" NO_PROXY=\"169.254.169.254\" ", proxyUri)
+		return fmt.Sprintf(" HTTP_PROXY=\"%s\" HTTPS_PROXY=\"%s\" NO_PROXY=\"169.254.169.254\" ", proxyUri, proxyUri)
 	}
 	return ""
 }
