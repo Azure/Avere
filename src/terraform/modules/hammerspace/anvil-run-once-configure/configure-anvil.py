@@ -535,7 +535,8 @@ def addAzureStorage(anvilRest, storageAccount, storageAccountKey, storageAccount
     waitForAzureStorage(anvilRest, storageAccount)
     # best effort run to add the volume
     if storageAccountContainer != "":
-        os.system("/bin/pdcli object-volume-add --native --no-compression --node-name {} --shared --logical-volume-name {}".format(storageAccount, storageAccountContainer))
+        #os.system("/bin/pdcli object-volume-add --native --no-compression --node-name {} --shared --logical-volume-name {}".format(storageAccount, storageAccountContainer))
+        os.system("/bin/pdcli object-volume-add --no-compression --node-name {} --shared --logical-volume-name {}".format(storageAccount, storageAccountContainer))
     
 def addDefaultObjectives(anvilRest):
     logging.info("add default objectives")
