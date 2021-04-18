@@ -69,6 +69,10 @@ func NewAvereVfxt(
 	cifsOrganizationalUnit string,
 	cifsTrustedActiveDirectoryDomains string,
 	enableExtendedGroups bool,
+	loginServicesLDAPServer string,
+	loginServicesLDAPBasedn string,
+	loginServicesLDAPBinddn string,
+	loginServicesLDAPBindPassword string,
 	userAssignedManagedIdentity string,
 	ntpServers string,
 	timezone string,
@@ -117,6 +121,10 @@ func NewAvereVfxt(
 		CifsOrganizationalUnit:            cifsOrganizationalUnit,
 		CifsTrustedActiveDirectoryDomains: cifsTrustedActiveDirectoryDomains,
 		EnableExtendedGroups:              enableExtendedGroups,
+		LoginServicesLDAPServer:           loginServicesLDAPServer,
+		LoginServicesLDAPBasedn:           loginServicesLDAPBasedn,
+		LoginServicesLDAPBinddn:           loginServicesLDAPBinddn,
+		LoginServicesLDAPBindPassword:     loginServicesLDAPBindPassword,
 		UserAssignedManagedIdentity:       userAssignedManagedIdentity,
 		NtpServers:                        ntpServers,
 		Timezone:                          timezone,
@@ -574,6 +582,38 @@ func (a *AvereVfxt) DisableCIFS() error {
 	if !a.CIFSSettingsExist() {
 		// it is enough to just call disable CIFS to disable it
 		if _, err := a.AvereCommand(a.getCIFSDisableCommand()); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (a *AvereVfxt) LoginSettingsExist() bool {
+	return len(a.LoginServicesLDAPServer) > 0 && len(a.LoginServicesLDAPBasedn) > 0 && len(a.LoginServicesLDAPBinddn) > 0 && len(a.LoginServicesLDAPBindPassword) > 0
+}
+
+func (a *AvereVfxt) EnableLoginServices() error {
+	if a.LoginSettingsExist() {
+		log.Printf("[INFO] [EnableLoginServices")
+		defer log.Printf("[INFO] EnableLoginServices]")
+		if _, err := a.AvereCommand(a.getDirServicesSetLdapPasswordCommand()); err != nil {
+			return fmt.Errorf("setting LDAP Password for login services command failed: %v", err)
+		}
+		// finish with polling for users / groups, otherwise cifs doesn't work immediately
+		if _, err := a.AvereCommand(a.getDirServicesModifyCommand()); err != nil {
+			return fmt.Errorf("modify dir services for login services failed with error: %v", err)
+		}
+	}
+
+	return nil
+}
+
+func (a *AvereVfxt) DisableLoginServices() error {
+	if !a.LoginSettingsExist() {
+		log.Printf("[INFO] [DisableLoginServices")
+		defer log.Printf("[INFO] DisableLoginServices]")
+		if _, err := a.AvereCommand(a.getLoginSettingsDisableCommand()); err != nil {
 			return err
 		}
 	}
@@ -2596,6 +2636,25 @@ func (a *AvereVfxt) getEnableExtendedGroupsCommand() string {
 
 func (a *AvereVfxt) getDisableExtendedGroupsCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s nfs.modify \"%s\" \"{'extendedGroups':'no'}\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getDirServicesSetLdapPasswordCommand() string {
+	nonSecretCommand := fmt.Sprintf("%s dirServices.setLdapPassword \"00000000-0000-0000-0000-000000000001\" \"%%s\"", a.getBaseAvereCmd())
+	return WrapCommandForLoggingSecretInput(nonSecretCommand, fmt.Sprintf(nonSecretCommand, a.LoginServicesLDAPBindPassword), AverecmdLogFile)
+}
+
+func getEpochMilliseconds() int64 {
+	now := time.Now()
+	nanos := now.UnixNano()
+	return nanos / 1000000
+}
+
+func (a *AvereVfxt) getDirServicesModifyCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s dirServices.modify \"00000000-0000-0000-0000-000000000001\" \"{'LDAPrequireCertificate':'enabled','LDAPbasedn':'%s','LDAPbinddn':'%s','loginSource':'Local/LDAP','LDAPserver':'%s','LDAPsecureAccess':'disabled','loginQueryAttributes':'ad','loginPollNow':'%v'}\"", a.getBaseAvereCmd(), a.LoginServicesLDAPBasedn, a.LoginServicesLDAPBinddn, a.LoginServicesLDAPServer, getEpochMilliseconds()), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getLoginSettingsDisableCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s dirServices.modify \"00000000-0000-0000-0000-000000000001\" \"{'LDAPrequireCertificate':'enabled','LDAPbasedn':'','loginSource':'Local','LDAPserver':'','LDAPsecureAccess':'disabled','LDAPbinddn':'','loginPollNow':'%v'}\"", a.getBaseAvereCmd(), getEpochMilliseconds()), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getUploadRollingTraceCommand(secondsSinceEpoch int64, aftermin int, beforemin int) string {

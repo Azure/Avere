@@ -372,6 +372,35 @@ func resourceVfxt() *schema.Resource {
 				Default:      false,
 				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_username, cifs_password},
 			},
+			login_services_ldap_server: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
+				RequiredWith: []string{login_services_ldap_basedn, login_services_ldap_binddn, login_services_ldap_bind_password},
+			},
+			login_services_ldap_basedn: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
+				RequiredWith: []string{login_services_ldap_server, login_services_ldap_binddn, login_services_ldap_bind_password},
+			},
+			login_services_ldap_binddn: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
+				RequiredWith: []string{login_services_ldap_server, login_services_ldap_basedn, login_services_ldap_bind_password},
+			},
+			login_services_ldap_bind_password: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				Default:      "",
+				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
+				RequiredWith: []string{login_services_ldap_server, login_services_ldap_basedn, login_services_ldap_binddn},
+			},
 			user_assigned_managed_identity: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -740,6 +769,10 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if err := avereVfxt.EnableLoginServices(); err != nil {
+		return err
+	}
+
 	// add the new filers
 	existingCoreFilers := make(map[string]*CoreFiler)
 	coreFilersToAdd, coreFilersToModify, err := getCoreFilersToAddorModify(d, existingCoreFilers, existingCoreFilers)
@@ -1013,6 +1046,18 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if d.HasChange(login_services_ldap_server) ||
+		d.HasChange(login_services_ldap_basedn) ||
+		d.HasChange(login_services_ldap_binddn) ||
+		d.HasChange(login_services_ldap_bind_password) {
+		if err := avereVfxt.EnableLoginServices(); err != nil {
+			return err
+		}
+		if err := avereVfxt.DisableLoginServices(); err != nil {
+			return err
+		}
+	}
+
 	// scale the cluster if node changed
 	if d.HasChange(vfxt_node_count) {
 		if err := scaleCluster(d, avereVfxt); err != nil {
@@ -1209,6 +1254,10 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(cifs_organizational_unit).(string),
 		d.Get(cifs_trusted_active_directory_domains).(string),
 		d.Get(enable_extended_groups).(bool),
+		d.Get(login_services_ldap_server).(string),
+		d.Get(login_services_ldap_basedn).(string),
+		d.Get(login_services_ldap_binddn).(string),
+		d.Get(login_services_ldap_bind_password).(string),
 		d.Get(user_assigned_managed_identity).(string),
 		d.Get(ntp_servers).(string),
 		d.Get(timezone).(string),

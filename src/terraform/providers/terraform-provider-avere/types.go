@@ -59,6 +59,11 @@ type AvereVfxt struct {
 	CifsTrustedActiveDirectoryDomains string
 	EnableExtendedGroups              bool
 
+	LoginServicesLDAPServer       string
+	LoginServicesLDAPBasedn       string
+	LoginServicesLDAPBinddn       string
+	LoginServicesLDAPBindPassword string
+
 	UserAssignedManagedIdentity string
 
 	NtpServers string
