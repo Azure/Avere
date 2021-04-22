@@ -103,6 +103,7 @@ Both HPC Cache and Avere vFXT for Azure provide file caching for high-performanc
    1. [Specify a custom VServer IP Range with the Avere vFXT](examples/vfxt/custom-vserver) - this example shows how to specify a custom VServer IP Range with the Avere vFXT.
    1. [Avere vFXT using User Assigned Managed Identity](examples/vfxt/user-assigned-managed-identity) - this example shows how to use a user assigned managed identity with the Avere vFXT.
    1. [Backup Restore](examples/backuprestore) - Backup any FXT or vFXT cluster and build terraform to restore to HPC Cache or Avere vFXT for Azure.
+   1. [Zone Redundant NFS / SMB Storage](examples/vfxt/azureblobfiler-zonal) - Availability Zone Redundant Avere vFXT mounting Blob Storage example
 
 ## Rendering Accessories Infrastructure
 

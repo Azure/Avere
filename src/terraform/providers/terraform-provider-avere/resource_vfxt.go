@@ -55,6 +55,12 @@ func resourceVfxt() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			use_availability_zones: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+			},
 			allow_non_ascii: {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -1138,6 +1144,13 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	var controllerSshPort int
 
 	runLocal := d.Get(run_local).(bool)
+
+	nodeCount := d.Get(vfxt_node_count).(int)
+	useAvailabilityZones := d.Get(use_availability_zones).(bool)
+	if useAvailabilityZones && nodeCount > MaxZonalNodesCount {
+		return nil, fmt.Errorf("The maximum of %v nodes may be specified, when availability zones is enabled", MaxZonalNodesCount)
+	}
+
 	allowNonAscii := d.Get(allow_non_ascii).(bool)
 
 	if !allowNonAscii {
@@ -1204,8 +1217,6 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	vServerIPAddressesRaw := d.Get(vserver_ip_addresses).([]interface{})
 	nodeNamesRaw := d.Get(node_names).([]interface{})
 
-	nodeCount := d.Get(vfxt_node_count).(int)
-
 	firstIPAddress := d.Get(vserver_first_ip).(string)
 	ipAddressCount := d.Get(vserver_ip_count).(int)
 	if nodeCount > ipAddressCount {
@@ -1224,6 +1235,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		authMethod,
 		controllerSshPort,
 		runLocal,
+		useAvailabilityZones,
 		allowNonAscii,
 		iaasPlatform,
 		d.Get(vfxt_cluster_name).(string),

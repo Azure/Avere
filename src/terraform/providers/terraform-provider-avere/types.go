@@ -23,8 +23,9 @@ type AvereVfxt struct {
 	SshAuthMethod ssh.AuthMethod
 	SshPort       int
 
-	RunLocal      bool
-	AllowNonAscii bool
+	RunLocal             bool
+	UseAvailabilityZones bool
+	AllowNonAscii        bool
 
 	Platform IaasPlatform
 

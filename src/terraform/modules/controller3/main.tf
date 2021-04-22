@@ -10,8 +10,9 @@ data "azurerm_subscription" "primary" {}
 
 locals {
   msazure_patchidentity_file_b64 = base64gzip(replace(file("${path.module}/msazure.py.patchidentity"),"\r",""))
+  vfxtpy_patchzone_file_b64 = base64gzip(replace(file("${path.module}/vfxt.py.patchzone"),"\r",""))
   # send the script file to custom data, adding env vars
-  cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { msazure_patchidentity = local.msazure_patchidentity_file_b64, ssh_port = var.ssh_port })
+  cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { vfxtpy_patchzone = local.vfxtpy_patchzone_file_b64, msazure_patchidentity = local.msazure_patchidentity_file_b64, ssh_port = var.ssh_port })
   # the roles assigned to the controller managed identity principal
   # the contributor role is required to create Avere clusters
   avere_create_cluster_role = "Avere Contributor"
