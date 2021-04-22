@@ -4,6 +4,7 @@ package main
 
 const (
 	AvereAdminUsername            = "admin"
+	MaxZonalNodesCount            = 3
 	MinNodesCount                 = 3
 	MaxNodesCount                 = 16
 	MinVserverIpCount             = MinNodesCount
@@ -162,6 +163,7 @@ const (
 	controller_admin_password             = "controller_admin_password"
 	controller_ssh_port                   = "controller_ssh_port"
 	run_local                             = "run_local"
+	use_availability_zones                = "use_availability_zones"
 	allow_non_ascii                       = "allow_non_ascii"
 	location                              = "location"
 	platform                              = "platform"

@@ -328,6 +328,10 @@ func (a Azure) getBaseVfxtCommand(avereVfxt *AvereVfxt) string {
 	// add the resource group and location
 	sb.WriteString(fmt.Sprintf("--resource-group %s --location %s ", a.ResourceGroup, a.Location))
 
+	if avereVfxt.UseAvailabilityZones {
+		sb.WriteString("--azure-zones 1 2 3 ")
+	}
+
 	// add the management address if one exists
 	if len(avereVfxt.ManagementIP) > 0 {
 		sb.WriteString(fmt.Sprintf("--management-address %s ", avereVfxt.ManagementIP))

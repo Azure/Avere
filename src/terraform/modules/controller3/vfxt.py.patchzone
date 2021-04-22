@@ -1,0 +1,11 @@
+--- apr22_2021/vfxt.py	2021-04-22 11:11:26.552748900 -0400
++++ apr22_2021new/vfxt.py	2021-04-22 11:20:32.997877800 -0400
+@@ -576,6 +576,8 @@
+                 storage_account=args.storage_account,
+                 private_range=args.cluster_range,
+             )
++            # on_instance_init will just apply a single zone from the controller, instead set all zones specified by customer
++            service.zones = args.azure_zones or []
+         else:
+             if args.from_environment:
+                 if not all([args.resource_group, args.location, args.azure_network, args.azure_subnet]):
