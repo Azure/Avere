@@ -1,4 +1,4 @@
-module github.com/Azure/Avere/src/vfxt/tf/terraform-provider-avere
+module github.com/Azure/Avere/src/terraform/providers/terraform-provider-avere
 
 go 1.13
 
