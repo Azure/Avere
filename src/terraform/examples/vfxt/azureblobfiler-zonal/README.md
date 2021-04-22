@@ -1,5 +1,7 @@
 # Zone Redundant NFS / SMB Storage: Availability Zone Redundant Avere vFXT mounting Blob Storage example
 
+The Avere vFXT combined with a zonal Azure Storage account is well suited to scenarios providing a POSIX compliant zonal redundant NFS Storage.  This includes file locking and atomic move.
+
 This example configures a render network, controller, and zonal capable Avere vFXT with a zonal Azure Blob Storage cloud core filer as shown in the diagram below:
 
 ![The architecture](../../../../../docs/images/terraform/cloudfiler-zonal.png)
