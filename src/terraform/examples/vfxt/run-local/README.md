@@ -18,13 +18,19 @@ sudo apt-get install unzip
 3. install the provider and terraform and the main.tf file:
 ```bash
 cd
+# for terraform >= 0.13.*
+mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/1.0.0/linux_amd64
+browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[0].browser_download_url)
+wget -O ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/1.0.0/linux_amd64/terraform-provider-avere_v1.0.0 $browser_download_url
+chmod 755 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/1.0.0/linux_amd64/terraform-provider-avere_v1.0.0
+# for terraform 0.12.*
 mkdir -p ~/.terraform.d/plugins
-wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.32/terraform-provider-avere
-chmod +x ~/.terraform.d/plugins/terraform-provider-avere
-wget https://releases.hashicorp.com/terraform/0.12.24/terraform_0.12.24_linux_amd64.zip
-unzip terraform_0.12.24_linux_amd64.zip
+cp ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/1.0.0/linux_amd64/terraform-provider-avere_v1.0.0 ~/.terraform.d/plugins
+# get terraform
+wget https://releases.hashicorp.com/terraform/0.15.0/terraform_0.15.0_linux_amd64.zip
+unzip terraform_0.15.0_linux_amd64.zip
 sudo mv terraform /usr/bin
-rm terraform_0.12.24_linux_amd64.zip
+rm terraform_0.15.0_linux_amd64.zip
 mkdir -p vfxt
 cd vfxt
 wget -O main.tf  https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/vfxt/run-local/main.tf
