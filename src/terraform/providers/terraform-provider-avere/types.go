@@ -29,6 +29,8 @@ type AvereVfxt struct {
 
 	Platform IaasPlatform
 
+	TagsMap map[string]string
+
 	AvereVfxtName          string
 	AvereVfxtSupportName   string
 	AvereAdminPassword     string

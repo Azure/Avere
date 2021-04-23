@@ -33,6 +33,14 @@ locals {
     //  "Transitioning Clients Before or After a Migration"
     cache_policy = "Clients Bypassing the Cluster"
 
+    tags = null // local.example_tags
+
+    example_tags = {
+        Movie = "some movie",
+	    Artist = "some artist",
+	    "Project Name" = "some name",
+    }
+
     // the proxy used by vfxt.py for cluster stand-up and scale-up / scale-down
     proxy_uri = null
     // the proxy used by the running vfxt cluster
@@ -68,6 +76,8 @@ module "vfxtcontroller" {
     virtual_network_resource_group = local.virtual_network_resource_group
     virtual_network_name = local.virtual_network_name
     virtual_network_subnet_name = local.controller_network_subnet_name
+
+    tags = local.tags
 }
 
 resource "avere_vfxt" "vfxt" {
@@ -94,6 +104,8 @@ resource "avere_vfxt" "vfxt" {
     vfxt_admin_password = local.vfxt_cluster_password
     vfxt_ssh_key_data = local.vfxt_ssh_key_data
     vfxt_node_count = 3
+
+    tags = local.tags
 }
 
 output "controller_username" {

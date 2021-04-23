@@ -33,6 +33,14 @@ locals {
     //  "Transitioning Clients Before or After a Migration"
     cache_policy = "Clients Bypassing the Cluster"
 
+    tags = null // local.example_tags
+
+    example_tags = {
+        Movie = "some movie",
+	    Artist = "some artist",
+	    "Project Name" = "some name",
+    }
+
     // advanced scenario: vfxt and controller image ids, leave this null, unless not using default marketplace
     controller_image_id = null
     vfxt_image_id       = null
@@ -101,6 +109,8 @@ module "vfxtcontroller" {
     virtual_network_subnet_name = module.network.jumpbox_subnet_name
 
     module_depends_on = [module.network.vnet_id]
+
+    tags = local.tags
 }
 
 // the vfxt
@@ -125,6 +135,8 @@ resource "avere_vfxt" "vfxt" {
     vfxt_ssh_key_data = local.vfxt_ssh_key_data
     vfxt_node_count = 3
     image_id = local.vfxt_image_id
+
+    tags = local.tags
 
     core_filer {
         name = "nfs1"

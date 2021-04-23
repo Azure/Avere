@@ -332,6 +332,10 @@ func (a Azure) getBaseVfxtCommand(avereVfxt *AvereVfxt) string {
 		sb.WriteString("--azure-zones 1 2 3 ")
 	}
 
+	for k, v := range avereVfxt.TagsMap {
+		sb.WriteString(fmt.Sprintf("--azure-tag '%s:%s' ", k, v))
+	}
+
 	// add the management address if one exists
 	if len(avereVfxt.ManagementIP) > 0 {
 		sb.WriteString(fmt.Sprintf("--management-address %s ", avereVfxt.ManagementIP))

@@ -42,6 +42,8 @@ resource "azurerm_resource_group" "vm" {
 
   count = var.deploy_controller && var.create_resource_group ? 1 : 0
 
+  tags = var.tags
+
   depends_on = [var.module_depends_on]
 }
 
@@ -58,6 +60,8 @@ resource "azurerm_public_ip" "vm" {
     location                     = var.location
     resource_group_name          = var.create_resource_group ? azurerm_resource_group.vm[0].name : data.azurerm_resource_group.vm[0].name
     allocation_method            = "Static"
+
+    tags = var.tags
 
     count = var.deploy_controller && var.add_public_ip ? 1 : 0
 
@@ -77,6 +81,9 @@ resource "azurerm_network_interface" "vm" {
   }
 
   count = var.deploy_controller ? 1 : 0
+
+  tags = var.tags
+
   depends_on = [var.module_depends_on]
 }
 
@@ -131,6 +138,8 @@ resource "azurerm_linux_virtual_machine" "vm" {
       }
   }
   count = var.deploy_controller ? 1 : 0
+
+  tags = var.tags
 }
 
 // assign roles per the the following article: https://github.com/Azure/Avere/tree/main/src/vfxt#managed-identity-and-roles

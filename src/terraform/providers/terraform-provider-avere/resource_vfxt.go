@@ -671,6 +671,13 @@ func resourceVfxt() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			tags: {
+				Type:         schema.TypeMap,
+				Optional:     true,
+				Computed:     false,
+				ForceNew:     true,
+				ValidateFunc: ValidateTags,
+			},
 		},
 	}
 }
@@ -1210,6 +1217,8 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		return nil, fmt.Errorf("platform '%s' not supported", platform)
 	}
 
+	tagsMap := GetTagsMap(d.Get(tags))
+
 	var managementIP string
 	if val, ok := d.Get(vfxt_management_ip).(string); ok {
 		managementIP = val
@@ -1238,6 +1247,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		useAvailabilityZones,
 		allowNonAscii,
 		iaasPlatform,
+		tagsMap,
 		d.Get(vfxt_cluster_name).(string),
 		d.Get(vfxt_admin_password).(string),
 		d.Get(vfxt_ssh_key_data).(string),
@@ -2539,4 +2549,61 @@ func flattenStringSlice(input *[]string) []interface{} {
 	}
 
 	return output
+}
+
+// from "github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/internal/tags/validation.go"
+// pasting here, because not allowed to import an internal library
+func ValidateTags(v interface{}, _ string) (warnings []string, errors []error) {
+	tagsMap := v.(map[string]interface{})
+
+	if len(tagsMap) > 50 {
+		errors = append(errors, fmt.Errorf("a maximum of 50 tags can be applied to each ARM resource"))
+	}
+
+	for k, v := range tagsMap {
+		if len(k) > 512 {
+			errors = append(errors, fmt.Errorf("the maximum length for a tag key is 512 characters: %q is %d characters", k, len(k)))
+		}
+
+		value, err := TagValueToString(v)
+		if err != nil {
+			errors = append(errors, err)
+		} else if len(value) > 256 {
+			errors = append(errors, fmt.Errorf("the maximum length for a tag value is 256 characters: the value for %q is %d characters", k, len(value)))
+		}
+
+		if strings.ContainsAny(k, "':") || strings.ContainsAny(value, "':") {
+			errors = append(errors, fmt.Errorf("characters ' or : are not allowed because it it interferes with vfxt.py command line parameter --azure-tag 'key:value'"))
+		}
+	}
+
+	return warnings, errors
+}
+
+// from "github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/internal/tags/validation.go"
+// pasting here, because not allowed to import an internal library
+func TagValueToString(v interface{}) (string, error) {
+	switch value := v.(type) {
+	case string:
+		return value, nil
+	case int:
+		return fmt.Sprintf("%d", value), nil
+	default:
+		return "", fmt.Errorf("unknown tag type %T in tag value", value)
+	}
+}
+
+func GetTagsMap(v interface{}) map[string]string {
+	results := make(map[string]string)
+
+	tagsMap := v.(map[string]interface{})
+
+	for k, v := range tagsMap {
+		// ignore any errors, because none should exist as this is guarded by validation
+		if value, err := TagValueToString(v); err == nil {
+			results[k] = value
+		}
+	}
+
+	return results
 }
