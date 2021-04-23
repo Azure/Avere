@@ -26,9 +26,18 @@ locals {
     cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { foreman_file = local.foreman_file_b64, example_file_b64 = local.example_file_b64})
 }
 
+terraform {
+  required_version = ">= 0.14.0,< 0.16.0"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~>2.56.0"
+    }
+  }
+}
+
 provider "azurerm" {
-    version = "~>2.55.0"
-    features {}
+  features {}
 }
 
 data "azurerm_subnet" "vnet" {
