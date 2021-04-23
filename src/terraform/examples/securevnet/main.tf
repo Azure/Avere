@@ -34,8 +34,18 @@ terraform {
 	}
 }
 
+terraform {
+  required_version = ">= 0.14.0,< 0.16.0"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~>2.56.0"
+    }
+  }
+}
+
 provider "azurerm" {
-	features {}
+  features {}
 }
 
 resource "azurerm_resource_group" "render_rg" {
