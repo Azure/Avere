@@ -249,4 +249,5 @@ const (
 	primary_cluster_ips                   = "primary_cluster_ips"
 	licensing_id                          = "licensing_id"
 	mass_filer_mappings                   = "mass_filer_mappings"
+	tags                                  = "tags"
 )
