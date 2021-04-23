@@ -34,9 +34,17 @@ locals {
     jb_cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { installcmd = local.jb_script_file_b64 })
 }
 
+terraform {
+	required_providers {
+		azurerm = {
+			source  = "hashicorp/azurerm"
+			version = "~>2.12.0"
+		}
+	}
+}
+
 provider "azurerm" {
-    version = "~>2.12.0"
-    features {}
+	features {}
 }
 
 ###########################################################

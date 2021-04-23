@@ -33,9 +33,17 @@ locals {
     cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { install_script = local.script_file_b64, search_domain = local.search_domain})
 }
 
+terraform {
+	required_providers {
+		azurerm = {
+			source  = "hashicorp/azurerm"
+			version = "~>2.12.0"
+		}
+	}
+}
+
 provider "azurerm" {
-    version = "~>2.12.0"
-    features {}
+	features {}
 }
 
 data "azurerm_subnet" "vnet" {

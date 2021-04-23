@@ -43,9 +43,17 @@ locals {
     vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
 }
 
+terraform {
+	required_providers {
+		azurerm = {
+			source  = "hashicorp/azurerm"
+			version = "~>2.12.0"
+		}
+	}
+}
+
 provider "azurerm" {
-    version = "~>2.12.0"
-    features {}
+	features {}
 }
 
 // the render network
