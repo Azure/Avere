@@ -3,7 +3,7 @@ output "primary_ip" {
 }
 
 output "admin_username" {
-  value = "${var.admin_username}"
+  value = var.admin_username
 }
 
 output "core_filer_export" {

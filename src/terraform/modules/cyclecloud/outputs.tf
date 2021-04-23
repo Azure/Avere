@@ -3,7 +3,7 @@ output "primary_ip" {
 }
 
 output "admin_username" {
-  value = "${var.admin_username}"
+  value = var.admin_username
 }
 
 output "ssh_string" {
