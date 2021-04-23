@@ -1,16 +1,16 @@
 // customize the simple VM by adjusting the following local variables
 locals {
-    // the region of the deployment
-    location = "eastus"
-    vm_admin_username = "azureuser"
-    vm_admin_password = "PASSWORD"
-    resource_group_name = "resource_group"
-    // set the following to true, otherwise use windows server
-    use_windows_desktop = false
+  // the region of the deployment
+  location            = "eastus"
+  vm_admin_username   = "azureuser"
+  vm_admin_password   = "PASSWORD"
+  resource_group_name = "resource_group"
+  // set the following to true, otherwise use windows server
+  use_windows_desktop = false
 
-    // provide a globally unique name
-    storage_account_name = "storageaccount"
-    container_name = "previz"
+  // provide a globally unique name
+  storage_account_name = "storageaccount"
+  container_name       = "previz"
 }
 
 terraform {
@@ -67,10 +67,10 @@ resource "azurerm_subnet" "subnet" {
 }
 
 resource "azurerm_public_ip" "vm" {
-    name                     = "publicip"
-    resource_group_name      = azurerm_resource_group.rg.name
-    location                 = azurerm_resource_group.rg.location
-    allocation_method        = "Static"
+  name                = "publicip"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  allocation_method   = "Static"
 }
 
 resource "azurerm_network_interface" "nic" {
@@ -103,28 +103,28 @@ resource "azurerm_windows_virtual_machine" "vm" {
   }
 
   dynamic "source_image_reference" {
-      for_each = local.use_windows_desktop == false ? ["MicrosoftWindowsServer"] : []
-      content {
-         publisher = "MicrosoftWindowsServer"
-         offer     = "WindowsServer"
-         sku       = "2016-Datacenter"
-         version   = "latest"
-      }
+    for_each = local.use_windows_desktop == false ? ["MicrosoftWindowsServer"] : []
+    content {
+      publisher = "MicrosoftWindowsServer"
+      offer     = "WindowsServer"
+      sku       = "2016-Datacenter"
+      version   = "latest"
+    }
   }
 
   dynamic "source_image_reference" {
-      for_each = local.use_windows_desktop == true ? ["MicrosoftWindowsDesktop"] : []
-      content {
-          publisher = "MicrosoftWindowsDesktop"
-          offer     = "Windows-10"
-          sku       = "19h2-pro"
-          version   = "latest"
-      }
+    for_each = local.use_windows_desktop == true ? ["MicrosoftWindowsDesktop"] : []
+    content {
+      publisher = "MicrosoftWindowsDesktop"
+      offer     = "Windows-10"
+      sku       = "19h2-pro"
+      version   = "latest"
+    }
   }
 }
 
 output "rdp_username" {
-    value = local.vm_admin_username
+  value = local.vm_admin_username
 }
 
 output "rdp_address" {
@@ -132,9 +132,9 @@ output "rdp_address" {
 }
 
 output "storage_account_container_sas_command_prefix" {
-    value = "export SAS_PREFIX=https://${local.storage_account_name}.blob.core.windows.net/${local.container_name}?"
+  value = "export SAS_PREFIX=https://${local.storage_account_name}.blob.core.windows.net/${local.container_name}?"
 }
 
 output "storage_account_container_sas_command_suffix" {
-    value = "export SAS_SUFFIX=$(az storage container generate-sas --account-name ${local.storage_account_name} --https-only --permissions acdlrw --start 2020-04-06T00:00:00Z --expiry 2021-01-01T00:00:00Z --name ${local.container_name}  --output tsv)"
+  value = "export SAS_SUFFIX=$(az storage container generate-sas --account-name ${local.storage_account_name} --https-only --permissions acdlrw --start 2020-04-06T00:00:00Z --expiry 2021-01-01T00:00:00Z --name ${local.container_name}  --output tsv)"
 }

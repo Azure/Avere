@@ -1,15 +1,15 @@
 variable "node_address" {
-    description = "The address of controller or jumpbox"
+  description = "The address of controller or jumpbox"
 }
 
 variable "admin_username" {
   description = "Admin username on the controller or jumpbox"
-  default = "azureuser"
+  default     = "azureuser"
 }
 
 variable "admin_password" {
   description = "(optional) The password used for access to the controller or jumpbox.  If not specified, ssh_key_data needs to be set."
-  default = null
+  default     = null
 }
 
 variable "ssh_key_data" {
@@ -18,18 +18,18 @@ variable "ssh_key_data" {
 
 variable "ssh_port" {
   description = "specifies the tcp port to use for ssh"
-  default = 22
+  default     = 22
 }
 
 variable "mount_dir" {
-    description = "the mount directory on the local machine"
-    default = "/mnt/nfs"
+  description = "the mount directory on the local machine"
+  default     = "/mnt/nfs"
 }
 
 variable "nfs_address" {
-    description = "the private name or ip address of the nfs server"
+  description = "the private name or ip address of the nfs server"
 }
 
 variable "nfs_export_path" {
-    description = "The writeable path exported on the nfs server that will host the boostrap scripts"
+  description = "The writeable path exported on the nfs server that will host the boostrap scripts"
 }

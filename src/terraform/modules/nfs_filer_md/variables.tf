@@ -1,6 +1,6 @@
 variable "deploy_vm" {
   description = "Specifies to create the vm or not.  Specify false to delete the vm."
-  default = true
+  default     = true
 }
 
 variable "resource_group_name" {
@@ -8,17 +8,17 @@ variable "resource_group_name" {
 }
 
 variable "location" {
-    description = "The Azure Region into which all resources of NFS filer will be created."
+  description = "The Azure Region into which all resources of NFS filer will be created."
 }
 
 variable "admin_username" {
   description = "Admin username on the VM."
-  default = "azureuser"
+  default     = "azureuser"
 }
 
 variable "admin_password" {
   description = "(optional) The password used for access to the vm.  If not specified, ssh_key_data needs to be set."
-  default = null
+  default     = null
 }
 
 variable "ssh_key_data" {
@@ -27,12 +27,12 @@ variable "ssh_key_data" {
 
 variable "unique_name" {
   description = "The unique name used for the VM and for resource names associated with the VM."
-  default = "cloudnfsfiler"
+  default     = "cloudnfsfiler"
 }
 
 variable "vm_size" {
   description = "Size of the VM."
-  default = "Standard_D14_v2"
+  default     = "Standard_D14_v2"
 }
 
 variable "virtual_network_resource_group" {
@@ -49,7 +49,7 @@ variable "virtual_network_subnet_name" {
 
 variable "private_ip_address" {
   description = "specifies a static private ip address to use"
-  default = null
+  default     = null
 }
 
 variable "managed_disk_id" {
@@ -58,30 +58,30 @@ variable "managed_disk_id" {
 
 variable "nfs_export_path" {
   description = "The nfs export path exposed in /etc/exports."
-  default = "/data"
+  default     = "/data"
 }
 
 variable "nfs_export_options" {
   description = "The mount options used in /etc/exports."
-  default = "*(rw,sync,no_root_squash)"
+  default     = "*(rw,sync,no_root_squash)"
 }
 
 variable "caching" {
   description = "The disk caching options.  A disk above 4095 must be specified as None"
-  default = "None"
+  default     = "None"
 }
 
 variable "enable_root_login" {
   description = "Enable the root login.  This is sometimes useful for running rsync. Requires ssh_key_data to be set"
-  default = false
+  default     = false
 }
 
 variable "deploy_diagnostic_tools" {
   description = "Enable performance diagnostic tools iotop, bwm-ng, iperf3."
-  default = false
+  default     = false
 }
 
 variable "proxy" {
   description = "specify a proxy address if one exists in the format of http://PROXY_SERVER:PORT"
-  default = null
+  default     = null
 }

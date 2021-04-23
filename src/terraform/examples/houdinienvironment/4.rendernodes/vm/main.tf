@@ -1,40 +1,40 @@
 // customize the simple VM by adjusting the following local variables
 locals {
-    resource_group_name = "houdini_vm_rg"
-    unique_name = "unique"
-    // leave blank to not rename VM, otherwise it will be named "VMPREFIX-OCTET3-OCTET4" where the octets are from the IPv4 address of the machine
-    vmPrefix = local.unique_name
-    // paste in the id of the full custom image
-    source_image_id = ""
-    // can be any of the following None, Windows_Client and Windows_Server
-    license_type = "None"
-    vm_size = "Standard_D4s_v3"
-    add_public_ip = true
-    vm_admin_username = "azureuser"
-    // use either SSH Key data or admin password, if ssh_key_data is specified
-    // then admin_password is ignored
-    vm_admin_password = "ReplacePassword$"
+  resource_group_name = "houdini_vm_rg"
+  unique_name         = "unique"
+  // leave blank to not rename VM, otherwise it will be named "VMPREFIX-OCTET3-OCTET4" where the octets are from the IPv4 address of the machine
+  vmPrefix = local.unique_name
+  // paste in the id of the full custom image
+  source_image_id = ""
+  // can be any of the following None, Windows_Client and Windows_Server
+  license_type      = "None"
+  vm_size           = "Standard_D4s_v3"
+  add_public_ip     = true
+  vm_admin_username = "azureuser"
+  // use either SSH Key data or admin password, if ssh_key_data is specified
+  // then admin_password is ignored
+  vm_admin_password = "ReplacePassword$"
 
-    // replace below variables with the infrastructure variables from 0.network
-    location = ""
-    vnet_render_clients1_subnet_id = ""
+  // replace below variables with the infrastructure variables from 0.network
+  location                       = ""
+  vnet_render_clients1_subnet_id = ""
 
-    // update the below with information about the domain
-    ad_domain = "" // example "rendering.com"
-    // leave blank to add machine to default location
-    ou_path = ""
-    ad_username = "" 
-    ad_password = ""
+  // update the below with information about the domain
+  ad_domain = "" // example "rendering.com"
+  // leave blank to add machine to default location
+  ou_path     = ""
+  ad_username = ""
+  ad_password = ""
 
-    // update if you need to change the RDP port
-    rdp_port = 3389
+  // update if you need to change the RDP port
+  rdp_port = 3389
 
-    // the following are the arguments to be passed to the custom script
-    windows_custom_script_arguments = "$arguments = ' -RenameVMPrefix ''${local.vmPrefix}'' -ADDomain ''${local.ad_domain}'' -OUPath ''${local.ou_path}'' ''${local.ad_username}'' -DomainPassword ''${local.ad_password}'' -RDPPort ${local.rdp_port} '  ; "
+  // the following are the arguments to be passed to the custom script
+  windows_custom_script_arguments = "$arguments = ' -RenameVMPrefix ''${local.vmPrefix}'' -ADDomain ''${local.ad_domain}'' -OUPath ''${local.ou_path}'' ''${local.ad_username}'' -DomainPassword ''${local.ad_password}'' -RDPPort ${local.rdp_port} '  ; "
 
-    // load the powershell file, you can substitute kv pairs as you need them, but 
-    // use arguments where possible
-    powershell_script = file("${path.module}/../../setupMachine.ps1")
+  // load the powershell file, you can substitute kv pairs as you need them, but 
+  // use arguments where possible
+  powershell_script = file("${path.module}/../../setupMachine.ps1")
 }
 
 terraform {
@@ -57,10 +57,10 @@ resource "azurerm_resource_group" "win" {
 }
 
 resource "azurerm_public_ip" "vm" {
-  name                         = "${local.unique_name}-publicip"
-  location                     = local.location
-  resource_group_name          = azurerm_resource_group.win.name
-  allocation_method            = "Static"
+  name                = "${local.unique_name}-publicip"
+  location            = local.location
+  resource_group_name = azurerm_resource_group.win.name
+  allocation_method   = "Static"
 
   count = local.add_public_ip ? 1 : 0
 }
@@ -127,5 +127,5 @@ output "username" {
 }
 
 output "vm_address" {
-  value = "${local.add_public_ip ? azurerm_public_ip.vm[0].ip_address : azurerm_network_interface.vm.ip_configuration[0].private_ip_address}"
+  value = local.add_public_ip ? azurerm_public_ip.vm[0].ip_address : azurerm_network_interface.vm.ip_configuration[0].private_ip_address
 }

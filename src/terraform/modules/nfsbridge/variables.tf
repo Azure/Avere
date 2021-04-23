@@ -3,17 +3,17 @@ variable "resource_group_name" {
 }
 
 variable "location" {
-    description = "The Azure Region into which the dnsserver will be created."
+  description = "The Azure Region into which the dnsserver will be created."
 }
 
 variable "admin_username" {
   description = "Admin username on the dnsserver."
-  default = "azureuser"
+  default     = "azureuser"
 }
 
 variable "admin_password" {
   description = "(optional) The password used for access to the dnsserver.  If not specified, ssh_key_data needs to be set."
-  default = null
+  default     = null
 }
 
 variable "ssh_key_data" {
@@ -22,17 +22,17 @@ variable "ssh_key_data" {
 
 variable "ssh_port" {
   description = "specifies the tcp port to use for ssh"
-  default = 22
+  default     = 22
 }
 
 variable "unique_name" {
   description = "The unique name used for the dnsserver and for resource names associated with the VM."
-  default = "nfsbridge"
+  default     = "nfsbridge"
 }
 
 variable "vm_size" {
   description = "Size of the VM."
-  default = "Standard_F32s_v2"
+  default     = "Standard_F32s_v2"
 }
 
 variable "virtual_network_resource_group" {
@@ -49,10 +49,10 @@ variable "virtual_network_subnet_name" {
 
 variable "private_ip_address" {
   description = "specifies a static private ip address to use"
-  default = null
+  default     = null
 }
 
 variable "module_depends_on" {
-  default = [""]
+  default     = [""]
   description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
 }

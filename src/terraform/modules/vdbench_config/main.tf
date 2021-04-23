@@ -1,18 +1,18 @@
 locals {
-    bootstrap_script = "https://raw.githubusercontent.com/Azure/Avere/main/src/clientapps/vdbench/bootstrap.vdbench.sh"
-    mount_dir = "/b"
-    bootstrap_dir = "bootstrap"
+  bootstrap_script = "https://raw.githubusercontent.com/Azure/Avere/main/src/clientapps/vdbench/bootstrap.vdbench.sh"
+  mount_dir        = "/b"
+  bootstrap_dir    = "bootstrap"
 }
 resource "null_resource" "install_vdbench_bootstrap" {
   # Bootstrap script can run on any instance of the cluster
   # So we just choose the first in this case
   connection {
-      type  = "ssh"
-      port  = var.ssh_port
-      host  = var.node_address
-      user  = var.admin_username
-      password = var.ssh_key_data != null && var.ssh_key_data != "" ? "" : var.admin_password
-      private_key = var.ssh_key_data != null && var.ssh_key_data != "" ? file("~/.ssh/id_rsa") : null
+    type        = "ssh"
+    port        = var.ssh_port
+    host        = var.node_address
+    user        = var.admin_username
+    password    = var.ssh_key_data != null && var.ssh_key_data != "" ? "" : var.admin_password
+    private_key = var.ssh_key_data != null && var.ssh_key_data != "" ? file("~/.ssh/id_rsa") : null
   }
 
   provisioner "remote-exec" {

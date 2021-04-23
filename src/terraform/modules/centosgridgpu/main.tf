@@ -1,6 +1,6 @@
 locals {
   # send the script file to custom data, adding env vars
-  script_file_b64 = base64gzip(replace(file("${path.module}/install.sh"),"\r",""))
+  script_file_b64 = base64gzip(replace(file("${path.module}/install.sh"), "\r", ""))
   cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { installcmd = local.script_file_b64, ssh_port = var.ssh_port })
 }
 
@@ -15,7 +15,7 @@ data "azurerm_subnet" "vnet" {
 data "azurerm_subscription" "primary" {}
 
 data "azurerm_resource_group" "vm" {
-  name     = var.resource_group_name
+  name = var.resource_group_name
 
   depends_on = [var.module_depends_on]
 }
@@ -34,17 +34,17 @@ resource "azurerm_network_interface" "vm" {
 }
 
 resource "azurerm_linux_virtual_machine" "vm" {
-  name = "${var.unique_name}-vm"
-  location = var.location
-  resource_group_name = data.azurerm_resource_group.vm.name
+  name                  = "${var.unique_name}-vm"
+  location              = var.location
+  resource_group_name   = data.azurerm_resource_group.vm.name
   network_interface_ids = [azurerm_network_interface.vm.id]
-  computer_name  = var.unique_name
-  custom_data = base64encode(local.cloud_init_file)
-  size = var.vm_size
+  computer_name         = var.unique_name
+  custom_data           = base64encode(local.cloud_init_file)
+  size                  = var.vm_size
 
   os_disk {
-    name              = "${var.unique_name}-osdisk"
-    caching           = "ReadWrite"
+    name                 = "${var.unique_name}-osdisk"
+    caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
 
@@ -60,20 +60,20 @@ resource "azurerm_linux_virtual_machine" "vm" {
     }
   }
 
-  admin_username = var.admin_username
-  admin_password = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? var.admin_password : null
+  admin_username                  = var.admin_username
+  admin_password                  = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? var.admin_password : null
   disable_password_authentication = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? false : true
   dynamic "admin_ssh_key" {
-      for_each = var.ssh_key_data == null || var.ssh_key_data == "" ? [] : [var.ssh_key_data]
-      content {
-          username   = var.admin_username
-          public_key = var.ssh_key_data
-      }
+    for_each = var.ssh_key_data == null || var.ssh_key_data == "" ? [] : [var.ssh_key_data]
+    content {
+      username   = var.admin_username
+      public_key = var.ssh_key_data
+    }
   }
 }
 
 resource "azurerm_virtual_machine_extension" "cse" {
-  name = "${var.unique_name}-cse"
+  name                 = "${var.unique_name}-cse"
   virtual_machine_id   = azurerm_linux_virtual_machine.vm.id
   publisher            = "Microsoft.Azure.Extensions"
   type                 = "CustomScript"

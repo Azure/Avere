@@ -9,8 +9,8 @@ data "azurerm_subnet" "vnet" {
 data "azurerm_subscription" "primary" {}
 
 locals {
-  msazure_patchidentity_file_b64 = base64gzip(replace(file("${path.module}/msazure.py.patchidentity"),"\r",""))
-  vfxtpy_patchzone_file_b64 = base64gzip(replace(file("${path.module}/vfxt.py.patchzone"),"\r",""))
+  msazure_patchidentity_file_b64 = base64gzip(replace(file("${path.module}/msazure.py.patchidentity"), "\r", ""))
+  vfxtpy_patchzone_file_b64      = base64gzip(replace(file("${path.module}/vfxt.py.patchzone"), "\r", ""))
   # send the script file to custom data, adding env vars
   cloud_init_file = templatefile("${path.module}/cloud-init.tpl", { vfxtpy_patchzone = local.vfxtpy_patchzone_file_b64, msazure_patchidentity = local.msazure_patchidentity_file_b64, ssh_port = var.ssh_port })
   # the roles assigned to the controller managed identity principal
@@ -23,17 +23,17 @@ locals {
   create_compute_role = "Virtual Machine Contributor"
 
   # publisher / offer / sku
-  image_parts = var.image_id == null ? [] : split(":", var.image_id)
+  image_parts     = var.image_id == null ? [] : split(":", var.image_id)
   is_custom_image = var.image_id == null ? false : (length(local.image_parts) < 4 && length(var.image_id) > 0)
-  publisher = length(local.image_parts) >= 4 ? local.image_parts[0] : "microsoft-avere"
-  offer = length(local.image_parts) >= 4 ? local.image_parts[1] : "vfxt" 
-  sku = length(local.image_parts) >= 4 ? local.image_parts[2] : "avere-vfxt-controller"
-  version = length(local.image_parts) >= 4 ? local.image_parts[3] : "latest"
+  publisher       = length(local.image_parts) >= 4 ? local.image_parts[0] : "microsoft-avere"
+  offer           = length(local.image_parts) >= 4 ? local.image_parts[1] : "vfxt"
+  sku             = length(local.image_parts) >= 4 ? local.image_parts[2] : "avere-vfxt-controller"
+  version         = length(local.image_parts) >= 4 ? local.image_parts[3] : "latest"
 
   # the plan details are the same for all marketplace controller images
-  plan_name = "avere-vfxt-controller"
+  plan_name      = "avere-vfxt-controller"
   plan_publisher = "microsoft-avere"
-  plan_product = "vfxt"
+  plan_product   = "vfxt"
 }
 
 resource "azurerm_resource_group" "vm" {
@@ -56,16 +56,16 @@ data "azurerm_resource_group" "vm" {
 }
 
 resource "azurerm_public_ip" "vm" {
-    name                         = "${var.unique_name}-publicip"
-    location                     = var.location
-    resource_group_name          = var.create_resource_group ? azurerm_resource_group.vm[0].name : data.azurerm_resource_group.vm[0].name
-    allocation_method            = "Static"
+  name                = "${var.unique_name}-publicip"
+  location            = var.location
+  resource_group_name = var.create_resource_group ? azurerm_resource_group.vm[0].name : data.azurerm_resource_group.vm[0].name
+  allocation_method   = "Static"
 
-    tags = var.tags
+  tags = var.tags
 
-    count = var.deploy_controller && var.add_public_ip ? 1 : 0
+  count = var.deploy_controller && var.add_public_ip ? 1 : 0
 
-    depends_on = [var.module_depends_on]
+  depends_on = [var.module_depends_on]
 }
 
 resource "azurerm_network_interface" "vm" {
@@ -88,23 +88,23 @@ resource "azurerm_network_interface" "vm" {
 }
 
 resource "azurerm_linux_virtual_machine" "vm" {
-  name = "${var.unique_name}-vm"
-  location = var.location
-  resource_group_name = var.create_resource_group ? azurerm_resource_group.vm[0].name : data.azurerm_resource_group.vm[0].name
+  name                  = "${var.unique_name}-vm"
+  location              = var.location
+  resource_group_name   = var.create_resource_group ? azurerm_resource_group.vm[0].name : data.azurerm_resource_group.vm[0].name
   network_interface_ids = [azurerm_network_interface.vm[0].id]
-  computer_name  = var.unique_name
-  custom_data = var.apply_patch ? base64encode(local.cloud_init_file) : null
-  size = var.vm_size
-  source_image_id = local.is_custom_image ? var.image_id : null
-  
+  computer_name         = var.unique_name
+  custom_data           = var.apply_patch ? base64encode(local.cloud_init_file) : null
+  size                  = var.vm_size
+  source_image_id       = local.is_custom_image ? var.image_id : null
+
   identity {
-    type = var.user_assigned_managed_identity_id == null ? "SystemAssigned" : "UserAssigned"
+    type         = var.user_assigned_managed_identity_id == null ? "SystemAssigned" : "UserAssigned"
     identity_ids = var.user_assigned_managed_identity_id == null ? [] : [var.user_assigned_managed_identity_id]
   }
 
   os_disk {
-    name              = "${var.unique_name}-osdisk"
-    caching           = "ReadWrite"
+    name                 = "${var.unique_name}-osdisk"
+    caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
 
@@ -121,21 +121,21 @@ resource "azurerm_linux_virtual_machine" "vm" {
   dynamic "plan" {
     for_each = local.is_custom_image ? [] : ["microsoft-avere"]
     content {
-      name = local.plan_name
+      name      = local.plan_name
       publisher = local.plan_publisher
-      product = local.plan_product
+      product   = local.plan_product
     }
   }
 
-  admin_username = var.admin_username
-  admin_password = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? var.admin_password : null
+  admin_username                  = var.admin_username
+  admin_password                  = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? var.admin_password : null
   disable_password_authentication = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? false : true
   dynamic "admin_ssh_key" {
-      for_each = var.ssh_key_data == null || var.ssh_key_data == "" ? [] : [var.ssh_key_data]
-      content {
-          username   = var.admin_username
-          public_key = var.ssh_key_data
-      }
+    for_each = var.ssh_key_data == null || var.ssh_key_data == "" ? [] : [var.ssh_key_data]
+    content {
+      username   = var.admin_username
+      public_key = var.ssh_key_data
+    }
   }
   count = var.deploy_controller ? 1 : 0
 
@@ -150,8 +150,8 @@ locals {
       var.resource_group_name,
       var.virtual_network_resource_group,
     ],
-    var.alternative_resource_groups))
-  
+  var.alternative_resource_groups))
+
   user_access_rgs = var.user_assigned_managed_identity_id != null ? [] : distinct(
     [
       var.resource_group_name,

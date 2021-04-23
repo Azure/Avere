@@ -7,11 +7,11 @@
 
 locals {
   // best practice is to ensure the ha_subnet needs to be isolated
-  anvil_dynamic_cluster_ip     = var.anvil_data_cluster_ip == ""
-  load_balancer_fe_name        = "${var.unique_name}LoadBalancerFrontEnd"
+  anvil_dynamic_cluster_ip = var.anvil_data_cluster_ip == ""
+  load_balancer_fe_name    = "${var.unique_name}LoadBalancerFrontEnd"
 
   // advanced
-  domain = "${var.unique_name}.azure"
+  domain               = "${var.unique_name}.azure"
   is_high_availability = var.anvil_configuration == "High Availability"
 }
 
@@ -81,7 +81,7 @@ resource "azurerm_lb_rule" "anvilloadbalancerlbrule" {
 locals {
   anvil_node_count = local.is_high_availability ? 2 : 1
 
-  anvil_host_names = [for i in range(local.anvil_node_count): 
+  anvil_host_names = [for i in range(local.anvil_node_count) :
     "${var.unique_name}anvil${i}"
   ]
 
@@ -92,7 +92,7 @@ locals {
 
   anvil_lb_ip = local.is_high_availability ? azurerm_lb.anvilloadbalancer[0].frontend_ip_configuration[0].private_ip_address : ""
 
-   // configure the custom data
+  // configure the custom data
   standalone_custom_data = [
     <<EOT
 {
@@ -131,7 +131,7 @@ EOT
     }
 }
 EOT
-, <<EOT
+    , <<EOT
 {
     "cluster": {
         "domainname": "${local.domain}",
@@ -198,7 +198,7 @@ resource "azurerm_linux_virtual_machine" "anvilvm" {
   name                  = local.anvil_host_names[count.index]
   location              = var.location
   resource_group_name   = var.resource_group_name
-  network_interface_ids = local.is_high_availability ? [azurerm_network_interface.anvildata[count.index].id, azurerm_network_interface.anvilha[count.index].id] : [azurerm_network_interface.anvildata[count.index].id] 
+  network_interface_ids = local.is_high_availability ? [azurerm_network_interface.anvildata[count.index].id, azurerm_network_interface.anvilha[count.index].id] : [azurerm_network_interface.anvildata[count.index].id]
   computer_name         = local.anvil_host_names[count.index]
   custom_data           = base64encode(local.is_high_availability ? local.ha_custom_data[count.index] : local.standalone_custom_data[count.index])
   size                  = var.anvil_instance_type
@@ -212,8 +212,8 @@ resource "azurerm_linux_virtual_machine" "anvilvm" {
     disk_size_gb         = var.anvil_boot_disk_size
   }
 
-  admin_username = var.admin_username
-  admin_password = var.admin_password
+  admin_username                  = var.admin_username
+  admin_password                  = var.admin_password
   disable_password_authentication = false
 
   // add depends_on so deletion happens successfully

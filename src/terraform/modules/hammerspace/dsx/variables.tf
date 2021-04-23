@@ -12,12 +12,12 @@ variable "hammerspace_image_id" {
 
 variable "unique_name" {
   description = "The unique name used for the hammerspace node."
-  default = "Hammerspace1"
+  default     = "Hammerspace1"
 }
 
 variable "admin_username" {
   description = "Admin username on the jumpbox."
-  default = "azureuser"
+  default     = "azureuser"
 }
 
 variable "admin_password" {
@@ -30,7 +30,7 @@ variable "dsx_instance_count" {
 
 variable "dsx_instance_type" {
   description = "DSX Instance Type"
-  default = "Standard_D8s_v3"
+  default     = "Standard_D8s_v3"
 }
 
 variable "virtual_network_resource_group" {
@@ -62,7 +62,7 @@ variable "anvil_domain" {
 }
 
 variable "module_depends_on" {
-  default = [""]
+  default     = [""]
   description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
 }
 
@@ -72,7 +72,7 @@ variable "module_depends_on" {
 
 variable "dsx_boot_disk_storage_type" {
   description = "DSX Boot/OS Disk Storage Type (Default is Premium_LRS if supported by the instance type, otherwise Standard_LRS)"
-  default = "StandardSSD_LRS"
+  default     = "StandardSSD_LRS"
   // options:
   // "Standard_LRS",
   // "Premium_LRS",
@@ -81,12 +81,12 @@ variable "dsx_boot_disk_storage_type" {
 
 variable "dsx_boot_disk_size" {
   description = "DSX Boot/OS Disk Size"
-  default = 127
+  default     = 127
 }
 
 variable "dsx_data_disk_storage_type" {
   description = "DSX data disk Storage Type (Default is Premium_LRS if supported by the instance type, otherwise Standard_LRS))"
-  default = "Premium_LRS"
+  default     = "Premium_LRS"
   // options:
   // "Standard_LRS",
   // "Premium_LRS",
@@ -95,5 +95,5 @@ variable "dsx_data_disk_storage_type" {
 
 variable "dsx_data_disk_size" {
   description = "DSX data disk Size"
-  default = 255
+  default     = 255
 }

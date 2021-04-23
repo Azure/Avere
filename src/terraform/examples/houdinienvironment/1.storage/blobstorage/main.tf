@@ -1,18 +1,18 @@
 // customize the simple VM by editing the following local variables
 locals {
-    // storage details
-    storage_resource_group_name  = "houdini_storage_rg"
-    storage_account_name         = "houdinistgacct"
+  // storage details
+  storage_resource_group_name = "houdini_storage_rg"
+  storage_account_name        = "houdinistgacct"
 
-    // replace below variables with the infrastructure variables from 1.base_infrastructure
-    location = ""
-    vnet_cloud_cache_subnet_id = ""
-    vnet_cloud_cache_subnet_name = ""
-    vnet_jumpbox_subnet_id = ""
-    vnet_jumpbox_subnet_name = ""
-    vnet_name = ""
-    vnet_render_clients1_subnet_id = ""
-    vnet_resource_group = ""
+  // replace below variables with the infrastructure variables from 1.base_infrastructure
+  location                       = ""
+  vnet_cloud_cache_subnet_id     = ""
+  vnet_cloud_cache_subnet_name   = ""
+  vnet_jumpbox_subnet_id         = ""
+  vnet_jumpbox_subnet_name       = ""
+  vnet_name                      = ""
+  vnet_render_clients1_subnet_id = ""
+  vnet_resource_group            = ""
 }
 
 terraform {
@@ -41,12 +41,12 @@ resource "azurerm_storage_account" "storage" {
   account_tier             = "Standard"
   account_replication_type = "LRS"
   network_rules {
-      virtual_network_subnet_ids = [
-          local.vnet_cloud_cache_subnet_id,
-          // need for the controller to create the container
-          local.vnet_jumpbox_subnet_id,
-      ]
-      default_action = "Deny"
+    virtual_network_subnet_ids = [
+      local.vnet_cloud_cache_subnet_id,
+      // need for the controller to create the container
+      local.vnet_jumpbox_subnet_id,
+    ]
+    default_action = "Deny"
   }
 }
 
