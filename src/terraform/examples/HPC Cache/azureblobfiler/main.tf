@@ -1,71 +1,71 @@
 // customize the HPC Cache by editing the following local variables
 locals {
-    // the region of the deployment
-    location = "eastus"
-    
-    // network details
-    network_resource_group_name = "network_resource_group"
+  // the region of the deployment
+  location = "eastus"
 
-    // hpc cache details
-    hpc_cache_resource_group_name = "hpc_cache_resource_group"
+  // network details
+  network_resource_group_name = "network_resource_group"
 
-    // HPC Cache Throughput SKU - 3 allowed values for throughput (GB/s) of the cache
-    //    Standard_2G
-    //    Standard_4G
-    //    Standard_8G
-    cache_throughput = "Standard_2G"
+  // hpc cache details
+  hpc_cache_resource_group_name = "hpc_cache_resource_group"
 
-    // HPC Cache Size - 5 allowed sizes (GBs) for the cache
-    //     3072
-    //     6144
-    //    12288
-    //    24576
-    //    49152
-    cache_size = 12288
+  // HPC Cache Throughput SKU - 3 allowed values for throughput (GB/s) of the cache
+  //    Standard_2G
+  //    Standard_4G
+  //    Standard_8G
+  cache_throughput = "Standard_2G"
 
-    // unique name for cache
-    cache_name = "uniquename"
+  // HPC Cache Size - 5 allowed sizes (GBs) for the cache
+  //     3072
+  //     6144
+  //    12288
+  //    24576
+  //    49152
+  cache_size = 12288
 
-    // usage model
-    //    WRITE_AROUND
-    //    READ_HEAVY_INFREQ
-    //    WRITE_WORKLOAD_15
-    usage_model = "READ_HEAVY_INFREQ"
+  // unique name for cache
+  cache_name = "uniquename"
 
-    // storage details
-    storage_resource_group_name = "storage_resource_group"
-    // create a globally unique name for the storage account
-    storage_account_name = ""
-    avere_storage_container_name = "hpccache"
+  // usage model
+  //    WRITE_AROUND
+  //    READ_HEAVY_INFREQ
+  //    WRITE_WORKLOAD_15
+  usage_model = "READ_HEAVY_INFREQ"
 
-    // per the hpc cache documentation: https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-add-storage
-    // customers who joined during the preview (before GA), will need to
-    // swap the display names below.  This will manifest as the following
-    // error:
-    //       Error: A Service Principal with the Display Name "HPC Cache Resource Provider" was not found
-    //
-    //hpc_cache_principal_name = "StorageCache Resource Provider"
-    hpc_cache_principal_name = "HPC Cache Resource Provider"
+  // storage details
+  storage_resource_group_name = "storage_resource_group"
+  // create a globally unique name for the storage account
+  storage_account_name         = ""
+  avere_storage_container_name = "hpccache"
+
+  // per the hpc cache documentation: https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-add-storage
+  // customers who joined during the preview (before GA), will need to
+  // swap the display names below.  This will manifest as the following
+  // error:
+  //       Error: A Service Principal with the Display Name "HPC Cache Resource Provider" was not found
+  //
+  //hpc_cache_principal_name = "StorageCache Resource Provider"
+  hpc_cache_principal_name = "HPC Cache Resource Provider"
 }
 
 terraform {
-	required_providers {
-		azurerm = {
-			source  = "hashicorp/azurerm"
-			version = "~>2.12.0"
-		}
-	}
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~>2.12.0"
+    }
+  }
 }
 
 provider "azurerm" {
-	features {}
+  features {}
 }
 
 // the render network
 module "network" {
-    source = "github.com/Azure/Avere/src/terraform/modules/render_network"
-    resource_group_name = local.network_resource_group_name
-    location = local.location
+  source              = "github.com/Azure/Avere/src/terraform/modules/render_network"
+  resource_group_name = local.network_resource_group_name
+  location            = local.location
 }
 
 resource "azurerm_resource_group" "hpc_cache_rg" {
@@ -75,7 +75,9 @@ resource "azurerm_resource_group" "hpc_cache_rg" {
   // limitation of the template deployment, the only
   // way to destroy template resources is to destroy
   // the resource group
-  depends_on = [module.network]
+  depends_on = [
+    module.network,
+  ]
 }
 
 resource "azurerm_hpc_cache" "hpc_cache" {
@@ -101,7 +103,9 @@ resource "azurerm_storage_account" "storage" {
 
   // if the nsg associations do not complete before the storage account
   // create is started, it will fail with "subnet updating"
-  depends_on = [module.network]
+  depends_on = [
+    module.network,
+  ]
 }
 
 resource "azurerm_storage_container" "blob_container" {
@@ -122,7 +126,9 @@ resource "azurerm_storage_account_network_rules" "storage_acls" {
   ]
   default_action = "Deny"
 
-  depends_on = [azurerm_storage_container.blob_container]
+  depends_on = [
+    azurerm_storage_container.blob_container,
+  ]
 }*/
 
 data "azuread_service_principal" "hpc_cache_sp" {
@@ -145,8 +151,8 @@ resource "azurerm_role_assignment" "storage_blob_data_contrib" {
 // there is similar guidance in per the hpc cache documentation: https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-add-storage
 resource "null_resource" "delay" {
   depends_on = [
-      azurerm_role_assignment.storage_account_contrib,
-      azurerm_role_assignment.storage_blob_data_contrib,
+    azurerm_role_assignment.storage_account_contrib,
+    azurerm_role_assignment.storage_blob_data_contrib,
   ]
 
   provisioner "local-exec" {
@@ -162,13 +168,15 @@ resource "azurerm_hpc_cache_blob_target" "blob_target1" {
   storage_container_id = azurerm_storage_container.blob_container.resource_manager_id
   namespace_path       = "/blob_storage"
 
-  depends_on           = [null_resource.delay]
+  depends_on = [
+    null_resource.delay,
+  ]
 }
 
 output "mount_addresses" {
-    value = azurerm_hpc_cache.hpc_cache.mount_addresses
+  value = azurerm_hpc_cache.hpc_cache.mount_addresses
 }
 
 output "export_namespace" {
-    value = azurerm_hpc_cache_blob_target.blob_target1.namespace_path
+  value = azurerm_hpc_cache_blob_target.blob_target1.namespace_path
 }

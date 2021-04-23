@@ -85,7 +85,9 @@ resource "azurerm_subnet" "rendergwsubnet" {
   virtual_network_name = module.network.vnet_name
   address_prefixes     = ["10.0.0.0/24"]
 
-  depends_on = [module.network.module_depends_on_ids]
+  depends_on = [
+    module.network,
+  ]
 }
 
 resource "azurerm_resource_group" "nfsfiler" {
@@ -200,7 +202,9 @@ resource "azurerm_public_ip" "rendergwpublicip" {
 
   allocation_method = "Dynamic"
 
-  depends_on = [module.network.vnet_id]
+  depends_on = [
+    module.network
+  ]
 }
 
 resource "azurerm_virtual_network_gateway" "rendervpngw" {
@@ -219,7 +223,10 @@ resource "azurerm_virtual_network_gateway" "rendervpngw" {
     subnet_id                     = azurerm_subnet.rendergwsubnet.id
   }
 
-  depends_on = [azurerm_subnet.filergwsubnet, azurerm_subnet.netapp]
+  depends_on = [
+    azurerm_subnet.filergwsubnet,
+    azurerm_subnet.netapp,
+  ]
 }
 
 resource "azurerm_virtual_network_gateway_connection" "filer_to_render" {
@@ -273,10 +280,6 @@ resource "avere_vfxt" "vfxt" {
   // ssh key takes precedence over controller password
   controller_admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
   controller_ssh_port       = local.ssh_port
-  // terraform is not creating the implicit dependency on the controller module
-  // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
-  // to work around, add the explicit dependency
-  depends_on = [module.vfxtcontroller, azurerm_virtual_network_gateway_connection.render_to_filer, azurerm_virtual_network_gateway_connection.filer_to_render]
 
   location                     = local.location
   azure_resource_group         = local.vfxt_resource_group_name
@@ -297,6 +300,15 @@ resource "avere_vfxt" "vfxt" {
       core_filer_export = "/${local.export_path}"
     }
   }
+
+  // terraform is not creating the implicit dependency on the controller module
+  // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
+  // to work around, add the explicit dependency
+  depends_on = [
+    module.vfxtcontroller,
+    azurerm_virtual_network_gateway_connection.render_to_filer,
+    azurerm_virtual_network_gateway_connection.filer_to_render,
+  ]
 }
 
 output "netapp_region" {

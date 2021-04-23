@@ -70,7 +70,9 @@ module "windowsgridgpu" {
   virtual_network_name           = local.virtual_network_name
   virtual_network_subnet_name    = local.virtual_network_subnet_name
 
-  module_depends_on = [azurerm_resource_group.windowsgridgpu.id]
+  depends_on = [
+    azurerm_resource_group.windowsgridgpu,
+  ]
 }
 
 output "address" {

@@ -109,7 +109,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
     }
   }
 
-  depends_on = [module.network.module_depends_on_ids]
+  depends_on = [
+    module.network,
+  ]
 }
 
 output "vmss_id" {

@@ -46,8 +46,3 @@ variable "block_until_warm" {
   description = "block the operation until the cache warming has finished"
   default     = true
 }
-
-variable "module_depends_on" {
-  default     = [""]
-  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
-}

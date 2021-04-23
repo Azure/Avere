@@ -3,8 +3,6 @@ resource "azurerm_resource_group" "render_rg" {
   location = var.location
 
   count = var.create_resource_group ? 1 : 0
-
-  depends_on = [var.module_depends_on]
 }
 
 resource "azurerm_network_security_group" "ssh_nsg" {
@@ -42,7 +40,9 @@ resource "azurerm_network_security_group" "ssh_nsg" {
     }
   }
 
-  depends_on = [var.module_depends_on, azurerm_resource_group.render_rg]
+  depends_on = [
+    azurerm_resource_group.render_rg,
+  ]
 }
 
 resource "azurerm_network_security_group" "no_internet_nsg" {
@@ -63,7 +63,9 @@ resource "azurerm_network_security_group" "no_internet_nsg" {
     destination_address_prefix = "*"
   }
 
-  depends_on = [var.module_depends_on, azurerm_resource_group.render_rg]
+  depends_on = [
+    azurerm_resource_group.render_rg,
+  ]
 }
 
 resource "azurerm_virtual_network" "vnet" {
@@ -73,7 +75,9 @@ resource "azurerm_virtual_network" "vnet" {
   resource_group_name = var.resource_group_name
   dns_servers         = var.dns_servers
 
-  depends_on = [var.module_depends_on, azurerm_resource_group.render_rg]
+  depends_on = [
+    azurerm_resource_group.render_rg,
+  ]
 }
 
 resource "azurerm_subnet" "cloud_cache" {

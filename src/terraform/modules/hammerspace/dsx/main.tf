@@ -2,8 +2,6 @@ data "azurerm_subnet" "data_subnet" {
   name                 = var.virtual_network_data_subnet_name
   virtual_network_name = var.virtual_network_name
   resource_group_name  = var.virtual_network_resource_group
-
-  depends_on = [var.module_depends_on]
 }
 
 locals {

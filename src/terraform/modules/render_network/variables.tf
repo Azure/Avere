@@ -82,11 +82,6 @@ variable "dns_servers" {
   default     = null
 }
 
-variable "module_depends_on" {
-  default     = [""]
-  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
-}
-
 variable "open_external_ports" {
   default = [22, 3389]
   # ports 443, 4172, 60443 required for terradici

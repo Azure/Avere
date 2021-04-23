@@ -61,11 +61,6 @@ variable "anvil_domain" {
   description = "The domain used by the anvil nodes."
 }
 
-variable "module_depends_on" {
-  default     = [""]
-  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
-}
-
 ////////////////////////////////////////////////////////////////
 // Advanced Configuration
 ////////////////////////////////////////////////////////////////

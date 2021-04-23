@@ -33,8 +33,3 @@ variable "bootstrap_mount_address" {
 variable "bootstrap_export_path" {
   description = "the export path that hosts the worker bootstrap script"
 }
-
-variable "module_depends_on" {
-  default     = [""]
-  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
-}

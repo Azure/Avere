@@ -97,8 +97,3 @@ variable "storage_account_type" {
   description = "specify the type of OS Disk.  Possible values are Standard_LRS, StandardSSD_LRS and Premium_LRS"
   default     = "StandardSSD_LRS"
 }
-
-variable "module_depends_on" {
-  default     = [""]
-  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
-}

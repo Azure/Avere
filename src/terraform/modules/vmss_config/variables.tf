@@ -28,8 +28,3 @@ variable "nfs_address" {
 variable "nfs_export_path" {
   description = "The writeable path exported on the nfs server that will host the boostrap scripts"
 }
-
-variable "module_depends_on" {
-  default     = [""]
-  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
-}

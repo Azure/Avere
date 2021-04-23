@@ -66,8 +66,3 @@ variable "alternative_resource_groups" {
   description = "specifies alternative resource groups including those containing custom images or storage accounts"
   default     = []
 }
-
-variable "module_depends_on" {
-  default     = [""]
-  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
-}

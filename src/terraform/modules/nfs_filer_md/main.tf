@@ -92,5 +92,7 @@ SETTINGS
 
   count = var.deploy_vm ? 1 : 0
 
-  depends_on = [azurerm_virtual_machine_data_disk_attachment.nfsfiler[0]]
+  depends_on = [
+    azurerm_virtual_machine_data_disk_attachment.nfsfiler[0],
+  ]
 }

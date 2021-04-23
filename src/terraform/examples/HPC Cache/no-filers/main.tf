@@ -55,7 +55,9 @@ resource "azurerm_resource_group" "hpc_cache_rg" {
   // limitation of the template deployment, the only
   // way to destroy template resources is to destroy
   // the resource group
-  depends_on = [module.network]
+  depends_on = [
+    module.network,
+  ]
 }
 
 resource "azurerm_hpc_cache" "hpc_cache" {

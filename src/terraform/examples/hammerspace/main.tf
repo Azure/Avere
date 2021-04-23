@@ -93,7 +93,9 @@ resource "azurerm_storage_account" "storage" {
   account_tier             = "Standard"
   account_replication_type = "LRS"
 
-  depends_on = [azurerm_resource_group.nfsfiler]
+  depends_on = [
+    azurerm_resource_group.nfsfiler,
+  ]
 }
 
 resource "azurerm_storage_container" "blob_container" {
@@ -121,7 +123,9 @@ module "anvil" {
   anvil_metadata_disk_storage_type      = local.storage_account_type
   anvil_metadata_disk_size              = local.metadata_disk_size_gb
 
-  module_depends_on = [azurerm_resource_group.nfsfiler.id]
+  depends_on = [
+    azurerm_resource_group.nfsfiler,
+  ]
 }
 
 // the ephemeral filer
@@ -155,7 +159,9 @@ module "anvil_configure" {
   nfs_export_path              = local.nfs_export_path
   anvil_hostname               = length(module.anvil.anvil_host_names) == 0 ? "" : module.anvil.anvil_host_names[0]
 
-  module_depends_on = module.anvil.module_depends_on_ids
+  depends_on = [
+    module.anvil,
+  ]
 }
 
 output "hammerspace_username" {

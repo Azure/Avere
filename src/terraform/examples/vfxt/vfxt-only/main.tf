@@ -95,10 +95,6 @@ resource "avere_vfxt" "vfxt" {
   // ssh key takes precedence over controller password
   controller_admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
   controller_ssh_port       = local.ssh_port
-  // terraform is not creating the implicit dependency on the controller module
-  // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
-  // to work around, add the explicit dependency
-  depends_on = [module.vfxtcontroller]
 
   proxy_uri         = local.proxy_uri
   cluster_proxy_uri = local.cluster_proxy_uri
@@ -115,6 +111,13 @@ resource "avere_vfxt" "vfxt" {
   vfxt_node_count              = 3
 
   tags = local.tags
+
+  // terraform is not creating the implicit dependency on the controller module
+  // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
+  // to work around, add the explicit dependency
+  depends_on = [
+    module.vfxtcontroller,
+  ]
 }
 
 output "controller_username" {

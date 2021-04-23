@@ -14,8 +14,3 @@ output "vmss_name" {
     description = "The name of the resource group."
     value = azurerm_virtual_machine_scale_set.vmss.name
 }
-
-output "module_depends_on_id" {
-  description = "the id(s) to force others to wait"
-  value = azurerm_virtual_machine_scale_set.vmss.id
-}

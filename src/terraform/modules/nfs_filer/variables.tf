@@ -61,8 +61,3 @@ variable "proxy" {
   description = "specify a proxy address if one exists in the format of http://PROXY_SERVER:PORT"
   default = null
 }
-
-variable "module_depends_on" {
-  default = [""]
-  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
-}

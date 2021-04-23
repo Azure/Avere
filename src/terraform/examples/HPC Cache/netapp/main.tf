@@ -1,64 +1,64 @@
 // customize the HPC Cache by editing the following local variables
 locals {
-    // the region of the deployment
-    location = "eastus"
-    
-    // network details
-    network_resource_group_name = "network_resource_group"
-    
-    // hpc cache details
-    hpc_cache_resource_group_name = "hpc_cache_resource_group"
+  // the region of the deployment
+  location = "eastus"
 
-    // HPC Cache Throughput SKU - 3 allowed values for throughput (GB/s) of the cache
-    //    Standard_2G
-    //    Standard_4G
-    //    Standard_8G
-    cache_throughput = "Standard_2G"
+  // network details
+  network_resource_group_name = "network_resource_group"
 
-    // HPC Cache Size - 5 allowed sizes (GBs) for the cache
-    //     3072
-    //     6144
-    //    12288
-    //    24576
-    //    49152
-    cache_size = 12288
+  // hpc cache details
+  hpc_cache_resource_group_name = "hpc_cache_resource_group"
 
-    // unique name for cache
-    cache_name = "uniquename"
+  // HPC Cache Throughput SKU - 3 allowed values for throughput (GB/s) of the cache
+  //    Standard_2G
+  //    Standard_4G
+  //    Standard_8G
+  cache_throughput = "Standard_2G"
 
-    // usage model
-    //    WRITE_AROUND
-    //    READ_HEAVY_INFREQ
-    //    WRITE_WORKLOAD_15
-    usage_model = "READ_HEAVY_INFREQ"
+  // HPC Cache Size - 5 allowed sizes (GBs) for the cache
+  //     3072
+  //     6144
+  //    12288
+  //    24576
+  //    49152
+  cache_size = 12288
 
-    // netapp filer details
-    netapp_resource_group_name = "netapp_resource_group"
-    export_path = "data"
-    // possible values are Standard, Premium, Ultra
-    service_level = "Premium"
-    pool_size_in_tb = 4
-    volume_storage_quota_in_gb = 100
+  // unique name for cache
+  cache_name = "uniquename"
+
+  // usage model
+  //    WRITE_AROUND
+  //    READ_HEAVY_INFREQ
+  //    WRITE_WORKLOAD_15
+  usage_model = "READ_HEAVY_INFREQ"
+
+  // netapp filer details
+  netapp_resource_group_name = "netapp_resource_group"
+  export_path                = "data"
+  // possible values are Standard, Premium, Ultra
+  service_level              = "Premium"
+  pool_size_in_tb            = 4
+  volume_storage_quota_in_gb = 100
 }
 
 terraform {
-	required_providers {
-		azurerm = {
-			source  = "hashicorp/azurerm"
-			version = "~>2.12.0"
-		}
-	}
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~>2.12.0"
+    }
+  }
 }
 
 provider "azurerm" {
-	features {}
+  features {}
 }
 
 // the render network
 module "network" {
-    source              = "github.com/Azure/Avere/src/terraform/modules/render_network"
-    resource_group_name = local.network_resource_group_name
-    location            = local.location
+  source              = "github.com/Azure/Avere/src/terraform/modules/render_network"
+  resource_group_name = local.network_resource_group_name
+  location            = local.location
 }
 
 resource "azurerm_subnet" "netapp" {
@@ -76,7 +76,9 @@ resource "azurerm_subnet" "netapp" {
     }
   }
 
-  depends_on = [module.network]
+  depends_on = [
+    module.network,
+  ]
 }
 
 resource "azurerm_resource_group" "netapprg" {
@@ -86,7 +88,9 @@ resource "azurerm_resource_group" "netapprg" {
   // limitation of the template deployment, the only
   // way to destroy template resources is to destroy
   // the resource group
-  depends_on = [module.network]
+  depends_on = [
+    module.network,
+  ]
 }
 
 resource "azurerm_netapp_account" "account" {
@@ -117,10 +121,10 @@ resource "azurerm_netapp_volume" "netappvolume" {
   storage_quota_in_gb = local.volume_storage_quota_in_gb
 
   export_policy_rule {
-    rule_index = 1
-    allowed_clients = [module.network.vnet_address_space]
+    rule_index        = 1
+    allowed_clients   = [module.network.vnet_address_space]
     protocols_enabled = ["NFSv3"]
-    unix_read_write = true
+    unix_read_write   = true
   }
 }
 
@@ -131,7 +135,9 @@ resource "azurerm_resource_group" "hpc_cache_rg" {
   // limitation of the template deployment, the only
   // way to destroy template resources is to destroy
   // the resource group
-  depends_on = [module.network]
+  depends_on = [
+    module.network,
+  ]
 }
 
 resource "azurerm_hpc_cache" "hpc_cache" {
@@ -157,17 +163,17 @@ resource "azurerm_hpc_cache_nfs_target" "nfs_targets" {
 }
 
 output "netapp_addresses" {
-    value = azurerm_netapp_volume.netappvolume.mount_ip_addresses
+  value = azurerm_netapp_volume.netappvolume.mount_ip_addresses
 }
 
 output "netapp_export" {
-    value = "/${local.export_path}"
+  value = "/${local.export_path}"
 }
 
 output "hpccache_mount_addresses" {
-    value = azurerm_hpc_cache.hpc_cache.mount_addresses
+  value = azurerm_hpc_cache.hpc_cache.mount_addresses
 }
 
 output "hpccache_export_namespace" {
-    value = tolist(azurerm_hpc_cache_nfs_target.nfs_targets.namespace_junction)[0].namespace_path
+  value = tolist(azurerm_hpc_cache_nfs_target.nfs_targets.namespace_junction)[0].namespace_path
 }
