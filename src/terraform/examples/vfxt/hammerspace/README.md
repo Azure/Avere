@@ -22,10 +22,14 @@ To run the example, execute the following instructions.  This assumes use of Azu
 
 4. If not already installed, run the following commands to install the Avere vFXT provider for Azure:
 ```bash
+# for terraform >= 0.13.*
+mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/1.0.0/linux_amd64
+browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[0].browser_download_url)
+wget -O ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/1.0.0/linux_amd64/terraform-provider-avere_v1.0.0 $browser_download_url
+chmod 755 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/1.0.0/linux_amd64/terraform-provider-avere_v1.0.0
+# for terraform 0.12.*
 mkdir -p ~/.terraform.d/plugins
-# install the vfxt released binary from https://github.com/Azure/Avere
-wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.31/terraform-provider-avere
-chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
+cp ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/1.0.0/linux_amd64/terraform-provider-avere_v1.0.0 ~/.terraform.d/plugins
 ```
 
 5. get the terraform examples

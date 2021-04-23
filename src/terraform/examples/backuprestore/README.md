@@ -35,9 +35,14 @@ scp admin@VFXT_ADDRESS:/support/Backups/backup.tgz .
 
 6. From the controller node, download the Avere vFXT terraform provider that will be used to create the the terraform files `hpccache-main.tf` and `vfxt-main.tf` for the HPC Cache and Avere vFXT clusters respectively:
 ```bash
+# for terraform >= 0.13.*
+mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/1.0.0/linux_amd64
+browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[0].browser_download_url)
+wget -O ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/1.0.0/linux_amd64/terraform-provider-avere_v1.0.0 $browser_download_url
+chmod 755 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/1.0.0/linux_amd64/terraform-provider-avere_v1.0.0
+# for terraform 0.12.*
 mkdir -p ~/.terraform.d/plugins
-wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.32/terraform-provider-avere
-chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
+cp ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/1.0.0/linux_amd64/terraform-provider-avere_v1.0.0 ~/.terraform.d/plugins
 ```
 
 7. generate the terraform files `hpccache-main.tf` and `vfxt-main.tf` for the HPC Cache and Avere vFXT clusters respectively:
