@@ -16,42 +16,42 @@ variable "dsx_count" {
 
 variable "nfs_export_path" {
   description = "the nfs export path to export from the Hammerspace filer, leave blank to not set"
-  default = ""
+  default     = ""
 }
 
 variable "local_site_name" {
   description = "the local site name, leave blank to not set"
-  default = ""
+  default     = ""
 }
 
 variable "ad_domain" {
   description = "the ad domainname, leave blank to not set"
-  default = ""
+  default     = ""
 }
 
 variable "ad_user" {
   description = "the ad user, leave blank to not set"
-  default = ""
+  default     = ""
 }
 
 variable "ad_user_password" {
   description = "the ad user password, leave blank to not set"
-  default = ""
+  default     = ""
 }
 
 variable "azure_storage_account" {
   description = "the azure storage account name"
-  default = ""
+  default     = ""
 }
 
 variable "azure_storage_account_key" {
   description = "the azure storage account key"
-  default = ""
+  default     = ""
 }
 
 variable "azure_storage_account_container" {
   description = "the azure storage account container"
-  default = ""
+  default     = ""
 }
 
 variable "anvil_hostname" {
@@ -59,6 +59,6 @@ variable "anvil_hostname" {
 }
 
 variable "module_depends_on" {
-  default = [""]
+  default     = [""]
   description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
 }

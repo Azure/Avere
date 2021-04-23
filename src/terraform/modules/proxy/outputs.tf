@@ -3,5 +3,5 @@ output "address" {
 }
 
 output "username" {
-  value = "${var.admin_username}"
+  value = var.admin_username
 }

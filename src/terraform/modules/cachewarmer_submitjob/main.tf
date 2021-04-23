@@ -1,20 +1,20 @@
 locals {
-  mount_dir = "/b"
+  mount_dir  = "/b"
   block_flag = var.block_until_warm ? " -blockUntilWarm " : ""
 }
 
 resource "null_resource" "cachewarmer_submitjob" {
   count = var.deploy_cachewarmer ? 1 : 0
-  
+
   connection {
-      type  = "ssh"
-      port  = var.ssh_port
-      host  = var.node_address
-      user  = var.admin_username
-      password = var.ssh_key_data != null && var.ssh_key_data != "" ? "" : var.admin_password
-      private_key = var.ssh_key_data != null && var.ssh_key_data != "" ? file("~/.ssh/id_rsa") : null
+    type        = "ssh"
+    port        = var.ssh_port
+    host        = var.node_address
+    user        = var.admin_username
+    password    = var.ssh_key_data != null && var.ssh_key_data != "" ? "" : var.admin_password
+    private_key = var.ssh_key_data != null && var.ssh_key_data != "" ? file("~/.ssh/id_rsa") : null
   }
-  
+
   provisioner "remote-exec" {
     inline = [
       "set -x",

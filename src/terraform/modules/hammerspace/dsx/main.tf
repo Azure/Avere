@@ -7,7 +7,7 @@ data "azurerm_subnet" "data_subnet" {
 }
 
 locals {
-  dsx_host_names = [for i in range(var.dsx_instance_count): 
+  dsx_host_names = [for i in range(var.dsx_instance_count) :
     "${var.unique_name}dsx${i}"
   ]
 
@@ -16,7 +16,7 @@ locals {
   // the functions above force custom_data to be unknown, causing re-creation
   data_mask_bits = var.virtual_network_data_subnet_mask_bits
 
-  dsx_custom_data = [for i in range(var.dsx_instance_count): 
+  dsx_custom_data = [for i in range(var.dsx_instance_count) :
     <<EOT
 {
     "cluster": {
@@ -59,12 +59,12 @@ resource "azurerm_linux_virtual_machine" "dsxvm" {
   name                  = local.dsx_host_names[count.index]
   location              = var.location
   resource_group_name   = var.resource_group_name
-  network_interface_ids = [ azurerm_network_interface.dsxdata[count.index].id ]
+  network_interface_ids = [azurerm_network_interface.dsxdata[count.index].id]
   computer_name         = local.dsx_host_names[count.index]
   custom_data           = base64encode(local.dsx_custom_data[count.index])
   size                  = var.dsx_instance_type
   source_image_id       = var.hammerspace_image_id
-  
+
   os_disk {
     name                 = "${local.dsx_host_names[count.index]}-osdisk"
     caching              = "ReadWrite"
@@ -72,8 +72,8 @@ resource "azurerm_linux_virtual_machine" "dsxvm" {
     disk_size_gb         = var.dsx_boot_disk_size
   }
 
-  admin_username = var.admin_username
-  admin_password = var.admin_password
+  admin_username                  = var.admin_username
+  admin_password                  = var.admin_password
   disable_password_authentication = false
 }
 
@@ -97,7 +97,7 @@ resource "azurerm_virtual_machine_data_disk_attachment" "dsxvm" {
 
 resource "azurerm_virtual_machine_extension" "cse" {
   count                = var.dsx_instance_count
-  name                 = "${ local.dsx_host_names[count.index]}-cse"
+  name                 = "${local.dsx_host_names[count.index]}-cse"
   virtual_machine_id   = azurerm_linux_virtual_machine.dsxvm[count.index].id
   publisher            = "Microsoft.Azure.Extensions"
   type                 = "CustomScript"
@@ -112,6 +112,6 @@ SETTINGS
 
   // unable to use the depends on clause, so using tags to create the same effect
   tags = {
-      dependson = var.dsx_data_disk_size == 0 ? "nodepends" : azurerm_virtual_machine_data_disk_attachment.dsxvm[count.index].id
+    dependson = var.dsx_data_disk_size == 0 ? "nodepends" : azurerm_virtual_machine_data_disk_attachment.dsxvm[count.index].id
   }
 }

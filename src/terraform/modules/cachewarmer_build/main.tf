@@ -1,20 +1,20 @@
 locals {
-  mount_dir = "/b"
-  bootstrap_dir = "bootstrap"
+  mount_dir              = "/b"
+  bootstrap_dir          = "bootstrap"
   manager_bootstrap_path = "/${local.bootstrap_dir}/bootstrap.cachewarmer-manager.sh"
-  worker_bootstrap_path = "/${local.bootstrap_dir}/bootstrap.cachewarmer-worker.sh"
+  worker_bootstrap_path  = "/${local.bootstrap_dir}/bootstrap.cachewarmer-worker.sh"
 }
 
 resource "null_resource" "build_cachewarmer_bootstrap" {
   count = var.deploy_cachewarmer ? 1 : 0
 
   connection {
-      type  = "ssh"
-      port  = var.ssh_port
-      host  = var.node_address
-      user  = var.admin_username
-      password = var.ssh_key_data != null && var.ssh_key_data != "" ? "" : var.admin_password
-      private_key = var.ssh_key_data != null && var.ssh_key_data != "" ? file("~/.ssh/id_rsa") : null
+    type        = "ssh"
+    port        = var.ssh_port
+    host        = var.node_address
+    user        = var.admin_username
+    password    = var.ssh_key_data != null && var.ssh_key_data != "" ? "" : var.admin_password
+    private_key = var.ssh_key_data != null && var.ssh_key_data != "" ? file("~/.ssh/id_rsa") : null
   }
 
   provisioner "remote-exec" {
@@ -57,5 +57,3 @@ resource "null_resource" "build_cachewarmer_bootstrap" {
 
   depends_on = [var.module_depends_on]
 }
-
-
