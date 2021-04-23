@@ -2572,7 +2572,7 @@ func ValidateTags(v interface{}, _ string) (warnings []string, errors []error) {
 			errors = append(errors, fmt.Errorf("the maximum length for a tag value is 256 characters: the value for %q is %d characters", k, len(value)))
 		}
 
-		if strings.ContainsAny(value, "':") {
+		if strings.ContainsAny(k, "':") || strings.ContainsAny(value, "':") {
 			errors = append(errors, fmt.Errorf("characters ' or : are not allowed because it it interferes with vfxt.py command line parameter --azure-tag 'key:value'"))
 		}
 	}
@@ -2600,7 +2600,7 @@ func GetTagsMap(v interface{}) map[string]string {
 
 	for k, v := range tagsMap {
 		// ignore any errors, because none should exist as this is guarded by validation
-		if value, err := TagValueToString(v); err != nil {
+		if value, err := TagValueToString(v); err == nil {
 			results[k] = value
 		}
 	}

@@ -27,6 +27,14 @@ locals {
     rouser_pw = "rouserpassword"
     rouser_permissions = "ro"
 
+    tags = null // local.example_tags
+
+    example_tags = {
+        Movie = "some movie",
+	    Artist = "some artist",
+	    "Project Name" = "some name",
+    }
+
     // advanced scenario: vfxt and controller image ids, leave this null, unless not using default marketplace
     controller_image_id = null
     vfxt_image_id       = null
@@ -74,6 +82,8 @@ module "vfxtcontroller" {
     virtual_network_subnet_name = module.network.jumpbox_subnet_name
 
     module_depends_on = [module.network.vnet_id]
+
+    tags = local.tags
 }
 
 // the vfxt
@@ -104,6 +114,8 @@ resource "avere_vfxt" "vfxt" {
         password = local.rouser_pw
         permission = local.rouser_permissions
     }
+
+    tags = local.tags
 } 
 
 output "controller_username" {

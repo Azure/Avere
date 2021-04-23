@@ -25,6 +25,14 @@ locals {
     //  "Full Caching"
     //  "Transitioning Clients Before or After a Migration"
     cache_policy = "Clients Bypassing the Cluster"
+
+    tags = null // local.example_tags
+
+    example_tags = {
+        Movie = "some movie",
+	    Artist = "some artist",
+	    "Project Name" = "some name",
+    }
 }
 
 resource "avere_vfxt" "vfxt" {
@@ -39,6 +47,8 @@ resource "avere_vfxt" "vfxt" {
     vfxt_admin_password = local.vfxt_cluster_password
     vfxt_ssh_key_data = local.vfxt_ssh_key_data
     vfxt_node_count = 3
+
+    tags = local.tags
 
     core_filer {
         name = "nfs1"
