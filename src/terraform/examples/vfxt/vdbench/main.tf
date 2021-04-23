@@ -97,7 +97,9 @@ module "vmss" {
   nfs_export_addresses           = tolist(var.vserver_ip_addresses)
   nfs_export_path                = var.nfs_export_path
   bootstrap_script_path          = module.vdbench_configure.bootstrap_script_path
-  module_depends_on              = [module.vdbench_configure.module_depends_on_id]
+  depends_on = [
+    module.vdbench_configure,
+  ]
 }
 
 output "vmss_id" {

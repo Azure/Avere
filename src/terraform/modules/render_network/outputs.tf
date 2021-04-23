@@ -77,8 +77,3 @@ output "render_clients2_subnet_id" {
   description = "The full id of the render clients 2 subnet."
   value       = azurerm_subnet.render_clients2.id
 }
-
-output "module_depends_on_ids" {
-  description = "the id(s) to force others to wait"
-  value       = [azurerm_subnet_network_security_group_association.cloud_cache.id, azurerm_subnet_network_security_group_association.cloud_filers.id, azurerm_subnet_network_security_group_association.jumpbox.id, azurerm_subnet_network_security_group_association.render_clients1.id, azurerm_subnet_network_security_group_association.render_clients2.id]
-}

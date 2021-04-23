@@ -60,7 +60,9 @@ module "centosgridgpu" {
   virtual_network_name           = local.vnet_name
   virtual_network_subnet_name    = local.subnet_name
 
-  module_depends_on = [azurerm_resource_group.centosgridgpu.id]
+  depends_on = [
+    azurerm_resource_group.centosgridgpu,
+  ]
 }
 
 output "address" {

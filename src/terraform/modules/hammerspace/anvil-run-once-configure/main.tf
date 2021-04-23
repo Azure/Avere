@@ -19,6 +19,4 @@ resource "azurerm_virtual_machine_extension" "cse" {
         "commandToExecute": "${local.command}"
     }
 SETTINGS
-
-  depends_on = [var.module_depends_on]
 }

@@ -139,7 +139,10 @@ module "anvil" {
   anvil_metadata_disk_storage_type      = local.storage_account_type
   anvil_metadata_disk_size              = local.metadata_disk_size_gb
 
-  module_depends_on = concat(module.network.module_depends_on_ids, [azurerm_resource_group.nfsfiler.id])
+  depends_on = [
+    module.network,
+    azurerm_resource_group.nfsfiler,
+  ]
 }
 
 // the ephemeral filer
@@ -163,7 +166,10 @@ module "dsx" {
   dsx_data_disk_storage_type            = local.storage_account_type
   dsx_data_disk_size                    = local.datadisk_size_gb
 
-  module_depends_on = concat(module.network.module_depends_on_ids, [azurerm_resource_group.nfsfiler.id])
+  depends_on = [
+    module.network,
+    azurerm_resource_group.nfsfiler,
+  ]
 }
 
 module "anvil_configure" {
@@ -175,7 +181,9 @@ module "anvil_configure" {
   nfs_export_path              = local.hammerspace_filer_nfs_export_path
   anvil_hostname               = length(module.anvil.anvil_host_names) == 0 ? "" : module.anvil.anvil_host_names[0]
 
-  module_depends_on = module.anvil.module_depends_on_ids
+  depends_on = [
+    module.anvil,
+  ]
 }
 
 // the vfxt controller
@@ -196,7 +204,9 @@ module "vfxtcontroller" {
   virtual_network_name           = module.network.vnet_name
   virtual_network_subnet_name    = module.network.jumpbox_subnet_name
 
-  module_depends_on = [module.network.vnet_id]
+  depends_on = [
+    module.network,
+  ]
 }
 
 // the vfxt
@@ -207,10 +217,6 @@ resource "avere_vfxt" "vfxt" {
   controller_admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
   controller_ssh_port       = local.ssh_port
   enable_nlm                = false
-  // terraform is not creating the implicit dependency on the controller module
-  // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
-  // to work around, add the explicit dependency
-  depends_on = [module.vfxtcontroller, module.anvil_configure.module_depends_on_id]
 
   location                     = local.location
   azure_resource_group         = local.vfxt_resource_group_name
@@ -232,6 +238,14 @@ resource "avere_vfxt" "vfxt" {
       core_filer_export = local.hammerspace_filer_nfs_export_path
     }
   }
+
+  // terraform is not creating the implicit dependency on the controller module
+  // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
+  // to work around, add the explicit dependency
+  depends_on = [
+    module.vfxtcontroller,
+    module.anvil_configure,
+  ]
 }
 
 output "hammerspace_filer_addresses" {

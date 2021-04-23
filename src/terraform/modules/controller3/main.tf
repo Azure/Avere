@@ -2,8 +2,6 @@ data "azurerm_subnet" "vnet" {
   name                 = var.virtual_network_subnet_name
   virtual_network_name = var.virtual_network_name
   resource_group_name  = var.virtual_network_resource_group
-
-  depends_on = [var.module_depends_on]
 }
 
 data "azurerm_subscription" "primary" {}
@@ -43,16 +41,12 @@ resource "azurerm_resource_group" "vm" {
   count = var.deploy_controller && var.create_resource_group ? 1 : 0
 
   tags = var.tags
-
-  depends_on = [var.module_depends_on]
 }
 
 data "azurerm_resource_group" "vm" {
   name = var.resource_group_name
 
   count = var.create_resource_group ? 0 : 1
-
-  depends_on = [var.module_depends_on]
 }
 
 resource "azurerm_public_ip" "vm" {
@@ -64,8 +58,6 @@ resource "azurerm_public_ip" "vm" {
   tags = var.tags
 
   count = var.deploy_controller && var.add_public_ip ? 1 : 0
-
-  depends_on = [var.module_depends_on]
 }
 
 resource "azurerm_network_interface" "vm" {
@@ -83,8 +75,6 @@ resource "azurerm_network_interface" "vm" {
   count = var.deploy_controller ? 1 : 0
 
   tags = var.tags
-
-  depends_on = [var.module_depends_on]
 }
 
 resource "azurerm_linux_virtual_machine" "vm" {
@@ -169,7 +159,9 @@ resource "azurerm_role_assignment" "avere_create_cluster_role" {
   principal_id                     = azurerm_linux_virtual_machine.vm[0].identity[0].principal_id
   skip_service_principal_aad_check = true
 
-  depends_on = [azurerm_linux_virtual_machine.vm[0]]
+  depends_on = [
+    azurerm_linux_virtual_machine.vm[0],
+  ]
 }
 
 resource "azurerm_role_assignment" "user_access_administrator_role" {
@@ -179,7 +171,9 @@ resource "azurerm_role_assignment" "user_access_administrator_role" {
   principal_id                     = azurerm_linux_virtual_machine.vm[0].identity[0].principal_id
   skip_service_principal_aad_check = true
 
-  depends_on = [azurerm_role_assignment.avere_create_cluster_role]
+  depends_on = [
+    azurerm_role_assignment.avere_create_cluster_role,
+  ]
 }
 
 // ensure controller rg is a VM contributor to enable cache warming
@@ -190,7 +184,9 @@ resource "azurerm_role_assignment" "create_compute" {
   principal_id                     = azurerm_linux_virtual_machine.vm[0].identity[0].principal_id
   skip_service_principal_aad_check = true
 
-  depends_on = [azurerm_role_assignment.user_access_administrator_role]
+  depends_on = [
+    azurerm_role_assignment.user_access_administrator_role,
+  ]
 }
 
 

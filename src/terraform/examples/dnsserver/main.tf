@@ -95,6 +95,10 @@ module "nasfiler1" {
   virtual_network_resource_group = local.network_resource_group_name
   virtual_network_name           = module.network.vnet_name
   virtual_network_subnet_name    = module.network.cloud_filers_subnet_name
+
+  depends_on = [
+    azurerm_resource_group.nfsfiler,
+  ]
 }
 
 // the vfxt controller
@@ -115,7 +119,9 @@ module "vfxtcontroller" {
   virtual_network_name           = module.network.vnet_name
   virtual_network_subnet_name    = module.network.jumpbox_subnet_name
 
-  module_depends_on = [module.network.vnet_id]
+  depends_on = [
+    module.network,
+  ]
 }
 
 // the vfxt
@@ -125,11 +131,7 @@ resource "avere_vfxt" "vfxt" {
   // ssh key takes precedence over controller password
   controller_admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
   controller_ssh_port       = local.ssh_port
-  // terraform is not creating the implicit dependency on the controller module
-  // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
-  // to work around, add the explicit dependency
-  depends_on = [module.vfxtcontroller]
-
+  
   location                     = local.location
   azure_resource_group         = local.vfxt_resource_group_name
   azure_network_resource_group = local.network_resource_group_name
@@ -154,6 +156,13 @@ resource "avere_vfxt" "vfxt" {
       core_filer_export = module.nasfiler1.core_filer_export
     }
   }
+
+  // terraform is not creating the implicit dependency on the controller module
+  // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
+  // to work around, add the explicit dependency
+  depends_on = [
+    module.vfxtcontroller,
+  ]
 }
 
 module "dnsserver" {
@@ -181,9 +190,10 @@ module "dnsserver" {
   // set the TTL
   dns_max_ttl_seconds = 300
 
-  module_depends_on = [module.network.module_depends_on_ids]
+  depends_on = [
+    module.network,
+  ]
 }
-
 
 output "filer_address" {
   value = module.nasfiler1.primary_ip

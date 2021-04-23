@@ -30,9 +30,3 @@ output "anvil_domain" {
 output "anvil_host_names" {
   value = local.anvil_host_names
 }
-
-output "module_depends_on_ids" {
-  description = "the id(s) to force others to wait"
-
-  value = var.anvil_metadata_disk_size == 0 ? [azurerm_linux_virtual_machine.anvilvm[0].id] : length(azurerm_virtual_machine_data_disk_attachment.anvilvm) == 1 ? [azurerm_virtual_machine_data_disk_attachment.anvilvm[0].id] : [azurerm_virtual_machine_data_disk_attachment.anvilvm[0].id, azurerm_virtual_machine_data_disk_attachment.anvilvm[1].id]
-}

@@ -91,7 +91,9 @@ module "vfxtcontroller" {
   virtual_network_name           = module.network.vnet_name
   virtual_network_subnet_name    = module.network.jumpbox_subnet_name
 
-  module_depends_on = [module.network.vnet_id]
+  depends_on = [
+    module.network,
+  ]
 }
 
 # // the vfxt
@@ -100,10 +102,6 @@ resource "avere_vfxt" "vfxt" {
   controller_admin_username = module.vfxtcontroller.controller_username
   controller_admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
   controller_ssh_port       = local.ssh_port
-  // terraform is not creating the implicit dependency on the controller module
-  // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
-  // to work around, add the explicit dependency
-  depends_on = [module.vfxtcontroller]
 
   location                     = local.location
   azure_resource_group         = local.vfxt_resource_group_name
@@ -125,6 +123,13 @@ resource "avere_vfxt" "vfxt" {
     custom_settings         = []
     junction_namespace_path = local.nfs_export_path
   }
+
+  // terraform is not creating the implicit dependency on the controller module
+  // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
+  // to work around, add the explicit dependency
+  depends_on = [
+    module.vfxtcontroller,
+  ]
 }
 
 resource "azurerm_resource_group" "cuebot_rg" {
@@ -138,7 +143,9 @@ resource "azurerm_public_ip" "cuebot_public_ip" {
   location            = local.location
   allocation_method   = "Static"
 
-  depends_on = [azurerm_resource_group.cuebot_rg]
+  depends_on = [
+    azurerm_resource_group.cuebot_rg,
+  ]
 }
 
 resource "azurerm_network_interface" "cuebot_nic" {
@@ -153,7 +160,10 @@ resource "azurerm_network_interface" "cuebot_nic" {
     public_ip_address_id          = azurerm_public_ip.cuebot_public_ip.id
   }
 
-  depends_on = [module.network, azurerm_public_ip.cuebot_public_ip]
+  depends_on = [
+    module.network,
+    azurerm_public_ip.cuebot_public_ip,
+  ]
 }
 
 resource "azurerm_virtual_machine" "cuebot" {
@@ -204,7 +214,9 @@ resource "azurerm_virtual_machine" "cuebot" {
     }
   }
 
-  depends_on = [avere_vfxt.vfxt]
+  depends_on = [
+    avere_vfxt.vfxt,
+  ]
 }
 
 // the opencue module
@@ -239,7 +251,10 @@ module "vmss" {
   nfs_export_path                = local.nfs_export_path
   additional_env_vars            = "${local.opencue_env_vars} CUEBOT_HOSTNAME=${azurerm_network_interface.cuebot_nic.private_ip_address}"
   bootstrap_script_path          = module.opencue_configure.bootstrap_script_path
-  module_depends_on              = [module.opencue_configure.module_depends_on_id, azurerm_virtual_machine.cuebot]
+  depends_on = [
+    module.opencue_configure,
+    azurerm_virtual_machine.cuebot,
+  ]
 }
 
 output "cuebot_vm_ssh" {

@@ -231,7 +231,9 @@ resource "avere_vfxt" "vfxt" {
     // terraform is not creating the implicit dependency on the controller module
     // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
     // to work around, add the explicit dependency
-    depends_on = [module.vfxtcontroller]
+    depends_on = [
+		module.vfxtcontroller,
+	]
     
     // azure information
     location = local.location

@@ -21,7 +21,5 @@ resource "null_resource" "cachewarmer_submitjob" {
       "sudo /usr/local/bin/cachewarmer-jobsubmitter -storageAccountName ${var.storage_account} -storageKey ${var.storage_key} -queueNamePrefix ${var.queue_name_prefix} -warmTargetExportPath ${var.warm_target_export_path} -warmTargetMountAddresses \"${var.warm_mount_addresses}\" -warmTargetPath \"${var.warm_target_path}\" ${local.block_flag}",
     ]
   }
-
-  depends_on = [var.module_depends_on]
 }
 

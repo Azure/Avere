@@ -87,7 +87,9 @@ resource "azurerm_storage_account" "storage" {
   }
   // if the nsg associations do not complete before the storage account
   // create is started, it will fail with "subnet updating"
-  depends_on = [module.network]
+  depends_on = [
+    module.network,
+  ]
 }
 
 // the vfxt controller
@@ -106,7 +108,9 @@ module "vfxtcontroller" {
   virtual_network_name           = module.network.vnet_name
   virtual_network_subnet_name    = module.network.jumpbox_subnet_name
 
-  module_depends_on = [module.network.vnet_id]
+  depends_on = [
+    module.network,
+  ]
 }
 
 // the vfxt
@@ -114,10 +118,6 @@ resource "avere_vfxt" "vfxt" {
   controller_address        = module.vfxtcontroller.controller_address
   controller_admin_username = module.vfxtcontroller.controller_username
   controller_ssh_port       = local.ssh_port
-  // terraform is not creating the implicit dependency on the controller module
-  // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
-  // to work around, add the explicit dependency
-  depends_on = [module.vfxtcontroller]
 
   location                     = local.location
   azure_resource_group         = local.vfxt_resource_group_name
@@ -135,6 +135,13 @@ resource "avere_vfxt" "vfxt" {
     custom_settings         = []
     junction_namespace_path = local.nfs_export_path
   }
+
+  // terraform is not creating the implicit dependency on the controller module
+  // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
+  // to work around, add the explicit dependency
+  depends_on = [
+    module.vfxtcontroller,
+  ]
 }
 
 // the vdbench module
@@ -148,7 +155,9 @@ module "vdbench_configure" {
   nfs_export_path = local.nfs_export_path
   vdbench_url     = local.vdbench_url
 
-  module_depends_on = [avere_vfxt.vfxt]
+  depends_on = [
+    avere_vfxt.vfxt,
+  ]
 }
 
 // the VMSS module
@@ -169,8 +178,9 @@ module "vmss" {
   nfs_export_addresses           = tolist(avere_vfxt.vfxt.vserver_ip_addresses)
   nfs_export_path                = local.nfs_export_path
   bootstrap_script_path          = module.vdbench_configure.bootstrap_script_path
-  module_depends_on              = [module.vdbench_configure.module_depends_on_id]
-
+  depends_on = [
+    module.vdbench_configure,
+  ]
 }
 
 output "controller_username" {

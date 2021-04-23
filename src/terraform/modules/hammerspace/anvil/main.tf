@@ -19,8 +19,6 @@ data "azurerm_subnet" "data_subnet" {
   name                 = var.virtual_network_data_subnet_name
   virtual_network_name = var.virtual_network_name
   resource_group_name  = var.virtual_network_resource_group
-
-  depends_on = [var.module_depends_on]
 }
 
 data "azurerm_subnet" "ha_subnet" {
@@ -217,7 +215,9 @@ resource "azurerm_linux_virtual_machine" "anvilvm" {
   disable_password_authentication = false
 
   // add depends_on so deletion happens successfully
-  depends_on = [azurerm_availability_set.anvilas]
+  depends_on = [
+    azurerm_availability_set.anvilas,
+  ]
 }
 
 resource "azurerm_managed_disk" "anvilvm" {

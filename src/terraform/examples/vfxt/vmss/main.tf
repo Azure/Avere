@@ -96,6 +96,10 @@ module "nasfiler1" {
   virtual_network_resource_group = local.network_resource_group_name
   virtual_network_name           = module.network.vnet_name
   virtual_network_subnet_name    = module.network.cloud_filers_subnet_name
+
+  depends_on = [
+    azurerm_resource_group.nfsfiler,
+  ]
 }
 
 // the vfxt controller
@@ -116,7 +120,9 @@ module "vfxtcontroller" {
   virtual_network_name           = module.network.vnet_name
   virtual_network_subnet_name    = module.network.jumpbox_subnet_name
 
-  module_depends_on = [module.network.vnet_id]
+  depends_on = [
+    module.network,
+  ]
 }
 
 // the vfxt
@@ -126,10 +132,6 @@ resource "avere_vfxt" "vfxt" {
   // ssh key takes precedence over controller password
   controller_admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
   controller_ssh_port       = local.ssh_port
-  // terraform is not creating the implicit dependency on the controller module
-  // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
-  // to work around, add the explicit dependency
-  depends_on = [module.vfxtcontroller]
 
   location                     = local.location
   azure_resource_group         = local.vfxt_resource_group_name
@@ -151,6 +153,13 @@ resource "avere_vfxt" "vfxt" {
       core_filer_export = module.nasfiler1.core_filer_export
     }
   }
+
+  // terraform is not creating the implicit dependency on the controller module
+  // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
+  // to work around, add the explicit dependency
+  depends_on = [
+    module.vfxtcontroller,
+  ]
 }
 
 // the vmss config module to install the round robin mount
@@ -164,7 +173,9 @@ module "vmss_configure" {
   nfs_address     = tolist(avere_vfxt.vfxt.vserver_ip_addresses)[0]
   nfs_export_path = local.nfs_export_path
 
-  module_depends_on = [avere_vfxt.vfxt]
+  depends_on = [
+    avere_vfxt.vfxt,
+  ]
 }
 
 // the VMSS module
@@ -186,7 +197,9 @@ module "vmss" {
   nfs_export_addresses           = tolist(avere_vfxt.vfxt.vserver_ip_addresses)
   nfs_export_path                = local.nfs_export_path
   bootstrap_script_path          = module.vmss_configure.bootstrap_script_path
-  module_depends_on              = [module.vmss_configure.module_depends_on_id]
+  depends_on = [
+    module.vmss_configure,
+  ]
 }
 
 output "controller_username" {
