@@ -1,4 +1,4 @@
-# Ubuntu Pipeline with Terraform 0.15.*
+# Ubuntu Pipeline with Terraform 0.14.*
 
 These instructions show the pipeline steps to deploy a vFXT on a newly deployed Ubuntu
 
@@ -15,9 +15,9 @@ Login to the ubuntu machine, with the default user, and deploy the tools with th
 sudo apt update
 sudo apt install -y unzip jq
 # install terraform
-wget https://releases.hashicorp.com/terraform/0.15.0/terraform_0.15.0_linux_amd64.zip
-sudo unzip terraform_0.15.0_linux_amd64.zip -d /usr/local/bin
-rm terraform_0.15.0_linux_amd64.zip
+wget https://releases.hashicorp.com/terraform/0.14.10/terraform_0.14.10_linux_amd64.zip
+sudo unzip terraform_0.14.10_linux_amd64.zip -d /usr/local/bin
+rm terraform_0.14.10_linux_amd64.zip
 # install az cli
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 # install the vfxt released binary from https://github.com/Azure/Avere

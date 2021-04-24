@@ -1,4 +1,4 @@
-# Ubuntu Pipeline with Terraform 0.15.*
+# Ubuntu Pipeline with Terraform 0.12.*
 
 These instructions show the pipeline steps to deploy a vFXT on a newly deployed Ubuntu
 
@@ -15,18 +15,18 @@ Login to the ubuntu machine, with the default user, and deploy the tools with th
 sudo apt update
 sudo apt install -y unzip jq
 # install terraform
-wget https://releases.hashicorp.com/terraform/0.15.0/terraform_0.15.0_linux_amd64.zip
-sudo unzip terraform_0.15.0_linux_amd64.zip -d /usr/local/bin
-rm terraform_0.15.0_linux_amd64.zip
+wget https://releases.hashicorp.com/terraform/0.12.24/terraform_0.12.24_linux_amd64.zip
+sudo unzip terraform_0.12.24_linux_amd64.zip -d /usr/local/bin
+rm terraform_0.12.24_linux_amd64.zip
 # install az cli
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+# install the provider
+mkdir -p ~/.terraform.d/plugins
 # install the vfxt released binary from https://github.com/Azure/Avere
 # to build the provider from scratch see: https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#build-the-terraform-provider-binary-on-linux
-version=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name | sed -e 's/[^0-9]*\([0-9].*\)$/\1/')
 browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[0].browser_download_url)
-mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
-wget -O ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version $browser_download_url
-chmod 755 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version
+wget -O ~/.terraform.d/plugins/terraform-provider-avere $browser_download_url
+chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 ```
 
 ## Step 3: Deploy the vFXT
