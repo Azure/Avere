@@ -113,10 +113,10 @@ locals {
 
   # create the dns forward lines  
   dns_servers      = var.dns_server == null || var.dns_server == "" ? [] : split(" ", var.dns_server)
-  forward_lines    = [for s in local.dns_servers : "forward-addr: ${s}" if trimspace("${s}") != ""]
+  forward_lines    = [for s in local.dns_servers : "forward-addr: ${s}" if trimspace(s) != ""]
   foward_lines_str = join("\n  ", local.forward_lines)
 
-  excluded_subnets     = [for s in var.excluded_subnet_cidrs : "access-control-view: ${s} excludedsubnetview" if trimspace("${s}") != ""]
+  excluded_subnets     = [for s in var.excluded_subnet_cidrs : "access-control-view: ${s} excludedsubnetview" if trimspace(s) != ""]
   excluded_subnets_str = join("\n  ", local.excluded_subnets)
 
   # send the script file to custom data, adding env vars
