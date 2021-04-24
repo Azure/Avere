@@ -16,11 +16,19 @@ az ad sp create-for-rbac --name ServicePrincipalName --role Owner
 
 Note: when you are done using the service principal delete it with the command `az ad sp delete --id APPLICATION_ID`
 
-## Target Environments
+## Target
 
-Choose any environment:
+1. [Ubuntu Pipeline + Terraform 0.15.*](ubuntu/)
+1. [CentOS Pipeline + Terraform 0.15.*](centos/)
+1. [Ubuntu Pipeline + Terraform 0.14.*](ubuntu/ubuntutf014.md)
+1. [CentOS Pipeline + Terraform 0.14.*](centos/centostf014.md)
 
-1. [Ubuntu Pipeline + Terraform 0.12.*](ubuntu)
-1. [CentOS Pipeline + Terraform 0.12.*](centos)
+## Legacy Target Environments
+
+The following are legacy environments:
+
+1. [Ubuntu Pipeline + Terraform 0.12.*](ubuntu/ubuntutf012.md)
+1. [CentOS Pipeline + Terraform 0.12.*](centos/centostf012.md)
 1. [Ubuntu Pipeline + Terraform 0.13.*](ubuntu/ubuntutf013.md)
 1. [CentOS Pipeline + Terraform 0.13.*](centos/centostf013.md)
+1. [Windows](windows/)

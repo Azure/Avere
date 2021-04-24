@@ -21,15 +21,16 @@ parameters:
 steps:
 - script: |
     set -e
-    wget https://releases.hashicorp.com/terraform/0.12.25/terraform_0.12.25_linux_amd64.zip
-    unzip terraform_0.12.25_linux_amd64.zip
+    wget https://releases.hashicorp.com/terraform/0.15.0/terraform_0.15.0_linux_amd64.zip
+    unzip terraform_0.15.0_linux_amd64.zip
     sudo mv terraform /usr/local/bin
     sudo chmod 755 /usr/local/bin/terraform
 
-    browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[].browser_download_url)
-    mkdir -p ~/.terraform.d/plugins
-    wget -O ~/.terraform.d/plugins/terraform-provider-avere $browser_download_url
-    chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
+    version=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name | sed -e 's/[^0-9]*\([0-9].*\)$/\1/')
+    browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[0].browser_download_url)
+    mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
+    wget -O ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version $browser_download_url
+    chmod 755 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version
 
     sshkey="$(cat ~/.ssh/id_rsa.pub) azureuser@linuxvm"
     echo "##vso[task.setvariable variable=secret.SSH_KEY;issecret=true]${sshkey}"
