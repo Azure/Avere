@@ -1,6 +1,6 @@
 // customize the simple VM by editing the following local variables
 locals {
-    vm_name = "${var.unique_name}"
+    vm_name = var.unique_name
 }
 
 data "azurerm_subnet" "vnet" {
