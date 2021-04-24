@@ -1,68 +1,77 @@
 // customize the simple VM by editing the following local variables
 locals {
-    // the region of the deployment
-    location = "westeurope"
-    network_resource_group_name   = "rr_network_rg"
-    # storage_resource_group_name   = "rr_storage_rg"
-    # vfxt_resource_group_name      = "rr_vfxt_rg"
-    rr_server_resource_group_name = "rr_server_rg"
-    vmss_resource_group_name      = "rr_vmss_rg"
-    filer_resource_group_name     = "rr_nfs_filer_rg"
-    
-    // NFS Filer VM variables
-    # nfs_vm_size = "Standard_L8s_v2"
-    nfs_vm_size = "Standard_D2s_v3"
-    filer_private_ip_address     = null
+  // the region of the deployment
+  location                    = "westeurope"
+  network_resource_group_name = "rr_network_rg"
+  # storage_resource_group_name   = "rr_storage_rg"
+  # vfxt_resource_group_name      = "rr_vfxt_rg"
+  rr_server_resource_group_name = "rr_server_rg"
+  vmss_resource_group_name      = "rr_vmss_rg"
+  filer_resource_group_name     = "rr_nfs_filer_rg"
 
-    // RR Server VM details
-    rr_server_name = "rrServer"
-    rr_server_vm_size = "Standard_D2s_v3"
-    vm_admin_password = "Password1234!"
-    vm_admin_username = "azureuser"
-    vm_ssh_key_data = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDLd1HLABZF8MvPUc/iR23m3CNn1DWagvrFw7a57kKFb0MTVzV/gQPlKUd1/NqSZPeV1x5LwLPUYWkHOk1texUt1M6nvpx1zlsQ42z03ckXQ2LvuoTR+SLuPGd8tu8Ro8L1s8dtSDe32gcAqCWTrgR3dQ9esD1l26/1GBEQi8xN6KgURM/tpsLoKlSP47DsL1ocA+uADE8zZNt96KpOirC9rzQ9aNdTTg0xT5I6wuIitGc5fXHYninAnNDHIl2ROVA9uBmI+eWUcIvJN2q+doC48rRDDWKJgj1OjQDRO79HmCGcxje/NGIn6RCeFG5zCJpRjtlxSm4mLesSV7jeadwhyGs0Yo53N4CiG18pqINy/aDKnm7IUO3ejUQAjyFlZrG6YwzxnHgOTnRIkhO6Ocy4oEEAlMJOZlknOZZFGf8XmqFkUcgK7zGRfKPGwPWmvfooH0BshvYBy5KvLNq9nCT+DA2eH0HxoXxiNX34baGrwfQroYRcQVAmtNXZJpIxQlXd1M4a/xQSNlam9IarrM1iM9ev/TQPDQdVhzzWSLQ/c815pwsUsw1Nx4IeTYZuCgEuoZAiOF1t+DBe+UojEA5lLDamIK6PER4X+meAcvZlZ0rbfxDFdukETCQd6uH9AkhDY4/tpWdJqBbR8aOJs/gRM348ooL4CgxMVfCDuty3Hw== eoinbailey@DESKTOP-D40RIHO"
-    ssh_port = 22
-    
-    // storage details
-    # storage_account_name = "rrtest1234"
-    # avere_storage_container_name = "rr"
-    # nfs_export_path = "/rr-demo"
-    
-    // vfxt details
-    // if you are running a locked down network, set controller_add_public_ip to false
-    # controller_add_public_ip = true
-    # vfxt_cluster_name = "vfxt"
-    # vfxt_cluster_password = "VFXT_PASSWORD"
-    # vfxt_ssh_key_data = local.vm_ssh_key_data
+  // NFS Filer VM variables
+  # nfs_vm_size = "Standard_L8s_v2"
+  nfs_vm_size              = "Standard_D2s_v3"
+  filer_private_ip_address = null
 
-    // vmss details
-    vmss_name = "vmss"
-    vmss_priority = "Low"
-    vmss_count = 2
-    vmss_size = "Standard_D2s_v3"
-    rr_mount_target = "/nfs/rr"
-    mount_target = "/nfs"
+  // RR Server VM details
+  rr_server_name    = "rrServer"
+  rr_server_vm_size = "Standard_D2s_v3"
+  vm_admin_password = "Password1234!"
+  vm_admin_username = "azureuser"
+  vm_ssh_key_data   = null
+  ssh_port          = 22
 
-    alternative_resource_groups = []
-    // advanced scenario: add external ports to work with cloud policies example [10022, 13389]
-    open_external_ports = [local.ssh_port,3389]
-    // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
-    // or if accessing from cloud shell, put "AzureCloud"
-    open_external_sources = ["*"]
+  // storage details
+  # storage_account_name = "rrtest1234"
+  # avere_storage_container_name = "rr"
+  # nfs_export_path = "/rr-demo"
+
+  // vfxt details
+  // if you are running a locked down network, set controller_add_public_ip to false
+  # controller_add_public_ip = true
+  # vfxt_cluster_name = "vfxt"
+  # vfxt_cluster_password = "VFXT_PASSWORD"
+  # vfxt_ssh_key_data = local.vm_ssh_key_data
+
+  // vmss details
+  vmss_name       = "vmss"
+  vmss_priority   = "Low"
+  vmss_count      = 2
+  vmss_size       = "Standard_D2s_v3"
+  rr_mount_target = "/nfs/rr"
+  mount_target    = "/nfs"
+
+  alternative_resource_groups = []
+  // advanced scenario: add external ports to work with cloud policies example [10022, 13389]
+  open_external_ports = [local.ssh_port, 3389]
+  // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
+  // or if accessing from cloud shell, put "AzureCloud"
+  open_external_sources = ["*"]
+}
+
+terraform {
+  required_version = ">= 0.14.0,< 0.16.0"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~>2.56.0"
+    }
+  }
 }
 
 provider "azurerm" {
-    version = "~>2.12.0"
-    features {}
+  features {}
 }
 
 // the render network
 module "network" {
-    source = "github.com/Azure/Avere/src/terraform/modules/render_network"
-    resource_group_name = local.network_resource_group_name
-    location = local.location
+  source              = "github.com/Azure/Avere/src/terraform/modules/render_network"
+  resource_group_name = local.network_resource_group_name
+  location            = local.location
 
-    open_external_ports   = local.open_external_ports
-    open_external_sources = local.open_external_sources
+  open_external_ports   = local.open_external_ports
+  open_external_sources = local.open_external_sources
 }
 
 # resource "azurerm_resource_group" "storage" {
@@ -99,7 +108,7 @@ module "network" {
 #     add_public_ip = local.controller_add_public_ip
 #     alternative_resource_groups = local.alternative_resource_groups
 #     ssh_port = local.ssh_port
-    
+
 #     // network details
 #     virtual_network_resource_group = module.network.vnet_resource_group
 #     virtual_network_name = module.network.vnet_name
@@ -118,7 +127,7 @@ module "network" {
 #     // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
 #     // to work around, add the explicit dependency
 #     depends_on = [module.vfxtcontroller]
-    
+
 #     location = local.location
 #     azure_resource_group = local.vfxt_resource_group_name
 #     azure_network_resource_group = module.network.vnet_resource_group
@@ -147,103 +156,103 @@ resource "azurerm_resource_group" "nfsfiler_rg" {
 
 // the ephemeral filer
 module "nfsfiler" {
-    source = "github.com/Azure/Avere/src/terraform/modules/nfs_filer"
-    resource_group_name = azurerm_resource_group.nfsfiler_rg.name
-    location = azurerm_resource_group.nfsfiler_rg.location
-    admin_username = local.vm_admin_username
-    admin_password = local.vm_admin_password
-    ssh_key_data = local.vm_ssh_key_data
-    vm_size = local.nfs_vm_size
-    unique_name = "nfsfiler"
+  source              = "github.com/Azure/Avere/src/terraform/modules/nfs_filer"
+  resource_group_name = azurerm_resource_group.nfsfiler_rg.name
+  location            = azurerm_resource_group.nfsfiler_rg.location
+  admin_username      = local.vm_admin_username
+  admin_password      = local.vm_admin_password
+  ssh_key_data        = local.vm_ssh_key_data
+  vm_size             = local.nfs_vm_size
+  unique_name         = "nfsfiler"
 
-    // network details
-    virtual_network_resource_group = local.network_resource_group_name
-    virtual_network_name           = module.network.vnet_name
-    virtual_network_subnet_name    = module.network.cloud_filers_subnet_name
-    private_ip_address             = local.filer_private_ip_address
+  // network details
+  virtual_network_resource_group = local.network_resource_group_name
+  virtual_network_name           = module.network.vnet_name
+  virtual_network_subnet_name    = module.network.cloud_filers_subnet_name
+  private_ip_address             = local.filer_private_ip_address
 
-    module_depends_on = [azurerm_resource_group.nfsfiler_rg, module.network.vnet_id]
+  module_depends_on = [azurerm_resource_group.nfsfiler_rg, module.network.vnet_id]
 }
 
 resource "azurerm_resource_group" "rr_server_rg" {
-    name     = local.rr_server_resource_group_name
-    location = local.location
+  name     = local.rr_server_resource_group_name
+  location = local.location
 }
 
 resource "azurerm_public_ip" "rr_server_public_ip" {
-    name                = "${local.rr_server_name}-public-ip"
-    resource_group_name = local.rr_server_resource_group_name
-    location            = local.location
-    allocation_method   = "Static"
+  name                = "${local.rr_server_name}-public-ip"
+  resource_group_name = local.rr_server_resource_group_name
+  location            = local.location
+  allocation_method   = "Static"
 
-    depends_on = [azurerm_resource_group.rr_server_rg]
+  depends_on = [azurerm_resource_group.rr_server_rg]
 }
 
 resource "azurerm_network_interface" "rr_server_nic" {
-    name                = "${local.rr_server_name}-nic"
-    location            = local.location
-    resource_group_name = local.rr_server_resource_group_name
+  name                = "${local.rr_server_name}-nic"
+  location            = local.location
+  resource_group_name = local.rr_server_resource_group_name
 
-    ip_configuration {
-        name                          = "rrserverconfiguration"
-        subnet_id                     = module.network.jumpbox_subnet_id
-        private_ip_address_allocation = "Dynamic"
-        public_ip_address_id          = azurerm_public_ip.rr_server_public_ip.id
-    }
+  ip_configuration {
+    name                          = "rrserverconfiguration"
+    subnet_id                     = module.network.jumpbox_subnet_id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.rr_server_public_ip.id
+  }
 
-    depends_on = [module.network, azurerm_public_ip.rr_server_public_ip]
+  depends_on = [module.network, azurerm_public_ip.rr_server_public_ip]
 }
 
 resource "azurerm_virtual_machine" "rr_server" {
-    name = local.rr_server_name
-    location = local.location
-    resource_group_name = local.rr_server_resource_group_name
-    vm_size = local.rr_server_vm_size
-    network_interface_ids = [azurerm_network_interface.rr_server_nic.id]
+  name                  = local.rr_server_name
+  location              = local.location
+  resource_group_name   = local.rr_server_resource_group_name
+  vm_size               = local.rr_server_vm_size
+  network_interface_ids = [azurerm_network_interface.rr_server_nic.id]
 
 
-    storage_image_reference {
-        publisher = "Canonical"
-        offer     = "UbuntuServer"
-        sku       = "18.04-LTS"
-        version   = "latest"
+  storage_image_reference {
+    publisher = "Canonical"
+    offer     = "UbuntuServer"
+    sku       = "18.04-LTS"
+    version   = "latest"
+  }
+  storage_os_disk {
+    name              = "${local.rr_server_name}-osdisk"
+    caching           = "ReadWrite"
+    create_option     = "FromImage"
+    managed_disk_type = "Standard_LRS"
+  }
+  dynamic "os_profile" {
+    for_each = (local.vm_ssh_key_data == null || local.vm_ssh_key_data == "") && local.vm_admin_password != null && local.vm_admin_password != "" ? [local.vm_admin_password] : [null]
+    content {
+      computer_name  = local.rr_server_name
+      admin_username = local.vm_admin_username
+      admin_password = os_profile.value
+      custom_data    = templatefile("${path.module}/cloud-init.yml", { nfsfiler = module.nfsfiler.nfs_mount, ssh_port = local.ssh_port })
     }
-    storage_os_disk {
-        name              = "${local.rr_server_name}-osdisk"
-        caching           = "ReadWrite"
-        create_option     = "FromImage"
-        managed_disk_type = "Standard_LRS"
+  }
+  // dynamic block when password is specified
+  dynamic "os_profile_linux_config" {
+    for_each = (local.vm_ssh_key_data == null || local.vm_ssh_key_data == "") && local.vm_admin_password != null && local.vm_admin_password != "" ? [local.vm_admin_password] : []
+    content {
+      disable_password_authentication = false
     }
-    dynamic "os_profile" {
-        for_each = (local.vm_ssh_key_data == null || local.vm_ssh_key_data == "") && local.vm_admin_password != null && local.vm_admin_password != "" ? [local.vm_admin_password] : [null] 
-        content {
-        computer_name  = local.rr_server_name
-        admin_username = local.vm_admin_username
-        admin_password = os_profile.value
-        custom_data    = templatefile("${path.module}/cloud-init.yml", {nfsfiler = module.nfsfiler.nfs_mount, ssh_port = local.ssh_port})
-        }
+  }
+  // dynamic block when SSH key is specified
+  dynamic "os_profile_linux_config" {
+    for_each = local.vm_ssh_key_data == null || local.vm_ssh_key_data == "" ? [] : [local.vm_ssh_key_data]
+    content {
+      disable_password_authentication = true
+      ssh_keys {
+        key_data = local.vm_ssh_key_data
+        path     = "/home/${local.vm_admin_username}/.ssh/authorized_keys"
+      }
     }
-    // dynamic block when password is specified
-    dynamic "os_profile_linux_config" {
-        for_each = (local.vm_ssh_key_data == null || local.vm_ssh_key_data == "") && local.vm_admin_password != null && local.vm_admin_password != "" ? [local.vm_admin_password] : [] 
-        content {
-        disable_password_authentication = false
-        }
-    }
-    // dynamic block when SSH key is specified
-    dynamic "os_profile_linux_config" {
-        for_each = local.vm_ssh_key_data == null || local.vm_ssh_key_data == "" ? [] : [local.vm_ssh_key_data]
-        content {
-            disable_password_authentication = true
-            ssh_keys {
-                key_data = local.vm_ssh_key_data
-                path = "/home/${local.vm_admin_username}/.ssh/authorized_keys"
-            }
-        }
-    }
+  }
 
-    # depends_on = [avere_vfxt.vfxt]
-    depends_on = [module.nfsfiler]
+  # depends_on = [avere_vfxt.vfxt]
+  depends_on = [module.nfsfiler]
 }
 
 resource "azurerm_resource_group" "vmss" {
@@ -261,18 +270,18 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
   overprovision       = false
 
   dynamic "os_profile" {
-    for_each = (local.vm_ssh_key_data == null || local.vm_ssh_key_data == "") && local.vm_admin_password != null && local.vm_admin_password != "" ? [local.vm_admin_password] : [null] 
+    for_each = (local.vm_ssh_key_data == null || local.vm_ssh_key_data == "") && local.vm_admin_password != null && local.vm_admin_password != "" ? [local.vm_admin_password] : [null]
     content {
       computer_name_prefix = local.vmss_name
-      admin_username      = local.vm_admin_username
-      admin_password = local.vm_admin_password
-      custom_data    = templatefile("${path.module}/cloud-init-vmss.yml", {nfsfiler = module.nfsfiler.nfs_mount, ssh_port = local.ssh_port})
+      admin_username       = local.vm_admin_username
+      admin_password       = local.vm_admin_password
+      custom_data          = templatefile("${path.module}/cloud-init-vmss.yml", { nfsfiler = module.nfsfiler.nfs_mount, ssh_port = local.ssh_port })
     }
   }
 
   // dynamic block when password is specified
   dynamic "os_profile_linux_config" {
-    for_each = (local.vm_ssh_key_data == null || local.vm_ssh_key_data == "") && local.vm_admin_password != null && local.vm_admin_password != "" ? [local.vm_admin_password] : [] 
+    for_each = (local.vm_ssh_key_data == null || local.vm_ssh_key_data == "") && local.vm_admin_password != null && local.vm_admin_password != "" ? [local.vm_admin_password] : []
     content {
       disable_password_authentication = false
     }
@@ -291,8 +300,8 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
   }
 
   sku {
-    name = local.vmss_size
-    tier = "Standard"
+    name     = local.vmss_size
+    tier     = "Standard"
     capacity = local.vmss_count
   }
 
@@ -303,7 +312,7 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
     version   = "latest"
   }
 
-  storage_profile_os_disk  {
+  storage_profile_os_disk {
     caching           = "ReadWrite"
     managed_disk_type = "Standard_LRS"
     create_option     = "FromImage"
@@ -323,7 +332,7 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
 }
 
 output "rr_server_vm_ssh" {
-    value = "ssh ${local.vm_admin_username}@${azurerm_public_ip.rr_server_public_ip.ip_address}"
+  value = "ssh ${local.vm_admin_username}@${azurerm_public_ip.rr_server_public_ip.ip_address}"
 }
 
 output "nfsfiler_username" {
@@ -335,11 +344,11 @@ output "nfsfiler_address" {
 }
 
 output "nfsfiler_ssh_string" {
-    value = module.nfsfiler.ssh_string
+  value = module.nfsfiler.ssh_string
 }
 
 output "list_disks_az_cli" {
-    value = "az disk list --query \"[?resourceGroup=='${upper(azurerm_resource_group.nfsfiler_rg.name)}'].id\""
+  value = "az disk list --query \"[?resourceGroup=='${upper(azurerm_resource_group.nfsfiler_rg.name)}'].id\""
 }
 
 # output "controller_username" {
