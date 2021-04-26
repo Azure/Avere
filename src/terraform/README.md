@@ -42,8 +42,6 @@ The remainder of this page provides Terraform infrastructure examples to build o
 
 ## Full End-To-End Examples
 
-**Important Note** Please use Terraform 0.12.x with the following examples.
-
 The following examples provide end-to-end examples that implement the burst rendering architecture in Linux and Windows environments.
 
 1. [Create a Linux based OpenCue managed render farm on Azure](examples/vfxt/opencue) - deploy an end to end render solution on Azure using OpenCue as your render manager.
@@ -62,8 +60,6 @@ The highest priority for VFX and Animation Studios is the lowest total cost of o
 1. [Security Best Practices for Rendering](examples/security)
 
 ## Storage Cache Infrastructure
-
-**Important Note** Please use Terraform 0.12.x with the following examples.
 
 Both HPC Cache and Avere vFXT for Azure provide file caching for high-performance computing (HPC).  We recommend to always choose HPC Cache for greater user manageability and only choose Avere vFXT for Azure for custom scenarios where HPC is unable to fit.  If you need to use Avere vFXT for Azure because of a missing feature in HPC Cache, please submit an issue so we can track and add to HPC Cache.
 
@@ -106,8 +102,6 @@ Both HPC Cache and Avere vFXT for Azure provide file caching for high-performanc
    1. [Zone Redundant NFS / SMB Storage](examples/vfxt/azureblobfiler-zonal) - Availability Zone Redundant Avere vFXT mounting Blob Storage example
 
 ## Rendering Accessories Infrastructure
-
-**Important Note** Please use Terraform 0.12.x with the following examples.
 
 The following terraform examples build out accessory rendering infrastructure such as DNS Servers, high speed NFS ephemeral filers, and a jumpbox:
 

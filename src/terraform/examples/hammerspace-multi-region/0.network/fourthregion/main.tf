@@ -105,29 +105,29 @@ resource "azurerm_virtual_network_peering" "p4-3" {
 }
 
 output "location4" {
-  value = "\"${local.location4}\""
+  value = local.location4
 }
 
 output "network_rg4_name" {
-  value = "\"${local.network_rg4_name}\""
+  value = local.network_rg4_name
 }
 
 output "network-region4-cloud_filers_ha_subnet_name" {
-  value = "\"${module.network-region4.cloud_filers_ha_subnet_name}\""
+  value = module.network-region4.cloud_filers_ha_subnet_name
 }
 
 output "network-region4-cloud_filers_subnet_name" {
-  value = "\"${module.network-region4.cloud_filers_subnet_name}\""
+  value = module.network-region4.cloud_filers_subnet_name
 }
 
 output "network-region4-vnet_name" {
-  value = "\"${module.network-region4.vnet_name}\""
+  value = module.network-region4.vnet_name
 }
 
 output "network-region4-vnet_id" {
-  value = "\"${module.network-region4.vnet_id}\""
+  value = module.network-region4.vnet_id
 }
 
 output "resource_group_unique_prefix" {
-  value = "\"${local.resource_group_unique_prefix}\""
+  value = local.resource_group_unique_prefix
 }

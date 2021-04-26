@@ -206,19 +206,19 @@ module "mount_nfs" {
 }
 
 output "controller_username" {
-  value = "\"${module.vfxtcontroller.controller_username}\""
+  value = module.vfxtcontroller.controller_username
 }
 
 output "controller_address" {
-  value = "\"${module.vfxtcontroller.controller_address}\""
+  value = module.vfxtcontroller.controller_address
 }
 
 output "ssh_command_with_avere_tunnel" {
-  value = "\"ssh -p ${local.ssh_port} -L8443:${avere_vfxt.vfxt.vfxt_management_ip}:443 ${module.vfxtcontroller.controller_username}@${module.vfxtcontroller.controller_address}\""
+  value = "\"ssh -p ${local.ssh_port} -L8443:${avere_vfxt.vfxt.vfxt_management_ip}:443 ${module.vfxtcontroller.controller_username}@${module.vfxtcontroller.controller_address
 }
 
 output "management_ip" {
-  value = "\"${avere_vfxt.vfxt.vfxt_management_ip}\""
+  value = avere_vfxt.vfxt.vfxt_management_ip
 }
 
 output "mount_addresses" {
@@ -226,5 +226,5 @@ output "mount_addresses" {
 }
 
 output "mount_path" {
-  value = "\"${local.use_nfs_storage ? local.junction_namespace_path_filer : local.junction_namespace_path_clfs}\""
+  value = local.use_nfs_storage ? local.junction_namespace_path_filer : local.junction_namespace_path_clfs
 }

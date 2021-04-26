@@ -138,94 +138,94 @@ resource "azurerm_virtual_network_peering" "p3-2" {
 }
 
 output "location1" {
-  value = "\"${local.location1}\""
+  value = local.location1
 }
 
 output "location2" {
-  value = "\"${local.location2}\""
+  value = local.location2
 }
 
 output "location3" {
-  value = "\"${local.location3}\""
+  value = local.location3
 }
 
 output "resource_group_unique_prefix" {
-  value = "\"${local.resource_group_unique_prefix}\""
+  value = local.resource_group_unique_prefix
 }
 
 output "network_rg1_name" {
-  value = "\"${local.network_rg1_name}\""
+  value = local.network_rg1_name
 }
 
 output "network-region1-cloud_filers_ha_subnet_name" {
-  value = "\"${module.network-region1.cloud_filers_ha_subnet_name}\""
+  value = module.network-region1.cloud_filers_ha_subnet_name
 }
 
 output "network-region1-cloud_filers_subnet_name" {
-  value = "\"${module.network-region1.cloud_filers_subnet_name}\""
+  value = module.network-region1.cloud_filers_subnet_name
 }
 
 output "network-region1-jumpbox_subnet_name" {
-  value = "\"${module.network-region1.jumpbox_subnet_name}\""
+  value = module.network-region1.jumpbox_subnet_name
 }
 
 output "network-region1-cloud_cache_subnet_name" {
-  value = "\"${module.network-region1.cloud_cache_subnet_name}\""
+  value = module.network-region1.cloud_cache_subnet_name
 }
 
 output "network-region1-render_clients1_subnet_name" {
-  value = "\"${module.network-region1.render_clients1_subnet_name}\""
+  value = module.network-region1.render_clients1_subnet_name
 }
 
 output "network-region1-vnet_name" {
-  value = "\"${module.network-region1.vnet_name}\""
+  value = module.network-region1.vnet_name
 }
 
 output "network-region1-vnet_id" {
-  value = "\"${module.network-region1.vnet_id}\""
+  value = module.network-region1.vnet_id
 }
 
 output "network_rg2_name" {
-  value = "\"${local.network_rg2_name}\""
+  value = local.network_rg2_name
 }
 
 output "network-region2-cloud_filers_ha_subnet_name" {
-  value = "\"${module.network-region2.cloud_filers_ha_subnet_name}\""
+  value = module.network-region2.cloud_filers_ha_subnet_name
 }
 
 output "network-region2-cloud_filers_subnet_name" {
-  value = "\"${module.network-region2.cloud_filers_subnet_name}\""
+  value = module.network-region2.cloud_filers_subnet_name
 }
 
 output "network-region2-vnet_name" {
-  value = "\"${module.network-region2.vnet_name}\""
+  value = module.network-region2.vnet_name
 }
 
 output "network-region2-vnet_id" {
-  value = "\"${module.network-region2.vnet_id}\""
+  value = module.network-region2.vnet_id
 }
 
 output "network_rg3_name" {
-  value = "\"${local.network_rg3_name}\""
+  value = local.network_rg3_name
 }
 
 output "network-region3-cloud_filers_ha_subnet_name" {
-  value = "\"${module.network-region3.cloud_filers_ha_subnet_name}\""
+  value = module.network-region3.cloud_filers_ha_subnet_name
 }
 
 output "network-region3-cloud_filers_subnet_name" {
-  value = "\"${module.network-region3.cloud_filers_subnet_name}\""
+  value = module.network-region3.cloud_filers_subnet_name
 }
 
 output "network-region3-vnet_name" {
-  value = "\"${module.network-region3.vnet_name}\""
+  value = module.network-region3.vnet_name
 }
 
 output "network-region3-vnet_id" {
-  value = "\"${module.network-region3.vnet_id}\""
+  value = module.network-region3.vnet_id
 }
 
 output "network-region1-jumpbox-subnet-id" {
-  value = "\"${module.network-region1.jumpbox_subnet_id}\""
+  value = module.network-region1.jumpbox_subnet_id
 }
 
