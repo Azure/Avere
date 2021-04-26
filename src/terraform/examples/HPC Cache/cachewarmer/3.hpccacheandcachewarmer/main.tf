@@ -9,26 +9,26 @@ locals {
   vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
 
   // HPC Cache Throughput SKU - 3 allowed values for throughput (GB/s) of the cache
-  //    Standard_2G
-  //    Standard_4G
-  //    Standard_8G
+  //  Standard_2G
+  //  Standard_4G
+  //  Standard_8G
   cache_throughput = "Standard_2G"
 
   // HPC Cache Size - 5 allowed sizes (GBs) for the cache
-  //     3072
-  //     6144
-  //    12288
-  //    24576
-  //    49152
+  //   3072
+  //   6144
+  //  12288
+  //  24576
+  //  49152
   cache_size = 12288
 
   // unique name for cache
   cache_name = "hpccache"
 
   // usage model
-  //    WRITE_AROUND
-  //    READ_HEAVY_INFREQ
-  //    WRITE_WORKLOAD_15
+  //  WRITE_AROUND
+  //  READ_HEAVY_INFREQ
+  //  WRITE_WORKLOAD_15
   usage_model = "READ_HEAVY_INFREQ"
 
   // storage account hosting the queue
@@ -50,10 +50,11 @@ locals {
 }
 
 terraform {
+  required_version = ">= 0.14.0,< 0.16.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.12.0"
+      version = "~>2.56.0"
     }
   }
 }

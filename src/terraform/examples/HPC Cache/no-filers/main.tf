@@ -10,17 +10,17 @@ locals {
   hpc_cache_resource_group_name = "hpc_cache_resource_group"
 
   // HPC Cache Throughput SKU - 3 allowed values for throughput (GB/s) of the cache
-  //    Standard_2G
-  //    Standard_4G
-  //    Standard_8G
+  //  Standard_2G
+  //  Standard_4G
+  //  Standard_8G
   cache_throughput = "Standard_2G"
 
   // HPC Cache Size - 5 allowed sizes (GBs) for the cache
-  //     3072
-  //     6144
-  //    12288
-  //    24576
-  //    49152
+  //   3072
+  //   6144
+  //  12288
+  //  24576
+  //  49152
   cache_size = 12288
 
   // unique name for cache
@@ -28,7 +28,7 @@ locals {
 }
 
 terraform {
-  required_version = ">= 0.14.0"
+  required_version = ">= 0.14.0,< 0.16.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"

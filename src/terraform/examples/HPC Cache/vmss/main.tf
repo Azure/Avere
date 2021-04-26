@@ -10,26 +10,26 @@ locals {
   hpc_cache_resource_group_name = "hpc_cache_resource_group"
 
   // HPC Cache Throughput SKU - 3 allowed values for throughput (GB/s) of the cache
-  //    Standard_2G
-  //    Standard_4G
-  //    Standard_8G
+  //  Standard_2G
+  //  Standard_4G
+  //  Standard_8G
   cache_throughput = "Standard_2G"
 
   // HPC Cache Size - 5 allowed sizes (GBs) for the cache
-  //     3072
-  //     6144
-  //    12288
-  //    24576
-  //    49152
+  //   3072
+  //   6144
+  //  12288
+  //  24576
+  //  49152
   cache_size = 12288
 
   // unique name for cache
   cache_name = "uniquename"
 
   // usage model
-  //    WRITE_AROUND
-  //    READ_HEAVY_INFREQ
-  //    WRITE_WORKLOAD_15
+  //  WRITE_AROUND
+  //  READ_HEAVY_INFREQ
+  //  WRITE_WORKLOAD_15
   usage_model = "READ_HEAVY_INFREQ"
 
   // nfs filer related variables
@@ -62,10 +62,11 @@ locals {
 }
 
 terraform {
+  required_version = ">= 0.14.0,< 0.16.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.12.0"
+      version = "~>2.56.0"
     }
   }
 }
@@ -125,6 +126,10 @@ module "nasfiler1" {
   virtual_network_resource_group = local.network_resource_group_name
   virtual_network_name           = module.network.vnet_name
   virtual_network_subnet_name    = module.network.cloud_filers_subnet_name
+
+  depends_on = [
+    azurerm_resource_group.nfsfiler
+  ]
 }
 
 resource "azurerm_hpc_cache_nfs_target" "nfs_targets" {
