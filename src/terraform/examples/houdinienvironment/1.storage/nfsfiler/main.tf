@@ -63,19 +63,19 @@ module "nasfiler1" {
 }
 
 output "filer_username" {
-  value = "\"${module.nasfiler1.admin_username}\""
+  value = module.nasfiler1.admin_username
 }
 
 output "filer_address" {
-  value = "\"${module.nasfiler1.primary_ip}\""
+  value = module.nasfiler1.primary_ip
 }
 
 output "filer_export" {
-  value = "\"${module.nasfiler1.core_filer_export}\""
+  value = module.nasfiler1.core_filer_export
 }
 
 output "storage_resource_group_name" {
-  value = "\"${local.storage_resource_group_name}\""
+  value = local.storage_resource_group_name
 }
 
 output "use_nfs_storage" {

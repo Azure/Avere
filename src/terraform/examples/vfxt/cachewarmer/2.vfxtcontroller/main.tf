@@ -57,15 +57,15 @@ module "vfxtcontroller" {
 }
 
 output "vfxt_resource_group_name" {
-  value = "\"${local.vfxt_resource_group_name}\""
+  value = local.vfxt_resource_group_name
 }
 
 output "controller_username" {
-  value = "\"${module.vfxtcontroller.controller_username}\""
+  value = module.vfxtcontroller.controller_username
 }
 
 output "controller_address" {
-  value = "\"${module.vfxtcontroller.controller_address}\""
+  value = module.vfxtcontroller.controller_address
 }
 
 output "ssh_port" {

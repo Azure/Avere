@@ -47,39 +47,39 @@ module "network" {
 }
 
 output "location" {
-  value = "\"${local.location}\""
+  value = local.location
 }
 
 output "vnet_resource_group" {
-  value = "\"${module.network.vnet_resource_group}\""
+  value = module.network.vnet_resource_group
 }
 
 output "vnet_name" {
-  value = "\"${module.network.vnet_name}\""
+  value = module.network.vnet_name
 }
 
 output "vnet_cloud_cache_subnet_name" {
-  value = "\"${module.network.cloud_cache_subnet_name}\""
+  value = module.network.cloud_cache_subnet_name
 }
 
 output "vnet_jumpbox_subnet_name" {
-  value = "\"${module.network.jumpbox_subnet_name}\""
+  value = module.network.jumpbox_subnet_name
 }
 
 output "vnet_cloud_filers_subnet_name" {
-  value = "\"${module.network.cloud_filers_subnet_name}\""
+  value = module.network.cloud_filers_subnet_name
 }
 
 output "vnet_cloud_cache_subnet_id" {
-  value = "\"${module.network.cloud_cache_subnet_id}\""
+  value = module.network.cloud_cache_subnet_id
 }
 
 output "vnet_jumpbox_subnet_id" {
-  value = "\"${module.network.jumpbox_subnet_id}\""
+  value = module.network.jumpbox_subnet_id
 }
 
 output "vnet_render_clients1_subnet_id" {
-  value = "\"${module.network.render_clients1_subnet_id}\""
+  value = module.network.render_clients1_subnet_id
 }
 
 

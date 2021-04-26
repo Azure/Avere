@@ -53,13 +53,13 @@ module "jumpbox" {
 }
 
 output "hpccache_resource_group_name" {
-  value = "\"${local.hpccache_resource_group_name}\""
+  value = local.hpccache_resource_group_name
 }
 
 output "jumpbox_username" {
-  value = "\"${module.jumpbox.jumpbox_username}\""
+  value = module.jumpbox.jumpbox_username
 }
 
 output "jumpbox_address" {
-  value = "\"${module.jumpbox.jumpbox_address}\""
+  value = module.jumpbox.jumpbox_address
 }

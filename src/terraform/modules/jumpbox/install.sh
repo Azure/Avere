@@ -81,9 +81,9 @@ gpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/azu
 
 function install_terraform() {
     cd $AZURE_HOME_DIR/.
-    retrycmd_if_failure 12 5 wget https://releases.hashicorp.com/terraform/0.12.24/terraform_0.12.24_linux_amd64.zip
-    unzip terraform_0.12.24_linux_amd64.zip -d /usr/local/bin
-    rm terraform_0.12.24_linux_amd64.zip
+    retrycmd_if_failure 12 5 wget https://releases.hashicorp.com/terraform/0.15.0/terraform_0.15.0_linux_amd64.zip
+    unzip terraform_0.15.0_linux_amd64.zip -d /usr/local/bin
+    rm terraform_0.15.0_linux_amd64.zip
 }
 
 function main() {

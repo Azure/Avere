@@ -51,11 +51,11 @@ resource "azurerm_storage_account" "storage" {
 }
 
 output "storage_resource_group_name" {
-  value = "\"${local.storage_resource_group_name}\""
+  value = local.storage_resource_group_name
 }
 
 output "storage_account_name" {
-  value = "\"${local.storage_account_name}\""
+  value = local.storage_account_name
 }
 
 output "use_blob_storage" {

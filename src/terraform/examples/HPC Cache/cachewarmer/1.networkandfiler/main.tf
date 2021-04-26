@@ -88,41 +88,41 @@ module "nasfiler1" {
 }
 
 output "filer_username" {
-  value = "\"${module.nasfiler1.admin_username}\""
+  value = module.nasfiler1.admin_username
 }
 
 output "filer_address" {
-  value = "\"${module.nasfiler1.primary_ip}\""
+  value = module.nasfiler1.primary_ip
 }
 
 output "filer_export" {
-  value = "\"${module.nasfiler1.core_filer_export}\""
+  value = module.nasfiler1.core_filer_export
 }
 
 output "hpccache_network_resource_group_name" {
-  value = "\"${module.network.vnet_resource_group}\""
+  value = module.network.vnet_resource_group
 }
 
 output "hpccache_network_name" {
-  value = "\"${module.network.vnet_name}\""
+  value = module.network.vnet_name
 }
 
 output "hpccache_jumpbox_subnet_name" {
-  value = "\"${module.network.jumpbox_subnet_name}\""
+  value = module.network.jumpbox_subnet_name
 }
 
 output "hpccache_jumpbox_subnet_id" {
-  value = "\"${module.network.jumpbox_subnet_id}\""
+  value = module.network.jumpbox_subnet_id
 }
 
 output "hpccache_cache_subnet_name" {
-  value = "\"${module.network.cloud_cache_subnet_name}\""
+  value = module.network.cloud_cache_subnet_name
 }
 
 output "hpccache_cache_subnet_id" {
-  value = "\"${module.network.cloud_cache_subnet_id}\""
+  value = module.network.cloud_cache_subnet_id
 }
 
 output "hpccache_render_subnet_name" {
-  value = "\"${module.network.render_clients1_subnet_name}\""
+  value = module.network.render_clients1_subnet_name
 }
