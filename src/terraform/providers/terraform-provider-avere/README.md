@@ -326,6 +326,8 @@ There are three approaches to access the provider binary:
 2. Deploy the [jumpbox](../../examples/jumpbox) - the jumpbox automatically builds the provider.
 3. Build the binary using the instructions below.
 
+_Note_: The provider is built as a go module - this lets you build outside your GOPATH.
+
 The following build instructions work in https://shell.azure.com, Centos, or Ubuntu:
 
 1. if this is centos, install git
