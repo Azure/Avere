@@ -47,8 +47,6 @@ locals {
   unique_name_1          = local.location1
   unique_name_2          = local.location2
   unique_name_3          = local.location3
-  use_highly_available   = false
-  anvil_configuration    = local.use_highly_available ? "High Availability" : "Standalone"
   // virtual network and subnet details
   data_subnet_mask_bits   = 25
   anvil_data_cluster_ip_1 = "10.0.2.240" // leave blank to be dynamic
@@ -101,45 +99,6 @@ locals {
     // storage_account_type = "StandardSSD_LRS"
     storage_account_type = "Premium_LRS"
   }
-
-  // More sizes found here: https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-  anvil_instance_type = "Standard_F8s_v2"
-  // anvil_instance_type = "Standard_F16s_v2"
-  // anvil_instance_type = "Standard_F32s_v2"
-  // anvil_instance_type = "Standard_F48s_v2"
-  //anvil_instance_type = "Standard_F16s_v2"
-  // More sizes found here: https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-  dsx_instance_type = "Standard_F8s_v2"
-  // dsx_instance_type = "Standard_F16s_v2"
-  // dsx_instance_type = "Standard_F32s_v2"
-  // dsx_instance_type = "Standard_F48s_v2"
-  // dsx_instance_type = "Standard_F16s_v2"
-
-  // storage_account_type = "Standard_LRS"
-  // storage_account_type = "StandardSSD_LRS"
-  storage_account_type = "Premium_LRS"
-
-  // more disk sizes and pricing found here: https://azure.microsoft.com/en-us/pricing/details/managed-disks/
-  // metadata_disk_size_gb = 127   //  P10, E10, S10
-  metadata_disk_size_gb = 255 //  P15, E15, S15
-  // metadata_disk_size_gb = 511   //  P20, E20, S20
-  // metadata_disk_size_gb = 1023  //  P30, E30, S30
-  // metadata_disk_size_gb = 2047  //  P40, E40, S40
-  // metadata_disk_size_gb = 4095  //  P50, E50, S50
-  // metadata_disk_size_gb = 8191  //  P60, E60, S60
-  // metadata_disk_size_gb = 16383 //  P70, E70, S70
-  // metadata_disk_size_gb = 32767 //  P80, E80, S80
-
-  // more disk sizes and pricing found here: https://azure.microsoft.com/en-us/pricing/details/managed-disks/
-  // data_disk_size_gb = 127   //  P10, E10, S10
-  // data_disk_size_gb = 255   //  P15, E15, S15
-  // data_disk_size_gb = 511   //  P20, E20, S20
-  data_disk_size_gb = 1023 //  P30, E30, S30
-  // data_disk_size_gb = 2047  //  P40, E40, S40
-  //data_disk_size_gb = 4095  //  P50, E50, S50
-  // data_disk_size_gb = 8191  //  P60, E60, S60
-  // data_disk_size_gb = 16383 //  P70, E70, S70
-  // data_disk_size_gb = 32767 //  P80, E80, S80
 
   # advanced scenario: add external ports to work with cloud policies example [10022, 13389]
   open_external_ports = [22, 3389]
@@ -234,23 +193,24 @@ resource "azurerm_resource_group" "nfsfiler3" {
 
 // the ephemeral filer
 module "anvil1" {
-  source                                = "github.com/Azure/Avere/src/terraform/modules/hammerspace/anvil"
-  resource_group_name                   = azurerm_resource_group.nfsfiler1.name
-  location                              = azurerm_resource_group.nfsfiler1.location
-  hammerspace_image_id                  = local.hammerspace_image_id_1
-  unique_name                           = local.unique_name_1
-  admin_username                        = local.admin_username
-  admin_password                        = local.admin_password
-  anvil_configuration                   = local.anvil_configuration
-  anvil_instance_type                   = local.anvil_instance_type
+  source                           = "github.com/Azure/Avere/src/terraform/modules/hammerspace/anvil"
+  resource_group_name              = azurerm_resource_group.nfsfiler1.name
+  location                         = azurerm_resource_group.nfsfiler1.location
+  hammerspace_image_id             = local.hammerspace_image_id_1
+  unique_name                      = local.unique_name_1
+  admin_username                   = local.admin_username
+  admin_password                   = local.admin_password
+  anvil_configuration              = local.region1_configuration.use_highly_available ? "High Availability" : "Standalone"
+  anvil_instance_type              = local.region1_configuration.anvil_instance_type
+  anvil_metadata_disk_size         = local.region1_configuration.metadata_disk_size_gb
+  anvil_metadata_disk_storage_type = local.region1_configuration.storage_account_type
+
   virtual_network_resource_group        = local.network_rg1_name
   virtual_network_name                  = local.network-region1-vnet_name
   virtual_network_ha_subnet_name        = local.network-region1-cloud_filers_ha_subnet_name
   virtual_network_data_subnet_name      = local.network-region1-cloud_filers_subnet_name
   virtual_network_data_subnet_mask_bits = local.data_subnet_mask_bits
   anvil_data_cluster_ip                 = local.anvil_data_cluster_ip_1
-  anvil_metadata_disk_storage_type      = local.storage_account_type
-  anvil_metadata_disk_size              = local.metadata_disk_size_gb
 
   depends_on = [
     azurerm_resource_group.nfsfiler1,
@@ -259,15 +219,18 @@ module "anvil1" {
 
 // the ephemeral filer
 module "dsx1" {
-  source                                = "github.com/Azure/Avere/src/terraform/modules/hammerspace/dsx"
-  resource_group_name                   = azurerm_resource_group.nfsfiler1.name
-  location                              = azurerm_resource_group.nfsfiler1.location
-  hammerspace_image_id                  = local.hammerspace_image_id_1
-  unique_name                           = local.unique_name_1
-  admin_username                        = local.admin_username
-  admin_password                        = local.admin_password
-  dsx_instance_count                    = local.dsx_instance_count
-  dsx_instance_type                     = local.dsx_instance_type
+  source               = "github.com/Azure/Avere/src/terraform/modules/hammerspace/dsx"
+  resource_group_name  = azurerm_resource_group.nfsfiler1.name
+  location             = azurerm_resource_group.nfsfiler1.location
+  hammerspace_image_id = local.hammerspace_image_id_1
+  unique_name          = local.unique_name_1
+  admin_username       = local.admin_username
+  admin_password       = local.admin_password
+
+  dsx_instance_count                    = local.region1_configuration.dsx_instance_count
+  dsx_instance_type                     = local.region1_configuration.dsx_instance_type
+  dsx_data_disk_size                    = local.region1_configuration.datadisk_size_gb
+  dsx_data_disk_storage_type            = local.region1_configuration.storage_account_type
   virtual_network_resource_group        = local.network_rg1_name
   virtual_network_name                  = local.network-region1-vnet_name
   virtual_network_data_subnet_name      = local.network-region1-cloud_filers_subnet_name
@@ -275,8 +238,6 @@ module "dsx1" {
   anvil_password                        = module.anvil1.web_ui_password
   anvil_data_cluster_ip                 = module.anvil1.anvil_data_cluster_ip
   anvil_domain                          = module.anvil1.anvil_domain
-  dsx_data_disk_storage_type            = local.storage_account_type
-  dsx_data_disk_size                    = local.data_disk_size_gb
 }
 
 module "anvil_configure1" {
@@ -304,23 +265,24 @@ module "anvil_configure1" {
 
 // the ephemeral filer
 module "anvil2" {
-  source                                = "github.com/Azure/Avere/src/terraform/modules/hammerspace/anvil"
-  resource_group_name                   = azurerm_resource_group.nfsfiler2.name
-  location                              = azurerm_resource_group.nfsfiler2.location
-  hammerspace_image_id                  = local.hammerspace_image_id_2
-  unique_name                           = local.unique_name_2
-  admin_username                        = local.admin_username
-  admin_password                        = local.admin_password
-  anvil_configuration                   = local.anvil_configuration
-  anvil_instance_type                   = local.anvil_instance_type
+  source                           = "github.com/Azure/Avere/src/terraform/modules/hammerspace/anvil"
+  resource_group_name              = azurerm_resource_group.nfsfiler2.name
+  location                         = azurerm_resource_group.nfsfiler2.location
+  hammerspace_image_id             = local.hammerspace_image_id_2
+  unique_name                      = local.unique_name_2
+  admin_username                   = local.admin_username
+  admin_password                   = local.admin_password
+  anvil_configuration              = local.region2_configuration.use_highly_available ? "High Availability" : "Standalone"
+  anvil_instance_type              = local.region2_configuration.anvil_instance_type
+  anvil_metadata_disk_size         = local.region2_configuration.metadata_disk_size_gb
+  anvil_metadata_disk_storage_type = local.region2_configuration.storage_account_type
+
   virtual_network_resource_group        = local.network_rg2_name
   virtual_network_name                  = local.network-region2-vnet_name
   virtual_network_ha_subnet_name        = local.network-region2-cloud_filers_ha_subnet_name
   virtual_network_data_subnet_name      = local.network-region2-cloud_filers_subnet_name
   virtual_network_data_subnet_mask_bits = local.data_subnet_mask_bits
   anvil_data_cluster_ip                 = local.anvil_data_cluster_ip_2
-  anvil_metadata_disk_storage_type      = local.storage_account_type
-  anvil_metadata_disk_size              = local.metadata_disk_size_gb
 
   depends_on = [
     azurerm_resource_group.nfsfiler2,
@@ -329,15 +291,19 @@ module "anvil2" {
 
 // the ephemeral filer
 module "dsx2" {
-  source                                = "github.com/Azure/Avere/src/terraform/modules/hammerspace/dsx"
-  resource_group_name                   = azurerm_resource_group.nfsfiler2.name
-  location                              = azurerm_resource_group.nfsfiler2.location
-  hammerspace_image_id                  = local.hammerspace_image_id_2
-  unique_name                           = local.unique_name_2
-  admin_username                        = local.admin_username
-  admin_password                        = local.admin_password
-  dsx_instance_count                    = local.dsx_instance_count
-  dsx_instance_type                     = local.dsx_instance_type
+  source               = "github.com/Azure/Avere/src/terraform/modules/hammerspace/dsx"
+  resource_group_name  = azurerm_resource_group.nfsfiler2.name
+  location             = azurerm_resource_group.nfsfiler2.location
+  hammerspace_image_id = local.hammerspace_image_id_2
+  unique_name          = local.unique_name_2
+  admin_username       = local.admin_username
+  admin_password       = local.admin_password
+
+  dsx_instance_count         = local.region2_configuration.dsx_instance_count
+  dsx_instance_type          = local.region2_configuration.dsx_instance_type
+  dsx_data_disk_size         = local.region2_configuration.datadisk_size_gb
+  dsx_data_disk_storage_type = local.region2_configuration.storage_account_type
+
   virtual_network_resource_group        = local.network_rg2_name
   virtual_network_name                  = local.network-region2-vnet_name
   virtual_network_data_subnet_name      = local.network-region2-cloud_filers_subnet_name
@@ -345,8 +311,6 @@ module "dsx2" {
   anvil_password                        = module.anvil2.web_ui_password
   anvil_data_cluster_ip                 = module.anvil2.anvil_data_cluster_ip
   anvil_domain                          = module.anvil2.anvil_domain
-  dsx_data_disk_storage_type            = local.storage_account_type
-  dsx_data_disk_size                    = local.data_disk_size_gb
 }
 
 module "anvil_configure2" {
@@ -373,23 +337,25 @@ module "anvil_configure2" {
 
 // the ephemeral filer
 module "anvil3" {
-  source                                = "github.com/Azure/Avere/src/terraform/modules/hammerspace/anvil"
-  resource_group_name                   = azurerm_resource_group.nfsfiler3.name
-  location                              = azurerm_resource_group.nfsfiler3.location
-  hammerspace_image_id                  = local.hammerspace_image_id_3
-  unique_name                           = local.unique_name_3
-  admin_username                        = local.admin_username
-  admin_password                        = local.admin_password
-  anvil_configuration                   = local.anvil_configuration
-  anvil_instance_type                   = local.anvil_instance_type
+  source               = "github.com/Azure/Avere/src/terraform/modules/hammerspace/anvil"
+  resource_group_name  = azurerm_resource_group.nfsfiler3.name
+  location             = azurerm_resource_group.nfsfiler3.location
+  hammerspace_image_id = local.hammerspace_image_id_3
+  unique_name          = local.unique_name_3
+  admin_username       = local.admin_username
+  admin_password       = local.admin_password
+
+  anvil_configuration              = local.region3_configuration.use_highly_available ? "High Availability" : "Standalone"
+  anvil_instance_type              = local.region3_configuration.anvil_instance_type
+  anvil_metadata_disk_size         = local.region3_configuration.metadata_disk_size_gb
+  anvil_metadata_disk_storage_type = local.region3_configuration.storage_account_type
+
   virtual_network_resource_group        = local.network_rg3_name
   virtual_network_name                  = local.network-region3-vnet_name
   virtual_network_ha_subnet_name        = local.network-region3-cloud_filers_ha_subnet_name
   virtual_network_data_subnet_name      = local.network-region3-cloud_filers_subnet_name
   virtual_network_data_subnet_mask_bits = local.data_subnet_mask_bits
   anvil_data_cluster_ip                 = local.anvil_data_cluster_ip_3
-  anvil_metadata_disk_storage_type      = local.storage_account_type
-  anvil_metadata_disk_size              = local.metadata_disk_size_gb
 
   depends_on = [
     azurerm_resource_group.nfsfiler3,
@@ -398,15 +364,19 @@ module "anvil3" {
 
 // the ephemeral filer
 module "dsx3" {
-  source                                = "github.com/Azure/Avere/src/terraform/modules/hammerspace/dsx"
-  resource_group_name                   = azurerm_resource_group.nfsfiler3.name
-  location                              = azurerm_resource_group.nfsfiler3.location
-  hammerspace_image_id                  = local.hammerspace_image_id_3
-  unique_name                           = local.unique_name_3
-  admin_username                        = local.admin_username
-  admin_password                        = local.admin_password
-  dsx_instance_count                    = local.dsx_instance_count
-  dsx_instance_type                     = local.dsx_instance_type
+  source               = "github.com/Azure/Avere/src/terraform/modules/hammerspace/dsx"
+  resource_group_name  = azurerm_resource_group.nfsfiler3.name
+  location             = azurerm_resource_group.nfsfiler3.location
+  hammerspace_image_id = local.hammerspace_image_id_3
+  unique_name          = local.unique_name_3
+  admin_username       = local.admin_username
+  admin_password       = local.admin_password
+
+  dsx_instance_count         = local.region3_configuration.dsx_instance_count
+  dsx_instance_type          = local.region3_configuration.dsx_instance_type
+  dsx_data_disk_size         = local.region3_configuration.datadisk_size_gb
+  dsx_data_disk_storage_type = local.region3_configuration.storage_account_type
+
   virtual_network_resource_group        = local.network_rg3_name
   virtual_network_name                  = local.network-region3-vnet_name
   virtual_network_data_subnet_name      = local.network-region3-cloud_filers_subnet_name
@@ -414,8 +384,6 @@ module "dsx3" {
   anvil_password                        = module.anvil3.web_ui_password
   anvil_data_cluster_ip                 = module.anvil3.anvil_data_cluster_ip
   anvil_domain                          = module.anvil3.anvil_domain
-  dsx_data_disk_storage_type            = local.storage_account_type
-  dsx_data_disk_size                    = local.data_disk_size_gb
 }
 
 module "anvil_configure3" {
