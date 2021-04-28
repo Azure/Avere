@@ -30,6 +30,13 @@ locals {
     version   = "latest"
   }
 
+  source_image_reference_7_6 = {
+    publisher = "OpenLogic"
+    offer     = "CentOS-CI"
+    sku       = "7-CI"
+    version   = "7.6.20190426"
+  }
+
   # even though it is deprecated, you can use the offer "CentOS-CI" for older Cent OS images
   source_image_reference_7_4 = {
     publisher = "OpenLogic"
