@@ -144,7 +144,8 @@ module "nfsfiler" {
   virtual_network_subnet_name    = azurerm_subnet.onprem.name
 
   depends_on = [
-    azurerm_managed_disk.nfsfiler
+    azurerm_managed_disk.nfsfiler,
+    azurerm_subnet.onprem,
   ]
 }
 

@@ -88,7 +88,8 @@ module "nasfiler1" {
   virtual_network_subnet_name = tolist(azurerm_virtual_network.filervnet.subnet)[0].name
 
   depends_on = [
-    azurerm_resource_group.nfsfiler
+    azurerm_resource_group.nfsfiler,
+    azurerm_virtual_network.filervnet.subnet,
   ]
 }
 

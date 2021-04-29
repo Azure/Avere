@@ -128,7 +128,8 @@ module "nasfiler1" {
   virtual_network_subnet_name    = module.network.cloud_filers_subnet_name
 
   depends_on = [
-    azurerm_resource_group.nfsfiler
+    azurerm_resource_group.nfsfiler,
+    module.network,
   ]
 }
 
@@ -162,6 +163,7 @@ module "jumpbox" {
 
   depends_on = [
     azurerm_resource_group.hpc_cache_rg,
+    module.network,
   ]
 }
 
@@ -180,6 +182,7 @@ module "vmss_configure" {
   depends_on = [
     azurerm_hpc_cache_nfs_target.nfs_targets,
     module.jumpbox,
+    azurerm_hpc_cache.hpc_cache,
   ]
 }
 
@@ -205,6 +208,8 @@ module "vmss" {
 
   depends_on = [
     module.vmss_configure,
+    azurerm_hpc_cache.hpc_cache,
+    module.network,
   ]
 }
 

@@ -100,7 +100,8 @@ module "nasfiler1" {
   virtual_network_subnet_name = module.network.cloud_filers_subnet_name
 
   depends_on = [
-    azurerm_resource_group.nfsfiler
+    azurerm_resource_group.nfsfiler,
+    module.network,
   ]
 }
 
@@ -134,7 +135,8 @@ module "nasfiler2" {
   virtual_network_subnet_name = module.network.cloud_filers_subnet_name
 
   depends_on = [
-    azurerm_resource_group.nfsfiler
+    azurerm_resource_group.nfsfiler,
+    module.network,
   ]
 }
 
@@ -168,7 +170,8 @@ module "nasfiler3" {
   virtual_network_subnet_name = module.network.cloud_filers_subnet_name
 
   depends_on = [
-    azurerm_resource_group.nfsfiler
+    azurerm_resource_group.nfsfiler,
+    module.network,
   ]
 }
 

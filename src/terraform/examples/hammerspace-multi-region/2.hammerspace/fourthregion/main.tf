@@ -169,6 +169,11 @@ module "dsx4" {
   anvil_password                        = module.anvil4.web_ui_password
   anvil_data_cluster_ip                 = module.anvil4.anvil_data_cluster_ip
   anvil_domain                          = module.anvil4.anvil_domain
+
+  depends_on = [
+    azurerm_resource_group.nfsfiler4,
+    module.anvil4,
+  ]
 }
 
 module "anvil_configure4" {
@@ -190,6 +195,7 @@ module "anvil_configure4" {
 
   depends_on = [
     module.anvil4,
+    data.azurerm_storage_account.sharedstorageaccount,
   ]
 }
 

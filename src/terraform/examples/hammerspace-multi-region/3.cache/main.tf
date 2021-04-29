@@ -171,6 +171,7 @@ module "cachewarmer_build" {
 
   depends_on = [
     avere_vfxt.vfxt,
+    module.vfxtcontroller,
   ]
 }
 

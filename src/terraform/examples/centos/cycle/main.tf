@@ -56,6 +56,10 @@ module "cyclecloud" {
   virtual_network_resource_group = local.vnet_resource_group
   virtual_network_name           = local.vnet_name
   virtual_network_subnet_name    = local.vnet_jumpbox_subnet_name
+
+  depends_on = [
+    azurerm_resource_group.vm,
+  ]
 }
 
 output "nfs_username" {

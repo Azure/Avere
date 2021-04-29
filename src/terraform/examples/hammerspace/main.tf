@@ -148,6 +148,11 @@ module "dsx" {
   anvil_domain                          = module.anvil.anvil_domain
   dsx_data_disk_storage_type            = local.storage_account_type
   dsx_data_disk_size                    = local.datadisk_size_gb
+
+  depends_on = [
+    azurerm_resource_group.nfsfiler,
+    module.anvil,
+  ]
 }
 
 module "anvil_configure" {

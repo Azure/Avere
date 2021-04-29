@@ -15,11 +15,7 @@ terraform {
 }
 
 provider "azurerm" {
-  features {
-    key_vault {
-      purge_soft_delete_on_destroy = true
-    }
-  }
+  features {}
 }
 
 data "azurerm_client_config" "current" {}
@@ -30,13 +26,13 @@ resource "azurerm_resource_group" "keyvaultrg" {
 }
 
 resource "azurerm_key_vault" "keyvault" {
-  name                        = local.keyvault_name
-  location                    = azurerm_resource_group.keyvaultrg.location
-  resource_group_name         = azurerm_resource_group.keyvaultrg.name
-  tenant_id                   = data.azurerm_client_config.current.tenant_id
-  soft_delete_retention_days  = 90
-  sku_name = "standard"
-  enable_rbac_authorization = true
+  name                       = local.keyvault_name
+  location                   = azurerm_resource_group.keyvaultrg.location
+  resource_group_name        = azurerm_resource_group.keyvaultrg.name
+  tenant_id                  = data.azurerm_client_config.current.tenant_id
+  soft_delete_retention_days = 90
+  sku_name                   = "standard"
+  enable_rbac_authorization  = true
 }
 
 output "location" {

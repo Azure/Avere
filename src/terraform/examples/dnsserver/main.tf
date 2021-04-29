@@ -98,6 +98,7 @@ module "nasfiler1" {
 
   depends_on = [
     azurerm_resource_group.nfsfiler,
+    module.network,
   ]
 }
 
@@ -192,6 +193,7 @@ module "dnsserver" {
 
   depends_on = [
     module.network,
+    avere_vfxt.vfxt,
   ]
 }
 

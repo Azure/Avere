@@ -108,6 +108,11 @@ module "nfsfiler" {
   virtual_network_name           = local.virtual_network_name
   virtual_network_subnet_name    = local.subnet_name
   private_ip_address             = local.filer_private_ip_address
+
+  depends_on = [
+    azurerm_resource_group.nfsfiler,
+    azurerm_managed_disk.nfsfiler,
+  ]
 }
 output "nfsfiler_username" {
   value = module.nfsfiler.admin_username

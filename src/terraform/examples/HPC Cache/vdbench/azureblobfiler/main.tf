@@ -207,7 +207,7 @@ module "jumpbox" {
 
   depends_on = [
     azurerm_resource_group.hpc_cache_rg,
-    module.jumpbox,
+    module.network,
   ]
 }
 
@@ -225,6 +225,8 @@ module "vdbench_configure" {
 
   depends_on = [
     azurerm_hpc_cache_blob_target.blob_target1,
+    azurerm_hpc_cache.hpc_cache,
+    module.jumpbox,
   ]
 }
 
@@ -249,6 +251,8 @@ module "vmss" {
 
   depends_on = [
     module.vdbench_configure,
+    azurerm_hpc_cache_blob_target.blob_target1,
+    module.network,
   ]
 }
 

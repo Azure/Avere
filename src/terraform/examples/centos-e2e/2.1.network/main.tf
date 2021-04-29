@@ -1,7 +1,7 @@
 // customize the simple VM by editing the following local variables
 locals {
   // the region of the main deployment
-  network_resource_group_name = "network_rg"
+  network_resource_group_name = "aaaaanetwork_rg"
 
   // virtual network settings
   vnet_name               = "vnet"
@@ -30,24 +30,24 @@ resource "azurerm_virtual_network" "vnet" {
 }
 
 resource "azurerm_subnet" "gatewaysubnet" {
-  name                = local.gateway_subnet_name
-  resource_group_name = azurerm_resource_group.network.name
-  location            = azurerm_resource_group.network.location
-  address_prefixes    = [local.gateway_subnet]
+  name                 = local.gateway_subnet_name
+  resource_group_name  = azurerm_resource_group.network.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = [local.gateway_subnet]
 }
 
 resource "azurerm_subnet" "cache" {
-  name                = local.cache_subnet_name
-  resource_group_name = azurerm_resource_group.network.name
-  location            = azurerm_resource_group.network.location
-  address_prefixes    = [local.cache_subnet]
+  name                 = local.cache_subnet_name
+  resource_group_name  = azurerm_resource_group.network.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = [local.cache_subnet]
 }
 
 resource "azurerm_subnet" "rendernodes" {
-  name                = local.rendernodes_subnet_name
-  resource_group_name = azurerm_resource_group.network.name
-  location            = azurerm_resource_group.network.location
-  address_prefixes    = [local.rendernodes_subnet]
+  name                 = local.rendernodes_subnet_name
+  resource_group_name  = azurerm_resource_group.network.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = [local.rendernodes_subnet]
 }
 
 // the following is only needed if you need to ssh to the controller
@@ -221,3 +221,4 @@ resource "azurerm_subnet_network_security_group_association" "rendernodes" {
   subnet_id                 = azurerm_subnet.rendernodes1.id
   network_security_group_id = azurerm_network_security_group.ssh_nsg1.id
 }
+
