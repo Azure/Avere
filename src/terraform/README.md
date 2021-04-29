@@ -74,7 +74,7 @@ Both HPC Cache and Avere vFXT for Azure provide file caching for high-performanc
    1. [HPC Cache and VDBench example](examples/HPC%20Cache/vdbench)
    1. [HPC Cache and VMSS example](examples/HPC%20Cache/vmss)
    1. [HPC Cache and CacheWarmer](examples/HPC%20Cache/cachewarmer)
-   1. [HPC Cache mounting Hammerspace filer example](examples/HPC%20Cache/hammerspace)
+   1. HPC Cache mounting Hammerspace filer example - WIP
 
 ### Avere vFXT for Azure
 
@@ -148,7 +148,7 @@ These modules provide core components for use with HPC Cache or Avere vFXT for A
 ### Controller and Jumpbox
 
 1. [Controller3](modules/controller3) - Deploys a python 3 controller that is used to create and manage an Avere vFXT for Azure.
-1. [Controller](modules/controller) - (Deprecated) Deploys a python 2 controller that is used to create and manage an Avere vFXT for Azure.
+1. Controller - (Deprecated) Deploys a python 2 controller that is used to create and manage an Avere vFXT for Azure.
 1. [Jumpbox](modules/jumpbox) - the jumpbox has the necessary environment for building the [terraform-provider-avere](providers/terraform-provider-avere).  It is also useful for when experimenting in virtual networks where there is no controller.
 
 ### NFS Filers
