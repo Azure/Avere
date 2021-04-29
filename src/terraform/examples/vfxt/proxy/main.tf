@@ -99,6 +99,11 @@ module "proxy" {
   virtual_network_resource_group = local.network_resource_group_name
   virtual_network_name           = module.network.vnet_name
   virtual_network_subnet_name    = module.network.proxy_subnet_name
+
+  depends_on = [
+    azurerm_resource_group.proxy,
+    module.network,
+  ]
 }
 
 resource "azurerm_resource_group" "storage" {
@@ -147,6 +152,11 @@ module "nasfiler1" {
   virtual_network_resource_group = local.network_resource_group_name
   virtual_network_name           = module.network.vnet_name
   virtual_network_subnet_name    = module.network.cloud_filers_subnet_name
+
+  depends_on = [
+    azurerm_resource_group.nfsfiler,
+    module.network,
+  ]
 }
 
 // the vfxt controller
