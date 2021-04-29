@@ -169,6 +169,7 @@ module "dsx" {
   depends_on = [
     module.network,
     azurerm_resource_group.nfsfiler,
+    module.anvil,
   ]
 }
 

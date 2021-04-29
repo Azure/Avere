@@ -60,6 +60,10 @@ module "nasfiler1" {
   virtual_network_resource_group = local.vnet_resource_group
   virtual_network_name           = local.vnet_name
   virtual_network_subnet_name    = local.vnet_cloud_filers_subnet_name
+
+  depends_on = [
+    azurerm_resource_group.nfsfiler,
+  ]
 }
 
 output "filer_username" {

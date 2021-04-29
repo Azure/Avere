@@ -89,6 +89,7 @@ resource "azurerm_storage_account" "storage" {
   // create is started, it will fail with "subnet updating"
   depends_on = [
     module.network,
+    azurerm_resource_group.storage,
   ]
 }
 
@@ -157,6 +158,7 @@ module "vdbench_configure" {
 
   depends_on = [
     avere_vfxt.vfxt,
+    module.vfxtcontroller,
   ]
 }
 
@@ -180,6 +182,8 @@ module "vmss" {
   bootstrap_script_path          = module.vdbench_configure.bootstrap_script_path
   depends_on = [
     module.vdbench_configure,
+    module.network,
+    module.vfxtcontroller,
   ]
 }
 

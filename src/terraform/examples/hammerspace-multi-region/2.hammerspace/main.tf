@@ -238,6 +238,11 @@ module "dsx1" {
   anvil_password                        = module.anvil1.web_ui_password
   anvil_data_cluster_ip                 = module.anvil1.anvil_data_cluster_ip
   anvil_domain                          = module.anvil1.anvil_domain
+
+  depends_on = [
+    azurerm_resource_group.nfsfiler1,
+    module.anvil1,
+  ]
 }
 
 module "anvil_configure1" {
@@ -260,6 +265,7 @@ module "anvil_configure1" {
 
   depends_on = [
     module.anvil1,
+    azurerm_storage_account.storage1,
   ]
 }
 
@@ -311,6 +317,11 @@ module "dsx2" {
   anvil_password                        = module.anvil2.web_ui_password
   anvil_data_cluster_ip                 = module.anvil2.anvil_data_cluster_ip
   anvil_domain                          = module.anvil2.anvil_domain
+
+  depends_on = [
+    module.anvil2,
+    azurerm_resource_group.nfsfiler2,
+  ]
 }
 
 module "anvil_configure2" {
@@ -332,6 +343,7 @@ module "anvil_configure2" {
 
   depends_on = [
     module.anvil2,
+    azurerm_storage_account.storage1,
   ]
 }
 
@@ -384,6 +396,11 @@ module "dsx3" {
   anvil_password                        = module.anvil3.web_ui_password
   anvil_data_cluster_ip                 = module.anvil3.anvil_data_cluster_ip
   anvil_domain                          = module.anvil3.anvil_domain
+
+  depends_on = [
+    azurerm_resource_group.nfsfiler3,
+    module.anvil3,
+  ]
 }
 
 module "anvil_configure3" {
@@ -405,6 +422,7 @@ module "anvil_configure3" {
 
   depends_on = [
     module.anvil3,
+    azurerm_storage_account.storage1,
   ]
 }
 

@@ -99,6 +99,7 @@ module "nasfiler1" {
 
   depends_on = [
     azurerm_resource_group.nfsfiler,
+    module.network,
   ]
 }
 
@@ -175,6 +176,7 @@ module "vmss_configure" {
 
   depends_on = [
     avere_vfxt.vfxt,
+    module.vfxtcontroller,
   ]
 }
 
@@ -199,6 +201,9 @@ module "vmss" {
   bootstrap_script_path          = module.vmss_configure.bootstrap_script_path
   depends_on = [
     module.vmss_configure,
+    module.vfxtcontroller,
+    module.network,
+    avere_vfxt.vfxt
   ]
 }
 

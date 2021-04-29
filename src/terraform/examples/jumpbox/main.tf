@@ -66,6 +66,7 @@ module "jumpbox" {
 
   depends_on = [
     azurerm_resource_group.jumpboxrg,
+    module.network,
   ]
 }
 

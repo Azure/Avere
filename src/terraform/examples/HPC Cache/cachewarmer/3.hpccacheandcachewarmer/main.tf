@@ -114,7 +114,6 @@ module "cachewarmer_build" {
 
   depends_on = [
     azurerm_hpc_cache.hpc_cache,
-    azurerm_hpc_cache_nfs_target.nfs_targets,
   ]
 }
 
@@ -146,6 +145,7 @@ module "cachewarmer_manager_install" {
 
   depends_on = [
     module.cachewarmer_build,
+    azurerm_storage_account.storage,
   ]
 }
 
@@ -170,6 +170,8 @@ module "cachewarmer_submitjob" {
 
   depends_on = [
     module.cachewarmer_manager_install,
+    azurerm_storage_account.storage,
+    azurerm_hpc_cache.hpc_cache,
   ]
 }
 

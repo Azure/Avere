@@ -229,6 +229,11 @@ module "opencue_configure" {
   nfs_address     = tolist(avere_vfxt.vfxt.vserver_ip_addresses)[0]
   nfs_export_path = local.nfs_export_path
   ssh_port        = local.ssh_port
+
+  depends_on = [
+    module.vfxtcontroller,
+    avere_vfxt.vfxt,
+  ]
 }
 
 // the VMSS module

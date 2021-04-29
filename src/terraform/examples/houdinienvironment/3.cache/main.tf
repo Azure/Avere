@@ -203,6 +203,11 @@ module "mount_nfs" {
   mount_dir       = "/mnt/nfs"
   nfs_address     = tolist(avere_vfxt.vfxt.vserver_ip_addresses)[0]
   nfs_export_path = local.use_nfs_storage ? local.junction_namespace_path_filer : local.junction_namespace_path_clfs
+
+  depends_on = [
+    module.vfxtcontroller,
+    avere_vfxt.vfxt,
+  ]
 }
 
 output "controller_username" {

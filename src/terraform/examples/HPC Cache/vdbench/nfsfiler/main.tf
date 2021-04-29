@@ -116,7 +116,8 @@ module "nasfiler1" {
   virtual_network_subnet_name    = module.network.cloud_filers_subnet_name
 
   depends_on = [
-    azurerm_resource_group.nfsfiler
+    azurerm_resource_group.nfsfiler,
+    module.network,
   ]
 }
 
@@ -190,7 +191,9 @@ module "vmss" {
   bootstrap_script_path          = module.vdbench_configure.bootstrap_script_path
 
   depends_on = [
+    module.network,
     module.vdbench_configure,
+    azurerm_hpc_cache.hpc_cache,
   ]
 }
 

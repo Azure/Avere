@@ -100,6 +100,7 @@ module "nasfiler1" {
   virtual_network_subnet_name = module.network.cloud_filers_subnet_name
 
   depends_on = [
+    module.network,
     azurerm_resource_group.nfsfiler
   ]
 }
