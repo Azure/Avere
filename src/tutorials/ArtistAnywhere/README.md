@@ -146,7 +146,7 @@ The following Microsoft Azure resource templates and scripts define the Azure Ar
 | :--------------------------- | :----------------------------- |
 | (18) [Image](ArtistWorkstation/18-Image.json) ([Parameters](ArtistWorkstation/18-Image.Parameters.json)) | (18) [Image](ArtistWorkstation/18-Image.json) ([Parameters](ArtistWorkstation/18-Image.Parameters.json)) |
 (18) [Image Customize](ArtistWorkstation/Linux/18-Image.sh) | (18) [Image Customize](ArtistWorkstation/Windows/18-Image.ps1) |
-(18) [Image Customize (Blender)](RenderFarm/Linux/16-Node.Image.Blender.sh) | (18) [Image Customize (Blender)](RenderFarm/Windows/16-Node.Image.Blender.ps1) |
+(18) [Image Customize (Blender)](RenderFarm/Linux/16-NodeImage.Blender.sh) | (18) [Image Customize (Blender)](RenderFarm/Windows/16-NodeImage.Blender.ps1) |
 (18) [Image Customize (OpenCue)](ArtistWorkstation/Linux/18-Image.OpenCue.sh) | (18) [Image Customize (OpenCue)](ArtistWorkstation/Windows/18-Image.OpenCue.ps1) |
 (18) [* Image Customize (Royal Render)](ArtistWorkstation/Linux/18-Image.RoyalRender.sh) | (18) [* Image Customize (Royal Render)](ArtistWorkstation/Windows/18-Image.RoyalRender.ps1) |
 (18) [Image Customize (Teradici)](ArtistWorkstation/Linux/18-Image.Teradici.sh) | (18) [Image Customize (Teradici)](ArtistWorkstation/Windows/18-Image.Teradici.ps1) |
