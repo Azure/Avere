@@ -100,6 +100,7 @@ module "nasfiler1" {
 
   depends_on = [
     azurerm_resource_group.nfsfiler,
+    module.network,
   ]
 }
 
