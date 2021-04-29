@@ -13,12 +13,13 @@ The following is a checklist of items to confirm before connecting an HPC Cache 
 ```bash
 az vm image list --location eastus -p microsoft-avere -f vfxt -s avere-vfxt-node --all
 ```
-* ensure the on-prem firewall is open to the HPC Cache or vFXT subnets
-* ensure an NFSv3 endpoint is enabled
 * ensure you put a vFXT or HPC Cache into its own subnet.  The smallest subnet may be a /27.  The HPC Cache and Avere vFXT have HA models where they migrate IP addresses in HA events, and it is important that another cluster or another vm does not grab those IP addresses during migration.
+* ensure the on-prem firewall is open to the HPC Cache or vFXT subnets by reviewing Internet access for [Avere vFXT clusters](../../../vfxt/internet_access.md)
+* ensure an NFSv3 endpoint is enabled
 * if you need to deploy a different image from default, there are two possible methods:
     1. get the SAS URL from Avere support and follow [the steps to create a custom image](../vfxt#create-vfxt-controller-from-custom-images) and populate the variable `image_id` with the URL of the image
     1. Alternatively, you can use an older version from the marketplace by running the following command and using the "urn" as the value to the `image_id`: `az vm image list --location westeurope -p microsoft-avere -f vfxt -s avere-vfxt-node --all`.  For example, the following specifies an older urn `image_id = "microsoft-avere:vfxt:avere-vfxt-node:5.3.61"`.
+* review https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs
 
 # Reducing TCO
 

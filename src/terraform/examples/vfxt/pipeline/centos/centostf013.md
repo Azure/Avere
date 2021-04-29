@@ -44,6 +44,7 @@ This example assumes the [no-filers](../../no-filers) example.
 
 ```bash
 # set the service principal variables (service principal created with az ad sp create-for-rbac --name ServicePrincipalName --role Owner)
+# alternatively, create a scoped service principal: https://github.com/Azure/Avere/blob/main/src/terraform/examples/vfxt/pipeline/createscopedsp.md
 export ARM_CLIENT_ID="00000000-0000-0000-0000-000000000000"
 export ARM_CLIENT_SECRET="00000000-0000-0000-0000-000000000000"
 export ARM_SUBSCRIPTION_ID="00000000-0000-0000-0000-000000000000"
