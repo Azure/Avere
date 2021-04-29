@@ -8,7 +8,7 @@ This example shows how to configure a multi-region artist and render studio in A
 
 To use this example, please contact a [Hammerspace representative](https://hammerspace.com/contact/) to get access to the Hammerspace Azure Image.
 
-Once you have the Hammerspace Image ID, use the [Hammerspace Image copy instructions](HammerspaceCopyImage.md) to copy the image, and now you will be ready to deploy, and can proceed to the deployment instructions.
+Once you have the Hammerspace Image ID, use the [Hammerspace Image copy instructions](../hammerspace/HammerspaceCopyImage.md) to copy the image, and now you will be ready to deploy, and can proceed to the deployment instructions.
 
 Visit the Rendering SKUs page to see the recommended [Hammerspace SKUs for rendering](../../modules/hammerspace/hammerspaceskus.md).
 
@@ -120,7 +120,7 @@ At this point you are now ready to scale the render nodes.
 
 1. continuing from the previous steps, browse to the cache directory: `cd ~/tf/src/terraform/examples/hammerspace-multi-region/3.cache`
 
-1. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  You will need to paste in the output values from the deployment of the storage and the network steps.  The cifs configuration will automatically join the Avere to the domain controller, and expose the CIFS share as described in these  [manual CIFS instructions](averecifs.md)
+1. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  You will need to paste in the output values from the deployment of the storage and the network steps.  The cifs configuration will automatically join the Avere to the domain controller, and expose the CIFS share as described in these  [manual CIFS instructions](../houdinienvironment/averecifs.md)
 
 1. execute `terraform init` in the directory of `main.tf`.
 

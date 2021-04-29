@@ -1,6 +1,6 @@
 # Create a Houdini Render Farm On Azure
 
-This example shows how to configure the end to end infrastructure for a Houdini render farm on Azure.  This example provides the azure infrastructure required to implement a [Houdini RenderFarm](https://www.sidefx.com/faq/question/indie-renderfarm-setup/) ([also described here](http://www.sidefx.com/docs/houdini/render/cloudfarm.html#rendering-on-cloud)).  The architecture includes a license server, an HQueue server, cloud cache and render nodes:
+This example shows how to configure the end to end infrastructure for a Houdini render farm on Azure.  This example provides the azure infrastructure required to implement a [Houdini RenderFarm](https://www.sidefx.com/faq/question/indie-renderfarm-setup/).  The architecture includes a license server, an HQueue server, cloud cache and render nodes:
 
 ![The architecture](../../../../docs/images/terraform/houdini.png)
 
