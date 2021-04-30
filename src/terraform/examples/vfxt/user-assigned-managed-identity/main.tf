@@ -1,4 +1,6 @@
-// customize the simple VM by editing the following local variables
+////////////////////////////////////////////////////////////////////////////////////////
+// WARNING: if you get an error deploying, please review https://aka.ms/avere-tf-prereqs
+////////////////////////////////////////////////////////////////////////////////////////
 locals {
   // service principal information, that have been scoped to the 
   // resource groups used in this example

@@ -1,4 +1,6 @@
-// customize the simple VM by editing the following local variables
+////////////////////////////////////////////////////////////////////////////////////////
+// WARNING: if you get an error deploying, please review https://aka.ms/avere-tf-prereqs
+////////////////////////////////////////////////////////////////////////////////////////
 locals {
   // paste from 0.network output variables
   location1                                   = ""

@@ -1,4 +1,6 @@
-// customize the simple VM by editing the following local variables
+////////////////////////////////////////////////////////////////////////////////////////
+// WARNING: if you get an error deploying, please review https://aka.ms/avere-tf-prereqs
+////////////////////////////////////////////////////////////////////////////////////////
 locals {
   vm_admin_username = "azureuser"
   // use either SSH Key data or admin password, if ssh_key_data is specified
