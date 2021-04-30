@@ -24,8 +24,6 @@ Here are the important tips to follow when building the image:
 
 * ensure you do not disable UDF as it is required for provisioning the VM.  This is described furtehr in the [linux installation notes](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/create-upload-generic#general-linux-installation-notes).
 
-* to enable cloud-init, follow the instructions for [preparing CentOS for cloud-init on Azure](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cloudinit-prepare-custom-image#preparing-rhel-76--centos-76)
-
 * To replace the default `reddog.microsoft.com` search domain with your own search domain, add a line similar to the following line to `/etc/sysconfig/network-scripts/ifcfg-eth0`
 ```bash
 SEARCH="rendering.com artists.rendering.com"
