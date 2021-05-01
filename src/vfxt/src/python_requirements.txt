@@ -187,7 +187,7 @@ six==1.12.0
 sshtunnel==0.1.4
 tabulate==0.8.3
 typing==3.6.6
-urllib3==1.25.3
+urllib3==1.25.8
 virtualenv==16.0.0
 vsts==0.1.25
 vsts-cd-manager==1.0.2
