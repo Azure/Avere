@@ -1825,6 +1825,12 @@ func (a *AvereVfxt) AddExportRules(policyName string, exportRules map[string]*Ex
 func (a *AvereVfxt) DeleteExportRules(policyName string, exportRules map[string]*ExportRule) error {
 	log.Printf("[INFO] [DeleteExportRules %s", policyName)
 	defer log.Printf("[INFO] DeleteExportRules %s]", policyName)
+
+	if policyName == DefaultExportPolicyName {
+		log.Printf("[INFO] default policy, nothing to do")
+		return nil
+	}
+
 	for _, v := range exportRules {
 		if len(v.Id) == 0 {
 			return fmt.Errorf("BUG: the export rule '%s' for policy '%s' cannot have an empty id, this should have come from function GetExportRules", v.Filter, policyName)
