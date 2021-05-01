@@ -75,6 +75,7 @@ module "nfsfiler" {
     azurerm_resource_group.nfsfiler,
   ]
 }
+
 output "nfsfiler_username" {
   value = module.nfsfiler.admin_username
 }

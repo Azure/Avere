@@ -60,6 +60,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~>2.56.0"
     }
+    avere = {
+      source  = "hashicorp/avere"
+      version = ">=1.0.0"
+    }
   }
 }
 
@@ -134,7 +138,7 @@ resource "avere_vfxt" "vfxt" {
   // ssh key takes precedence over controller password
   controller_admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
   controller_ssh_port       = local.ssh_port
-  
+
   location                     = local.location
   azure_resource_group         = local.vfxt_resource_group_name
   azure_network_resource_group = local.network_resource_group_name

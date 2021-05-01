@@ -37,6 +37,16 @@ locals {
   }
 }
 
+terraform {
+  required_version = ">= 0.14.0,< 0.16.0"
+  required_providers {
+    avere = {
+      source  = "hashicorp/avere"
+      version = ">=1.0.0"
+    }
+  }
+}
+
 resource "avere_vfxt" "vfxt" {
   run_local = true
 

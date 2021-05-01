@@ -893,6 +893,7 @@ func resourceVfxtRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("error encountered getting cluster '%v'", err)
 	}
 	d.Set(licensing_id, cluster.LicensingId)
+	log.Printf("[INFO] cluster name: '%s', uuid: '%s', support name: '%s'", avereVfxt.AvereVfxtName, cluster.LicensingId, avereVfxt.AvereVfxtSupportName)
 
 	return nil
 }
@@ -1297,7 +1298,6 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	if avereVfxt.AvereVfxtSupportName, err = iaasPlatform.GetSupportName(avereVfxt, d.Get(support_uploads_company_name).(string)); err != nil {
 		return nil, err
 	}
-	log.Printf("[INFO] cluster name: '%s', support name: '%s'", avereVfxt.AvereVfxtName, avereVfxt.AvereVfxtSupportName)
 
 	return avereVfxt, nil
 }

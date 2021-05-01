@@ -2008,15 +2008,33 @@ func (a *AvereVfxt) EnableSupport() error {
 	return nil
 }
 
+func (a *AvereVfxt) AreTermsAccepted() (bool, error) {
+	jsonData, err := a.AvereCommand(a.getSupportAreTermsAccepted())
+	if err != nil {
+		return false, err
+	}
+	var termsAccepted bool
+	if err := json.Unmarshal([]byte(jsonData), &termsAccepted); err != nil {
+		return false, err
+	}
+	return termsAccepted, nil
+}
+
 func (a *AvereVfxt) ModifySupportUploads() error {
 	if err := a.EnableSupport(); err != nil {
 		return err
 	}
-	if _, err := a.AvereCommand(a.getSupportModifyCustomerUploadInfoCommand()); err != nil {
+	termsAccepted, err := a.AreTermsAccepted()
+	if err != nil {
 		return err
 	}
-	if _, err := a.AvereCommand(a.getSupportSecureProactiveSupportCommand()); err != nil {
-		return err
+	if termsAccepted {
+		if _, err := a.AvereCommand(a.getSupportModifyCustomerUploadInfoCommand()); err != nil {
+			return err
+		}
+		if _, err := a.AvereCommand(a.getSupportSecureProactiveSupportCommand()); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -2506,6 +2524,10 @@ func (a *AvereVfxt) getRemoveCustomSettingCommand(customSetting string) string {
 	return WrapCommandForLogging(fmt.Sprintf("%s support.removeCustomSetting %s", a.getBaseAvereCmd(), firstArgument), AverecmdLogFile)
 }
 
+func (a *AvereVfxt) getSupportAreTermsAccepted() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json support.areTermsAccepted", a.getBaseAvereCmd()), AverecmdLogFile)
+}
+
 // This is activated by the customer accepting the privacy policy by setting enable_support_uploads.  Otherwise, none of the examples will ever set this.
 func (a *AvereVfxt) getSupportAcceptTermsCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s support.acceptTerms yes", a.getBaseAvereCmd()), AverecmdLogFile)
@@ -2545,10 +2567,12 @@ func (a *AvereVfxt) getSupportModifyCustomerUploadInfoCommand() string {
 // this updates SPS (Secure Proactive Support) per docs https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-enable-support
 func (a *AvereVfxt) getSupportSecureProactiveSupportCommand() string {
 	isEnabled := "no"
+	secureProactiveSupport := ProactiveSupportDisabled
 	if a.EnableSupportUploads {
 		isEnabled = "yes"
+		secureProactiveSupport = a.SecureProactiveSupport
 	}
-	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'remoteCommandEnabled':'%s','SPSLinkInterval':'60','SPSLinkEnabled':'%s','remoteCommandExpiration':''}\"", a.getBaseAvereCmd(), a.SecureProactiveSupport, isEnabled), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'remoteCommandEnabled':'%s','SPSLinkInterval':'60','SPSLinkEnabled':'%s','remoteCommandExpiration':''}\"", a.getBaseAvereCmd(), secureProactiveSupport, isEnabled), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getDirServicesEnableCIFSCommand() string {

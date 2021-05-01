@@ -16,6 +16,17 @@ The provider has the following features:
 More examples deployable from Azure Cloud Shell can be found in the [Avere vFXT for Azure Examples](../../examples/vfxt/).
 
 ```terraform
+
+terraform {
+  required_version = ">= 0.14.0,< 0.16.0"
+  required_providers {
+    avere = {
+      source  = "hashicorp/avere"
+      version = ">=1.0.0"
+    }
+  }
+}
+
 resource "avere_vfxt" "vfxt" {
     controller_address = "10.0.2.5"
     controller_admin_username = "azureuser"
