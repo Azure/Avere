@@ -28,20 +28,17 @@ locals {
   // virtual network and subnet details
   data_subnet_mask_bits   = 25
   anvil_data_cluster_ip_4 = "10.3.2.240" // leave blank to be dynamic
-  dsx_instance_count      = 1
 
   region4_configuration = local.test_configuration
 
   test_configuration = {
-    use_highly_available = false
-    // More sizes found here: https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+    use_highly_available  = false
     anvil_instance_type   = "Standard_F8s_v2"
     metadata_disk_size_gb = 127
 
     dsx_instance_count = 1
-    // More sizes found here: https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-    dsx_instance_type = "Standard_F8s_v2"
-    datadisk_size_gb  = 511
+    dsx_instance_type  = "Standard_F8s_v2"
+    datadisk_size_gb   = 511
 
     storage_account_type = "Standard_LRS"
     // storage_account_type = "StandardSSD_LRS"
@@ -50,33 +47,25 @@ locals {
 
   artist_configuration = {
     use_highly_available = false
-    // More sizes found here: https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-    anvil_instance_type = "Standard_F16s_v2"
-    dsx_instance_count  = 3
+    anvil_instance_type  = "Standard_F16s_v2"
+    dsx_instance_count   = 3
 
-    // More sizes found here: https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
     dsx_instance_type     = "Standard_DS14_v2"
     metadata_disk_size_gb = 256
     datadisk_size_gb      = 1024
 
-    // storage_account_type = "Standard_LRS"
-    // storage_account_type = "StandardSSD_LRS"
     storage_account_type = "Premium_LRS"
   }
 
   render_configuration = {
-    use_highly_available = false
-    // More sizes found here: https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-    anvil_instance_type   = "Standard_F16s_v2"
+    use_highly_available  = false
+    anvil_instance_type   = "Standard_L8s_v2"
     metadata_disk_size_gb = 256
 
     dsx_instance_count = 3
-    // More sizes found here: https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-    dsx_instance_type = "Standard_L32s_v2"
-    datadisk_size_gb  = 0
+    dsx_instance_type  = "Standard_L32s_v2"
+    datadisk_size_gb   = 0
 
-    // storage_account_type = "Standard_LRS"
-    // storage_account_type = "StandardSSD_LRS"
     storage_account_type = "Premium_LRS"
   }
 
@@ -181,7 +170,7 @@ module "anvil_configure4" {
   anvil_arm_virtual_machine_id = length(module.anvil4.arm_virtual_machine_ids) == 0 ? "" : module.anvil4.arm_virtual_machine_ids[0]
   anvil_data_cluster_ip        = module.anvil4.anvil_data_cluster_ip
   web_ui_password              = module.anvil4.web_ui_password
-  dsx_count                    = local.dsx_instance_count
+  dsx_count                    = local.region4_configuration.dsx_instance_count
   anvil_hostname               = length(module.anvil4.anvil_host_names) == 0 ? "" : module.anvil4.anvil_host_names[0]
 
   local_site_name  = local.unique_name_4

@@ -52,7 +52,6 @@ locals {
   anvil_data_cluster_ip_1 = "10.0.2.240" // leave blank to be dynamic
   anvil_data_cluster_ip_2 = "10.1.2.240" // leave blank to be dynamic
   anvil_data_cluster_ip_3 = "10.2.2.240" // leave blank to be dynamic
-  dsx_instance_count      = 1
 
   region1_configuration = local.render_configuration
   region2_configuration = local.artist_configuration
@@ -81,22 +80,18 @@ locals {
     metadata_disk_size_gb = 256
     datadisk_size_gb      = 1024
 
-    // storage_account_type = "Standard_LRS"
-    // storage_account_type = "StandardSSD_LRS"
     storage_account_type = "Premium_LRS"
   }
 
   render_configuration = {
     use_highly_available  = false
-    anvil_instance_type   = "Standard_F16s_v2"
+    anvil_instance_type   = "Standard_L8s_v2"
     metadata_disk_size_gb = 256
 
     dsx_instance_count = 3
     dsx_instance_type  = "Standard_L32s_v2"
     datadisk_size_gb   = 0
 
-    // storage_account_type = "Standard_LRS"
-    // storage_account_type = "StandardSSD_LRS"
     storage_account_type = "Premium_LRS"
   }
 
@@ -235,7 +230,7 @@ module "dsx1" {
   virtual_network_name                  = local.network-region1-vnet_name
   virtual_network_data_subnet_name      = local.network-region1-cloud_filers_subnet_name
   virtual_network_data_subnet_mask_bits = local.data_subnet_mask_bits
-  anvil_password                        = module.anvil1.web_ui_password
+  anvil_password                        = module.anvil1.web_ui_password[0]
   anvil_data_cluster_ip                 = module.anvil1.anvil_data_cluster_ip
   anvil_domain                          = module.anvil1.anvil_domain
 
@@ -250,7 +245,7 @@ module "anvil_configure1" {
   anvil_arm_virtual_machine_id = length(module.anvil1.arm_virtual_machine_ids) == 0 ? "" : module.anvil1.arm_virtual_machine_ids[0]
   anvil_data_cluster_ip        = module.anvil1.anvil_data_cluster_ip
   web_ui_password              = module.anvil1.web_ui_password
-  dsx_count                    = local.dsx_instance_count
+  dsx_count                    = local.region1_configuration.dsx_instance_count
   anvil_hostname               = length(module.anvil1.anvil_host_names) == 0 ? "" : module.anvil1.anvil_host_names[0]
 
   nfs_export_path  = local.site1_sharename
@@ -314,7 +309,7 @@ module "dsx2" {
   virtual_network_name                  = local.network-region2-vnet_name
   virtual_network_data_subnet_name      = local.network-region2-cloud_filers_subnet_name
   virtual_network_data_subnet_mask_bits = local.data_subnet_mask_bits
-  anvil_password                        = module.anvil2.web_ui_password
+  anvil_password                        = module.anvil2.web_ui_password[0]
   anvil_data_cluster_ip                 = module.anvil2.anvil_data_cluster_ip
   anvil_domain                          = module.anvil2.anvil_domain
 
@@ -329,7 +324,7 @@ module "anvil_configure2" {
   anvil_arm_virtual_machine_id = length(module.anvil2.arm_virtual_machine_ids) == 0 ? "" : module.anvil2.arm_virtual_machine_ids[0]
   anvil_data_cluster_ip        = module.anvil2.anvil_data_cluster_ip
   web_ui_password              = module.anvil2.web_ui_password
-  dsx_count                    = local.dsx_instance_count
+  dsx_count                    = local.region2_configuration.dsx_instance_count
   anvil_hostname               = length(module.anvil2.anvil_host_names) == 0 ? "" : module.anvil2.anvil_host_names[0]
 
   local_site_name  = local.unique_name_2
@@ -393,7 +388,7 @@ module "dsx3" {
   virtual_network_name                  = local.network-region3-vnet_name
   virtual_network_data_subnet_name      = local.network-region3-cloud_filers_subnet_name
   virtual_network_data_subnet_mask_bits = local.data_subnet_mask_bits
-  anvil_password                        = module.anvil3.web_ui_password
+  anvil_password                        = module.anvil3.web_ui_password[0]
   anvil_data_cluster_ip                 = module.anvil3.anvil_data_cluster_ip
   anvil_domain                          = module.anvil3.anvil_domain
 
@@ -408,7 +403,7 @@ module "anvil_configure3" {
   anvil_arm_virtual_machine_id = length(module.anvil3.arm_virtual_machine_ids) == 0 ? "" : module.anvil3.arm_virtual_machine_ids[0]
   anvil_data_cluster_ip        = module.anvil3.anvil_data_cluster_ip
   web_ui_password              = module.anvil3.web_ui_password
-  dsx_count                    = local.dsx_instance_count
+  dsx_count                    = local.region3_configuration.dsx_instance_count
   anvil_hostname               = length(module.anvil3.anvil_host_names) == 0 ? "" : module.anvil3.anvil_host_names[0]
 
   local_site_name  = local.unique_name_3
