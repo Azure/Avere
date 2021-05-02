@@ -43,11 +43,10 @@ resource "azurerm_lb" "anvilloadbalancer" {
   }
 }
 
-// TODO - create the associations https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_interface_backend_address_pool_association
 resource "azurerm_lb_backend_address_pool" "anvilloadbalancerbepool" {
-  count               = local.is_high_availability ? 1 : 0
-  loadbalancer_id     = azurerm_lb.anvilloadbalancer[0].id
-  name                = "${var.unique_name}LoadBalancerBEPool"
+  count           = local.is_high_availability ? 1 : 0
+  loadbalancer_id = azurerm_lb.anvilloadbalancer[0].id
+  name            = "${var.unique_name}LoadBalancerBEPool"
 }
 
 resource "azurerm_lb_probe" "anvilloadbalancerprobe" {
@@ -164,7 +163,6 @@ resource "azurerm_network_interface" "anvildata" {
     private_ip_address_allocation = local.is_high_availability || local.anvil_dynamic_cluster_ip ? "Dynamic" : "Static"
     private_ip_address            = local.is_high_availability || local.anvil_dynamic_cluster_ip ? null : var.anvil_data_cluster_ip
     subnet_id                     = data.azurerm_subnet.data_subnet.id
-    // TODO - need "loadBalancerBackendAddressPools": "[if(variables('highAvailability'), variables('lbPools'), json('null'))]"
   }
 }
 
@@ -181,6 +179,13 @@ resource "azurerm_network_interface" "anvilha" {
     private_ip_address            = local.is_high_availability || local.anvil_dynamic_cluster_ip ? null : var.anvil_data_cluster_ip
     subnet_id                     = data.azurerm_subnet.ha_subnet.id
   }
+}
+
+resource "azurerm_network_interface_backend_address_pool_association" "anvilha" {
+  count                   = local.is_high_availability ? 2 : 0
+  network_interface_id    = azurerm_network_interface.anvildata[count.index].id
+  ip_configuration_name   = "${var.unique_name}-ipconfig"
+  backend_address_pool_id = azurerm_lb_backend_address_pool.anvilloadbalancerbepool[0].id
 }
 
 resource "azurerm_availability_set" "anvilas" {
