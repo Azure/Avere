@@ -14,13 +14,13 @@ locals {
   ssh_port        = 22
 
   // network details
-  virtual_network_resource_group = "network_resource_group"
-  virtual_network_name           = "rendervnet"
-  controller_network_subnet_name = "jumpbox"
-  vfxt_network_subnet_name       = "cloud_cache"
+  virtual_network_resource_group = "network_rg"
+  virtual_network_name           = "vnet"
+  controller_network_subnet_name = "cache"
+  vfxt_network_subnet_name       = "cache"
 
   // vfxt details
-  vfxt_resource_group_name = "vfxt_resource_group"
+  vfxt_resource_group_name = "vfxt_rg"
   // if you are running a locked down network, set controller_add_public_ip to false, but ensure
   // you have access to the subnet
   controller_add_public_ip = true
@@ -34,19 +34,6 @@ locals {
   //  "Full Caching"
   //  "Transitioning Clients Before or After a Migration"
   cache_policy = "Clients Bypassing the Cluster"
-
-  tags = null // local.example_tags
-
-  example_tags = {
-    Movie          = "some movie",
-    Artist         = "some artist",
-    "Project Name" = "some name",
-  }
-
-  // the proxy used by vfxt.py for cluster stand-up and scale-up / scale-down
-  proxy_uri = null
-  // the proxy used by the running vfxt cluster
-  cluster_proxy_uri = null
 
   // advanced scenario: vfxt and controller image ids, leave this null, unless not using default marketplace
   controller_image_id = null
@@ -85,14 +72,11 @@ module "vfxtcontroller" {
   add_public_ip               = local.controller_add_public_ip
   image_id                    = local.controller_image_id
   alternative_resource_groups = local.alternative_resource_groups
-  ssh_port                    = local.ssh_port
 
   // network details
   virtual_network_resource_group = local.virtual_network_resource_group
   virtual_network_name           = local.virtual_network_name
   virtual_network_subnet_name    = local.controller_network_subnet_name
-
-  tags = local.tags
 }
 
 resource "avere_vfxt" "vfxt" {
@@ -100,7 +84,6 @@ resource "avere_vfxt" "vfxt" {
   controller_admin_username = module.vfxtcontroller.controller_username
   // ssh key takes precedence over controller password
   controller_admin_password = local.vm_ssh_key_data != null && local.vm_ssh_key_data != "" ? "" : local.vm_admin_password
-  controller_ssh_port       = local.ssh_port
 
   proxy_uri         = local.proxy_uri
   cluster_proxy_uri = local.cluster_proxy_uri
@@ -115,8 +98,6 @@ resource "avere_vfxt" "vfxt" {
   vfxt_admin_password          = local.vfxt_cluster_password
   vfxt_ssh_key_data            = local.vfxt_ssh_key_data
   vfxt_node_count              = 3
-
-  tags = local.tags
 
   // terraform is not creating the implicit dependency on the controller module
   // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
