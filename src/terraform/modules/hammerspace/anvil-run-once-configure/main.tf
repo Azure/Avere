@@ -19,4 +19,8 @@ resource "azurerm_virtual_machine_extension" "cse" {
         "commandToExecute": "${local.command}"
     }
 SETTINGS
+
+  timeouts {
+    create = "60m"
+  }
 }

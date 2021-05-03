@@ -276,7 +276,7 @@ class AnvilRest:
         jsonText = json.dumps(jsonObj)
         target = "ad/{}".format(uuid)
         logging.info("PUT to {} '{}'".format(target, jsonText))
-        data = self.submitRetryableRequest(PutRequest, target, jsonText)
+        data = self.submitNonRetryableRequest(PutRequest, target, jsonText)
 
     def getLocalSite(self):
         logging.info("getting local site data")
