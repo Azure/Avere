@@ -1,5 +1,7 @@
 // customize the simple VM by editing the following local variables
 locals {
+  location = ""
+
   // the region of the main deployment
   onprem_simulated_resource_group_name = "onprem_rg"
 
@@ -27,9 +29,7 @@ locals {
   vm_admin_password = "ReplacePassword$"
   // if you use SSH key, ensure you have ~/.ssh/id_rsa with permission 600
   // populated where you are running terraform
-
-  // paste from keyvault outputs
-  location = ""
+  vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
 }
 
 terraform {
@@ -163,4 +163,16 @@ output "nfsfiler_username" {
 
 output "nfsfiler_address" {
   value = module.nfsfiler.primary_ip
+}
+
+output "onprem_location" {
+  value = local.location
+}
+
+output "onprem_resource_group" {
+  value = azurerm_resource_group.onpremrg.name
+}
+
+output "onprem_vpn_gateway_id" {
+  value = azurerm_virtual_network_gateway.vpngateway.id
 }

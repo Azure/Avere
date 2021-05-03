@@ -39,10 +39,6 @@ output "location" {
   value = local.location
 }
 
-output "keyvault_resource_group_name" {
-  value = local.keyvault_resource_group_name
-}
-
-output "keyvault_name" {
-  value = local.keyvault_name
+output "keyvault_id" {
+  value = azurerm_key_vault.keyvault.id
 }

@@ -4,10 +4,12 @@ locals {
   location = "eastus"
 
   // network details
-  network_resource_group_name = "network_resource_group"
+  network_resource_group_name = "network_rg"
+  virtual_network_name        = "vnet"
+  cache_network_subnet_name   = "cache"
 
   // hpc cache details
-  hpc_cache_resource_group_name = "hpc_cache_resource_group"
+  hpc_cache_resource_group_name = "hpc_cache_rg"
 
   // HPC Cache Throughput SKU - 3 allowed values for throughput (GB/s) of the cache
   //    Standard_2G
@@ -57,11 +59,10 @@ provider "azurerm" {
   features {}
 }
 
-// the render network
-module "network" {
-  source              = "github.com/Azure/Avere/src/terraform/modules/render_network"
-  resource_group_name = local.network_resource_group_name
-  location            = local.location
+data "azurerm_subnet" "vnet" {
+  name                 = local.cache_network_subnet_name
+  virtual_network_name = local.virtual_network_name
+  resource_group_name  = local.network_resource_group_name
 }
 
 resource "azurerm_resource_group" "hpc_cache_rg" {
@@ -74,46 +75,19 @@ resource "azurerm_hpc_cache" "hpc_cache" {
   resource_group_name = azurerm_resource_group.hpc_cache_rg.name
   location            = azurerm_resource_group.hpc_cache_rg.location
   cache_size_in_gb    = local.cache_size
-  subnet_id           = module.network.cloud_cache_subnet_id
+  subnet_id           = data.vnet.id
   sku_name            = local.cache_throughput
-}
-
-resource "azurerm_resource_group" "nfsfiler" {
-  name     = local.filer_resource_group_name
-  location = local.location
-}
-
-// the ephemeral filer
-module "nasfiler1" {
-  source              = "github.com/Azure/Avere/src/terraform/modules/nfs_filer"
-  resource_group_name = azurerm_resource_group.nfsfiler.name
-  location            = azurerm_resource_group.nfsfiler.location
-  admin_username      = local.vm_admin_username
-  admin_password      = local.vm_admin_password
-  ssh_key_data        = local.vm_ssh_key_data
-  vm_size             = "Standard_D2s_v3"
-  unique_name         = "nasfiler1"
-
-  // network details
-  virtual_network_resource_group = local.network_resource_group_name
-  virtual_network_name           = module.network.vnet_name
-  virtual_network_subnet_name    = module.network.cloud_filers_subnet_name
-
-  depends_on = [
-    azurerm_resource_group.nfsfiler,
-    module.network,
-  ]
 }
 
 resource "azurerm_hpc_cache_nfs_target" "nfs_targets" {
   name                = "nfs_targets"
   resource_group_name = azurerm_resource_group.hpc_cache_rg.name
   cache_name          = azurerm_hpc_cache.hpc_cache.name
-  target_host_name    = module.nasfiler1.primary_ip
+  target_host_name    = "REPLACE_IP_ADDRESS"
   usage_model         = local.usage_model
   namespace_junction {
     namespace_path = "/nfs1data"
-    nfs_export     = module.nasfiler1.core_filer_export
+    nfs_export     = "/nfs1data"
     target_path    = ""
   }
 }

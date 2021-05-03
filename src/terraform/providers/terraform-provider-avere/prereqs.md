@@ -34,4 +34,10 @@
 
 3. Review the [storage cache pre-reqs](../../examples/storagecache-rendering#pre-requisites)
 
+## Upgrade
+
+If you have downloaded a new provider to an existing project using the steps above, run `terraform init -upgrade` to pull in the new provider.
+
+## Devops Pipeline
+
 If you are building a DevOps pipeline, please see our pipeline page to learn how to [prepare a pipeline in multiple environments](../../examples/vfxt/pipeline).
