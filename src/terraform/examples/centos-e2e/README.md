@@ -19,8 +19,16 @@ This sets up a VNET with the following subnets:
 
 ## 3. CentOS Stock
 
+Once you have deployed the image, run the following two steps:
+1. on VM, run `sudo waagent -deprovision+user` and exit
+2. in portal click the "Capture" button, and capture to a separate resource group, and don't delete the VM.
+3. after VM is captured, `terraform deploy` to remove the VM
+
 ## 4. CentOS Image
 
 ## 5. Cache
 
 ## 6. VMSS
+
+## 7. Threat Modeling
+
