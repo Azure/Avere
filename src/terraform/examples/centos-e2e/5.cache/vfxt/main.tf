@@ -21,12 +21,17 @@ locals {
 
   // vfxt details
   vfxt_resource_group_name = "vfxt_rg"
+  // the following allows scaling to 6 nodes
+  vfxt_node_count = 3
+  vfxt_first_ip   = "10.0.1.50"
+  vfxt_ip_count   = 6
   // if you are running a locked down network, set controller_add_public_ip to false, but ensure
   // you have access to the subnet
-  controller_add_public_ip = true
-  vfxt_cluster_name        = "vfxt"
-  vfxt_cluster_password    = "VFXT_PASSWORD"
-  vfxt_ssh_key_data        = local.vm_ssh_key_data
+  controller_add_public_ip     = true
+  vfxt_cluster_name            = "vfxt"
+  vfxt_cluster_password        = "VFXT_PASSWORD"
+  support_uploads_company_name = "REPLACE_WITH_COMPANY_NAME"
+  vfxt_ssh_key_data            = local.vm_ssh_key_data
   // vfxt cache polies
   //  "Clients Bypassing the Cluster"
   //  "Read Caching"
@@ -34,6 +39,16 @@ locals {
   //  "Full Caching"
   //  "Transitioning Clients Before or After a Migration"
   cache_policy = "Clients Bypassing the Cluster"
+
+  // enables support according to document https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-enable-support
+  // please review privacy policy before setting to true: https://privacy.microsoft.com/en-us/privacystatement
+  enable_support_uploads = false
+
+  // set to true, to use the DNS Server for spoofing: https://github.com/Azure/Avere/tree/main/src/terraform/examples/dnsserver
+  enable_dns_server   = true
+  dnsserver_static_ip = "10.0.1.250"
+  onprem_dns_servers  = "168.63.129.16 169.254.169.254"
+  onprem_filer_fqdn   = "filer.rendering.com"
 
   // advanced scenario: vfxt and controller image ids, leave this null, unless not using default marketplace
   controller_image_id = null
@@ -97,13 +112,59 @@ resource "avere_vfxt" "vfxt" {
   vfxt_cluster_name            = local.vfxt_cluster_name
   vfxt_admin_password          = local.vfxt_cluster_password
   vfxt_ssh_key_data            = local.vfxt_ssh_key_data
-  vfxt_node_count              = 3
+
+  vfxt_node_count  = local.vfxt_node_count
+  vserver_first_ip = local.vfxt_first_ip
+  vserver_ip_count = local.vfxt_ip_count
+
+  // uncomment following two lines to save money during testing
+  // node_cache_size = 1024
+  // node_size = "unsupported_test_SKU"
+
+  // support
+  enable_support_uploads          = local.enable_support_uploads
+  support_uploads_company_name    = local.support_uploads_company_name
+  enable_rolling_trace_data       = false
+  active_support_upload           = true
+  enable_secure_proactive_support = "Support"
 
   // terraform is not creating the implicit dependency on the controller module
   // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
   // to work around, add the explicit dependency
   depends_on = [
     module.vfxtcontroller,
+  ]
+}
+
+module "dnsserver" {
+  count = local.enable_dns_server ? 1 : 0
+
+  source              = "github.com/Azure/Avere/src/terraform/modules/dnsserver"
+  resource_group_name = local.vfxt_resource_group_name
+  location            = local.location
+  admin_username      = local.vm_admin_username
+  admin_password      = local.vm_admin_password
+  ssh_key_data        = local.vm_ssh_key_data
+  ssh_port            = local.ssh_port
+
+  // network details
+  virtual_network_resource_group = local.virtual_network_resource_group
+  virtual_network_name           = module.network.virtual_network_name
+  virtual_network_subnet_name    = module.network.vfxt_network_subnet_name
+
+  // this is the address of the unbound dns server
+  private_ip_address = local.dnsserver_static_ip
+
+  dns_server          = local.onprem_dns_servers
+  avere_first_ip_addr = avere_vfxt.vfxt.vserver_first_ip
+  avere_ip_addr_count = avere_vfxt.vfxt.vserver_ip_count
+  avere_filer_fqdn    = local.onprem_filer_fqdn
+
+  // set the TTL
+  dns_max_ttl_seconds = 300
+
+  depends_on = [
+    avere_vfxt.vfxt,
   ]
 }
 
@@ -125,4 +186,12 @@ output "management_ip" {
 
 output "mount_addresses" {
   value = tolist(avere_vfxt.vfxt.vserver_ip_addresses)
+}
+
+output "unbound_dns_server_username" {
+  value = local.enable_dns_server ? local.vm_admin_username : null
+}
+
+output "unbound_dns_server_ip" {
+  value = local.enable_dns_server ? module.dnsserver[0].dnsserver_address : null
 }
