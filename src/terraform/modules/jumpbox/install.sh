@@ -61,8 +61,9 @@ function pull_avere_github() {
     go build
     # build windows
     GOOS=windows GOARCH=amd64 go build
-    mkdir -p $AZURE_HOME_DIR/.terraform.d/plugins
-    cp terraform-provider-avere $AZURE_HOME_DIR/.terraform.d/plugins
+    version=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name | sed -e 's/[^0-9]*\([0-9].*\)$/\1/')
+    mkdir -p $AZURE_HOME_DIR/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
+    cp terraform-provider-avere $AZURE_HOME_DIR/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
     export HOME=$OLD_HOME
     # re-enable exit on error
     set -e
