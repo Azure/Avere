@@ -369,8 +369,9 @@ The following build instructions work in https://shell.azure.com, Centos, or Ubu
     go mod download
     go mod tidy
     go build
-    mkdir -p ~/.terraform.d/plugins
-    cp terraform-provider-avere ~/.terraform.d/plugins
+    version=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name | sed -e 's/[^0-9]*\([0-9].*\)$/\1/')
+    mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
+    cp terraform-provider-avere ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
     ```
 
 4. Install the provider `~/.terraform.d/plugins/terraform-provider-avere` to the ~/.terraform.d/plugins directory of your terraform environment.
