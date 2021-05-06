@@ -374,7 +374,7 @@ The following build instructions work in https://shell.azure.com, Centos, or Ubu
     cp terraform-provider-avere ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
     ```
 
-4. Install the provider `~/.terraform.d/plugins/terraform-provider-avere` to the ~/.terraform.d/plugins directory of your terraform environment.
+4. Install the provider `~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere` to the ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64 directory of your terraform environment, where $version is the version of the provider.
 
 # Build the Terraform Provider binary on Windows
 
