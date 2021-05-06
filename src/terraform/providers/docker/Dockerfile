@@ -1,6 +1,9 @@
 FROM golang:1.16
 
-RUN apt update && apt install -y unzip jq
+ARG version=1.1.1
+RUN echo $version
+
+RUN apt update && apt install -y unzip
 
 WORKDIR /root
 
@@ -10,8 +13,8 @@ WORKDIR /root/Avere/src/terraform/providers/terraform-provider-avere
 RUN go mod download
 RUN go mod tidy
 RUN go build
-RUN mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/1.1.1/linux_amd64
-RUN cp terraform-provider-avere ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/1.1.1/linux_amd64
+RUN mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
+RUN cp terraform-provider-avere ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
 
 WORKDIR /root
 
