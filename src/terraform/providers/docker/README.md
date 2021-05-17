@@ -20,3 +20,7 @@ To build the container:
 If required, you can input an argument when building the container that is used as the version number for the Avere Terraform provider:
 
  - `docker build ./ -t azureAvereTerraform --build-arg version=1.1.2`
+
+You can use the image as part of a pipeline or execute it in interactive mode with the following command:
+
+ - `docker run -i azureAvereTerraform`
