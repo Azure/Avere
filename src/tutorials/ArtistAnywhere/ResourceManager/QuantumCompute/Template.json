@@ -12,6 +12,8 @@
   "variables": {
     "quantumWorkspaceApiVersion": "2019-11-04-preview"
   },
+  "functions": [
+  ],
   "resources": [
     {
       "type": "Microsoft.Quantum/workspaces",

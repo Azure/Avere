@@ -1,21 +1,17 @@
 // customize the simple VM by editing the following local variables
 locals {
-    vm_name = "${var.unique_name}"
+    vm_name = var.unique_name
 }
 
 data "azurerm_subnet" "vnet" {
   name                 = var.virtual_network_subnet_name
   virtual_network_name = var.virtual_network_name
   resource_group_name  = var.virtual_network_resource_group
-
-  depends_on = [var.module_depends_on]
 }
 
 resource "azurerm_resource_group" "vmss" {
   name     = var.resource_group_name
   location = var.location
-
-  depends_on = [var.module_depends_on]
 }
 
 locals {
@@ -113,8 +109,6 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
     }
 SETTINGS
   }
-
-  depends_on = [var.module_depends_on]
 }
 
 /*

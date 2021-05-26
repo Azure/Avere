@@ -1,6 +1,6 @@
 # Create a Houdini Render Farm On Azure
 
-This example shows how to configure the end to end infrastructure for a Houdini render farm on Azure.  This example provides the azure infrastructure required to implement a [Houdini RenderFarm](https://www.sidefx.com/faq/question/indie-renderfarm-setup/) ([also described here](http://www.sidefx.com/docs/houdini/render/cloudfarm.html#rendering-on-cloud)).  The architecture includes a license server, an HQueue server, cloud cache and render nodes:
+This example shows how to configure the end to end infrastructure for a Houdini render farm on Azure.  This example provides the azure infrastructure required to implement a [Houdini RenderFarm](https://www.sidefx.com/faq/question/indie-renderfarm-setup/).  The architecture includes a license server, an HQueue server, cloud cache and render nodes:
 
 ![The architecture](../../../../docs/images/terraform/houdini.png)
 
@@ -28,10 +28,12 @@ Before running the examples you will need to setup the following pre-requisites:
 
     1. If not already installed, run the following commands to install the Avere vFXT provider for Azure:
     ```bash
-    mkdir -p ~/.terraform.d/plugins
-    # install the vfxt released binary from https://github.com/Azure/Avere
-    wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.31/terraform-provider-avere
-    chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
+    # for terraform >= 0.13.*
+    version=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name | sed -e 's/[^0-9]*\([0-9].*\)$/\1/')
+    browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[0].browser_download_url)
+    mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
+    wget -O ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version $browser_download_url
+    chmod 755 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version
     ```
 
     1. get the terraform examples

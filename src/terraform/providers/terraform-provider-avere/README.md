@@ -16,6 +16,17 @@ The provider has the following features:
 More examples deployable from Azure Cloud Shell can be found in the [Avere vFXT for Azure Examples](../../examples/vfxt/).
 
 ```terraform
+
+terraform {
+  required_version = ">= 0.14.0,< 0.16.0"
+  required_providers {
+    avere = {
+      source  = "hashicorp/avere"
+      version = ">=1.0.0"
+    }
+  }
+}
+
 resource "avere_vfxt" "vfxt" {
     controller_address = "10.0.2.5"
     controller_admin_username = "azureuser"
@@ -76,6 +87,7 @@ The following arguments are supported:
 * <a name="controller_admin_password"></a>[controller_admin_password](#controller_admin_password) - (Optional) only specify if [run_local](#run_local) is set to false and password is to be used to access the key, instead of the ssh key ~/.ssh/id_rsa
 * <a name="controller_ssh_port"></a>[controller_ssh_port](#controller_ssh_port) - (Optional) only specify if [run_local](#run_local) is set to false and the ssh is a value other than the default port 22.
 * <a name="run_local"></a>[run_local](#run_local) - (Optional) specifies if terraform is run directly on the controller (or similar machine with vfxt.py, az cli, and averecmd).  This defaults to false, and if false, a minimum of [controller_address](#controller_address) and [controller_admin_username](#controller_admin_username) must be set.
+* <a name="use_availability_zones"></a>[use_availability_zones](#use_availability_zones) - (Optional) specify true to spread the nodes across availability zones for HA purposes.  By default this is set to false.  This feature only works in [regions that support availability zones](https://azure.microsoft.com/en-us/global-infrastructure/geographies/) and with 3 node clusters.  Note: cluster re-created if modified.
 * <a name="allow_non_ascii"></a>[allow_non_ascii](#allow_non_ascii) - (Optional) non-ascii characters can break deployment so this is set to `false` by default.  In more advanced scenarios, the ascii check may be disabled by setting to `true`.
 * <a name="location"></a>[location](#location) - (Required) specify the azure region.  Note: cluster re-created if modified.
 * <a name="azure_resource_group"></a>[azure_resource_group](#azure_resource_group) - (Required) this is the azure resource group to install the vFXT.  This must be the same resource as the controller, or increase the RBAC scope of the controller's managed identity roles with a different resource group.  Note: cluster re-created if modified.
@@ -95,6 +107,7 @@ The following arguments are supported:
 * <a name="vfxt_ssh_key_data"></a>[vfxt_ssh_key_data](#vfxt_ssh_key_data) - (Optional) deploy the cluster using the ssh public key for authentication instead of the password, this is useful to align with policies.
 * <a name="vfxt_node_count"></a>[vfxt_node_count](#vfxt_node_count) - (Required) the number of nodes to deploy for the Avere cluster.  The count may be a minimum of 3 and a maximum of 16.  If the cluster is already deployed, this will result in scaling up or down to the node count.  It requires about 15 minutes to delete and add each node in a scale-up or scale-down scenario.
 * <a name="node_cache_size"></a>[node_cache_size](#node_cache_size) - (Optional) The cache size in GB to use for each Avere vFXT VM.  There are two options: 1024 or 4096 where 4096 is the default value.  Note: cluster re-created if modified.
+* <a name="enable_nlm"></a>[enable_nlm](#enable_nlm) - (optional) set to false to disable NLM on the vserver.  By default this is set to true.  Warning: toggling this parameter is destructive and restarts armada and will result in a multi-minute outage.
 * <a name="vserver_first_ip"></a>[vserver_first_ip](#vserver_first_ip) - (Optional, but also requires [vserver_ip_count](#vserver_ip_count) to be set) To ensure predictable vserver ranges for dns pre-population, specify the first IP of the vserver.  This will create consecutive ip addresses based on the maximum of [vfxt_node_count](#vfxt_node_count) or [vserver_ip_count](#vserver_ip_count).  The following configuration is recommended:
     1. ensure the Avere vFxt has a dedicated subnet,
     2. consider a range at the end of the subnet, and
@@ -132,6 +145,17 @@ The following arguments are supported:
 * <a name="cifs_trusted_active_directory_domains"></a>[cifs_trusted_active_directory_domains](#cifs_trusted_active_directory_domains) - (optional, but if specified required with `"cifs_ad_domain"`, `"cifs_netbios_domain_name"`, `"cifs_dc_addreses"`, `"cifs_server_name"`, `"cifs_username"`, `"cifs_password"`) A space-separated list of names of trusted Active Directory domains to download user/group data from.  By default this is empty to only download data from the domain the FXT is joined to.  Set to '*' to download data from all known trusted domains.
 * <a name="enable_extended_groups"></a>[enable_extended_groups](#enable_extended_groups) - (optional, but if specified required with `"cifs_ad_domain"`, `"cifs_netbios_domain_name"`, `"cifs_dc_addreses"`, `"cifs_server_name"`, `"cifs_username"`, `"cifs_password"`) set to true to enable extended groups to support users that are in more than 16 authsys groups. By default this is set to false.
 * <a name="user_assigned_managed_identity"></a>[user_assigned_managed_identity](#user_assigned_managed_identity) - (optional) set to a user assigned managed identity that will be used by the vFXT nodes.  This should have a minimum of role assignment of "[Avere Operator](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#avere-operator)" with scope of the vFXT resource group.  See the [Managed Identities Section](#managed-identities) to learn more.
+* <a name="login_services_ldap_server"></a>[login_services_ldap_server](#login_services_ldap_server) - (optional, but if specified required with `"login_services_ldap_basedn"`, `"login_services_ldap_binddn"`, `"login_services_ldap_bind_password"`) - is one of the parameters to configure an LDAP or Active Directory (AD) server to supply usernames and groups for authorizing access to the Avere Control Panel ([more details on loginservices](https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_login_services.html)).  Here is a concrete example of how to enable login services:
+```terraform
+    login_services_ldap_server = "rendering.com"
+    login_services_ldap_basedn = "dc=rendering,dc=com"
+    login_services_ldap_binddn = "CN=azureuser,CN=Users,DC=rendering,DC=com"
+    login_services_ldap_bind_password = "ReplacePassword"
+```
+* <a name="login_services_ldap_basedn"></a>[login_services_ldap_basedn](#login_services_ldap_basedn) - (optional, but if specified required with `"login_services_ldap_server"`, `"login_services_ldap_binddn"`, `"login_services_ldap_bind_password"`) - is one of the parameters to configure an LDAP or Active Directory (AD) server to supply usernames and groups for authorizing access to the Avere Control Panel ([more details on loginservices](https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_login_services.html)).
+* <a name="login_services_ldap_binddn"></a>[login_services_ldap_binddn](#login_services_ldap_binddn) - (optional, but if specified required with `"login_services_ldap_server"`, `"login_services_ldap_basedn"`, `"login_services_ldap_bind_password"`) - is one of the parameters to configure an LDAP or Active Directory (AD) server to supply usernames and groups for authorizing access to the Avere Control Panel ([more details on loginservices](https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_login_services.html)).
+* <a name="login_services_ldap_bind_password"></a>[login_services_ldap_bind_password](#login_services_ldap_bind_password) - (optional, but if specified required with `"login_services_ldap_server"`, `"login_services_ldap_basedn"`, `"login_services_ldap_binddn"`) - is one of the parameters to configure an LDAP or Active Directory (AD) server to supply usernames and groups for authorizing access to the Avere Control Panel ([more details on loginservices](https://azure.github.io/Avere/legacy/ops_guide/4_7/html/gui_login_services.html)).
+* <a name="tags"></a>[tags](#tags) - (optional) A map of tags assigned to the Azure resources created by this terraform resource.  Note: cluster re-created if modified.
 ---
 
 A <a name="user"></a>`user` block supports the following
@@ -313,6 +337,8 @@ There are three approaches to access the provider binary:
 2. Deploy the [jumpbox](../../examples/jumpbox) - the jumpbox automatically builds the provider.
 3. Build the binary using the instructions below.
 
+_Note_: The provider is built as a go module - this lets you build outside your GOPATH.
+
 The following build instructions work in https://shell.azure.com, Centos, or Ubuntu:
 
 1. if this is centos, install git
@@ -343,11 +369,12 @@ The following build instructions work in https://shell.azure.com, Centos, or Ubu
     go mod download
     go mod tidy
     go build
-    mkdir -p ~/.terraform.d/plugins
-    cp terraform-provider-avere ~/.terraform.d/plugins
+    version=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name | sed -e 's/[^0-9]*\([0-9].*\)$/\1/')
+    mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
+    cp terraform-provider-avere ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
     ```
 
-4. Install the provider `~/.terraform.d/plugins/terraform-provider-avere` to the ~/.terraform.d/plugins directory of your terraform environment.
+4. Install the provider `~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere` to the ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64 directory of your terraform environment, where $version is the version of the provider.
 
 # Build the Terraform Provider binary on Windows
 

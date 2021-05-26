@@ -13,9 +13,11 @@
     }
   },
   "variables": {
-    "webFarmApiVersion": "2020-10-01",
-    "webSiteApiVersion": "2020-10-01"
+    "webFarmApiVersion": "2020-12-01",
+    "webSiteApiVersion": "2020-12-01"
   },
+  "functions": [
+  ],
   "resources": [
     {
       "type": "Microsoft.Web/serverFarms",

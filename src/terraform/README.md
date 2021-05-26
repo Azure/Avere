@@ -30,6 +30,7 @@ There are multiple video resources to help with learning about burst rendering o
 | [Making movie magic more affordable](https://customers.microsoft.com/en-us/story/jellyfishpictures) - By using Azure HPC resources, Jellyfish can bid on bigger jobs, better meet deadlines, and reduce capital and labor costs. | [![Making movie magic more affordable](https://ms-f7-sites-01-cdn.azureedge.net/docs/stories/jellyfishpictures/resources/6601324a-047e-488b-bbc5-bad3173f1b0f/1105644140099490900)](https://customers.microsoft.com/en-us/story/jellyfishpictures) |
 | [Visual Effects and Animation Rendering in Azure](https://azure.microsoft.com/en-us/resources/visual-effects-and-animation-rendering-in-azure/) | [Whitepaper](https://azure.microsoft.com/en-us/resources/visual-effects-and-animation-rendering-in-azure/) |
 | [Head-Turning Animation: ‘Bobbleheads: The Movie’ First Feature Completed Remotely on Microsoft Azure Using NVIDIA GPUs](https://blogs.nvidia.com/blog/2020/12/09/bobbleheads-the-movie/) - With post-production struck by the COVID-19 pandemic, Threshold Entertainment and Incessant Rain Studios use the cloud to bring 3D animators and VFX artists together from around the world. | [Blog Link](https://blogs.nvidia.com/blog/2020/12/09/bobbleheads-the-movie/) |
+| [GitOps for Azure Rendering](https://techcommunity.microsoft.com/t5/azure-storage/gitops-for-azure-rendering/ba-p/1326920) | [Blog](https://techcommunity.microsoft.com/t5/azure-storage/gitops-for-azure-rendering/ba-p/132692) |
 
 The remainder of this page provides Terraform infrastructure examples to build out the rendering architecture:
 1. [Full End-To-End Examples](#full-end-to-end-examples) - Full end to end examples in Linux and Windows.
@@ -41,13 +42,12 @@ The remainder of this page provides Terraform infrastructure examples to build o
 
 ## Full End-To-End Examples
 
-**Important Note** Please use Terraform 0.12.x with the following examples.
-
 The following examples provide end-to-end examples that implement the burst rendering architecture in Linux and Windows environments.
 
 1. [Create a Linux based OpenCue managed render farm on Azure](examples/vfxt/opencue) - deploy an end to end render solution on Azure using OpenCue as your render manager.
 1. [Create a CentOS Custom  Image and scale on Azure](examples/centos) - shows how to create, upload, and deploy a centos custom image and then scale the image using VMSS.
 1. [Create a Windows Render Farm On Azure](examples/houdinienvironment) - this walks through a deployment of a Houdini render environment on Azure.
+1. [Create a multi-region render farm with a Hammerspace global file system on Azure](examples/hammerspace-multi-region) - this walks through a deployment of a Houdini render environment on Azure.
 
 ## Rendering Best Practices for Azure Compute, Network, and Storage
 
@@ -60,8 +60,6 @@ The highest priority for VFX and Animation Studios is the lowest total cost of o
 1. [Security Best Practices for Rendering](examples/security)
 
 ## Storage Cache Infrastructure
-
-**Important Note** Please use Terraform 0.12.x with the following examples.
 
 Both HPC Cache and Avere vFXT for Azure provide file caching for high-performance computing (HPC).  We recommend to always choose HPC Cache for greater user manageability and only choose Avere vFXT for Azure for custom scenarios where HPC is unable to fit.  If you need to use Avere vFXT for Azure because of a missing feature in HPC Cache, please submit an issue so we can track and add to HPC Cache.
 
@@ -76,6 +74,7 @@ Both HPC Cache and Avere vFXT for Azure provide file caching for high-performanc
    1. [HPC Cache and VDBench example](examples/HPC%20Cache/vdbench)
    1. [HPC Cache and VMSS example](examples/HPC%20Cache/vmss)
    1. [HPC Cache and CacheWarmer](examples/HPC%20Cache/cachewarmer)
+   1. HPC Cache mounting Hammerspace filer example - WIP
 
 ### Avere vFXT for Azure
 
@@ -88,6 +87,7 @@ Both HPC Cache and Avere vFXT for Azure provide file caching for high-performanc
    1. [Avere vFXT and VDBench example](examples/vfxt/vdbench)
    1. [Avere vFXT and VMSS example](examples/vfxt/vmss)
    1. [Avere vFXT and CacheWarmer](examples/vfxt/cachewarmer)
+   1. [Avere vFXT mounting Hammerspace filer example](examples/vfxt/hammerspace)
 
 ### Specialized Avere vFXT for Rendering and Artists](examples/vfxt)
 
@@ -99,18 +99,22 @@ Both HPC Cache and Avere vFXT for Azure provide file caching for high-performanc
    1. [Specify a custom VServer IP Range with the Avere vFXT](examples/vfxt/custom-vserver) - this example shows how to specify a custom VServer IP Range with the Avere vFXT.
    1. [Avere vFXT using User Assigned Managed Identity](examples/vfxt/user-assigned-managed-identity) - this example shows how to use a user assigned managed identity with the Avere vFXT.
    1. [Backup Restore](examples/backuprestore) - Backup any FXT or vFXT cluster and build terraform to restore to HPC Cache or Avere vFXT for Azure.
+   1. [Zone Redundant NFS / SMB Storage](examples/vfxt/azureblobfiler-zonal) - Availability Zone Redundant Avere vFXT mounting Blob Storage example
 
 ## Rendering Accessories Infrastructure
 
-**Important Note** Please use Terraform 0.12.x with the following examples.
-
 The following terraform examples build out accessory rendering infrastructure such as DNS Servers, high speed NFS ephemeral filers, and a jumpbox:
+
+### Workstations
+1. [Windows 10 + Nvidia Grid + Teradici PCoIP](examples/windowsgridgpu) - this example deploys Windows 10 + Nvidia Grid + Teradici PCoIP.
+1. [CentOS7 + Gnome + Nvidia Grid + Teradici PCoIP](examples/centosgridgpu) - this example deploys CentOS7 with Gnome + Nvidia Grid + Teradici PCoIP.
 
 ### NFS Filers
 
 1. [NFS Ephemeral Filer](examples/nfsfiler) - builds a very high performance NFS filers for use as a scratch filer.
 1. [NFS Managed Disk Filer](examples/nfsfilermd) - builds an NFS Filer with highly available managed disk storage.
 1. [NFS Filer using NFS-Ganesha](examples/nfsfilerganesha) - builds high performance NFS filers.
+1. [NFS Filer using Hammerspace](examples/hammerspace) - builds a Hammerspace filer capable of spanning across multiple regions.
 
 ### DNS, Security, and Jumpbox 
 
@@ -138,12 +142,13 @@ These modules provide core components for use with HPC Cache or Avere vFXT for A
 1. [VMSS Mount Script](modules/mount_nfs) - This module installs the mount bootstrap script for VMSS.
 1. [VD Bench Config Script](modules/vdbench_config) - this module configures an NFS share with the VDBench install tools.
 1. [VMSS Config Script](modules/vmss_config) - this module configures an NFS share with a round robin mount script.
-1. [Opencue Config Script](modules/opencue_config) - this module sets up the OpenCue RQD clients module..
+1. [Opencue Config Script](modules/opencue_config) - this module sets up the OpenCue RQD clients module.
+1. [Gnome + Nvidia Grid + Teradici PCoIP](modules/centosgridgpu) - this module deploys Gnome + Nvidia Grid + Teradici PCoIP.
 
 ### Controller and Jumpbox
 
 1. [Controller3](modules/controller3) - Deploys a python 3 controller that is used to create and manage an Avere vFXT for Azure.
-1. [Controller](modules/controller) - (Deprecated) Deploys a python 2 controller that is used to create and manage an Avere vFXT for Azure.
+1. Controller - (Deprecated) Deploys a python 2 controller that is used to create and manage an Avere vFXT for Azure.
 1. [Jumpbox](modules/jumpbox) - the jumpbox has the necessary environment for building the [terraform-provider-avere](providers/terraform-provider-avere).  It is also useful for when experimenting in virtual networks where there is no controller.
 
 ### NFS Filers
@@ -151,6 +156,8 @@ These modules provide core components for use with HPC Cache or Avere vFXT for A
 1. [NFS Ephemeral Filer](modules/nfs_filer) - the NFS ephemeral filer provides a high IOPs, high throughput filer that can be used for scratch data.
 1. [NFS Managed Disk Filer](modules/nfs_filer_md) - the NFS managed disk filer provides NFS access to highly available storage.  There is an offline mode to destroy the VM and cool the storage for maximum cost savings when not in use.
 1. [NFS-Ganesha Filer](modules/nfs_filer_ganesha) - the NFS-Ganesha provides a user space NFS Server and provides NFS access to highly available storage.  There is an offline mode to destroy the VM and cool the storage for maximum cost savings when not in use.
+1. [Hammerspace Anvil](modules/hammerspace/anvil) - the Hammerspace Anvil module deploys a Standalone or Highly Available Hammerspace Anvil cluster.
+1. [Hammerspace DSX](modules/hammerspace/dsx) - the Hammerspace DSX module deploys a configurable number of Hammerspace DSX nodes.
 
 ### Cache Warmer
 
@@ -163,4 +170,8 @@ These modules provide core components for use with HPC Cache or Avere vFXT for A
 
 The following provider creates, destroys, and manages an Avere vFXT for Azure:
 
-1. [terraform-provider-avere](providers/terraform-provider-avere)
+* [terraform-provider-avere](providers/terraform-provider-avere)
+
+To add the provider to a pipeline on either Ubuntu or CentOS read the following examples:
+
+* [Building a Pipeline for the vFXT Provider](examples/vfxt/pipeline)

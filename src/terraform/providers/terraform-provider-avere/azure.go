@@ -328,6 +328,14 @@ func (a Azure) getBaseVfxtCommand(avereVfxt *AvereVfxt) string {
 	// add the resource group and location
 	sb.WriteString(fmt.Sprintf("--resource-group %s --location %s ", a.ResourceGroup, a.Location))
 
+	if avereVfxt.UseAvailabilityZones {
+		sb.WriteString("--azure-zones 1 2 3 ")
+	}
+
+	for k, v := range avereVfxt.TagsMap {
+		sb.WriteString(fmt.Sprintf("--azure-tag '%s:%s' ", k, v))
+	}
+
 	// add the management address if one exists
 	if len(avereVfxt.ManagementIP) > 0 {
 		sb.WriteString(fmt.Sprintf("--management-address %s ", avereVfxt.ManagementIP))
@@ -365,7 +373,7 @@ func (a Azure) getBaseVfxtCommand(avereVfxt *AvereVfxt) string {
 // used when multiple commands piped together
 func getAzCliProxyExports(proxyUri string) string {
 	if len(proxyUri) > 0 {
-		return fmt.Sprintf(" export HTTPS_PROXY=\"%s\" && export NO_PROXY=\"169.254.169.254\" && ", proxyUri)
+		return fmt.Sprintf(" export HTTP_PROXY=\"%s\" && export HTTPS_PROXY=\"%s\" && export NO_PROXY=\"169.254.169.254\" && ", proxyUri, proxyUri)
 	}
 	return ""
 }
@@ -373,7 +381,7 @@ func getAzCliProxyExports(proxyUri string) string {
 // used when single command
 func getAzCliProxyExportsInline(proxyUri string) string {
 	if len(proxyUri) > 0 {
-		return fmt.Sprintf(" HTTPS_PROXY=\"%s\" NO_PROXY=\"169.254.169.254\" ", proxyUri)
+		return fmt.Sprintf(" HTTP_PROXY=\"%s\" HTTPS_PROXY=\"%s\" NO_PROXY=\"169.254.169.254\" ", proxyUri, proxyUri)
 	}
 	return ""
 }

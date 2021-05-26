@@ -1,7 +1,7 @@
 // customize the simple VM by adjusting the following local variables
 locals {
   // the region of the deployment
-  location = "eastus"
+  location          = "eastus"
   vm_admin_username = "azureuser"
   // use either SSH Key data or admin password, if ssh_key_data is specified
   // then admin_password is ignored
@@ -10,7 +10,7 @@ locals {
   unique_name = "unique"
 
   vm_size = "Standard_D2s_v3"
-    
+
   resource_group_name = "windows_resource_group"
 
   // the following are the arguments to be passed to the custom script
@@ -21,8 +21,17 @@ locals {
   powershell_script = templatefile("${path.module}/setupMachine.ps1", {})
 }
 
+terraform {
+  required_version = ">= 0.14.0,< 0.16.0"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~>2.56.0"
+    }
+  }
+}
+
 provider "azurerm" {
-  version = "~>2.12.0"
   features {}
 }
 
@@ -46,10 +55,10 @@ resource "azurerm_subnet" "subnet" {
 }
 
 resource "azurerm_public_ip" "vm" {
-  name                         = "${local.unique_name}-publicip"
-  location                     = local.location
-  resource_group_name          = azurerm_resource_group.win.name
-  allocation_method            = "Static"
+  name                = "${local.unique_name}-publicip"
+  location            = local.location
+  resource_group_name = azurerm_resource_group.win.name
+  allocation_method   = "Static"
 }
 
 resource "azurerm_network_interface" "vm" {

@@ -1,7 +1,7 @@
 param (
     $resourceGroup = @{
         "name" = ""
-        "regionName" = "WestUS2"    # https://azure.microsoft.com/global-infrastructure/geographies/
+        "regionName" = "WestUS"     # https://azure.microsoft.com/global-infrastructure/geographies/
     },
     $functionApp = @{
         "name" = ""
@@ -14,7 +14,7 @@ param (
     },
     $storageAccount = @{            # https://docs.microsoft.com/azure/storage/common/storage-introduction
         "name" = ""
-        "resourceGroupName" = ""
+        "resourceGroupName" = $resourceGroup.name
     }
 )
 

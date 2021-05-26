@@ -261,12 +261,13 @@ func (v *VMScaler) deleteNodes() error {
 		}
 		var ids compute.VirtualMachineScaleSetVMInstanceRequiredIDs
 		ids.InstanceIds = &instances
-		future, err := v.vmssClient.VmssClient.DeleteInstances(v.Context, v.ResourceGroup, k, ids)
+		forceDelete := false
+		future, err := v.vmssClient.VmssClient.DeleteInstances(v.Context, v.ResourceGroup, k, ids, &forceDelete)
 		if err != nil {
 			log.Error.Printf("error deleting instances for '%s': %v", k, instances)
 			continue
 		}
-		v.vmssOpManager.AddWatchOperation(k, future.Future)
+		v.vmssOpManager.AddWatchOperation(k, future.FutureAPI)
 		// delete the queue messages
 		for _, i := range vi {
 			msg := i.Message.Message(0)
@@ -439,7 +440,7 @@ func (v *VMScaler) executePlan(p *Plan) error {
 				log.Error.Printf("error updating '%s': %v, %v", element, err, future)
 				continue
 			}
-			v.vmssOpManager.AddWatchOperation(*vmss.Name, future.Future)
+			v.vmssOpManager.AddWatchOperation(*vmss.Name, future.FutureAPI)
 		}
 	}
 
@@ -463,7 +464,7 @@ func (v *VMScaler) executePlan(p *Plan) error {
 				log.Error.Printf("error updating '%s': %v, %v", element, err, future)
 				continue
 			}
-			v.vmssOpManager.AddWatchOperation(*vmss.Name, future.Future)
+			v.vmssOpManager.AddWatchOperation(*vmss.Name, future.FutureAPI)
 		}
 	}
 
@@ -488,18 +489,19 @@ func (v *VMScaler) executePlan(p *Plan) error {
 				log.Error.Printf("error updating '%s': %v, %v", element, err, future)
 				continue
 			}
-			v.vmssOpManager.AddWatchOperation(*vmss.Name, future.Future)
+			v.vmssOpManager.AddWatchOperation(*vmss.Name, future.FutureAPI)
 		}
 	}
 
 	// delete 0 capacity vmss instances
 	for _, element := range p.VMSSToDelete {
-		future, err := v.vmssClient.VmssClient.Delete(v.Context, v.ResourceGroup, element)
+		forceDelete := false
+		future, err := v.vmssClient.VmssClient.Delete(v.Context, v.ResourceGroup, element, &forceDelete)
 		if err != nil {
 			log.Error.Printf("error deleting '%s': %v, %v", element, err, future)
 			continue
 		}
-		v.vmssOpManager.AddWatchOperation(element, future.Future)
+		v.vmssOpManager.AddWatchOperation(element, future.FutureAPI)
 	}
 
 	// create the new VMSS
@@ -510,7 +512,7 @@ func (v *VMScaler) executePlan(p *Plan) error {
 			log.Error.Printf("error updating '%s': %v, %v", element, err, future)
 			continue
 		}
-		v.vmssOpManager.AddWatchOperation(element, future.Future)
+		v.vmssOpManager.AddWatchOperation(element, future.FutureAPI)
 	}
 
 	return nil

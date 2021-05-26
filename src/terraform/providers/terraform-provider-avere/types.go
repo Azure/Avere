@@ -23,10 +23,13 @@ type AvereVfxt struct {
 	SshAuthMethod ssh.AuthMethod
 	SshPort       int
 
-	RunLocal      bool
-	AllowNonAscii bool
+	RunLocal             bool
+	UseAvailabilityZones bool
+	AllowNonAscii        bool
 
 	Platform IaasPlatform
+
+	TagsMap map[string]string
 
 	AvereVfxtName          string
 	AvereVfxtSupportName   string
@@ -40,6 +43,7 @@ type AvereVfxt struct {
 	NodeCount              int
 	NodeSize               string
 	NodeCacheSize          int
+	EnableNlm              bool
 	FirstIPAddress         string
 	LastIPAddress          string
 
@@ -57,6 +61,11 @@ type AvereVfxt struct {
 	CifsOrganizationalUnit            string
 	CifsTrustedActiveDirectoryDomains string
 	EnableExtendedGroups              bool
+
+	LoginServicesLDAPServer       string
+	LoginServicesLDAPBasedn       string
+	LoginServicesLDAPBinddn       string
+	LoginServicesLDAPBindPassword string
 
 	UserAssignedManagedIdentity string
 

@@ -18,18 +18,35 @@ Use your current environment to create a CentOS virtual machine image CentOS usi
 
 Here are the important tips to follow when building the image:
 
+* in WAAgent 2.46 and above you will need to set 
+
 * remove swap partition, as this will eat up your ops on your OS disk.  As an alternative, the Azure Linux Agent (waagent) can configure a swap partition as outlined in the setup instructions
 
 * ensure you do not disable UDF as it is required for provisioning the VM.  This is described furtehr in the [linux installation notes](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/create-upload-generic#general-linux-installation-notes).
 
-* to enable cloud-init, follow the instructions for [preparing CentOS for cloud-init on Azure](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cloudinit-prepare-custom-image#preparing-rhel-76--centos-76)
-
-* to run without the WAAgent (and no cloud-init) follow the instructions [Creating generalized images without a provisioning agent](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/no-agent)
-
-* to add a search domain, add a line similar to the following line to `/etc/sysconfig/network-scripts/ifcfg-eth0`
+* To replace the default `reddog.microsoft.com` search domain with your own search domain, add a line similar to the following line to `/etc/sysconfig/network-scripts/ifcfg-eth0`
 ```bash
 SEARCH="rendering.com artists.rendering.com"
 ```
+
+* a search domain may also be added through cloud-init or custom script extension using a script similar to the below.  An example of this is shown in [main.tf](main.tf):
+```bash
+function update_search_domain() {
+    if [[ ! -z "$SEARCH_DOMAIN" ]]; then
+        NETWORK_FILE=/etc/sysconfig/network-scripts/ifcfg-eth0
+        if grep --quiet "DOMAIN=" $NETWORK_FILE; then
+            sed -i 's/^#\s*DOMAIN=/DOMAIN=/g' $NETWORK_FILE
+            sed -i "s/^DOMAIN=.*$/DOMAIN=\"${SEARCH_DOMAIN}\"/g"  $NETWORK_FILE
+        else
+            echo "DOMAIN=\"${SEARCH_DOMAIN}\"" >> $NETWORK_FILE
+        fi
+        # restart network to take effect
+        systemctl restart network
+    fi
+}
+```
+
+**TIP** if you need to create a VHD from following the instructions [Creating VHD Azure blob SAS URL from Azure Managed Image](https://arsenvlad.medium.com/creating-vhd-azure-blob-sas-url-from-azure-managed-image-2be0e7c287f4)
 
 # Prepare Image Size and Format for Azure
 

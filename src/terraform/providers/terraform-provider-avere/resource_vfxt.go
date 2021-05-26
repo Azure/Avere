@@ -55,6 +55,12 @@ func resourceVfxt() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			use_availability_zones: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+			},
 			allow_non_ascii: {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -184,7 +190,14 @@ func resourceVfxt() *schema.Resource {
 				ValidateFunc: validation.IntInSlice([]int{
 					1024,
 					4096,
+					// per documentation: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-deploy-plan#vfxt-node-size
+					8192,
 				}),
+			},
+			enable_nlm: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
 			},
 			vserver_first_ip: {
 				Type:         schema.TypeString,
@@ -364,6 +377,35 @@ func resourceVfxt() *schema.Resource {
 				Optional:     true,
 				Default:      false,
 				RequiredWith: []string{cifs_ad_domain, cifs_server_name, cifs_username, cifs_password},
+			},
+			login_services_ldap_server: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
+				RequiredWith: []string{login_services_ldap_basedn, login_services_ldap_binddn, login_services_ldap_bind_password},
+			},
+			login_services_ldap_basedn: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
+				RequiredWith: []string{login_services_ldap_server, login_services_ldap_binddn, login_services_ldap_bind_password},
+			},
+			login_services_ldap_binddn: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
+				RequiredWith: []string{login_services_ldap_server, login_services_ldap_basedn, login_services_ldap_bind_password},
+			},
+			login_services_ldap_bind_password: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				Default:      "",
+				ValidateFunc: validation.StringDoesNotContainAny(" '\""),
+				RequiredWith: []string{login_services_ldap_server, login_services_ldap_basedn, login_services_ldap_binddn},
 			},
 			user_assigned_managed_identity: {
 				Type:         schema.TypeString,
@@ -629,6 +671,13 @@ func resourceVfxt() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			tags: {
+				Type:         schema.TypeMap,
+				Optional:     true,
+				Computed:     false,
+				ForceNew:     true,
+				ValidateFunc: ValidateTags,
+			},
 		},
 	}
 }
@@ -695,6 +744,12 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("ERROR: error while creating VServer: %s", err)
 	}
 
+	if !avereVfxt.EnableNlm {
+		if err := avereVfxt.SetNlm(); err != nil {
+			fmt.Errorf("ERROR: error while disabling Nlm: %s", err)
+		}
+	}
+
 	if avereVfxt.Timezone != DefaultTimezone || len(avereVfxt.DnsServer) > 0 || len(avereVfxt.DnsDomain) > 0 || len(avereVfxt.DnsSearch) > 0 {
 		if err := avereVfxt.UpdateCluster(); err != nil {
 			return err
@@ -725,6 +780,10 @@ func resourceVfxtCreate(d *schema.ResourceData, m interface{}) error {
 		if err := avereVfxt.ModifyExtendedGroups(); err != nil {
 			return err
 		}
+	}
+
+	if err := avereVfxt.EnableLoginServices(); err != nil {
+		return err
 	}
 
 	// add the new filers
@@ -834,6 +893,7 @@ func resourceVfxtRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("error encountered getting cluster '%v'", err)
 	}
 	d.Set(licensing_id, cluster.LicensingId)
+	log.Printf("[INFO] cluster name: '%s', uuid: '%s', support name: '%s'", avereVfxt.AvereVfxtName, cluster.LicensingId, avereVfxt.AvereVfxtSupportName)
 
 	return nil
 }
@@ -860,18 +920,25 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 
 	//
 	// The cluster will be updated in the following order
-	//  1. Timezone and DNS changes
-	//  2. NTP Servers
-	//  3. Global and Vserver Custom Support settings
-	//  4. Update Users
-	//  5. Delete Junctions
-	//  6. Update CIFs
-	//  7. Update Core Filers including Core Filer custom settings
-	//  8. Add Junctions
-	//  9. Update Extended Groups
-	// 10. Scale cluster
-	// 11. Update Support Uploads
+	//  1. Disable NLM
+	//  2. Timezone and DNS changes
+	//  3. NTP Servers
+	//  4. Global and Vserver Custom Support settings
+	//  5. Update Users
+	//  6. Delete Junctions
+	//  7. Update CIFs
+	//  8. Update Core Filers including Core Filer custom settings
+	//  9. Add Junctions
+	// 10. Update Extended Groups
+	// 11. Scale cluster
+	// 12. Update Support Uploads
 	//
+
+	if d.HasChange(enable_nlm) {
+		if err := avereVfxt.SetNlm(); err != nil {
+			return err
+		}
+	}
 
 	if d.HasChange(timezone) || d.HasChange(dns_server) || d.HasChange(dns_domain) || d.HasChange(dns_search) {
 		if err := avereVfxt.UpdateCluster(); err != nil {
@@ -993,6 +1060,18 @@ func resourceVfxtUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	if d.HasChange(login_services_ldap_server) ||
+		d.HasChange(login_services_ldap_basedn) ||
+		d.HasChange(login_services_ldap_binddn) ||
+		d.HasChange(login_services_ldap_bind_password) {
+		if err := avereVfxt.EnableLoginServices(); err != nil {
+			return err
+		}
+		if err := avereVfxt.DisableLoginServices(); err != nil {
+			return err
+		}
+	}
+
 	// scale the cluster if node changed
 	if d.HasChange(vfxt_node_count) {
 		if err := scaleCluster(d, avereVfxt); err != nil {
@@ -1048,6 +1127,11 @@ func resourceVfxtDelete(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
+	log.Printf("[INFO] vfxt: ensure cluster is stable before deletion so vfxt.py will have a smooth deletion")
+	if err := avereVfxt.EnsureClusterStable(); err != nil {
+		return err
+	}
+
 	if err := avereVfxt.Platform.DestroyVfxt(avereVfxt); err != nil {
 		return fmt.Errorf("failed to destroy cluster: %s\n", err)
 	}
@@ -1068,6 +1152,13 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	var controllerSshPort int
 
 	runLocal := d.Get(run_local).(bool)
+
+	nodeCount := d.Get(vfxt_node_count).(int)
+	useAvailabilityZones := d.Get(use_availability_zones).(bool)
+	if useAvailabilityZones && nodeCount > MaxZonalNodesCount {
+		return nil, fmt.Errorf("The maximum of %v nodes may be specified, when availability zones is enabled", MaxZonalNodesCount)
+	}
+
 	allowNonAscii := d.Get(allow_non_ascii).(bool)
 
 	if !allowNonAscii {
@@ -1127,14 +1218,14 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		return nil, fmt.Errorf("platform '%s' not supported", platform)
 	}
 
+	tagsMap := GetTagsMap(d.Get(tags))
+
 	var managementIP string
 	if val, ok := d.Get(vfxt_management_ip).(string); ok {
 		managementIP = val
 	}
 	vServerIPAddressesRaw := d.Get(vserver_ip_addresses).([]interface{})
 	nodeNamesRaw := d.Get(node_names).([]interface{})
-
-	nodeCount := d.Get(vfxt_node_count).(int)
 
 	firstIPAddress := d.Get(vserver_first_ip).(string)
 	ipAddressCount := d.Get(vserver_ip_count).(int)
@@ -1154,8 +1245,10 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		authMethod,
 		controllerSshPort,
 		runLocal,
+		useAvailabilityZones,
 		allowNonAscii,
 		iaasPlatform,
+		tagsMap,
 		d.Get(vfxt_cluster_name).(string),
 		d.Get(vfxt_admin_password).(string),
 		d.Get(vfxt_ssh_key_data).(string),
@@ -1167,6 +1260,7 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		nodeCount,
 		d.Get(node_size).(string),
 		d.Get(node_cache_size).(int),
+		d.Get(enable_nlm).(bool),
 		firstIPAddress,
 		lastIPAddress,
 		d.Get(cifs_ad_domain).(string),
@@ -1183,6 +1277,10 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(cifs_organizational_unit).(string),
 		d.Get(cifs_trusted_active_directory_domains).(string),
 		d.Get(enable_extended_groups).(bool),
+		d.Get(login_services_ldap_server).(string),
+		d.Get(login_services_ldap_basedn).(string),
+		d.Get(login_services_ldap_binddn).(string),
+		d.Get(login_services_ldap_bind_password).(string),
 		d.Get(user_assigned_managed_identity).(string),
 		d.Get(ntp_servers).(string),
 		d.Get(timezone).(string),
@@ -1200,7 +1298,6 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 	if avereVfxt.AvereVfxtSupportName, err = iaasPlatform.GetSupportName(avereVfxt, d.Get(support_uploads_company_name).(string)); err != nil {
 		return nil, err
 	}
-	log.Printf("[INFO] cluster name: '%s', support name: '%s'", avereVfxt.AvereVfxtName, avereVfxt.AvereVfxtSupportName)
 
 	return avereVfxt, nil
 }
@@ -1558,21 +1655,21 @@ func addCoreFilersWithBalancedQuota(corefilers []*CoreFiler, averevfxt *AvereVfx
 	var lastCoreFiler *CoreFiler
 	lastIndex := len(corefilers)
 
-	// increase speed of dynamic block allocation
-	if err := startFixedQuotaPercent(corefilers, averevfxt); err != nil {
-		return fmt.Errorf("error encountered while starting setting of fixed quota: %v", err)
-	}
-
 	// There is an undesired behavior in Avere vFXT where the first core filer is added and
 	// it receives all the quota space.  To speed up balancing, add the last core filer, and
 	// then delete it after added the other core filers.  This releases the space.
 	if QuotaSpeedUpDeleteFirstFiler {
 		lastIndex = lastIndex - 1
 		lastCoreFiler = corefilers[lastIndex]
-		log.Printf("[INFO] add last core filer '%s'", lastCoreFiler.Name)
-		if err := createCoreFilerWithFixedQuota(lastCoreFiler, averevfxt); err != nil {
+		log.Printf("[INFO] add last core filer '%s', without fixed quota", lastCoreFiler.Name)
+		if err := averevfxt.CreateCoreFiler(lastCoreFiler); err != nil {
 			return err
 		}
+	}
+
+	// increase speed of dynamic block allocation
+	if err := startFixedQuotaPercent(corefilers, averevfxt); err != nil {
+		return fmt.Errorf("error encountered while starting setting of fixed quota: %v", err)
 	}
 
 	// add the core filer and quota percent first (not adding last core filer if used for quota speedup)
@@ -1589,7 +1686,7 @@ func addCoreFilersWithBalancedQuota(corefilers []*CoreFiler, averevfxt *AvereVfx
 			return err
 		}
 
-		log.Printf("[INFO] add last core filer '%s'", lastCoreFiler.Name)
+		log.Printf("[INFO] add last core filer '%s', with fixed quota", lastCoreFiler.Name)
 		if err := createCoreFilerWithFixedQuota(lastCoreFiler, averevfxt); err != nil {
 			return err
 		}
@@ -2452,4 +2549,61 @@ func flattenStringSlice(input *[]string) []interface{} {
 	}
 
 	return output
+}
+
+// from "github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/internal/tags/validation.go"
+// pasting here, because not allowed to import an internal library
+func ValidateTags(v interface{}, _ string) (warnings []string, errors []error) {
+	tagsMap := v.(map[string]interface{})
+
+	if len(tagsMap) > 50 {
+		errors = append(errors, fmt.Errorf("a maximum of 50 tags can be applied to each ARM resource"))
+	}
+
+	for k, v := range tagsMap {
+		if len(k) > 512 {
+			errors = append(errors, fmt.Errorf("the maximum length for a tag key is 512 characters: %q is %d characters", k, len(k)))
+		}
+
+		value, err := TagValueToString(v)
+		if err != nil {
+			errors = append(errors, err)
+		} else if len(value) > 256 {
+			errors = append(errors, fmt.Errorf("the maximum length for a tag value is 256 characters: the value for %q is %d characters", k, len(value)))
+		}
+
+		if strings.ContainsAny(k, "':") || strings.ContainsAny(value, "':") {
+			errors = append(errors, fmt.Errorf("characters ' or : are not allowed because it it interferes with vfxt.py command line parameter --azure-tag 'key:value'"))
+		}
+	}
+
+	return warnings, errors
+}
+
+// from "github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/internal/tags/validation.go"
+// pasting here, because not allowed to import an internal library
+func TagValueToString(v interface{}) (string, error) {
+	switch value := v.(type) {
+	case string:
+		return value, nil
+	case int:
+		return fmt.Sprintf("%d", value), nil
+	default:
+		return "", fmt.Errorf("unknown tag type %T in tag value", value)
+	}
+}
+
+func GetTagsMap(v interface{}) map[string]string {
+	results := make(map[string]string)
+
+	tagsMap := v.(map[string]interface{})
+
+	for k, v := range tagsMap {
+		// ignore any errors, because none should exist as this is guarded by validation
+		if value, err := TagValueToString(v); err == nil {
+			results[k] = value
+		}
+	}
+
+	return results
 }

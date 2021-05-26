@@ -1,20 +1,20 @@
 param (
     $resourceGroup = @{
         "name" = ""
-        "regionName" = "WestUS"     # https://azure.microsoft.com/global-infrastructure/geographies/
+        "regionName" = "WestUS" # https://azure.microsoft.com/global-infrastructure/geographies/
     },
-    $quantumWorkspace = @{          # https://docs.microsoft.com/azure/quantum/overview-azure-quantum
+    $quantumWorkspace = @{      # https://docs.microsoft.com/azure/quantum/overview-azure-quantum
         "name" = ""
         "providers" = @(
             @{
                 "providerId" = "Microsoft"
-                "providerSku" = "DZH3178M639F"
+                "providerSku" = "DZH3178M639F" # Learn & Develop = "DZH3178M639F", Scale = "DZH318RV7MW4"
             }
         )
     },
-    $storageAccount = @{
+    $storageAccount = @{        # https://docs.microsoft.com/azure/storage/common/storage-account-overview
         "name" = ""
-        "resourceGroupName" = ""
+        "resourceGroupName" = $resourceGroup.name
     }
 )
 

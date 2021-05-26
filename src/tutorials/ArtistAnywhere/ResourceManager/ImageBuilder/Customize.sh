@@ -1,5 +1,8 @@
 #!/bin/bash
 
+gpuDriverUrl="https://bit1.blob.core.windows.net/bin/Graphics/Linux"
+gpuDriver="NVIDIA-Linux-x86_64-460.32.03-grid-azure.run"
+
 set -ex
 
 cd /usr/local/bin
@@ -10,16 +13,16 @@ if $gpuNVIDIA; then
     if $centOS8; then
         dnf -y install gcc
         dnf -y install make
-        dnf -y install kernel-devel
+        dnf -y install "kernel-devel-uname-r == $(uname -r)"
         dnf -y install epel-release
         dnf -y install dkms
-    else # CentOS7
+        dnf -y groups install "Workstation"
+    else # centOS7
         yum -y install gcc
-        yum -y install kernel-devel
+        yum -y install "kernel-devel-uname-r == $(uname -r)"
+        yum -y groups install "GNOME Desktop"
     fi
-    downloadUrl="https://bit.blob.core.windows.net/bin/Graphics/Linux"
-    fileName="NVIDIA-Linux-x86_64-460.32.03-grid-azure.run"
-    curl -L -o $fileName $downloadUrl/$fileName
-    chmod +x $fileName
-    ./$fileName -s
+    curl -L -o $gpuDriver $gpuDriverUrl/$gpuDriver
+    chmod +x $gpuDriver
+    ./$gpuDriver -s
 fi

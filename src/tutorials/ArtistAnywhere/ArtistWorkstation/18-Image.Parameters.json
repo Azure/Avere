@@ -1,0 +1,65 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "managedIdentity": {
+      "value": {
+        "name": "MediaPipeline",
+        "resourceGroupName": "Artist.Anywhere-Identity"
+      }
+    },
+    "imageGallery": {
+      "value": {
+        "name": "MediaPipeline",
+        "resourceGroupName": "Artist.Anywhere-Gallery"
+      }
+    },
+    "imageTemplates": {
+      "value": [
+        {
+          "deploy": false,
+          "name": "WorkstationLG",
+          "imageDefinitionName": "WorkstationLinux",
+          "imageSourceType": "PlatformImage",
+          "imageSourceVersion": "latest",
+          "imageOutputVersion": "1.0.0",
+          "imageStorageAccount": {
+            "type": "Standard_LRS"
+          },
+          "machineProfile": {
+            "size": "Standard_NV6",
+            "osDiskSizeGB": 0
+          },
+          "buildTimeoutMinutes": 90,
+          "buildCustomization": [
+          ]
+        },
+        {
+          "deploy": false,
+          "name": "WorkstationWG",
+          "imageDefinitionName": "WorkstationWindows",
+          "imageSourceType": "PlatformImage",
+          "imageSourceVersion": "latest",
+          "imageOutputVersion": "1.0.0",
+          "imageStorageAccount": {
+            "type": "Standard_LRS"
+          },
+          "machineProfile": {
+            "size": "Standard_NV6",
+            "osDiskSizeGB": 0
+          },
+          "buildTimeoutMinutes": 90,
+          "buildCustomization": [
+          ]
+        }
+      ]
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "MediaPipeline",
+        "subnetName": "Workstation",
+        "resourceGroupName": "Artist.Anywhere-Network"
+      }
+    }
+  }
+}

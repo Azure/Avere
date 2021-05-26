@@ -4,6 +4,7 @@ package main
 
 const (
 	AvereAdminUsername            = "admin"
+	MaxZonalNodesCount            = 3
 	MinNodesCount                 = 3
 	MaxNodesCount                 = 16
 	MinVserverIpCount             = MinNodesCount
@@ -21,6 +22,8 @@ const (
 	ClusterAliveRetrySleepSeconds = 5
 	AverecmdLogFile               = "~/averecmd.log"
 	VServerName                   = "vserver"
+	DBUtilYes                     = "yes"
+	DBUtilNo                      = "no"
 	VfxtKeyPubFile                = "~/vfxt_ssh_key_data.pub"
 	ShellLogFile                  = "~/shell.log"
 
@@ -160,6 +163,7 @@ const (
 	controller_admin_password             = "controller_admin_password"
 	controller_ssh_port                   = "controller_ssh_port"
 	run_local                             = "run_local"
+	use_availability_zones                = "use_availability_zones"
 	allow_non_ascii                       = "allow_non_ascii"
 	location                              = "location"
 	platform                              = "platform"
@@ -181,6 +185,7 @@ const (
 	vfxt_node_count                       = "vfxt_node_count"
 	node_size                             = "node_size"
 	node_cache_size                       = "node_cache_size"
+	enable_nlm                            = "enable_nlm"
 	vserver_first_ip                      = "vserver_first_ip"
 	vserver_ip_count                      = "vserver_ip_count"
 	global_custom_settings                = "global_custom_settings"
@@ -204,6 +209,10 @@ const (
 	cifs_rid_mapping_base_integer         = "cifs_rid_mapping_base_integer"
 	cifs_organizational_unit              = "cifs_organizational_unit"
 	cifs_trusted_active_directory_domains = "cifs_trusted_active_directory_domains"
+	login_services_ldap_server            = "login_services_ldap_server"
+	login_services_ldap_basedn            = "login_services_ldap_basedn"
+	login_services_ldap_binddn            = "login_services_ldap_binddn"
+	login_services_ldap_bind_password     = "login_services_ldap_bind_password"
 	enable_extended_groups                = "enable_extended_groups"
 	user_assigned_managed_identity        = "user_assigned_managed_identity"
 	user                                  = "user"
@@ -240,4 +249,5 @@ const (
 	primary_cluster_ips                   = "primary_cluster_ips"
 	licensing_id                          = "licensing_id"
 	mass_filer_mappings                   = "mass_filer_mappings"
+	tags                                  = "tags"
 )

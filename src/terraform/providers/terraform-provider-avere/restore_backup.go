@@ -200,9 +200,14 @@ locals {
     alternative_resource_groups = []
 }
 
-provider "azurerm" {
-    version = "~>2.12.0"
-    features {}
+terraform {
+  required_version = ">= 0.14.0,< 0.16.0"
+  required_providers {
+    avere = {
+      source  = "hashicorp/avere"
+      version = ">=1.0.0"
+    }
+  }
 }
 
 // the vfxt controller
@@ -231,7 +236,9 @@ resource "avere_vfxt" "vfxt" {
     // terraform is not creating the implicit dependency on the controller module
     // otherwise during destroy, it tries to destroy the controller at the same time as vfxt cluster
     // to work around, add the explicit dependency
-    depends_on = [module.vfxtcontroller]
+    depends_on = [
+		module.vfxtcontroller,
+	]
     
     // azure information
     location = local.location

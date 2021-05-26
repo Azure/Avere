@@ -18,7 +18,7 @@ locals {
 resource "azurerm_network_interface" "nfsfiler" {
   name                = "${var.unique_name}-nic"
   resource_group_name = data.azurerm_resource_group.nfsfiler.name
-  location            = data.azurerm_resource_group.nfsfiler.location
+  location            = var.location
 
   ip_configuration {
     name                          = "${var.unique_name}-ipconfig"
@@ -30,7 +30,7 @@ resource "azurerm_network_interface" "nfsfiler" {
 
 resource "azurerm_linux_virtual_machine" "nfsfiler" {
   name = "${var.unique_name}-vm"
-  location = data.azurerm_resource_group.nfsfiler.location
+  location = var.location
   resource_group_name = data.azurerm_resource_group.nfsfiler.name
   network_interface_ids = [azurerm_network_interface.nfsfiler.id]
   computer_name  = var.unique_name
@@ -45,9 +45,8 @@ resource "azurerm_linux_virtual_machine" "nfsfiler" {
 
   source_image_reference {
     publisher = "OpenLogic"
-    offer     = "CentOS-CI"
-    # only 7-CI supports cloud-init https://docs.microsoft.com/en-us/azure/virtual-machines/linux/using-cloud-init
-    sku       = "7-CI"
+    offer     = "CentOS"
+    sku       = "7.7"
     version   = "latest"
   }
 

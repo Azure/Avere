@@ -13,6 +13,7 @@ For lowest TCO, on [Azure Virtual Network](https://docs.microsoft.com/en-us/azur
     1. [Render Network](../../modules/render_network/) - describes a standard render network
     2. [Secure Network](../../modules/render_network_secure/) - describes a secure render network where internet traffic only goes over internet.
 * For a VPN Gateway or ExpressRoute Gateway you will need to define a subnet named `GatewaySubnet`, and it can be [as small as a /28](https://docs.microsoft.com/en-us/azure/vpn-gateway/tutorial-site-to-site-portal#create-the-gateway).
+* If you are using a firewall, you may need to dump all ARM Endpoints as described in [ARM Endpoints](armendpoints.md)
 
 ## Azure VPN Gateway
 

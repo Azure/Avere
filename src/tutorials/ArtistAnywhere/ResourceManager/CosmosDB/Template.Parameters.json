@@ -5,6 +5,10 @@
     "cosmosAccount": {
       "value": {
       }
+    },
+    "sqlDatabase": {
+      "value": {
+      }
     }
   }
 }

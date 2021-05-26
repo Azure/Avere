@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -38,8 +39,10 @@ func NewAvereVfxt(
 	sshAuthMethod ssh.AuthMethod,
 	sshPort int,
 	runLocal bool,
+	useAvailabilityZones bool,
 	allowNonAscii bool,
 	platform IaasPlatform,
+	tagsMap map[string]string,
 	avereVfxtName string,
 	avereAdminPassword string,
 	sshKeyData string,
@@ -51,6 +54,7 @@ func NewAvereVfxt(
 	nodeCount int,
 	nodeSize string,
 	nodeCacheSize int,
+	enableNlm bool,
 	firstIPAddress string,
 	lastIPAddress string,
 	cifsAdDomain string,
@@ -67,6 +71,10 @@ func NewAvereVfxt(
 	cifsOrganizationalUnit string,
 	cifsTrustedActiveDirectoryDomains string,
 	enableExtendedGroups bool,
+	loginServicesLDAPServer string,
+	loginServicesLDAPBasedn string,
+	loginServicesLDAPBinddn string,
+	loginServicesLDAPBindPassword string,
 	userAssignedManagedIdentity string,
 	ntpServers string,
 	timezone string,
@@ -85,8 +93,10 @@ func NewAvereVfxt(
 		SshAuthMethod:                     sshAuthMethod,
 		SshPort:                           sshPort,
 		RunLocal:                          runLocal,
+		UseAvailabilityZones:              useAvailabilityZones,
 		AllowNonAscii:                     allowNonAscii,
 		Platform:                          platform,
+		TagsMap:                           tagsMap,
 		AvereVfxtName:                     avereVfxtName,
 		AvereAdminPassword:                avereAdminPassword,
 		AvereSshKeyData:                   sshKeyData,
@@ -98,6 +108,7 @@ func NewAvereVfxt(
 		NodeCount:                         nodeCount,
 		NodeSize:                          nodeSize,
 		NodeCacheSize:                     nodeCacheSize,
+		EnableNlm:                         enableNlm,
 		FirstIPAddress:                    firstIPAddress,
 		LastIPAddress:                     lastIPAddress,
 		CifsAdDomain:                      cifsAdDomain,
@@ -114,6 +125,10 @@ func NewAvereVfxt(
 		CifsOrganizationalUnit:            cifsOrganizationalUnit,
 		CifsTrustedActiveDirectoryDomains: cifsTrustedActiveDirectoryDomains,
 		EnableExtendedGroups:              enableExtendedGroups,
+		LoginServicesLDAPServer:           loginServicesLDAPServer,
+		LoginServicesLDAPBasedn:           loginServicesLDAPBasedn,
+		LoginServicesLDAPBinddn:           loginServicesLDAPBinddn,
+		LoginServicesLDAPBindPassword:     loginServicesLDAPBindPassword,
 		UserAssignedManagedIdentity:       userAssignedManagedIdentity,
 		NtpServers:                        ntpServers,
 		Timezone:                          timezone,
@@ -571,6 +586,38 @@ func (a *AvereVfxt) DisableCIFS() error {
 	if !a.CIFSSettingsExist() {
 		// it is enough to just call disable CIFS to disable it
 		if _, err := a.AvereCommand(a.getCIFSDisableCommand()); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (a *AvereVfxt) LoginSettingsExist() bool {
+	return len(a.LoginServicesLDAPServer) > 0 && len(a.LoginServicesLDAPBasedn) > 0 && len(a.LoginServicesLDAPBinddn) > 0 && len(a.LoginServicesLDAPBindPassword) > 0
+}
+
+func (a *AvereVfxt) EnableLoginServices() error {
+	if a.LoginSettingsExist() {
+		log.Printf("[INFO] [EnableLoginServices")
+		defer log.Printf("[INFO] EnableLoginServices]")
+		if _, err := a.AvereCommand(a.getDirServicesSetLdapPasswordCommand()); err != nil {
+			return fmt.Errorf("setting LDAP Password for login services command failed: %v", err)
+		}
+		// finish with polling for users / groups, otherwise cifs doesn't work immediately
+		if _, err := a.AvereCommand(a.getDirServicesModifyCommand()); err != nil {
+			return fmt.Errorf("modify dir services for login services failed with error: %v", err)
+		}
+	}
+
+	return nil
+}
+
+func (a *AvereVfxt) DisableLoginServices() error {
+	if !a.LoginSettingsExist() {
+		log.Printf("[INFO] [DisableLoginServices")
+		defer log.Printf("[INFO] DisableLoginServices]")
+		if _, err := a.AvereCommand(a.getLoginSettingsDisableCommand()); err != nil {
 			return err
 		}
 	}
@@ -1529,6 +1576,159 @@ func (a *AvereVfxt) UpdateCifsMasks(junction *Junction) error {
 	return nil
 }
 
+// Approach derived from Avere document "Disable NLM Locking Version 1.0", 2019-09-18
+func (a *AvereVfxt) SetNlm() error {
+	log.Printf("[INFO] [SetNlm(%v)", a.EnableNlm)
+	defer log.Printf("[INFO] SetNlm]")
+
+	// get the vserver
+	vServerMappings, err := a.GetVServerMappings()
+	if err != nil {
+		return err
+	}
+	internalVServerName, ok := vServerMappings[VServerName]
+	if !ok {
+		return fmt.Errorf("ERROR: vserver '%s' is missing, and needed for disabling NLM", VServerName)
+	}
+
+	// get NLM status, if it matches exit with nil
+	nlmEnabled, err := a.IsNLMEnabled(internalVServerName)
+	if err != nil {
+		return err
+	}
+	if a.EnableNlm == nlmEnabled {
+		log.Printf("[INFO] nlm state '%v' is already at expected state '%v', nothing to do", nlmEnabled, a.EnableNlm)
+		return nil
+	}
+
+	// cluster exec set serverNlm
+	serverNlmNoProbe := DBUtilNo
+	serverNlm := DBUtilYes
+	if !a.EnableNlm {
+		serverNlmNoProbe = DBUtilYes
+		serverNlm = DBUtilNo
+	}
+	if _, err := a.ShellCommand(a.getSetServerNlmNoProbeCommand(internalVServerName, serverNlmNoProbe)); err != nil {
+		return err
+	}
+	if _, err := a.ShellCommand(a.getSetServerNlm(internalVServerName, serverNlm)); err != nil {
+		return err
+	}
+
+	if err := a.RestartArmada(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *AvereVfxt) RestartArmada() error {
+	log.Printf("[INFO] [RestartArmada(%v)", a.EnableNlm)
+	defer log.Printf("[INFO] RestartArmada]")
+
+	// get static IP
+	primaryIPs, err := a.GetNodePrimaryIPs()
+	if err != nil {
+		return fmt.Errorf("error encountered getting nodes primary ips '%v'", err)
+	}
+	if len(primaryIPs) == 0 {
+		return fmt.Errorf("BUG: there are no primary ip addresses")
+	}
+	staticIp := primaryIPs[0]
+
+	// since we are using a non-mgmt IP clear the known hosts before and after the restart
+	if err := a.PrepareForVFXTNodeCommands(); err != nil {
+		return err
+	}
+
+	if _, err := a.ShellCommand(a.getRestartArmadaCommand(staticIp)); err != nil {
+		return err
+	}
+
+	if err := a.PrepareForVFXTNodeCommands(); err != nil {
+		return err
+	}
+
+	// wait to settle
+	log.Printf("[INFO] vfxt: ensure stable cluster after restarting Armada")
+	if err := a.EnsureClusterStable(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *AvereVfxt) IsNLMEnabled(internalVServerName string) (bool, error) {
+	enabledResult := false
+
+	rawResult, err := a.ShellCommand(a.getServerNlmNoProbeCommand(internalVServerName))
+	if err != nil {
+		return enabledResult, err
+	}
+
+	// parse a result similar to vserver1.serverNlmNoProbe: yes
+	parts := strings.Split(rawResult, ":")
+	if len(parts) < 2 {
+		return true, nil
+	}
+	result := strings.TrimSpace(parts[1])
+
+	return result != DBUtilYes, nil
+}
+
+func (a *AvereVfxt) GetVServerInternalNames() ([]string, error) {
+	results := make([]string, 0)
+
+	vserverRawList, err := a.ShellCommand(a.getVServerInternalNamesCommand())
+	if err != nil {
+		return results, err
+	}
+
+	scanner := bufio.NewScanner(strings.NewReader(vserverRawList))
+	for scanner.Scan() {
+		line := scanner.Text()
+		// filter out the meta data lines that begin with '_'
+		if strings.HasPrefix(line, "_") {
+			continue
+		}
+		// split a line similar to "vserver1: aa87576c-7c09-11eb-b929-000d3a8b2a07"
+		parts := strings.Split(line, ":")
+		// if line was empty, continue
+		if len(parts) == 0 {
+			continue
+		}
+		trimmedLine := strings.TrimSpace(parts[0])
+		if len(trimmedLine) > 0 {
+			results = append(results, trimmedLine)
+		}
+	}
+
+	return results, nil
+}
+
+func (a *AvereVfxt) GetVServerMappings() (map[string]string, error) {
+	results := make(map[string]string)
+
+	vserverInternalNames, err := a.GetVServerInternalNames()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, internalName := range vserverInternalNames {
+		// TODO - probably need shell command
+		vserverName, err := a.ShellCommand(a.getVServerNameCommand(internalName))
+		if err != nil {
+			return nil, fmt.Errorf("ERROR getting versver name from internal name '%s': '%v'", internalName, err)
+		}
+		trimVserverName := strings.TrimSpace(vserverName)
+		if len(trimVserverName) == 0 {
+			return nil, fmt.Errorf("ERROR getting empty vservername for internal name '%s'", internalName)
+		}
+		results[trimVserverName] = internalName
+	}
+
+	return results, nil
+}
+
 func (a *AvereVfxt) VServerIPsPingable() (bool, error) {
 	log.Printf("[INFO] [VServerIPsPingable")
 	defer log.Printf("[INFO] VServerIPsPingable]")
@@ -1625,6 +1825,12 @@ func (a *AvereVfxt) AddExportRules(policyName string, exportRules map[string]*Ex
 func (a *AvereVfxt) DeleteExportRules(policyName string, exportRules map[string]*ExportRule) error {
 	log.Printf("[INFO] [DeleteExportRules %s", policyName)
 	defer log.Printf("[INFO] DeleteExportRules %s]", policyName)
+
+	if policyName == DefaultExportPolicyName {
+		log.Printf("[INFO] default policy, nothing to do")
+		return nil
+	}
+
 	for _, v := range exportRules {
 		if len(v.Id) == 0 {
 			return fmt.Errorf("BUG: the export rule '%s' for policy '%s' cannot have an empty id, this should have come from function GetExportRules", v.Filter, policyName)
@@ -1808,15 +2014,33 @@ func (a *AvereVfxt) EnableSupport() error {
 	return nil
 }
 
+func (a *AvereVfxt) AreTermsAccepted() (bool, error) {
+	jsonData, err := a.AvereCommand(a.getSupportAreTermsAccepted())
+	if err != nil {
+		return false, err
+	}
+	var termsAccepted bool
+	if err := json.Unmarshal([]byte(jsonData), &termsAccepted); err != nil {
+		return false, err
+	}
+	return termsAccepted, nil
+}
+
 func (a *AvereVfxt) ModifySupportUploads() error {
 	if err := a.EnableSupport(); err != nil {
 		return err
 	}
-	if _, err := a.AvereCommand(a.getSupportModifyCustomerUploadInfoCommand()); err != nil {
+	termsAccepted, err := a.AreTermsAccepted()
+	if err != nil {
 		return err
 	}
-	if _, err := a.AvereCommand(a.getSupportSecureProactiveSupportCommand()); err != nil {
-		return err
+	if termsAccepted {
+		if _, err := a.AvereCommand(a.getSupportModifyCustomerUploadInfoCommand()); err != nil {
+			return err
+		}
+		if _, err := a.AvereCommand(a.getSupportSecureProactiveSupportCommand()); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -2306,6 +2530,10 @@ func (a *AvereVfxt) getRemoveCustomSettingCommand(customSetting string) string {
 	return WrapCommandForLogging(fmt.Sprintf("%s support.removeCustomSetting %s", a.getBaseAvereCmd(), firstArgument), AverecmdLogFile)
 }
 
+func (a *AvereVfxt) getSupportAreTermsAccepted() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s --json support.areTermsAccepted", a.getBaseAvereCmd()), AverecmdLogFile)
+}
+
 // This is activated by the customer accepting the privacy policy by setting enable_support_uploads.  Otherwise, none of the examples will ever set this.
 func (a *AvereVfxt) getSupportAcceptTermsCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s support.acceptTerms yes", a.getBaseAvereCmd()), AverecmdLogFile)
@@ -2345,10 +2573,12 @@ func (a *AvereVfxt) getSupportModifyCustomerUploadInfoCommand() string {
 // this updates SPS (Secure Proactive Support) per docs https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-enable-support
 func (a *AvereVfxt) getSupportSecureProactiveSupportCommand() string {
 	isEnabled := "no"
+	secureProactiveSupport := ProactiveSupportDisabled
 	if a.EnableSupportUploads {
 		isEnabled = "yes"
+		secureProactiveSupport = a.SecureProactiveSupport
 	}
-	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'remoteCommandEnabled':'%s','SPSLinkInterval':'60','SPSLinkEnabled':'%s','remoteCommandExpiration':''}\"", a.getBaseAvereCmd(), a.SecureProactiveSupport, isEnabled), AverecmdLogFile)
+	return WrapCommandForLogging(fmt.Sprintf("%s support.modify \"{'remoteCommandEnabled':'%s','SPSLinkInterval':'60','SPSLinkEnabled':'%s','remoteCommandExpiration':''}\"", a.getBaseAvereCmd(), secureProactiveSupport, isEnabled), AverecmdLogFile)
 }
 
 func (a *AvereVfxt) getDirServicesEnableCIFSCommand() string {
@@ -2442,6 +2672,25 @@ func (a *AvereVfxt) getDisableExtendedGroupsCommand() string {
 	return WrapCommandForLogging(fmt.Sprintf("%s nfs.modify \"%s\" \"{'extendedGroups':'no'}\"", a.getBaseAvereCmd(), VServerName), AverecmdLogFile)
 }
 
+func (a *AvereVfxt) getDirServicesSetLdapPasswordCommand() string {
+	nonSecretCommand := fmt.Sprintf("%s dirServices.setLdapPassword \"00000000-0000-0000-0000-000000000001\" \"%%s\"", a.getBaseAvereCmd())
+	return WrapCommandForLoggingSecretInput(nonSecretCommand, fmt.Sprintf(nonSecretCommand, a.LoginServicesLDAPBindPassword), AverecmdLogFile)
+}
+
+func getEpochMilliseconds() int64 {
+	now := time.Now()
+	nanos := now.UnixNano()
+	return nanos / 1000000
+}
+
+func (a *AvereVfxt) getDirServicesModifyCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s dirServices.modify \"00000000-0000-0000-0000-000000000001\" \"{'LDAPrequireCertificate':'enabled','LDAPbasedn':'%s','LDAPbinddn':'%s','loginSource':'Local/LDAP','LDAPserver':'%s','LDAPsecureAccess':'disabled','loginQueryAttributes':'ad','loginPollNow':'%v'}\"", a.getBaseAvereCmd(), a.LoginServicesLDAPBasedn, a.LoginServicesLDAPBinddn, a.LoginServicesLDAPServer, getEpochMilliseconds()), AverecmdLogFile)
+}
+
+func (a *AvereVfxt) getLoginSettingsDisableCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s dirServices.modify \"00000000-0000-0000-0000-000000000001\" \"{'LDAPrequireCertificate':'enabled','LDAPbasedn':'','loginSource':'Local','LDAPserver':'','LDAPsecureAccess':'disabled','LDAPbinddn':'','loginPollNow':'%v'}\"", a.getBaseAvereCmd(), getEpochMilliseconds()), AverecmdLogFile)
+}
+
 func (a *AvereVfxt) getUploadRollingTraceCommand(secondsSinceEpoch int64, aftermin int, beforemin int) string {
 	return WrapCommandForLogging(fmt.Sprintf("%s  support.executeNormalMode cluster gsirollingtrace \"\" \"{'eventtime':'%d','aftermin':'%d','beforemin':'%d'}\"", a.getBaseAvereCmd(), secondsSinceEpoch, aftermin, beforemin), AverecmdLogFile)
 }
@@ -2532,8 +2781,12 @@ func (a *AvereVfxt) GetSSHPassPrefix() string {
 }
 
 func (a *AvereVfxt) GetBaseVFXTNodeCommand() string {
+	return a.GetBaseVFXTNodeCommandWithIPAddress(a.ManagementIP)
+}
+
+func (a *AvereVfxt) GetBaseVFXTNodeCommandWithIPAddress(ipAddress string) string {
 	sshPassPrefix := a.GetSSHPassPrefix()
-	return fmt.Sprintf("%s ssh -oStrictHostKeyChecking=no -oProxyCommand=\"%s ssh -oStrictHostKeyChecking=no -W %%h:%%p admin@%s\" root@localhost ", sshPassPrefix, sshPassPrefix, a.ManagementIP)
+	return fmt.Sprintf("%s ssh -oStrictHostKeyChecking=no -oProxyCommand=\"%s ssh -oStrictHostKeyChecking=no -W %%h:%%p admin@%s\" root@localhost ", sshPassPrefix, sshPassPrefix, ipAddress)
 }
 
 func (a *AvereVfxt) getPutPasswdFileCommand() string {
@@ -2589,4 +2842,28 @@ func (a *AvereVfxt) getExecuteRidGeneratorCommand() string {
 
 func (a *AvereVfxt) getSetGSIUploadUrlCommand(url string) string {
 	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"dbutil.py set gsiInfo url %s --user admin --case latency\"'", a.GetBaseVFXTNodeCommand(), url), ShellLogFile)
+}
+
+func (a *AvereVfxt) getVServerInternalNamesCommand() string {
+	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"lsu vservers\"'", a.GetBaseVFXTNodeCommand()), ShellLogFile)
+}
+
+func (a *AvereVfxt) getVServerNameCommand(internalVServerName string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"lsu %s name|cut -d '\"'\"' '\"'\"' -f 2\"'", a.GetBaseVFXTNodeCommand(), internalVServerName), ShellLogFile)
+}
+
+func (a *AvereVfxt) getServerNlmNoProbeCommand(internalVServerName string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"dbutil.py get %s serverNlmNoProbe\"'", a.GetBaseVFXTNodeCommand(), internalVServerName), ShellLogFile)
+}
+
+func (a *AvereVfxt) getSetServerNlmNoProbeCommand(internalVServerName string, dbutilValue string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"dbutil.py set %s serverNlmNoProbe %s --user admin --case nlmadjust\"'", a.GetBaseVFXTNodeCommand(), internalVServerName, dbutilValue), ShellLogFile)
+}
+
+func (a *AvereVfxt) getSetServerNlm(internalVServerName string, dbutilValue string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"dbutil.py set %s serverNlm %s --user admin --case nlmadjust\"'", a.GetBaseVFXTNodeCommand(), internalVServerName, dbutilValue), ShellLogFile)
+}
+
+func (a *AvereVfxt) getRestartArmadaCommand(staticIP string) string {
+	return WrapCommandForLogging(fmt.Sprintf("%s 'bash -l -c \"clusterexec.py /etc/rc.d/armadad restart\"'", a.GetBaseVFXTNodeCommandWithIPAddress(staticIP)), ShellLogFile)
 }

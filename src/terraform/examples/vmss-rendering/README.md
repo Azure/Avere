@@ -20,8 +20,51 @@ The following are best practices for configuring Azure Virtual Machine Scale Set
 1. Set `overprovision` to false, so machines don't temporarily run and then get destroyed leading to problems and delays with the render managers.
 1. If using custom images, and scaling above 1k-2k nodes, use [Azure Shared Image Gallery](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/shared-image-galleries).
 1. Once using > 1000 nodes consider using [Azure Cycle Cloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/) for help with the complexity of managing multiple VMSS instances at the same time and best option for itegration with the render manager.  The best practices and settings above, apply to [Azure Cycle Cloud](https://azure.microsoft.com/en-us/features/azure-cyclecloud/).
+1. Register for [Try/Restore](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#register-for-try--restore) public preview, to ensure any evicted VMs are restored.
 
 In this directory are terraform and ARM template examples to demonstrate how to achieve all of the above properties.  Closely related is deployment performance, and there are [best practices for improving virtual machine performance](https://github.com/Azure/Avere/blob/main/docs/azure_vm_provision_best_practices.md).
+
+## Specifying a different Home Dir
+
+A common request of M&E customers is to specify a different homedir for the default user, other than `/home`, so that automounts can be mounted to `/home`.
+
+One approach is to use the [`homedir` of cloud-init](https://cloudinit.readthedocs.io/en/latest/topics/examples.html?highlight=homedir#including-users-and-groups).  For example, the following cloud-init will put the default user under `/home2`.
+
+```terraform
+#cloud-config
+#
+users:
+  - default
+  - name: azureuser
+    gecos: azureuser
+    primary_group: azureuser
+    groups: users, admin
+    lock_passwd: false
+    passwd: REPLACEPASSWORD
+    homedir: /home2/azureuser
+
+runcmd:
+ - set -x
+ - touch /opt/ci.install.completed
+```
+
+A second approach is to capture an image where the image has `/etc/default/useradd` pointing to a different homedir, as shown in the following example:
+
+```
+# useradd defaults file
+GROUP=100
+HOME=/home2
+INACTIVE=-1
+EXPIRE=
+SHELL=/bin/bash
+SKEL=/etc/skel
+CREATE_MAIL_SPOOL=yes
+```
+
+A third approach is to capture an image (`sudo waagent -deprovision`, without the `+user`) where the image has the target deployed user under a different home directory and /etc/passwd, for example '/home2/azureuser'.  Then when you deploy the use the user 'azureuser', and it lands correctly in '/home2/azureuser'.
+
+**Note**: In the previous two approaches, SSH keys cannot be assigned.  Per the note in [terraform the Azure VM Agent](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine) only allows creating SSH Keys at the path `/home/{username}/.ssh/authorized_keys`.
+
 
 ## Terraform Deployment
 

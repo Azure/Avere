@@ -34,7 +34,7 @@ After the cluster has been deployed, any of the other test_*.py files can be run
 *(placeholder -- link to plan, DevOps or otherwise)*
 
 ### Custom Command-Line Arguments
-When running the tests, the standard [pytest command-line arguments](https://docs.pytest.org/en/latest/reference.html#ini-options-ref) are available. In addition, the following custom command-line options are available:
+When running the tests, the standard [pytest command-line arguments](https://docs.pytest.org/en/latest/reference/reference.html#ini-options-refhttps://docs.pytest.org/en/latest/reference.html#ini-options-ref) are available. In addition, the following custom command-line options are available:
 
     $ pytest --help
 

@@ -1,0 +1,169 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualMachine": {
+      "type": "object"
+    },
+    "virtualNetwork": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "virtualNetworkApiVersion": "2020-11-01",
+    "virtualMachineApiVersion": "2021-03-01",
+    "publicIPAddressApiVersion": "2020-11-01",
+    "networkInterfaceApiVersion": "2020-11-01",
+    "networkSecurityGroupApiVersion": "2020-11-01"
+  },
+  "functions": [
+  ],
+  "resources": [
+    {
+      "condition": "[parameters('virtualMachine').publicAddress.enable]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[parameters('virtualMachine').name]",
+      "apiVersion": "[variables('publicIPAddressApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "[parameters('virtualMachine').publicAddress.type]"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "[parameters('virtualMachine').publicAddress.allocationMethod]"
+      }
+    },
+    {
+      "condition": "[parameters('virtualMachine').publicAddress.enable]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[parameters('virtualMachine').name]",
+      "apiVersion": "[variables('networkSecurityGroupApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "copy": [
+          {
+            "name": "securityRules",
+            "count": "[length(parameters('virtualMachine').networkSecurityRules)]",
+            "input": {
+              "name": "[parameters('virtualMachine').networkSecurityRules[copyIndex('securityRules')].name]",
+              "properties": {
+                "access": "[parameters('virtualMachine').networkSecurityRules[copyIndex('securityRules')].access]",
+                "priority": "[parameters('virtualMachine').networkSecurityRules[copyIndex('securityRules')].priority]",
+                "protocol": "[parameters('virtualMachine').networkSecurityRules[copyIndex('securityRules')].protocol]",
+                "direction": "[parameters('virtualMachine').networkSecurityRules[copyIndex('securityRules')].direction]",
+                "sourcePortRange": "[parameters('virtualMachine').networkSecurityRules[copyIndex('securityRules')].sourcePort]",
+                "sourceAddressPrefix": "[parameters('virtualMachine').networkSecurityRules[copyIndex('securityRules')].sourceAddress]",
+                "destinationPortRanges": "[parameters('virtualMachine').networkSecurityRules[copyIndex('securityRules')].destinationPorts]",
+                "destinationAddressPrefix": "[parameters('virtualMachine').networkSecurityRules[copyIndex('securityRules')].destinationAddress]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[parameters('virtualMachine').name]",
+      "apiVersion": "[variables('networkInterfaceApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('virtualMachine').name)]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('virtualMachine').name)]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "primary",
+            "properties": {
+              "subnet": {
+                "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+              },
+              "publicIPAddress": "[if(parameters('virtualMachine').publicAddress.enable, json(concat('{\"id\": \"', resourceId('Microsoft.Network/publicIPAddresses', parameters('virtualMachine').name), '\"}')), json('null'))]"
+            }
+          }
+        ],
+        "networkSecurityGroup": "[if(parameters('virtualMachine').publicAddress.enable, json(concat('{\"id\": \"', resourceId('Microsoft.Network/networkSecurityGroups', parameters('virtualMachine').name), '\"}')), json('null'))]"
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[parameters('virtualMachine').name]",
+      "apiVersion": "[variables('virtualMachineApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', parameters('virtualMachine').name)]"
+      ],
+      "identity": {
+        "type": "[parameters('virtualMachine').managedIdentity.type]",
+        "userAssignedIdentities": "[if(equals(parameters('virtualMachine').managedIdentity.type, 'UserAssigned'), json(concat('{\"', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('virtualMachine').managedIdentity.name), '\": {}}')), json('null'))]"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('virtualMachine').size]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('virtualMachine').name)]"
+            }
+          ]
+        },
+        "storageProfile": {
+          "imageReference": {
+            "id": "[if(not(equals(parameters('virtualMachine').image.name, '')), resourceId(parameters('virtualMachine').image.resourceGroupName, 'Microsoft.Compute/images', parameters('virtualMachine').image.name), if(not(equals(parameters('virtualMachine').image.galleryName, '')), resourceId(parameters('virtualMachine').image.resourceGroupName, 'Microsoft.Compute/galleries/images/versions', parameters('virtualMachine').image.galleryName, parameters('virtualMachine').image.definitionName, parameters('virtualMachine').image.versionId), json('null')))]",
+            "publisher": "[if(not(equals(parameters('virtualMachine').image.publisher, '')), parameters('virtualMachine').image.publisher, json('null'))]",
+            "offer": "[if(not(equals(parameters('virtualMachine').image.publisher, '')), parameters('virtualMachine').image.offer, json('null'))]",
+            "sku": "[if(not(equals(parameters('virtualMachine').image.publisher, '')), parameters('virtualMachine').image.sku, json('null'))]",
+            "version": "[if(not(equals(parameters('virtualMachine').image.publisher, '')), parameters('virtualMachine').image.version, json('null'))]"
+           },
+          "osDisk": {
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "[parameters('virtualMachine').osDisk.storageAccountType]"
+            }
+          }
+        },
+        "osProfile": {
+          "computerName": "[parameters('virtualMachine').name]",
+          "adminUsername": "[parameters('virtualMachine').login.adminUsername]",
+          "adminPassword": "[parameters('virtualMachine').login.adminPassword]"
+        }
+      }
+    },
+    {
+      "condition": "[parameters('virtualMachine').scriptExtension.enable]",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(parameters('virtualMachine').name, '/extension')]",
+      "apiVersion": "[variables('virtualMachineApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachine').name)]"
+      ],
+      "properties": {
+        "publisher": "[if(equals(reference(resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachine').name), variables('virtualMachineApiVersion')).storageProfile.osDisk.osType, 'Windows'), 'Microsoft.Compute', 'Microsoft.Azure.Extensions')]",
+        "type": "[if(equals(reference(resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachine').name), variables('virtualMachineApiVersion')).storageProfile.osDisk.osType, 'Windows'), 'CustomScriptExtension', 'CustomScript')]",
+        "typeHandlerVersion": "[if(equals(reference(resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachine').name), variables('virtualMachineApiVersion')).storageProfile.osDisk.osType, 'Windows'), '1.10', '2.1')]",
+        "autoUpgradeMinorVersion": true,
+        "protectedSettings": {
+          "commandToExecute": "[if(equals(reference(resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachine').name), variables('virtualMachineApiVersion')).storageProfile.osDisk.osType, 'Windows'), format('PowerShell -ExecutionPolicy Unrestricted -EncodedCommand {0}', parameters('virtualMachine').scriptExtension.command), format('echo {0} | base64 --decode | tr -d \r | {1} /bin/bash', parameters('virtualMachine').scriptExtension.command, parameters('virtualMachine').scriptExtension.parameters))]"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "virtualMachine": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('virtualMachine').name]",
+        "resourceGroupName": "[resourceGroup().name]",
+        "privateIPAddress": "[reference(resourceId('Microsoft.Network/networkInterfaces', parameters('virtualMachine').name), variables('virtualNetworkApiVersion')).ipConfigurations[0].properties.privateIPAddress]"
+      }
+    },
+    "virtualNetwork": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('virtualNetwork').name]",
+        "resourceGroupName": "[parameters('virtualNetwork').resourceGroupName]"
+      }
+    }
+  }
+}

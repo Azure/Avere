@@ -17,8 +17,3 @@ output "cachewarmer_manager_bootstrap_script_path" {
   description = "The path of the cachewarmer manager on the NFS share."
   value       = local.manager_bootstrap_path
 }
-
-output "module_depends_on_id" {
-  description = "the id(s) to force others to wait"
-  value = null_resource.build_cachewarmer_bootstrap.id
-}

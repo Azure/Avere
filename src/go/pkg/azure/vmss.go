@@ -74,7 +74,7 @@ type VmssOperation struct {
 	LastQuery    time.Time
 	WaitDuration time.Duration
 	Attempts     int
-	Future       azure.Future
+	FutureAPI    azure.FutureAPI
 }
 
 func InitializeVmssOperationManager(ctx context.Context, client autorest.Client) *VmssOperationManager {
@@ -130,7 +130,7 @@ func (v *VmssOperationManager) Run(syncWaitGroup *sync.WaitGroup) {
 					v.mux.Unlock()
 					continue
 				}
-				future := op.Future
+				future := op.FutureAPI
 				v.mux.Unlock()
 
 				// make blocking call
@@ -189,13 +189,13 @@ func (v *VmssOperationManager) IsComplete(vmssName string) bool {
 	return !ok
 }
 
-func (v *VmssOperationManager) AddWatchOperation(vmssName string, future azure.Future) {
+func (v *VmssOperationManager) AddWatchOperation(vmssName string, futureAPI azure.FutureAPI) {
 	log.Debug.Printf("[vmss.AddWatchOperation")
 	defer log.Debug.Printf("vmss.AddWatchOperation]")
 	v.mux.Lock()
 	defer v.mux.Unlock()
 
-	delay, ok := future.GetPollingDelay()
+	delay, ok := futureAPI.GetPollingDelay()
 	if !ok {
 		delay = DEFAULT_OPERATION_POLL_TIME
 	}
@@ -204,6 +204,6 @@ func (v *VmssOperationManager) AddWatchOperation(vmssName string, future azure.F
 	v.vmssFutureMap[vmssName] = &VmssOperation{
 		LastQuery:    time.Now(),
 		WaitDuration: delay,
-		Future:       future,
+		FutureAPI:    futureAPI,
 	}
 }

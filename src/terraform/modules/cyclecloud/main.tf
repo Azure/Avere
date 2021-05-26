@@ -18,9 +18,8 @@ locals {
 
   centos_source_image = {
     publisher = "OpenLogic"
-    offer     = "CentOS-CI"
-    # only 7-CI supports cloud-init https://docs.microsoft.com/en-us/azure/virtual-machines/linux/using-cloud-init
-    sku       = "7-CI"
+    offer     = "CentOS"
+    sku       = "7.7"
     version   = "latest"
   }
 
@@ -37,7 +36,7 @@ locals {
 resource "azurerm_network_interface" "cyclecloud" {
   name                = "${var.unique_name}-nic"
   resource_group_name = data.azurerm_resource_group.cyclecloud.name
-  location            = data.azurerm_resource_group.cyclecloud.location
+  location            = var.location
 
   ip_configuration {
     name                          = "${var.unique_name}-ipconfig"
@@ -49,7 +48,7 @@ resource "azurerm_network_interface" "cyclecloud" {
 resource "azurerm_virtual_machine" "cyclecloud" {
   name = "${var.unique_name}-vm"
   resource_group_name = data.azurerm_resource_group.cyclecloud.name
-  location = data.azurerm_resource_group.cyclecloud.location
+  location = var.location
   network_interface_ids = [azurerm_network_interface.cyclecloud.id]
   vm_size = var.vm_size
 

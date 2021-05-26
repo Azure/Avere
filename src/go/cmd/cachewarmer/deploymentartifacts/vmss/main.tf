@@ -16,9 +16,11 @@ locals {
     virtual_network_subnet_name = "render_clients1"
     
     // nfs job folder details
-    job_mount_address = "10.0.1.11"
-    job_export_path = "/nfs1data"
-    job_base_path = "/"
+    bootstrap_address = "10.0.1.11"
+    bootstrap_export_path = ""
+    storage_account = ""
+    storage_key = ""
+    queue_prefix = "isilon1"
     
     // vmss details
     vmss_resource_group_name = "vmss_rg"
@@ -48,8 +50,8 @@ locals {
     // non-configurable bootstrap details
     bootstrap_path = "/b"
     cachewarmer_worker_bootstrap_script_path = "/bootstrap/bootstrap.cachewarmer-worker.sh"
-    env_vars = " BOOTSTRAP_PATH=\"${local.bootstrap_path}\" BOOTSTRAP_SCRIPT=\"${local.cachewarmer_worker_bootstrap_script_path}\" JOB_MOUNT_ADDRESS=\"${local.job_mount_address}\" JOB_EXPORT_PATH=\"${local.job_export_path}\" JOB_BASE_PATH=\"${local.job_base_path}\" "
-    cloud_init_file = templatefile("cloud-init.tpl", { bootstrap_address = local.job_mount_address, export_path = local.job_export_path, bootstrap_path = local.bootstrap_path, bootstrap_script_path = local.cachewarmer_worker_bootstrap_script_path, env_vars=local.env_vars})
+    env_vars = " BOOTSTRAP_PATH=\"${local.bootstrap_path}\" BOOTSTRAP_SCRIPT=\"${local.cachewarmer_worker_bootstrap_script_path}\" STORAGE_ACCOUNT=\"${local.storage_account}\" STORAGE_KEY=\"${local.storage_key}\" QUEUE_PREFIX=\"${local.queue_prefix}\" "
+    cloud_init_file = templatefile("cloud-init.tpl", { bootstrap_address = local.bootstrap_address, export_path = local.bootstrap_export_path, bootstrap_path = local.bootstrap_path, bootstrap_script_path = local.cachewarmer_worker_bootstrap_script_path, env_vars=local.env_vars})
 }
 
 resource "azurerm_linux_virtual_machine_scale_set" "vmss" {

@@ -2,7 +2,7 @@
 
 This is an example of how to setup the CacheWarmer for [Avere vFXT for Azure](https://docs.microsoft.com/en-us/azure/avere-vfxt/).  The CacheWarmer is a golang program that runs as a systemd service on the controller and the source code is located under the [golang source](../../../../go/cmd/cachewarmer).
 
-The CacheWarmer watches a pre-defined directory for a job file.  The job file describes the HPC Cache mount addresses, export path, and path to warm.  For example, the following file is an example of a job file:
+The CacheWarmer runs as a service on the jumpbox, and watches the azure storage queue for a job entry.  The job entry describes the HPC Cache mount addresses, export path, and path to warm.  For example, the following file is an example of a job entry:
 
 ```bash
 {
@@ -89,10 +89,11 @@ cd ~/tf/src/terraform/examples/vfxt/cachewarmer/3.vfxtandcachewarmer
 
 2. If not already installed, run the following commands to install the Avere vFXT provider for Azure:
 ```bash
-mkdir -p ~/.terraform.d/plugins
-# install the vfxt released binary from https://github.com/Azure/Avere
-wget -O ~/.terraform.d/plugins/terraform-provider-avere https://github.com/Azure/Avere/releases/download/tfprovider_v0.9.31/terraform-provider-avere
-chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
+version=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name | sed -e 's/[^0-9]*\([0-9].*\)$/\1/')
+browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[0].browser_download_url)
+mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
+wget -O ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version $browser_download_url
+chmod 755 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version
 ```
 
 3. `code main.tf` to edit the local variables section at the top of the file, to customize to your preferences.  Set the warm directory

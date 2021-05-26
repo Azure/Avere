@@ -3,17 +3,17 @@ variable "resource_group_name" {
 }
 
 variable "location" {
-    description = "The Azure Region into which the jumpbox will be created."
+  description = "The Azure Region into which the jumpbox will be created."
 }
 
 variable "admin_username" {
   description = "Admin username on the jumpbox."
-  default = "azureuser"
+  default     = "azureuser"
 }
 
 variable "admin_password" {
   description = "(optional) The password used for access to the jumpbox.  If not specified, ssh_key_data needs to be set."
-  default = null
+  default     = null
 }
 
 variable "ssh_key_data" {
@@ -22,17 +22,17 @@ variable "ssh_key_data" {
 
 variable "ssh_port" {
   description = "specifies the tcp port to use for ssh"
-  default = 22
+  default     = 22
 }
 
 variable "unique_name" {
   description = "The unique name used for the jumpbox and for resource names associated with the VM."
-  default = "jumpbox"
+  default     = "jumpbox"
 }
 
 variable "vm_size" {
   description = "Size of the VM."
-  default = "Standard_D2s_v3"
+  default     = "Standard_D2s_v3"
 }
 
 variable "virtual_network_resource_group" {
@@ -49,25 +49,20 @@ variable "virtual_network_subnet_name" {
 
 variable "add_public_ip" {
   description = "specifies if the jumpbox should have a public ip"
-  default = false
+  default     = false
 }
 
 variable "build_vfxt_terraform_provider" {
   description = "specifies if the jumpbox should build the terraform provider"
-  default = true
+  default     = true
 }
 
 variable "add_role_assignments" {
   description = "specifies if the jumpbox should have a role assignment"
-  default = false
+  default     = false
 }
 
 variable "alternative_resource_groups" {
   description = "specifies alternative resource groups including those containing custom images or storage accounts"
-  default = []
-}
-
-variable "module_depends_on" {
-  default = [""]
-  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
+  default     = []
 }

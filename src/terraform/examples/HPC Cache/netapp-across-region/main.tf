@@ -1,54 +1,63 @@
 // customize the simple VM by editing the following local variables
 locals {
-    // the region of the main deployment
-    location = "eastus"
-    network_resource_group_name = "network_resource_group"
-    
-    // netapp filer details
-    filer_location = "westus2"
-    filer_resource_group_name = "filer_resource_group"
-    netapp_account_name = "netappaccount"
-    export_path = "data"
-    // possible values are Standard, Premium, Ultra
-    service_level = "Premium"
-    pool_size_in_tb = 4
-    volume_storage_quota_in_gb = 100
+  // the region of the main deployment
+  location                    = "eastus"
+  network_resource_group_name = "network_resource_group"
 
-    // vnet to vnet settings
-    vpngw_generation = "Generation1" // generation and sku defined in https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways#benchmark
-    vpngw_sku = "VpnGw2"
-    shared_key = "5v2ty45bt171p53c5h4r3dk4y"
+  // netapp filer details
+  filer_location            = "westus2"
+  filer_resource_group_name = "filer_resource_group"
+  netapp_account_name       = "netappaccount"
+  export_path               = "data"
+  // possible values are Standard, Premium, Ultra
+  service_level              = "Premium"
+  pool_size_in_tb            = 4
+  volume_storage_quota_in_gb = 100
 
-    // hpc cache details
-    hpc_cache_resource_group_name = "hpc_cache_resource_group"
+  // vnet to vnet settings
+  vpngw_generation = "Generation1" // generation and sku defined in https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways#benchmark
+  vpngw_sku        = "VpnGw2"
+  shared_key       = "5v2ty45bt171p53c5h4r3dk4y"
 
-    // HPC Cache Throughput SKU - 3 allowed values for throughput (GB/s) of the cache
-    //    Standard_2G
-    //    Standard_4G
-    //    Standard_8G
-    cache_throughput = "Standard_2G"
+  // hpc cache details
+  hpc_cache_resource_group_name = "hpc_cache_resource_group"
 
-    // HPC Cache Size - 5 allowed sizes (GBs) for the cache
-    //     3072
-    //     6144
-    //    12288
-    //    24576
-    //    49152
-    cache_size = 12288
+  // HPC Cache Throughput SKU - 3 allowed values for throughput (GB/s) of the cache
+  //  Standard_2G
+  //  Standard_4G
+  //  Standard_8G
+  cache_throughput = "Standard_2G"
 
-    // unique name for cache
-    cache_name = "uniquename"
+  // HPC Cache Size - 5 allowed sizes (GBs) for the cache
+  //   3072
+  //   6144
+  //  12288
+  //  24576
+  //  49152
+  cache_size = 12288
 
-    // usage model
-    //    WRITE_AROUND
-    //    READ_HEAVY_INFREQ
-    //    WRITE_WORKLOAD_15
-    usage_model = "WRITE_AROUND"
+  // unique name for cache
+  cache_name = "uniquename"
+
+  // usage model
+  //  WRITE_AROUND
+  //  READ_HEAVY_INFREQ
+  //  WRITE_WORKLOAD_15
+  usage_model = "WRITE_AROUND"
+}
+
+terraform {
+  required_version = ">= 0.14.0,< 0.16.0"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~>2.56.0"
+    }
+  }
 }
 
 provider "azurerm" {
-    version = "~>2.12.0"
-    features {}
+  features {}
 }
 
 ////////////////////////////////////////////////////////////////
@@ -56,9 +65,9 @@ provider "azurerm" {
 ////////////////////////////////////////////////////////////////
 
 module "network" {
-    source = "github.com/Azure/Avere/src/terraform/modules/render_network"
-    resource_group_name = local.network_resource_group_name
-    location = local.location
+  source              = "github.com/Azure/Avere/src/terraform/modules/render_network"
+  resource_group_name = local.network_resource_group_name
+  location            = local.location
 }
 
 resource "azurerm_subnet" "rendergwsubnet" {
@@ -67,7 +76,9 @@ resource "azurerm_subnet" "rendergwsubnet" {
   virtual_network_name = module.network.vnet_name
   address_prefixes     = ["10.0.0.0/24"]
 
-  depends_on = [module.network.module_depends_on_ids]
+  depends_on = [
+    module.network,
+  ]
 }
 
 resource "azurerm_resource_group" "nfsfiler" {
@@ -76,10 +87,10 @@ resource "azurerm_resource_group" "nfsfiler" {
 }
 
 resource "azurerm_virtual_network" "filervnet" {
-    name                = "filervnet"
-    address_space       = ["192.168.0.0/22"]
-    location            = azurerm_resource_group.nfsfiler.location
-    resource_group_name = azurerm_resource_group.nfsfiler.name
+  name                = "filervnet"
+  address_space       = ["192.168.0.0/22"]
+  location            = azurerm_resource_group.nfsfiler.location
+  resource_group_name = azurerm_resource_group.nfsfiler.name
 }
 
 resource "azurerm_subnet" "filergwsubnet" {
@@ -137,10 +148,10 @@ resource "azurerm_netapp_volume" "netappvolume" {
   storage_quota_in_gb = local.volume_storage_quota_in_gb
 
   export_policy_rule {
-    rule_index = 1
-    allowed_clients = ["0.0.0.0/0"]
+    rule_index        = 1
+    allowed_clients   = ["0.0.0.0/0"]
     protocols_enabled = ["NFSv3"]
-    unix_read_write = true
+    unix_read_write   = true
   }
 }
 
@@ -182,7 +193,9 @@ resource "azurerm_public_ip" "rendergwpublicip" {
 
   allocation_method = "Dynamic"
 
-  depends_on = [module.network.vnet_id]
+  depends_on = [
+    module.network,
+  ]
 }
 
 resource "azurerm_virtual_network_gateway" "rendervpngw" {
@@ -201,7 +214,10 @@ resource "azurerm_virtual_network_gateway" "rendervpngw" {
     subnet_id                     = azurerm_subnet.rendergwsubnet.id
   }
 
-  depends_on = [azurerm_subnet.filergwsubnet, azurerm_subnet.netapp]
+  depends_on = [
+    azurerm_subnet.filergwsubnet,
+    azurerm_subnet.netapp,
+  ]
 }
 
 resource "azurerm_virtual_network_gateway_connection" "filer_to_render" {
@@ -258,21 +274,24 @@ resource "azurerm_hpc_cache_nfs_target" "nfs_targets" {
     target_path    = ""
   }
 
-  depends_on = [azurerm_virtual_network_gateway_connection.render_to_filer, azurerm_virtual_network_gateway_connection.filer_to_render]
+  depends_on = [
+    azurerm_virtual_network_gateway_connection.render_to_filer,
+    azurerm_virtual_network_gateway_connection.filer_to_render,
+  ]
 }
 
 output "netapp_addresses" {
-    value = azurerm_netapp_volume.netappvolume.mount_ip_addresses
+  value = azurerm_netapp_volume.netappvolume.mount_ip_addresses
 }
 
 output "netapp_export" {
-    value = "/${local.export_path}"
+  value = "/${local.export_path}"
 }
 
 output "hpccache_mount_addresses" {
-    value = azurerm_hpc_cache.hpc_cache.mount_addresses
+  value = azurerm_hpc_cache.hpc_cache.mount_addresses
 }
 
 output "hpccache_export_namespace" {
-    value = tolist(azurerm_hpc_cache_nfs_target.nfs_targets.namespace_junction)[0].namespace_path
+  value = tolist(azurerm_hpc_cache_nfs_target.nfs_targets.namespace_junction)[0].namespace_path
 }

@@ -1,6 +1,6 @@
 # HPC Cache Deployment with no Filers
 
-This examples configures a render network, controller, and HPC Cache without any filers as shown in the diagram below:
+This example configures a render network and HPC Cache without any filers as shown in the diagram below:
 
 ![The architecture](../../../../../docs/images/terraform/nofiler-hpcc.png)
 

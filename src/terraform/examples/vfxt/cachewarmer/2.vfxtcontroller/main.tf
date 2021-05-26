@@ -25,9 +25,18 @@ locals {
   vfxt_network_resource_group_name = ""
 }
 
+terraform {
+  required_version = ">= 0.14.0,< 0.16.0"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~>2.56.0"
+    }
+  }
+}
+
 provider "azurerm" {
-    version = "~>2.12.0"
-    features {}
+  features {}
 }
 
 // the vfxt controller
@@ -48,15 +57,15 @@ module "vfxtcontroller" {
 }
 
 output "vfxt_resource_group_name" {
-  value = "\"${local.vfxt_resource_group_name}\""
+  value = local.vfxt_resource_group_name
 }
 
 output "controller_username" {
-  value = "\"${module.vfxtcontroller.controller_username}\""
+  value = module.vfxtcontroller.controller_username
 }
 
 output "controller_address" {
-  value = "\"${module.vfxtcontroller.controller_address}\""
+  value = module.vfxtcontroller.controller_address
 }
 
 output "ssh_port" {

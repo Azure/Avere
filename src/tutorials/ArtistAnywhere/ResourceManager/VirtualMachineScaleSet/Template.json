@@ -1,0 +1,132 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualMachineScaleSet": {
+      "type": "object"
+    },
+    "virtualNetwork": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "virtualMachineScaleSetApiVersion": "2021-03-01"
+  },
+  "functions": [
+    {
+      "namespace": "fx",
+      "members": {
+        "GetLinuxConfig": {
+          "parameters": [
+            {
+              "name": "sshPublicKeyData",
+              "type": "string"
+            },
+            {
+              "name": "adminUserName",
+              "type": "string"
+            }
+          ],
+          "output": {
+            "type": "string",
+            "value": "[if(equals(parameters('sshPublicKeyData'), ''), 'null', concat('{\"ssh\": {\"publicKeys\": [{\"path\": \"/home/', parameters('adminUsername'), '/.ssh/authorized_keys\", \"keyData\": \"', parameters('sshPublicKeyData'), '\"}]}}'))]"
+          }
+        }
+      }
+    }
+  ],
+  "resources": [
+    {
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "[parameters('virtualMachineScaleSet').name]",
+      "apiVersion": "[variables('virtualMachineScaleSetApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "[parameters('virtualMachineScaleSet').machine.size]",
+        "capacity": "[parameters('virtualMachineScaleSet').machine.count]"
+      },
+      "identity": {
+        "type": "[parameters('virtualMachineScaleSet').managedIdentity.type]",
+        "userAssignedIdentities": "[if(equals(parameters('virtualMachineScaleSet').managedIdentity.type, 'UserAssigned'), json(concat('{\"', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('virtualMachineScaleSet').managedIdentity.name), '\": {}}')), json('null'))]"
+      },
+      "properties": {
+        "virtualMachineProfile": {
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "networkInterface",
+                "properties": {
+                  "primary": true,
+                  "ipConfigurations": [
+                    {
+                      "name": "primary",
+                      "properties": {
+                        "subnet": {
+                          "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "storageProfile": {
+            "imageReference": {
+              "id": "[if(not(equals(parameters('virtualMachineScaleSet').image.name, '')), resourceId(parameters('virtualMachineScaleSet').image.resourceGroupName, 'Microsoft.Compute/images', parameters('virtualMachineScaleSet').image.name), if(not(equals(parameters('virtualMachineScaleSet').image.galleryName, '')), resourceId(parameters('virtualMachineScaleSet').image.resourceGroupName, 'Microsoft.Compute/galleries/images/versions', parameters('virtualMachineScaleSet').image.galleryName, parameters('virtualMachineScaleSet').image.definitionName, parameters('virtualMachineScaleSet').image.versionId), json('null')))]",
+              "publisher": "[if(not(equals(parameters('virtualMachineScaleSet').image.publisher, '')), parameters('virtualMachineScaleSet').image.publisher, json('null'))]",
+              "offer": "[if(not(equals(parameters('virtualMachineScaleSet').image.publisher, '')), parameters('virtualMachineScaleSet').image.offer, json('null'))]",
+              "sku": "[if(not(equals(parameters('virtualMachineScaleSet').image.publisher, '')), parameters('virtualMachineScaleSet').image.sku, json('null'))]",
+              "version": "[if(not(equals(parameters('virtualMachineScaleSet').image.publisher, '')), parameters('virtualMachineScaleSet').image.version, json('null'))]"
+            },
+            "osDisk": {
+              "createOption": "FromImage",
+              "diffDiskSettings": "[if(parameters('virtualMachineScaleSet').osDisk.enableEphemeral, json('{\"option\": \"Local\"}'), json('null'))]",
+              "managedDisk": {
+                "storageAccountType": "[parameters('virtualMachineScaleSet').osDisk.storageAccountType]"
+              }
+            }
+          },
+          "osProfile": {
+            "computerNamePrefix": "[parameters('virtualMachineScaleSet').name]",
+            "adminUsername": "[parameters('virtualMachineScaleSet').login.adminUsername]",
+            "adminPassword": "[parameters('virtualMachineScaleSet').login.adminPassword]",
+            "linuxConfiguration": "[json(fx.GetLinuxConfig(parameters('virtualMachineScaleSet').login.sshPublicKeyData, parameters('virtualMachineScaleSet').login.adminUsername))]"
+          },
+          "priority": "[parameters('virtualMachineScaleSet').machine.priority]",
+          "evictionPolicy": "[parameters('virtualMachineScaleSet').machine.evictionPolicy]",
+          "billingProfile": {
+            "maxPrice": "[parameters('virtualMachineScaleSet').machine.maxPrice]"
+          }
+        },
+        "upgradePolicy": {
+          "mode": "[parameters('virtualMachineScaleSet').upgradePolicy]"
+        },
+        "overprovision": "[parameters('virtualMachineScaleSet').overprovision]",
+        "singlePlacementGroup": "[parameters('virtualMachineScaleSet').singlePlacementGroup]",
+        "platformFaultDomainCount": "[parameters('virtualMachineScaleSet').faultDomainCount]"
+      }
+    },
+    {
+      "condition": "[parameters('virtualMachineScaleSet').scriptExtension.enable]",
+      "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
+      "name": "[concat(parameters('virtualMachineScaleSet').name, '/extension')]",
+      "apiVersion": "[variables('virtualMachineScaleSetApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachineScaleSet').name)]"
+      ],
+      "properties": {
+        "publisher": "[if(equals(reference(resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachineScaleSet').name), variables('virtualMachineScaleSetApiVersion')).storageProfile.osDisk.osType, 'Windows'), 'Microsoft.Compute', 'Microsoft.Azure.Extensions')]",
+        "type": "[if(equals(reference(resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachineScaleSet').name), variables('virtualMachineScaleSetApiVersion')).storageProfile.osDisk.osType, 'Windows'), 'CustomScriptExtension', 'CustomScript')]",
+        "typeHandlerVersion": "[if(equals(reference(resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachineScaleSet').name), variables('virtualMachineScaleSetApiVersion')).storageProfile.osDisk.osType, 'Windows'), '1.10', '2.1')]",
+        "autoUpgradeMinorVersion": true,
+        "protectedSettings": {
+          "commandToExecute": "[if(equals(reference(resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachineScaleSet').name), variables('virtualMachineScaleSetApiVersion')).storageProfile.osDisk.osType, 'Windows'), format('PowerShell -ExecutionPolicy Unrestricted -EncodedCommand {0}', parameters('virtualMachineScaleSet').scriptExtension.command), format('echo {0} | base64 --decode | tr -d \r | {1} /bin/bash', parameters('virtualMachineScaleSet').scriptExtension.command, parameters('virtualMachineScaleSet').scriptExtension.parameters))]"
+        }
+      }
+    }
+  ],
+  "outputs": {
+  }
+}

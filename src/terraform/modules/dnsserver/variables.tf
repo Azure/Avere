@@ -56,12 +56,24 @@ variable "dns_server" {
   description = "A space separated list of dns servers to forward to.  At least one dns server must be specified"
 }
 
+variable "excluded_subnet_cidrs" {
+  description = "the list of excluded subnets from spoofing.  The Cache should be in this subnet."
+  default = []
+}
+
+variable "avere_address_list" {
+  description = "the list of addresses from the Avere vserver."
+  default = []
+}
+
 variable "avere_first_ip_addr" {
   description = "the first ip address of the Avere vserver."
+  default = ""
 }
 
 variable "avere_ip_addr_count" {
   description = "the count of ip addresses on the vserver."
+  default = 0
 }
 
 variable "avere_first_ip_addr2" {
@@ -106,9 +118,4 @@ variable "dns_max_ttl_seconds" {
 variable "avere_filer_alternate_fqdn" {
   default = []
   description = "alternate fqdn of the avere and is useful to point other names at Avere or can be used to emulate a domain search list."
-}
-
-variable "module_depends_on" {
-  default = [""]
-  description = "depends on workaround discussed in https://discuss.hashicorp.com/t/tips-howto-implement-module-depends-on-emulation/2305/2"
 }

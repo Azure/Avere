@@ -25,7 +25,10 @@ function retrycmd_if_failure() {
 }
 
 function update_linux() {
-    retrycmd_if_failure 12 5 yum -y install wget unzip git nfs-utils tmux
+    retrycmd_if_failure 12 5 yum -y install wget unzip git nfs-utils tmux nc
+    retrycmd_if_failure 12 5 yum -y install epel-release
+    retrycmd_if_failure 12 5 yum -y install python-pip
+    retrycmd_if_failure 3 5 pip install hstk
 }
 
 function install_golang() {
@@ -58,8 +61,9 @@ function pull_avere_github() {
     go build
     # build windows
     GOOS=windows GOARCH=amd64 go build
-    mkdir -p $AZURE_HOME_DIR/.terraform.d/plugins
-    cp terraform-provider-avere $AZURE_HOME_DIR/.terraform.d/plugins
+    version=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name | sed -e 's/[^0-9]*\([0-9].*\)$/\1/')
+    mkdir -p $AZURE_HOME_DIR/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
+    cp terraform-provider-avere $AZURE_HOME_DIR/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
     export HOME=$OLD_HOME
     # re-enable exit on error
     set -e
@@ -78,9 +82,9 @@ gpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/azu
 
 function install_terraform() {
     cd $AZURE_HOME_DIR/.
-    retrycmd_if_failure 12 5 wget https://releases.hashicorp.com/terraform/0.12.24/terraform_0.12.24_linux_amd64.zip
-    unzip terraform_0.12.24_linux_amd64.zip -d /usr/local/bin
-    rm terraform_0.12.24_linux_amd64.zip
+    retrycmd_if_failure 12 5 wget https://releases.hashicorp.com/terraform/0.15.0/terraform_0.15.0_linux_amd64.zip
+    unzip terraform_0.15.0_linux_amd64.zip -d /usr/local/bin
+    rm terraform_0.15.0_linux_amd64.zip
 }
 
 function main() {

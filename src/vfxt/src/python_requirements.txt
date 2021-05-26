@@ -152,7 +152,7 @@ idna==2.8
 invoke==1.2.0
 ipaddress==1.0.22
 isodate==0.6.0
-Jinja2==2.10.1
+Jinja2==2.11.3
 jmespath==0.9.3
 keyring==13.2.1
 knack==0.6.2
@@ -171,14 +171,14 @@ psutil==5.6.6
 pyasn1==0.4.5
 pycparser==2.19
 pydocumentdb==2.3.3
-Pygments==2.4.2
+Pygments==2.7.4
 PyJWT==1.6.4
 PyNaCl==1.2.1
 pyOpenSSL==19.0.0
 pyperclip==1.7.0
 python-dateutil==2.8.0
 pytz==2019.1
-PyYAML==5.1.1
+PyYAML==5.4
 requests==2.22.0
 requests-oauthlib==1.2.0
 scandir==1.10.0
@@ -187,7 +187,7 @@ six==1.12.0
 sshtunnel==0.1.4
 tabulate==0.8.3
 typing==3.6.6
-urllib3==1.25.3
+urllib3==1.25.8
 virtualenv==16.0.0
 vsts==0.1.25
 vsts-cd-manager==1.0.2

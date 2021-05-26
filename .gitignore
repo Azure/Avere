@@ -341,3 +341,6 @@ pytest.ini
 # Terraform .tfstate files
 *.tfstate
 *.tfstate.*
+
+# Terrafom lock file (for version 0.14+)
+.terraform.lock.hcl

@@ -1,8 +1,8 @@
 // customize the simple VM by adjusting the following local variables
 locals {
   resource_group_name = "houdini_windows_vms_rg"
-  unique_name = "unique"
-  vm_size = "Standard_D4s_v3"
+  unique_name         = "unique"
+  vm_size             = "Standard_D4s_v3"
   # choose one of the following windows versions
   source_image_reference = local.windows_server_2016
   #source_image_reference = local.windows_server_2019
@@ -12,7 +12,7 @@ locals {
   license_type = "None"
   # license_type = "Windows_Client"
   # license_type = "Windows_Server"
-  add_public_ip = true
+  add_public_ip     = true
   vm_admin_username = "azureuser"
   // use either SSH Key data or admin password, if ssh_key_data is specified
   // then admin_password is ignored
@@ -20,20 +20,20 @@ locals {
 
   // network, set static and IP if using a DC
   use_static_private_ip_address = false
-  private_ip_address = "" // for example "10.0.3.254" could be use for domain controller
+  private_ip_address            = "" // for example "10.0.3.254" could be use for domain controller
 
   // replace below variables with the infrastructure variables from 0.network
-  location = ""
+  location                       = ""
   vnet_render_clients1_subnet_id = ""
-  
+
   // replace below variables with the cache variables from the nfs filer or cache (in case of blob backed storage)
   mount_addresses = []
-  mount_path = ""
+  mount_path      = ""
 
   // advanced scenarios: the below variables rarely need to change  
   mount_address_csv = join(",", tolist(local.mount_addresses))
-  target_path = "c:\\\\cloudcache"
-  rdp_port = 3389
+  target_path       = "c:\\\\cloudcache"
+  rdp_port          = 3389
 
   // the following are the arguments to be passed to the custom script
   windows_custom_script_arguments = "$arguments = ' -MountAddressesCSV ''${local.mount_address_csv}'' -MountPath ''${local.mount_path}'' -TargetPath ''${local.target_path}'' -RDPPort ${local.rdp_port} '  ; "
@@ -62,12 +62,20 @@ locals {
     offer     = "Windows-10"
     sku       = "20h2-pro"
     #sku       = "20h1-entn" // uncomment for 2004
-    version   = "latest"
+    version = "latest"
+  }
+}
+terraform {
+  required_version = ">= 0.14.0,< 0.16.0"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~>2.56.0"
+    }
   }
 }
 
 provider "azurerm" {
-  version = "~>2.12.0"
   features {}
 }
 
@@ -77,10 +85,10 @@ resource "azurerm_resource_group" "win" {
 }
 
 resource "azurerm_public_ip" "vm" {
-  name                         = "${local.unique_name}-publicip"
-  location                     = local.location
-  resource_group_name          = azurerm_resource_group.win.name
-  allocation_method            = "Static"
+  name                = "${local.unique_name}-publicip"
+  location            = local.location
+  resource_group_name = azurerm_resource_group.win.name
+  allocation_method   = "Static"
 
   count = local.add_public_ip ? 1 : 0
 }
@@ -110,7 +118,7 @@ resource "azurerm_windows_virtual_machine" "vm" {
   size                  = local.vm_size
   network_interface_ids = [azurerm_network_interface.vm.id]
   license_type          = local.license_type
-  
+
   os_disk {
     name                 = "${local.unique_name}-osdisk"
     caching              = "ReadWrite"
@@ -154,5 +162,5 @@ output "username" {
 }
 
 output "vm_address" {
-  value = "${local.add_public_ip ? azurerm_public_ip.vm[0].ip_address : azurerm_network_interface.vm.ip_configuration[0].private_ip_address}"
+  value = local.add_public_ip ? azurerm_public_ip.vm[0].ip_address : azurerm_network_interface.vm.ip_configuration[0].private_ip_address
 }
