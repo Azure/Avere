@@ -8,11 +8,11 @@ As a simple example, the following image was rendered in Azure via [Azure HPC Vi
 
 ## Solution Architecture
 
-The following overview diagram depicts the Azure Artist Anywhere solution architecture, including on-premises storage asset caching.
+The following overview diagram depicts the Azure Artist Anywhere solution architecture, including multiple options for asset storage.
 
 ![](https://bit1.blob.core.windows.net/doc/AzureArtistAnywhere/SolutionArchitecture.png?sv=2020-04-08&st=2021-05-29T22%3A07%3A54Z&se=2222-05-30T22%3A07%3A00Z&sr=c&sp=rl&sig=0BEFPK7gDh3D57FW6FTdOb8l6bISbtjPBUm3asmzGQs%3D)
 
-The following Microsoft Azure services and 3rd-party software are integrated within the Azure Artist Anywhere rendering solution.
+The integration of the following Microsoft Azure services and 3rd-party software enables the Azure Artist Anywhere rendering solution.
 
 <table>
     <tr>
@@ -25,7 +25,7 @@ The following Microsoft Azure services and 3rd-party software are integrated wit
             <a href="https://docs.microsoft.com/azure/storage/blobs/storage-blobs-overview" target="_blank">Objects</a>)
         </td>
         <td>
-            <a href="https://docs.microsoft.com/azure/virtual-machines" target="_blank">Azure Virtual Machines</a> (<a href="https://docs.microsoft.com/azure/virtual-machines/linux/overview" target="_blank">Linux</a>, <a href="https://docs.microsoft.com/azure/virtual-machines/windows/overview" target="_blank">Windows</a>)
+            <a href="https://docs.microsoft.com/azure/virtual-machines" target="_blank">Azure Virtual Machines</a><br/>(<a href="https://docs.microsoft.com/azure/virtual-machines/linux/overview" target="_blank">Linux</a>, <a href="https://docs.microsoft.com/azure/virtual-machines/windows/overview" target="_blank">Windows</a>)
         </td>
         <td>
             <a href="https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview" target="_blank">Azure HPC Cache</a>
@@ -77,7 +77,7 @@ The following Microsoft Azure services and 3rd-party software are integrated wit
 
 ## Deployment Modules
 
-The following Microsoft Azure resource templates and scripts define the Azure Artist Anywhere deployment modules. For individual and self-contained module deployment automation, refer to the [Resource Manager](ResourceManager) folder.
+Azure Artist Anywhere is composed from the following Microsoft Azure resource templates and deployment scripts.
 
 | *Base Framework* | *Storage Cache* | *Image Library* |
 | :--------------- | :-------------- | :-------------- |
