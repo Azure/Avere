@@ -1,25 +1,48 @@
 param (
-    # Set an Azure resource group naming prefix (with alphanumeric, periods, underscores, hyphens or parenthesis only)
-    [string] $resourceGroupNamePrefix = "Artist.Anywhere",
+  $computeRegionName = "",    # List available regions via Azure CLI (az account list-locations --query [].name)
+  $resourceGroupPrefix = "",  # Alphanumeric characters, periods, underscores, hyphens and parentheses allowed
 
-    # Set an Azure region name for compute resources (e.g., Image Gallery, Virtual Machine Scale Set, HPC Cache, etc.)
-    [string] $computeRegionName = "WestUS2",
+  $computeNetworkName = "",
+  $networkResourceGroupName = "",
 
-    # Set an Azure region name for storage resources (e.g., Storage Network, Storage Account, File Share/Container, etc.)
-    [string] $storageRegionName = "EastUS2",
-
-    # Set to true to deploy Azure VPN Gateway (https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways)
-    [boolean] $networkGatewayDeploy = $false
+  $managedIdentityName = "",
+  $managedIdentityResourceGroupName = ""
 )
 
-$rootDirectory = (Get-Item -Path $PSScriptRoot).Parent.FullName
+$modulePath = $PSScriptRoot
+Import-Module "$modulePath/../Functions.psm1"
 
-Import-Module "$rootDirectory/Deploy.psm1"
-Import-Module "$rootDirectory/BaseFramework/Deploy.psm1"
-Import-Module "$rootDirectory/ImageLibrary/Deploy.psm1"
+# (07) Image Gallery
+$moduleName = "(07) Image Gallery"
+New-TraceMessage $moduleName $false
 
-$baseFramework = Get-BaseFramework $rootDirectory $resourceGroupNamePrefix $computeRegionName $storageRegionName $networkGatewayDeploy
-ConvertTo-Json -InputObject $baseFramework | Write-Host
+$templateResourcesPath = "$modulePath/07.ImageGallery.json"
+$templateParametersPath = "$modulePath/07.ImageGallery.Parameters.json"
 
-$imageLibrary = Get-ImageLibrary $rootDirectory $baseFramework $resourceGroupNamePrefix $computeRegionName
-ConvertTo-Json -InputObject $imageLibrary | Write-Host
+$principalId = az identity show --resource-group $managedIdentityResourceGroupName --name $managedIdentityName --query principalId --output tsv
+Set-OverrideParameter $templateParametersPath "imageGallery" "managedIdentityPrincipalId" $principalId
+Set-OverrideParameter $templateParametersPath "imageGallery" "networkResourceGroupName" $networkResourceGroupName
+
+$resourceGroupName = Set-ResourceGroup $computeRegionName $resourceGroupPrefix ".Gallery"
+$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResourcesPath --parameters $templateParametersPath) | ConvertFrom-Json
+
+$imageGallery = $groupDeployment.properties.outputs.imageGallery.value
+
+New-TraceMessage $moduleName $true
+
+# (08) Container Registry
+$moduleName = "(08) Container Registry"
+New-TraceMessage $moduleName $false
+
+$templateResourcesPath = "$modulePath/08.ContainerRegistry.json"
+$templateParametersPath = "$modulePath/08.ContainerRegistry.Parameters.json"
+
+Set-OverrideParameter $templateParametersPath "virtualNetwork" "name" $computeNetworkName
+Set-OverrideParameter $templateParametersPath "virtualNetwork" "resourceGroupName" $networkResourceGroupName
+
+$resourceGroupName = Set-ResourceGroup $computeRegionName $resourceGroupPrefix ".Registry"
+$groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResourcesPath --parameters $templateParametersPath) | ConvertFrom-Json
+
+$containerRegistry = $groupDeployment.properties.outputs.containerRegistry.value
+
+New-TraceMessage $moduleName $true

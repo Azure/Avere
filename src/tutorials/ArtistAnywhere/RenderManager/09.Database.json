@@ -1,0 +1,63 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "postgreSql": {
+      "type": "object"
+    },
+    "dataAdminUsername": {
+      "type": "string"
+    },
+    "dataAdminPassword": {
+      "type": "string"
+    },
+    "virtualNetwork": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "postgreSqlApiVersion": "2020-11-05-preview"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers",
+      "name": "[parameters('postgreSql').name]",
+      "apiVersion": "[variables('postgreSqlApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "[parameters('postgreSql').size]",
+        "tier": "[parameters('postgreSql').tier]"
+      },
+      "properties": {
+        "version": "[parameters('postgreSql').sqlVersion]",
+        "storageProfile": {
+          "storageMB": "[parameters('postgreSql').storage.sizeMB]",
+          "backupRetentionDays": "[parameters('postgreSql').storage.backupRetentionDays]"
+        },
+        "administratorLogin": "[parameters('dataAdminUsername')]",
+        "administratorLoginPassword": "[parameters('dataAdminPassword')]",
+        "delegatedSubnetArguments": {
+          "subnetArmResourceId": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "dataTierHost": {
+      "type": "string",
+      "value": "[concat(parameters('postgreSql').name, '.postgres.database.azure.com')]"
+    },
+    "dataTierPort": {
+      "type": "int",
+      "value": 5432
+    },
+    "dataTierAdminUsername": {
+      "type": "string",
+      "value": "[parameters('dataAdminUsername')]"
+    },
+    "dataTierAdminPassword": {
+      "type": "string",
+      "value": "[parameters('dataAdminPassword')]"
+    }
+  }
+}

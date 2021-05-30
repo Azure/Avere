@@ -1,0 +1,122 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "computeNetwork": {
+      "value": {
+        "name": "Compute",
+        "regionName": "WestUS2",
+        "addressPrefixes": [
+          "10.1.0.0/20"
+        ],
+        "enableDomainRegistration": true,
+        "subnets": [
+          {
+            "name": "Farm",
+            "properties": {
+              "addressPrefix": "10.1.0.0/22",
+              "privateEndpointNetworkPolicies": "Disabled",
+              "privateLinkServiceNetworkPolicies": "Disabled"
+            }
+          },
+          {
+            "name": "Workstation",
+            "properties": {
+              "addressPrefix": "10.1.4.0/22",
+              "privateEndpointNetworkPolicies": "Disabled",
+              "privateLinkServiceNetworkPolicies": "Disabled"
+            }
+          },
+          {
+            "name": "Data",
+            "properties": {
+              "addressPrefix": "10.1.8.0/24",
+              "privateEndpointNetworkPolicies": "Disabled",
+              "privateLinkServiceNetworkPolicies": "Disabled",
+              "delegations": [
+                {
+                  "name": "SQL",
+                  "properties": {
+                    "serviceName": "Microsoft.DBforPostgreSQL/flexibleServers"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "Storage",
+            "properties": {
+              "addressPrefix": "10.1.9.0/24",
+              "privateEndpointNetworkPolicies": "Disabled",
+              "privateLinkServiceNetworkPolicies": "Disabled",
+              "serviceEndpoints": [
+                {
+                  "service": "Microsoft.Storage"
+                }
+              ]
+            }
+          },
+          {
+            "name": "Cache",
+            "properties": {
+              "addressPrefix": "10.1.10.0/24",
+              "privateEndpointNetworkPolicies": "Disabled",
+              "privateLinkServiceNetworkPolicies": "Disabled",
+              "serviceEndpoints": [
+                {
+                  "service": "Microsoft.Storage"
+                }
+              ]
+            }
+          },
+          {
+            "name": "GatewaySubnet",
+            "properties": {
+              "addressPrefix": "10.1.11.0/24"
+            }
+          }
+        ]
+      }
+    },
+    "storageNetwork": {
+      "value": {
+        "name": "Storage",
+        "regionName": "",
+        "addressPrefixes": [
+          "10.0.0.0/20"
+        ],
+        "enableDomainRegistration": true,
+        "subnets": [
+          {
+            "name": "Storage",
+            "properties": {
+              "addressPrefix": "10.0.0.0/24",
+              "privateEndpointNetworkPolicies": "Disabled",
+              "privateLinkServiceNetworkPolicies": "Disabled"
+            }
+          },
+          {
+            "name": "NetApp",
+            "properties": {
+              "addressPrefix": "10.0.1.0/24",
+              "delegations": [
+                {
+                  "name": "Volumes",
+                  "properties": {
+                    "serviceName": "Microsoft.NetApp/volumes"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "GatewaySubnet",
+            "properties": {
+              "addressPrefix": "10.0.2.0/24"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

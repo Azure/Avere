@@ -1,0 +1,170 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "keyVault": {
+      "type": "object"
+    },
+    "virtualNetwork": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "roleAssignmentApiVersion": "2021-04-01-preview",
+    "keyVaultApiVersion": "2021-04-01-preview",
+    "networkApiVersion": "2021-02-01",
+    "dnsZoneApiVersion": "2020-06-01",
+    "dnsZoneNameKeyVault": "privatelink.vaultcore.azure.net"
+  },
+  "functions": [
+  ],
+  "resources": [
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "name": "[parameters('keyVault').name]",
+      "apiVersion": "[variables('keyVaultApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "sku": {
+          "name": "[parameters('keyVault').tier]",
+          "family": "A"
+        },
+        "tenantId": "[subscription().tenantId]",
+        "enabledForDeployment": "[parameters('keyVault').enableForDeployment]",
+        "enabledForDiskEncryption": "[parameters('keyVault').enableForDiskEncryption]",
+        "enabledForTemplateDeployment": "[parameters('keyVault').enableForTemplateDeployment]",
+        "enableRbacAuthorization": "[parameters('keyVault').enableRbacAuthorization]",
+        "enablePurgeProtection": "[if(parameters('keyVault').enablePurgeProtection, true(), json('null'))]",
+        "softDeleteRetentionInDays": "[parameters('keyVault').softDeleteRetentionDays]",
+        "networkAcls": {
+          "defaultAction": "Deny",
+          "bypass": "AzureServices",
+          "ipRules": "[parameters('virtualNetwork').firewallAddressRules]"
+        }
+      }
+    },
+    {
+      "type":"Microsoft.KeyVault/vaults/secrets",
+      "name": "[concat(parameters('keyVault').name, '/', parameters('keyVault').secrets[copyIndex()].name)]",
+      "apiVersion": "[variables('keyVaultApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn":[
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name)]"
+      ],
+      "properties": {
+        "value": "[parameters('keyVault').secrets[copyIndex()].value]"
+      },
+      "copy": {
+        "name": "secrets",
+        "count": "[length(parameters('keyVault').secrets)]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/providers/roleAssignments",
+      "name": "[concat(parameters('keyVault').name, '/Microsoft.Authorization/', guid('Key Vault Administrator', parameters('keyVault').name))]",
+      "apiVersion": "[variables('roleAssignmentApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn":[
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name)]"
+      ],
+      "properties": {
+        "roleDefinitionId": "[concat(resourceGroup().id, '/providers/Microsoft.Authorization/roleDefinitions/', '00482a5a-887f-4fb3-b363-3b7fe8e74483')]",
+        "principalId": "[parameters('keyVault').adminUserPrincipalId]",
+        "principalType": "User"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/providers/roleAssignments",
+      "name": "[concat(parameters('keyVault').name, '/Microsoft.Authorization/', guid('Key Vault Secrets User', parameters('keyVault').name))]",
+      "apiVersion": "[variables('roleAssignmentApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn":[
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name)]"
+      ],
+      "properties": {
+        "roleDefinitionId": "[concat(resourceGroup().id, '/providers/Microsoft.Authorization/roleDefinitions/', '4633458b-17de-408a-b874-0445c86b69e6')]",
+        "principalId": "[parameters('keyVault').managedIdentityPrincipalId]",
+        "principalType": "ServicePrincipal"
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones",
+      "name": "[variables('dnsZoneNameKeyVault')]",
+      "apiVersion": "[variables('dnsZoneApiVersion')]",
+      "location": "global",
+      "properties": {
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+      "name": "[concat(variables('dnsZoneNameKeyVault'), '/', parameters('virtualNetwork').name)]",
+      "apiVersion": "[variables('dnsZoneApiVersion')]",
+      "location": "global",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneNameKeyVault'))]"
+      ],
+      "properties": {
+        "virtualNetwork": {
+          "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks', parameters('virtualNetwork').name)]"
+        },
+        "registrationEnabled": "[parameters('virtualNetwork').enableDnsRegistration]"
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints",
+      "name": "[parameters('keyVault').name]",
+      "apiVersion": "[variables('networkApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name)]"
+      ],
+      "properties": {
+        "subnet": {
+          "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "vault",
+            "properties": {
+              "privateLinkServiceId": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name)]",
+              "groupIds": [
+                "vault"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+      "name": "[concat(parameters('keyVault').name, '/vault')]",
+      "apiVersion": "[variables('networkApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/privateEndpoints', parameters('keyVault').name)]",
+        "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneNameKeyVault'))]"
+      ],
+      "properties": {
+        "privateDnsZoneConfigs": [
+          {
+            "name": "primary",
+            "properties": {
+              "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneNameKeyVault'))]"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "keyVault": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('keyVault').name]",
+        "resourceGroupName": "[resourceGroup().name]",
+        "secrets": "[parameters('keyVault').secrets]",
+        "id": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVault').name)]"
+      }
+    }
+  }
+}

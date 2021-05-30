@@ -1,0 +1,34 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "managedIdentity": {
+      "value": {
+        "name": "RenderPipeline",
+        "resourceGroupName": "ArtistAnywhere"
+      }
+    },
+    "containerRegistry": {
+      "value": {
+        "name": "RenderPipeline",
+        "tier": "Premium",
+        "enableAdminUser": true,
+        "enableDataEndpoint": true
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "Compute",
+        "subnetName": "Farm",
+        "resourceGroupName": "ArtistAnywhere.Network",
+        "enableDnsRegistration": false,
+        "firewallAddressRules": [
+          {
+            "action": "Allow",
+            "value": "47.153.25.140"
+          }
+        ]
+      }
+    }
+  }
+}

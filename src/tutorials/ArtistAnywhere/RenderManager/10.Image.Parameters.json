@@ -1,0 +1,83 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "managedIdentity": {
+      "value": {
+        "name": "RenderPipeline",
+        "resourceGroupName": "ArtistAnywhere"
+      }
+    },
+    "imageGallery": {
+      "value": {
+        "name": "RenderPipeline",
+        "resourceGroupName": "ArtistAnywhere.Gallery"
+      }
+    },
+    "imageTemplates": {
+      "value": [
+        {
+          "deploy": true,
+          "name": "RenderManagerLC",
+          "imageDefinitionName": "Linux",
+          "imageSourceType": "PlatformImage",
+          "imageSourceVersion": "latest",
+          "imageOutputVersion": "1.0.0",
+          "imageStorageAccount": {
+            "type": "Standard_LRS"
+          },
+          "machineProfile": {
+            "size": "Standard_D4s_v3",
+            "osDiskSizeGB": 0
+          },
+          "buildTimeoutMinutes": 90,
+          "buildCustomization": [
+            {
+              "type": "Shell",
+              "scriptUri": "https://hpc01.blob.core.windows.net/script/RenderManager/Linux/10.Image.sh"
+            },
+            {
+              "type": "File",
+              "sourceUri": "https://hpc01.blob.core.windows.net/script/RenderManager/Linux/11.Machine.sh",
+              "destination": "/tmp/11.Machine.sh"
+            }
+          ]
+        },
+        {
+          "deploy": false,
+          "name": "RenderManagerWC",
+          "imageDefinitionName": "WindowsServer",
+          "imageSourceType": "PlatformImage",
+          "imageSourceVersion": "latest",
+          "imageOutputVersion": "1.0.0",
+          "imageStorageAccount": {
+            "type": "Standard_LRS"
+          },
+          "machineProfile": {
+            "size": "Standard_D4s_v3",
+            "osDiskSizeGB": 0
+          },
+          "buildTimeoutMinutes": 90,
+          "buildCustomization": [
+            {
+              "type": "PowerShell",
+              "scriptUri": "https://hpc01.blob.core.windows.net/script/RenderManager/Windows/10.Image.ps1"
+            },
+            {
+              "type": "File",
+              "sourceUri": "https://hpc01.blob.core.windows.net/script/RenderManager/Windows/11.Machine.ps1",
+              "destination": "C:\\Windows\\Temp\\11.Machine.ps1"
+            }
+          ]
+        }
+      ]
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "Compute",
+        "subnetName": "Farm",
+        "resourceGroupName": "ArtistAnywhere.Network"
+      }
+    }
+  }
+}
