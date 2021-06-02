@@ -9,7 +9,6 @@ When you encounter any issue with M&E rendering:
     1. **HPC Cache** - use the [HPC Cache support process](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-support-ticket)
     1. **Avere vFXT for Azure** - use the [Avere vFXT for Azure support Process](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-open-ticket#open-a-support-ticket-for-your-avere-vfxt)
     3. **Other** use the process [Create an Azure support request](https://docs.microsoft.com/en-us/azure/azure-portal/supportability/how-to-create-azure-support-request), and try to submit from the resource impacted.
-    1. If this is a vFXT issue, submit a ticket per the [vFXT support instructions](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-open-ticket#open-a-support-ticket-for-your-avere-vfxt)
 
 2. Before submitting a ticket to support do the following:
     1. if you business is blocked, please set to SEV A, and briefly describe in the description how your business is blocked.
