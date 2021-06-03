@@ -1,0 +1,64 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "computeNetwork": {
+      "type": "object"
+    },
+    "storageNetwork": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "networkApiVersion": "2021-02-01",
+    "virtualNetworks": "[createArray(parameters('computeNetwork'), parameters('storageNetwork'))]"
+  },
+  "functions": [
+  ],
+  "resources": [
+    {
+      "condition": "[not(equals(variables('virtualNetworks')[copyIndex()].regionName, ''))]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('virtualNetworks')[copyIndex()].name]",
+      "apiVersion": "[variables('networkApiVersion')]",
+      "location": "[variables('virtualNetworks')[copyIndex()].regionName]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": "[variables('virtualNetworks')[copyIndex()].addressPrefixes]"
+        },
+        "copy": [
+          {
+            "name": "subnets",
+            "count": "[length(variables('virtualNetworks')[copyIndex()].subnets)]",
+            "input": {
+              "name": "[variables('virtualNetworks')[copyIndex()].subnets[copyIndex('subnets')].name]",
+              "properties": "[variables('virtualNetworks')[copyIndex()].subnets[copyIndex('subnets')].properties]"
+            }
+          }
+        ]
+      },
+      "copy": {
+        "name": "virtualNetworks",
+        "count": "[length(variables('virtualNetworks'))]"
+      }
+    }
+  ],
+  "outputs": {
+    "computeNetwork": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('computeNetwork').name]",
+        "resourceGroupName": "[resourceGroup().name]",
+        "regionName": "[parameters('computeNetwork').regionName]"
+      }
+    },
+    "storageNetwork": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('storageNetwork').name]",
+        "resourceGroupName": "[resourceGroup().name]",
+        "regionName": "[parameters('storageNetwork').regionName]"
+      }
+    }
+  }
+}

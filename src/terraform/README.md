@@ -58,6 +58,7 @@ The highest priority for VFX and Animation Studios is the lowest total cost of o
 1. [Networking Best Practices for Rendering](examples/network-rendering)
 1. [Storage Cache Best Practices for Rendering](examples/storagecache-rendering)
 1. [Security Best Practices for Rendering](examples/security)
+1. [Support Best Practices for Rendering](support.md) - describes what to do when you encounter an issue on Azure.
 
 ## Storage Cache Infrastructure
 

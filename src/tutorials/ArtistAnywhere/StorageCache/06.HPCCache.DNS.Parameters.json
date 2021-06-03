@@ -1,0 +1,25 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "hpcCache": {
+      "value": {
+        "addresses": [
+          "10.1.10.7",
+          "10.1.10.8",
+          "10.1.10.9"
+        ],
+        "name": "hpcc"
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "Compute",
+        "resourceGroupName": "ArtistAnywhere.Network",
+        "domainName": "pipeline.net",
+        "domainRecordTTLSeconds": 3600,
+        "enableDnsRegistration": false
+      }
+    }
+  }
+}

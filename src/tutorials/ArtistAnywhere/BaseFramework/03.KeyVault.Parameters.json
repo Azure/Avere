@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "keyVault": {
+      "value": {
+        "name": "RenderPipeline",
+        "tier": "Standard",
+        "enableForDeployment": true,
+        "enableForDiskEncryption": true,
+        "enableForTemplateDeployment": true,
+        "enableRbacAuthorization": true,
+        "enablePurgeProtection": false,
+        "softDeleteRetentionDays": 90,
+        "adminUserPrincipalId": "ef54b085-8b87-4b95-b2a7-cbe762e5664f",
+        "managedIdentityPrincipalId": "d2dd965a-534d-4892-a4fa-28c439f8f473",
+        "secrets": [
+          {
+            "name": "networkConnectionKey",
+            "value": "ChangeMe"
+          },
+          {
+            "name": "dataAdminUsername",
+            "value": "az"
+          },
+          {
+            "name": "dataAdminPassword",
+            "value": "ChangeMe"
+          }
+        ]
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "Compute",
+        "subnetName": "Farm",
+        "resourceGroupName": "ArtistAnywhere.Network",
+        "enableDnsRegistration": false,
+        "firewallAddressRules": [
+          {
+            "action": "Allow",
+            "value": "47.153.25.140"
+          }
+        ]
+      }
+    }
+  }
+}

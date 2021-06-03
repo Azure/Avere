@@ -1,0 +1,43 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "cacheName": {
+      "value": "hpcc"
+    },
+    "cacheThroughput": {
+      "value": "Standard_2G"
+    },
+    "cacheSize": {
+      "value": 3072
+    },
+    "storageTargets": {
+      "value": [
+        {
+          "accountName": "hpc02",
+          "containerName": "show",
+          "host": "",
+          "junctions": [
+            {
+              "namespacePath": "/mnt/cache",
+              "nfsAccessPolicy": "default",
+              "nfsExport": "/",
+              "targetPath": "/"
+            }
+          ],
+          "name": "Azure.Storage",
+          "resourceGroupName": "ArtistAnywhere.Storage",
+          "type": "blobNfs",
+          "usageModel": "WRITE_AROUND"
+        }
+      ]
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "Compute",
+        "subnetName": "Cache",
+        "resourceGroupName": "ArtistAnywhere.Network"
+      }
+    }
+  }
+}

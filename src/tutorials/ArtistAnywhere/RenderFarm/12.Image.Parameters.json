@@ -1,0 +1,209 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "managedIdentity": {
+      "value": {
+        "name": "RenderPipeline",
+        "resourceGroupName": "ArtistAnywhere"
+      }
+    },
+    "imageGallery": {
+      "value": {
+        "name": "RenderPipeline",
+        "resourceGroupName": "ArtistAnywhere.Gallery"
+      }
+    },
+    "imageTemplates": {
+      "value": [
+        {
+          "deploy": true,
+          "name": "RenderNodeLC",
+          "imageDefinitionName": "Linux",
+          "imageSourceType": "PlatformImage",
+          "imageSourceVersion": "latest",
+          "imageOutputVersion": "2.0.0",
+          "imageStorageAccount": {
+            "type": "Standard_LRS"
+          },
+          "machineProfile": {
+            "size": "Standard_F16s_v2",
+            "osDiskSizeGB": 0
+          },
+          "buildTimeoutMinutes": 90,
+          "buildCustomization": [
+            {
+              "type": "File",
+              "sourceUri": "https://hpc01.blob.core.windows.net/script/StorageCache/mnt-storage.mount",
+              "destination": "/tmp/mnt-storage.mount"
+            },
+            {
+              "type": "File",
+              "sourceUri": "https://hpc01.blob.core.windows.net/script/StorageCache/mnt-cache.mount",
+              "destination": "/tmp/mnt-cache.mount"
+            },
+            {
+              "type": "Shell",
+              "scriptUri": "https://hpc01.blob.core.windows.net/script/RenderFarm/Linux/12.Image.sh"
+            },
+            {
+              "type": "Shell",
+              "scriptUri": "https://hpc01.blob.core.windows.net/script/RenderFarm/Linux/12.Image.OpenCue.sh"
+            },
+            {
+              "type": "Shell",
+              "scriptUri": "https://hpc01.blob.core.windows.net/script/RenderFarm/Linux/12.Image.Blender.sh"
+            },
+            {
+              "type": "File",
+              "sourceUri": "https://hpc01.blob.core.windows.net/script/RenderFarm/Linux/13.Machine.sh",
+              "destination": "/tmp/13.Machine.sh"
+            }
+          ]
+        },
+        {
+          "deploy": false,
+          "name": "RenderNodeLG",
+          "imageDefinitionName": "Linux",
+          "imageSourceType": "PlatformImage",
+          "imageSourceVersion": "latest",
+          "imageOutputVersion": "2.1.0",
+          "imageStorageAccount": {
+            "type": "Standard_LRS"
+          },
+          "machineProfile": {
+            "size": "Standard_NC16as_T4_v3",
+            "osDiskSizeGB": 0
+          },
+          "buildTimeoutMinutes": 90,
+          "buildCustomization": [
+            {
+              "type": "File",
+              "sourceUri": "https://hpc01.blob.core.windows.net/script/StorageCache/mnt-storage.mount",
+              "destination": "/tmp/mnt-storage.mount"
+            },
+            {
+              "type": "File",
+              "sourceUri": "https://hpc01.blob.core.windows.net/script/StorageCache/mnt-cache.mount",
+              "destination": "/tmp/mnt-cache.mount"
+            },
+            {
+              "type": "Shell",
+              "scriptUri": "https://hpc01.blob.core.windows.net/script/RenderFarm/Linux/12.Image.sh"
+            },
+            {
+              "type": "Shell",
+              "scriptUri": "https://hpc01.blob.core.windows.net/script/RenderFarm/Linux/12.Image.OpenCue.sh"
+            },
+            {
+              "type": "Shell",
+              "scriptUri": "https://hpc01.blob.core.windows.net/script/RenderFarm/Linux/12.Image.Blender.sh"
+            },
+            {
+              "type": "File",
+              "sourceUri": "https://hpc01.blob.core.windows.net/script/RenderFarm/Linux/13.Machine.sh",
+              "destination": "/tmp/13.Machine.sh"
+            }
+          ]
+        },
+        {
+          "deploy": false,
+          "name": "RenderNodeWC",
+          "imageDefinitionName": "WindowsServer",
+          "imageSourceType": "PlatformImage",
+          "imageSourceVersion": "latest",
+          "imageOutputVersion": "2.0.0",
+          "imageStorageAccount": {
+            "type": "Standard_LRS"
+          },
+          "machineProfile": {
+            "size": "Standard_F16s_v2",
+            "osDiskSizeGB": 0
+          },
+          "buildTimeoutMinutes": 90,
+          "buildCustomization": [
+            {
+              "type": "File",
+              "sourceUri": "https://hpc01.blob.core.windows.net/script/StorageCache/mnt-storage.mount",
+              "destination": "C:\\Windows\\Temp\\mnt-storage.mount"
+            },
+            {
+              "type": "File",
+              "sourceUri": "https://hpc01.blob.core.windows.net/script/StorageCache/mnt-cache.mount",
+              "destination": "C:\\Windows\\Temp\\mnt-cache.mount"
+            },
+            {
+              "type": "PowerShell",
+              "scriptUri": "https://hpc01.blob.core.windows.net/script/RenderFarm/Windows/12.Image.ps1"
+            },
+            {
+              "type": "PowerShell",
+              "scriptUri": "https://hpc01.blob.core.windows.net/script/RenderFarm/Windows/12.Image.OpenCue.ps1"
+            },
+            {
+              "type": "PowerShell",
+              "scriptUri": "https://hpc01.blob.core.windows.net/script/RenderFarm/Windows/12.Image.Blender.ps1"
+            },
+            {
+              "type": "File",
+              "sourceUri": "https://hpc01.blob.core.windows.net/script/RenderFarm/Windows/13.Machine.ps1",
+              "destination": "C:\\Windows\\Temp\\13.Machine.ps1"
+            }
+          ]
+        },
+        {
+          "deploy": false,
+          "name": "RenderNodeWG",
+          "imageDefinitionName": "WindowsServer",
+          "imageSourceType": "PlatformImage",
+          "imageSourceVersion": "latest",
+          "imageOutputVersion": "2.1.0",
+          "imageStorageAccount": {
+            "type": "Standard_LRS"
+          },
+          "machineProfile": {
+            "size": "Standard_NC16as_T4_v3",
+            "osDiskSizeGB": 0
+          },
+          "buildTimeoutMinutes": 90,
+          "buildCustomization": [
+            {
+              "type": "File",
+              "sourceUri": "https://hpc01.blob.core.windows.net/script/StorageCache/mnt-storage.mount",
+              "destination": "C:\\Windows\\Temp\\mnt-storage.mount"
+            },
+            {
+              "type": "File",
+              "sourceUri": "https://hpc01.blob.core.windows.net/script/StorageCache/mnt-cache.mount",
+              "destination": "C:\\Windows\\Temp\\mnt-cache.mount"
+            },
+            {
+              "type": "PowerShell",
+              "scriptUri": "https://hpc01.blob.core.windows.net/script/RenderFarm/Windows/12.Image.ps1"
+            },
+            {
+              "type": "PowerShell",
+              "scriptUri": "https://hpc01.blob.core.windows.net/script/RenderFarm/Windows/12.Image.OpenCue.ps1"
+            },
+            {
+              "type": "PowerShell",
+              "scriptUri": "https://hpc01.blob.core.windows.net/script/RenderFarm/Windows/12.Image.Blender.ps1"
+            },
+            {
+              "type": "File",
+              "sourceUri": "https://hpc01.blob.core.windows.net/script/RenderFarm/Windows/13.Machine.ps1",
+              "destination": "C:\\Windows\\Temp\\13.Machine.ps1"
+            }
+          ]
+        }
+      ]
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "Compute",
+        "subnetName": "Farm",
+        "resourceGroupName": "ArtistAnywhere.Network"
+      }
+    }
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageAccounts": {
+      "value": [
+        {
+          "name": "hpc01",
+          "type": "StorageV2",
+          "replication": "Standard_LRS",
+          "enableBlobNFSv3": false,
+          "enableHttpsTrafficOnly": true,
+          "enableLargeFileShares": true,
+          "enableBlobPublicAccess": false,
+          "enableAccountKeyAccess": false,
+          "virtualNetworkRules": []
+        },
+        {
+          "name": "hpc02",
+          "type": "StorageV2",
+          "replication": "Standard_LRS",
+          "enableBlobNFSv3": true,
+          "enableHttpsTrafficOnly": false,
+          "enableLargeFileShares": false,
+          "enableBlobPublicAccess": false,
+          "enableAccountKeyAccess": false,
+          "virtualNetworkRules": [
+            {
+              "name": "Compute",
+              "subnetName": "Storage",
+              "resourceGroupName": "ArtistAnywhere.Network"
+            },
+            {
+              "name": "Compute",
+              "subnetName": "Cache",
+              "resourceGroupName": "ArtistAnywhere.Network"
+            }
+          ]
+        }
+      ]
+    },
+    "roleAssignments": {
+      "value": [
+        {
+          "storageAccountName": "hpc01",
+          "roleDefinitionId": "974c5e8b-45b9-4653-ba55-5f855dd0fb88",
+          "principalId": "ef54b085-8b87-4b95-b2a7-cbe762e5664f",
+          "principalType": "User"
+        },
+        {
+          "storageAccountName": "hpc01",
+          "roleDefinitionId": "ba92f5b4-2d11-453d-a403-e96b0029c9fe",
+          "principalId": "ef54b085-8b87-4b95-b2a7-cbe762e5664f",
+          "principalType": "User"
+        },
+        {
+          "storageAccountName": "hpc01",
+          "roleDefinitionId": "2a2b9908-6ea1-4ae2-8e65-a410df84e7d1",
+          "principalId": "d2dd965a-534d-4892-a4fa-28c439f8f473",
+          "principalType": "ServicePrincipal"
+        },
+        {
+          "storageAccountName": "hpc02",
+          "roleDefinitionId": "17d1049b-9a84-46fb-8f53-869881c3d3ab",
+          "principalId": "831d4223-7a3c-4121-a445-1e423591e57b",
+          "principalType": "ServicePrincipal"
+        },
+        {
+          "storageAccountName": "hpc02",
+          "roleDefinitionId": "ba92f5b4-2d11-453d-a403-e96b0029c9fe",
+          "principalId": "831d4223-7a3c-4121-a445-1e423591e57b",
+          "principalType": "ServicePrincipal"
+        }
+      ]
+    },
+    "blobContainers": {
+      "value": [
+        {
+          "name": "script",
+          "accountName": "hpc01",
+          "publicAccess": "None"
+        },
+        {
+          "name": "show",
+          "accountName": "hpc02",
+          "publicAccess": "None"
+        }
+      ]
+    },
+    "fileShares": {
+      "value": [
+        {
+          "name": "show",
+          "accountName": "hpc01",
+          "protocols": "SMB",
+          "size": 5120
+        }
+      ]
+    },
+    "messageQueues": {
+      "value": [
+        {
+          "name": "hpc",
+          "accountName": "hpc01"
+        }
+      ]
+    },
+    "storageMounts": {
+      "value": [
+        {
+          "type": "nfs",
+          "host": "hpc02.blob.core.windows.net:/hpc02/show",
+          "options": "sec=sys,vers=3,proto=tcp,nolock",
+          "path": "/mnt/storage"
+        }
+      ]
+    },
+    "storageTargets": {
+      "value": [
+        {
+          "name": "Azure.Storage",
+          "type": "blobNfs",
+          "host": "",
+          "accountName": "hpc02",
+          "resourceGroupName": "ArtistAnywhere.Storage",
+          "containerName": "show",
+          "usageModel": "WRITE_AROUND",
+          "junctions": [
+            {
+              "nfsExport": "/",
+              "nfsAccessPolicy": "default",
+              "namespacePath": "/mnt/cache",
+              "targetPath": "/"
+            }
+          ]
+        }
+      ]
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "Compute",
+        "subnetName": "Storage",
+        "resourceGroupName": "ArtistAnywhere.Network",
+        "enableDnsRegistration": false,
+        "firewallAddressRules": [
+          {
+            "action": "Allow",
+            "value": "47.153.25.140"
+          }
+        ]
+      }
+    }
+  }
+}

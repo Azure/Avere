@@ -1,0 +1,87 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "managedIdentity": {
+      "type": "object"
+    },
+    "imageGallery": {
+      "type": "object"
+    },
+    "imageTemplates": {
+      "type": "array"
+    },
+    "virtualNetwork": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "imageBuilderApiVersion": "2020-02-14",
+    "imageGalleryApiVersion": "2020-09-30"
+  },
+  "resources": [
+    {
+      "condition": "[parameters('imageTemplates')[copyIndex()].deploy]",
+      "type": "Microsoft.VirtualMachineImages/imageTemplates",
+      "name": "[parameters('imageTemplates')[copyIndex()].name]",
+      "apiVersion": "[variables('imageBuilderApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceId(parameters('managedIdentity').resourceGroupName, 'Microsoft.ManagedIdentity/userAssignedIdentities', parameters('managedIdentity').name)]": {
+          }
+        }
+      },
+      "properties": {
+        "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].buildTimeoutMinutes]",
+        "vmProfile": {
+          "vmSize": "[parameters('imageTemplates')[copyIndex()].machineProfile.size]",
+          "osDiskSizeGB": "[parameters('imageTemplates')[copyIndex()].machineProfile.osDiskSizeGB]",
+          "vnetConfig": {
+            "subnetId": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetwork').name, parameters('virtualNetwork').subnetName)]"
+          }
+        },
+        "source": {
+          "type": "[parameters('imageTemplates')[copyIndex()].imageSourceType]",
+          "version": "[parameters('imageTemplates')[copyIndex()].imageSourceVersion]",
+          "publisher": "[reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).identifier.publisher]",
+          "offer": "[reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).identifier.offer]",
+          "sku": "[reference(resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images', parameters('imageGallery').name, parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).identifier.sku]"
+        },
+        "customize": "[parameters('imageTemplates')[copyIndex()].buildCustomization]",
+        "distribute": [
+          {
+            "type": "SharedImage",
+            "runOutputName": "SharedImage",
+            "galleryImageId": "[resourceId(parameters('imageGallery').resourceGroupName, 'Microsoft.Compute/galleries/images/versions', parameters('imageGallery').name, parameters('imageTemplates')[copyIndex()].imageDefinitionName, parameters('imageTemplates')[copyIndex()].imageOutputVersion)]",
+            "storageAccountType": "[parameters('imageTemplates')[copyIndex()].imageStorageAccount.type]",
+            "replicationRegions": [
+              "[resourceGroup().location]"
+            ],
+            "artifactTags": {
+              "imageTemplateName": "[parameters('imageTemplates')[copyIndex()].name]"
+            }
+          }
+        ]
+      },
+      "copy": {
+        "name": "imageTemplates",
+        "count": "[length(parameters('imageTemplates'))]"
+      }
+    }
+  ],
+  "outputs": {
+    "imageTemplates": {
+      "type": "array",
+      "value": "[parameters('imageTemplates')]"
+    },
+    "imageGallery": {
+      "type": "object",
+      "value": {
+        "name": "[parameters('imageGallery').name]",
+        "resourceGroupName": "[resourceGroup().name]"
+      }
+    }
+  }
+}

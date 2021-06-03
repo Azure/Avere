@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "postgreSql": {
+      "value": {
+        "name": "rendermanager",
+        "tier": "MemoryOptimized",
+        "size": "Standard_E4s_v3",
+        "sqlVersion": 12,
+        "storage": {
+          "sizeMB": 32768,
+          "backupRetentionDays": 7
+        }
+      }
+    },
+    "dataAdminUsername": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/ArtistAnywhere/providers/Microsoft.KeyVault/vaults/RenderPipeline"
+        },
+        "secretName": "dataAdminPassword"
+      }
+    },
+    "dataAdminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/ArtistAnywhere/providers/Microsoft.KeyVault/vaults/RenderPipeline"
+        },
+        "secretName": "dataAdminPassword"
+      }
+    },
+    "virtualNetwork": {
+      "value": {
+        "name": "Compute",
+        "subnetName": "Data",
+        "resourceGroupName": "ArtistAnywhere.Network"
+      }
+    }
+  }
+}
