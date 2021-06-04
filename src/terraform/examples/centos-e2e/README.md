@@ -34,6 +34,7 @@ The keyvault stores all the secrets used in this example.  Be sure to configure 
 1. back in cloud shell, `cd ~/tf/src/terraform/examples/centos-e2e/1.keyvault`
 1. `code main.tf` and edit the variables at the top.  Once applied, set your keys.
 1. `terraform init` and `terraform apply -auto-approve`
+1. once deployed, browse to the keyvault in the portal and update the keys.
 
 ## 2. Network
 
