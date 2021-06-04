@@ -28,7 +28,7 @@ function update_linux() {
     retrycmd_if_failure 12 5 yum -y install wget unzip git nfs-utils tmux nc
     retrycmd_if_failure 12 5 yum -y install epel-release
     retrycmd_if_failure 12 5 yum -y install python-pip
-    retrycmd_if_failure 3 5 pip install hstk
+    #retrycmd_if_failure 3 5 pip install hstk
 }
 
 function install_golang() {
