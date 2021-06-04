@@ -47,7 +47,7 @@ This sets up a VNET with the following subnets:
 ### Steps to Deploy
 
 1. back in cloud shell, `cd ~/tf/src/terraform/examples/centos-e2e/2.1.network`
-1. `code main.tf` and edit the variables at the top.  Once applied.
+1. `code main.tf` and edit the variables at the top
 1. `terraform init` and `terraform apply -auto-approve`
 1. once deployed, browse to the keyvault in the portal and update the keys.
 
