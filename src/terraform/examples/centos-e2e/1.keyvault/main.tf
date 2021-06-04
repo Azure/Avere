@@ -35,6 +35,24 @@ resource "azurerm_key_vault" "keyvault" {
   enable_rbac_authorization  = true
 }
 
+resource "azurerm_key_vault_secret" "example" {
+  name         = "vpngatewaykey"
+  value        = "replace with correct value"
+  key_vault_id = azurerm_key_vault.keyvault.id
+}
+
+resource "azurerm_key_vault_secret" "example" {
+  name         = "virtualmachine"
+  value        = "replace with correct value"
+  key_vault_id = azurerm_key_vault.keyvault.id
+}
+
+resource "azurerm_key_vault_secret" "example" {
+  name         = "AvereCache"
+  value        = "replace with correct value"
+  key_vault_id = azurerm_key_vault.keyvault.id
+}
+
 output "location" {
   value = local.location
 }
