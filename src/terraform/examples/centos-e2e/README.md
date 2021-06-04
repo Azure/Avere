@@ -49,7 +49,22 @@ This sets up a VNET with the following subnets:
 1. back in cloud shell, `cd ~/tf/src/terraform/examples/centos-e2e/2.1.network`
 1. `code main.tf` and edit the variables at the top
 1. `terraform init` and `terraform apply -auto-approve`
-1. once deployed, browse to the keyvault in the portal and update the keys.
+
+## 2.2 Simulated On Prem
+
+This step creates a simulated on-premises network with a filer and jumpbox.
+
+1. in cloud shell, `cd ~/tf/src/terraform/examples/centos-e2e/2.2.simulatedonprem`
+1. `code main.tf` and edit the variables at the top
+1. `terraform init` and `terraform apply -auto-approve`
+
+## 2.3 VPN Connection
+
+This step creates a simulated on-premises network with a filer and jumpbox.
+
+1. in cloud shell, `cd ~/tf/src/terraform/examples/centos-e2e/2.3.vpnconnection`
+1. `code main.tf` and edit the variables at the top
+1. `terraform init` and `terraform apply -auto-approve`
 
 ## 3. CentOS Stock
 
