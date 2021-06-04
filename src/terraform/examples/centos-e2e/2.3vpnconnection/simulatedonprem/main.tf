@@ -5,10 +5,12 @@ locals {
   vpngw_generation = "Generation1" // generation and sku defined in https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways#benchmark
   vpngw_sku        = "VpnGw2"
 
+  # paste from network outputs
   location            = ""
   gateway_subnet_id   = ""
   vnet_resource_group = ""
 
+  # paste from onprem outputs
   onprem_location       = ""
   onprem_resource_group = ""
   onprem_vpn_gateway_id = ""
