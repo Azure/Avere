@@ -6,7 +6,7 @@ This folder contains all the automation to configure all infrastructure describe
 
 To run the example, execute the following instructions.  This assumes use of Azure Cloud Shell.  If you are installing into your own environment, you will need to follow the [instructions to setup terraform for the Azure environment](https://docs.microsoft.com/en-us/azure/terraform/terraform-install-configure).
 
-1. browse to https://shell.azure.com
+1. browse to https://shell.azure.com, and choose a Bash shell.
 
 2. Specify your subscription by running this command with your subscription ID:  ```az account set --subscription YOUR_SUBSCRIPTION_ID```.  You will need to run this every time after restarting your shell, otherwise it may default you to the wrong subscription, and you will see an error similar to `azurerm_public_ip.vm is empty tuple`.
 
@@ -30,9 +30,9 @@ The keyvault stores all the secrets used in this example.  Be sure to configure 
 
 ### Steps to Deploy
 
-1. Before deploying, ensure you have Role ''.  To do this, open https://portal.azure.com, and browse to Subscriptions=>Acccess Control (IAM) and add "Key Vault Secrets Officer" to your id.
+1. Before deploying, ensure you have Role `Key Vault Secrets Officer`.  To do this, open https://portal.azure.com, and browse to Subscriptions=>Acccess Control (IAM) and add "Key Vault Secrets Officer" to your id.
 1. back in cloud shell, `cd ~/tf/src/terraform/examples/centos-e2e/1.keyvault`
-1. `code main.tf` and edit the variables at the top.  Once applied, set your keys.
+1. `code main.tf` and edit the variables at the top.  Once applied.
 1. `terraform init` and `terraform apply -auto-approve`
 1. once deployed, browse to the keyvault in the portal and update the keys.
 
@@ -43,6 +43,13 @@ This sets up a VNET with the following subnets:
 1. Gateway
 2. Cache
 3. Render Nodes
+
+### Steps to Deploy
+
+1. back in cloud shell, `cd ~/tf/src/terraform/examples/centos-e2e/2.1.network`
+1. `code main.tf` and edit the variables at the top.  Once applied.
+1. `terraform init` and `terraform apply -auto-approve`
+1. once deployed, browse to the keyvault in the portal and update the keys.
 
 ## 3. CentOS Stock
 
