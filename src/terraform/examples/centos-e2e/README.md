@@ -62,7 +62,7 @@ This step creates a simulated on-premises network with a filer and jumpbox.
 
 This step creates a simulated on-premises network with a filer and jumpbox.
 
-1. in cloud shell, `cd ~/tf/src/terraform/examples/centos-e2e/2.3.vpnconnection`
+1. in cloud shell, `cd ~/tf/src/terraform/examples/centos-e2e/2.3vpnconnection/simulatedonprem`
 1. `code main.tf` and edit the variables at the top
 1. `terraform init` and `terraform apply -auto-approve`
 
