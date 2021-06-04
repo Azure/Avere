@@ -1,6 +1,18 @@
+data "azurerm_key_vault" "keyvault" {
+  name                = local.keyvault_name
+  resource_group_name = local.keyvault_resource_group_name
+}
+
+data "azurerm_key_vault_secret" "virtualmachine" {
+  name         = "virtualmachine"
+  key_vault_id = data.azurerm_key_vault.keyvault.id
+}
+
 // customize the simple VM by editing the following local variables
 locals {
-  location = ""
+  location                     = ""
+  keyvault_name                = "renderkeyvault"
+  keyvault_resource_group_name = "keyvault_rg"
 
   // the region of the main deployment
   onprem_simulated_resource_group_name = "onprem_rg"
@@ -15,7 +27,6 @@ locals {
   // vnet to vnet settings
   vpngw_generation = "Generation1" // generation and sku defined in https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways#benchmark
   vpngw_sku        = "VpnGw2"
-  shared_key_nam   = "vpn-shared-key"
 
   unique_name  = "onprem"
   disk_size_gb = 127
@@ -26,7 +37,7 @@ locals {
   vm_admin_username = "azureuser"
   // use either SSH Key data or admin password, if ssh_key_data is specified
   // then admin_password is ignored
-  vm_admin_password = "ReplacePassword$"
+  vm_admin_password = data.azurerm_key_vault_secret.virtualmachine.id
   // if you use SSH key, ensure you have ~/.ssh/id_rsa with permission 600
   // populated where you are running terraform
   vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
