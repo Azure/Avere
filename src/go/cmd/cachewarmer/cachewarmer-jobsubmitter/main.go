@@ -40,6 +40,8 @@ func initializeApplicationVariables(ctx context.Context) (*cachewarmer.WarmPathJ
 	var inclusionCsv = flag.String("inclusionCsv", "", "the inclusion list of file match strings per https://golang.org/pkg/path/filepath/#Match.  Leave blank to include everything.")
 	var exclusionCsv = flag.String("exclusionCsv", "", "the exclusion list of file match strings per https://golang.org/pkg/path/filepath/#Match.  Leave blank to not exlude anything.")
 
+	var maxFileSizeBytes = flag.Int64("maxFileSizeBytes", 0, "the maximum file size in bytes to warm.")
+
 	var storageAccount = flag.String("storageAccountName", "", "the storage account name to host the queue")
 	var storageKey = flag.String("storageKey", "", "the storage key to access the queue")
 	var queueNamePrefix = flag.String("queueNamePrefix", "", "the queue name to be used for organizing the work. The queues will be created automatically")
@@ -99,7 +101,8 @@ func initializeApplicationVariables(ctx context.Context) (*cachewarmer.WarmPathJ
 		*warmTargetExportPath,
 		*warmTargetPath,
 		*inclusionCsv,
-		*exclusionCsv)
+		*exclusionCsv,
+		*maxFileSizeBytes)
 
 	cacheWarmerQueues, err := cachewarmer.InitializeCacheWarmerQueues(
 		ctx,

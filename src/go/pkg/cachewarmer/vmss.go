@@ -15,8 +15,8 @@ import (
 	"time"
 
 	"github.com/Azure/Avere/src/go/pkg/log"
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/compute/mgmt/compute"
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/network/mgmt/network"
+	"github.com/Azure/azure-sdk-for-go/profiles/2020-09-01/compute/mgmt/compute"
+	"github.com/Azure/azure-sdk-for-go/profiles/2020-09-01/network/mgmt/network"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/Azure/go-autorest/autorest/to"
 )
@@ -331,8 +331,7 @@ func DeleteVmss(ctx context.Context, azureClients *AzureClients, name string) er
 	defer log.Info.Printf(" %s %s DeleteVmss]", azureClients.LocalMetadata.ResourceGroup, name)
 
 	// passing nil instance ids will deallocate all VMs in the VMSS
-	forceDeletion := false
-	future, err := azureClients.VMSSClient.Delete(ctx, azureClients.LocalMetadata.ResourceGroup, name, &forceDeletion)
+	future, err := azureClients.VMSSClient.Delete(ctx, azureClients.LocalMetadata.ResourceGroup, name)
 	if err != nil {
 		return fmt.Errorf("cannot delete vmss (%s %s): %v", azureClients.LocalMetadata.ResourceGroup, name, err)
 	}
