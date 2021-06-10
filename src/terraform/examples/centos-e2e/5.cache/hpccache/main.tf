@@ -3,6 +3,10 @@ locals {
   // the region of the deployment
   location = "eastus"
 
+  // onprem filer and mount point
+  nfsfiler_address = ""
+  nfsmount_point   = "/data"
+
   // network details
   network_resource_group_name = "network_rg"
   virtual_network_name        = "vnet"
@@ -33,16 +37,6 @@ locals {
   //    READ_HEAVY_INFREQ
   //    WRITE_WORKLOAD_15
   usage_model = "READ_HEAVY_INFREQ"
-
-  // nfs filer related variables
-  filer_resource_group_name = "filer_resource_group"
-  vm_admin_username         = "azureuser"
-  // use either SSH Key data or admin password, if ssh_key_data is specified
-  // then admin_password is ignored
-  vm_admin_password = "ReplacePassword$"
-  // if you use SSH key, ensure you have ~/.ssh/id_rsa with permission 600
-  // populated where you are running terraform
-  vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
 }
 
 terraform {
@@ -83,11 +77,11 @@ resource "azurerm_hpc_cache_nfs_target" "nfs_targets" {
   name                = "nfs_targets"
   resource_group_name = azurerm_resource_group.hpc_cache_rg.name
   cache_name          = azurerm_hpc_cache.hpc_cache.name
-  target_host_name    = "REPLACE_IP_ADDRESS"
+  target_host_name    = local.nfsfiler_address
   usage_model         = local.usage_model
   namespace_junction {
-    namespace_path = "/nfs1data"
-    nfs_export     = "/nfs1data"
+    namespace_path = local.nfsmount_point
+    nfs_export     = local.nfsmount_point
     target_path    = ""
   }
 }

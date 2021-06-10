@@ -210,6 +210,10 @@ terraform {
   }
 }
 
+provider "azurerm" {
+  features {}
+}
+
 // the vfxt controller
 module "vfxtcontroller" {
     source = "github.com/Azure/Avere/src/terraform/modules/controller3"
