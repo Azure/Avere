@@ -39,10 +39,13 @@ const (
 	// this size is the most common, and will stand up the fastest
 	VMSSNodeSize            = "Standard_D2s_v3"
 	VmssName                = "cwvmss"
-	NodesPerNFSMountAddress = 6
-	MarketPlacePublisher    = "Canonical"
+	NodesPerNFSMountAddress = 2
+	/*MarketPlacePublisher    = "Canonical"
 	MarketPlaceOffer        = "UbuntuServer"
-	MarketPlaceSku          = "18.04-LTS"
+	MarketPlaceSku          = "18.04-LTS"*/
+	MarketPlacePublisher = "microsoft-avere"
+	MarketPlaceOffer     = "vfxt"
+	MarketPlaceSku       = "avere-vfxt-controller"
 
 	tick                        = time.Duration(1) * time.Millisecond   // 1ms
 	timeBetweenJobCheck         = time.Duration(2) * time.Second        // 2 seconds between checking for jobs
