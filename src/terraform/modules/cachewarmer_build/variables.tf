@@ -19,6 +19,7 @@ variable "admin_password" {
 
 variable "ssh_key_data" {
   description = "(optional) The public SSH key used for access to the controller or jumpbox.  If not specified, the password needs to be set.  The ssh_key_data takes precedence over the password, and if set, the password will be ignored."
+  default     = null
 }
 
 variable "ssh_port" {
