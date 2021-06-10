@@ -15,7 +15,7 @@ import (
 
 	"github.com/Azure/Avere/src/go/pkg/log"
 	"github.com/Azure/Avere/src/go/pkg/stats"
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/compute/mgmt/compute"
+	"github.com/Azure/azure-sdk-for-go/profiles/2020-09-01/compute/mgmt/compute"
 )
 
 // WarmPathManager contains the information for the manager
@@ -172,7 +172,7 @@ func (m *WarmPathManager) processJob(ctx context.Context, warmPathJob *WarmPathJ
 					end = fileSize
 				}
 				log.Info.Printf("queuing worker job for file %s [%d,%d)", fullPath, i, end)
-				workerJob := InitializeWorkerJobForLargeFile(warmPathJob.WarmTargetMountAddresses, warmPathJob.WarmTargetExportPath, fullPath, i, end, warmPathJob.InclusionList, warmPathJob.ExclusionList)
+				workerJob := InitializeWorkerJobForLargeFile(warmPathJob.WarmTargetMountAddresses, warmPathJob.WarmTargetExportPath, fullPath, i, end, warmPathJob.InclusionList, warmPathJob.ExclusionList, warmPathJob.MaxFileSizeBytes)
 				if err := m.Queues.WriteWorkerJob(workerJob); err != nil {
 					log.Error.Printf("error encountered writing worker job '%s': %v", fullPath, err)
 				}
@@ -183,7 +183,7 @@ func (m *WarmPathManager) processJob(ctx context.Context, warmPathJob *WarmPathJ
 		if len(files) > 0 {
 			if len(files) < MaximumFilesToRead {
 				log.Info.Printf("queuing job for path %s", warmFolder)
-				workerJob := InitializeWorkerJob(warmPathJob.WarmTargetMountAddresses, warmPathJob.WarmTargetExportPath, warmFolder, warmPathJob.InclusionList, warmPathJob.ExclusionList)
+				workerJob := InitializeWorkerJob(warmPathJob.WarmTargetMountAddresses, warmPathJob.WarmTargetExportPath, warmFolder, warmPathJob.InclusionList, warmPathJob.ExclusionList, warmPathJob.MaxFileSizeBytes)
 				if err := m.Queues.WriteWorkerJob(workerJob); err != nil {
 					log.Error.Printf("error encountered writing worker job '%s': %v", warmFolder, err)
 				}
@@ -194,7 +194,7 @@ func (m *WarmPathManager) processJob(ctx context.Context, warmPathJob *WarmPathJ
 						end = len(files) - 1
 					}
 					log.Info.Printf("queuing job for path %s [%s,%s]", warmFolder, files[i].Name(), files[end].Name())
-					workerJob := InitializeWorkerJobWithFilter(warmPathJob.WarmTargetMountAddresses, warmPathJob.WarmTargetExportPath, warmFolder, files[i].Name(), files[end].Name(), warmPathJob.InclusionList, warmPathJob.ExclusionList)
+					workerJob := InitializeWorkerJobWithFilter(warmPathJob.WarmTargetMountAddresses, warmPathJob.WarmTargetExportPath, warmFolder, files[i].Name(), files[end].Name(), warmPathJob.InclusionList, warmPathJob.ExclusionList, warmPathJob.MaxFileSizeBytes)
 					if err := m.Queues.WriteWorkerJob(workerJob); err != nil {
 						log.Error.Printf("error encountered writing worker job %s [%s,%s]: %v", warmFolder, files[i].Name(), files[end].Name(), err)
 					}
@@ -222,7 +222,7 @@ func processDirEntries(dirEntries []os.FileInfo, warmPathJob *WarmPathJob) ([]os
 		if dirEntry.IsDir() {
 			dirs = append(dirs, dirEntry)
 		} else { /* !dirEntry.IsDir() */
-			if !warmPathJob.FileMatches(dirEntry.Name()) {
+			if !warmPathJob.FileMatches(dirEntry.Name(), dirEntry.Size()) {
 				continue
 			}
 			fileSizes = append(fileSizes, dirEntry.Size())

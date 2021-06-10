@@ -16,12 +16,13 @@ type WarmPathJob struct {
 	WarmTargetPath           string
 	InclusionList            []string
 	ExclusionList            []string
+	MaxFileSizeBytes         int64
 	queueMessageID           azqueue.MessageID
 	queuePopReceipt          azqueue.PopReceipt
 }
 
-func (j *WarmPathJob) FileMatches(filename string) bool {
-	return FileMatches(j.InclusionList, j.ExclusionList, filename)
+func (j *WarmPathJob) FileMatches(filename string, filesize int64) bool {
+	return FileMatches(j.InclusionList, j.ExclusionList, j.MaxFileSizeBytes, filename, filesize)
 }
 
 // InitializeWarmPathJob initializes the job submitter structure
@@ -30,7 +31,8 @@ func InitializeWarmPathJob(
 	warmTargetExportPath string,
 	warmTargetPath string,
 	inclusionCsv string,
-	exclusionCsv string) *WarmPathJob {
+	exclusionCsv string,
+	maxFileSizeBytes int64) *WarmPathJob {
 
 	return &WarmPathJob{
 		WarmTargetMountAddresses: prepareCsvList(warmTargetMountAddresses),
@@ -38,6 +40,7 @@ func InitializeWarmPathJob(
 		WarmTargetPath:           warmTargetPath,
 		InclusionList:            prepareCsvList(inclusionCsv),
 		ExclusionList:            prepareCsvList(exclusionCsv),
+		MaxFileSizeBytes:         maxFileSizeBytes,
 	}
 }
 

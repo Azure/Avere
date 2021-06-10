@@ -4,6 +4,7 @@ package cachewarmer
 
 import (
 	"encoding/json"
+	"os"
 	"strings"
 
 	"github.com/Azure/azure-storage-queue-go/azqueue"
@@ -21,6 +22,7 @@ type WorkerJob struct {
 	EndFileFilter            string
 	InclusionList            []string
 	ExclusionList            []string
+	MaxFileSizeBytes         int64
 	queueMessageID           azqueue.MessageID
 	queuePopReceipt          azqueue.PopReceipt
 }
@@ -40,7 +42,8 @@ func InitializeWorkerJob(
 	warmTargetExportPath string,
 	warmTargetPath string,
 	inclusionList []string,
-	exclusionList []string) *WorkerJob {
+	exclusionList []string,
+	maxFileSizeBytes int64) *WorkerJob {
 	return &WorkerJob{
 		WarmTargetMountAddresses: warmTargetMountAddresses,
 		WarmTargetExportPath:     warmTargetExportPath,
@@ -52,6 +55,7 @@ func InitializeWorkerJob(
 		EndFileFilter:            "",
 		InclusionList:            inclusionList,
 		ExclusionList:            exclusionList,
+		MaxFileSizeBytes:         maxFileSizeBytes,
 	}
 }
 
@@ -63,7 +67,8 @@ func InitializeWorkerJobForLargeFile(
 	startByte int64,
 	stopByte int64,
 	inclusionList []string,
-	exclusionList []string) *WorkerJob {
+	exclusionList []string,
+	maxFileSizeBytes int64) *WorkerJob {
 	return &WorkerJob{
 		WarmTargetMountAddresses: warmTargetMountAddresses,
 		WarmTargetExportPath:     warmTargetExportPath,
@@ -75,6 +80,7 @@ func InitializeWorkerJobForLargeFile(
 		EndFileFilter:            "",
 		InclusionList:            inclusionList,
 		ExclusionList:            exclusionList,
+		MaxFileSizeBytes:         maxFileSizeBytes,
 	}
 }
 
@@ -86,7 +92,8 @@ func InitializeWorkerJobWithFilter(
 	startFileFilter string,
 	endFileFilter string,
 	inclusionList []string,
-	exclusionList []string) *WorkerJob {
+	exclusionList []string,
+	maxFileSizeBytes int64) *WorkerJob {
 	return &WorkerJob{
 		WarmTargetMountAddresses: warmTargetMountAddresses,
 		WarmTargetExportPath:     warmTargetExportPath,
@@ -98,6 +105,7 @@ func InitializeWorkerJobWithFilter(
 		EndFileFilter:            endFileFilter,
 		InclusionList:            inclusionList,
 		ExclusionList:            exclusionList,
+		MaxFileSizeBytes:         maxFileSizeBytes,
 	}
 }
 
@@ -120,18 +128,21 @@ func (j *WorkerJob) GetWorkerJobFileContents() (string, error) {
 	return string(data), nil
 }
 
-func (j *WorkerJob) FilterFiles(filenames []string) []string {
-	if j.ApplyFilter == false {
-		return filenames
-	}
+func (j *WorkerJob) FilterFiles(dirEntries []os.FileInfo) []string {
+	filteredFileNames := make([]string, 0, len(dirEntries))
 
-	filteredFileNames := make([]string, 0, len(filenames))
-
-	for _, filename := range filenames {
-		compareStart := strings.Compare(filename, j.StartFileFilter)
-		if compareStart == 0 || (compareStart > 0 && strings.Compare(filename, j.EndFileFilter) <= 0) {
-			if FileMatches(j.InclusionList, j.ExclusionList, filename) {
+	for _, dirEntry := range dirEntries {
+		if !dirEntry.IsDir() {
+			filename := dirEntry.Name()
+			if j.ApplyFilter == false {
 				filteredFileNames = append(filteredFileNames, filename)
+			} else {
+				compareStart := strings.Compare(filename, j.StartFileFilter)
+				if compareStart == 0 || (compareStart > 0 && strings.Compare(filename, j.EndFileFilter) <= 0) {
+					if FileMatches(j.InclusionList, j.ExclusionList, j.MaxFileSizeBytes, filename, dirEntry.Size()) {
+						filteredFileNames = append(filteredFileNames, filename)
+					}
+				}
 			}
 		}
 	}

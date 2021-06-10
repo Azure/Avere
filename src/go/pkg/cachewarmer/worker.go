@@ -119,19 +119,19 @@ func (w *Worker) processWorkerJob(ctx context.Context, workerJob *WorkerJob) err
 				}
 
 			}
-			filenames, err := f.Readdirnames(MinimumJobsOnDirRead)
+			dirEntries, err := f.Readdir(MinimumJobsOnDirRead)
 
-			if len(filenames) == 0 && err == io.EOF {
+			if len(dirEntries) == 0 && err == io.EOF {
 				log.Info.Printf("finished reading directory '%s'", readPath)
 				break
 			}
 
 			if err != nil && err != io.EOF {
-				log.Error.Printf("error reading dirnames from directory '%s': '%v'", readPath, err)
+				log.Error.Printf("error reading directory from directory '%s': '%v'", readPath, err)
 				break
 			}
 
-			filteredFilenames := workerJob.FilterFiles(filenames)
+			filteredFilenames := workerJob.FilterFiles(dirEntries)
 			if len(filteredFilenames) > 0 {
 				workItemsQueued += w.QueueWork(localPaths, filteredFilenames)
 			}

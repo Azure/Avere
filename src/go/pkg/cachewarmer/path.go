@@ -16,10 +16,14 @@ import (
 	"github.com/Azure/Avere/src/go/pkg/log"
 )
 
-func FileMatches(inclusionList []string, exclusionList []string, filename string) bool {
+func FileMatches(inclusionList []string, exclusionList []string, maxFileSizeBytes int64, filename string, filesize int64) bool {
 	// if the lists are empty, include everything
-	if len(inclusionList) == 0 && len(exclusionList) == 0 {
+	if len(inclusionList) == 0 && len(exclusionList) == 0 && maxFileSizeBytes == 0 {
 		return true
+	}
+
+	if maxFileSizeBytes != 0 && filesize > maxFileSizeBytes {
+		return false
 	}
 
 	// exclusion takes priority
