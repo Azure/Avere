@@ -68,14 +68,23 @@ This step creates a simulated on-premises network with a filer and jumpbox.
 
 ## 3. CentOS Stock
 
-Once you have deployed the image, run the following two steps:
+### Deploy instructructions
+
+### Capture instructions
+
+Once you have deployed the stock VM, login and configure, and then run the following two steps ([more info](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/capture-image)):
 1. on VM, run `sudo waagent -deprovision+user` and exit
 2. in portal click the "Capture" button, and capture to a separate resource group, and don't delete the VM.
 3. after VM is captured, `terraform deploy` to remove the VM
 
 ## 4. CentOS Image
 
-## 5. Cache
+## 5. Cache - HPC Cache
+
+This step mounts the NFS filer on-prem.
+1. in cloud shell, `cd ~/tf/src/terraform/examples/centos-e2e/5.cache/hpccache/main.tf`
+1. `code main.tf` and edit the variables at the top
+1. `terraform init` and `terraform apply -auto-approve`
 
 ## 6. VMSS
 
