@@ -337,8 +337,7 @@ func DeleteVmss(ctx context.Context, azureClients *AzureClients, name string) er
 	defer log.Info.Printf(" %s %s DeleteVmss]", azureClients.LocalMetadata.ResourceGroup, name)
 
 	// passing nil instance ids will deallocate all VMs in the VMSS
-	forceDelete := false
-	future, err := azureClients.VMSSClient.Delete(ctx, azureClients.LocalMetadata.ResourceGroup, name, &forceDelete)
+	future, err := azureClients.VMSSClient.Delete(ctx, azureClients.LocalMetadata.ResourceGroup, name)
 	if err != nil {
 		return fmt.Errorf("cannot delete vmss (%s %s): %v", azureClients.LocalMetadata.ResourceGroup, name, err)
 	}
