@@ -1,13 +1,24 @@
-// customize the Secured VM by adjusting the following local variables
+data "azurerm_key_vault" "keyvault" {
+  name                = local.keyvault_name
+  resource_group_name = local.keyvault_resource_group_name
+}
+
+data "azurerm_key_vault_secret" "virtualmachine" {
+  name         = "virtualmachine"
+  key_vault_id = data.azurerm_key_vault.keyvault.id
+}
+
+// customize the simple VM by editing the following local variables
 locals {
-  // the region of the deployment
-  location = "eastus"
+  location                     = ""
+  keyvault_name                = "renderkeyvault"
+  keyvault_resource_group_name = "keyvault_rg"// customize the Secured VM by adjusting the following local variables
 
   // authentication details
   vm_admin_username = "azureuser"
   // use either SSH Key data or admin password, if ssh_key_data is specified
   // then admin_password is ignored
-  vm_admin_password = "ReplacePassword$"
+  vm_admin_password = data.azurerm_key_vault_secret.virtualmachine.value
   // leave ssh key data blank if you want to use a password
   vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
 
