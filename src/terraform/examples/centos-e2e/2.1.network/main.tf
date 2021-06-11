@@ -1,20 +1,19 @@
 // customize the simple VM by editing the following local variables
 locals {
   // the region of the main deployment
+  location = ""
   network_resource_group_name = "network_rg"
 
   // virtual network settings
   vnet_name               = "vnet"
   address_space           = "10.0.0.0/16"
+  // DO NOT CHANGE NAME "GatewaySubnet", Azure requires it with that name
   gateway_subnet_name     = "GatewaySubnet"
   gateway_subnet          = "10.0.0.0/24"
   cache_subnet_name       = "cache"
   cache_subnet            = "10.0.1.0/24"
   rendernodes_subnet_name = "rendernodes"
   rendernodes_subnet      = "10.0.4.0/22"
-
-  // paste from keyvault outputs
-  location = ""
 }
 
 terraform {
@@ -247,3 +246,10 @@ output "gateway_subnet_id" {
   value = azurerm_subnet.gatewaysubnet.id
 }
 
+output "virtual_network_name" {
+  value = local.vnet_name
+}
+
+output "cache_network_subnet_name" {
+  value = local.cache_subnet_name
+}

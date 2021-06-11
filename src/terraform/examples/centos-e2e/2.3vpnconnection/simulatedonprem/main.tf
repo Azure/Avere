@@ -1,16 +1,17 @@
 locals {
-  # paste from key vault tf output
+  # paste from 1.keyvault/ output (re-run "terraform output" from that directory if needed)
   key_vault_id = ""
 
   vpngw_generation = "Generation1" // generation and sku defined in https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways#benchmark
   vpngw_sku        = "VpnGw2"
 
-  # paste from network outputs
+  # paste from 2.1.network/ outputs (re-run "terraform output" from that directory if needed)
   location            = ""
   gateway_subnet_id   = ""
   vnet_resource_group = ""
 
-  # paste from onprem outputs
+  # paste from 2.2.simulatatedonprem/ outputs (re-run "terraform output" from that directory if needed)
+  location            = ""
   onprem_location       = ""
   onprem_resource_group = ""
   onprem_vpn_gateway_id = ""

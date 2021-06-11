@@ -25,12 +25,12 @@ git pull origin main
 
 The keyvault stores all the secrets used in this example.  Be sure to configure the following Secrets with keys:
 * `vpngatewaykey` - this is the subnet to contain the VPN gateway
-* `virtualmachine` - this configures the 
+* `virtualmachine` - this configures the password for the virtual machines used in this example
 * `AvereCache` - this configures the secret to be used with the Avere Cache
 
 ### Steps to Deploy
 
-1. Before deploying, ensure you have Role `Key Vault Secrets Officer`.  To do this, open https://portal.azure.com, and browse to Subscriptions=>Acccess Control (IAM) and add "Key Vault Secrets Officer" to your id.
+1. Before deploying, ensure you have Role `Key Vault Secrets Officer`.  To do this, open https://portal.azure.com, and browse to Subscriptions=>Access Control (IAM) and add "Key Vault Secrets Officer" to your id.
 1. back in cloud shell, `cd ~/tf/src/terraform/examples/centos-e2e/1.keyvault`
 1. `code main.tf` and edit the variables at the top.  Once applied.
 1. `terraform init` and `terraform apply -auto-approve`
@@ -68,7 +68,14 @@ This step creates a simulated on-premises network with a filer and jumpbox.
 
 ## 3. CentOS Stock
 
+This step deploys a stock image, and is used for creation of a custom image.
+
 ### Deploy instructructions
+
+1. in cloud shell, `cd ~/tf/src/terraform/examples/centos-e2e/2.3vpnconnection/simulatedonprem`
+1. `code main.tf` and edit the variables at the top
+1. `terraform init` and `terraform apply -auto-approve`
+1. log into the VM and configure before creating the VM
 
 ### Capture instructions
 
@@ -82,7 +89,7 @@ Once you have deployed the stock VM, login and configure, and then run the follo
 ## 5. Cache - HPC Cache
 
 This step mounts the NFS filer on-prem.
-1. in cloud shell, `cd ~/tf/src/terraform/examples/centos-e2e/5.cache/hpccache/main.tf`
+1. in cloud shell, `cd ~/tf/src/terraform/examples/centos-e2e/5.cache/hpccache`
 1. `code main.tf` and edit the variables at the top
 1. `terraform init` and `terraform apply -auto-approve`
 
