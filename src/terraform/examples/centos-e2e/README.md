@@ -72,7 +72,7 @@ This step deploys a stock image, and is used for creation of a custom image.
 
 ### Deploy instructructions
 
-1. in cloud shell, `cd ~/tf/src/terraform/examples/centos-e2e/2.3vpnconnection/simulatedonprem`
+1. in cloud shell, `cd ~/tf/src/terraform/examples/centos-e2e/3.centosstock`
 1. `code main.tf` and edit the variables at the top
 1. `terraform init` and `terraform apply -auto-approve`
 1. log into the VM and configure before creating the VM
