@@ -18,8 +18,8 @@ locals {
 
   // paste from 2.1.network/ outputs (re-run "terraform output" from that directory if needed)
   virtual_network_resource_group_name = "network_resource_group"
-  virtual_network_name                = "rendervnet"
-  virtual_network_subnet_name         = "render_clients1"
+  virtual_network_name                = "vnet"
+  virtual_network_subnet_name         = "rendernodes"
 
   source_image_reference = local.source_image_reference_latest
 

@@ -253,3 +253,7 @@ output "virtual_network_name" {
 output "cache_network_subnet_name" {
   value = local.cache_subnet_name
 }
+
+output "render_network_subnet_name" {
+  value = local.rendernodes_subnet_name
+}
