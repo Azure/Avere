@@ -12,6 +12,7 @@ import (
 	"github.com/Azure/Avere/src/go/pkg/azure"
 	"github.com/Azure/Avere/src/go/pkg/log"
 	"github.com/Azure/azure-sdk-for-go/profiles/2020-09-01/compute/mgmt/compute"
+	computesvc "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2020-06-01/compute"
 	"github.com/Azure/azure-storage-queue-go/azqueue"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/to"
@@ -261,8 +262,7 @@ func (v *VMScaler) deleteNodes() error {
 		}
 		var ids compute.VirtualMachineScaleSetVMInstanceRequiredIDs
 		ids.InstanceIds = &instances
-		forceDelete := false
-		future, err := v.vmssClient.VmssClient.DeleteInstances(v.Context, v.ResourceGroup, k, ids, &forceDelete)
+		future, err := v.vmssClient.VmssClient.DeleteInstances(v.Context, v.ResourceGroup, k, ids)
 		if err != nil {
 			log.Error.Printf("error deleting instances for '%s': %v", k, instances)
 			continue
@@ -373,7 +373,7 @@ func (v *VMScaler) createPlan(firstRun bool) (*Plan, error) {
 		}
 
 		// check if VMSS can be increased
-		if *element.VirtualMachineScaleSetProperties.ProvisioningState == string(compute.ProvisioningStateSucceeded) {
+		if *element.VirtualMachineScaleSetProperties.ProvisioningState == string(computesvc.ProvisioningStateSucceeded) {
 			if (currentCapacity + increasedCapacity) < v.TotalNodes {
 				vmssToIncrease = append(vmssToIncrease, *element.Name)
 				increasedCapacity += (v.VMsPerVMSS - *element.Sku.Capacity)
@@ -495,8 +495,7 @@ func (v *VMScaler) executePlan(p *Plan) error {
 
 	// delete 0 capacity vmss instances
 	for _, element := range p.VMSSToDelete {
-		forceDelete := false
-		future, err := v.vmssClient.VmssClient.Delete(v.Context, v.ResourceGroup, element, &forceDelete)
+		future, err := v.vmssClient.VmssClient.Delete(v.Context, v.ResourceGroup, element)
 		if err != nil {
 			log.Error.Printf("error deleting '%s': %v, %v", element, err, future)
 			continue
