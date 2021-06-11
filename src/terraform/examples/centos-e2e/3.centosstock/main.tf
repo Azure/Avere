@@ -28,7 +28,7 @@ locals {
   vm_size             = "Standard_D2s_v3"
 
   // paste from 2.1.network/ outputs (re-run "terraform output" from that directory if needed)
-  virtual_network_resource_group_name = "network_resource_group"
+  virtual_network_resource_group_name = "network_rg"
   virtual_network_name                = "vnet"
   virtual_network_subnet_name         = "rendernodes"
 
