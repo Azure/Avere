@@ -40,12 +40,18 @@ const (
 	VMSSNodeSize            = "Standard_D2s_v3"
 	VmssName                = "cwvmss"
 	NodesPerNFSMountAddress = 2
-	/*MarketPlacePublisher    = "Canonical"
+	MarketPlacePublisher    = "Canonical"
 	MarketPlaceOffer        = "UbuntuServer"
-	MarketPlaceSku          = "18.04-LTS"*/
+	MarketPlaceSku          = "18.04-LTS"
+	/*PlanName = ""
+	PlanPublisherName = ""
+	PlanProductName = ""
 	MarketPlacePublisher = "microsoft-avere"
 	MarketPlaceOffer     = "vfxt"
 	MarketPlaceSku       = "avere-vfxt-controller"
+	PlanName             = "avere-vfxt-controller"
+	PlanPublisherName    = "microsoft-avere"
+	PlanProductName      = "vfxt"*/
 
 	tick                        = time.Duration(1) * time.Millisecond   // 1ms
 	timeBetweenJobCheck         = time.Duration(2) * time.Second        // 2 seconds between checking for jobs
