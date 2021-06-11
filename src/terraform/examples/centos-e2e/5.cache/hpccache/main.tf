@@ -3,11 +3,11 @@ locals {
   // the region of the deployment
   location = "eastus"
 
-  // onprem filer and mount point
+  // paste from 2.2.simulatatedonprem/ outputs (re-run "terraform output" from that directory if needed)
   nfsfiler_address = ""
   nfsmount_point   = "/data"
 
-  // network details
+  # paste from 2.1.network/ outputs (re-run "terraform output" from that directory if needed)
   network_resource_group_name = "network_rg"
   virtual_network_name        = "vnet"
   cache_network_subnet_name   = "cache"
@@ -69,7 +69,7 @@ resource "azurerm_hpc_cache" "hpc_cache" {
   resource_group_name = azurerm_resource_group.hpc_cache_rg.name
   location            = azurerm_resource_group.hpc_cache_rg.location
   cache_size_in_gb    = local.cache_size
-  subnet_id           = data.vnet.id
+  subnet_id           = data.azurerm_subnet.vnet.id
   sku_name            = local.cache_throughput
 }
 
