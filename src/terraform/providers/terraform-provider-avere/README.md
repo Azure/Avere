@@ -18,7 +18,7 @@ More examples deployable from Azure Cloud Shell can be found in the [Avere vFXT 
 ```terraform
 
 terraform {
-  required_version = ">= 0.14.0,< 0.16.0"
+  required_version = ">= 0.14.0"
   required_providers {
     avere = {
       source  = "hashicorp/avere"
