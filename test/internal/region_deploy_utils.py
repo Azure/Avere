@@ -40,6 +40,10 @@ regions_to_exclude = [
 
     # 2019-08-25: E32s VMs not available in this region for the test sub
     "westcentralus", "germanywestcentral",
+
+    # 2021-07-01: restricted regions
+    "brazilsoutheast", "jioindiacentral", "jioindiawest",
+    "swedencentral", "swedensouth",
 ]
 regions_to_include = []
 
