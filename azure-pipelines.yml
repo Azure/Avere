@@ -211,6 +211,7 @@ jobs:
 
   - script: |
       az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+      az account set --subscription ${AZURE_SUBSCRIPTION_ID}
       STORAGE_ACT=$(jq -r .storage_account $VFXT_TEST_VARS_FILE)
       az storage account keys list --account-name $STORAGE_ACT > keys.json
       export SA_KEY="$(jq -r '.[0].value' keys.json)"
@@ -419,6 +420,9 @@ jobs:
       az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
       check_rc.sh $? "Azure login" || exit
 
+      az account set --subscription ${AZURE_SUBSCRIPTION_ID}
+      check_rc.sh $? "Set default subscription" || exit
+
       export _RESOURCE_GROUP=$(jq -r .resource_group $VFXT_TEST_VARS_FILE)
       check_rc.sh $? 'Get resource group name from VFXT_TEST_VARS_FILE' || exit
       echo "##vso[task.setvariable variable=_RESOURCE_GROUP]${_RESOURCE_GROUP}"
@@ -448,6 +452,7 @@ jobs:
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
       export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
