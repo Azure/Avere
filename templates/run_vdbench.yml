@@ -42,15 +42,15 @@ steps:
       IP_ADDRESS_COMMAND=$(terraform output -json | jq -r ".vmss_addresses_command.value") 
       IP_ADDRESS=$(${IP_ADDRESS_COMMAND} | jq -r '.[0]')
       
-      ssh -o "StrictHostKeyChecking=no" -oProxyCommand="ssh -oStrictHostKeyChecking=no -W %h:%p  ${USERNAME}@${CONTROLLER_ADDRESS}" ${USERNAME}@${IP_ADDRESS} ls
+      ssh -o "StrictHostKeyChecking=no" -oProxyCommand="ssh -p ${SSH_PORT} -oStrictHostKeyChecking=no -W %h:%p  ${USERNAME}@${CONTROLLER_ADDRESS}" ${USERNAME}@${IP_ADDRESS} ls
       echo ">> SCP CMD"
-      scp -o "ProxyJump ${USERNAME}@${CONTROLLER_ADDRESS}" ~/.ssh/id_rsa ${USERNAME}@${IP_ADDRESS}:.ssh/id_rsa
+      scp -o "ProxyJump ${USERNAME}@${CONTROLLER_ADDRESS}:${SSH_PORT}" ~/.ssh/id_rsa ${USERNAME}@${IP_ADDRESS}:.ssh/id_rsa
       
       echo ">> COPY_IDRSA.SH"
-      ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} /home/azureuser/copy_idrsa.sh
+      ssh -J ${USERNAME}@${CONTROLLER_ADDRESS}:${SSH_PORT} ${USERNAME}@${IP_ADDRESS} /home/azureuser/copy_idrsa.sh
       
       echo ">> RUN VDBENCH"
-      ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "tmux new-session -d \"/home/${USERNAME}/run_vdbench.sh ${{ parameters.vdbench_config }}.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1\""
+      ssh -J ${USERNAME}@${CONTROLLER_ADDRESS}:${SSH_PORT} ${USERNAME}@${IP_ADDRESS} "tmux new-session -d \"/home/${USERNAME}/run_vdbench.sh ${{ parameters.vdbench_config }}.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1\""
     fi
   displayName: 'VDBENCH: ${{ parameters.cmd_terraform }} - ${{ parameters.vdbench_config }}'
   condition: always()
