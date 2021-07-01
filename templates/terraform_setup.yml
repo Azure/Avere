@@ -38,6 +38,7 @@ steps:
     cd src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
     sed -i -E -e "s:vm_ssh_key_data = null:vm_ssh_key_data = \"${sshkey}\":" \
       -e "s/location\s*= \"eastus\"/location = \"${REGION}\"/" \
+      -e "s/ssh_port\s*= 22/ssh_port = 10022/" \
       -e "s/controller_image_id\s*= null/controller_image_id = \"${{ parameters.controller_image }}\"/" \
       -e "s/vfxt_image_id\s*= null/vfxt_image_id = \"${{ parameters.image }}\"/" \
       -e "s/(([a-z]+)_resource_group_name)\s*= \"[^\"]+\"/\1 = \"${RESOURCE_GROUP_NAME}-\2\"/" \
