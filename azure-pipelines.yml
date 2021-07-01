@@ -344,7 +344,7 @@ jobs:
         grep ' version' $(find ${BUILD_SOURCESDIRECTORY} -name vfxt.log)
       fi
     displayName: 'INFO: Deployment region, version checks, etc.'
-    condition: always()
+    condition: eq(variables['COLLECT_ARTIFACTS'], 'true')
 
   - script: |
       DEPLOY_ID=$(jq -r .deploy_id $VFXT_TEST_VARS_FILE)
