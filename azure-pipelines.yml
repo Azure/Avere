@@ -199,7 +199,7 @@ jobs:
         echo "##vso[task.complete result=Failed;]"
       fi
     displayName: 'TEST: Cluster status, health'
-    condition: succeeded()
+    condition: and(succeeded(), eq(variables['CHECK_CLUSTER_HEALTH'], 'true'))
     env:
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
       AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
@@ -211,6 +211,7 @@ jobs:
 
   - script: |
       az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+      az account set --subscription ${AZURE_SUBSCRIPTION_ID}
       STORAGE_ACT=$(jq -r .storage_account $VFXT_TEST_VARS_FILE)
       az storage account keys list --account-name $STORAGE_ACT > keys.json
       export SA_KEY="$(jq -r '.[0].value' keys.json)"
@@ -282,7 +283,7 @@ jobs:
         echo "##vso[task.complete result=Failed;]"
       fi
     displayName: 'TEST: Collect deployment artifacts, log files'
-    condition: always()
+    condition: eq(variables['COLLECT_ARTIFACTS'], 'true')
     env:
       AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
       AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
@@ -324,7 +325,7 @@ jobs:
       echo "INFO: Done."
       exit $exit_code
     displayName: 'TEST: Check for error messages in artifacts'
-    condition: always()
+    condition: eq(variables['COLLECT_ARTIFACTS'], 'true')
     failOnStderr: true
 
   - script: |
@@ -343,7 +344,7 @@ jobs:
         grep ' version' $(find ${BUILD_SOURCESDIRECTORY} -name vfxt.log)
       fi
     displayName: 'INFO: Deployment region, version checks, etc.'
-    condition: always()
+    condition: eq(variables['COLLECT_ARTIFACTS'], 'true')
 
   - script: |
       DEPLOY_ID=$(jq -r .deploy_id $VFXT_TEST_VARS_FILE)
@@ -358,14 +359,14 @@ jobs:
       mkdir -p $P_ARTIFACTS_DIR
       tar -zcvf ${P_ARTIFACTS_DIR}/vfxt_artifacts_${DEPLOY_ID}.tar.gz ${T_ARTIFACTS_DIR}
     displayName: 'ARCHIVE: Deployment artifacts, log files'
-    condition: always()
+    condition: eq(variables['COLLECT_ARTIFACTS'], 'true')
     failOnStderr: true
 
   - script: |
       P_ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
       grep -i -C 5 -e vfxt:ERROR -e exception ${P_ARTIFACTS_DIR}/vfxt.log
     displayName: 'CHECK: Grep errors from vfxt.log (+/- 5 lines)'
-    condition: or(failed(), canceled())
+    condition: and(or(failed(), canceled()), eq(variables['COLLECT_ARTIFACTS'], 'true'))
 
   - script: |
       set -x
@@ -411,13 +412,16 @@ jobs:
   #   inputs:
   #     artifactName: 'testArtifacts'
   #     targetPath: 'test_artifacts'
-  #   condition: always()
+  #   condition: eq(variables['COLLECT_ARTIFACTS'], 'true')
 
   - bash: |
       export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
 
       az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
       check_rc.sh $? "Azure login" || exit
+
+      az account set --subscription ${AZURE_SUBSCRIPTION_ID}
+      check_rc.sh $? "Set default subscription" || exit
 
       export _RESOURCE_GROUP=$(jq -r .resource_group $VFXT_TEST_VARS_FILE)
       check_rc.sh $? 'Get resource group name from VFXT_TEST_VARS_FILE' || exit
@@ -448,6 +452,7 @@ jobs:
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
   - script: |
       export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
