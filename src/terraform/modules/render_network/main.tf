@@ -78,6 +78,11 @@ resource "azurerm_virtual_network" "vnet" {
   depends_on = [
     azurerm_resource_group.render_rg,
   ]
+
+  tags = {
+    // needed for DEVOPS testing
+    SkipNRMSNSG = "12345"
+  }
 }
 
 resource "azurerm_subnet" "cloud_cache" {
@@ -124,11 +129,6 @@ resource "azurerm_subnet" "jumpbox" {
   address_prefixes     = [var.subnet_jumpbox_address_prefix]
   # needed for the controller to add storage containers
   service_endpoints = ["Microsoft.Storage"]
-
-  tags = {
-    // needed for DEVOPS testing
-    "SkipNRMSNSG" = "12345"
-  }
 }
 
 resource "azurerm_subnet_network_security_group_association" "jumpbox" {
