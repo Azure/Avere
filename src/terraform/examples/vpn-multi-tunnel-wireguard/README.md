@@ -1,4 +1,4 @@
-# WireGuard Multi-tunnel ECMP on Azure
+# WireGuard Multi-tunnel implementation using ECMP on Azure
 
 When implementing a cloud burst solution a common need of rendering studios is a high bandwidth connection back to on-premises.  This can be achieved through [Azure ExpressRoute](https://azure.microsoft.com/en-us/services/expressroute/).  However, [Azure ExpressRoute](https://azure.microsoft.com/en-us/services/expressroute/) can take 45 to 90 waiting for a connectivity parter to install an interconnect.
 
@@ -76,11 +76,14 @@ This is a non-exhaustive test, but a good price per value VM for a [WireGuard](h
 
 Thanks to the following articles and websites to help with this project:
 
+1. Klassert, Steffen.  [Parallelizing IPsec: switching SMP to 'On' is not even half the way](https://www.strongswan.org/docs/Steffen_Klassert_Parallelizing_IPsec.pdf).  June 11, 2010.
+    * this helped explain why there is a 1Gbps limit on IPSec tunnels, and it is due to a Single cpu managing the network traffic.  Slide 36 provides the details of this limit.
+
+1. ServerFault User: bao7uo. [ServerFault Answer - Hash-based multipath routing](https://serverfault.com/questions/696675/multipath-routing-in-post-3-6-kernels/820319#820319).  April 13, 2017.
+    * this helped explain the affinitization of source / destination address pairs, because Hash-based multipath routing with a hash based on source / destination pairs had been added after linux kernel 4.4.  Search for "Hash-based multipath routing" on the [Linux 4.4 release notes](https://kernelnewbies.org/Linux_4.4#head-2583c31a65e6592bef9af426a78940078df7f630).
+
 1. Thangavel, Muthuraj.  [High throughput Site to site VPN on commodity hardware - an adventure with Wireguard, bonding and ECMP](https://blog.muthuraj.in/2020/06/high-throughput-site-to-site-vpn-using.html). June 18, 2020.
     * this article helped explain how to setup ECMP on Linux, including how to add multiple tunnels on overlapping address spaces.
 
 1. [WireGuard Fast, Modern, Secure VPN Tunnel](https://www.wireguard.com/).  July, 2021.
     * this is WireGuard's main website, and helped with understanding and installation of WireGuard.
-
-1. ServerFault User: bao7uo. [ServerFault Answer - Hash-based multipath routing](https://serverfault.com/questions/696675/multipath-routing-in-post-3-6-kernels/820319#820319).  April 13, 2017.
-    * this helped explain the affinitization of source / destination address pairs, because Hash-based multipath routing with a hash based on source / destination pairs had been added after linux kernel 4.4.  Search for "Hash-based multipath routing" on the [Linux 4.4 release notes](https://kernelnewbies.org/Linux_4.4#head-2583c31a65e6592bef9af426a78940078df7f630).

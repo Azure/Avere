@@ -107,6 +107,9 @@ Both HPC Cache and Avere vFXT for Azure provide file caching for high-performanc
 
 The following terraform examples build out accessory rendering infrastructure such as DNS Servers, high speed NFS ephemeral filers, and a jumpbox:
 
+### VPN
+1. [WireGuard Multi-tunnel implementation using ECMP on Azure](vpn-multi-tunnel-wireguard) - this example shows how to deploy a WireGuard VPN with multiple tunnels to achieve high throuhput.
+
 ### Workstations
 1. [Windows 10 + Nvidia Grid + Teradici PCoIP](examples/windowsgridgpu) - this example deploys Windows 10 + Nvidia Grid + Teradici PCoIP.
 1. [CentOS7 + Gnome + Nvidia Grid + Teradici PCoIP](examples/centosgridgpu) - this example deploys CentOS7 with Gnome + Nvidia Grid + Teradici PCoIP.
