@@ -3,20 +3,17 @@
 set -x
 
 function retrycmd_if_failure() {
-    set +e
     retries=$1; wait_sleep=$2; shift && shift
     for i in $(seq 1 $retries); do
         ${@}
         [ $? -eq 0  ] && break || \
         if [ $i -eq $retries ]; then
             echo Executed \"$@\" $i times;
-            set -e
             return 1
         else
             sleep $wait_sleep
         fi
     done
-    set -e
     echo Executed \"$@\" $i times;
 }
 
