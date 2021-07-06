@@ -145,7 +145,6 @@ variable "vmss_instance_count" {
 }
 
 ### Resources
-// wg cloud init
 locals {
   script_file_b64 = base64gzip(replace(file("${path.module}/install.sh"), "\r", ""))
   init_file       = templatefile("${path.module}/cloud-init.tpl", { installcmd = local.script_file_b64 })
@@ -208,7 +207,6 @@ resource "azurerm_subnet_route_table_association" "cloud" {
   route_table_id = azurerm_route_table.cloudroutable.id
 }
 
-// the following is only needed if you need to ssh to the controller
 resource "azurerm_network_security_group" "cloud_wg_nsg" {
   name                = "cloud_wg_nsg"
   resource_group_name = azurerm_resource_group.cloud.name
@@ -240,7 +238,6 @@ resource "azurerm_network_security_group" "cloud_wg_nsg" {
   }
 }
 
-// the following is only needed if you need to ssh to the controller
 resource "azurerm_network_security_group" "cloud_vms_nsg" {
   name                = "cloud_vms_nsg"
   resource_group_name = azurerm_resource_group.cloud.name
@@ -326,7 +323,6 @@ resource "azurerm_subnet_route_table_association" "onprem" {
   route_table_id = azurerm_route_table.onpremroutable.id
 }
 
-// the following is only needed if you need to ssh to the controller
 resource "azurerm_network_security_group" "onprem_wg_nsg" {
   name                = "onprem_wg_nsg"
   resource_group_name = azurerm_resource_group.onprem.name
@@ -358,7 +354,6 @@ resource "azurerm_network_security_group" "onprem_wg_nsg" {
   }
 }
 
-// the following is only needed if you need to ssh to the controller
 resource "azurerm_network_security_group" "onprem_vms_nsg" {
   name                = "onprem_vms_nsg"
   resource_group_name = azurerm_resource_group.onprem.name
