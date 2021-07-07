@@ -17,7 +17,7 @@ locals {
   onprem_simulated_resource_group_name = "onprem_rg"
 
   // virtual network settings
-  address_space       = "172.16.0.0/23"
+  address_space = "172.16.0.0/23"
   // DO NOT CHANGE NAME "GatewaySubnet", Azure requires it with that name
   gateway_subnet_name = "GatewaySubnet"
   gateway_subnet      = "172.16.0.0/24"
@@ -48,7 +48,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.56.0"
+      version = "~>2.66.0"
     }
   }
 }

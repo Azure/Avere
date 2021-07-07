@@ -1,9 +1,9 @@
 // customize the simple VM by editing the following local variables
 locals {
   // the region of the deployment
-  location = "eastus"
+  location                    = "eastus"
   network_resource_group_name = "network_resource_group"
-  vm_admin_username = "azureuser"
+  vm_admin_username           = "azureuser"
   // use either SSH Key data or admin password, if ssh_key_data is specified
   // then admin_password is ignored
   vm_admin_password = "ReplacePassword$"
@@ -12,10 +12,10 @@ locals {
   vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
 
   // nfs filer details
-  filer_location = "westus2"
+  filer_location            = "westus2"
   filer_resource_group_name = "filer_resource_group"
   // more filer sizes listed at https://github.com/Azure/Avere/tree/main/src/terraform/modules/nfs_filer
-  filer_size = "Standard_D2s_v3" 
+  filer_size = "Standard_D2s_v3"
 }
 
 terraform {
@@ -23,7 +23,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.56.0"
+      version = "~>2.66.0"
     }
   }
 }
@@ -34,9 +34,9 @@ provider "azurerm" {
 
 // the render network
 module "network" {
-  source = "github.com/Azure/Avere/src/terraform/modules/render_network"
+  source              = "github.com/Azure/Avere/src/terraform/modules/render_network"
   resource_group_name = local.network_resource_group_name
-  location = local.location
+  location            = local.location
 }
 
 resource "azurerm_resource_group" "nfsfiler" {
@@ -73,19 +73,19 @@ resource "azurerm_virtual_network_peering" "peer-from-filer" {
 
 // the ephemeral filer
 module "nasfiler1" {
-  source = "github.com/Azure/Avere/src/terraform/modules/nfs_filer"
+  source              = "github.com/Azure/Avere/src/terraform/modules/nfs_filer"
   resource_group_name = azurerm_resource_group.nfsfiler.name
-  location = azurerm_resource_group.nfsfiler.location
-  admin_username = local.vm_admin_username
-  admin_password = local.vm_admin_password
-  ssh_key_data = local.vm_ssh_key_data
-  vm_size = local.filer_size
-  unique_name = "nasfiler1"
+  location            = azurerm_resource_group.nfsfiler.location
+  admin_username      = local.vm_admin_username
+  admin_password      = local.vm_admin_password
+  ssh_key_data        = local.vm_ssh_key_data
+  vm_size             = local.filer_size
+  unique_name         = "nasfiler1"
 
   // network details
   virtual_network_resource_group = azurerm_virtual_network.filervnet.resource_group_name
-  virtual_network_name = azurerm_virtual_network.filervnet.name
-  virtual_network_subnet_name = tolist(azurerm_virtual_network.filervnet.subnet)[0].name
+  virtual_network_name           = azurerm_virtual_network.filervnet.name
+  virtual_network_subnet_name    = tolist(azurerm_virtual_network.filervnet.subnet)[0].name
 
   depends_on = [
     azurerm_resource_group.nfsfiler,

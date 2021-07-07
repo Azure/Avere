@@ -19,7 +19,7 @@ If you have created a new subscription, you will need to perform the following s
       required_providers {
         azurerm = {
           source  = "hashicorp/azurerm"
-          version = "~>2.56.0"
+          version = "~>2.66.0"
         }
       }
     }
