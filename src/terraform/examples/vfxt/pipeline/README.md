@@ -16,17 +16,19 @@ To run this example, ensure that you have created a service principal:
 
 1. When you are done using the service principal delete it with the command `az ad sp delete --id APPLICATION_ID`
 
-1. [Ubuntu Pipeline + Terraform 0.15.*](ubuntu/)
-1. [CentOS Pipeline + Terraform 0.15.*](centos/)
-1. [Ubuntu Pipeline + Terraform 0.14.*](ubuntu/ubuntutf014.md)
-1. [CentOS Pipeline + Terraform 0.14.*](centos/centostf014.md)
+1. [Ubuntu Pipeline + Terraform 1.0.*](ubuntu/)
+1. [CentOS Pipeline + Terraform 1.0.*](centos/)
+1. [Windows](windows/)
 
 ## Legacy Target Environments
 
 The following are legacy environments:
 
+1. [Ubuntu Pipeline + Terraform 0.15.*](ubuntu/ubuntutf015.md)
+1. [CentOS Pipeline + Terraform 0.15.*](centos/centostf015.md)
+1. [Ubuntu Pipeline + Terraform 0.14.*](ubuntu/ubuntutf014.md)
+1. [CentOS Pipeline + Terraform 0.14.*](centos/centostf014.md)
 1. [Ubuntu Pipeline + Terraform 0.12.*](ubuntu/ubuntutf012.md)
 1. [CentOS Pipeline + Terraform 0.12.*](centos/centostf012.md)
 1. [Ubuntu Pipeline + Terraform 0.13.*](ubuntu/ubuntutf013.md)
 1. [CentOS Pipeline + Terraform 0.13.*](centos/centostf013.md)
-1. [Windows](windows/)
