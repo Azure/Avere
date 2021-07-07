@@ -1,12 +1,12 @@
 // customize the simple VM by editing the following local variables
 locals {
   // the region of the main deployment
-  location = ""
-  network_resource_group_name = "network_rg"
+  location   = ""
+  network_rg = "network_rg"
 
   // virtual network settings
-  vnet_name               = "vnet"
-  address_space           = "10.0.0.0/16"
+  vnet_name     = "vnet"
+  address_space = "10.0.0.0/16"
   // DO NOT CHANGE NAME "GatewaySubnet", Azure requires it with that name
   gateway_subnet_name     = "GatewaySubnet"
   gateway_subnet          = "10.0.0.0/24"
@@ -31,7 +31,7 @@ provider "azurerm" {
 }
 
 resource "azurerm_resource_group" "network" {
-  name     = local.network_resource_group_name
+  name     = local.network_rg
   location = local.location
 }
 

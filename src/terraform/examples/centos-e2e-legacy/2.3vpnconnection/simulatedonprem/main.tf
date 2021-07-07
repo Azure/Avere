@@ -11,7 +11,6 @@ locals {
   vnet_resource_group = ""
 
   # paste from 2.2.simulatatedonprem/ outputs (re-run "terraform output" from that directory if needed)
-  location            = ""
   onprem_location       = ""
   onprem_resource_group = ""
   onprem_vpn_gateway_id = ""
