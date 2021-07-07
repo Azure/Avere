@@ -66,7 +66,9 @@ The [Azure ExpressRoute](https://azure.microsoft.com/en-us/services/expressroute
     1. (ongoing cost, fast failover) use S2S VPN as a backup for [ExpressRoute private peering](https://docs.microsoft.com/en-us/azure/expressroute/use-s2s-vpn-as-backup-for-expressroute-privatepeering).  Here is an additional article on how you to have an [ExpressRoute co-exist with a VPN gateway](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-howto-coexist-resource-manager).
 
 ### Ensuring for security:
-* To ensure your ExpressRoute connection is encrypted end-to-end, consider configuring [IPsec over ExpressRoute for Virtual WAN](https://docs.microsoft.com/en-us/azure/virtual-wan/vpn-over-expressroute).
+* To ensure your ExpressRoute connection is encrypted end-to-end, there are two approaches:
+    1. configuring [IPsec over ExpressRoute for Virtual WAN](https://docs.microsoft.com/en-us/azure/virtual-wan/vpn-over-expressroute).
+    1. setup wireguard end to end.  Here is our [WireGuard to WireGuard](../vpn-multi-tunnel-wireguard) implementation, but since this is over ExpressRoute with low latency and few hops, you would only need a single tunnel.  (credit to Raymond Gumti for this recommendation!)
 
 ## Troubleshooting network speeds
 
