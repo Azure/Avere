@@ -45,6 +45,11 @@ variable "subnet_name" {
   default     = "render_clients1"
 }
 
+variable "ssh_port" {
+  description = "ssh port"
+  default     = 22
+}
+
 // customize the simple VM by editing the following local variables
 locals {
   unique_name  = "vmss"
@@ -77,6 +82,7 @@ module "vdbench_configure" {
   nfs_address     = tolist(var.vserver_ip_addresses)[0]
   nfs_export_path = var.nfs_export_path
   vdbench_url     = var.vdbench_url
+  ssh_port        = var.ssh_port
 }
 
 // the VMSS module
@@ -115,7 +121,7 @@ output "vmss_name" {
 }
 
 output "vmss_addresses_command" {
-  // local-exec doesn't return output, and the only way to 
+  // local-exec doesn't return output, and the only way to
   // try to get the output is follow advice from https://stackoverflow.com/questions/49136537/obtain-ip-of-internal-load-balancer-in-app-service-environment/49436100#49436100
   // in the meantime just provide the az cli command to
   // the customer
