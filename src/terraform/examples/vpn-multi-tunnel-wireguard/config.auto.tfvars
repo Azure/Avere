@@ -50,8 +50,9 @@ tunnel_count  = 3
 base_udp_port = 5000
 
 // vm details
-vm_admin_username   = "azureuser"
-vm_admin_password   = "ReplacePassword$"
+vm_admin_username = "azureuser"
+vm_admin_password = "ReplacePassword$"
+# leave ssh key empty if not used
 vm_ssh_key_data     = ""
 cloud_wg_vm_size    = "Standard_F8s_v2"
 cloud_vm_size       = "Standard_D16s_v3"
