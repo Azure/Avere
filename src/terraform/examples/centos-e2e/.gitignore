@@ -1,0 +1,7 @@
+.terraform
+.terraform.*
+*tfstate*
+test
+crash.log
+test.tfvars
+test.backend

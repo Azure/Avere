@@ -1,0 +1,3 @@
+resource_group_name  = "tfsecurity_rg"
+storage_account_name = "tfstgaccount"
+container_name       = "terraform"
