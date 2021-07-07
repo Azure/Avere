@@ -1,7 +1,7 @@
 # Windows With Terraform
 
 Here are the steps to setup a Windows environment:
-1. Download Terraform from https://releases.hashicorp.com/terraform/0.15.0/terraform_0.15.0_windows_amd64.zip and install to a path
+1. Download Terraform from https://releases.hashicorp.com/terraform/1.0.1/terraform_1.0.1_windows_amd64.zip and install to folder in the PATH
 
 1. Install az cli per [az cli install instructions for Windows](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-windows?tabs=azure-cli)
 

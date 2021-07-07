@@ -1,25 +1,34 @@
-# Ubuntu Pipeline with Terraform 1.0.*
+# CentOS Pipeline with Terraform 0.15.*
 
-These instructions show the pipeline steps to deploy a vFXT on a newly deployed Ubuntu
+These instructions show the pipeline steps to deploy a vFXT on a newly deployed CentOS
 
-## Step 1: Deploy Ubuntu
+## Step 1: Deploy Centos
 
-Deploy Ubuntu from [Azure Portal](https://portal.azure.com/), or using the main.tf provided in this directory.
+Deploy CentOS from [Azure Portal](https://portal.azure.com/), or using the main.tf provided in this directory.
 
 ## Step 2: Tools
 
-Login to the ubuntu machine, with the default user, and deploy the tools with the following commands:
+Login to the CentOS machine, with the default user, and deploy the tools with the following commands:
 
 ```bash
-# install unzip and jq
-sudo apt update
-sudo apt install -y unzip jq
+# install git and jq
+sudo yum install -y epel-release
+sudo yum install -y git jq
 # install terraform
-wget https://releases.hashicorp.com/terraform/1.0.1/terraform_1.0.1_linux_amd64.zip
-sudo unzip terraform_1.0.1_linux_amd64.zip -d /usr/local/bin
-rm terraform_1.0.1_linux_amd64.zip
+wget https://releases.hashicorp.com/terraform/0.15.0/terraform_0.15.0_linux_amd64.zip
+sudo unzip terraform_0.15.0_linux_amd64.zip -d /usr/local/bin
+rm terraform_0.15.0_linux_amd64.zip
 # install az cli
-curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+echo -e "[azure-cli]
+name=Azure CLI
+baseurl=https://packages.microsoft.com/yumrepos/azure-cli
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.microsoft.com/keys/microsoft.asc" | sudo tee /etc/yum.repos.d/azure-cli.repo
+sudo yum install -y azure-cli
+
+# install the provider
 # install the vfxt released binary from https://github.com/Azure/Avere
 # to build the provider from scratch see: https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#build-the-terraform-provider-binary-on-linux
 version=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name | sed -e 's/[^0-9]*\([0-9].*\)$/\1/')

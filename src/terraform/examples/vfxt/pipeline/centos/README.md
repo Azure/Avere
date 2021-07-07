@@ -1,4 +1,4 @@
-# CentOS Pipeline with Terraform 0.15.*
+# CentOS Pipeline with Terraform 1.0.*
 
 These instructions show the pipeline steps to deploy a vFXT on a newly deployed CentOS
 
@@ -15,9 +15,9 @@ Login to the CentOS machine, with the default user, and deploy the tools with th
 sudo yum install -y epel-release
 sudo yum install -y git jq
 # install terraform
-wget https://releases.hashicorp.com/terraform/0.15.0/terraform_0.15.0_linux_amd64.zip
-sudo unzip terraform_0.15.0_linux_amd64.zip -d /usr/local/bin
-rm terraform_0.15.0_linux_amd64.zip
+wget https://releases.hashicorp.com/terraform/1.0.1/terraform_1.0.1_linux_amd64.zip
+sudo unzip terraform_1.0.1_linux_amd64.zip -d /usr/local/bin
+rm terraform_1.0.1_linux_amd64.zip
 # install az cli
 sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
 echo -e "[azure-cli]
