@@ -1,15 +1,15 @@
 // customize the simple VM by adjusting the following local variables
 locals {
   // paste from 0.network output variables
-  resource_group_unique_prefix = ""
-  location1 = ""
+  resource_group_unique_prefix      = ""
+  location1                         = ""
   network-region1-jumpbox-subnet-id = ""
 
   // set the following variables to appropriate values
 
   resource_group_name = "${local.resource_group_unique_prefix}windc"
-  unique_name = "dc"
-  vm_size = "Standard_D4s_v3"
+  unique_name         = "dc"
+  vm_size             = "Standard_D4s_v3"
   # choose one of the following windows versions
   source_image_reference = local.windows_server_2016
   #source_image_reference = local.windows_server_2019
@@ -19,13 +19,13 @@ locals {
   license_type = "None"
   # license_type = "Windows_Client"
   # license_type = "Windows_Server"
-  add_public_ip = true
+  add_public_ip     = true
   vm_admin_username = "azureuser"
   vm_admin_password = "ReplacePassword$"
 
   // network, set static and IP if using a DC
   use_static_private_ip_address = true
-  private_ip_address = "10.0.3.254" // for example "10.0.3.254" could be use for domain controller
+  private_ip_address            = "10.0.3.254" // for example "10.0.3.254" could be use for domain controller
 
   // advanced: rarely changed parameters
   windows_server_2016 = {
@@ -48,7 +48,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.56.0"
+      version = "~>2.66.0"
     }
   }
 }
@@ -63,10 +63,10 @@ resource "azurerm_resource_group" "win" {
 }
 
 resource "azurerm_public_ip" "vm" {
-  name                         = "${local.unique_name}-publicip"
-  location                     = local.location1
-  resource_group_name          = azurerm_resource_group.win.name
-  allocation_method            = "Static"
+  name                = "${local.unique_name}-publicip"
+  location            = local.location1
+  resource_group_name = azurerm_resource_group.win.name
+  allocation_method   = "Static"
 
   count = local.add_public_ip ? 1 : 0
 }
@@ -95,7 +95,7 @@ resource "azurerm_windows_virtual_machine" "vm" {
   size                  = local.vm_size
   network_interface_ids = [azurerm_network_interface.vm.id]
   license_type          = local.license_type
-  
+
   os_disk {
     name                 = "${local.unique_name}-osdisk"
     caching              = "ReadWrite"
@@ -115,5 +115,5 @@ output "username" {
 }
 
 output "vm_address" {
-  value = "${local.add_public_ip ? azurerm_public_ip.vm[0].ip_address : azurerm_network_interface.vm.ip_configuration[0].private_ip_address}"
+  value = local.add_public_ip ? azurerm_public_ip.vm[0].ip_address : azurerm_network_interface.vm.ip_configuration[0].private_ip_address
 }

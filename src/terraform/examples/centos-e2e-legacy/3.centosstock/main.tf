@@ -12,7 +12,7 @@ data "azurerm_key_vault_secret" "virtualmachine" {
 locals {
   location                     = ""
   keyvault_name                = "renderkeyvault"
-  keyvault_resource_group_name = "keyvault_rg"// customize the Secured VM by adjusting the following local variables
+  keyvault_resource_group_name = "keyvault_rg" // customize the Secured VM by adjusting the following local variables
 
   // authentication details
   vm_admin_username = "azureuser"
@@ -62,7 +62,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.56.0"
+      version = "~>2.66.0"
     }
   }
 }
