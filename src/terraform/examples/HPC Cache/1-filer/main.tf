@@ -34,7 +34,7 @@ locals {
 
   // nfs filer related variables
   filer_resource_group_name = "filer_resource_group"
-  vm_admin_username = "azureuser"
+  vm_admin_username         = "azureuser"
   // use either SSH Key data or admin password, if ssh_key_data is specified
   // then admin_password is ignored
   vm_admin_password = "ReplacePassword$"
@@ -48,7 +48,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.56.0"
+      version = "~>2.66.0"
     }
   }
 }
@@ -85,19 +85,19 @@ resource "azurerm_resource_group" "nfsfiler" {
 
 // the ephemeral filer
 module "nasfiler1" {
-  source = "github.com/Azure/Avere/src/terraform/modules/nfs_filer"
+  source              = "github.com/Azure/Avere/src/terraform/modules/nfs_filer"
   resource_group_name = azurerm_resource_group.nfsfiler.name
-  location = azurerm_resource_group.nfsfiler.location
-  admin_username = local.vm_admin_username
-  admin_password = local.vm_admin_password
-  ssh_key_data = local.vm_ssh_key_data
-  vm_size = "Standard_D2s_v3"
-  unique_name = "nasfiler1"
+  location            = azurerm_resource_group.nfsfiler.location
+  admin_username      = local.vm_admin_username
+  admin_password      = local.vm_admin_password
+  ssh_key_data        = local.vm_ssh_key_data
+  vm_size             = "Standard_D2s_v3"
+  unique_name         = "nasfiler1"
 
   // network details
   virtual_network_resource_group = local.network_resource_group_name
-  virtual_network_name = module.network.vnet_name
-  virtual_network_subnet_name = module.network.cloud_filers_subnet_name
+  virtual_network_name           = module.network.vnet_name
+  virtual_network_subnet_name    = module.network.cloud_filers_subnet_name
 
   depends_on = [
     module.network,

@@ -1,6 +1,10 @@
 // customize the simple VM by editing the following local variables
 locals {
-    vm_name = var.unique_name
+  vm_name = var.unique_name
+
+  # deliver the install script via cloud-init
+  script_file_b64 = base64gzip(replace(file("${path.module}/install.sh"), "\r", ""))
+  init_file       = templatefile("${path.module}/cloud-init.tpl", { installcmd = local.script_file_b64 })
 }
 
 data "azurerm_subnet" "vnet" {
@@ -15,12 +19,12 @@ resource "azurerm_resource_group" "vmss" {
 }
 
 locals {
-    mount_all_env_var = var.mount_all ? " MOUNT_ALL=true " : ""
-    env_vars = " ${local.mount_all_env_var} LINUX_USER=${var.admin_username} NODE_PREFIX=${local.vm_name} NODE_COUNT=${var.vm_count} BASE_DIR=${var.mount_target} BOOTSTRAP_SCRIPT_PATH=${var.bootstrap_script_path} NFS_IP_CSV='${join(",",var.nfs_export_addresses)}' NFS_PATH=${var.nfs_export_path} ${var.additional_env_vars}"
+  mount_all_env_var = var.mount_all ? " MOUNT_ALL=true " : ""
+  env_vars          = " ${local.mount_all_env_var} LINUX_USER=${var.admin_username} NODE_PREFIX=${local.vm_name} NODE_COUNT=${var.vm_count} BASE_DIR=${var.mount_target} BOOTSTRAP_SCRIPT_PATH=${var.bootstrap_script_path} NFS_IP_CSV='${join(",", var.nfs_export_addresses)}' NFS_PATH=${var.nfs_export_path} ${var.additional_env_vars}"
 
-    bootstrap_path = "/b"
+  bootstrap_path = "/b"
 
-    vmss_priority = "Standard"
+  vmss_priority = "Standard"
 }
 
 resource "azurerm_virtual_machine_scale_set" "vmss" {
@@ -33,17 +37,18 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
   overprovision       = var.overprovision
 
   dynamic "os_profile" {
-    for_each = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? [var.admin_password] : [null] 
+    for_each = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? [var.admin_password] : [null]
     content {
       computer_name_prefix = var.unique_name
-      admin_username      = var.admin_username
-      admin_password = var.admin_password
+      admin_username       = var.admin_username
+      admin_password       = var.admin_password
+      custom_data          = base64encode(local.init_file)
     }
   }
 
   // dynamic block when password is specified
   dynamic "os_profile_linux_config" {
-    for_each = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? [var.admin_password] : [] 
+    for_each = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? [var.admin_password] : []
     content {
       disable_password_authentication = false
     }
@@ -62,8 +67,8 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
   }
 
   sku {
-    name = var.vm_size
-    tier = local.vmss_priority
+    name     = var.vm_size
+    tier     = local.vmss_priority
     capacity = var.vm_count
   }
 
@@ -74,7 +79,7 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
     version   = var.image_reference_version
   }
 
-  storage_profile_os_disk  {
+  storage_profile_os_disk {
     caching           = "ReadWrite"
     managed_disk_type = "Standard_LRS"
     create_option     = "FromImage"
@@ -105,7 +110,7 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
     # 4. unmount the nfs server the bootstrap directory 
     settings = <<SETTINGS
     {
-        "commandToExecute": "set -x && ((apt-get update && apt-get install -y nfs-common) || (sleep 10 && apt-get update && apt-get install -y nfs-common) || (sleep 10 && apt-get update && apt-get install -y nfs-common)) && mkdir -p ${local.bootstrap_path} && r=5 && for i in $(seq 1 $r); do mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' ${var.nfs_export_addresses[0]}:${var.nfs_export_path} ${local.bootstrap_path} && break || [ $i == $r ] && break 0 || sleep 1; done && while [ ! -f ${local.bootstrap_path}${var.bootstrap_script_path} ]; do sleep 10; done && ${local.env_vars} /bin/bash ${local.bootstrap_path}${var.bootstrap_script_path} 2>&1 | tee -a /var/log/bootstrap.log && umount ${local.bootstrap_path} && rmdir ${local.bootstrap_path}"
+        "commandToExecute": "set -x && while [ ! -f /opt/install.completed ]; do sleep 2; done && mkdir -p ${local.bootstrap_path} && r=5 && for i in $(seq 1 $r); do mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' ${var.nfs_export_addresses[0]}:${var.nfs_export_path} ${local.bootstrap_path} && break || [ $i == $r ] && break 0 || sleep 1; done && while [ ! -f ${local.bootstrap_path}${var.bootstrap_script_path} ]; do sleep 10; done && ${local.env_vars} /bin/bash ${local.bootstrap_path}${var.bootstrap_script_path} 2>&1 | tee -a /var/log/bootstrap.log && umount ${local.bootstrap_path} && rmdir ${local.bootstrap_path}"
     }
 SETTINGS
   }

@@ -77,11 +77,19 @@ git pull origin main
 
 1. `terraform apply -auto-approve`
 
-Once deployed you can login to the cloud or onprem vms and use `iperf3` to test out the tunnel performance:
-    1. **iperf3 server** - `iperf3 -s -B CLIENT_IP_ADDRESS`, example `iperf3 -s -B 10.0.1.4`
-    2. **iperf3 client** - `iperf3 -c CLIENT_IP_ADDRESS -P PARALLEL_CONNECTIONS`, here is an example with 16 parallel connections: `iperf3 -c 10.0.1.4 -P 16`.  Note that this test will affinitize to a single tunnel, because ECMP affinitizes the source / address pair to a single tunnel.
-
 ## Performance Characteristics
+
+One approach to perf testing is to use `iperf3`.  Here are the commands to perf test two sides of a VPN connection:
+
+```bash
+# on one end of the connection
+# eg. iperf3 -s -B 10.0.1.4
+iperf3 -s -B <local address to bind to>
+
+# on the other end of the connection
+# eg. iperf3 -c 10.0.1.4 -i 2 -t 30
+iperf3 -c <remote ip address> -i 2 -t 30
+```
 
 The performance of the IPSec tunnel appears to degrade as the latency goes up.  This is a non-exhaustive test, and this framework may be used to confirm the effect of latency on IPSec tunnel throughput:
 
