@@ -110,7 +110,7 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
     # 4. unmount the nfs server the bootstrap directory 
     settings = <<SETTINGS
     {
-        "commandToExecute": "set -x && while [[ ! -f /opt/install.completed ]] ; do sleep 2; done && mkdir -p ${local.bootstrap_path} && r=5 && for i in $(seq 1 $r); do mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' ${var.nfs_export_addresses[0]}:${var.nfs_export_path} ${local.bootstrap_path} && break || [ $i == $r ] && break 0 || sleep 1; done && while [ ! -f ${local.bootstrap_path}${var.bootstrap_script_path} ]; do sleep 10; done && ${local.env_vars} /bin/bash ${local.bootstrap_path}${var.bootstrap_script_path} 2>&1 | tee -a /var/log/bootstrap.log && umount ${local.bootstrap_path} && rmdir ${local.bootstrap_path}"
+        "commandToExecute": "set -x && while [ ! -f /opt/install.completed ]; do sleep 2; done && mkdir -p ${local.bootstrap_path} && r=5 && for i in $(seq 1 $r); do mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' ${var.nfs_export_addresses[0]}:${var.nfs_export_path} ${local.bootstrap_path} && break || [ $i == $r ] && break 0 || sleep 1; done && while [ ! -f ${local.bootstrap_path}${var.bootstrap_script_path} ]; do sleep 10; done && ${local.env_vars} /bin/bash ${local.bootstrap_path}${var.bootstrap_script_path} 2>&1 | tee -a /var/log/bootstrap.log && umount ${local.bootstrap_path} && rmdir ${local.bootstrap_path}"
     }
 SETTINGS
   }
