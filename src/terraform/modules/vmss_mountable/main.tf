@@ -1,6 +1,10 @@
 // customize the simple VM by editing the following local variables
 locals {
     vm_name = var.unique_name
+
+    # deliver the install script via cloud-init
+    script_file_b64 = base64gzip(replace(file("${path.module}/install.sh"), "\r", ""))
+    init_file       = templatefile("${path.module}/cloud-init.tpl", { installcmd = local.script_file_b64 })
 }
 
 data "azurerm_subnet" "vnet" {
@@ -31,6 +35,7 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
   priority            = var.vmss_priority
   eviction_policy     = var.vmss_priority == "Spot" ? "Delete" : null
   overprovision       = var.overprovision
+  custom_data         = base64encode(local.init_file) 
 
   dynamic "os_profile" {
     for_each = (var.ssh_key_data == null || var.ssh_key_data == "") && var.admin_password != null && var.admin_password != "" ? [var.admin_password] : [null] 
@@ -105,7 +110,7 @@ resource "azurerm_virtual_machine_scale_set" "vmss" {
     # 4. unmount the nfs server the bootstrap directory 
     settings = <<SETTINGS
     {
-        "commandToExecute": "set -x && ((apt-get update && apt-get install -y nfs-common) || (sleep 10 && apt-get update && apt-get install -y nfs-common) || (sleep 10 && apt-get update && apt-get install -y nfs-common)) && mkdir -p ${local.bootstrap_path} && r=5 && for i in $(seq 1 $r); do mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' ${var.nfs_export_addresses[0]}:${var.nfs_export_path} ${local.bootstrap_path} && break || [ $i == $r ] && break 0 || sleep 1; done && while [ ! -f ${local.bootstrap_path}${var.bootstrap_script_path} ]; do sleep 10; done && ${local.env_vars} /bin/bash ${local.bootstrap_path}${var.bootstrap_script_path} 2>&1 | tee -a /var/log/bootstrap.log && umount ${local.bootstrap_path} && rmdir ${local.bootstrap_path}"
+        "commandToExecute": "set -x && while [[ ! -f /opt/install.completed ]] ; do sleep 2; done && mkdir -p ${local.bootstrap_path} && r=5 && for i in $(seq 1 $r); do mount -o 'hard,nointr,proto=tcp,mountproto=tcp,retry=30' ${var.nfs_export_addresses[0]}:${var.nfs_export_path} ${local.bootstrap_path} && break || [ $i == $r ] && break 0 || sleep 1; done && while [ ! -f ${local.bootstrap_path}${var.bootstrap_script_path} ]; do sleep 10; done && ${local.env_vars} /bin/bash ${local.bootstrap_path}${var.bootstrap_script_path} 2>&1 | tee -a /var/log/bootstrap.log && umount ${local.bootstrap_path} && rmdir ${local.bootstrap_path}"
     }
 SETTINGS
   }
