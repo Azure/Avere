@@ -82,6 +82,11 @@ variable "ssh_port" {
   default     = 22
 }
 
+variable "static_ip_address" {
+  description = "specifies the static ip address to use.  Leave null or blank to dynamically assign"
+  default     = null
+}
+
 variable "tags" {
   description = "specifies key value pairs of tags"
   default     = null
