@@ -17,6 +17,7 @@ steps:
 - script: |
     set -e
     az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+    az account set -s $ARM_SUBSCRIPTION_ID
     cd src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
     CONTROLLER_ADDRESS=$(terraform output -json | jq -r ".controller_address.value")
     USERNAME=$(terraform output -json | jq -r ".controller_username.value")
@@ -33,22 +34,23 @@ steps:
       -var="controller_address=${CONTROLLER_ADDRESS}" \
       -var="controller_username=${USERNAME}" \
       -var="ssh_key_data=${ssh_key_data}" \
+      -var="ssh_port=${SSH_PORT}" \
       -var="vserver_ip_addresses=${VSERVER_IP_ADDRESSES}" \
       -var="nfs_export_path=${NFS_EXPORT_PATH}" \
       -var="vdbench_url=${VDBENCH_URL}" \
       -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network"
 
     if [ "apply" = "${{ parameters.cmd_terraform }}" ]; then
-      IP_ADDRESS_COMMAND=$(terraform output -json | jq -r ".vmss_addresses_command.value") 
+      IP_ADDRESS_COMMAND=$(terraform output -json | jq -r ".vmss_addresses_command.value")
       IP_ADDRESS=$(${IP_ADDRESS_COMMAND} | jq -r '.[0]')
-      
+
       ssh -o "StrictHostKeyChecking=no" -oProxyCommand="ssh -p ${SSH_PORT} -oStrictHostKeyChecking=no -W %h:%p  ${USERNAME}@${CONTROLLER_ADDRESS}" ${USERNAME}@${IP_ADDRESS} ls
       echo ">> SCP CMD"
       scp -o "ProxyJump ${USERNAME}@${CONTROLLER_ADDRESS}:${SSH_PORT}" ~/.ssh/id_rsa ${USERNAME}@${IP_ADDRESS}:.ssh/id_rsa
-      
+
       echo ">> COPY_IDRSA.SH"
       ssh -J ${USERNAME}@${CONTROLLER_ADDRESS}:${SSH_PORT} ${USERNAME}@${IP_ADDRESS} /home/azureuser/copy_idrsa.sh
-      
+
       echo ">> RUN VDBENCH"
       ssh -J ${USERNAME}@${CONTROLLER_ADDRESS}:${SSH_PORT} ${USERNAME}@${IP_ADDRESS} "tmux new-session -d \"/home/${USERNAME}/run_vdbench.sh ${{ parameters.vdbench_config }}.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1\""
     fi
@@ -60,4 +62,3 @@ steps:
     ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
     ARM_TENANT_ID: $(AZURE-TENANT-ID)
     ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-    
