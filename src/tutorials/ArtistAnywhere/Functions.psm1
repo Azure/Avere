@@ -14,7 +14,7 @@ function Set-ResourceGroup ($regionName, $resourceGroupNamePrefix, $resourceGrou
   return $resourceGroupName
 }
 
-function Set-OverrideParameter ($templateParametersPath, $objectName, $propertyName, $propertyValue) {
+function Set-TemplateParameter ($templateParametersPath, $objectName, $propertyName, $propertyValue) {
   $valueReference = ($propertyName -eq "keyVault" -or $propertyName -eq "secretName") ? "reference" : "value"
   $templateParameters = Get-Content -Path $templateParametersPath -Raw | ConvertFrom-Json
   if ($propertyName -eq "") {

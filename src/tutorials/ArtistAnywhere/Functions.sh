@@ -19,7 +19,7 @@ function Set-ResourceGroup {
   echo $resourceGroupName
 }
 
-function Set-OverrideParameter {
+function Set-TemplateParameter {
   templateParametersPath=$1
   objectName=$2
   propertyName=$3

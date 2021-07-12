@@ -1,6 +1,6 @@
 param (
-  $computeRegionName = "",    # List available regions via Azure CLI (az account list-locations --query [].name)
-  $resourceGroupPrefix = "",  # Alphanumeric characters, periods, underscores, hyphens and parentheses allowed
+  $computeRegionName = "",    # List Azure region names via Azure CLI (az account list-locations --query [].name)
+  $resourceGroupPrefix = "",  # Alphanumeric characters, periods, underscores, hyphens and parentheses are valid
 
   $computeNetworkName = "",
   $networkResourceGroupName = "",
@@ -28,11 +28,11 @@ Set-StorageScripts $rootDirectory $moduleDirectory $imageBuilderStorageAccountNa
 $templateResourcesPath = "$modulePath/14.Image.json"
 $templateParametersPath = "$modulePath/14.Image.Parameters.json"
 
-Set-OverrideParameter $templateParametersPath "managedIdentity" "name" $managedIdentityName
-Set-OverrideParameter $templateParametersPath "managedIdentity" "resourceGroupName" $managedIdentityResourceGroupName
+Set-TemplateParameter $templateParametersPath "managedIdentity" "name" $managedIdentityName
+Set-TemplateParameter $templateParametersPath "managedIdentity" "resourceGroupName" $managedIdentityResourceGroupName
 
-Set-OverrideParameter $templateParametersPath "virtualNetwork" "name" $computeNetworkName
-Set-OverrideParameter $templateParametersPath "virtualNetwork" "resourceGroupName" $networkResourceGroupName
+Set-TemplateParameter $templateParametersPath "virtualNetwork" "name" $computeNetworkName
+Set-TemplateParameter $templateParametersPath "virtualNetwork" "resourceGroupName" $networkResourceGroupName
 
 $resourceGroupName = Set-ResourceGroup $computeRegionName $resourceGroupPrefix ".Gallery"
 $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResourcesPath --parameters $templateParametersPath) | ConvertFrom-Json
@@ -53,13 +53,13 @@ New-TraceMessage $moduleName $false
 $templateResourcesPath = "$modulePath/15.Machine.json"
 $templateParametersPath = "$modulePath/15.Machine.Parameters.json"
 
-Set-OverrideParameter $templateParametersPath "managedIdentity" "name" $managedIdentityName
-Set-OverrideParameter $templateParametersPath "managedIdentity" "resourceGroupName" $managedIdentityResourceGroupName
+Set-TemplateParameter $templateParametersPath "managedIdentity" "name" $managedIdentityName
+Set-TemplateParameter $templateParametersPath "managedIdentity" "resourceGroupName" $managedIdentityResourceGroupName
 
-Set-OverrideParameter $templateParametersPath "virtualNetwork" "name" $computeNetworkName
-Set-OverrideParameter $templateParametersPath "virtualNetwork" "resourceGroupName" $networkResourceGroupName
+Set-TemplateParameter $templateParametersPath "virtualNetwork" "name" $computeNetworkName
+Set-TemplateParameter $templateParametersPath "virtualNetwork" "resourceGroupName" $networkResourceGroupName
 
-Set-OverrideParameter $templateParametersPath "customExtension" "scriptParameters.renderManagerHost" $renderManagerHost
+Set-TemplateParameter $templateParametersPath "customExtension" "scriptParameters.renderManagerHost" $renderManagerHost
 
 $resourceGroupName = Set-ResourceGroup $computeRegionName $resourceGroupPrefix ".Workstation"
 $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResourcesPath --parameters $templateParametersPath) | ConvertFrom-Json

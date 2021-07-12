@@ -141,7 +141,7 @@
         "name": "Compute",
         "subnetName": "Storage",
         "resourceGroupName": "ArtistAnywhere.Network",
-        "enableDnsRegistration": false,
+        "enableDnsAutoRegistration": false,
         "firewallAddressRules": [
           {
             "action": "Allow",

@@ -16,7 +16,7 @@
     "containerRegistryApiVersion": "2020-11-01-preview",
     "networkApiVersion": "2021-02-01",
     "dnsZoneApiVersion": "2020-06-01",
-    "dnsZoneNameContainerRegistry": "privatelink.azurecr.io"
+    "dnsZoneName": "privatelink.azurecr.io"
   },
   "resources": [
     {
@@ -46,7 +46,7 @@
     },
     {
       "type": "Microsoft.Network/privateDnsZones",
-      "name": "[variables('dnsZoneNameContainerRegistry')]",
+      "name": "[variables('dnsZoneName')]",
       "apiVersion": "[variables('dnsZoneApiVersion')]",
       "location": "global",
       "properties": {
@@ -54,17 +54,17 @@
     },
     {
       "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
-      "name": "[concat(variables('dnsZoneNameContainerRegistry'), '/', parameters('virtualNetwork').name)]",
+      "name": "[concat(variables('dnsZoneName'), '/', parameters('virtualNetwork').name)]",
       "apiVersion": "[variables('dnsZoneApiVersion')]",
       "location": "global",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneNameContainerRegistry'))]"
+        "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneName'))]"
       ],
       "properties": {
         "virtualNetwork": {
           "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks', parameters('virtualNetwork').name)]"
         },
-        "registrationEnabled": "[parameters('virtualNetwork').enableDnsRegistration]"
+        "registrationEnabled": "[parameters('virtualNetwork').enableDnsAutoRegistration]"
       }
     },
     {
@@ -99,14 +99,14 @@
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/privateEndpoints', parameters('containerRegistry').name)]",
-        "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneNameContainerRegistry'))]"
+        "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneName'))]"
       ],
       "properties": {
         "privateDnsZoneConfigs": [
           {
             "name": "primary",
             "properties": {
-              "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneNameContainerRegistry'))]"
+              "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneName'))]"
             }
           }
         ]

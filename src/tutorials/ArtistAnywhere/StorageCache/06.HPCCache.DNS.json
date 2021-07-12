@@ -56,7 +56,7 @@
         "virtualNetwork": {
           "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks', parameters('virtualNetwork').name)]"
         },
-        "registrationEnabled": "[parameters('virtualNetwork').enableDnsRegistration]"
+        "registrationEnabled": "[parameters('virtualNetwork').enableDnsAutoRegistration]"
       }
     }
   ],

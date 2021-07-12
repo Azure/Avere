@@ -9,7 +9,6 @@
         "addressPrefixes": [
           "10.1.0.0/20"
         ],
-        "enableDomainRegistration": true,
         "subnets": [
           {
             "name": "Farm",
@@ -85,7 +84,6 @@
         "addressPrefixes": [
           "10.0.0.0/20"
         ],
-        "enableDomainRegistration": true,
         "subnets": [
           {
             "name": "Storage",

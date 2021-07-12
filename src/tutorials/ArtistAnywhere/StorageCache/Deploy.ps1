@@ -1,7 +1,7 @@
 param (
-  $computeRegionName = "",    # List available regions via Azure CLI (az account list-locations --query [].name)
-  $storageRegionName = "",    # List available regions via Azure CLI (az account list-locations --query [].name)
-  $resourceGroupPrefix = "",  # Alphanumeric characters, periods, underscores, hyphens and parentheses allowed
+  $computeRegionName = "",    # List Azure region names via Azure CLI (az account list-locations --query [].name)
+  $storageRegionName = "",    # List Azure region names via Azure CLI (az account list-locations --query [].name)
+  $resourceGroupPrefix = "",  # Alphanumeric characters, periods, underscores, hyphens and parentheses are valid
 
   $computeNetworkName = "",
   $storageNetworkName = "",
@@ -41,8 +41,8 @@ New-TraceMessage $moduleName $false
 $templateResourcesPath = "$modulePath/05.Storage.json"
 $templateParametersPath = "$modulePath/05.Storage.Parameters.json"
 
-Set-OverrideParameter $templateParametersPath "virtualNetwork" "name" $storageNetworkName
-Set-OverrideParameter $templateParametersPath "virtualNetwork" "resourceGroupName" $networkResourceGroupName
+Set-TemplateParameter $templateParametersPath "virtualNetwork" "name" $storageNetworkName
+Set-TemplateParameter $templateParametersPath "virtualNetwork" "resourceGroupName" $networkResourceGroupName
 
 $resourceGroupName = Set-ResourceGroup $storageRegionName $resourceGroupPrefix ".Storage"
 $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResourcesPath --parameters $templateParametersPath) | ConvertFrom-Json
@@ -65,9 +65,9 @@ if ($enableHPCCache) {
   $templateResourcesPath = "$modulePath/06.HPCCache.json"
   $templateParametersPath = "$modulePath/06.HPCCache.Parameters.json"
 
-  Set-OverrideParameter $templateParametersPath "storageTargets" "" $storageTargets
-  Set-OverrideParameter $templateParametersPath "virtualNetwork" "name" $computeNetworkName
-  Set-OverrideParameter $templateParametersPath "virtualNetwork" "resourceGroupName" $networkResourceGroupName
+  Set-TemplateParameter $templateParametersPath "storageTargets" "" $storageTargets
+  Set-TemplateParameter $templateParametersPath "virtualNetwork" "name" $computeNetworkName
+  Set-TemplateParameter $templateParametersPath "virtualNetwork" "resourceGroupName" $networkResourceGroupName
 
   $resourceGroupName = Set-ResourceGroup $computeRegionName $resourceGroupPrefix ".Cache"
   $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResourcesPath --parameters $templateParametersPath) | ConvertFrom-Json
@@ -83,9 +83,9 @@ if ($enableHPCCache) {
   $templateResourcesPath = "$modulePath/06.HPCCache.DNS.json"
   $templateParametersPath = "$modulePath/06.HPCCache.DNS.Parameters.json"
 
-  Set-OverrideParameter $templateParametersPath "hpcCache" "" $hpcCache
-  Set-OverrideParameter $templateParametersPath "virtualNetwork" "name" $computeNetworkName
-  Set-OverrideParameter $templateParametersPath "virtualNetwork" "resourceGroupName" $networkResourceGroupName
+  Set-TemplateParameter $templateParametersPath "hpcCache" "" $hpcCache
+  Set-TemplateParameter $templateParametersPath "virtualNetwork" "name" $computeNetworkName
+  Set-TemplateParameter $templateParametersPath "virtualNetwork" "resourceGroupName" $networkResourceGroupName
 
   $resourceGroupName = Set-ResourceGroup $computeRegionName $resourceGroupPrefix ".Cache"
   $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResourcesPath --parameters $templateParametersPath) | ConvertFrom-Json

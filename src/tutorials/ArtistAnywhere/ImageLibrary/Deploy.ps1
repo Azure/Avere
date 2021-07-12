@@ -1,6 +1,6 @@
 param (
-  $computeRegionName = "",    # List available regions via Azure CLI (az account list-locations --query [].name)
-  $resourceGroupPrefix = "",  # Alphanumeric characters, periods, underscores, hyphens and parentheses allowed
+  $computeRegionName = "",    # List Azure region names via Azure CLI (az account list-locations --query [].name)
+  $resourceGroupPrefix = "",  # Alphanumeric characters, periods, underscores, hyphens and parentheses are valid
 
   $computeNetworkName = "",
   $networkResourceGroupName = "",
@@ -20,8 +20,8 @@ $templateResourcesPath = "$modulePath/07.ImageGallery.json"
 $templateParametersPath = "$modulePath/07.ImageGallery.Parameters.json"
 
 $principalId = az identity show --resource-group $managedIdentityResourceGroupName --name $managedIdentityName --query principalId --output tsv
-Set-OverrideParameter $templateParametersPath "imageGallery" "managedIdentityPrincipalId" $principalId
-Set-OverrideParameter $templateParametersPath "imageGallery" "networkResourceGroupName" $networkResourceGroupName
+Set-TemplateParameter $templateParametersPath "imageGallery" "managedIdentityPrincipalId" $principalId
+Set-TemplateParameter $templateParametersPath "imageGallery" "networkResourceGroupName" $networkResourceGroupName
 
 $resourceGroupName = Set-ResourceGroup $computeRegionName $resourceGroupPrefix ".Gallery"
 $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResourcesPath --parameters $templateParametersPath) | ConvertFrom-Json
@@ -37,8 +37,8 @@ New-TraceMessage $moduleName $false
 $templateResourcesPath = "$modulePath/08.ContainerRegistry.json"
 $templateParametersPath = "$modulePath/08.ContainerRegistry.Parameters.json"
 
-Set-OverrideParameter $templateParametersPath "virtualNetwork" "name" $computeNetworkName
-Set-OverrideParameter $templateParametersPath "virtualNetwork" "resourceGroupName" $networkResourceGroupName
+Set-TemplateParameter $templateParametersPath "virtualNetwork" "name" $computeNetworkName
+Set-TemplateParameter $templateParametersPath "virtualNetwork" "resourceGroupName" $networkResourceGroupName
 
 $resourceGroupName = Set-ResourceGroup $computeRegionName $resourceGroupPrefix ".Registry"
 $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResourcesPath --parameters $templateParametersPath) | ConvertFrom-Json

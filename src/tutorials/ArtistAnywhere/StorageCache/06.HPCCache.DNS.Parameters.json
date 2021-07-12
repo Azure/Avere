@@ -18,7 +18,7 @@
         "resourceGroupName": "ArtistAnywhere.Network",
         "domainName": "pipeline.net",
         "domainRecordTTLSeconds": 3600,
-        "enableDnsRegistration": false
+        "enableDnsAutoRegistration": false
       }
     }
   }

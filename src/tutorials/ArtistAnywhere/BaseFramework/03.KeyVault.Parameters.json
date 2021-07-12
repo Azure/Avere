@@ -35,7 +35,7 @@
         "name": "Compute",
         "subnetName": "Farm",
         "resourceGroupName": "ArtistAnywhere.Network",
-        "enableDnsRegistration": false,
+        "enableDnsAutoRegistration": false,
         "firewallAddressRules": [
           {
             "action": "Allow",

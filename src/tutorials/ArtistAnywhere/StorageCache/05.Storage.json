@@ -32,7 +32,7 @@
     "storageApiVersion": "2021-04-01",
     "networkApiVersion": "2021-02-01",
     "dnsZoneApiVersion": "2020-06-01",
-    "dnsZoneNameStorageBlob": "privatelink.blob.core.windows.net"
+    "dnsZoneName": "privatelink.blob.core.windows.net"
   },
   "functions": [
     {
@@ -116,7 +116,7 @@
     },
     {
       "type": "Microsoft.Network/privateDnsZones",
-      "name": "[variables('dnsZoneNameStorageBlob')]",
+      "name": "[variables('dnsZoneName')]",
       "apiVersion": "[variables('dnsZoneApiVersion')]",
       "location": "global",
       "properties": {
@@ -124,17 +124,17 @@
     },
     {
       "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
-      "name": "[concat(variables('dnsZoneNameStorageBlob'), '/', parameters('virtualNetwork').name)]",
+      "name": "[concat(variables('dnsZoneName'), '/', parameters('virtualNetwork').name)]",
       "apiVersion": "[variables('dnsZoneApiVersion')]",
       "location": "global",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneNameStorageBlob'))]"
+        "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneName'))]"
       ],
       "properties": {
         "virtualNetwork": {
           "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks', parameters('virtualNetwork').name)]"
         },
-        "registrationEnabled": "[parameters('virtualNetwork').enableDnsRegistration]"
+        "registrationEnabled": "[parameters('virtualNetwork').enableDnsAutoRegistration]"
       }
     },
     {
@@ -173,14 +173,14 @@
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/privateEndpoints', parameters('storageAccounts')[copyIndex()].name)]",
-        "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneNameStorageBlob'))]"
+        "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneName'))]"
       ],
       "properties": {
         "privateDnsZoneConfigs": [
           {
             "name": "primary",
             "properties": {
-              "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneNameStorageBlob'))]"
+              "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneName'))]"
             }
           }
         ]

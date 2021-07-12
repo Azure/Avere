@@ -16,9 +16,9 @@
     }
   },
   "variables": {
-    "primaryAddressSuffix": ".1",
-    "secondaryAddressSuffix": ".2",
     "networkApiVersion": "2021-02-01",
+    "ipAddress1Suffix": ".1",
+    "ipAddress2Suffix": ".2",
     "virtualNetworks": "[createArray(parameters('computeNetwork'), parameters('storageNetwork'))]"
   },
   "functions": [
@@ -52,7 +52,7 @@
     {
       "condition": "[not(equals(variables('virtualNetworks')[copyIndex()].regionName, ''))]",
       "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[fx.GetAddressName(variables('virtualNetworks')[copyIndex()].name, variables('primaryAddressSuffix'), parameters('networkGateway').enableActiveActiveMode)]",
+      "name": "[fx.GetAddressName(variables('virtualNetworks')[copyIndex()].name, variables('ipAddress1Suffix'), parameters('networkGateway').enableActiveActiveMode)]",
       "apiVersion": "[variables('networkApiVersion')]",
       "location": "[variables('virtualNetworks')[copyIndex()].regionName]",
       "sku": {
@@ -69,7 +69,7 @@
     {
       "condition": "[and(not(equals(variables('virtualNetworks')[copyIndex()].regionName, '')), parameters('networkGateway').enableActiveActiveMode)]",
       "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[concat(variables('virtualNetworks')[copyIndex()].name, variables('secondaryAddressSuffix'))]",
+      "name": "[concat(variables('virtualNetworks')[copyIndex()].name, variables('ipAddress2Suffix'))]",
       "apiVersion": "[variables('networkApiVersion')]",
       "location": "[variables('virtualNetworks')[copyIndex()].regionName]",
       "sku": {
@@ -90,8 +90,8 @@
       "apiVersion": "[variables('networkApiVersion')]",
       "location": "[variables('virtualNetworks')[copyIndex()].regionName]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', fx.GetAddressName(variables('virtualNetworks')[copyIndex()].name, variables('primaryAddressSuffix'), parameters('networkGateway').enableActiveActiveMode))]",
-        "[resourceId('Microsoft.Network/publicIPAddresses', fx.GetAddressName(variables('virtualNetworks')[copyIndex()].name, variables('secondaryAddressSuffix'), parameters('networkGateway').enableActiveActiveMode))]"
+        "[resourceId('Microsoft.Network/publicIPAddresses', fx.GetAddressName(variables('virtualNetworks')[copyIndex()].name, variables('ipAddress1Suffix'), parameters('networkGateway').enableActiveActiveMode))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', concat(variables('virtualNetworks')[copyIndex()].name, variables('ipAddress2Suffix')))]"
       ],
       "properties": {
         "sku": {
@@ -107,13 +107,13 @@
             "name": "ipConfigurations",
             "count": "[if(parameters('networkGateway').enableActiveActiveMode, 2, 1)]",
             "input": {
-              "name": "[if(equals(copyIndex('ipConfigurations'), 0), 'primary', 'secondary')]",
+              "name": "[concat('ipConfig', add(copyIndex(), 1))]",
               "properties": {
                 "subnet": {
                   "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworks')[copyIndex()].name, 'GatewaySubnet')]"
                 },
                 "publicIPAddress": {
-                  "id": "[resourceId('Microsoft.Network/publicIPAddresses', fx.GetAddressName(variables('virtualNetworks')[copyIndex()].name, if(equals(copyIndex('ipConfigurations'), 0), variables('primaryAddressSuffix'), variables('secondaryAddressSuffix')), parameters('networkGateway').enableActiveActiveMode))]"
+                  "id": "[resourceId('Microsoft.Network/publicIPAddresses', if(equals(copyIndex('ipConfigurations'), 0), fx.GetAddressName(variables('virtualNetworks')[copyIndex()].name, variables('ipAddress1Suffix'), parameters('networkGateway').enableActiveActiveMode), concat(variables('virtualNetworks')[copyIndex()].name, variables('ipAddress2Suffix'))))]"
                 }
               }
             }
@@ -122,20 +122,6 @@
         "enableBgp": "[variables('virtualNetworks')[copyIndex()].bgpSettings.enabled]",
         "bgpSettings": {
           "asn": "[variables('virtualNetworks')[copyIndex()].bgpSettings.asNumber]"
-        },
-        "vpnClientConfiguration": {
-          "vpnClientProtocols": "[variables('virtualNetworks')[copyIndex()].localClient.protocols]",
-          "vpnClientAddressPool": {
-            "addressPrefixes": "[variables('virtualNetworks')[copyIndex()].localClient.addressPrefixes]"
-          },
-          "vpnClientRootCertificates": [
-            {
-              "name": "[variables('virtualNetworks')[copyIndex()].localClient.rootCertificateName]",
-              "properties": {
-                "publicCertData": "[variables('virtualNetworks')[copyIndex()].localClient.rootCertificateData]"
-              }
-            }
-          ]
         }
       },
       "copy": {

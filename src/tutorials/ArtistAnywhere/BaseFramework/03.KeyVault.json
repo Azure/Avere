@@ -14,7 +14,7 @@
     "keyVaultApiVersion": "2021-04-01-preview",
     "networkApiVersion": "2021-02-01",
     "dnsZoneApiVersion": "2020-06-01",
-    "dnsZoneNameKeyVault": "privatelink.vaultcore.azure.net"
+    "dnsZoneName": "privatelink.vaultcore.azure.net"
   },
   "functions": [
   ],
@@ -89,7 +89,7 @@
     },
     {
       "type": "Microsoft.Network/privateDnsZones",
-      "name": "[variables('dnsZoneNameKeyVault')]",
+      "name": "[variables('dnsZoneName')]",
       "apiVersion": "[variables('dnsZoneApiVersion')]",
       "location": "global",
       "properties": {
@@ -97,17 +97,17 @@
     },
     {
       "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
-      "name": "[concat(variables('dnsZoneNameKeyVault'), '/', parameters('virtualNetwork').name)]",
+      "name": "[concat(variables('dnsZoneName'), '/', parameters('virtualNetwork').name)]",
       "apiVersion": "[variables('dnsZoneApiVersion')]",
       "location": "global",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneNameKeyVault'))]"
+        "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneName'))]"
       ],
       "properties": {
         "virtualNetwork": {
           "id": "[resourceId(parameters('virtualNetwork').resourceGroupName, 'Microsoft.Network/virtualNetworks', parameters('virtualNetwork').name)]"
         },
-        "registrationEnabled": "[parameters('virtualNetwork').enableDnsRegistration]"
+        "registrationEnabled": "[parameters('virtualNetwork').enableDnsAutoRegistration]"
       }
     },
     {
@@ -142,14 +142,14 @@
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/privateEndpoints', parameters('keyVault').name)]",
-        "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneNameKeyVault'))]"
+        "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneName'))]"
       ],
       "properties": {
         "privateDnsZoneConfigs": [
           {
             "name": "primary",
             "properties": {
-              "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneNameKeyVault'))]"
+              "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('dnsZoneName'))]"
             }
           }
         ]

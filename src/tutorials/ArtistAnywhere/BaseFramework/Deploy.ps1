@@ -1,7 +1,7 @@
 param (
-  $computeRegionName = "",        # List available regions via Azure CLI (az account list-locations --query [].name)
-  $storageRegionName = "",        # List available regions via Azure CLI (az account list-locations --query [].name)
-  $resourceGroupPrefix = "",      # Alphanumeric characters, periods, underscores, hyphens and parentheses allowed
+  $computeRegionName = "",        # List Azure region names via Azure CLI (az account list-locations --query [].name)
+  $storageRegionName = "",        # List Azure region names via Azure CLI (az account list-locations --query [].name)
+  $resourceGroupPrefix = "",      # Alphanumeric characters, periods, underscores, hyphens and parentheses are valid
   $enableNetworkGateway = $false  # https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways
 )
 
@@ -30,8 +30,8 @@ New-TraceMessage $moduleName $false
 $templateResourcesPath = "$modulePath/01.VirtualNetwork.json"
 $templateParametersPath = "$modulePath/01.VirtualNetwork.Parameters.json"
 
-Set-OverrideParameter $templateParametersPath "computeNetwork" "regionName" $computeRegionName
-Set-OverrideParameter $templateParametersPath "storageNetwork" "regionName" $storageRegionName
+Set-TemplateParameter $templateParametersPath "computeNetwork" "regionName" $computeRegionName
+Set-TemplateParameter $templateParametersPath "storageNetwork" "regionName" $storageRegionName
 
 $resourceGroupName = Set-ResourceGroup $computeRegionName $resourceGroupPrefix ".Network"
 $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResourcesPath --parameters $templateParametersPath) | ConvertFrom-Json
@@ -63,11 +63,11 @@ $templateResourcesPath = "$modulePath/03.KeyVault.json"
 $templateParametersPath = "$modulePath/03.KeyVault.Parameters.json"
 
 $principalId = az ad signed-in-user show --query objectId --output tsv
-Set-OverrideParameter $templateParametersPath "keyVault" "adminUserPrincipalId" $principalId
-Set-OverrideParameter $templateParametersPath "keyVault" "managedIdentityPrincipalId" $managedIdentity.principalId
+Set-TemplateParameter $templateParametersPath "keyVault" "adminUserPrincipalId" $principalId
+Set-TemplateParameter $templateParametersPath "keyVault" "managedIdentityPrincipalId" $managedIdentity.principalId
 
-Set-OverrideParameter $templateParametersPath "virtualNetwork" "name" $computeNetwork.name
-Set-OverrideParameter $templateParametersPath "virtualNetwork" "resourceGroupName" $computeNetwork.resourceGroupName
+Set-TemplateParameter $templateParametersPath "virtualNetwork" "name" $computeNetwork.name
+Set-TemplateParameter $templateParametersPath "virtualNetwork" "resourceGroupName" $computeNetwork.resourceGroupName
 
 $resourceGroupName = Set-ResourceGroup $computeRegionName $resourceGroupPrefix ""
 $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResourcesPath --parameters $templateParametersPath) | ConvertFrom-Json
@@ -84,19 +84,19 @@ if ($enableNetworkGateway) {
   $templateResourcesPath = "$modulePath/04.NetworkGateway.json"
   $templateParametersPath = "$modulePath/04.NetworkGateway.Parameters.json"
 
-  Set-OverrideParameter $templateParametersPath "computeNetwork" "name" $computeNetwork.name
-  Set-OverrideParameter $templateParametersPath "computeNetwork" "resourceGroupName" $computeNetwork.resourceGroupName
-  Set-OverrideParameter $templateParametersPath "computeNetwork" "regionName" $computeNetwork.regionName
+  Set-TemplateParameter $templateParametersPath "computeNetwork" "name" $computeNetwork.name
+  Set-TemplateParameter $templateParametersPath "computeNetwork" "resourceGroupName" $computeNetwork.resourceGroupName
+  Set-TemplateParameter $templateParametersPath "computeNetwork" "regionName" $computeNetwork.regionName
 
-  Set-OverrideParameter $templateParametersPath "storageNetwork" "name" $storageNetwork.name
-  Set-OverrideParameter $templateParametersPath "storageNetwork" "resourceGroupName" $storageNetwork.resourceGroupName
-  Set-OverrideParameter $templateParametersPath "storageNetwork" "regionName" $storageNetwork.regionName
+  Set-TemplateParameter $templateParametersPath "storageNetwork" "name" $storageNetwork.name
+  Set-TemplateParameter $templateParametersPath "storageNetwork" "resourceGroupName" $storageNetwork.resourceGroupName
+  Set-TemplateParameter $templateParametersPath "storageNetwork" "regionName" $storageNetwork.regionName
 
   $keyName = "networkConnectionKey"
   $keyVaultRef = New-Object PSObject
   $keyVaultRef | Add-Member -MemberType NoteProperty -Name "id" -Value $keyVault.id
-  Set-OverrideParameter $templateParametersPath $keyName "keyVault" $keyVaultRef
-  Set-OverrideParameter $templateParametersPath $keyName "secretName" $keyName
+  Set-TemplateParameter $templateParametersPath $keyName "keyVault" $keyVaultRef
+  Set-TemplateParameter $templateParametersPath $keyName "secretName" $keyName
 
   $resourceGroupName = Set-ResourceGroup $computeRegionName $resourceGroupPrefix ".Network"
   $groupDeployment = (az deployment group create --resource-group $resourceGroupName --template-file $templateResourcesPath --parameters $templateParametersPath) | ConvertFrom-Json
