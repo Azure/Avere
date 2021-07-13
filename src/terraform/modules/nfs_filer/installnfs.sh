@@ -73,16 +73,25 @@ function config_ephemeral_ssd {
         sed -i "s:${EPHEMERAL_DISK_PATH}:${EXPORT_PATH}:g" /etc/fstab
         mount ${EXPORT_PATH}
     else 
-        # this is managed by older waagent
+        grep -e "cloud-init.service" /etc/fstab > /dev/null 2>&1
+        if [ $? = "0" ]; then
+            # export the ephemeral disk
+            EPHEMERAL_DISK_PATH="/mnt/resource"
+            umount $EPHEMERAL_DISK_PATH
+            sed -i "s:${EPHEMERAL_DISK_PATH}:${EXPORT_PATH}:g" /etc/fstab
+            mount ${EXPORT_PATH}
+        else
+            # this is managed by older waagent
 
-        # export the ephemeral disk
-        EPHEMERAL_DISK_PATH="/mnt/resource"
-        # move the ephemeral mount to the mount chosen by the customer
-        # we cannot do the symbolic link because it is not supported by nfsv4
-        umount $EPHEMERAL_DISK_PATH
-        sed -i "s:${EPHEMERAL_DISK_PATH}:${EXPORT_PATH}:g" /etc/waagent.conf
-        # restart waagent to mount the new share
-        systemctl restart waagent
+            # export the ephemeral disk
+            EPHEMERAL_DISK_PATH="/mnt/resource"
+            # move the ephemeral mount to the mount chosen by the customer
+            # we cannot do the symbolic link because it is not supported by nfsv4
+            umount $EPHEMERAL_DISK_PATH
+            sed -i "s:${EPHEMERAL_DISK_PATH}:${EXPORT_PATH}:g" /etc/waagent.conf
+            # restart waagent to mount the new share
+            systemctl restart waagent
+        fi
     fi
 }
 

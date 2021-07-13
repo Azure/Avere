@@ -54,21 +54,46 @@ variable "vyos_image_id" {
   type = string
 }
 
+variable "vyos_static_private_ip_1" {
+  type = string
+}
+
+variable "vyos_static_private_ip_2" {
+  type = string
+}
+
+variable "vyos_asn" {
+  type = string
+}
+
+variable "vm_admin_username" {
+  type = string
+}
+
 variable "ssh_public_key" {
   type = string
 }
 
-variable "disk_type" {
+variable "nfs_filer_vm_size" {
   type = string
 }
 
-variable "disk_size_gb" {
-  type = number
+variable "nfs_filer_unique_name" {
+  type = string
+}
+
+variable "nfs_filer_fqdn" {
+  type = string
 }
 
 ### Resources
 data "azurerm_key_vault_secret" "virtualmachine" {
   name         = var.virtualmachine_key
+  key_vault_id = var.key_vault_id
+}
+
+data "azurerm_key_vault_secret" "vpn_gateway_key" {
+  name         = var.vpn_gateway_key
   key_vault_id = var.key_vault_id
 }
 
@@ -84,8 +109,7 @@ data "terraform_remote_state" "network" {
 }
 
 locals {
-  gateway_subnet_name = var.vyos_image_id == "" ? "GatewaySubnet" : "vyossubnet"
-  deploy_azure_vpngw  = var.vyos_image_id == ""
+  gateway_subnet_name = data.terraform_remote_state.network.outputs.is_vpn_ipsec ? "vyossubnet" : "GatewaySubnet"
 
   // azure gateway settings
   // generation and sku defined in https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways#benchmark
@@ -93,24 +117,29 @@ locals {
   vpngw_sku        = "VpnGw2"
 
   // nfsfiler machine settings
-  unique_name  = "onprem"
-  disk_size_gb = 127
+  /*disk_size_gb = 127
   caching      = local.disk_size_gb > 4095 ? "None" : "ReadWrite"
-  vm_size      = "Standard_F4s_v2"
+  vm_size      = "Standard_F4s_v2"*/
 
   // vyos machine settings
   vyos_vm_size     = "Standard_D2s_v3"
   vyos_unique_name = "vyos"
   vyos_asn         = 64512
 
+  azure_dns = "168.63.129.16"
+
   // jumpbox details
-  vm_admin_username = "azureuser"
+  vm_admin_username = var.vm_admin_username
   // use either SSH Key data or admin password, if ssh_key_data is specified
   // then admin_password is ignored
   vm_admin_password = data.azurerm_key_vault_secret.virtualmachine.value
   // if you use SSH key, ensure you have ~/.ssh/id_rsa with permission 600
   // populated where you are running terraform
   vm_ssh_key_data = var.ssh_public_key == "" ? null : var.ssh_public_key
+
+  // to preserve single source of truth this comes from first element
+  // of 1.network dns servers
+  dns_static_private_ip = data.terraform_remote_state.network.outputs.onprem_dns_servers[0]
 }
 
 resource "azurerm_resource_group" "onpremrg" {
@@ -123,6 +152,12 @@ resource "azurerm_virtual_network" "vnet" {
   resource_group_name = azurerm_resource_group.onpremrg.name
   location            = azurerm_resource_group.onpremrg.location
   address_space       = [var.address_space]
+  dns_servers         = [local.dns_static_private_ip, local.azure_dns]
+
+  tags = {
+    // needed for DEVOPS testing
+    SkipNRMSNSG = "12345"
+  }
 }
 
 resource "azurerm_subnet" "gateway" {
@@ -137,116 +172,6 @@ resource "azurerm_subnet" "onprem" {
   resource_group_name  = azurerm_resource_group.onpremrg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = [var.onprem_subnet]
-}
-
-resource "azurerm_public_ip" "onpremgatewaypublicip" {
-  name                = "onpremgatewaypublicip"
-  location            = azurerm_resource_group.onpremrg.location
-  resource_group_name = azurerm_resource_group.onpremrg.name
-  allocation_method   = "Dynamic"
-}
-
-resource "azurerm_virtual_network_gateway" "vpngateway" {
-  count               = local.deploy_azure_vpngw ? 1 : 0
-  name                = "onpremvpngateway"
-  location            = azurerm_resource_group.onpremrg.location
-  resource_group_name = azurerm_resource_group.onpremrg.name
-
-  type       = "Vpn"
-  vpn_type   = "RouteBased"
-  generation = local.vpngw_generation
-  sku        = local.vpngw_sku
-  enable_bgp = true
-
-  ip_configuration {
-    public_ip_address_id          = azurerm_public_ip.onpremgatewaypublicip.id
-    private_ip_address_allocation = "Dynamic"
-    subnet_id                     = azurerm_subnet.gateway.id
-  }
-}
-
-resource "azurerm_public_ip" "vyos" {
-  count               = local.deploy_azure_vpngw ? 0 : 1
-  name                = "${local.vyos_unique_name}-publicip"
-  location            = azurerm_resource_group.onpremrg.location
-  resource_group_name = azurerm_resource_group.onpremrg.name
-  allocation_method   = "Static"
-}
-
-resource "azurerm_network_interface" "vyosnic" {
-  count               = local.deploy_azure_vpngw ? 0 : 1
-  name                = "${local.vyos_unique_name}-nic"
-  location            = azurerm_resource_group.onpremrg.location
-  resource_group_name = azurerm_resource_group.onpremrg.name
-
-  ip_configuration {
-    name                          = "internal"
-    subnet_id                     = azurerm_subnet.gateway.id
-    private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.vyos[0].id
-  }
-}
-
-resource "azurerm_linux_virtual_machine" "vyos" {
-  count                 = local.deploy_azure_vpngw ? 0 : 1
-  name                  = local.vyos_unique_name
-  resource_group_name   = azurerm_resource_group.onpremrg.name
-  location              = azurerm_resource_group.onpremrg.location
-  network_interface_ids = [azurerm_network_interface.vyosnic[0].id]
-  computer_name         = local.vyos_unique_name
-  size                  = local.vyos_vm_size
-
-  source_image_id = var.vyos_image_id
-
-  // by default the OS has encryption at rest
-  os_disk {
-    name                 = "osdisk"
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-  }
-
-  // configuration for authentication.  If ssh key specified, ignore password
-  admin_username                  = local.vm_admin_username
-  admin_password                  = (local.vm_ssh_key_data == null || local.vm_ssh_key_data == "") && local.vm_admin_password != null && local.vm_admin_password != "" ? local.vm_admin_password : null
-  disable_password_authentication = (local.vm_ssh_key_data == null || local.vm_ssh_key_data == "") && local.vm_admin_password != null && local.vm_admin_password != "" ? false : true
-  dynamic "admin_ssh_key" {
-    for_each = local.vm_ssh_key_data == null || local.vm_ssh_key_data == "" ? [] : [local.vm_ssh_key_data]
-    content {
-      username   = local.vm_admin_username
-      public_key = local.vm_ssh_key_data
-    }
-  }
-}
-
-resource "azurerm_network_security_group" "vyos_nsg" {
-  count               = local.deploy_azure_vpngw ? 0 : 1
-  name                = "vyos_nsg"
-  resource_group_name = azurerm_resource_group.onpremrg.name
-  location            = azurerm_resource_group.onpremrg.location
-
-  security_rule {
-    name                       = "ssh"
-    priority                   = 120
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "TCP"
-    source_port_range          = "*"
-    destination_port_range     = "22"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "cloudvpngw"
-    priority                   = 130
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = data.terraform_remote_state.network.outputs.vpn_gateway_public_ip_address
-    destination_address_prefix = "*"
-  }
 }
 
 resource "azurerm_network_security_group" "onprem_nsg" {
@@ -265,12 +190,6 @@ resource "azurerm_network_security_group" "onprem_nsg" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
-}
-
-resource "azurerm_subnet_network_security_group_association" "vyos" {
-  count                     = local.deploy_azure_vpngw ? 0 : 1
-  subnet_id                 = azurerm_subnet.gateway.id
-  network_security_group_id = azurerm_network_security_group.vyos_nsg[0].id
 }
 
 resource "azurerm_subnet_network_security_group_association" "onprem" {
@@ -299,26 +218,15 @@ module "jumpbox" {
   ]
 }
 
-resource "azurerm_managed_disk" "nfsfiler" {
-  name                 = "${local.unique_name}-disk1"
-  resource_group_name  = azurerm_resource_group.onpremrg.name
-  location             = azurerm_resource_group.onpremrg.location
-  storage_account_type = var.disk_type
-  create_option        = "Empty"
-  disk_size_gb         = var.disk_size_gb
-}
-
-module "nfsfiler" {
-  source              = "github.com/Azure/Avere/src/terraform/modules/nfs_filer_md"
+module "nfsfilerephemeral" {
+  source              = "github.com/Azure/Avere/src/terraform/modules/nfs_filer"
   resource_group_name = azurerm_resource_group.onpremrg.name
   location            = azurerm_resource_group.onpremrg.location
   admin_username      = local.vm_admin_username
   admin_password      = local.vm_admin_password
   ssh_key_data        = local.vm_ssh_key_data
-  vm_size             = local.vm_size
-  unique_name         = local.unique_name
-  caching             = local.caching
-  managed_disk_id     = azurerm_managed_disk.nfsfiler.id
+  vm_size             = var.nfs_filer_vm_size
+  unique_name         = var.nfs_filer_unique_name
 
   // network details
   virtual_network_resource_group = azurerm_resource_group.onpremrg.name
@@ -326,9 +234,223 @@ module "nfsfiler" {
   virtual_network_subnet_name    = azurerm_subnet.onprem.name
 
   depends_on = [
-    azurerm_managed_disk.nfsfiler,
     azurerm_subnet.onprem,
   ]
+}
+
+////////////////////////////////////////////////////////////////
+// OnPrem DNS Server
+//  - per the article: https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-name-resolution-for-vms-and-role-instances?toc=/azure/dns/toc.json#vms-and-role-instances
+//    use a single DNS server over Azure Private DNS because
+//    we are connecting VNETs together
+////////////////////////////////////////////////////////////////
+
+module "dnsserver" {
+  source              = "github.com/Azure/Avere/src/terraform/modules/dnsserver"
+  resource_group_name = azurerm_resource_group.onpremrg.name
+  location            = azurerm_resource_group.onpremrg.location
+  admin_username      = local.vm_admin_username
+  admin_password      = local.vm_admin_password
+  ssh_key_data        = local.vm_ssh_key_data
+
+  // network details
+  virtual_network_resource_group = azurerm_resource_group.onpremrg.name
+  virtual_network_name           = azurerm_virtual_network.vnet.name
+  virtual_network_subnet_name    = azurerm_subnet.onprem.name
+
+  // this is the address of the unbound dns server
+  private_ip_address = local.dns_static_private_ip
+
+  dns_server = local.azure_dns
+  // these parameters should be named more generically, as they could be any generic core filer
+  avere_address_list = [module.nfsfilerephemeral.primary_ip]
+  avere_filer_fqdn   = var.nfs_filer_fqdn
+
+  // set the TTL
+  dns_max_ttl_seconds = 300
+
+  depends_on = [
+    module.nfsfilerephemeral,
+  ]
+}
+
+////////////////////////////////////////////////////////////////
+// Azure VPN Gateway Vnet2Vnet related resources
+////////////////////////////////////////////////////////////////
+
+resource "azurerm_public_ip" "onpremgatewaypublicip" {
+  count               = data.terraform_remote_state.network.outputs.is_vnet_to_vnet ? 1 : 0
+  name                = "onpremgatewaypublicip"
+  location            = azurerm_resource_group.onpremrg.location
+  resource_group_name = azurerm_resource_group.onpremrg.name
+  allocation_method   = "Dynamic"
+}
+
+resource "azurerm_virtual_network_gateway" "vpngateway" {
+  count               = data.terraform_remote_state.network.outputs.is_vnet_to_vnet ? 1 : 0
+  name                = "onpremvpngateway"
+  location            = azurerm_resource_group.onpremrg.location
+  resource_group_name = azurerm_resource_group.onpremrg.name
+
+  type       = "Vpn"
+  vpn_type   = "RouteBased"
+  generation = local.vpngw_generation
+  sku        = local.vpngw_sku
+  enable_bgp = true
+
+  ip_configuration {
+    public_ip_address_id          = azurerm_public_ip.onpremgatewaypublicip[0].id
+    private_ip_address_allocation = "Dynamic"
+    subnet_id                     = azurerm_subnet.gateway.id
+  }
+
+  depends_on = [
+    # the Azure vpn gateway creation will lock updates to the VNET
+    # complete all vnet updates first
+    azurerm_subnet_network_security_group_association.onprem
+  ]
+}
+
+resource "azurerm_virtual_network_gateway_connection" "onprem_to_cloud" {
+  count               = data.terraform_remote_state.network.outputs.is_vnet_to_vnet ? 1 : 0
+  name                = "onprem_to_cloud"
+  location            = azurerm_resource_group.onpremrg.location
+  resource_group_name = azurerm_resource_group.onpremrg.name
+
+  type                            = "Vnet2Vnet"
+  virtual_network_gateway_id      = azurerm_virtual_network_gateway.vpngateway[0].id
+  peer_virtual_network_gateway_id = data.terraform_remote_state.network.outputs.vpn_gateway_id
+
+  shared_key = data.azurerm_key_vault_secret.vpn_gateway_key.value
+}
+
+////////////////////////////////////////////////////////////////
+// Azure VPN Gateway VPN IPSec related resources
+////////////////////////////////////////////////////////////////
+
+resource "azurerm_network_security_group" "vyos_nsg" {
+  count               = data.terraform_remote_state.network.outputs.is_vpn_ipsec ? 1 : 0
+  name                = "vyos_nsg"
+  resource_group_name = azurerm_resource_group.onpremrg.name
+  location            = azurerm_resource_group.onpremrg.location
+
+  security_rule {
+    name                       = "cloudvpngwin"
+    priority                   = 200
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = data.terraform_remote_state.network.outputs.vpn_gateway_public_ip_address
+    destination_address_prefix = var.vyos_static_private_ip_1
+  }
+
+  # notice the required but counterintuitive source => destination
+  security_rule {
+    name                       = "remotevnetin"
+    priority                   = 210
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = data.terraform_remote_state.network.outputs.cloud_address_space
+  }
+
+  security_rule {
+    name                       = "remotevnetout"
+    priority                   = 200
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = data.terraform_remote_state.network.outputs.cloud_address_space
+  }
+
+  security_rule {
+    name                       = "remotevnetout2"
+    priority                   = 210
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = data.terraform_remote_state.network.outputs.cloud_address_space
+    destination_address_prefix = "VirtualNetwork"
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "vyos" {
+  count                     = data.terraform_remote_state.network.outputs.is_vpn_ipsec ? 1 : 0
+  subnet_id                 = azurerm_subnet.gateway.id
+  network_security_group_id = azurerm_network_security_group.vyos_nsg[0].id
+}
+
+module "vyos_vm" {
+  count               = data.terraform_remote_state.network.outputs.is_vpn_ipsec ? 1 : 0
+  source              = "github.com/Azure/Avere/src/terraform/modules/vyos_vm"
+  location            = azurerm_resource_group.onpremrg.location
+  resource_group_name = azurerm_resource_group.onpremrg.name
+  admin_username      = local.vm_admin_username
+  admin_password      = local.vm_admin_password
+  ssh_key_data        = local.vm_ssh_key_data
+  vyos_image_id       = var.vyos_image_id
+
+  // network details
+  static_private_ip = var.vyos_static_private_ip_1
+  vnet_rg           = azurerm_resource_group.onpremrg.name
+  vnet_name         = azurerm_virtual_network.vnet.name
+  vnet_subnet_name  = azurerm_subnet.gateway.name
+
+  depends_on = [
+    azurerm_resource_group.onpremrg,
+    azurerm_virtual_network.vnet,
+    azurerm_subnet.gateway,
+    # for security, delay the vyos vm creation until the security group is in place
+    azurerm_subnet_network_security_group_association.vyos[0]
+  ]
+}
+
+module "vyos_vm_connection" {
+  count                  = data.terraform_remote_state.network.outputs.is_vpn_ipsec ? 1 : 0
+  source                 = "github.com/Azure/Avere/src/terraform/modules/vyos_vm_connection"
+  vyos_vm_id             = module.vyos_vm[0].vm_id
+  vpn_preshared_key      = data.azurerm_key_vault_secret.vpn_gateway_key.value
+  vyos_vti_dummy_address = var.vyos_static_private_ip_2
+
+  vyos_public_ip   = module.vyos_vm[0].public_ip_address
+  vyos_bgp_address = module.vyos_vm[0].private_ip_address
+  vyos_asn         = var.vyos_asn
+
+  azure_vpn_gateway_public_ip   = data.terraform_remote_state.network.outputs.vpn_gateway_public_ip_address
+  azure_vpn_gateway_bgp_address = data.terraform_remote_state.network.outputs.vpn_gateway_bgp_address
+  azure_vpn_gateway_asn         = data.terraform_remote_state.network.outputs.vpn_gateway_asn
+
+  depends_on = [module.vyos_vm]
+}
+
+resource "azurerm_route_table" "onpremroutable" {
+  count               = data.terraform_remote_state.network.outputs.is_vpn_ipsec ? 1 : 0
+  name                = "onpremroutable"
+  resource_group_name = azurerm_resource_group.onpremrg.name
+  location            = azurerm_resource_group.onpremrg.location
+
+  route {
+    name                   = "onpremvyosguardroute"
+    address_prefix         = data.terraform_remote_state.network.outputs.cloud_address_space
+    next_hop_type          = "VirtualAppliance"
+    next_hop_in_ip_address = module.vyos_vm[0].private_ip_address
+  }
+}
+
+resource "azurerm_subnet_route_table_association" "onprem" {
+  count          = data.terraform_remote_state.network.outputs.is_vpn_ipsec ? 1 : 0
+  subnet_id      = azurerm_subnet.onprem.id
+  route_table_id = azurerm_route_table.onpremroutable[0].id
 }
 
 ### Outputs
@@ -341,39 +463,31 @@ output "jumpbox_address" {
 }
 
 output "nfsfiler_username" {
-  value = module.nfsfiler.admin_username
+  value = module.nfsfilerephemeral.admin_username
+}
+
+output "nfsfiler_fqdn" {
+  value = var.nfs_filer_fqdn
 }
 
 output "nfsfiler_address" {
-  value = module.nfsfiler.primary_ip
+  value = module.nfsfilerephemeral.primary_ip
+}
+
+output "nfsfiler_export" {
+  value = module.nfsfilerephemeral.core_filer_export
 }
 
 output "vyos_address" {
-  value = local.deploy_azure_vpngw ? "" : azurerm_public_ip.vyos[0].ip_address
+  value = data.terraform_remote_state.network.outputs.is_vpn_ipsec ? module.vyos_vm[0].public_ip_address : ""
 }
 
 output "vyos_bgp_address" {
-  value = local.deploy_azure_vpngw ? "" : azurerm_network_interface.vyosnic[0].ip_configuration[0].private_ip_address
+  value = data.terraform_remote_state.network.outputs.is_vpn_ipsec ? module.vyos_vm[0].private_ip_address : ""
 }
 
 output "vyos_asn" {
-  value = local.deploy_azure_vpngw ? "" : local.vyos_asn
-}
-
-output "cloud_bgp_address" {
-  value = local.deploy_azure_vpngw ? "" : data.terraform_remote_state.network.outputs.vpn_gateway_bgp_addresses[0]
-}
-
-output "cloud_address_space" {
-  value = local.deploy_azure_vpngw ? "" : data.terraform_remote_state.network.outputs.cloud_address_space
-}
-
-output "cloud_address" {
-  value = local.deploy_azure_vpngw ? "" : data.terraform_remote_state.network.outputs.vpn_gateway_public_ip_address
-}
-
-output "cloud_asn" {
-  value = local.deploy_azure_vpngw ? "" : data.terraform_remote_state.network.outputs.vpn_gateway_asn
+  value = data.terraform_remote_state.network.outputs.is_vpn_ipsec ? local.vyos_asn : ""
 }
 
 output "onprem_location" {
@@ -385,13 +499,13 @@ output "onprem_resource_group" {
 }
 
 output "onprem_vpn_gateway_id" {
-  value = local.deploy_azure_vpngw ? azurerm_virtual_network_gateway.vpngateway[0].id : ""
+  value = data.terraform_remote_state.network.outputs.is_vnet_to_vnet ? azurerm_virtual_network_gateway.vpngateway[0].id : ""
 }
 
 output "onprem_address_space" {
   value = var.address_space
 }
 
-output "deploy_azure_vpngw" {
-  value = local.deploy_azure_vpngw
+output "dns_server_ip" {
+  value = local.dns_static_private_ip
 }
