@@ -335,6 +335,10 @@ output "network_rg" {
   value = azurerm_resource_group.network.name
 }
 
+output "ssh_port" {
+  value = var.ssh_port
+}
+
 output "vnet_name" {
   value = var.vnet_name
 }
