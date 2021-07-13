@@ -19,4 +19,5 @@ tfbackend_storage_container_name = "terraform"
 secret_keys = ["vpngatewaykey", "virtualmachine", "AvereCache"]
 
 # used as initial place holders for the secrets
-secret_dummy_value = "initialplaceholder"
+# for security, populate these secrets through portal, instead of here
+secret_dummy_values = ["vpngatewaykey", "virtualmachine", "AvereCache"]
