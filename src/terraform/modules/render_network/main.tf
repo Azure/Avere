@@ -32,7 +32,7 @@ resource "azurerm_network_security_group" "ssh_nsg" {
       priority                   = security_rule.key + 121
       direction                  = "Inbound"
       access                     = "Allow"
-      protocol                   = "Tcp"
+      protocol                   = "Udp"
       source_port_range          = "*"
       destination_port_ranges    = var.open_external_udp_ports
       source_address_prefix      = security_rule.value
