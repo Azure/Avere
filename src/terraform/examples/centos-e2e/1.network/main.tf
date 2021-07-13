@@ -28,6 +28,10 @@ variable "network_rg" {
   type = string
 }
 
+variable "ssh_port" {
+  type = number
+}
+
 variable "vnet_name" {
   type = string
 }

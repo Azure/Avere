@@ -1,5 +1,6 @@
 # the network resource group name
 network_rg = "tfnetwork_rg"
+ssh_port = 22
 
 // virtual network settings
 vnet_name     = "vnet"
