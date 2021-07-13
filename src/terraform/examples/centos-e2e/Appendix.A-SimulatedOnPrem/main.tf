@@ -126,6 +126,7 @@ data "terraform_remote_state" "network" {
 
 locals {
   gateway_subnet_name = data.terraform_remote_state.network.outputs.is_vpn_ipsec ? "vyossubnet" : "GatewaySubnet"
+  ssh_port            = data.terraform_remote_state.network.outputs.ssh_port
 
   // azure gateway settings
   // generation and sku defined in https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways#benchmark
@@ -201,7 +202,7 @@ resource "azurerm_network_security_group" "onprem_nsg" {
     access                     = "Allow"
     protocol                   = "TCP"
     source_port_range          = "*"
-    destination_port_range     = "22"
+    destination_port_range     = local.ssh_port
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
@@ -222,6 +223,7 @@ module "jumpbox" {
   add_public_ip                 = true
   build_vfxt_terraform_provider = false
   vm_size                       = var.jumpbox_vm_size
+  ssh_port                      = local.ssh_port
 
   // network details
   virtual_network_resource_group = azurerm_resource_group.onpremrg.name
@@ -291,14 +293,12 @@ module "dnsserver" {
 }
 
 module "download_moana" {
-  # do not download if any SAS url is missing
-  count  = var.island_animation_sas_url == "" || var.island_basepackage_sas_url == "" || var.island_pbrt_sas_url == "" ? 0 : 1
-  source              = "github.com/Azure/Avere/src/terraform/modules/download_moana"
-  node_address   = module.jumpbox.jumpbox_address
-  admin_username = local.vm_admin_username
-  admin_password = local.vm_admin_password
-  ssh_key_data   = local.vm_ssh_key_data
-  #ssh_port = 22
+  source                     = "github.com/Azure/Avere/src/terraform/modules/download_moana"
+  node_address               = module.jumpbox.jumpbox_address
+  admin_username             = local.vm_admin_username
+  admin_password             = local.vm_admin_password
+  ssh_key_data               = local.vm_ssh_key_data
+  ssh_port                   = local.ssh_port
   nfsfiler_address           = var.nfs_filer_fqdn
   nfsfiler_export_path       = module.nfsfilerephemeral.core_filer_export
   island_animation_sas_url   = var.island_animation_sas_url
