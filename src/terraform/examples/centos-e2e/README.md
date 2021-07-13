@@ -52,7 +52,7 @@ The tfstate files contain secrets, so it is recommended to use a protected backe
 ### Steps to Deploy
 
 1. Before deploying, ensure you have Role `Key Vault Secrets Officer`.  To do this, open https://portal.azure.com, and browse to Subscriptions=>Access Control (IAM) and add "Key Vault Secrets Officer" to your id.
-1. `cd ~/tf/src/terraform/examples/centos-e2e/0.keyvault`
+1. `cd ~/tf/src/terraform/examples/centos-e2e/0.security`
 1. `code config.tfvars` and edit the values to your desired values.
 1. `terraform init` and `terraform apply -auto-approve`
 1. **Important** once deployed, browse to the keyvault in the portal and update each of the 3 **Secrets**.
