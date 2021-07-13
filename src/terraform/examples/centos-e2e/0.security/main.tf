@@ -36,8 +36,8 @@ variable "secret_keys" {
   type = list(string)
 }
 
-variable "secret_dummy_value" {
-  type = string
+variable "secret_dummy_values" {
+  type = list(string)
 }
 
 variable "tfbackend_storage_account_name" {
@@ -69,7 +69,7 @@ resource "azurerm_key_vault" "keyvault" {
 resource "azurerm_key_vault_secret" "secretkeys" {
   count        = length(var.secret_keys)
   name         = var.secret_keys[count.index]
-  value        = var.secret_dummy_value
+  value        = var.secret_dummy_values[count.index]
   key_vault_id = azurerm_key_vault.keyvault.id
 }
 
