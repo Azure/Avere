@@ -78,22 +78,11 @@ locals {
   onprem_vpn_bgp_address = var.use_onprem_simulation ? data.terraform_remote_state.onprem[0].outputs.vyos_bgp_address : var.real_onprem_vpn_bgp_address
 }
 
-# Vnet2Vnet
-resource "azurerm_virtual_network_gateway_connection" "onprem_to_cloud" {
-  count               = var.use_onprem_simulation && data.terraform_remote_state.onprem[0].outputs.deploy_azure_vpngw ? 1 : 0
-  name                = "onprem_to_cloud"
-  location            = data.terraform_remote_state.onprem[0].outputs.onprem_location
-  resource_group_name = data.terraform_remote_state.onprem[0].outputs.onprem_resource_group
-
-  type                            = "Vnet2Vnet"
-  virtual_network_gateway_id      = data.terraform_remote_state.onprem[0].outputs.onprem_vpn_gateway_id
-  peer_virtual_network_gateway_id = data.terraform_remote_state.network.outputs.vpn_gateway_id
-
-  shared_key = data.azurerm_key_vault_secret.vpn_gateway_key.value
-}
-
+################################################################
+# VpnVnet2Vnet
+################################################################
 resource "azurerm_virtual_network_gateway_connection" "cloud_to_onprem" {
-  count               = var.use_onprem_simulation && data.terraform_remote_state.onprem[0].outputs.deploy_azure_vpngw ? 1 : 0
+  count               = data.terraform_remote_state.network.outputs.is_vnet_to_vnet ? 1 : 0
   name                = "cloud_to_onprem"
   location            = var.location
   resource_group_name = data.terraform_remote_state.network.outputs.network_rg
@@ -105,9 +94,11 @@ resource "azurerm_virtual_network_gateway_connection" "cloud_to_onprem" {
   shared_key = data.azurerm_key_vault_secret.vpn_gateway_key.value
 }
 
-# Vnet to Onprem
+################################################################
+# VpnIPsec
+################################################################
 resource "azurerm_local_network_gateway" "onpremise" {
-  count               = var.use_onprem_simulation && data.terraform_remote_state.onprem[0].outputs.deploy_azure_vpngw ? 0 : 1
+  count               = data.terraform_remote_state.network.outputs.is_vpn_ipsec ? 1 : 0
   name                = "onpremise"
   location            = var.location
   resource_group_name = data.terraform_remote_state.network.outputs.network_rg
@@ -120,7 +111,7 @@ resource "azurerm_local_network_gateway" "onpremise" {
 }
 
 resource "azurerm_virtual_network_gateway_connection" "onpremise" {
-  count               = var.use_onprem_simulation && data.terraform_remote_state.onprem[0].outputs.deploy_azure_vpngw ? 0 : 1
+  count               = data.terraform_remote_state.network.outputs.is_vpn_ipsec ? 1 : 0
   name                = "onpremise"
   location            = var.location
   resource_group_name = data.terraform_remote_state.network.outputs.network_rg

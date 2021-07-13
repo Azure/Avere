@@ -19,7 +19,25 @@ cache_subnet      = "10.0.1.0/24"
 rendernodes_subnet_name = "rendernodes"
 rendernodes_subnet      = "10.0.4.0/22"
 
-// VPN Gateway configuration
+// There are 3 VNET choices
+// NoVpn        - does nothing, customer will setup ExpressRoute 
+//                gateway, or some other connectivity to onprem
+// VpnIPsec     - creates an IPsec Tunnel
+// VpnVnet2Vnet - creates an Azure Vnet to Vnet tunnel
+on_prem_connectivity = "VpnVnet2Vnet"
+
+// VPN Gateway configuration, unused if set to ExpressRoute
 // generation and sku defined in https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways#benchmark
 vpngw_generation = "Generation2"
 vpngw_sku        = "VpnGw2"
+
+# replace with onprem dns servers, otherwise points at the simulated dns
+# if using the onprem simulator, the first entry must match
+# note that the Azure DNS "168.63.129.16" is only used in the 
+# initial deployment for bootstrapping purposes
+onprem_dns_servers = ["172.16.1.254", "168.63.129.16"]
+
+# the spoof dns server is used to redirect cloud clients to HPC Cache or
+# Avere vFXT instead of the onprem filer
+use_spoof_dns_server = true
+spoof_dns_server     = "10.0.1.253"

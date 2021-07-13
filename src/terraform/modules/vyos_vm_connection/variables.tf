@@ -15,7 +15,7 @@ variable "vyos_vti_dummy_address" {
 
 variable "vyos_public_ip" {
   description = "The public ip of the VyOS server"
-  type       = string
+  type        = string
 }
 
 variable "vyos_bgp_address" {
