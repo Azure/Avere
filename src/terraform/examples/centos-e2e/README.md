@@ -88,7 +88,7 @@ Please note that a real on-premises environment must have VPN or ExpressRoute co
 For deployment of the simulated on-premises environment, consider a different region from rest of the example to simulate a higher latency.
 
 1. `cd ~/tf/src/terraform/examples/centos-e2e/Appendix.A-SimulatedOnPrem`
-1. `code config.auto.tfvars` and edit the values to your desired values.
+1. `code config.auto.tfvars` and edit the values to your desired values.  For the Moana SAS urls, you can leave these blank to not populate or download the 3 files from [Disney](https://www.disneyanimation.com/resources/moana-island-scene/) to a blob storage account.  Once downloaded to the blob storage account, you can create SAS Urls to each blob using [Azure Storage Explorer](https://azure.microsoft.com/en-us/features/storage-explorer/).
 1. `terraform init -backend-config ../globalconfig.backend`
 1. `terraform apply -auto-approve -var-file ../globalconfig.tfvars`
 
