@@ -10,6 +10,9 @@ gateway_subnet     = "172.16.0.0/24"
 onprem_subnet_name = "onprem"
 onprem_subnet      = "172.16.1.0/24"
 
+# jumpbox parameters
+jumpbox_vm_size = "Standard_F4s_v2"
+
 # vyos parameters, only used is 1.network output has is_vpn_ipsec set
 vyos_image_id            = ""
 vyos_static_private_ip_1 = "172.16.0.254"
@@ -32,3 +35,8 @@ ssh_public_key = ""
 nfs_filer_vm_size     = "Standard_L8s_v2"
 nfs_filer_unique_name = "nfsfiler"
 nfs_filer_fqdn        = "nfsfiler.rendering.com"
+
+// leave blank to not download
+island_animation_sas_url   = ""
+island_basepackage_sas_url = ""
+island_pbrt_sas_url        = ""

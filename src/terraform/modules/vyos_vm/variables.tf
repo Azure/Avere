@@ -27,7 +27,7 @@ variable "unique_name" {
 
 variable "vm_size" {
   description = "Size of the VM."
-  default     = "Standard_F8s_v2"
+  default     = "Standard_F4s_v2"
 }
 
 variable "vyos_image_id" {
