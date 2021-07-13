@@ -50,6 +50,10 @@ variable "onprem_subnet" {
   type = string
 }
 
+variable "jumpbox_vm_size" {
+  type = string
+}
+
 variable "vyos_image_id" {
   type = string
 }
@@ -84,6 +88,18 @@ variable "nfs_filer_unique_name" {
 
 variable "nfs_filer_fqdn" {
   type = string
+}
+
+variable "island_animation_sas_url" {
+  description = "SAS url to Moana island animation sas url (https://www.disneyanimation.com/resources/moana-island-scene/)"
+}
+
+variable "island_basepackage_sas_url" {
+  description = "SAS url to Moana island base package sas url (https://www.disneyanimation.com/resources/moana-island-scene/)"
+}
+
+variable "island_pbrt_sas_url" {
+  description = "SAS url to Moana island PBRT sas url (https://www.disneyanimation.com/resources/moana-island-scene/)"
 }
 
 ### Resources
@@ -122,7 +138,6 @@ locals {
   vm_size      = "Standard_F4s_v2"*/
 
   // vyos machine settings
-  vyos_vm_size     = "Standard_D2s_v3"
   vyos_unique_name = "vyos"
   vyos_asn         = 64512
 
@@ -206,6 +221,7 @@ module "jumpbox" {
   ssh_key_data                  = local.vm_ssh_key_data
   add_public_ip                 = true
   build_vfxt_terraform_provider = false
+  vm_size                       = var.jumpbox_vm_size
 
   // network details
   virtual_network_resource_group = azurerm_resource_group.onpremrg.name
@@ -271,6 +287,28 @@ module "dnsserver" {
 
   depends_on = [
     module.nfsfilerephemeral,
+  ]
+}
+
+module "download_moana" {
+  # do not download if any SAS url is missing
+  count  = var.island_animation_sas_url == "" || var.island_basepackage_sas_url == "" || var.island_pbrt_sas_url == "" ? 0 : 1
+  source              = "github.com/Azure/Avere/src/terraform/modules/download_moana"
+  node_address   = module.jumpbox.jumpbox_address
+  admin_username = local.vm_admin_username
+  admin_password = local.vm_admin_password
+  ssh_key_data   = local.vm_ssh_key_data
+  #ssh_port = 22
+  nfsfiler_address           = var.nfs_filer_fqdn
+  nfsfiler_export_path       = module.nfsfilerephemeral.core_filer_export
+  island_animation_sas_url   = var.island_animation_sas_url
+  island_basepackage_sas_url = var.island_basepackage_sas_url
+  island_pbrt_sas_url        = var.island_pbrt_sas_url
+
+  depends_on = [
+    module.nfsfilerephemeral,
+    module.dnsserver,
+    module.jumpbox,
   ]
 }
 
