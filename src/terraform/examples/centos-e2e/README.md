@@ -132,8 +132,8 @@ This step setups an HPC Cache or Avere vFXT with an optional DNS server for "spo
 Per the [security best practices](../security), it is recommended to perform a simple threat modeling exercise to know where vulnerabilities may exist:
 
 1. Azure Access
-    1. For vFXT deployment, Azure deployment requires a variety of Managed Identity roles, described in [Managed Identity and Roles](../../../src/vfxt#managed-identity-and-roles) require owner or user
-    1. The controller and vFXT used managed identities.  The managed identies are scoped to the resource groups and roles described in [Managed Identity and Roles](../../../src/vfxt#managed-identity-and-roles).  To further lockdown, user created managed identities may be used.  For more information, refer to [Avere vFXT using User Assigned Managed Identity](../vfxt/user-assigned-managed-identity).
+    1. For vFXT deployment, Azure deployment requires a variety of Managed Identity roles, described in [Managed Identity and Roles](../../../vfxt#managed-identity-and-roles) require owner or user
+    1. The controller and vFXT used managed identities.  The managed identies are scoped to the resource groups and roles described in [Managed Identity and Roles](../../../vfxt#managed-identity-and-roles).  To further lockdown, user created managed identities may be used.  For more information, refer to [Avere vFXT using User Assigned Managed Identity](../vfxt/user-assigned-managed-identity).
 
 1. Secrets
     1. no secrets live in code or printed to logs
