@@ -88,6 +88,18 @@ variable "onprem_dns_servers" {
   type = list(string)
 }
 
+variable "dns_search_domain" {
+  type = string
+}
+
+variable "use_proxy_server" {
+  type = bool
+}
+
+variable "proxy_uri" {
+  type = string
+}
+
 variable "use_spoof_dns_server" {
   type = bool
 }
@@ -389,6 +401,18 @@ output "no_vpn" {
 
 output "onprem_dns_servers" {
   value = var.onprem_dns_servers
+}
+
+output "dns_search_domain" {
+  value = var.dns_search_domain
+}
+
+output "use_proxy_server" {
+  value = var.use_proxy_server
+}
+
+output "proxy_uri" {
+  value = var.proxy_uri
 }
 
 output "use_spoof_dns_server" {
