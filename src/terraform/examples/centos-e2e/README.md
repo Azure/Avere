@@ -23,9 +23,9 @@ To run the example, execute the following instructions.  This assumes use of Azu
 
 1. browse to https://shell.azure.com, and choose a Bash shell.
 
-2. Specify your subscription by running this command with your subscription ID:  ```az account set --subscription YOUR_SUBSCRIPTION_ID```.  You will need to run this every time after restarting your shell, otherwise it may default you to the wrong subscription, and you will see an error similar to `azurerm_public_ip.vm is empty tuple`.
+1. Specify your subscription by running this command with your subscription ID:  ```az account set --subscription YOUR_SUBSCRIPTION_ID```.  You will need to run this every time after restarting your shell, otherwise it may default you to the wrong subscription, and you will see an error similar to `azurerm_public_ip.vm is empty tuple`.
 
-3. get the terraform examples
+1. get the terraform examples
 ```bash
 mkdir tf
 cd tf
@@ -34,6 +34,17 @@ git remote add origin -f https://github.com/Azure/Avere.git
 git config core.sparsecheckout true
 echo "src/terraform/*" >> .git/info/sparse-checkout
 git pull origin main
+```
+
+1. If deploying the cachewarmer or the Avere vFXT, you will need the controller image.To use it you must accept the terms as part of the Avere vFXT prerequisites, including running `az vm image terms accept --urn microsoft-avere:vfxt:avere-vfxt-controller:latest`: https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs
+
+1. If deploying the Avere vFXT, run the following commands to install the Avere vFXT provider for Azure:
+```bash
+version=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name | sed -e 's/[^0-9]*\([0-9].*\)$/\1/')
+browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[0].browser_download_url)
+mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
+wget -O ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version $browser_download_url
+chmod 755 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version
 ```
 
 ### 0. Security
@@ -97,7 +108,7 @@ For deployment of the simulated on-premises environment, consider a different re
 This step connects the on-prem gateway with the cloud gateway.  Here are the steps to deploy:
 
 1. `cd ~/tf/src/terraform/examples/centos-e2e/1.network.vpnconnection`
-1. `code config.tfvars` and edit the values to your desired values.
+1. `code config.auto.tfvars` and edit the values to your desired values.
 1. `terraform init -backend-config ../globalconfig.backend`
 1. `terraform apply -auto-approve -var-file ../globalconfig.tfvars`
 
@@ -105,6 +116,32 @@ This step connects the on-prem gateway with the cloud gateway.  Here are the ste
 
 ## 3. Cache
 
+This step setups an HPC Cache or Avere vFXT with an optional DNS server for "spoofing" the filer fqdn so cloud clients mount to the cache ip addresses instead of the onpremises filer.
+
+1. if deploying the Avere vFXT, please confirm the [pre-requisites for vFXT listed above](#pre-requisites).
+1. `cd ~/tf/src/terraform/examples/centos-e2e/3.cache`
+1. `code config.auto.tfvars` and edit the values to your desired values.
+1. `terraform init -backend-config ../globalconfig.backend`
+1. `terraform apply -auto-approve -var-file ../globalconfig.tfvars`
+
 ## 4. VMSS
 
 
+## Security and Threat modeling
+
+Per the [security best practices](../security), it is recommended to perform a simple threat modeling exercise to know where vulnerabilities may exist:
+
+1. Azure Access
+    1. For vFXT deployment, Azure deployment requires a variety of Managed Identity roles, described in [Managed Identity and Roles](../../../src/vfxt#managed-identity-and-roles) require owner or user
+    1. The controller and vFXT used managed identities.  The managed identies are scoped to the resource groups and roles described in [Managed Identity and Roles](../../../src/vfxt#managed-identity-and-roles).  To further lockdown, user created managed identities may be used.  For more information, refer to [Avere vFXT using User Assigned Managed Identity](../vfxt/user-assigned-managed-identity).
+
+1. Secrets
+    1. no secrets live in code or printed to logs
+    1. secrets are stored and retrieved from in keyvault
+    1. Terraform tfstate files are stored in a secure blob storage account.
+
+1. Network Egress
+    1. When the onprem proxy is provided, the cloud network Egress is locked down with Network Security Groups (NSGs).  All control plane traffic goes back to the onprem and studios have not found too much impact with the extra latency for the controlplane traffic.
+    1. When HPC Cache is used, the cache subnet is opened to the "AzureCloud" security tag.  There is potential for egress here.
+    1. If the controller receives a public IP, port 22 (SSH) will be exposed to the internet.  If no public IP, the terraform needs to be run from a machine that access to the private ip.  To setup an on-prem machine, refer to [Terraform setup for vFXT for various OS's](../vfxt/pipeline).
+    1. When using the CacheWarmer, the blob storage account is exposed to the Internet.  This can be locked down to the subnets for VNET.

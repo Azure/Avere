@@ -32,8 +32,8 @@ on_prem_connectivity = "VpnVnet2Vnet"
 vpngw_generation = "Generation2"
 vpngw_sku        = "VpnGw2"
 
-// An onprem proxy is a common way to avoid egress from the cloud
-// all control plane traffic goes through the proxy.  Customers have found
+// An onprem proxy is a common way to avoid egress from the cloud.
+// All control plane traffic goes through the proxy.  Customers have found
 // that the higher latency for the control plane traffic does not affect operations
 // much.
 use_proxy_server = true
