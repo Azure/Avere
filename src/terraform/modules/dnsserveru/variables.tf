@@ -3,17 +3,17 @@ variable "resource_group_name" {
 }
 
 variable "location" {
-    description = "The Azure Region into which the dnsserver will be created."
+  description = "The Azure Region into which the dnsserver will be created."
 }
 
 variable "admin_username" {
   description = "Admin username on the dnsserver."
-  default = "azureuser"
+  default     = "azureuser"
 }
 
 variable "admin_password" {
   description = "(optional) The password used for access to the dnsserver.  If not specified, ssh_key_data needs to be set."
-  default = null
+  default     = null
 }
 
 variable "ssh_key_data" {
@@ -22,17 +22,17 @@ variable "ssh_key_data" {
 
 variable "ssh_port" {
   description = "specifies the tcp port to use for ssh"
-  default = 22
+  default     = 22
 }
 
 variable "unique_name" {
   description = "The unique name used for the dnsserver and for resource names associated with the VM."
-  default = "dnsserver"
+  default     = "dnsserver"
 }
 
 variable "vm_size" {
   description = "Size of the VM."
-  default = "Standard_D2s_v3"
+  default     = "Standard_D2s_v3"
 }
 
 variable "virtual_network_resource_group" {
@@ -49,7 +49,7 @@ variable "virtual_network_subnet_name" {
 
 variable "private_ip_address" {
   description = "specifies a static private ip address to use"
-  default = null
+  default     = null
 }
 
 variable "dns_server" {
@@ -66,32 +66,32 @@ variable "avere_ip_addr_count" {
 
 variable "avere_first_ip_addr2" {
   description = "the first ip address of the Avere vserver2."
-  default = ""
+  default     = ""
 }
 
 variable "avere_ip_addr_count2" {
   description = "the count of ip addresses on the vserver2."
-  default = 0
+  default     = 0
 }
 
 variable "avere_first_ip_addr3" {
   description = "the first ip address of the Avere vserver3."
-  default = ""
+  default     = ""
 }
 
 variable "avere_ip_addr_count3" {
   description = "the count of ip addresses on the vserver3."
-  default = 0
+  default     = 0
 }
 
 variable "avere_first_ip_addr4" {
   description = "the first ip address of the Avere vserver4."
-  default = ""
+  default     = ""
 }
 
 variable "avere_ip_addr_count4" {
   description = "the count of ip addresses on the vserver4."
-  default = 0
+  default     = 0
 }
 
 variable "avere_filer_fqdn" {
@@ -100,10 +100,15 @@ variable "avere_filer_fqdn" {
 
 variable "dns_max_ttl_seconds" {
   description = "The max ttl in seconds of the dns records, the default is 5 minutes.  This will cap larger TTLS, and TTLs set lower than this value will still be respected."
-  default = 300
+  default     = 300
 }
 
 variable "avere_filer_alternate_fqdn" {
-  default = []
+  default     = []
   description = "alternate fqdn of the avere and is useful to point other names at Avere or can be used to emulate a domain search list."
+}
+
+variable "proxy" {
+  description = "specify a proxy address if one exists in the format of http://PROXY_SERVER:PORT"
+  default     = null
 }
