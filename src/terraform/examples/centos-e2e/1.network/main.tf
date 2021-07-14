@@ -244,7 +244,7 @@ resource "azurerm_network_security_group" "rendernodes_nsg" {
     name                       = "allowvnetin"
     priority                   = 200
     direction                  = "Inbound"
-    access                     = "Deny"
+    access                     = "Allow"
     protocol                   = "*"
     source_port_range          = "*"
     destination_port_range     = "*"
