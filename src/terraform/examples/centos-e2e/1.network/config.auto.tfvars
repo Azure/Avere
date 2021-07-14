@@ -1,6 +1,6 @@
 # the network resource group name
 network_rg = "tfnetwork_rg"
-ssh_port = 22
+ssh_port   = 22
 
 // virtual network settings
 vnet_name     = "vnet"
@@ -32,11 +32,20 @@ on_prem_connectivity = "VpnVnet2Vnet"
 vpngw_generation = "Generation2"
 vpngw_sku        = "VpnGw2"
 
+// An onprem proxy is a common way to avoid egress from the cloud
+// all control plane traffic goes through the proxy.  Customers have found
+// that the higher latency for the control plane traffic does not affect operations
+// much.
+use_proxy_server = true
+proxy_uri        = "http://172.16.1.253:3128"
+
 # replace with onprem dns servers, otherwise points at the simulated dns
 # if using the onprem simulator, the first entry must match
 # note that the Azure DNS "168.63.129.16" is only used in the 
 # initial deployment for bootstrapping purposes
 onprem_dns_servers = ["172.16.1.254", "168.63.129.16"]
+# a space separted list of domains, if no search domain, leave empty
+dns_search_domain = ""
 
 # the spoof dns server is used to redirect cloud clients to HPC Cache or
 # Avere vFXT instead of the onprem filer

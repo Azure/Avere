@@ -156,6 +156,11 @@ locals {
   // to preserve single source of truth this comes from first element
   // of 1.network dns servers
   dns_static_private_ip = data.terraform_remote_state.network.outputs.onprem_dns_servers[0]
+
+  // extract the proxy address if used
+  use_proxy_server = data.terraform_remote_state.network.outputs.use_proxy_server
+  proxy_uri        = data.terraform_remote_state.network.outputs.proxy_uri
+  proxy_address    = local.use_proxy_server && length(regex("[^/]*//([^:]*):", local.proxy_uri)) > 0 ? regex("[^/]*//([^:]*):", local.proxy_uri)[0] : null
 }
 
 resource "azurerm_resource_group" "onpremrg" {
@@ -245,6 +250,26 @@ module "nfsfilerephemeral" {
   ssh_key_data        = local.vm_ssh_key_data
   vm_size             = var.nfs_filer_vm_size
   unique_name         = var.nfs_filer_unique_name
+
+  // network details
+  virtual_network_resource_group = azurerm_resource_group.onpremrg.name
+  virtual_network_name           = azurerm_virtual_network.vnet.name
+  virtual_network_subnet_name    = azurerm_subnet.onprem.name
+
+  depends_on = [
+    azurerm_subnet.onprem,
+  ]
+}
+
+module "proxy" {
+  count               = local.use_proxy_server ? 1 : 0
+  source              = "github.com/Azure/Avere/src/terraform/modules/proxy"
+  resource_group_name = azurerm_resource_group.onpremrg.name
+  location            = azurerm_resource_group.onpremrg.location
+  admin_username      = local.vm_admin_username
+  admin_password      = local.vm_admin_password
+  ssh_key_data        = local.vm_ssh_key_data
+  private_ip_address  = local.proxy_address
 
   // network details
   virtual_network_resource_group = azurerm_resource_group.onpremrg.name
