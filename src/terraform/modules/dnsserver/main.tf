@@ -123,6 +123,8 @@ locals {
   script_file_b64       = base64gzip(replace(file("${path.module}/install.sh"), "\r", ""))
   unbound_conf_file_b64 = base64gzip(replace(templatefile("${path.module}/unbound.conf", { max_ttl = var.dns_max_ttl_seconds, excluded_subnets = local.excluded_subnets_str, local_zone_line = local.local_zone_record_str, arecord_lines = local.local_a_records_str, forward_addr_lines = local.foward_lines_str }), "\r", ""))
   cloud_init_file       = templatefile("${path.module}/cloud-init.tpl", { installcmd = local.script_file_b64, unboundconf = local.unbound_conf_file_b64, ssh_port = var.ssh_port })
+
+  proxy_env = (var.proxy == null || var.proxy == "") ? "" : "http_proxy=${var.proxy} https_proxy=${var.proxy} no_proxy=169.254.169.254"
 }
 
 data "azurerm_subnet" "vnet" {
@@ -193,7 +195,7 @@ resource "azurerm_virtual_machine_extension" "cse" {
 
   settings = <<SETTINGS
     {
-        "commandToExecute": " /bin/bash /opt/install.sh"
+        "commandToExecute": " ${var.proxy_env} /bin/bash /opt/install.sh"
     }
 SETTINGS
 }
