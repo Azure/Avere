@@ -176,7 +176,7 @@ resource "azurerm_virtual_machine_extension" "cse" {
 
   settings = <<SETTINGS
     {
-        "commandToExecute": " ${var.proxy_env} /bin/bash /opt/install.sh"
+        "commandToExecute": " ${local.proxy_env} /bin/bash /opt/install.sh"
     }
 SETTINGS
 }
