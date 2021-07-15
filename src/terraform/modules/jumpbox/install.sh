@@ -25,46 +25,64 @@ function retrycmd_if_failure() {
 }
 
 function update_linux() {
-    retrycmd_if_failure 12 5 yum -y install wget unzip git nfs-utils tmux nc
+    retrycmd_if_failure 12 5 yum -y install wget unzip git nfs-utils tmux nc jq
     retrycmd_if_failure 12 5 yum -y install epel-release
     retrycmd_if_failure 12 5 yum -y install python-pip
     #retrycmd_if_failure 3 5 pip install hstk
 }
 
 function install_golang() {
-    cd $AZURE_HOME_DIR/.
-    GO_DL_FILE=go1.14.4.linux-amd64.tar.gz
-    retrycmd_if_failure 12 5 wget https://dl.google.com/go/$GO_DL_FILE
-    tar xvf $GO_DL_FILE
-    chown -R $ADMIN_USER_NAME:$ADMIN_USER_NAME ./go
-    mkdir -p $AZURE_HOME_DIR/gopath
-    chown -R $ADMIN_USER_NAME:$ADMIN_USER_NAME $AZURE_HOME_DIR/gopath
-    echo "export GOPATH=$AZURE_HOME_DIR/gopath" >> $AZURE_HOME_DIR/.bashrc
-    echo "export PATH=\$GOPATH/bin:$AZURE_HOME_DIR/go/bin:$PATH" >> $AZURE_HOME_DIR/.bashrc
-    echo "export GOROOT=$AZURE_HOME_DIR/go" >> $AZURE_HOME_DIR/.bashrc
-    rm $GO_DL_FILE
+    cd $AZURE_HOME_DIR
+    GO_DL_FILE=go1.16.6.linux-amd64.tar.gz
+    wget --tries=12 --wait=5 https://dl.google.com/go/$GO_DL_FILE
+    sudo tar -C /usr/local -xzf $GO_DL_FILE
+    rm -f $GO_DL_FILE
+    #echo "export GOPATH=$AZURE_HOME_DIR/gopath" >> $AZURE_HOME_DIR/.profile
+    echo "export PATH=$PATH:/usr/local/go/bin" >> $AZURE_HOME_DIR/.profile
 }
 
 function pull_avere_github() {
-    # best effort to build the github content
-    set +e
-    # setup the environment
-    source $AZURE_HOME_DIR/.bashrc
+    # use workaround set home for go to work, bug here: https://github.com/golang/go/issues/43938
     OLD_HOME=$HOME
     export HOME=$AZURE_HOME_DIR
-    # checkout Checkpoint simulator code, all dependencies and build the binaries
-    cd $GOPATH
-    go get -v github.com/Azure/Avere/src/terraform/providers/terraform-provider-avere
-    cd src/github.com/Azure/Avere/src/terraform/providers/terraform-provider-avere
-    go mod download
-    go mod tidy
+
+    # best effort to build the github content
+    set +e
+    RELEASE_DIR=$AZURE_HOME_DIR/releases
+    mkdir -p $RELEASE_DIR
+    source $AZURE_HOME_DIR/.profile
+    cd $AZURE_HOME_DIR
+    git clone https://github.com/Azure/Avere.git
+    
+    # build the provider
+    cd $AZURE_HOME_DIR/Avere/src/terraform/providers/terraform-provider-avere
     go build
-    # build windows
     GOOS=windows GOARCH=amd64 go build
+    mv terraform-provider-avere* $RELEASE_DIR/.
+    
+    # build the cachewarmer
+    cd $AZURE_HOME_DIR/Avere/src/go/cmd/cachewarmer/cachewarmer-jobsubmitter
+    go build
+    mv cachewarmer-jobsubmitter $RELEASE_DIR/.
+    cd $AZURE_HOME_DIR/Avere/src/go/cmd/cachewarmer/cachewarmer-manager
+    go build
+    mv cachewarmer-manager $RELEASE_DIR/.
+    cd $AZURE_HOME_DIR/Avere/src/go/cmd/cachewarmer/cachewarmer-worker
+    go build
+    mv cachewarmer-worker $RELEASE_DIR/.
+    
+    cd $RELEASE_DIR/.
+    ls -lh
+
+    # install provider
     version=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name | sed -e 's/[^0-9]*\([0-9].*\)$/\1/')
+    echo $version
     mkdir -p $AZURE_HOME_DIR/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
-    cp terraform-provider-avere $AZURE_HOME_DIR/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
+    cp $RELEASE_DIR/terraform-provider-avere $AZURE_HOME_DIR/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
+
+    # restore HOME
     export HOME=$OLD_HOME
+
     # re-enable exit on error
     set -e
 }
@@ -82,9 +100,9 @@ gpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/azu
 
 function install_terraform() {
     cd $AZURE_HOME_DIR/.
-    retrycmd_if_failure 12 5 wget https://releases.hashicorp.com/terraform/0.15.0/terraform_0.15.0_linux_amd64.zip
-    unzip terraform_0.15.0_linux_amd64.zip -d /usr/local/bin
-    rm terraform_0.15.0_linux_amd64.zip
+    wget --tries=12 --wait=5 https://releases.hashicorp.com/terraform/1.0.2/terraform_1.0.2_linux_amd64.zip
+    unzip terraform_1.0.2_linux_amd64.zip -d /usr/local/bin
+    rm terraform_1.0.2_linux_amd64.zip
 }
 
 function main() {

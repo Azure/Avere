@@ -341,40 +341,41 @@ _Note_: The provider is built as a go module - this lets you build outside your 
 
 The following build instructions work in https://shell.azure.com, Centos, or Ubuntu:
 
-1. if this is centos, install git
+1. if this is centos, install git and jq
 
     ```bash
-    sudo yum install git
+    sudo yum install -y git jq
     ```
 
-2. If not already installed go, install golang:
+1. if this is ubuntu, install jq
 
     ```bash
-    wget https://dl.google.com/go/go1.14.linux-amd64.tar.gz
-    tar xvf go1.14.linux-amd64.tar.gz
-    mkdir ~/gopath
-    echo "export GOPATH=$HOME/gopath" >> ~/.profile
-    echo "export PATH=\$GOPATH/bin:$HOME/go/bin:$PATH" >> ~/.profile
-    echo "export GOROOT=$HOME/go" >> ~/.profile
+    sudo apt get install -y jq
+    ```
+
+1. If not already installed go, install golang:
+
+    ```bash
+    GO_DL_FILE=go1.16.6.linux-amd64.tar.gz
+    wget --tries=12 --wait=5 https://dl.google.com/go/$GO_DL_FILE
+    sudo tar -C /usr/local -xzf $GO_DL_FILE
+    rm -f $GO_DL_FILE
+    echo "export PATH=$PATH:/usr/local/go/bin" >> ~/.profile
     source ~/.profile
-    rm go1.14.linux-amd64.tar.gz
     ```
 
-3. build the provider code
+1. build and install the provider code
     ```bash
-    # checkout Checkpoint simulator code, all dependencies and build the binaries
-    cd $GOPATH
-    go get -v github.com/Azure/Avere/src/terraform/providers/terraform-provider-avere
-    cd src/github.com/Azure/Avere/src/terraform/providers/terraform-provider-avere
-    go mod download
-    go mod tidy
+    cd
+    git clone https://github.com/Azure/Avere.git
+    # build the cache warmer
+    cd $AZURE_HOME_DIR/Avere/src/terraform/providers/terraform-provider-avere
     go build
+    # install the avere provider
     version=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name | sed -e 's/[^0-9]*\([0-9].*\)$/\1/')
     mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
     cp terraform-provider-avere ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
     ```
-
-4. Install the provider `~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere` to the ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64 directory of your terraform environment, where $version is the version of the provider.
 
 # Build the Terraform Provider binary on Windows
 
@@ -387,13 +388,25 @@ Here are the instructions for building the windows binary:
 1. open a new powershell command prompt and type the following to checkout the code:
 
 ```powershell
-mkdir $env:GOPATH -Force
-cd $env:GOPATH
-go get -v github.com/Azure/Avere/src/terraform/providers/terraform-provider-avere
-cd $env:GOPATH\src\github.com\Azure\Avere\src\terraform\providers\terraform-provider-avere
-go mod download
-go mod tidy
+# change to your desired directory
+$env:SRC='c:\src'
+mkdir $env:SRC -Force
+cd $env:SRC
+git clone https://github.com/Azure/Avere.git
+cd $env:SRC\Avere\src\terraform\providers\terraform-provider-avere
 go build
+# install the provider
+# get the latest download URL
+$latestPage         = Invoke-WebRequest https://api.github.com/repos/Azure/Avere/releases/latest
+($latestpage.Content|ConvertFrom-Json|Select tag_name).tag_name -match '[^0-9]*([0-9\.].*)$'
+$version            = $matches[1]
+$browserDownloadUrl = (($latestpage.Content |ConvertFrom-Json|Select assets).assets |where-object {$_.browser_download_url -match ".exe"}).browser_download_url
+
+# download the provider
+$pluginsDirectory   = "$Env:APPDATA\terraform.d\plugins\registry.terraform.io\hashicorp\avere\$version\windows_amd64"
+md $pluginsDirectory -ea 0
+$pluginPath         = "$pluginsDirectory\terraform-provider-avere_v$version.exe"
+Write-Output "copying the avere plugin to $pluginPath"
+copy terraform-provider-avere.exe $pluginPath
 ```
 
-1. copy the .exe to the source directory
