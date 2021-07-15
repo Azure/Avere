@@ -14,9 +14,9 @@ import (
 	"github.com/Azure/Avere/src/go/pkg/edasim"
 	"github.com/Azure/Avere/src/go/pkg/file"
 	"github.com/Azure/Avere/src/go/pkg/log"
-	"github.com/Azure/azure-event-hubs-go/persist"
-	"github.com/Azure/azure-amqp-common-go/sas"
-	eventhubs "github.com/Azure/azure-event-hubs-go"
+	"github.com/Azure/azure-event-hubs-go/v3/persist"
+	"github.com/Azure/azure-amqp-common-go/v3/sas"
+	eventhubs "github.com/Azure/azure-event-hubs-go/v3"
 )
 
 const (
