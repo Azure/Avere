@@ -24,22 +24,31 @@ These instructions work on Centos 7 (systemd) and Ubuntu 18.04.  This can be ins
 2. If not already installed go, install golang:
 
     ```bash
-    wget https://dl.google.com/go/go1.11.2.linux-amd64.tar.gz
-    tar xvf go1.11.2.linux-amd64.tar.gz
-    sudo chown -R root:root ./go
-    sudo mv go /usr/local
-    mkdir ~/gopath
-    echo "export GOPATH=$HOME/gopath" >> ~/.profile
-    echo "export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin" >> ~/.profile
+    GO_DL_FILE=go1.16.6.linux-amd64.tar.gz
+    wget --tries=12 --wait=5 https://dl.google.com/go/$GO_DL_FILE
+    sudo tar -C /usr/local -xzf $GO_DL_FILE
+    rm -f $GO_DL_FILE
+    echo "export PATH=$PATH:/usr/local/go/bin" >> ~/.profile
     source ~/.profile
-    rm go1.11.2.linux-amd64.tar.gz
     ```
 
 2. setup CacheWarmer code
     ```bash
-    # checkout CacheWarmer code, all dependencies and build the binaries
-    cd $GOPATH
-    go get -v github.com/Azure/Avere/src/go/...
+    # checkout and build CacheWarmer
+    cd
+    RELEASE_DIR=~/release
+    mkdir -p $RELEASE_DIR
+    git clone https://github.com/Azure/Avere.git
+    # build the cache warmer
+    cd $AZURE_HOME_DIR/Avere/src/go/cmd/cachewarmer/cachewarmer-jobsubmitter
+    go build
+    mv cachewarmer-jobsubmitter $RELEASE_DIR/.
+    cd $AZURE_HOME_DIR/Avere/src/go/cmd/cachewarmer/cachewarmer-manager
+    go build
+    mv cachewarmer-manager $RELEASE_DIR/.
+    cd $AZURE_HOME_DIR/Avere/src/go/cmd/cachewarmer/cachewarmer-worker
+    go build
+    mv cachewarmer-worker $RELEASE_DIR/.
     ```
 
 ### Mount NFS and build a bootstrap directory
