@@ -36,9 +36,10 @@ func initializeApplicationVariables(ctx context.Context) *cachewarmer.WarmPathMa
 	var bootstrapMountAddress = flag.String("bootstrapMountAddress", "", "the mount address that hosts the worker bootstrap script")
 	var bootstrapExportPath = flag.String("bootstrapExportPath", "", "the export path that hosts the worker bootstrap script")
 	var bootstrapScriptPath = flag.String("bootstrapScriptPath", "", "the path to the worker bootstrap script")
+	var workerCount = flag.Int64("workerCount", 12, "the worker count to warm the cache")
 
+	var storageAccountResourceGroup = flag.String("storageAccountResourceGroup", "", "the storage account resource group")
 	var storageAccount = flag.String("storageAccountName", "", "the storage account name to host the queue")
-	var storageKey = flag.String("storageKey", "", "the storage key to access the queue")
 	var queueNamePrefix = flag.String("queueNamePrefix", "", "the queue name to be used for organizing the work. The queues will be created automatically")
 
 	var vmssUserName = flag.String("vmssUserName", "", "the username for the vmss vms")
@@ -70,14 +71,14 @@ func initializeApplicationVariables(ctx context.Context) *cachewarmer.WarmPathMa
 		os.Exit(1)
 	}
 
-	if len(*storageAccount) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: storageAccount is not specified\n")
+	if len(*storageAccountResourceGroup) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: storageAccountResourceGroup is not specified\n")
 		usage()
 		os.Exit(1)
 	}
 
-	if len(*storageKey) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: storageKey is not specified\n")
+	if len(*storageAccount) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: storageAccount is not specified\n")
 		usage()
 		os.Exit(1)
 	}
@@ -112,10 +113,16 @@ func initializeApplicationVariables(ctx context.Context) *cachewarmer.WarmPathMa
 		os.Exit(1)
 	}
 
+	primaryKey, err := cachewarmer.GetPrimaryStorageKey(ctx, *storageAccountResourceGroup, *storageAccount)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: unable to get storage account key: %s", err)
+		os.Exit(1)
+	}
+
 	cacheWarmerQueues, err := cachewarmer.InitializeCacheWarmerQueues(
 		ctx,
 		*storageAccount,
-		*storageKey,
+		primaryKey,
 		*queueNamePrefix)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: error initializing queue %v\n", err)
@@ -124,6 +131,7 @@ func initializeApplicationVariables(ctx context.Context) *cachewarmer.WarmPathMa
 
 	return cachewarmer.InitializeWarmPathManager(
 		azureClients,
+		*workerCount,
 		cacheWarmerQueues,
 		*bootstrapMountAddress,
 		*bootstrapExportPath,
@@ -133,7 +141,7 @@ func initializeApplicationVariables(ctx context.Context) *cachewarmer.WarmPathMa
 		*vmssSshPublicKey,
 		*vmssSubnetName,
 		*storageAccount,
-		*storageKey,
+		primaryKey,
 		*queueNamePrefix,
 	)
 }

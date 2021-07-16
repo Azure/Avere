@@ -211,6 +211,9 @@ func createCacheWarmerVmssModel(
 	publisher string,
 	offer string,
 	sku string,
+	planName string,
+	planPublisher string,
+	planProduct string,
 	priority compute.VirtualMachinePriorityTypes,
 	evictionPolicy compute.VirtualMachineEvictionPolicyTypes,
 	subnetId string,
@@ -236,6 +239,16 @@ func createCacheWarmerVmssModel(
 		}
 	}
 
+	var computePlan *compute.Plan
+	computePlan = nil
+	if len(planName) == 0 || len(planPublisher) == 0 || len(planProduct) == 0 {
+		computePlan = &compute.Plan{
+			Name:      to.StringPtr(planName),
+			Publisher: to.StringPtr(planPublisher),
+			Product:   to.StringPtr(planProduct),
+		}
+	}
+
 	// create the vmss model
 	return compute.VirtualMachineScaleSet{
 		Name:     to.StringPtr(vmssName),
@@ -244,6 +257,7 @@ func createCacheWarmerVmssModel(
 			Name:     to.StringPtr(vmssSKU),
 			Capacity: to.Int64Ptr(nodeCount),
 		},
+		Plan: computePlan,
 		VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{
 			Overprovision: to.BoolPtr(false),
 			UpgradePolicy: &compute.UpgradePolicy{
