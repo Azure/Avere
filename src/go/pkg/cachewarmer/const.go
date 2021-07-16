@@ -37,21 +37,25 @@ const (
 	MountRetrySleepSeconds = 10
 
 	// this size is the most common, and will stand up the fastest
-	VMSSNodeSize            = "Standard_D2s_v3"
-	VmssName                = "cwvmss"
-	NodesPerNFSMountAddress = 2
+	VMSSNodeSize = "Standard_D2s_v3"
+	VmssName     = "cwvmss"
+
+	/* by default Ubuntu doesn't install NFS and we need a distro with NFS installed by default for airgapped environments
 	MarketPlacePublisher    = "Canonical"
 	MarketPlaceOffer        = "UbuntuServer"
 	MarketPlaceSku          = "18.04-LTS"
-	/*PlanName = ""
-	PlanPublisherName = ""
-	PlanProductName = ""
+	PlanName             = ""
+	PlanPublisherName    = ""
+	PlanProductName      = ""
+	*/
+
+	// the controller will work in an airgapped environment
 	MarketPlacePublisher = "microsoft-avere"
 	MarketPlaceOffer     = "vfxt"
 	MarketPlaceSku       = "avere-vfxt-controller"
 	PlanName             = "avere-vfxt-controller"
 	PlanPublisherName    = "microsoft-avere"
-	PlanProductName      = "vfxt"*/
+	PlanProductName      = "vfxt"
 
 	tick                        = time.Duration(1) * time.Millisecond   // 1ms
 	timeBetweenJobCheck         = time.Duration(2) * time.Second        // 2 seconds between checking for jobs
@@ -66,4 +70,6 @@ const (
 
 	WorkerMultiplier        = 2
 	MinimumJobsBeforeRefill = 100
+
+	SubscriptionIdEnvVar = "AZURE_SUBSCRIPTION_ID"
 )

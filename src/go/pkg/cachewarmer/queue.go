@@ -5,9 +5,50 @@ package cachewarmer
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/Azure/Avere/src/go/pkg/azure"
+	"github.com/Azure/azure-sdk-for-go/profiles/2020-09-01/storage/mgmt/storage"
+	"github.com/Azure/go-autorest/autorest/azure/auth"
 )
+
+func GetSubscriptionID() (string, error) {
+	// try environment
+	if v := os.Getenv(SubscriptionIdEnvVar); v != "" {
+		return v, nil
+	}
+
+	// try az cli file
+	if fileSettings, err := auth.GetSettingsFromFile(); err == nil && fileSettings.GetSubscriptionID() != "" {
+		return fileSettings.GetSubscriptionID(), nil
+	}
+
+	// try metadata
+	if computeMetadata, err := GetComputeMetadata(); err == nil {
+		return computeMetadata.SubscriptionId, nil
+	}
+
+	return "", fmt.Errorf("unable to get subscription from env var '%s', az cli login file, or instance meta data.  Set the environment variable '%s' or run 'az login' to resolve", SubscriptionIdEnvVar, SubscriptionIdEnvVar)
+}
+
+func GetPrimaryStorageKey(ctx context.Context, resourceGroup string, accountName string) (string, error) {
+	subscriptionId, err := GetSubscriptionID()
+	if err != nil {
+		return "", err
+	}
+	authorizer, err := auth.NewAuthorizerFromEnvironment()
+	if err != nil {
+		return "", fmt.Errorf("ERROR: authorizer from environment failed: %s", err)
+	}
+	accountsClient := storage.NewAccountsClient(subscriptionId)
+	accountsClient.Authorizer = authorizer
+	response, err := accountsClient.ListKeys(ctx, resourceGroup, accountName)
+	if err != nil {
+		return "", err
+	}
+
+	return *(((*response.Keys)[0]).Value), nil
+}
 
 type CacheWarmerQueues struct {
 	jobQueue  *azure.Queue

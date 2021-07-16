@@ -21,6 +21,7 @@ import (
 // WarmPathManager contains the information for the manager
 type WarmPathManager struct {
 	AzureClients          *AzureClients
+	WorkerCount           int64
 	Queues                *CacheWarmerQueues
 	bootstrapMountAddress string
 	bootstrapExportPath   string
@@ -37,6 +38,7 @@ type WarmPathManager struct {
 // InitializeWarmPathManager initializes the job submitter structure
 func InitializeWarmPathManager(
 	azureClients *AzureClients,
+	workerCount int64,
 	queues *CacheWarmerQueues,
 	bootstrapMountAddress string,
 	bootstrapExportPath string,
@@ -50,6 +52,7 @@ func InitializeWarmPathManager(
 	queueNamePrefix string) *WarmPathManager {
 	return &WarmPathManager{
 		AzureClients:          azureClients,
+		WorkerCount:           workerCount,
 		Queues:                queues,
 		bootstrapMountAddress: bootstrapMountAddress,
 		bootstrapExportPath:   bootstrapExportPath,
@@ -310,8 +313,7 @@ func (m *WarmPathManager) RunVMSSManager(ctx context.Context, syncWaitGroup *syn
 					if workerJob == nil {
 						continue
 					}
-					mountCount := len(workerJob.WarmTargetMountAddresses)
-					m.EnsureVmssRunning(ctx, mountCount)
+					m.EnsureVmssRunning(ctx)
 					lastJobSeen = time.Now()
 				}
 				lastReadQueueSuccess = time.Now()
@@ -320,7 +322,7 @@ func (m *WarmPathManager) RunVMSSManager(ctx context.Context, syncWaitGroup *syn
 	}
 }
 
-func (m *WarmPathManager) EnsureVmssRunning(ctx context.Context, mountCount int) {
+func (m *WarmPathManager) EnsureVmssRunning(ctx context.Context) {
 	vmssExists, err := VmssExists(ctx, m.AzureClients, VmssName)
 	if err != nil {
 		log.Error.Printf("checking VMSS existence failed with error %v", err)
@@ -357,26 +359,27 @@ func (m *WarmPathManager) EnsureVmssRunning(ctx context.Context, mountCount int)
 		return
 	}
 
-	vmssCount := int64(mountCount * NodesPerNFSMountAddress)
-
 	cacheWarmerVmss := createCacheWarmerVmssModel(
 		VmssName,                              // vmssName string,
 		m.AzureClients.LocalMetadata.Location, // location string,
 		VMSSNodeSize,                          // vmssSKU string,
-		vmssCount,                             // nodeCount int64,
+		m.WorkerCount,                         // nodeCount int64,
 		m.vmssUserName,                        // userName string,
 		m.vmssPassword,                        // password string,
 		m.vmssSshPublicKey,                    // sshKeyData string,
 		MarketPlacePublisher,                  // publisher string,
 		MarketPlaceOffer,                      // offer string,
 		MarketPlaceSku,                        // sku string,
+		PlanName,                              // planName string,
+		PlanPublisherName,                     // planPublisherName string,
+		PlanProductName,                       // planProductName string,
 		compute.Spot,                          // priority compute.VirtualMachinePriorityTypes,
 		compute.Delete,                        // evictionPolicy compute.VirtualMachineEvictionPolicyTypes
 		vmssSubnetId,                          // subnetId string
 		customData,
 	)
 
-	log.Info.Printf("create VMSS with %d workers", vmssCount)
+	log.Info.Printf("create VMSS with %d workers", m.WorkerCount)
 	if _, err := CreateVmss(ctx, m.AzureClients, cacheWarmerVmss); err != nil {
 		log.Error.Printf("error creating vmss: %v", err)
 		return

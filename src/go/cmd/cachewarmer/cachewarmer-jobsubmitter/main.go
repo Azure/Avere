@@ -42,8 +42,8 @@ func initializeApplicationVariables(ctx context.Context) (*cachewarmer.WarmPathJ
 
 	var maxFileSizeBytes = flag.Int64("maxFileSizeBytes", 0, "the maximum file size in bytes to warm.")
 
+	var storageAccountResourceGroup = flag.String("storageAccountResourceGroup", "", "the storage account resource group")
 	var storageAccount = flag.String("storageAccountName", "", "the storage account name to host the queue")
-	var storageKey = flag.String("storageKey", "", "the storage key to access the queue")
 	var queueNamePrefix = flag.String("queueNamePrefix", "", "the queue name to be used for organizing the work. The queues will be created automatically")
 
 	var blockUntilWarm = flag.Bool("blockUntilWarm", false, "the job submitter will not return until there are no more jobs")
@@ -72,14 +72,14 @@ func initializeApplicationVariables(ctx context.Context) (*cachewarmer.WarmPathJ
 		os.Exit(1)
 	}
 
-	if len(*storageAccount) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: storageAccount is not specified\n")
+	if len(*storageAccountResourceGroup) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: storageAccountResourceGroup is not specified\n")
 		usage()
 		os.Exit(1)
 	}
 
-	if len(*storageKey) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: storageKey is not specified\n")
+	if len(*storageAccount) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: storageAccount is not specified\n")
 		usage()
 		os.Exit(1)
 	}
@@ -96,6 +96,12 @@ func initializeApplicationVariables(ctx context.Context) (*cachewarmer.WarmPathJ
 		os.Exit(1)
 	}
 
+	primaryKey, err := cachewarmer.GetPrimaryStorageKey(ctx, *storageAccountResourceGroup, *storageAccount)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: unable to get storage account key: %s", err)
+		os.Exit(1)
+	}
+
 	warmJobPath := cachewarmer.InitializeWarmPathJob(
 		*warmTargetMountAddresses,
 		*warmTargetExportPath,
@@ -107,7 +113,7 @@ func initializeApplicationVariables(ctx context.Context) (*cachewarmer.WarmPathJ
 	cacheWarmerQueues, err := cachewarmer.InitializeCacheWarmerQueues(
 		ctx,
 		*storageAccount,
-		*storageKey,
+		primaryKey,
 		*queueNamePrefix)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: error initializing queue %v\n", err)
