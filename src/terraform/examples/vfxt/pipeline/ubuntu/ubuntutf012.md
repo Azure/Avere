@@ -24,7 +24,7 @@ curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 mkdir -p ~/.terraform.d/plugins
 # install the vfxt released binary from https://github.com/Azure/Avere
 # to build the provider from scratch see: https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#build-the-terraform-provider-binary-on-linux
-browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[0].browser_download_url)
+browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[].browser_download_url | grep -e "terraform-provider-avere$")
 wget -O ~/.terraform.d/plugins/terraform-provider-avere $browser_download_url
 chmod 755 ~/.terraform.d/plugins/terraform-provider-avere
 ```

@@ -400,7 +400,6 @@ go build
 $latestPage         = Invoke-WebRequest https://api.github.com/repos/Azure/Avere/releases/latest
 ($latestpage.Content|ConvertFrom-Json|Select tag_name).tag_name -match '[^0-9]*([0-9\.].*)$'
 $version            = $matches[1]
-$browserDownloadUrl = (($latestpage.Content |ConvertFrom-Json|Select assets).assets |where-object {$_.browser_download_url -match ".exe"}).browser_download_url
 
 # download the provider
 $pluginsDirectory   = "$Env:APPDATA\terraform.d\plugins\registry.terraform.io\hashicorp\avere\$version\windows_amd64"
