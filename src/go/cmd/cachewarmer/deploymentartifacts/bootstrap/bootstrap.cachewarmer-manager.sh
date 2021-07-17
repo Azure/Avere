@@ -6,8 +6,9 @@ set -x
 # NEED following ENV VARS
 # BOOTSTRAP_PATH - the mount path for bootstrap
 #
+# STORAGE_ACCOUNT_RESOURCE_GROUP - the resource group of the storage account
 # STORAGE_ACCOUNT - the storage account hosting the job queue
-# STORAGE_KEY - the key to the storage account
+
 # QUEUE_PREFIX - the queue prefix
 # BOOTSTRAP_EXPORT_PATH
 # BOOTSTRAP_MOUNT_ADDRESS
@@ -39,8 +40,8 @@ function write_system_files() {
     cp $SRC_FILE $DST_FILE
     sed -i "s/USERREPLACE/$SERVICE_USER/g" $DST_FILE
     sed -i "s/GROUPREPLACE/$SERVICE_USER/g" $DST_FILE
+    sed -i "s:STORAGE_RG_REPLACE:$STORAGE_ACCOUNT_RESOURCE_GROUP:g" $DST_FILE
     sed -i "s:STORAGE_ACCOUNT_REPLACE:$STORAGE_ACCOUNT:g" $DST_FILE
-    sed -i "s:STORAGE_KEY_REPLACE:$STORAGE_KEY:g" $DST_FILE
     sed -i "s/QUEUE_PREFIX_REPLACE/$QUEUE_PREFIX/g" $DST_FILE
     sed -i "s:BOOTSTRAP_EXPORT_PATH_REPLACE:$BOOTSTRAP_EXPORT_PATH:g" $DST_FILE
     sed -i "s:BOOTSTRAP_MOUNT_ADDRESS_REPLACE:$BOOTSTRAP_MOUNT_ADDRESS:g" $DST_FILE

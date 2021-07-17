@@ -28,25 +28,25 @@ These instructions work on Centos 7 (systemd) and Ubuntu 18.04.  This can be ins
     wget --tries=12 --wait=5 https://dl.google.com/go/$GO_DL_FILE
     sudo tar -C /usr/local -xzf $GO_DL_FILE
     rm -f $GO_DL_FILE
-    echo "export PATH=$PATH:/usr/local/go/bin" >> ~/.profile
-    source ~/.profile
+    echo "export PATH=$PATH:/usr/local/go/bin" >> $HOME/.profile
+    source $HOME/.profile
     ```
 
 2. setup CacheWarmer code
     ```bash
     # checkout and build CacheWarmer
     cd
-    RELEASE_DIR=~/release
+    RELEASE_DIR=$HOME/release
     mkdir -p $RELEASE_DIR
     git clone https://github.com/Azure/Avere.git
     # build the cache warmer
-    cd $AZURE_HOME_DIR/Avere/src/go/cmd/cachewarmer/cachewarmer-jobsubmitter
+    cd $HOME/Avere/src/go/cmd/cachewarmer/cachewarmer-jobsubmitter
     go build
     mv cachewarmer-jobsubmitter $RELEASE_DIR/.
-    cd $AZURE_HOME_DIR/Avere/src/go/cmd/cachewarmer/cachewarmer-manager
+    cd $HOME/Avere/src/go/cmd/cachewarmer/cachewarmer-manager
     go build
     mv cachewarmer-manager $RELEASE_DIR/.
-    cd $AZURE_HOME_DIR/Avere/src/go/cmd/cachewarmer/cachewarmer-worker
+    cd $HOME/Avere/src/go/cmd/cachewarmer/cachewarmer-worker
     go build
     mv cachewarmer-worker $RELEASE_DIR/.
     ```
