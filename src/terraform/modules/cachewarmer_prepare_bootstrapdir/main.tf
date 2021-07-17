@@ -1,22 +1,22 @@
 locals {
   build_cachewarmer_lines = [
-    "curl --retry 5 --retry-delay 5 -o /tmp/cachewarmer_build.sh https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/modules/cachewarmer_prepare_bootstrapdir/cachewarmer_build.sh",
-    "source /tmp/cachewarmer_build.sh",
+    "curl --retry 5 --retry-delay 5 --output /tmp/cachewarmer_build.sh https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/modules/cachewarmer_prepare_bootstrapdir/cachewarmer_build.sh",
+    "chmod +x /tmp/cachewarmer_build.sh",
+    ". /tmp/cachewarmer_build.sh",
   ]
 
   env_vars = "LOCAL_MOUNT_DIR=/b BOOTSTRAP_MOUNT_ADDRESS=${var.bootstrap_mount_address} BOOTSTRAP_MOUNT_EXPORT=${var.bootstrap_export_path} BOOTSTRAP_SUBDIR=${var.bootstrap_subdir}"
 
   prepare_cachewarmer_bootstrap_lines = [
-    "curl --retry 5 --retry-delay 5 -o /tmp/cachewarmer_prepare_bootstrap.sh https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/modules/cachewarmer_prepare_bootstrapdir/cachewarmer_prepare_bootstrap.sh",
-    "${local.env_vars} source /tmp/cachewarmer_prepare_bootstrap.sh"
+    "curl --retry 5 --retry-delay 5 --output /tmp/cachewarmer_prepare_bootstrap.sh https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/modules/cachewarmer_prepare_bootstrapdir/cachewarmer_prepare_bootstrap.sh",
+    "chmod +x /tmp/cachewarmer_prepare_bootstrap.sh",
+    "${local.env_vars} /tmp/cachewarmer_prepare_bootstrap.sh",
   ]
 
-  provisioner_lines = var.build_cachewarmer ? concat(build_cachewarmer_lines, prepare_cachewarmer_bootstrap_lines) : prepare_cachewarmer_bootstrap_lines
+  provisioner_lines = var.build_cachewarmer ? concat(local.build_cachewarmer_lines, local.prepare_cachewarmer_bootstrap_lines) : local.prepare_cachewarmer_bootstrap_lines
 }
 
 resource "null_resource" "build_cachewarmer_bootstrap" {
-  count = var.deploy_cachewarmer ? 1 : 0
-
   connection {
     type        = "ssh"
     port        = var.jumpbox_ssh_port
