@@ -49,17 +49,17 @@ sudo mkdir -p $LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/rsyslog
 sudo mkdir -p $LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/systemd
 
 # download the content
-sudo curl --retry 5 --retry-delay 5 -o $LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/bootstrap.cachewarmer-manager.sh https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/bootstrap.cachewarmer-manager.sh
-sudo curl --retry 5 --retry-delay 5 -o $LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/bootstrap.cachewarmer-worker.sh https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/bootstrap.cachewarmer-worker.sh
-sudo curl --retry 5 --retry-delay 5 -o $LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/rsyslog/35-cachewarmer-manager.conf https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/rsyslog/35-cachewarmer-manager.conf
-sudo curl --retry 5 --retry-delay 5 -o $LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/rsyslog/36-cachewarmer-worker.conf https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/rsyslog/36-cachewarmer-worker.conf
-sudo curl --retry 5 --retry-delay 5 -o $LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/systemd/cachewarmer-manager.service https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/systemd/cachewarmer-manager.service
-sudo curl --retry 5 --retry-delay 5 -o $LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/systemd/cachewarmer-worker.service https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/systemd/cachewarmer-worker.service
+sudo curl --retry 5 --retry-delay 5 -L -o $LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/bootstrap.cachewarmer-manager.sh https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/bootstrap.cachewarmer-manager.sh
+sudo curl --retry 5 --retry-delay 5 -L -o $LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/bootstrap.cachewarmer-worker.sh https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/bootstrap.cachewarmer-worker.sh
+sudo curl --retry 5 --retry-delay 5 -L -o $LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/rsyslog/35-cachewarmer-manager.conf https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/rsyslog/35-cachewarmer-manager.conf
+sudo curl --retry 5 --retry-delay 5 -L -o $LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/rsyslog/36-cachewarmer-worker.conf https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/rsyslog/36-cachewarmer-worker.conf
+sudo curl --retry 5 --retry-delay 5 -L -o $LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/systemd/cachewarmer-manager.service https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/systemd/cachewarmer-manager.service
+sudo curl --retry 5 --retry-delay 5 -L -o $LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/systemd/cachewarmer-worker.service https://raw.githubusercontent.com/Azure/Avere/main/src/go/cmd/cachewarmer/deploymentartifacts/bootstrap/systemd/cachewarmer-worker.service
 
 TARGET_PATH=$LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/cachewarmerbin/cachewarmer-manager
 if [ -z "$CACHEWARMER_MANAGER_PATH" ]; then
     browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[].browser_download_url | grep -e "cachewarmer-manager$")
-    sudo curl --retry 5 --retry-delay 5 -o $TARGET_PATH $browser_download_url
+    sudo curl --retry 5 --retry-delay 5 -L -o $TARGET_PATH $browser_download_url
     sudo chmod +x $TARGET_PATH
 else
     sudo cp $CACHEWARMER_MANAGER_PATH $TARGET_PATH
@@ -67,7 +67,7 @@ fi
 TARGET_PATH=$LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/cachewarmerbin/cachewarmer-worker
 if [ -z "$CACHEWARMER_WORKER_PATH" ]; then
     browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[].browser_download_url | grep -e "cachewarmer-worker$")
-    sudo curl --retry 5 --retry-delay 5 -o $TARGET_PATH $browser_download_url
+    sudo curl --retry 5 --retry-delay 5 -L -o $TARGET_PATH $browser_download_url
     sudo chmod +x $TARGET_PATH
 else
     sudo cp $CACHEWARMER_WORKER_PATH $TARGET_PATH
@@ -75,7 +75,7 @@ fi
 TARGET_PATH=$LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/cachewarmerbin/cachewarmer-jobsubmitter
 if [ -z "$CACHEWARMER_JOBSUBMITTER_PATH" ]; then
     browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[].browser_download_url | grep -e "cachewarmer-jobsubmitter$")
-    sudo curl --retry 5 --retry-delay 5 -o $TARGET_PATH $browser_download_url
+    sudo curl --retry 5 --retry-delay 5 -L -o $TARGET_PATH $browser_download_url
     sudo chmod +x $TARGET_PATH
 else
     sudo cp $CACHEWARMER_JOBSUBMITTER_PATH $TARGET_PATH
