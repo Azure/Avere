@@ -1,8 +1,30 @@
-# CacheWarmer Bootstrap Setup Module
+# CacheWarmer Bootstrap Preparation Module
 
-This module installs the CacheWarmer bootstrap script for the [CacheWarmer](../../../go/cmd/cachewarmer).  The [CacheWarmer for HPC Cache](../../examples/HPC%20Cache/cachewarmer) or the [CacheWarmer for Avere vFXT for Azure](../../examples/vfxt/cachewarmer) examples demonstrate how to use this module.
+This module prepares the CacheWarmer bootstrap folder on a target NFS file server for the [CacheWarmer](../../../go/cmd/cachewarmer).  The [CacheWarmer for HPC Cache](../../examples/HPC%20Cache/cachewarmer) or the [CacheWarmer for Avere vFXT for Azure](../../examples/vfxt/cachewarmer) examples demonstrate how to use this module.
 
-It requires the following:
-1. SSH access to a node with mountable access to the target NFS Server.  Both the [controller](../controller3) and [jumpbox](../jumpbox) modules achieve this.
-2. the node must have internet access.
-3. the node must have a service principal in the environment defined.
+If the controller or jumpbox does not have internet access, manually prepare the folder using one of the following approaches:
+
+1. Use the cachewarmer release binaries:
+    ```bash
+    # prepare the bootstrap directory, updating the env vars with your own vars
+    export LOCAL_MOUNT_DIR=/b
+    export BOOTSTRAP_MOUNT_ADDRESS=192.168.254.244
+    export BOOTSTRAP_MOUNT_EXPORT=/data
+    export BOOTSTRAP_SUBDIR=/bootstrap
+    curl --retry 5 --retry-delay 5 -o /tmp/cachewarmer_prepare_bootstrap.sh https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/modules/cachewarmer_build/cachewarmer_prepare_bootstrap.sh
+    source /tmp/cachewarmer_prepare_bootstrap.sh
+    ```
+
+1. Build your own cachewarmer:
+    ```bash
+    # build the cachewarmer, it will correctly set the env vars for the paths
+    curl --retry 5 --retry-delay 5 -o /tmp/cachewarmer_build.sh https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/modules/cachewarmer_build/cachewarmer_build.sh
+    source /tmp/cachewarmer_build.sh
+    # prepare the bootstrap directory, updating the env vars with your own vars
+    export LOCAL_MOUNT_DIR=/b
+    export BOOTSTRAP_MOUNT_ADDRESS=192.168.254.244
+    export BOOTSTRAP_MOUNT_EXPORT=/data
+    export BOOTSTRAP_SUBDIR=/bootstrap
+    curl --retry 5 --retry-delay 5 -o /tmp/cachewarmer_prepare_bootstrap.sh https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/modules/cachewarmer_build/cachewarmer_prepare_bootstrap.sh
+    source /tmp/cachewarmer_prepare_bootstrap.sh
+    ```

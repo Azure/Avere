@@ -10,10 +10,10 @@ output "bootstrap_export_path" {
 
 output "cachewarmer_worker_bootstrap_script_path" {
   description = "The path of the cachewarmer worker on the NFS share."
-  value       = local.worker_bootstrap_path
+  value       = "${var.bootstrap_subdir}/bootstrap.cachewarmer-worker.sh"
 }
 
 output "cachewarmer_manager_bootstrap_script_path" {
   description = "The path of the cachewarmer manager on the NFS share."
-  value       = local.manager_bootstrap_path
+  value       = "${var.bootstrap_subdir}/bootstrap.cachewarmer-manager.sh"
 }
