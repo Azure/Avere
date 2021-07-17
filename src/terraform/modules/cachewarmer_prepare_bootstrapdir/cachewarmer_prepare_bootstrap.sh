@@ -60,6 +60,7 @@ TARGET_PATH=$LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/cachewarmerbin/cachewarmer-manage
 if [ -z "$CACHEWARMER_MANAGER_PATH" ]; then
     browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[].browser_download_url | grep -e "cachewarmer-manager$")
     sudo curl --retry 5 --retry-delay 5 -o $TARGET_PATH $browser_download_url
+    chmod +x $TARGET_PATH
 else
     sudo cp $CACHEWARMER_MANAGER_PATH $TARGET_PATH
 fi
@@ -67,6 +68,7 @@ TARGET_PATH=$LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/cachewarmerbin/cachewarmer-worker
 if [ -z "$CACHEWARMER_WORKER_PATH" ]; then
     browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[].browser_download_url | grep -e "cachewarmer-worker$")
     sudo curl --retry 5 --retry-delay 5 -o $TARGET_PATH $browser_download_url
+    chmod +x $TARGET_PATH
 else
     sudo cp $CACHEWARMER_WORKER_PATH $TARGET_PATH
 fi
@@ -74,6 +76,7 @@ TARGET_PATH=$LOCAL_MOUNT_DIR/$BOOTSTRAP_SUBDIR/cachewarmerbin/cachewarmer-jobsub
 if [ -z "$CACHEWARMER_JOBSUBMITTER_PATH" ]; then
     browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[].browser_download_url | grep -e "cachewarmer-jobsubmitter$")
     sudo curl --retry 5 --retry-delay 5 -o $TARGET_PATH $browser_download_url
+    chmod +x $TARGET_PATH
 else
     sudo cp $CACHEWARMER_JOBSUBMITTER_PATH $TARGET_PATH
 fi
