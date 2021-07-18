@@ -1,6 +1,9 @@
 #!/bin/bash
 set -x
 
+# always source to get go in the path
+. $HOME/.profile
+
 # install golang
 if ! command -v go &> /dev/null ; then
     GO_DL_FILE=go1.16.6.linux-amd64.tar.gz
@@ -8,9 +11,8 @@ if ! command -v go &> /dev/null ; then
     sudo tar -C /usr/local -xzf $GO_DL_FILE
     rm -f $GO_DL_FILE
     echo "export PATH=$PATH:/usr/local/go/bin" >> $HOME/.profile
+    . $HOME/.profile
 fi
-# always source to get go in the path
-source $HOME/.profile
 
 # checkout and build CacheWarmer
 cd
