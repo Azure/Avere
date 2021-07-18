@@ -17,6 +17,7 @@ set -x
 # (OPT)VMSS_SUBNET
 # (OPT)VMSS_SSHPUBLICKEY
 # (OPT)VMSS_PASSWORD
+# (OPT)VMSS_WORKER_COUNT
 
 SERVICE_USER=root
 RSYSLOG_FILE="35-cachewarmer-manager.conf"
@@ -65,6 +66,12 @@ function write_system_files() {
         sed -i "s/VMSS_SUBNET_NAME_REPLACE//g" $DST_FILE
     else
         sed -i "s/VMSS_SUBNET_NAME_REPLACE/-vmssSubnetName $VMSS_SUBNET/g" $DST_FILE
+    fi
+    
+    if [[ -z "${VMSS_WORKER_COUNT}" ]]; then
+        sed -i "s/VMSS_WORKER_COUNT_REPLACE//g" $DST_FILE
+    else
+        sed -i "s/VMSS_WORKER_COUNT_REPLACE/-workerCount $VMSS_WORKER_COUNT/g" $DST_FILE
     fi
 
     if [ -f '/etc/centos-release' ]; then 

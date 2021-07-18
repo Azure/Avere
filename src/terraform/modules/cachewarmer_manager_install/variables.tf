@@ -69,3 +69,9 @@ variable "vmss_subnet_name" {
   description = "(optional) the subnet to use for the VMSS, if not specified use the same subnet as the controller"
   default     = null
 }
+
+variable "vmss_worker_count" {
+  description = "(optional) the maximum workers to create, defaults to 12"
+  default     = 12
+  type        = number
+}
