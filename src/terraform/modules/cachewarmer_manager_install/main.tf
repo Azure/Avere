@@ -1,5 +1,5 @@
 locals {
-  mount_dir               = "/b"
+  mount_dir               = "/bcwmi"
   vmss_password_str       = var.vmss_password == null ? "" : var.vmss_password
   vmss_ssh_public_key_str = var.vmss_ssh_public_key == null ? "" : var.vmss_ssh_public_key
   vmss_subnet_name_str    = var.vmss_subnet_name == null ? "" : var.vmss_subnet_name

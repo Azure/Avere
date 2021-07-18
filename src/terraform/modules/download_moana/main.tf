@@ -1,5 +1,5 @@
 locals {
-  mount_path = "/b"
+  mount_path = "/bmi"
 
   prerequisites = [
     "set -x",
@@ -16,7 +16,7 @@ locals {
   ]
 
   umount_path = [
-    "sudo chmod -R 755 -R /b/island*",
+    "sudo chmod -R 755 -R ${local.mount_path}/island*",
     "sudo umount ${local.mount_path}",
     "sudo rmdir ${local.mount_path}",
   ]
