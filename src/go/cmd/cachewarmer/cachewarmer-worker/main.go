@@ -28,6 +28,7 @@ func usage(errs ...error) {
 
 func initializeApplicationVariables(ctx context.Context) *cachewarmer.Worker {
 	var enableDebugging = flag.Bool("enableDebugging", false, "enable debug logging")
+	var storageAccountResourceGroup = flag.String("storageAccountResourceGroup", "", "the storage account resource group")
 	var storageAccount = flag.String("storageAccountName", "", "the storage account name to host the queue")
 	var storageKey = flag.String("storageKey", "", "the storage key to access the queue")
 	var queueNamePrefix = flag.String("queueNamePrefix", "", "the queue name to be used for organizing the work. The queues will be created automatically")
@@ -44,8 +45,8 @@ func initializeApplicationVariables(ctx context.Context) *cachewarmer.Worker {
 		os.Exit(1)
 	}
 
-	if len(*storageKey) == 0 {
-		fmt.Fprintf(os.Stderr, "ERROR: storageKey is not specified\n")
+	if len(*storageAccountResourceGroup) == 0 && len(*storageKey) == 0 {
+		fmt.Fprintf(os.Stderr, "ERROR: storageAccountResourceGroup or storageKey must be specified\n")
 		usage()
 		os.Exit(1)
 	}
@@ -62,10 +63,22 @@ func initializeApplicationVariables(ctx context.Context) *cachewarmer.Worker {
 		os.Exit(1)
 	}
 
+	storageAccountKey := ""
+	if len(*storageKey) != 0 {
+		storageAccountKey = *storageKey
+	} else {
+		primaryKey, err := cachewarmer.GetPrimaryStorageKey(ctx, *storageAccountResourceGroup, *storageAccount)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "ERROR: unable to get storage account key: %s", err)
+			os.Exit(1)
+		}
+		storageAccountKey = primaryKey
+	}
+
 	cacheWarmerQueues, err := cachewarmer.InitializeCacheWarmerQueues(
 		ctx,
 		*storageAccount,
-		*storageKey,
+		storageAccountKey,
 		*queueNamePrefix)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: error initializing queue %v\n", err)
