@@ -7,7 +7,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/signal"
 	"sync"
 	"time"
 
@@ -140,7 +139,7 @@ func BlockUntilWarm(ctx context.Context, syncWaitGroup *sync.WaitGroup, cacheWar
 		case <-ticker.C:
 			if time.Since(lastCheckTime) > timeBetweenBlockCheck {
 				lastCheckTime = time.Now()
-				if jobDirectoryEmpty {
+				if !jobDirectoryEmpty {
 					if isEmpty, err := cacheWarmerQueues.IsJobQueueEmpty(); err != nil {
 						log.Error.Printf("error checking if job queue was empty: %v", err)
 					} else if isEmpty == true {
@@ -162,7 +161,7 @@ func BlockUntilWarm(ctx context.Context, syncWaitGroup *sync.WaitGroup, cacheWar
 
 func main() {
 	// setup the shared context
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx := context.Background()
 
 	// initialize the variables
 	warmPathJob, cacheWarmerQueues, blockUntilWarm := initializeApplicationVariables(ctx)
@@ -180,16 +179,6 @@ func main() {
 		syncWaitGroup.Add(1)
 		go BlockUntilWarm(ctx, &syncWaitGroup, cacheWarmerQueues)
 
-		log.Info.Printf("wait for ctrl-c")
-		// wait on ctrl-c
-		sigchan := make(chan os.Signal, 10)
-		// catch all signals will cause cancellation when mounted, we need to
-		// filter out better
-		// signal.Notify(sigchan)
-		signal.Notify(sigchan, os.Interrupt)
-		<-sigchan
-		log.Info.Printf("Received ctrl-c, stopping services...")
-		cancel()
 		log.Info.Printf("Waiting for all processes to finish")
 		syncWaitGroup.Wait()
 	}
