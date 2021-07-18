@@ -35,8 +35,7 @@ vm_admin_username = "azureuser"
 vm_admin_password = "ReplacePassword$"
 // if you use SSH key, ensure you have ~/.ssh/id_rsa with permission 600
 // populated where you are running terraform
-//vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
-vm_ssh_key_data = ""
+vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
 ssh_port        = 22
 // Important: if you specify false, you must apply this terraform from a VM 
 // that has access to the cloud VNETs
