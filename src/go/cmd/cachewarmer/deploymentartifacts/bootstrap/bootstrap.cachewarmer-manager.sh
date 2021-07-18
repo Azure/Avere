@@ -79,6 +79,27 @@ function configure_rsyslog() {
     # enable listen on port 514/TCP
     sed -i 's/^#module(load="imtcp")/module(load="imtcp")/g' /etc/rsyslog.conf
     sed -i 's/^#input(type="imtcp" port="514")/input(type="imtcp" port="514")/g' /etc/rsyslog.conf
+    
+    # ensure the logs are rotating
+    if grep -F --quiet "/var/log/cachewarmer-manager.log" /etc/logrotate.d/rsyslog; then
+        echo "not updating /etc/logrotate.d/rsyslog, already there"
+    else
+        /bin/cat <<EOM >>/etc/logrotate.d/rsyslog
+/var/log/cachewarmer-manager.log
+{
+        rotate 2
+        daily
+        missingok
+        notifempty
+        compress
+        postrotate
+                /usr/lib/rsyslog/rsyslog-rotate
+        endscript
+}
+EOM
+    fi
+    
+    # restart syslog
     systemctl restart rsyslog
 }
 
