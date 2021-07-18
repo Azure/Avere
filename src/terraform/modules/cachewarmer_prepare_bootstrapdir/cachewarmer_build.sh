@@ -8,8 +8,9 @@ if ! command -v go &> /dev/null ; then
     sudo tar -C /usr/local -xzf $GO_DL_FILE
     rm -f $GO_DL_FILE
     echo "export PATH=$PATH:/usr/local/go/bin" >> $HOME/.profile
-    source $HOME/.profile
 fi
+# always source to get go in the path
+source $HOME/.profile
 
 # checkout and build CacheWarmer
 cd
