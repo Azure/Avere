@@ -12,7 +12,7 @@ LimitNOFILE=16384
 Restart=always
 RestartSec=2
 
-ExecStart=/usr/local/bin/cachewarmer-manager -storageAccountResourceGroup "STORAGE_RG_REPLACE"  -storageAccountName "STORAGE_ACCOUNT_REPLACE"-queueNamePrefix "QUEUE_PREFIX_REPLACE" -bootstrapExportPath "BOOTSTRAP_EXPORT_PATH_REPLACE" -bootstrapMountAddress "BOOTSTRAP_MOUNT_ADDRESS_REPLACE" -bootstrapScriptPath "BOOTSTRAP_SCRIPT_PATH_REPLACE" -vmssUserName "VMSS_USERNAME_REPLACE" VMSS_SSH_PUBLIC_KEY_REPLACE VMSS_PASSWORD_REPLACE VMSS_SUBNET_NAME_REPLACE
+ExecStart=/usr/local/bin/cachewarmer-manager -storageAccountResourceGroup "STORAGE_RG_REPLACE"  -storageAccountName "STORAGE_ACCOUNT_REPLACE" -queueNamePrefix "QUEUE_PREFIX_REPLACE" -bootstrapExportPath "BOOTSTRAP_EXPORT_PATH_REPLACE" -bootstrapMountAddress "BOOTSTRAP_MOUNT_ADDRESS_REPLACE" -bootstrapScriptPath "BOOTSTRAP_SCRIPT_PATH_REPLACE" -vmssUserName "VMSS_USERNAME_REPLACE" VMSS_SSH_PUBLIC_KEY_REPLACE VMSS_PASSWORD_REPLACE VMSS_SUBNET_NAME_REPLACE
 
 # make sure log directory exists and owned by syslog
 PermissionsStartOnly=true
