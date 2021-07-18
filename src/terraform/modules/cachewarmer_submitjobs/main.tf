@@ -1,5 +1,5 @@
 locals {
-  mount_dir        = "/b"
+  mount_dir        = "/bcwsj"
   block_flag       = " -blockUntilWarm "
   no_block_flag    = ""
   warm_paths_array = [for i, z in var.warm_paths : setproduct([i], z)]
