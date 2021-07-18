@@ -241,7 +241,7 @@ func createCacheWarmerVmssModel(
 
 	var computePlan *compute.Plan
 	computePlan = nil
-	if len(planName) == 0 || len(planPublisher) == 0 || len(planProduct) == 0 {
+	if len(planName) > 0 && len(planPublisher) > 0 && len(planProduct) > 0 {
 		computePlan = &compute.Plan{
 			Name:      to.StringPtr(planName),
 			Publisher: to.StringPtr(planPublisher),
