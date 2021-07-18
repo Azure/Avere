@@ -1,6 +1,6 @@
 locals {
   mount_dir = "/b"
-  env_vars  = "export STORAGE_ACCOUNT_RESOURCE_GROUP='${var.storage_account_rg}' && export STORAGE_ACCOUNT=${var.storage_account} && export QUEUE_PREFIX=${var.queue_name_prefix}"
+  env_vars  = "export BOOTSTRAP_PATH=${local.mount_dir} && export STORAGE_ACCOUNT_RESOURCE_GROUP='${var.storage_account_rg}' && export STORAGE_ACCOUNT=${var.storage_account} && export QUEUE_PREFIX=${var.queue_name_prefix}  && export BOOTSTRAP_SCRIPT=${var.bootstrap_worker_script_path}"
 }
 
 resource "null_resource" "install_cachewarmer_worker" {
