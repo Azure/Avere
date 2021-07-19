@@ -130,7 +130,7 @@ jobs:
           --resource-group ${_RESOURCE_GROUP} \
           --parameters "{ \
               'location':                      { 'value': '${_REGION}'            }, \
-              'createVirtualNetwork':          { 'value': 'false'                 }, \
+              'createVirtualNetwork':          { 'value': false                   }, \
               'virtualNetworkResourceGroup':   { 'value': '${_VNET_RG}'           }, \
               'virtualNetworkName':            { 'value': '${_VNET}'              }, \
               'virtualNetworkSubnetName':      { 'value': '${_SUBNET}'            }, \
