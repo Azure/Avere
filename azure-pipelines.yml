@@ -82,6 +82,11 @@ jobs:
       export _CONTROLLER_USERID=${CONTROLLER_USERID:-azureuser}
       export _STORAGE_ACCOUNT=${STORAGE_ACCOUNT:-vfxt$(uuidgen | tr A-Z a-z | sed 's/-//g' | cut -c -20)}
 
+      # Generate an SSH key for use on the controller.
+      ssh-keygen -b 1024 -t rsa -f temp_ssh_key -q -N "" -C ""
+      check_rc.sh $? "Generate SSH key" || exit 0
+      export _SSH_PUB_KEY=${SSH_PUB_KEY:-$(head -1 temp_ssh_key.pub)}
+
       echo "##[group]Dump environment variables"
       env | sort
       echo "##[endgroup]"
@@ -143,6 +148,7 @@ jobs:
               'controllerName':                { 'value': '${_CONTROLLER}'        }, \
               'controllerAdminUsername':       { 'value': '${_CONTROLLER_USERID}' }, \
               'avereClusterName':              { 'value': '${_CLUSTER}'           }, \
+              'controllerSSHKeyData':          { 'value': '${_SSH_PUB_KEY}'       }, \
               'adminPassword':                 { 'value': '${AVERE_ADMIN_PW}'     }  \
           }" ${EXTRA_ARGS}
       check_rc.sh $? "Deploy vFXT (${_CLUSTER}) to ${_RESOURCE_GROUP} in ${_REGION}" || exit 0
