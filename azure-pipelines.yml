@@ -73,7 +73,7 @@ jobs:
       export _RESOURCE_GROUP=${RESOURCE_GROUP:-arm-vfxt-${_timestamp}}
       export _REGION=${VFXT_DEPLOY_LOCATION:-eastus}
       export _NSG=${NSG:-nsg-${_timestamp}}
-      export _VNET_RG=${VNET_RG:-${_RESOURCE_GROUP}}
+      export _VNET_RG=${VNET_RG:-${_RESOURCE_GROUP}-vnet}
       export _VNET=${VNET:-vnet-${_timestamp}}
       export _VNET_ADDR_PREFIX=${VNET_ADDR_PREFIX:-'10.0.0.0/16'}
       export _SUBNET=${SUBNET:-subnet-${_timestamp}}
