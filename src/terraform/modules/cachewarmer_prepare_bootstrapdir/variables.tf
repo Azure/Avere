@@ -40,3 +40,8 @@ variable "build_cachewarmer" {
   type        = bool
   default     = false
 }
+
+variable "proxy" {
+  description = "specify a proxy address if one exists in the format of http://PROXY_SERVER:PORT"
+  default     = null
+}

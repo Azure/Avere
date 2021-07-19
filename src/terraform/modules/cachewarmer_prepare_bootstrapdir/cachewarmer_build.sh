@@ -8,7 +8,7 @@ set -x
 if ! command -v go &> /dev/null ; then
     GO_DL_FILE=go1.16.6.linux-amd64.tar.gz
     wget --tries=12 --wait=5 https://dl.google.com/go/$GO_DL_FILE
-    sudo tar -C /usr/local -xzf $GO_DL_FILE
+    sudo -E tar -C /usr/local -xzf $GO_DL_FILE
     rm -f $GO_DL_FILE
     echo "export PATH=$PATH:/usr/local/go/bin" >> $HOME/.profile
     . $HOME/.profile
