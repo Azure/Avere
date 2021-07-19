@@ -181,3 +181,4 @@ jobs:
         cmd_terraform: destroy
     - template: templates/public_ip_delete.yml
     - template: templates/rg_delete.yml
+  - template: templates/public_ip_delete.yml
