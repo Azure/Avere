@@ -18,7 +18,9 @@ jobs:
   - bash: |
       export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
 
+      echo "##[group]Dump environment variables"
       env | sort
+      echo "##[endgroup]"
 
       pip install --upgrade pip setuptools wheel
       check_rc.sh $? "Upgrade Python pip" || exit 0
@@ -41,7 +43,7 @@ jobs:
 
       echo "##vso[task.setvariable variable=VFXT_DEPLOY_LOCATION]${REGION_TO_TEST}"
       echo "REGION TO TEST: ${REGION_TO_TEST}"
-    displayName: 'SETUP: Get region to test in'
+    displayName: 'SETUP: Get region to test'
     condition: and(succeeded(), eq(variables['VFXT_DEPLOY_LOCATION'], ''))
     env:
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
@@ -55,14 +57,16 @@ jobs:
   - bash: |
       export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
 
+      echo "##[group]Login to Azure CLI"
       az login --service-principal \
         --username ${AZURE_CLIENT_ID} \
         --password ${AZURE_CLIENT_SECRET} \
         --tenant   ${AZURE_TENANT_ID}
-      check_rc.sh $? "Login to AzCLI" || exit 0
+      check_rc.sh $? "Login to Azure CLI" || exit 0
 
       az account set --subscription ${AZURE_SUBSCRIPTION_ID}
       check_rc.sh $? "Set default Azure subscription" || exit 0
+      echo "##[endgroup]"
 
       ssh-keygen -b 4096 -t rsa -f temp_ssh_key -q -N ""
       check_rc.sh $? "Generate SSH key" || exit 0
@@ -80,6 +84,10 @@ jobs:
       export _STORAGE_ACCOUNT=${STORAGE_ACCOUNT:-vfxt$(uuidgen | tr A-Z a-z | sed 's/-//g' | cut -c -20)}
       export _SSH_PUB_KEY=${SSH_PUB_KEY:-$(head -1 temp_ssh_key.pub)}
 
+      echo "##[group]Dump environment variables"
+      env | sort
+      echo "##[endgroup]"
+
       # Task variables available to subsequent tasks as envars.
       echo "##vso[task.setvariable variable=_RESOURCE_GROUP]${_RESOURCE_GROUP}"
 
@@ -90,12 +98,16 @@ jobs:
       [[ -n "${VFXT_CONTROLLER_MKT_OFFER}" ]]   && EXTRA_ARGS+=' -p controllerMarketplaceOffer=${VFXT_CONTROLLER_MKT_OFFER}'
       [[ -n "${VFXT_CONTROLLER_MKT_VERSION}" ]] && EXTRA_ARGS+=' -p controllerMarketplaceVersion=${VFXT_CONTROLLER_MKT_VERSION}'
 
+      _msg="Create resource group (${_RESOURCE_GROUP}) in ${_REGION}"
+      echo "##[group]${_msg}"
       az group create \
         --name     ${_RESOURCE_GROUP} \
         --location ${_REGION}
-      check_rc.sh $? "Create resource group (${RESOURCE_GROUP_NAME})" || exit 0
+      check_rc.sh $? "${_msg}" || exit 0
+      echo "##[endgroup]"
 
-      echo "##[group]Deploy vFXT to ${_RESOURCE_GROUP}"
+      _msg="Deploy vFXT (${_CLUSTER}) to ${_RESOURCE_GROUP} in ${_REGION}"
+      echo "##[group]${_msg}"
       az deployment group create \
           --template-file ${BUILD_SOURCESDIRECTORY}/src/vfxt/azuredeploy-auto.json \
           --resource-group ${_RESOURCE_GROUP} \
@@ -111,7 +123,7 @@ jobs:
               'avereClusterName':              { 'value': '${_CLUSTER}'           }, \
               'adminPassword':                 { 'value': '${AVERE_ADMIN_PW}'     }  \
           }" ${EXTRA_ARGS}
-      check_rc.sh $? "Deploy vFXT (${_CLUSTER})"
+      check_rc.sh $? "${_msg}" || exit 0
       echo "##[endgroup]"
     displayName: 'TEST: Deploy vFXT cluster'
     condition: succeeded()
@@ -140,27 +152,25 @@ jobs:
   - bash: |
       export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
 
-      env | sort
-
       _ipcfgs_file=/tmp/ipcfgs.lst
       az network public-ip list             \
         --resource-group ${_RESOURCE_GROUP} \
-        --output tsv --query '[].ipConfiguration.id' | tee ${_ipcfgs_file}
-      check_rc.sh ${PIPESTATUS[0]} "List IP configs with a public IP address" || exit
+        --output tsv --query '[].ipConfiguration.id' |& tee ${_ipcfgs_file}
+      check_rc.sh ${PIPESTATUS[0]} "List IP configs with a public IP address" || exit 0
 
       az network nic ip-config update \
         --public-ip-address ""        \
         --ids @- < ${_ipcfgs_file}
-      check_rc.sh ${PIPESTATUS[0]} "Disassociate public IP addresses from all IP configs" || exit
+      check_rc.sh ${PIPESTATUS[0]} "Disassociate public IP addresses from all IP configs" || exit 0
 
       _pubips_file=/tmp/pubips.lst
       az network public-ip list             \
         --resource-group ${_RESOURCE_GROUP} \
-        --output tsv --query '[].id' | tee ${_pubips_file}
-      check_rc.sh ${PIPESTATUS[0]} "List all public IP address resources" || exit
+        --output tsv --query '[].id' |& tee ${_pubips_file}
+      check_rc.sh ${PIPESTATUS[0]} "List all public IP address resources" || exit 0
 
       az network public-ip delete --ids @- < ${_pubips_file}
-      check_rc.sh ${PIPESTATUS[0]} "Delete all public IP address resources" || exit
+      check_rc.sh ${PIPESTATUS[0]} "Delete all public IP address resources" || exit 0
     displayName: 'CLEAN UP: Delete public IP resource(s)'
     condition: always()
 
