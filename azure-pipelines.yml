@@ -75,8 +75,10 @@ jobs:
       export _timestamp=$(date -u '+%m%dx%H%M%S')
       export _RESOURCE_GROUP=${RESOURCE_GROUP:-arm-vfxt-${_timestamp}}
       export _REGION=${VFXT_DEPLOY_LOCATION:-eastus}
+      export _NSG=${NSG:-nsg-${_timestamp}}
       export _VNET_RG=${VNET_RG:-${_RESOURCE_GROUP}}
       export _VNET=${VNET:-vnet-${_timestamp}}
+      export _VNET_ADDR_PREFIX=${VNET_ADDR_PREFIX:-'10.0.0.0/16'}
       export _SUBNET=${SUBNET:-subnet-${_timestamp}}
       export _CLUSTER=${CLUSTER:-vfxt-cluster-${_timestamp}}
       export _CONTROLLER=${CONTROLLER:-controller-${_timestamp}}
@@ -98,21 +100,40 @@ jobs:
       [[ -n "${VFXT_CONTROLLER_MKT_OFFER}" ]]   && EXTRA_ARGS+=' -p controllerMarketplaceOffer=${VFXT_CONTROLLER_MKT_OFFER}'
       [[ -n "${VFXT_CONTROLLER_MKT_VERSION}" ]] && EXTRA_ARGS+=' -p controllerMarketplaceVersion=${VFXT_CONTROLLER_MKT_VERSION}'
 
-      _msg="Create resource group (${_RESOURCE_GROUP}) in ${_REGION}"
-      echo "##[group]${_msg}"
-      az group create \
-        --name     ${_RESOURCE_GROUP} \
-        --location ${_REGION}
-      check_rc.sh $? "${_msg}" || exit 0
+      echo "##[group]Create resource group(s) in ${_REGION}"
+      az group create --location ${_REGION} --name ${_RESOURCE_GROUP}
+      check_rc.sh $? "Create resource group (${_RESOURCE_GROUP}) in ${_REGION}" || exit 0
+
+      if [[ "${_RESOURCE_GROUP}" != "${_VNET_RG}" ]]; then
+        az group create --location ${_REGION} --name ${_VNET_RG}
+        check_rc.sh $? "Create resource group (${_VNET_RG}) in ${_REGION}" || exit 0
+      fi
       echo "##[endgroup]"
 
-      _msg="Deploy vFXT (${_CLUSTER}) to ${_RESOURCE_GROUP} in ${_REGION}"
-      echo "##[group]${_msg}"
+      echo "##[group]Create network resources in ${_VNET_RG}"
+      az network nsg create \
+        --resource-group ${_VNET_RG} \
+        --location       ${_REGION} \
+        --name           ${_NSG}
+      check_rc.sh $? "Create network security group (${_NSG})" || exit 0
+
+      az network vnet create \
+        --resource-group         ${_VNET_RG} \
+        --location               ${_REGION} \
+        --name                   ${_VNET} \
+        --address-prefixes       ${_VNET_ADDR_PREFIX} \
+        --subnet-name            ${_SUBNET} \
+        --network-security-group ${_NSG}
+      check_rc.sh $? "Create vnet (${_VNET}) and subnet (${_SUBNET}) in ${_VNET_RG}" || exit 0
+      echo "##[endgroup]"
+
+      echo "##[group]Deploy vFXT (${_CLUSTER}) to ${_RESOURCE_GROUP} in ${_REGION}"
       az deployment group create \
           --template-file ${BUILD_SOURCESDIRECTORY}/src/vfxt/azuredeploy-auto.json \
           --resource-group ${_RESOURCE_GROUP} \
           --parameters "{ \
               'location':                      { 'value': '${_REGION}'            }, \
+              'createVirtualNetwork':          { 'value': false                   }, \
               'virtualNetworkResourceGroup':   { 'value': '${_VNET_RG}'           }, \
               'virtualNetworkName':            { 'value': '${_VNET}'              }, \
               'virtualNetworkSubnetName':      { 'value': '${_SUBNET}'            }, \
@@ -123,7 +144,7 @@ jobs:
               'avereClusterName':              { 'value': '${_CLUSTER}'           }, \
               'adminPassword':                 { 'value': '${AVERE_ADMIN_PW}'     }  \
           }" ${EXTRA_ARGS}
-      check_rc.sh $? "${_msg}" || exit 0
+      check_rc.sh $? "Deploy vFXT (${_CLUSTER}) to ${_RESOURCE_GROUP} in ${_REGION}" || exit 0
       echo "##[endgroup]"
     displayName: 'TEST: Deploy vFXT cluster'
     condition: succeeded()
