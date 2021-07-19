@@ -1,0 +1,34 @@
+steps:
+- bash: |
+    export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
+
+    az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+    for x in "-vmss" "-vfxt" "-filer" "-storage" "-proxy" "-network"; do
+      exists=$(az group exists --name ${RESOURCE_GROUP_NAME}$x)
+      _ipcfgs_file=/tmp/ipcfgs.lst
+      if [ "${exists}" = "true" ]; then
+        echo "${RESOURCE_GROUP_NAME}$x exists - checking for public IPs"
+        az network public-ip list             \
+          --resource-group ${RESOURCE_GROUP_NAME}$x \
+          --output tsv --query '[].ipConfiguration.id' |& tee ${_ipcfgs_file}
+        check_rc.sh ${PIPESTATUS[0]} "List IP configs with a public IP address" || exit 0
+        az network nic ip-config update \
+          --public-ip-address ""        \
+          --ids @- < ${_ipcfgs_file}
+        check_rc.sh ${PIPESTATUS[0]} "Disassociate public IP addresses from all IP configs" || exit 0
+        _pubips_file=/tmp/pubips.lst
+        az network public-ip list             \
+          --resource-group ${RESOURCE_GROUP_NAME}$x \
+          --output tsv --query '[].id' |& tee ${_pubips_file}
+        check_rc.sh ${PIPESTATUS[0]} "List all public IP address resources" || exit 0
+        az network public-ip delete --ids @- < ${_pubips_file}
+        check_rc.sh ${PIPESTATUS[0]} "Delete all public IP address resources" || exit 0
+      fi
+    done
+  displayName: 'Public IP Delete'
+  condition: always()
+  env:
+    ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+    ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+    ARM_TENANT_ID: $(AZURE-TENANT-ID)
+    ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
