@@ -78,19 +78,19 @@ function write_system_files() {
     if [[ -z "${http_proxy}" ]]; then
         sed -i "s/HTTP_PROXY_REPLACE//g" $DST_FILE
     else
-        sed -i "s/HTTP_PROXY_REPLACE/Environment=\"$http_proxy\"/g" $DST_FILE
+        sed -i "s#HTTP_PROXY_REPLACE#Environment=\"http_proxy=$http_proxy\"#g" $DST_FILE
     fi
 
     if [[ -z "${https_proxy}" ]]; then
         sed -i "s/HTTPS_PROXY_REPLACE//g" $DST_FILE
     else
-        sed -i "s/HTTPS_PROXY_REPLACE/Environment=\"$https_proxy\"/g" $DST_FILE
+        sed -i "s#HTTPS_PROXY_REPLACE#Environment=\"https_proxy=$https_proxy\"#g" $DST_FILE
     fi
 
     if [[ -z "${no_proxy}" ]]; then
         sed -i "s/NO_PROXY_REPLACE//g" $DST_FILE
     else
-        sed -i "s/NO_PROXY_REPLACE/Environment=\"$no_proxy\"/g" $DST_FILE
+        sed -i "s/NO_PROXY_REPLACE/Environment=\"no_proxy=$no_proxy\"/g" $DST_FILE
     fi
 
     if [ -f '/etc/centos-release' ]; then 
