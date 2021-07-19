@@ -66,3 +66,8 @@ variable "alternative_resource_groups" {
   description = "specifies alternative resource groups including those containing custom images or storage accounts"
   default     = []
 }
+
+variable "static_ip_address" {
+  description = "specifies the static ip address to use.  Leave null or blank to dynamically assign"
+  default     = null
+}
