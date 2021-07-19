@@ -88,6 +88,7 @@ jobs:
 
       # Task variables available to subsequent tasks as envars.
       echo "##vso[task.setvariable variable=_RESOURCE_GROUP]${_RESOURCE_GROUP}"
+      echo "##vso[task.setvariable variable=_VNET_RG]${_VNET_RG}"
 
       # Add extra arguments when specified at queue time.
       EXTRA_ARGS=''
@@ -193,7 +194,16 @@ jobs:
   - bash: |
       export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
 
+      echo "##[group]Dump environment variables"
+      env | sort
+      echo "##[endgroup]"
+
       az group delete --yes --name ${_RESOURCE_GROUP}
       check_rc.sh $? "Delete resource group (${_RESOURCE_GROUP})"
+
+      if [[ "${_RESOURCE_GROUP}" != "${_VNET_RG}" ]]; then
+        az group delete --yes --name ${_VNET_RG}
+        check_rc.sh $? "Delete resource group (${_VNET_RG})"
+      fi
     displayName: 'CLEAN UP: Delete resource group(s)'
     condition: and(always(), ne(variables['SKIP_RG_CLEANUP'], 'true'))
