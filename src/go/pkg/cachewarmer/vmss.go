@@ -30,6 +30,9 @@ type CacheWarmerCloudInit struct {
 }
 
 func InitializeCloutInit(
+	httpProxyStr string,
+	httpsProxyStr string,
+	noProxyStr string,
 	bootstrapAddress string,
 	bootstrapExportPath string,
 	bootstrapScriptPath string,
@@ -39,7 +42,10 @@ func InitializeCloutInit(
 
 	localMountPath := "/b" // this is a temporary mount on the filesystem
 	envVars := fmt.Sprintf(
-		" BOOTSTRAP_PATH='%s' BOOTSTRAP_SCRIPT='%s' STORAGE_ACCOUNT='%s' STORAGE_KEY='%s' QUEUE_PREFIX='%s' ",
+		" %s %s %s BOOTSTRAP_PATH='%s' BOOTSTRAP_SCRIPT='%s' STORAGE_ACCOUNT='%s' STORAGE_KEY='%s' QUEUE_PREFIX='%s' ",
+		httpProxyStr,
+		httpsProxyStr,
+		noProxyStr,
 		localMountPath,
 		bootstrapScriptPath,
 		storageAccount,

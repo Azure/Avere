@@ -344,7 +344,24 @@ func (m *WarmPathManager) EnsureVmssRunning(ctx context.Context) {
 		vmssSubnetId = SwapResourceName(localVMSubnetId, m.vmssSubnet)
 	}
 
+	// get proxy information and pass on to worker
+	httpProxyStr := ""
+	if e := os.Getenv("http_proxy"); len(e) > 0 {
+		httpProxyStr = fmt.Sprintf("http_proxy=%s", e)
+	}
+	httpsProxyStr := ""
+	if e := os.Getenv("https_proxy"); len(e) > 0 {
+		httpProxyStr = fmt.Sprintf("https_proxy=%s", e)
+	}
+	noProxyStr := ""
+	if e := os.Getenv("no_proxy"); len(e) > 0 {
+		noProxyStr = fmt.Sprintf("no_proxy=%s", e)
+	}
+
 	cacheWarmerCloudInit := InitializeCloutInit(
+		httpProxyStr,            // httpProxyStr string,
+		httpsProxyStr,           // httpsProxyStr string,
+		noProxyStr,              // noProxyStr string,
 		m.bootstrapMountAddress, // bootstrapAddress string,
 		m.bootstrapExportPath,   // exportPath string,
 		m.bootstrapScriptPath,   // bootstrapScriptPath string,
