@@ -1,90 +1,48 @@
 # Copyright (C) Microsoft Corporation. All rights reserved.
 # https://aka.ms/yaml
 
-trigger:
-  branches:
-    include:
-    - main
-    - releases/*
-  paths:
-    exclude:
-    - docs/*
-
-pr:
-  branches:
-    include:
-    - main
-    - releases/*
-  paths:
-    exclude:
-    - docs/*
-
-
-variables:
-  VFXT_TEST_VARS_FILE: 'pipelines.json'
+trigger: none
 
 jobs:
-- job: vfxt_template_testing
-  timeoutInMinutes: 180
+- job: ARM_Template_Test
+  timeoutInMinutes: 90
   pool:
-    vmImage: 'Ubuntu 16.04'
+    vmImage: ubuntu-latest
 
   steps:
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: '3.7'
+      versionSpec: '3.8'
       architecture: 'x64'
 
-  - task: DownloadSecureFile@1
-    inputs:
-      secureFile: 'id_rsa'
+  - bash: |
+      export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
 
-  - task: DownloadSecureFile@1
-    inputs:
-      secureFile: 'pip.conf'
+      env | sort
 
-  - script: |
-      set -e
-      cp $AGENT_TEMPDIRECTORY/pip.conf .
-      ln -s $AGENT_TEMPDIRECTORY ~/.ssh
-      chmod 600 ~/.ssh/id_rsa
-      ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
-    displayName: 'SETUP: SSH keys'
-    condition: succeeded()
-    failOnStderr: true
-
-  - script: |
-      set -xe
       pip install --upgrade pip setuptools wheel
+      check_rc.sh $? "Upgrade Python pip" || exit 0
+
       pip install -r test/requirements.txt
+      check_rc.sh $? "Install Python requirements" || exit 0
     displayName: 'SETUP: Install Python dependencies'
     condition: succeeded()
 
-  - script: |
+  - bash: |
+      export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
+
       python test/internal/region_deploy_utils.py --update_region_list
-    displayName: 'SETUP: Update region list'
-    condition: and(succeeded(), eq(variables['VFXT_DEPLOY_LOCATION'], ''))
-    failOnStderr: true
-    env:
-      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      PIPELINES_DATA_STORAGE_ACCOUNT: $(PIPELINES-DATA-STORAGE-ACCOUNT)
-      PIPELINES_DATA_STORAGE_ACCOUNT_KEY: $(PIPELINES-DATA-STORAGE-ACCOUNT-KEY)
-      PIPELINES_DATA_TABLE_NAME: $(PIPELINES-DATA-TABLE-NAME)
+      check_rc.sh $? "Update region list" || exit 0
 
-  - script: |
-      python test/internal/region_deploy_utils.py \
-        --cooldown-hours $REGION_COOLDOWN_HOURS   \
-        --get_next_region > REGION_TO_TEST
+      REGION_TO_TEST=$(python test/internal/region_deploy_utils.py \
+        --cooldown-hours ${REGION_COOLDOWN_HOURS:-96}   \
+        --get_next_region)
+      check_rc.sh $? "Get next region to test" || exit 0
 
-      if [[ "$?" -eq "0" ]]; then
-        echo "REGION TO TEST: $(cat REGION_TO_TEST)"
-      fi
+      echo "##vso[task.setvariable variable=VFXT_DEPLOY_LOCATION]${REGION_TO_TEST}"
+      echo "REGION TO TEST: ${REGION_TO_TEST}"
     displayName: 'SETUP: Get region to test in'
     condition: and(succeeded(), eq(variables['VFXT_DEPLOY_LOCATION'], ''))
-    failOnStderr: true
     env:
       AZURE_TENANT_ID: $(AZURE-TENANT-ID)
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
@@ -94,51 +52,67 @@ jobs:
       PIPELINES_DATA_STORAGE_ACCOUNT_KEY: $(PIPELINES-DATA-STORAGE-ACCOUNT-KEY)
       PIPELINES_DATA_TABLE_NAME: $(PIPELINES-DATA-TABLE-NAME)
 
-  - script: |
-      if [ -z "$VFXT_DEPLOY_LOCATION" -a -s REGION_TO_TEST ]; then
-        export VFXT_DEPLOY_LOCATION=$(cat REGION_TO_TEST)
-      fi
-      echo "\$VFXT_DEPLOY_LOCATION  = $VFXT_DEPLOY_LOCATION"
-      echo "\$VFXT_DEPLOY_NEW_VNET  = $VFXT_DEPLOY_NEW_VNET"
-      echo "\$VFXT_DEPLOY_WITH_BLOB = $VFXT_DEPLOY_WITH_BLOB"
+  - bash: |
+      export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
 
-      test_to_run="Unrecognized_Deploy_Options"
-      if   [[ "true"  = $VFXT_DEPLOY_NEW_VNET &&
-              "true"  = $VFXT_DEPLOY_WITH_BLOB ]]; then
-          test_to_run="test/test_vfxt_template_deploy.py::TestVfxtTemplateDeploy::test_deploy_template"
+      az login --service-principal \
+        --username ${AZURE_CLIENT_ID} \
+        --password ${AZURE_CLIENT_SECRET} \
+        --tenant   ${AZURE_TENANT_ID}
+      check_rc.sh $? "Login to AzCLI" || exit 0
 
-      elif [[ "true"  = $VFXT_DEPLOY_NEW_VNET &&
-              "false" = $VFXT_DEPLOY_WITH_BLOB ]]; then
-          test_to_run="test/test_vfxt_template_deploy.py::TestVfxtTemplateDeploy::test_no_storage_account_deploy"
+      az account set --subscription ${AZURE_SUBSCRIPTION_ID}
+      check_rc.sh $? "Set default Azure subscription" || exit 0
 
-      elif [[ "false" = $VFXT_DEPLOY_NEW_VNET &&
-              "true"  = $VFXT_DEPLOY_WITH_BLOB ]]; then
-          test_to_run="test/test_vfxt_template_deploy.py::TestVfxtTemplateDeploy::test_byovnet_deploy"
+      ssh-keygen -b 4096 -t rsa -f temp_ssh_key -q -N ""
+      check_rc.sh $? "Generate SSH key" || exit 0
 
-      elif [[ "false" = $VFXT_DEPLOY_NEW_VNET &&
-              "false" = $VFXT_DEPLOY_WITH_BLOB ]]; then
-          test_to_run="Not_Yet_Implemented"
+      # Set various variables, deferring to user-specified values.
+      export _timestamp=$(date -u '+%m%dx%H%M%S')
+      export _RESOURCE_GROUP=${RESOURCE_GROUP:-arm-vfxt-${_timestamp}}
+      export _REGION=${VFXT_DEPLOY_LOCATION:-eastus}
+      export _VNET_RG=${VNET_RG:-${_RESOURCE_GROUP}}
+      export _VNET=${VNET:-vnet-${_timestamp}}
+      export _SUBNET=${SUBNET:-subnet-${_timestamp}}
+      export _CLUSTER=${CLUSTER:-vfxt-cluster-${_timestamp}}
+      export _CONTROLLER=${CONTROLLER:-controller-${_timestamp}}
+      export _CONTROLLER_USERID=${CONTROLLER_USERID:-azureuser}
+      export _STORAGE_ACCOUNT=${STORAGE_ACCOUNT:-vfxt$(uuidgen | tr A-Z a-z | sed 's/-//g' | cut -c -20)}
+      export _SSH_PUB_KEY=${SSH_PUB_KEY:-$(head -1 temp_ssh_key.pub)}
 
-      else
-          # The VFXT_DEPLOY_* variables checked above are strings and not
-          # constrained to "true" or "false" for their values.
-          echo 'ERROR: Unrecognized deploy options. \$VFXT_DEPLOY_* above should be "true" or "false":'
-      fi
+      # Task variables available to subsequent tasks as envars.
+      echo "##vso[task.setvariable variable=_RESOURCE_GROUP]${_RESOURCE_GROUP}"
 
-      set -x
-      pytest $test_to_run $PYTEST_OPTIONS \
-        --location $VFXT_DEPLOY_LOCATION \
-        --doctest-modules --junitxml=junit/test-deploy.xml | tee /tmp/test_output.log
-      rc=${PIPESTATUS[0]}
-      set +x
+      # Add extra arguments when specified at queue time.
+      EXTRA_ARGS=''
+      [[ -n "${VFXT_CONTROLLER_IMG_REF_ID}" ]]  && EXTRA_ARGS+=' -p controllerImageReferenceId=${VFXT_CONTROLLER_IMG_REF_ID}'
+      [[ -n "${VFXT_NODE_IMAGE_REF_ID}" ]]      && EXTRA_ARGS+=' -p nodeImageId=${VFXT_NODE_IMAGE_REF_ID}'
+      [[ -n "${VFXT_CONTROLLER_MKT_OFFER}" ]]   && EXTRA_ARGS+=' -p controllerMarketplaceOffer=${VFXT_CONTROLLER_MKT_OFFER}'
+      [[ -n "${VFXT_CONTROLLER_MKT_VERSION}" ]] && EXTRA_ARGS+=' -p controllerMarketplaceVersion=${VFXT_CONTROLLER_MKT_VERSION}'
 
-      if [ ${rc} -ne 0 ]; then
-        grep -e '^E ' -e '^ERROR ' /tmp/test_output.log | sed -E 's/^E +//g' > /tmp/errs.log
-        while read line; do
-          echo "##vso[task.logissue type=error;] $line"
-        done < /tmp/errs.log
-        echo "##vso[task.complete result=Failed;]"
-      fi
+      az group create \
+        --name     ${_RESOURCE_GROUP} \
+        --location ${_REGION}
+      check_rc.sh $? "Create resource group (${RESOURCE_GROUP_NAME})" || exit 0
+
+      echo "##[group]Deploy vFXT to ${_RESOURCE_GROUP}"
+      az deployment group create \
+          --template-file ${BUILD_SOURCESDIRECTORY}/src/vfxt/azuredeploy-auto.json \
+          --resource-group ${_RESOURCE_GROUP} \
+          --parameters "{ \
+              'location':                      { 'value': '${_REGION}'            }, \
+              'virtualNetworkResourceGroup':   { 'value': '${_VNET_RG}'           }, \
+              'virtualNetworkName':            { 'value': '${_VNET}'              }, \
+              'virtualNetworkSubnetName':      { 'value': '${_SUBNET}'            }, \
+              'avereBackedStorageAccountName': { 'value': '${_STORAGE_ACCOUNT}'   }, \
+              'controllerName':                { 'value': '${_CONTROLLER}'        }, \
+              'controllerAdminUsername':       { 'value': '${_CONTROLLER_USERID}' }, \
+              'controllerSSHKeyData':          { 'value': '${_SSH_PUB_KEY}'       }, \
+              'avereClusterName':              { 'value': '${_CLUSTER}'           }, \
+              'adminPassword':                 { 'value': '${AVERE_ADMIN_PW}'     }  \
+          }" ${EXTRA_ARGS}
+      check_rc.sh $? "Deploy vFXT (${_CLUSTER})"
+      echo "##[endgroup]"
     displayName: 'TEST: Deploy vFXT cluster'
     condition: succeeded()
     env:
@@ -149,257 +123,13 @@ jobs:
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
-  - script: |
-      # Check for common error messages that might occur during deployment.
-      deploy_results_file="junit/test-deploy.xml"
-      declare -a common_errors=(
-        "Operation results in exceeding quota limits"
-        "A hash conflict was encountered for the role Assignment ID"
-        "Corefiler configured with empty bucket but bucket \S+ has existing data"
-      )
+  - bash: |
+      export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
 
-      echo
-      echo
-      for ce in "${common_errors[@]}"; do
-          grep_res=$(grep -E "$ce" $deploy_results_file)
-          if [[ -n $grep_res ]]; then
-              echo "MESSAGE FOUND: $ce"
-              msg_found=1
-          fi
-      done
-
-      if [[ -z $msg_found ]]; then
-        echo "No common error messages found in $deploy_results_file"
-        echo
-        echo
-        echo "Dumping $deploy_results_file:"
-        cat $deploy_results_file
-        exit 1
-      fi
-    displayName: 'CHECK: Common deploy error messages'
-    condition: or(failed(), canceled())
-
-  - script: |
-      if [[ -f $VFXT_TEST_VARS_FILE ]]; then
-        cat $VFXT_TEST_VARS_FILE
-      fi
-
-      set -x
-      pytest test/test_vfxt_cluster_status.py $PYTEST_OPTIONS \
-        -k 'TestVfxtClusterStatus and not ping' \
-        --doctest-modules --junitxml=junit/test-results02.xml | tee /tmp/test_output.log
-      rc=${PIPESTATUS[0]}
-      set +x
-
-      if [ ${rc} -ne 0 ]; then
-        grep -e '^E ' -e '^ERROR ' /tmp/test_output.log | sed -E 's/^E +//g' > /tmp/errs.log
-        while read line; do
-          echo "##vso[task.logissue type=error;] $line"
-        done < /tmp/errs.log
-        echo "##vso[task.complete result=Failed;]"
-      fi
-    displayName: 'TEST: Cluster status, health'
-    condition: and(succeeded(), eq(variables['CHECK_CLUSTER_HEALTH'], 'true'))
-    env:
-      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
-      AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
-      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      INTERNAL_CUSTOM_SETTING: $(INTERNAL-CUSTOM-SETTING)
-
-  - script: |
-      az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-      az account set --subscription ${AZURE_SUBSCRIPTION_ID}
-      STORAGE_ACT=$(jq -r .storage_account $VFXT_TEST_VARS_FILE)
-      az storage account keys list --account-name $STORAGE_ACT > keys.json
-      export SA_KEY="$(jq -r '.[0].value' keys.json)"
-      pytest test/test_vfxt_client_docker.py $PYTEST_OPTIONS
-    displayName: 'TEST: docker/client'
-    condition: and(succeeded(), eq(variables['RUN_DOCKER_CLIENT_STEP'], 'true'))
-    env:
-      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
-      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      dockerRegistry: $(DOCKER-REGISTRY)
-      dockerUsername: $(DOCKER-UN)
-      dockerPassword: $(DOCKER-PW)
-      GIT_UN: $(GIT-UN)
-      GIT_PAT: $(GIT-PAT)
-
-  - script: |
-      pytest test/test_reg_client_setup.py $PYTEST_OPTIONS
-    displayName: 'SETUP: vFXT Regression Clients'
-    condition: and(succeeded(), eq(variables['RUN_REG_CLIENT_STEP'], 'true'))
-    env:
-      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
-      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      GIT_UN: $(GIT-UN)
-      GIT_PAT: $(GIT-PAT)
-      PIPELINES_DATA_STORAGE_ACCOUNT: $(PIPELINES-DATA-STORAGE-ACCOUNT)
-      PIPELINES_DATA_STORAGE_ACCOUNT_KEY: $(PIPELINES-DATA-STORAGE-ACCOUNT-KEY)
-
-  - script: |
-      set -x
-      P_ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
-      mkdir -p $P_ARTIFACTS_DIR
-
-      # Collect various test artifacts (e.g., controller/node logs).
-      pytest test/test_vfxt_cluster_status.py $PYTEST_OPTIONS \
-        -k TestVfxtSupport \
-        --doctest-modules --junitxml=junit/test-results03.xml | tee /tmp/test_output.log
-      pyt_res=${PIPESTATUS[0]}
-
-      if [ ${pyt_res} -ne 0 ]; then
-        grep -e '^E ' -e '^ERROR ' /tmp/test_output.log | sed -E 's/^E +//g' > /tmp/errs.log
-        while read line; do
-          echo "##vso[task.logissue type=error;] $line"
-        done < /tmp/errs.log
-      fi
-
-      # Copy VFXT_TEST_VARS_FILE to the artifacts directory.
-      if [[ -f $VFXT_TEST_VARS_FILE ]]; then
-        cat $VFXT_TEST_VARS_FILE
-        cp $VFXT_TEST_VARS_FILE $P_ARTIFACTS_DIR/.
-      fi
-
-      # Get controller logs in case the pytest call failed.
-      vfxt_log_loc=$(find ${BUILD_SOURCESDIRECTORY} -name vfxt.log)
-      if [ -z "$vfxt_log_loc" ]; then
-        CONTROLLER_USER=$(jq -r .controller_user $VFXT_TEST_VARS_FILE)
-        PUBLIC_IP=$(jq -r .public_ip $VFXT_TEST_VARS_FILE)
-        scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $CONTROLLER_USER@$PUBLIC_IP:~/*.log ${P_ARTIFACTS_DIR}/.
-      else
-        cp $vfxt_log_loc ${P_ARTIFACTS_DIR}/.
-      fi
-
-      if [ ${pyt_res} -ne 0 ]; then
-        echo "##vso[task.complete result=Failed;]"
-      fi
-    displayName: 'TEST: Collect deployment artifacts, log files'
-    condition: eq(variables['COLLECT_ARTIFACTS'], 'true')
-    env:
-      AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
-      AVERE_CONTROLLER_PW: $(AVERE-CONTROLLER-PW)
-      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-
-  - script: |
-      P_ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
-
-      # Array of messages to search for in the collected artifacts (logs).
-      #
-      # IMPORTANT:
-      #   - Each quoted string is a separate message to check for, so if the
-      #     message itself contains quotes, be sure to nest/escape.
-      #   - Messages are evaluated as Perl-style regular expressions. Be aware
-      #     of potential issues when new messages contain punctuation (e.g.,
-      #     "." matches any character, so use "\." to require a period).
-      MSGS_TO_CHECK_REGEX=(
-        "Allocating HA disk space for core filer"
-      )
-
-      exit_code=0
-      IFS="" # Internal Field Separator
-      for msg in ${MSGS_TO_CHECK_REGEX[@]}; do
-        echo "INFO: Checking for /$msg/ in $P_ARTIFACTS_DIR"
-        grep_output=$(grep -r -P "$msg" $P_ARTIFACTS_DIR)
-        if [ -n "$grep_output" ]; then
-          (>&2 echo "ERROR: MATCH FOUND!")
-          (>&2 echo "$grep_output")
-          exit_code=1
-        else
-          echo "INFO: No matches found."
-        fi
-        echo
-      done
-
-      echo "INFO: Done."
-      exit $exit_code
-    displayName: 'TEST: Check for error messages in artifacts'
-    condition: eq(variables['COLLECT_ARTIFACTS'], 'true')
-    failOnStderr: true
-
-  - script: |
-      if [ -z "$VFXT_DEPLOY_LOCATION" -a -s REGION_TO_TEST ]; then
-        export VFXT_DEPLOY_LOCATION=$(cat REGION_TO_TEST)
-      fi
-      echo "\$VFXT_DEPLOY_LOCATION = $VFXT_DEPLOY_LOCATION"
-      echo
-
-      vfxt_log_loc=$(find ${BUILD_SOURCESDIRECTORY} -name vfxt.log)
-      if [ -z "$vfxt_log_loc" ]; then
-        echo "ERROR: vfxt.log not found. Could not grep for versions." 1>&2
-        exit 412
-      else
-        echo "Versions reported by vfxt.py:"
-        grep ' version' $(find ${BUILD_SOURCESDIRECTORY} -name vfxt.log)
-      fi
-    displayName: 'INFO: Deployment region, version checks, etc.'
-    condition: eq(variables['COLLECT_ARTIFACTS'], 'true')
-
-  - script: |
-      DEPLOY_ID=$(jq -r .deploy_id $VFXT_TEST_VARS_FILE)
-      CONTROLLER_NAME=$(jq -r .controller_name $VFXT_TEST_VARS_FILE)
-      T_ARTIFACTS_DIR="vfxt_artifacts_${DEPLOY_ID}"
-
-      echo "DEPLOY_ID: $DEPLOY_ID"
-      echo "CONTROLLER_NAME: $CONTROLLER_NAME"
-      echo "T_ARTIFACTS_DIR: $T_ARTIFACTS_DIR"
-
-      P_ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
-      mkdir -p $P_ARTIFACTS_DIR
-      tar -zcvf ${P_ARTIFACTS_DIR}/vfxt_artifacts_${DEPLOY_ID}.tar.gz ${T_ARTIFACTS_DIR}
-    displayName: 'ARCHIVE: Deployment artifacts, log files'
-    condition: eq(variables['COLLECT_ARTIFACTS'], 'true')
-    failOnStderr: true
-
-  - script: |
-      P_ARTIFACTS_DIR="$BUILD_SOURCESDIRECTORY/test_artifacts"
-      grep -i -C 5 -e vfxt:ERROR -e exception ${P_ARTIFACTS_DIR}/vfxt.log
-    displayName: 'CHECK: Grep errors from vfxt.log (+/- 5 lines)'
-    condition: and(or(failed(), canceled()), eq(variables['COLLECT_ARTIFACTS'], 'true'))
-
-  - script: |
-      set -x
-      pytest test/test_vdbench.py $PYTEST_OPTIONS \
-        --doctest-modules --junitxml=junit/test-results04.xml
-    displayName: 'TEST: vdbench'
-    condition: and(succeeded(), eq(variables['RUN_VDBENCH_STEP'], 'true'))
-    env:
-      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      VDBENCH_URL: $(VDBENCH-URL)
-
-  - script: |
-      set -x
-      pytest test/test_edasim.py $PYTEST_OPTIONS \
-        --doctest-modules --junitxml=junit/test-results05.xml
-    displayName: 'TEST: edasim'
-    condition: and(succeeded(), eq(variables['RUN_EDASIM_STEP'], 'true'), eq(variables['VFXT_DEPLOY_WITH_BLOB'], 'true'))
-    env:
-      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-
-  - script: |
-      if [ -z "$VFXT_DEPLOY_LOCATION" -a -s REGION_TO_TEST ]; then
-        export VFXT_DEPLOY_LOCATION=$(cat REGION_TO_TEST)
-      fi
       python test/internal/region_deploy_utils.py \
         --update_last_success \
-        --last_success_region $VFXT_DEPLOY_LOCATION
+        --last_success_region ${VFXT_DEPLOY_LOCATION}
+      check_rc.sh $? "Update last successful run for region ${VFXT_DEPLOY_LOCATION}" || exit 0
     displayName: 'CLEANUP: Update last successful run timestamp for region'
     condition: succeeded()
     env:
@@ -407,25 +137,10 @@ jobs:
       PIPELINES_DATA_STORAGE_ACCOUNT_KEY: $(PIPELINES-DATA-STORAGE-ACCOUNT-KEY)
       PIPELINES_DATA_TABLE_NAME: $(PIPELINES-DATA-TABLE-NAME)
 
-  # - task: PublishPipelineArtifact@0
-  #   displayName: 'PUBLISH: Deployment artifacts, log files'
-  #   inputs:
-  #     artifactName: 'testArtifacts'
-  #     targetPath: 'test_artifacts'
-  #   condition: eq(variables['COLLECT_ARTIFACTS'], 'true')
-
   - bash: |
       export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
 
-      az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-      check_rc.sh $? "Azure login" || exit
-
-      az account set --subscription ${AZURE_SUBSCRIPTION_ID}
-      check_rc.sh $? "Set default subscription" || exit
-
-      export _RESOURCE_GROUP=$(jq -r .resource_group $VFXT_TEST_VARS_FILE)
-      check_rc.sh $? 'Get resource group name from VFXT_TEST_VARS_FILE' || exit
-      echo "##vso[task.setvariable variable=_RESOURCE_GROUP]${_RESOURCE_GROUP}"
+      env | sort
 
       _ipcfgs_file=/tmp/ipcfgs.lst
       az network public-ip list             \
@@ -448,34 +163,11 @@ jobs:
       check_rc.sh ${PIPESTATUS[0]} "Delete all public IP address resources" || exit
     displayName: 'CLEAN UP: Delete public IP resource(s)'
     condition: always()
-    env:
-      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
 
-  - script: |
+  - bash: |
       export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
 
-      echo "Deleting resource group: ${_RESOURCE_GROUP}"
-      az group delete --yes -n ${_RESOURCE_GROUP}
+      az group delete --yes --name ${_RESOURCE_GROUP}
       check_rc.sh $? "Delete resource group (${_RESOURCE_GROUP})"
-
-      if [[ "false" = $VFXT_DEPLOY_NEW_VNET ]]; then
-        echo "Deleting resource group (vnet): ${_RESOURCE_GROUP}-vnet"
-        az group delete --yes -n "${_RESOURCE_GROUP}-vnet"
-        check_rc.sh $? "Delete resource group (${_RESOURCE_GROUP}-vnet)"
-      fi
     displayName: 'CLEAN UP: Delete resource group(s)'
     condition: and(always(), ne(variables['SKIP_RG_CLEANUP'], 'true'))
-    env:
-      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-
-  - task: PublishTestResults@2
-    condition: always()
-    inputs:
-      testResultsFiles: 'junit/test-*.xml'
-      testRunTitle: 'PUBLISH: pytest results'
-
