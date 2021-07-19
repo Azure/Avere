@@ -45,10 +45,12 @@ variable "warm_paths" {
 
 variable "inclusion_csv" {
   description = "the inclusion list of file match strings per https://golang.org/pkg/path/filepath/#Match.  Leave blank to include everything."
+  default = ""
 }
 
 variable "exclusion_csv" {
   description = "the exclusion list of file match strings per https://golang.org/pkg/path/filepath/#Match.  Leave blank to not exlude anything."
+  default = ""
 }
 
 variable "maxFileSizeBytes" {
