@@ -68,9 +68,6 @@ jobs:
       check_rc.sh $? "Set default Azure subscription" || exit 0
       echo "##[endgroup]"
 
-      ssh-keygen -b 4096 -t rsa -f temp_ssh_key -q -N ""
-      check_rc.sh $? "Generate SSH key" || exit 0
-
       # Set various variables, deferring to user-specified values.
       export _timestamp=$(date -u '+%m%dx%H%M%S')
       export _RESOURCE_GROUP=${RESOURCE_GROUP:-arm-vfxt-${_timestamp}}
@@ -84,7 +81,6 @@ jobs:
       export _CONTROLLER=${CONTROLLER:-controller-${_timestamp}}
       export _CONTROLLER_USERID=${CONTROLLER_USERID:-azureuser}
       export _STORAGE_ACCOUNT=${STORAGE_ACCOUNT:-vfxt$(uuidgen | tr A-Z a-z | sed 's/-//g' | cut -c -20)}
-      export _SSH_PUB_KEY=${SSH_PUB_KEY:-$(head -1 temp_ssh_key.pub)}
 
       echo "##[group]Dump environment variables"
       env | sort
@@ -140,8 +136,8 @@ jobs:
               'avereBackedStorageAccountName': { 'value': '${_STORAGE_ACCOUNT}'   }, \
               'controllerName':                { 'value': '${_CONTROLLER}'        }, \
               'controllerAdminUsername':       { 'value': '${_CONTROLLER_USERID}' }, \
-              'controllerSSHKeyData':          { 'value': '${_SSH_PUB_KEY}'       }, \
               'avereClusterName':              { 'value': '${_CLUSTER}'           }, \
+              'controllerSSHKeyData':          { 'value': '${SSH_PUB_KEY}'        }, \
               'adminPassword':                 { 'value': '${AVERE_ADMIN_PW}'     }  \
           }" ${EXTRA_ARGS}
       check_rc.sh $? "Deploy vFXT (${_CLUSTER}) to ${_RESOURCE_GROUP} in ${_REGION}" || exit 0
