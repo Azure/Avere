@@ -1,5 +1,7 @@
 # Copyright (C) Microsoft Corporation. All rights reserved.
 # https://aka.ms/yaml
+trigger: none
+
 parameters:
   - name: original_node_count
     displayName: "Original Node Count"
