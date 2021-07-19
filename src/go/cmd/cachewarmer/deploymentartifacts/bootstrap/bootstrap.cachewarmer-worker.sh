@@ -41,6 +41,25 @@ function write_system_files() {
         sed -i "s/chown syslog:adm/chown root:root/g" $DST_FILE
     fi
 
+    # set the proxy information
+    if [[ -z "${http_proxy}" ]]; then
+        sed -i "s/HTTP_PROXY_REPLACE//g" $DST_FILE
+    else
+        sed -i "s/HTTP_PROXY_REPLACE/Environment=\"$http_proxy\"/g" $DST_FILE
+    fi
+
+    if [[ -z "${https_proxy}" ]]; then
+        sed -i "s/HTTPS_PROXY_REPLACE//g" $DST_FILE
+    else
+        sed -i "s/HTTPS_PROXY_REPLACE/Environment=\"$https_proxy\"/g" $DST_FILE
+    fi
+
+    if [[ -z "${no_proxy}" ]]; then
+        sed -i "s/NO_PROXY_REPLACE//g" $DST_FILE
+    else
+        sed -i "s/NO_PROXY_REPLACE/Environment=\"$no_proxy\"/g" $DST_FILE
+    fi
+
     # copy the rsyslog file
     cp $BOOTSTRAP_BASE_PATH/rsyslog/$RSYSLOG_FILE /etc/rsyslog.d/.
 }
