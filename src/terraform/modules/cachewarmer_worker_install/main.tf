@@ -1,6 +1,7 @@
 locals {
   mount_dir = "/b"
-  env_vars  = "export BOOTSTRAP_PATH=${local.mount_dir} && export STORAGE_ACCOUNT_RESOURCE_GROUP='${var.storage_account_rg}' && export STORAGE_ACCOUNT=${var.storage_account} && export QUEUE_PREFIX=${var.queue_name_prefix}  && export BOOTSTRAP_SCRIPT=${var.bootstrap_worker_script_path}"
+  proxy_env = (var.proxy == null || var.proxy == "") ? "" : "export http_proxy=${var.proxy} && export https_proxy=${var.proxy} && export no_proxy=169.254.169.254 &&"
+  env_vars  = "${local.proxy_env} export BOOTSTRAP_PATH=${local.mount_dir} && export STORAGE_ACCOUNT_RESOURCE_GROUP='${var.storage_account_rg}' && export STORAGE_ACCOUNT=${var.storage_account} && export QUEUE_PREFIX=${var.queue_name_prefix}  && export BOOTSTRAP_SCRIPT=${var.bootstrap_worker_script_path}"
 }
 
 resource "null_resource" "install_cachewarmer_worker" {

@@ -45,12 +45,12 @@ variable "warm_paths" {
 
 variable "inclusion_csv" {
   description = "the inclusion list of file match strings per https://golang.org/pkg/path/filepath/#Match.  Leave blank to include everything."
-  default = ""
+  default     = ""
 }
 
 variable "exclusion_csv" {
   description = "the exclusion list of file match strings per https://golang.org/pkg/path/filepath/#Match.  Leave blank to not exlude anything."
-  default = ""
+  default     = ""
 }
 
 variable "maxFileSizeBytes" {
@@ -62,4 +62,10 @@ variable "maxFileSizeBytes" {
 variable "block_until_warm" {
   description = "block the operation until the cache warming has finished"
   default     = true
+}
+
+
+variable "proxy" {
+  description = "specify a proxy address if one exists in the format of http://PROXY_SERVER:PORT"
+  default     = null
 }

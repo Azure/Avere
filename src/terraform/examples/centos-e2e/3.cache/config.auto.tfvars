@@ -7,8 +7,11 @@ vm_admin_username = "azureuser"
 ssh_public_key = ""
 
 // controller settings, used for vfxt and cachewarmer
-controller_private_ip    = "10.0.1.254" // at end of range to not interfere with cache
-controller_add_public_ip = true
+controller_private_ip            = "10.0.1.254" // at end of range to not interfere with cache
+controller_add_public_ip         = true
+install_cachewarmer              = true
+cachewarmer_storage_account_name = "cachewarmerstg"
+queue_prefix_name                = "cachewarmer"
 
 // There are 2 Cache choices
 // "HPCCache" - deploys HPC Cache

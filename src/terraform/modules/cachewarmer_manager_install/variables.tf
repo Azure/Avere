@@ -75,3 +75,8 @@ variable "vmss_worker_count" {
   default     = 12
   type        = number
 }
+
+variable "proxy" {
+  description = "specify a proxy address if one exists in the format of http://PROXY_SERVER:PORT"
+  default     = null
+}

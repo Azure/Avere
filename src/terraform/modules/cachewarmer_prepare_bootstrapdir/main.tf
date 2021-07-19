@@ -1,7 +1,7 @@
 locals {
   mount_dir = "/bcwpb"
 
-  proxy_env = (var.proxy == null || var.proxy == "") ? "" : "http_proxy=${var.proxy} https_proxy=${var.proxy} no_proxy=169.254.169.254"
+  proxy_env = (var.proxy == null || var.proxy == "") ? "" : "export http_proxy=${var.proxy} && export https_proxy=${var.proxy} && export no_proxy=169.254.169.254 && "
 
   build_cachewarmer_lines = [
     "set -x",

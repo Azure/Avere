@@ -44,6 +44,18 @@ variable "controller_add_public_ip" {
   type = bool
 }
 
+variable "install_cachewarmer" {
+  type = bool
+}
+
+variable "cachewarmer_storage_account_name" {
+  type = string
+}
+
+variable "queue_prefix_name" {
+  type = string
+}
+
 variable "cache_type" {
   type = string
 }
@@ -291,10 +303,10 @@ resource "azurerm_hpc_cache_nfs_target" "nfs_targets" {
 }
 
 ////////////////////////////////////////////////////////////////
-// Avere vFXT related resources
+// Controller - used for cachewarmer and vFXT install
 ////////////////////////////////////////////////////////////////
 resource "azurerm_network_security_rule" "controllersshin" {
-  count                  = local.deployAverevFXT && var.controller_add_public_ip ? 1 : 0
+  count                  = (local.deployAverevFXT || var.install_cachewarmer) && var.controller_add_public_ip ? 1 : 0
   name                   = "controllersshin"
   priority               = 120
   direction              = "Inbound"
@@ -310,7 +322,7 @@ resource "azurerm_network_security_rule" "controllersshin" {
 }
 
 module "vfxtcontroller" {
-  count                       = local.deployAverevFXT ? 1 : 0
+  count                       = local.deployAverevFXT || var.install_cachewarmer ? 1 : 0
   source                      = "github.com/Azure/Avere/src/terraform/modules/controller3"
   create_resource_group       = false
   resource_group_name         = var.cache_rg
@@ -335,6 +347,9 @@ module "vfxtcontroller" {
   ]
 }
 
+////////////////////////////////////////////////////////////////
+// Avere vFXT related resources
+////////////////////////////////////////////////////////////////
 resource "azurerm_network_security_rule" "avere" {
   count                  = local.deployAverevFXT && !data.terraform_remote_state.network.outputs.use_proxy_server ? 1 : 0
   name                   = "avere"
@@ -405,6 +420,148 @@ resource "avere_vfxt" "vfxt" {
   }
 }
 
+////////////////////////////////////////////////////////////////
+// Cachewarmer
+////////////////////////////////////////////////////////////////
+resource "azurerm_storage_account" "storage" {
+  count                    = var.install_cachewarmer ? 1 : 0
+  name                     = var.cachewarmer_storage_account_name
+  resource_group_name      = var.cache_rg // must be in same rg as controller for access by controller
+  location                 = var.location
+  account_kind             = "Storage" // set to storage v1 for cheapest cost on queue transactions
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+
+  depends_on = [
+    azurerm_resource_group.cache_rg,
+  ]
+}
+
+module "cachewarmer_prepare_bootstrapdir" {
+  count  = var.install_cachewarmer ? 1 : 0
+  source = "github.com/Azure/Avere/src/terraform/modules/cachewarmer_prepare_bootstrapdir"
+
+  // authentication with controller
+  jumpbox_address      = module.vfxtcontroller[0].controller_address
+  jumpbox_username     = module.vfxtcontroller[0].controller_username
+  jumpbox_password     = data.azurerm_key_vault_secret.virtualmachine.value
+  jumpbox_ssh_key_data = var.ssh_public_key
+  proxy                = local.proxy_uri
+
+  // bootstrap directory to store the cache manager binaries and install scripts
+  bootstrap_mount_address = data.terraform_remote_state.onprem.outputs.nfsfiler_address
+  bootstrap_export_path   = data.terraform_remote_state.onprem.outputs.nfsfiler_export
+  bootstrap_subdir        = "/tools/bootstrap"
+
+  # use the release binaries by setting build_cachewarmer to false
+  build_cachewarmer = false
+
+  depends_on = [
+    module.vfxtcontroller,
+  ]
+}
+
+module "cachewarmer_manager_install" {
+  count  = var.install_cachewarmer ? 1 : 0
+  source = "github.com/Azure/Avere/src/terraform/modules/cachewarmer_manager_install"
+
+  // authentication with controller
+  jumpbox_address      = module.vfxtcontroller[0].controller_address
+  jumpbox_username     = module.vfxtcontroller[0].controller_username
+  jumpbox_password     = data.azurerm_key_vault_secret.virtualmachine.value
+  jumpbox_ssh_key_data = var.ssh_public_key
+  proxy                = local.proxy_uri
+
+  // bootstrap directory to install the cache manager service
+  bootstrap_mount_address       = module.cachewarmer_prepare_bootstrapdir[0].bootstrap_mount_address
+  bootstrap_export_path         = module.cachewarmer_prepare_bootstrapdir[0].bootstrap_export_path
+  bootstrap_manager_script_path = module.cachewarmer_prepare_bootstrapdir[0].cachewarmer_manager_bootstrap_script_path
+
+  // the job path
+  storage_account    = azurerm_storage_account.storage[0].name
+  storage_account_rg = azurerm_storage_account.storage[0].resource_group_name
+  queue_name_prefix  = var.queue_prefix_name
+
+  // the cachewarmer VMSS auth details
+  vmss_user_name      = module.vfxtcontroller[0].controller_username
+  vmss_password       = data.azurerm_key_vault_secret.virtualmachine.value
+  vmss_ssh_public_key = var.ssh_public_key
+  vmss_subnet_name    = data.terraform_remote_state.network.outputs.render_subnet_name
+  vmss_worker_count   = length(local.deployAverevFXT ? avere_vfxt.vfxt[0].node_names : azurerm_hpc_cache.hpc_cache[0].mount_addresses) * 4 // 4 D2sv3 nodes per cache node
+
+  // the cachewarmer install the work script
+  bootstrap_worker_script_path = module.cachewarmer_prepare_bootstrapdir[0].cachewarmer_worker_bootstrap_script_path
+
+  depends_on = [
+    module.cachewarmer_prepare_bootstrapdir,
+    avere_vfxt.vfxt,
+    azurerm_hpc_cache.hpc_cache,
+    azurerm_storage_account.storage,
+  ]
+}
+
+module "cachewarmer_worker_install" {
+  count  = var.install_cachewarmer ? 1 : 0
+  source = "github.com/Azure/Avere/src/terraform/modules/cachewarmer_worker_install"
+
+  // authentication with controller
+  jumpbox_address      = module.vfxtcontroller[0].controller_address
+  jumpbox_username     = module.vfxtcontroller[0].controller_username
+  jumpbox_password     = data.azurerm_key_vault_secret.virtualmachine.value
+  jumpbox_ssh_key_data = var.ssh_public_key
+  proxy                = local.proxy_uri
+
+  // bootstrap directory to install the cache manager service
+  bootstrap_mount_address      = module.cachewarmer_prepare_bootstrapdir[0].bootstrap_mount_address
+  bootstrap_export_path        = module.cachewarmer_prepare_bootstrapdir[0].bootstrap_export_path
+  bootstrap_worker_script_path = module.cachewarmer_prepare_bootstrapdir[0].cachewarmer_worker_bootstrap_script_path
+
+  // the job path
+  storage_account    = azurerm_storage_account.storage[0].name
+  storage_account_rg = azurerm_storage_account.storage[0].resource_group_name
+  queue_name_prefix  = var.queue_prefix_name
+
+  depends_on = [
+    module.cachewarmer_manager_install,
+  ]
+}
+
+module "cachewarmer_submitjobs" {
+  count  = var.install_cachewarmer ? 1 : 0
+  source = "github.com/Azure/Avere/src/terraform/modules/cachewarmer_submitjobs"
+
+  // authentication with controller
+  jumpbox_address      = module.vfxtcontroller[0].controller_address
+  jumpbox_username     = module.vfxtcontroller[0].controller_username
+  jumpbox_password     = data.azurerm_key_vault_secret.virtualmachine.value
+  jumpbox_ssh_key_data = var.ssh_public_key
+  proxy                = local.proxy_uri
+
+  // the job path
+  storage_account    = azurerm_storage_account.storage[0].name
+  storage_account_rg = azurerm_storage_account.storage[0].resource_group_name
+  queue_name_prefix  = var.queue_prefix_name
+
+  // the path to warm
+  warm_mount_addresses = join(",", tolist(local.deployAverevFXT ? avere_vfxt.vfxt[0].vserver_ip_addresses : azurerm_hpc_cache.hpc_cache[0].mount_addresses))
+  warm_paths = {
+    "${data.terraform_remote_state.onprem.outputs.nfsfiler_export}" : ["/tools", "/island"],
+  }
+
+  inclusion_csv    = "" // example "*.jpg,*.png"
+  exclusion_csv    = "" // example "*.tgz,*.tmp"
+  maxFileSizeBytes = 0
+
+  block_until_warm = true
+
+  depends_on = [
+    module.cachewarmer_worker_install,
+    avere_vfxt.vfxt,
+    azurerm_hpc_cache.hpc_cache,
+    azurerm_storage_account.storage,
+  ]
+}
+
 ### Outputs
 output "controller_username" {
   value = length(module.vfxtcontroller) == 0 ? "" : module.vfxtcontroller[0].controller_username
@@ -421,5 +578,3 @@ output "mount_addresses" {
 output "management_ip" {
   value = local.deployAverevFXT ? avere_vfxt.vfxt[0].vfxt_management_ip : ""
 }
-
-
