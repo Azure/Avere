@@ -132,6 +132,13 @@ jobs:
           --subnet-name            ${_SUBNET} \
           --network-security-group ${_NSG}
         check_rc.sh $? "Create vnet (${_VNET}) and subnet (${_SUBNET}) in ${_VNET_RG}" || exit 0
+
+        az network vnet subnet update \
+          --resource-group         ${_VNET_RG} \
+          --vnet-name              ${_VNET} \
+          --name                   ${_SUBNET} \
+          --service-endpoints      Microsoft.Storage
+        check_rc.sh $? "Add Microsoft.Storage to subnet ${_SUBNET} in ${_VNET}" || exit 0
         echo "##[endgroup]"
       fi
 
