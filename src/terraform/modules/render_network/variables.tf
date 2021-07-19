@@ -7,6 +7,11 @@ variable "resource_group_name" {
   description = "The resource group to contain the NFS filer."
 }
 
+variable "vnet_name" {
+  description = "The name of the vnet."
+  default = "rendervnet"
+}
+
 variable "location" {
   description = "The Azure Region into which all resources of NFS filer will be created."
 }

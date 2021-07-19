@@ -33,7 +33,8 @@ resource "azurerm_network_interface" "vm" {
   ip_configuration {
     name                          = "${var.unique_name}-ipconfig"
     subnet_id                     = data.azurerm_subnet.vnet.id
-    private_ip_address_allocation = "Dynamic"
+    private_ip_address_allocation = var.static_ip_address == null || var.static_ip_address == "" ? "Dynamic" : "Static"
+    private_ip_address            = var.static_ip_address == null || var.static_ip_address == "" ? null : var.static_ip_address
     public_ip_address_id          = var.add_public_ip ? azurerm_public_ip.vm[0].id : ""
   }
 }
