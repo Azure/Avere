@@ -4,11 +4,11 @@ cloud_rg       = "cloud_rg"
 
 // onprem settings
 onprem_location = "eastus"
-onprem_rg       = "nprem_rg"
+onprem_rg       = "onprem_rg"
 
 // storage account for the cache warmer
 // set a globally unique name
-storage_account_name = "stgaccount"
+storage_account_name = "storage"
 queue_prefix_name    = "cachewarmer"
 
 // the following ephemeral disk size and skus fit the Moana scene
@@ -39,20 +39,34 @@ vm_ssh_key_data = null //"ssh-rsa AAAAB3...."
 ssh_port        = 22
 // Important: if you specify false, you must apply this terraform from a VM 
 // that has access to the cloud VNETs
-controller_add_public_ip = true
+jumpbox_add_public_ip = true
 // for this example, we use Standard_F2s_v2 instead of the default Standard_A1_v2
 // for fast downloading of the Moana scene 
-controller_size = "Standard_F2s_v2"
+jumpbox_size = "Standard_F2s_v2"
 
-// vfxt details
-vfxt_cluster_name     = "vfxt"
-vfxt_cluster_password = "VFXT_PASSWORD"
-// specify true to use the cheaper D16sv3's for the vfxt cache, otherwise E32sv3 will be used
-vfxt_use_test_sku = true
-// vfxt cache polies
-//  "Clients Bypassing the Cluster"
-//  "Read Caching"
-//  "Read and Write Caching"
-//  "Full Caching"
-//  "Transitioning Clients Before or After a Migration"
-cache_policy = "Clients Bypassing the Cluster"
+// HPC Cache Throughput SKU - 3 allowed values for throughput (GB/s) of the cache
+//  Standard_2G
+//  Standard_4G
+//  Standard_8G
+hpc_cache_throughput = "Standard_2G"
+
+// HPC Cache Size - 5 allowed sizes (GBs) for the cache
+//   3072
+//   6144
+//  12288
+//  24576
+//  49152
+hpc_cache_size = 3072
+
+// unique name for cache
+hpc_cache_name = "hpccache"
+
+// HPC Cache usage models:
+//   READ_HEAVY_INFREQ
+//   READ_HEAVY_CHECK_180
+//   WRITE_WORKLOAD_15
+//   WRITE_AROUND
+//   WRITE_WORKLOAD_CHECK_30
+//   WRITE_WORKLOAD_CHECK_60
+//   WRITE_WORKLOAD_CLOUDWS
+hpc_usage_model = "WRITE_AROUND"
