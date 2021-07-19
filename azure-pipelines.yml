@@ -91,10 +91,10 @@ jobs:
 
       # Add extra arguments when specified at queue time.
       EXTRA_ARGS=''
-      [[ -n "${VFXT_CONTROLLER_IMG_REF_ID}" ]]  && EXTRA_ARGS+=' -p controllerImageReferenceId=${VFXT_CONTROLLER_IMG_REF_ID}'
-      [[ -n "${VFXT_NODE_IMAGE_REF_ID}" ]]      && EXTRA_ARGS+=' -p nodeImageId=${VFXT_NODE_IMAGE_REF_ID}'
-      [[ -n "${VFXT_CONTROLLER_MKT_OFFER}" ]]   && EXTRA_ARGS+=' -p controllerMarketplaceOffer=${VFXT_CONTROLLER_MKT_OFFER}'
-      [[ -n "${VFXT_CONTROLLER_MKT_VERSION}" ]] && EXTRA_ARGS+=' -p controllerMarketplaceVersion=${VFXT_CONTROLLER_MKT_VERSION}'
+      [[ -n "${VFXT_CONTROLLER_IMG_REF_ID}" ]]  && EXTRA_ARGS+=" -p controllerImageReferenceId=${VFXT_CONTROLLER_IMG_REF_ID}"
+      [[ -n "${VFXT_NODE_IMAGE_REF_ID}" ]]      && EXTRA_ARGS+=" -p nodeImageId=${VFXT_NODE_IMAGE_REF_ID}"
+      [[ -n "${VFXT_CONTROLLER_MKT_OFFER}" ]]   && EXTRA_ARGS+=" -p controllerMarketplaceOffer=${VFXT_CONTROLLER_MKT_OFFER}"
+      [[ -n "${VFXT_CONTROLLER_MKT_VERSION}" ]] && EXTRA_ARGS+=" -p controllerMarketplaceVersion=${VFXT_CONTROLLER_MKT_VERSION}"
 
       echo "##[group]Create resource group(s) in ${_REGION}"
       az group create --location ${_REGION} --name ${_RESOURCE_GROUP}
