@@ -73,7 +73,7 @@ jobs:
       export _RESOURCE_GROUP=${RESOURCE_GROUP:-arm-vfxt-${_timestamp}}
       export _REGION=${VFXT_DEPLOY_LOCATION:-eastus}
       export _NSG=${NSG:-nsg-${_timestamp}}
-      export _VNET_RG=${VNET_RG:-${_RESOURCE_GROUP}}
+      export _VNET_RG=${VNET_RG:-${_RESOURCE_GROUP}-vnet}
       export _VNET=${VNET:-vnet-${_timestamp}}
       export _VNET_ADDR_PREFIX=${VNET_ADDR_PREFIX:-'10.0.0.0/16'}
       export _SUBNET=${SUBNET:-subnet-${_timestamp}}
@@ -130,6 +130,7 @@ jobs:
           --resource-group ${_RESOURCE_GROUP} \
           --parameters "{ \
               'location':                      { 'value': '${_REGION}'            }, \
+              'createVirtualNetwork':          { 'value': 'false'                 }, \
               'virtualNetworkResourceGroup':   { 'value': '${_VNET_RG}'           }, \
               'virtualNetworkName':            { 'value': '${_VNET}'              }, \
               'virtualNetworkSubnetName':      { 'value': '${_SUBNET}'            }, \
@@ -138,8 +139,7 @@ jobs:
               'controllerAdminUsername':       { 'value': '${_CONTROLLER_USERID}' }, \
               'avereClusterName':              { 'value': '${_CLUSTER}'           }, \
               'adminPassword':                 { 'value': '${AVERE_ADMIN_PW}'     }  \
-          }" \
-          -p createVirtualNetwork=false ${EXTRA_ARGS}
+          }" ${EXTRA_ARGS}
       check_rc.sh $? "Deploy vFXT (${_CLUSTER}) to ${_RESOURCE_GROUP} in ${_REGION}" || exit 0
       echo "##[endgroup]"
     displayName: 'TEST: Deploy vFXT cluster'
