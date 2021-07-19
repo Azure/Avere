@@ -7,6 +7,7 @@ locals {
   maxFileSizeBytes = var.maxFileSizeBytes == 0 ? "" : " -maxFileSizeBytes ${var.maxFileSizeBytes} "
   inclusion_csv    = var.inclusion_csv == null || length(var.inclusion_csv) == 0 ? "" : " -inclusionCsv \"${var.inclusion_csv}\" "
   exclusion_csv    = var.exclusion_csv == null || length(var.exclusion_csv) == 0 ? "" : " -exclusionCsv \"${var.exclusion_csv}\" "
+  proxy_env        = (var.proxy == null || var.proxy == "") ? "" : "export http_proxy=${var.proxy} && export https_proxy=${var.proxy} && export no_proxy=169.254.169.254 &&"
 }
 
 resource "null_resource" "cachewarmer_submitmultiplejobs" {
@@ -24,7 +25,7 @@ resource "null_resource" "cachewarmer_submitmultiplejobs" {
   provisioner "remote-exec" {
     inline = [
       "set -x",
-      "sudo /usr/local/bin/cachewarmer-jobsubmitter -storageAccountName ${var.storage_account} -storageAccountResourceGroup ${var.storage_account_rg} -queueNamePrefix ${var.queue_name_prefix} -warmTargetExportPath \"${local.warm_paths_sets[count.index].export}\" -warmTargetMountAddresses \"${var.warm_mount_addresses}\" -warmTargetPath \"${local.warm_paths_sets[count.index].path}\" ${local.inclusion_csv} ${local.exclusion_csv} ${local.maxFileSizeBytes} ${var.block_until_warm && count.index == 0 ? local.block_flag : local.no_block_flag}",
+      "${local.proxy_env} sudo -E /usr/local/bin/cachewarmer-jobsubmitter -storageAccountName ${var.storage_account} -storageAccountResourceGroup ${var.storage_account_rg} -queueNamePrefix ${var.queue_name_prefix} -warmTargetExportPath \"${local.warm_paths_sets[count.index].export}\" -warmTargetMountAddresses \"${var.warm_mount_addresses}\" -warmTargetPath \"${local.warm_paths_sets[count.index].path}\" ${local.inclusion_csv} ${local.exclusion_csv} ${local.maxFileSizeBytes} ${var.block_until_warm && count.index == 0 ? local.block_flag : local.no_block_flag}",
     ]
   }
 }

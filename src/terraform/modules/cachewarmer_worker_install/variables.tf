@@ -45,3 +45,8 @@ variable "storage_account" {
 variable "queue_name_prefix" {
   description = "the queue name prefix for the job management"
 }
+
+variable "proxy" {
+  description = "specify a proxy address if one exists in the format of http://PROXY_SERVER:PORT"
+  default     = null
+}
