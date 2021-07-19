@@ -168,6 +168,7 @@ jobs:
           run_terraform: ${{ parameters.run_terraform }}
           cmd_terraform: apply
           condition: succeeded()
+  - template: templates/public_up_delete.yml
   - ${{ if eq(parameters.run_destroy_and_cleanup, true) }}:
     - ${{ if eq(parameters.run_vdbench, true) }}:
       - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
