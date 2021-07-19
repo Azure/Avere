@@ -5,6 +5,7 @@ steps:
     az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
     for x in "-vmss" "-vfxt" "-filer" "-storage" "-proxy" "-network"; do
       exists=$(az group exists --name ${RESOURCE_GROUP_NAME}$x)
+      _ipcfgs_file=/tmp/ipcfgs.lst
       if [ "${exists}" = "true" ]; then
         echo "${RESOURCE_GROUP_NAME}$x exists - checking for public IPs"
         az network public-ip list             \
