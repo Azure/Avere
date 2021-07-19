@@ -39,6 +39,7 @@ steps:
     sed -i -E -e "s:vm_ssh_key_data = null:vm_ssh_key_data = \"${sshkey}\":" \
       -e "s/location\s*= \"eastus\"/location = \"${REGION}\"/" \
       -e "s/ssh_port\s*= 22/ssh_port = ${SSH_PORT}/" \
+      -e "s/controller_add_public_ip\s*= true/controller_add_public_ip = false/" \
       -e "s/controller_image_id\s*= null/controller_image_id = \"${{ parameters.controller_image }}\"/" \
       -e "s/vfxt_image_id\s*= null/vfxt_image_id = \"${{ parameters.image }}\"/" \
       -e "s/(([a-z]+)_resource_group_name)\s*= \"[^\"]+\"/\1 = \"${RESOURCE_GROUP_NAME}-\2\"/" \
