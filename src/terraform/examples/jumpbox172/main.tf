@@ -13,7 +13,7 @@ locals {
 
   // network details
   vnet_name         = "rendervnet"
-  jumpbox_static_ip = "172.16.3.254"
+  jumpbox_static_ip = "192.168.3.254"
 
   // jumpbox details
   jumpbox_resource_group_name = "jumpbox_resource_group"
@@ -47,16 +47,16 @@ module "network" {
   source                = "github.com/Azure/Avere/src/terraform/modules/render_network"
   resource_group_name   = local.jumpbox_resource_group_name
   create_resource_group = false
-  vnet_name             = vnet_name
+  vnet_name             = local.vnet_name
   location              = local.location
 
-  vnet_address_space                    = "172.16.0.0/20"
-  subnet_cloud_cache_address_prefix     = "172.16.1.0/24"
-  subnet_cloud_filers_address_prefix    = "172.16.2.128/25"
-  subnet_cloud_filers_ha_address_prefix = "172.16.2.0/25"
-  subnet_jumpbox_address_prefix         = "172.16.3.0/24"
-  subnet_render_clients1_address_prefix = "172.16.4.0/23"
-  subnet_render_clients2_address_prefix = "172.16.6.0/23"
+  vnet_address_space                    = "192.168.0.0/20"
+  subnet_cloud_cache_address_prefix     = "192.168.1.0/24"
+  subnet_cloud_filers_address_prefix    = "192.168.2.128/25"
+  subnet_cloud_filers_ha_address_prefix = "192.168.2.0/25"
+  subnet_jumpbox_address_prefix         = "192.168.3.0/24"
+  subnet_render_clients1_address_prefix = "192.168.4.0/23"
+  subnet_render_clients2_address_prefix = "192.168.6.0/23"
 
   depends_on = [
     resource.azurerm_resource_group.jumpboxrg
