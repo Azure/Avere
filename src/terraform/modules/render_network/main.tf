@@ -99,7 +99,7 @@ resource "azurerm_virtual_network_peering" "peer-to-onprem" {
   name                      = "peertoonprem"
   resource_group_name       = azurerm_virtual_network.vnet.resource_group_name
   virtual_network_name      = azurerm_virtual_network.vnet.name
-  remote_virtual_network_id = data.azurerm_virtual_network.onprem.id
+  remote_virtual_network_id = data.azurerm_virtual_network.onprem[0].id
 
   depends_on = [
     azurerm_virtual_network.vnet,
@@ -131,8 +131,8 @@ resource "azurerm_subnet" "cloud_cache" {
 
   depends_on = [
     azurerm_virtual_network.vnet,
-    resource.azurerm_virtual_network_peering.peer-to-onprem,
-    azurerm_virtual_network_peering, peer-from-onprem,
+    azurerm_virtual_network_peering.peer-to-onprem,
+    azurerm_virtual_network_peering.peer-from-onprem,
   ]
 }
 
@@ -149,8 +149,8 @@ resource "azurerm_subnet" "cloud_filers" {
 
   depends_on = [
     azurerm_virtual_network.vnet,
-    resource.azurerm_virtual_network_peering.peer-to-onprem,
-    azurerm_virtual_network_peering, peer-from-onprem,
+    azurerm_virtual_network_peering.peer-to-onprem,
+    azurerm_virtual_network_peering.peer-from-onprem,
   ]
 }
 
@@ -167,8 +167,8 @@ resource "azurerm_subnet" "cloud_filers_ha" {
 
   depends_on = [
     azurerm_virtual_network.vnet,
-    resource.azurerm_virtual_network_peering.peer-to-onprem,
-    azurerm_virtual_network_peering, peer-from-onprem,
+    azurerm_virtual_network_peering.peer-to-onprem,
+    azurerm_virtual_network_peering.peer-from-onprem,
   ]
 }
 
@@ -187,8 +187,8 @@ resource "azurerm_subnet" "jumpbox" {
 
   depends_on = [
     azurerm_virtual_network.vnet,
-    resource.azurerm_virtual_network_peering.peer-to-onprem,
-    azurerm_virtual_network_peering, peer-from-onprem,
+    azurerm_virtual_network_peering.peer-to-onprem,
+    azurerm_virtual_network_peering.peer-from-onprem,
   ]
 }
 
@@ -205,8 +205,8 @@ resource "azurerm_subnet" "render_clients1" {
 
   depends_on = [
     azurerm_virtual_network.vnet,
-    resource.azurerm_virtual_network_peering.peer-to-onprem,
-    azurerm_virtual_network_peering, peer-from-onprem,
+    azurerm_virtual_network_peering.peer-to-onprem,
+    azurerm_virtual_network_peering.peer-from-onprem,
   ]
 }
 
@@ -224,8 +224,8 @@ resource "azurerm_subnet" "render_clients2" {
 
   depends_on = [
     azurerm_virtual_network.vnet,
-    resource.azurerm_virtual_network_peering.peer-to-onprem,
-    azurerm_virtual_network_peering, peer-from-onprem,
+    azurerm_virtual_network_peering.peer-to-onprem,
+    azurerm_virtual_network_peering.peer-from-onprem,
   ]
 }
 
