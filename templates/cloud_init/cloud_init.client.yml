@@ -1,0 +1,367 @@
+#cloud-config
+
+final_message: "<> DONE: Cloud-Init COMPLETE. The VM is UP and READY ($UPTIME seconds elapsed)."
+
+write_files:
+  - encoding: b64
+    path: /root/.ssh/id_rsa
+    permissions: '0600'
+    content: '<id_rsa>'
+
+  - path: /opt/setup_environment.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+
+      function error() {
+        >&2 echo "echo >< ERROR: $* See log for details."
+        exit 1
+      }
+
+      export AZURE_SUBSCRIPTION='<sub_id>'
+      export ARM_SUBSCRIPTION_ID='<sub_id>'
+      export ARM_CLIENT_ID='<arm_client_id>'
+      export ARM_CLIENT_SECRET='<arm_client_scrt>'
+      export ARM_TENANT_ID='<arm_tenant_id>'
+      export REGION='<region>'
+      export RESOURCE_GROUP_NAME='<resource_group_name>'
+      export CONTROLLER_IMAGE='<controller_image>'
+      export VFXT_IMAGE='<vfxt_image>'
+      export AVERE_ADMIN_PW='<avere_admin_pw>'
+      export VNET_NAME='<vnet_name>'
+      export RUN_TERRAFORM_FILE='<run_terraform_file>'
+      export LINUX_USER='<vm_admin_user>'
+
+      apt-get update
+      apt install azure-cli jq unzip -y
+
+      echo "az login"
+      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+      [ $? -ne 0 ] && error "az login."
+
+      echo "az acct set"
+      az account set -s $AZURE_SUBSCRIPTION
+      [ $? -ne 0 ] && error "az acct set."
+
+      echo "wget"
+      wget https://releases.hashicorp.com/terraform/0.15.0/terraform_0.15.0_linux_amd64.zip
+      [ $? -ne 0 ] && error "wget."
+
+      echo "unzip"
+      unzip terraform_0.15.0_linux_amd64.zip
+      [ $? -ne 0 ] && error "unzip."
+
+      echo "mv tf"
+      sudo mv terraform /usr/local/bin
+      [ $? -ne 0 ] && error "mv tf."
+
+      echo "chmod"
+      sudo chmod 755 /usr/local/bin/terraform
+      [ $? -ne 0 ] && error "chmod."
+
+      echo "version"
+      version=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name | sed -e 's/[^0-9]*\([0-9].*\)$/\1/')
+      [ $? -ne 0 ] && error "version."
+
+      echo "browser_download"
+      browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[].browser_download_url | grep -e "terraform-provider-avere$")
+      [ $? -ne 0 ] && error "browser_download."
+
+      echo "mkdir"
+      mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
+      [ $? -ne 0 ] && error "mkdir."
+
+      echo "wget2"
+      wget -O ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version $browser_download_url
+      [ $? -ne 0 ] && error "wget2."
+
+      echo "chmod2"
+      chmod 755 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version
+      [ $? -ne 0 ] && error "chmod2."
+
+      echo "mkdir tf"
+      mkdir tf
+      [ $? -ne 0 ] && error "mkdir tf."
+
+      echo "cd tf"
+      cd tf
+      [ $? -ne 0 ] && error "cd tf."
+
+      echo "git init"
+      git init
+      [ $? -ne 0 ] && error "git init."
+
+      echo "git remote"
+      git remote add origin -f https://github.com/Azure/Avere.git
+      [ $? -ne 0 ] && error "git remote."
+
+      echo "git config"
+      git config core.sparsecheckout true
+      [ $? -ne 0 ] && error "git config."
+
+      echo "src"
+      echo "src/terraform/*" >> .git/info/sparse-checkout
+      [ $? -ne 0 ] && error "src."
+
+      echo "git pull"
+      git pull origin main
+      [ $? -ne 0 ] && error "git pull."
+
+      echo "to file path"
+      cd src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
+      [ $? -ne 0 ] && error "filepath."
+
+      echo "sskey"
+      sshkey="<ssh_key> azureuser@linuxvm"
+      [ $? -ne 0 ] && error "sshkey."
+
+      sed -i -E -e "s:vm_ssh_key_data = null:vm_ssh_key_data = \"${sshkey}\":" \
+        -e "s/location\s*= \"eastus\"/location = \"${REGION}\"/" \
+        -e "s/open_external_sources\s*= [\"*\"]/open_external_sources = [\"AzureCloud\"]/" \
+        -e "s/controller_add_public_ip\s*= true/controller_add_public_ip = false/" \
+        -e "s/controller_image_id\s*= null/controller_image_id = \"$CONTROLLER_IMAGE\"/" \
+        -e "s/vfxt_image_id\s*= null/vfxt_image_id = \"$VFXT_IMAGE\"/" \
+        -e "s/(([a-z]+)_resource_group_name)\s*= \"[^\"]+\"/\1 = \"${RESOURCE_GROUP_NAME}-\2\"/" \
+        -e "s/vfxt_cluster_password\s*= \"VFXT_PASSWORD\"/vfxt_cluster_password = \"${AVERE_ADMIN_PW}\"/" \
+        -e "s/peer_vnet_rg\s*= \"\"/peer_vnet_rg = \"$RESOURCE_GROUP_NAME\"/" \
+        -e "s/peer_vnet_name\s*= \"\"/peer_vnet_name = \"$VNET_NAME\"/" \
+        -e "s/storage_account_name\s*= \"storageaccount\"/storage_account_name = \"$RESOURCE_GROUP_NAME\"/" \
+        -e 's/vfxt_node_count\s*= 3/vfxt_node_count = <original_node_count>/' main.tf
+
+      terraform init
+      terraform apply -auto-approve
+
+  - path: /opt/scaleup.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+
+      function error() {
+        >&2 echo "echo >< ERROR: $* See log for details."
+        exit 1
+      }
+
+      export AZURE_SUBSCRIPTION='<sub_id>'
+      export ARM_SUBSCRIPTION_ID='<sub_id>'
+      export ARM_CLIENT_ID='<arm_client_id>'
+      export ARM_CLIENT_SECRET='<arm_client_scrt>'
+      export ARM_TENANT_ID='<arm_tenant_id>'
+      export RUN_TERRAFORM_FILE='<run_terraform_file>'
+
+      echo "az login"
+      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+      [ $? -ne 0 ] && error "az login."
+
+      echo "az acct set"
+      az account set -s $AZURE_SUBSCRIPTION
+      [ $? -ne 0 ] && error "az acct set."
+
+      echo "to file path"
+      cd /tf/src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
+      [ $? -ne 0 ] && error "filepath."
+
+      sed -i -E -e 's/vfxt_node_count\s*= <original_node_count>/vfxt_node_count = <new_node_count>/' main.tf
+
+      terraform init
+      terraform apply -auto-approve
+
+  - path: /opt/scaledown.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+
+      function error() {
+        >&2 echo "echo >< ERROR: $* See log for details."
+        exit 1
+      }
+
+      export AZURE_SUBSCRIPTION='<sub_id>'
+      export ARM_SUBSCRIPTION_ID='<sub_id>'
+      export ARM_CLIENT_ID='<arm_client_id>'
+      export ARM_CLIENT_SECRET='<arm_client_scrt>'
+      export ARM_TENANT_ID='<arm_tenant_id>'
+      export RUN_TERRAFORM_FILE='<run_terraform_file>'
+
+      echo "az login"
+      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+      [ $? -ne 0 ] && error "az login."
+
+      echo "az acct set"
+      az account set -s $AZURE_SUBSCRIPTION
+      [ $? -ne 0 ] && error "az acct set."
+
+      echo "to file path"
+      cd /tf/src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
+      [ $? -ne 0 ] && error "filepath."
+
+      sed -i -E -e 's/vfxt_node_count\s*= <new_node_count>/vfxt_node_count = <original_node_count>/' main.tf
+
+      terraform init
+      terraform apply -auto-approve
+
+  - path: /opt/destroy.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+
+      function error() {
+        >&2 echo "echo >< ERROR: $* See log for details."
+        exit 1
+      }
+
+      export AZURE_SUBSCRIPTION='<sub_id>'
+      export ARM_SUBSCRIPTION_ID='<sub_id>'
+      export ARM_CLIENT_ID='<arm_client_id>'
+      export ARM_CLIENT_SECRET='<arm_client_scrt>'
+      export ARM_TENANT_ID='<arm_tenant_id>'
+      export RUN_TERRAFORM_FILE='<run_terraform_file>'
+
+      echo "az login"
+      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+      [ $? -ne 0 ] && error "az login."
+
+      echo "az acct set"
+      az account set -s $AZURE_SUBSCRIPTION
+      [ $? -ne 0 ] && error "az acct set."
+
+      echo "to file path"
+      cd /tf/src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
+      [ $? -ne 0 ] && error "filepath."
+
+      terraform init
+      terraform destroy -auto-approve
+
+  - path: /opt/vdbench_destroy.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+
+      function error() {
+        >&2 echo "echo >< ERROR: $* See log for details."
+        exit 1
+      }
+
+      export AZURE_SUBSCRIPTION='<sub_id>'
+      export ARM_SUBSCRIPTION_ID='<sub_id>'
+      export ARM_CLIENT_ID='<arm_client_id>'
+      export ARM_CLIENT_SECRET='<arm_client_scrt>'
+      export ARM_TENANT_ID='<arm_tenant_id>'
+      export REGION='<region>'
+      export RESOURCE_GROUP_NAME='<resource_group_name>'
+      export RUN_TERRAFORM_FILE='<run_terraform_file>'
+
+      echo "az login"
+      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+      [ $? -ne 0 ] && error "az login."
+
+      echo "az acct set"
+      az account set -s $AZURE_SUBSCRIPTION
+      [ $? -ne 0 ] && error "az acct set."
+
+      echo "to file path"
+      cd /tf/src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
+      [ $? -ne 0 ] && error "filepath."
+
+      echo "terraform outputs"
+      CONTROLLER_ADDRESS=$(terraform output -json | jq -r ".controller_address.value")
+      USERNAME=$(terraform output -json | jq -r ".controller_username.value")
+      VSERVER_IP_ADDRESSES=$(terraform output -json | jq -c ".mount_addresses.value")
+      NFS_EXPORT_PATH=$(terraform output -json | jq -r ".mount_namespace_path.value")
+      [ $? -ne 0 ] && error "outputs."
+
+      echo "sskey"
+      sshkey="<ssh_key> azureuser@linuxvm"
+      [ $? -ne 0 ] && error "sshkey."
+
+      cd ../vdbench
+
+      terraform init
+      TF_LOG=INFO terraform destroy -auto-approve -var="location=${REGION}" \
+        -var="vmss_resource_group_name=${RESOURCE_GROUP_NAME}-vmss" \
+        -var="controller_address=${CONTROLLER_ADDRESS}" \
+        -var="controller_username=${USERNAME}" \
+        -var="ssh_key_data=${sshkey}" \
+        -var="vserver_ip_addresses=${VSERVER_IP_ADDRESSES}" \
+        -var="nfs_export_path=${NFS_EXPORT_PATH}" \
+        -var="vdbench_url=<vdbench_download_url>" \
+        -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network"
+
+  - path: /opt/vdbench_run.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+
+      function error() {
+        >&2 echo "echo >< ERROR: $* See log for details."
+        exit 1
+      }
+
+      export AZURE_SUBSCRIPTION='<sub_id>'
+      export ARM_SUBSCRIPTION_ID='<sub_id>'
+      export ARM_CLIENT_ID='<arm_client_id>'
+      export ARM_CLIENT_SECRET='<arm_client_scrt>'
+      export ARM_TENANT_ID='<arm_tenant_id>'
+      export REGION='<region>'
+      export RESOURCE_GROUP_NAME='<resource_group_name>'
+      export RUN_TERRAFORM_FILE='<run_terraform_file>'
+
+      echo "az login"
+      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+      [ $? -ne 0 ] && error "az login."
+
+      echo "az acct set"
+      az account set -s $AZURE_SUBSCRIPTION
+      [ $? -ne 0 ] && error "az acct set."
+
+      echo "to file path"
+      cd /tf/src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
+      [ $? -ne 0 ] && error "filepath."
+
+      echo "terraform outputs"
+      CONTROLLER_ADDRESS=$(terraform output -json | jq -r ".controller_address.value")
+      USERNAME=$(terraform output -json | jq -r ".controller_username.value")
+      VSERVER_IP_ADDRESSES=$(terraform output -json | jq -c ".mount_addresses.value")
+      NFS_EXPORT_PATH=$(terraform output -json | jq -r ".mount_namespace_path.value")
+      [ $? -ne 0 ] && error "terraform outputs."
+
+      echo "sskey"
+      sshkey="<ssh_key> azureuser@linuxvm"
+      [ $? -ne 0 ] && error "sshkey."
+
+      cd ../vdbench
+
+      terraform init
+      TF_LOG=INFO terraform apply -auto-approve -var="location=${REGION}" \
+        -var="vmss_resource_group_name=${RESOURCE_GROUP_NAME}-vmss" \
+        -var="controller_address=${CONTROLLER_ADDRESS}" \
+        -var="controller_username=${USERNAME}" \
+        -var="ssh_key_data=${sshkey}" \
+        -var="vserver_ip_addresses=${VSERVER_IP_ADDRESSES}" \
+        -var="nfs_export_path=${NFS_EXPORT_PATH}" \
+        -var="vdbench_url=<vdbench_download_url>" \
+        -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network"
+
+      echo "vdbench terraform outputs"
+      IP_ADDRESS_COMMAND=$(terraform output -json | jq -r ".vmss_addresses_command.value")
+      IP_ADDRESS=$(${IP_ADDRESS_COMMAND} | jq -r '.[0]')
+      [ $? -ne 0 ] && error "vdbench terraform outputs."
+
+      echo "ssh"
+      ssh -o "StrictHostKeyChecking=no" -oProxyCommand="ssh -oStrictHostKeyChecking=no -W %h:%p  ${USERNAME}@${CONTROLLER_ADDRESS}" ${USERNAME}@${IP_ADDRESS} ls
+      echo ">> SCP CMD"
+      scp -o "ProxyJump ${USERNAME}@${CONTROLLER_ADDRESS}" /root/.ssh/id_rsa ${USERNAME}@${IP_ADDRESS}:.ssh/id_rsa
+      [ $? -ne 0 ] && error "ssh and scp."
+
+      echo ">> COPY_IDRSA.SH"
+      ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} /home/azureuser/copy_idrsa.sh
+      [ $? -ne 0 ] && error "copy_idrsa."
+
+      echo ">> RUN VDBENCH"
+      ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "tmux new-session -d \"/home/${USERNAME}/run_vdbench.sh <vdbench_config>.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1\""
+      [ $? -ne 0 ] && error "run vdbench."
+
+runcmd:
+  - "echo '# STEP: Setup SSH key.'"
+  - "cp -v /root/.ssh/id_rsa /home/<vm_admin_user>/.ssh/id_rsa"
+  - "/opt/setup_environment.sh"
+

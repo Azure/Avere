@@ -17,44 +17,108 @@ parameters:
     - "microsoft-avere:vfxt-preview:avere-vfxt-node:latest"
 - name: controller_image
   type: string
+- name: scale_up_node_count
+  type: string
+- name: vdbench_config
+  type: string
+  default: "ondisk"
+  values:
+    - "ondisk"
+    - "inmem"
 
 steps:
 - script: |
-    set -e
-    wget https://releases.hashicorp.com/terraform/0.15.0/terraform_0.15.0_linux_amd64.zip
-    unzip terraform_0.15.0_linux_amd64.zip
-    sudo mv terraform /usr/local/bin
-    sudo chmod 755 /usr/local/bin/terraform
+    export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
 
-    version=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name | sed -e 's/[^0-9]*\([0-9].*\)$/\1/')
-    browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[].browser_download_url | grep -e "terraform-provider-avere$")
-    mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
-    wget -O ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version $browser_download_url
-    chmod 755 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version
+    az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+    az account set -s $ARM_SUBSCRIPTION_ID
+    echo "##[group]Create runner resource group in ${REGION}"
+    az group create --location ${REGION} --name ${RESOURCE_GROUP_NAME}
+    check_rc.sh $? "Create resource group (${RESOURCE_GROUP_NAME}) in ${REGION}" || exit 0
 
-    sshkey="$(cat ~/.ssh/id_rsa.pub) azureuser@linuxvm"
-    echo "##vso[task.setvariable variable=secret.SSH_KEY;issecret=true]${sshkey}"
+    echo "##[group]Create network resources in ${RESOURCE_GROUP_NAME}"
+    az network nsg create \
+      --resource-group ${RESOURCE_GROUP_NAME} \
+      --location       ${REGION} \
+      --name           ${NSG}
+    check_rc.sh $? "Create network security group (${NSG})" || exit 0
 
-    cd src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
-    sed -i -E -e "s:vm_ssh_key_data = null:vm_ssh_key_data = \"${sshkey}\":" \
-      -e "s/location\s*= \"eastus\"/location = \"${REGION}\"/" \
-      -e "s/ssh_port\s*= 22/ssh_port = ${SSH_PORT}/" \
-      -e "s/open_external_sources\s*= [\"*\"]/open_external_sources = [\"AzureCloud\"]/" \
-      -e "s/controller_image_id\s*= null/controller_image_id = \"${{ parameters.controller_image }}\"/" \
-      -e "s/vfxt_image_id\s*= null/vfxt_image_id = \"${{ parameters.image }}\"/" \
-      -e "s/(([a-z]+)_resource_group_name)\s*= \"[^\"]+\"/\1 = \"${RESOURCE_GROUP_NAME}-\2\"/" \
-      -e "s/vfxt_cluster_password\s*= \"VFXT_PASSWORD\"/vfxt_cluster_password = \"${AVERE_ADMIN_PW}\"/" \
-      -e 's/vfxt_node_count\s*= 3/vfxt_node_count = ${{ parameters.original_node_count }}/' main.tf
+    az network vnet create \
+      --resource-group         ${RESOURCE_GROUP_NAME} \
+      --location               ${REGION} \
+      --name                   ${VNET} \
+      --address-prefixes       ${VNET_ADDR_PREFIX} \
+      --subnet-name            ${SUBNET} \
+      --network-security-group ${NSG}
+    check_rc.sh $? "Create vnet (${VNET}) in ${RESOURCE_GROUP_NAME}" || exit 0
 
-      # Used for using Dseries, but does not work with vdbench, needed to use Eseries.
-      # Leaving commented out incase we do need to use testing sku
-      # -e 's/vfxt_node_count = 3/vfxt_node_count = ${{ parameters.original_node_count }}\n    node_cache_size = 1024\n    node_size = "unsupported_test_SKU"/' main.tf
+    az network vnet subnet update \
+      --resource-group         ${RESOURCE_GROUP_NAME} \
+      --vnet-name              ${VNET} \
+      --name                   ${SUBNET} \
+      --service-endpoints      Microsoft.Storage
+    check_rc.sh $? "Add Microsoft.Storage to subnet ${SUBNET} in ${VNET}" || exit 0
+    echo "##[endgroup]"
 
-    if [ "proxy" = "${{ parameters.run_terraform }}" ] || [ "azureblobfiler" = "${{ parameters.run_terraform }}" ]; then
-      sed -i "s/storage_account_name\s*= \"storageaccount\"/storage_account_name = \"$RESOURCE_GROUP_NAME\"/" main.tf
-    fi
+    # Prepare the cloud-init file.
+    cloud_init_file=${BUILD_SOURCESDIRECTORY}/templates/cloud_init/cloud_init.client.yml
 
-    cat main.tf
+    base64_idrsa=$(base64 -w 0 ~/.ssh/id_rsa)
+    echo "##vso[task.setvariable variable=secret.SSH_ID_RSA_BASE64;issecret=true]${base64_idrsa}"
+    ssk_key_pub=$(cat ~/.ssh/id_rsa.pub)
+    echo "##vso[task.setvariable variable=secret.SSH_KEY_PUBLIC;issecret=true]${ssk_key_pub}"
+
+    new_node_count=$(( ${{ parameters.original_node_count }} + ${{ parameters.scale_up_node_count }} ))
+
+    sed -i -e "s/<id_rsa>/$base64_idrsa/" \
+      -e "s/<region>/$REGION/" \
+      -e "s/<avere_admin_pw>/$AVERE_ADMIN_PW/" \
+      -e "s/<sub_id>/$ARM_SUBSCRIPTION_ID/" \
+      -e "s/<arm_client_id>/$ARM_CLIENT_ID/" \
+      -e "s:<arm_client_scrt>:$ARM_CLIENT_SECRET:" \
+      -e "s/<arm_tenant_id>/$ARM_TENANT_ID/" \
+      -e "s/<resource_group_name>/$RESOURCE_GROUP_NAME/" \
+      -e "s/<vnet_name>/$VNET/" \
+      -e "s/<run_terraform_file>/$RUN_TERRAFORM_FILE/" \
+      -e "s,<ssh_key>,$(cat ~/.ssh/id_rsa.pub)," \
+      -e "s/<vm_admin_user>/azureuser/" \
+      -e "s/<controller_image>/${{ parameters.controller_image }}/" \
+      -e "s/<vfxt_image>/${{ parameters.image }}/" \
+      -e "s/<original_node_count>/${{ parameters.original_node_count }}/" \
+      -e "s/<new_node_count>/$new_node_count/" \
+      -e "s/<vdbench_config>/${{ parameters.vdbench_config }}/" \
+      -e "s,<vdbench_download_url>,${VDBENCH_URL}," \
+      ${cloud_init_file}
+    check_rc.sh $? "Preparing cloud-init file (sed)" || exit
+
+    # Deploy the client VMs.
+    az vm create -g ${RESOURCE_GROUP_NAME} \
+      -n ${VM_NAME}  \
+      --admin-username azureuser \
+      --vnet-name ${VNET} \
+      --subnet ${SUBNET} \
+      --image 'Canonical:0001-com-ubuntu-server-focal:20_04-lts:latest' \
+      --public-ip-address "" \
+      --size Standard_DS2_v2 \
+      --custom-data ${BUILD_SOURCESDIRECTORY}/templates/cloud_init/cloud_init.client.yml
+
+    check_rc.sh $? "VM Create" || exit
+
+    cmdlog=/tmp/vm_runcmd.log
+    az vm run-command invoke                  \
+      --resource-group ${RESOURCE_GROUP_NAME} \
+      --name ${VM_NAME}                      \
+      --command-id RunShellScript             \
+      --scripts "cloud-init status --wait"    \
+      --query 'value[0].message' --output tsv | tee ${cmdlog}
+    check_rc.sh ${PIPESTATUS[0]} "Wait for the VM's cloud-init to complete" || exit 0
+    grep -q 'status: done' ${cmdlog}
+
   displayName: 'Terraform: setup ${{ parameters.run_terraform }}'
   env:
     AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
+    ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+    ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+    ARM_TENANT_ID: $(AZURE-TENANT-ID)
+    ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+    VDBENCH_URL: $(VDBENCH-URL)

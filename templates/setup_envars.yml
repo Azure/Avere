@@ -9,9 +9,18 @@ parameters:
 steps:
 - bash: |
     resource_group="tf$(date -u +'%m%dx%H%M%S')"
+    VM_NAME="runner-vm"
+    VNET="vnet-${resource_group}"
+    VNET_ADDR_PREFIX='10.7.0.0/16'
+    NSG="nsg-${resource_group}"
+    SUBNET="subnet-${resource_group}"
     echo "##vso[task.setvariable variable=REGION]${{ parameters.region }}"
     echo "##vso[task.setvariable variable=RESOURCE_GROUP_NAME]${resource_group}"
     echo "##vso[task.setvariable variable=RUN_TERRAFORM_FILE]${{ parameters.run_terraform }}"
+    echo "##vso[task.setvariable variable=VM_NAME]${VM_NAME}"
+    echo "##vso[task.setvariable variable=VNET]${VNET}"
+    echo "##vso[task.setvariable variable=VNET_ADDR_PREFIX]${VNET_ADDR_PREFIX}"
+    echo "##vso[task.setvariable variable=NSG]${NSG}"
+    echo "##vso[task.setvariable variable=SUBNET]${SUBNET}"
   displayName: "Setup: Environment Variables"
   condition: always()
-  

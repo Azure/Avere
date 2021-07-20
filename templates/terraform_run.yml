@@ -1,0 +1,62 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# https://aka.ms/yaml
+parameters:
+- name: run
+  type: string
+  values:
+  - "scaleup"
+  - "scaledown"
+  - "vdbench_run"
+  - "vdbench_destroy"
+  - "destroy"
+- name: condition
+  type: string
+  default: "always()"
+  values:
+    - "always()"
+    - "succeededOrFailed()"
+    - "succeeded()"
+    - "failed()"
+
+steps:
+- script: |
+    export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
+    TMUX_SESSION=${{ parameters.run }}
+    echo "##vso[task.setvariable variable=TMUX_SESSION]${TMUX_SESSION}"
+
+    cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
+    cmdlog=/tmp/vm_runcmd.log
+    az vm run-command invoke                  \
+      --resource-group ${RESOURCE_GROUP_NAME} \
+      --name ${VM_NAME}                      \
+      --command-id RunShellScript             \
+      --scripts "tmux new-session -d -s ${TMUX_SESSION} /opt/${{ parameters.run }}.sh && echo ${cmdokmsg}" \
+      --query 'value[0].message' --output tsv |& tee ${cmdlog}
+    check_rc.sh ${PIPESTATUS[0]} " ${{ parameters.run }} command" || exit 0
+    grep -q ${cmdokmsg} ${cmdlog}
+    check_rc.sh $? "Check for CMD_OK (${cmdokmsg}) in cmdlog (${cmdlog}) for  ${{ parameters.run }}" || exit 0
+
+    cmdokmsg2="CMD_OK_$(date -u '+%m%dx%H%M%S')"
+    cmdlog2=/tmp/vm_runcmd2.log
+    polling_secs=60
+    while [ 1 ]; do
+      az vm run-command invoke                    \
+        --resource-group ${RESOURCE_GROUP_NAME}   \
+        --name ${VM_NAME}                         \
+        --command-id RunShellScript               \
+        --scripts "tmux has-session -t ${TMUX_SESSION} || echo ${cmdokmsg2}" \
+        --query 'value[0].message' --output tsv |& tee ${cmdlog2}
+      check_rc.sh ${PIPESTATUS[0]} "Checking for tmux session ${TMUX_SESSION}" || exit
+      grep -q ${cmdokmsg2} ${cmdlog2}
+      if [ $? -ne 0 ]; then
+        echo "INFO: tmux session ${TMUX_SESSION} still active. Re-check in ${polling_secs} seconds."
+        sleep ${polling_secs}
+        continue
+      else
+        echo "INFO: tmux session ${TMUX_SESSION} no longer active"
+        break
+      fi
+    done
+  displayName: 'Terraform: ${{ parameters.run }}'
+  condition: ${{ parameters.condition }}
+
