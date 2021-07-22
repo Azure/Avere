@@ -189,12 +189,8 @@ output "anvil_data_cluster_ip" {
   value = module.anvil.anvil_data_cluster_ip
 }
 
-output "anvil_data_cluster_data0_ip" {
-  value = module.anvil.anvil_data_cluster_data0_ip
-}
-
-output "anvil_data_cluster_data1_ip" {
-  value = module.anvil.anvil_data_cluster_data1_ip
+output "anvil_data_cluster_data_ips" {
+  value = module.anvil.anvil_data_cluster_data_ips
 }
 
 output "nfs_mountable_ips" {
