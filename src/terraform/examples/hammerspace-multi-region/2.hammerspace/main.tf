@@ -244,7 +244,7 @@ module "anvil_configure1" {
   source                       = "github.com/Azure/Avere/src/terraform/modules/hammerspace/anvil-run-once-configure"
   anvil_arm_virtual_machine_id = length(module.anvil1.arm_virtual_machine_ids) == 0 ? "" : module.anvil1.arm_virtual_machine_ids[0]
   anvil_data_cluster_ip        = module.anvil1.anvil_data_cluster_ip
-  web_ui_password              = module.anvil1.web_ui_password
+  web_ui_password              = module.anvil1.web_ui_password[0]
   dsx_count                    = local.region1_configuration.dsx_instance_count
   anvil_hostname               = length(module.anvil1.anvil_host_names) == 0 ? "" : module.anvil1.anvil_host_names[0]
 
@@ -323,7 +323,7 @@ module "anvil_configure2" {
   source                       = "github.com/Azure/Avere/src/terraform/modules/hammerspace/anvil-run-once-configure"
   anvil_arm_virtual_machine_id = length(module.anvil2.arm_virtual_machine_ids) == 0 ? "" : module.anvil2.arm_virtual_machine_ids[0]
   anvil_data_cluster_ip        = module.anvil2.anvil_data_cluster_ip
-  web_ui_password              = module.anvil2.web_ui_password
+  web_ui_password              = module.anvil2.web_ui_password[0]
   dsx_count                    = local.region2_configuration.dsx_instance_count
   anvil_hostname               = length(module.anvil2.anvil_host_names) == 0 ? "" : module.anvil2.anvil_host_names[0]
 
@@ -402,7 +402,7 @@ module "anvil_configure3" {
   source                       = "github.com/Azure/Avere/src/terraform/modules/hammerspace/anvil-run-once-configure"
   anvil_arm_virtual_machine_id = length(module.anvil3.arm_virtual_machine_ids) == 0 ? "" : module.anvil3.arm_virtual_machine_ids[0]
   anvil_data_cluster_ip        = module.anvil3.anvil_data_cluster_ip
-  web_ui_password              = module.anvil3.web_ui_password
+  web_ui_password              = module.anvil3.web_ui_password[0]
   dsx_count                    = local.region3_configuration.dsx_instance_count
   anvil_hostname               = length(module.anvil3.anvil_host_names) == 0 ? "" : module.anvil3.anvil_host_names[0]
 
@@ -426,7 +426,7 @@ output "hammerspace_webui_username" {
 }
 
 output "hammerspace_webui_password_1" {
-  value = module.anvil1.web_ui_password
+  value = module.anvil1.web_ui_password[0]
 }
 
 output "anvil_data_cluster_ip_1" {
@@ -438,7 +438,7 @@ output "nfs_mountable_ips_1" {
 }
 
 output "hammerspace_webui_password_2" {
-  value = module.anvil2.web_ui_password
+  value = module.anvil2.web_ui_password[0]
 }
 
 output "anvil_data_cluster_ip_2" {
@@ -450,7 +450,7 @@ output "nfs_mountable_ips_2" {
 }
 
 output "hammerspace_webui_password_3" {
-  value = module.anvil3.web_ui_password
+  value = module.anvil3.web_ui_password[0]
 }
 
 output "anvil_data_cluster_ip_3" {
