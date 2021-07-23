@@ -163,7 +163,7 @@ module "anvil_configure" {
   source                       = "github.com/Azure/Avere/src/terraform/modules/hammerspace/anvil-run-once-configure"
   anvil_arm_virtual_machine_id = length(module.anvil.arm_virtual_machine_ids) == 0 ? "" : module.anvil.arm_virtual_machine_ids[0]
   anvil_data_cluster_ip        = module.anvil.anvil_data_cluster_ip
-  web_ui_password              = module.anvil.web_ui_password
+  web_ui_password              = module.anvil.web_ui_password[0]
   dsx_count                    = local.region_configuration.dsx_instance_count
   nfs_export_path              = local.nfs_export_path
   anvil_hostname               = length(module.anvil.anvil_host_names) == 0 ? "" : module.anvil.anvil_host_names[0]
@@ -182,19 +182,15 @@ output "hammerspace_webui_username" {
 }
 
 output "hammerspace_webui_password" {
-  value = module.anvil.web_ui_password
+  value = module.anvil.web_ui_password[0]
 }
 
 output "anvil_data_cluster_ip" {
   value = module.anvil.anvil_data_cluster_ip
 }
 
-output "anvil_data_cluster_data0_ip" {
-  value = module.anvil.anvil_data_cluster_data0_ip
-}
-
-output "anvil_data_cluster_data1_ip" {
-  value = module.anvil.anvil_data_cluster_data1_ip
+output "anvil_data_cluster_data_ips" {
+  value = module.anvil.anvil_data_cluster_data_ips
 }
 
 output "nfs_mountable_ips" {
