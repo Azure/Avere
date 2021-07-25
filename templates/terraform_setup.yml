@@ -114,6 +114,8 @@ steps:
     check_rc.sh ${PIPESTATUS[0]} "Wait for the VM's cloud-init to complete" || exit 0
     grep -q 'status: done' ${cmdlog}
 
+    sleep 20
+
   displayName: 'Terraform: setup ${{ parameters.run_terraform }}'
   env:
     AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
