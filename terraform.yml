@@ -130,8 +130,8 @@ jobs:
       scale_up_node_count: ${{ parameters.scale_up_node_count }}
       vdbench_config: ${{ parameters.vdbench_config }}
 
-  # - ${{ if ne(parameters.ssh_pub_key, '.') }}:
-  #   - template: templates/add_sshkey.yml
+  - ${{ if ne(parameters.ssh_pub_key, '.') }}:
+    - template: templates/add_sshkey.yml
 
   - ${{ if eq(parameters.run_vdbench, true) }}:
     - ${{ if eq(parameters.tf_config, 'azureblobfiler') }}:
@@ -149,7 +149,6 @@ jobs:
       - template: templates/terraform_run.yml
         parameters:
           run: scaledown
-          condition: succeeded()
   - ${{ if eq(parameters.run_destroy_and_cleanup, true) }}:
     - ${{ if eq(parameters.run_vdbench, true) }}:
       - ${{ if eq(parameters.tf_config, 'azureblobfiler') }}:
@@ -159,5 +158,6 @@ jobs:
     - template: templates/terraform_run.yml
       parameters:
         run: destroy
+        condition: always()
     - template: templates/rg_delete.yml
   - template: templates/public_ip_delete.yml

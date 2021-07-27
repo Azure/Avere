@@ -11,7 +11,7 @@ parameters:
   - "destroy"
 - name: condition
   type: string
-  default: "always()"
+  default: "succeeded()"
   values:
     - "always()"
     - "succeededOrFailed()"
