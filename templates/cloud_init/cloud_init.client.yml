@@ -126,8 +126,13 @@ write_files:
         -e "s/storage_account_name\s*= \"storageaccount\"/storage_account_name = \"$RESOURCE_GROUP_NAME\"/" \
         -e 's/vfxt_node_count\s*= 3/vfxt_node_count = <original_node_count>/' main.tf
 
+      echo "terraform init"
       terraform init
+      [ $? -ne 0 ] && error "terraform init."
+
+      echo "terraform apply"
       terraform apply -auto-approve
+      [ $? -ne 0 ] && error "terraform apply."
 
   - path: /opt/scaleup.sh
     permissions: '0755'
@@ -159,8 +164,13 @@ write_files:
 
       sed -i -E -e 's/vfxt_node_count\s*= <original_node_count>/vfxt_node_count = <new_node_count>/' main.tf
 
+      echo "terraform init"
       terraform init
+      [ $? -ne 0 ] && error "terraform init."
+
+      echo "terraform apply"
       terraform apply -auto-approve
+      [ $? -ne 0 ] && error "terraform apply."
 
   - path: /opt/scaledown.sh
     permissions: '0755'
@@ -192,8 +202,13 @@ write_files:
 
       sed -i -E -e 's/vfxt_node_count\s*= <new_node_count>/vfxt_node_count = <original_node_count>/' main.tf
 
+      echo "terraform init"
       terraform init
+      [ $? -ne 0 ] && error "terraform init."
+
+      echo "terraform apply"
       terraform apply -auto-approve
+      [ $? -ne 0 ] && error "terraform apply."
 
   - path: /opt/destroy.sh
     permissions: '0755'
@@ -223,8 +238,13 @@ write_files:
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
       [ $? -ne 0 ] && error "filepath."
 
+      echo "terraform init"
       terraform init
+      [ $? -ne 0 ] && error "terraform init."
+
+      echo "terraform destroy"
       terraform destroy -auto-approve
+      [ $? -ne 0 ] && error "terraform destroy."
 
   - path: /opt/vdbench_destroy.sh
     permissions: '0755'
@@ -269,8 +289,12 @@ write_files:
 
       cd ../vdbench
 
+      echo "terraform init"
       terraform init
-      TF_LOG=INFO terraform destroy -auto-approve -var="location=${REGION}" \
+      [ $? -ne 0 ] && error "terraform init."
+
+      echo "terraform destroy"
+      terraform destroy -auto-approve -var="location=${REGION}" \
         -var="vmss_resource_group_name=${RESOURCE_GROUP_NAME}-vmss" \
         -var="controller_address=${CONTROLLER_ADDRESS}" \
         -var="controller_username=${USERNAME}" \
@@ -279,6 +303,8 @@ write_files:
         -var="nfs_export_path=${NFS_EXPORT_PATH}" \
         -var="vdbench_url=<vdbench_download_url>" \
         -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network"
+
+      [ $? -ne 0 ] && error "terraform destroy."
 
   - path: /opt/vdbench_run.sh
     permissions: '0755'
@@ -324,8 +350,12 @@ write_files:
 
       cd ../vdbench
 
+      echo "terraform init"
       terraform init
-      TF_LOG=INFO terraform apply -auto-approve -var="location=${REGION}" \
+      [ $? -ne 0 ] && error "terraform init."
+
+      echo "terraform apply"
+      terraform apply -auto-approve -var="location=${REGION}" \
         -var="vmss_resource_group_name=${RESOURCE_GROUP_NAME}-vmss" \
         -var="controller_address=${CONTROLLER_ADDRESS}" \
         -var="controller_username=${USERNAME}" \
@@ -334,6 +364,8 @@ write_files:
         -var="nfs_export_path=${NFS_EXPORT_PATH}" \
         -var="vdbench_url=<vdbench_download_url>" \
         -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network"
+
+      [ $? -ne 0 ] && error "terraform apply."
 
       echo "vdbench terraform outputs"
       IP_ADDRESS_COMMAND=$(terraform output -json | jq -r ".vmss_addresses_command.value")
