@@ -32,9 +32,11 @@ steps:
 
     az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
     az account set -s $ARM_SUBSCRIPTION_ID
+    check_rc.sh $? "Log into Azure and set the default subscription." || exit 0
     echo "##[group]Create runner resource group in ${REGION}"
     az group create --location ${REGION} --name ${RESOURCE_GROUP_NAME}
     check_rc.sh $? "Create resource group (${RESOURCE_GROUP_NAME}) in ${REGION}" || exit 0
+    echo "##[endgroup]"
 
     echo "##[group]Create network resources in ${RESOURCE_GROUP_NAME}"
     az network nsg create \
@@ -58,7 +60,6 @@ steps:
       --name                   ${SUBNET} \
       --service-endpoints      Microsoft.Storage
     check_rc.sh $? "Add Microsoft.Storage to subnet ${SUBNET} in ${VNET}" || exit 0
-    echo "##[endgroup]"
 
     # Prepare the cloud-init file.
     cloud_init_file=${BUILD_SOURCESDIRECTORY}/templates/cloud_init/cloud_init.client.yml
@@ -100,9 +101,10 @@ steps:
       --image 'Canonical:0001-com-ubuntu-server-focal:20_04-lts:latest' \
       --public-ip-address "" \
       --size Standard_DS2_v2 \
+      --nsg "" \
       --custom-data ${BUILD_SOURCESDIRECTORY}/templates/cloud_init/cloud_init.client.yml
 
-    check_rc.sh $? "VM Create" || exit
+    check_rc.sh $? "VM Create and VFXT Create" || exit
 
     cmdlog=/tmp/vm_runcmd.log
     az vm run-command invoke                  \
@@ -111,8 +113,9 @@ steps:
       --command-id RunShellScript             \
       --scripts "cloud-init status --wait"    \
       --query 'value[0].message' --output tsv | tee ${cmdlog}
-    check_rc.sh ${PIPESTATUS[0]} "Wait for the VM's cloud-init to complete" || exit 0
+    check_rc.sh ${PIPESTATUS[0]} "Wait for the VM's cloud-init to complete(creates vfxt)" || exit 0
     grep -q 'status: done' ${cmdlog}
+    check_rc.sh $? "Wait for cloud-init completion. Cloud-init create vfxt." || exit 0
 
     sleep 20
 
