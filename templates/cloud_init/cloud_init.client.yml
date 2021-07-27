@@ -29,7 +29,6 @@ write_files:
       export AVERE_ADMIN_PW='<avere_admin_pw>'
       export VNET_NAME='<vnet_name>'
       export TF_VFXT_CONFIG='<terraform_file_config>'
-      export LINUX_USER='<vm_admin_user>'
 
       apt-get update
       apt install azure-cli jq unzip -y
