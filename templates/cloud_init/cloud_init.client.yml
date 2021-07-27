@@ -50,11 +50,11 @@ write_files:
       [ $? -ne 0 ] && error "unzip."
 
       echo "mv tf"
-      sudo mv terraform /usr/local/bin
+      mv terraform /usr/local/bin
       [ $? -ne 0 ] && error "mv tf."
 
       echo "chmod"
-      sudo chmod 755 /usr/local/bin/terraform
+      chmod 755 /usr/local/bin/terraform
       [ $? -ne 0 ] && error "chmod."
 
       echo "version"
