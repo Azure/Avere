@@ -1,4 +1,7 @@
 #cloud-config
+packages:
+- jq
+- unzip
 
 final_message: "<> DONE: Cloud-Init COMPLETE. The VM is UP and READY ($UPTIME seconds elapsed)."
 
@@ -31,23 +34,23 @@ write_files:
       export TF_VFXT_CONFIG='<terraform_file_config>'
 
       apt-get update
-      apt install azure-cli jq unzip -y
+      apt install azure-cli -y
 
-      echo "az login"
-      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
-      [ $? -ne 0 ] && error "az login."
+      # echo "az login"
+      # az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+      # [ $? -ne 0 ] && error "az login."
 
       echo "az acct set"
       az account set -s $ARM_SUBSCRIPTION_ID
       [ $? -ne 0 ] && error "az acct set."
 
-      echo "wget"
+      echo "wget terraform zip"
       wget https://releases.hashicorp.com/terraform/0.15.0/terraform_0.15.0_linux_amd64.zip
-      [ $? -ne 0 ] && error "wget."
+      [ $? -ne 0 ] && error "wget terraform zip."
 
-      echo "unzip"
+      echo "unzip terraform.zip"
       unzip terraform_0.15.0_linux_amd64.zip
-      [ $? -ne 0 ] && error "unzip."
+      [ $? -ne 0 ] && error "unzip terraform.zip ."
 
       echo "mv tf"
       mv terraform /usr/local/bin
@@ -57,9 +60,9 @@ write_files:
       chmod 755 /usr/local/bin/terraform
       [ $? -ne 0 ] && error "chmod."
 
-      echo "version"
+      echo "version of repo"
       version=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name | sed -e 's/[^0-9]*\([0-9].*\)$/\1/')
-      [ $? -ne 0 ] && error "version."
+      [ $? -ne 0 ] && error "version of repo."
 
       echo "browser_download"
       browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[].browser_download_url | grep -e "terraform-provider-avere$")
@@ -69,21 +72,17 @@ write_files:
       mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
       [ $? -ne 0 ] && error "mkdir."
 
-      echo "wget2"
+      echo "wget terraform-provider-avere"
       wget -O ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version $browser_download_url
-      [ $? -ne 0 ] && error "wget2."
+      [ $? -ne 0 ] && error "wget terraform-provider-avere."
 
       echo "chmod2"
       chmod 755 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version
       [ $? -ne 0 ] && error "chmod2."
 
-      echo "mkdir tf"
-      mkdir tf
-      [ $? -ne 0 ] && error "mkdir tf."
-
-      echo "cd tf"
-      cd tf
-      [ $? -ne 0 ] && error "cd tf."
+      echo "mkdir tf && cd tf"
+      mkdir tf && cd tf
+      [ $? -ne 0 ] && error "mkdir tf && cd tf."
 
       echo "git init"
       git init
@@ -113,6 +112,7 @@ write_files:
       sshkey="<ssh_key> azureuser@linuxvm"
       [ $? -ne 0 ] && error "sshkey."
 
+      echo "sed command"
       sed -i -E -e "s:vm_ssh_key_data = null:vm_ssh_key_data = \"${sshkey}\":" \
         -e "s/location\s*= \"eastus\"/location = \"${REGION}\"/" \
         -e "s/open_external_sources\s*= [\"*\"]/open_external_sources = [\"AzureCloud\"]/" \
@@ -125,6 +125,8 @@ write_files:
         -e "s/peer_vnet_name\s*= \"\"/peer_vnet_name = \"$VNET_NAME\"/" \
         -e "s/storage_account_name\s*= \"storageaccount\"/storage_account_name = \"$RESOURCE_GROUP_NAME\"/" \
         -e 's/vfxt_node_count\s*= 3/vfxt_node_count = <original_node_count>/' main.tf
+
+      [ $? -ne 0 ] && error "sed command."
 
       echo "terraform init"
       terraform init
@@ -150,19 +152,13 @@ write_files:
       export ARM_TENANT_ID='<arm_tenant_id>'
       export TF_VFXT_CONFIG='<terraform_file_config>'
 
-      echo "az login"
-      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
-      [ $? -ne 0 ] && error "az login."
-
-      echo "az acct set"
-      az account set -s $ARM_SUBSCRIPTION_ID
-      [ $? -ne 0 ] && error "az acct set."
-
       echo "to file path"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
       [ $? -ne 0 ] && error "filepath."
 
+      echo "sed command"
       sed -i -E -e 's/vfxt_node_count\s*= <original_node_count>/vfxt_node_count = <new_node_count>/' main.tf
+      [ $? -ne 0 ] && error "sed command."
 
       echo "terraform init"
       terraform init
@@ -188,19 +184,13 @@ write_files:
       export ARM_TENANT_ID='<arm_tenant_id>'
       export TF_VFXT_CONFIG='<terraform_file_config>'
 
-      echo "az login"
-      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
-      [ $? -ne 0 ] && error "az login."
-
-      echo "az acct set"
-      az account set -s $ARM_SUBSCRIPTION_ID
-      [ $? -ne 0 ] && error "az acct set."
-
       echo "to file path"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
       [ $? -ne 0 ] && error "filepath."
 
+      echo "sed command"
       sed -i -E -e 's/vfxt_node_count\s*= <new_node_count>/vfxt_node_count = <original_node_count>/' main.tf
+      [ $? -ne 0 ] && error "sed command."
 
       echo "terraform init"
       terraform init
@@ -225,14 +215,6 @@ write_files:
       export ARM_CLIENT_SECRET='<arm_client_scrt>'
       export ARM_TENANT_ID='<arm_tenant_id>'
       export TF_VFXT_CONFIG='<terraform_file_config>'
-
-      echo "az login"
-      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
-      [ $? -ne 0 ] && error "az login."
-
-      echo "az acct set"
-      az account set -s $ARM_SUBSCRIPTION_ID
-      [ $? -ne 0 ] && error "az acct set."
 
       echo "to file path"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
@@ -263,14 +245,6 @@ write_files:
       export REGION='<region>'
       export RESOURCE_GROUP_NAME='<resource_group_name>'
       export TF_VFXT_CONFIG='<terraform_file_config>'
-
-      echo "az login"
-      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
-      [ $? -ne 0 ] && error "az login."
-
-      echo "az acct set"
-      az account set -s $ARM_SUBSCRIPTION_ID
-      [ $? -ne 0 ] && error "az acct set."
 
       echo "to file path"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
@@ -324,14 +298,6 @@ write_files:
       export REGION='<region>'
       export RESOURCE_GROUP_NAME='<resource_group_name>'
       export TF_VFXT_CONFIG='<terraform_file_config>'
-
-      echo "az login"
-      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
-      [ $? -ne 0 ] && error "az login."
-
-      echo "az acct set"
-      az account set -s $ARM_SUBSCRIPTION_ID
-      [ $? -ne 0 ] && error "az acct set."
 
       echo "to file path"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
