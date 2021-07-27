@@ -18,7 +18,6 @@ write_files:
         exit 1
       }
 
-      export AZURE_SUBSCRIPTION='<sub_id>'
       export ARM_SUBSCRIPTION_ID='<sub_id>'
       export ARM_CLIENT_ID='<arm_client_id>'
       export ARM_CLIENT_SECRET='<arm_client_scrt>'
@@ -40,7 +39,7 @@ write_files:
       [ $? -ne 0 ] && error "az login."
 
       echo "az acct set"
-      az account set -s $AZURE_SUBSCRIPTION
+      az account set -s $ARM_SUBSCRIPTION_ID
       [ $? -ne 0 ] && error "az acct set."
 
       echo "wget"
@@ -141,7 +140,6 @@ write_files:
         exit 1
       }
 
-      export AZURE_SUBSCRIPTION='<sub_id>'
       export ARM_SUBSCRIPTION_ID='<sub_id>'
       export ARM_CLIENT_ID='<arm_client_id>'
       export ARM_CLIENT_SECRET='<arm_client_scrt>'
@@ -153,7 +151,7 @@ write_files:
       [ $? -ne 0 ] && error "az login."
 
       echo "az acct set"
-      az account set -s $AZURE_SUBSCRIPTION
+      az account set -s $ARM_SUBSCRIPTION_ID
       [ $? -ne 0 ] && error "az acct set."
 
       echo "to file path"
@@ -175,7 +173,6 @@ write_files:
         exit 1
       }
 
-      export AZURE_SUBSCRIPTION='<sub_id>'
       export ARM_SUBSCRIPTION_ID='<sub_id>'
       export ARM_CLIENT_ID='<arm_client_id>'
       export ARM_CLIENT_SECRET='<arm_client_scrt>'
@@ -187,7 +184,7 @@ write_files:
       [ $? -ne 0 ] && error "az login."
 
       echo "az acct set"
-      az account set -s $AZURE_SUBSCRIPTION
+      az account set -s $ARM_SUBSCRIPTION_ID
       [ $? -ne 0 ] && error "az acct set."
 
       echo "to file path"
@@ -209,7 +206,6 @@ write_files:
         exit 1
       }
 
-      export AZURE_SUBSCRIPTION='<sub_id>'
       export ARM_SUBSCRIPTION_ID='<sub_id>'
       export ARM_CLIENT_ID='<arm_client_id>'
       export ARM_CLIENT_SECRET='<arm_client_scrt>'
@@ -221,7 +217,7 @@ write_files:
       [ $? -ne 0 ] && error "az login."
 
       echo "az acct set"
-      az account set -s $AZURE_SUBSCRIPTION
+      az account set -s $ARM_SUBSCRIPTION_ID
       [ $? -ne 0 ] && error "az acct set."
 
       echo "to file path"
@@ -241,7 +237,6 @@ write_files:
         exit 1
       }
 
-      export AZURE_SUBSCRIPTION='<sub_id>'
       export ARM_SUBSCRIPTION_ID='<sub_id>'
       export ARM_CLIENT_ID='<arm_client_id>'
       export ARM_CLIENT_SECRET='<arm_client_scrt>'
@@ -255,7 +250,7 @@ write_files:
       [ $? -ne 0 ] && error "az login."
 
       echo "az acct set"
-      az account set -s $AZURE_SUBSCRIPTION
+      az account set -s $ARM_SUBSCRIPTION_ID
       [ $? -ne 0 ] && error "az acct set."
 
       echo "to file path"
@@ -310,7 +305,7 @@ write_files:
       [ $? -ne 0 ] && error "az login."
 
       echo "az acct set"
-      az account set -s $AZURE_SUBSCRIPTION
+      az account set -s $ARM_SUBSCRIPTION_ID
       [ $? -ne 0 ] && error "az acct set."
 
       echo "to file path"
