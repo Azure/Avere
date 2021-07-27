@@ -3,7 +3,7 @@
 parameters:
 - name: original_node_count
   type: string
-- name: run_terraform
+- name: tf_config
   type: string
 - name: image
   type: string
@@ -119,7 +119,7 @@ steps:
 
     sleep 20
 
-  displayName: 'Terraform: setup ${{ parameters.run_terraform }}'
+  displayName: 'Terraform: setup ${{ parameters.tf_config }}'
   env:
     AVERE_ADMIN_PW: $(AVERE-ADMIN-PW)
     ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
