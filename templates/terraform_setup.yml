@@ -33,7 +33,6 @@ steps:
     az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID &&
     az account set -s $ARM_SUBSCRIPTION_ID
     check_rc.sh $? "Login to Azure and set default subscription" || exit 0
-    check_rc.sh $? "Log into Azure and set the default subscription." || exit 0
     echo "##[group]Create runner resource group in ${REGION}"
     az group create --location ${REGION} --name ${RESOURCE_GROUP_NAME}
     check_rc.sh $? "Create resource group (${RESOURCE_GROUP_NAME}) in ${REGION}" || exit 0
