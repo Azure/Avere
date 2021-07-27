@@ -28,7 +28,7 @@ write_files:
       export VFXT_IMAGE='<vfxt_image>'
       export AVERE_ADMIN_PW='<avere_admin_pw>'
       export VNET_NAME='<vnet_name>'
-      export RUN_TERRAFORM_FILE='<run_terraform_file>'
+      export TF_VFXT_CONFIG='<terraform_file_config>'
       export LINUX_USER='<vm_admin_user>'
 
       apt-get update
@@ -107,7 +107,7 @@ write_files:
       [ $? -ne 0 ] && error "git pull."
 
       echo "to file path"
-      cd src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
+      cd src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
       [ $? -ne 0 ] && error "filepath."
 
       echo "sskey"
@@ -144,7 +144,7 @@ write_files:
       export ARM_CLIENT_ID='<arm_client_id>'
       export ARM_CLIENT_SECRET='<arm_client_scrt>'
       export ARM_TENANT_ID='<arm_tenant_id>'
-      export RUN_TERRAFORM_FILE='<run_terraform_file>'
+      export TF_VFXT_CONFIG='<terraform_file_config>'
 
       echo "az login"
       az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
@@ -155,7 +155,7 @@ write_files:
       [ $? -ne 0 ] && error "az acct set."
 
       echo "to file path"
-      cd /tf/src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
+      cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
       [ $? -ne 0 ] && error "filepath."
 
       sed -i -E -e 's/vfxt_node_count\s*= <original_node_count>/vfxt_node_count = <new_node_count>/' main.tf
@@ -177,7 +177,7 @@ write_files:
       export ARM_CLIENT_ID='<arm_client_id>'
       export ARM_CLIENT_SECRET='<arm_client_scrt>'
       export ARM_TENANT_ID='<arm_tenant_id>'
-      export RUN_TERRAFORM_FILE='<run_terraform_file>'
+      export TF_VFXT_CONFIG='<terraform_file_config>'
 
       echo "az login"
       az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
@@ -188,7 +188,7 @@ write_files:
       [ $? -ne 0 ] && error "az acct set."
 
       echo "to file path"
-      cd /tf/src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
+      cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
       [ $? -ne 0 ] && error "filepath."
 
       sed -i -E -e 's/vfxt_node_count\s*= <new_node_count>/vfxt_node_count = <original_node_count>/' main.tf
@@ -210,7 +210,7 @@ write_files:
       export ARM_CLIENT_ID='<arm_client_id>'
       export ARM_CLIENT_SECRET='<arm_client_scrt>'
       export ARM_TENANT_ID='<arm_tenant_id>'
-      export RUN_TERRAFORM_FILE='<run_terraform_file>'
+      export TF_VFXT_CONFIG='<terraform_file_config>'
 
       echo "az login"
       az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
@@ -221,7 +221,7 @@ write_files:
       [ $? -ne 0 ] && error "az acct set."
 
       echo "to file path"
-      cd /tf/src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
+      cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
       [ $? -ne 0 ] && error "filepath."
 
       terraform init
@@ -243,7 +243,7 @@ write_files:
       export ARM_TENANT_ID='<arm_tenant_id>'
       export REGION='<region>'
       export RESOURCE_GROUP_NAME='<resource_group_name>'
-      export RUN_TERRAFORM_FILE='<run_terraform_file>'
+      export TF_VFXT_CONFIG='<terraform_file_config>'
 
       echo "az login"
       az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
@@ -254,7 +254,7 @@ write_files:
       [ $? -ne 0 ] && error "az acct set."
 
       echo "to file path"
-      cd /tf/src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
+      cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
       [ $? -ne 0 ] && error "filepath."
 
       echo "terraform outputs"
@@ -298,7 +298,7 @@ write_files:
       export ARM_TENANT_ID='<arm_tenant_id>'
       export REGION='<region>'
       export RESOURCE_GROUP_NAME='<resource_group_name>'
-      export RUN_TERRAFORM_FILE='<run_terraform_file>'
+      export TF_VFXT_CONFIG='<terraform_file_config>'
 
       echo "az login"
       az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
@@ -309,7 +309,7 @@ write_files:
       [ $? -ne 0 ] && error "az acct set."
 
       echo "to file path"
-      cd /tf/src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
+      cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
       [ $? -ne 0 ] && error "filepath."
 
       echo "terraform outputs"

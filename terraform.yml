@@ -52,8 +52,8 @@ parameters:
       - "westus3"
       - "westeurope"
       - "westindia"
-  - name: run_terraform
-    displayName: "Select terraform example to run"
+  - name: tf_config
+    displayName: "Select terraform config to setup"
     type: string
     default: "azureblobfiler"
     values:
@@ -119,12 +119,12 @@ jobs:
   - template: templates/setup_ssh.yml
   - template: templates/setup_envars.yml
     parameters:
-      run_terraform: ${{ parameters.run_terraform }}
+      tf_config: ${{ parameters.tf_config }}
       region: ${{ parameters.region }}
   - template: templates/terraform_setup.yml
     parameters:
       original_node_count: ${{ parameters.original_node_count }}
-      run_terraform: ${{ parameters.run_terraform }}
+      tf_config: ${{ parameters.tf_config }}
       image: ${{ parameters.image }}
       controller_image: ${{ parameters.controller_image }}
       scale_up_node_count: ${{ parameters.scale_up_node_count }}
@@ -134,7 +134,7 @@ jobs:
   #   - template: templates/add_sshkey.yml
 
   - ${{ if eq(parameters.run_vdbench, true) }}:
-    - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
+    - ${{ if eq(parameters.tf_config, 'azureblobfiler') }}:
       - template: templates/terraform_run.yml
         parameters:
           run: vdbench_run
@@ -152,7 +152,7 @@ jobs:
           condition: succeeded()
   - ${{ if eq(parameters.run_destroy_and_cleanup, true) }}:
     - ${{ if eq(parameters.run_vdbench, true) }}:
-      - ${{ if eq(parameters.run_terraform, 'azureblobfiler') }}:
+      - ${{ if eq(parameters.tf_config, 'azureblobfiler') }}:
         - template: templates/terraform_run.yml
           parameters:
             run: vdbench_destroy

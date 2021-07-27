@@ -2,7 +2,7 @@
 # https://aka.ms/yaml
 steps:
 - script: |
-    cd src/terraform/examples/vfxt/${RUN_TERRAFORM_FILE}
+    cd src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
     CONTROLLER_ADDRESS=$(terraform output -json | jq -r ".controller_address.value")
     USERNAME=$(terraform output -json | jq -r ".controller_username.value")
 

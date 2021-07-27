@@ -1,7 +1,7 @@
 # Copyright (C) Microsoft Corporation. All rights reserved.
 # https://aka.ms/yaml
 parameters:
-- name: run_terraform
+- name: tf_config
   type: string
 - name: region
   type: string
@@ -16,7 +16,7 @@ steps:
     SUBNET="subnet-${resource_group}"
     echo "##vso[task.setvariable variable=REGION]${{ parameters.region }}"
     echo "##vso[task.setvariable variable=RESOURCE_GROUP_NAME]${resource_group}"
-    echo "##vso[task.setvariable variable=RUN_TERRAFORM_FILE]${{ parameters.run_terraform }}"
+    echo "##vso[task.setvariable variable=TF_VFXT_CONFIG]${{ parameters.tf_config }}"
     echo "##vso[task.setvariable variable=VM_NAME]${VM_NAME}"
     echo "##vso[task.setvariable variable=VNET]${VNET}"
     echo "##vso[task.setvariable variable=VNET_ADDR_PREFIX]${VNET_ADDR_PREFIX}"

@@ -79,7 +79,7 @@ steps:
       -e "s/<arm_tenant_id>/$ARM_TENANT_ID/" \
       -e "s/<resource_group_name>/$RESOURCE_GROUP_NAME/" \
       -e "s/<vnet_name>/$VNET/" \
-      -e "s/<run_terraform_file>/$RUN_TERRAFORM_FILE/" \
+      -e "s/<terraform_file_config>/$TF_VFXT_CONFIG/" \
       -e "s,<ssh_key>,$(cat ~/.ssh/id_rsa.pub)," \
       -e "s/<vm_admin_user>/azureuser/" \
       -e "s/<controller_image>/${{ parameters.controller_image }}/" \
