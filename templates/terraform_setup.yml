@@ -115,7 +115,17 @@ steps:
       --query 'value[0].message' --output tsv | tee ${cmdlog}
     check_rc.sh ${PIPESTATUS[0]} "Wait for the VM's cloud-init to complete" || exit 0
     grep -q 'status: done' ${cmdlog}
-    check_rc.sh $? "Wait for cloud-init completion. Cloud-init create vfxt" || exit 0
+    check_rc.sh $? "Wait for cloud-init completion. Create vfxt"
+
+    az vm run-command invoke                          \
+      --command-id     RunShellScript                 \
+      --name           ${VM_NAME}                     \
+      --resource-group ${RESOURCE_GROUP_NAME}         \
+      --scripts "tail -100 /var/log/cloud-init-output.log" \
+      --query 'value[0].message' --output tsv | tee /tmp/cloud-init_output.log
+
+    grep -q 'DONE: Cloud-Init COMPLETE' /tmp/cloud-init_output.log
+    check_rc.sh $? "Cloud-init status check" || exit
 
     sleep 20
 

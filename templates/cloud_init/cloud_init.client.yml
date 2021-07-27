@@ -16,8 +16,10 @@ write_files:
     content: |
       #!/bin/bash
 
+      set -x
+
       function error() {
-        >&2 echo "echo >< ERROR: $* See log for details."
+        echo "echo >< ERROR: $* See log for details."
         exit 1
       }
 
@@ -136,13 +138,15 @@ write_files:
       terraform apply -auto-approve
       [ $? -ne 0 ] && error "terraform apply."
 
+      echo "test - echo after apply"
+
   - path: /opt/scaleup.sh
     permissions: '0755'
     content: |
       #!/bin/bash
 
       function error() {
-        >&2 echo "echo >< ERROR: $* See log for details."
+        echo "echo >< ERROR: $* See log for details."
         exit 1
       }
 
@@ -174,7 +178,7 @@ write_files:
       #!/bin/bash
 
       function error() {
-        >&2 echo "echo >< ERROR: $* See log for details."
+        echo "echo >< ERROR: $* See log for details."
         exit 1
       }
 
@@ -206,7 +210,7 @@ write_files:
       #!/bin/bash
 
       function error() {
-        >&2 echo "echo >< ERROR: $* See log for details."
+        echo "echo >< ERROR: $* See log for details."
         exit 1
       }
 
@@ -234,7 +238,7 @@ write_files:
       #!/bin/bash
 
       function error() {
-        >&2 echo "echo >< ERROR: $* See log for details."
+        echo "echo >< ERROR: $* See log for details."
         exit 1
       }
 
@@ -286,7 +290,7 @@ write_files:
       #!/bin/bash
 
       function error() {
-        >&2 echo "echo >< ERROR: $* See log for details."
+        echo "echo >< ERROR: $* See log for details."
         exit 1
       }
 
@@ -353,7 +357,9 @@ write_files:
       [ $? -ne 0 ] && error "run vdbench."
 
 runcmd:
+  - "set -e"
   - "echo '# STEP: Setup SSH key.'"
   - "cp -v /root/.ssh/id_rsa /home/<vm_admin_user>/.ssh/id_rsa"
   - "/opt/setup_environment.sh"
+  - "echo '#TEST'"
 
