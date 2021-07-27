@@ -40,9 +40,9 @@ write_files:
       # az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
       # [ $? -ne 0 ] && error "az login."
 
-      echo "az acct set"
-      az account set -s $ARM_SUBSCRIPTION_ID
-      [ $? -ne 0 ] && error "az acct set."
+      # echo "az acct set"
+      # az account set -s $ARM_SUBSCRIPTION_ID
+      # [ $? -ne 0 ] && error "az acct set."
 
       echo "wget terraform zip"
       wget https://releases.hashicorp.com/terraform/0.15.0/terraform_0.15.0_linux_amd64.zip
