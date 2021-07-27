@@ -104,7 +104,7 @@ steps:
       --nsg "" \
       --custom-data ${BUILD_SOURCESDIRECTORY}/templates/cloud_init/cloud_init.client.yml
 
-    check_rc.sh $? "VM Create and VFXT Create" || exit
+    check_rc.sh $? "VM Create" || exit
 
     cmdlog=/tmp/vm_runcmd.log
     az vm run-command invoke                  \
@@ -113,9 +113,9 @@ steps:
       --command-id RunShellScript             \
       --scripts "cloud-init status --wait"    \
       --query 'value[0].message' --output tsv | tee ${cmdlog}
-    check_rc.sh ${PIPESTATUS[0]} "Wait for the VM's cloud-init to complete(creates vfxt)" || exit 0
+    check_rc.sh ${PIPESTATUS[0]} "Wait for the VM's cloud-init to complete" || exit 0
     grep -q 'status: done' ${cmdlog}
-    check_rc.sh $? "Wait for cloud-init completion. Cloud-init create vfxt." || exit 0
+    check_rc.sh $? "Wait for cloud-init completion. Cloud-init create vfxt" || exit 0
 
     sleep 20
 
