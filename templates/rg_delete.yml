@@ -3,6 +3,7 @@
 steps:
 - bash: |
     az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+    check_rc.sh $? "Az login" || exit 0
     for x in "-vmss" "-vfxt" "-filer" "-storage" "-proxy" "-network"; do
       rg_del_rc=111111
       exists=$(az group exists --name ${RESOURCE_GROUP_NAME}$x)

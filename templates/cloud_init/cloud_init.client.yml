@@ -368,7 +368,7 @@ write_files:
       [ $? -ne 0 ] && error "terraform apply."
 
       echo "vdbench terraform outputs"
-      IP_ADDRESS_COMMAND=$(terraform output -json | jq -r ".vmss_addresses_command.value")
+      IP_ADDRESS_COMMAND=$(terraform output -json | jq -r ".vmss_addresses_command.value") &&
       IP_ADDRESS=$(${IP_ADDRESS_COMMAND} | jq -r '.[0]')
       [ $? -ne 0 ] && error "vdbench terraform outputs."
 
