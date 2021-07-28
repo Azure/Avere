@@ -168,10 +168,11 @@ These modules provide core components for use with HPC Cache or Avere vFXT for A
 
 ### Cache Warmer
 
-1. [CacheWarmer Build](modules/cachewarmer_build) - build the cache warmer binaries, and build the bootstrap install directory for the CacheWarmer
-1. [CacheWarmer Manager Install](modules/cachewarmer_manager_install) - install the cachewarmer manager using the bootstrap install directory created by the CacheWarmer build process.
-1. [CacheWarmer Submit Job](modules/cachewarmer_submitjob) - submit the path to warm, and block until it is warmed.
-1. [CacheWarmer Submit Multiple Jobs](modules/cachewarmer_submitmultiplejobs) - submit multiple jobs to the cachewarmer.
+The Cache Warmer is deployed through 4 Terraform modules.  Examples that use these 4 modules are the following:
+* [HPC Cache and CacheWarmer](examples/HPC%20Cache/cachewarmer)
+* [Avere vFXT and CacheWarmer](examples/vfxt/cachewarmer)
+
+A good explanation of each of the modules is described in the [HPC Cache](examples/HPC%20Cache/cachewarmer#cachwarmer-installation) or [vFXT](examples/vfxt/cachewarmer#cachwarmer-installation) documentation.  For Locked down internet environments, customers will manually have to run the shell script of the cachewarmer module.
 
 ## Avere vFXT Terraform Provider
 
