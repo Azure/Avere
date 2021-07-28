@@ -57,6 +57,16 @@ steps:
         break
       fi
     done
+
+    az vm run-command invoke                          \
+      --command-id     RunShellScript                 \
+      --name           ${VM_NAME}                     \
+      --resource-group ${RESOURCE_GROUP_NAME}         \
+      --scripts "tail -100 /tmp/${{ parameters.run }}.txt" \
+      --query 'value[0].message' --output tsv | tee /tmp/cloud-init_output.log
+
+    grep -q 'complete! Resources:' /tmp/cloud-init_output.log
+    check_rc.sh $? "Terraform file check" || exit
   displayName: 'Terraform: ${{ parameters.run }}'
   condition: ${{ parameters.condition }}
 

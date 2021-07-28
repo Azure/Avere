@@ -133,7 +133,7 @@ write_files:
       [ $? -ne 0 ] && error "terraform init."
 
       echo "terraform apply"
-      terraform apply -auto-approve
+      terraform apply -auto-approve > /tmp/${TF_VFXT_CONFIG}.txt
       [ $? -ne 0 ] && error "terraform apply."
 
       echo "sleep 1 second"
@@ -168,7 +168,7 @@ write_files:
       [ $? -ne 0 ] && error "terraform init."
 
       echo "terraform apply"
-      terraform apply -auto-approve
+      terraform apply -auto-approve > /tmp/${TF_VFXT_CONFIG}.txt
       [ $? -ne 0 ] && error "terraform apply."
 
       echo "sleep 1 second"
@@ -203,7 +203,7 @@ write_files:
       [ $? -ne 0 ] && error "terraform init."
 
       echo "terraform apply"
-      terraform apply -auto-approve
+      terraform apply -auto-approve > /tmp/${TF_VFXT_CONFIG}.txt
       [ $? -ne 0 ] && error "terraform apply."
 
       echo "sleep 1 second"
@@ -234,7 +234,7 @@ write_files:
       [ $? -ne 0 ] && error "terraform init."
 
       echo "terraform destroy"
-      terraform destroy -auto-approve
+      terraform destroy -auto-approve > /tmp/${TF_VFXT_CONFIG}.txt
       [ $? -ne 0 ] && error "terraform destroy."
 
       echo "sleep 1 second"
@@ -288,7 +288,7 @@ write_files:
         -var="vserver_ip_addresses=${VSERVER_IP_ADDRESSES}" \
         -var="nfs_export_path=${NFS_EXPORT_PATH}" \
         -var="vdbench_url=<vdbench_download_url>" \
-        -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network"
+        -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network" > /tmp/${TF_VFXT_CONFIG}.txt
 
       [ $? -ne 0 ] && error "terraform destroy."
 
@@ -344,7 +344,7 @@ write_files:
         -var="vserver_ip_addresses=${VSERVER_IP_ADDRESSES}" \
         -var="nfs_export_path=${NFS_EXPORT_PATH}" \
         -var="vdbench_url=<vdbench_download_url>" \
-        -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network"
+        -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network" > /tmp/${TF_VFXT_CONFIG}.txt
 
       [ $? -ne 0 ] && error "terraform apply."
 
