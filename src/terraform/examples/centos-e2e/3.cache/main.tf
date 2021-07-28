@@ -217,6 +217,7 @@ resource "azurerm_network_security_rule" "allowazureresourcemanager" {
 }
 
 module "dnsserver" {
+  count               = data.terraform_remote_state.network.outputs.use_spoof_dns_server ? 1 : 0
   source              = "github.com/Azure/Avere/src/terraform/modules/dnsserver"
   resource_group_name = var.cache_rg
   location            = var.location

@@ -1,10 +1,10 @@
 # resource group to hold the cache
-cache_rg = "cache_rg"
+cache_rg = "aaa0707acache_rg"
 
 # VM access (jumpbox, vyos VM) 
 vm_admin_username = "azureuser"
 # vm ssh key, leave empty string if not used
-ssh_public_key = ""
+ssh_public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8fhkh3jpHUQsrUIezFB5k4Rq9giJM8G1Cr0u2IRMiqG++nat5hbOr3gODpTA0h11q9bzb6nJtK7NtDzIHx+w3YNIVpcTGLiUEsfUbY53IHg7Nl/p3/gkST3g0R6BSL7Hg45SfyvpH7kwY30MoVHG/6P3go4SKlYoHXlgaaNr3fMwUTIeE9ofvyS3fcr6xxlsoB6luKuEs50h0NGsE4QEnbfSY4Yd/C1ucc3mEw+QFXBIsENHfHfZYrLNHm2L8MXYVmAH8k//5sFs4Migln9GiUgEQUT6uOjowsZyXBbXwfT11og+syPkAq4eqjiC76r0w6faVihdBYVoc/UcyupgH azureuser@linuxvm"
 
 // controller settings, used for vfxt and cachewarmer
 controller_private_ip            = "10.0.1.254" // at end of range to not interfere with cache
@@ -16,7 +16,7 @@ queue_prefix_name                = "cachewarmer"
 // There are 2 Cache choices
 // "HPCCache" - deploys HPC Cache
 // "AverevFXT" - deploy AverevFXT
-cache_type = "HPCCache"
+cache_type = "AverevFXT"
 
 ////////////////////////////////////////////////////////////////
 // Set real_* vars if use_onprem_simulation set to true
