@@ -16,10 +16,8 @@ write_files:
     content: |
       #!/bin/bash
 
-      set -x
-
       function error() {
-        echo "echo >< ERROR: $* See log for details."
+        >&2 echo "echo >< ERROR: $* See log for details."
         exit 1
       }
 
@@ -138,7 +136,8 @@ write_files:
       terraform apply -auto-approve
       [ $? -ne 0 ] && error "terraform apply."
 
-      echo "test - echo after apply"
+      echo "sleep 1 second"
+      sleep 1
 
   - path: /opt/scaleup.sh
     permissions: '0755'
@@ -146,7 +145,7 @@ write_files:
       #!/bin/bash
 
       function error() {
-        echo "echo >< ERROR: $* See log for details."
+        >&2 echo "echo >< ERROR: $* See log for details."
         exit 1
       }
 
@@ -172,13 +171,16 @@ write_files:
       terraform apply -auto-approve
       [ $? -ne 0 ] && error "terraform apply."
 
+      echo "sleep 1 second"
+      sleep 1
+
   - path: /opt/scaledown.sh
     permissions: '0755'
     content: |
       #!/bin/bash
 
       function error() {
-        echo "echo >< ERROR: $* See log for details."
+        >&2 echo "echo >< ERROR: $* See log for details."
         exit 1
       }
 
@@ -204,13 +206,16 @@ write_files:
       terraform apply -auto-approve
       [ $? -ne 0 ] && error "terraform apply."
 
+      echo "sleep 1 second"
+      sleep 1
+
   - path: /opt/destroy.sh
     permissions: '0755'
     content: |
       #!/bin/bash
 
       function error() {
-        echo "echo >< ERROR: $* See log for details."
+        >&2 echo "echo >< ERROR: $* See log for details."
         exit 1
       }
 
@@ -232,13 +237,16 @@ write_files:
       terraform destroy -auto-approve
       [ $? -ne 0 ] && error "terraform destroy."
 
+      echo "sleep 1 second"
+      sleep 1
+
   - path: /opt/vdbench_destroy.sh
     permissions: '0755'
     content: |
       #!/bin/bash
 
       function error() {
-        echo "echo >< ERROR: $* See log for details."
+        >&2 echo "echo >< ERROR: $* See log for details."
         exit 1
       }
 
@@ -284,13 +292,16 @@ write_files:
 
       [ $? -ne 0 ] && error "terraform destroy."
 
+      echo "sleep 1 second"
+      sleep 1
+
   - path: /opt/vdbench_run.sh
     permissions: '0755'
     content: |
       #!/bin/bash
 
       function error() {
-        echo "echo >< ERROR: $* See log for details."
+        >&2 echo "echo >< ERROR: $* See log for details."
         exit 1
       }
 
@@ -357,9 +368,7 @@ write_files:
       [ $? -ne 0 ] && error "run vdbench."
 
 runcmd:
-  - "set -e"
   - "echo '# STEP: Setup SSH key.'"
   - "cp -v /root/.ssh/id_rsa /home/<vm_admin_user>/.ssh/id_rsa"
   - "/opt/setup_environment.sh"
-  - "echo '#TEST'"
 
