@@ -56,9 +56,9 @@ write_files:
       mv terraform /usr/local/bin
       [ $? -ne 0 ] && error "mv tf."
 
-      echo "chmod"
+      echo "chmod terraform executable to be globally runnable"
       chmod 755 /usr/local/bin/terraform
-      [ $? -ne 0 ] && error "chmod."
+      [ $? -ne 0 ] && error "chmod terraform executable."
 
       echo "version of repo"
       version=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name | sed -e 's/[^0-9]*\([0-9].*\)$/\1/')
@@ -371,4 +371,3 @@ runcmd:
   - "echo '# STEP: Setup SSH key.'"
   - "cp -v /root/.ssh/id_rsa /home/<vm_admin_user>/.ssh/id_rsa"
   - "/opt/setup_environment.sh"
-
