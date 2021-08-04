@@ -37,7 +37,7 @@ steps:
     echo "##[group]Create runner resource group in ${REGION}"
     az group create --location ${REGION} --name ${RESOURCE_GROUP_NAME}
     check_rc.sh $? "Create resource group (${RESOURCE_GROUP_NAME}) in ${REGION}" || exit 0
-
+    echo "##[endgroup]"
     echo "##[group]Create network resources in ${RESOURCE_GROUP_NAME}"
     az network nsg create \
       --resource-group ${RESOURCE_GROUP_NAME} \
