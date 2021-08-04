@@ -342,8 +342,6 @@ write_files:
       IP_ADDRESS=$(${IP_ADDRESS_COMMAND} | jq -r '.[0]')
       [ $? -ne 0 ] && error "vdbench terraform outputs."
 
-      echo "ssh"
-      ssh -o "StrictHostKeyChecking=no" -oProxyCommand="ssh -oStrictHostKeyChecking=no -W %h:%p  ${USERNAME}@${CONTROLLER_ADDRESS}" ${USERNAME}@${IP_ADDRESS} ls
       echo ">> SCP CMD"
       scp -o "ProxyJump ${USERNAME}@${CONTROLLER_ADDRESS}" /root/.ssh/id_rsa ${USERNAME}@${IP_ADDRESS}:.ssh/id_rsa
       [ $? -ne 0 ] && error "ssh and scp."
