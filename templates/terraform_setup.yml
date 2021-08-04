@@ -128,6 +128,8 @@ steps:
     grep -q 'DONE: Cloud-Init COMPLETE' /tmp/cloud-init_output.log
     check_rc.sh $? "Cloud-init status check" || exit
 
+    # Cooldown for "az vm run-command invoke" before the next one.
+    # This solves a corner/race case when the command is run back-to-back.
     sleep 20
 
   displayName: 'Terraform: setup ${{ parameters.tf_config }}'
