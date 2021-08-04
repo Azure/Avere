@@ -108,7 +108,7 @@ write_files:
       cd src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
       [ $? -ne 0 ] && error "filepath."
 
-      echo "sskey"
+      echo "Add comment to SSH public key"
       sshkey="<ssh_key> azureuser@linuxvm"
       [ $? -ne 0 ] && error "sshkey."
 
