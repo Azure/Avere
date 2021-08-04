@@ -36,14 +36,6 @@ write_files:
       apt-get update
       apt install azure-cli -y
 
-      # echo "az login"
-      # az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
-      # [ $? -ne 0 ] && error "az login."
-
-      # echo "az acct set"
-      # az account set -s $ARM_SUBSCRIPTION_ID
-      # [ $? -ne 0 ] && error "az acct set."
-
       echo "wget terraform zip"
       wget https://releases.hashicorp.com/terraform/0.15.0/terraform_0.15.0_linux_amd64.zip
       [ $? -ne 0 ] && error "wget terraform zip."
@@ -76,9 +68,9 @@ write_files:
       wget -O ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version $browser_download_url
       [ $? -ne 0 ] && error "wget terraform-provider-avere."
 
-      echo "chmod2"
+      echo "chmod terraform provider avere"
       chmod 755 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version
-      [ $? -ne 0 ] && error "chmod2."
+      [ $? -ne 0 ] && error "chmod terraform provider avere"
 
       echo "mkdir tf && cd tf"
       mkdir tf && cd tf
@@ -100,9 +92,9 @@ write_files:
       echo "src/terraform/*" >> .git/info/sparse-checkout
       [ $? -ne 0 ] && error "src."
 
-      echo "git pull"
+      echo "git pull main branch"
       git pull origin main
-      [ $? -ne 0 ] && error "git pull."
+      [ $? -ne 0 ] && error "git pull main branch."
 
       echo "to file path"
       cd src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
@@ -136,8 +128,7 @@ write_files:
       terraform apply -auto-approve
       [ $? -ne 0 ] && error "terraform apply."
 
-      echo "sleep 1 second"
-      sleep 1
+      echo "DONE: end of $0"
 
   - path: /opt/scaleup.sh
     permissions: '0755'
@@ -167,12 +158,11 @@ write_files:
       terraform init
       [ $? -ne 0 ] && error "terraform init."
 
-      echo "terraform apply"
+      echo "terraform apply scaleup"
       terraform apply -auto-approve |& tee /tmp/scaleup.txt
-      [ $? -ne 0 ] && error "terraform apply."
+      [ $? -ne 0 ] && error "terraform apply scaleup."
 
-      echo "sleep 1 second"
-      sleep 1
+      echo "DONE: end of $0"
 
   - path: /opt/scaledown.sh
     permissions: '0755'
@@ -202,12 +192,11 @@ write_files:
       terraform init
       [ $? -ne 0 ] && error "terraform init."
 
-      echo "terraform apply"
+      echo "terraform apply scaledown"
       terraform apply -auto-approve |& tee /tmp/scaledown.txt
-      [ $? -ne 0 ] && error "terraform apply."
+      [ $? -ne 0 ] && error "terraform apply scale down."
 
-      echo "sleep 1 second"
-      sleep 1
+      echo "DONE: end of $0"
 
   - path: /opt/destroy.sh
     permissions: '0755'
@@ -237,8 +226,7 @@ write_files:
       terraform destroy -auto-approve |& tee /tmp/destroy.txt
       [ $? -ne 0 ] && error "terraform destroy."
 
-      echo "sleep 1 second"
-      sleep 1
+      echo "DONE: end of $0"
 
   - path: /opt/vdbench_destroy.sh
     permissions: '0755'
@@ -262,12 +250,14 @@ write_files:
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
       [ $? -ne 0 ] && error "filepath."
 
-      echo "terraform outputs"
-      CONTROLLER_ADDRESS=$(terraform output -json | jq -r ".controller_address.value")
-      USERNAME=$(terraform output -json | jq -r ".controller_username.value")
-      VSERVER_IP_ADDRESSES=$(terraform output -json | jq -c ".mount_addresses.value")
-      NFS_EXPORT_PATH=$(terraform output -json | jq -r ".mount_namespace_path.value")
-      [ $? -ne 0 ] && error "outputs."
+      echo "tee outputs to json"
+      terraform output -json |& tee /tmp/tf_output.json
+      [ $? -ne 0 ] && error "tee outputs to json"
+
+      CONTROLLER_ADDRESS=$(jq -r ".controller_address.value" /tmp/tf_output.json)
+      USERNAME=$(jq -r ".controller_username.value" /tmp/tf_output.json)
+      VSERVER_IP_ADDRESSES=$(jq -c ".mount_addresses.value" /tmp/tf_output.json)
+      NFS_EXPORT_PATH=$(jq -r ".mount_namespace_path.value" /tmp/tf_output.json)
 
       echo "sskey"
       sshkey="<ssh_key> azureuser@linuxvm"
@@ -292,8 +282,7 @@ write_files:
 
       [ $? -ne 0 ] && error "terraform destroy."
 
-      echo "sleep 1 second"
-      sleep 1
+      echo "DONE: end of $0"
 
   - path: /opt/vdbench_run.sh
     permissions: '0755'
@@ -366,6 +355,8 @@ write_files:
       echo ">> RUN VDBENCH"
       ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "tmux new-session -d \"/home/${USERNAME}/run_vdbench.sh <vdbench_config>.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1\""
       [ $? -ne 0 ] && error "run vdbench."
+
+      echo "DONE: end of $0"
 
 runcmd:
   - "echo '# STEP: Setup SSH key.'"
