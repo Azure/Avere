@@ -60,9 +60,9 @@ write_files:
       chmod 755 /usr/local/bin/terraform
       [ $? -ne 0 ] && error "chmod terraform executable."
 
-      echo "version of repo"
+      echo "Get the version of Azure/Avere repo"
       version=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name | sed -e 's/[^0-9]*\([0-9].*\)$/\1/')
-      [ $? -ne 0 ] && error "version of repo."
+      [ $? -ne 0 ] && error "Get the version of the Azure/Avere repo (${version})."
 
       echo "browser_download"
       browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[].browser_download_url | grep -e "terraform-provider-avere$")
