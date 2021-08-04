@@ -22,6 +22,7 @@ steps:
         done
       fi
     done
+    # Final delete is for the Resource group that has the VM runner in it.
     az group delete --yes --name ${RESOURCE_GROUP_NAME} --subscription ${ARM_SUBSCRIPTION_ID}
 
   displayName: 'RG Delete Check'
