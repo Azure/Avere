@@ -118,6 +118,10 @@ steps:
     grep -q 'status: done' ${cmdlog}
     check_rc.sh $? "Wait for cloud-init completion. Create vfxt"
 
+    # Cooldown for "az vm run-command invoke" before the next one.
+    # This solves a corner/race case when the command is run back-to-back.
+    sleep 20
+
     az vm run-command invoke                          \
       --command-id     RunShellScript                 \
       --name           ${VM_NAME}                     \
