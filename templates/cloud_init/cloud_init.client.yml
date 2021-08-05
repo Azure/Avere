@@ -44,9 +44,9 @@ write_files:
       unzip terraform_0.15.0_linux_amd64.zip
       [ $? -ne 0 ] && error "unzip terraform.zip ."
 
-      echo "mv tf"
+      echo "mv tf folder to /usr/local/bin"
       mv terraform /usr/local/bin
-      [ $? -ne 0 ] && error "mv tf."
+      [ $? -ne 0 ] && error "mv tf folder to /usr/local/bin."
 
       echo "chmod terraform executable to be globally runnable"
       chmod 755 /usr/local/bin/terraform
@@ -79,33 +79,33 @@ write_files:
 
       echo "git init"
       git init
-      [ $? -ne 0 ] && error "git init."
+      [ $? -ne 0 ] && error "git init - setup step"
 
       echo "git remote"
       git remote add origin -f https://github.com/Azure/Avere.git
-      [ $? -ne 0 ] && error "git remote."
+      [ $? -ne 0 ] && error "git remote - setup step"
 
-      echo "git config"
+      echo "git config cmd for setup"
       git config core.sparsecheckout true
-      [ $? -ne 0 ] && error "git config."
+      [ $? -ne 0 ] && error "git config - setup step."
 
-      echo "src"
+      echo "append src/terraform to /sparse-checkout"
       echo "src/terraform/*" >> .git/info/sparse-checkout
-      [ $? -ne 0 ] && error "src."
+      [ $? -ne 0 ] && error "append src/terraform to /sparse-checkout"
 
       echo "git pull main branch"
       git pull origin main
       [ $? -ne 0 ] && error "git pull main branch."
 
-      echo "to file path"
+      echo "cd to file path"
       cd src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
-      [ $? -ne 0 ] && error "filepath."
+      [ $? -ne 0 ] && error "cd to filepath: $TF_VFXT_CONFIG"
 
       echo "Add comment to SSH public key"
       sshkey="<ssh_key> azureuser@linuxvm"
-      [ $? -ne 0 ] && error "sshkey."
+      [ $? -ne 0 ] && error "Add comment to sshkey."
 
-      echo "sed command"
+      echo "sed command for initial main.tf setup"
       sed -i -E -e "s:vm_ssh_key_data = null:vm_ssh_key_data = \"${sshkey}\":" \
         -e "s/location\s*= \"eastus\"/location = \"${REGION}\"/" \
         -e "s/open_external_sources\s*= [\"*\"]/open_external_sources = [\"AzureCloud\"]/" \
@@ -119,7 +119,7 @@ write_files:
         -e "s/storage_account_name\s*= \"storageaccount\"/storage_account_name = \"$RESOURCE_GROUP_NAME\"/" \
         -e 's/vfxt_node_count\s*= 3/vfxt_node_count = <original_node_count>/' main.tf
 
-      [ $? -ne 0 ] && error "sed command."
+      [ $? -ne 0 ] && error "sed command for initial main.tf setup."
 
       echo "terraform init"
       terraform init
@@ -127,7 +127,7 @@ write_files:
 
       echo "terraform apply"
       terraform apply -auto-approve
-      [ $? -ne 0 ] && error "terraform apply."
+      [ $? -ne 0 ] && error "terraform apply for $TF_VFXT_CONFIG"
 
       echo "DONE: end of $0"
 
@@ -147,13 +147,13 @@ write_files:
       export ARM_TENANT_ID='<arm_tenant_id>'
       export TF_VFXT_CONFIG='<terraform_file_config>'
 
-      echo "to file path"
+      echo "to file path for scaleup"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
-      [ $? -ne 0 ] && error "filepath."
+      [ $? -ne 0 ] && error "to file path for scaleup"
 
-      echo "sed command"
+      echo "sed command for node counts in scaleup"
       sed -i -E -e 's/vfxt_node_count\s*= <original_node_count>/vfxt_node_count = <new_node_count>/' main.tf
-      [ $? -ne 0 ] && error "sed command."
+      [ $? -ne 0 ] && error "sed command for node counts in scaleup"
 
       echo "terraform init"
       terraform init
@@ -181,13 +181,13 @@ write_files:
       export ARM_TENANT_ID='<arm_tenant_id>'
       export TF_VFXT_CONFIG='<terraform_file_config>'
 
-      echo "to file path"
+      echo "cd to file path"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
-      [ $? -ne 0 ] && error "filepath."
+      [ $? -ne 0 ] && error "cd to filepath: $TF_VFXT_CONFIG"
 
-      echo "sed command"
+      echo "sed command for node counts in scale down"
       sed -i -E -e 's/vfxt_node_count\s*= <new_node_count>/vfxt_node_count = <original_node_count>/' main.tf
-      [ $? -ne 0 ] && error "sed command."
+      [ $? -ne 0 ] && error "sed command for node counts in scale down"
 
       echo "terraform init"
       terraform init
@@ -215,9 +215,9 @@ write_files:
       export ARM_TENANT_ID='<arm_tenant_id>'
       export TF_VFXT_CONFIG='<terraform_file_config>'
 
-      echo "to file path"
+      echo "cd to file path"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
-      [ $? -ne 0 ] && error "filepath."
+      [ $? -ne 0 ] && error "cd to filepath: $TF_VFXT_CONFIG"
 
       echo "terraform init"
       terraform init
@@ -247,9 +247,9 @@ write_files:
       export RESOURCE_GROUP_NAME='<resource_group_name>'
       export TF_VFXT_CONFIG='<terraform_file_config>'
 
-      echo "to file path"
+      echo " cd to file path"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
-      [ $? -ne 0 ] && error "filepath."
+      [ $? -ne 0 ] && error "cd to filepath: $TF_VFXT_CONFIG"
 
       echo "tee outputs to json"
       terraform output -json |& tee /tmp/tf_output.json
@@ -260,9 +260,9 @@ write_files:
       VSERVER_IP_ADDRESSES=$(jq -c ".mount_addresses.value" /tmp/tf_output.json)
       NFS_EXPORT_PATH=$(jq -r ".mount_namespace_path.value" /tmp/tf_output.json)
 
-      echo "sskey"
+      echo "Add comment to SSH public key"
       sshkey="<ssh_key> azureuser@linuxvm"
-      [ $? -ne 0 ] && error "sshkey."
+      [ $? -ne 0 ] && error "Add comment to sshkey."
 
       cd ../vdbench
 
@@ -270,7 +270,7 @@ write_files:
       terraform init
       [ $? -ne 0 ] && error "terraform init."
 
-      echo "terraform destroy"
+      echo "terraform destroy for vdbench"
       terraform destroy -auto-approve -var="location=${REGION}" \
         -var="vmss_resource_group_name=${RESOURCE_GROUP_NAME}-vmss" \
         -var="controller_address=${CONTROLLER_ADDRESS}" \
@@ -281,7 +281,7 @@ write_files:
         -var="vdbench_url=<vdbench_download_url>" \
         -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network" |& tee /tmp/vdbench_destroy.txt
 
-      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform destroy."
+      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform destroy for vdbench."
 
       echo "DONE: end of $0"
 
@@ -304,9 +304,9 @@ write_files:
       export RESOURCE_GROUP_NAME='<resource_group_name>'
       export TF_VFXT_CONFIG='<terraform_file_config>'
 
-      echo "to file path"
+      echo "cd to file path"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
-      [ $? -ne 0 ] && error "filepath."
+      [ $? -ne 0 ] && error "cd to filepath: $TF_VFXT_CONFIG"
 
       echo "terraform outputs"
       CONTROLLER_ADDRESS=$(terraform output -json | jq -r ".controller_address.value")
@@ -315,9 +315,9 @@ write_files:
       NFS_EXPORT_PATH=$(terraform output -json | jq -r ".mount_namespace_path.value")
       [ $? -ne 0 ] && error "terraform outputs."
 
-      echo "sskey"
+      echo "Add comment to SSH public key"
       sshkey="<ssh_key> azureuser@linuxvm"
-      [ $? -ne 0 ] && error "sshkey."
+      [ $? -ne 0 ] && error "Add comment to sshkey."
 
       cd ../vdbench
 
@@ -325,7 +325,7 @@ write_files:
       terraform init
       [ $? -ne 0 ] && error "terraform init."
 
-      echo "terraform apply"
+      echo "terraform apply vdbench"
       terraform apply -auto-approve -var="location=${REGION}" \
         -var="vmss_resource_group_name=${RESOURCE_GROUP_NAME}-vmss" \
         -var="controller_address=${CONTROLLER_ADDRESS}" \
@@ -336,26 +336,26 @@ write_files:
         -var="vdbench_url=<vdbench_download_url>" \
         -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network" |& tee /tmp/vdbench_run.txt
 
-      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform apply."
+      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform apply vdbench."
 
       echo "vdbench terraform outputs"
       IP_ADDRESS_COMMAND=$(terraform output -json | jq -r ".vmss_addresses_command.value") &&
       IP_ADDRESS=$(${IP_ADDRESS_COMMAND} | jq -r '.[0]')
       [ $? -ne 0 ] && error "vdbench terraform outputs."
 
-      echo "ssh"
+      echo "ssh - initial connection needed for below scp cmd"
       ssh -o "StrictHostKeyChecking=no" -oProxyCommand="ssh -oStrictHostKeyChecking=no -W %h:%p  ${USERNAME}@${CONTROLLER_ADDRESS}" ${USERNAME}@${IP_ADDRESS} ls
-      echo ">> SCP CMD"
+      echo "scp cmd to copy id_rsa "
       scp -o "ProxyJump ${USERNAME}@${CONTROLLER_ADDRESS}" /root/.ssh/id_rsa ${USERNAME}@${IP_ADDRESS}:.ssh/id_rsa
-      [ $? -ne 0 ] && error "ssh and scp."
+      [ $? -ne 0 ] && error "scp cmd to copy id_rsa"
 
-      echo ">> COPY_IDRSA.SH"
+      echo "ssh to run copy_idrsa.sh"
       ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} /home/azureuser/copy_idrsa.sh
-      [ $? -ne 0 ] && error "copy_idrsa."
+      [ $? -ne 0 ] && error "ssh to run copy_idrsa.sh"
 
-      echo ">> RUN VDBENCH"
+      echo "ssh to run vdbench"
       ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "tmux new-session -d \"/home/${USERNAME}/run_vdbench.sh <vdbench_config>.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1\""
-      [ $? -ne 0 ] && error "run vdbench."
+      [ $? -ne 0 ] && error "ssh to run vdbench"
 
       echo "DONE: end of $0"
 
