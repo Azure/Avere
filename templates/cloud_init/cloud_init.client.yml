@@ -38,19 +38,19 @@ write_files:
 
       echo "wget terraform zip"
       wget https://releases.hashicorp.com/terraform/0.15.0/terraform_0.15.0_linux_amd64.zip
-      [ $? -ne 0 ] && error "wget terraform zip."
+      [ $? -ne 0 ] && error "wget terraform zip - setup step"
 
       echo "unzip terraform.zip"
       unzip terraform_0.15.0_linux_amd64.zip
-      [ $? -ne 0 ] && error "unzip terraform.zip ."
+      [ $? -ne 0 ] && error "unzip terraform.zip - setup step"
 
       echo "mv tf folder to /usr/local/bin"
       mv terraform /usr/local/bin
-      [ $? -ne 0 ] && error "mv tf folder to /usr/local/bin."
+      [ $? -ne 0 ] && error "mv tf folder to /usr/local/bin - setup step"
 
       echo "chmod terraform executable to be globally runnable"
       chmod 755 /usr/local/bin/terraform
-      [ $? -ne 0 ] && error "chmod terraform executable."
+      [ $? -ne 0 ] && error "chmod terraform executable - setup step"
 
       echo "Get the version of Azure/Avere repo"
       re="[0-9]+\.[0-9]+\.[0-9]"
@@ -59,23 +59,23 @@ write_files:
 
       echo "browser_download"
       browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[].browser_download_url | grep -e "terraform-provider-avere$")
-      [ $? -ne 0 ] && error "browser_download."
+      [ $? -ne 0 ] && error "browser_download_url for terraform-provider-avere - setup step"
 
       echo "mkdir terraform avere linux dir"
       mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
-      [ $? -ne 0 ] && error "mkdir terraform avere linux dir"
+      [ $? -ne 0 ] && error "mkdir terraform avere linux dir - setup step"
 
       echo "wget terraform-provider-avere"
       wget -O ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version $browser_download_url
-      [ $? -ne 0 ] && error "wget terraform-provider-avere."
+      [ $? -ne 0 ] && error "wget terraform-provider-avere - setup step"
 
       echo "chmod terraform provider avere"
       chmod 755 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version
-      [ $? -ne 0 ] && error "chmod terraform provider avere"
+      [ $? -ne 0 ] && error "chmod terraform provider avere - setup step"
 
       echo "mkdir tf && cd tf"
       mkdir tf && cd tf
-      [ $? -ne 0 ] && error "mkdir tf && cd tf."
+      [ $? -ne 0 ] && error "mkdir tf && cd tf - setup step"
 
       echo "git init"
       git init
@@ -83,7 +83,7 @@ write_files:
 
       echo "git remote"
       git remote add origin -f https://github.com/Azure/Avere.git
-      [ $? -ne 0 ] && error "git remote - setup step"
+      [ $? -ne 0 ] && error "git remote cmd for Avere.git- setup step"
 
       echo "git config cmd for setup"
       git config core.sparsecheckout true
@@ -91,15 +91,15 @@ write_files:
 
       echo "append src/terraform to /sparse-checkout"
       echo "src/terraform/*" >> .git/info/sparse-checkout
-      [ $? -ne 0 ] && error "append src/terraform to /sparse-checkout"
+      [ $? -ne 0 ] && error "append src/terraform to /sparse-checkout - setup step"
 
       echo "git pull main branch"
       git pull origin main
-      [ $? -ne 0 ] && error "git pull main branch."
+      [ $? -ne 0 ] && error "git pull main branch - setup step"
 
       echo "cd to file path"
       cd src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
-      [ $? -ne 0 ] && error "cd to filepath: $TF_VFXT_CONFIG"
+      [ $? -ne 0 ] && error "cd to directory: $TF_VFXT_CONFIG"
 
       echo "Add comment to SSH public key"
       sshkey="<ssh_key> azureuser@linuxvm"
@@ -123,11 +123,11 @@ write_files:
 
       echo "terraform init"
       terraform init
-      [ $? -ne 0 ] && error "terraform init."
+      [ $? -ne 0 ] && error "terraform init cmd"
 
       echo "terraform apply"
       terraform apply -auto-approve
-      [ $? -ne 0 ] && error "terraform apply for $TF_VFXT_CONFIG"
+      [ $? -ne 0 ] && error "terraform apply cmd for $TF_VFXT_CONFIG"
 
       echo "DONE: end of $0"
 
@@ -157,11 +157,11 @@ write_files:
 
       echo "terraform init"
       terraform init
-      [ $? -ne 0 ] && error "terraform init."
+      [ $? -ne 0 ] && error "terraform init cmd"
 
       echo "terraform apply scaleup"
       terraform apply -auto-approve |& tee /tmp/scaleup.txt
-      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform apply scaleup."
+      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform apply cmd for scaling up nodes"
 
       echo "DONE: end of $0"
 
@@ -183,7 +183,7 @@ write_files:
 
       echo "cd to file path"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
-      [ $? -ne 0 ] && error "cd to filepath: $TF_VFXT_CONFIG"
+      [ $? -ne 0 ] && error "cd to directory: $TF_VFXT_CONFIG"
 
       echo "sed command for node counts in scale down"
       sed -i -E -e 's/vfxt_node_count\s*= <new_node_count>/vfxt_node_count = <original_node_count>/' main.tf
@@ -191,11 +191,11 @@ write_files:
 
       echo "terraform init"
       terraform init
-      [ $? -ne 0 ] && error "terraform init."
+      [ $? -ne 0 ] && error "terraform init cmd"
 
       echo "terraform apply scaledown"
       terraform apply -auto-approve |& tee /tmp/scaledown.txt
-      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform apply scale down."
+      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform apply cmd for scaling down nodes"
 
       echo "DONE: end of $0"
 
@@ -217,15 +217,15 @@ write_files:
 
       echo "cd to file path"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
-      [ $? -ne 0 ] && error "cd to filepath: $TF_VFXT_CONFIG"
+      [ $? -ne 0 ] && error "cd to directory: $TF_VFXT_CONFIG"
 
       echo "terraform init"
       terraform init
-      [ $? -ne 0 ] && error "terraform init."
+      [ $? -ne 0 ] && error "terraform init cmd"
 
       echo "terraform destroy"
       terraform destroy -auto-approve |& tee /tmp/destroy.txt
-      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform destroy."
+      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform destroy cmd for $TF_VFXT_CONFIG"
 
       echo "DONE: end of $0"
 
@@ -249,7 +249,7 @@ write_files:
 
       echo " cd to file path"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
-      [ $? -ne 0 ] && error "cd to filepath: $TF_VFXT_CONFIG"
+      [ $? -ne 0 ] && error "cd to directory: $TF_VFXT_CONFIG"
 
       echo "tee outputs to json"
       terraform output -json |& tee /tmp/tf_output.json
@@ -268,7 +268,7 @@ write_files:
 
       echo "terraform init"
       terraform init
-      [ $? -ne 0 ] && error "terraform init."
+      [ $? -ne 0 ] && error "terraform init cmd"
 
       echo "terraform destroy for vdbench"
       terraform destroy -auto-approve -var="location=${REGION}" \
@@ -281,7 +281,7 @@ write_files:
         -var="vdbench_url=<vdbench_download_url>" \
         -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network" |& tee /tmp/vdbench_destroy.txt
 
-      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform destroy for vdbench."
+      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform destroy cmd for vdbench"
 
       echo "DONE: end of $0"
 
@@ -306,14 +306,12 @@ write_files:
 
       echo "cd to file path"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
-      [ $? -ne 0 ] && error "cd to filepath: $TF_VFXT_CONFIG"
+      [ $? -ne 0 ] && error "cd to directory: $TF_VFXT_CONFIG"
 
-      echo "terraform outputs"
       CONTROLLER_ADDRESS=$(terraform output -json | jq -r ".controller_address.value")
       USERNAME=$(terraform output -json | jq -r ".controller_username.value")
       VSERVER_IP_ADDRESSES=$(terraform output -json | jq -c ".mount_addresses.value")
       NFS_EXPORT_PATH=$(terraform output -json | jq -r ".mount_namespace_path.value")
-      [ $? -ne 0 ] && error "terraform outputs."
 
       echo "Add comment to SSH public key"
       sshkey="<ssh_key> azureuser@linuxvm"
@@ -323,7 +321,7 @@ write_files:
 
       echo "terraform init"
       terraform init
-      [ $? -ne 0 ] && error "terraform init."
+      [ $? -ne 0 ] && error "terraform init cmd"
 
       echo "terraform apply vdbench"
       terraform apply -auto-approve -var="location=${REGION}" \
@@ -336,7 +334,7 @@ write_files:
         -var="vdbench_url=<vdbench_download_url>" \
         -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network" |& tee /tmp/vdbench_run.txt
 
-      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform apply vdbench."
+      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform apply cmd for vdbench"
 
       echo "vdbench terraform outputs"
       IP_ADDRESS_COMMAND=$(terraform output -json | jq -r ".vmss_addresses_command.value") &&
