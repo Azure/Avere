@@ -161,7 +161,7 @@ write_files:
 
       echo "terraform apply scaleup"
       terraform apply -auto-approve |& tee /tmp/scaleup.txt
-      [ $? -ne 0 ] && error "terraform apply scaleup."
+      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform apply scaleup."
 
       echo "DONE: end of $0"
 
@@ -195,7 +195,7 @@ write_files:
 
       echo "terraform apply scaledown"
       terraform apply -auto-approve |& tee /tmp/scaledown.txt
-      [ $? -ne 0 ] && error "terraform apply scale down."
+      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform apply scale down."
 
       echo "DONE: end of $0"
 
@@ -225,7 +225,7 @@ write_files:
 
       echo "terraform destroy"
       terraform destroy -auto-approve |& tee /tmp/destroy.txt
-      [ $? -ne 0 ] && error "terraform destroy."
+      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform destroy."
 
       echo "DONE: end of $0"
 
@@ -253,7 +253,7 @@ write_files:
 
       echo "tee outputs to json"
       terraform output -json |& tee /tmp/tf_output.json
-      [ $? -ne 0 ] && error "tee outputs to json"
+      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform outputs"
 
       CONTROLLER_ADDRESS=$(jq -r ".controller_address.value" /tmp/tf_output.json)
       USERNAME=$(jq -r ".controller_username.value" /tmp/tf_output.json)
@@ -281,7 +281,7 @@ write_files:
         -var="vdbench_url=<vdbench_download_url>" \
         -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network" |& tee /tmp/vdbench_destroy.txt
 
-      [ $? -ne 0 ] && error "terraform destroy."
+      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform destroy."
 
       echo "DONE: end of $0"
 
@@ -336,7 +336,7 @@ write_files:
         -var="vdbench_url=<vdbench_download_url>" \
         -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network" |& tee /tmp/vdbench_run.txt
 
-      [ $? -ne 0 ] && error "terraform apply."
+      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform apply."
 
       echo "vdbench terraform outputs"
       IP_ADDRESS_COMMAND=$(terraform output -json | jq -r ".vmss_addresses_command.value") &&

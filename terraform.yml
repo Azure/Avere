@@ -68,9 +68,6 @@ parameters:
       - "microsoft-avere:vfxt:avere-vfxt-node:latest"
       - "microsoft-avere:vfxt:avere-vfxt-node:8.0.1"
       - "microsoft-avere:vfxt:avere-vfxt-node:6.3.0"
-      - "microsoft-avere:vfxt:avere-vfxt-node:6.2.0"
-      - "microsoft-avere:vfxt:avere-vfxt-node:6.0.0"
-      - "microsoft-avere:vfxt:avere-vfxt-node:5.3.61"
       - "microsoft-avere:vfxt-preview:avere-vfxt-node:latest"
   - name: controller_image
     displayName: "Controller Image Offering (default: latest public)"
