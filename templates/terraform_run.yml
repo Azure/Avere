@@ -63,10 +63,10 @@ steps:
       --name           ${VM_NAME}                     \
       --resource-group ${RESOURCE_GROUP_NAME}         \
       --scripts "tail -100 /tmp/${{ parameters.run }}.txt" \
-      --query 'value[0].message' --output tsv | tee /tmp/cloud-init_output.log
-
+      --query 'value[0].message' --output tsv |& tee /tmp/cloud-init_output.log
+    check_rc.sh $? "Collect tail of terraform's output for ${{ parameters.run }}" || exit 0
+    
     grep -q 'complete! Resources:' /tmp/cloud-init_output.log
-    check_rc.sh $? "Terraform file check" || exit
+    check_rc.sh $? "Check results of 'terraform apply' for ${{ parameters.run }}" || exit 0
   displayName: 'Terraform: ${{ parameters.run }}'
   condition: ${{ parameters.condition }}
-
