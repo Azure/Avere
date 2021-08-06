@@ -6,6 +6,11 @@ variable "location" {
   description = "The Azure Region into which all resources of NFS filer will be created."
 }
 
+variable "vnet_name" {
+  description = "The name of the vnet."
+  default = "rendervnet"
+}
+
 variable "vnet_address_space" {
   description = "The full address space of the virtual network"
   default     = "10.0.0.0/16"
