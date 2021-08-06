@@ -85,3 +85,13 @@ variable "open_external_sources" {
   default     = ["*"]
   description = "this is the external source to open on the subnet"
 }
+
+variable "peer_vnet_rg" {
+  default     = ""
+  description = "the rg of the vnet to peer to"
+}
+
+variable "peer_vnet_name" {
+  default     = ""
+  description = "the name of vnet to peer this vnet to"
+}
