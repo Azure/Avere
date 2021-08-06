@@ -125,7 +125,7 @@ steps:
       --resource-group ${RESOURCE_GROUP_NAME}         \
       --scripts "tail -100 /var/log/cloud-init-output.log" \
       --query 'value[0].message' --output tsv | tee /tmp/cloud-init_output.log
-
+    check_rc.sh ${PIPESTATUS[0]} "tail cloud-init-output.log" || exit 0
     grep -q 'DONE: Cloud-Init COMPLETE' /tmp/cloud-init_output.log
     check_rc.sh $? "Cloud-init status check" || exit
 
