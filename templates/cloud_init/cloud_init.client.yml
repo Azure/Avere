@@ -94,7 +94,7 @@ write_files:
       [ $? -ne 0 ] && error "append src/terraform to /sparse-checkout - setup step"
 
       echo "git pull main branch"
-      git pull origin main
+      git pull origin test/remakar/proxy_1filer
       [ $? -ne 0 ] && error "git pull main branch - setup step"
 
       echo "cd to file path"
