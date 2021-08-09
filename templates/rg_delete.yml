@@ -2,8 +2,10 @@
 # https://aka.ms/yaml
 steps:
 - bash: |
+    export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
     az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
-    for x in "-vmss" "-vfxt" "-filer" "-storage" "-proxy" "-network"; do  
+    check_rc.sh $? "Az login" || exit 0
+    for x in "-vmss" "-vfxt" "-filer" "-storage" "-proxy" "-network"; do
       rg_del_rc=111111
       exists=$(az group exists --name ${RESOURCE_GROUP_NAME}$x)
       if [ "${exists}" = "true" ]; then
@@ -20,9 +22,12 @@ steps:
         done
       fi
     done
+    # Final delete is for the Resource group that has the VM runner in it.
+    az group delete --yes --name ${RESOURCE_GROUP_NAME} --subscription ${ARM_SUBSCRIPTION_ID}
+
   displayName: 'RG Delete Check'
   condition: always()
-  env: 
+  env:
     ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
     ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
     ARM_TENANT_ID: $(AZURE-TENANT-ID)
