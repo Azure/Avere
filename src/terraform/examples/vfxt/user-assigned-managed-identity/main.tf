@@ -2,7 +2,7 @@
 // WARNING: if you get an error deploying, please review https://aka.ms/avere-tf-prereqs
 ////////////////////////////////////////////////////////////////////////////////////////
 locals {
-  // service principal information, that have been scoped to the 
+  // service principal information, that have been scoped to the
   // resource groups used in this example
   subscription_id = "00000000-0000-0000-0000-000000000000"
   client_id       = "00000000-0000-0000-0000-000000000000"
@@ -58,6 +58,8 @@ locals {
   // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
   // or if accessing from cloud shell, put "AzureCloud"
   open_external_sources = ["*"]
+  peer_vnet_rg          = ""
+  peer_vnet_name        = ""
 }
 
 terraform {
@@ -82,7 +84,7 @@ provider "azurerm" {
 
   # If you are on a new subscription, and encounter resource provider registration
   # issues, please uncomment the following line.
-  # Please following the directions for a new subscription: 
+  # Please following the directions for a new subscription:
   # skip_provider_registration = "true"
 
   features {}
@@ -97,6 +99,8 @@ module "network" {
 
   open_external_ports   = local.open_external_ports
   open_external_sources = local.open_external_sources
+  peer_vnet_rg          = local.peer_vnet_rg
+  peer_vnet_name        = local.peer_vnet_name
 }
 
 module "nasfiler1" {
@@ -203,7 +207,7 @@ resource "avere_vfxt" "vfxt" {
   }
 
   // terraform is not creating the implicit dependency on the controller module
-  // otherwise during destroy, it tries to destroy the controller at the 
+  // otherwise during destroy, it tries to destroy the controller at the
   // same time as vfxt cluster to work around, add the explicit dependencies
   depends_on = [
     module.vfxtcontroller,

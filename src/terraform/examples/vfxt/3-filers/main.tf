@@ -52,6 +52,8 @@ locals {
   // for a fully locked down internet get your external IP address from http://www.myipaddress.com/
   // or if accessing from cloud shell, put "AzureCloud"
   open_external_sources = ["*"]
+  peer_vnet_rg          = ""
+  peer_vnet_name        = ""
 }
 
 terraform {
@@ -80,6 +82,8 @@ module "network" {
 
   open_external_ports   = local.open_external_ports
   open_external_sources = local.open_external_sources
+  peer_vnet_rg          = local.peer_vnet_rg
+  peer_vnet_name        = local.peer_vnet_name
 }
 
 resource "azurerm_resource_group" "nfsfiler" {
