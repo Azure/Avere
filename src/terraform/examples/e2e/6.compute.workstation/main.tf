@@ -1,13 +1,13 @@
 terraform {
-  required_version = ">= 1.0.7"
+  required_version = ">= 1.0.8"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.78.0"
+      version = "~>2.80.0"
     }
   }
   backend "azurerm" {
-    key = "5.compute.workstation"
+    key = "6.compute.workstation"
   }
 }
 
@@ -53,7 +53,7 @@ variable "virtualMachines" {
 data "terraform_remote_state" "network" {
   backend = "azurerm"
   config = {
-    resource_group_name  = module.global.terraformResourceGroupName
+    resource_group_name  = module.global.securityResourceGroupName
     storage_account_name = module.global.terraformStorageAccountName
     container_name       = module.global.terraformStorageContainerName
     key                  = "1.network"
@@ -66,9 +66,19 @@ data "azurerm_subnet" "workstation" {
   virtual_network_name = data.terraform_remote_state.network.outputs.virtualNetworkName
 }
 
+data "azurerm_user_assigned_identity" "identity" {
+  name                = module.global.managedIdentityName
+  resource_group_name = module.global.securityResourceGroupName
+}
+
+data "azurerm_key_vault" "vault" {
+  name                = module.global.keyVaultName
+  resource_group_name = module.global.securityResourceGroupName
+}
+
 data "azurerm_key_vault_secret" "admin_password" {
   name         = module.global.keyVaultSecretNameAdminPassword
-  key_vault_id = module.global.keyVaultId
+  key_vault_id = data.azurerm_key_vault.vault.id
 }
 
 resource "azurerm_resource_group" "workstation" {
@@ -112,7 +122,7 @@ resource "azurerm_linux_virtual_machine" "workstation" {
   }
   identity {
     type         = "UserAssigned"
-    identity_ids = [module.global.managedIdentityId]
+    identity_ids = [data.azurerm_user_assigned_identity.identity.id]
   }
   dynamic "admin_ssh_key" {
     for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1] 
@@ -147,7 +157,7 @@ resource "azurerm_windows_virtual_machine" "workstation" {
   }
   identity {
     type         = "UserAssigned"
-    identity_ids = [module.global.managedIdentityId]
+    identity_ids = [data.azurerm_user_assigned_identity.identity.id]
   }
   depends_on = [
     azurerm_network_interface.workstation

@@ -2,7 +2,7 @@ resourceGroupName = "AzureRender.Cache"
 
 cacheName = "Cache" // Set to a uniquely identifiable name
 
-hpcCacheEnable = false // Set to true for HPC Cache managed service deployment
+hpcCacheEnable = true // Set to false for Avere vFXT deployment
 
 ###################################################################################
 # HPC Cache - https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview #
@@ -15,27 +15,32 @@ hpcCacheEnable = false // Set to true for HPC Cache managed service deployment
 //   Standard_L4_5G - 21623                Read Only
 //     Standard_L9G - 43246                Read Only
 //    Standard_L16G - 86491                Read Only
-hpcCacheThroughput = "Standard_2G"
-hpcCacheSize       = 3072
+hpcCache = {
+  throughput = "Standard_2G"
+  size       = 3072
+}
 
 ######################################################################################
 # Avere vFXT - https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-overview #
 ######################################################################################
 
-vfxtNodeSize  = 4096 // Set to either 1024 GBs (1 TB) or 4096 GBs (4 TBs) nodes
-vfxtNodeCount = 3    // Set to a minimum of 3 nodes up to a maximum of 20 nodes
-
-vfxtSupportUploadEnable      = false // Set to true to authorize cluster support bundle upload per the
-vfxtSupportUploadCompanyName = ""    // https://privacy.microsoft.com/en-us/privacystatement policy
-vfxtProactiveSupportType     = "Support"
-
-vfxtNodeAdminUsername = "azureadmin"
-vfxtNodeSshPublicKey  = ""
-
-vfxtControllerAdminUsername = "azureadmin"
-vfxtControllerSshPublicKey = ""
-
-vfxtGlobalCustomSettings = []
+vfxtCache = {
+  cluster = {
+    nodeSize       = 4096 // Set to either 1024 GBs (1 TB) or 4096 GBs (4 TBs) nodes
+    nodeCount      = 3    // Set to a minimum of 3 nodes up to a maximum of 20 nodes
+    nodeImageId    = ""
+    adminUsername  = "azureadmin"
+    sshPublicKey   = ""
+    customSettings = []
+  }
+  controller = {
+    adminUsername = "azureadmin"
+    sshPublicKey  = ""
+  }
+  support = {
+    companyName = "" // Set to authorize automated support data upload per https://privacy.microsoft.com/en-us/privacystatement
+  }
+}
 
 ###################
 # Storage Targets #
@@ -43,31 +48,39 @@ vfxtGlobalCustomSettings = []
 
 storageTargetsNfs = [
   {
-    name              = ""
-    targetFqdnOrIp    = ""
-    targetConnections = 4
-    usageModel        = "WRITE_AROUND"                  // https://docs.microsoft.com/en-us/azure/hpc-cache/cache-usage-models
-    cachePolicy       = "Clients Bypassing the Cluster" // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#cache_policy
-    customSettings    = []
+    name            = ""
+    fqdnOrIpAddress = [""]
+    hpcCache = {
+      usageModel = "WRITE_AROUND" // https://docs.microsoft.com/en-us/azure/hpc-cache/cache-usage-models
+    }
+    vfxtCache = {
+      cachePolicy      = "Clients Bypassing the Cluster"
+      filerConnections = 4
+      customSettings   = []
+    }
     namespaceJunctions = [
       {
+        nfsExport     = "/show"
         namespacePath = "/mnt/farm"
-        nfsExport     = "/"
         targetPath    = ""
       }
-    ],
+    ]
   },
   {
-    name              = ""
-    targetFqdnOrIp    = ""
-    targetConnections = 4
-    usageModel        = "WRITE_WORKLOAD_CLOUDWS"          // https://docs.microsoft.com/en-us/azure/hpc-cache/cache-usage-models
-    cachePolicy       = "Collaborating Cloud Workstation" // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#cache_policy
-    customSettings    = []
+    name            = ""
+    fqdnOrIpAddress = [""]
+    hpcCache = {
+      usageModel = "WRITE_WORKLOAD_CLOUDWS" // https://docs.microsoft.com/en-us/azure/hpc-cache/cache-usage-models
+    }
+    vfxtCache = {
+      cachePolicy      = "Collaborating Cloud Workstation"
+      filerConnections = 4
+      customSettings   = []
+    }
     namespaceJunctions = [
       {
+        nfsExport     = "/show"
         namespacePath = "/mnt/workstation"
-        nfsExport     = "/"
         targetPath    = ""
       }
     ]
@@ -76,10 +89,33 @@ storageTargetsNfs = [
 
 storageTargetsNfsBlob = [
   {
-    name                 = ""
-    usageModel           = "WRITE_WORKLOAD_CLOUDWS"
-    namespacePath        = "/mnt/show"
-    storageAccountName   = "mediastudio"
-    storageContainerName = "show"
+    name          = ""
+    usageModel    = "WRITE_AROUND"
+    namespacePath = "/mnt/farm"
+    storage = {
+      resourceGroupName = "AzureRender.Storage"
+      accountName       = "mediaasset"
+      containerName     = "show"
+    }
+  },
+  {
+    name          = ""
+    usageModel    = "WRITE_WORKLOAD_CLOUDWS"
+    namespacePath = "/mnt/workstation"
+    storage = {
+      resourceGroupName = "AzureRender.Storage"
+      accountName       = "mediaasset"
+      containerName     = "show"
+    }
   }
 ]
+
+######################################################################################################
+# Virtual Network - https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview #
+######################################################################################################
+
+virtualNetwork = {
+  name              = ""
+  subnetName        = ""
+  resourceGroupName = ""
+}

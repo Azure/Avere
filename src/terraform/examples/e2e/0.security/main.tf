@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.0.7"
+  required_version = ">= 1.0.8"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.78.0"
+      version = "~>2.80.0"
     }
   }
 }
@@ -20,52 +20,45 @@ variable "resourceGroupName" {
   type = string
 }
 
-variable "storageAccountName" {
-  type = string
-}
-
-variable "storageAccountType" {
-  type = string
-}
-
-variable "storageAccountTier" {
-  type = string
-}
-
-variable "storageAccountReplication" {
-  type = string
-}
-
-variable "storageContainerName" {
-  type = string
-}
-
 variable "managedIdentityName" {
   type = string
 }
 
-variable "keyVaultName" {
-  type = string
+variable "storage" {
+  type = object(
+    {
+      accountName        = string
+      accountType        = string
+      accountRedundancy  = string
+      accountPerformance = string
+      containerName      = string
+    }
+  )
 }
 
-variable "keyVaultSecretNames" {
-  type = list(string)
-}
-
-variable "keyVaultSecretValues" {
-  type = list(string)
-}
-
-variable "keyVaultKeyNames" {
-  type = list(string)
-}
-
-variable "keyVaultKeyTypes" {
-  type = list(string)
-}
-
-variable "keyVaultKeySizes" {
-  type = list(string)
+variable "keyVault" {
+  type = object(
+    {
+      name    = string
+      secrets = list(
+        object(
+          {
+            name  = string
+            value = string
+          }
+        )
+      )
+      keys = list(
+        object(
+          {
+            name = string
+            type = string
+            size = number
+          }
+        )
+      )
+    }
+  )
 }
 
 data "azurerm_client_config" "current" {}
@@ -75,28 +68,28 @@ resource "azurerm_resource_group" "security" {
   location = module.global.regionName
 }
 
-resource "azurerm_storage_account" "storage" {
-  name                     = var.storageAccountName
-  resource_group_name      = azurerm_resource_group.security.name
-  location                 = azurerm_resource_group.security.location
-  account_kind             = var.storageAccountType
-  account_tier             = var.storageAccountTier
-  account_replication_type = var.storageAccountReplication
-}
-
-resource "azurerm_storage_container" "container" {
-  name                 = var.storageContainerName
-  storage_account_name = azurerm_storage_account.storage.name
-}
-
 resource "azurerm_user_assigned_identity" "identity" {
   name                = var.managedIdentityName
   resource_group_name = azurerm_resource_group.security.name
   location            = azurerm_resource_group.security.location
 }
 
+resource "azurerm_storage_account" "storage" {
+  name                     = var.storage.accountName
+  resource_group_name      = azurerm_resource_group.security.name
+  location                 = azurerm_resource_group.security.location
+  account_kind             = var.storage.accountType
+  account_replication_type = var.storage.accountRedundancy
+  account_tier             = var.storage.accountPerformance
+}
+
+resource "azurerm_storage_container" "container" {
+  name                 = var.storage.containerName
+  storage_account_name = azurerm_storage_account.storage.name
+}
+
 resource "azurerm_key_vault" "vault" {
-  name                      = var.keyVaultName
+  name                      = var.keyVault.name
   resource_group_name       = azurerm_resource_group.security.name
   location                  = azurerm_resource_group.security.location
   tenant_id                 = data.azurerm_client_config.current.tenant_id
@@ -105,17 +98,17 @@ resource "azurerm_key_vault" "vault" {
 }
 
 resource "azurerm_key_vault_secret" "secrets" {
-  count        = length(var.keyVaultSecretNames)
-  name         = var.keyVaultSecretNames[count.index]
-  value        = var.keyVaultSecretValues[count.index]
+  count        = length(var.keyVault.secrets)
+  name         = var.keyVault.secrets[count.index].name
+  value        = var.keyVault.secrets[count.index].value
   key_vault_id = azurerm_key_vault.vault.id
 }
 
 resource "azurerm_key_vault_key" "keys" {
-  count        = length(var.keyVaultKeyNames)
-  name         = var.keyVaultKeyNames[count.index]
-  key_type     = var.keyVaultKeyTypes[count.index]
-  key_size     = var.keyVaultKeySizes[count.index]
+  count        = length(var.keyVault.keys)
+  name         = var.keyVault.keys[count.index].name
+  key_type     = var.keyVault.keys[count.index].type
+  key_size     = var.keyVault.keys[count.index].size
   key_vault_id = azurerm_key_vault.vault.id
   key_opts = [
     "decrypt",
@@ -123,7 +116,7 @@ resource "azurerm_key_vault_key" "keys" {
     "sign",
     "unwrapKey",
     "verify",
-    "wrapKey",
+    "wrapKey"
   ]
 }
 
@@ -135,26 +128,14 @@ output "resourceGroupName" {
   value = var.resourceGroupName
 }
 
-output "storageAccountName" {
-  value = var.storageAccountName
+output "managedIdentityName" {
+  value = var.managedIdentityName
 }
 
-output "storageContainerName" {
-  value = var.storageContainerName
+output "storage" {
+  value = var.storage
 }
 
-output "managedIdentityId" {
-  value = azurerm_user_assigned_identity.identity.id
-}
-
-output "keyVaultId" {
-  value = azurerm_key_vault.vault.id
-}
-
-output "keyVaultSecretNames" {
-  value = var.keyVaultSecretNames
-}
-
-output "keyVaultKeyNames" {
-  value = var.keyVaultKeyNames
+output "keyVault" {
+  value = var.keyVault
 }

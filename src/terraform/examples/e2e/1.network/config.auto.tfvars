@@ -10,29 +10,34 @@ virtualNetwork = {
   dnsServerAddresses = [] 
   subnets = [
     {
-      name             = "Farm"
-      addressSpace     = ["10.0.0.0/17"]
-      serviceEndpoints = []
+      name              = "Farm"
+      addressSpace      = ["10.0.0.0/17"]
+      serviceDelegation = ""
+      serviceEndpoints  = []
     },
     {
-      name             = "Workstation"
-      addressSpace     = ["10.0.128.0/18"]
-      serviceEndpoints = []
+      name              = "Workstation"
+      addressSpace      = ["10.0.128.0/18"]
+      serviceDelegation = ""
+      serviceEndpoints  = []
     },
     {
-      name             = "Storage"
-      addressSpace     = ["10.0.253.0/24"]
-      serviceEndpoints = ["Microsoft.Storage"]
+      name              = "Storage"
+      addressSpace      = ["10.0.253.0/24"]
+      serviceDelegation = "Microsoft.Netapp/volumes"
+      serviceEndpoints  = [] // ["Microsoft.Storage"]
     },
     {
-      name             = "Cache"
-      addressSpace     = ["10.0.254.0/24"]
-      serviceEndpoints = ["Microsoft.Storage"]
+      name              = "Cache"
+      addressSpace      = ["10.0.254.0/24"]
+      serviceDelegation = ""
+      serviceEndpoints  = [] // ["Microsoft.Storage"]
     },
     {
-      name             = "GatewaySubnet"
-      addressSpace     = ["10.0.255.0/24"]
-      serviceEndpoints = []
+      name              = "GatewaySubnet"
+      addressSpace      = ["10.0.255.0/24"]
+      serviceDelegation = ""
+      serviceEndpoints  = []
     }
   ]
 }

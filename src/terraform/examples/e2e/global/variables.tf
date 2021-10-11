@@ -3,11 +3,12 @@ variable "regionName" {
   default = "EastUS" // Set to the target Azure region name (az account list-locations --query [].name)
 }
 
-# Terraform backend state configuration
-variable "terraformResourceGroupName" {
+variable "securityResourceGroupName" {
   type    = string
   default = "AzureRender" // Set to the resource group name from the 0.security module
 }
+
+# Terraform backend state configuration
 variable "terraformStorageAccountName" {
   type    = string
   default = "azurerender" // Set to the storage account name from the 0.security module
@@ -17,16 +18,16 @@ variable "terraformStorageContainerName" {
   default = "terraform" // Set to the storage container from the 0.security module
 }
 
-# User-Assigned Managed Identity resource id
-variable "managedIdentityId" {
+# Managed Identity
+variable "managedIdentityName" {
   type    = string
-  default = "" // Set to "/subscriptions/[subscription_id]/resourceGroups/[resource_group_name]/providers/Microsoft.ManagedIdentity/userAssignedIdentities/[identity_name]" resource id format
+  default = "AzureRender" // Set to the managed identity name from the 0.security module
 }
 
-# KeyVault resource id
-variable "keyVaultId" {
+# KeyVault
+variable "keyVaultName" {
   type    = string
-  default = "" // Set to "/subscriptions/[subscription_id]/resourceGroups/[resource_group_name]/providers/Microsoft.KeyVault/vaults/[vault_name]" resource id format
+  default = "AzureRender" // Set to the key vault name from the 0.security module
 }
 
 # KeyVault secret names
@@ -49,9 +50,10 @@ output "regionName" {
   value = var.regionName
 }
 
-output "terraformResourceGroupName" {
-  value = var.terraformResourceGroupName
+output "securityResourceGroupName" {
+  value = var.securityResourceGroupName
 }
+
 output "terraformStorageAccountName" {
   value = var.terraformStorageAccountName
 }
@@ -59,12 +61,12 @@ output "terraformStorageContainerName" {
   value = var.terraformStorageContainerName
 }
 
-output "managedIdentityId" {
-  value = var.managedIdentityId
+output "managedIdentityName" {
+  value = var.managedIdentityName
 }
 
-output "keyVaultId" {
-  value = var.keyVaultId
+output "keyVaultName" {
+  value = var.keyVaultName
 }
 
 output "keyVaultSecretNameGatewayConnection" {

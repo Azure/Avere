@@ -6,24 +6,36 @@
 
 resourceGroupName = "AzureRender"
 
-# Storage Account - https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview
-storageAccountName        = "azurerender" // Name must be globally unique, lowercase alphanumeric
-storageAccountType        = "StorageV2"
-storageAccountTier        = "Standard"
-storageAccountReplication = "LRS"
-storageContainerName      = "terraform" // Storage container for Terraform .tfstate files
-
 # Managed Identity - https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview
 managedIdentityName = "AzureRender"
 
+# Storage - https://docs.microsoft.com/en-us/azure/storage/
+storage = {
+  accountName        = "azurerender" // Name must be globally unique, lowercase alphanumeric
+  accountType        = "StorageV2"   // https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview
+  accountRedundancy  = "LRS"         // https://docs.microsoft.com/en-us/azure/storage/common/storage-redundancy
+  accountPerformance = "Standard"    // https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-performance-tiers
+  containerName      = "terraform"   // Storage container for Terraform .tfstate files
+}
+
 # Key Vault - https://docs.microsoft.com/en-us/azure/key-vault/general/overview
-keyVaultName = "AzureRender" // Name must be globally unique
-
-# KeyVault secrets should be updated via https://portal.azure.com
-keyVaultSecretNames  = ["GatewayConnection", "AdminPassword"]
-keyVaultSecretValues = ["SharedKey", "P@ssword1234"]
-
-# KeyVault keys should be updated via https://portal.azure.com
-keyVaultKeyNames = ["CacheEncryption"]
-keyVaultKeyTypes = ["RSA"]
-keyVaultKeySizes = [2048]
+keyVault = {
+  name    = "AzureRender" // Name must be globally unique
+  secrets = [ // Update secret values via https://portal.azure.com
+    {
+      name  = "GatewayConnection"
+      value = "SharedKey"
+    },
+    {
+      name  = "AdminPassword"
+      value = "P@ssword1234"
+    }
+  ]
+  keys = [
+    {
+      name = "CacheEncryption"
+      type = "RSA"
+      size = 2048
+    }
+  ]
+}

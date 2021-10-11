@@ -1,9 +1,13 @@
 terraform {
-  required_version = ">= 1.0.7"
+  required_version = ">= 1.0.8"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.78.0"
+      version = "~>2.80.0"
+    }
+    avere = {
+      source  = "hashicorp/avere"
+      version = "~>1.3.2"
     }
   }
   backend "azurerm" {
@@ -31,64 +35,61 @@ variable "hpcCacheEnable" {
   type = bool
 }
 
-variable "hpcCacheThroughput" {
-  type = string
+variable "hpcCache" {
+  type = object(
+    {
+      throughput = string
+      size       = number
+    }
+  )
 }
 
-variable "hpcCacheSize" {
-  type = string
-}
-
-variable "vfxtNodeSize" {
-  type = number
-}
-
-variable "vfxtNodeCount" {
-  type = number
-}
-
-variable "vfxtNodeAdminUsername" {
-  type = string
-}
-
-variable "vfxtNodeSshPublicKey" {
-  type = string
-}
-
-variable "vfxtControllerAdminUsername" {
-  type = string
-}
-
-variable "vfxtControllerSshPublicKey" {
-  type = string
-}
-
-variable "vfxtSupportUploadEnable" {
-  type = bool
-}
-
-variable "vfxtSupportUploadCompanyName" {
-  type = string
-}
-
-variable "vfxtProactiveSupportType" {
-  type = string
-}
-
-variable "vfxtGlobalCustomSettings" {
-  type = list(string)
+variable "vfxtCache" {
+  type = object(
+    {
+      cluster = object(
+        {
+          nodeSize       = number
+          nodeCount      = number
+          nodeImageId    = string
+          adminUsername  = string
+          sshPublicKey   = string
+          customSettings = list(string)
+        }
+      )
+      controller = object(
+        {
+          adminUsername = string
+          sshPublicKey  = string
+        }
+      )
+      support = object(
+        {
+          companyName = string
+        }
+      )
+    }
+  )
 }
 
 variable "storageTargetsNfs" {
   type = list(
     object(
       {
-        name              = string
-        targetFqdnOrIp    = string
-        targetConnections = number
-        usageModel        = string
-        cachePolicy       = string
-        customSettings    = list(string)
+        name            = string
+        fqdnOrIpAddress = list(string)
+        hpcCache = object(
+          {
+            usageModel = string
+          }
+        )
+        vfxtCache = object(
+          {
+            cachePolicy      = string
+            filerConnections = number
+            customSettings   = list(string)
+          }
+        )
         namespaceJunctions = list(
           object(
             {
@@ -107,25 +108,38 @@ variable "storageTargetsNfsBlob" {
   type = list(
     object(
       {
-        name                 = string
-        usageModel           = string
-        namespacePath        = string
-        storageAccountName   = string
-        storageContainerName = string
+        name          = string
+        usageModel    = string
+        namespacePath = string
+        storage = object(
+          {
+            resourceGroupName = string
+            accountName       = string
+            containerName     = string
+          }
+        )
       }
     )
   )
 }
 
-resource "azurerm_resource_group" "cache" {
-  name     = var.resourceGroupName
-  location = module.global.regionName
+variable "virtualNetwork" {
+  type = object(
+    {
+      name              = string
+      subnetName        = string
+      resourceGroupName = string
+    }
+  )
 }
 
+data "azurerm_client_config" "current" {}
+
 data "terraform_remote_state" "network" {
+  count   = var.virtualNetwork.name == "" ? 1 : 0
   backend = "azurerm"
   config = {
-    resource_group_name  = module.global.terraformResourceGroupName
+    resource_group_name  = module.global.securityResourceGroupName
     storage_account_name = module.global.terraformStorageAccountName
     container_name       = module.global.terraformStorageContainerName
     key                  = "1.network"
@@ -133,34 +147,25 @@ data "terraform_remote_state" "network" {
 }
 
 data "azurerm_virtual_network" "network" {
-  name                 = data.terraform_remote_state.network.outputs.virtualNetworkName
-  resource_group_name  = data.terraform_remote_state.network.outputs.resourceGroupName
+  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
+  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
 }
 
 data "azurerm_subnet" "cache" {
-  name                 = data.terraform_remote_state.network.outputs.virtualNetworkSubnetNameCache
-  resource_group_name  = data.terraform_remote_state.network.outputs.resourceGroupName
-  virtual_network_name = data.azurerm_virtual_network.network.name
-}
-
-data "terraform_remote_state" "storage" {
-  backend = "azurerm"
-  config = {
-    resource_group_name  = module.global.terraformResourceGroupName
-    storage_account_name = module.global.terraformStorageAccountName
-    container_name       = module.global.terraformStorageContainerName
-    key                  = "2.storage"
-  }
-}
-
-data "azurerm_resource_group" "storage" {
-  name = data.terraform_remote_state.storage.outputs.resourceGroupName
+  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndexCache].name : var.virtualNetwork.subnetName
+  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
+  virtual_network_name = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
 }
 
 locals {
-  vfxtControllerAddress   = cidrhost(data.terraform_remote_state.network.outputs.virtualNetworkSubnetAddressSpaceCache[0], 39)
-  vfxtVServerFirstAddress = cidrhost(data.terraform_remote_state.network.outputs.virtualNetworkSubnetAddressSpaceCache[0], 40)
+  vfxtControllerAddress   = cidrhost(data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndexCache].addressSpace[0], 39)
+  vfxtVServerFirstAddress = cidrhost(data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndexCache].addressSpace[0], 40)
   vfxtVServerAddressCount = 20
+}
+
+resource "azurerm_resource_group" "cache" {
+  name     = var.resourceGroupName
+  location = module.global.regionName
 }
 
 ###################################################################################
@@ -172,8 +177,8 @@ resource "azurerm_hpc_cache" "cache" {
   name                = var.cacheName
   resource_group_name = azurerm_resource_group.cache.name
   location            = azurerm_resource_group.cache.location
-  sku_name            = var.hpcCacheThroughput
-  cache_size_in_gb    = var.hpcCacheSize
+  sku_name            = var.hpcCache.throughput
+  cache_size_in_gb    = var.hpcCache.size
   subnet_id           = data.azurerm_subnet.cache.id
 }
 
@@ -184,13 +189,13 @@ resource "azurerm_hpc_cache_nfs_target" "storage" {
   name                = each.value.name
   resource_group_name = azurerm_resource_group.cache.name
   cache_name          = azurerm_hpc_cache.cache[0].name
-  target_host_name    = each.value.targetFqdnOrIp
-  usage_model         = each.value.usageModel
+  target_host_name    = each.value.fqdnOrIpAddress[0]
+  usage_model         = each.value.hpcCache.usageModel
   dynamic "namespace_junction" {
     for_each = each.value.namespaceJunctions
     content {
-      namespace_path = namespace_junction.value["namespacePath"]
       nfs_export     = namespace_junction.value["nfsExport"]
+      namespace_path = namespace_junction.value["namespacePath"]
       target_path    = namespace_junction.value["targetPath"]
     }
   }
@@ -203,7 +208,7 @@ resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
   name                 = each.value.name
   resource_group_name  = azurerm_resource_group.cache.name
   cache_name           = azurerm_hpc_cache.cache[0].name
-  storage_container_id = "${data.azurerm_resource_group.storage.id}/providers/Microsoft.Storage/storageAccounts/${each.value.storageAccountName}/blobServices/default/containers/${each.value.storageContainerName}"
+  storage_container_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}/blobServices/default/containers/${each.value.storage.containerName}"
   usage_model          = each.value.usageModel
   namespace_path       = each.value.namespacePath
 }
@@ -212,9 +217,14 @@ resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
 # Avere vFXT - https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-overview #
 ######################################################################################
 
+data "azurerm_key_vault" "vault" {
+  name                = module.global.keyVaultName
+  resource_group_name = module.global.securityResourceGroupName
+}
+
 data "azurerm_key_vault_secret" "admin_password" {
   name         = module.global.keyVaultSecretNameAdminPassword
-  key_vault_id = module.global.keyVaultId
+  key_vault_id = data.azurerm_key_vault.vault.id
 }
 
 module "vfxt_controller" {
@@ -223,11 +233,11 @@ module "vfxt_controller" {
   create_resource_group          = false
   resource_group_name            = var.resourceGroupName
   location                       = module.global.regionName
-  admin_username                 = var.vfxtControllerAdminUsername
+  admin_username                 = var.vfxtCache.controller.adminUsername
   admin_password                 = data.azurerm_key_vault_secret.admin_password.value
-  ssh_key_data                   = var.vfxtControllerSshPublicKey != "" ? var.vfxtControllerSshPublicKey : null
-  virtual_network_resource_group = data.azurerm_virtual_network.network.resource_group_name
+  ssh_key_data                   = var.vfxtCache.controller.sshPublicKey != "" ? var.vfxtCache.controller.sshPublicKey : null
   virtual_network_name           = data.azurerm_virtual_network.network.name
+  virtual_network_resource_group = data.azurerm_virtual_network.network.resource_group_name
   virtual_network_subnet_name    = data.azurerm_subnet.cache.name
   static_ip_address              = local.vfxtControllerAddress
   depends_on = [
@@ -240,20 +250,21 @@ resource "avere_vfxt" "cache" {
   vfxt_cluster_name               = lower(var.cacheName)
   azure_resource_group            = var.resourceGroupName
   location                        = module.global.regionName
-  node_cache_size                 = var.vfxtNodeSize
-  vfxt_node_count                 = var.vfxtNodeCount
-  azure_network_resource_group    = data.azurerm_virtual_network.network.resource_group_name
+  node_cache_size                 = var.vfxtCache.cluster.nodeSize
+  vfxt_node_count                 = var.vfxtCache.cluster.nodeCount
+  image_id                        = var.vfxtCache.cluster.nodeImageId
   azure_network_name              = data.azurerm_virtual_network.network.name
+  azure_network_resource_group    = data.azurerm_virtual_network.network.resource_group_name
   azure_subnet_name               = data.azurerm_subnet.cache.name
   controller_address              = module.vfxt_controller[count.index].controller_address
   controller_admin_username       = module.vfxt_controller[count.index].controller_username
   controller_admin_password       = data.azurerm_key_vault_secret.admin_password.value
   vfxt_admin_password             = data.azurerm_key_vault_secret.admin_password.value
-  vfxt_ssh_key_data               = var.vfxtNodeSshPublicKey != "" ? var.vfxtNodeSshPublicKey : null
-  enable_support_uploads          = var.vfxtSupportUploadEnable
-  support_uploads_company_name    = var.vfxtSupportUploadCompanyName
-  enable_secure_proactive_support = var.vfxtProactiveSupportType
-  global_custom_settings          = var.vfxtGlobalCustomSettings
+  vfxt_ssh_key_data               = var.vfxtCache.cluster.sshPublicKey != "" ? var.vfxtCache.cluster.sshPublicKey : null
+  support_uploads_company_name    = var.vfxtCache.support.companyName
+  enable_support_uploads          = var.vfxtCache.support.companyName == "" ? false : true
+  enable_secure_proactive_support = var.vfxtCache.support.companyName == "" ? "Disabled" : "Support"
+  global_custom_settings          = var.vfxtCache.cluster.customSettings
   vserver_first_ip                = local.vfxtVServerFirstAddress
   vserver_ip_count                = local.vfxtVServerAddressCount
   dynamic "core_filer" {
@@ -262,15 +273,15 @@ resource "avere_vfxt" "cache" {
     }
     content {
       name                      = core_filer.value["name"]
-      fqdn_or_primary_ip        = core_filer.value["targetFqdnOrIp"]
-      nfs_connection_multiplier = core_filer.value["targetConnections"]
-      cache_policy              = core_filer.value["cachePolicy"]
-      custom_settings           = core_filer.value["customSettings"]
+      fqdn_or_primary_ip        = join(core_filer.value["fqdnOrIpAddress"], " ")
+      cache_policy              = core_filer.value["vfxtCache"].cachePolicy
+      nfs_connection_multiplier = core_filer.value["vfxtCache"].filerConnections
+      custom_settings           = core_filer.value["vfxtCache"].customSettings
       dynamic "junction" {
         for_each = core_filer.value["namespaceJunctions"]
         content {
-          namespace_path      = junction.value["namespacePath"]
           core_filer_export   = junction.value["nfsExport"]
+          namespace_path      = junction.value["namespacePath"]
           export_subdirectory = junction.value["targetPath"]
         }
       }
@@ -293,10 +304,14 @@ output "cacheName" {
   value = var.cacheName
 }
 
-output "cacheMountAddresses" {
-  value = var.hpcCacheEnable ? azurerm_hpc_cache.cache[0].mount_addresses : avere_vfxt.cache[0].vserver_ip_addresses
+output "cacheControllerAddress" {
+  value = var.hpcCacheEnable ? "" : avere_vfxt.cache[0].controller_address
 }
 
 output "cacheManagementAddress" {
   value = var.hpcCacheEnable ? "" : avere_vfxt.cache[0].vfxt_management_ip
+}
+
+output "cacheMountAddresses" {
+  value = var.hpcCacheEnable ? azurerm_hpc_cache.cache[0].mount_addresses : avere_vfxt.cache[0].vserver_ip_addresses
 }

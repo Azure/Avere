@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.0.7"
+  required_version = ">= 1.0.8"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.78.0"
+      version = "~>2.80.0"
     }
   }
   backend "azurerm" {
@@ -32,9 +32,10 @@ variable "virtualNetwork" {
       subnets = list(
         object(
           {
-            name             = string
-            addressSpace     = list(string)
-            serviceEndpoints = list(string)
+            name              = string
+            addressSpace      = list(string)
+            serviceDelegation = string
+            serviceEndpoints  = list(string)
           }
         )
       )
@@ -158,18 +159,29 @@ resource "azurerm_subnet" "network" {
   }
   name                 = each.value.name
   resource_group_name  = azurerm_resource_group.network.name
-  virtual_network_name = var.virtualNetwork.name
+  virtual_network_name = azurerm_virtual_network.network.name
   address_prefixes     = each.value.addressSpace
   service_endpoints    = each.value.serviceEndpoints
   enforce_private_link_endpoint_network_policies = each.value.name != "GatewaySubnet"
-  depends_on = [
-    azurerm_virtual_network.network
-  ]
+  enforce_private_link_service_network_policies  = each.value.name != "GatewaySubnet"
+  dynamic "delegation" {
+    for_each = each.value.serviceDelegation != "" ? [1] : [] 
+    content {
+      name = "serviceDelegation"
+      service_delegation {
+        name    = each.value.serviceDelegation
+        actions = [
+          "Microsoft.Network/networkinterfaces/*",
+          "Microsoft.Network/virtualNetworks/subnets/join/action"
+        ]
+      }
+    }
+  }
 }
 
 resource "azurerm_network_security_group" "network" {
   for_each = {
-    for x in var.virtualNetwork.subnets : x.name => x if x.name != "GatewaySubnet"
+    for x in var.virtualNetwork.subnets : x.name => x if x.name != "GatewaySubnet" && x.serviceDelegation == ""
   }
   name                = "${var.virtualNetwork.name}.${each.value.name}"
   resource_group_name = azurerm_resource_group.network.name
@@ -179,7 +191,7 @@ resource "azurerm_network_security_group" "network" {
     priority                   = 2000
     direction                  = "Inbound"
     access                     = "Allow"
-    protocol                   = "Tcp"
+    protocol                   = "TCP"
     source_address_prefix      = "GatewayManager"
     source_port_range          = "*"
     destination_address_prefix = "*"
@@ -190,7 +202,7 @@ resource "azurerm_network_security_group" "network" {
     priority                   = 2001
     direction                  = "Inbound"
     access                     = "Allow"
-    protocol                   = "Tcp"
+    protocol                   = "TCP"
     source_address_prefix      = "GatewayManager"
     source_port_range          = "*"
     destination_address_prefix = "*"
@@ -200,7 +212,7 @@ resource "azurerm_network_security_group" "network" {
 
 resource "azurerm_subnet_network_security_group_association" "network" {
   for_each = {
-    for x in var.virtualNetwork.subnets : x.name => x if x.name != "GatewaySubnet"
+    for x in var.virtualNetwork.subnets : x.name => x if x.name != "GatewaySubnet" && x.serviceDelegation == ""
   }
   subnet_id                 = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${var.virtualNetwork.name}/subnets/${each.value.name}"
   network_security_group_id = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/networkSecurityGroups/${var.virtualNetwork.name}.${each.value.name}"
@@ -236,9 +248,14 @@ resource "azurerm_public_ip" "address2" {
 # Virtual Network Gateway (VPN) #
 #################################
 
+data "azurerm_key_vault" "vault" {
+  name                = module.global.keyVaultName
+  resource_group_name = module.global.securityResourceGroupName
+}
+
 data "azurerm_key_vault_secret" "gateway_connection" {
   name         = module.global.keyVaultSecretNameGatewayConnection
-  key_vault_id = module.global.keyVaultId
+  key_vault_id = data.azurerm_key_vault.vault.id
 }
 
 resource "azurerm_virtual_network_gateway" "vpn" {
@@ -349,38 +366,22 @@ output "resourceGroupName" {
   value = var.resourceGroupName
 }
 
-output "virtualNetworkName" {
-  value = var.virtualNetwork.name
+output "virtualNetwork" {
+  value = var.virtualNetwork
 }
 
-output "virtualNetworkSubnetNameFarm" {
-  value = var.virtualNetwork.subnets[var.virtualNetworkSubnetIndexFarm].name
+output "virtualNetworkSubnetIndexFarm" {
+  value = var.virtualNetworkSubnetIndexFarm
 }
 
-output "virtualNetworkSubnetAddressSpaceFarm" {
-  value = var.virtualNetwork.subnets[var.virtualNetworkSubnetIndexFarm].addressSpace
+output "virtualNetworkSubnetIndexWorkstation" {
+  value = var.virtualNetworkSubnetIndexWorkstation
 }
 
-output "virtualNetworkSubnetNameWorkstation" {
-  value = var.virtualNetwork.subnets[var.virtualNetworkSubnetIndexWorkstation].name
+output "virtualNetworkSubnetIndexStorage" {
+  value = var.virtualNetworkSubnetIndexStorage
 }
 
-output "virtualNetworkSubnetAddressSpaceWorkstation" {
-  value = var.virtualNetwork.subnets[var.virtualNetworkSubnetIndexWorkstation].addressSpace
-}
-
-output "virtualNetworkSubnetNameStorage" {
-  value = var.virtualNetwork.subnets[var.virtualNetworkSubnetIndexStorage].name
-}
-
-output "virtualNetworkSubnetAddressSpaceStorage" {
-  value = var.virtualNetwork.subnets[var.virtualNetworkSubnetIndexStorage].addressSpace
-}
-
-output "virtualNetworkSubnetNameCache" {
-  value = var.virtualNetwork.subnets[var.virtualNetworkSubnetIndexCache].name
-}
-
-output "virtualNetworkSubnetAddressSpaceCache" {
-  value = var.virtualNetwork.subnets[var.virtualNetworkSubnetIndexCache].addressSpace
+output "virtualNetworkSubnetIndexCache" {
+  value = var.virtualNetworkSubnetIndexCache
 }
