@@ -1,6 +1,6 @@
 resourceGroupName = "AzureRender.Cache"
 
-cacheName = "Cache" // Set to a uniquely identifiable name
+cacheName = "cache" // Set to a uniquely identifiable name
 
 hpcCacheEnable = true // Set to false for Avere vFXT deployment
 
@@ -26,7 +26,7 @@ hpcCache = {
 
 vfxtCache = {
   cluster = {
-    nodeSize       = 4096 // Set to either 1024 GBs (1 TB) or 4096 GBs (4 TBs) nodes
+    nodeSize       = 1024 // Set to either 1024 GBs (1 TB) or 4096 GBs (4 TBs) nodes
     nodeCount      = 3    // Set to a minimum of 3 nodes up to a maximum of 20 nodes
     nodeImageId    = ""
     adminUsername  = "azureadmin"
@@ -94,7 +94,7 @@ storageTargetsNfsBlob = [
     namespacePath = "/mnt/farm"
     storage = {
       resourceGroupName = "AzureRender.Storage"
-      accountName       = "mediaasset"
+      accountName       = "azasset"
       containerName     = "show"
     }
   },
@@ -104,11 +104,23 @@ storageTargetsNfsBlob = [
     namespacePath = "/mnt/workstation"
     storage = {
       resourceGroupName = "AzureRender.Storage"
-      accountName       = "mediaasset"
+      accountName       = "azasset"
       containerName     = "show"
     }
   }
 ]
+
+################################################################################# 
+# Private DNS - https://docs.microsoft.com/en-us/azure/dns/private-dns-overview #
+################################################################################# 
+
+privateDns = {
+  zoneName = "media.studio"
+  aRecord = {
+    name = "cache"
+    ttl  = 300
+  }
+}
 
 ######################################################################################################
 # Virtual Network - https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview #

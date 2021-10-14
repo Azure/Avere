@@ -27,12 +27,11 @@ variable "virtualMachineScaleSets" {
   type = list(
     object(
       {
-        name           = string
-        hostNamePrefix = string
-        imageId        = string
-        nodeSizeSku    = string
-        nodeCount      = number
-        osType         = string
+        name        = string
+        imageId     = string
+        nodeSizeSku = string
+        nodeCount   = number
+        osType      = string
         osDisk = object(
           {
             storageType     = string
@@ -68,7 +67,18 @@ variable "virtualMachineScaleSets" {
   )
 }
 
+variable "virtualNetwork" {
+  type = object(
+    {
+      name              = string
+      subnetName        = string
+      resourceGroupName = string
+    }
+  )
+}
+
 data "terraform_remote_state" "network" {
+  count   = var.virtualNetwork.name == "" ? 1 : 0
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -78,10 +88,15 @@ data "terraform_remote_state" "network" {
   }
 }
 
+data "azurerm_virtual_network" "network" {
+  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
+  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
+}
+
 data "azurerm_subnet" "farm" {
-  name                 = data.terraform_remote_state.network.outputs.virtualNetworkSubnetNameFarm
-  resource_group_name  = data.terraform_remote_state.network.outputs.resourceGroupName
-  virtual_network_name = data.terraform_remote_state.network.outputs.virtualNetworkName
+  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndexFarm].name : var.virtualNetwork.subnetName
+  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
+  virtual_network_name = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
 }
 
 data "azurerm_user_assigned_identity" "identity" {
@@ -109,7 +124,6 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     for x in var.virtualMachineScaleSets : x.name => x if x.name != "" && x.osType == "Linux"
   }
   name                            = each.value.name
-  computer_name_prefix            = each.value.hostNamePrefix
   resource_group_name             = azurerm_resource_group.farm.name
   location                        = azurerm_resource_group.farm.location
   source_image_id                 = each.value.imageId
@@ -177,7 +191,6 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     for x in var.virtualMachineScaleSets : x.name => x if x.name != "" && x.osType == "Windows"
   }
   name                            = each.value.name
-  computer_name_prefix            = each.value.hostNamePrefix
   resource_group_name             = azurerm_resource_group.farm.name
   location                        = azurerm_resource_group.farm.location
   source_image_id                 = each.value.imageId

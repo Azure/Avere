@@ -1,6 +1,6 @@
 variable "regionName" {
   type    = string
-  default = "EastUS" // Set to the target Azure region name (az account list-locations --query [].name)
+  default = "WestUS2" // Set to the target Azure region name (az account list-locations --query [].name)
 }
 
 variable "securityResourceGroupName" {
@@ -11,7 +11,7 @@ variable "securityResourceGroupName" {
 # Terraform backend state configuration
 variable "terraformStorageAccountName" {
   type    = string
-  default = "azurerender" // Set to the storage account name from the 0.security module
+  default = "azrender" // Set to the storage account name from the 0.security module
 }
 variable "terraformStorageContainerName" {
   type    = string
@@ -21,13 +21,13 @@ variable "terraformStorageContainerName" {
 # Managed Identity
 variable "managedIdentityName" {
   type    = string
-  default = "AzureRender" // Set to the managed identity name from the 0.security module
+  default = "AzRender" // Set to the managed identity name from the 0.security module
 }
 
 # KeyVault
 variable "keyVaultName" {
   type    = string
-  default = "AzureRender" // Set to the key vault name from the 0.security module
+  default = "AzRender" // Set to the key vault name from the 0.security module
 }
 
 # KeyVault secret names

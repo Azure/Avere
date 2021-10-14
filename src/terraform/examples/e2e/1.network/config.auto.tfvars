@@ -13,7 +13,7 @@ virtualNetwork = {
       name              = "Farm"
       addressSpace      = ["10.0.0.0/17"]
       serviceDelegation = ""
-      serviceEndpoints  = []
+      serviceEndpoints  = ["Microsoft.Storage"]
     },
     {
       name              = "Workstation"
@@ -24,14 +24,14 @@ virtualNetwork = {
     {
       name              = "Storage"
       addressSpace      = ["10.0.253.0/24"]
-      serviceDelegation = "Microsoft.Netapp/volumes"
-      serviceEndpoints  = [] // ["Microsoft.Storage"]
+      serviceDelegation = "" // "Microsoft.Netapp/volumes"
+      serviceEndpoints  = ["Microsoft.Storage"]
     },
     {
       name              = "Cache"
       addressSpace      = ["10.0.254.0/24"]
       serviceDelegation = ""
-      serviceEndpoints  = [] // ["Microsoft.Storage"]
+      serviceEndpoints  = ["Microsoft.Storage"]
     },
     {
       name              = "GatewaySubnet"

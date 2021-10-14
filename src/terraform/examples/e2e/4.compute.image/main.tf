@@ -234,6 +234,43 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
         "imageGalleryApiVersion": "2021-07-01"
       },
       "functions": [
+        {
+          "namespace": "fx",
+          "members": {
+            "GetExecuteCommandLinux": {
+              "parameters": [
+                {
+                  "name": "scriptFile",
+                  "type": "string"
+                },
+                {
+                  "name": "scriptParameters",
+                  "type": "object"
+                }
+              ],
+              "output": {
+                "type": "string",
+                "value": "[format('cat {0} | tr -d \r | {1} /bin/bash', parameters('scriptFile'), replace(replace(replace(replace(replace(string(parameters('scriptParameters')), '{', ''), '}', ''), '\"', ''), ':', '='), ',', ' '))]"
+              }
+            },
+            "GetExecuteCommandWindows": {
+              "parameters": [
+                {
+                  "name": "scriptFile",
+                  "type": "string"
+                },
+                {
+                  "name": "scriptParameters",
+                  "type": "object"
+                }
+              ],
+              "output": {
+                "type": "string",
+                "value": "[format('PowerShell -ExecutionPolicy Unrestricted -File {0} {1}', parameters('scriptFile'), replace(replace(replace(replace(replace(string(parameters('scriptParameters')), ',\"', ' -'), '\"', ''), ':', ' '), '{', '-'), '}', ''))]"
+              }
+            }
+          }
+        }
       ],
       "resources": [
         {
@@ -263,7 +300,17 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).identifier.sku]",
               "version": "[parameters('imageTemplates')[copyIndex()].imageSkuVersion]"
             },
-            "customize": "[if(equals(parameters('imageTemplates')[copyIndex()].imageScriptFile, ''), createArray(), json(if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), concat('[{\"type\":\"PowerShell\",\"inline\":[\"[System.Environment]::SetEnvironmentVariable(''vmSku'',''', parameters('imageTemplates')[copyIndex()].machineProfile.sizeSku, ''')\"]},{\"type\":\"PowerShell\",\"scriptUri\":\"', parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()].imageScriptFile, '\"}]'), concat('[{\"type\":\"Shell\",\"inline\":[\"export subnetName=', parameters('imageTemplates')[copyIndex()].machineProfile.subnetName, '\"]},{\"type\":\"Shell\",\"scriptUri\":\"', parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()].imageScriptFile, '\"}]'))))]",
+            "customize": [
+              {
+                "type": "File",
+                "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()].imageScriptFile)]",
+                "destination": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), concat('%TMP%\\', parameters('imageTemplates')[copyIndex()].imageScriptFile), concat('/tmp/', parameters('imageTemplates')[copyIndex()].imageScriptFile))]"
+              },
+              {
+                "type": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), 'PowerShell', 'Shell')]",
+                "inline": "[createArray(if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetExecuteCommandWindows(parameters('imageTemplates')[copyIndex()].imageScriptFile, parameters('imageTemplates')[copyIndex()].machineProfile), fx.GetExecuteCommandLinux(parameters('imageTemplates')[copyIndex()].imageScriptFile, parameters('imageTemplates')[copyIndex()].machineProfile)))]"
+              }
+            ],
             "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].buildTimeoutMinutes]",
             "distribute": [
               {

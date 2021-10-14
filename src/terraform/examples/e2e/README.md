@@ -13,8 +13,9 @@ This folder contains the end-to-end example configuration and automated deployme
 | [6 Compute Workstation](#6-compute-workstation) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/) for [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) artist workstations. |
 
 To manage the Azure rendering solution infrastructure from your local workstation, the following prerequisite steps are required.
-1. Make sure the [Terraform CLI](https://www.terraform.io/downloads.html) is downloaded and accessible locally. Version 1.0.8 is required as of October, 2021.
-1. Make sure the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) is installed and accessible locally. The latest version is currently 2.28.0 as of October, 2021.
+1. Make sure the [Terraform CLI](https://www.terraform.io/downloads.html) is downloaded locally. Version 1.0.8 (or higher) is required.
+1. Make sure the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) is installed locally. The latest version is 2.28.0 as of October, 2021.
+1. Make sure that [Git](https://git-scm.com/downloads) is installed locally. The latest version is 2.33.0 as of October, 2021.
 1. Run `az account show` to ensure that your target Azure subscription context is set appropriately. If requested, run `az login` 
 1. To change your target Azure subscription context, run `az account set --subscription YOUR_SUBSCRIPTION_ID`
 1. Download the Azure rendering solution Terraform examples GitHub repository via the following commands.

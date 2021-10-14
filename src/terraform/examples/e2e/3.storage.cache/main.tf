@@ -123,6 +123,20 @@ variable "storageTargetsNfsBlob" {
   )
 }
 
+variable "privateDns" {
+  type = object(
+    {
+      zoneName = string
+      aRecord = object(
+        {
+          name = string
+          ttl  = number
+        }
+      )
+    }
+  )
+}
+
 variable "virtualNetwork" {
   type = object(
     {
@@ -292,6 +306,30 @@ resource "avere_vfxt" "cache" {
   ]
 }
 
+################################################################################# 
+# Private DNS - https://docs.microsoft.com/en-us/azure/dns/private-dns-overview #
+################################################################################# 
+
+resource "azurerm_private_dns_zone" "cache" {
+  name                = var.privateDns.zoneName
+  resource_group_name = azurerm_resource_group.cache.name
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "cache" {
+  name                  = data.azurerm_virtual_network.network.name
+  resource_group_name   = azurerm_resource_group.cache.name
+  private_dns_zone_name = azurerm_private_dns_zone.cache.name
+  virtual_network_id    = data.azurerm_virtual_network.network.id
+}
+
+resource "azurerm_private_dns_a_record" "cache" {
+  name                = var.privateDns.aRecord.name
+  resource_group_name = azurerm_resource_group.cache.name
+  zone_name           = azurerm_private_dns_zone.cache.name
+  records             = var.hpcCacheEnable ? azurerm_hpc_cache.cache[0].mount_addresses : avere_vfxt.cache[0].vserver_ip_addresses
+  ttl                 = var.privateDns.aRecord.ttl
+}
+
 output "regionName" {
   value = module.global.regionName
 }
@@ -314,4 +352,8 @@ output "cacheManagementAddress" {
 
 output "cacheMountAddresses" {
   value = var.hpcCacheEnable ? azurerm_hpc_cache.cache[0].mount_addresses : avere_vfxt.cache[0].vserver_ip_addresses
+}
+
+output "cachePrivateDnsFqdn" {
+  value = azurerm_private_dns_a_record.cache.fqdn
 }

@@ -27,11 +27,10 @@ variable "virtualMachines" {
   type = list(
     object(
       {
-        name     = string
-        hostName = string
-        imageId  = string
-        sizeSku  = string
-        osType   = string
+        name    = string
+        imageId = string
+        sizeSku = string
+        osType  = string
         osDisk = object(
           {
             storageType = string
@@ -45,12 +44,33 @@ variable "virtualMachines" {
             disablePasswordAuthentication = bool
           }
         )
+        script = object(
+          {
+            file       = string
+            parameters = object(
+              {
+                fileSystemMounts = list(string)
+              }
+            )
+          }
+        )
       }
     )
   )
 }
 
+variable "virtualNetwork" {
+  type = object(
+    {
+      name              = string
+      subnetName        = string
+      resourceGroupName = string
+    }
+  )
+}
+
 data "terraform_remote_state" "network" {
+  count   = var.virtualNetwork.name == "" ? 1 : 0
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -60,10 +80,15 @@ data "terraform_remote_state" "network" {
   }
 }
 
+data "azurerm_virtual_network" "network" {
+  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
+  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
+}
+
 data "azurerm_subnet" "workstation" {
-  name                 = data.terraform_remote_state.network.outputs.virtualNetworkSubnetNameWorkstation
-  resource_group_name  = data.terraform_remote_state.network.outputs.resourceGroupName
-  virtual_network_name = data.terraform_remote_state.network.outputs.virtualNetworkName
+  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndexWorkstation].name : var.virtualNetwork.subnetName
+  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
+  virtual_network_name = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
 }
 
 data "azurerm_user_assigned_identity" "identity" {
@@ -105,7 +130,6 @@ resource "azurerm_linux_virtual_machine" "workstation" {
     for x in var.virtualMachines : x.name => x if x.name != "" && x.osType == "Linux"
   }
   name                            = each.value.name
-  computer_name                   = each.value.hostName != "" ? each.value.hostName : null
   resource_group_name             = azurerm_resource_group.workstation.name
   location                        = azurerm_resource_group.workstation.location
   source_image_id                 = each.value.imageId
@@ -131,6 +155,23 @@ resource "azurerm_linux_virtual_machine" "workstation" {
       public_key = each.value.adminLogin.sshPublicKey
     }
   }
+  dynamic "extension" {
+    for_each = each.value.script.file == "" ? [] : [1] 
+    content {
+      name                       = "Custom"
+      type                       = "CustomScript"
+      publisher                  = "Microsoft.Azure.Extensions"
+      type_handler_version       = "2.1"
+      auto_upgrade_minor_version = true
+      settings = <<SETTINGS
+        {
+          "script": "${base64encode(
+            templatefile(each.value.script.file, each.value.script.parameters)
+          )}"
+        }
+      SETTINGS
+    }
+  }
   depends_on = [
     azurerm_network_interface.workstation
   ]
@@ -141,7 +182,6 @@ resource "azurerm_windows_virtual_machine" "workstation" {
     for x in var.virtualMachines : x.name => x if x.name != "" && x.osType == "Windows"
   }
   name                = each.value.name
-  computer_name       = each.value.hostName != "" ? each.value.hostName : null
   resource_group_name = azurerm_resource_group.workstation.name
   location            = azurerm_resource_group.workstation.location
   source_image_id     = each.value.imageId
@@ -158,6 +198,23 @@ resource "azurerm_windows_virtual_machine" "workstation" {
   identity {
     type         = "UserAssigned"
     identity_ids = [data.azurerm_user_assigned_identity.identity.id]
+  }
+  dynamic "extension" {
+    for_each = each.value.script.file == "" ? [] : [1] 
+    content {
+      name                       = "Custom"
+      type                       = "CustomScriptExtension"
+      publisher                  = "Microsoft.Compute"
+      type_handler_version       = "1.10"
+      auto_upgrade_minor_version = true
+      settings = <<SETTINGS
+        {
+          "script": "${base64encode(
+            templatefile(each.value.script.file, each.value.script.parameters)
+          )}"
+        }
+      SETTINGS
+    }
   }
   depends_on = [
     azurerm_network_interface.workstation
