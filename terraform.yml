@@ -63,7 +63,7 @@ parameters:
   - name: image
     displayName: "Select vfxt image to run. Defaults to latest"
     type: string
-    default: "microsoft-avere:vfxt:avere-vfxt-node:9.1.0"
+    default: "microsoft-avere:vfxt:avere-vfxt-node:8.0.1"
     values:
       - "microsoft-avere:vfxt:avere-vfxt-node:latest"
       - "microsoft-avere:vfxt:avere-vfxt-node:9.1.0"
