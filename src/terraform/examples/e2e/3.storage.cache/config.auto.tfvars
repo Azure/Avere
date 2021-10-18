@@ -29,12 +29,12 @@ vfxtCache = {
     nodeSize       = 1024 // Set to either 1024 GBs (1 TB) or 4096 GBs (4 TBs) nodes
     nodeCount      = 3    // Set to a minimum of 3 nodes up to a maximum of 20 nodes
     nodeImageId    = ""
-    adminUsername  = "azureadmin"
+    adminUsername  = "azadmin"
     sshPublicKey   = ""
     customSettings = []
   }
   controller = {
-    adminUsername = "azureadmin"
+    adminUsername = "azadmin"
     sshPublicKey  = ""
   }
   support = {
@@ -89,7 +89,7 @@ storageTargetsNfs = [
 
 storageTargetsNfsBlob = [
   {
-    name          = ""
+    name          = "RenderFarm"
     usageModel    = "WRITE_AROUND"
     namespacePath = "/mnt/farm"
     storage = {
@@ -99,7 +99,7 @@ storageTargetsNfsBlob = [
     }
   },
   {
-    name          = ""
+    name          = "ArtistWorkstation"
     usageModel    = "WRITE_WORKLOAD_CLOUDWS"
     namespacePath = "/mnt/workstation"
     storage = {

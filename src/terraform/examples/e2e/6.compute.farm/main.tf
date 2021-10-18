@@ -1,13 +1,13 @@
 terraform {
-  required_version = ">= 1.0.8"
+  required_version = ">= 1.0.9"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.80.0"
+      version = "~>2.81.0"
     }
   }
   backend "azurerm" {
-    key = "5.compute.farm"
+    key = "6.compute.farm"
   }
 }
 
@@ -27,16 +27,24 @@ variable "virtualMachineScaleSets" {
   type = list(
     object(
       {
-        name        = string
-        imageId     = string
-        nodeSizeSku = string
-        nodeCount   = number
-        osType      = string
-        osDisk = object(
+        name    = string
+        imageId = string
+        machine = object (
           {
-            storageType     = string
-            cachingType     = string
-            ephemeralEnable = bool
+            size  = string
+            count = number
+          }
+        )
+        operatingSystem = object(
+          {
+            type = string
+            disk = object(
+              {
+                storageType     = string
+                cachingType     = string
+                ephemeralEnable = bool
+              }
+            )
           }
         )
         adminLogin = object(
@@ -46,20 +54,20 @@ variable "virtualMachineScaleSets" {
             disablePasswordAuthentication = bool
           }
         )
-        spot = object(
+        scriptExtension = object(
           {
-            evictionPolicy = string
-            maxNodePrice   = number
-          }
-        )
-        script = object(
-          {
-            file       = string
+            fileName   = string
             parameters = object(
               {
                 fileSystemMounts = list(string)
               }
             )
+          }
+        )
+        spot = object(
+          {
+            evictionPolicy  = string
+            machineMaxPrice = number
           }
         )
       }
@@ -121,20 +129,20 @@ resource "azurerm_resource_group" "farm" {
 
 resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   for_each = {
-    for x in var.virtualMachineScaleSets : x.name => x if x.name != "" && x.osType == "Linux"
+    for x in var.virtualMachineScaleSets : x.name => x if x.name != "" && x.operatingSystem.type == "Linux"
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.farm.name
   location                        = azurerm_resource_group.farm.location
   source_image_id                 = each.value.imageId
-  sku                             = each.value.nodeSizeSku
-  instances                       = each.value.nodeCount
+  sku                             = each.value.machine.size
+  instances                       = each.value.machine.count
   admin_username                  = each.value.adminLogin.username
   admin_password                  = data.azurerm_key_vault_secret.admin_password.value
   disable_password_authentication = each.value.adminLogin.disablePasswordAuthentication
   priority                        = each.value.spot.evictionPolicy != "" ? "Spot" : "Regular"
   eviction_policy                 = each.value.spot.evictionPolicy != "" ? each.value.spot.evictionPolicy : null
-  max_bid_price                   = each.value.spot.evictionPolicy != "" ? each.value.spot.maxNodePrice : -1
+  max_bid_price                   = each.value.spot.evictionPolicy != "" ? each.value.spot.machineMaxPrice : -1
   single_placement_group          = false
   overprovision                   = false
   network_interface {
@@ -147,10 +155,10 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     }
   }
   os_disk {
-    storage_account_type = each.value.osDisk.storageType
-    caching              = each.value.osDisk.cachingType
+    storage_account_type = each.value.operatingSystem.disk.storageType
+    caching              = each.value.operatingSystem.disk.cachingType
     dynamic "diff_disk_settings" {
-      for_each = each.value.osDisk.ephemeralEnable ? [1] : [] 
+      for_each = each.value.operatingSystem.disk.ephemeralEnable ? [1] : [] 
       content {
         option = "Local"
       }
@@ -168,7 +176,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic "extension" {
-    for_each = each.value.script.file == "" ? [] : [1] 
+    for_each = each.value.scriptExtension.fileName == "" ? [] : [1]
     content {
       name                       = "Custom"
       type                       = "CustomScript"
@@ -178,7 +186,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       settings = <<SETTINGS
         {
           "script": "${base64encode(
-            templatefile(each.value.script.file, each.value.script.parameters)
+            templatefile(each.value.scriptExtension.fileName, each.value.scriptExtension.parameters)
           )}"
         }
       SETTINGS
@@ -188,21 +196,24 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
 
 resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   for_each = {
-    for x in var.virtualMachineScaleSets : x.name => x if x.name != "" && x.osType == "Windows"
+    for x in var.virtualMachineScaleSets : x.name => x if x.name != "" && x.operatingSystem.type == "Windows"
   }
-  name                            = each.value.name
-  resource_group_name             = azurerm_resource_group.farm.name
-  location                        = azurerm_resource_group.farm.location
-  source_image_id                 = each.value.imageId
-  sku                             = each.value.nodeSizeSku
-  instances                       = each.value.nodeCount
-  admin_username                  = each.value.adminLogin.username
-  admin_password                  = data.azurerm_key_vault_secret.admin_password.value
-  priority                        = each.value.spot.evictionPolicy != "" ? "Spot" : "Regular"
-  eviction_policy                 = each.value.spot.evictionPolicy != "" ? each.value.spot.evictionPolicy : null
-  max_bid_price                   = each.value.spot.evictionPolicy != "" ? each.value.spot.maxNodePrice : -1
-  single_placement_group          = false
-  overprovision                   = false
+  name                   = each.value.name
+  resource_group_name    = azurerm_resource_group.farm.name
+  location               = azurerm_resource_group.farm.location
+  source_image_id        = each.value.imageId
+  sku                    = each.value.machine.size
+  instances              = each.value.machine.count
+  admin_username         = each.value.adminLogin.username
+  admin_password         = data.azurerm_key_vault_secret.admin_password.value
+  priority               = each.value.spot.evictionPolicy != "" ? "Spot" : "Regular"
+  eviction_policy        = each.value.spot.evictionPolicy != "" ? each.value.spot.evictionPolicy : null
+  max_bid_price          = each.value.spot.evictionPolicy != "" ? each.value.spot.machineMaxPrice : -1
+  single_placement_group = false
+  overprovision          = false
+  custom_data = each.value.scriptExtension.fileName == "" ? null : base64gzip(
+    templatefile(each.value.scriptExtension.fileName, each.value.scriptExtension.parameters)
+  )
   network_interface {
     name    = each.value.name
     primary = true
@@ -213,10 +224,10 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     }
   }
   os_disk {
-    storage_account_type = each.value.osDisk.storageType
-    caching              = each.value.osDisk.cachingType
+    storage_account_type = each.value.operatingSystem.disk.storageType
+    caching              = each.value.operatingSystem.disk.cachingType
     dynamic "diff_disk_settings" {
-      for_each = each.value.osDisk.ephemeralEnable ? [1] : [] 
+      for_each = each.value.operatingSystem.disk.ephemeralEnable ? [1] : [] 
       content {
         option = "Local"
       }
@@ -227,7 +238,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     identity_ids = [data.azurerm_user_assigned_identity.identity.id]
   }
   dynamic "extension" {
-    for_each = each.value.script.file == "" ? [] : [1] 
+    for_each = each.value.scriptExtension.fileName == "" ? [] : [1] 
     content {
       name                       = "Custom"
       type                       = "CustomScriptExtension"
@@ -236,9 +247,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       auto_upgrade_minor_version = true
       settings = <<SETTINGS
         {
-          "script": "${base64encode(
-            templatefile(each.value.script.file, each.value.script.parameters)
-          )}"
+          "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -Command %SystemDrive%\\AzureData\\CustomData.bin"
         }
       SETTINGS
     }

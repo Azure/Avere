@@ -40,87 +40,131 @@ imageDefinitions = [
 # Image Builder - https://docs.microsoft.com/en-us/azure/virtual-machines/image-builder-overview
 imageTemplates = [
   {
-    name                = "LinuxFarm"
-    imageDefinitionName = "LinuxFarm"
-    imageSourceType     = "PlatformImage"
-    imageScriptFile     = "customize.sh"
-    imageSkuVersion     = "Latest"
-    imageOutputVersion  = "1.0.0"
-    buildTimeoutMinutes = 60
-    machineProfile = {                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#vmprofile
-      sizeSku      = "Standard_HB120rs_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      subnetName   = "Farm"                // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#vnetconfig
-      osDiskSizeGB = 0                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+    name = "LinuxScheduler"
+    image = {
+      definitionName = "LinuxFarm"
+      sourceType     = "PlatformImage"
+      scriptFile     = "customize.sh"
+      inputVersion   = "Latest"
+      outputVersion  = "10.0.0"
+    }
+    build = {
+      subnetName     = "Farm"
+      machineSize    = "Standard_L8s_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                 // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 90                // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
     }
   },
   {
-    name                = "LinuxWorkstationV3"
-    imageDefinitionName = "LinuxWorkstation"
-    imageSourceType     = "PlatformImage"
-    imageScriptFile     = "customize.sh"
-    imageSkuVersion     = "Latest"
-    imageOutputVersion  = "3.0.0"
-    buildTimeoutMinutes = 60
-    machineProfile = {                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#vmprofile
-      sizeSku      = "Standard_NV48s_v3" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      subnetName   = "Workstation"       // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#vnetconfig
-      osDiskSizeGB = 0                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+    name = "LinuxFarm"
+    image = {
+      definitionName = "LinuxFarm"
+      sourceType     = "PlatformImage"
+      scriptFile     = "customize.sh"
+      inputVersion   = "Latest"
+      outputVersion  = "1.0.0"
+    }
+    build = {
+      subnetName     = "Farm"
+      machineSize    = "Standard_HB120rs_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 90                    // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
     }
   },
   {
-    name                = "LinuxWorkstationV4"
-    imageDefinitionName = "LinuxWorkstation"
-    imageSourceType     = "PlatformImage"
-    imageScriptFile     = "customize.sh"
-    imageSkuVersion     = "Latest"
-    imageOutputVersion  = "4.0.0"
-    buildTimeoutMinutes = 60
-    machineProfile = {                    // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#vmprofile
-      sizeSku      = "Standard_NV32as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      subnetName   = "Workstation"        // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#vnetconfig
-      osDiskSizeGB = 0                    // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+    name = "LinuxWorkstationV3"
+    image = {
+      definitionName = "LinuxWorkstation"
+      sourceType     = "PlatformImage"
+      scriptFile     = "customize.sh"
+      inputVersion   = "Latest"
+      outputVersion  = "3.0.0"
+    }
+    build = {
+      subnetName     = "Workstation"
+      machineSize    = "Standard_NV48s_v3" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 90                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
     }
   },
   {
-    name                = "WindowsFarm"
-    imageDefinitionName = "WindowsFarm"
-    imageSourceType     = "PlatformImage"
-    imageScriptFile     = "customize.ps1"
-    imageSkuVersion     = "Latest"
-    imageOutputVersion  = "1.0.0"
-    buildTimeoutMinutes = 60
-    machineProfile = {                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#vmprofile
-      sizeSku      = "Standard_HB120rs_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      subnetName   = "Farm"                // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#vnetconfig
-      osDiskSizeGB = 0                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+    name = "LinuxWorkstationV4"
+    image = {
+      definitionName = "LinuxWorkstation"
+      sourceType     = "PlatformImage"
+      scriptFile     = "customize.sh"
+      inputVersion   = "Latest"
+      outputVersion  = "4.0.0"
+    }
+    build = {
+      subnetName     = "Workstation"
+      machineSize    = "Standard_NV32as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                    // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 90                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
     }
   },
   {
-    name                = "WindowsWorkstationV3"
-    imageDefinitionName = "WindowsWorkstation"
-    imageSourceType     = "PlatformImage"
-    imageScriptFile     = "customize.ps1"
-    imageSkuVersion     = "Latest"
-    imageOutputVersion  = "3.0.0"
-    buildTimeoutMinutes = 60
-    machineProfile = {                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#vmprofile
-      sizeSku      = "Standard_NV48s_v3" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      subnetName   = "Workstation"       // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#vnetconfig
-      osDiskSizeGB = 0                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+    name = "WindowsScheduler"
+    image = {
+      definitionName = "WindowsFarm"
+      sourceType     = "PlatformImage"
+      scriptFile     = "customize.ps1"
+      inputVersion   = "Latest"
+      outputVersion  = "10.0.0"
+    }
+    build = {
+      subnetName     = "Farm"
+      machineSize    = "Standard_L8s_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                 // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 90                // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
     }
   },
   {
-    name                = "WindowsWorkstationV4"
-    imageDefinitionName = "WindowsWorkstation"
-    imageSourceType     = "PlatformImage"
-    imageScriptFile     = "customize.ps1"
-    imageSkuVersion     = "Latest"
-    imageOutputVersion  = "4.0.0"
-    buildTimeoutMinutes = 60
-    machineProfile = {                    // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#vmprofile
-      sizeSku      = "Standard_NV32as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      subnetName   = "Workstation"        // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#vnetconfig
-      osDiskSizeGB = 0                    // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+    name = "WindowsFarm"
+    image = {
+      definitionName = "WindowsFarm"
+      sourceType     = "PlatformImage"
+      scriptFile     = "customize.ps1"
+      inputVersion   = "Latest"
+      outputVersion  = "1.0.0"
+    }
+    build = {
+      subnetName     = "Farm"
+      machineSize    = "Standard_HB120rs_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 90                    // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+    }
+  },
+  {
+    name = "WindowsWorkstationV3"
+    image = {
+      definitionName = "WindowsWorkstation"
+      sourceType     = "PlatformImage"
+      scriptFile     = "customize.ps1"
+      inputVersion   = "Latest"
+      outputVersion  = "3.0.0"
+    }
+    build = {
+      subnetName     = "Workstation"
+      machineSize    = "Standard_NV48s_v3" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 90                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+    }
+  },
+  {
+    name = "WindowsWorkstationV4"
+    image = {
+      definitionName = "WindowsWorkstation"
+      sourceType     = "PlatformImage"
+      scriptFile     = "customize.ps1"
+      inputVersion   = "Latest"
+      outputVersion  = "4.0.0"
+    }
+    build = {
+      subnetName     = "Workstation"
+      machineSize    = "Standard_NV32as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                    // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 90                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
     }
   }
 ]
@@ -132,4 +176,10 @@ storage = {
   accountRedundancy  = "LRS"       // https://docs.microsoft.com/en-us/azure/storage/common/storage-redundancy
   accountPerformance = "Standard"  // https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-performance-tiers
   containerName      = "builder"   // Storage container for Image Builder customization scripts
+}
+
+# Virtual Network - https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview
+virtualNetwork = {
+  name              = ""
+  resourceGroupName = ""
 }

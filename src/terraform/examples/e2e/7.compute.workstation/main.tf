@@ -1,13 +1,13 @@
 terraform {
-  required_version = ">= 1.0.8"
+  required_version = ">= 1.0.9"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.80.0"
+      version = "~>2.81.0"
     }
   }
   backend "azurerm" {
-    key = "6.compute.workstation"
+    key = "7.compute.workstation"
   }
 }
 
@@ -27,14 +27,18 @@ variable "virtualMachines" {
   type = list(
     object(
       {
-        name    = string
-        imageId = string
-        sizeSku = string
-        osType  = string
-        osDisk = object(
+        name        = string
+        imageId     = string
+        machineSize = string
+        operatingSystem = object(
           {
-            storageType = string
-            cachingType = string
+            type = string
+            disk = object(
+              {
+                storageType = string
+                cachingType = string
+              }
+            )
           }
         )
         adminLogin = object(
@@ -44,12 +48,13 @@ variable "virtualMachines" {
             disablePasswordAuthentication = bool
           }
         )
-        script = object(
+        scriptExtension = object(
           {
-            file       = string
+            fileName   = string
             parameters = object(
               {
-                fileSystemMounts = list(string)
+                fileSystemMounts  = list(string)
+                schedulerHostName = string
               }
             )
           }
@@ -127,13 +132,13 @@ resource "azurerm_network_interface" "workstation" {
 
 resource "azurerm_linux_virtual_machine" "workstation" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.osType == "Linux"
+    for x in var.virtualMachines : x.name => x if x.name != "" && x.operatingSystem.type == "Linux"
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.workstation.name
   location                        = azurerm_resource_group.workstation.location
   source_image_id                 = each.value.imageId
-  size                            = each.value.sizeSku
+  size                            = each.value.machineSize
   admin_username                  = each.value.adminLogin.username
   admin_password                  = data.azurerm_key_vault_secret.admin_password.value
   disable_password_authentication = each.value.adminLogin.disablePasswordAuthentication
@@ -141,8 +146,8 @@ resource "azurerm_linux_virtual_machine" "workstation" {
     "${azurerm_resource_group.workstation.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
   ]
   os_disk {
-    storage_account_type = each.value.osDisk.storageType
-    caching              = each.value.osDisk.cachingType
+    storage_account_type = each.value.operatingSystem.disk.storageType
+    caching              = each.value.operatingSystem.disk.cachingType
   }
   identity {
     type         = "UserAssigned"
@@ -155,69 +160,80 @@ resource "azurerm_linux_virtual_machine" "workstation" {
       public_key = each.value.adminLogin.sshPublicKey
     }
   }
-  dynamic "extension" {
-    for_each = each.value.script.file == "" ? [] : [1] 
-    content {
-      name                       = "Custom"
-      type                       = "CustomScript"
-      publisher                  = "Microsoft.Azure.Extensions"
-      type_handler_version       = "2.1"
-      auto_upgrade_minor_version = true
-      settings = <<SETTINGS
-        {
-          "script": "${base64encode(
-            templatefile(each.value.script.file, each.value.script.parameters)
-          )}"
-        }
-      SETTINGS
-    }
-  }
   depends_on = [
     azurerm_network_interface.workstation
   ]
 }
 
+resource "azurerm_virtual_machine_extension" "workstation_linux" {
+  for_each = {
+    for x in var.virtualMachines : x.name => x if x.name != "" && x.scriptExtension.fileName != "" && x.operatingSystem.type == "Linux" 
+  }
+  name                       = "Custom"
+  type                       = "CustomScript"
+  publisher                  = "Microsoft.Azure.Extensions"
+  type_handler_version       = "2.1"
+  auto_upgrade_minor_version = true
+  virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
+  settings = <<SETTINGS
+    {
+      "script": "${base64encode(
+        templatefile(each.value.scriptExtension.fileName, each.value.scriptExtension.parameters)
+      )}"
+    }
+  SETTINGS
+  depends_on = [
+    azurerm_linux_virtual_machine.workstation
+  ]
+}
+
 resource "azurerm_windows_virtual_machine" "workstation" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.osType == "Windows"
+    for x in var.virtualMachines : x.name => x if x.name != "" && x.operatingSystem.type == "Windows" 
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.workstation.name
   location            = azurerm_resource_group.workstation.location
   source_image_id     = each.value.imageId
-  size                = each.value.sizeSku
+  size                = each.value.machineSize
   admin_username      = each.value.adminLogin.username
   admin_password      = data.azurerm_key_vault_secret.admin_password.value
   network_interface_ids = [
     "${azurerm_resource_group.workstation.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
   ]
   os_disk {
-    storage_account_type = each.value.osDisk.storageType
-    caching              = each.value.osDisk.cachingType
+    storage_account_type = each.value.operatingSystem.disk.storageType
+    caching              = each.value.operatingSystem.disk.cachingType
   }
   identity {
     type         = "UserAssigned"
     identity_ids = [data.azurerm_user_assigned_identity.identity.id]
   }
-  dynamic "extension" {
-    for_each = each.value.script.file == "" ? [] : [1] 
-    content {
-      name                       = "Custom"
-      type                       = "CustomScriptExtension"
-      publisher                  = "Microsoft.Compute"
-      type_handler_version       = "1.10"
-      auto_upgrade_minor_version = true
-      settings = <<SETTINGS
-        {
-          "script": "${base64encode(
-            templatefile(each.value.script.file, each.value.script.parameters)
-          )}"
-        }
-      SETTINGS
-    }
-  }
+  custom_data = each.value.scriptExtension.fileName == "" ? null : base64gzip(
+    templatefile(each.value.scriptExtension.fileName, each.value.scriptExtension.parameters)
+  )
   depends_on = [
     azurerm_network_interface.workstation
+  ]
+}
+
+resource "azurerm_virtual_machine_extension" "workstation_windows" {
+  for_each = {
+    for x in var.virtualMachines : x.name => x if x.name != "" && x.scriptExtension.fileName != "" && x.operatingSystem.type == "Windows" 
+  }
+  name                       = "Custom"
+  type                       = "CustomScriptExtension"
+  publisher                  = "Microsoft.Compute"
+  type_handler_version       = "1.10"
+  auto_upgrade_minor_version = true
+  virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
+  settings = <<SETTINGS
+    {
+      "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -Command %SystemDrive%\\AzureData\\CustomData.bin"
+    }
+  SETTINGS
+  depends_on = [
+    azurerm_windows_virtual_machine.workstation
   ]
 }
 

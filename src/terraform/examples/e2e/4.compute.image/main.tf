@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.0.8"
+  required_version = ">= 1.0.9"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.80.0"
+      version = "~>2.81.0"
     }
   }
   backend "azurerm" {
@@ -46,18 +46,22 @@ variable "imageTemplates" {
   type = list(
     object(
       {
-        name                = string
-        imageDefinitionName = string
-        imageSourceType     = string
-        imageScriptFile     = string
-        imageSkuVersion     = string
-        imageOutputVersion  = string
-        buildTimeoutMinutes = number
-        machineProfile = object(
+        name = string
+        image = object(
           {
-            sizeSku      = string
-            subnetName   = string
-            osDiskSizeGB = number
+            definitionName = string
+            sourceType     = string
+            scriptFile     = string
+            inputVersion   = string
+            outputVersion  = string
+          }
+        )
+        build = object(
+          {
+            machineSize    = string
+            subnetName     = string
+            osDiskSizeGB   = number
+            timeoutMinutes = number
           }
         )
       }
@@ -77,12 +81,22 @@ variable "storage" {
   )
 }
 
+variable "virtualNetwork" {
+  type = object(
+    {
+      name              = string
+      resourceGroupName = string
+    }
+  )
+}
+
 locals {
   fileNameCustomizeLinux   = "customize.sh"
   fileNameCustomizeWindows = "customize.ps1"
 }
 
 data "terraform_remote_state" "network" {
+  count   = var.virtualNetwork.name == "" ? 1 : 0
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -92,13 +106,18 @@ data "terraform_remote_state" "network" {
   }
 }
 
+data "azurerm_virtual_network" "network" {
+  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
+  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
+}
+
 data "azurerm_user_assigned_identity" "identity" {
   name                = module.global.managedIdentityName
   resource_group_name = module.global.securityResourceGroupName
 }
 
 data "azurerm_resource_group" "network" {
-  name = data.terraform_remote_state.network.outputs.resourceGroupName
+  name = data.azurerm_virtual_network.network.resource_group_name
 }
 
 resource "azurerm_resource_group" "image" {
@@ -196,10 +215,10 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
       value = "https://${azurerm_storage_account.storage.name}.blob.core.windows.net/${azurerm_storage_container.container.name}/"
     },
     "virtualNetworkName" = {
-      value = data.terraform_remote_state.network.outputs.virtualNetwork.name
+      value = data.azurerm_virtual_network.network.name
     },
     "virtualNetworkResourceGroupName" = {
-      value = data.terraform_remote_state.network.outputs.resourceGroupName
+      value = data.azurerm_virtual_network.network.resource_group_name
     }
   })
   template_content = <<TEMPLATE
@@ -231,7 +250,9 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
       },
       "variables": {
         "imageBuilderApiVersion": "2020-02-14",
-        "imageGalleryApiVersion": "2021-07-01"
+        "imageGalleryApiVersion": "2021-07-01",
+        "localDownloadPathLinux": "/tmp/",
+        "localDownloadPathWindows": "C:\\Windows\\Temp\\"
       },
       "functions": [
         {
@@ -240,7 +261,11 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
             "GetExecuteCommandLinux": {
               "parameters": [
                 {
-                  "name": "scriptFile",
+                  "name": "scriptFilePath",
+                  "type": "string"
+                },
+                {
+                  "name": "scriptFileName",
                   "type": "string"
                 },
                 {
@@ -250,13 +275,17 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               ],
               "output": {
                 "type": "string",
-                "value": "[format('cat {0} | tr -d \r | {1} /bin/bash', parameters('scriptFile'), replace(replace(replace(replace(replace(string(parameters('scriptParameters')), '{', ''), '}', ''), '\"', ''), ':', '='), ',', ' '))]"
+                "value": "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('scriptFileName')), replace(replace(replace(replace(replace(string(parameters('scriptParameters')), '{', ''), '}', ''), '\"', ''), ':', '='), ',', ' '))]"
               }
             },
             "GetExecuteCommandWindows": {
               "parameters": [
                 {
-                  "name": "scriptFile",
+                  "name": "scriptFilePath",
+                  "type": "string"
+                },
+                {
+                  "name": "scriptFileName",
                   "type": "string"
                 },
                 {
@@ -266,7 +295,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               ],
               "output": {
                 "type": "string",
-                "value": "[format('PowerShell -ExecutionPolicy Unrestricted -File {0} {1}', parameters('scriptFile'), replace(replace(replace(replace(replace(string(parameters('scriptParameters')), ',\"', ' -'), '\"', ''), ':', ' '), '{', '-'), '}', ''))]"
+                "value": "[format('PowerShell -ExecutionPolicy Unrestricted -File {0} {1}', concat(parameters('scriptFilePath'), parameters('scriptFileName')), replace(replace(replace(replace(replace(string(parameters('scriptParameters')), ',\"', ' -'), '\"', ''), ':', ' '), '{', '-'), '}', ''))]"
               }
             }
           }
@@ -287,36 +316,36 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
           },
           "properties": {
             "vmProfile": {
-              "vmSize": "[parameters('imageTemplates')[copyIndex()].machineProfile.sizeSku]",
-              "osDiskSizeGB": "[parameters('imageTemplates')[copyIndex()].machineProfile.osDiskSizeGB]",
+              "vmSize": "[parameters('imageTemplates')[copyIndex()].build.machineSize]",
+              "osDiskSizeGB": "[parameters('imageTemplates')[copyIndex()].build.osDiskSizeGB]",
               "vnetConfig": {
-                "subnetId": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('imageTemplates')[copyIndex()].machineProfile.subnetName)]"
+                "subnetId": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('imageTemplates')[copyIndex()].build.subnetName)]"
               }
             },
             "source": {
-              "type": "[parameters('imageTemplates')[copyIndex()].imageSourceType]",
-              "publisher": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).identifier.publisher]",
-              "offer": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).identifier.offer]",
-              "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).identifier.sku]",
-              "version": "[parameters('imageTemplates')[copyIndex()].imageSkuVersion]"
+              "type": "[parameters('imageTemplates')[copyIndex()].image.sourceType]",
+              "publisher": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.publisher]",
+              "offer": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.offer]",
+              "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.sku]",
+              "version": "[parameters('imageTemplates')[copyIndex()].image.inputVersion]"
             },
             "customize": [
               {
                 "type": "File",
-                "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()].imageScriptFile)]",
-                "destination": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), concat('%TMP%\\', parameters('imageTemplates')[copyIndex()].imageScriptFile), concat('/tmp/', parameters('imageTemplates')[copyIndex()].imageScriptFile))]"
+                "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()].image.scriptFile)]",
+                "destination": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), concat(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.scriptFile), concat(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.scriptFile))]"
               },
               {
-                "type": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), 'PowerShell', 'Shell')]",
-                "inline": "[createArray(if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].imageDefinitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetExecuteCommandWindows(parameters('imageTemplates')[copyIndex()].imageScriptFile, parameters('imageTemplates')[copyIndex()].machineProfile), fx.GetExecuteCommandLinux(parameters('imageTemplates')[copyIndex()].imageScriptFile, parameters('imageTemplates')[copyIndex()].machineProfile)))]"
+                "type": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), 'PowerShell', 'Shell')]",
+                "inline": "[createArray(if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetExecuteCommandWindows(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.scriptFile, parameters('imageTemplates')[copyIndex()].build), fx.GetExecuteCommandLinux(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.scriptFile, parameters('imageTemplates')[copyIndex()].build)))]"
               }
             ],
-            "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].buildTimeoutMinutes]",
+            "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].build.timeoutMinutes]",
             "distribute": [
               {
                 "type": "SharedImage",
-                "runOutputName": "[concat(parameters('imageTemplates')[copyIndex()].name, '-', parameters('imageTemplates')[copyIndex()].imageOutputVersion)]",
-                "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images/versions', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].imageDefinitionName, parameters('imageTemplates')[copyIndex()].imageOutputVersion)]",
+                "runOutputName": "[concat(parameters('imageTemplates')[copyIndex()].name, '-', parameters('imageTemplates')[copyIndex()].image.outputVersion)]",
+                "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images/versions', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName, parameters('imageTemplates')[copyIndex()].image.outputVersion)]",
                 "replicationRegions": [
                   "[resourceGroup().location]"
                 ],
