@@ -43,101 +43,82 @@ variable "virtualNetwork" {
   )
 }
 
-variable "virtualNetworkSubnetIndexFarm" {
-  type = number
+variable "virtualNetworkSubnetIndex" {
+  type = object(
+    {
+      farm        = number
+      workstation = number
+      scheduler   = number
+      storage     = number
+      cache       = number
+    }
+  )
 }
 
-variable "virtualNetworkSubnetIndexWorkstation" {
-  type = number
+variable "privateDns" {
+  type = object(
+    {
+      zoneName = string
+    }
+  )
 }
 
-variable "virtualNetworkSubnetIndexScheduler" {
-  type = number
+variable "hybridNetwork" {
+  type = object(
+    {
+      type = string
+      address = object(
+        {
+          type             = string
+          allocationMethod = string
+        }
+      )
+    }
+  )
 }
 
-variable "virtualNetworkSubnetIndexStorage" {
-  type = number
+variable "vpnGateway" {
+  type = object(
+    {
+      sku          = string
+      type         = string
+      generation   = string
+      activeActive = bool
+    }
+  )
 }
 
-variable "virtualNetworkSubnetIndexCache" {
-  type = number
+variable "vpnGatewayLocal" {
+  type = object(
+    {
+      fqdn              = string
+      address           = string
+      addressSpace      = list(string)
+      bgpAsn            = number
+      bgpPeeringAddress = string
+      bgpPeerWeight     = number
+    }
+  )
 }
 
-variable "hybridNetworkType" {
-  type    = string
-  default = ""
+variable "vpnGatewayClient" {
+  type = object(
+    {
+      addressSpace    = list(string)
+      certificateName = string
+      certificateData = string
+    }
+  )
 }
 
-variable "hybridNetworkAddressType" {
-  type = string
-}
-
-variable "hybridNetworkAddressAllocationMethod" {
-  type = string
-}
-
-variable "vpnGatewaySku" {
-  type = string
-}
-
-variable "vpnGatewayType" {
-  type = string
-}
-
-variable "vpnGatewayGeneration" {
-  type = string
-}
-
-variable "vpnGatewayActiveActive" {
-  type = bool
-}
-
-variable "vpnGatewayLocalFqdn" {
-  type = string
-}
-
-variable "vpnGatewayLocalAddress" {
-  type = string
-}
-
-variable "vpnGatewayLocalAddressSpace" {
-  type = list(string)
-}
-
-variable "vpnGatewayLocalBgpAsn" {
-  type = number
-}
-
-variable "vpnGatewayLocalBgpPeeringAddress" {
-  type = string
-}
-
-variable "vpnGatewayLocalBgpPeerWeight" {
-  type = number
-}
-
-variable "vpnGatewayClientAddressSpace" {
-  type = list(string)
-}
-
-variable "vpnGatewayClientCertificateName" {
-  type = string
-}
-
-variable "vpnGatewayClientCertificateData" {
-  type = string
-}
-
-variable "expressRouteCircuitId" {
-  type = string
-}
-
-variable "expressRouteGatewaySku" {
-  type = string
-}
-
-variable "expressRouteConnectionFastPath" {
-  type = bool
+variable "expressRoute" {
+  type = object(
+    {
+      circuitId          = string
+      gatewaySku         = string
+      connectionFastPath = bool
+    }
+  )
 }
 
 resource "azurerm_resource_group" "network" {
@@ -226,26 +207,42 @@ resource "azurerm_subnet_network_security_group_association" "network" {
   ]
 }
 
+################################################################################# 
+# Private DNS - https://docs.microsoft.com/en-us/azure/dns/private-dns-overview #
+################################################################################# 
+
+resource "azurerm_private_dns_zone" "network" {
+  name                = var.privateDns.zoneName
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "network" {
+  name                  = azurerm_virtual_network.network.name
+  resource_group_name   = azurerm_resource_group.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.network.name
+  virtual_network_id    = azurerm_virtual_network.network.id
+}
+
 ########################################
 # Hybrid Network (VPN or ExpressRoute) #
 ########################################
 
 resource "azurerm_public_ip" "address1" {
-  count               = var.hybridNetworkType != "" ? 1 : 0
-  name                = var.vpnGatewayActiveActive ? "${var.virtualNetwork.name}1" : var.virtualNetwork.name
+  count               = var.hybridNetwork.type != "" ? 1 : 0
+  name                = var.vpnGateway.activeActive ? "${var.virtualNetwork.name}1" : var.virtualNetwork.name
   resource_group_name = azurerm_resource_group.network.name
   location            = azurerm_resource_group.network.location
-  sku                 = var.hybridNetworkAddressType
-  allocation_method   = var.hybridNetworkAddressAllocationMethod
+  sku                 = var.hybridNetwork.address.type
+  allocation_method   = var.hybridNetwork.address.allocationMethod
 }
 
 resource "azurerm_public_ip" "address2" {
-  count               = var.hybridNetworkType == "VPN" && var.vpnGatewayActiveActive ? 1 : 0
+  count               = var.hybridNetwork.type == "VPN" && var.vpnGateway.activeActive ? 1 : 0
   name                = "${var.virtualNetwork.name}2"
   resource_group_name = azurerm_resource_group.network.name
   location            = azurerm_resource_group.network.location
-  sku                 = var.hybridNetworkAddressType
-  allocation_method   = var.hybridNetworkAddressAllocationMethod
+  sku                 = var.hybridNetwork.address.type
+  allocation_method   = var.hybridNetwork.address.allocationMethod
 }
 
 #################################
@@ -263,15 +260,15 @@ data "azurerm_key_vault_secret" "gateway_connection" {
 }
 
 resource "azurerm_virtual_network_gateway" "vpn" {
-  count               = var.hybridNetworkType == "VPN" ? 1 : 0
+  count               = var.hybridNetwork.type == "VPN" ? 1 : 0
   name                = var.virtualNetwork.name
   resource_group_name = azurerm_resource_group.network.name
   location            = azurerm_resource_group.network.location
-  type                = var.hybridNetworkType
-  sku                 = var.vpnGatewaySku
-  vpn_type            = var.vpnGatewayType
-  generation          = var.vpnGatewayGeneration
-  active_active       = var.vpnGatewayActiveActive
+  type                = var.hybridNetwork.type
+  sku                 = var.vpnGateway.sku
+  vpn_type            = var.vpnGateway.type
+  generation          = var.vpnGateway.generation
+  active_active       = var.vpnGateway.activeActive
   enable_bgp          = true
   ip_configuration {
     name                 = "ipConfig1"
@@ -279,7 +276,7 @@ resource "azurerm_virtual_network_gateway" "vpn" {
     subnet_id            = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${var.virtualNetwork.name}/subnets/GatewaySubnet"
   }
   dynamic "ip_configuration" {
-    for_each = var.vpnGatewayActiveActive ? [1] : [] 
+    for_each = var.vpnGateway.activeActive ? [1] : [] 
     content {
       name                 = "ipConfig2"
       public_ip_address_id = azurerm_public_ip.address2[count.index].id
@@ -287,12 +284,12 @@ resource "azurerm_virtual_network_gateway" "vpn" {
     }
   }
   dynamic "vpn_client_configuration" {
-    for_each = length(var.vpnGatewayClientAddressSpace) > 0 ? [1] : [] 
+    for_each = length(var.vpnGatewayClient.addressSpace) > 0 ? [1] : [] 
     content {
-      address_space = var.vpnGatewayClientAddressSpace
+      address_space = var.vpnGatewayClient.addressSpace
       root_certificate {
-        name             = var.vpnGatewayClientCertificateName
-        public_cert_data = var.vpnGatewayClientCertificateData
+        name             = var.vpnGatewayClient.certificateName
+        public_cert_data = var.vpnGatewayClient.certificateData
       }
     }
   }
@@ -302,25 +299,25 @@ resource "azurerm_virtual_network_gateway" "vpn" {
 }
 
 resource "azurerm_local_network_gateway" "vpn" {
-  count               = var.hybridNetworkType == "VPN" && (var.vpnGatewayLocalFqdn != "" || var.vpnGatewayLocalAddress != "") ? 1 : 0
+  count               = var.hybridNetwork.type == "VPN" && (var.vpnGatewayLocal.fqdn != "" || var.vpnGatewayLocal.address != "") ? 1 : 0
   name                = var.virtualNetwork.name
   resource_group_name = azurerm_resource_group.network.name
   location            = azurerm_resource_group.network.location
-  gateway_fqdn        = var.vpnGatewayLocalAddress == "" ? var.vpnGatewayLocalFqdn : null
-  gateway_address     = var.vpnGatewayLocalFqdn == "" ? var.vpnGatewayLocalAddress : null
-  address_space       = var.vpnGatewayLocalAddressSpace
+  gateway_fqdn        = var.vpnGatewayLocal.address == "" ? var.vpnGatewayLocal.fqdn : null
+  gateway_address     = var.vpnGatewayLocal.fqdn == "" ? var.vpnGatewayLocal.address : null
+  address_space       = var.vpnGatewayLocal.addressSpace
   dynamic "bgp_settings" {
-    for_each = var.vpnGatewayLocalBgpAsn > 0 ? [1] : []
+    for_each = var.vpnGatewayLocal.bgpAsn > 0 ? [1] : []
     content {
-      asn                 = var.vpnGatewayLocalBgpAsn
-      bgp_peering_address = var.vpnGatewayLocalBgpPeeringAddress
-      peer_weight         = var.vpnGatewayLocalBgpPeerWeight
+      asn                 = var.vpnGatewayLocal.bgpAsn
+      bgp_peering_address = var.vpnGatewayLocal.bgpPeeringAddress
+      peer_weight         = var.vpnGatewayLocal.bgpPeerWeight
     }
   }
 }
 
 resource "azurerm_virtual_network_gateway_connection" "vpn" {
-  count                      = var.hybridNetworkType == "VPN" && (var.vpnGatewayLocalFqdn != "" || var.vpnGatewayLocalAddress != "") ? 1 : 0
+  count                      = var.hybridNetwork.type == "VPN" && (var.vpnGatewayLocal.fqdn != "" || var.vpnGatewayLocal.address != "") ? 1 : 0
   name                       = var.virtualNetwork.name
   resource_group_name        = azurerm_resource_group.network.name
   location                   = azurerm_resource_group.network.location
@@ -328,7 +325,7 @@ resource "azurerm_virtual_network_gateway_connection" "vpn" {
   virtual_network_gateway_id = azurerm_virtual_network_gateway.vpn[count.index].id
   local_network_gateway_id   = azurerm_local_network_gateway.vpn[count.index].id
   shared_key                 = data.azurerm_key_vault_secret.gateway_connection.value
-  enable_bgp                 = var.vpnGatewayLocalBgpAsn > 0
+  enable_bgp                 = var.vpnGatewayLocal.bgpAsn > 0
 }
 
 ##########################################
@@ -336,12 +333,12 @@ resource "azurerm_virtual_network_gateway_connection" "vpn" {
 ##########################################
 
 resource "azurerm_virtual_network_gateway" "express_route" {
-  count               = var.hybridNetworkType == "ExpressRoute" ? 1 : 0
+  count               = var.hybridNetwork.type == "ExpressRoute" ? 1 : 0
   name                = var.virtualNetwork.name
   resource_group_name = azurerm_resource_group.network.name
   location            = azurerm_resource_group.network.location
-  type                = var.hybridNetworkType
-  sku                 = var.expressRouteGatewaySku
+  type                = var.hybridNetwork.type
+  sku                 = var.expressRoute.gatewaySku
   ip_configuration {
     public_ip_address_id = azurerm_public_ip.address1[count.index].id
     subnet_id            = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${var.virtualNetwork.name}/subnets/GatewaySubnet"
@@ -352,14 +349,14 @@ resource "azurerm_virtual_network_gateway" "express_route" {
 }
 
 resource "azurerm_virtual_network_gateway_connection" "express_route" {
-  count                        = var.hybridNetworkType == "ExpressRoute" ? 1 : 0
+  count                        = var.hybridNetwork.type == "ExpressRoute" ? 1 : 0
   name                         = var.virtualNetwork.name
   resource_group_name          = azurerm_resource_group.network.name
   location                     = azurerm_resource_group.network.location
   type                         = "ExpressRoute"
   virtual_network_gateway_id   = azurerm_virtual_network_gateway.express_route[count.index].id
-  express_route_circuit_id     = var.expressRouteCircuitId
-  express_route_gateway_bypass = var.expressRouteConnectionFastPath
+  express_route_circuit_id     = var.expressRoute.circuitId
+  express_route_gateway_bypass = var.expressRoute.connectionFastPath
 }
 
 output "regionName" {
@@ -374,22 +371,10 @@ output "virtualNetwork" {
   value = var.virtualNetwork
 }
 
-output "virtualNetworkSubnetIndexFarm" {
-  value = var.virtualNetworkSubnetIndexFarm
+output "virtualNetworkSubnetIndex" {
+  value = var.virtualNetworkSubnetIndex
 }
 
-output "virtualNetworkSubnetIndexWorkstation" {
-  value = var.virtualNetworkSubnetIndexWorkstation
-}
-
-output "virtualNetworkSubnetIndexScheduler" {
-  value = var.virtualNetworkSubnetIndexScheduler
-}
-
-output "virtualNetworkSubnetIndexStorage" {
-  value = var.virtualNetworkSubnetIndexStorage
-}
-
-output "virtualNetworkSubnetIndexCache" {
-  value = var.virtualNetworkSubnetIndexCache
+output "privateDns" {
+  value = var.privateDns
 }

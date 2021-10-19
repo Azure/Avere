@@ -1,6 +1,6 @@
 # Azure Artist Anywhere (AAA) Rendering Solution
 
-This folder contains the end-to-end example configuration and automated deployment framework for the [Azure Artist Anywhere (AAA) rendering solution architecture](https://github.com/Azure/Avere/blob/main/src/terraform/burstrenderarchitecture.png). By leveraging the [Azure First Render Pilot](../securedimage/Azure%20First%20Render%20Pilot.pdf) process along with [Terraform](https://www.terraform.io/) across the following deployment modules, your existing pipeline can be extended via [Azure HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) to enable render at scale without moving your asset storage.
+This folder contains the end-to-end example configuration and automated deployment framework for the [Azure Artist Anywhere (AAA) rendering solution architecture](https://github.com/Azure/Avere/blob/main/src/terraform/burstrenderarchitecture.png). By leveraging the [Azure First Render Pilot](../securedimage/Azure%20First%20Render%20Pilot.pdf) process along with [Terraform](https://www.terraform.io/) across the following deployment modules, your existing pipeline can be extended via [Azure HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) to enable rendering at scale without moving your asset storage.
 
 | Module | Description |
 | :----- | :---------- |

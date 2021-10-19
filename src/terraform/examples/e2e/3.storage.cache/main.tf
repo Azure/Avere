@@ -123,20 +123,6 @@ variable "storageTargetsNfsBlob" {
   )
 }
 
-variable "privateDns" {
-  type = object(
-    {
-      zoneName = string
-      aRecord = object(
-        {
-          name = string
-          ttl  = number
-        }
-      )
-    }
-  )
-}
-
 variable "virtualNetwork" {
   type = object(
     {
@@ -166,14 +152,19 @@ data "azurerm_virtual_network" "network" {
 }
 
 data "azurerm_subnet" "cache" {
-  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndexCache].name : var.virtualNetwork.subnetName
+  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.cache].name : var.virtualNetwork.subnetName
   resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
   virtual_network_name = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
 }
 
+data "azurerm_private_dns_zone" "network" {
+  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.privateDns.zoneName : var.virtualNetwork.privateDnsZoneName
+  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
+}
+
 locals {
-  vfxtControllerAddress   = cidrhost(data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndexCache].addressSpace[0], 39)
-  vfxtVServerFirstAddress = cidrhost(data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndexCache].addressSpace[0], 40)
+  vfxtControllerAddress   = cidrhost(data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.cache].addressSpace[0], 39)
+  vfxtVServerFirstAddress = cidrhost(data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.cache].addressSpace[0], 40)
   vfxtVServerAddressCount = 20
 }
 
@@ -310,24 +301,12 @@ resource "avere_vfxt" "cache" {
 # Private DNS - https://docs.microsoft.com/en-us/azure/dns/private-dns-overview #
 ################################################################################# 
 
-resource "azurerm_private_dns_zone" "cache" {
-  name                = var.privateDns.zoneName
-  resource_group_name = azurerm_resource_group.cache.name
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "cache" {
-  name                  = data.azurerm_virtual_network.network.name
-  resource_group_name   = azurerm_resource_group.cache.name
-  private_dns_zone_name = azurerm_private_dns_zone.cache.name
-  virtual_network_id    = data.azurerm_virtual_network.network.id
-}
-
 resource "azurerm_private_dns_a_record" "cache" {
-  name                = var.privateDns.aRecord.name
-  resource_group_name = azurerm_resource_group.cache.name
-  zone_name           = azurerm_private_dns_zone.cache.name
+  name                = "cache"
+  resource_group_name = data.azurerm_private_dns_zone.network.resource_group_name
+  zone_name           = data.azurerm_private_dns_zone.network.name
   records             = var.hpcCacheEnable ? azurerm_hpc_cache.cache[0].mount_addresses : avere_vfxt.cache[0].vserver_ip_addresses
-  ttl                 = var.privateDns.aRecord.ttl
+  ttl                 = 300
 }
 
 output "regionName" {

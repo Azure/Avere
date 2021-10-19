@@ -48,51 +48,69 @@ virtualNetwork = {
   ]
 }
 
-virtualNetworkSubnetIndexFarm        = 0
-virtualNetworkSubnetIndexWorkstation = 1
-virtualNetworkSubnetIndexScheduler   = 2
-virtualNetworkSubnetIndexStorage     = 3
-virtualNetworkSubnetIndexCache       = 4
+virtualNetworkSubnetIndex = {
+  farm        = 0
+  workstation = 1
+  scheduler   = 2
+  storage     = 3
+  cache       = 4
+}
+
+################################################################################# 
+# Private DNS - https://docs.microsoft.com/en-us/azure/dns/private-dns-overview #
+################################################################################# 
+
+privateDns = {
+  zoneName = "media.studio"
+}
 
 ########################################
 # Hybrid Network (VPN or ExpressRoute) #
 ########################################
 
-hybridNetworkType = "VPN"          // https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways
-//hybridNetworkType = "ExpressRoute" // https://docs.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways
-
-# Public IP Address - https://docs.microsoft.com/en-us/azure/virtual-network/public-ip-addresses
-hybridNetworkAddressType             = "Basic"
-hybridNetworkAddressAllocationMethod = "Dynamic"
+hybridNetwork = {
+  type = "VPN"          // https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways
+  //type = "ExpressRoute" // https://docs.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways
+  address = {
+    type             = "Basic"
+    allocationMethod = "Dynamic"
+  }
+}
 
 ####################################################################################################################
 # Virtual Network Gateway (VPN) - https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways #
 ####################################################################################################################
 
-vpnGatewaySku          = "VpnGw2"
-vpnGatewayType         = "RouteBased"
-vpnGatewayGeneration   = "Generation2"
-vpnGatewayActiveActive = false
+vpnGateway = {
+  sku          = "VpnGw2"
+  type         = "RouteBased"
+  generation   = "Generation2"
+  activeActive = false
+}
 
 # Site-to-Site Local Network Gateway - https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpn-gateway-settings#lng
-vpnGatewayLocalFqdn              = "" // Set the fully-qualified domain name (FQDN) of your on-premises VPN gateway device
-vpnGatewayLocalAddress           = "" // OR set the public IP address of your on-prem VPN gateway device. Do not set both.
-vpnGatewayLocalAddressSpace      = []
-vpnGatewayLocalBgpAsn            = 0
-vpnGatewayLocalBgpPeeringAddress = ""
-vpnGatewayLocalBgpPeerWeight     = 0
+vpnGatewayLocal = {
+  fqdn              = "" // Set the fully-qualified domain name (FQDN) of your on-premises VPN gateway device
+  address           = "" // OR set the public IP address of your on-prem VPN gateway device. Do not set both.
+  addressSpace      = []
+  bgpAsn            = 0
+  bgpPeeringAddress = ""
+  bgpPeerWeight     = 0
+}
 
 # Point-to-Site Client - https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-howto-point-to-site-rm-ps
-vpnGatewayClientAddressSpace    = []
-vpnGatewayClientCertificateName = ""
-vpnGatewayClientCertificateData = ""
+vpnGatewayClient = {
+  addressSpace    = []
+  certificateName = ""
+  certificateData = ""
+}
 
 ############################################################################################################################################
 # Virtual Network Gateway (ExpressRoute) - https://docs.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways #
 ############################################################################################################################################
 
-# ExpressRoute Circuit - https://docs.microsoft.com/en-us/azure/expressroute/expressroute-circuit-peerings#circuits
-expressRouteCircuitId = "" // Expected format is "/subscriptions/[subscription_id]/resourceGroups/[resource_group_name]/providers/Microsoft.Network/expressRouteCircuits/[circuit_name]"
-
-expressRouteGatewaySku         = "Standard" // https://docs.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways#gwsku
-expressRouteConnectionFastPath = false      // https://docs.microsoft.com/en-us/azure/expressroute/about-fastpath
+expressRoute = {
+  circuitId          = ""         // Expected format is "/subscriptions/[subscription_id]/resourceGroups/[resource_group_name]/providers/Microsoft.Network/expressRouteCircuits/[circuit_name]"
+  gatewaySku         = "Standard" // https://docs.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways#gwsku
+  connectionFastPath = false      // https://docs.microsoft.com/en-us/azure/expressroute/about-fastpath
+}

@@ -110,24 +110,13 @@ storageTargetsNfsBlob = [
   }
 ]
 
-################################################################################# 
-# Private DNS - https://docs.microsoft.com/en-us/azure/dns/private-dns-overview #
-################################################################################# 
-
-privateDns = {
-  zoneName = "media.studio"
-  aRecord = {
-    name = "cache"
-    ttl  = 300
-  }
-}
-
 ######################################################################################################
 # Virtual Network - https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview #
 ######################################################################################################
 
 virtualNetwork = {
-  name              = ""
-  subnetName        = ""
-  resourceGroupName = ""
+  name               = ""
+  subnetName         = ""
+  resourceGroupName  = ""
+  privateDnsZoneName = ""
 }
