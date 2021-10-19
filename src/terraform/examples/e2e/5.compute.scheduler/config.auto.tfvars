@@ -5,7 +5,7 @@ virtualMachines = [
   {
     name        = "LinuxScheduler"
     imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/AzureRender.Image/providers/Microsoft.Compute/galleries/Gallery/images/LinuxFarm/versions/10.0.0"
-    machineSize = "Standard_L8s_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+    machineSize = "Standard_D4as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Linux"
       disk = {
@@ -27,7 +27,7 @@ virtualMachines = [
   {
     name        = "WinScheduler"
     imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/AzureRender.Image/providers/Microsoft.Compute/galleries/Gallery/images/WindowsFarm/versions/10.0.0"
-    machineSize = "Standard_L8s_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+    machineSize = "Standard_D4as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Windows"
       disk = {

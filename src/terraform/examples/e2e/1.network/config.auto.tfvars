@@ -22,6 +22,12 @@ virtualNetwork = {
       serviceEndpoints  = []
     },
     {
+      name              = "Scheduler"
+      addressSpace      = ["10.0.252.0/24"]
+      serviceDelegation = ""
+      serviceEndpoints  = []
+    },
+    {
       name              = "Storage"
       addressSpace      = ["10.0.253.0/24"]
       serviceDelegation = "" // "Microsoft.Netapp/volumes"
@@ -44,8 +50,9 @@ virtualNetwork = {
 
 virtualNetworkSubnetIndexFarm        = 0
 virtualNetworkSubnetIndexWorkstation = 1
-virtualNetworkSubnetIndexStorage     = 2
-virtualNetworkSubnetIndexCache       = 3
+virtualNetworkSubnetIndexScheduler   = 2
+virtualNetworkSubnetIndexStorage     = 3
+virtualNetworkSubnetIndexCache       = 4
 
 ########################################
 # Hybrid Network (VPN or ExpressRoute) #

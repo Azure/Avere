@@ -26,10 +26,11 @@ $registryKeyPath = "HKLM:\\SOFTWARE\\Microsoft\\ClientForNFS\\CurrentVersion\\De
 New-ItemProperty -Path $registryKeyPath -Name AnonymousUid -PropertyType DWORD -Value 0
 New-ItemProperty -Path $registryKeyPath -Name AnonymousGid -PropertyType DWORD -Value 0
 
-$registryKeyName = "OOBE"
-$registryKeyPath = "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows"
-New-Item –Path $registryKeyPath –Name $registryKeyName -Force
-New-ItemProperty -Path $registryKeyPath\$registryKeyName -PropertyType DWORD -Name "DisablePrivacyExperience" -Value 1 -Force
+if ($subnetName -eq "Workstation") {
+  $registryKeyPath = "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\OOBE"
+  New-Item –Path $registryKeyPath -Force
+  New-ItemProperty -Path $registryKeyPath -PropertyType DWORD -Name "DisablePrivacyExperience" -Value 1 -Force
+}
 
 $storageContainerUrl = "https://az0.blob.core.windows.net/bin"
 $storageContainerSas = "?sp=r&sr=c&sig=Ysr0iLGUhilzRYPHuY066aZ69iT46uTx87pP2V%2BdMEY%3D&sv=2020-08-04&se=2222-12-31T00%3A00%3A00Z"
@@ -43,7 +44,7 @@ Invoke-WebRequest $downloadUrl -OutFile $fileName
 Expand-Archive -Path $fileName
 
 Set-Location -Path "Deadline*"
-if ($machineSize.StartsWith("Standard_L")) {
+if ($subnetName -eq "Scheduler") {
   $fileName = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
   Start-Process -FilePath $fileName -ArgumentList "--mode unattended --licensemode $schedulerLicense --dbLicenseAcceptance accept --installmongodb true" -Wait
 } else {
@@ -54,7 +55,7 @@ if ($machineSize.StartsWith("Standard_L")) {
 }
 
 $fileName = "DeadlineClient-$schedulerVersion-windows-installer.exe"
-Start-Process -FilePath $fileName -ArgumentList "--mode unattended --licensemode $schedulerLicense" -Wait
+Start-Process -FilePath $fileName -ArgumentList "--mode unattended --licensemode $schedulerLicense --connectiontype Remote" -Wait
 
 if ($subnetName -eq "Workstation") {
   $fileName = "pcoip-agent-graphics_21.07.4.exe"

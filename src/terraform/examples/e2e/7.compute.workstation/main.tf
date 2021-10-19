@@ -111,6 +111,12 @@ data "azurerm_key_vault_secret" "admin_password" {
   key_vault_id = data.azurerm_key_vault.vault.id
 }
 
+locals {
+  customScriptFileInput  = "C:\\\\AzureData\\\\CustomData.bin"
+  customScriptFileOutput = "C:\\\\AzureData\\\\CustomData.ps1"
+  customScriptFileCreate = "$inputStream = New-Object System.IO.FileStream ${local.customScriptFileInput}, ([System.IO.FileMode]::Open), ([System.IO.FileAccess]::Read), ([System.IO.FileShare]::Read) ; $streamReader = New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($inputStream, [System.IO.Compression.CompressionMode]::Decompress)) ; Out-File -InputObject $streamReader.ReadToEnd() -FilePath ${local.customScriptFileOutput}"
+}
+
 resource "azurerm_resource_group" "workstation" {
   name     = var.resourceGroupName
   location = module.global.regionName
@@ -229,7 +235,7 @@ resource "azurerm_virtual_machine_extension" "workstation_windows" {
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = <<SETTINGS
     {
-      "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -Command %SystemDrive%\\AzureData\\CustomData.bin"
+      "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -Command \"& {${local.customScriptFileCreate}}\" ; PowerShell -ExecutionPolicy Unrestricted -File ${local.customScriptFileOutput}"
     }
   SETTINGS
   depends_on = [

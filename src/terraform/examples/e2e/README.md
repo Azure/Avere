@@ -1,6 +1,6 @@
 # Azure Artist Anywhere (AAA) Rendering Solution
 
-This folder contains the end-to-end example configuration and automated deployment framework for the [Azure rendering solution architecture](https://github.com/Azure/Avere/blob/main/src/terraform/burstrenderarchitecture.png). It follows the [Azure First Render Pilot](../securedimage/Azure%20First%20Render%20Pilot.pdf) process and leverages [Terraform](https://www.terraform.io/) across the following deployment modules.
+This folder contains the end-to-end configuration and deployment framework for the [Azure Artist Anywhere (AAA) rendering solution architecture](https://github.com/Azure/Avere/blob/main/src/terraform/burstrenderarchitecture.png). It directly enables the [Azure First Render Pilot](../securedimage/Azure%20First%20Render%20Pilot.pdf) process and leverages [Terraform](https://www.terraform.io/) automation across the following deployment modules.
 
 | Module | Description |
 | :----- | :---------- |
@@ -44,8 +44,8 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 1. Edit the `regionName` config value in `variables.tf` using your favorite text editor
 1. Run `cd ~/tf/src/terraform/examples/e2e/0.security`
 1. Edit the config values in `config.auto.tfvars` using your favorite text editor
-1. Run `terraform init` to initialize the current local directory (add `-upgrade` if older providers are detected)
-1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (add `-destroy` to delete Azure resources)
+1. Run `terraform init` to initialize the current local directory (append `-upgrade` if older providers are detected)
+1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
 1. Use the [Azure portal to update your Key Vault secrets](https://docs.microsoft.com/en-us/azure/key-vault/secrets/quick-create-portal) (`GatewayConnection`, `AdminPassword`)
 1. Run `cd ~/tf/src/terraform/examples/e2e`
@@ -59,8 +59,8 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 
 1. Run `cd ~/tf/src/terraform/examples/e2e/1.network`
 1. Edit the config values in `config.auto.tfvars` using your favorite text editor.
-1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (add `-upgrade` if older providers are detected)
-1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (add `-destroy` to delete Azure resources)
+1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
+1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
 
 ## 2 Storage
@@ -69,8 +69,8 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 
 1. Run `cd ~/tf/src/terraform/examples/e2e/2.storage`
 1. Edit the config values in `config.auto.tfvars` using your favorite text editor.
-1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (add `-upgrade` if older providers are detected)
-1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (add `-destroy` to delete Azure resources)
+1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
+1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
 
 ## 3 Storage Cache
@@ -103,8 +103,8 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 1. Run `cd ~/tf/src/terraform/examples/e2e/3.storage.cache`
 1. Edit the config values in `config.auto.tfvars` using your favorite text editor.
 1. For Avere vFXT deployment, make sure the [Avere vFXT image terms have been accepted](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs#accept-software-terms) (only required once per Azure subscription)
-1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (add `-upgrade` if older providers are detected)
-1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (add `-destroy` to delete Azure resources)
+1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
+1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
 
 ## 4 Compute Image
@@ -113,38 +113,39 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 
 1. Run `cd ~/tf/src/terraform/examples/e2e/4.compute.image`
 1. Edit the config values in `config.auto.tfvars` using your favorite text editor.
-1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (add `-upgrade` if older providers are detected)
-1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (add `-destroy` to delete Azure resources)
+1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
+1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
+1. After successful deployment, use the Azure portal or CLI on your image templates to build each image
 
 ## 5 Compute Scheduler
 
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
-1. Run `cd ~/tf/src/terraform/examples/e2e/5.compute.farm`
+1. Run `cd ~/tf/src/terraform/examples/e2e/5.compute.scheduler`
 1. Edit the config values in `config.auto.tfvars` using your favorite text editor.
-1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (add `-upgrade` if older providers are detected)
-1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (add `-destroy` to delete Azure resources)
+1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
+1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
 
 ## 6 Compute Farm
 
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
-1. Run `cd ~/tf/src/terraform/examples/e2e/5.compute.farm`
+1. Run `cd ~/tf/src/terraform/examples/e2e/6.compute.farm`
 1. Edit the config values in `config.auto.tfvars` using your favorite text editor.
-1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (add `-upgrade` if older providers are detected)
-1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (add `-destroy` to delete Azure resources)
+1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
+1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
 
 ## 7 Compute Workstation
 
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
-1. Run `cd ~/tf/src/terraform/examples/e2e/6.compute.workstation`
+1. Run `cd ~/tf/src/terraform/examples/e2e/7.compute.workstation`
 1. Edit the config values in `config.auto.tfvars` using your favorite text editor.
-1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (add `-upgrade` if older providers are detected)
-1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (add `-destroy` to delete Azure resources)
+1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
+1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com

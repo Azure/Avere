@@ -51,6 +51,10 @@ variable "virtualNetworkSubnetIndexWorkstation" {
   type = number
 }
 
+variable "virtualNetworkSubnetIndexScheduler" {
+  type = number
+}
+
 variable "virtualNetworkSubnetIndexStorage" {
   type = number
 }
@@ -376,6 +380,10 @@ output "virtualNetworkSubnetIndexFarm" {
 
 output "virtualNetworkSubnetIndexWorkstation" {
   value = var.virtualNetworkSubnetIndexWorkstation
+}
+
+output "virtualNetworkSubnetIndexScheduler" {
+  value = var.virtualNetworkSubnetIndexScheduler
 }
 
 output "virtualNetworkSubnetIndexStorage" {

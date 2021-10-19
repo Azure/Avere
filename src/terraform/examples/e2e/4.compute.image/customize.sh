@@ -37,7 +37,7 @@ fileName="Deadline-$schedulerVersion-linux-installers.tar"
 curl -L -o $fileName "$storageContainerUrl/Deadline/$fileName$storageContainerSas"
 tar -xf $fileName
 
-if [[ "$machineSize" == Standard_L* ]]; then
+if [ "$subnetName" == "Scheduler" ]; then
   fileName="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
   ./$fileName --mode unattended --licensemode $schedulerLicense --dbLicenseAcceptance accept --installmongodb true
 else
@@ -53,7 +53,7 @@ else
 fi
 
 fileName="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
-./$fileName --mode unattended --licensemode $schedulerLicense
+./$fileName --mode unattended --licensemode $schedulerLicense --connectiontype Remote
 
 if [ "$subnetName" == "Workstation" ]; then
   yum -y groups install "KDE Plasma Workspaces"

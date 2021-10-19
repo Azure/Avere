@@ -49,10 +49,10 @@ imageTemplates = [
       outputVersion  = "10.0.0"
     }
     build = {
-      subnetName     = "Farm"
-      machineSize    = "Standard_L8s_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 0                 // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 90                // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      subnetName     = "Scheduler"
+      machineSize    = "Standard_D4as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 90                 // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
     }
   },
   {
@@ -113,10 +113,10 @@ imageTemplates = [
       outputVersion  = "10.0.0"
     }
     build = {
-      subnetName     = "Farm"
-      machineSize    = "Standard_L8s_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 0                 // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 90                // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      subnetName     = "Scheduler"
+      machineSize    = "Standard_D4as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 90                 // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
     }
   },
   {
