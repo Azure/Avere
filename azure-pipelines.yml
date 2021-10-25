@@ -1,7 +1,22 @@
 # Copyright (C) Microsoft Corporation. All rights reserved.
 # https://aka.ms/yaml
 
-trigger: none
+trigger:
+  branches:
+    include:
+    - main
+    - releases/*
+  paths:
+    exclude:
+    - docs/*
+pr:
+  branches:
+    include:
+    - main
+    - releases/*
+  paths:
+    exclude:
+    - docs/*
 
 jobs:
 - job: ARM_Template_Test
