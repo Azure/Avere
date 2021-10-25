@@ -29,6 +29,10 @@ keyVault = {
     {
       name  = "AdminPassword"
       value = "P@ssword1234"
+    },
+    {
+      name  = "UserPassword"
+      value = "P@ssword1234"
     }
   ]
   keys = [
@@ -38,4 +42,13 @@ keyVault = {
       size = 2048
     }
   ]
+}
+
+# Monitor - https://docs.microsoft.com/en-us/azure/azure-monitor/overview
+monitorWorkspace = {
+  name               = "AzRender"
+  sku                = "PerGB2018"
+  retentionDays      = 90
+  publicIngestEnable = false
+  publicQueryEnable  = false
 }

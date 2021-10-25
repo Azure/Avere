@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.81.0"
+      version = "~>2.82.0"
     }
   }
   backend "azurerm" {
@@ -54,7 +54,7 @@ variable "virtualMachineScaleSets" {
             disablePasswordAuthentication = bool
           }
         )
-        scriptExtension = object(
+        customExtension = object(
           {
             fileName   = string
             parameters = object(
@@ -62,6 +62,11 @@ variable "virtualMachineScaleSets" {
                 fileSystemMounts = list(string)
               }
             )
+          }
+        )
+        monitorExtension = object(
+          {
+            enable = bool
           }
         )
         spot = object(
@@ -122,6 +127,11 @@ data "azurerm_key_vault_secret" "admin_password" {
   key_vault_id = data.azurerm_key_vault.vault.id
 }
 
+data "azurerm_log_analytics_workspace" "monitor" {
+  name                = module.global.monitorWorkspaceName
+  resource_group_name = module.global.securityResourceGroupName
+}
+
 resource "azurerm_resource_group" "farm" {
   name     = var.resourceGroupName
   location = module.global.regionName
@@ -176,20 +186,34 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic "extension" {
-    for_each = each.value.scriptExtension.fileName == "" ? [] : [1]
+    for_each = each.value.customExtension.fileName != "" ? [1] : []
     content {
       name                       = "Custom"
       type                       = "CustomScript"
       publisher                  = "Microsoft.Azure.Extensions"
       type_handler_version       = "2.1"
       auto_upgrade_minor_version = true
-      settings = <<SETTINGS
-        {
-          "script": "${base64encode(
-            templatefile(each.value.scriptExtension.fileName, each.value.scriptExtension.parameters)
-          )}"
-        }
-      SETTINGS
+      settings = jsonencode({
+        script: "${base64encode(
+          templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
+        )}"
+      })
+    }
+  }
+  dynamic "extension" {
+    for_each = each.value.monitorExtension.enable ? [1] : [] 
+    content {
+      name                       = "Monitor"
+      type                       = "OmsAgentForLinux"
+      publisher                  = "Microsoft.EnterpriseCloud.Monitoring"
+      type_handler_version       = "1.13"
+      auto_upgrade_minor_version = true
+      settings = jsonencode({
+        workspaceId: data.azurerm_log_analytics_workspace.monitor.workspace_id
+      })
+      protected_settings = jsonencode({
+        workspaceKey: data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+      })
     }
   }
 }
@@ -211,8 +235,8 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   max_bid_price          = each.value.spot.evictionPolicy != "" ? each.value.spot.machineMaxPrice : -1
   single_placement_group = false
   overprovision          = false
-  custom_data = each.value.scriptExtension.fileName == "" ? null : base64gzip(
-    templatefile(each.value.scriptExtension.fileName, each.value.scriptExtension.parameters)
+  custom_data = each.value.customExtension.fileName == "" ? null : base64gzip(
+    templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
   )
   network_interface {
     name    = each.value.name
@@ -238,18 +262,32 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     identity_ids = [data.azurerm_user_assigned_identity.identity.id]
   }
   dynamic "extension" {
-    for_each = each.value.scriptExtension.fileName == "" ? [] : [1] 
+    for_each = each.value.customExtension.fileName != "" ? [1] : [] 
     content {
       name                       = "Custom"
       type                       = "CustomScriptExtension"
       publisher                  = "Microsoft.Compute"
       type_handler_version       = "1.10"
       auto_upgrade_minor_version = true
-      settings = <<SETTINGS
-        {
-          "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -Command %SystemDrive%\\AzureData\\CustomData.bin"
-        }
-      SETTINGS
+      settings = jsonencode({
+        commandToExecute: "PowerShell -ExecutionPolicy Unrestricted -Command %SystemDrive%\\AzureData\\CustomData.bin"
+      })
+    }
+  }
+  dynamic "extension" {
+    for_each = each.value.monitorExtension.enable ? [1] : [] 
+    content {
+      name                       = "Monitor"
+      type                       = "MicrosoftMonitoringAgent"
+      publisher                  = "Microsoft.EnterpriseCloud.Monitoring"
+      type_handler_version       = "1.0"
+      auto_upgrade_minor_version = true
+      settings = jsonencode({
+        workspaceId: data.azurerm_log_analytics_workspace.monitor.workspace_id
+      })
+      protected_settings = jsonencode({
+        workspaceKey: data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+      })
     }
   }
 }

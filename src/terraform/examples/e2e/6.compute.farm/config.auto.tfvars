@@ -22,7 +22,7 @@ virtualMachineScaleSets = [
       sshPublicKey = "" // "ssh-rsa ..."
       disablePasswordAuthentication = false
     }
-    scriptExtension = {
+    customExtension = {
       fileName = "initialize.sh"
       parameters = {
         fileSystemMounts = [
@@ -31,13 +31,16 @@ virtualMachineScaleSets = [
         ]
       }
     }
+    monitorExtension = {
+      enable = true
+    }
     spot = {                     // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot
       evictionPolicy  = "Delete" // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#eviction-policy
       machineMaxPrice = -1       // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#pricing
     }
   },
   {
-    name    = "WinFarm"
+    name    = ""
     imageId = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/AzureRender.Image/providers/Microsoft.Compute/galleries/Gallery/images/WindowsFarm/versions/1.0.0"
     machine = {
       size  = "Standard_HB120rs_v2"
@@ -56,7 +59,7 @@ virtualMachineScaleSets = [
       sshPublicKey = "" // "ssh-rsa ..."
       disablePasswordAuthentication = false
     }
-    scriptExtension = {
+    customExtension = {
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMounts = [         
@@ -64,6 +67,9 @@ virtualMachineScaleSets = [
           "mount -o anon azasset.blob.core.windows.net:/azasset/show W:"
         ]
       }
+    }
+    monitorExtension = {
+      enable = true
     }
     spot = {                     // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot
       evictionPolicy  = "Delete" // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#eviction-policy

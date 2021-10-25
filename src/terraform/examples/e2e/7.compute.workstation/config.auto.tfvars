@@ -19,7 +19,7 @@ virtualMachines = [
       sshPublicKey = "" // "ssh-rsa ..."
       disablePasswordAuthentication = false
     }
-    scriptExtension = {
+    customExtension = {
       fileName = "initialize.sh"
       parameters = {
         fileSystemMounts = [
@@ -46,7 +46,7 @@ virtualMachines = [
       sshPublicKey = "" // "ssh-rsa ..."
       disablePasswordAuthentication = false
     }
-    scriptExtension = {
+    customExtension = {
       fileName = "initialize.sh"
       parameters = {
         fileSystemMounts = [
@@ -58,7 +58,7 @@ virtualMachines = [
     }
   },
   {
-    name        = "WindowsArtist3"
+    name        = ""
     imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/AzureRender.Image/providers/Microsoft.Compute/galleries/Gallery/images/WindowsWorkstation/versions/3.0.0"
     machineSize = "Standard_NV48s_v3" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
     operatingSystem = {
@@ -73,7 +73,7 @@ virtualMachines = [
       sshPublicKey = "" // "ssh-rsa ..."
       disablePasswordAuthentication = false
     }
-    scriptExtension = {
+    customExtension = {
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMounts = [
@@ -85,7 +85,7 @@ virtualMachines = [
     }
   },
   {
-    name        = "WindowsArtist4"
+    name        = ""
     imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/AzureRender.Image/providers/Microsoft.Compute/galleries/Gallery/images/WindowsWorkstation/versions/4.0.0"
     machineSize = "Standard_NV32as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
     operatingSystem = {
@@ -100,7 +100,7 @@ virtualMachines = [
       sshPublicKey = "" // "ssh-rsa ..."
       disablePasswordAuthentication = false
     }
-    scriptExtension = {
+    customExtension = {
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMounts = [

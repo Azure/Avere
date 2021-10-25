@@ -39,11 +39,20 @@ variable "keyVaultSecretNameAdminPassword" {
   type    = string
   default = "AdminPassword"
 }
+variable "keyVaultSecretNameUserPassword" {
+  type    = string
+  default = "UserPassword"
+}
 
 # KeyVault key names
 variable "keyVaultKeyNameCacheEncryption" {
   type    = string
   default = "CacheEncryption"
+}
+
+variable "monitorWorkspaceName" {
+  type    = string
+  default = "AzRender" // Set to the monitor workspace name from the 0.security module
 }
 
 output "regionName" {
@@ -75,7 +84,14 @@ output "keyVaultSecretNameGatewayConnection" {
 output "keyVaultSecretNameAdminPassword" {
   value = var.keyVaultSecretNameAdminPassword
 }
+output "keyVaultSecretNameUserPassword" {
+  value = var.keyVaultSecretNameUserPassword
+}
 
 output "keyVaultKeyNameCacheEncryption" {
   value = var.keyVaultKeyNameCacheEncryption
+}
+
+output "monitorWorkspaceName" {
+  value = var.monitorWorkspaceName
 }

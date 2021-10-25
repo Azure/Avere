@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.81.0"
+      version = "~>2.82.0"
     }
   }
   backend "azurerm" {
@@ -48,7 +48,7 @@ variable "virtualMachines" {
             disablePasswordAuthentication = bool
           }
         )
-        scriptExtension = object(
+        customExtension = object(
           {
             fileName   = string
             parameters = object(
@@ -173,7 +173,7 @@ resource "azurerm_linux_virtual_machine" "workstation" {
 
 resource "azurerm_virtual_machine_extension" "workstation_linux" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.scriptExtension.fileName != "" && x.operatingSystem.type == "Linux" 
+    for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.fileName != "" && x.operatingSystem.type == "Linux" 
   }
   name                       = "Custom"
   type                       = "CustomScript"
@@ -181,13 +181,11 @@ resource "azurerm_virtual_machine_extension" "workstation_linux" {
   type_handler_version       = "2.1"
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
-  settings = <<SETTINGS
-    {
-      "script": "${base64encode(
-        templatefile(each.value.scriptExtension.fileName, each.value.scriptExtension.parameters)
-      )}"
-    }
-  SETTINGS
+  settings = jsonencode({
+    script: "${base64encode(
+      templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
+    )}"
+  })
   depends_on = [
     azurerm_linux_virtual_machine.workstation
   ]
@@ -215,8 +213,8 @@ resource "azurerm_windows_virtual_machine" "workstation" {
     type         = "UserAssigned"
     identity_ids = [data.azurerm_user_assigned_identity.identity.id]
   }
-  custom_data = each.value.scriptExtension.fileName == "" ? null : base64gzip(
-    templatefile(each.value.scriptExtension.fileName, each.value.scriptExtension.parameters)
+  custom_data = each.value.customExtension.fileName == "" ? null : base64gzip(
+    templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
   )
   depends_on = [
     azurerm_network_interface.workstation
@@ -225,7 +223,7 @@ resource "azurerm_windows_virtual_machine" "workstation" {
 
 resource "azurerm_virtual_machine_extension" "workstation_windows" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.scriptExtension.fileName != "" && x.operatingSystem.type == "Windows" 
+    for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.fileName != "" && x.operatingSystem.type == "Windows" 
   }
   name                       = "Custom"
   type                       = "CustomScriptExtension"
@@ -233,11 +231,9 @@ resource "azurerm_virtual_machine_extension" "workstation_windows" {
   type_handler_version       = "1.10"
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
-  settings = <<SETTINGS
-    {
-      "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -Command \"& {${local.customScriptFileCreate}}\" ; PowerShell -ExecutionPolicy Unrestricted -File ${local.customScriptFileOutput}"
-    }
-  SETTINGS
+  settings = jsonencode({
+    commandToExecute: "PowerShell -ExecutionPolicy Unrestricted -Command \"& {${local.customScriptFileCreate}}\" ; PowerShell -ExecutionPolicy Unrestricted -File ${local.customScriptFileOutput}"
+  })
   depends_on = [
     azurerm_windows_virtual_machine.workstation
   ]

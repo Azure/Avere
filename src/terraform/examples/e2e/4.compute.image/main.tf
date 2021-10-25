@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.81.0"
+      version = "~>2.82.0"
     }
   }
   backend "azurerm" {
@@ -62,6 +62,7 @@ variable "imageTemplates" {
             subnetName     = string
             osDiskSizeGB   = number
             timeoutMinutes = number
+            hostName       = string
           }
         )
       }
@@ -91,6 +92,11 @@ variable "virtualNetwork" {
 }
 
 locals {
+  imageTemplatesBuild = [
+    for imageTemplate in var.imageTemplates : merge(imageTemplate.build, {
+      userPassword: "${data.azurerm_key_vault_secret.user_password.value}"
+    })
+  ]
   fileNameCustomizeLinux   = "customize.sh"
   fileNameCustomizeWindows = "customize.ps1"
 }
@@ -111,13 +117,23 @@ data "azurerm_virtual_network" "network" {
   resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
 }
 
+data "azurerm_resource_group" "network" {
+  name = data.azurerm_virtual_network.network.resource_group_name
+}
+
 data "azurerm_user_assigned_identity" "identity" {
   name                = module.global.managedIdentityName
   resource_group_name = module.global.securityResourceGroupName
 }
 
-data "azurerm_resource_group" "network" {
-  name = data.azurerm_virtual_network.network.resource_group_name
+data "azurerm_key_vault" "vault" {
+  name                = module.global.keyVaultName
+  resource_group_name = module.global.securityResourceGroupName
+}
+
+data "azurerm_key_vault_secret" "user_password" {
+  name         = module.global.keyVaultSecretNameUserPassword
+  key_vault_id = data.azurerm_key_vault.vault.id
 }
 
 resource "azurerm_resource_group" "image" {
@@ -211,6 +227,9 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
     "imageTemplates" = {
       value = var.imageTemplates
     },
+    "imageTemplatesBuild" = {
+      value = local.imageTemplatesBuild
+    },
     "imageScriptContainer" = {
       value = "https://${azurerm_storage_account.storage.name}.blob.core.windows.net/${azurerm_storage_container.container.name}/"
     },
@@ -236,6 +255,9 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
           "type": "string"
         },
         "imageTemplates": {
+          "type": "array"
+        },
+        "imageTemplatesBuild": {
           "type": "array"
         },
         "imageScriptContainer": {
@@ -295,7 +317,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               ],
               "output": {
                 "type": "string",
-                "value": "[format('PowerShell -ExecutionPolicy Unrestricted -File {0} {1}', concat(parameters('scriptFilePath'), parameters('scriptFileName')), replace(replace(replace(replace(replace(string(parameters('scriptParameters')), ',\"', ' -'), '\"', ''), ':', ' '), '{', '-'), '}', ''))]"
+                "value": "[format('PowerShell -ExecutionPolicy Unrestricted -File {0} {1}', concat(parameters('scriptFilePath'), parameters('scriptFileName')), replace(replace(replace(replace(replace(replace(string(parameters('scriptParameters')), '\"hostName\":\"\",', ''), ',\"', ' -'), '\"', ''), ':', ' '), '{', '-'), '}', ''))]"
               }
             }
           }
@@ -316,10 +338,10 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
           },
           "properties": {
             "vmProfile": {
-              "vmSize": "[parameters('imageTemplates')[copyIndex()].build.machineSize]",
-              "osDiskSizeGB": "[parameters('imageTemplates')[copyIndex()].build.osDiskSizeGB]",
+              "vmSize": "[parameters('imageTemplatesBuild')[copyIndex()].machineSize]",
+              "osDiskSizeGB": "[parameters('imageTemplatesBuild')[copyIndex()].osDiskSizeGB]",
               "vnetConfig": {
-                "subnetId": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('imageTemplates')[copyIndex()].build.subnetName)]"
+                "subnetId": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('imageTemplatesBuild')[copyIndex()].subnetName)]"
               }
             },
             "source": {
@@ -337,10 +359,11 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               },
               {
                 "type": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), 'PowerShell', 'Shell')]",
-                "inline": "[createArray(if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetExecuteCommandWindows(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.scriptFile, parameters('imageTemplates')[copyIndex()].build), fx.GetExecuteCommandLinux(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.scriptFile, parameters('imageTemplates')[copyIndex()].build)))]"
+                "inline": "[createArray(if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetExecuteCommandWindows(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.scriptFile, parameters('imageTemplatesBuild')[copyIndex()]), fx.GetExecuteCommandLinux(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.scriptFile, parameters('imageTemplatesBuild')[copyIndex()])))]",
+                "runElevated": true
               }
             ],
-            "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].build.timeoutMinutes]",
+            "buildTimeoutInMinutes": "[parameters('imageTemplatesBuild')[copyIndex()].timeoutMinutes]",
             "distribute": [
               {
                 "type": "SharedImage",

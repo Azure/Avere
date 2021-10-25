@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.81.0"
+      version = "~>2.82.0"
     }
   }
 }
@@ -57,6 +57,18 @@ variable "keyVault" {
           }
         )
       )
+    }
+  )
+}
+
+variable "monitorWorkspace" {
+  type = object(
+    {
+      name               = string
+      sku                = string
+      retentionDays      = number
+      publicIngestEnable = bool
+      publicQueryEnable  = bool
     }
   )
 }
@@ -120,6 +132,16 @@ resource "azurerm_key_vault_key" "keys" {
   ]
 }
 
+resource "azurerm_log_analytics_workspace" "monitor" {
+  name                       = var.monitorWorkspace.name
+  location                   = azurerm_resource_group.security.location
+  resource_group_name        = azurerm_resource_group.security.name
+  sku                        = var.monitorWorkspace.sku
+  retention_in_days          = var.monitorWorkspace.retentionDays
+  internet_ingestion_enabled = var.monitorWorkspace.publicIngestEnable
+  internet_query_enabled     = var.monitorWorkspace.publicQueryEnable
+}
+
 output "regionName" {
   value = module.global.regionName
 }
@@ -138,4 +160,8 @@ output "storage" {
 
 output "keyVault" {
   value = var.keyVault
+}
+
+output "monitorWorkspace" {
+  value = var.monitorWorkspace
 }
