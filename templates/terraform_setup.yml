@@ -92,7 +92,9 @@ steps:
     check_rc.sh $? "Preparing cloud-init file (sed)" || exit
 
     # Deploy the client VMs.
-    # old version -  --image 'Canonical:0001-com-ubuntu-server-focal:20_04-lts:latest' \
+    # Updating version to version released in July.
+    # the latest version is causing the cloud_init file to fail.
+    # Old image line was: --image 'Canonical:0001-com-ubuntu-server-focal:20_04-lts:latest'
     az vm create -g ${RESOURCE_GROUP_NAME} \
       -n ${VM_NAME}  \
       --admin-username azureuser \
