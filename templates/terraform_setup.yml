@@ -95,12 +95,13 @@ steps:
     # Updating version to version released in July.
     # the latest version is causing the cloud_init file to fail.
     # Old image line was: --image 'Canonical:0001-com-ubuntu-server-focal:20_04-lts:latest'
+    # tried: --image 'Canonical:0001-com-ubuntu-server-focal:20_04-lts:20.04.202107200' \
     az vm create -g ${RESOURCE_GROUP_NAME} \
       -n ${VM_NAME}  \
       --admin-username azureuser \
       --vnet-name ${VNET} \
       --subnet ${SUBNET} \
-      --image 'Canonical:0001-com-ubuntu-server-focal:20_04-lts:20.04.202107200' \
+      --image 'Canonical:0001-com-ubuntu-pro-focal:20_04-lts:latest' \
       --public-ip-address "" \
       --size Standard_DS2_v2 \
       --nsg "" \
