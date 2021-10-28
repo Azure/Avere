@@ -101,7 +101,7 @@ steps:
       --admin-username azureuser \
       --vnet-name ${VNET} \
       --subnet ${SUBNET} \
-      --image 'Canonical:0001-com-ubuntu-pro-focal:pro-20_04-lts:latest' \
+      --image 'Canonical:0001-com-ubuntu-server-focal:20_04-lts:20.04.202109080' \
       --public-ip-address "" \
       --size Standard_DS2_v2 \
       --nsg "" \
