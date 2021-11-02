@@ -106,6 +106,7 @@ steps:
     check_rc.sh $? "VM Create" || exit
 
     for i in {1..3}; do
+      sleep 60
       cmdlog=/tmp/vm_runcmd.log
       az vm run-command invoke                  \
         --resource-group ${RESOURCE_GROUP_NAME} \
@@ -117,7 +118,6 @@ steps:
       run_rc=${PIPESTATUS[0]}
       if [ "${run_rc}" -ne 0 ]; then
         echo "##vso[task.logissue type=error;]Running cloud init wait Attempt $i of 3."
-        sleep 30
       else
         break
       fi
