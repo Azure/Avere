@@ -95,7 +95,7 @@ parameters:
   - name: run_scale_down
     displayName: "Run scale-down (only runs if scale-up is selected)"
     type: boolean
-    default: false
+    default: true
   - name: run_destroy_and_cleanup
     displayName: "Run terraform destroy and rg cleanup."
     type: boolean
