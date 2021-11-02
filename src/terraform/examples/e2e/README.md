@@ -12,10 +12,11 @@ This folder contains the end-to-end example configuration and automated deployme
 | [5 Compute Scheduler](#5-compute-scheduler) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/) for distributed job scheduling across a render farm. |
 | [6 Compute Farm](#6-compute-farm) | Deploys [Virtual Machine Scale Sets](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview) for [Linux](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) or [Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) render farms. |
 | [7 Compute Workstation](#7-compute-workstation) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/) for [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) artist workstations. |
+| [Render Job Submission](#render-job-submission) | Submit render job from the perspective of a remote artist workstation. |
 
 To manage the Azure rendering solution infrastructure from your local workstation, the following prerequisite steps are required.
-1. Make sure the [Terraform CLI](https://www.terraform.io/downloads.html) is downloaded locally. Version 1.0.9 (or higher) is required.
-1. Make sure the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) is installed locally. The latest version is 2.29.1 as of October, 2021.
+1. Make sure the [Terraform CLI](https://www.terraform.io/downloads.html) is downloaded locally. Version 1.0.10 (or higher) is required.
+1. Make sure the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) is installed locally. The latest version is 2.29.2 as of October, 2021.
 1. Make sure that [Git](https://git-scm.com/downloads) is installed locally. The latest version is 2.33.1 as of October, 2021.
 1. Run `az account show` to ensure that your target Azure subscription context is set appropriately. If requested, run `az login` 
 1. To change your target Azure subscription context, run `az account set --subscription YOUR_SUBSCRIPTION_ID`
@@ -112,7 +113,7 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
 1. Run `cd ~/tf/src/terraform/examples/e2e/4.compute.image`
-1. Edit the config values in `config.auto.tfvars` using your favorite text editor.
+1. Edit the config values in `config.auto.tfvars` using your favorite text editor. Make sure you have sufficient compute cores quota available on your Azure subscription for the selected virtual machine size(s).
 1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
@@ -123,7 +124,7 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
 1. Run `cd ~/tf/src/terraform/examples/e2e/5.compute.scheduler`
-1. Edit the config values in `config.auto.tfvars` using your favorite text editor.
+1. Edit the config values in `config.auto.tfvars` using your favorite text editor. Make sure you have sufficient compute cores quota available on your Azure subscription for the selected virtual machine size(s).
 1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
@@ -133,7 +134,7 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
 1. Run `cd ~/tf/src/terraform/examples/e2e/6.compute.farm`
-1. Edit the config values in `config.auto.tfvars` using your favorite text editor.
+1. Edit the config values in `config.auto.tfvars` using your favorite text editor. Make sure you have sufficient compute Spot cores quota available on your Azure subscription.
 1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
@@ -143,9 +144,15 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
 1. Run `cd ~/tf/src/terraform/examples/e2e/7.compute.workstation`
-1. Edit the config values in `config.auto.tfvars` using your favorite text editor.
+1. Edit the config values in `config.auto.tfvars` using your favorite text editor. Make sure you have sufficient compute cores quota available on your Azure subscription for the selected virtual machine size(s).
 1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
+
+## Render Job Submission
+
+Now that the Azure Artist Anywhere solution deployment is complete, this next section will walk through the render job submission process.
+
+*TBD*
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com

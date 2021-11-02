@@ -18,11 +18,6 @@ virtualMachines = [
       sshPublicKey = "" // "ssh-rsa ..."
       disablePasswordAuthentication = false
     }
-    customExtension = {
-      fileName = "initialize.sh"
-      parameters = {
-      }
-    }
   },
   {
     name        = ""
@@ -39,11 +34,6 @@ virtualMachines = [
       username     = "azadmin"
       sshPublicKey = "" // "ssh-rsa ..."
       disablePasswordAuthentication = false
-    }
-    customExtension = {
-      fileName = "initialize.ps1"
-      parameters = {
-      }
     }
   }
 ]

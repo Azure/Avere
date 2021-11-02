@@ -25,7 +25,6 @@ virtualMachines = [
         fileSystemMounts = [
           "cache.media.studio:/mnt/workstation /mnt/show nfs hard,proto=tcp,mountproto=tcp,retry=30 0 0"
         ]
-        schedulerHostName  = "LinuxScheduler"
         teradiciLicenseKey = ""
       }
     }
@@ -52,7 +51,6 @@ virtualMachines = [
         fileSystemMounts = [
           "cache.media.studio:/mnt/workstation /mnt/show nfs hard,proto=tcp,mountproto=tcp,retry=30 0 0"
         ]
-        schedulerHostName  = "LinuxScheduler"
         teradiciLicenseKey = ""
       }
     }
@@ -79,7 +77,6 @@ virtualMachines = [
         fileSystemMounts = [
           "mount -o anon cache.media.studio:/mnt/workstation W:"
         ]
-        schedulerHostName  = "WinScheduler"
         teradiciLicenseKey = ""
       }
     }
@@ -106,7 +103,6 @@ virtualMachines = [
         fileSystemMounts = [
           "mount -o anon cache.media.studio:/mnt/workstation W:"
         ]
-        schedulerHostName  = "WinScheduler"
         teradiciLicenseKey = ""
       }
     }

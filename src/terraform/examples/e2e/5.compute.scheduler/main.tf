@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.0.9"
+  required_version = ">= 1.0.10"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.82.0"
+      version = "~>2.83.0"
     }
   }
   backend "azurerm" {
@@ -48,15 +48,6 @@ variable "virtualMachines" {
             disablePasswordAuthentication = bool
           }
         )
-        customExtension = object(
-          {
-            fileName   = string
-            parameters = object(
-              {
-              }
-            )
-          }
-        )
       }
     )
   )
@@ -91,13 +82,13 @@ data "azurerm_virtual_network" "network" {
 
 data "azurerm_private_dns_zone" "network" {
   name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.privateDns.zoneName : var.virtualNetwork.privateDnsZoneName
-  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
+  resource_group_name  = data.azurerm_virtual_network.network.resource_group_name
 }
 
-data "azurerm_subnet" "farm" {
+data "azurerm_subnet" "scheduler" {
   name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.scheduler].name : var.virtualNetwork.subnetName
-  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
-  virtual_network_name = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
+  resource_group_name  = data.azurerm_virtual_network.network.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.network.name
 }
 
 data "azurerm_user_assigned_identity" "identity" {
@@ -116,9 +107,6 @@ data "azurerm_key_vault_secret" "admin_password" {
 }
 
 locals {
-  customScriptFileInput  = "C:\\\\AzureData\\\\CustomData.bin"
-  customScriptFileOutput = "C:\\\\AzureData\\\\CustomData.ps1"
-  customScriptFileCreate = "$inputStream = New-Object System.IO.FileStream ${local.customScriptFileInput}, ([System.IO.FileMode]::Open), ([System.IO.FileAccess]::Read), ([System.IO.FileShare]::Read) ; $streamReader = New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($inputStream, [System.IO.Compression.CompressionMode]::Decompress)) ; Out-File -InputObject $streamReader.ReadToEnd() -FilePath ${local.customScriptFileOutput}"
   schedulerMachineNames = [
     for virtualMachine in var.virtualMachines : virtualMachine.name if virtualMachine.name != ""
   ]
@@ -138,7 +126,7 @@ resource "azurerm_network_interface" "scheduler" {
   location            = azurerm_resource_group.scheduler.location
   ip_configuration {
     name                          = "ipConfig"
-    subnet_id                     = data.azurerm_subnet.farm.id
+    subnet_id                     = data.azurerm_subnet.scheduler.id
     private_ip_address_allocation = "Dynamic"
   }
 }
@@ -178,26 +166,6 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
   ]
 }
 
-resource "azurerm_virtual_machine_extension" "scheduler_linux" {
-  for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.fileName != "" && x.operatingSystem.type == "Linux" 
-  }
-  name                       = "Custom"
-  type                       = "CustomScript"
-  publisher                  = "Microsoft.Azure.Extensions"
-  type_handler_version       = "2.1"
-  auto_upgrade_minor_version = true
-  virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
-  settings = jsonencode({
-    script: "${base64encode(
-      templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
-    )}"
-  })
-  depends_on = [
-    azurerm_linux_virtual_machine.scheduler
-  ]
-}
-
 resource "azurerm_windows_virtual_machine" "scheduler" {
   for_each = {
     for x in var.virtualMachines : x.name => x if x.name != "" && x.operatingSystem.type == "Windows" 
@@ -220,29 +188,8 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
     type         = "UserAssigned"
     identity_ids = [data.azurerm_user_assigned_identity.identity.id]
   }
-  custom_data = each.value.customExtension.fileName == "" ? null : base64gzip(
-    templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
-  )
   depends_on = [
     azurerm_network_interface.scheduler
-  ]
-}
-
-resource "azurerm_virtual_machine_extension" "scheduler_windows" {
-  for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.fileName != "" && x.operatingSystem.type == "Windows" 
-  }
-  name                       = "Custom"
-  type                       = "CustomScriptExtension"
-  publisher                  = "Microsoft.Compute"
-  type_handler_version       = "1.10"
-  auto_upgrade_minor_version = true
-  virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
-  settings = jsonencode({
-    commandToExecute: "PowerShell -ExecutionPolicy Unrestricted -Command \"& {${local.customScriptFileCreate}}\" ; PowerShell -ExecutionPolicy Unrestricted -File ${local.customScriptFileOutput}"
-  })
-  depends_on = [
-    azurerm_windows_virtual_machine.scheduler
   ]
 }
 

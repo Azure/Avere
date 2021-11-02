@@ -32,11 +32,15 @@ virtualMachineScaleSets = [
       }
     }
     monitorExtension = {
-      enable = true
+      enable = false
     }
     spot = {                     // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot
       evictionPolicy  = "Delete" // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#eviction-policy
       machineMaxPrice = -1       // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#pricing
+    }
+    terminateNotification = {
+      enable         = true
+      timeoutMinutes = "PT15M"
     }
   },
   {
@@ -69,11 +73,15 @@ virtualMachineScaleSets = [
       }
     }
     monitorExtension = {
-      enable = true
+      enable = false
     }
     spot = {                     // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot
       evictionPolicy  = "Delete" // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#eviction-policy
       machineMaxPrice = -1       // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#pricing
+    }
+    terminateNotification = {
+      enable         = true
+      timeoutMinutes = "PT15M"
     }
   }
 ]

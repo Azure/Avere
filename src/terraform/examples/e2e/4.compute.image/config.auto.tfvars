@@ -52,8 +52,9 @@ imageTemplates = [
       subnetName     = "Scheduler"
       machineSize    = "Standard_D8s_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 0                 // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 90                // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      hostName       = "scheduler.media.studio"
+      timeoutMinutes = 120               // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      schedulerHost  = "scheduler.media.studio"
+      runElevated    = false
     }
   },
   {
@@ -69,8 +70,9 @@ imageTemplates = [
       subnetName     = "Farm"
       machineSize    = "Standard_HB120rs_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 0                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 90                    // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      hostName       = ""
+      timeoutMinutes = 120                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      schedulerHost  = "scheduler.media.studio"
+      runElevated    = false
     }
   },
   {
@@ -86,8 +88,9 @@ imageTemplates = [
       subnetName     = "Workstation"
       machineSize    = "Standard_NV48s_v3" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 0                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 90                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      hostName       = ""
+      timeoutMinutes = 120                 // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      schedulerHost  = "scheduler.media.studio"
+      runElevated    = false
     }
   },
   {
@@ -103,8 +106,9 @@ imageTemplates = [
       subnetName     = "Workstation"
       machineSize    = "Standard_NV32as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 0                    // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 90                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      hostName       = ""
+      timeoutMinutes = 120                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      schedulerHost  = "scheduler.media.studio"
+      runElevated    = false
     }
   },
   {
@@ -120,8 +124,9 @@ imageTemplates = [
       subnetName     = "Scheduler"
       machineSize    = "Standard_D8s_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 0                 // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 90                // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      hostName       = "scheduler.media.studio"
+      timeoutMinutes = 120               // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      schedulerHost  = "scheduler.media.studio"
+      runElevated    = true
     }
   },
   {
@@ -137,8 +142,9 @@ imageTemplates = [
       subnetName     = "Farm"
       machineSize    = "Standard_HB120rs_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 0                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 90                    // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      hostName       = ""
+      timeoutMinutes = 120                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      schedulerHost  = "scheduler.media.studio"
+      runElevated    = false
     }
   },
   {
@@ -154,8 +160,9 @@ imageTemplates = [
       subnetName     = "Workstation"
       machineSize    = "Standard_NV48s_v3" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 0                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 90                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      hostName       = ""
+      timeoutMinutes = 120                 // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      schedulerHost  = "scheduler.media.studio"
+      runElevated    = false
     }
   },
   {
@@ -171,8 +178,9 @@ imageTemplates = [
       subnetName     = "Workstation"
       machineSize    = "Standard_NV32as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 0                    // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 90                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      hostName       = ""
+      timeoutMinutes = 120                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      schedulerHost  = "scheduler.media.studio"
+      runElevated    = false
     }
   }
 ]

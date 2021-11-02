@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.0.9"
+  required_version = ">= 1.0.10"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.82.0"
+      version = "~>2.83.0"
     }
   }
   backend "azurerm" {
@@ -53,8 +53,8 @@ variable "virtualMachines" {
             fileName   = string
             parameters = object(
               {
-                fileSystemMounts  = list(string)
-                schedulerHostName = string
+                fileSystemMounts   = list(string)
+                teradiciLicenseKey = string
               }
             )
           }
@@ -92,8 +92,8 @@ data "azurerm_virtual_network" "network" {
 
 data "azurerm_subnet" "workstation" {
   name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.workstation].name : var.virtualNetwork.subnetName
-  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
-  virtual_network_name = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
+  resource_group_name  = data.azurerm_virtual_network.network.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.network.name
 }
 
 data "azurerm_user_assigned_identity" "identity" {
@@ -112,8 +112,8 @@ data "azurerm_key_vault_secret" "admin_password" {
 }
 
 locals {
-  customScriptFileInput  = "C:\\\\AzureData\\\\CustomData.bin"
-  customScriptFileOutput = "C:\\\\AzureData\\\\CustomData.ps1"
+  customScriptFileInput  = "C:\\AzureData\\CustomData.bin"
+  customScriptFileOutput = "C:\\AzureData\\CustomData.ps1"
   customScriptFileCreate = "$inputStream = New-Object System.IO.FileStream ${local.customScriptFileInput}, ([System.IO.FileMode]::Open), ([System.IO.FileAccess]::Read), ([System.IO.FileShare]::Read) ; $streamReader = New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($inputStream, [System.IO.Compression.CompressionMode]::Decompress)) ; Out-File -InputObject $streamReader.ReadToEnd() -FilePath ${local.customScriptFileOutput}"
 }
 
