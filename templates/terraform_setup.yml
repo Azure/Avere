@@ -128,7 +128,7 @@ steps:
 
     # Cooldown for "az vm run-command invoke" before the next one.
     # This solves a corner/race case when the command is run back-to-back.
-    sleep 20
+    sleep 30
 
     az vm run-command invoke                          \
       --command-id     RunShellScript                 \
