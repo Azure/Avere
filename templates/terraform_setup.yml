@@ -117,7 +117,6 @@ steps:
       run_rc=${PIPESTATUS[0]}
       if [ "${run_rc}" -ne 0 ]; then
         echo "##vso[task.logissue type=error;]Running cloud init wait Attempt $i of 3."
-        echo "##vso[task.complete result=Failed;]"
         sleep 30
       else
         break
