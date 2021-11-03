@@ -90,7 +90,7 @@ steps:
       -e "s/<new_node_count>/$new_node_count/" \
       -e "s/<vdbench_config>/${{ parameters.vdbench_config }}/" \
       -e "s,<vdbench_download_url>,${VDBENCH_URL}," \
-      -e "s/<vdbench_tmux_session>/${VDBENCH_TMUX_SESSION}" \
+      -e "s/<vdbench_tmux_session>/${VDBENCH_TMUX_SESSION}/" \
       ${cloud_init_file}
     check_rc.sh $? "Preparing cloud-init file (sed)" || exit
 
