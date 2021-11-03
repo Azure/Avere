@@ -353,7 +353,7 @@ write_files:
       [ $? -ne 0 ] && error "ssh to run copy_idrsa.sh"
 
       echo "ssh to run vdbench"
-      ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "tmux new-session -d -s ${VDBENCH_TMUX_SESSION} \"/home/${USERNAME}/run_vdbench.sh <vdbench_config>.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1\""
+      ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "tmux new-session -d \"/home/${USERNAME}/run_vdbench.sh <vdbench_config>.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1\""
       [ $? -ne 0 ] && error "ssh to run vdbench"
 
       echo "DONE: end of $0"

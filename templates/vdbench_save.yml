@@ -19,16 +19,16 @@ steps:
         --name           "vmss"                       \
         --instance-id    0                            \
         --command-id     RunShellScript               \
-        --scripts        "runuser -l azureuser -c 'tmux has-session -t ${VDBENCH_TMUX_SESSION}' || echo ${cmdokmsg}" \
+        --scripts        "runuser -l azureuser -c 'tmux has-session -t 0' || echo ${cmdokmsg}" \
         --query 'value[0].message' --output tsv |& tee ${cmdlog}
-      check_rc.sh ${PIPESTATUS[0]} "Checking for tmux session ${VDBENCH_TMUX_SESSION}" || exit
+      check_rc.sh ${PIPESTATUS[0]} "Checking for tmux session " || exit
       grep -q ${cmdokmsg} ${cmdlog}
       if [ $? -ne 0 ]; then
-        echo "INFO: tmux session ${VDBENCH_TMUX_SESSION} still active. Re-check in ${polling_secs} seconds."
+        echo "INFO: tmux session still active. Re-check in ${polling_secs} seconds."
         sleep ${polling_secs}
         continue
       else
-        echo "INFO: tmux session ${VDBENCH_TMUX_SESSION} no longer active"
+        echo "INFO: tmux session no longer active"
         break
       fi
     done
