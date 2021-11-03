@@ -32,7 +32,7 @@ steps:
         break
       fi
     done
-  displayName: "WAIT: ${{ runConfig }}: Check for vdbench.py completion"
+  displayName: "WAIT: Check for vdbench.py completion"
   timeoutInMinutes: 360
   condition: not(or(failed(), canceled()))
   env:
