@@ -1,0 +1,77 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# https://aka.ms/yaml
+
+steps:
+- script: |
+    export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
+
+    az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID &&
+    az account set -s $ARM_SUBSCRIPTION_ID
+    check_rc.sh $? "Login to Azure and set default subscription" || exit 0
+
+    # Wait for the vdbench.py script to complete.
+    cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
+    cmdlog=/tmp/vm_runcmd.log
+    polling_secs=60
+    while [ 1 ]; do
+      az vmss run-command invoke                      \
+        --resource-group ${RESOURCE_GROUP_NAME}-vmss  \
+        --name           "vmss"                       \
+        --instance-id    0                            \
+        --command-id     RunShellScript               \
+        --scripts        "runuser -l azureuser -c 'tmux has-session -t ${VDBENCH_TMUX_SESSION}' || echo ${cmdokmsg}" \
+        --query 'value[0].message' --output tsv |& tee ${cmdlog}
+      check_rc.sh ${PIPESTATUS[0]} "Checking for tmux session ${VDBENCH_TMUX_SESSION}" || exit
+      grep -q ${cmdokmsg} ${cmdlog}
+      if [ $? -ne 0 ]; then
+        echo "INFO: tmux session ${VDBENCH_TMUX_SESSION} still active. Re-check in ${polling_secs} seconds."
+        sleep ${polling_secs}
+        continue
+      else
+        echo "INFO: tmux session ${VDBENCH_TMUX_SESSION} no longer active"
+        break
+      fi
+    done
+  displayName: "WAIT: ${{ runConfig }}: Check for vdbench.py completion"
+  timeoutInMinutes: 360
+  condition: not(or(failed(), canceled()))
+  env:
+    ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+    ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+    ARM_TENANT_ID: $(AZURE-TENANT-ID)
+    ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+
+- bash: |
+    export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
+    # Check if the vdbench.py run had any failures.
+    cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
+    cmdlog=/tmp/vm_runcmd.log
+    az vmss run-command invoke                     \
+      --resource-group ${RESOURCE_GROUP_NAME}-vmss \
+      --name           "vmss"                      \
+      --instance-id    0                           \
+      --command-id     RunShellScript              \
+      --scripts        "runuser -l azureuser -c 'tail -25 /home/azureuser/vdb.log' && echo ${cmdokmsg}" \
+      --query 'value[0].message' --output tsv |& tee ${cmdlog}
+    grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "Tail vdbench.log"
+
+    # Check for "exit with rc=0" at the end of the test log.
+    grep -q 'exit with rc=0' ${cmdlog}
+    grep_rc=$?
+    check_rc.sh ${grep_rc} "vdbench.py success check"
+
+    # If the vdbench.py run succeeded, display the summarized results.
+    if [ "${grep_rc}" -eq "0" ]; then
+      az vmss run-command invoke                    \
+        --resource-group ${RESOURCE_GROUP_NAME}-vmss \
+        --name           "vmss"                      \
+        --instance-id    0                           \
+        --command-id     RunShellScript             \
+        --scripts        "runuser -l azureuser -c 'cat /home/azureuser/*.summary' && echo ${cmdokmsg}" \
+        --query 'value[0].message' --output tsv |& tee ${cmdlog}
+        grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "Display summarized run results"
+    fi
+
+  displayName: "RESULTS: Check for vdbench.py success/failure"
+  timeoutInMinutes: 10
+  condition: not(or(failed(), canceled()))

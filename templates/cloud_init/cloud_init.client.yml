@@ -303,6 +303,7 @@ write_files:
       export REGION='<region>'
       export RESOURCE_GROUP_NAME='<resource_group_name>'
       export TF_VFXT_CONFIG='<terraform_file_config>'
+      export VDBENCH_TMUX_SESSION='<vdbench_tmux_session>'
 
       echo "cd to file path"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
@@ -352,7 +353,7 @@ write_files:
       [ $? -ne 0 ] && error "ssh to run copy_idrsa.sh"
 
       echo "ssh to run vdbench"
-      ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "tmux new-session -d \"/home/${USERNAME}/run_vdbench.sh <vdbench_config>.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1\""
+      ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "tmux new-session -d -s ${VDBENCH_TMUX_SESSION} \"/home/${USERNAME}/run_vdbench.sh <vdbench_config>.conf uniquestring1 >> /home/${USERNAME}/vdb.log 2>&1\""
       [ $? -ne 0 ] && error "ssh to run vdbench"
 
       echo "DONE: end of $0"
