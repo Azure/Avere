@@ -358,6 +358,53 @@ write_files:
 
       echo "DONE: end of $0"
 
+  - path: /opt/vdbench_save.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+
+      function error() {
+        >&2 echo "echo >< ERROR: $* See log for details."
+        exit 1
+      }
+
+      export ARM_SUBSCRIPTION_ID='<sub_id>'
+      export ARM_CLIENT_ID='<arm_client_id>'
+      export ARM_CLIENT_SECRET='<arm_client_scrt>'
+      export ARM_TENANT_ID='<arm_tenant_id>'
+      export REGION='<region>'
+      export RESOURCE_GROUP_NAME='<resource_group_name>'
+      export TF_VFXT_CONFIG='<terraform_file_config>'
+
+      echo " cd to file path"
+      cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
+      [ $? -ne 0 ] && error "cd to directory: $TF_VFXT_CONFIG"
+
+      echo "tee outputs to json"
+      terraform output -json |& tee /tmp/tf_output.json
+      [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform outputs"
+
+      CONTROLLER_ADDRESS=$(jq -r ".controller_address.value" /tmp/tf_output.json)
+      USERNAME=$(jq -r ".controller_username.value" /tmp/tf_output.json)
+      VSERVER_IP_ADDRESSES=$(jq -c ".mount_addresses.value" /tmp/tf_output.json)
+      NFS_EXPORT_PATH=$(jq -r ".mount_namespace_path.value" /tmp/tf_output.json)
+
+      cd ../vdbench
+
+      echo "vdbench terraform outputs"
+      IP_ADDRESS_COMMAND=$(terraform output -json | jq -r ".vmss_addresses_command.value") &&
+      IP_ADDRESS=$(${IP_ADDRESS_COMMAND} | jq -r '.[0]')
+      [ $? -ne 0 ] && error "vdbench terraform outputs."
+
+      echo "ssh - initial connection needed for below scp cmd"
+      ssh -o "StrictHostKeyChecking=no" -oProxyCommand="ssh -oStrictHostKeyChecking=no -W %h:%p  ${USERNAME}@${CONTROLLER_ADDRESS}" ${USERNAME}@${IP_ADDRESS} ls
+      [ $? -ne 0 ] && error "scp cmd to copy id_rsa"
+
+      echo "ssh to cat vdbench log"
+      ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "cat /home/${USERNAME}/vdb.log" |& tee /tmp/vdbench_save.txt
+      [ $? -ne 0 ] && error "ssh to cat vdbench.log"
+
+      echo "DONE: end of $0"
 runcmd:
   - "echo '# STEP: Setup SSH key.'"
   - "cp -v /root/.ssh/id_rsa /home/<vm_admin_user>/.ssh/id_rsa"

@@ -7,6 +7,7 @@ parameters:
   - "scaleup"
   - "scaledown"
   - "vdbench_run"
+  - "vdbench_save"
   - "vdbench_destroy"
   - "destroy"
 - name: condition
@@ -58,15 +59,28 @@ steps:
       fi
     done
 
-    az vm run-command invoke                          \
+    if [[ "vdbench_save" =~ ${{ parameters.run }} ]]; then
+      az vm run-command invoke                        \
+      --command-id     RunShellScript                 \
+      --name           ${VM_NAME}                     \
+      --resource-group ${RESOURCE_GROUP_NAME}         \
+      --scripts "cat /tmp/${{ parameters.run }}.txt" \
+      --query 'value[0].message' --output tsv |& tee /tmp/vdb.log
+
+      check_rc.sh ${PIPESTATUS[0]} "Collect vdbench output." || exit 0
+    else
+      az vm run-command invoke                        \
       --command-id     RunShellScript                 \
       --name           ${VM_NAME}                     \
       --resource-group ${RESOURCE_GROUP_NAME}         \
       --scripts "tail -100 /tmp/${{ parameters.run }}.txt" \
       --query 'value[0].message' --output tsv |& tee /tmp/cloud-init_output.log
-    check_rc.sh ${PIPESTATUS[0]} "Collect tail of terraform's output for ${{ parameters.run }}" || exit 0
 
-    grep -q 'complete! Resources:' /tmp/cloud-init_output.log
-    check_rc.sh $? "Check results of 'terraform apply' for ${{ parameters.run }}" || exit 0
+      check_rc.sh ${PIPESTATUS[0]} "Collect tail of terraform's output for ${{ parameters.run }}" || exit 0
+
+      grep -q 'complete! Resources:' /tmp/cloud-init_output.log
+      check_rc.sh $? "Check results of 'terraform apply' for ${{ parameters.run }}" || exit 0
+    fi
+
   displayName: 'Terraform: ${{ parameters.run }}'
   condition: ${{ parameters.condition }}
