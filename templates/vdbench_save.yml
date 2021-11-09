@@ -55,8 +55,8 @@ steps:
     az network private-endpoint create \
       --name myPrivateEndpoint \
       --resource-group ${RESOURCE_GROUP_NAME} \
-      --vnet-name ${VIRTUAL_NETWORK_NAME}  \
-      --subnet ${SUBNET_NAME} \
+      --vnet-name ${VNET}  \
+      --subnet ${SUBNET} \
       --private-connection-resource-id ${STOR_ACCT_RESOURCE_ID} \
       --group-ids blob \
       --connection-name myConnection
@@ -70,7 +70,7 @@ steps:
     az network private-dns link vnet create --resource-group ${RESOURCE_GROUP_NAME} \
       --zone-name  "privatelink.staccttest.windows.net"\
       --name MyDNSLink \
-      --virtual-network ${VIRTUAL_NETWORK_NAME} \
+      --virtual-network ${VNET} \
       --registration-enabled false
     check_rc.sh $? "Create Private-DNS Link" || exit 0
 
