@@ -6,3 +6,6 @@
   echo "${fsMount}" >> /etc/fstab
 %{ endfor }
 mount -a
+
+cd /opt/Thinkbox/Deadline10/bin/
+./deadlinecommand -ChangeRepository "Direct" "/mnt/scheduler" "" ""

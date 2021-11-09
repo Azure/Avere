@@ -117,7 +117,7 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
-1. After successful deployment, use the Azure portal or CLI on your image templates to build each image
+1. After successful deployment, use the Azure portal or CLI to start image template build processes
 
 ## 5 Compute Scheduler
 
@@ -151,7 +151,7 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 
 ## Render Job Submission
 
-Now that the Azure Artist Anywhere solution deployment is complete, this next section will walk through the render job submission process.
+Now that the Azure Artist Anywhere solution deployment is complete, this next section will walk through the render job submission process. For this example, we have deployed the render farm in Azure on CentOS 7.8 and the artist workstation in Azure on Windows 10. We are also using Teradici PCoIP for remote access to the artist workstation over Azure VPN.
 
 *TBD*
 

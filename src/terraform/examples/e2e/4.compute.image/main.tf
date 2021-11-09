@@ -51,7 +51,8 @@ variable "imageTemplates" {
           {
             definitionName = string
             sourceType     = string
-            scriptFile     = string
+            customizeFile  = string
+            metadataFile   = string
             inputVersion   = string
             outputVersion  = string
           }
@@ -62,7 +63,7 @@ variable "imageTemplates" {
             machineSize    = string
             osDiskSizeGB   = number
             timeoutMinutes = number
-            schedulerHost  = string
+            userName       = string
             runElevated    = bool
           }
         )
@@ -93,8 +94,10 @@ variable "virtualNetwork" {
 }
 
 locals {
-  fileNameCustomizeLinux   = "customize.sh"
-  fileNameCustomizeWindows = "customize.ps1"
+  customizeFileLinux   = "customize.sh"
+  customizeFileWindows = "customize.ps1"
+  metadataFileLinux    = "metadata.sh"
+  metadataFileWindows  = "metadata.ps1"
 }
 
 data "terraform_remote_state" "network" {
@@ -170,18 +173,34 @@ resource "azurerm_storage_container" "container" {
 }
 
 resource "azurerm_storage_blob" "customize_linux" {
-  name                   = local.fileNameCustomizeLinux
+  name                   = local.customizeFileLinux
   storage_account_name   = azurerm_storage_account.storage.name
   storage_container_name = azurerm_storage_container.container.name
-  source                 = local.fileNameCustomizeLinux
+  source                 = local.customizeFileLinux
   type                   = "Block"
 }
 
 resource "azurerm_storage_blob" "customize_windows" {
-  name                   = local.fileNameCustomizeWindows
+  name                   = local.customizeFileWindows
   storage_account_name   = azurerm_storage_account.storage.name
   storage_container_name = azurerm_storage_container.container.name
-  source                 = local.fileNameCustomizeWindows
+  source                 = local.customizeFileWindows
+  type                   = "Block"
+}
+
+resource "azurerm_storage_blob" "metadata_linux" {
+  name                   = local.metadataFileLinux
+  storage_account_name   = azurerm_storage_account.storage.name
+  storage_container_name = azurerm_storage_container.container.name
+  source                 = local.metadataFileLinux
+  type                   = "Block"
+}
+
+resource "azurerm_storage_blob" "metadata_windows" {
+  name                   = local.metadataFileWindows
+  storage_account_name   = azurerm_storage_account.storage.name
+  storage_container_name = azurerm_storage_container.container.name
+  source                 = local.metadataFileWindows
   type                   = "Block"
 }
 
@@ -358,12 +377,17 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
             "customize": [
               {
                 "type": "File",
-                "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()].image.scriptFile)]",
-                "destination": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), concat(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.scriptFile), concat(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.scriptFile))]"
+                "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()].image.customizeFile)]",
+                "destination": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), concat(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.customizeFile), concat(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.customizeFile))]"
+              },
+              {
+                "type": "File",
+                "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()].image.metadataFile)]",
+                "destination": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), concat(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.metadataFile), concat(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.metadataFile))]"
               },
               {
                 "type": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), 'PowerShell', 'Shell')]",
-                "inline": "[createArray(if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetExecuteCommandWindows(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.scriptFile, parameters('imageTemplates')[copyIndex()].build, parameters('userPassword')), fx.GetExecuteCommandLinux(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.scriptFile, parameters('imageTemplates')[copyIndex()].build, parameters('userPassword'))))]",
+                "inline": "[createArray(if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetExecuteCommandWindows(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.customizeFile, parameters('imageTemplates')[copyIndex()].build, parameters('userPassword')), fx.GetExecuteCommandLinux(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.customizeFile, parameters('imageTemplates')[copyIndex()].build, parameters('userPassword'))))]",
                 "runElevated": "[parameters('imageTemplates')[copyIndex()].build.runElevated]"
               }
             ],

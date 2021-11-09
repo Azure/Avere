@@ -44,7 +44,8 @@ imageTemplates = [
     image = {
       definitionName = "LinuxFarm"
       sourceType     = "PlatformImage"
-      scriptFile     = "customize.sh"
+      customizeFile  = "customize.sh"
+      metadataFile   = "metadata.sh"
       inputVersion   = "Latest"
       outputVersion  = "10.0.0"
     }
@@ -53,7 +54,7 @@ imageTemplates = [
       machineSize    = "Standard_D8s_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 0                 // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
       timeoutMinutes = 120               // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      schedulerHost  = "scheduler.media.studio"
+      userName       = "dbuser"
       runElevated    = false
     }
   },
@@ -62,7 +63,8 @@ imageTemplates = [
     image = {
       definitionName = "LinuxFarm"
       sourceType     = "PlatformImage"
-      scriptFile     = "customize.sh"
+      customizeFile  = "customize.sh"
+      metadataFile   = "metadata.sh"
       inputVersion   = "Latest"
       outputVersion  = "1.0.0"
     }
@@ -71,7 +73,7 @@ imageTemplates = [
       machineSize    = "Standard_HB120rs_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 0                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
       timeoutMinutes = 120                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      schedulerHost  = "scheduler.media.studio"
+      userName       = ""
       runElevated    = false
     }
   },
@@ -80,7 +82,8 @@ imageTemplates = [
     image = {
       definitionName = "LinuxWorkstation"
       sourceType     = "PlatformImage"
-      scriptFile     = "customize.sh"
+      customizeFile  = "customize.sh"
+      metadataFile   = "metadata.sh"
       inputVersion   = "Latest"
       outputVersion  = "3.0.0"
     }
@@ -89,7 +92,7 @@ imageTemplates = [
       machineSize    = "Standard_NV48s_v3" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 0                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
       timeoutMinutes = 120                 // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      schedulerHost  = "scheduler.media.studio"
+      userName       = ""
       runElevated    = false
     }
   },
@@ -98,7 +101,8 @@ imageTemplates = [
     image = {
       definitionName = "LinuxWorkstation"
       sourceType     = "PlatformImage"
-      scriptFile     = "customize.sh"
+      customizeFile  = "customize.sh"
+      metadataFile   = "metadata.sh"
       inputVersion   = "Latest"
       outputVersion  = "4.0.0"
     }
@@ -107,7 +111,7 @@ imageTemplates = [
       machineSize    = "Standard_NV32as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 0                    // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
       timeoutMinutes = 120                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      schedulerHost  = "scheduler.media.studio"
+      userName       = ""
       runElevated    = false
     }
   },
@@ -116,7 +120,8 @@ imageTemplates = [
     image = {
       definitionName = "WindowsFarm"
       sourceType     = "PlatformImage"
-      scriptFile     = "customize.ps1"
+      customizeFile  = "customize.ps1"
+      metadataFile   = "metadata.ps1"
       inputVersion   = "Latest"
       outputVersion  = "10.0.0"
     }
@@ -125,7 +130,7 @@ imageTemplates = [
       machineSize    = "Standard_D8s_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 0                 // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
       timeoutMinutes = 120               // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      schedulerHost  = "scheduler.media.studio"
+      userName       = "dbuser"
       runElevated    = true
     }
   },
@@ -134,7 +139,8 @@ imageTemplates = [
     image = {
       definitionName = "WindowsFarm"
       sourceType     = "PlatformImage"
-      scriptFile     = "customize.ps1"
+      customizeFile  = "customize.ps1"
+      metadataFile   = "metadata.ps1"
       inputVersion   = "Latest"
       outputVersion  = "1.0.0"
     }
@@ -143,7 +149,7 @@ imageTemplates = [
       machineSize    = "Standard_HB120rs_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 0                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
       timeoutMinutes = 120                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      schedulerHost  = "scheduler.media.studio"
+      userName       = ""
       runElevated    = false
     }
   },
@@ -152,7 +158,8 @@ imageTemplates = [
     image = {
       definitionName = "WindowsWorkstation"
       sourceType     = "PlatformImage"
-      scriptFile     = "customize.ps1"
+      customizeFile  = "customize.ps1"
+      metadataFile   = "metadata.ps1"
       inputVersion   = "Latest"
       outputVersion  = "3.0.0"
     }
@@ -161,7 +168,7 @@ imageTemplates = [
       machineSize    = "Standard_NV48s_v3" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 0                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
       timeoutMinutes = 120                 // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      schedulerHost  = "scheduler.media.studio"
+      userName       = ""
       runElevated    = false
     }
   },
@@ -170,7 +177,8 @@ imageTemplates = [
     image = {
       definitionName = "WindowsWorkstation"
       sourceType     = "PlatformImage"
-      scriptFile     = "customize.ps1"
+      customizeFile  = "customize.ps1"
+      metadataFile   = "metadata.ps1"
       inputVersion   = "Latest"
       outputVersion  = "4.0.0"
     }
@@ -179,7 +187,7 @@ imageTemplates = [
       machineSize    = "Standard_NV32as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 0                    // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
       timeoutMinutes = 120                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      schedulerHost  = "scheduler.media.studio"
+      userName       = ""
       runElevated    = false
     }
   }

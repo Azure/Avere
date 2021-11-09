@@ -56,7 +56,7 @@ variable "virtualMachineScaleSets" {
         )
         customExtension = object(
           {
-            fileName   = string
+            fileName = string
             parameters = object(
               {
                 fileSystemMounts = list(string)
@@ -130,6 +130,11 @@ data "azurerm_key_vault" "vault" {
 
 data "azurerm_key_vault_secret" "admin_password" {
   name         = module.global.keyVaultSecretNameAdminPassword
+  key_vault_id = data.azurerm_key_vault.vault.id
+}
+
+data "azurerm_key_vault_secret" "user_password" {
+  name         = module.global.keyVaultSecretNameUserPassword
   key_vault_id = data.azurerm_key_vault.vault.id
 }
 
@@ -207,7 +212,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       auto_upgrade_minor_version = true
       settings = jsonencode({
         script: "${base64encode(
-          templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
+          templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {userPassword: "${data.azurerm_key_vault_secret.user_password.value}"}))
         )}"
       })
     }
@@ -255,7 +260,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   single_placement_group = false
   overprovision          = false
   custom_data = each.value.customExtension.fileName == "" ? null : base64gzip(
-    templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
+    templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {userPassword: "${data.azurerm_key_vault_secret.user_password.value}"}))
   )
   network_interface {
     name    = each.value.name

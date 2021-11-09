@@ -23,6 +23,7 @@ virtualMachines = [
       fileName = "initialize.sh"
       parameters = {
         fileSystemMounts = [
+          "scheduler.media.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0",
           "cache.media.studio:/mnt/workstation /mnt/show nfs hard,proto=tcp,mountproto=tcp,retry=30 0 0"
         ]
         teradiciLicenseKey = ""
@@ -49,6 +50,7 @@ virtualMachines = [
       fileName = "initialize.sh"
       parameters = {
         fileSystemMounts = [
+          "scheduler.media.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0",
           "cache.media.studio:/mnt/workstation /mnt/show nfs hard,proto=tcp,mountproto=tcp,retry=30 0 0"
         ]
         teradiciLicenseKey = ""
@@ -56,7 +58,7 @@ virtualMachines = [
     }
   },
   {
-    name        = ""
+    name        = "WinArtist3"
     imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/AzureRender.Image/providers/Microsoft.Compute/galleries/Gallery/images/WindowsWorkstation/versions/3.0.0"
     machineSize = "Standard_NV48s_v3" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
     operatingSystem = {
@@ -75,6 +77,7 @@ virtualMachines = [
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMounts = [
+          "mount -o anon scheduler.media.studio:/DeadlineRepository S:",
           "mount -o anon cache.media.studio:/mnt/workstation W:"
         ]
         teradiciLicenseKey = ""
@@ -82,7 +85,7 @@ virtualMachines = [
     }
   },
   {
-    name        = ""
+    name        = "WinArtist4"
     imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/AzureRender.Image/providers/Microsoft.Compute/galleries/Gallery/images/WindowsWorkstation/versions/4.0.0"
     machineSize = "Standard_NV32as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
     operatingSystem = {
@@ -101,6 +104,7 @@ virtualMachines = [
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMounts = [
+          "mount -o anon scheduler.media.studio:/DeadlineRepository S:",
           "mount -o anon cache.media.studio:/mnt/workstation W:"
         ]
         teradiciLicenseKey = ""

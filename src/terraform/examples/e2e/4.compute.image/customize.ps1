@@ -1,8 +1,8 @@
 param (
   [string] $subnetName,
   [string] $machineSize,
-  [string] $userPassword,
-  [string] $schedulerHost
+  [string] $userName,
+  [string] $userPassword
 )
 
 Set-Location -Path "C:\Users\Default\Downloads"
@@ -35,18 +35,21 @@ New-ItemProperty -Path $registryKeyPath -Name AnonymousUid -PropertyType DWORD -
 New-ItemProperty -Path $registryKeyPath -Name AnonymousGid -PropertyType DWORD -Value 0
 Write-Host "Customize (End): NFS Client"
 
+Write-Host "Customize (Start): CLI Tools"
+$fileName = "az-cli.msi"
+$downloadUrl = "https://aka.ms/installazurecliwindows"
+Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl
+Start-Process -FilePath $fileName -ArgumentList "/quiet" -Wait
+Write-Host "Customize (End): CLI Tools"
+
 $storageContainerUrl = "https://az0.blob.core.windows.net/bin"
-$storageContainerSas = "?sp=r&sr=c&sig=Ysr0iLGUhilzRYPHuY066aZ69iT46uTx87pP2V%2BdMEY%3D&sv=2020-08-04&se=2222-12-31T00%3A00%3A00Z"
+$storageContainerSas = "?sv=2020-08-04&st=2021-11-07T18%3A19%3A06Z&se=2222-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=b4TcohYc%2FInzvG%2FQSxApyIaZlLT8Cl8ychUqZx6zNsg%3D"
 
 $schedulerVersion = "10.1.19.4"
 $schedulerLicense = "LicenseFree"
-$schedulerHostName = "$schedulerHost;127.0.0.1"
 $schedulerShareName = "DeadlineRepository"
-$schedulerRepositoryPath = "C:\DeadlineRepository10"
-$schedulerRepositoryShare = "\\$schedulerHost\$schedulerShareName"
-$schedulerCertificateFile = "Deadline10Client.pfx"
-$schedulerCertificatePath = "C:\DeadlineDatabase10\certs\$schedulerCertificateFile"
-$schedulerCertificateShare = "$schedulerRepositoryShare\$schedulerCertificateFile"
+$schedulerDatabasePath = "C:\DeadlineDatabase"
+$schedulerRepositoryPath = "C:\DeadlineRepository"
 
 $fileName = "Deadline-$schedulerVersion-windows-installers.zip"
 $downloadUrl = "$storageContainerUrl/Deadline/$fileName$storageContainerSas"
@@ -58,9 +61,8 @@ if ($subnetName -eq "Scheduler") {
   netsh advfirewall firewall add rule name="Allow MongoDB Port" dir=in action=allow protocol=TCP localport=27100
   Set-Location -Path "Deadline*"
   $fileName = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
-  Start-Process -FilePath $fileName -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost $schedulerHostName --certgen_password $userPassword" -Wait
+  Start-Process -FilePath $fileName -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --prefix $schedulerRepositoryPath --mongodir $schedulerDatabasePath --dbuser $userName --dbpassword $userPassword --requireSSL false" -Wait
   Set-Location -Path ".."
-  Copy-Item -Path $schedulerCertificatePath -Destination $schedulerRepositoryPath
   Install-WindowsFeature -Name "FS-NFS-Service"
   New-NfsShare -Name $schedulerShareName -Path $schedulerRepositoryPath -Permission ReadWrite -AllowRootAccess $true
   Write-Host "Customize (End): Deadline Repository"
@@ -73,10 +75,20 @@ if ($subnetName -eq "Scheduler") {
   Write-Host "Customize (End): Blender"
 }
 
+if ($subnetName -eq "Farm") {
+  Write-Host "Customize (Start): Metadata Service"
+  $taskName = "Local Metadata Service Events"
+  $taskArgument = "PowerShell -ExecutionPolicy Unrestricted -File C:\Windows\Temp\metadata.ps1"
+  $taskAction = New-ScheduledTaskAction -Execute "PowerShell" -Argument $taskArgument
+  $taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval (New-TimeSpan -Minute 1) -At ([System.DateTime]::UtcNow) -Once
+  Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob
+  Write-Host "Customize (End): Metadata Service"
+}
+
 Write-Host "Customize (Start): Deadline Client"
 Set-Location -Path "Deadline*"
 $fileName = "DeadlineClient-$schedulerVersion-windows-installer.exe"
-Start-Process -FilePath $fileName -ArgumentList "--mode unattended --licensemode $schedulerLicense --repositorydir $schedulerRepositoryShare --dbsslcertificate $schedulerCertificateShare --dbsslpassword $userPassword" -Wait
+Start-Process -FilePath $fileName -ArgumentList "--mode unattended --licensemode $schedulerLicense" -Wait
 Set-Location -Path ".."
 Write-Host "Customize (End): Deadline Client"
 

@@ -50,7 +50,7 @@ variable "virtualMachines" {
         )
         customExtension = object(
           {
-            fileName   = string
+            fileName = string
             parameters = object(
               {
                 fileSystemMounts   = list(string)
@@ -108,6 +108,11 @@ data "azurerm_key_vault" "vault" {
 
 data "azurerm_key_vault_secret" "admin_password" {
   name         = module.global.keyVaultSecretNameAdminPassword
+  key_vault_id = data.azurerm_key_vault.vault.id
+}
+
+data "azurerm_key_vault_secret" "user_password" {
+  name         = module.global.keyVaultSecretNameUserPassword
   key_vault_id = data.azurerm_key_vault.vault.id
 }
 
@@ -183,7 +188,7 @@ resource "azurerm_virtual_machine_extension" "workstation_linux" {
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     script: "${base64encode(
-      templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
+      templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {userPassword: "${data.azurerm_key_vault_secret.user_password.value}"}))
     )}"
   })
   depends_on = [
@@ -214,7 +219,7 @@ resource "azurerm_windows_virtual_machine" "workstation" {
     identity_ids = [data.azurerm_user_assigned_identity.identity.id]
   }
   custom_data = each.value.customExtension.fileName == "" ? null : base64gzip(
-    templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
+    templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {userPassword: "${data.azurerm_key_vault_secret.user_password.value}"}))
   )
   depends_on = [
     azurerm_network_interface.workstation
