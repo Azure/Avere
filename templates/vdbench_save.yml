@@ -43,21 +43,126 @@ steps:
 
 - bash: |
     export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
+
+    az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID &&
+    az account set -s $ARM_SUBSCRIPTION_ID
+    check_rc.sh $? "Login to Azure and set default subscription" || exit 0
+
+    STOR_ACCT_RESOURCE_ID="/subscriptions/${ARM_SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Storage/storageAccounts/${AZURE_STORAGE_ACCOUNT_NAME}"
+
+    echo "> STOR_ACCT_RESOURCE_ID: ${STOR_ACCT_RESOURCE_ID}"
+    echo "> Creating Private Endpoint"
+    az network private-endpoint create \
+      --name myPrivateEndpoint \
+      --resource-group ${RESOURCE_GROUP_NAME} \
+      --vnet-name ${VIRTUAL_NETWORK_NAME}  \
+      --subnet ${SUBNET_NAME} \
+      --private-connection-resource-id ${STOR_ACCT_RESOURCE_ID} \
+      --group-ids blob \
+      --connection-name myConnection
+    check_rc.sh $? "Create Private Endpoint" || exit 0
+
+    echo "> Creating private-dns zone"
+    az network private-dns zone create --resource-group ${RESOURCE_GROUP_NAME} \
+      --name  "privatelink.staccttest.windows.net"
+    check_rc.sh $? "Create Private DNS Zone" || exit 0
+
+    az network private-dns link vnet create --resource-group ${RESOURCE_GROUP_NAME} \
+      --zone-name  "privatelink.staccttest.windows.net"\
+      --name MyDNSLink \
+      --virtual-network ${VIRTUAL_NETWORK_NAME} \
+      --registration-enabled false
+    check_rc.sh $? "Create Private-DNS Link" || exit 0
+
+    #Query for the network interface ID
+    echo "> Getting Network Interface"
+    networkInterfaceId=$(az network private-endpoint show --name myPrivateEndpoint --resource-group ${RESOURCE_GROUP_NAME} --query 'networkInterfaces[0].id' -o tsv)
+
+    az resource show --ids $networkInterfaceId --api-version 2019-04-01 > output.json
+    privIp=$(jq -r '.properties.ipConfigurations[0].properties.privateIPAddress' output.json)
+    check_rc.sh $? "Get Private IP" || exit 0
+
+    echo "> Creating DNS Records"
+    #Create DNS records
+    az network private-dns record-set a create --name mystoragetest --zone-name privatelink.staccttest.windows.net --resource-group ${RESOURCE_GROUP_NAME}
+    check_rc.sh $? "Create DNS Record" || exit 0
+    az network private-dns record-set a add-record --record-set-name mystoragetest --zone-name privatelink.staccttest.windows.net --resource-group ${RESOURCE_GROUP_NAME} -a ${privIp}
+    check_rc.sh $? "Add DNS Record" || exit 0
+  displayName: "Setup Private Endpoint"
+  env:
+    ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+    ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+    ARM_TENANT_ID: $(AZURE-TENANT-ID)
+    ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+    AZURE_STORAGE_ACCOUNT_NAME: $(AZURE-STORAGE-ACCOUNT-NAME)
+
+- bash: |
+    export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
     # Check if the vdbench.py run had any failures.
+    end_timestamp=$(date -u -d "60 minutes" '+%Y-%m-%dT%H:%MZ')
+
+    dest_storacct_key=$(az storage account keys list            \
+        --account-name   ${AZURE_STORAGE_ACCOUNT_NAME}          \
+        --resource-group ${AZURE_STORAGE_ACCOUNT_RG_NAME}       \
+        --subscription   $ARM_SUBSCRIPTION_ID --query "[1].value" --output tsv)
+    rc=$?
+    echo "##vso[task.setvariable variable=dest_storacct_key;issecret=true]${dest_storacct_key}"
+    check_rc.sh $rc "Get destination Storage Account key" || exit 0
+
+    dest_container_sas=$(az storage container generate-sas    \
+        --account-key  ${dest_storacct_key}                   \
+        --account-name ${AZURE_STORAGE_ACCOUNT_NAME}          \
+        --name         ${AZURE_STORAGE_ACCOUNT_CONTAINER_NAME} \
+        --expiry       ${end_timestamp}                       \
+        --permissions lrw --https-only --full-uri --output tsv)
+    rc=$?
+    echo "##vso[task.setvariable variable=dest_container_sas;issecret=true]${dest_container_sas}"
+    check_rc.sh $rc "Generate destination SAS URL" || exit 0
+
     cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
-    cmdlog=/tmp/vm_runcmd.log
+    cmdlog=/tmp/vm_runcmd1.log
     az vmss run-command invoke                     \
-      --resource-group ${RESOURCE_GROUP_NAME}-vmss \
+      --resource-group ${RESOURCE_GROUP_NAME}      \
       --name           "vmss"                      \
       --instance-id    0                           \
       --command-id     RunShellScript              \
-      --scripts        "runuser -l azureuser -c 'cat /home/azureuser/vdb.log' && echo ${cmdokmsg}" \
+      --scripts        "runuser -l azureuser -c 'wget https://aka.ms/downloadazcopy-v10-linux && tar -xvf downloadazcopy-v10-linux && sudo cp ./azcopy_linux_amd64_*/azcopy /usr/bin/' && echo ${cmdokmsg}" \
       --query 'value[0].message' --output tsv |& tee ${cmdlog}
-    grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "Tail vdbench.log"
-
-    # Check for "exit with rc=0" at the end of the test log.
+    grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "Install azcopy"
     cat ${cmdlog}
 
-  displayName: "RESULTS: Check for vdbench.py success/failure"
-  timeoutInMinutes: 10
+    cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
+    cmdlog=/tmp/vm_runcmd2.log
+    az vmss run-command invoke                     \
+      --resource-group ${RESOURCE_GROUP_NAME}      \
+      --name           "vmss"                      \
+      --instance-id    0                           \
+      --command-id     RunShellScript              \
+      --scripts        "runuser -l azureuser -c 'tar -c -f /home/azureuser/${RESOURCE_GROUP_NAME}.tar /home/azureuser/vdbench/output/' && echo ${cmdokmsg}" \
+      --query 'value[0].message' --output tsv |& tee ${cmdlog}
+    grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "Tar directory"
+    cat ${cmdlog}
+
+    cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
+    cmdlog=/tmp/vm_runcmd2.log
+    az vmss run-command invoke                     \
+      --resource-group ${RESOURCE_GROUP_NAME}      \
+      --name           "vmss"                      \
+      --instance-id    0                           \
+      --command-id     RunShellScript              \
+      --scripts        "runuser -l azureuser -c 'sudo azcopy copy /home/azureuser/${RESOURCE_GROUP_NAME}.tar ${dest_container_sas} --recursive' && echo ${cmdokmsg}" \
+      --query 'value[0].message' --output tsv |& tee ${cmdlog}
+    grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "az copy"
+
+    cat ${cmdlog}
+  displayName: "RESULTS: Push to Storage Account."
+  timeoutInMinutes: 30
   condition: always()
+  env:
+    ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+    ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+    ARM_TENANT_ID: $(AZURE-TENANT-ID)
+    ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+    AZURE_STORAGE_ACCOUNT_NAME: $(AZURE-STORAGE-ACCOUNT-NAME)
+    AZURE_STORAGE_ACCOUNT_RG_NAME: $(AZURE-STORAGE-ACCOUNT-RG-NAME)
+    AZURE_STORAGE_ACCOUNT_CONTAINER_NAME: $(AZURE-STORAGE-ACCOUNT-CONTAINER-NAME)
