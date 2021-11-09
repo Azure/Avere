@@ -56,6 +56,7 @@ steps:
       --resource-group         ${RESOURCE_GROUP_NAME} \
       --vnet-name              ${VNET} \
       --name                   ${SUBNET} \
+      --disable-private-endpoint-network-policies true \
       --service-endpoints      Microsoft.Storage
     check_rc.sh $? "Add Microsoft.Storage to subnet ${SUBNET} in ${VNET}" || exit 0
 
