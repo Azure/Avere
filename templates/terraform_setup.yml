@@ -72,7 +72,7 @@ steps:
     echo "##vso[task.setvariable variable=VDBENCH_TMUX_SESSION]${VDBENCH_TMUX_SESSION}"
     new_node_count=$(( ${{ parameters.original_node_count }} + ${{ parameters.scale_up_node_count }} ))
 
-    vdbench_sed_url='${VDBENCH_URL}'
+    vdbench_sed_url=${VDBENCH_URL}
 
     sed -i -e "s/<id_rsa>/$base64_idrsa/" \
       -e "s/<region>/$REGION/" \
