@@ -34,7 +34,7 @@ steps:
     done
   displayName: "WAIT: Check for vdbench.py completion"
   timeoutInMinutes: 360
-  condition: not(or(failed(), canceled()))
+  condition: always()
   env:
     ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
     ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
@@ -60,4 +60,4 @@ steps:
 
   displayName: "RESULTS: Check for vdbench.py success/failure"
   timeoutInMinutes: 10
-  condition: not(or(failed(), canceled()))
+  condition: always()
