@@ -96,6 +96,8 @@ steps:
       ${cloud_init_file}
     check_rc.sh $? "Preparing cloud-init file (sed)" || exit
 
+    cat ${cloud_init_file}
+
     # Deploy the client VMs.
     az vm create -g ${RESOURCE_GROUP_NAME} \
       -n ${VM_NAME}  \
