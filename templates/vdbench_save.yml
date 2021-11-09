@@ -19,7 +19,7 @@ steps:
         --name           "vmss"                       \
         --instance-id    0                            \
         --command-id     RunShellScript               \
-        --scripts        "runuser -l azureuser -c 'tmux has-session -t 0' || echo ${cmdokmsg}" \
+        --scripts        "runuser -l azureuser -c 'tmux ls' || echo ${cmdokmsg}" \
         --query 'value[0].message' --output tsv |& tee ${cmdlog}
       check_rc.sh ${PIPESTATUS[0]} "Checking for tmux session " || exit
       grep -q ${cmdokmsg} ${cmdlog}
@@ -51,26 +51,12 @@ steps:
       --name           "vmss"                      \
       --instance-id    0                           \
       --command-id     RunShellScript              \
-      --scripts        "runuser -l azureuser -c 'tail -25 /home/azureuser/vdb.log' && echo ${cmdokmsg}" \
+      --scripts        "runuser -l azureuser -c 'cat /home/azureuser/vdb.log' && echo ${cmdokmsg}" \
       --query 'value[0].message' --output tsv |& tee ${cmdlog}
     grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "Tail vdbench.log"
 
     # Check for "exit with rc=0" at the end of the test log.
-    grep -q 'exit with rc=0' ${cmdlog}
-    grep_rc=$?
-    check_rc.sh ${grep_rc} "vdbench.py success check"
-
-    # If the vdbench.py run succeeded, display the summarized results.
-    if [ "${grep_rc}" -eq "0" ]; then
-      az vmss run-command invoke                    \
-        --resource-group ${RESOURCE_GROUP_NAME}-vmss \
-        --name           "vmss"                      \
-        --instance-id    0                           \
-        --command-id     RunShellScript             \
-        --scripts        "runuser -l azureuser -c 'cat /home/azureuser/*.summary' && echo ${cmdokmsg}" \
-        --query 'value[0].message' --output tsv |& tee ${cmdlog}
-        grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "Display summarized run results"
-    fi
+    cat ${cmdlog}
 
   displayName: "RESULTS: Check for vdbench.py success/failure"
   timeoutInMinutes: 10
