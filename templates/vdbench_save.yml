@@ -125,7 +125,7 @@ steps:
     cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
     cmdlog=/tmp/vm_runcmd1.log
     az vmss run-command invoke                     \
-      --resource-group ${RESOURCE_GROUP_NAME}      \
+      --resource-group ${RESOURCE_GROUP_NAME}-vmss \
       --name           "vmss"                      \
       --instance-id    0                           \
       --command-id     RunShellScript              \
@@ -137,7 +137,7 @@ steps:
     cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
     cmdlog=/tmp/vm_runcmd2.log
     az vmss run-command invoke                     \
-      --resource-group ${RESOURCE_GROUP_NAME}      \
+      --resource-group ${RESOURCE_GROUP_NAME}-vmss \
       --name           "vmss"                      \
       --instance-id    0                           \
       --command-id     RunShellScript              \
@@ -149,7 +149,7 @@ steps:
     cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
     cmdlog=/tmp/vm_runcmd2.log
     az vmss run-command invoke                     \
-      --resource-group ${RESOURCE_GROUP_NAME}      \
+      --resource-group ${RESOURCE_GROUP_NAME}-vmss \
       --name           "vmss"                      \
       --instance-id    0                           \
       --command-id     RunShellScript              \
