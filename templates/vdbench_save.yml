@@ -70,11 +70,11 @@ steps:
     check_rc.sh $? "Create Private Endpoint" || exit 0
 
     echo "> Creating private-dns zone"
-    az network private-dns zone create --resource-group ${RESOURCE_GROUP_NAME} \
+    az network private-dns zone create --resource-group ${RESOURCE_GROUP_NAME}-network \
       --name  "privatelink.staccttest.windows.net"
     check_rc.sh $? "Create Private DNS Zone" || exit 0
 
-    az network private-dns link vnet create --resource-group ${RESOURCE_GROUP_NAME} \
+    az network private-dns link vnet create --resource-group ${RESOURCE_GROUP_NAME}-network \
       --zone-name  "privatelink.staccttest.windows.net"\
       --name MyDNSLink \
       --virtual-network rendervnet \
@@ -83,7 +83,7 @@ steps:
 
     #Query for the network interface ID
     echo "> Getting Network Interface"
-    networkInterfaceId=$(az network private-endpoint show --name myPrivateEndpoint --resource-group ${RESOURCE_GROUP_NAME} --query 'networkInterfaces[0].id' -o tsv)
+    networkInterfaceId=$(az network private-endpoint show --name myPrivateEndpoint --resource-group ${RESOURCE_GROUP_NAME}-network --query 'networkInterfaces[0].id' -o tsv)
 
     az resource show --ids $networkInterfaceId --api-version 2019-04-01 > output.json
     privIp=$(jq -r '.properties.ipConfigurations[0].properties.privateIPAddress' output.json)
@@ -91,9 +91,9 @@ steps:
 
     echo "> Creating DNS Records"
     #Create DNS records
-    az network private-dns record-set a create --name mystoragetest --zone-name privatelink.staccttest.windows.net --resource-group ${RESOURCE_GROUP_NAME}
+    az network private-dns record-set a create --name mystoragetest --zone-name privatelink.staccttest.windows.net --resource-group ${RESOURCE_GROUP_NAME}-network
     check_rc.sh $? "Create DNS Record" || exit 0
-    az network private-dns record-set a add-record --record-set-name mystoragetest --zone-name privatelink.staccttest.windows.net --resource-group ${RESOURCE_GROUP_NAME} -a ${privIp}
+    az network private-dns record-set a add-record --record-set-name mystoragetest --zone-name privatelink.staccttest.windows.net --resource-group ${RESOURCE_GROUP_NAME}-network -a ${privIp}
     check_rc.sh $? "Add DNS Record" || exit 0
   displayName: "Setup Private Endpoint for uploading vdbench results to Storage Account."
   condition: not(or(failed(), canceled()))
