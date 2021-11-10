@@ -163,7 +163,7 @@ steps:
       --name           "vmss"                      \
       --instance-id    0                           \
       --command-id     RunShellScript              \
-      --scripts        "azcopy copy '/home/azureuser/${RESOURCE_GROUP_NAME}.tar' '${sas_url}' && echo ${cmdokmsg}" \
+      --scripts        "azcopy copy --from-to LocalBlob '/home/azureuser/${RESOURCE_GROUP_NAME}.tar' '${sas_url}' && echo ${cmdokmsg}" \
       --query 'value[0].message' --output tsv |& tee ${cmdlog}
     grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "azcopy .tar to storage account"
 
