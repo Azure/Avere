@@ -48,7 +48,7 @@ steps:
     az account set -s $ARM_SUBSCRIPTION_ID
     check_rc.sh $? "Login to Azure and set default subscription" || exit 0
 
-    STOR_ACCT_RESOURCE_ID="/subscriptions/${ARM_SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Storage/storageAccounts/${AZURE_STORAGE_ACCOUNT_NAME}"
+    STOR_ACCT_RESOURCE_ID="/subscriptions/${ARM_SUBSCRIPTION_ID}/resourceGroups/${AZURE_STORAGE_ACCOUNT_RG_NAME}/providers/Microsoft.Storage/storageAccounts/${AZURE_STORAGE_ACCOUNT_NAME}"
 
     echo "> STOR_ACCT_RESOURCE_ID: ${STOR_ACCT_RESOURCE_ID}"
     echo "> Creating Private Endpoint"
@@ -95,6 +95,7 @@ steps:
     ARM_TENANT_ID: $(AZURE-TENANT-ID)
     ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
     AZURE_STORAGE_ACCOUNT_NAME: $(AZURE-STORAGE-ACCOUNT-NAME)
+    AZURE_STORAGE_ACCOUNT_RG_NAME: $(AZURE-STORAGE-ACCOUNT-RG-NAME)
 
 - bash: |
     export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
