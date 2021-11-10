@@ -115,10 +115,12 @@ steps:
         --account-name ${AZURE_STORAGE_ACCOUNT_NAME}          \
         --name         ${AZURE_STORAGE_ACCOUNT_CONTAINER_NAME} \
         --expiry       ${end_timestamp}                       \
-        --permissions lrw --https-only --full-uri --output tsv)
+        --permissions lrw --https-only --output tsv)
     rc=$?
     echo "##vso[task.setvariable variable=dest_container_sas;issecret=true]${dest_container_sas}"
     check_rc.sh $rc "Generate destination SAS URL" || exit 0
+
+    sas_url='https://${AZURE_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${AZURE_STORAGE_ACCOUNT_CONTAINER_NAME}?${dest_container_sas}'
 
     cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
     cmdlog=/tmp/vm_runcmd1.log
@@ -151,7 +153,7 @@ steps:
       --name           "vmss"                      \
       --instance-id    0                           \
       --command-id     RunShellScript              \
-      --scripts        "runuser -l azureuser -c 'sudo azcopy copy /home/azureuser/${RESOURCE_GROUP_NAME}.tar ${dest_container_sas} --recursive' && echo ${cmdokmsg}" \
+      --scripts        "runuser -l azureuser -c 'sudo azcopy copy /home/azureuser/${RESOURCE_GROUP_NAME}.tar ${sas_url} --recursive' && echo ${cmdokmsg}" \
       --query 'value[0].message' --output tsv |& tee ${cmdlog}
     grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "az copy"
 
