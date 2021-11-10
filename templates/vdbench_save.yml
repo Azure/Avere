@@ -120,7 +120,7 @@ steps:
     echo "##vso[task.setvariable variable=dest_container_sas;issecret=true]${dest_container_sas}"
     check_rc.sh $rc "Generate destination SAS URL" || exit 0
 
-    sas_url='https://${AZURE_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${AZURE_STORAGE_ACCOUNT_CONTAINER_NAME}?${dest_container_sas}'
+    sas_url=$(echo https://${AZURE_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${AZURE_STORAGE_ACCOUNT_CONTAINER_NAME}?${dest_container_sas})
 
     cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
     cmdlog=/tmp/vm_runcmd1.log
@@ -145,6 +145,9 @@ steps:
       --query 'value[0].message' --output tsv |& tee ${cmdlog}
     grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "Tar directory"
     cat ${cmdlog}
+
+    echo '!!!!!!! - URL'
+    echo ${sas_url}
 
     cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
     cmdlog=/tmp/vm_runcmd2.log
