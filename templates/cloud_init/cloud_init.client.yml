@@ -304,7 +304,6 @@ write_files:
       export REGION='<region>'
       export RESOURCE_GROUP_NAME='<resource_group_name>'
       export TF_VFXT_CONFIG='<terraform_file_config>'
-      export VDBENCH_TMUX_SESSION='<vdbench_tmux_session>'
       export VDBENCH_URL='<vdbench_download_url>'
 
       echo "cd to file path"

@@ -32,9 +32,9 @@ steps:
         break
       fi
     done
-  displayName: "WAIT: Check for vdbench.py completion"
+  displayName: "Check for vdbench.py completion"
   timeoutInMinutes: 360
-  condition: always()
+  condition: not(or(failed(), canceled()))
   env:
     ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
     ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
@@ -48,15 +48,22 @@ steps:
     az account set -s $ARM_SUBSCRIPTION_ID
     check_rc.sh $? "Login to Azure and set default subscription" || exit 0
 
+    az network vnet subnet update \
+      --resource-group         ${RESOURCE_GROUP_NAME}-network \
+      --vnet-name              rendervnet \
+      --name                   render_clients1 \
+      --disable-private-endpoint-network-policies true
+    check_rc.sh $? "Disable private endpoint network policies on render_clients1 subnet" || exit 0
+
     STOR_ACCT_RESOURCE_ID="/subscriptions/${ARM_SUBSCRIPTION_ID}/resourceGroups/${AZURE_STORAGE_ACCOUNT_RG_NAME}/providers/Microsoft.Storage/storageAccounts/${AZURE_STORAGE_ACCOUNT_NAME}"
 
     echo "> STOR_ACCT_RESOURCE_ID: ${STOR_ACCT_RESOURCE_ID}"
     echo "> Creating Private Endpoint"
     az network private-endpoint create \
       --name myPrivateEndpoint \
-      --resource-group ${RESOURCE_GROUP_NAME} \
-      --vnet-name ${VNET}  \
-      --subnet ${SUBNET} \
+      --resource-group ${RESOURCE_GROUP_NAME}-network \
+      --vnet-name rendervnet  \
+      --subnet render_clients1 \
       --private-connection-resource-id ${STOR_ACCT_RESOURCE_ID} \
       --group-ids blob \
       --connection-name myConnection
@@ -70,7 +77,7 @@ steps:
     az network private-dns link vnet create --resource-group ${RESOURCE_GROUP_NAME} \
       --zone-name  "privatelink.staccttest.windows.net"\
       --name MyDNSLink \
-      --virtual-network ${VNET} \
+      --virtual-network rendervnet \
       --registration-enabled false
     check_rc.sh $? "Create Private-DNS Link" || exit 0
 
@@ -88,7 +95,9 @@ steps:
     check_rc.sh $? "Create DNS Record" || exit 0
     az network private-dns record-set a add-record --record-set-name mystoragetest --zone-name privatelink.staccttest.windows.net --resource-group ${RESOURCE_GROUP_NAME} -a ${privIp}
     check_rc.sh $? "Add DNS Record" || exit 0
-  displayName: "Setup Private Endpoint"
+  displayName: "Setup Private Endpoint for uploading vdbench results to Storage Account."
+  condition: not(or(failed(), canceled()))
+
   env:
     ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
     ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
@@ -99,7 +108,6 @@ steps:
 
 - bash: |
     export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
-    # Check if the vdbench.py run had any failures.
     end_timestamp=$(date -u -d "60 minutes" '+%Y-%m-%dT%H:%MZ')
 
     dest_storacct_key=$(az storage account keys list            \
@@ -115,12 +123,13 @@ steps:
         --account-name ${AZURE_STORAGE_ACCOUNT_NAME}          \
         --name         ${AZURE_STORAGE_ACCOUNT_CONTAINER_NAME} \
         --expiry       ${end_timestamp}                       \
-        --permissions lrw --https-only --output tsv)
+        --permissions clrw --https-only --output tsv)
     rc=$?
     echo "##vso[task.setvariable variable=dest_container_sas;issecret=true]${dest_container_sas}"
     check_rc.sh $rc "Generate destination SAS URL" || exit 0
 
     sas_url=$(echo https://${AZURE_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${AZURE_STORAGE_ACCOUNT_CONTAINER_NAME}?${dest_container_sas})
+    check_rc.sh $rc "Full SAS URL" || exit 0
 
     cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
     cmdlog=/tmp/vm_runcmd1.log
@@ -132,7 +141,6 @@ steps:
       --scripts        "runuser -l azureuser -c 'wget https://aka.ms/downloadazcopy-v10-linux && tar -xvf downloadazcopy-v10-linux && sudo cp ./azcopy_linux_amd64_*/azcopy /usr/bin/' && echo ${cmdokmsg}" \
       --query 'value[0].message' --output tsv |& tee ${cmdlog}
     grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "Install azcopy"
-    cat ${cmdlog}
 
     cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
     cmdlog=/tmp/vm_runcmd2.log
@@ -143,8 +151,7 @@ steps:
       --command-id     RunShellScript              \
       --scripts        "runuser -l azureuser -c 'tar -c -f ${RESOURCE_GROUP_NAME}.tar /home/azureuser/vdbench/output/' && echo ${cmdokmsg}" \
       --query 'value[0].message' --output tsv |& tee ${cmdlog}
-    grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "Tar directory"
-    cat ${cmdlog}
+    grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "Tar vdbench output directory"
 
     echo '!!!!!!! - URL'
     echo ${sas_url}
@@ -156,14 +163,22 @@ steps:
       --name           "vmss"                      \
       --instance-id    0                           \
       --command-id     RunShellScript              \
-      --scripts        "runuser -l azureuser -c 'sudo azcopy copy ${RESOURCE_GROUP_NAME}.tar ${sas_url} --recursive' && echo ${cmdokmsg}" \
+      --scripts        "azcopy copy '${RESOURCE_GROUP_NAME}.tar' '${sas_url}' && echo ${cmdokmsg}" \
       --query 'value[0].message' --output tsv |& tee ${cmdlog}
-    grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "az copy"
+    grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "azcopy .tar to storage account"
 
     cat ${cmdlog}
-  displayName: "RESULTS: Push to Storage Account."
+
+    az network vnet subnet update \
+      --resource-group         ${RESOURCE_GROUP_NAME}-network \
+      --vnet-name              rendervnet \
+      --name                   render_clients1 \
+      --disable-private-endpoint-network-policies false
+    check_rc.sh $? "Enable private endpoint network policies on render_clients1 subnet" || exit 0
+
+  displayName: "Add results to Storage Account."
   timeoutInMinutes: 30
-  condition: always()
+  condition: not(or(failed(), canceled()))
   env:
     ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
     ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
