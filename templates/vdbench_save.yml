@@ -141,7 +141,7 @@ steps:
       --name           "vmss"                      \
       --instance-id    0                           \
       --command-id     RunShellScript              \
-      --scripts        "runuser -l azureuser -c 'tar -c -f /home/azureuser/${RESOURCE_GROUP_NAME}.tar /home/azureuser/vdbench/output/' && echo ${cmdokmsg}" \
+      --scripts        "runuser -l azureuser -c 'tar -c -f ${RESOURCE_GROUP_NAME}.tar /home/azureuser/vdbench/output/' && echo ${cmdokmsg}" \
       --query 'value[0].message' --output tsv |& tee ${cmdlog}
     grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "Tar directory"
     cat ${cmdlog}
@@ -153,7 +153,7 @@ steps:
       --name           "vmss"                      \
       --instance-id    0                           \
       --command-id     RunShellScript              \
-      --scripts        "runuser -l azureuser -c 'sudo azcopy copy /home/azureuser/${RESOURCE_GROUP_NAME}.tar ${sas_url} --recursive' && echo ${cmdokmsg}" \
+      --scripts        "runuser -l azureuser -c 'sudo azcopy copy ${RESOURCE_GROUP_NAME}.tar ${sas_url} --recursive' && echo ${cmdokmsg}" \
       --query 'value[0].message' --output tsv |& tee ${cmdlog}
     grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "az copy"
 
