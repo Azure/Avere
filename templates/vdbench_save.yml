@@ -163,11 +163,21 @@ steps:
       --name           "vmss"                      \
       --instance-id    0                           \
       --command-id     RunShellScript              \
-      --scripts        "azcopy copy '${RESOURCE_GROUP_NAME}.tar' '${sas_url}' && echo ${cmdokmsg}" \
+      --scripts        "azcopy copy '/home/azureuser/${RESOURCE_GROUP_NAME}.tar' '${sas_url}' && echo ${cmdokmsg}" \
       --query 'value[0].message' --output tsv |& tee ${cmdlog}
     grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "azcopy .tar to storage account"
 
     cat ${cmdlog}
+
+    az network private-endpoint dns-zone-group delete \
+      --endpoint-name myPrivateEndpoint \
+      --name "privatelink.staccttest.windows.net" \
+      --resource-group ${RESOURCE_GROUP_NAME}-network
+    check_rc.sh $? "DNS-Zone delete" || exit 0
+
+    az network private-endpoint delete --name myPrivateEndpoint \
+      --resource-group ${RESOURCE_GROUP_NAME}-network
+    check_rc.sh $? "Private endpoint delete" || exit 0
 
     az network vnet subnet update \
       --resource-group         ${RESOURCE_GROUP_NAME}-network \
