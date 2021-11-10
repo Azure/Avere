@@ -156,6 +156,7 @@ jobs:
         - template: templates/terraform_run.yml
           parameters:
             run: vdbench_destroy
+            condition: always()
     - template: templates/terraform_run.yml
       parameters:
         run: destroy
