@@ -128,7 +128,7 @@ steps:
     echo "##vso[task.setvariable variable=dest_container_sas;issecret=true]${dest_container_sas}"
     check_rc.sh $rc "Generate destination SAS URL" || exit 0
 
-    sas_url='https://${AZURE_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${AZURE_STORAGE_ACCOUNT_CONTAINER_NAME}?${dest_container_sas}'
+    sas_url=$(echo https://${AZURE_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${AZURE_STORAGE_ACCOUNT_CONTAINER_NAME}?${dest_container_sas})
     check_rc.sh $rc "Full SAS URL" || exit 0
 
     cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
