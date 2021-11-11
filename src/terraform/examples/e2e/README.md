@@ -1,6 +1,6 @@
 # Azure Artist Anywhere (AAA) Rendering Solution
 
-This folder contains the end-to-end example configuration and automated deployment framework for the [Azure Artist Anywhere (AAA) rendering solution architecture](https://github.com/Azure/Avere/blob/main/src/terraform/burstrenderarchitecture.png). By leveraging the [Azure First Render Pilot](../securedimage/Azure%20First%20Render%20Pilot.pdf) process along with [Terraform](https://www.terraform.io/) across the following deployment modules, your existing pipeline can be extended via [Azure HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) to enable rendering at scale without moving your asset storage.
+This folder contains the end-to-end example configuration and automated deployment framework for the [Azure Artist Anywhere (AAA) rendering solution architecture](https://github.com/Azure/Avere/blob/main/src/terraform/burstrenderarchitecture.png). By leveraging the [Azure First Render Pilot Program](../securedimage/Azure%20First%20Render%20Pilot.pdf) with [Terraform](https://www.terraform.io/) across the following deployment modules, your existing pipeline can be extended via [Azure HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) to enable rendering at scale without moving your asset storage.
 
 | Module | Description |
 | :----- | :---------- |
@@ -14,12 +14,11 @@ This folder contains the end-to-end example configuration and automated deployme
 | [7 Compute Workstation](#7-compute-workstation) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/) for [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) artist workstations. |
 | [Render Job Submission](#render-job-submission) | Submit render job from the perspective of a remote artist workstation. |
 
-To manage the Azure rendering solution infrastructure from your local workstation, the following prerequisite steps are required.
+To manage deployment of the Azure rendering solution from your local workstation, the following prerequisite steps are required.
 1. Make sure the [Terraform CLI](https://www.terraform.io/downloads.html) is downloaded locally. Version 1.0.10 (or higher) is required.
 1. Make sure the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) is installed locally. The latest version is 2.29.2 as of October, 2021.
 1. Make sure that [Git](https://git-scm.com/downloads) is installed locally. The latest version is 2.33.1 as of October, 2021.
-1. Run `az account show` to ensure that your target Azure subscription context is set appropriately. If requested, run `az login` 
-1. To change your target Azure subscription context, run `az account set --subscription YOUR_SUBSCRIPTION_ID`
+1. Run `az account show` to ensure that your current Azure subscription session context is set appropriately. To change your current Azure subscription session context, run `az account set --subscription YOUR_SUBSCRIPTION_ID`
 1. Download the Azure rendering solution Terraform examples GitHub repository via the following commands.
    ```
    mkdir tf
@@ -33,9 +32,9 @@ To manage the Azure rendering solution infrastructure from your local workstatio
 
 ## 0 Security
 
-*Before deploying the Security module*, the following built-in Azure roles are required for the current user to create KeyVault secrets and keys, respectively
-* "Key Vault Secrets Officer" - https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-secrets-officer
-* "Key Vault Crypto Officer"  - https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-crypto-officer
+*Before deploying the Security module*, the following built-in Azure roles must be assigned to the current user to enable creation of KeyVault secrets and keys, respectively.
+* *Key Vault Secrets Officer* - https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-secrets-officer
+* *Key Vault Crypto Officer*  - https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-crypto-officer
 
 For Azure role assignment instructions, refer to either the Azure [portal](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal), [CLI](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-cli) or [PowerShell](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-powershell) documents.
 
@@ -47,8 +46,8 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 1. Edit the config values in `config.auto.tfvars` using your favorite text editor
 1. Run `terraform init` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
-1. Use the [Azure portal to update your Key Vault secrets](https://docs.microsoft.com/en-us/azure/key-vault/secrets/quick-create-portal) (`GatewayConnection`, `AdminPassword`)
+1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
+1. Use the [Azure portal to update your Key Vault secrets](https://docs.microsoft.com/en-us/azure/key-vault/secrets/quick-create-portal) (`GatewayConnection`, `AdminPassword`, `UserPassword`)
 1. Run `cd ~/tf/src/terraform/examples/e2e`
 1. Edit the config values in `backend.config` to match the config values that you set in `config.auto.tfvars`
 1. Run `cd ~/tf/src/terraform/examples/e2e/global`
@@ -62,7 +61,7 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 1. Edit the config values in `config.auto.tfvars` using your favorite text editor.
 1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
+1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
 
 ## 2 Storage
 
@@ -72,11 +71,11 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 1. Edit the config values in `config.auto.tfvars` using your favorite text editor.
 1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
+1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
 
 ## 3 Storage Cache
 
-*Before deploying the Storage Cache module*, download the latest [Terraform Avere provider](https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere) using the following commands.
+*Before deploying the Storage Cache module*, download the latest [Terraform Avere provider](https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere) to your local workstation using the following `Bash` / `Linux` commands or `PowerShell` / `Windows` commands.
 
 `Bash` / `Linux`
 ```
@@ -103,10 +102,10 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 
 1. Run `cd ~/tf/src/terraform/examples/e2e/3.storage.cache`
 1. Edit the config values in `config.auto.tfvars` using your favorite text editor.
-1. For Avere vFXT deployment, make sure the [Avere vFXT image terms have been accepted](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs#accept-software-terms) (only required once per Azure subscription)
+1. *For Avere vFXT deployment only*, make sure the [Avere vFXT image terms have been accepted](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs#accept-software-terms) (only required once per Azure subscription)
 1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
+1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
 
 ## 4 Compute Image
 
@@ -116,8 +115,8 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 1. Edit the config values in `config.auto.tfvars` using your favorite text editor. Make sure you have sufficient compute cores quota available on your Azure subscription for the selected virtual machine size(s).
 1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
-1. After successful deployment, use the Azure portal or CLI to start image template build processes
+1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
+1. After successful image template deployment, use the Azure portal or [CLI](https://docs.microsoft.com/en-us/cli/azure/image/builder?view=azure-cli-latest#az_image_builder_run) to start image build runs
 
 ## 5 Compute Scheduler
 
@@ -127,7 +126,7 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 1. Edit the config values in `config.auto.tfvars` using your favorite text editor. Make sure you have sufficient compute cores quota available on your Azure subscription for the selected virtual machine size(s).
 1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
+1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
 
 ## 6 Compute Farm
 
@@ -137,7 +136,7 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 1. Edit the config values in `config.auto.tfvars` using your favorite text editor. Make sure you have sufficient compute Spot cores quota available on your Azure subscription.
 1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
+1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
 
 ## 7 Compute Workstation
 
@@ -147,7 +146,7 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 1. Edit the config values in `config.auto.tfvars` using your favorite text editor. Make sure you have sufficient compute cores quota available on your Azure subscription for the selected virtual machine size(s).
 1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the deployment (add, change and/or destroy) of the Azure resources in this module
+1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
 
 ## Render Job Submission
 
