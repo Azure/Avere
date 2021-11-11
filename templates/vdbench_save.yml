@@ -119,10 +119,10 @@ steps:
     check_rc.sh $rc "Get destination Storage Account key" || exit 0
 
     dest_container_sas=$(az storage container generate-sas    \
-        --account-key  ${dest_storacct_key}                   \
+        --account-key  "${dest_storacct_key}"                   \
         --account-name ${AZURE_STORAGE_ACCOUNT_NAME}          \
         --name         ${AZURE_STORAGE_ACCOUNT_CONTAINER_NAME} \
-        --expiry       ${end_timestamp}                       \
+        --expiry       "${end_timestamp}"                       \
         --permissions clrw --https-only --output tsv)
     rc=$?
     echo "##vso[task.setvariable variable=dest_container_sas;issecret=true]${dest_container_sas}"
