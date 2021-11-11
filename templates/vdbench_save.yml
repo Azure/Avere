@@ -180,6 +180,7 @@ steps:
     grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "second attempt azcopy .tar to storage account"
     cat ${test.log}
 
+
     # az network private-endpoint dns-zone-group delete \
     #   --endpoint-name myPrivateEndpoint \
     #   --name "privatelink.staccttest.windows.net" \
