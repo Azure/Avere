@@ -106,7 +106,7 @@ steps:
     AZURE_STORAGE_ACCOUNT_NAME: $(AZURE-STORAGE-ACCOUNT-NAME)
     AZURE_STORAGE_ACCOUNT_RG_NAME: $(AZURE-STORAGE-ACCOUNT-RG-NAME)
 
-- bash: |
+- script: |
     export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
     end_timestamp=$(date -u -d "60 minutes" '+%Y-%m-%dT%H:%MZ')
 
@@ -163,11 +163,22 @@ steps:
       --name           "vmss"                      \
       --instance-id    0                           \
       --command-id     RunShellScript              \
+      --scripts        "azcopy copy '/home/azureuser/${RESOURCE_GROUP_NAME}.tar' 'https://${AZURE_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${AZURE_STORAGE_ACCOUNT_CONTAINER_NAME}?${dest_container_sas}' && echo ${cmdokmsg}" \
+      --query 'value[0].message' --output tsv |& tee ${cmdlog}
+    grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "first attempt azcopy .tar to storage account"
+    cat ${cmdlog}
+
+    cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
+    cmdlog=/tmp/test.log
+    az vmss run-command invoke                     \
+      --resource-group ${RESOURCE_GROUP_NAME}-vmss \
+      --name           "vmss"                      \
+      --instance-id    0                           \
+      --command-id     RunShellScript              \
       --scripts        "azcopy copy '/home/azureuser/${RESOURCE_GROUP_NAME}.tar' '${sas_url}' && echo ${cmdokmsg}" \
       --query 'value[0].message' --output tsv |& tee ${cmdlog}
-    grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "azcopy .tar to storage account"
-
-    cat ${cmdlog}
+    grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "second attempt azcopy .tar to storage account"
+    cat ${test.log}
 
     # az network private-endpoint dns-zone-group delete \
     #   --endpoint-name myPrivateEndpoint \
