@@ -175,7 +175,7 @@ steps:
       --name           "vmss"                      \
       --instance-id    0                           \
       --command-id     RunShellScript              \
-      --scripts        "azcopy copy '/home/azureuser/${RESOURCE_GROUP_NAME}.tar' 'https://${AZURE_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${AZURE_STORAGE_ACCOUNT_CONTAINER_NAME}?${dest_container_sas}' && echo ${cmdokmsg}" \
+      --scripts        "azcopy copy '/home/azureuser/${RESOURCE_GROUP_NAME}.tar' 'https://${AZURE_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${AZURE_STORAGE_ACCOUNT_CONTAINER_NAME}?${dest_container_sas}'   && echo ${cmdokmsg}" \
       --query 'value[0].message' --output tsv |& tee ${cmdlog}
     grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "first attempt azcopy .tar to storage account"
     cat ${cmdlog}
@@ -187,28 +187,28 @@ steps:
       --name           "vmss"                      \
       --instance-id    0                           \
       --command-id     RunShellScript              \
-      --scripts        "azcopy copy '/home/azureuser/${RESOURCE_GROUP_NAME}.tar' '${sas_url}' && echo ${cmdokmsg}" \
+      --scripts        "azcopy copy '/home/azureuser/${RESOURCE_GROUP_NAME}.tar' '${sas_url}'   && echo ${cmdokmsg}" \
       --query 'value[0].message' --output tsv |& tee ${cmdlog}
     grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "second attempt azcopy .tar to storage account"
     cat ${test.log}
 
 
-    az network private-endpoint dns-zone-group delete \
-      --endpoint-name ${RESOURCE_GROUP_NAME}-privendpt \
-      --name "privatelink.blob.core.windows.net" \
-      --resource-group ${RESOURCE_GROUP_NAME}-network
-    check_rc.sh $? "DNS-Zone delete" || exit 0
+    # az network private-endpoint dns-zone-group delete \
+    #   --endpoint-name ${RESOURCE_GROUP_NAME}-privendpt \
+    #   --name "privatelink.blob.core.windows.net" \
+    #   --resource-group ${RESOURCE_GROUP_NAME}-network
+    # check_rc.sh $? "DNS-Zone delete" || exit 0
 
-    az network private-endpoint delete --name ${RESOURCE_GROUP_NAME}-privendpt \
-      --resource-group ${RESOURCE_GROUP_NAME}-network
-    check_rc.sh $? "Private endpoint delete" || exit 0
+    # az network private-endpoint delete --name ${RESOURCE_GROUP_NAME}-privendpt \
+    #   --resource-group ${RESOURCE_GROUP_NAME}-network
+    # check_rc.sh $? "Private endpoint delete" || exit 0
 
-    az network vnet subnet update \
-      --resource-group         ${RESOURCE_GROUP_NAME}-network \
-      --vnet-name              rendervnet \
-      --name                   render_clients1 \
-      --disable-private-endpoint-network-policies false
-    check_rc.sh $? "Enable private endpoint network policies on render_clients1 subnet" || exit 0
+    # az network vnet subnet update \
+    #   --resource-group         ${RESOURCE_GROUP_NAME}-network \
+    #   --vnet-name              rendervnet \
+    #   --name                   render_clients1 \
+    #   --disable-private-endpoint-network-policies false
+    # check_rc.sh $? "Enable private endpoint network policies on render_clients1 subnet" || exit 0
 
   displayName: "Add results to Storage Account."
   timeoutInMinutes: 30
