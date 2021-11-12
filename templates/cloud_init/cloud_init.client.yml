@@ -360,6 +360,7 @@ write_files:
       [ $? -ne 0 ] && error "ssh to run vdbench"
 
       echo "DONE: end of $0"
+
 runcmd:
   - "echo '# STEP: Setup SSH key.'"
   - "cp -v /root/.ssh/id_rsa /home/<vm_admin_user>/.ssh/id_rsa"
