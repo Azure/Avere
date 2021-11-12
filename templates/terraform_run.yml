@@ -59,11 +59,11 @@ steps:
     done
 
     az vm run-command invoke                        \
-    --command-id     RunShellScript                 \
-    --name           ${VM_NAME}                     \
-    --resource-group ${RESOURCE_GROUP_NAME}         \
-    --scripts "tail -100 /tmp/${{ parameters.run }}.txt" \
-    --query 'value[0].message' --output tsv |& tee /tmp/cloud-init_output.log
+      --command-id     RunShellScript                 \
+      --name           ${VM_NAME}                     \
+      --resource-group ${RESOURCE_GROUP_NAME}         \
+      --scripts "tail -100 /tmp/${{ parameters.run }}.txt" \
+      --query 'value[0].message' --output tsv |& tee /tmp/cloud-init_output.log
 
     check_rc.sh ${PIPESTATUS[0]} "Collect tail of terraform's output for ${{ parameters.run }}" || exit 0
 
