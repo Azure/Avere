@@ -30,7 +30,7 @@
         },
         "subnetDeploymentName": {
             "type": "string",
-            "defaultValue": "[concat(resourceGroup().name, '-sub')]"
+            "defaultValue": "[concat(resourceGroup().name, '-subnet')]"
         },
         "privateDnsDeploymentName": {
             "type": "string",

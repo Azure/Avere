@@ -150,6 +150,8 @@ jobs:
           run: scaledown
   - ${{ if eq(parameters.run_vdbench, true) }}:
     - template: templates/vdbench_save.yml
+      parameters:
+        vdbench_config: ${{ parameters.vdbench_config }}
   - ${{ if eq(parameters.run_destroy_and_cleanup, true) }}:
     - ${{ if eq(parameters.run_vdbench, true) }}:
       - ${{ if eq(parameters.tf_config, 'azureblobfiler') }}:
