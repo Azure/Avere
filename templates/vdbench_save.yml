@@ -58,46 +58,58 @@ steps:
     STOR_ACCT_RESOURCE_ID="/subscriptions/${ARM_SUBSCRIPTION_ID}/resourceGroups/${AZURE_STORAGE_ACCOUNT_RG_NAME}/providers/Microsoft.Storage/storageAccounts/${AZURE_STORAGE_ACCOUNT_NAME}"
 
     echo "> STOR_ACCT_RESOURCE_ID: ${STOR_ACCT_RESOURCE_ID}"
-    echo "> Creating Private Endpoint"
-    az network private-endpoint create \
-      --name myPrivateEndpoint \
-      --resource-group ${RESOURCE_GROUP_NAME}-network \
-      --vnet-name rendervnet  \
-      --subnet render_clients1 \
-      --private-connection-resource-id ${STOR_ACCT_RESOURCE_ID} \
-      --group-ids blob \
-      --connection-name myConnection
+
+    az deployment group create \
+      -f ${BUILD_SOURCESDIRECTORY}/templates/private_endpt.json \
+      --resource-group ${RESOURCE_GROUP_NAME}-network           \
+      -p location=${REGION}                                     \
+      -p privateEndpointName=${RESOURCE_GROUP_NAME}-privendpt   \
+      -p privateLinkResourceId=${STOR_ACCT_RESOURCE_ID}         \
+      -p subnet=render_clients1                                 \
+      -p vnet=rendervnet                                        \
+      -p subscriptionId=${ARM_SUBSCRIPTION_ID}
+
     check_rc.sh $? "Create Private Endpoint" || exit 0
 
-    echo "> Creating private-dns zone"
-    az network private-dns zone create --resource-group ${RESOURCE_GROUP_NAME}-network \
-      --name  "privatelink.staccttest.windows.net"
-    check_rc.sh $? "Create Private DNS Zone" || exit 0
+    # echo "> Creating Private Endpoint"
+    # az network private-endpoint create \
+    #   --name myPrivateEndpoint \
+    #   --resource-group ${RESOURCE_GROUP_NAME}-network \
+    #   --vnet-name rendervnet  \
+    #   --subnet render_clients1 \
+    #   --private-connection-resource-id ${STOR_ACCT_RESOURCE_ID} \
+    #   --group-ids blob \
+    #   --connection-name myConnection
+    # check_rc.sh $? "Create Private Endpoint" || exit 0
 
-    az network private-dns link vnet create --resource-group ${RESOURCE_GROUP_NAME}-network \
-      --zone-name  "privatelink.staccttest.windows.net"\
-      --name MyDNSLink \
-      --virtual-network rendervnet \
-      --registration-enabled false
-    check_rc.sh $? "Create Private-DNS Link" || exit 0
+    # echo "> Creating private-dns zone"
+    # az network private-dns zone create --resource-group ${RESOURCE_GROUP_NAME}-network \
+    #   --name  "privatelink.staccttest.windows.net"
+    # check_rc.sh $? "Create Private DNS Zone" || exit 0
 
-    #Query for the network interface ID
-    echo "> Getting Network Interface"
-    networkInterfaceId=$(az network private-endpoint show --name myPrivateEndpoint --resource-group ${RESOURCE_GROUP_NAME}-network --query 'networkInterfaces[0].id' -o tsv)
+    # az network private-dns link vnet create --resource-group ${RESOURCE_GROUP_NAME}-network \
+    #   --zone-name  "privatelink.staccttest.windows.net"\
+    #   --name MyDNSLink \
+    #   --virtual-network rendervnet \
+    #   --registration-enabled false
+    # check_rc.sh $? "Create Private-DNS Link" || exit 0
 
-    az resource show --ids $networkInterfaceId --api-version 2019-04-01 > output.json
-    privIp=$(jq -r '.properties.ipConfigurations[0].properties.privateIPAddress' output.json)
-    check_rc.sh $? "Get Private IP" || exit 0
+    # #Query for the network interface ID
+    # echo "> Getting Network Interface"
+    # networkInterfaceId=$(az network private-endpoint show --name myPrivateEndpoint --resource-group ${RESOURCE_GROUP_NAME}-network --query 'networkInterfaces[0].id' -o tsv)
 
-    echo "> Creating DNS Records"
-    #Create DNS records
-    az network private-dns record-set a create --name mystoragetest --zone-name privatelink.staccttest.windows.net --resource-group ${RESOURCE_GROUP_NAME}-network
-    check_rc.sh $? "Create DNS Record" || exit 0
-    az network private-dns record-set a add-record --record-set-name mystoragetest --zone-name privatelink.staccttest.windows.net --resource-group ${RESOURCE_GROUP_NAME}-network -a ${privIp}
-    check_rc.sh $? "Add DNS Record" || exit 0
+    # az resource show --ids $networkInterfaceId --api-version 2019-04-01 > output.json
+    # privIp=$(jq -r '.properties.ipConfigurations[0].properties.privateIPAddress' output.json)
+    # check_rc.sh $? "Get Private IP" || exit 0
+
+    # echo "> Creating DNS Records"
+    # #Create DNS records
+    # az network private-dns record-set a create --name ${AZURE_STORAGE_ACCOUNT_NAME} --zone-name privatelink.staccttest.windows.net --resource-group ${RESOURCE_GROUP_NAME}-network
+    # check_rc.sh $? "Create DNS Record" || exit 0
+    # az network private-dns record-set a add-record --record-set-name ${AZURE_STORAGE_ACCOUNT_NAME} --zone-name privatelink.staccttest.windows.net --resource-group ${RESOURCE_GROUP_NAME}-network -a ${privIp}
+    # check_rc.sh $? "Add DNS Record" || exit 0
   displayName: "Setup Private Endpoint for uploading vdbench results to Storage Account."
   condition: not(or(failed(), canceled()))
-
   env:
     ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
     ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
