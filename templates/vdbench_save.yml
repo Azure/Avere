@@ -176,6 +176,6 @@ steps:
     AZURE_STORAGE_ACCOUNT_RG_NAME: $(AZURE-STORAGE-ACCOUNT-RG-NAME)
     AZURE_STORAGE_ACCOUNT_CONTAINER_NAME: $(AZURE-STORAGE-ACCOUNT-CONTAINER-NAME)
 
-- bash: echo "##vso[build.updatebuildnumber]${BUILD_BUILDNUMBER}-${{ parameters.vdbench_config }}.tar - vdbench"
-  displayName: "Add onto build with .tar with vdbench config  "
+- bash: echo "##vso[build.updatebuildnumber]${BUILD_BUILDNUMBER} (vdbench, ${RESOURCE_GROUP_NAME}-${{ parameters.vdbench_config }}.tar)"
+  displayName: "Add .tar name with vdbench config  "
   condition: not(or(failed(), canceled()))
