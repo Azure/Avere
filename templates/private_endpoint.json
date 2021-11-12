@@ -1,0 +1,202 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string"
+        },
+        "privateEndpointName": {
+            "type": "string"
+        },
+        "privateLinkResourceId": {
+            "type": "string"
+        },
+        "targetSubResource": {
+            "type": "array",
+            "defaultValue": ["blob"]
+        },
+        "subnet": {
+            "type": "string"
+        },
+        "vnet": {
+            "type": "string"
+        },
+        "resourceGroup": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().name]"
+        },
+        "subscriptionId": {
+            "type": "string"
+        },
+        "subnetDeploymentName": {
+            "type": "string",
+            "defaultValue": "[concat(resourceGroup().name, '-sub')]"
+        },
+        "privateDnsDeploymentName": {
+            "type": "string",
+            "defaultValue": "[concat(resourceGroup().name, '-dns')]"
+
+        },
+        "dnsZoneDeploymentName": {
+            "type": "string",
+            "defaultValue": "[concat(resourceGroup().name, '-dnszone')]"
+        },
+        "privateLink": {
+            "type": "string",
+            "defaultValue": "privatelink.blob.core.windows.net"
+        },
+        "configurationLink": {
+            "type": "string",
+            "defaultValue": "privatelink-blob-core-windows-net"
+        }
+    },
+    "variables": {
+        "subnetResourceId": "[resourceId(parameters('resourceGroup'), 'Microsoft.Network/virtualNetworks/subnets', parameters('vnet'), parameters('subnet'))]",
+        "vnetResourceId": "[resourceId(parameters('resourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnet'))]"
+
+    },
+    "resources": [
+        {
+            "location": "[parameters('location')]",
+            "name": "[parameters('privateEndpointName')]",
+            "type": "Microsoft.Network/privateEndpoints",
+            "apiVersion": "2020-03-01",
+            "properties": {
+                "subnet": {
+                    "id": "[variables('subnetResourceId')]"
+                },
+                "privateLinkServiceConnections": [
+                    {
+                        "name": "[parameters('privateEndpointName')]",
+                        "properties": {
+                            "privateLinkServiceId": "[parameters('privateLinkResourceId')]",
+                            "groupIds": "[parameters('targetSubResource')]"
+                        }
+                    }
+                ]
+            },
+            "tags": {}
+        },
+        {
+            "apiVersion": "2017-05-10",
+            "name": "[parameters('privateDnsDeploymentName')]",
+            "type": "Microsoft.Resources/deployments",
+            "dependsOn": [
+                "[parameters('privateEndpointName')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [
+                        {
+                            "apiVersion": "2017-05-10",
+                            "name": "[concat(parameters('privateDnsDeploymentName'), '2')]",
+                            "type": "Microsoft.Resources/deployments",
+                            "subscriptionId": "[parameters('subscriptionId')]",
+                            "resourceGroup": "[parameters('resourceGroup')]",
+                            "properties": {
+                                "mode": "Incremental",
+                                "template": {
+                                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                                    "contentVersion": "1.0.0.0",
+                                    "resources": [
+                                        {
+                                            "type": "Microsoft.Network/privateDnsZones",
+                                            "apiVersion": "2018-09-01",
+                                            "name": "[parameters('privateLink')]",
+                                            "location": "global",
+                                            "tags": {},
+                                            "properties": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "apiVersion": "2017-05-10",
+            "name": "[concat('VirtualNetworkLink-', parameters('resourceGroup'))]",
+            "type": "Microsoft.Resources/deployments",
+            "dependsOn": [
+                "[parameters('privateDnsDeploymentName')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [
+                        {
+                            "apiVersion": "2017-05-10",
+                            "name": "[concat('VirtualNetworkLink-', parameters('resourceGroup'), '2')]",
+                            "type": "Microsoft.Resources/deployments",
+                            "subscriptionId": "[parameters('subscriptionId')]",
+                            "resourceGroup": "[parameters('resourceGroup')]",
+                            "properties": {
+                                "mode": "Incremental",
+                                "template": {
+                                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                                    "contentVersion": "1.0.0.0",
+                                    "resources": [
+                                        {
+                                            "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                                            "apiVersion": "2018-09-01",
+                                            "name": "[concat(parameters('privateLink'), '/', uniqueString(variables('vnetResourceId')))]",
+                                            "location": "global",
+                                            "properties": {
+                                                "virtualNetwork": {
+                                                    "id": "[variables('vnetResourceId')]"
+                                                },
+                                                "registrationEnabled": false
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "apiVersion": "2017-05-10",
+            "name": "[parameters('dnsZoneDeploymentName')]",
+            "type": "Microsoft.Resources/deployments",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "dependsOn": [
+                "[parameters('privateEndpointName')]",
+                "[parameters('privateDnsDeploymentName')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [
+                        {
+                            "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+                            "apiVersion": "2020-03-01",
+                            "name": "[concat(parameters('privateEndpointName'), '/', 'default')]",
+                            "location": "[parameters('location')]",
+                            "properties": {
+                                "privateDnsZoneConfigs": [
+                                    {
+                                        "name": "[parameters('configurationLink')]",
+                                        "properties": {
+                                            "privateDnsZoneId": "[concat('/subscriptions/', parameters('subscriptionId'), '/resourceGroups/', parameters('resourceGroup'), '/providers/Microsoft.Network/privateDnsZones/', parameters('privateLink'))]"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

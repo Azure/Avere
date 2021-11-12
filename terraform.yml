@@ -148,12 +148,15 @@ jobs:
       - template: templates/terraform_run.yml
         parameters:
           run: scaledown
+  - ${{ if eq(parameters.run_vdbench, true) }}:
+    - template: templates/vdbench_save.yml
   - ${{ if eq(parameters.run_destroy_and_cleanup, true) }}:
     - ${{ if eq(parameters.run_vdbench, true) }}:
       - ${{ if eq(parameters.tf_config, 'azureblobfiler') }}:
         - template: templates/terraform_run.yml
           parameters:
             run: vdbench_destroy
+            condition: always()
     - template: templates/terraform_run.yml
       parameters:
         run: destroy

@@ -69,6 +69,7 @@ steps:
     echo "##vso[task.setvariable variable=secret.SSH_KEY_PUBLIC;issecret=true]${ssk_key_pub}"
 
     new_node_count=$(( ${{ parameters.original_node_count }} + ${{ parameters.scale_up_node_count }} ))
+    vdbench_sed_url=${VDBENCH_URL}
 
     sed -i -e "s/<id_rsa>/$base64_idrsa/" \
       -e "s/<region>/$REGION/" \
@@ -87,7 +88,7 @@ steps:
       -e "s/<original_node_count>/${{ parameters.original_node_count }}/" \
       -e "s/<new_node_count>/$new_node_count/" \
       -e "s/<vdbench_config>/${{ parameters.vdbench_config }}/" \
-      -e "s,<vdbench_download_url>,${VDBENCH_URL}," \
+      -e "s,<vdbench_download_url>,${vdbench_sed_url//&/\\&}," \
       ${cloud_init_file}
     check_rc.sh $? "Preparing cloud-init file (sed)" || exit
 
@@ -124,7 +125,6 @@ steps:
     done
     grep -q 'status: done' ${cmdlog}
     check_rc.sh $? "Wait for cloud-init completion. Create vfxt"
-
 
     # Cooldown for "az vm run-command invoke" before the next one.
     # This solves a corner/race case when the command is run back-to-back.
