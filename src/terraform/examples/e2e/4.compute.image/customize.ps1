@@ -101,7 +101,7 @@ if ($subnetName -eq "Workstation") {
   Write-Host "Customize (End): Blender Deadline Submitter"
   
   Write-Host "Customize (Start): Teradici PCoIP Agent"
-  $fileName = "pcoip-agent-graphics_21.07.4.exe"
+  $fileName = "pcoip-agent-graphics_21.07.5.exe"
   $downloadUrl = "$storageContainerUrl/Teradici/$fileName$storageContainerSas"
   Invoke-WebRequest $downloadUrl -OutFile $fileName
   Start-Process -FilePath $fileName -ArgumentList "/S /NoPostReboot /Force" -Wait

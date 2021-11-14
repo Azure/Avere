@@ -1,6 +1,6 @@
 # Azure Artist Anywhere (AAA) Rendering Solution
 
-This folder contains the end-to-end example configuration and automated deployment framework for the [Azure Artist Anywhere (AAA) rendering solution architecture](https://github.com/Azure/Avere/blob/main/src/terraform/burstrenderarchitecture.png). By leveraging the [Azure First Render Pilot Program](../securedimage/Azure%20First%20Render%20Pilot.pdf) with [Terraform](https://www.terraform.io/) across the following deployment modules, your existing pipeline can be extended via [Azure HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) to enable rendering at scale without moving your asset storage.
+This folder contains the end-to-end framework for the automated deployment of the [Azure Artist Anywhere (AAA) rendering solution architecture](https://github.com/Azure/Avere/blob/main/src/terraform/burstrenderarchitecture.png). By leveraging the [Azure First Render Pilot Program](../securedimage/Azure%20First%20Render%20Pilot.pdf) with [Terraform](https://www.terraform.io/) across the following deployment modules, your existing pipeline can be extended via [Azure HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) to enable rendering at scale without moving your asset storage.
 
 | Module | Description |
 | :----- | :---------- |
@@ -15,7 +15,7 @@ This folder contains the end-to-end example configuration and automated deployme
 | [Render Job Submission](#render-job-submission) | Submit render job from the perspective of a remote artist workstation. |
 
 To manage deployment of the Azure rendering solution from your local workstation, the following prerequisite steps are required.
-1. Make sure the [Terraform CLI](https://www.terraform.io/downloads.html) is downloaded locally. Version 1.0.10 (or higher) is required.
+1. Make sure the [Terraform CLI](https://www.terraform.io/downloads.html) is downloaded locally and accessible in your path environment variable. Version 1.0.10 (or higher) is required.
 1. Make sure the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) is installed locally. The latest version is 2.29.2 as of October, 2021.
 1. Make sure that [Git](https://git-scm.com/downloads) is installed locally. The latest version is 2.33.1 as of October, 2021.
 1. Run `az account show` to ensure that your current Azure subscription session context is set appropriately. To change your current Azure subscription session context, run `az account set --subscription YOUR_SUBSCRIPTION_ID`

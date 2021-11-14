@@ -42,9 +42,9 @@ vfxtCache = {
   }
 }
 
-###################
-# Storage Targets #
-###################
+################################################################################################################
+# Storage Targets - this config section is for references to existing storage targets to be added to the cache #
+################################################################################################################
 
 storageTargetsNfs = [
   {
@@ -89,7 +89,7 @@ storageTargetsNfs = [
 
 storageTargetsNfsBlob = [
   {
-    name          = "RenderFarm"
+    name          = ""
     usageModel    = "WRITE_AROUND"
     namespacePath = "/mnt/farm"
     storage = {
@@ -99,7 +99,7 @@ storageTargetsNfsBlob = [
     }
   },
   {
-    name          = "ArtistWorkstation"
+    name          = ""
     usageModel    = "WRITE_WORKLOAD_CLOUDWS"
     namespacePath = "/mnt/workstation"
     storage = {

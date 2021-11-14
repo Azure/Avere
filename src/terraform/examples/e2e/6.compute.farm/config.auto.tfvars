@@ -14,7 +14,7 @@ virtualMachineScaleSets = [
       disk = {
         storageType = "Standard_LRS"
         cachingType = "ReadOnly"
-        ephemeralEnable = false // https://docs.microsoft.com/en-us/azure/virtual-machines/ephemeral-os-disks
+        ephemeralEnable = true // https://docs.microsoft.com/en-us/azure/virtual-machines/ephemeral-os-disks
       }
     }
     adminLogin = {
@@ -41,7 +41,7 @@ virtualMachineScaleSets = [
     }
     terminateNotification = {
       enable         = true
-      timeoutMinutes = "PT15M"
+      timeoutMinutes = "PT7M"
     }
   },
   {
@@ -56,7 +56,7 @@ virtualMachineScaleSets = [
       disk = {
         storageType = "Standard_LRS"
         cachingType = "ReadOnly"
-        ephemeralEnable = false // https://docs.microsoft.com/en-us/azure/virtual-machines/ephemeral-os-disks
+        ephemeralEnable = true // https://docs.microsoft.com/en-us/azure/virtual-machines/ephemeral-os-disks
       }
     }
     adminLogin = {
@@ -83,7 +83,7 @@ virtualMachineScaleSets = [
     }
     terminateNotification = {
       enable         = true
-      timeoutMinutes = "PT15M"
+      timeoutMinutes = "PT7M"
     }
   }
 ]

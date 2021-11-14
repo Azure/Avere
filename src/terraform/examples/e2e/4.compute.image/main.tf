@@ -72,18 +72,6 @@ variable "imageTemplates" {
   )
 }
 
-variable "storage" {
-  type = object(
-    {
-      accountName        = string
-      accountType        = string
-      accountRedundancy  = string
-      accountPerformance = string
-      containerName      = string
-    }
-  )
-}
-
 variable "virtualNetwork" {
   type = object(
     {
@@ -135,18 +123,14 @@ data "azurerm_key_vault_secret" "user_password" {
   key_vault_id = data.azurerm_key_vault.vault.id
 }
 
+data "azurerm_storage_account" "storage" {
+  name                = module.global.terraformStorageAccountName
+  resource_group_name = module.global.securityResourceGroupName
+}
+
 resource "azurerm_resource_group" "image" {
   name     = var.resourceGroupName
   location = module.global.regionName
-}
-
-resource "azurerm_storage_account" "storage" {
-  name                     = var.storage.accountName
-  resource_group_name      = azurerm_resource_group.image.name
-  location                 = azurerm_resource_group.image.location
-  account_kind             = var.storage.accountType
-  account_replication_type = var.storage.accountRedundancy
-  account_tier             = var.storage.accountPerformance
 }
 
 resource "azurerm_role_assignment" "network" {
@@ -158,7 +142,7 @@ resource "azurerm_role_assignment" "network" {
 resource "azurerm_role_assignment" "storage" {
   role_definition_name = "Storage Blob Data Reader" // https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage-blob-data-reader
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
-  scope                = azurerm_storage_account.storage.id
+  scope                = data.azurerm_storage_account.storage.id
 }
 
 resource "azurerm_role_assignment" "image" {
@@ -168,13 +152,13 @@ resource "azurerm_role_assignment" "image" {
 }
 
 resource "azurerm_storage_container" "container" {
-  name                 = var.storage.containerName
-  storage_account_name = azurerm_storage_account.storage.name
+  name                 = "builder"
+  storage_account_name = data.azurerm_storage_account.storage.name
 }
 
 resource "azurerm_storage_blob" "customize_linux" {
   name                   = local.customizeFileLinux
-  storage_account_name   = azurerm_storage_account.storage.name
+  storage_account_name   = data.azurerm_storage_account.storage.name
   storage_container_name = azurerm_storage_container.container.name
   source                 = local.customizeFileLinux
   type                   = "Block"
@@ -182,7 +166,7 @@ resource "azurerm_storage_blob" "customize_linux" {
 
 resource "azurerm_storage_blob" "customize_windows" {
   name                   = local.customizeFileWindows
-  storage_account_name   = azurerm_storage_account.storage.name
+  storage_account_name   = data.azurerm_storage_account.storage.name
   storage_container_name = azurerm_storage_container.container.name
   source                 = local.customizeFileWindows
   type                   = "Block"
@@ -190,7 +174,7 @@ resource "azurerm_storage_blob" "customize_windows" {
 
 resource "azurerm_storage_blob" "metadata_linux" {
   name                   = local.metadataFileLinux
-  storage_account_name   = azurerm_storage_account.storage.name
+  storage_account_name   = data.azurerm_storage_account.storage.name
   storage_container_name = azurerm_storage_container.container.name
   source                 = local.metadataFileLinux
   type                   = "Block"
@@ -198,7 +182,7 @@ resource "azurerm_storage_blob" "metadata_linux" {
 
 resource "azurerm_storage_blob" "metadata_windows" {
   name                   = local.metadataFileWindows
-  storage_account_name   = azurerm_storage_account.storage.name
+  storage_account_name   = data.azurerm_storage_account.storage.name
   storage_container_name = azurerm_storage_container.container.name
   source                 = local.metadataFileWindows
   type                   = "Block"
@@ -243,7 +227,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
       value = var.imageTemplates
     },
     "imageScriptContainer" = {
-      value = "https://${azurerm_storage_account.storage.name}.blob.core.windows.net/${azurerm_storage_container.container.name}/"
+      value = "https://${data.azurerm_storage_account.storage.name}.blob.core.windows.net/${azurerm_storage_container.container.name}/"
     },
     "virtualNetworkName" = {
       value = data.azurerm_virtual_network.network.name
@@ -316,7 +300,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               ],
               "output": {
                 "type": "string",
-                "value": "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('scriptFileName')), concat(replace(replace(replace(replace(replace(string(parameters('scriptParameters')), '{', ''), '}', ''), '\"', ''), ':', '='), ',', ' '), ' userPassword=', parameters('userPassword')))]"
+                "value": "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('scriptFileName')), concat(replace(replace(replace(replace(string(parameters('scriptParameters')), ',\"', ' '), '\":', '='), '{\"', ''), '}', ''), ' userPassword=', parameters('userPassword')))]"
               }
             },
             "GetExecuteCommandWindows": {
@@ -340,7 +324,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               ],
               "output": {
                 "type": "string",
-                "value": "[concat(parameters('scriptFilePath'), parameters('scriptFileName'), replace(replace(replace(replace(replace(string(parameters('scriptParameters')), ',\"', ' -'), '\"', ''), ':', ' '), '{', ' -'), '}', ''), ' -userPassword ', parameters('userPassword'))]"
+                "value": "[format('{0} {1}', concat(parameters('scriptFilePath'), parameters('scriptFileName')), concat(replace(replace(replace(replace(string(parameters('scriptParameters')), ',\"', ' -'), '\":', ' '), '{\"', '-'), '}', ''), ' -userPassword ', parameters('userPassword')))]"
               }
             }
           }

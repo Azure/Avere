@@ -1,3 +1,7 @@
+###############################################################################################################
+# IMPORTANT: Make sure the following variable default values match the config values in the 0.Security module #
+###############################################################################################################
+
 variable "regionName" {
   type    = string
   default = "WestUS2" // Set to the target Azure region name (az account list-locations --query [].name)
@@ -5,29 +9,29 @@ variable "regionName" {
 
 variable "securityResourceGroupName" {
   type    = string
-  default = "AzureRender" // Set to the resource group name from the 0.security module
+  default = "AzureRender"
 }
 
 # Terraform backend state configuration
 variable "terraformStorageAccountName" {
   type    = string
-  default = "azrender" // Set to the storage account name from the 0.security module
+  default = "azrender"
 }
 variable "terraformStorageContainerName" {
   type    = string
-  default = "terraform" // Set to the storage container from the 0.security module
+  default = "terraform"
 }
 
 # Managed Identity
 variable "managedIdentityName" {
   type    = string
-  default = "AzRender" // Set to the managed identity name from the 0.security module
+  default = "AzRender"
 }
 
 # KeyVault
 variable "keyVaultName" {
   type    = string
-  default = "AzRender" // Set to the key vault name from the 0.security module
+  default = "AzRender"
 }
 
 # KeyVault secret names
@@ -52,8 +56,12 @@ variable "keyVaultKeyNameCacheEncryption" {
 
 variable "monitorWorkspaceName" {
   type    = string
-  default = "AzRender" // Set to the monitor workspace name from the 0.security module
+  default = "AzRender"
 }
+
+#####################################################
+# The following output values should not be changed #
+#####################################################
 
 output "regionName" {
   value = var.regionName

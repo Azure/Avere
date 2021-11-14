@@ -193,15 +193,6 @@ imageTemplates = [
   }
 ]
 
-# Storage - https://docs.microsoft.com/en-us/azure/storage/
-storage = {
-  accountName        = "azimage"   // Name must be globally unique, lowercase alphanumeric
-  accountType        = "StorageV2" // https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview
-  accountRedundancy  = "LRS"       // https://docs.microsoft.com/en-us/azure/storage/common/storage-redundancy
-  accountPerformance = "Standard"  // https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-performance-tiers
-  containerName      = "builder"   // Storage container for Image Builder customization scripts
-}
-
 # Virtual Network - https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview
 virtualNetwork = {
   name              = ""
