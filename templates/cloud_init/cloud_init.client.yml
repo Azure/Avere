@@ -246,6 +246,7 @@ write_files:
       export REGION='<region>'
       export RESOURCE_GROUP_NAME='<resource_group_name>'
       export TF_VFXT_CONFIG='<terraform_file_config>'
+      export VDBENCH_URL='<vdbench_download_url>'
 
       echo " cd to file path"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
@@ -278,7 +279,7 @@ write_files:
         -var="ssh_key_data=${sshkey}" \
         -var="vserver_ip_addresses=${VSERVER_IP_ADDRESSES}" \
         -var="nfs_export_path=${NFS_EXPORT_PATH}" \
-        -var="vdbench_url=<vdbench_download_url>" \
+        -var="vdbench_url=${VDBENCH_URL}" \
         -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network" |& tee /tmp/vdbench_destroy.txt
 
       [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform destroy cmd for vdbench"
@@ -303,6 +304,7 @@ write_files:
       export REGION='<region>'
       export RESOURCE_GROUP_NAME='<resource_group_name>'
       export TF_VFXT_CONFIG='<terraform_file_config>'
+      export VDBENCH_URL='<vdbench_download_url>'
 
       echo "cd to file path"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
@@ -331,13 +333,15 @@ write_files:
         -var="ssh_key_data=${sshkey}" \
         -var="vserver_ip_addresses=${VSERVER_IP_ADDRESSES}" \
         -var="nfs_export_path=${NFS_EXPORT_PATH}" \
-        -var="vdbench_url=<vdbench_download_url>" \
+        -var="vdbench_url=${VDBENCH_URL}" \
         -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network" |& tee /tmp/vdbench_run.txt
 
       [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform apply cmd for vdbench"
 
       echo "vdbench terraform outputs"
       IP_ADDRESS_COMMAND=$(terraform output -json | jq -r ".vmss_addresses_command.value") &&
+      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID &&
+      az account set -s $ARM_SUBSCRIPTION_ID &&
       IP_ADDRESS=$(${IP_ADDRESS_COMMAND} | jq -r '.[0]')
       [ $? -ne 0 ] && error "vdbench terraform outputs."
 
