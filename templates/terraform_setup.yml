@@ -18,6 +18,8 @@ parameters:
   type: string
 - name: scale_up_node_count
   type: string
+- name: vm_count
+  type: string
 - name: vdbench_config
   type: string
   default: "ondisk"
@@ -87,6 +89,7 @@ steps:
       -e "s/<vfxt_image>/${{ parameters.image }}/" \
       -e "s/<original_node_count>/${{ parameters.original_node_count }}/" \
       -e "s/<new_node_count>/$new_node_count/" \
+      -e "s/<vm_count>/${{ parameters.vm_count }}/" \
       -e "s/<vdbench_config>/${{ parameters.vdbench_config }}/" \
       -e "s,<vdbench_download_url>,${vdbench_sed_url//&/\\&}," \
       ${cloud_init_file}

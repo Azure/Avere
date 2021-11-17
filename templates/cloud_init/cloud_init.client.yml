@@ -280,6 +280,7 @@ write_files:
         -var="vserver_ip_addresses=${VSERVER_IP_ADDRESSES}" \
         -var="nfs_export_path=${NFS_EXPORT_PATH}" \
         -var="vdbench_url=${VDBENCH_URL}" \
+        -var="vm_count"=<vm_count> \
         -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network" |& tee /tmp/vdbench_destroy.txt
 
       [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform destroy cmd for vdbench"
@@ -305,7 +306,6 @@ write_files:
       export RESOURCE_GROUP_NAME='<resource_group_name>'
       export TF_VFXT_CONFIG='<terraform_file_config>'
       export VDBENCH_URL='<vdbench_download_url>'
-
       echo "cd to file path"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
       [ $? -ne 0 ] && error "cd to directory: $TF_VFXT_CONFIG"
@@ -334,6 +334,7 @@ write_files:
         -var="vserver_ip_addresses=${VSERVER_IP_ADDRESSES}" \
         -var="nfs_export_path=${NFS_EXPORT_PATH}" \
         -var="vdbench_url=${VDBENCH_URL}" \
+        -var="vm_count"=<vm_count> \
         -var="vnet_resource_group=${RESOURCE_GROUP_NAME}-network" |& tee /tmp/vdbench_run.txt
 
       [ ${PIPESTATUS[0]} -ne 0 ] && error "terraform apply cmd for vdbench"

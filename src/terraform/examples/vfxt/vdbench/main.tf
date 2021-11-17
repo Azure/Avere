@@ -50,10 +50,14 @@ variable "ssh_port" {
   default     = 22
 }
 
+variable "vm_count" {
+  description = "number of instances created in VMSS"
+  default     = 12
+}
+
 // customize the simple VM by editing the following local variables
 locals {
   unique_name  = "vmss"
-  vm_count     = 12
   vmss_size    = "Standard_D2s_v3"
   mount_target = "/data"
 }
@@ -94,7 +98,7 @@ module "vmss" {
   admin_username                 = var.controller_username
   ssh_key_data                   = var.ssh_key_data
   unique_name                    = local.unique_name
-  vm_count                       = local.vm_count
+  vm_count                       = var.vm_count
   vm_size                        = local.vmss_size
   virtual_network_resource_group = var.vnet_resource_group
   virtual_network_name           = var.vnet_name
