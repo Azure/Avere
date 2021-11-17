@@ -3,6 +3,42 @@
 
 trigger: none
 
+parameters:
+  - name: region
+    displayName: "Region to run pipeline"
+    type: string
+    default: "eastus"
+    values:
+      - australiaeast
+      - australiasoutheast
+      - brazilsouth
+      - canadacentral
+      - canadaeast
+      - centralus
+      - eastasia
+      - eastus
+      - eastus2
+      - francecentral
+      - japaneast
+      - japanwest
+      - koreacentral
+      - koreasouth
+      - northeurope
+      - northcentralus
+      - southcentralus
+      - southeastasia
+      - southeastindia
+      - uksouth
+      - ukwest
+      - westus
+      - westus2
+      - westus3
+      - westeurope
+      - westindia
+
+variables:
+  VFXT_DEPLOY_LOCATION: '${{ parameters.region}}'
+
 jobs:
 - job: ARM_Template_Test
   timeoutInMinutes: 90
@@ -29,30 +65,6 @@ jobs:
       check_rc.sh $? "Install Python requirements" || exit 0
     displayName: 'SETUP: Install Python dependencies'
     condition: succeeded()
-
-  - bash: |
-      export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
-
-      python test/internal/region_deploy_utils.py --update_region_list
-      check_rc.sh $? "Update region list" || exit 0
-
-      REGION_TO_TEST=$(python test/internal/region_deploy_utils.py \
-        --cooldown-hours ${REGION_COOLDOWN_HOURS:-96}   \
-        --get_next_region)
-      check_rc.sh $? "Get next region to test" || exit 0
-
-      echo "##vso[task.setvariable variable=VFXT_DEPLOY_LOCATION]${REGION_TO_TEST}"
-      echo "REGION TO TEST: ${REGION_TO_TEST}"
-    displayName: 'SETUP: Get region to test'
-    condition: and(succeeded(), eq(variables['VFXT_DEPLOY_LOCATION'], ''))
-    env:
-      AZURE_TENANT_ID: $(AZURE-TENANT-ID)
-      AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
-      AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
-      AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-      PIPELINES_DATA_STORAGE_ACCOUNT: $(PIPELINES-DATA-STORAGE-ACCOUNT)
-      PIPELINES_DATA_STORAGE_ACCOUNT_KEY: $(PIPELINES-DATA-STORAGE-ACCOUNT-KEY)
-      PIPELINES_DATA_TABLE_NAME: $(PIPELINES-DATA-TABLE-NAME)
 
   - bash: |
       export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
@@ -169,20 +181,6 @@ jobs:
       AZURE_CLIENT_ID: $(AZURE-CLIENT-ID)
       AZURE_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
       AZURE_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
-
-  - bash: |
-      export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
-
-      python test/internal/region_deploy_utils.py \
-        --update_last_success \
-        --last_success_region ${VFXT_DEPLOY_LOCATION}
-      check_rc.sh $? "Update last successful run for region ${VFXT_DEPLOY_LOCATION}" || exit 0
-    displayName: 'CLEANUP: Update last successful run timestamp for region'
-    condition: succeeded()
-    env:
-      PIPELINES_DATA_STORAGE_ACCOUNT: $(PIPELINES-DATA-STORAGE-ACCOUNT)
-      PIPELINES_DATA_STORAGE_ACCOUNT_KEY: $(PIPELINES-DATA-STORAGE-ACCOUNT-KEY)
-      PIPELINES_DATA_TABLE_NAME: $(PIPELINES-DATA-TABLE-NAME)
 
   - bash: |
       export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
