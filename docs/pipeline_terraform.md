@@ -9,13 +9,11 @@ Terraform vFXT automation has multiple configrations that can be ran. The main f
 TODO: make cluster name unique
 ### Scale-up and Scale-down nodes
 - Number of nodes to scale: +-2 or +-14
-  - +-1     +-3         TODO: CHANGE
+  - TODO: +-1     +-3  **(UPDATED IN CURRENT BRANCH)**
 - Scale-down is only ran if scale-up previously ran. It is a no-op if only scaledown is chosen.
 
 ### VdBench:
 Automation only runs with the [azureblobfiler](../src/terraform/examples/vfxt/azureblobfiler) configuration.
-
-**FOLLOWUP:** azureblobfiler ==clfs ; make sure bernie knows.
 
 **TODO:**
 - Automate [nfsfiler](../src/terraform/examples/vfxt/vdbench/nfsfiler/main.tf)
@@ -68,6 +66,7 @@ Notes:
 
 7. Number of clients
    - currently using vmss: creates 12
+   - TODO: Make option to pass in  **(UPDATED IN CURRENT BRANCH)**
 8. VM skus of clients
    - Standard_D2s_v3
 9. Client mount distribution (all clients mount the cache)
