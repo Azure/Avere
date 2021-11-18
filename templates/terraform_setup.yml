@@ -131,7 +131,7 @@ steps:
 
     # Cooldown for "az vm run-command invoke" before the next one.
     # This solves a corner/race case when the command is run back-to-back.
-    sleep 30
+    sleep 60
 
     az vm run-command invoke                          \
       --command-id     RunShellScript                 \
@@ -145,7 +145,7 @@ steps:
 
     # Cooldown for "az vm run-command invoke" before the next one.
     # This solves a corner/race case when the command is run back-to-back.
-    sleep 20
+    sleep 60
 
   displayName: 'Terraform: setup ${{ parameters.tf_config }}'
   env:

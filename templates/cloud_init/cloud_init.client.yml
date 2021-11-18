@@ -97,6 +97,10 @@ write_files:
       git pull origin main
       [ $? -ne 0 ] && error "git pull main branch - setup step"
 
+      echo "git checkout local branch"
+      git checkout remakar/vdbench_configs
+      [ $? -ne 0 ] && error "git checkout local branch"
+
       echo "cd to file path"
       cd src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
       [ $? -ne 0 ] && error "cd to directory: $TF_VFXT_CONFIG"
@@ -113,6 +117,7 @@ write_files:
         -e "s/controller_image_id\s*= null/controller_image_id = \"$CONTROLLER_IMAGE\"/" \
         -e "s/vfxt_image_id\s*= null/vfxt_image_id = \"$VFXT_IMAGE\"/" \
         -e "s/(([a-z]+)_resource_group_name)\s*= \"[^\"]+\"/\1 = \"${RESOURCE_GROUP_NAME}-\2\"/" \
+        -e "s/vfxt_cluster_name\s*= \"vfxt\"/vfxt_cluster_name = \"vfxt-${RESOURCE_GROUP_NAME}\"/" \
         -e "s/vfxt_cluster_password\s*= \"VFXT_PASSWORD\"/vfxt_cluster_password = \"${AVERE_ADMIN_PW}\"/" \
         -e "s/peer_vnet_rg\s*= \"\"/peer_vnet_rg = \"$RESOURCE_GROUP_NAME\"/" \
         -e "s/peer_vnet_name\s*= \"\"/peer_vnet_name = \"$VNET_NAME\"/" \
