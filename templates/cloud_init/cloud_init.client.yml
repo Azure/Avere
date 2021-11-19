@@ -97,10 +97,6 @@ write_files:
       git pull origin main
       [ $? -ne 0 ] && error "git pull main branch - setup step"
 
-      echo "git checkout local branch"
-      git checkout remakar/vdbench_configs
-      [ $? -ne 0 ] && error "git checkout local branch"
-
       echo "cd to file path"
       cd src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
       [ $? -ne 0 ] && error "cd to directory: $TF_VFXT_CONFIG"

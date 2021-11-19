@@ -181,7 +181,7 @@ steps:
     az resource lock create --lock-type CanNotDelete \
       -n DO_NOT_DELETE \
       --resource ${STOR_ACCT_RESOURCE_ID} \
-      --notes "Delete created by ${BUILD_BUILDID}"
+      --notes "Delete created by Pipeline BuildID: ${BUILD_BUILDID}"
     check_rc.sh $? "Create Lock on storage account" || exit 0
 
     az network vnet subnet update \
