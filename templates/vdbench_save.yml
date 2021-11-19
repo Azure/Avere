@@ -70,7 +70,8 @@ steps:
       --disable-private-endpoint-network-policies true
     check_rc.sh $? "Disable private endpoint network policies on render_clients1 subnet" || exit 0
 
-    STOR_ACCT_RESOURCE_ID="/subscriptions/${ARM_SUBSCRIPTION_ID}/resourceGroups/${AZURE_STORAGE_ACCOUNT_RG_NAME}/providers/Microsoft.Storage/storageAccounts/${AZURE_STORAGE_ACCOUNT_NAME}"
+    export STOR_ACCT_RESOURCE_ID="/subscriptions/${ARM_SUBSCRIPTION_ID}/resourceGroups/${AZURE_STORAGE_ACCOUNT_RG_NAME}/providers/Microsoft.Storage/storageAccounts/${AZURE_STORAGE_ACCOUNT_NAME}"
+    echo "##vso[task.setvariable variable=STOR_ACCT_RESOURCE_ID]${STOR_ACCT_RESOURCE_ID}"
 
     az deployment group create \
       -f ${BUILD_SOURCESDIRECTORY}/templates/private_endpoint.json \
@@ -189,7 +190,6 @@ steps:
       --name             render_clients1               \
       --disable-private-endpoint-network-policies false
     check_rc.sh $? "Enable private endpoint network policies on render_clients1 subnet" || exit 0
-
   displayName: "Add vdbench .tar to Storage Account."
   timeoutInMinutes: 30
   condition: not(or(failed(), canceled()))
