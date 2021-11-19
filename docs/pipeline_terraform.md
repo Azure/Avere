@@ -8,8 +8,7 @@ Terraform vFXT automation has multiple configrations that can be ran. The main f
 
 TODO: make cluster name unique
 ### Scale-up and Scale-down nodes
-- Number of nodes to scale: +-2 or +-14
-  - TODO: +-1     +-3  **(UPDATED IN CURRENT BRANCH)**
+- Number of nodes to scale:+-1     +-3
 - Scale-down is only ran if scale-up previously ran. It is a no-op if only scaledown is chosen.
 
 ### VdBench:
@@ -21,6 +20,7 @@ Automation only runs with the [azureblobfiler](../src/terraform/examples/vfxt/az
 The configurations implemented:
 - [vdbench-inmem](../src/terraform/examples/vfxt/vdbench) - 20 minutes
 - [vdbench-ondisk](../src/terraform/examples/vfxt/vdbench) - 40 minutes
+  - If running scale up and scale down, vdbench-ondisk is a failing scenario.
 
 Currently if vdbench is selected. It is kicked off and then goes into scale-up if that is selected. If nothing is selected, then it waits for vdbench completion.
 
@@ -65,8 +65,7 @@ Notes:
         - ondiskscaledown3.conf / vdbench(?) / scaledown (-3)
 
 7. Number of clients
-   - currently using vmss: creates 12
-   - TODO: Make option to pass in  **(UPDATED IN CURRENT BRANCH)**
+   - Option to decide between 6 and 12 instances.
 8. VM skus of clients
    - Standard_D2s_v3
 9. Client mount distribution (all clients mount the cache)
