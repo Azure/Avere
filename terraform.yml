@@ -139,21 +139,32 @@ jobs:
           run: vdbench_run
 
   - ${{ if eq(parameters.run_scale_up, true) }}:
+    - bash: echo "##vso[build.updatebuildnumber]${BUILD_BUILDNUMBER} (Scale-Up)"
+      displayName: "Tag Build with RG Name "
+      condition: always()
     - template: templates/terraform_run.yml
       parameters:
         run: scaleup
 
   - ${{ if eq(parameters.run_scale_up, true) }}:
     - ${{ if eq(parameters.run_scale_down, true) }}:
+      - bash: echo "##vso[build.updatebuildnumber]${BUILD_BUILDNUMBER} (Scale-Down)"
+        displayName: "Tag Build with RG Name "
+        condition: always()
       - template: templates/terraform_run.yml
         parameters:
           run: scaledown
+  - ${{ if eq(parameters.run_vdbench, true) }}:
+    - template: templates/vdbench_save.yml
+      parameters:
+        vdbench_config: ${{ parameters.vdbench_config }}
   - ${{ if eq(parameters.run_destroy_and_cleanup, true) }}:
     - ${{ if eq(parameters.run_vdbench, true) }}:
       - ${{ if eq(parameters.tf_config, 'azureblobfiler') }}:
         - template: templates/terraform_run.yml
           parameters:
             run: vdbench_destroy
+            condition: always()
     - template: templates/terraform_run.yml
       parameters:
         run: destroy

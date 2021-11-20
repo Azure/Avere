@@ -19,3 +19,7 @@ steps:
     echo "##vso[task.setvariable variable=SUBNET]subnet-${resource_group}"
   displayName: "Setup: Environment Variables"
   condition: always()
+
+- bash: echo "##vso[build.updatebuildnumber]${BUILD_BUILDNUMBER} (${TF_VFXT_CONFIG},${REGION})"
+  displayName: "Tag Build with RG Name "
+  condition: always()

@@ -1,0 +1,181 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+# https://aka.ms/yaml
+
+parameters:
+- name: vdbench_config
+  type: string
+
+steps:
+- script: |
+    export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
+
+    az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID &&
+    az account set -s $ARM_SUBSCRIPTION_ID
+    check_rc.sh $? "Login to Azure and set default subscription" || exit 0
+
+    # Wait for the vdbench.py script to complete.
+    cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
+    cmdlog=/tmp/vm_runcmd.log
+    polling_secs=60
+    while [ 1 ]; do
+      az vmss run-command invoke                      \
+        --resource-group ${RESOURCE_GROUP_NAME}-vmss  \
+        --name           "vmss"                       \
+        --instance-id    0                            \
+        --command-id     RunShellScript               \
+        --scripts        "runuser -l azureuser -c 'tmux ls' || echo ${cmdokmsg}" \
+        --query 'value[0].message' --output tsv |& tee ${cmdlog}
+      check_rc.sh ${PIPESTATUS[0]} "Checking for any tmux session " || exit
+      grep -q ${cmdokmsg} ${cmdlog}
+      if [ $? -ne 0 ]; then
+        echo "INFO: tmux session still active. Re-check in ${polling_secs} seconds."
+        sleep ${polling_secs}
+        continue
+      else
+        echo "INFO: tmux session no longer active"
+        break
+      fi
+    done
+
+    cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
+    cmdlog=/tmp/vm_runcmd_tail.log
+    az vmss run-command invoke                     \
+      --resource-group ${RESOURCE_GROUP_NAME}-vmss \
+      --name           "vmss"                      \
+      --instance-id    0                           \
+      --command-id     RunShellScript              \
+      --scripts        "runuser -l azureuser -c 'tail -25 /home/azureuser/vdb.log' && echo ${cmdokmsg}" \
+      --query 'value[0].message' --output tsv |& tee ${cmdlog}
+    grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "Tail vdbench.log"
+
+    grep -q 'Vdbench execution completed successfully' ${cmdlog}
+    grep_rc=$?
+    check_rc.sh ${grep_rc} "vdbench.py success check"
+  displayName: "Check for vdbench.py completion"
+  timeoutInMinutes: 45
+  condition: not(or(failed(), canceled()))
+  env:
+    ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+    ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+    ARM_TENANT_ID: $(AZURE-TENANT-ID)
+    ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+
+- bash: |
+    export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
+
+    az network vnet subnet update \
+      --resource-group         ${RESOURCE_GROUP_NAME}-network \
+      --vnet-name              rendervnet \
+      --name                   render_clients1 \
+      --disable-private-endpoint-network-policies true
+    check_rc.sh $? "Disable private endpoint network policies on render_clients1 subnet" || exit 0
+
+    STOR_ACCT_RESOURCE_ID="/subscriptions/${ARM_SUBSCRIPTION_ID}/resourceGroups/${AZURE_STORAGE_ACCOUNT_RG_NAME}/providers/Microsoft.Storage/storageAccounts/${AZURE_STORAGE_ACCOUNT_NAME}"
+
+    az deployment group create \
+      -f ${BUILD_SOURCESDIRECTORY}/templates/private_endpoint.json \
+      --resource-group ${RESOURCE_GROUP_NAME}-network           \
+      -p location=${REGION}                                     \
+      -p privateEndpointName=${RESOURCE_GROUP_NAME}-privendpt   \
+      -p privateLinkResourceId=${STOR_ACCT_RESOURCE_ID}         \
+      -p subnet=render_clients1                                 \
+      -p vnet=rendervnet                                        \
+      -p subscriptionId=${ARM_SUBSCRIPTION_ID}
+    check_rc.sh $? "Create Private Endpoint" || exit 0
+  displayName: "Setup Private Endpoint for uploading vdbench results to Storage Account."
+  condition: not(or(failed(), canceled()))
+  env:
+    ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
+    ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
+    ARM_TENANT_ID: $(AZURE-TENANT-ID)
+    ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+    AZURE_STORAGE_ACCOUNT_NAME: $(AZURE-STORAGE-ACCOUNT-NAME)
+    AZURE_STORAGE_ACCOUNT_RG_NAME: $(AZURE-STORAGE-ACCOUNT-RG-NAME)
+
+- script: |
+    export PATH=$PATH:${BUILD_SOURCESDIRECTORY}/test/utils
+    end_timestamp=$(date -u -d "60 minutes" '+%Y-%m-%dT%H:%MZ')
+
+    dest_storacct_key=$(az storage account keys list            \
+        --account-name   ${AZURE_STORAGE_ACCOUNT_NAME}          \
+        --resource-group ${AZURE_STORAGE_ACCOUNT_RG_NAME}       \
+        --subscription   $ARM_SUBSCRIPTION_ID --query "[1].value" --output tsv)
+    rc=$?
+    echo "##vso[task.setvariable variable=dest_storacct_key;issecret=true]${dest_storacct_key}"
+    check_rc.sh $rc "Get destination Storage Account key" || exit 0
+
+    dest_container_sas=$(az storage container generate-sas      \
+        --account-key  "${dest_storacct_key}"                   \
+        --account-name ${AZURE_STORAGE_ACCOUNT_NAME}            \
+        --name         ${AZURE_STORAGE_ACCOUNT_CONTAINER_NAME}  \
+        --expiry       "${end_timestamp}"                       \
+        --permissions clrw --https-only --output tsv)
+    rc=$?
+    echo "##vso[task.setvariable variable=dest_container_sas;issecret=true]${dest_container_sas}"
+    check_rc.sh $rc "Generate destination SAS URL" || exit 0
+
+    sas_url="https://${AZURE_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${AZURE_STORAGE_ACCOUNT_CONTAINER_NAME}?${dest_container_sas}"
+    echo "##vso[task.setvariable variable=sas_url;issecret=true]${sas_url}"
+
+    cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
+    cmdlog=/tmp/vm_runcmd_install_azcopy.log
+    az vmss run-command invoke                     \
+      --resource-group ${RESOURCE_GROUP_NAME}-vmss \
+      --name           "vmss"                      \
+      --instance-id    0                           \
+      --command-id     RunShellScript              \
+      --scripts        "runuser -l azureuser -c 'wget https://aka.ms/downloadazcopy-v10-linux && tar -xvf downloadazcopy-v10-linux && sudo cp ./azcopy_linux_amd64_*/azcopy /usr/bin/' && echo ${cmdokmsg}" \
+      --query 'value[0].message' --output tsv |& tee ${cmdlog}
+    grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "Install azcopy"
+
+    cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
+    cmdlog=/tmp/vm_runcmd_tar.log
+    az vmss run-command invoke                     \
+      --resource-group ${RESOURCE_GROUP_NAME}-vmss \
+      --name           "vmss"                      \
+      --instance-id    0                           \
+      --command-id     RunShellScript              \
+      --scripts        "runuser -l azureuser -c 'tar -c -f ${RESOURCE_GROUP_NAME}-${{ parameters.vdbench_config }}.tar /home/azureuser/vdbench/output/' && echo ${cmdokmsg}" \
+      --query 'value[0].message' --output tsv |& tee ${cmdlog}
+    grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "Tar vdbench output directory"
+
+    cmdokmsg="CMD_OK_$(date -u '+%m%dx%H%M%S')"
+    cmdlog=/tmp/vm_runcmd_azcopy.log
+    az vmss run-command invoke                     \
+      --resource-group ${RESOURCE_GROUP_NAME}-vmss \
+      --name           "vmss"                      \
+      --instance-id    0                           \
+      --command-id     RunShellScript              \
+      --scripts        "azcopy copy '/home/azureuser/${RESOURCE_GROUP_NAME}-${{ parameters.vdbench_config }}.tar' '${sas_url}'   && echo ${cmdokmsg}" \
+      --query 'value[0].message' --output tsv |& tee ${cmdlog}
+    grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "Run azcopy .tar to storage account"
+
+    # Private endpoint removal needed so terraform destory will work.
+    az network private-endpoint dns-zone-group delete  \
+      --endpoint-name ${RESOURCE_GROUP_NAME}-privendpt \
+      --name "privatelink.blob.core.windows.net"       \
+      --resource-group ${RESOURCE_GROUP_NAME}-network
+    check_rc.sh $? "DNS-Zone delete" || exit 0
+
+    az network private-endpoint delete --name ${RESOURCE_GROUP_NAME}-privendpt \
+      --resource-group ${RESOURCE_GROUP_NAME}-network
+    check_rc.sh $? "Private endpoint delete" || exit 0
+
+    az network vnet subnet update \
+      --resource-group  ${RESOURCE_GROUP_NAME}-network \
+      --vnet-name        rendervnet                    \
+      --name             render_clients1               \
+      --disable-private-endpoint-network-policies false
+    check_rc.sh $? "Enable private endpoint network policies on render_clients1 subnet" || exit 0
+  displayName: "Add vdbench .tar to Storage Account."
+  timeoutInMinutes: 30
+  condition: not(or(failed(), canceled()))
+  env:
+    ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+    AZURE_STORAGE_ACCOUNT_NAME: $(AZURE-STORAGE-ACCOUNT-NAME)
+    AZURE_STORAGE_ACCOUNT_RG_NAME: $(AZURE-STORAGE-ACCOUNT-RG-NAME)
+    AZURE_STORAGE_ACCOUNT_CONTAINER_NAME: $(AZURE-STORAGE-ACCOUNT-CONTAINER-NAME)
+
+- bash: echo "##vso[build.updatebuildnumber]${BUILD_BUILDNUMBER} (vdbench, ${RESOURCE_GROUP_NAME}-${{ parameters.vdbench_config }}.tar)"
+  displayName: "Add .tar name with vdbench config  "
+  condition: not(or(failed(), canceled()))
