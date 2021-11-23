@@ -12,9 +12,9 @@ This folder contains the end-to-end modular framework for automated deployment o
 | [5 Compute Scheduler](#5-compute-scheduler) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/) for distributed job scheduling across a render farm. |
 | [6 Compute Farm](#6-compute-farm) | Deploys [Virtual Machine Scale Sets](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview) for [Linux](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) or [Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) render farms. |
 | [7 Compute Workstation](#7-compute-workstation) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/) for [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) artist workstations. |
-| [Render Job Submission](#render-job-submission) | Submit render job from the perspective of a remote artist workstation. |
+| [8 Render Job Submission](#8-render-job-submission) | Submit a render job from an Azure GPU remote artist workstation. |
 
-To manage deployment of the Azure rendering solution from your local workstation, the following prerequisite steps are required.
+To manage deployment of the Azure Artist Anywhere solution from your local workstation, the following prerequisite steps are required.
 1. Make sure the [Terraform CLI](https://www.terraform.io/downloads.html) is downloaded locally and accessible in your path environment variable. Version 1.0.10 (or higher) is required.
 1. Make sure the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) is installed locally. The latest version is 2.29.2 as of October, 2021.
 1. Make sure that [Git](https://git-scm.com/downloads) is installed locally. The latest version is 2.33.1 as of October, 2021.
@@ -32,7 +32,7 @@ To manage deployment of the Azure rendering solution from your local workstation
 
 ## 0 Security
 
-*Before deploying the Security module*, the following built-in Azure roles must be assigned to the current user to enable creation of KeyVault secrets and keys, respectively.
+*Before deploying the Security module*, the following built-in Azure roles *must be assigned to the current user* to enable creation of KeyVault secrets and keys, respectively.
 * *Key Vault Secrets Officer* - https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-secrets-officer
 * *Key Vault Crypto Officer*  - https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-crypto-officer
 
@@ -47,7 +47,7 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 1. Run `terraform init` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
-1. Use the [Azure portal to update your Key Vault secrets](https://docs.microsoft.com/en-us/azure/key-vault/secrets/quick-create-portal) (`GatewayConnection`, `AdminPassword`, `UserPassword`)
+1. Use the [Azure portal to update your Key Vault secret values](https://docs.microsoft.com/en-us/azure/key-vault/secrets/quick-create-portal) (`GatewayConnection`, `AdminPassword`, `UserPassword`)
 1. Run `cd ~/tf/src/terraform/examples/e2e`
 1. Edit the config values in `backend.config` to match the config values that you set in `config.auto.tfvars`
 1. Run `cd ~/tf/src/terraform/examples/e2e/global`
@@ -148,7 +148,7 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
 
-## Render Job Submission
+## 8 Render Job Submission
 
 Now that the Azure Artist Anywhere solution deployment is complete, this next section will walk through the render job submission process. For this example, we have deployed the render farm in Azure on CentOS 7.8 and the artist workstation in Azure on Windows 10. We are also using Teradici PCoIP for remote access to the artist workstation over Azure VPN.
 

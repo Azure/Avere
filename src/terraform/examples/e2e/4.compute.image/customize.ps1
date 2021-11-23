@@ -14,7 +14,7 @@ if (($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v3")) -
   $fileName = "nvidia-gpu.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=874181"
   Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl
-  Start-Process -FilePath $fileName -ArgumentList "/s /noreboot" -Wait
+  Start-Process -FilePath .\$fileName -ArgumentList "/s /noreboot" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
   Write-Host "Customize (End): GPU Driver (NVv3)"
 }
 
@@ -24,7 +24,7 @@ if ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v4")) {
   $fileName = "amd-gpu.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=2175154"
   Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl
-  Start-Process -FilePath $fileName -ArgumentList "/S" -Wait
+  Start-Process -FilePath .\$fileName -ArgumentList "/S" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
   Write-Host "Customize (End): GPU Driver (NVv4)"
 }
 
@@ -39,7 +39,7 @@ Write-Host "Customize (Start): CLI Tools"
 $fileName = "az-cli.msi"
 $downloadUrl = "https://aka.ms/installazurecliwindows"
 Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl
-Start-Process -FilePath $fileName -ArgumentList "/quiet" -Wait
+Start-Process -FilePath $fileName -ArgumentList "/quiet /norestart" -Wait
 Write-Host "Customize (End): CLI Tools"
 
 $storageContainerUrl = "https://az0.blob.core.windows.net/bin"
@@ -50,6 +50,7 @@ $schedulerLicense = "LicenseFree"
 $schedulerShareName = "DeadlineRepository"
 $schedulerDatabasePath = "C:\DeadlineDatabase"
 $schedulerRepositoryPath = "C:\DeadlineRepository"
+$blenderPath = '"C:\Program Files\Blender Foundation\Blender 2.93"'
 
 $fileName = "Deadline-$schedulerVersion-windows-installers.zip"
 $downloadUrl = "$storageContainerUrl/Deadline/$fileName$storageContainerSas"
@@ -61,14 +62,14 @@ if ($subnetName -eq "Scheduler") {
   netsh advfirewall firewall add rule name="Allow MongoDB Port" dir=in action=allow protocol=TCP localport=27100
   Set-Location -Path "Deadline*"
   $fileName = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
-  Start-Process -FilePath $fileName -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --prefix $schedulerRepositoryPath --mongodir $schedulerDatabasePath --dbuser $userName --dbpassword $userPassword --requireSSL false" -Wait
+  Start-Process -FilePath .\$fileName -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --prefix $schedulerRepositoryPath --mongodir $schedulerDatabasePath --dbuser $userName --dbpassword $userPassword --requireSSL false" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
   Set-Location -Path ".."
   Install-WindowsFeature -Name "FS-NFS-Service"
   New-NfsShare -Name $schedulerShareName -Path $schedulerRepositoryPath -Permission ReadWrite -AllowRootAccess $true
   Write-Host "Customize (End): Deadline Repository"
 } else {
   Write-Host "Customize (Start): Blender"
-  $fileName = "blender-2.93.5-windows-x64.msi"
+  $fileName = "blender-2.93.6-windows-x64.msi"
   $downloadUrl = "$storageContainerUrl/Blender/$fileName$storageContainerSas"
   Invoke-WebRequest $downloadUrl -OutFile $fileName
   Start-Process -FilePath $fileName -ArgumentList "/quiet /norestart" -Wait
@@ -88,7 +89,7 @@ if ($subnetName -eq "Farm") {
 Write-Host "Customize (Start): Deadline Client"
 Set-Location -Path "Deadline*"
 $fileName = "DeadlineClient-$schedulerVersion-windows-installer.exe"
-Start-Process -FilePath $fileName -ArgumentList "--mode unattended --licensemode $schedulerLicense" -Wait
+Start-Process -FilePath .\$fileName -ArgumentList "--mode unattended --licensemode $schedulerLicense" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
 Set-Location -Path ".."
 Write-Host "Customize (End): Deadline Client"
 
@@ -97,14 +98,14 @@ if ($subnetName -eq "Workstation") {
   $fileName = "Blender-submitter-windows-installer.exe"
   $downloadUrl = "$storageContainerUrl/Deadline/Blender/Installers/$fileName$storageContainerSas"
   Invoke-WebRequest $downloadUrl -OutFile $fileName
-  Start-Process -FilePath $fileName -ArgumentList "--mode unattended" -Wait
+  Start-Process -FilePath .\$fileName -ArgumentList "--mode unattended --source bundle --deadline_dir x --blender_dir $blenderPath" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
   Write-Host "Customize (End): Blender Deadline Submitter"
   
   Write-Host "Customize (Start): Teradici PCoIP Agent"
   $fileName = "pcoip-agent-graphics_21.07.5.exe"
   $downloadUrl = "$storageContainerUrl/Teradici/$fileName$storageContainerSas"
   Invoke-WebRequest $downloadUrl -OutFile $fileName
-  Start-Process -FilePath $fileName -ArgumentList "/S /NoPostReboot /Force" -Wait
+  Start-Process -FilePath .\$fileName -ArgumentList "/S /NoPostReboot /Force" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
   Write-Host "Customize (End): Teradici PCoIP Agent"
 }
 

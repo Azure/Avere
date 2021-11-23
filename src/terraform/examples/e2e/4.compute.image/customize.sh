@@ -54,6 +54,7 @@ schedulerVersion="10.1.19.4"
 schedulerLicense="LicenseFree"
 schedulerDatabasePath="/DeadlineDatabase"
 schedulerRepositoryPath="/DeadlineRepository"
+blenderPath="/usr/local/bin"
 
 fileName="Deadline-$schedulerVersion-linux-installers.tar"
 downloadUrl="$storageContainerUrl/Deadline/$fileName$storageContainerSas"
@@ -77,7 +78,7 @@ else
   yum -y install libXfixes
   yum -y install libXrender
   yum -y install libGL
-  fileName="blender-2.93.5-linux-x64.tar.xz"
+  fileName="blender-2.93.6-linux-x64.tar.xz"
   downloadUrl="$storageContainerUrl/Blender/$fileName$storageContainerSas"
   curl -L -o $fileName $downloadUrl
   tar -xJf $fileName
@@ -107,7 +108,7 @@ if [ "$subnetName" == "Workstation" ]; then
   downloadUrl="$storageContainerUrl/Deadline/Blender/Installers/$fileName$storageContainerSas"
   curl -L -o $fileName $downloadUrl
   chmod +x $fileName
-  ./$fileName --mode unattended
+  ./$fileName --mode unattended --source bundle --deadline_dir x --blender_dir $blenderPath
   echo "Customize (End): Blender Deadline Submitter"
 
   echo "Customize (Start): Teradici PCoIP Agent"
