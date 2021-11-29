@@ -85,7 +85,7 @@ parameters:
       - "ondisk"
       - "inmem"
   - name: vm_count
-    displayName: "Number of VMSS instances created for vdbench client"
+    displayName: "Number of VMSS instances to create as vdbench clients"
     type: number
     default: 12
     values:

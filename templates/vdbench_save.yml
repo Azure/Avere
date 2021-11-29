@@ -161,19 +161,21 @@ steps:
       --resource-group ${RESOURCE_GROUP_NAME}-network
     check_rc.sh $? "DNS-Zone delete" || exit 0
 
+    # TODO: This assumes that there is only 1 lock. If there are more, this will fail from timeout.
     while [ 1 ]; do
       cmdlog=/tmp/private_endpt_delete.log
       # Private endpoint removal needed so terraform destory will work.
       az network private-endpoint delete --name ${RESOURCE_GROUP_NAME}-privendpt \
         --resource-group ${RESOURCE_GROUP_NAME}-network |& tee ${cmdlog}
+      rc=${PIPESTATUS[0]}
       grep -q "remove the lock" ${cmdlog}
-      if [ $? -ne 1 ]; then
+      if [ $? -eq 0 ]; then
         echo "Delete Lock"
         az resource lock delete -n DO_NOT_DELETE --resource ${STOR_ACCT_RESOURCE_ID}
         check_rc.sh $rc "Delete Lock on storage account" || exit 0
         continue
       else
-        echo "Private Endpoint Deleted"
+        check_rc.sh ${rc} "Private Endpoint delete" || exit 0
         break
       fi
     done
