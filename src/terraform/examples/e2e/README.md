@@ -12,7 +12,7 @@ This folder contains the end-to-end modular framework for automated deployment o
 | [5 Compute Scheduler](#5-compute-scheduler) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/) for distributed job scheduling across a render farm. |
 | [6 Compute Farm](#6-compute-farm) | Deploys [Virtual Machine Scale Sets](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview) for [Linux](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) or [Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) render farms. |
 | [7 Compute Workstation](#7-compute-workstation) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/) for [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) artist workstations. |
-| [8 Render Job Submission](#8-render-job-submission) | Submit a render job from an Azure GPU remote artist workstation. |
+| [8 Render Job Submission](#8-render-job-submission) | Submit a render job from an Azure remote artist GPU workstation. |
 
 To manage deployment of the Azure Artist Anywhere solution from your local workstation, the following prerequisite steps are required.
 1. Make sure the [Terraform CLI](https://www.terraform.io/downloads.html) is downloaded locally and accessible in your path environment variable. Version 1.0.10 (or higher) is required.
@@ -112,7 +112,7 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
 1. Run `cd ~/tf/src/terraform/examples/e2e/4.compute.image`
-1. Edit the config values in `config.auto.tfvars` using your favorite text editor. Make sure you have sufficient compute cores quota available on your Azure subscription for the selected virtual machine size(s).
+1. Edit the config values in `config.auto.tfvars` using your favorite text editor. Make sure you have sufficient compute cores quota available on your Azure subscription for each configured virtual machine size.
 1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
@@ -123,7 +123,7 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
 1. Run `cd ~/tf/src/terraform/examples/e2e/5.compute.scheduler`
-1. Edit the config values in `config.auto.tfvars` using your favorite text editor. Make sure you have sufficient compute cores quota available on your Azure subscription for the selected virtual machine size(s).
+1. Edit the config values in `config.auto.tfvars` using your favorite text editor. Make sure you have sufficient compute cores quota available on your Azure subscription for each configured virtual machine size.
 1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
@@ -143,15 +143,34 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
 1. Run `cd ~/tf/src/terraform/examples/e2e/7.compute.workstation`
-1. Edit the config values in `config.auto.tfvars` using your favorite text editor. Make sure you have sufficient compute cores quota available on your Azure subscription for the selected virtual machine size(s).
+1. Edit the config values in `config.auto.tfvars` using your favorite text editor. Make sure you have sufficient compute cores quota available on your Azure subscription for each configured virtual machine size.
 1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
 
 ## 8 Render Job Submission
 
-Now that the Azure Artist Anywhere solution deployment is complete, this next section will walk through the render job submission process. For this example, we have deployed the render farm in Azure on CentOS 7.8 and the artist workstation in Azure on Windows 10. We are also using Teradici PCoIP for remote access to the artist workstation over Azure VPN.
+Now that the Azure Artist Anywhere solution deployment is complete, this next section describes render job submission via command line and user interface.
 
-*TBD*
+### Command Line
+
+Based on the [SubmitCommandLineJob](https://docs.thinkboxsoftware.com/products/deadline/10.1/1_User%20Manual/manual/command-line-arguments-jobs.html#submitcommandlinejob) argument to Deadline, the following example command renders a sample Blender splash image.
+
+* deadlinecommand.exe -SubmitCommandLineJob -frames \<STARTFRAME>-\<ENDFRAME> -executable blender -arguments "/mnt/show/read/splash/2.93.blend --background --frame-start \<STARTFRAME> --frame-end \<ENDFRAME>"
+
+### User Interface
+
+By default, the image build customization process in module [4 Compute Image](#4-compute-image) includes installation of the [Deadline Blender integrated job submission script](https://docs.thinkboxsoftware.com/products/deadline/10.1/1_User%20Manual/manual/app-blender.html?highlight=blender%20submitter#submitter-installer-blender-version-2-80-onward) for Workstation images. To activate the integrated submission script, complete the following configuration steps.
+
+1. In Blender, select Edit -> Preferences…, and then select the Add-Ons tab on the left.<br/>https://docs.thinkboxsoftware.com/products/deadline/10.1/1_User%20Manual/_images/blender_280_preferences.png
+
+1. Click on the Render filter in the dropdown along the top, and check the box next to the *Render: Submit Blender To Deadline* add-on.<br/>https://docs.thinkboxsoftware.com/products/deadline/10.1/1_User%20Manual/_images/blender_280_preferences_render.png
+
+1. After closing the Preferences window, the *Submit To Deadline* option should now be in your Render menu.
+
+
+
+
+
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com
