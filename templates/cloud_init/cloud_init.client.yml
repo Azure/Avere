@@ -98,6 +98,10 @@ write_files:
       git pull origin main
       [ $? -ne 0 ] && error "git pull main branch - setup step"
 
+      echo "git fetch local branch"
+      git fetch origin ${BUILD_SOURCE_BRANCH}:${BUILD_SOURCE_BRANCH}
+      [ $? -ne 0 ] && error "git fetch local branch"
+
       echo "git checkout source branch"
       git checkout ${BUILD_SOURCE_BRANCH}
       [ $? -ne 0 ] && error "git checkout source branch"
