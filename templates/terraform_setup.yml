@@ -91,6 +91,7 @@ steps:
       -e "s/<new_node_count>/$new_node_count/" \
       -e "s/<vm_count>/${{ parameters.vm_count }}/" \
       -e "s,<build_sourcebranch>,${BUILD_SOURCEBRANCHNAME}," \
+      -e "s,refs/(heads|pull)/,," \
       -e "s/<vdbench_config>/${{ parameters.vdbench_config }}/" \
       -e "s,<vdbench_download_url>,${vdbench_sed_url//&/\\&}," \
       ${cloud_init_file}
