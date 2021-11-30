@@ -9,18 +9,14 @@ parameters:
     default: 3
     values:
       - 3
-      - 14
+      - 6
   - name: scale_up_node_count
     displayName: "Scale Up Node Count +"
     type: number
-    default: 2
+    default: 1
     values:
       - 1
-      - 2
       - 3
-      - 4
-      - 5
-      - 6
   - name: region
     displayName: "Region to run pipeline"
     type: string
@@ -88,6 +84,13 @@ parameters:
     values:
       - "ondisk"
       - "inmem"
+  - name: vm_count
+    displayName: "Number of VMSS instances to create as vdbench clients"
+    type: number
+    default: 12
+    values:
+      - 12
+      - 6
   - name: run_scale_up
     displayName: "Run scale-up"
     type: boolean
@@ -128,6 +131,7 @@ jobs:
       controller_image: ${{ parameters.controller_image }}
       scale_up_node_count: ${{ parameters.scale_up_node_count }}
       vdbench_config: ${{ parameters.vdbench_config }}
+      vm_count: ${{ parameters.vm_count }}
 
   - ${{ if ne(parameters.ssh_pub_key, '.') }}:
     - template: templates/add_sshkey.yml

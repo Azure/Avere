@@ -70,7 +70,8 @@ steps:
       --disable-private-endpoint-network-policies true
     check_rc.sh $? "Disable private endpoint network policies on render_clients1 subnet" || exit 0
 
-    STOR_ACCT_RESOURCE_ID="/subscriptions/${ARM_SUBSCRIPTION_ID}/resourceGroups/${AZURE_STORAGE_ACCOUNT_RG_NAME}/providers/Microsoft.Storage/storageAccounts/${AZURE_STORAGE_ACCOUNT_NAME}"
+    export STOR_ACCT_RESOURCE_ID="/subscriptions/${ARM_SUBSCRIPTION_ID}/resourceGroups/${AZURE_STORAGE_ACCOUNT_RG_NAME}/providers/Microsoft.Storage/storageAccounts/${AZURE_STORAGE_ACCOUNT_NAME}"
+    echo "##vso[task.setvariable variable=STOR_ACCT_RESOURCE_ID]${STOR_ACCT_RESOURCE_ID}"
 
     az deployment group create \
       -f ${BUILD_SOURCESDIRECTORY}/templates/private_endpoint.json \
@@ -150,6 +151,9 @@ steps:
       --query 'value[0].message' --output tsv |& tee ${cmdlog}
     grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "Run azcopy .tar to storage account"
 
+    az resource lock delete -n DO_NOT_DELETE --resource ${STOR_ACCT_RESOURCE_ID}
+    check_rc.sh $rc "Delete Lock on storage account" || exit 0
+
     # Private endpoint removal needed so terraform destory will work.
     az network private-endpoint dns-zone-group delete  \
       --endpoint-name ${RESOURCE_GROUP_NAME}-privendpt \
@@ -157,9 +161,30 @@ steps:
       --resource-group ${RESOURCE_GROUP_NAME}-network
     check_rc.sh $? "DNS-Zone delete" || exit 0
 
-    az network private-endpoint delete --name ${RESOURCE_GROUP_NAME}-privendpt \
-      --resource-group ${RESOURCE_GROUP_NAME}-network
-    check_rc.sh $? "Private endpoint delete" || exit 0
+    # TODO: This assumes that there is only 1 lock. If there are more, this will fail from timeout.
+    while [ 1 ]; do
+      cmdlog=/tmp/private_endpt_delete.log
+      # Private endpoint removal needed so terraform destory will work.
+      az network private-endpoint delete --name ${RESOURCE_GROUP_NAME}-privendpt \
+        --resource-group ${RESOURCE_GROUP_NAME}-network |& tee ${cmdlog}
+      rc=${PIPESTATUS[0]}
+      grep -q "remove the lock" ${cmdlog}
+      if [ $? -eq 0 ]; then
+        echo "Delete Lock"
+        az resource lock delete -n DO_NOT_DELETE --resource ${STOR_ACCT_RESOURCE_ID}
+        check_rc.sh $rc "Delete Lock on storage account" || exit 0
+        continue
+      else
+        check_rc.sh ${rc} "Private Endpoint delete" || exit 0
+        break
+      fi
+    done
+
+    az resource lock create --lock-type CanNotDelete \
+      -n DO_NOT_DELETE \
+      --resource ${STOR_ACCT_RESOURCE_ID} \
+      --notes "Delete created by Pipeline BuildID: ${BUILD_BUILDID}"
+    check_rc.sh $? "Create Lock on storage account" || exit 0
 
     az network vnet subnet update \
       --resource-group  ${RESOURCE_GROUP_NAME}-network \
