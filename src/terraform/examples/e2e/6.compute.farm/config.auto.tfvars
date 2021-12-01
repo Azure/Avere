@@ -26,8 +26,8 @@ virtualMachineScaleSets = [
       fileName = "initialize.sh"
       parameters = {
         fileSystemMounts = [
-          "azasset.blob.core.windows.net:/azasset/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0",
           "cache.media.studio:/mnt/farm /mnt/show/read nfs hard,proto=tcp,mountproto=tcp,retry=30 0 0",
+          "azasset.blob.core.windows.net:/azasset/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0",
           "scheduler.media.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0"
         ]
       }
@@ -68,9 +68,9 @@ virtualMachineScaleSets = [
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMounts = [         
-          "mount -o anon azasset.blob.core.windows.net:/azasset/show W:",
-          "mount -o anon cache.media.studio:/mnt/farm R:",
-          "mount -o anon scheduler.media.studio:/DeadlineRepository S:"
+          "mount -o anon \\\\cache.media.studio\\mnt\\farm R:",
+          "mount -o anon \\\\azasset.blob.core.windows.net\\azasset\\show W:",
+          "mount -o anon \\\\scheduler.media.studio\\DeadlineRepository S:"
         ]
       }
     }

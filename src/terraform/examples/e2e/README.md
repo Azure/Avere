@@ -12,7 +12,7 @@ This folder contains the end-to-end modular framework for automated deployment o
 | [5 Compute Scheduler](#5-compute-scheduler) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/) for distributed job scheduling across a render farm. |
 | [6 Compute Farm](#6-compute-farm) | Deploys [Virtual Machine Scale Sets](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview) for [Linux](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) or [Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) render farms. |
 | [7 Compute Workstation](#7-compute-workstation) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/) for [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) artist workstations. |
-| [8 Render Job Submission](#8-render-job-submission) | Submit a render job from an Azure remote artist GPU workstation. |
+| [8 Render Job Submission](#8-render-job-submission) | Submit a render farm job from an Azure remote artist workstation. |
 
 To manage deployment of the Azure Artist Anywhere solution from your local workstation, the following prerequisite steps are required.
 1. Make sure the [Terraform CLI](https://www.terraform.io/downloads.html) is downloaded locally and accessible in your path environment variable. Version 1.0.10 (or higher) is required.
@@ -156,7 +156,7 @@ Now that the Azure Artist Anywhere solution deployment is complete, this next se
 
 Based on the [SubmitCommandLineJob](https://docs.thinkboxsoftware.com/products/deadline/10.1/1_User%20Manual/manual/command-line-arguments-jobs.html#submitcommandlinejob) argument to Deadline, the following example command renders a sample Blender splash image.
 
-* deadlinecommand.exe -SubmitCommandLineJob -frames \<STARTFRAME>-\<ENDFRAME> -executable blender -arguments "/mnt/show/read/splash/2.93.blend --background --frame-start \<STARTFRAME> --frame-end \<ENDFRAME>"
+* deadlinecommand.exe -SubmitCommandLineJob -frames \<STARTFRAME>-\<ENDFRAME> -executable blender -arguments "/mnt/show/splash/2.93.blend --background --frame-start \<STARTFRAME> --frame-end \<ENDFRAME>"
 
 ### User Interface
 
@@ -167,10 +167,5 @@ By default, the image build customization process in module [4 Compute Image](#4
 1. Click on the Render filter in the dropdown along the top, and check the box next to the *Render: Submit Blender To Deadline* add-on.<br/>https://docs.thinkboxsoftware.com/products/deadline/10.1/1_User%20Manual/_images/blender_280_preferences_render.png
 
 1. After closing the Preferences window, the *Submit To Deadline* option should now be in your Render menu.
-
-
-
-
-
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com
