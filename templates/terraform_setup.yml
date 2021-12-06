@@ -93,6 +93,7 @@ steps:
       -e "s,<build_sourcebranch>,${BUILD_SOURCEBRANCH}," \
       -e "s/<vdbench_config>/${{ parameters.vdbench_config }}/" \
       -e "s,<vdbench_download_url>,${vdbench_sed_url//&/\\&}," \
+      -e "s,<gsi_url>,$GSI_URL," \
       ${cloud_init_file}
     check_rc.sh $? "Preparing cloud-init file (sed)" || exit
 
@@ -155,4 +156,5 @@ steps:
     ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
     ARM_TENANT_ID: $(AZURE-TENANT-ID)
     ARM_SUBSCRIPTION_ID: $(AZURE-SUBSCRIPTION-ID)
+    GSI_URL: $(GSI-URL)
     VDBENCH_URL: $(VDBENCH-URL)
