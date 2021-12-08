@@ -47,12 +47,13 @@ steps:
       --resource-group ${RESOURCE_GROUP_NAME}   \
       --name ${VM_NAME}                         \
       --command-id RunShellScript               \
-      --scripts "ls gsi_results.done || echo ${cmdokmsg3}" \
+      --scripts "cat gsi_results.done || echo ${cmdokmsg3}" \
       --query 'value[0].message' --output tsv |& tee ${cmdlog3}
    check_rc.sh ${PIPESTATUS[0]} "Checking for file gsi_results.done" || exit
    grep -q ${cmdokmsg3} ${cmdlog3}
    check_rc.sh $? "Check for CMD_OK (${cmdokmsg3}) in cmdlog (${cmdlog3}) for ls gsi_results.done}" || exit 0
-
+   grep -q 'gsi_complete' ${cmdlog3}
+   check_rc.sh $? "Check for (gsi_complete) in cmdlog (${cmdlog3})" || exit 0
   displayName: "Run GSI script for gsi and check for complete"
   timeoutInMinutes: 45
   condition: always()

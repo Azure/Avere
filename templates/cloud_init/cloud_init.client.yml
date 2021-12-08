@@ -393,6 +393,7 @@ write_files:
       export REGION='<region>'
       export RESOURCE_GROUP_NAME='<resource_group_name>'
       export GSI_URL='<gsi_url>'
+      export TF_VFXT_CONFIG='<terraform_file_config>'
 
       echo "cd to file path"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
@@ -416,10 +417,9 @@ write_files:
       [ $? -ne 0 ] && error "ssh to run averecmd gsi"
 
       response=False
-      while [ ! ${response} ] ; do
-
-        response=$(ssh -J admin@${MANAGEMENT_IP} root@${MANAGEMENT_IP} "/support/bin/averecmdsupport.taskIsDone $job_id")
-        if [ $? -ne 0 ]; then
+      while [ "${response}" != "True" ] ; do
+        response=$(ssh -J admin@${MANAGEMENT_IP} root@${MANAGEMENT_IP} "/support/bin/averecmd support.taskIsDone $job_id")
+        if [ ${response} ]; then
           echo "INFO: gsi collect is still active. Re-check in 30 seconds."
           sleep 30
           continue
