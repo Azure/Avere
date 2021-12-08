@@ -404,17 +404,32 @@ write_files:
       ssh -o "StrictHostKeyChecking=no" -oProxyCommand="ssh -oStrictHostKeyChecking=no -W %h:%p  admin@${MANAGEMENT_IP}" root@${MANAGEMENT_IP} ls
 
       echo "ssh to run averecmd accept terms"
-      ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "averecmd support.acceptTerms yes"
+      ssh -J admin@${MANAGEMENT_IP} root@${MANAGEMENT_IP} "/support/bin/averecmd support.acceptTerms yes"
       [ $? -ne 0 ] && error "ssh to run averecmd accept terms"
 
       echo "ssh to run averecmd setCustomSetting"
-      ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "averecmd support.setCustomSetting 'gsiInfo.url' 'LB' '${GSI_URL}'"
+      ssh -J admin@${MANAGEMENT_IP} root@${MANAGEMENT_IP} "/support/bin/averecmd support.setCustomSetting 'gsiInfo.url' 'LB' '${GSI_URL}'"
       [ $? -ne 0 ] && error "ssh to run averecmd setCustomSetting"
 
-      echo "ssh to run averecmd gsi
-      ssh -J ${USERNAME}@${CONTROLLER_ADDRESS} ${USERNAME}@${IP_ADDRESS} "averecmd support.executeNormalMode cluster gsimin"
+      echo "ssh to run averecmd gsi"
+      job_id=$(ssh -J admin@${MANAGEMENT_IP} root@${MANAGEMENT_IP} "/support/bin/averecmd support.executeNormalMode cluster gsimin")
       [ $? -ne 0 ] && error "ssh to run averecmd gsi"
 
+      response=False
+      while [ ! ${response} ] ; do
+
+        response=$(ssh -J admin@${MANAGEMENT_IP} root@${MANAGEMENT_IP} "/support/bin/averecmdsupport.taskIsDone $job_id")
+        if [ $? -ne 0 ]; then
+          echo "INFO: gsi collect is still active. Re-check in 30 seconds."
+          sleep 30
+          continue
+        else
+          echo "INFO: gsi collect is  no longer active"
+          break
+        fi
+      done
+
+      echo "gsi_complete" > gsi_results.done
       echo "DONE: end of $0"
 
 runcmd:
