@@ -429,7 +429,7 @@ write_files:
         fi
       done
 
-      echo "gsi_complete" > gsi_results.done
+      echo "gsi_complete" > /tmp/gsi_results.done
       echo "DONE: end of $0"
 
 runcmd:
