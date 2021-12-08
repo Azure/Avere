@@ -55,7 +55,7 @@ steps:
 
   displayName: "Run GSI script for gsi and check for complete"
   timeoutInMinutes: 45
-  condition: not(or(failed(), canceled()))
+  condition: always()
   env:
     ARM_CLIENT_ID: $(AZURE-CLIENT-ID)
     ARM_CLIENT_SECRET: $(AZURE-CLIENT-SECRET)
