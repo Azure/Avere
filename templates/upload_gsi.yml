@@ -41,17 +41,14 @@ steps:
    fi
    done
 
-   cmdokmsg3="CMD_OK_$(date -u '+%m%dx%H%M%S')"
    cmdlog3=/tmp/vm_runcmd2.log
    az vm run-command invoke                      \
       --resource-group ${RESOURCE_GROUP_NAME}   \
       --name ${VM_NAME}                         \
       --command-id RunShellScript               \
-      --scripts "cat /tmp/gsi_results.done || echo ${cmdokmsg3}" \
+      --scripts "cat /tmp/gsi_results.done" \
       --query 'value[0].message' --output tsv |& tee ${cmdlog3}
    check_rc.sh ${PIPESTATUS[0]} "Checking for file /tmp/gsi_results.done" || exit
-   grep -q ${cmdokmsg3} ${cmdlog3}
-   check_rc.sh $? "Check for CMD_OK (${cmdokmsg3}) in cmdlog (${cmdlog3}) for ls /tmp/gsi_results.done" || exit 0
    grep -q 'gsi_complete' ${cmdlog3}
    check_rc.sh $? "Check for (gsi_complete) in cmdlog (${cmdlog3})" || exit 0
   displayName: "Run GSI script for gsi and check for complete"
