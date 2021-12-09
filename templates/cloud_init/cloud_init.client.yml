@@ -401,8 +401,9 @@ write_files:
 
       MANAGEMENT_IP=$(terraform output -json | jq -r ".management_ip.value")
 
-      echo "ssh - initial connection needed for below scp cmd"
+      echo "ssh - initial connection needed for below following cmds"
       ssh -o "StrictHostKeyChecking=no" -oProxyCommand="ssh -oStrictHostKeyChecking=no -W %h:%p  admin@${MANAGEMENT_IP}" root@${MANAGEMENT_IP} ls
+      [ $? -ne 0 ] && error "ssh for initial connection"
 
       echo "ssh to run averecmd accept terms"
       ssh -J admin@${MANAGEMENT_IP} root@${MANAGEMENT_IP} "/support/bin/averecmd support.acceptTerms yes"
@@ -419,17 +420,19 @@ write_files:
       response=False
       while [ "${response}" != "True" ] ; do
         response=$(ssh -J admin@${MANAGEMENT_IP} root@${MANAGEMENT_IP} "/support/bin/averecmd support.taskIsDone $job_id")
-        if [ ${response} ]; then
+        if [ "${response}" == "False" ]; then
           echo "INFO: gsi collect is still active. Re-check in 30 seconds."
           sleep 30
           continue
-        else
+        elif [ "${response}" == "True" ]; then
           echo "INFO: gsi collect is  no longer active"
+          echo "gsi_complete" > /tmp/gsi_results.done
           break
+        else
+          error "Response was not True or False for averecmd support.taskIsDone"
         fi
       done
 
-      echo "gsi_complete" > /tmp/gsi_results.done
       echo "DONE: end of $0"
 
 runcmd:
