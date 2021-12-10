@@ -375,6 +375,66 @@ write_files:
 
       echo "DONE: end of $0"
 
+  - path: /opt/upload_gsi.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+
+      function error() {
+        >&2 echo "echo >< ERROR: $* See log for details."
+        exit 1
+      }
+
+      export AZURE_SUBSCRIPTION='<sub_id>'
+      export ARM_SUBSCRIPTION_ID='<sub_id>'
+      export ARM_CLIENT_ID='<arm_client_id>'
+      export ARM_CLIENT_SECRET='<arm_client_scrt>'
+      export ARM_TENANT_ID='<arm_tenant_id>'
+      export REGION='<region>'
+      export RESOURCE_GROUP_NAME='<resource_group_name>'
+      export GSI_URL='<gsi_url>'
+      export TF_VFXT_CONFIG='<terraform_file_config>'
+
+      echo "cd to file path"
+      cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
+      [ $? -ne 0 ] && error "cd to directory: $TF_VFXT_CONFIG"
+
+      MANAGEMENT_IP=$(terraform output -json | jq -r ".management_ip.value")
+
+      echo "ssh - initial connection needed for below following cmds"
+      ssh -o "StrictHostKeyChecking=no" -oProxyCommand="ssh -oStrictHostKeyChecking=no -W %h:%p  admin@${MANAGEMENT_IP}" root@${MANAGEMENT_IP} ls
+      [ $? -ne 0 ] && error "ssh for initial connection"
+
+      echo "ssh to run averecmd accept terms"
+      ssh -J admin@${MANAGEMENT_IP} root@${MANAGEMENT_IP} "/support/bin/averecmd support.acceptTerms yes"
+      [ $? -ne 0 ] && error "ssh to run averecmd accept terms"
+
+      echo "ssh to run averecmd setCustomSetting"
+      ssh -J admin@${MANAGEMENT_IP} root@${MANAGEMENT_IP} "/support/bin/averecmd support.setCustomSetting 'gsiInfo.url' 'LB' '${GSI_URL}'"
+      [ $? -ne 0 ] && error "ssh to run averecmd setCustomSetting"
+
+      echo "ssh to run averecmd gsi"
+      job_id=$(ssh -J admin@${MANAGEMENT_IP} root@${MANAGEMENT_IP} "/support/bin/averecmd support.executeNormalMode cluster gsimin")
+      [ $? -ne 0 ] && error "ssh to run averecmd gsi"
+
+      response=False
+      while [ "${response}" != "True" ] ; do
+        response=$(ssh -J admin@${MANAGEMENT_IP} root@${MANAGEMENT_IP} "/support/bin/averecmd support.taskIsDone $job_id")
+        if [ "${response}" == "False" ]; then
+          echo "INFO: gsi collect is still active. Re-check in 30 seconds."
+          sleep 30
+          continue
+        elif [ "${response}" == "True" ]; then
+          echo "INFO: gsi collect is  no longer active"
+          echo "gsi_complete" > /tmp/gsi_results.done
+          break
+        else
+          error "Response was not True or False for averecmd support.taskIsDone"
+        fi
+      done
+
+      echo "DONE: end of $0"
+
 runcmd:
   - "echo '# STEP: Setup SSH key.'"
   - "cp -v /root/.ssh/id_rsa /home/<vm_admin_user>/.ssh/id_rsa"
