@@ -162,11 +162,11 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 
 Now that deployment of the Azure Artist Anywhere solution is complete, this section provides a render job submission example via the general purpose Deadline [SubmitCommandLineJob](https://docs.thinkboxsoftware.com/products/deadline/10.1/1_User%20Manual/manual/command-line-arguments-jobs.html#submitcommandlinejob) API.
 
-### Linux Render Farm (*the following example command can be executed from either a Linux or Windows artist workstation*)
+### Linux Render Farm (*the following command can be executed from a Linux or Windows artist workstation*)
 
     deadlinecommand -SubmitCommandLineJob -name azure -executable blender -arguments "-b -y -noaudio /mnt/show/read/blender/splash/3.0.blend --render-output /mnt/show/write/blender/splash/ --render-frame <STARTFRAME>..<ENDFRAME>"
 
-### Windows Render Farm (*the following example command can be executed from either a Linux or Windows artist workstation*)
+### Windows Render Farm (*the following command can be executed from a Linux or Windows artist workstation*)
 
     deadlinecommand -SubmitCommandLineJob -name azure -executable blender.exe -arguments "-b -y -noaudio R:\blender\splash\3.0.blend --render-output W:\blender\splash\ --render-frame <STARTFRAME>..<ENDFRAME>"
 
