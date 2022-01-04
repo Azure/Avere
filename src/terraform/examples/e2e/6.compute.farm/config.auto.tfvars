@@ -17,8 +17,11 @@ virtualMachineScaleSets = [
         ephemeralEnable = true // https://docs.microsoft.com/en-us/azure/virtual-machines/ephemeral-os-disks
       }
     }
+    networkInterface = {
+      enableAcceleratedNetworking = false
+    }
     adminLogin = {
-      username     = "azadmin"
+      userName     = "azadmin"
       sshPublicKey = "" // "ssh-rsa ..."
       disablePasswordAuthentication = false
     }
@@ -32,16 +35,16 @@ virtualMachineScaleSets = [
         ]
       }
     }
-    monitorExtension = {
-      enable = false
-    }
     spot = {                     // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot
       evictionPolicy  = "Delete" // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#eviction-policy
       machineMaxPrice = -1       // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#pricing
     }
-    terminateNotification = {
+    terminateNotification = {    // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
       enable         = true
-      timeoutMinutes = "PT7M"
+      timeoutMinutes = "PT5M"
+    }
+    bootDiagnostics = {
+      storageAccountUri = ""
     }
   },
   {
@@ -59,31 +62,34 @@ virtualMachineScaleSets = [
         ephemeralEnable = true // https://docs.microsoft.com/en-us/azure/virtual-machines/ephemeral-os-disks
       }
     }
+    networkInterface = {
+      enableAcceleratedNetworking = false
+    }
     adminLogin = {
-      username     = "azadmin"
+      userName     = "azadmin"
       sshPublicKey = "" // "ssh-rsa ..."
       disablePasswordAuthentication = false
     }
     customExtension = {
       fileName = "initialize.ps1"
       parameters = {
-        fileSystemMounts = [         
+        fileSystemMounts = [
           "mount -o anon \\\\cache.media.studio\\mnt\\farm R:",
           "mount -o anon \\\\azasset.blob.core.windows.net\\azasset\\show W:",
           "mount -o anon \\\\scheduler.media.studio\\DeadlineRepository S:"
         ]
       }
     }
-    monitorExtension = {
-      enable = false
-    }
     spot = {                     // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot
       evictionPolicy  = "Delete" // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#eviction-policy
       machineMaxPrice = -1       // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#pricing
     }
-    terminateNotification = {
+    terminateNotification = {    // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
       enable         = true
-      timeoutMinutes = "PT7M"
+      timeoutMinutes = "PT5M"
+    }
+    bootDiagnostics = {
+      storageAccountUri = ""
     }
   }
 ]

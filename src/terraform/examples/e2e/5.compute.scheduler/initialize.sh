@@ -1,5 +1,7 @@
 #!/bin/bash -ex
 
+source /etc/profile.d/aaa.sh # https://github.com/Azure/WALinuxAgent/issues/1561
+
 %{ for fsMount in fileSystemMounts }
   fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
   mkdir -p $fsMountPoint
@@ -7,11 +9,7 @@
 %{ endfor }
 mount -a
 
-hostName=$(hostname)
+databaseHost=$(hostname)
 databasePort=27100
 databaseName="deadline10db"
-
-cd /opt/Thinkbox/Deadline10/bin/
-./deadlinecommand -ConfigureDatabase $hostName $databasePort $databaseName false "" "" false ${userName} "pass:${userPassword}" "" false
-./deadlinecommand -UpdateDatabaseSettings "/DeadlineRepository" "MongoDB" $hostName $databaseName $databasePort 0 false false ${userName} "pass:${userPassword}" "" false
-./deadlinecommand -ChangeRepository "Direct" "/mnt/scheduler" "" ""
+deadlinecommand -UpdateDatabaseSettings /DeadlineRepository MongoDB $databaseHost $databaseName $databasePort 0 false false "" "" "" false

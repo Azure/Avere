@@ -1,15 +1,30 @@
-$fsMountPath = "$env:AllUsersProfile\Microsoft\Windows\Start Menu\Programs\StartUp\FSMount.bat"
-New-Item -Path $fsMountPath -ItemType File
+$mountFile = "C:\Windows\Temp\mount.bat"
+New-Item -Path $mountFile -ItemType File
 %{ for fsMount in fileSystemMounts }
-  Add-Content -Path $fsMountPath -Value "${fsMount}"
+  Add-Content -Path $mountFile -Value "${fsMount}"
 %{ endfor }
-Start-Process -FilePath $fsMountPath -Wait
 
-$hostName = hostname
+$taskName = "AAA Storage Mounts"
+$taskAction = New-ScheduledTaskAction -Execute $mountFile
+$taskTrigger = New-ScheduledTaskTrigger -AtStartup
+Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System
+Start-Process -FilePath $mountFile -Wait
+
+$databaseFile = "C:\Windows\Temp\database.ps1"
+New-Item -Path $databaseFile -ItemType File
+Add-Content -Path $databaseFile -Value '$serviceName = "Deadline10DatabaseService"'
+Add-Content -Path $databaseFile -Value '$serviceStatus = (Get-Service -Name $serviceName).Status'
+Add-Content -Path $databaseFile -Value 'if ($serviceStatus -ne "Running") { Start-Service -Name $serviceName }'
+
+$taskName = "AAA Scheduler Database"
+$taskStart = Get-Date
+$taskInterval = New-TimeSpan -Minutes 5
+$taskAction = New-ScheduledTaskAction -Execute "PowerShell" -Argument "-ExecutionPolicy Unrestricted -File $databaseFile"
+$taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval $taskInterval -At $taskStart -Once
+Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System
+
+$databaseHost = hostname
 $databasePort = 27100
 $databaseName = "deadline10db"
-
-Set-Location -Path "C:\Program Files\Thinkbox\Deadline10\bin"
-./deadlinecommand -ConfigureDatabase $hostName $databasePort $databaseName false '""' '""' false ${userName} "pass:${userPassword}" '""' false
-./deadlinecommand -UpdateDatabaseSettings "C:\DeadlineRepository" "MongoDB" $hostName $databaseName $databasePort 0 false false ${userName} "pass:${userPassword}" '""' false
-./deadlinecommand -ChangeRepository "Direct" "S:\" '""' '""'
+netsh advfirewall firewall add rule name="Allow Mongo Database" dir=in action=allow protocol=TCP localport=$databasePort
+deadlinecommand -UpdateDatabaseSettings C:\DeadlineRepository MongoDB $databaseHost $databaseName $databasePort 0 false false '""' '""' '""' false

@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.0.10"
+  required_version = ">= 1.1.2"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.86.0"
+      version = "~>2.90.0"
     }
   }
   backend "azurerm" {
@@ -47,9 +47,14 @@ variable "virtualMachineScaleSets" {
             )
           }
         )
+        networkInterface = object(
+          {
+            enableAcceleratedNetworking = bool
+          }
+        )
         adminLogin = object(
           {
-            username     = string
+            userName     = string
             sshPublicKey = string
             disablePasswordAuthentication = bool
           }
@@ -64,11 +69,6 @@ variable "virtualMachineScaleSets" {
             )
           }
         )
-        monitorExtension = object(
-          {
-            enable = bool
-          }
-        )
         spot = object(
           {
             evictionPolicy  = string
@@ -79,6 +79,11 @@ variable "virtualMachineScaleSets" {
           {
             enable         = bool
             timeoutMinutes = string
+          }
+        )
+        bootDiagnostics = object(
+          {
+            storageAccountUri = string
           }
         )
       }
@@ -133,16 +138,6 @@ data "azurerm_key_vault_secret" "admin_password" {
   key_vault_id = data.azurerm_key_vault.vault.id
 }
 
-data "azurerm_key_vault_secret" "user_password" {
-  name         = module.global.keyVaultSecretNameUserPassword
-  key_vault_id = data.azurerm_key_vault.vault.id
-}
-
-data "azurerm_log_analytics_workspace" "monitor" {
-  name                = module.global.monitorWorkspaceName
-  resource_group_name = module.global.securityResourceGroupName
-}
-
 locals {
   customScriptFileInput  = "C:\\AzureData\\CustomData.bin"
   customScriptFileOutput = "C:\\AzureData\\CustomData.ps1"
@@ -164,7 +159,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   source_image_id                 = each.value.imageId
   sku                             = each.value.machine.size
   instances                       = each.value.machine.count
-  admin_username                  = each.value.adminLogin.username
+  admin_username                  = each.value.adminLogin.userName
   admin_password                  = data.azurerm_key_vault_secret.admin_password.value
   disable_password_authentication = each.value.adminLogin.disablePasswordAuthentication
   priority                        = each.value.spot.evictionPolicy != "" ? "Spot" : "Regular"
@@ -180,6 +175,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       primary   = true
       subnet_id = data.azurerm_subnet.farm.id
     }
+    enable_accelerated_networking = false
   }
   os_disk {
     storage_account_type = each.value.operatingSystem.disk.storageType
@@ -198,7 +194,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   dynamic "admin_ssh_key" {
     for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1] 
     content {
-      username   = each.value.adminLogin.username
+      username   = each.value.adminLogin.userName
       public_key = each.value.adminLogin.sshPublicKey
     }
   }
@@ -212,24 +208,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       auto_upgrade_minor_version = true
       settings = jsonencode({
         script: "${base64encode(
-          templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {userPassword: "${data.azurerm_key_vault_secret.user_password.value}"}))
+          templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
         )}"
-      })
-    }
-  }
-  dynamic "extension" {
-    for_each = each.value.monitorExtension.enable ? [1] : [] 
-    content {
-      name                       = "Monitor"
-      type                       = "OmsAgentForLinux"
-      publisher                  = "Microsoft.EnterpriseCloud.Monitoring"
-      type_handler_version       = "1.13"
-      auto_upgrade_minor_version = true
-      settings = jsonencode({
-        workspaceId: data.azurerm_log_analytics_workspace.monitor.workspace_id
-      })
-      protected_settings = jsonencode({
-        workspaceKey: data.azurerm_log_analytics_workspace.monitor.primary_shared_key
       })
     }
   }
@@ -239,6 +219,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       enabled = each.value.terminateNotification.enable
       timeout = each.value.terminateNotification.timeoutMinutes
     }
+  }
+  boot_diagnostics {
+    storage_account_uri = each.value.bootDiagnostics.storageAccountUri
   }
 }
 
@@ -252,7 +235,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   source_image_id        = each.value.imageId
   sku                    = each.value.machine.size
   instances              = each.value.machine.count
-  admin_username         = each.value.adminLogin.username
+  admin_username         = each.value.adminLogin.userName
   admin_password         = data.azurerm_key_vault_secret.admin_password.value
   priority               = each.value.spot.evictionPolicy != "" ? "Spot" : "Regular"
   eviction_policy        = each.value.spot.evictionPolicy != "" ? each.value.spot.evictionPolicy : null
@@ -260,7 +243,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   single_placement_group = false
   overprovision          = false
   custom_data = each.value.customExtension.fileName == "" ? null : base64gzip(
-    templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {userPassword: "${data.azurerm_key_vault_secret.user_password.value}"}))
+    templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
   )
   network_interface {
     name    = each.value.name
@@ -270,6 +253,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       primary   = true
       subnet_id = data.azurerm_subnet.farm.id
     }
+    enable_accelerated_networking = each.value.networkInterface.enableAcceleratedNetworking
   }
   os_disk {
     storage_account_type = each.value.operatingSystem.disk.storageType
@@ -298,28 +282,15 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       })
     }
   }
-  dynamic "extension" {
-    for_each = each.value.monitorExtension.enable ? [1] : [] 
-    content {
-      name                       = "Monitor"
-      type                       = "MicrosoftMonitoringAgent"
-      publisher                  = "Microsoft.EnterpriseCloud.Monitoring"
-      type_handler_version       = "1.0"
-      auto_upgrade_minor_version = true
-      settings = jsonencode({
-        workspaceId: data.azurerm_log_analytics_workspace.monitor.workspace_id
-      })
-      protected_settings = jsonencode({
-        workspaceKey: data.azurerm_log_analytics_workspace.monitor.primary_shared_key
-      })
-    }
-  }
   dynamic "terminate_notification" {
     for_each = each.value.terminateNotification.enable ? [1] : [] 
     content {
       enabled = each.value.terminateNotification.enable
       timeout = each.value.terminateNotification.timeoutMinutes
     }
+  }
+  boot_diagnostics {
+    storage_account_uri = each.value.bootDiagnostics.storageAccountUri
   }
 }
 

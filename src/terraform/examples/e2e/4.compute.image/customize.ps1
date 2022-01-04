@@ -5,9 +5,10 @@ param (
   [string] $userPassword
 )
 
-Set-Location -Path "C:\Users\Default\Downloads"
+Set-Location -Path "C:\Users\Public\Downloads"
 
-# NVv3 Series - https://docs.microsoft.com/en-us/azure/virtual-machines/nvv3-series
+#   NVv3 - https://docs.microsoft.com/en-us/azure/virtual-machines/nvv3-series
+# NCT4v3 - https://docs.microsoft.com/en-us/azure/virtual-machines/nct4-v3-series
 if (($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v3")) -or
     ($machineSize.StartsWith("Standard_NC") -and $machineSize.EndsWith("T4_v3"))) {
   Write-Host "Customize (Start): GPU Driver (NVv3)"
@@ -18,7 +19,7 @@ if (($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v3")) -
   Write-Host "Customize (End): GPU Driver (NVv3)"
 }
 
-# NVv4 Series - https://docs.microsoft.com/en-us/azure/virtual-machines/nvv4-series
+# NVv4 - https://docs.microsoft.com/en-us/azure/virtual-machines/nvv4-series
 if ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v4")) {
   Write-Host "Customize (Start): GPU Driver (NVv4)"
   $fileName = "amd-gpu.exe"
@@ -28,81 +29,118 @@ if ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v4")) {
   Write-Host "Customize (End): GPU Driver (NVv4)"
 }
 
-Write-Host "Customize (Start): NFS Client"
-DISM /Online /Enable-Feature /FeatureName:ClientForNFS-Infrastructure /All
-$registryKeyPath = "HKLM:\SOFTWARE\Microsoft\ClientForNFS\CurrentVersion\Default"
-New-ItemProperty -Path $registryKeyPath -Name AnonymousUid -PropertyType DWORD -Value 0
-New-ItemProperty -Path $registryKeyPath -Name AnonymousGid -PropertyType DWORD -Value 0
-Write-Host "Customize (End): NFS Client"
-
-Write-Host "Customize (Start): CLI Tools"
-$fileName = "az-cli.msi"
-$downloadUrl = "https://aka.ms/installazurecliwindows"
-Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl
-Start-Process -FilePath $fileName -ArgumentList "/quiet /norestart" -Wait
-Write-Host "Customize (End): CLI Tools"
+if ($subnetName -ne "Scheduler") {
+  Write-Host "Customize (Start): NFS Client"
+  DISM /Online /Enable-Feature /FeatureName:ClientForNFS-Infrastructure /All
+  $registryKeyPath = "HKLM:\SOFTWARE\Microsoft\ClientForNFS\CurrentVersion\Default"
+  New-ItemProperty -Path $registryKeyPath -Name AnonymousUid -PropertyType DWORD -Value 0
+  New-ItemProperty -Path $registryKeyPath -Name AnonymousGid -PropertyType DWORD -Value 0
+  Write-Host "Customize (End): NFS Client"
+}
 
 $storageContainerUrl = "https://az0.blob.core.windows.net/bin"
 $storageContainerSas = "?sv=2020-08-04&st=2021-11-07T18%3A19%3A06Z&se=2222-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=b4TcohYc%2FInzvG%2FQSxApyIaZlLT8Cl8ychUqZx6zNsg%3D"
 
-$schedulerVersion = "10.1.19.4"
+$schedulerVersion = "10.1.20.2"
 $schedulerLicense = "LicenseFree"
-$schedulerShareName = "DeadlineRepository"
 $schedulerDatabasePath = "C:\DeadlineDatabase"
 $schedulerRepositoryPath = "C:\DeadlineRepository"
-$blenderPath = '"C:\Program Files\Blender Foundation\Blender 2.93"'
 
+$rendererVersion = "3.0.0"
+
+$schedulerPath = "C:\Program Files\Thinkbox\Deadline10\bin"
+$rendererPath = "C:\Program Files\Blender Foundation\Blender"
+setx PATH "$env:PATH;$schedulerPath;$rendererPath" /m
+
+Write-Host "Customize (Start): Deadline Download"
 $fileName = "Deadline-$schedulerVersion-windows-installers.zip"
-$downloadUrl = "$storageContainerUrl/Deadline/$fileName$storageContainerSas"
+$downloadUrl = "$storageContainerUrl/Deadline/$schedulerVersion/$fileName$storageContainerSas"
 Invoke-WebRequest $downloadUrl -OutFile $fileName
 Expand-Archive -Path $fileName
+Write-Host "Customize (End): Deadline Download"
+
+Write-Host "Customize (Start): Deadline Client"
+netsh advfirewall firewall add rule name="Allow Deadline Worker" dir=in action=allow program="$schedulerPath\deadlineworker.exe"
+netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$schedulerPath\deadlinemonitor.exe"
+netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$schedulerPath\deadlinelauncher.exe"
+Set-Location -Path "Deadline*"
+$fileName = "DeadlineClient-$schedulerVersion-windows-installer.exe"
+if ($subnetName -eq "Scheduler") {
+  $clientArgs = "--slavestartup false --launcherservice false"
+} else {
+  New-LocalUser -Name $userName -Password (ConvertTo-SecureString -String $userPassword -AsPlainText -Force)
+  if ($subnetName -eq "Farm") {
+    $workerStartup = "true"
+  } else {
+    $workerStartup = "false"
+  }
+  $clientArgs = "--slavestartup $workerStartup --launcherservice true --serviceuser $userName --servicepassword $userPassword"
+}
+Start-Process -FilePath .\$fileName -ArgumentList "--mode unattended --licensemode $schedulerLicense $clientArgs" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
+$fileName = "$schedulerPath\deadlinecommand.exe"
+Start-Process -FilePath "$fileName" -ArgumentList "-ChangeRepositorySkipValidation Direct S:\" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
+Start-Process -FilePath "$fileName" -ArgumentList "-ChangeLicenseMode $schedulerLicense" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
+Set-Location -Path ".."
+Write-Host "Customize (End): Deadline Client"
 
 if ($subnetName -eq "Scheduler") {
   Write-Host "Customize (Start): Deadline Repository"
-  netsh advfirewall firewall add rule name="Allow MongoDB Port" dir=in action=allow protocol=TCP localport=27100
   Set-Location -Path "Deadline*"
   $fileName = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
   Start-Process -FilePath .\$fileName -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --prefix $schedulerRepositoryPath --mongodir $schedulerDatabasePath --dbuser $userName --dbpassword $userPassword --requireSSL false" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
   Set-Location -Path ".."
+  Install-WindowsFeature -Name "NFS-Client"
   Install-WindowsFeature -Name "FS-NFS-Service"
-  New-NfsShare -Name $schedulerShareName -Path $schedulerRepositoryPath -Permission ReadWrite -AllowRootAccess $true
+  New-NfsShare -Name "DeadlineRepository" -Path $schedulerRepositoryPath -Permission ReadWrite
   Write-Host "Customize (End): Deadline Repository"
 } else {
   Write-Host "Customize (Start): Blender"
-  $fileName = "blender-2.93.6-windows-x64.msi"
-  $downloadUrl = "$storageContainerUrl/Blender/$fileName$storageContainerSas"
+  $fileName = "blender-$rendererVersion-windows-x64.msi"
+  $downloadUrl = "$storageContainerUrl/Blender/$rendererVersion/$fileName$storageContainerSas"
   Invoke-WebRequest $downloadUrl -OutFile $fileName
-  Start-Process -FilePath $fileName -ArgumentList "/quiet /norestart" -Wait
-  Write-Host "Customize (End): Blender"
+  Start-Process -FilePath $fileName -ArgumentList ('INSTALL_ROOT="' + $rendererPath + '" /quiet /norestart') -Wait
+  Write-Host "Customize (End): Blender"  
 }
 
 if ($subnetName -eq "Farm") {
-  Write-Host "Customize (Start): Metadata Service"
-  $taskName = "Local Metadata Service Events"
-  $taskArgument = "PowerShell -ExecutionPolicy Unrestricted -File C:\Windows\Temp\metadata.ps1"
-  $taskAction = New-ScheduledTaskAction -Execute "PowerShell" -Argument $taskArgument
-  $taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval (New-TimeSpan -Minute 1) -At ([System.DateTime]::UtcNow) -Once
-  Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob
-  Write-Host "Customize (End): Metadata Service"
+  Write-Host "Customize (Start): Privacy Experience"
+  $registryKeyPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE"
+  New-Item -Path $registryKeyPath -Force
+  New-ItemProperty -Path $registryKeyPath -PropertyType DWORD -Name "DisablePrivacyExperience" -Value 1 -Force
+  Write-Host "Customize (End): Privacy Experience"   
 }
-
-Write-Host "Customize (Start): Deadline Client"
-Set-Location -Path "Deadline*"
-$fileName = "DeadlineClient-$schedulerVersion-windows-installer.exe"
-Start-Process -FilePath .\$fileName -ArgumentList "--mode unattended --licensemode $schedulerLicense" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
-Set-Location -Path ".."
-Write-Host "Customize (End): Deadline Client"
 
 if ($subnetName -eq "Workstation") {
   Write-Host "Customize (Start): Blender Deadline Submitter"
   $fileName = "Blender-submitter-windows-installer.exe"
-  $downloadUrl = "$storageContainerUrl/Deadline/Blender/Installers/$fileName$storageContainerSas"
+  $downloadUrl = "$storageContainerUrl/Deadline/$schedulerVersion/Blender/Installers/$fileName$storageContainerSas"
   Invoke-WebRequest $downloadUrl -OutFile $fileName
-  Start-Process -FilePath .\$fileName -ArgumentList "--mode unattended --source bundle --deadline_dir x --blender_dir $blenderPath" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
+  $fileArgs = '--mode unattended --source bundle --blender_dir "' + $rendererPath + '" --deadline_dir x'
+  Start-Process -FilePath .\$fileName -ArgumentList $fileArgs -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
   Write-Host "Customize (End): Blender Deadline Submitter"
-  
+
+  Write-Host "Customize (Start): Deadline Monitor Shortcut"
+  $shortcutPath = "$env:AllUsersProfile\Desktop\Deadline Monitor.lnk"
+  $scriptShell = New-Object -ComObject WScript.Shell
+  $shortcut = $scriptShell.CreateShortcut($shortcutPath)
+  $shortcut.WorkingDirectory = $schedulerPath
+  $shortcut.TargetPath = "$schedulerPath\deadlinemonitor.exe"
+  $shortcut.Arguments = ""
+  $shortcut.Save()
+  Write-Host "Customize (End): Deadline Monitor Shortcut"
+
+  Write-Host "Customize (Start): Blender Shortcut"
+  $shortcutPath = "$env:AllUsersProfile\Desktop\Blender.lnk"
+  $scriptShell = New-Object -ComObject WScript.Shell
+  $shortcut = $scriptShell.CreateShortcut($shortcutPath)
+  $shortcut.WorkingDirectory = $rendererPath
+  $shortcut.TargetPath = "$rendererPath\blender.exe"
+  $shortcut.Arguments = "--python 3.0\scripts\addons\DeadlineBlenderClient.py"
+  $shortcut.Save()
+  Write-Host "Customize (End): Blender Shortcut"
+
   Write-Host "Customize (Start): Teradici PCoIP Agent"
-  $fileName = "pcoip-agent-graphics_21.07.5.exe"
+  $fileName = "pcoip-agent-graphics_21.07.6.exe"
   $downloadUrl = "$storageContainerUrl/Teradici/$fileName$storageContainerSas"
   Invoke-WebRequest $downloadUrl -OutFile $fileName
   Start-Process -FilePath .\$fileName -ArgumentList "/S /NoPostReboot /Force" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")

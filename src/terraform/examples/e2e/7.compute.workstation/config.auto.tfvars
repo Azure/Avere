@@ -3,7 +3,7 @@ resourceGroupName = "AzureRender.Workstation"
 # Virtual Machines - https://docs.microsoft.com/en-us/azure/virtual-machines/
 virtualMachines = [
   {
-    name        = "LinuxArtist3"
+    name        = "LinuxArtist"
     imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/AzureRender.Image/providers/Microsoft.Compute/galleries/Gallery/images/LinuxWorkstation/versions/3.0.0"
     machineSize = "Standard_NV48s_v3" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
     operatingSystem = {
@@ -14,8 +14,11 @@ virtualMachines = [
         cachingType = "ReadOnly"
       }
     }
+    networkInterface = {
+      enableAcceleratedNetworking = false
+    }
     adminLogin = {
-      username     = "azadmin"
+      userName     = "azadmin"
       sshPublicKey = "" // "ssh-rsa ..."
       disablePasswordAuthentication = false
     }
@@ -29,9 +32,12 @@ virtualMachines = [
         teradiciLicenseKey = ""
       }
     }
+    bootDiagnostics = {
+      storageAccountUri = ""
+    }
   },
   {
-    name        = "LinuxArtist4"
+    name        = ""
     imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/AzureRender.Image/providers/Microsoft.Compute/galleries/Gallery/images/LinuxWorkstation/versions/4.0.0"
     machineSize = "Standard_NV32as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
     operatingSystem = {
@@ -41,8 +47,11 @@ virtualMachines = [
         cachingType = "ReadOnly"
       }
     }
+    networkInterface = {
+      enableAcceleratedNetworking = false
+    }
     adminLogin = {
-      username     = "azadmin"
+      userName     = "azadmin"
       sshPublicKey = "" // "ssh-rsa ..."
       disablePasswordAuthentication = false
     }
@@ -56,9 +65,12 @@ virtualMachines = [
         teradiciLicenseKey = ""
       }
     }
+    bootDiagnostics = {
+      storageAccountUri = ""
+    }
   },
   {
-    name        = ""
+    name        = "WinArtist"
     imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/AzureRender.Image/providers/Microsoft.Compute/galleries/Gallery/images/WindowsWorkstation/versions/3.0.0"
     machineSize = "Standard_NV48s_v3" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
     operatingSystem = {
@@ -68,8 +80,11 @@ virtualMachines = [
         cachingType = "ReadOnly"
       }
     }
+    networkInterface = {
+      enableAcceleratedNetworking = false
+    }
     adminLogin = {
-      username     = "azadmin"
+      userName     = "azadmin"
       sshPublicKey = "" // "ssh-rsa ..."
       disablePasswordAuthentication = false
     }
@@ -82,6 +97,9 @@ virtualMachines = [
         ]
         teradiciLicenseKey = ""
       }
+    }
+    bootDiagnostics = {
+      storageAccountUri = ""
     }
   },
   {
@@ -95,8 +113,11 @@ virtualMachines = [
         cachingType = "ReadOnly"
       }
     }
+    networkInterface = {
+      enableAcceleratedNetworking = false
+    }
     adminLogin = {
-      username     = "azadmin"
+      userName     = "azadmin"
       sshPublicKey = "" // "ssh-rsa ..."
       disablePasswordAuthentication = false
     }
@@ -109,6 +130,9 @@ virtualMachines = [
         ]
         teradiciLicenseKey = ""
       }
+    }
+    bootDiagnostics = {
+      storageAccountUri = ""
     }
   }
 ]

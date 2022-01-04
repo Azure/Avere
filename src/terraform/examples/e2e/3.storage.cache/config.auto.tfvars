@@ -89,7 +89,7 @@ storageTargetsNfs = [
 
 storageTargetsNfsBlob = [
   {
-    name          = ""
+    name          = "RenderFarm"
     usageModel    = "WRITE_AROUND"
     namespacePath = "/mnt/farm"
     storage = {
@@ -99,7 +99,7 @@ storageTargetsNfsBlob = [
     }
   },
   {
-    name          = ""
+    name          = "ArtistWorkstation"
     usageModel    = "WRITE_WORKLOAD_CLOUDWS"
     namespacePath = "/mnt/workstation"
     storage = {

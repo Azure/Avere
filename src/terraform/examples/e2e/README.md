@@ -15,9 +15,9 @@ This folder contains the end-to-end modular framework for automated deployment o
 | [8 Render Job Submission](#8-render-job-submission) | Submit a render farm job from an Azure remote artist workstation. |
 
 To manage deployment of the Azure Artist Anywhere solution from your local workstation, the following prerequisite steps are required.
-1. Make sure the [Terraform CLI](https://www.terraform.io/downloads.html) is downloaded locally and accessible in your path environment variable. Version 1.0.10 (or higher) is required.
-1. Make sure the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) is installed locally. The latest version is 2.29.2 as of October, 2021.
-1. Make sure that [Git](https://git-scm.com/downloads) is installed locally. The latest version is 2.33.1 as of October, 2021.
+1. Make sure the [Terraform CLI](https://www.terraform.io/downloads.html) (v1.1.2 or higher) is downloaded locally and accessible in your path environment variable.
+1. Make sure the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) is installed locally and accessible in your path environment variable.
+1. Make sure [Git](https://git-scm.com/downloads) is installed locally.
 1. Run `az account show` to ensure that your current Azure subscription session context is set appropriately. To change your current Azure subscription session context, run `az account set --subscription YOUR_SUBSCRIPTION_ID`
 1. Download the Azure rendering solution Terraform examples GitHub repository via the following commands.
    ```
@@ -123,7 +123,9 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
 1. Run `cd ~/tf/src/terraform/examples/e2e/5.compute.scheduler`
-1. Edit the config values in `config.auto.tfvars` using your favorite text editor. Make sure you have sufficient compute cores quota available on your Azure subscription for each configured virtual machine size.
+1. Edit the config values in `config.auto.tfvars` using your favorite text editor.
+   * Make sure you have sufficient compute cores quota available in your Azure subscription.
+   * Make sure the "imageId" config has the correct value for an image in your Azure subscription.
 1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
@@ -133,7 +135,11 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
 1. Run `cd ~/tf/src/terraform/examples/e2e/6.compute.farm`
-1. Edit the config values in `config.auto.tfvars` using your favorite text editor. Make sure you have sufficient compute Spot cores quota available on your Azure subscription.
+1. Edit the config values in `config.auto.tfvars` using your favorite text editor.
+   * Make sure you have sufficient compute (*Spot*) cores quota available in your Azure subscription.
+   * Make sure the "imageId" config has the correct value for an image in your Azure subscription.
+   * Make sure the "fileSystemMounts" config has the correct values (e.g., storage account name).
+   * Make sure module [3 Storage Cache](#3-storage-cache) is deployed and *Running* before deploying this module.
 1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
@@ -143,29 +149,25 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
 1. Run `cd ~/tf/src/terraform/examples/e2e/7.compute.workstation`
-1. Edit the config values in `config.auto.tfvars` using your favorite text editor. Make sure you have sufficient compute cores quota available on your Azure subscription for each configured virtual machine size.
+1. Edit the config values in `config.auto.tfvars` using your favorite text editor.
+   * Make sure you have sufficient compute cores quota available in your Azure subscription.
+   * Make sure the "imageId" config has the correct value for an image in your Azure subscription.
+   * Make sure the "fileSystemMounts" config has the correct values (e.g., storage cache mount).
+   * Make sure module [3 Storage Cache](#3-storage-cache) is deployed and *Running* before deploying this module.
 1. Run `terraform init -backend-config ../backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
 
 ## 8 Render Job Submission
 
-Now that the Azure Artist Anywhere solution deployment is complete, this next section describes render job submission via command line and user interface.
+Now that deployment of the Azure Artist Anywhere solution is complete, this section provides a render job submission example via the general purpose Deadline [SubmitCommandLineJob](https://docs.thinkboxsoftware.com/products/deadline/10.1/1_User%20Manual/manual/command-line-arguments-jobs.html#submitcommandlinejob) API.
 
-### Command Line
+### Linux Render Farm (*the following example command can be executed from either a Linux or Windows artist workstation*)
 
-Based on the [SubmitCommandLineJob](https://docs.thinkboxsoftware.com/products/deadline/10.1/1_User%20Manual/manual/command-line-arguments-jobs.html#submitcommandlinejob) argument to Deadline, the following example command renders a sample Blender splash image.
+    deadlinecommand -SubmitCommandLineJob -name azure -executable blender -arguments "-b -y -noaudio /mnt/show/read/blender/splash/3.0.blend --render-output /mnt/show/write/blender/splash/ --render-frame <STARTFRAME>..<ENDFRAME>"
 
-* deadlinecommand.exe -SubmitCommandLineJob -frames \<STARTFRAME>-\<ENDFRAME> -executable blender -arguments "/mnt/show/splash/2.93.blend --background --frame-start \<STARTFRAME> --frame-end \<ENDFRAME>"
+### Windows Render Farm (*the following example command can be executed from either a Linux or Windows artist workstation*)
 
-### User Interface
-
-By default, the image build customization process in module [4 Compute Image](#4-compute-image) includes installation of the [Deadline Blender integrated job submission script](https://docs.thinkboxsoftware.com/products/deadline/10.1/1_User%20Manual/manual/app-blender.html?highlight=blender%20submitter#submitter-installer-blender-version-2-80-onward) for Workstation images. To activate the integrated submission script, complete the following configuration steps.
-
-1. In Blender, select Edit -> Preferences…, and then select the Add-Ons tab on the left.<br/>https://docs.thinkboxsoftware.com/products/deadline/10.1/1_User%20Manual/_images/blender_280_preferences.png
-
-1. Click on the Render filter in the dropdown along the top, and check the box next to the *Render: Submit Blender To Deadline* add-on.<br/>https://docs.thinkboxsoftware.com/products/deadline/10.1/1_User%20Manual/_images/blender_280_preferences_render.png
-
-1. After closing the Preferences window, the *Submit To Deadline* option should now be in your Render menu.
+    deadlinecommand -SubmitCommandLineJob -name azure -executable blender.exe -arguments "-b -y -noaudio R:\blender\splash\3.0.blend --render-output W:\blender\splash\ --render-frame <STARTFRAME>..<ENDFRAME>"
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com

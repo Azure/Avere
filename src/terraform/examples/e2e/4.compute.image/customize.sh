@@ -1,8 +1,9 @@
 #!/bin/bash -ex
 
-cd /usr/local/bin
+cd /usr/local
 
-# NVv3 Series - https://docs.microsoft.com/en-us/azure/virtual-machines/nvv3-series
+#   NVv3 - https://docs.microsoft.com/en-us/azure/virtual-machines/nvv3-series
+# NCT4v3 - https://docs.microsoft.com/en-us/azure/virtual-machines/nct4-v3-series
 if [[ ($machineSize == Standard_NV* && $machineSize == *_v3) ||
       ($machineSize == Standard_NC* && $machineSize == *T4_v3) ]]; then
   echo "Customize (Start): GPU Driver (NVv3)"
@@ -16,7 +17,7 @@ if [[ ($machineSize == Standard_NV* && $machineSize == *_v3) ||
   echo "Customize (End): GPU Driver (NVv3)"
 fi
 
-# NVv4 Series - https://docs.microsoft.com/en-us/azure/virtual-machines/nvv4-series
+# NVv4 - https://docs.microsoft.com/en-us/azure/virtual-machines/nvv4-series
 if [[ $machineSize == Standard_NV* && $machineSize == *_v4 ]]; then
   echo "Customize (Start): GPU Driver (NVv4)"
   fileName="amd-gpu.tar.xz"
@@ -30,40 +31,54 @@ if [[ $machineSize == Standard_NV* && $machineSize == *_v4 ]]; then
   echo "Customize (End): GPU Driver (NVv4)"
 fi
 
-echo "Customize (Start): NFS Utilities"
+echo "Customize (Start): Utilities"
 yum -y install nfs-utils
-echo "Customize (End): NFS Utilities"
-
-echo "Customize (Start): CLI Tools"
-rpm --import https://packages.microsoft.com/keys/microsoft.asc
-echo -e "[azure-cli]
-name=Azure CLI
-baseurl=https://packages.microsoft.com/yumrepos/azure-cli
-enabled=1
-gpgcheck=1
-gpgkey=https://packages.microsoft.com/keys/microsoft.asc" | sudo tee /etc/yum.repos.d/azure-cli.repo
-yum -y install azure-cli
 yum -y install epel-release
 yum -y install jq
-echo "Customize (End): CLI Tools"
+echo "Customize (End): Utilities"
 
 storageContainerUrl="https://az0.blob.core.windows.net/bin"
 storageContainerSas="?sv=2020-08-04&st=2021-11-07T18%3A19%3A06Z&se=2222-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=b4TcohYc%2FInzvG%2FQSxApyIaZlLT8Cl8ychUqZx6zNsg%3D"
 
-schedulerVersion="10.1.19.4"
+schedulerVersion="10.1.20.2"
 schedulerLicense="LicenseFree"
 schedulerDatabasePath="/DeadlineDatabase"
 schedulerRepositoryPath="/DeadlineRepository"
-blenderPath="/usr/local/bin"
 
+rendererVersion="3.0.0"
+
+schedulerPath="/opt/Thinkbox/Deadline10/bin"
+rendererPath="/usr/local/Blender"
+profilePath="/etc/profile.d/aaa.sh"
+if [ $subnetName == "Scheduler" ]; then
+  echo "PATH=$PATH:$schedulerPath" >> $profilePath
+else
+  echo "PATH=$PATH:$schedulerPath:$rendererPath" >> $profilePath
+fi
+
+echo "Customize (Start): Deadline Download"
 fileName="Deadline-$schedulerVersion-linux-installers.tar"
-downloadUrl="$storageContainerUrl/Deadline/$fileName$storageContainerSas"
+downloadUrl="$storageContainerUrl/Deadline/$schedulerVersion/$fileName$storageContainerSas"
 curl -L -o $fileName $downloadUrl
 tar -xf $fileName
+echo "Customize (End): Deadline Download"
 
-if [ "$subnetName" == "Scheduler" ]; then
+echo "Customize (Start): Deadline Client"
+fileName="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
+if [ $subnetName == "Scheduler" ]; then
+  clientArgs="--slavestartup false --launcherdaemon false"
+else
+  useradd $userName
+  [ $subnetName == "Farm" ] && workerStartup=true || workerStartup=false
+  clientArgs="--slavestartup $workerStartup --launcherdaemon true --daemonuser $userName"
+fi
+./$fileName --mode unattended --licensemode $schedulerLicense $clientArgs
+$schedulerPath/deadlinecommand -ChangeRepositorySkipValidation Direct /mnt/scheduler
+$schedulerPath/deadlinecommand -ChangeLicenseMode $schedulerLicense
+echo "Customize (End): Deadline Client"
+
+if [ $subnetName == "Scheduler" ]; then
   echo "Customize (Start): Deadline Repository"
-  hostnamectl set-hostname scheduler
   fileName="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
   ./$fileName --mode unattended --dbLicenseAcceptance accept --installmongodb true --prefix $schedulerRepositoryPath --mongodir $schedulerDatabasePath --dbuser $userName --dbpassword $userPassword --requireSSL false
   systemctl start nfs-server
@@ -78,37 +93,27 @@ else
   yum -y install libXfixes
   yum -y install libXrender
   yum -y install libGL
-  fileName="blender-2.93.6-linux-x64.tar.xz"
-  downloadUrl="$storageContainerUrl/Blender/$fileName$storageContainerSas"
+  fileName="blender-$rendererVersion-linux-x64.tar.xz"
+  downloadUrl="$storageContainerUrl/Blender/$rendererVersion/$fileName$storageContainerSas"
   curl -L -o $fileName $downloadUrl
   tar -xJf $fileName
-  mv blender*/* .
+  mkdir Blender
+  cd blender*
+  mv * ../Blender
   echo "Customize (End): Blender"
 fi
 
-if [ "$subnetName" == "Farm" ]; then
-  echo "Customize (Start): Metadata Service"
-  echo "* * * * * /tmp/preempt.sh" >> /etc/crontab
-  echo "* * * * * sleep 30; /tmp/preempt.sh" >> /etc/crontab
-  echo "Customize (End): Metadata Service"
-fi
-
-echo "Customize (Start): Deadline Client"
-fileName="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
-./$fileName --mode unattended --licensemode $schedulerLicense
-echo "Customize (End): Deadline Client"
-
-if [ "$subnetName" == "Workstation" ]; then
+if [ $subnetName == "Workstation" ]; then
   echo "Customize (Start): Workstation Desktop"
   yum -y groups install "KDE Plasma Workspaces"
   echo "Customize (End): Workstation Desktop"
 
   echo "Customize (Start): Blender Deadline Submitter"
   fileName="Blender-submitter-linux-x64-installer.run"
-  downloadUrl="$storageContainerUrl/Deadline/Blender/Installers/$fileName$storageContainerSas"
+  downloadUrl="$storageContainerUrl/Deadline/$schedulerVersion/Blender/Installers/$fileName$storageContainerSas"
   curl -L -o $fileName $downloadUrl
   chmod +x $fileName
-  ./$fileName --mode unattended --source bundle --deadline_dir x --blender_dir $blenderPath
+  ./$fileName --mode unattended --source bundle --blender_dir $rendererPath --deadline_dir x
   echo "Customize (End): Blender Deadline Submitter"
 
   echo "Customize (Start): Teradici PCoIP Agent"

@@ -1,12 +1,16 @@
-$fsMountPath = "$env:AllUsersProfile\Microsoft\Windows\Start Menu\Programs\StartUp\FSMount.bat"
-New-Item -Path $fsMountPath -ItemType File
+$mountFile = "C:\Windows\Temp\mount.bat"
+New-Item -Path $mountFile -ItemType File
 %{ for fsMount in fileSystemMounts }
-  Add-Content -Path $fsMountPath -Value "${fsMount}"
+  Add-Content -Path $mountFile -Value "${fsMount}"
 %{ endfor }
-Start-Process -FilePath $fsMountPath -Wait
+Add-Content -Path $mountFile -Value "net stop Deadline10LauncherService"
+Add-Content -Path $mountFile -Value "net start Deadline10LauncherService"
 
-Set-Location -Path "C:\Program Files\Thinkbox\Deadline10\bin"
-./deadlinecommand -ChangeRepository "Direct" "S:\" '""' '""'
+$taskName = "AAA Storage Mounts"
+$taskAction = New-ScheduledTaskAction -Execute $mountFile
+$taskTrigger = New-ScheduledTaskTrigger -AtStartup
+Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System
+Start-Process -FilePath $mountFile -Wait
 
 %{ if teradiciLicenseKey != "" }
   Set-Location -Path "C:\Program Files\Teradici\PCoIP Agent"

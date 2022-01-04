@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.0.10"
+  required_version = ">= 1.1.2"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.86.0"
+      version = "~>2.90.0"
     }
   }
   backend "azurerm" {
@@ -35,6 +35,7 @@ variable "storageAccounts" {
         fileShares       = list(string)
         messageQueues    = list(string)
         blobContainers   = list(string)
+        blobs            = list(string)
         privateEndpoints = list(string)
       }
     )
@@ -116,6 +117,26 @@ locals {
         blobContainerName  = blobContainer
         storageAccountName = storageAccount.name
       }
+    ] if storageAccount.name != ""
+  ])
+  blobDirectories = flatten([
+    for storageAccount in var.storageAccounts : [
+      for blob in storageAccount.blobs : [
+        for file in fileset(blob, "**") : {
+          blobName           = trimprefix(file, split("/", file)[0])
+          blobContainerName  = split("/", blob)[0]
+          storageAccountName = storageAccount.name
+        }
+      ] if substr(strrev(blob), 0, 1) == "*"
+    ] if storageAccount.name != ""
+  ])
+  blobs = flatten([
+    for storageAccount in var.storageAccounts : [
+      for blob in storageAccount.blobs : {
+        blobName           = trimprefix(blob, split("/", blob)[0])
+        blobContainerName  = split("/", blob)[0]
+        storageAccountName = storageAccount.name
+      } if substr(strrev(blob), 0, 1) != "*"
     ] if storageAccount.name != ""
   ])
   privateEndpoints = flatten([
@@ -246,6 +267,34 @@ resource "azurerm_storage_container" "containers" {
   storage_account_name = each.value.storageAccountName
   depends_on = [
     azurerm_storage_account.storage
+  ]
+}
+
+resource "azurerm_storage_blob" "directory_files" {
+  for_each = {
+    for x in local.blobDirectories : "${x.storageAccountName}.${x.blobName}" => x
+  }
+  name                   = each.value.blobName
+  storage_account_name   = each.value.storageAccountName
+  storage_container_name = each.value.blobContainerName
+  source                 = "${path.cwd}/${each.value.blobContainerName}${each.value.blobName}"
+  type                   = "Block"
+  depends_on = [
+    azurerm_storage_container.containers
+  ]
+}
+
+resource "azurerm_storage_blob" "root_files" {
+  for_each = {
+    for x in local.blobs : "${x.storageAccountName}.${x.blobName}" => x
+  }
+  name                   = each.value.blobName
+  storage_account_name   = each.value.storageAccountName
+  storage_container_name = each.value.blobContainerName
+  source                 = "${path.cwd}/${each.value.blobContainerName}${each.value.blobName}"
+  type                   = "Block"
+  depends_on = [
+    azurerm_storage_container.containers
   ]
 }
 

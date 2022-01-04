@@ -1,0 +1,10 @@
+{
+  "directories": [
+    {
+      "path": "/mnt/farm"
+    },
+    {
+      "path": "/mnt/workstation"
+    }
+  ]
+}

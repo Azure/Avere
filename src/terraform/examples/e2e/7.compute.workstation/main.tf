@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.0.10"
+  required_version = ">= 1.1.2"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.86.0"
+      version = "~>2.90.0"
     }
   }
   backend "azurerm" {
@@ -41,9 +41,14 @@ variable "virtualMachines" {
             )
           }
         )
+        networkInterface = object(
+          {
+            enableAcceleratedNetworking = bool
+          }
+        )
         adminLogin = object(
           {
-            username     = string
+            userName     = string
             sshPublicKey = string
             disablePasswordAuthentication = bool
           }
@@ -57,6 +62,11 @@ variable "virtualMachines" {
                 teradiciLicenseKey = string
               }
             )
+          }
+        )
+        bootDiagnostics = object(
+          {
+            storageAccountUri = string
           }
         )
       }
@@ -111,11 +121,6 @@ data "azurerm_key_vault_secret" "admin_password" {
   key_vault_id = data.azurerm_key_vault.vault.id
 }
 
-data "azurerm_key_vault_secret" "user_password" {
-  name         = module.global.keyVaultSecretNameUserPassword
-  key_vault_id = data.azurerm_key_vault.vault.id
-}
-
 locals {
   customScriptFileInput  = "C:\\AzureData\\CustomData.bin"
   customScriptFileOutput = "C:\\AzureData\\CustomData.ps1"
@@ -139,6 +144,7 @@ resource "azurerm_network_interface" "workstation" {
     subnet_id                     = data.azurerm_subnet.workstation.id
     private_ip_address_allocation = "Dynamic"
   }
+  enable_accelerated_networking = each.value.networkInterface.enableAcceleratedNetworking
 }
 
 resource "azurerm_linux_virtual_machine" "workstation" {
@@ -150,7 +156,7 @@ resource "azurerm_linux_virtual_machine" "workstation" {
   location                        = azurerm_resource_group.workstation.location
   source_image_id                 = each.value.imageId
   size                            = each.value.machineSize
-  admin_username                  = each.value.adminLogin.username
+  admin_username                  = each.value.adminLogin.userName
   admin_password                  = data.azurerm_key_vault_secret.admin_password.value
   disable_password_authentication = each.value.adminLogin.disablePasswordAuthentication
   network_interface_ids = [
@@ -164,10 +170,13 @@ resource "azurerm_linux_virtual_machine" "workstation" {
     type         = "UserAssigned"
     identity_ids = [data.azurerm_user_assigned_identity.identity.id]
   }
+  boot_diagnostics {
+    storage_account_uri = each.value.bootDiagnostics.storageAccountUri
+  }
   dynamic "admin_ssh_key" {
     for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1] 
     content {
-      username   = each.value.adminLogin.username
+      username   = each.value.adminLogin.userName
       public_key = each.value.adminLogin.sshPublicKey
     }
   }
@@ -188,7 +197,7 @@ resource "azurerm_virtual_machine_extension" "workstation_linux" {
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     script: "${base64encode(
-      templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {userPassword: "${data.azurerm_key_vault_secret.user_password.value}"}))
+      templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
     )}"
   })
   depends_on = [
@@ -205,7 +214,7 @@ resource "azurerm_windows_virtual_machine" "workstation" {
   location            = azurerm_resource_group.workstation.location
   source_image_id     = each.value.imageId
   size                = each.value.machineSize
-  admin_username      = each.value.adminLogin.username
+  admin_username      = each.value.adminLogin.userName
   admin_password      = data.azurerm_key_vault_secret.admin_password.value
   network_interface_ids = [
     "${azurerm_resource_group.workstation.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
@@ -218,8 +227,11 @@ resource "azurerm_windows_virtual_machine" "workstation" {
     type         = "UserAssigned"
     identity_ids = [data.azurerm_user_assigned_identity.identity.id]
   }
+  boot_diagnostics {
+    storage_account_uri = each.value.bootDiagnostics.storageAccountUri
+  }
   custom_data = each.value.customExtension.fileName == "" ? null : base64gzip(
-    templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {userPassword: "${data.azurerm_key_vault_secret.user_password.value}"}))
+    templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
   )
   depends_on = [
     azurerm_network_interface.workstation

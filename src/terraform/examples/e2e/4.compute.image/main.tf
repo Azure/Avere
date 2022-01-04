@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.0.10"
+  required_version = ">= 1.1.2"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.86.0"
+      version = "~>2.90.0"
     }
   }
   backend "azurerm" {
@@ -51,8 +51,8 @@ variable "imageTemplates" {
           {
             definitionName = string
             sourceType     = string
-            customizeFile  = string
-            metadataFile   = string
+            customizer     = string
+            terminater     = string
             inputVersion   = string
             outputVersion  = string
           }
@@ -64,7 +64,6 @@ variable "imageTemplates" {
             osDiskSizeGB   = number
             timeoutMinutes = number
             userName       = string
-            runElevated    = bool
           }
         )
       }
@@ -82,10 +81,10 @@ variable "virtualNetwork" {
 }
 
 locals {
-  customizeFileLinux   = "customize.sh"
-  customizeFileWindows = "customize.ps1"
-  metadataFileLinux    = "metadata.sh"
-  metadataFileWindows  = "metadata.ps1"
+  customizerLinux   = "customize.sh"
+  customizerWindows = "customize.ps1"
+  terminaterLinux   = "terminate.sh"
+  terminaterWindows = "terminate.ps1"
 }
 
 data "terraform_remote_state" "network" {
@@ -152,39 +151,39 @@ resource "azurerm_role_assignment" "image" {
 }
 
 resource "azurerm_storage_container" "container" {
-  name                 = "builder"
+  name                 = "image"
   storage_account_name = data.azurerm_storage_account.storage.name
 }
 
-resource "azurerm_storage_blob" "customize_linux" {
-  name                   = local.customizeFileLinux
+resource "azurerm_storage_blob" "customizer_linux" {
+  name                   = local.customizerLinux
   storage_account_name   = data.azurerm_storage_account.storage.name
   storage_container_name = azurerm_storage_container.container.name
-  source                 = local.customizeFileLinux
+  source                 = local.customizerLinux
   type                   = "Block"
 }
 
-resource "azurerm_storage_blob" "customize_windows" {
-  name                   = local.customizeFileWindows
+resource "azurerm_storage_blob" "customizer_windows" {
+  name                   = local.customizerWindows
   storage_account_name   = data.azurerm_storage_account.storage.name
   storage_container_name = azurerm_storage_container.container.name
-  source                 = local.customizeFileWindows
+  source                 = local.customizerWindows
   type                   = "Block"
 }
 
-resource "azurerm_storage_blob" "metadata_linux" {
-  name                   = local.metadataFileLinux
+resource "azurerm_storage_blob" "terminater_linux" {
+  name                   = local.terminaterLinux
   storage_account_name   = data.azurerm_storage_account.storage.name
   storage_container_name = azurerm_storage_container.container.name
-  source                 = local.metadataFileLinux
+  source                 = local.terminaterLinux
   type                   = "Block"
 }
 
-resource "azurerm_storage_blob" "metadata_windows" {
-  name                   = local.metadataFileWindows
+resource "azurerm_storage_blob" "terminater_windows" {
+  name                   = local.terminaterWindows
   storage_account_name   = data.azurerm_storage_account.storage.name
   storage_container_name = azurerm_storage_container.container.name
-  source                 = local.metadataFileWindows
+  source                 = local.terminaterWindows
   type                   = "Block"
 }
 
@@ -361,18 +360,17 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
             "customize": [
               {
                 "type": "File",
-                "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()].image.customizeFile)]",
-                "destination": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), concat(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.customizeFile), concat(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.customizeFile))]"
+                "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()].image.customizer)]",
+                "destination": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), concat(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.customizer), concat(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.customizer))]"
               },
               {
                 "type": "File",
-                "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()].image.metadataFile)]",
-                "destination": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), concat(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.metadataFile), concat(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.metadataFile))]"
+                "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()].image.terminater)]",
+                "destination": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), concat(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.terminater), concat(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.terminater))]"
               },
               {
                 "type": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), 'PowerShell', 'Shell')]",
-                "inline": "[createArray(if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetExecuteCommandWindows(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.customizeFile, parameters('imageTemplates')[copyIndex()].build, parameters('userPassword')), fx.GetExecuteCommandLinux(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.customizeFile, parameters('imageTemplates')[copyIndex()].build, parameters('userPassword'))))]",
-                "runElevated": "[parameters('imageTemplates')[copyIndex()].build.runElevated]"
+                "inline": "[createArray(if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetExecuteCommandWindows(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.customizer, parameters('imageTemplates')[copyIndex()].build, parameters('userPassword')), fx.GetExecuteCommandLinux(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.customizer, parameters('imageTemplates')[copyIndex()].build, parameters('userPassword'))))]"
               }
             ],
             "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].build.timeoutMinutes]",
@@ -391,6 +389,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
             ]
           },
           "copy": {
+            "mode": "serial",
             "name": "imageTemplates",
             "count": "[length(parameters('imageTemplates'))]"
           }
@@ -402,8 +401,10 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
   TEMPLATE
   depends_on = [
     azurerm_shared_image.definitions,
-    azurerm_storage_blob.customize_linux,
-    azurerm_storage_blob.customize_windows
+    azurerm_storage_blob.customizer_linux,
+    azurerm_storage_blob.customizer_windows,
+    azurerm_storage_blob.terminater_linux,
+    azurerm_storage_blob.terminater_windows
   ]
 }
 

@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.0.10"
+  required_version = ">= 1.1.2"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.86.0"
+      version = "~>2.90.0"
     }
   }
   backend "azurerm" {
@@ -41,9 +41,14 @@ variable "virtualMachines" {
             )
           }
         )
+        networkInterface = object(
+          {
+            enableAcceleratedNetworking = bool
+          }
+        )
         adminLogin = object(
           {
-            username     = string
+            userName     = string
             sshPublicKey = string
             disablePasswordAuthentication = bool
           }
@@ -54,9 +59,13 @@ variable "virtualMachines" {
             parameters = object(
               {
                 fileSystemMounts = list(string)
-                userName         = string
               }
             )
+          }
+        )
+        monitorExtension = object(
+          {
+            enable = bool
           }
         )
       }
@@ -117,9 +126,9 @@ data "azurerm_key_vault_secret" "admin_password" {
   key_vault_id = data.azurerm_key_vault.vault.id
 }
 
-data "azurerm_key_vault_secret" "user_password" {
-  name         = module.global.keyVaultSecretNameUserPassword
-  key_vault_id = data.azurerm_key_vault.vault.id
+data "azurerm_log_analytics_workspace" "monitor" {
+  name                = module.global.monitorWorkspaceName
+  resource_group_name = module.global.securityResourceGroupName
 }
 
 locals {
@@ -148,6 +157,7 @@ resource "azurerm_network_interface" "scheduler" {
     subnet_id                     = data.azurerm_subnet.scheduler.id
     private_ip_address_allocation = "Dynamic"
   }
+  enable_accelerated_networking = each.value.networkInterface.enableAcceleratedNetworking
 }
 
 resource "azurerm_linux_virtual_machine" "scheduler" {
@@ -159,7 +169,7 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
   location                        = azurerm_resource_group.scheduler.location
   source_image_id                 = each.value.imageId
   size                            = each.value.machineSize
-  admin_username                  = each.value.adminLogin.username
+  admin_username                  = each.value.adminLogin.userName
   admin_password                  = data.azurerm_key_vault_secret.admin_password.value
   disable_password_authentication = each.value.adminLogin.disablePasswordAuthentication
   network_interface_ids = [
@@ -176,7 +186,7 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
   dynamic "admin_ssh_key" {
     for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1] 
     content {
-      username   = each.value.adminLogin.username
+      username   = each.value.adminLogin.userName
       public_key = each.value.adminLogin.sshPublicKey
     }
   }
@@ -185,7 +195,7 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
   ]
 }
 
-resource "azurerm_virtual_machine_extension" "scheduler_linux" {
+resource "azurerm_virtual_machine_extension" "custom_linux" {
   for_each = {
     for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.fileName != "" && x.operatingSystem.type == "Linux" 
   }
@@ -197,8 +207,29 @@ resource "azurerm_virtual_machine_extension" "scheduler_linux" {
   virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     script: "${base64encode(
-      templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {userPassword: "${data.azurerm_key_vault_secret.user_password.value}"}))
+      templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
     )}"
+  })
+  depends_on = [
+    azurerm_linux_virtual_machine.scheduler
+  ]
+}
+
+resource "azurerm_virtual_machine_extension" "monitor_linux" {
+  for_each = {
+    for x in var.virtualMachines : x.name => x if x.name != "" && x.monitorExtension.enable && x.operatingSystem.type == "Linux" 
+  }
+  name                       = "Monitor"
+  type                       = "OmsAgentForLinux"
+  publisher                  = "Microsoft.EnterpriseCloud.Monitoring"
+  type_handler_version       = "1.13"
+  auto_upgrade_minor_version = true
+  virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
+  settings = jsonencode({
+    workspaceId: data.azurerm_log_analytics_workspace.monitor.workspace_id
+  })
+  protected_settings = jsonencode({
+    workspaceKey: data.azurerm_log_analytics_workspace.monitor.primary_shared_key
   })
   depends_on = [
     azurerm_linux_virtual_machine.scheduler
@@ -214,7 +245,7 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
   location            = azurerm_resource_group.scheduler.location
   source_image_id     = each.value.imageId
   size                = each.value.machineSize
-  admin_username      = each.value.adminLogin.username
+  admin_username      = each.value.adminLogin.userName
   admin_password      = data.azurerm_key_vault_secret.admin_password.value
   network_interface_ids = [
     "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
@@ -228,14 +259,14 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
     identity_ids = [data.azurerm_user_assigned_identity.identity.id]
   }
   custom_data = each.value.customExtension.fileName == "" ? null : base64gzip(
-    templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {userPassword: "${data.azurerm_key_vault_secret.user_password.value}"}))
+    templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
   )
   depends_on = [
     azurerm_network_interface.scheduler
   ]
 }
 
-resource "azurerm_virtual_machine_extension" "scheduler_windows" {
+resource "azurerm_virtual_machine_extension" "custom_windows" {
   for_each = {
     for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.fileName != "" && x.operatingSystem.type == "Windows" 
   }
@@ -247,6 +278,27 @@ resource "azurerm_virtual_machine_extension" "scheduler_windows" {
   virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     commandToExecute: "PowerShell -ExecutionPolicy Unrestricted -Command \"& {${local.customScriptFileCreate}}\" ; PowerShell -ExecutionPolicy Unrestricted -File ${local.customScriptFileOutput}"
+  })
+  depends_on = [
+    azurerm_windows_virtual_machine.scheduler
+  ]
+}
+
+resource "azurerm_virtual_machine_extension" "monitor_windows" {
+  for_each = {
+    for x in var.virtualMachines : x.name => x if x.name != "" && x.monitorExtension.enable && x.operatingSystem.type == "Windows" 
+  }
+  name                       = "Monitor"
+  type                       = "MicrosoftMonitoringAgent"
+  publisher                  = "Microsoft.EnterpriseCloud.Monitoring"
+  type_handler_version       = "1.0"
+  auto_upgrade_minor_version = true
+  virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
+  settings = jsonencode({
+    workspaceId: data.azurerm_log_analytics_workspace.monitor.workspace_id
+  })
+  protected_settings = jsonencode({
+    workspaceKey: data.azurerm_log_analytics_workspace.monitor.primary_shared_key
   })
   depends_on = [
     azurerm_windows_virtual_machine.scheduler
