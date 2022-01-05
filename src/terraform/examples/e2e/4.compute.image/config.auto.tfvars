@@ -52,8 +52,7 @@ imageTemplates = [
     image = {
       definitionName = "LinuxFarm"
       sourceType     = "PlatformImage"
-      customizer     = "customize.sh"
-      terminater     = "terminate.sh"
+      customScript   = "customize.sh"
       inputVersion   = "Latest"
       outputVersion  = "10.0.0"
     }
@@ -70,8 +69,7 @@ imageTemplates = [
     image = {
       definitionName = "LinuxFarm"
       sourceType     = "PlatformImage"
-      customizer     = "customize.sh"
-      terminater     = "terminate.sh"
+      customScript   = "customize.sh"
       inputVersion   = "Latest"
       outputVersion  = "1.0.0"
     }
@@ -88,8 +86,7 @@ imageTemplates = [
     image = {
       definitionName = "LinuxWorkstation"
       sourceType     = "PlatformImage"
-      customizer     = "customize.sh"
-      terminater     = "terminate.sh"
+      customScript   = "customize.sh"
       inputVersion   = "Latest"
       outputVersion  = "3.0.0"
     }
@@ -106,8 +103,7 @@ imageTemplates = [
     image = {
       definitionName = "LinuxWorkstation"
       sourceType     = "PlatformImage"
-      customizer     = "customize.sh"
-      terminater     = "terminate.sh"
+      customScript   = "customize.sh"
       inputVersion   = "Latest"
       outputVersion  = "4.0.0"
     }
@@ -124,8 +120,7 @@ imageTemplates = [
     image = {
       definitionName = "WindowsScheduler"
       sourceType     = "PlatformImage"
-      customizer     = "customize.ps1"
-      terminater     = "terminate.ps1"
+      customScript   = "customize.ps1"
       inputVersion   = "Latest"
       outputVersion  = "10.0.0"
     }
@@ -142,8 +137,7 @@ imageTemplates = [
     image = {
       definitionName = "WindowsFarm"
       sourceType     = "PlatformImage"
-      customizer     = "customize.ps1"
-      terminater     = "terminate.ps1"
+      customScript   = "customize.ps1"
       inputVersion   = "Latest"
       outputVersion  = "1.0.0"
     }
@@ -160,8 +154,7 @@ imageTemplates = [
     image = {
       definitionName = "WindowsWorkstation"
       sourceType     = "PlatformImage"
-      customizer     = "customize.ps1"
-      terminater     = "terminate.ps1"
+      customScript   = "customize.ps1"
       inputVersion   = "Latest"
       outputVersion  = "3.0.0"
     }
@@ -178,8 +171,7 @@ imageTemplates = [
     image = {
       definitionName = "WindowsWorkstation"
       sourceType     = "PlatformImage"
-      customizer     = "customize.ps1"
-      terminater     = "terminate.ps1"
+      customScript   = "customize.ps1"
       inputVersion   = "Latest"
       outputVersion  = "4.0.0"
     }

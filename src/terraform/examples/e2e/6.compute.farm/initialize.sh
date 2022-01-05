@@ -13,13 +13,18 @@ mount -a
   chmod -R 777 $fsMountPoint
 %{ endfor }
 
+customDataInput="/var/lib/waagent/ovf-env.xml"
+customDataOutput="/var/lib/waagent/terminate.sh"
+customData=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $customDataInput)
+echo $customData | base64 -d | gzip -d > $customDataOutput
+
 servicePath="/etc/systemd/system/terminate.service"
 echo "[Unit]" > $servicePath
 echo "Description=Scheduled Event Handler Service" >> $servicePath
 echo "" >> $servicePath
 echo "[Service]" >> $servicePath
 echo "Environment=PATH=$schedulerPath:$PATH" >> $servicePath
-echo "ExecStart=/bin/bash /tmp/terminate.sh" >> $servicePath
+echo "ExecStart=/bin/bash $customDataOutput" >> $servicePath
 echo "" >> $servicePath
 timerPath="/etc/systemd/system/terminate.timer"
 echo "[Unit]" > $timerPath

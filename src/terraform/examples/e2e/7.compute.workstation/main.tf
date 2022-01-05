@@ -121,12 +121,6 @@ data "azurerm_key_vault_secret" "admin_password" {
   key_vault_id = data.azurerm_key_vault.vault.id
 }
 
-locals {
-  customScriptFileInput  = "C:\\AzureData\\CustomData.bin"
-  customScriptFileOutput = "C:\\AzureData\\CustomData.ps1"
-  customScriptFileCreate = "$inputStream = New-Object System.IO.FileStream ${local.customScriptFileInput}, ([System.IO.FileMode]::Open), ([System.IO.FileAccess]::Read), ([System.IO.FileShare]::Read) ; $streamReader = New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($inputStream, [System.IO.Compression.CompressionMode]::Decompress)) ; Out-File -InputObject $streamReader.ReadToEnd() -FilePath ${local.customScriptFileOutput}"
-}
-
 resource "azurerm_resource_group" "workstation" {
   name     = var.resourceGroupName
   location = module.global.regionName
@@ -230,9 +224,6 @@ resource "azurerm_windows_virtual_machine" "workstation" {
   boot_diagnostics {
     storage_account_uri = each.value.bootDiagnostics.storageAccountUri
   }
-  custom_data = each.value.customExtension.fileName == "" ? null : base64gzip(
-    templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
-  )
   depends_on = [
     azurerm_network_interface.workstation
   ]
@@ -249,7 +240,9 @@ resource "azurerm_virtual_machine_extension" "workstation_windows" {
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
-    commandToExecute: "PowerShell -ExecutionPolicy Unrestricted -Command \"& {${local.customScriptFileCreate}}\" ; PowerShell -ExecutionPolicy Unrestricted -File ${local.customScriptFileOutput}"
+    commandToExecute: "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
+      templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters), "UTF-16LE"
+    )}"
   })
   depends_on = [
     azurerm_windows_virtual_machine.workstation

@@ -40,8 +40,9 @@ virtualMachineScaleSets = [
       machineMaxPrice = -1       // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#pricing
     }
     terminateNotification = {    // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
-      enable         = true
-      timeoutMinutes = "PT5M"
+      enable       = true
+      timeoutDelay = "PT5M"
+      eventHandler = "terminate.sh"
     }
     bootDiagnostics = {
       storageAccountUri = ""
@@ -85,8 +86,9 @@ virtualMachineScaleSets = [
       machineMaxPrice = -1       // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#pricing
     }
     terminateNotification = {    // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
-      enable         = true
-      timeoutMinutes = "PT5M"
+      enable       = true
+      timeoutDelay = "PT5M"
+      eventHandler = "terminate.ps1"
     }
     bootDiagnostics = {
       storageAccountUri = ""

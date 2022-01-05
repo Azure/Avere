@@ -77,8 +77,9 @@ variable "virtualMachineScaleSets" {
         )
         terminateNotification = object(
           {
-            enable         = bool
-            timeoutMinutes = string
+            enable       = bool
+            timeoutDelay = string
+            eventHandler = string
           }
         )
         bootDiagnostics = object(
@@ -138,12 +139,6 @@ data "azurerm_key_vault_secret" "admin_password" {
   key_vault_id = data.azurerm_key_vault.vault.id
 }
 
-locals {
-  customScriptFileInput  = "C:\\AzureData\\CustomData.bin"
-  customScriptFileOutput = "C:\\AzureData\\CustomData.ps1"
-  customScriptFileCreate = "$inputStream = New-Object System.IO.FileStream ${local.customScriptFileInput}, ([System.IO.FileMode]::Open), ([System.IO.FileAccess]::Read), ([System.IO.FileShare]::Read) ; $streamReader = New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($inputStream, [System.IO.Compression.CompressionMode]::Decompress)) ; Out-File -InputObject $streamReader.ReadToEnd() -FilePath ${local.customScriptFileOutput}"
-}
-
 resource "azurerm_resource_group" "farm" {
   name     = var.resourceGroupName
   location = module.global.regionName
@@ -167,6 +162,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   max_bid_price                   = each.value.spot.evictionPolicy != "" ? each.value.spot.machineMaxPrice : -1
   single_placement_group          = false
   overprovision                   = false
+  custom_data = base64gzip(
+    templatefile(each.value.terminateNotification.eventHandler, {})
+  )
   network_interface {
     name    = each.value.name
     primary = true
@@ -217,7 +215,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     for_each = each.value.terminateNotification.enable ? [1] : [] 
     content {
       enabled = each.value.terminateNotification.enable
-      timeout = each.value.terminateNotification.timeoutMinutes
+      timeout = each.value.terminateNotification.timeoutDelay
     }
   }
   boot_diagnostics {
@@ -242,8 +240,8 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   max_bid_price          = each.value.spot.evictionPolicy != "" ? each.value.spot.machineMaxPrice : -1
   single_placement_group = false
   overprovision          = false
-  custom_data = each.value.customExtension.fileName == "" ? null : base64gzip(
-    templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
+  custom_data = base64gzip(
+    templatefile(each.value.terminateNotification.eventHandler, {})
   )
   network_interface {
     name    = each.value.name
@@ -278,7 +276,9 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       type_handler_version       = "1.10"
       auto_upgrade_minor_version = true
       settings = jsonencode({
-        commandToExecute: "PowerShell -ExecutionPolicy Unrestricted -Command \"& {${local.customScriptFileCreate}}\" ; PowerShell -ExecutionPolicy Unrestricted -File ${local.customScriptFileOutput}"
+        commandToExecute: "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
+          templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters), "UTF-16LE"
+        )}"
       })
     }
   }
@@ -286,7 +286,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     for_each = each.value.terminateNotification.enable ? [1] : [] 
     content {
       enabled = each.value.terminateNotification.enable
-      timeout = each.value.terminateNotification.timeoutMinutes
+      timeout = each.value.terminateNotification.timeoutDelay
     }
   }
   boot_diagnostics {
