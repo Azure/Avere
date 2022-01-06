@@ -108,14 +108,6 @@ if [ $subnetName == "Workstation" ]; then
   yum -y groups install "KDE Plasma Workspaces"
   echo "Customize (End): Workstation Desktop"
 
-  echo "Customize (Start): Blender Deadline Submitter"
-  fileName="Blender-submitter-linux-x64-installer.run"
-  downloadUrl="$storageContainerUrl/Deadline/$schedulerVersion/Blender/Installers/$fileName$storageContainerSas"
-  curl -L -o $fileName $downloadUrl
-  chmod +x $fileName
-  ./$fileName --mode unattended --source bundle --blender_dir $rendererPath --deadline_dir x
-  echo "Customize (End): Blender Deadline Submitter"
-
   echo "Customize (Start): Teradici PCoIP Agent"
   fileName="teradici-pcoip-agent_rpm.sh"
   downloadUrl="$storageContainerUrl/Teradici/$fileName$storageContainerSas"

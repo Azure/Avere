@@ -111,21 +111,12 @@ if ($subnetName -eq "Farm") {
 }
 
 if ($subnetName -eq "Workstation") {
-  Write-Host "Customize (Start): Blender Deadline Submitter"
-  $fileName = "Blender-submitter-windows-installer.exe"
-  $downloadUrl = "$storageContainerUrl/Deadline/$schedulerVersion/Blender/Installers/$fileName$storageContainerSas"
-  Invoke-WebRequest $downloadUrl -OutFile $fileName
-  $fileArgs = '--mode unattended --source bundle --blender_dir "' + $rendererPath + '" --deadline_dir x'
-  Start-Process -FilePath .\$fileName -ArgumentList $fileArgs -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
-  Write-Host "Customize (End): Blender Deadline Submitter"
-
   Write-Host "Customize (Start): Deadline Monitor Shortcut"
   $shortcutPath = "$env:AllUsersProfile\Desktop\Deadline Monitor.lnk"
   $scriptShell = New-Object -ComObject WScript.Shell
   $shortcut = $scriptShell.CreateShortcut($shortcutPath)
   $shortcut.WorkingDirectory = $schedulerPath
   $shortcut.TargetPath = "$schedulerPath\deadlinemonitor.exe"
-  $shortcut.Arguments = ""
   $shortcut.Save()
   Write-Host "Customize (End): Deadline Monitor Shortcut"
 
@@ -135,7 +126,6 @@ if ($subnetName -eq "Workstation") {
   $shortcut = $scriptShell.CreateShortcut($shortcutPath)
   $shortcut.WorkingDirectory = $rendererPath
   $shortcut.TargetPath = "$rendererPath\blender.exe"
-  $shortcut.Arguments = "--python 3.0\scripts\addons\DeadlineBlenderClient.py"
   $shortcut.Save()
   Write-Host "Customize (End): Blender Shortcut"
 
