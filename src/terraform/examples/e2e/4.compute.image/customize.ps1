@@ -50,7 +50,7 @@ $schedulerRepositoryPath = "C:\DeadlineRepository"
 $rendererPaths = ""
 $schedulerPath = "C:\Program Files\Thinkbox\Deadline10\bin"
 $rendererPathBlender = "C:\Program Files\Blender Foundation\Blender"
-$rendererPathUnreal = "C:\Program Files (x86)\Epic Games"
+$rendererPathUnreal = "C:\Unreal"
 if ($renderEngines -like "*Blender*") {
   $rendererPaths += ";$rendererPathBlender"
 }
@@ -115,14 +115,11 @@ if ($renderEngines -like "*Blender*") {
 if ($renderEngines -like "*Unreal*") {
   Write-Host "Customize (Start): Unreal"
   $rendererVersion = "5.0.0"
-  $fileName = "UnrealEngine-$rendererVersion-early-access-1.zip"
+  $fileName = "UnrealEngine-$rendererVersion-early-access-2.zip"
   $downloadUrl = "$storageContainerUrl/Unreal/$rendererVersion/$fileName$storageContainerSas"
   Invoke-WebRequest $downloadUrl -OutFile $fileName
-  Expand-Archive -Path $fileName
-  New-Item -Path $rendererPathUnreal -ItemType Directory
-  Set-Location -Path "UnrealEngine*"
-  Move-Item -Path * -Destination $rendererPathUnreal
-  Set-Location -Path ".."
+  Expand-Archive -Path $fileName -DestinationPath $rendererPathUnreal
+  Move-Item -Path "$rendererPathUnreal\UnrealEngine*\*" -Destination $rendererPathUnreal
   Write-Host "Customize (End): Unreal"
 }
 

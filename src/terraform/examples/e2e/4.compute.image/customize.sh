@@ -102,22 +102,26 @@ if [[ $renderEngines == *Blender* ]]; then
   downloadUrl="$storageContainerUrl/Blender/$rendererVersion/$fileName$storageContainerSas"
   curl -L -o $fileName $downloadUrl
   tar -xJf $fileName
-  mkdir Blender
+  localDirectory="Blender"
+  mkdir $localDirectory
   cd blender*
-  mv * ../Blender
+  mv * ../$localDirectory
+  cd ..
   echo "Customize (End): Blender"
 fi
 
 if [[ $renderEngines == *Unreal* ]]; then
   echo "Customize (Start): Unreal"
   rendererVersion="5.0.0"
-  fileName="UnrealEngine-$rendererVersion-early-access-1.tar.gz"
+  fileName="UnrealEngine-$rendererVersion-early-access-2.tar.gz"
   downloadUrl="$storageContainerUrl/Unreal/$rendererVersion/$fileName$storageContainerSas"
   curl -L -o $fileName $downloadUrl
   tar -xf $fileName
-  mkdir Unreal
+  localDirectory="Unreal"
+  mkdir $localDirectory
   cd UnrealEngine*
-  mv * ../UnrealEngine
+  mv * ../$localDirectory
+  cd ..
   echo "Customize (End): Unreal"
 fi
 
