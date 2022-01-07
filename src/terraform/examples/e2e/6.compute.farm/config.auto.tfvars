@@ -7,7 +7,7 @@ virtualMachineScaleSets = [
     imageId = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/AzureRender.Image/providers/Microsoft.Compute/galleries/Gallery/images/LinuxFarm/versions/1.0.0"
     machine = {
       size  = "Standard_HB120rs_v2"
-      count = 10
+      count = 1
     }
     operatingSystem = {
       type = "Linux"

@@ -45,16 +45,17 @@ schedulerLicense="LicenseFree"
 schedulerDatabasePath="/DeadlineDatabase"
 schedulerRepositoryPath="/DeadlineRepository"
 
-rendererVersion="3.0.0"
-
+rendererPaths=""
 schedulerPath="/opt/Thinkbox/Deadline10/bin"
-rendererPath="/usr/local/Blender"
-profilePath="/etc/profile.d/aaa.sh"
-if [ $subnetName == "Scheduler" ]; then
-  echo "PATH=$PATH:$schedulerPath" >> $profilePath
-else
-  echo "PATH=$PATH:$schedulerPath:$rendererPath" >> $profilePath
+rendererPathBlender="/usr/local/Blender"
+rendererPathUnreal="/usr/local/Unreal"
+if [[ $renderEngines == *Blender* ]]; then
+  rendererPaths="$rendererPaths:$rendererPathBlender"
 fi
+if [[ $renderEngines == *Unreal* ]]; then
+  rendererPaths="$rendererPaths:$rendererPathUnreal"
+fi
+echo "PATH=$PATH:$schedulerPath$rendererPaths" >> /etc/profile.d/aaa.sh
 
 echo "Customize (Start): Deadline Download"
 fileName="Deadline-$schedulerVersion-linux-installers.tar"
@@ -73,8 +74,9 @@ else
   clientArgs="--slavestartup $workerStartup --launcherdaemon true --daemonuser $userName"
 fi
 ./$fileName --mode unattended --licensemode $schedulerLicense $clientArgs
-$schedulerPath/deadlinecommand -ChangeRepositorySkipValidation Direct /mnt/scheduler
-$schedulerPath/deadlinecommand -ChangeLicenseMode $schedulerLicense
+fileName="$schedulerPath/deadlinecommand"
+./$fileName -ChangeRepositorySkipValidation Direct /mnt/scheduler
+./$fileName -ChangeLicenseMode $schedulerLicense
 echo "Customize (End): Deadline Client"
 
 if [ $subnetName == "Scheduler" ]; then
@@ -86,13 +88,16 @@ if [ $subnetName == "Scheduler" ]; then
   echo "$schedulerRepositoryPath *(rw,no_root_squash)" >> /etc/exports
   exportfs -a
   echo "Customize (End): Deadline Repository"
-else
+fi
+
+if [[ $renderEngines == *Blender* ]]; then
   echo "Customize (Start): Blender"
   yum -y install libXi
   yum -y install libXxf86vm
   yum -y install libXfixes
   yum -y install libXrender
   yum -y install libGL
+  rendererVersion="3.0.0"
   fileName="blender-$rendererVersion-linux-x64.tar.xz"
   downloadUrl="$storageContainerUrl/Blender/$rendererVersion/$fileName$storageContainerSas"
   curl -L -o $fileName $downloadUrl
@@ -101,6 +106,19 @@ else
   cd blender*
   mv * ../Blender
   echo "Customize (End): Blender"
+fi
+
+if [[ $renderEngines == *Unreal* ]]; then
+  echo "Customize (Start): Unreal"
+  rendererVersion="5.0.0"
+  fileName="UnrealEngine-$rendererVersion-early-access-1.tar.gz"
+  downloadUrl="$storageContainerUrl/Unreal/$rendererVersion/$fileName$storageContainerSas"
+  curl -L -o $fileName $downloadUrl
+  tar -xf $fileName
+  mkdir Unreal
+  cd UnrealEngine*
+  mv * ../UnrealEngine
+  echo "Customize (End): Unreal"
 fi
 
 if [ $subnetName == "Workstation" ]; then

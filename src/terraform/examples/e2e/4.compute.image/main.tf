@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.1.2"
+  required_version = ">= 1.1.3"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.90.0"
+      version = "~>2.91.0"
     }
   }
   backend "azurerm" {
@@ -53,16 +53,17 @@ variable "imageTemplates" {
             sourceType     = string
             customScript   = string
             inputVersion   = string
-            outputVersion  = string
           }
         )
         build = object(
           {
+            userName       = string
             subnetName     = string
             machineSize    = string
             osDiskSizeGB   = number
             timeoutMinutes = number
-            userName       = string
+            outputVersion  = string
+            renderEngines  = string
           }
         )
       }
@@ -353,8 +354,8 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
             "distribute": [
               {
                 "type": "SharedImage",
-                "runOutputName": "[concat(parameters('imageTemplates')[copyIndex()].name, '-', parameters('imageTemplates')[copyIndex()].image.outputVersion)]",
-                "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images/versions', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName, parameters('imageTemplates')[copyIndex()].image.outputVersion)]",
+                "runOutputName": "[concat(parameters('imageTemplates')[copyIndex()].name, '-', parameters('imageTemplates')[copyIndex()].build.outputVersion)]",
+                "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images/versions', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName, parameters('imageTemplates')[copyIndex()].build.outputVersion)]",
                 "replicationRegions": [
                   "[resourceGroup().location]"
                 ],

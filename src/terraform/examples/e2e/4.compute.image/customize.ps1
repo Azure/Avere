@@ -1,8 +1,9 @@
 param (
+  [string] $userName,
+  [string] $userPassword,
   [string] $subnetName,
   [string] $machineSize,
-  [string] $userName,
-  [string] $userPassword
+  [string] $renderEngines
 )
 
 Set-Location -Path "C:\Users\Public\Downloads"
@@ -46,11 +47,17 @@ $schedulerLicense = "LicenseFree"
 $schedulerDatabasePath = "C:\DeadlineDatabase"
 $schedulerRepositoryPath = "C:\DeadlineRepository"
 
-$rendererVersion = "3.0.0"
-
+$rendererPaths = ""
 $schedulerPath = "C:\Program Files\Thinkbox\Deadline10\bin"
-$rendererPath = "C:\Program Files\Blender Foundation\Blender"
-setx PATH "$env:PATH;$schedulerPath;$rendererPath" /m
+$rendererPathBlender = "C:\Program Files\Blender Foundation\Blender"
+$rendererPathUnreal = "C:\Program Files (x86)\Epic Games"
+if ($renderEngines -like "*Blender*") {
+  $rendererPaths += ";$rendererPathBlender"
+}
+if ($renderEngines -like "*Unreal*") {
+  $rendererPaths += ";$rendererPathUnreal"
+}
+setx PATH "$env:PATH;$schedulerPath$rendererPaths" /m
 
 Write-Host "Customize (Start): Deadline Download"
 $fileName = "Deadline-$schedulerVersion-windows-installers.zip"
@@ -93,13 +100,30 @@ if ($subnetName -eq "Scheduler") {
   Install-WindowsFeature -Name "FS-NFS-Service"
   New-NfsShare -Name "DeadlineRepository" -Path $schedulerRepositoryPath -Permission ReadWrite
   Write-Host "Customize (End): Deadline Repository"
-} else {
+}
+
+if ($renderEngines -like "*Blender*") {
   Write-Host "Customize (Start): Blender"
+  $rendererVersion = "3.0.0"
   $fileName = "blender-$rendererVersion-windows-x64.msi"
   $downloadUrl = "$storageContainerUrl/Blender/$rendererVersion/$fileName$storageContainerSas"
   Invoke-WebRequest $downloadUrl -OutFile $fileName
-  Start-Process -FilePath $fileName -ArgumentList ('INSTALL_ROOT="' + $rendererPath + '" /quiet /norestart') -Wait
+  Start-Process -FilePath $fileName -ArgumentList ('INSTALL_ROOT="' + $rendererPathBlender + '" /quiet /norestart') -Wait
   Write-Host "Customize (End): Blender"  
+}
+
+if ($renderEngines -like "*Unreal*") {
+  Write-Host "Customize (Start): Unreal"
+  $rendererVersion = "5.0.0"
+  $fileName = "UnrealEngine-$rendererVersion-early-access-1.zip"
+  $downloadUrl = "$storageContainerUrl/Unreal/$rendererVersion/$fileName$storageContainerSas"
+  Invoke-WebRequest $downloadUrl -OutFile $fileName
+  Expand-Archive -Path $fileName
+  New-Item -Path $rendererPathUnreal -ItemType Directory
+  Set-Location -Path "UnrealEngine*"
+  Move-Item -Path * -Destination $rendererPathUnreal
+  Set-Location -Path ".."
+  Write-Host "Customize (End): Unreal"
 }
 
 if ($subnetName -eq "Farm") {
@@ -124,8 +148,8 @@ if ($subnetName -eq "Workstation") {
   $shortcutPath = "$env:AllUsersProfile\Desktop\Blender.lnk"
   $scriptShell = New-Object -ComObject WScript.Shell
   $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-  $shortcut.WorkingDirectory = $rendererPath
-  $shortcut.TargetPath = "$rendererPath\blender.exe"
+  $shortcut.WorkingDirectory = $rendererPathBlender
+  $shortcut.TargetPath = "$rendererPathBlender\blender.exe"
   $shortcut.Save()
   Write-Host "Customize (End): Blender Shortcut"
 

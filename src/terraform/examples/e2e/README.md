@@ -15,7 +15,7 @@ This folder contains the end-to-end modular framework for automated deployment o
 | [8 Render Job Submission](#8-render-job-submission) | Submit a render farm job from an Azure remote artist workstation. |
 
 To manage deployment of the Azure Artist Anywhere solution from your local workstation, the following prerequisite steps are required.
-1. Make sure the [Terraform CLI](https://www.terraform.io/downloads.html) (v1.1.2 or higher) is downloaded locally and accessible in your path environment variable.
+1. Make sure the [Terraform CLI](https://www.terraform.io/downloads.html) (v1.1.3 or higher) is downloaded locally and accessible in your path environment variable.
 1. Make sure the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) is installed locally and accessible in your path environment variable.
 1. Make sure [Git](https://git-scm.com/downloads) is installed locally.
 1. Run `az account show` to ensure that your current Azure subscription session context is set appropriately. To change your current Azure subscription session context, run `az account set --subscription YOUR_SUBSCRIPTION_ID`
