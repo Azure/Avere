@@ -75,8 +75,8 @@ else
 fi
 ./$fileName --mode unattended --licensemode $schedulerLicense $clientArgs
 fileName="$schedulerPath/deadlinecommand"
-./$fileName -ChangeRepositorySkipValidation Direct /mnt/scheduler
-./$fileName -ChangeLicenseMode $schedulerLicense
+$fileName -ChangeRepositorySkipValidation Direct /mnt/scheduler
+$fileName -ChangeLicenseMode $schedulerLicense
 echo "Customize (End): Deadline Client"
 
 if [ $subnetName == "Scheduler" ]; then

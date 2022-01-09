@@ -12,7 +12,7 @@ This folder contains the end-to-end modular framework for automated deployment o
 | [5 Compute Scheduler](#5-compute-scheduler) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/) for distributed job scheduling across a render farm. |
 | [6 Compute Farm](#6-compute-farm) | Deploys [Virtual Machine Scale Sets](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview) for [Linux](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) or [Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) render farms. |
 | [7 Compute Workstation](#7-compute-workstation) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/) for [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) artist workstations. |
-| [8 Render Job Submission](#8-render-job-submission) | Submit a render farm job from an Azure remote artist workstation. |
+| [8 Render Job Submission](#8-render-job-submission) | Submit render farm jobs from [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) artist workstations. |
 
 To manage deployment of the Azure Artist Anywhere solution from your local workstation, the following prerequisite steps are required.
 1. Make sure the [Terraform CLI](https://www.terraform.io/downloads.html) (v1.1.3 or higher) is downloaded locally and accessible in your path environment variable.
@@ -160,14 +160,22 @@ Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.
 
 ## 8 Render Job Submission
 
-Now that deployment of the Azure Artist Anywhere solution is complete, this section provides a render job submission example via the general purpose Deadline [SubmitCommandLineJob](https://docs.thinkboxsoftware.com/products/deadline/10.1/1_User%20Manual/manual/command-line-arguments-jobs.html#submitcommandlinejob) API.
+Now that deployment of the Azure Artist Anywhere solution is complete, this section provides render job submission examples via the general purpose Deadline [SubmitCommandLineJob](https://docs.thinkboxsoftware.com/products/deadline/10.1/1_User%20Manual/manual/command-line-arguments-jobs.html#submitcommandlinejob) API.
 
-### Linux Render Farm (*the following command can be executed from a Linux or Windows artist workstation*)
+### Linux Render Farm (*the following example jobs can be submitted from a Linux or Windows artist workstation*)
 
-    deadlinecommand -SubmitCommandLineJob -name azure -executable blender -arguments "-b -y -noaudio /mnt/show/read/blender/splash/3.0.blend --render-output /mnt/show/write/blender/splash/ --render-frame <STARTFRAME>..<ENDFRAME>"
+    deadlinecommand -SubmitCommandLineJob -name ellie -executable blender -arguments "-b -y /mnt/show/read/blender/ellie/3.0.blend --render-output /mnt/show/write/blender/ellie/output/ --render-frame <STARTFRAME>..<ENDFRAME>"
 
-### Windows Render Farm (*the following command can be executed from a Linux or Windows artist workstation*)
+    deadlinecommand -SubmitCommandLineJob -name amy.frames -executable blender -arguments "-b -y /mnt/show/read/blender/amy/rain_restaurant.blend --render-output /mnt/show/write/blender/amy/output/ --engine CYCLES --render-frame <STARTFRAME>..<ENDFRAME>" -frames 100-280 -chunksize 19
 
-    deadlinecommand -SubmitCommandLineJob -name azure -executable blender.exe -arguments "-b -y -noaudio R:\blender\splash\3.0.blend --render-output W:\blender\splash\ --render-frame <STARTFRAME>..<ENDFRAME>"
+    deadlinecommand -SubmitCommandLineJob -name amy.video -executable blender -arguments "-b -y /mnt/show/read/blender/amy/rain_restaurant.blend --render-output /mnt/show/write/blender/amy/output/ --engine CYCLES  --render-format FFMPEG --render-anim" -frames 100-280 -chunksize 19
+
+### Windows Render Farm (*the following example jobs can be submitted from a Linux or Windows artist workstation*)
+
+    deadlinecommand -SubmitCommandLineJob -name ellie -executable blender.exe -arguments "-b -y R:\blender\ellie\3.0.blend --render-output W:\blender\ellie\output\ --render-frame <STARTFRAME>..<ENDFRAME>"
+
+    deadlinecommand -SubmitCommandLineJob -name amy.frames -executable blender.exe -arguments "-b -y R:\blender\amy\rain_restaurant.blend --render-output W:\blender\amy\output\ --engine CYCLES --render-frame <STARTFRAME>..<ENDFRAME>" -frames 100-280 -chunksize 19
+
+    deadlinecommand -SubmitCommandLineJob -name amy.video -executable blender.exe -arguments "-b -y R:\blender\amy\rain_restaurant.blend --render-output W:\blender\amy\output\ --engine CYCLES  --render-format FFMPEG --render-anim" -frames 100-280 -chunksize 19
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com
