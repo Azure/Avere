@@ -1,4 +1,4 @@
-$mountFile = "C:\Windows\Temp\mount.bat"
+$mountFile = "C:\Windows\Temp\mounts.bat"
 New-Item -Path $mountFile -ItemType File
 %{ for fsMount in fileSystemMounts }
   Add-Content -Path $mountFile -Value "${fsMount}"

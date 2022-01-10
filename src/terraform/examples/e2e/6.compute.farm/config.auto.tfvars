@@ -76,7 +76,7 @@ virtualMachineScaleSets = [
       parameters = {
         fileSystemMounts = [
           "mount -o anon \\\\cache.media.studio\\mnt\\farm R:",
-          "mount -o anon \\\\azasset.blob.core.windows.net\\azasset\\show W:",
+          "mount -o anon -o sec=sys -o nolock \\\\azasset.blob.core.windows.net\\azasset\\show W:",
           "mount -o anon \\\\scheduler.media.studio\\DeadlineRepository S:"
         ]
       }
