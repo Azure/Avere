@@ -11,11 +11,11 @@ managedIdentityName = "AzRender"
 
 # Storage - https://docs.microsoft.com/en-us/azure/storage/
 storage = {
-  accountName        = "azrender"  // Name must be globally unique, lowercase alphanumeric
+e, lowercase alphanumeric
   accountType        = "StorageV2" // https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview
   accountRedundancy  = "LRS"       // https://docs.microsoft.com/en-us/azure/storage/common/storage-redundancy
   accountPerformance = "Standard"  // https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-performance-tiers
-  containerName      = "terraform" // Storage container for Terraform .tfstate files
+  containerName      = "terraform" // Storage container name for Terraform .tfstate files
 }
 
 # Key Vault - https://docs.microsoft.com/en-us/azure/key-vault/general/overview

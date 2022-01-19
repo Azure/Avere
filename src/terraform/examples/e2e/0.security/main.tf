@@ -27,7 +27,6 @@ variable "managedIdentityName" {
 variable "storage" {
   type = object(
     {
-      accountName        = string
       accountType        = string
       accountRedundancy  = string
       accountPerformance = string
@@ -87,7 +86,7 @@ resource "azurerm_user_assigned_identity" "identity" {
 }
 
 resource "azurerm_storage_account" "storage" {
-  name                     = var.storage.accountName
+  name                     = module.global.securityStorageAccountName
   resource_group_name      = azurerm_resource_group.security.name
   location                 = azurerm_resource_group.security.location
   account_kind             = var.storage.accountType

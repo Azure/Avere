@@ -1,7 +1,3 @@
-###############################################################################################################
-# IMPORTANT: Make sure the following variable default values match the config values in the 0.Security module #
-###############################################################################################################
-
 variable "regionName" {
   type    = string
   default = "WestUS2" // Set to the target Azure region name (az account list-locations --query [].name)
@@ -11,11 +7,9 @@ variable "securityResourceGroupName" {
   type    = string
   default = "AzureRender"
 }
-
-# Terraform backend state configuration
-variable "terraformStorageAccountName" {
+variable "securityStorageAccountName" {
   type    = string
-  default = "azrender"
+  default = "azrender" // Set to a globally unique and available storage account name (lowercase alphanumeric)
 }
 variable "terraformStorageContainerName" {
   type    = string
@@ -70,9 +64,8 @@ output "regionName" {
 output "securityResourceGroupName" {
   value = var.securityResourceGroupName
 }
-
-output "terraformStorageAccountName" {
-  value = var.terraformStorageAccountName
+output "securityStorageAccountName" {
+  value = var.securityStorageAccountName
 }
 output "terraformStorageContainerName" {
   value = var.terraformStorageContainerName

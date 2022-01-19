@@ -6,33 +6,36 @@ param (
   [string] $renderEngines
 )
 
-Set-Location -Path "C:\Users\Public\Downloads"
+$homeDirectory = "C:\Users\Public\Downloads"
+Set-Location -Path $homeDirectory
 
 #   NVv3 - https://docs.microsoft.com/en-us/azure/virtual-machines/nvv3-series
 # NCT4v3 - https://docs.microsoft.com/en-us/azure/virtual-machines/nct4-v3-series
 if (($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v3")) -or
     ($machineSize.StartsWith("Standard_NC") -and $machineSize.EndsWith("T4_v3"))) {
   Write-Host "Customize (Start): GPU Driver (NVv3)"
-  $fileName = "nvidia-gpu.exe"
+  $installFile = "nvidia-gpu.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=874181"
-  Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl
-  Start-Process -FilePath .\$fileName -ArgumentList "/s /noreboot" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
+  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Start-Process -FilePath .\$installFile -ArgumentList "/s /noreboot" -Wait -RedirectStandardError $installFile.Replace(".exe", "-error.txt") -RedirectStandardOutput $installFile.Replace(".exe", "-output.txt")
   Write-Host "Customize (End): GPU Driver (NVv3)"
 }
 
 # NVv4 - https://docs.microsoft.com/en-us/azure/virtual-machines/nvv4-series
 if ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v4")) {
   Write-Host "Customize (Start): GPU Driver (NVv4)"
-  $fileName = "amd-gpu.exe"
+  $installFile = "amd-gpu.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=2175154"
-  Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl
-  Start-Process -FilePath .\$fileName -ArgumentList "/S" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
+  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Start-Process -FilePath .\$installFile -ArgumentList "/S" -Wait -RedirectStandardError $installFile.Replace(".exe", "-error.txt") -RedirectStandardOutput $installFile.Replace(".exe", "-output.txt")
   Write-Host "Customize (End): GPU Driver (NVv4)"
 }
 
 if ($subnetName -ne "Scheduler") {
   Write-Host "Customize (Start): NFS Client"
-  DISM /Online /Enable-Feature /FeatureName:ClientForNFS-Infrastructure /All
+  $installFile = "dism.exe"
+  $featureName = "ClientForNFS-Infrastructure"
+  Start-Process -FilePath $installFile -ArgumentList "/Enable-Feature /FeatureName:$featureName /Online /All /NoRestart" -Wait -Verb RunAs
   $registryKeyPath = "HKLM:\SOFTWARE\Microsoft\ClientForNFS\CurrentVersion\Default"
   New-ItemProperty -Path $registryKeyPath -Name AnonymousUid -PropertyType DWORD -Value 0
   New-ItemProperty -Path $registryKeyPath -Name AnonymousGid -PropertyType DWORD -Value 0
@@ -50,9 +53,13 @@ $schedulerRepositoryPath = "C:\DeadlineRepository"
 $rendererPaths = ""
 $schedulerPath = "C:\Program Files\Thinkbox\Deadline10\bin"
 $rendererPathBlender = "C:\Program Files\Blender Foundation\Blender"
+$rendererPathMaya = "C:\Program Files\Autodesk\Maya2022"
 $rendererPathUnreal = "C:\Unreal"
 if ($renderEngines -like "*Blender*") {
   $rendererPaths += ";$rendererPathBlender"
+}
+if ($renderEngines -like "*Maya*") {
+  $rendererPaths += ";$rendererPathMaya"
 }
 if ($renderEngines -like "*Unreal*") {
   $rendererPaths += ";$rendererPathUnreal"
@@ -60,10 +67,10 @@ if ($renderEngines -like "*Unreal*") {
 setx PATH "$env:PATH;$schedulerPath$rendererPaths" /m
 
 Write-Host "Customize (Start): Deadline Download"
-$fileName = "Deadline-$schedulerVersion-windows-installers.zip"
-$downloadUrl = "$storageContainerUrl/Deadline/$schedulerVersion/$fileName$storageContainerSas"
-Invoke-WebRequest $downloadUrl -OutFile $fileName
-Expand-Archive -Path $fileName
+$installFile = "Deadline-$schedulerVersion-windows-installers.zip"
+$downloadUrl = "$storageContainerUrl/Deadline/$schedulerVersion/$installFile$storageContainerSas"
+Invoke-WebRequest $downloadUrl -OutFile $installFile
+Expand-Archive -Path $installFile
 Write-Host "Customize (End): Deadline Download"
 
 Write-Host "Customize (Start): Deadline Client"
@@ -71,7 +78,7 @@ netsh advfirewall firewall add rule name="Allow Deadline Worker" dir=in action=a
 netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$schedulerPath\deadlinemonitor.exe"
 netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$schedulerPath\deadlinelauncher.exe"
 Set-Location -Path "Deadline*"
-$fileName = "DeadlineClient-$schedulerVersion-windows-installer.exe"
+$installFile = "DeadlineClient-$schedulerVersion-windows-installer.exe"
 if ($subnetName -eq "Scheduler") {
   $clientArgs = "--slavestartup false --launcherservice false"
 } else {
@@ -83,19 +90,19 @@ if ($subnetName -eq "Scheduler") {
   }
   $clientArgs = "--slavestartup $workerStartup --launcherservice true --serviceuser $userName --servicepassword $userPassword"
 }
-Start-Process -FilePath .\$fileName -ArgumentList "--mode unattended --licensemode $schedulerLicense $clientArgs" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
-$fileName = "$schedulerPath\deadlinecommand.exe"
-Start-Process -FilePath "$fileName" -ArgumentList "-ChangeRepositorySkipValidation Direct S:\" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
-Start-Process -FilePath "$fileName" -ArgumentList "-ChangeLicenseMode $schedulerLicense" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
-Set-Location -Path ".."
+Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --licensemode $schedulerLicense $clientArgs" -Wait -RedirectStandardError $installFile.Replace(".exe", "-error.txt") -RedirectStandardOutput $installFile.Replace(".exe", "-output.txt")
+$installFile = "$schedulerPath\deadlinecommand.exe"
+Start-Process -FilePath "$installFile" -ArgumentList "-ChangeRepositorySkipValidation Direct S:\" -Wait -RedirectStandardError $installFile.Replace(".exe", "-error.txt") -RedirectStandardOutput $installFile.Replace(".exe", "-output.txt")
+Start-Process -FilePath "$installFile" -ArgumentList "-ChangeLicenseMode $schedulerLicense" -Wait -RedirectStandardError $installFile.Replace(".exe", "-error.txt") -RedirectStandardOutput $installFile.Replace(".exe", "-output.txt")
+Set-Location -Path $homeDirectory
 Write-Host "Customize (End): Deadline Client"
 
 if ($subnetName -eq "Scheduler") {
   Write-Host "Customize (Start): Deadline Repository"
   Set-Location -Path "Deadline*"
-  $fileName = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
-  Start-Process -FilePath .\$fileName -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --prefix $schedulerRepositoryPath --mongodir $schedulerDatabasePath --dbuser $userName --dbpassword $userPassword --requireSSL false" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
-  Set-Location -Path ".."
+  $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
+  Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --prefix $schedulerRepositoryPath --mongodir $schedulerDatabasePath --dbuser $userName --dbpassword $userPassword --requireSSL false" -Wait -RedirectStandardError $installFile.Replace(".exe", "-error.txt") -RedirectStandardOutput $installFile.Replace(".exe", "-output.txt")
+  Set-Location -Path $homeDirectory
   Install-WindowsFeature -Name "NFS-Client"
   Install-WindowsFeature -Name "FS-NFS-Service"
   New-NfsShare -Name "DeadlineRepository" -Path $schedulerRepositoryPath -Permission ReadWrite
@@ -105,21 +112,43 @@ if ($subnetName -eq "Scheduler") {
 if ($renderEngines -like "*Blender*") {
   Write-Host "Customize (Start): Blender"
   $rendererVersion = "3.0.0"
-  $fileName = "blender-$rendererVersion-windows-x64.msi"
-  $downloadUrl = "$storageContainerUrl/Blender/$rendererVersion/$fileName$storageContainerSas"
-  Invoke-WebRequest $downloadUrl -OutFile $fileName
-  Start-Process -FilePath $fileName -ArgumentList ('INSTALL_ROOT="' + $rendererPathBlender + '" /quiet /norestart') -Wait
-  Write-Host "Customize (End): Blender"  
+  $installFile = "blender-$rendererVersion-windows-x64.msi"
+  $downloadUrl = "$storageContainerUrl/Blender/$rendererVersion/$installFile$storageContainerSas"
+  Invoke-WebRequest $downloadUrl -OutFile $installFile
+  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $rendererPathBlender + '" /quiet /norestart') -Wait -RedirectStandardError $installFile.Replace(".msi", "-error.txt") -RedirectStandardOutput $installFile.Replace(".msi", "-output.txt")
+  Write-Host "Customize (End): Blender"
+}
+
+if ($renderEngines -like "*Maya*") {
+  Write-Host "Customize (Start): Maya"
+  $rendererVersion = "2022"
+  $installFile = "Autodesk_Maya_2022_3_ML_Windows_64bit_di_ML_setup_webinstall.exe"
+  $downloadUrl = "$storageContainerUrl/Maya/$rendererVersion/$installFile$storageContainerSas"
+  Invoke-WebRequest $downloadUrl -OutFile $installFile
+  Start-Process -FilePath .\$installFile -ArgumentList "--silent" -RedirectStandardError $installFile.Replace(".exe", "-error.txt") -RedirectStandardOutput $installFile.Replace(".exe", "-output.txt")
+  Start-Sleep -Seconds 600
+  Write-Host "Customize (End): Maya"
 }
 
 if ($renderEngines -like "*Unreal*") {
   Write-Host "Customize (Start): Unreal"
+  $installFile = "dism.exe"
+  $featureName = "NetFX3"
+  Start-Process -FilePath $installFile -ArgumentList "/Enable-Feature /FeatureName:$featureName /Online /All /NoRestart" -Wait -Verb RunAs
   $rendererVersion = "5.0.0"
-  $fileName = "UnrealEngine-$rendererVersion-early-access-2.zip"
-  $downloadUrl = "$storageContainerUrl/Unreal/$rendererVersion/$fileName$storageContainerSas"
-  Invoke-WebRequest $downloadUrl -OutFile $fileName
-  Expand-Archive -Path $fileName -DestinationPath $rendererPathUnreal
+  $installFile = "UnrealEngine-$rendererVersion-early-access-2.zip"
+  $downloadUrl = "$storageContainerUrl/Unreal/$rendererVersion/$installFile$storageContainerSas"
+  Invoke-WebRequest $downloadUrl -OutFile $installFile
+  Expand-Archive -Path $installFile -DestinationPath $rendererPathUnreal
   Move-Item -Path "$rendererPathUnreal\UnrealEngine*\*" -Destination $rendererPathUnreal
+  $installFile = "$rendererPathUnreal\Setup.bat"
+  $setupScript = Get-Content -Path $installFile
+  $setupScript = $setupScript.Replace(".\Engine\Binaries\Win64\UnrealVersionSelector", "rem .\Engine\Binaries\Win64\UnrealVersionSelector")
+  $setupScript = $setupScript.Replace("pause", "rem pause")
+  $setupScript = $setupScript.Replace("pushd", "rem pushd")
+  $setupScript = $setupScript.Replace("popd", "rem popd")
+  Set-Content -Path $installFile -Value $setupScript
+  Start-Process -FilePath $installFile -ArgumentList "--force" -Wait -RedirectStandardError $installFile.Replace(".bat", "-error.txt") -RedirectStandardOutput $installFile.Replace(".bat", "-output.txt")
   Write-Host "Customize (End): Unreal"
 }
 
@@ -151,11 +180,9 @@ if ($subnetName -eq "Workstation") {
   Write-Host "Customize (End): Blender Shortcut"
 
   Write-Host "Customize (Start): Teradici PCoIP Agent"
-  $fileName = "pcoip-agent-graphics_21.07.6.exe"
-  $downloadUrl = "$storageContainerUrl/Teradici/$fileName$storageContainerSas"
-  Invoke-WebRequest $downloadUrl -OutFile $fileName
-  Start-Process -FilePath .\$fileName -ArgumentList "/S /NoPostReboot /Force" -Wait -RedirectStandardError $fileName.Replace(".exe", "-error.txt") -RedirectStandardOutput $fileName.Replace(".exe", "-output.txt")
+  $installFile = "pcoip-agent-graphics_21.07.7.exe"
+  $downloadUrl = "$storageContainerUrl/Teradici/$installFile$storageContainerSas"
+  Invoke-WebRequest $downloadUrl -OutFile $installFile
+  Start-Process -FilePath .\$installFile -ArgumentList "/S /NoPostReboot /Force" -Wait -RedirectStandardError $installFile.Replace(".exe", "-error.txt") -RedirectStandardOutput $installFile.Replace(".exe", "-output.txt")
   Write-Host "Customize (End): Teradici PCoIP Agent"
 }
-
-Copy-Item -Path $env:TMP -Destination TMP -Recurse

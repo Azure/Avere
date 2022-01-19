@@ -62,8 +62,8 @@ variable "imageTemplates" {
             machineSize    = string
             osDiskSizeGB   = number
             timeoutMinutes = number
-            outputVersion  = string
             renderEngines  = string
+            outputVersion  = string
           }
         )
       }
@@ -90,7 +90,7 @@ data "terraform_remote_state" "network" {
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
-    storage_account_name = module.global.terraformStorageAccountName
+    storage_account_name = module.global.securityStorageAccountName
     container_name       = module.global.terraformStorageContainerName
     key                  = "1.network"
   }
@@ -121,7 +121,7 @@ data "azurerm_key_vault_secret" "user_password" {
 }
 
 data "azurerm_storage_account" "storage" {
-  name                = module.global.terraformStorageAccountName
+  name                = module.global.securityStorageAccountName
   resource_group_name = module.global.securityResourceGroupName
 }
 
@@ -348,7 +348,11 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               {
                 "type": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), 'PowerShell', 'Shell')]",
                 "inline": "[createArray(if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetExecuteCommandWindows(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.customScript, parameters('imageTemplates')[copyIndex()].build, parameters('userPassword')), fx.GetExecuteCommandLinux(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.customScript, parameters('imageTemplates')[copyIndex()].build, parameters('userPassword'))))]"
-              }
+              },
+              {
+                "type": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), 'WindowsRestart', 'Shell')]",
+                "inline": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), json('null'), createArray('true'))]"
+              }              
             ],
             "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].build.timeoutMinutes]",
             "distribute": [

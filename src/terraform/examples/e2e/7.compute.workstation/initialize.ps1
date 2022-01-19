@@ -10,7 +10,7 @@ $taskName = "AAA Storage Mounts"
 $taskAction = New-ScheduledTaskAction -Execute $mountFile
 $taskTrigger = New-ScheduledTaskTrigger -AtStartup
 Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System
-Start-Process -FilePath $mountFile -Wait
+Start-Process -FilePath $mountFile -Wait -RedirectStandardError $mountFile.Replace(".bat", "-error.txt") -RedirectStandardOutput $mountFile.Replace(".bat", "-output.txt")
 
 %{ if teradiciLicenseKey != "" }
   Set-Location -Path "C:\Program Files\Teradici\PCoIP Agent"

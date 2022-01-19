@@ -178,7 +178,7 @@ data "terraform_remote_state" "network" {
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
-    storage_account_name = module.global.terraformStorageAccountName
+    storage_account_name = module.global.securityStorageAccountName
     container_name       = module.global.terraformStorageContainerName
     key                  = "1.network"
   }
