@@ -11,7 +11,6 @@ managedIdentityName = "AzRender"
 
 # Storage - https://docs.microsoft.com/en-us/azure/storage/
 storage = {
-e, lowercase alphanumeric
   accountType        = "StorageV2" // https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview
   accountRedundancy  = "LRS"       // https://docs.microsoft.com/en-us/azure/storage/common/storage-redundancy
   accountPerformance = "Standard"  // https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-performance-tiers
