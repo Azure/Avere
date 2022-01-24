@@ -121,6 +121,14 @@ variable "expressRoute" {
   )
 }
 
+data "azurerm_client_config" "current" {}
+
+data "azurerm_subnet" "farm" {
+  name                 = var.virtualNetwork.subnets[var.virtualNetworkSubnetIndex.farm].name
+  resource_group_name  = azurerm_resource_group.network.name
+  virtual_network_name = azurerm_virtual_network.network.name
+}
+
 resource "azurerm_resource_group" "network" {
   name     = var.resourceGroupName
   location = module.global.regionName
@@ -220,6 +228,95 @@ resource "azurerm_private_dns_zone_virtual_network_link" "network" {
   name                  = azurerm_virtual_network.network.name
   resource_group_name   = azurerm_resource_group.network.name
   private_dns_zone_name = azurerm_private_dns_zone.network.name
+  virtual_network_id    = azurerm_virtual_network.network.id
+}
+
+########################################################################################################## 
+# Monitor Private Link - https://docs.microsoft.com/en-us/azure/azure-monitor/logs/private-link-security #
+########################################################################################################## 
+
+resource "azurerm_private_endpoint" "monitor_farm" {
+  name                = "Monitor.Farm"
+  resource_group_name = azurerm_resource_group.network.name
+  location            = azurerm_resource_group.network.location
+  subnet_id           = data.azurerm_subnet.farm.id
+  private_service_connection {
+    name                           = "Monitor.Farm"
+    private_connection_resource_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${module.global.securityResourceGroupName}/providers/Microsoft.Insights/privateLinkScopes/${module.global.monitorWorkspaceName}"
+    is_manual_connection           = false
+    subresource_names = [
+      "azuremonitor"
+    ]
+  }
+  private_dns_zone_group {
+    name = "Monitor.Farm"
+    private_dns_zone_ids = [
+      azurerm_private_dns_zone.monitor.id,
+      azurerm_private_dns_zone.opinsights_oms.id,
+      azurerm_private_dns_zone.opinsights_ods.id,
+      azurerm_private_dns_zone.automation.id,
+      azurerm_private_dns_zone.blob.id
+    ]
+  }
+}
+
+resource "azurerm_private_dns_zone" "monitor" {
+  name                = "privatelink.monitor.azure.com"
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_private_dns_zone" "opinsights_oms" {
+  name                = "privatelink.oms.opinsights.azure.com"
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_private_dns_zone" "opinsights_ods" {
+  name                = "privatelink.ods.opinsights.azure.com"
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_private_dns_zone" "automation" {
+  name                = "privatelink.agentsvc.azure-automation.net"
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_private_dns_zone" "blob" {
+  name                = "privatelink.blob.core.windows.net"
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "monitor" {
+  name                  = "monitor"
+  resource_group_name   = azurerm_resource_group.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.monitor.name
+  virtual_network_id    = azurerm_virtual_network.network.id
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "opinsights_oms" {
+  name                  = "opinsights_oms"
+  resource_group_name   = azurerm_resource_group.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.opinsights_oms.name
+  virtual_network_id    = azurerm_virtual_network.network.id
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "opinsights_ods" {
+  name                  = "opinsights_ods"
+  resource_group_name   = azurerm_resource_group.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.opinsights_ods.name
+  virtual_network_id    = azurerm_virtual_network.network.id
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "automation" {
+  name                  = "automation"
+  resource_group_name   = azurerm_resource_group.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.automation.name
+  virtual_network_id    = azurerm_virtual_network.network.id
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "blob" {
+  name                  = "blob"
+  resource_group_name   = azurerm_resource_group.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.blob.name
   virtual_network_id    = azurerm_virtual_network.network.id
 }
 

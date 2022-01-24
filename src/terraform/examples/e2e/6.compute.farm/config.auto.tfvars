@@ -35,6 +35,9 @@ virtualMachineScaleSets = [
         ]
       }
     }
+    monitorExtension = {
+      enable = true
+    }
     spot = {                     // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot
       evictionPolicy  = "Delete" // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#eviction-policy
       machineMaxPrice = -1       // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#pricing
@@ -80,6 +83,9 @@ virtualMachineScaleSets = [
           "mount -o anon \\\\scheduler.media.studio\\DeadlineRepository S:"
         ]
       }
+    }
+    monitorExtension = {
+      enable = true
     }
     spot = {                     // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot
       evictionPolicy  = "Delete" // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#eviction-policy

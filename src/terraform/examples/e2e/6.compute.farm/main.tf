@@ -69,6 +69,11 @@ variable "virtualMachineScaleSets" {
             )
           }
         )
+        monitorExtension = object(
+          {
+            enable = bool
+          }
+        )
         spot = object(
           {
             evictionPolicy  = string
@@ -137,6 +142,11 @@ data "azurerm_key_vault" "vault" {
 data "azurerm_key_vault_secret" "admin_password" {
   name         = module.global.keyVaultSecretNameAdminPassword
   key_vault_id = data.azurerm_key_vault.vault.id
+}
+
+data "azurerm_log_analytics_workspace" "monitor" {
+  name                = module.global.monitorWorkspaceName
+  resource_group_name = module.global.securityResourceGroupName
 }
 
 resource "azurerm_resource_group" "farm" {
@@ -211,6 +221,22 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       })
     }
   }
+  dynamic "extension" {
+    for_each = each.value.monitorExtension.enable != "" ? [1] : [] 
+    content {
+      name                       = "Monitor"
+      type                       = "OmsAgentForLinux"
+      publisher                  = "Microsoft.EnterpriseCloud.Monitoring"
+      type_handler_version       = "1.13"
+      auto_upgrade_minor_version = true
+      settings = jsonencode({
+        workspaceId: data.azurerm_log_analytics_workspace.monitor.workspace_id
+      })
+      protected_settings = jsonencode({
+        workspaceKey: data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+      })
+    }
+  }
   dynamic "terminate_notification" {
     for_each = each.value.terminateNotification.enable ? [1] : [] 
     content {
@@ -279,6 +305,22 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
         commandToExecute: "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
           templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters), "UTF-16LE"
         )}"
+      })
+    }
+  }
+  dynamic "extension" {
+    for_each = each.value.monitorExtension.enable != "" ? [1] : [] 
+    content {
+      name                       = "Monitor"
+      type                       = "MicrosoftMonitoringAgent"
+      publisher                  = "Microsoft.EnterpriseCloud.Monitoring"
+      type_handler_version       = "1.0"
+      auto_upgrade_minor_version = true
+      settings = jsonencode({
+        workspaceId: data.azurerm_log_analytics_workspace.monitor.workspace_id
+      })
+      protected_settings = jsonencode({
+        workspaceKey: data.azurerm_log_analytics_workspace.monitor.primary_shared_key
       })
     }
   }

@@ -30,7 +30,7 @@ virtualMachines = [
       }
     }
     monitorExtension = {
-      enable = false
+      enable = true
     }    
   },
   {
@@ -61,7 +61,7 @@ virtualMachines = [
       }
     }
     monitorExtension = {
-      enable = false
+      enable = true
     }
   }
 ]

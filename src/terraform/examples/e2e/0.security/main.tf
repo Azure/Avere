@@ -141,6 +141,18 @@ resource "azurerm_log_analytics_workspace" "monitor" {
   internet_query_enabled     = var.monitorWorkspace.publicQueryEnable
 }
 
+resource "azurerm_monitor_private_link_scope" "monitor" {
+  name                = var.monitorWorkspace.name
+  resource_group_name = azurerm_resource_group.security.name
+}
+
+resource "azurerm_monitor_private_link_scoped_service" "monitor" {
+  name                = var.monitorWorkspace.name
+  resource_group_name = azurerm_resource_group.security.name
+  linked_resource_id  = azurerm_log_analytics_workspace.monitor.id
+  scope_name          = azurerm_monitor_private_link_scope.monitor.name
+}
+
 output "regionName" {
   value = module.global.regionName
 }
