@@ -20,6 +20,6 @@ steps:
   displayName: "Setup: Environment Variables"
   condition: always()
 
-- bash: echo "##vso[build.updatebuildnumber]${BUILD_BUILDNUMBER} (${TF_VFXT_CONFIG},${REGION})"
-  displayName: "Tag Build with RG Name "
+- bash: echo "##vso[build.updatebuildnumber]${BUILD_BUILDNUMBER} (${RESOURCE_GROUP_NAME},${TF_VFXT_CONFIG},${REGION})"
+  displayName: "Tag Build with Details "
   condition: always()
