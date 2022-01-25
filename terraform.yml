@@ -144,7 +144,7 @@ jobs:
 
   - ${{ if eq(parameters.run_scale_up, true) }}:
     - bash: echo "##vso[build.updatebuildnumber]${BUILD_BUILDNUMBER} (Scale-Up)"
-      displayName: "Tag Build with RG Name "
+      displayName: "Tag Build with Scale-Up"
       condition: always()
     - template: templates/terraform_run.yml
       parameters:
@@ -153,7 +153,7 @@ jobs:
   - ${{ if eq(parameters.run_scale_up, true) }}:
     - ${{ if eq(parameters.run_scale_down, true) }}:
       - bash: echo "##vso[build.updatebuildnumber]${BUILD_BUILDNUMBER} (Scale-Down)"
-        displayName: "Tag Build with RG Name "
+        displayName: "Tag Build with Scale-Down "
         condition: always()
       - template: templates/terraform_run.yml
         parameters:
