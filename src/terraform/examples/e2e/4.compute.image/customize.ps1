@@ -31,7 +31,14 @@ if ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v4")) {
   Write-Host "Customize (End): GPU Driver (NVv4)"
 }
 
-if ($subnetName -ne "Scheduler") {
+if ($subnetName -eq "Scheduler") {
+  Write-Host "Customize (Start): Azure CLI"
+  $fileName = "az-cli.msi"
+  $downloadUrl = "https://aka.ms/installazurecliwindows"
+  Invoke-WebRequest -OutFile $fileName -Uri $downloadUrl
+  Start-Process -FilePath $fileName -ArgumentList "/quiet /norestart" -Wait
+  Write-Host "Customize (End): Azure CLI"
+} else {
   Write-Host "Customize (Start): NFS Client"
   $installFile = "dism.exe"
   $featureName = "ClientForNFS-Infrastructure"

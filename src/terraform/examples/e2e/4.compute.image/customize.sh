@@ -32,6 +32,20 @@ if [[ $machineSize == Standard_NV* && $machineSize == *_v4 ]]; then
   echo "Customize (End): GPU Driver (NVv4)"
 fi
 
+if [ $subnetName == "Scheduler" ]; then
+  echo "Customize (Start): Azure CLI"
+  rpm --import https://packages.microsoft.com/keys/microsoft.asc
+  repoFile="/etc/yum.repos.d/azure-cli.repo"
+  echo "[azure-cli]" > $repoFile
+  echo "name=AzureCLI" >> $repoFile
+  echo "baseurl=https://packages.microsoft.com/yumrepos/azure-cli" >> $repoFile
+  echo "enabled=1" >> $repoFile
+  echo "gpgcheck=1" >> $repoFile
+  echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $repoFile
+  yum -y install azure-cli
+  echo "Customize (End): Azure CLI"
+fi
+
 echo "Customize (Start): Utilities"
 yum -y install nfs-utils
 yum -y install epel-release

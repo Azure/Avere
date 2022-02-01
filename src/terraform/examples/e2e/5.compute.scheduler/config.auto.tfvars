@@ -31,7 +31,15 @@ virtualMachines = [
     }
     monitorExtension = {
       enable = true
-    }    
+    }
+    autoScale = {
+      enable = false
+      fileName = "scale.sh"
+      farm = {
+        name = "LinuxFarm"
+        resourceGroupName = "AzureRender.Farm"
+      }
+    }
   },
   {
     name        = ""
@@ -62,6 +70,14 @@ virtualMachines = [
     }
     monitorExtension = {
       enable = true
+    }
+    autoScale = {
+      enable = false
+      fileName = "scale.ps1"
+      farm = {
+        name = "WindowsFarm"
+        resourceGroupName = "AzureRender.Farm"
+      }
     }
   }
 ]

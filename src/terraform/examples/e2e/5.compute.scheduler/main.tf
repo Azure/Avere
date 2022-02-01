@@ -68,6 +68,18 @@ variable "virtualMachines" {
             enable = bool
           }
         )
+        autoScale = object(
+          {
+            enable   = bool
+            fileName = string
+            farm = object(
+              {
+                name              = string
+                resourceGroupName = string
+              }
+            )
+          }
+        )
       }
     )
   )
@@ -169,6 +181,9 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
   admin_username                  = each.value.adminLogin.userName
   admin_password                  = data.azurerm_key_vault_secret.admin_password.value
   disable_password_authentication = each.value.adminLogin.disablePasswordAuthentication
+  custom_data = each.value.autoScale.enable ? base64gzip(
+    templatefile(each.value.autoScale.fileName, {})
+  ) : null
   network_interface_ids = [
     "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
   ]
@@ -244,6 +259,9 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
   size                = each.value.machineSize
   admin_username      = each.value.adminLogin.userName
   admin_password      = data.azurerm_key_vault_secret.admin_password.value
+  custom_data = each.value.autoScale.enable ? base64gzip(
+    templatefile(each.value.autoScale.fileName, {})
+  ) : null
   network_interface_ids = [
     "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
   ]
