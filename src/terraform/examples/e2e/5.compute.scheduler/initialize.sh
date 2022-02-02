@@ -16,10 +16,11 @@ deadlinecommand -UpdateDatabaseSettings /DeadlineRepository MongoDB $databaseHos
 
 customDataInput="/var/lib/waagent/ovf-env.xml"
 customDataOutput="/var/lib/waagent/scale.sh"
-if [ -f $customDataInput ]; then
-  customData=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $customDataInput)
+customDataXPath="//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']"
+customData=$(xmllint --xpath "boolean($customDataXPath)" $customDataInput)
+if [ $customData == true ]; then
+  customData=$(xmllint --xpath "$customDataXPath/text()" $customDataInput)
   echo $customData | base64 -d | gzip -d > $customDataOutput
-
   servicePath="/etc/systemd/system/scale.service"
   echo "[Unit]" > $servicePath
   echo "Description=Render Farm Scaler Service" >> $servicePath
