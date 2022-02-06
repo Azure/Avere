@@ -22,7 +22,7 @@ if ($queuedTasks -gt 0) {
       $workerIdleStartTime = $worker.WorkerLastRenderFinishedTime == "" ? $worker.StateDateTime : $worker.WorkerLastRenderFinishedTime
       $workerIdleEndTime = Get-Date -AsUtc
       $workerIdleSeconds = (New-TimeSpan -Start $workerIdleStartTime -End $workerIdleEndTime).TotalSeconds
-      if ($workerIdleSeconds -gt 3600) {
+      if ($workerIdleSeconds -gt $workerIdleSecondsDelete) {
         $instanceId = az vmss list-instances --resource-group $resourceGroupName --name $scaleSetName --query "[?osProfile.computerName=='$workerName'].instanceId" --output tsv
         az vmss delete-instances --resource-group $resourceGroupName --name $scaleSetName --instance-ids $instanceId
       }

@@ -61,10 +61,12 @@ variable "virtualMachines" {
                 fileSystemMounts = list(string)
                 autoScale = object(
                   {
-                    enable            = bool
-                    fileName          = string
-                    scaleSetName      = string
-                    resourceGroupName = string
+                    enable                   = bool
+                    fileName                 = string
+                    scaleSetName             = string
+                    resourceGroupName        = string
+                    detectionIntervalSeconds = number
+                    workerIdleSecondsDelete  = number
                   }
                 )
               }

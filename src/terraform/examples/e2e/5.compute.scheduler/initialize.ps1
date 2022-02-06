@@ -38,8 +38,8 @@ Out-File -InputObject $streamReader.ReadToEnd() -FilePath $customDataOutput
 
 $taskName = "AAA Render Farm Scaler"
 $taskStart = Get-Date
-$taskInterval = New-TimeSpan -Minutes 1
-$taskAction = New-ScheduledTaskAction -Execute "PowerShell" -Argument "-ExecutionPolicy Unrestricted -File $customDataOutput -resourceGroupName ${autoScale.resourceGroupName} -scaleSetName ${autoScale.scaleSetName}"
+$taskInterval = New-TimeSpan -Seconds ${autoScale.detectionIntervalSeconds}
+$taskAction = New-ScheduledTaskAction -Execute "PowerShell" -Argument "-ExecutionPolicy Unrestricted -File $customDataOutput -resourceGroupName ${autoScale.resourceGroupName} -scaleSetName ${autoScale.scaleSetName} -workerIdleSecondsDelete ${autoScale.workerIdleSecondsDelete}"
 $taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval $taskInterval -At $taskStart -Once
 Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System
 

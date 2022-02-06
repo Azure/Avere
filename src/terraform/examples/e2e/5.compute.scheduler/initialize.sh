@@ -27,6 +27,7 @@ echo "[Service]" >> $servicePath
 echo "Environment=PATH=$schedulerPath:$PATH" >> $servicePath
 echo "Environment=scaleSetName=${autoScale.scaleSetName}" >> $servicePath
 echo "Environment=resourceGroupName=${autoScale.resourceGroupName}" >> $servicePath
+echo "Environment=workerIdleSecondsDelete=${autoScale.workerIdleSecondsDelete}" >> $servicePath
 echo "ExecStart=/bin/bash $customDataOutput" >> $servicePath
 echo "" >> $servicePath
 timerPath="/etc/systemd/system/scale.timer"
@@ -35,7 +36,7 @@ echo "Description=Render Farm Scaler Timer" >> $timerPath
 echo "" >> $timerPath
 echo "[Timer]" >> $timerPath
 echo "OnBootSec=10" >> $timerPath
-echo "OnUnitActiveSec=60" >> $timerPath
+echo "OnUnitActiveSec=${autoScale.detectionIntervalSeconds}" >> $timerPath
 echo "AccuracySec=1us" >> $timerPath
 echo "" >> $timerPath
 echo "[Install]" >> $timerPath

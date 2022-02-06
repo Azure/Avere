@@ -35,7 +35,7 @@ else
       else
         workerIdleSeconds=$(deadlinecommand -GetSlaveInfo $workerName UpTimeSeconds)
       fi
-      if [ $workerIdleSeconds -gt 3600 ]; then
+      if [ $workerIdleSeconds -gt $workerIdleSecondsDelete ]; then
         instanceId=$(az vmss list-instances --resource-group $resourceGroupName --name $scaleSetName --query "[?osProfile.computerName=='$workerName'].instanceId" --output tsv)
         az vmss delete-instances --resource-group $resourceGroupName --name $scaleSetName --instance-ids $instanceId
       fi
