@@ -31,16 +31,19 @@ deadlinecommand -UpdateDatabaseSettings C:\DeadlineRepository MongoDB $databaseH
 
 $customDataInput = "C:\AzureData\CustomData.bin"
 $customDataOutput = "C:\AzureData\Scale.ps1"
-if (Test-Path -Path $customDataInput) {
-  $fileStream = New-Object System.IO.FileStream($customDataInput, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read)
-  $gZipStream = New-Object System.IO.Compression.GZipStream($fileStream, [System.IO.Compression.CompressionMode]::Decompress)
-  $streamReader = New-Object System.IO.StreamReader($gZipStream)
-  Out-File -InputObject $streamReader.ReadToEnd() -FilePath $customDataOutput
+$fileStream = New-Object System.IO.FileStream($customDataInput, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read)
+$gZipStream = New-Object System.IO.Compression.GZipStream($fileStream, [System.IO.Compression.CompressionMode]::Decompress)
+$streamReader = New-Object System.IO.StreamReader($gZipStream)
+Out-File -InputObject $streamReader.ReadToEnd() -FilePath $customDataOutput
 
-  $taskName = "AAA Render Farm Scaler"
-  $taskStart = Get-Date
-  $taskInterval = New-TimeSpan -Minutes 1
-  $taskAction = New-ScheduledTaskAction -Execute "PowerShell" -Argument "-ExecutionPolicy Unrestricted -File $customDataOutput"
-  $taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval $taskInterval -At $taskStart -Once
-  Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System
+$taskName = "AAA Render Farm Scaler"
+$taskStart = Get-Date
+$taskInterval = New-TimeSpan -Minutes 1
+$taskAction = New-ScheduledTaskAction -Execute "PowerShell" -Argument "-ExecutionPolicy Unrestricted -File $customDataOutput -resourceGroupName ${autoScale.resourceGroupName} -scaleSetName ${autoScale.scaleSetName}"
+$taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval $taskInterval -At $taskStart -Once
+Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System
+
+if (${autoScale.enable} -ne "true") {
+  Disable-ScheduledTask -TaskName $taskName
 }
+

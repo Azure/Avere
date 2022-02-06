@@ -27,18 +27,16 @@ virtualMachines = [
         fileSystemMounts = [
           "scheduler.media.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0"
         ]
+        autoScale = {
+          enable            = false
+          fileName          = "scale.sh"
+          scaleSetName      = "LinuxFarm"
+          resourceGroupName = "AzureRender.Farm"
+        }
       }
     }
     monitorExtension = {
       enable = true
-    }
-    autoScale = {
-      enable = false
-      fileName = "scale.sh"
-      farm = {
-        name = "LinuxFarm"
-        resourceGroupName = "AzureRender.Farm"
-      }
     }
   },
   {
@@ -66,18 +64,16 @@ virtualMachines = [
         fileSystemMounts = [
           "mount -o anon \\\\scheduler.media.studio\\DeadlineRepository S:"
         ]
+        autoScale = {
+          enable            = false
+          fileName          = "scale.ps1"
+          scaleSetName      = "WindowsFarm"
+          resourceGroupName = "AzureRender.Farm"
+        }
       }
     }
     monitorExtension = {
       enable = true
-    }
-    autoScale = {
-      enable = false
-      fileName = "scale.ps1"
-      farm = {
-        name = "WindowsFarm"
-        resourceGroupName = "AzureRender.Farm"
-      }
     }
   }
 ]

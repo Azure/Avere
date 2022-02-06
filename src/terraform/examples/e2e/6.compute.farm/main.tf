@@ -149,6 +149,12 @@ data "azurerm_log_analytics_workspace" "monitor" {
   resource_group_name = module.global.securityResourceGroupName
 }
 
+resource "azurerm_role_assignment" "farm" {
+  role_definition_name = "Virtual Machine Contributor" // https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
+  principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
+  scope                = azurerm_resource_group.farm.id
+}
+
 resource "azurerm_resource_group" "farm" {
   name     = var.resourceGroupName
   location = module.global.regionName
