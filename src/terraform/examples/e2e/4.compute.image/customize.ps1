@@ -118,7 +118,7 @@ if ($subnetName -eq "Scheduler") {
 
 if ($renderEngines -like "*Blender*") {
   Write-Host "Customize (Start): Blender"
-  $rendererVersion = "3.0.0"
+  $rendererVersion = "3.0.1"
   $installFile = "blender-$rendererVersion-windows-x64.msi"
   $downloadUrl = "$storageContainerUrl/Blender/$rendererVersion/$installFile$storageContainerSas"
   Invoke-WebRequest $downloadUrl -OutFile $installFile
@@ -150,10 +150,8 @@ if ($renderEngines -like "*Unreal*") {
   Move-Item -Path "$rendererPathUnreal\UnrealEngine*\*" -Destination $rendererPathUnreal
   $installFile = "$rendererPathUnreal\Setup.bat"
   $setupScript = Get-Content -Path $installFile
-  $setupScript = $setupScript.Replace(".\Engine\Binaries\Win64\UnrealVersionSelector", "rem .\Engine\Binaries\Win64\UnrealVersionSelector")
+  $setupScript = $setupScript.Replace("/register", "/register /unattended")
   $setupScript = $setupScript.Replace("pause", "rem pause")
-  $setupScript = $setupScript.Replace("pushd", "rem pushd")
-  $setupScript = $setupScript.Replace("popd", "rem popd")
   Set-Content -Path $installFile -Value $setupScript
   Start-Process -FilePath $installFile -ArgumentList "--force" -Wait -RedirectStandardError $installFile.Replace(".bat", "-error.txt") -RedirectStandardOutput $installFile.Replace(".bat", "-output.txt")
   Write-Host "Customize (End): Unreal"
