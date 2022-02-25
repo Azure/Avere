@@ -1,6 +1,6 @@
 param (
-  [string] $userName,
-  [string] $userPassword,
+  [string] $serviceUser,
+  [string] $servicePassword,
   [string] $subnetName,
   [string] $machineSize,
   [string] $renderEngines
@@ -89,13 +89,13 @@ $installFile = "DeadlineClient-$schedulerVersion-windows-installer.exe"
 if ($subnetName -eq "Scheduler") {
   $clientArgs = "--slavestartup false --launcherservice false"
 } else {
-  New-LocalUser -Name $userName -Password (ConvertTo-SecureString -String $userPassword -AsPlainText -Force)
+  New-LocalUser -Name $userName -Password (ConvertTo-SecureString -String $servicePassword -AsPlainText -Force)
   if ($subnetName -eq "Farm") {
     $workerStartup = "true"
   } else {
     $workerStartup = "false"
   }
-  $clientArgs = "--slavestartup $workerStartup --launcherservice true --serviceuser $userName --servicepassword $userPassword"
+  $clientArgs = "--slavestartup $workerStartup --launcherservice true --serviceuser $userName --servicepassword $servicePassword"
 }
 Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --licensemode $schedulerLicense $clientArgs" -Wait -RedirectStandardError $installFile.Replace(".exe", "-error.txt") -RedirectStandardOutput $installFile.Replace(".exe", "-output.txt")
 $installFile = "$schedulerPath\deadlinecommand.exe"
@@ -108,7 +108,7 @@ if ($subnetName -eq "Scheduler") {
   Write-Host "Customize (Start): Deadline Repository"
   Set-Location -Path "Deadline*"
   $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
-  Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --prefix $schedulerRepositoryPath --mongodir $schedulerDatabasePath --dbuser $userName --dbpassword $userPassword --requireSSL false" -Wait -RedirectStandardError $installFile.Replace(".exe", "-error.txt") -RedirectStandardOutput $installFile.Replace(".exe", "-output.txt")
+  Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --prefix $schedulerRepositoryPath --mongodir $schedulerDatabasePath --dbuser $userName --dbpassword $servicePassword --requireSSL false" -Wait -RedirectStandardError $installFile.Replace(".exe", "-error.txt") -RedirectStandardOutput $installFile.Replace(".exe", "-output.txt")
   Set-Location -Path $homeDirectory
   Install-WindowsFeature -Name "NFS-Client"
   Install-WindowsFeature -Name "FS-NFS-Service"

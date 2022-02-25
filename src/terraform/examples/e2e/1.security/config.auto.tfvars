@@ -4,33 +4,26 @@
 # "Key Vault Crypto Officer"  - https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-crypto-officer  #
 ###########################################################################################################################################
 
-resourceGroupName = "AzureRender"
-
-# Managed Identity - https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview
-managedIdentityName = "AzRender"
-
 # Storage - https://docs.microsoft.com/en-us/azure/storage/
 storage = {
   accountType        = "StorageV2" // https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview
   accountRedundancy  = "LRS"       // https://docs.microsoft.com/en-us/azure/storage/common/storage-redundancy
   accountPerformance = "Standard"  // https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-performance-tiers
-  containerName      = "terraform" // Storage container name for Terraform .tfstate files
 }
 
 # Key Vault - https://docs.microsoft.com/en-us/azure/key-vault/general/overview
 keyVault = {
-  name    = "AzRender" // Name must be globally unique
-  secrets = [ // Update secret values via https://portal.azure.com
+  secrets = [ // Update secret values via https://docs.microsoft.com/en-us/azure/key-vault/secrets/quick-create-portal
     {
       name  = "GatewayConnection"
-      value = "SharedKey"
+      value = "ConnectionKey"
     },
     {
-      name  = "AdminPassword"
+      name  = "ServicePassword"
       value = "P@ssword1234"
     },
     {
-      name  = "UserPassword"
+      name  = "AdminPassword"
       value = "P@ssword1234"
     }
   ]
@@ -41,13 +34,4 @@ keyVault = {
       size = 2048
     }
   ]
-}
-
-# Monitor - https://docs.microsoft.com/en-us/azure/azure-monitor/overview
-monitorWorkspace = {
-  name               = "AzRender"
-  sku                = "PerGB2018"
-  retentionDays      = 90
-  publicIngestEnable = false
-  publicQueryEnable  = false
 }

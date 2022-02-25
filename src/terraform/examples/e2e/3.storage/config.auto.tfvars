@@ -3,7 +3,7 @@ resourceGroupName = "AzureRender.Storage"
 # Storage - https://docs.microsoft.com/en-us/azure/storage/common/storage-introduction
 storageAccounts = [
   {
-    name             = "azasset"   // Name must be globally unique, lowercase alphanumeric
+    name             = "azasset"   // Name must be globally unique (lowercase alphanumeric)
     type             = "StorageV2" // https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview
     redundancy       = "LRS"       // https://docs.microsoft.com/en-us/azure/storage/common/storage-redundancy
     performance      = "Standard"  // https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-performance-tiers
@@ -12,10 +12,10 @@ storageAccounts = [
     messageQueues    = []
     blobContainers   = ["show"]
     blobs            = ["show/*"]
-    privateEndpoints = [] // ["blob"]
+    privateEndpoints = ["blob"]
   },
   {
-    name             = ""            // Name must be globally unique, lowercase alphanumeric
+    name             = ""            // Name must be globally unique (lowercase alphanumeric)
     type             = "FileStorage" // https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview
     redundancy       = "LRS"         // https://docs.microsoft.com/en-us/azure/storage/common/storage-redundancy
     performance      = "Premium"     // https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-performance-tiers
@@ -24,7 +24,7 @@ storageAccounts = [
     messageQueues    = []
     blobContainers   = []
     blobs            = []
-    privateEndpoints = [] // ["file"]
+    privateEndpoints = ["file"]
   }
 ]
 

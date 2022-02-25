@@ -13,37 +13,31 @@ virtualNetwork = {
       name              = "Farm"
       addressSpace      = ["10.0.0.0/17"]
       serviceDelegation = ""
-      serviceEndpoints  = ["Microsoft.Storage"]
     },
     {
       name              = "Workstation"
       addressSpace      = ["10.0.128.0/18"]
       serviceDelegation = ""
-      serviceEndpoints  = []
     },
     {
       name              = "Scheduler"
       addressSpace      = ["10.0.252.0/24"]
       serviceDelegation = ""
-      serviceEndpoints  = []
     },
     {
       name              = "Storage"
       addressSpace      = ["10.0.253.0/24"]
-      serviceDelegation = "" // "Microsoft.Netapp/volumes"
-      serviceEndpoints  = ["Microsoft.Storage"]
+      serviceDelegation = "" // "Microsoft.NetApp/volumes"
     },
     {
       name              = "Cache"
       addressSpace      = ["10.0.254.0/24"]
       serviceDelegation = ""
-      serviceEndpoints  = ["Microsoft.Storage"]
     },
     {
       name              = "GatewaySubnet"
       addressSpace      = ["10.0.255.0/24"]
       serviceDelegation = ""
-      serviceEndpoints  = []
     }
   ]
 }
@@ -56,11 +50,11 @@ virtualNetworkSubnetIndex = {
   cache       = 4
 }
 
-################################################################################# 
+#################################################################################
 # Private DNS - https://docs.microsoft.com/en-us/azure/dns/private-dns-overview #
-################################################################################# 
+#################################################################################
 
-privateDns = {
+virtualNetworkPrivateDns = {
   zoneName = "media.studio"
 }
 

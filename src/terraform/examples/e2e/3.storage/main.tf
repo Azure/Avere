@@ -1,13 +1,13 @@
 terraform {
-  required_version = ">= 1.1.3"
+  required_version = ">= 1.1.6"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.91.0"
+      version = "~>2.97.0"
     }
   }
   backend "azurerm" {
-    key = "2.storage"
+    key = "3.storage"
   }
 }
 
@@ -16,7 +16,7 @@ provider "azurerm" {
 }
 
 module "global" {
-  source = "../global"
+  source = "../0.global"
 }
 
 variable "resourceGroupName" {
@@ -180,7 +180,7 @@ data "terraform_remote_state" "network" {
     resource_group_name  = module.global.securityResourceGroupName
     storage_account_name = module.global.securityStorageAccountName
     container_name       = module.global.terraformStorageContainerName
-    key                  = "1.network"
+    key                  = "2.network"
   }
 }
 
@@ -224,17 +224,26 @@ resource "azurerm_storage_account" "storage" {
   is_hns_enabled           = each.value.nfsV3Enable
   nfsv3_enabled            = each.value.nfsV3Enable
   dynamic "network_rules" {
-    for_each = each.value.nfsV3Enable || length(each.value.privateEndpoints) > 0 ? [1] : [] 
+    for_each = each.value.nfsV3Enable ? [1] : [] 
     content {
       default_action = "Deny"
-      virtual_network_subnet_ids = [
-        for x in data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets : "${data.azurerm_virtual_network.network.id}/subnets/${x.name}" if contains(x.serviceEndpoints, "Microsoft.Storage")
-      ]
       ip_rules = [
         jsondecode(data.http.current_ip_address.body).ip
       ]
     }
   }
+  # dynamic "network_rules" {
+  #   for_each = each.value.nfsV3Enable || length(each.value.privateEndpoints) > 0 ? [1] : [] 
+  #   content {
+  #     default_action = "Deny"
+  #     virtual_network_subnet_ids = [
+  #       for x in data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets : "${data.azurerm_virtual_network.network.id}/subnets/${x.name}" if contains(x.serviceEndpoints, "Microsoft.Storage")
+  #     ]
+  #     ip_rules = [
+  #       jsondecode(data.http.current_ip_address.body).ip
+  #     ]
+  #   }
+  # }
 }
 
 resource "azurerm_storage_share" "shares" {

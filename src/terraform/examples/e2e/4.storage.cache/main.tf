@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.1.3"
+  required_version = ">= 1.1.6"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.91.0"
+      version = "~>2.97.0"
     }
     avere = {
       source  = "hashicorp/avere"
@@ -11,7 +11,7 @@ terraform {
     }
   }
   backend "azurerm" {
-    key = "3.storage.cache"
+    key = "4.storage.cache"
   }
 }
 
@@ -20,7 +20,7 @@ provider "azurerm" {
 }
 
 module "global" {
-  source = "../global"
+  source = "../0.global"
 }
 
 variable "resourceGroupName" {
@@ -142,7 +142,7 @@ data "terraform_remote_state" "network" {
     resource_group_name  = module.global.securityResourceGroupName
     storage_account_name = module.global.securityStorageAccountName
     container_name       = module.global.terraformStorageContainerName
-    key                  = "1.network"
+    key                  = "2.network"
   }
 }
 
@@ -158,7 +158,7 @@ data "azurerm_subnet" "cache" {
 }
 
 data "azurerm_private_dns_zone" "network" {
-  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.privateDns.zoneName : var.virtualNetwork.privateDnsZoneName
+  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetworkPrivateDns.zoneName : var.virtualNetwork.privateDnsZoneName
   resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
 }
 

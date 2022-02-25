@@ -5,27 +5,27 @@ variable "regionName" {
 
 variable "securityResourceGroupName" {
   type    = string
-  default = "AzureRender"
+  default = "AzureRender" // Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 }
 variable "securityStorageAccountName" {
   type    = string
-  default = "azrender" // Set to a globally unique and available storage account name (lowercase alphanumeric)
+  default = "azrender" // Set to a globally unique name (lowercase alphanumeric)
 }
 variable "terraformStorageContainerName" {
   type    = string
   default = "terraform"
 }
 
-# Managed Identity
+# Managed Identity - https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview
 variable "managedIdentityName" {
   type    = string
-  default = "AzRender"
+  default = "AzRender" // Alphanumeric, underscores and hyphens are allowed
 }
 
-# KeyVault
+# Key Vault - https://docs.microsoft.com/en-us/azure/key-vault/general/overview
 variable "keyVaultName" {
   type    = string
-  default = "AzRender"
+  default = "AzRender" // Set to a globally unique name (alphanumeric, hyphens)
 }
 
 # KeyVault secret names
@@ -33,13 +33,13 @@ variable "keyVaultSecretNameGatewayConnection" {
   type    = string
   default = "GatewayConnection"
 }
+variable "keyVaultSecretNameServicePassword" {
+  type    = string
+  default = "ServicePassword"
+}
 variable "keyVaultSecretNameAdminPassword" {
   type    = string
   default = "AdminPassword"
-}
-variable "keyVaultSecretNameUserPassword" {
-  type    = string
-  default = "UserPassword"
 }
 
 # KeyVault key names
@@ -52,10 +52,6 @@ variable "monitorWorkspaceName" {
   type    = string
   default = "AzRender"
 }
-
-#####################################################
-# The following output values should not be changed #
-#####################################################
 
 output "regionName" {
   value = var.regionName
@@ -82,11 +78,11 @@ output "keyVaultName" {
 output "keyVaultSecretNameGatewayConnection" {
   value = var.keyVaultSecretNameGatewayConnection
 }
+output "keyVaultSecretNameServicePassword" {
+  value = var.keyVaultSecretNameServicePassword
+}
 output "keyVaultSecretNameAdminPassword" {
   value = var.keyVaultSecretNameAdminPassword
-}
-output "keyVaultSecretNameUserPassword" {
-  value = var.keyVaultSecretNameUserPassword
 }
 
 output "keyVaultKeyNameCacheEncryption" {

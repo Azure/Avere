@@ -101,7 +101,7 @@ echo "Customize (End): Deadline Client"
 if [ $subnetName == "Scheduler" ]; then
   echo "Customize (Start): Deadline Repository"
   installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
-  ./$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --prefix $schedulerRepositoryPath --mongodir $schedulerDatabasePath --dbuser $userName --dbpassword $userPassword --requireSSL false
+  ./$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --prefix $schedulerRepositoryPath --mongodir $schedulerDatabasePath --dbuser $userName --dbpassword $servicePassword --requireSSL false
   systemctl start nfs-server
   systemctl enable nfs-server
   echo "$schedulerRepositoryPath *(rw,no_root_squash)" >> /etc/exports

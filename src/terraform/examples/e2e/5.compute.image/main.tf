@@ -1,13 +1,13 @@
 terraform {
-  required_version = ">= 1.1.3"
+  required_version = ">= 1.1.6"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.91.0"
+      version = "~>2.97.0"
     }
   }
   backend "azurerm" {
-    key = "4.compute.image"
+    key = "5.compute.image"
   }
 }
 
@@ -16,7 +16,7 @@ provider "azurerm" {
 }
 
 module "global" {
-  source = "../global"
+  source = "../0.global"
 }
 
 variable "resourceGroupName" {
@@ -92,7 +92,7 @@ data "terraform_remote_state" "network" {
     resource_group_name  = module.global.securityResourceGroupName
     storage_account_name = module.global.securityStorageAccountName
     container_name       = module.global.terraformStorageContainerName
-    key                  = "1.network"
+    key                  = "2.network"
   }
 }
 
@@ -115,8 +115,8 @@ data "azurerm_key_vault" "vault" {
   resource_group_name = module.global.securityResourceGroupName
 }
 
-data "azurerm_key_vault_secret" "user_password" {
-  name         = module.global.keyVaultSecretNameUserPassword
+data "azurerm_key_vault_secret" "service_password" {
+  name         = module.global.keyVaultSecretNameServicePassword
   key_vault_id = data.azurerm_key_vault.vault.id
 }
 
@@ -216,8 +216,8 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
     "virtualNetworkResourceGroupName" = {
       value = data.azurerm_virtual_network.network.resource_group_name
     },
-    "userPassword" = {
-      value = data.azurerm_key_vault_secret.user_password.value
+    "servicePassword" = {
+      value = data.azurerm_key_vault_secret.service_password.value
     }
   })
   template_content = <<TEMPLATE
@@ -246,7 +246,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
         "virtualNetworkResourceGroupName": {
           "type": "string"
         },
-        "userPassword": {
+        "servicePassword": {
           "type": "string"
         }
       },
@@ -275,13 +275,13 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   "type": "object"
                 },
                 {
-                  "name": "userPassword",
+                  "name": "servicePassword",
                   "type": "string"
                 }
               ],
               "output": {
                 "type": "string",
-                "value": "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('scriptFileName')), concat(replace(replace(replace(replace(string(parameters('scriptParameters')), ',\"', ' '), '\":', '='), '{\"', ''), '}', ''), ' userPassword=', parameters('userPassword')))]"
+                "value": "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('scriptFileName')), concat(replace(replace(replace(replace(string(parameters('scriptParameters')), ',\"', ' '), '\":', '='), '{\"', ''), '}', ''), ' servicePassword=', parameters('servicePassword')))]"
               }
             },
             "GetExecuteCommandWindows": {
@@ -299,13 +299,13 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   "type": "object"
                 },
                 {
-                  "name": "userPassword",
+                  "name": "servicePassword",
                   "type": "string"
                 }
               ],
               "output": {
                 "type": "string",
-                "value": "[format('{0} {1}', concat(parameters('scriptFilePath'), parameters('scriptFileName')), concat(replace(replace(replace(replace(string(parameters('scriptParameters')), ',\"', ' -'), '\":', ' '), '{\"', '-'), '}', ''), ' -userPassword ', parameters('userPassword')))]"
+                "value": "[format('{0} {1}', concat(parameters('scriptFilePath'), parameters('scriptFileName')), concat(replace(replace(replace(replace(string(parameters('scriptParameters')), ',\"', ' -'), '\":', ' '), '{\"', '-'), '}', ''), ' -servicePassword ', parameters('servicePassword')))]"
               }
             }
           }
@@ -347,7 +347,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               },
               {
                 "type": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), 'PowerShell', 'Shell')]",
-                "inline": "[createArray(if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetExecuteCommandWindows(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.customScript, parameters('imageTemplates')[copyIndex()].build, parameters('userPassword')), fx.GetExecuteCommandLinux(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.customScript, parameters('imageTemplates')[copyIndex()].build, parameters('userPassword'))))]"
+                "inline": "[createArray(if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetExecuteCommandWindows(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.customScript, parameters('imageTemplates')[copyIndex()].build, parameters('servicePassword')), fx.GetExecuteCommandLinux(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.customScript, parameters('imageTemplates')[copyIndex()].build, parameters('servicePassword'))))]"
               },
               {
                 "type": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), 'WindowsRestart', 'Shell')]",

@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.1.3"
+  required_version = ">= 1.1.6"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.91.0"
+      version = "~>2.97.0"
     }
   }
 }
@@ -13,15 +13,7 @@ provider "azurerm" {
 }
 
 module "global" {
-  source = "../global"
-}
-
-variable "resourceGroupName" {
-  type = string
-}
-
-variable "managedIdentityName" {
-  type = string
+  source = "../0.global"
 }
 
 variable "storage" {
@@ -30,7 +22,6 @@ variable "storage" {
       accountType        = string
       accountRedundancy  = string
       accountPerformance = string
-      containerName      = string
     }
   )
 }
@@ -38,7 +29,6 @@ variable "storage" {
 variable "keyVault" {
   type = object(
     {
-      name    = string
       secrets = list(
         object(
           {
@@ -60,27 +50,15 @@ variable "keyVault" {
   )
 }
 
-variable "monitorWorkspace" {
-  type = object(
-    {
-      name               = string
-      sku                = string
-      retentionDays      = number
-      publicIngestEnable = bool
-      publicQueryEnable  = bool
-    }
-  )
-}
-
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_resource_group" "security" {
-  name     = var.resourceGroupName
+  name     = module.global.securityResourceGroupName
   location = module.global.regionName
 }
 
 resource "azurerm_user_assigned_identity" "identity" {
-  name                = var.managedIdentityName
+  name                = module.global.managedIdentityName
   resource_group_name = azurerm_resource_group.security.name
   location            = azurerm_resource_group.security.location
 }
@@ -95,12 +73,12 @@ resource "azurerm_storage_account" "storage" {
 }
 
 resource "azurerm_storage_container" "container" {
-  name                 = var.storage.containerName
+  name                 = module.global.terraformStorageContainerName
   storage_account_name = azurerm_storage_account.storage.name
 }
 
 resource "azurerm_key_vault" "vault" {
-  name                      = var.keyVault.name
+  name                      = module.global.keyVaultName
   resource_group_name       = azurerm_resource_group.security.name
   location                  = azurerm_resource_group.security.location
   tenant_id                 = data.azurerm_client_config.current.tenant_id
@@ -131,48 +109,28 @@ resource "azurerm_key_vault_key" "keys" {
   ]
 }
 
-resource "azurerm_log_analytics_workspace" "monitor" {
-  name                       = var.monitorWorkspace.name
-  location                   = azurerm_resource_group.security.location
-  resource_group_name        = azurerm_resource_group.security.name
-  sku                        = var.monitorWorkspace.sku
-  retention_in_days          = var.monitorWorkspace.retentionDays
-  internet_ingestion_enabled = var.monitorWorkspace.publicIngestEnable
-  internet_query_enabled     = var.monitorWorkspace.publicQueryEnable
-}
-
-resource "azurerm_monitor_private_link_scope" "monitor" {
-  name                = var.monitorWorkspace.name
-  resource_group_name = azurerm_resource_group.security.name
-}
-
-resource "azurerm_monitor_private_link_scoped_service" "monitor" {
-  name                = var.monitorWorkspace.name
-  resource_group_name = azurerm_resource_group.security.name
-  linked_resource_id  = azurerm_log_analytics_workspace.monitor.id
-  scope_name          = azurerm_monitor_private_link_scope.monitor.name
-}
-
 output "regionName" {
   value = module.global.regionName
 }
 
 output "resourceGroupName" {
-  value = var.resourceGroupName
+  value = module.global.securityResourceGroupName
 }
 
 output "managedIdentityName" {
-  value = var.managedIdentityName
+  value = module.global.managedIdentityName
 }
 
 output "storage" {
-  value = var.storage
+  value = merge(
+    { name = module.global.securityStorageAccountName },
+    var.storage
+  )
 }
 
 output "keyVault" {
-  value = var.keyVault
-}
-
-output "monitorWorkspace" {
-  value = var.monitorWorkspace
+  value = merge(
+    { name = module.global.keyVaultName },
+    var.keyVault
+  )
 }
