@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.97.0"
+      version = "~>2.98.0"
     }
   }
   backend "azurerm" {
@@ -27,16 +27,30 @@ variable "storageAccounts" {
   type = list(
     object(
       {
-        name             = string
-        type             = string
-        redundancy       = string
-        performance      = string
-        nfsV3Enable      = bool
-        fileShares       = list(string)
-        messageQueues    = list(string)
-        blobContainers   = list(string)
-        blobs            = list(string)
-        privateEndpoints = list(string)
+        name                  = string
+        type                  = string
+        redundancy            = string
+        performance           = string
+        enableBlobNfsV3       = bool
+        enableLargeFileShares = bool
+        privateEndpoints      = list(string)
+        blobContainers = list(
+          object(
+            {
+              name   = string
+              access = string
+            }
+          )
+        )
+        fileShares = list(
+          object(
+            {
+              name     = string
+              sizeGiB  = number
+              protocol = string
+            }
+          )
+        )
       }
     )
   )
@@ -95,54 +109,18 @@ variable "virtualNetwork" {
 }
 
 locals {
-  fileShares = flatten([
+  privateDnsZones = flatten([
     for storageAccount in var.storageAccounts : [
-      for fileShare in storageAccount.fileShares : {
-        fileShareName      = fileShare
-        storageAccountName = storageAccount.name
+      for privateEndpoint in storageAccount.privateEndpoints : {
+        privateDnsZoneName = "privatelink.${privateEndpoint}.core.windows.net"
       }
-    ] if storageAccount.name != ""
-  ])
-  messageQueues = flatten([
-    for storageAccount in var.storageAccounts : [
-      for messageQueue in storageAccount.messageQueues : {
-        messageQueueName   = messageQueue
-        storageAccountName = storageAccount.name
-      }
-    ] if storageAccount.name != ""
-  ])
-  blobContainers = flatten([
-    for storageAccount in var.storageAccounts : [
-      for blobContainer in storageAccount.blobContainers : {
-        blobContainerName  = blobContainer
-        storageAccountName = storageAccount.name
-      }
-    ] if storageAccount.name != ""
-  ])
-  blobDirectories = flatten([
-    for storageAccount in var.storageAccounts : [
-      for blob in storageAccount.blobs : [
-        for file in fileset(blob, "**") : {
-          blobName           = trimprefix(file, split("/", file)[0])
-          blobContainerName  = split("/", blob)[0]
-          storageAccountName = storageAccount.name
-        }
-      ] if substr(strrev(blob), 0, 1) == "*"
-    ] if storageAccount.name != ""
-  ])
-  blobs = flatten([
-    for storageAccount in var.storageAccounts : [
-      for blob in storageAccount.blobs : {
-        blobName           = trimprefix(blob, split("/", blob)[0])
-        blobContainerName  = split("/", blob)[0]
-        storageAccountName = storageAccount.name
-      } if substr(strrev(blob), 0, 1) != "*"
     ] if storageAccount.name != ""
   ])
   privateEndpoints = flatten([
     for storageAccount in var.storageAccounts : [
       for privateEndpoint in storageAccount.privateEndpoints : {
         privateEndpointType = privateEndpoint
+        privateDnsZoneName  = "privatelink.${privateEndpoint}.core.windows.net"
         storageAccountName  = storageAccount.name
         storageAccountId    = "${azurerm_resource_group.storage.id}/providers/Microsoft.Storage/storageAccounts/${storageAccount.name}"
       }
@@ -151,7 +129,38 @@ locals {
   privateEndpointTypes = flatten([
     for storageAccount in var.storageAccounts : storageAccount.privateEndpoints if storageAccount.name != ""
   ])
-  capacityPools = flatten([
+  blobContainers = flatten([
+    for storageAccount in var.storageAccounts : [
+      for blobContainer in storageAccount.blobContainers : {
+        blobContainerName   = blobContainer.name
+        blobContainerAccess = blobContainer.access
+        storageAccountName  = storageAccount.name
+      }
+    ] if storageAccount.name != ""
+  ])
+  blobs = flatten([
+    for storageAccount in var.storageAccounts : [
+      for blobContainer in storageAccount.blobContainers : [
+        for blob in fileset(blobContainer.name, "**") : {
+          blobName           = blob
+          blobContainerName  = blobContainer.name
+          storageAccountName = storageAccount.name
+        }
+      ]
+    ] if storageAccount.name != ""
+  ])
+  fileShares = flatten([
+    for storageAccount in var.storageAccounts : [
+      for fileShare in storageAccount.fileShares : {
+        fileShareName      = fileShare.name
+        fileShareSize      = fileShare.sizeGiB
+        fileAccessProtocol = fileShare.protocol
+        storageAccountName = storageAccount.name
+      }
+    ] if storageAccount.name != ""
+  ])
+  hpcCachePrincipalId = "831d4223-7a3c-4121-a445-1e423591e57b"
+  netAppCapacityPools = flatten([
     for netAppAccount in var.netAppAccounts : [
       for capacityPool in netAppAccount.capacityPools : {
         netAppAccountName = netAppAccount.name
@@ -159,7 +168,7 @@ locals {
       } if capacityPool.name != ""
     ] if netAppAccount.name != ""
   ])
-  poolVolumes = flatten([
+  netAppPoolVolumes = flatten([
     for netAppAccount in var.netAppAccounts : [
       for capacityPool in netAppAccount.capacityPools : [
         for poolVolume in capacityPool.volumes : {
@@ -170,7 +179,6 @@ locals {
       ] if capacityPool.name != ""
     ] if netAppAccount.name != ""
   ])
-  hpcCachePrincipalId = "831d4223-7a3c-4121-a445-1e423591e57b"
 }
 
 data "terraform_remote_state" "network" {
@@ -208,7 +216,7 @@ resource "azurerm_resource_group" "storage" {
 }
 
 ########################################################################################
-# Storage - https://docs.microsoft.com/en-us/azure/storage/common/storage-introduction #
+# Storage (https://docs.microsoft.com/en-us/azure/storage/common/storage-introduction) #
 ########################################################################################
 
 resource "azurerm_storage_account" "storage" {
@@ -221,10 +229,11 @@ resource "azurerm_storage_account" "storage" {
   account_kind             = each.value.type
   account_replication_type = each.value.redundancy
   account_tier             = each.value.performance
-  is_hns_enabled           = each.value.nfsV3Enable
-  nfsv3_enabled            = each.value.nfsV3Enable
+  is_hns_enabled           = each.value.enableBlobNfsV3
+  nfsv3_enabled            = each.value.enableBlobNfsV3
+  large_file_share_enabled = each.value.enableLargeFileShares ? true : null
   dynamic "network_rules" {
-    for_each = each.value.nfsV3Enable ? [1] : [] 
+    for_each = each.value.enableBlobNfsV3 ? [1] : [] 
     content {
       default_action = "Deny"
       ip_rules = [
@@ -232,107 +241,27 @@ resource "azurerm_storage_account" "storage" {
       ]
     }
   }
-  # dynamic "network_rules" {
-  #   for_each = each.value.nfsV3Enable || length(each.value.privateEndpoints) > 0 ? [1] : [] 
-  #   content {
-  #     default_action = "Deny"
-  #     virtual_network_subnet_ids = [
-  #       for x in data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets : "${data.azurerm_virtual_network.network.id}/subnets/${x.name}" if contains(x.serviceEndpoints, "Microsoft.Storage")
-  #     ]
-  #     ip_rules = [
-  #       jsondecode(data.http.current_ip_address.body).ip
-  #     ]
-  #   }
-  # }
 }
 
-resource "azurerm_storage_share" "shares" {
+resource "azurerm_private_dns_zone" "zones" {
   for_each = {
-    for x in local.fileShares : "${x.storageAccountName}.${x.fileShareName}" => x
+    for x in distinct(local.privateDnsZones) : x.privateDnsZoneName => x
   }
-  name                 = each.value.fileShareName
-  storage_account_name = each.value.storageAccountName
-  depends_on = [
-    azurerm_storage_account.storage
-  ]
-}
-
-resource "azurerm_storage_queue" "queues" {
-  for_each = {
-    for x in local.messageQueues : "${x.storageAccountName}.${x.messageQueueName}" => x
-  }
-  name                 = each.value.messageQueueName
-  storage_account_name = each.value.storageAccountName
-  depends_on = [
-    azurerm_storage_account.storage
-  ]
-}
-
-resource "azurerm_storage_container" "containers" {
-  for_each = {
-    for x in local.blobContainers : "${x.storageAccountName}.${x.blobContainerName}" => x
-  }
-  name                 = each.value.blobContainerName
-  storage_account_name = each.value.storageAccountName
-  depends_on = [
-    azurerm_storage_account.storage
-  ]
-}
-
-resource "azurerm_storage_blob" "directory_files" {
-  for_each = {
-    for x in local.blobDirectories : "${x.storageAccountName}.${x.blobName}" => x
-  }
-  name                   = each.value.blobName
-  storage_account_name   = each.value.storageAccountName
-  storage_container_name = each.value.blobContainerName
-  source                 = "${path.cwd}/${each.value.blobContainerName}${each.value.blobName}"
-  type                   = "Block"
-  depends_on = [
-    azurerm_storage_container.containers
-  ]
-}
-
-resource "azurerm_storage_blob" "root_files" {
-  for_each = {
-    for x in local.blobs : "${x.storageAccountName}.${x.blobName}" => x
-  }
-  name                   = each.value.blobName
-  storage_account_name   = each.value.storageAccountName
-  storage_container_name = each.value.blobContainerName
-  source                 = "${path.cwd}/${each.value.blobContainerName}${each.value.blobName}"
-  type                   = "Block"
-  depends_on = [
-    azurerm_storage_container.containers
-  ]
-}
-
-resource "azurerm_private_dns_zone" "blob" {
-  count               = contains(local.privateEndpointTypes, "blob") ? 1 : 0
-  name                = "privatelink.blob.core.windows.net"
+  name                = each.value.privateDnsZoneName
   resource_group_name = azurerm_resource_group.storage.name
 }
 
-resource "azurerm_private_dns_zone" "file" {
-  count               = contains(local.privateEndpointTypes, "file") ? 1 : 0
-  name                = "privatelink.file.core.windows.net"
-  resource_group_name = azurerm_resource_group.storage.name
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "blob" {
-  count                 = contains(local.privateEndpointTypes, "blob") ? 1 : 0
+resource "azurerm_private_dns_zone_virtual_network_link" "zone_links" {
+  for_each = {
+    for x in distinct(local.privateDnsZones) : x.privateDnsZoneName => x
+  }
   name                  = data.azurerm_virtual_network.network.name
   resource_group_name   = azurerm_resource_group.storage.name
-  private_dns_zone_name = azurerm_private_dns_zone.blob[count.index].name
+  private_dns_zone_name = each.value.privateDnsZoneName
   virtual_network_id    = data.azurerm_virtual_network.network.id
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "file" {
-  count                 = contains(local.privateEndpointTypes, "file") ? 1 : 0
-  name                  = data.azurerm_virtual_network.network.name
-  resource_group_name   = azurerm_resource_group.storage.name
-  private_dns_zone_name = azurerm_private_dns_zone.file[count.index].name
-  virtual_network_id    = data.azurerm_virtual_network.network.id
+  depends_on = [
+    azurerm_private_dns_zone.zones
+  ]
 }
 
 resource "azurerm_private_endpoint" "storage" {
@@ -354,20 +283,19 @@ resource "azurerm_private_endpoint" "storage" {
   private_dns_zone_group {
     name = each.value.storageAccountName
     private_dns_zone_ids = [
-      each.value.privateEndpointType == "file" ? azurerm_private_dns_zone.file[0].id : azurerm_private_dns_zone.blob[0].id
+      "${azurerm_resource_group.storage.id}/providers/Microsoft.Network/privateDnsZones/${each.value.privateDnsZoneName}"
     ]
   }
   depends_on = [
     azurerm_storage_account.storage,
-    azurerm_private_dns_zone_virtual_network_link.blob,
-    azurerm_private_dns_zone_virtual_network_link.file
+    azurerm_private_dns_zone_virtual_network_link.zone_links
   ]
 }
 
 # https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage-account-contributor
 resource "azurerm_role_assignment" "storage_account_contributor" {
   for_each = {
-    for x in var.storageAccounts : x.name => x if x.nfsV3Enable && x.name != "" 
+    for x in var.storageAccounts : x.name => x if x.enableBlobNfsV3 && x.name != "" 
   }
   role_definition_name = "Storage Account Contributor"
   principal_id         = local.hpcCachePrincipalId
@@ -380,7 +308,7 @@ resource "azurerm_role_assignment" "storage_account_contributor" {
 # https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor
 resource "azurerm_role_assignment" "storage_blob_data_contributor" {
   for_each = {
-    for x in var.storageAccounts : x.name => x if x.nfsV3Enable && x.name != "" 
+    for x in var.storageAccounts : x.name => x if x.enableBlobNfsV3 && x.name != "" 
   }
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = local.hpcCachePrincipalId
@@ -390,8 +318,53 @@ resource "azurerm_role_assignment" "storage_blob_data_contributor" {
   ]
 }
 
+resource "azurerm_storage_container" "containers" {
+  for_each = {
+    for x in local.blobContainers : "${x.storageAccountName}.${x.blobContainerName}" => x
+  }
+  name                  = each.value.blobContainerName
+  container_access_type = each.value.blobContainerAccess
+  storage_account_name  = each.value.storageAccountName
+  depends_on = [
+    azurerm_storage_account.storage
+  ]
+}
+
+resource "azurerm_storage_blob" "blobs" {
+  for_each = {
+    for x in local.blobs : "${x.storageAccountName}.${x.blobName}" => x
+  }
+  name                   = each.value.blobName
+  storage_account_name   = each.value.storageAccountName
+  storage_container_name = each.value.blobContainerName
+  source                 = "${path.cwd}/${each.value.blobContainerName}/${each.value.blobName}"
+  type                   = "Block"
+  depends_on = [
+    azurerm_storage_container.containers
+  ]
+}
+
+resource "azurerm_storage_share" "shares" {
+  for_each = {
+    for x in local.fileShares : "${x.storageAccountName}.${x.fileShareName}" => x
+  }
+  name                 = each.value.fileShareName
+  storage_account_name = each.value.storageAccountName
+  enabled_protocol     = each.value.fileAccessProtocol
+  quota                = each.value.fileShareSize
+  depends_on = [
+    azurerm_storage_account.storage
+  ]
+}
+
+#######################################################################################################
+# Hammerspace (https://azuremarketplace.microsoft.com/en-us/marketplace/apps/hammerspace.hammerspace) #
+#######################################################################################################
+
+# TBD
+
 ############################################################################################################
-# NetApp Files - https://docs.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-introduction #
+# NetApp Files (https://docs.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-introduction) #
 ############################################################################################################
 
 resource "azurerm_netapp_account" "storage" {
@@ -405,7 +378,7 @@ resource "azurerm_netapp_account" "storage" {
 
 resource "azurerm_netapp_pool" "storage" {
   for_each = {
-    for x in local.capacityPools : "${x.netAppAccountName}.${x.capacityPool.name}" => x
+    for x in local.netAppCapacityPools : "${x.netAppAccountName}.${x.capacityPool.name}" => x
   }
   name                = each.value.capacityPool.name
   resource_group_name = azurerm_resource_group.storage.name
@@ -420,7 +393,7 @@ resource "azurerm_netapp_pool" "storage" {
 
 resource "azurerm_netapp_volume" "storage" {
   for_each = {
-    for x in local.poolVolumes : "${x.netAppAccountName}.${x.capacityPoolName}.${x.poolVolume.name}" => x
+    for x in local.netAppPoolVolumes : "${x.netAppAccountName}.${x.capacityPoolName}.${x.poolVolume.name}" => x
   }
   name                = each.value.poolVolume.name
   resource_group_name = azurerm_resource_group.storage.name

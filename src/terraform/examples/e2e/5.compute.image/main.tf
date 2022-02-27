@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.97.0"
+      version = "~>2.98.0"
     }
   }
   backend "azurerm" {
@@ -116,7 +116,7 @@ data "azurerm_key_vault" "vault" {
 }
 
 data "azurerm_key_vault_secret" "service_password" {
-  name         = module.global.keyVaultSecretNameServicePassword
+  name         = module.global.keyVaultSecretNameAdminPassword
   key_vault_id = data.azurerm_key_vault.vault.id
 }
 

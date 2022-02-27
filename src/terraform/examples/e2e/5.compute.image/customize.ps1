@@ -9,8 +9,8 @@ param (
 $homeDirectory = "C:\Users\Public\Downloads"
 Set-Location -Path $homeDirectory
 
-#   NVv3 - https://docs.microsoft.com/en-us/azure/virtual-machines/nvv3-series
-# NCT4v3 - https://docs.microsoft.com/en-us/azure/virtual-machines/nct4-v3-series
+#   NVv3 (https://docs.microsoft.com/en-us/azure/virtual-machines/nvv3-series)
+# NCT4v3 (https://docs.microsoft.com/en-us/azure/virtual-machines/nct4-v3-series)
 if (($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v3")) -or
     ($machineSize.StartsWith("Standard_NC") -and $machineSize.EndsWith("T4_v3"))) {
   Write-Host "Customize (Start): GPU Driver (NVv3)"
@@ -21,7 +21,7 @@ if (($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v3")) -
   Write-Host "Customize (End): GPU Driver (NVv3)"
 }
 
-# NVv4 - https://docs.microsoft.com/en-us/azure/virtual-machines/nvv4-series
+# NVv4 (https://docs.microsoft.com/en-us/azure/virtual-machines/nvv4-series)
 if ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v4")) {
   Write-Host "Customize (Start): GPU Driver (NVv4)"
   $installFile = "amd-gpu.exe"

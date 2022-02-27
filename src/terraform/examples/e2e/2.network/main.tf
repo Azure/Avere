@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.97.0"
+      version = "~>2.98.0"
     }
   }
   backend "azurerm" {
@@ -130,7 +130,7 @@ resource "azurerm_resource_group" "network" {
 }
 
 ######################################################################################################
-# Virtual Network - https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview #
+# Virtual Network (https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) #
 ######################################################################################################
 
 resource "azurerm_virtual_network" "network" {
@@ -210,7 +210,7 @@ resource "azurerm_subnet_network_security_group_association" "network" {
 }
 
 ################################################################################# 
-# Private DNS - https://docs.microsoft.com/en-us/azure/dns/private-dns-overview #
+# Private DNS (https://docs.microsoft.com/en-us/azure/dns/private-dns-overview) #
 ################################################################################# 
 
 resource "azurerm_private_dns_zone" "network" {

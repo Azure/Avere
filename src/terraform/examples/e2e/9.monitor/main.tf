@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.97.0"
+      version = "~>2.98.0"
     }
   }
   backend "azurerm" {
@@ -23,18 +23,6 @@ variable "resourceGroupName" {
   type = string
 }
 
-variable "monitorWorkspace" {
-  type = object(
-    {
-      name               = string
-      sku                = string
-      retentionDays      = number
-      publicIngestEnable = bool
-      publicQueryEnable  = bool
-    }
-  )
-}
-
 variable "virtualNetwork" {
   type = object(
     {
@@ -45,6 +33,11 @@ variable "virtualNetwork" {
 }
 
 data "azurerm_client_config" "current" {}
+
+data "azurerm_log_analytics_workspace" "monitor" {
+  name                = module.global.monitorWorkspaceName
+  resource_group_name = module.global.securityResourceGroupName
+}
 
 data "terraform_remote_state" "network" {
   count   = var.virtualNetwork.name == "" ? 1 : 0
@@ -73,30 +66,20 @@ resource "azurerm_resource_group" "network_monitor" {
   location = module.global.regionName
 }
 
-resource "azurerm_log_analytics_workspace" "monitor" {
-  name                       = var.monitorWorkspace.name
-  resource_group_name        = azurerm_resource_group.network_monitor.name
-  location                   = azurerm_resource_group.network_monitor.location
-  sku                        = var.monitorWorkspace.sku
-  retention_in_days          = var.monitorWorkspace.retentionDays
-  internet_ingestion_enabled = var.monitorWorkspace.publicIngestEnable
-  internet_query_enabled     = var.monitorWorkspace.publicQueryEnable
-}
-
 resource "azurerm_monitor_private_link_scope" "monitor" {
-  name                = var.monitorWorkspace.name
+  name                = module.global.monitorWorkspaceName
   resource_group_name = azurerm_resource_group.network_monitor.name
 }
 
 resource "azurerm_monitor_private_link_scoped_service" "monitor" {
-  name                = var.monitorWorkspace.name
+  name                = module.global.monitorWorkspaceName
   resource_group_name = azurerm_resource_group.network_monitor.name
-  linked_resource_id  = azurerm_log_analytics_workspace.monitor.id
+  linked_resource_id  = data.azurerm_log_analytics_workspace.monitor.id
   scope_name          = azurerm_monitor_private_link_scope.monitor.name
 }
 
 ################################################################################# 
-# Private DNS - https://docs.microsoft.com/en-us/azure/dns/private-dns-overview #
+# Private DNS (https://docs.microsoft.com/en-us/azure/dns/private-dns-overview) #
 ################################################################################# 
 
 resource "azurerm_private_dns_zone" "monitor" {
@@ -165,7 +148,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "blob" {
 }
 
 ########################################################################################################## 
-# Monitor Private Link - https://docs.microsoft.com/en-us/azure/azure-monitor/logs/private-link-security #
+# Monitor Private Link (https://docs.microsoft.com/en-us/azure/azure-monitor/logs/private-link-security) #
 ########################################################################################################## 
 
 resource "azurerm_private_endpoint" "monitor_farm" {
@@ -201,6 +184,6 @@ output "resourceGroupName" {
   value = var.resourceGroupName
 }
 
-output "monitorWorkspace" {
-  value = var.monitorWorkspace
+output "monitorPrivateLink" {
+  value = azurerm_monitor_private_link_scoped_service.monitor
 }

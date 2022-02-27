@@ -1,6 +1,6 @@
 resourceGroupName = "AzureRender.Farm"
 
-# Virtual Machine Scale Sets - https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview
+# Virtual Machine Scale Sets (https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview)
 virtualMachineScaleSets = [
   {
     name    = "LinuxFarm"
@@ -30,7 +30,7 @@ virtualMachineScaleSets = [
       parameters = {
         fileSystemMounts = [
           "cache.media.studio:/mnt/farm /mnt/show/read nfs hard,proto=tcp,mountproto=tcp,retry=30 0 0",
-          "azasset.blob.core.windows.net:/azasset/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0",
+          "azmedia1.blob.core.windows.net:/azmedia1/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0",
           "scheduler.media.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0"
         ]
       }
@@ -79,7 +79,7 @@ virtualMachineScaleSets = [
       parameters = {
         fileSystemMounts = [
           "mount -o anon \\\\cache.media.studio\\mnt\\farm R:",
-          "mount -o anon -o sec=sys -o nolock \\\\azasset.blob.core.windows.net\\azasset\\show W:",
+          "mount -o anon -o sec=sys -o nolock \\\\azmedia1.blob.core.windows.net\\azmedia1\\show W:",
           "mount -o anon \\\\scheduler.media.studio\\DeadlineRepository S:"
         ]
       }
@@ -102,7 +102,7 @@ virtualMachineScaleSets = [
   }
 ]
 
-# Virtual Network - https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview
+# Virtual Network (https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview)
 virtualNetwork = {
   name              = ""
   subnetName        = ""

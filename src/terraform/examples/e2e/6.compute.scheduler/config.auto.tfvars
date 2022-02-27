@@ -1,6 +1,6 @@
 resourceGroupName = "AzureRender.Scheduler"
 
-# Virtual Machines - https://docs.microsoft.com/en-us/azure/virtual-machines/
+# Virtual Machines (https://docs.microsoft.com/en-us/azure/virtual-machines)
 virtualMachines = [
   {
     name        = "LinuxScheduler"
@@ -82,7 +82,7 @@ virtualMachines = [
   }
 ]
 
-# Virtual Network - https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview
+# Virtual Network (https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview)
 virtualNetwork = {
   name               = ""
   subnetName         = ""

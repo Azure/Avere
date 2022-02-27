@@ -3,8 +3,8 @@
 homeDirectory="/usr/local"
 cd $homeDirectory
 
-#   NVv3 - https://docs.microsoft.com/en-us/azure/virtual-machines/nvv3-series
-# NCT4v3 - https://docs.microsoft.com/en-us/azure/virtual-machines/nct4-v3-series
+#   NVv3 (https://docs.microsoft.com/en-us/azure/virtual-machines/nvv3-series)
+# NCT4v3 (https://docs.microsoft.com/en-us/azure/virtual-machines/nct4-v3-series)
 if [[ ($machineSize == Standard_NV* && $machineSize == *_v3) ||
       ($machineSize == Standard_NC* && $machineSize == *T4_v3) ]]; then
   echo "Customize (Start): GPU Driver (NVv3)"
@@ -18,7 +18,7 @@ if [[ ($machineSize == Standard_NV* && $machineSize == *_v3) ||
   echo "Customize (End): GPU Driver (NVv3)"
 fi
 
-# NVv4 - https://docs.microsoft.com/en-us/azure/virtual-machines/nvv4-series
+# NVv4 (https://docs.microsoft.com/en-us/azure/virtual-machines/nvv4-series)
 if [[ $machineSize == Standard_NV* && $machineSize == *_v4 ]]; then
   echo "Customize (Start): GPU Driver (NVv4)"
   installFile="amd-gpu.tar.xz"

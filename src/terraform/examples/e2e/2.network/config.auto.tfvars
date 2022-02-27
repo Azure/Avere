@@ -1,7 +1,7 @@
 resourceGroupName = "AzureRender.Network"
 
 ######################################################################################################
-# Virtual Network - https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview #
+# Virtual Network (https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) #
 ######################################################################################################
 
 virtualNetwork = {
@@ -51,7 +51,7 @@ virtualNetworkSubnetIndex = {
 }
 
 #################################################################################
-# Private DNS - https://docs.microsoft.com/en-us/azure/dns/private-dns-overview #
+# Private DNS (https://docs.microsoft.com/en-us/azure/dns/private-dns-overview) #
 #################################################################################
 
 virtualNetworkPrivateDns = {
@@ -72,7 +72,7 @@ hybridNetwork = {
 }
 
 ####################################################################################################################
-# Virtual Network Gateway (VPN) - https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways #
+# Virtual Network Gateway (VPN) (https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways) #
 ####################################################################################################################
 
 vpnGateway = {
@@ -82,7 +82,7 @@ vpnGateway = {
   activeActive = false
 }
 
-# Site-to-Site Local Network Gateway - https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpn-gateway-settings#lng
+# Site-to-Site Local Network Gateway (https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpn-gateway-settings#lng)
 vpnGatewayLocal = {
   fqdn              = "" // Set the fully-qualified domain name (FQDN) of your on-premises VPN gateway device
   address           = "" // OR set the public IP address of your on-prem VPN gateway device. Do not set both.
@@ -92,7 +92,7 @@ vpnGatewayLocal = {
   bgpPeerWeight     = 0
 }
 
-# Point-to-Site Client - https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-howto-point-to-site-rm-ps
+# Point-to-Site Client (https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-howto-point-to-site-rm-ps)
 vpnGatewayClient = {
   addressSpace    = []
   certificateName = ""
@@ -100,7 +100,7 @@ vpnGatewayClient = {
 }
 
 ############################################################################################################################################
-# Virtual Network Gateway (ExpressRoute) - https://docs.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways #
+# Virtual Network Gateway (ExpressRoute) (https://docs.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways) #
 ############################################################################################################################################
 
 expressRoute = {

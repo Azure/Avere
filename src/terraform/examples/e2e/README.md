@@ -1,6 +1,6 @@
 # Azure Artist Anywhere (AAA) Rendering Solution
 
-This folder contains the end-to-end modular framework for automated deployment of the [Azure Artist Anywhere (AAA) rendering architecture](https://github.com/Azure/Avere/blob/main/src/terraform/burstrenderarchitecture.png). By extending your rendering pipeline with [Azure HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview), you can enable remote artists across [Azure Regions](https://azure.microsoft.com/en-us/global-infrastructure/geographies) and scale your Azure render farm. You can choose to connect your on-premises asset storage via [Azure Hybrid Networking](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/hybrid-networking/) and/or enable Azure (multi-regional) storage.
+This folder contains the end-to-end modular framework for automated deployment of the [Azure Artist Anywhere (AAA) rendering architecture](https://github.com/Azure/Avere/blob/main/src/terraform/burstrenderarchitecture.png). By extending your rendering pipeline with [Azure HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview), you can enable remote artists across [Azure Regions](https://azure.microsoft.com/en-us/global-infrastructure/geographies) and scale your Azure render farm. You can choose to connect your on-premises asset storage via [Azure Hybrid Networking](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/hybrid-networking) and/or deploy Azure (multi-regional) storage.
 
 The following core principles are implemented throughout this Azure rendering solution framework.
 * Incorporation of security best practices ([Managed Identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://docs.microsoft.com/en-us/azure/key-vault/general/overview), [Private Endpoints](https://docs.microsoft.com/en-us/azure/private-link/private-endpoint-overview), etc.) 
@@ -14,10 +14,10 @@ The following core principles are implemented throughout this Azure rendering so
 | [2 Network](#2-network) | Deploys [Virtual Network](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) with [VPN](https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways) hybrid networking services. |
 | [3 Storage](#3-storage) | Deploys [Storage Accounts](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview) (Blob or File), [NetApp Files](https://docs.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-introduction) or [Hammerspace](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/hammerspace.hammerspace) storage. |
 | [4 Storage Cache](#4-storage-cache) | Deploys [HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-overview) for highly-available and scalable file caching. |
-| [5 Compute Image](#5-compute-image) | Deploys [Compute Gallery](https://docs.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries) with automated image building via [Image Builder](https://docs.microsoft.com/en-us/azure/virtual-machines/image-builder-overview),<br>including customized images with *Blender 3*, *Maya 2022* and/or *Unreal Engine 5*. |
-| [6 Compute Scheduler](#6-compute-scheduler) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/) for distributed job scheduling across a render farm. |
+| [5 Compute Image](#5-compute-image) | Deploys [Compute Gallery](https://docs.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries) images that are custom built via [Image Builder](https://docs.microsoft.com/en-us/azure/virtual-machines/image-builder-overview) service. |
+| [6 Compute Scheduler](#6-compute-scheduler) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines) for distributed job scheduling across a render farm. |
 | [7 Compute Farm](#7-compute-farm) | Deploys [Virtual Machine Scale Sets](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview) for [Linux](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) or [Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) render farms. |
-| [8 Compute Workstation](#8-compute-workstation) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/) for [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) artist workstations. |
+| [8 Compute Workstation](#8-compute-workstation) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines) for [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) artist workstations. |
 | [9 Monitor](#9-monitor) | Deploys [Monitor Private Link](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/private-link-security) with [Private DNS](https://docs.microsoft.com/en-us/azure/dns/private-dns-overview) and [Private Endpoint](https://docs.microsoft.com/en-us/azure/private-link/private-endpoint-overview) integration. |
 | [10 Render](#10-render) | Submit render farm jobs from [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) artist workstations. |
 
@@ -47,9 +47,10 @@ To manage deployment of the Azure Artist Anywhere solution from your local works
 
 ## 1 Security
 
-*Before deploying the Security module*, the following built-in Azure roles *must be assigned to the current user* to enable creation of KeyVault secrets and keys, respectively.
-* *Key Vault Secrets Officer* - https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-secrets-officer
-* *Key Vault Crypto Officer*  - https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-crypto-officer
+*Before deploying the Security module*, the following built-in Azure roles *must be assigned to the current user* to enable creation of KeyVault secrets, certificates and keys, respectively.
+* *Key Vault Secrets Officer* (https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-secrets-officer)
+* *Key Vault Certificates Officer* (https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-crypto-officer)
+* *Key Vault Crypto Officer*  (https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-crypto-officer)
 
 For Azure role assignment instructions, refer to either the Azure [portal](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal), [CLI](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-cli) or [PowerShell](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-powershell) documents.
 
@@ -60,7 +61,7 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 1. Run `terraform init` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
-1. Use the [Azure portal to update your Key Vault secret values](https://docs.microsoft.com/en-us/azure/key-vault/secrets/quick-create-portal) (`GatewayConnection`, `ServicePassword`, `AdminPassword`)
+1. Use the [Azure portal to update your Key Vault secret values](https://docs.microsoft.com/en-us/azure/key-vault/secrets/quick-create-portal) (`GatewayConnection`, `AdminPassword`)
 
 ## 2 Network
 

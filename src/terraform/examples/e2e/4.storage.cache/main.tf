@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.97.0"
+      version = "~>2.98.0"
     }
     avere = {
       source  = "hashicorp/avere"
@@ -31,7 +31,7 @@ variable "cacheName" {
   type = string
 }
 
-variable "hpcCacheEnable" {
+variable "enableHpcCache" {
   type = bool
 }
 
@@ -165,7 +165,7 @@ data "azurerm_private_dns_zone" "network" {
 locals {
   vfxtControllerAddress   = cidrhost(data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.cache].addressSpace[0], 39)
   vfxtVServerFirstAddress = cidrhost(data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.cache].addressSpace[0], 40)
-  vfxtVServerAddressCount = 20
+  vfxtVServerAddressCount = 16
 }
 
 resource "azurerm_resource_group" "cache" {
@@ -174,11 +174,11 @@ resource "azurerm_resource_group" "cache" {
 }
 
 ###################################################################################
-# HPC Cache - https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview #
+# HPC Cache (https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) #
 ###################################################################################
 
 resource "azurerm_hpc_cache" "cache" {
-  count               = var.hpcCacheEnable ? 1 : 0
+  count               = var.enableHpcCache ? 1 : 0
   name                = var.cacheName
   resource_group_name = azurerm_resource_group.cache.name
   location            = azurerm_resource_group.cache.location
@@ -189,7 +189,7 @@ resource "azurerm_hpc_cache" "cache" {
 
 resource "azurerm_hpc_cache_nfs_target" "storage" {
   for_each = {
-    for x in var.storageTargetsNfs : x.name => x if var.hpcCacheEnable && x.name != ""
+    for x in var.storageTargetsNfs : x.name => x if var.enableHpcCache && x.name != ""
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.cache.name
@@ -208,7 +208,7 @@ resource "azurerm_hpc_cache_nfs_target" "storage" {
 
 resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
   for_each = {
-    for x in var.storageTargetsNfsBlob : x.name => x if var.hpcCacheEnable && x.name != ""
+    for x in var.storageTargetsNfsBlob : x.name => x if var.enableHpcCache && x.name != ""
   }
   name                 = each.value.name
   resource_group_name  = azurerm_resource_group.cache.name
@@ -219,7 +219,7 @@ resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
 }
 
 ######################################################################################
-# Avere vFXT - https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-overview #
+# Avere vFXT (https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-overview) #
 ######################################################################################
 
 data "azurerm_key_vault" "vault" {
@@ -233,7 +233,7 @@ data "azurerm_key_vault_secret" "admin_password" {
 }
 
 module "vfxt_controller" {
-  count                          = var.hpcCacheEnable ? 0 : 1
+  count                          = var.enableHpcCache ? 0 : 1
   source                         = "github.com/Azure/Avere/src/terraform/modules/controller3"
   create_resource_group          = false
   resource_group_name            = var.resourceGroupName
@@ -251,7 +251,7 @@ module "vfxt_controller" {
 }
 
 resource "avere_vfxt" "cache" {
-  count                           = var.hpcCacheEnable ? 0 : 1
+  count                           = var.enableHpcCache ? 0 : 1
   vfxt_cluster_name               = lower(var.cacheName)
   azure_resource_group            = var.resourceGroupName
   location                        = module.global.regionName
@@ -298,14 +298,14 @@ resource "avere_vfxt" "cache" {
 }
 
 ################################################################################# 
-# Private DNS - https://docs.microsoft.com/en-us/azure/dns/private-dns-overview #
+# Private DNS (https://docs.microsoft.com/en-us/azure/dns/private-dns-overview) #
 ################################################################################# 
 
 resource "azurerm_private_dns_a_record" "cache" {
   name                = "cache"
   resource_group_name = data.azurerm_private_dns_zone.network.resource_group_name
   zone_name           = data.azurerm_private_dns_zone.network.name
-  records             = var.hpcCacheEnable ? azurerm_hpc_cache.cache[0].mount_addresses : avere_vfxt.cache[0].vserver_ip_addresses
+  records             = var.enableHpcCache ? azurerm_hpc_cache.cache[0].mount_addresses : avere_vfxt.cache[0].vserver_ip_addresses
   ttl                 = 300
 }
 
@@ -322,15 +322,15 @@ output "cacheName" {
 }
 
 output "cacheControllerAddress" {
-  value = var.hpcCacheEnable ? "" : avere_vfxt.cache[0].controller_address
+  value = var.enableHpcCache ? "" : avere_vfxt.cache[0].controller_address
 }
 
 output "cacheManagementAddress" {
-  value = var.hpcCacheEnable ? "" : avere_vfxt.cache[0].vfxt_management_ip
+  value = var.enableHpcCache ? "" : avere_vfxt.cache[0].vfxt_management_ip
 }
 
 output "cacheMountAddresses" {
-  value = var.hpcCacheEnable ? azurerm_hpc_cache.cache[0].mount_addresses : avere_vfxt.cache[0].vserver_ip_addresses
+  value = var.enableHpcCache ? azurerm_hpc_cache.cache[0].mount_addresses : avere_vfxt.cache[0].vserver_ip_addresses
 }
 
 output "cachePrivateDnsFqdn" {

@@ -16,13 +16,13 @@ variable "terraformStorageContainerName" {
   default = "terraform"
 }
 
-# Managed Identity - https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview
+# Managed Identity (https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview)
 variable "managedIdentityName" {
   type    = string
   default = "AzRender" // Alphanumeric, underscores and hyphens are allowed
 }
 
-# Key Vault - https://docs.microsoft.com/en-us/azure/key-vault/general/overview
+# Key Vault (https://docs.microsoft.com/en-us/azure/key-vault/general/overview)
 variable "keyVaultName" {
   type    = string
   default = "AzRender" // Set to a globally unique name (alphanumeric, hyphens)
@@ -33,13 +33,19 @@ variable "keyVaultSecretNameGatewayConnection" {
   type    = string
   default = "GatewayConnection"
 }
-variable "keyVaultSecretNameServicePassword" {
-  type    = string
-  default = "ServicePassword"
-}
 variable "keyVaultSecretNameAdminPassword" {
   type    = string
   default = "AdminPassword"
+}
+
+# KeyVault certificate names
+variable "keyVaultCertificateNameDeadlineClient" {
+  type    = string
+  default = "DeadlineClient"
+}
+variable "keyVaultCertificateNameDeadlineServer" {
+  type    = string
+  default = "DeadlineServer"
 }
 
 # KeyVault key names
@@ -78,11 +84,15 @@ output "keyVaultName" {
 output "keyVaultSecretNameGatewayConnection" {
   value = var.keyVaultSecretNameGatewayConnection
 }
-output "keyVaultSecretNameServicePassword" {
-  value = var.keyVaultSecretNameServicePassword
-}
 output "keyVaultSecretNameAdminPassword" {
   value = var.keyVaultSecretNameAdminPassword
+}
+
+output "keyVaultCertificateNameDeadlineClient" {
+  value = var.keyVaultCertificateNameDeadlineClient
+}
+output "keyVaultCertificateNameDeadlineServer" {
+  value = var.keyVaultCertificateNameDeadlineServer
 }
 
 output "keyVaultKeyNameCacheEncryption" {

@@ -1,6 +1,6 @@
 resourceGroupName = "AzureRender.Image"
 
-# Shared Image Gallery - https://docs.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries
+# Compute Gallery (https://docs.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries)
 imageGalleryName = "Gallery"
 imageDefinitions = [
   {
@@ -45,7 +45,7 @@ imageDefinitions = [
   }
 ]
 
-# Image Builder - https://docs.microsoft.com/en-us/azure/virtual-machines/image-builder-overview
+# Image Builder (https://docs.microsoft.com/en-us/azure/virtual-machines/image-builder-overview)
 imageTemplates = [
   {
     name = "LinuxScheduler"
@@ -193,7 +193,7 @@ imageTemplates = [
   }
 ]
 
-# Virtual Network - https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview
+# Virtual Network (https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview)
 virtualNetwork = {
   name              = ""
   resourceGroupName = ""

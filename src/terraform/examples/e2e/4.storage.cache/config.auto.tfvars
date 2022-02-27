@@ -1,11 +1,10 @@
 resourceGroupName = "AzureRender.Cache"
 
-cacheName = "cache" // Set to a uniquely identifiable name
-
-hpcCacheEnable = true // Set to false for Avere vFXT deployment
+cacheName      = "cache" // Set to a uniquely identifiable cache name
+enableHpcCache = true    // Set to false for Avere vFXT cache deployment
 
 ###################################################################################
-# HPC Cache - https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview #
+# HPC Cache (https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) #
 ###################################################################################
 
 // HPC Cache throughput / size (GBs) options
@@ -21,13 +20,13 @@ hpcCache = {
 }
 
 ######################################################################################
-# Avere vFXT - https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-overview #
+# Avere vFXT (https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-overview) #
 ######################################################################################
 
 vfxtCache = {
   cluster = {
     nodeSize       = 1024 // Set to either 1024 GBs (1 TB) or 4096 GBs (4 TBs) nodes
-    nodeCount      = 3    // Set to a minimum of 3 nodes up to a maximum of 20 nodes
+    nodeCount      = 3    // Set to a minimum of 3 nodes up to a maximum of 16 nodes
     nodeImageId    = ""
     adminUsername  = "azadmin"
     sshPublicKey   = ""
@@ -38,17 +37,17 @@ vfxtCache = {
     sshPublicKey  = ""
   }
   support = {
-    companyName = "" // Set to authorize automated support data upload per https://privacy.microsoft.com/en-us/privacystatement
-  }
+    companyName = "" // Set to your company name to authorize automated support data upload
+  }                  // per the https://privacy.microsoft.com/en-us/privacystatement policy
 }
 
-################################################################################################################
-# Storage Targets - this config section is for references to existing storage targets to be added to the cache #
-################################################################################################################
+############################################################################################
+# Storage Targets (https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-add-storage) #
+############################################################################################
 
 storageTargetsNfs = [
   {
-    name            = ""
+    name            = "" // RenderFarm
     fqdnOrIpAddress = [""]
     hpcCache = {
       usageModel = "WRITE_AROUND" // https://docs.microsoft.com/en-us/azure/hpc-cache/cache-usage-models
@@ -67,7 +66,7 @@ storageTargetsNfs = [
     ]
   },
   {
-    name            = ""
+    name            = "" // ArtistWorkstation 
     fqdnOrIpAddress = [""]
     hpcCache = {
       usageModel = "WRITE_WORKLOAD_CLOUDWS" // https://docs.microsoft.com/en-us/azure/hpc-cache/cache-usage-models
@@ -89,29 +88,29 @@ storageTargetsNfs = [
 
 storageTargetsNfsBlob = [
   {
-    name          = "RenderFarm"
+    name          = "" // RenderFarm
     usageModel    = "WRITE_AROUND"
     namespacePath = "/mnt/farm"
     storage = {
       resourceGroupName = "AzureRender.Storage"
-      accountName       = "azasset"
+      accountName       = "azmedia1"
       containerName     = "show"
     }
   },
   {
-    name          = "ArtistWorkstation"
+    name          = "" // ArtistWorkstation
     usageModel    = "WRITE_WORKLOAD_CLOUDWS"
     namespacePath = "/mnt/workstation"
     storage = {
       resourceGroupName = "AzureRender.Storage"
-      accountName       = "azasset"
+      accountName       = "azmedia1"
       containerName     = "show"
     }
   }
 ]
 
 ######################################################################################################
-# Virtual Network - https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview #
+# Virtual Network (https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) #
 ######################################################################################################
 
 virtualNetwork = {
