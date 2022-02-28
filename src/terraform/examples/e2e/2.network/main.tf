@@ -34,6 +34,7 @@ variable "virtualNetwork" {
           {
             name              = string
             addressSpace      = list(string)
+            serviceEndpoints  = list(string)
             serviceDelegation = string
           }
         )
@@ -149,6 +150,7 @@ resource "azurerm_subnet" "network" {
   resource_group_name  = azurerm_resource_group.network.name
   virtual_network_name = azurerm_virtual_network.network.name
   address_prefixes     = each.value.addressSpace
+  service_endpoints    = each.value.serviceEndpoints
   enforce_private_link_endpoint_network_policies = each.value.name != "GatewaySubnet"
   enforce_private_link_service_network_policies  = each.value.name != "GatewaySubnet"
   dynamic "delegation" {

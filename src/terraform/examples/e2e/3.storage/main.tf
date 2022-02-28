@@ -236,6 +236,9 @@ resource "azurerm_storage_account" "storage" {
     for_each = each.value.enableBlobNfsV3 ? [1] : [] 
     content {
       default_action = "Deny"
+      virtual_network_subnet_ids = [
+        for x in data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets : "${data.azurerm_virtual_network.network.id}/subnets/${x.name}" if contains(x.serviceEndpoints, "Microsoft.Storage")
+      ]
       ip_rules = [
         jsondecode(data.http.current_ip_address.body).ip
       ]
