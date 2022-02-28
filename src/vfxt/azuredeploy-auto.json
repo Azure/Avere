@@ -446,7 +446,7 @@
       }
     },
     {
-      "apiVersion": "2017-12-01",
+      "apiVersion": "2021-07-01",
       "tags": {
         "averevfxt": "server"
       },
