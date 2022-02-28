@@ -228,7 +228,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic "extension" {
-    for_each = each.value.monitorExtension.enable != "" ? [1] : [] 
+    for_each = each.value.monitorExtension.enable ? [1] : [] 
     content {
       name                       = "Monitor"
       type                       = "OmsAgentForLinux"
@@ -315,7 +315,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic "extension" {
-    for_each = each.value.monitorExtension.enable != "" ? [1] : [] 
+    for_each = each.value.monitorExtension.enable ? [1] : [] 
     content {
       name                       = "Monitor"
       type                       = "MicrosoftMonitoringAgent"
