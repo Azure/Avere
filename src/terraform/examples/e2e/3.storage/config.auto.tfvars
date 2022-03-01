@@ -3,7 +3,7 @@ resourceGroupName = "AzureRender.Storage"
 # Storage (https://docs.microsoft.com/en-us/azure/storage/common/storage-introduction)
 storageAccounts = [
   {
-    name                  = "azmedia1"  // Name must be globally unique (lowercase alphanumeric)
+    name                  = ""          // Name must be globally unique (lowercase alphanumeric)
     type                  = "StorageV2" // https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview
     redundancy            = "LRS"       // https://docs.microsoft.com/en-us/azure/storage/common/storage-redundancy
     performance           = "Standard"  // https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-performance-tiers
@@ -28,7 +28,7 @@ storageAccounts = [
     ]
   },
   {
-    name                  = "azmedia2"    // Name must be globally unique (lowercase alphanumeric)
+    name                  = ""            // Name must be globally unique (lowercase alphanumeric)
     type                  = "FileStorage" // https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview
     redundancy            = "LRS"         // https://docs.microsoft.com/en-us/azure/storage/common/storage-redundancy
     performance           = "Premium"     // https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-performance-tiers
@@ -59,14 +59,14 @@ netAppAccounts = [
     capacityPools = [
       {
         name         = "Standard"
+        sizeTiB      = 4
         serviceLevel = "Standard"
-        sizeTB       = 4
         volumes = [
           {
             name         = "Show"
-            mountPath    = "show"
+            sizeGiB      = 4096
             serviceLevel = "Standard"
-            sizeGB       = 4096
+            mountPath    = "show"
             protocols = [
               "NFSv3"
             ]
@@ -94,6 +94,9 @@ netAppAccounts = [
 # Virtual Network (https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview)
 virtualNetwork = {
   name              = ""
-  subnetName        = ""
   resourceGroupName = ""
+  serviceEndpointSubnets = [ // Subnet names that are enabled with the Microsoft.Storage service endpoint
+    # "Storage",
+    # "Cache"
+  ]
 }

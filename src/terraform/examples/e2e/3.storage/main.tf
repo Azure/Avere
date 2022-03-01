@@ -65,16 +65,16 @@ variable "netAppAccounts" {
           object(
             {
               name         = string
+              sizeTiB      = number
               serviceLevel = string
-              sizeTB       = number
               volumes = list(
                 object(
                   {
-                    name           = string
-                    mountPath      = string
-                    serviceLevel   = string
-                    sizeGB         = number
-                    protocols      = list(string)
+                    name         = string
+                    sizeGiB      = number
+                    serviceLevel = string
+                    mountPath    = string
+                    protocols    = list(string)
                     exportPolicies = list(
                       object(
                         {
@@ -101,21 +101,39 @@ variable "netAppAccounts" {
 variable "virtualNetwork" {
   type = object(
     {
-      name              = string
-      subnetName        = string
-      resourceGroupName = string
+      name                   = string
+      resourceGroupName      = string
+      serviceEndpointSubnets = list(string)
     }
   )
 }
 
+data "azurerm_virtual_network" "network" {
+  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
+  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
+}
+
+data "azurerm_subnet" "storage" {
+  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.storage].name : var.virtualNetwork.subnetName
+  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
+  virtual_network_name = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
+}
+
+data "http" "current_ip_address" {
+  url = "https://ifconfig.co/json"
+  request_headers = {
+    Accept = "application/json"
+  }
+}
+
 locals {
-  privateDnsZones = flatten([
+  privateDnsZones = distinct(flatten([
     for storageAccount in var.storageAccounts : [
       for privateEndpoint in storageAccount.privateEndpoints : {
         privateDnsZoneName = "privatelink.${privateEndpoint}.core.windows.net"
       }
     ] if storageAccount.name != ""
-  ])
+  ]))
   privateEndpoints = flatten([
     for storageAccount in var.storageAccounts : [
       for privateEndpoint in storageAccount.privateEndpoints : {
@@ -126,9 +144,10 @@ locals {
       }
     ] if storageAccount.name != ""
   ])
-  privateEndpointTypes = flatten([
-    for storageAccount in var.storageAccounts : storageAccount.privateEndpoints if storageAccount.name != ""
-  ])
+  storageEndpointSubnets = [
+    for subnet in data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets : subnet.name if contains(subnet.serviceEndpoints, "Microsoft.Storage")
+  ]
+  serviceEndpointSubnets = var.virtualNetwork.name == "" ? local.storageEndpointSubnets : var.virtualNetwork.serviceEndpointSubnets
   blobContainers = flatten([
     for storageAccount in var.storageAccounts : [
       for blobContainer in storageAccount.blobContainers : {
@@ -192,24 +211,6 @@ data "terraform_remote_state" "network" {
   }
 }
 
-data "azurerm_virtual_network" "network" {
-  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
-  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
-}
-
-data "azurerm_subnet" "storage" {
-  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.storage].name : var.virtualNetwork.subnetName
-  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
-  virtual_network_name = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
-}
-
-data "http" "current_ip_address" {
-  url = "https://ifconfig.co/json"
-  request_headers = {
-    Accept = "application/json"
-  }
-}
-
 resource "azurerm_resource_group" "storage" {
   name     = var.resourceGroupName
   location = module.global.regionName
@@ -237,7 +238,7 @@ resource "azurerm_storage_account" "storage" {
     content {
       default_action = "Deny"
       virtual_network_subnet_ids = [
-        for x in data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets : "${data.azurerm_virtual_network.network.id}/subnets/${x.name}" if contains(x.serviceEndpoints, "Microsoft.Storage")
+        for x in local.serviceEndpointSubnets : "${data.azurerm_virtual_network.network.id}/subnets/${x}"
       ]
       ip_rules = [
         jsondecode(data.http.current_ip_address.body).ip
@@ -248,7 +249,7 @@ resource "azurerm_storage_account" "storage" {
 
 resource "azurerm_private_dns_zone" "zones" {
   for_each = {
-    for x in distinct(local.privateDnsZones) : x.privateDnsZoneName => x
+    for x in local.privateDnsZones : x.privateDnsZoneName => x
   }
   name                = each.value.privateDnsZoneName
   resource_group_name = azurerm_resource_group.storage.name
@@ -256,7 +257,7 @@ resource "azurerm_private_dns_zone" "zones" {
 
 resource "azurerm_private_dns_zone_virtual_network_link" "zone_links" {
   for_each = {
-    for x in distinct(local.privateDnsZones) : x.privateDnsZoneName => x
+    for x in local.privateDnsZones : x.privateDnsZoneName => x
   }
   name                  = data.azurerm_virtual_network.network.name
   resource_group_name   = azurerm_resource_group.storage.name
@@ -386,9 +387,9 @@ resource "azurerm_netapp_pool" "storage" {
   name                = each.value.capacityPool.name
   resource_group_name = azurerm_resource_group.storage.name
   location            = azurerm_resource_group.storage.location
-  account_name        = each.value.netAppAccountName
+  size_in_tb          = each.value.capacityPool.sizeTiB
   service_level       = each.value.capacityPool.serviceLevel
-  size_in_tb          = each.value.capacityPool.sizeTB
+  account_name        = each.value.netAppAccountName
   depends_on = [
     azurerm_netapp_account.storage
   ]
@@ -401,12 +402,12 @@ resource "azurerm_netapp_volume" "storage" {
   name                = each.value.poolVolume.name
   resource_group_name = azurerm_resource_group.storage.name
   location            = azurerm_resource_group.storage.location
-  account_name        = each.value.netAppAccountName
-  pool_name           = each.value.capacityPoolName
-  volume_path         = each.value.poolVolume.mountPath
+  storage_quota_in_gb = each.value.poolVolume.sizeGiB
   service_level       = each.value.poolVolume.serviceLevel
-  storage_quota_in_gb = each.value.poolVolume.sizeGB
+  volume_path         = each.value.poolVolume.mountPath
   protocols           = each.value.poolVolume.protocols
+  pool_name           = each.value.capacityPoolName
+  account_name        = each.value.netAppAccountName
   subnet_id           = data.azurerm_subnet.storage.id
   dynamic "export_policy_rule" {
     for_each = each.value.poolVolume.exportPolicies 
@@ -430,6 +431,12 @@ output "regionName" {
 
 output "resourceGroupName" {
   value = var.resourceGroupName
+}
+
+output "privateEndpoints" {
+  value = distinct(flatten([
+    for storageAccount in var.storageAccounts : storageAccount.privateEndpoints if storageAccount.name != ""
+  ]))
 }
 
 output "storageAccounts" {

@@ -100,9 +100,9 @@ vpnGatewayLocal = {
 
 # Point-to-Site Client (https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-howto-point-to-site-rm-ps)
 vpnGatewayClient = {
-  addressSpace    = ["10.1.0.0/24"]
-  certificateName = "MediaStudio"
-  certificateData = "MIIC9TCCAd2gAwIBAgIQUoFz+AyWjZNIkwB41MzEKTANBgkqhkiG9w0BAQsFADAdMRswGQYDVQQDDBJBenVyZSBNZWRpYSBTdHVkaW8wHhcNMjEwODI5MTcwNjQzWhcNMjIwODI5MTcyNjQzWjAdMRswGQYDVQQDDBJBenVyZSBNZWRpYSBTdHVkaW8wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC6j/Ry9yXkgeb/DSkCHFPseUbJRosES8KOF+9WgUyiOcjf3d2bbBPo7y3hL2AuWr1Uja7ffnJzffXkXvUkABHetZ8TLha/ysN/gcixYORUX1ODED8GZNZyi+Bx6T3TV0d+goArQDVH2QQcwQUoFb2Xm+uz/fi6dTGcoS7v7DBrjD7h5+8jt03gXCOgndAqQ/1CHDbNQwRgPfHDuo3t3yy2DCJWqgOrPv/G6gD6HspbGNs2WlKDzu7Pj5YFWkgrpJ5hkqV3S9pitMwUPlm1uCFSsPLcdHxdtOv/6KJVz7Ua6gActZmewvnOD5qx8uq9gYhB+XuHu9IJtCyAQFeMw83pAgMBAAGjMTAvMA4GA1UdDwEB/wQEAwICBDAdBgNVHQ4EFgQU8TtxeRZG8wnQFldF5hc8zWO0EI0wDQYJKoZIhvcNAQELBQADggEBAGulDzihQffoLUAVa530D2HhgX2zAUNEC1xOUh+emLisgP2RB8ZX7jH2BSNMCkcK4SpBlFRjS31dj7Hlwa9/d4EZ4LOpy+HQwKY+IOWP6J3OCMyj2M8G/c69efiq3wAA9vzzS2VcFRCuwTmcf/DTyymc9x2jdDIed7xWZCzxk94+Up9HtvhrzxFzAuuLjpxaarbsHwP+IeAcAbMNyMM+J1RTZb3EcYzCUWOfEqxOtDUsG6bNRnVLpO9cxFvh0aU9zPdZZ0PJ7cWLi1IXsa89lq8t25ZQZhe0gYG6y9lLIAbPFZBlUA6/T8ZHaf+yGKO29WpavvdW8AiFi3xkpa8864I="
+  addressSpace    = []
+  certificateName = ""
+  certificateData = ""
 }
 
 ############################################################################################################################################

@@ -80,11 +80,6 @@ variable "virtualNetwork" {
   )
 }
 
-locals {
-  customScriptLinux   = "customize.sh"
-  customScriptWindows = "customize.ps1"
-}
-
 data "terraform_remote_state" "network" {
   count   = var.virtualNetwork.name == "" ? 1 : 0
   backend = "azurerm"
@@ -123,6 +118,11 @@ data "azurerm_key_vault_secret" "service_password" {
 data "azurerm_storage_account" "storage" {
   name                = module.global.securityStorageAccountName
   resource_group_name = module.global.securityResourceGroupName
+}
+
+locals {
+  customScriptLinux   = "customize.sh"
+  customScriptWindows = "customize.ps1"
 }
 
 resource "azurerm_resource_group" "image" {
