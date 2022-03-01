@@ -50,6 +50,16 @@ data "terraform_remote_state" "network" {
   }
 }
 
+data "terraform_remote_state" "storage" {
+  backend = "azurerm"
+  config = {
+    resource_group_name  = module.global.securityResourceGroupName
+    storage_account_name = module.global.securityStorageAccountName
+    container_name       = module.global.terraformStorageContainerName
+    key                  = "3.storage"
+  }
+}
+
 data "azurerm_virtual_network" "network" {
   name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
   resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
@@ -61,19 +71,30 @@ data "azurerm_subnet" "farm" {
   virtual_network_name = data.azurerm_virtual_network.network.name
 }
 
-resource "azurerm_resource_group" "network_monitor" {
+data "azurerm_private_dns_zone" "blob" {
+  count               = local.blobStorageDeployed ? 1 : 0
+  name                = "privatelink.blob.core.windows.net"
+  resource_group_name = data.terraform_remote_state.storage.outputs.resourceGroupName
+}
+
+locals {
+  blobStorageDeployed  = try(contains(data.terraform_remote_state.storage.outputs.privateEndpoints, "blob"), false)
+  blobPrivateDnsZoneId = local.blobStorageDeployed ? data.azurerm_private_dns_zone.blob[0].id : azurerm_private_dns_zone.blob[0].id
+}
+
+resource "azurerm_resource_group" "monitor" {
   name     = var.resourceGroupName
   location = module.global.regionName
 }
 
 resource "azurerm_monitor_private_link_scope" "monitor" {
   name                = module.global.monitorWorkspaceName
-  resource_group_name = azurerm_resource_group.network_monitor.name
+  resource_group_name = azurerm_resource_group.monitor.name
 }
 
 resource "azurerm_monitor_private_link_scoped_service" "monitor" {
   name                = module.global.monitorWorkspaceName
-  resource_group_name = azurerm_resource_group.network_monitor.name
+  resource_group_name = azurerm_resource_group.monitor.name
   linked_resource_id  = data.azurerm_log_analytics_workspace.monitor.id
   scope_name          = azurerm_monitor_private_link_scope.monitor.name
 }
@@ -84,67 +105,64 @@ resource "azurerm_monitor_private_link_scoped_service" "monitor" {
 
 resource "azurerm_private_dns_zone" "monitor" {
   name                = "privatelink.monitor.azure.com"
-  resource_group_name = azurerm_resource_group.network_monitor.name
+  resource_group_name = azurerm_resource_group.monitor.name
 }
 
 resource "azurerm_private_dns_zone" "opinsights_oms" {
   name                = "privatelink.oms.opinsights.azure.com"
-  resource_group_name = azurerm_resource_group.network_monitor.name
+  resource_group_name = azurerm_resource_group.monitor.name
 }
 
 resource "azurerm_private_dns_zone" "opinsights_ods" {
   name                = "privatelink.ods.opinsights.azure.com"
-  resource_group_name = azurerm_resource_group.network_monitor.name
+  resource_group_name = azurerm_resource_group.monitor.name
 }
 
 resource "azurerm_private_dns_zone" "automation" {
   name                = "privatelink.agentsvc.azure-automation.net"
-  resource_group_name = azurerm_resource_group.network_monitor.name
+  resource_group_name = azurerm_resource_group.monitor.name
 }
 
 resource "azurerm_private_dns_zone" "blob" {
+  count               = local.blobStorageDeployed ? 0 : 1
   name                = "privatelink.blob.core.windows.net"
-  resource_group_name = azurerm_resource_group.network_monitor.name
+  resource_group_name = azurerm_resource_group.monitor.name
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "monitor" {
-  count                 = var.virtualNetwork.name == "" ? 0 : 1
   name                  = "monitor"
-  resource_group_name   = azurerm_resource_group.network_monitor.name
+  resource_group_name   = azurerm_resource_group.monitor.name
   private_dns_zone_name = azurerm_private_dns_zone.monitor.name
-  virtual_network_id    = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.virtualNetwork.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${var.virtualNetwork.name}"
+  virtual_network_id    = data.azurerm_virtual_network.network.id
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "opinsights_oms" {
-  count                 = var.virtualNetwork.name == "" ? 0 : 1
   name                  = "opinsights_oms"
-  resource_group_name   = azurerm_resource_group.network_monitor.name
+  resource_group_name   = azurerm_resource_group.monitor.name
   private_dns_zone_name = azurerm_private_dns_zone.opinsights_oms.name
-  virtual_network_id    = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.virtualNetwork.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${var.virtualNetwork.name}"
+  virtual_network_id    = data.azurerm_virtual_network.network.id
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "opinsights_ods" {
-  count                 = var.virtualNetwork.name == "" ? 0 : 1
   name                  = "opinsights_ods"
-  resource_group_name   = azurerm_resource_group.network_monitor.name
+  resource_group_name   = azurerm_resource_group.monitor.name
   private_dns_zone_name = azurerm_private_dns_zone.opinsights_ods.name
-  virtual_network_id    = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.virtualNetwork.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${var.virtualNetwork.name}"
+  virtual_network_id    = data.azurerm_virtual_network.network.id
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "automation" {
-  count                 = var.virtualNetwork.name == "" ? 0 : 1
   name                  = "automation"
-  resource_group_name   = azurerm_resource_group.network_monitor.name
+  resource_group_name   = azurerm_resource_group.monitor.name
   private_dns_zone_name = azurerm_private_dns_zone.automation.name
-  virtual_network_id    = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.virtualNetwork.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${var.virtualNetwork.name}"
+  virtual_network_id    = data.azurerm_virtual_network.network.id
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "blob" {
-  count                 = var.virtualNetwork.name == "" ? 0 : 1
+  count                 = local.blobStorageDeployed ? 0 : 1
   name                  = "blob"
-  resource_group_name   = azurerm_resource_group.network_monitor.name
-  private_dns_zone_name = azurerm_private_dns_zone.blob.name
-  virtual_network_id    = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.virtualNetwork.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${var.virtualNetwork.name}"
+  resource_group_name   = azurerm_resource_group.monitor.name
+  private_dns_zone_name = azurerm_private_dns_zone.blob[0].name
+  virtual_network_id    = data.azurerm_virtual_network.network.id
 }
 
 ########################################################################################################## 
@@ -153,8 +171,8 @@ resource "azurerm_private_dns_zone_virtual_network_link" "blob" {
 
 resource "azurerm_private_endpoint" "monitor_farm" {
   name                = "Monitor.Farm"
-  resource_group_name = azurerm_resource_group.network_monitor.name
-  location            = azurerm_resource_group.network_monitor.location
+  resource_group_name = azurerm_resource_group.monitor.name
+  location            = azurerm_resource_group.monitor.location
   subnet_id           = data.azurerm_subnet.farm.id
   private_service_connection {
     name                           = "Monitor.Farm"
@@ -171,7 +189,7 @@ resource "azurerm_private_endpoint" "monitor_farm" {
       azurerm_private_dns_zone.opinsights_oms.id,
       azurerm_private_dns_zone.opinsights_ods.id,
       azurerm_private_dns_zone.automation.id,
-      azurerm_private_dns_zone.blob.id
+      local.blobPrivateDnsZoneId
     ]
   }
 }
