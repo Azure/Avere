@@ -189,15 +189,6 @@ resource "azurerm_hpc_cache" "cache" {
   sku_name            = var.hpcCache.throughput
   cache_size_in_gb    = var.hpcCache.size
   subnet_id           = data.azurerm_subnet.cache.id
-  default_access_policy {
-    access_rule {
-      scope                   = "default"
-      access                  = "rw"
-      suid_enabled            = false
-      submount_access_enabled = false
-      root_squash_enabled     = false
-    }
-  }
 }
 
 resource "azurerm_hpc_cache_nfs_target" "storage" {
