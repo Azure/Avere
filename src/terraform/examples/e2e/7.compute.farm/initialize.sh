@@ -2,17 +2,6 @@
 
 source /etc/profile.d/aaa.sh # https://github.com/Azure/WALinuxAgent/issues/1561
 
-%{ for fsMount in fileSystemMounts }
-  fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
-  mkdir -p $fsMountPoint
-  echo "${fsMount}" >> /etc/fstab
-%{ endfor }
-mount -a
-%{ for fsMount in fileSystemMounts }
-  fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
-  chmod -R 777 $fsMountPoint
-%{ endfor }
-
 customDataInput="/var/lib/waagent/ovf-env.xml"
 customDataOutput="/var/lib/waagent/terminate.sh"
 customData=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $customDataInput)
@@ -37,5 +26,15 @@ echo "AccuracySec=1us" >> $timerPath
 echo "" >> $timerPath
 echo "[Install]" >> $timerPath
 echo "WantedBy=timers.target" >> $timerPath
-systemctl enable terminate.timer
-systemctl start terminate.timer
+systemctl --now enable terminate.timer
+
+%{ for fsMount in fileSystemMounts }
+  fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
+  mkdir -p $fsMountPoint
+  echo "${fsMount}" >> /etc/fstab
+%{ endfor }
+mount -a
+%{ for fsMount in fileSystemMounts }
+  fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
+  chmod -R 777 $fsMountPoint
+%{ endfor }

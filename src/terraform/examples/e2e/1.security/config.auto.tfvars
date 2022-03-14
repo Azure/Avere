@@ -1,9 +1,7 @@
-###################################################################################################################################################
-# The following built-in Azure roles are required for the current user to create KeyVault secrets and keys, respectively                          #
-#      Key Vault Secrets Officer (https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-secrets-officer)      #
-# Key Vault Certificates Officer (https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-certificates-officer) #
-#       Key Vault Crypto Officer (https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-crypto-officer)       #
-###################################################################################################################################################
+#####################################################################################################################################
+# The following built-in Azure RBAC role is required for the current user to create Azure Key Vault secrets, certificates and keys. #
+# Key Vault Administrator (https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-administrator) #
+#####################################################################################################################################
 
 # Storage (https://docs.microsoft.com/en-us/azure/storage)
 storage = {
@@ -26,38 +24,6 @@ keyVault = {
     }
   ]
   certificates = [
-    {
-      name        = "DeadlineClient"
-      subject     = "CN=deadline-client"
-      issuerName  = "Self"
-      contentType = "application/x-pkcs12"
-      validMonths = 12
-      key = {
-        type       = "RSA"
-        size       = 2048
-        reusable   = true
-        exportable = true
-        usage = [
-          "keyCertSign"
-        ]
-      }
-    },
-    {
-      name        = "DeadlineServer"
-      subject     = "CN=deadline-server"
-      issuerName  = "Self"
-      contentType = "application/x-pkcs12"
-      validMonths = 12
-      key = {
-        type       = "RSA"
-        size       = 2048
-        reusable   = true
-        exportable = true
-        usage = [
-          "keyCertSign"
-        ]
-      }
-    }
   ]
   keys = [
     {

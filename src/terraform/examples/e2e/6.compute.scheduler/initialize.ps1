@@ -1,17 +1,7 @@
-$mountFile = "C:\Windows\Temp\mounts.bat"
-New-Item -Path $mountFile -ItemType File
-%{ for fsMount in fileSystemMounts }
-  Add-Content -Path $mountFile -Value "${fsMount}"
-%{ endfor }
-
-$taskName = "AAA Storage Mounts"
-$taskAction = New-ScheduledTaskAction -Execute $mountFile
-$taskTrigger = New-ScheduledTaskTrigger -AtStartup
-Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System
-Start-Process -FilePath $mountFile -Wait -RedirectStandardError $mountFile.Replace(".bat", "-error.txt") -RedirectStandardOutput $mountFile.Replace(".bat", "-output.txt")
+$ErrorActionPreference = "Stop"
 
 $databaseFile = "C:\Windows\Temp\database.ps1"
-New-Item -Path $databaseFile -ItemType File
+New-Item -ItemType File -Path $databaseFile
 Add-Content -Path $databaseFile -Value '$serviceName = "Deadline10DatabaseService"'
 Add-Content -Path $databaseFile -Value '$serviceStatus = (Get-Service -Name $serviceName).Status'
 Add-Content -Path $databaseFile -Value 'if ($serviceStatus -ne "Running") { Start-Service -Name $serviceName }'
@@ -19,15 +9,9 @@ Add-Content -Path $databaseFile -Value 'if ($serviceStatus -ne "Running") { Star
 $taskName = "AAA Scheduler Database"
 $taskStart = Get-Date
 $taskInterval = New-TimeSpan -Minutes 5
-$taskAction = New-ScheduledTaskAction -Execute "PowerShell" -Argument "-ExecutionPolicy Unrestricted -File $databaseFile"
+$taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File $databaseFile"
 $taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval $taskInterval -At $taskStart -Once
-Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System
-
-$databaseHost = hostname
-$databasePort = 27100
-$databaseName = "deadline10db"
-netsh advfirewall firewall add rule name="Allow Mongo Database" dir=in action=allow protocol=TCP localport=$databasePort
-deadlinecommand -UpdateDatabaseSettings C:\DeadlineRepository MongoDB $databaseHost $databaseName $databasePort 0 false false '""' '""' '""' false
+Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
 
 $customDataInput = "C:\AzureData\CustomData.bin"
 $customDataOutput = "C:\AzureData\Scale.ps1"
@@ -39,11 +23,26 @@ Out-File -InputObject $streamReader.ReadToEnd() -FilePath $customDataOutput
 $taskName = "AAA Render Farm Scaler"
 $taskStart = Get-Date
 $taskInterval = New-TimeSpan -Seconds ${autoScale.detectionIntervalSeconds}
-$taskAction = New-ScheduledTaskAction -Execute "PowerShell" -Argument "-ExecutionPolicy Unrestricted -File $customDataOutput -resourceGroupName ${autoScale.resourceGroupName} -scaleSetName ${autoScale.scaleSetName} -workerIdleSecondsDelete ${autoScale.workerIdleSecondsDelete}"
+$taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File $customDataOutput -resourceGroupName ${autoScale.resourceGroupName} -scaleSetName ${autoScale.scaleSetName} -workerIdleSecondsDelete ${autoScale.workerIdleSecondsDelete}"
 $taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval $taskInterval -At $taskStart -Once
-Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System
+Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
 
-if (${autoScale.enable} -ne "true") {
+while ($null -eq (Get-ScheduledTask $taskName -ErrorAction SilentlyContinue)) {
+  Start-Sleep -Seconds 1
+}
+if ("${autoScale.enable}" -ne "true") {
   Disable-ScheduledTask -TaskName $taskName
 }
 
+$mountFile = "C:\Windows\Temp\mounts.bat"
+New-Item -ItemType File -Path $mountFile
+%{ for fsMount in fileSystemMounts }
+  Add-Content -Path $mountFile -Value "${fsMount}"
+%{ endfor }
+
+$taskName = "AAA Storage Mounts"
+$taskAction = New-ScheduledTaskAction -Execute $mountFile
+$taskTrigger = New-ScheduledTaskTrigger -AtStartup
+Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
+
+Start-Process -FilePath $mountFile -Wait -RedirectStandardOutput "$mountFile.output.txt" -RedirectStandardError "$mountFile.error.txt"

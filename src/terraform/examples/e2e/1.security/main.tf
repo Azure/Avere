@@ -1,15 +1,26 @@
 terraform {
-  required_version = ">= 1.1.6"
+  required_version = ">= 1.1.7"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.98.0"
+      version = "~>2.99.0"
     }
   }
 }
 
 provider "azurerm" {
-  features {}
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = true
+    }
+    key_vault {
+      purge_soft_delete_on_destroy    = true
+      recover_soft_deleted_key_vaults = true
+    }
+    log_analytics_workspace {
+      permanently_delete_on_destroy = true
+    }
+  }
 }
 
 module "global" {

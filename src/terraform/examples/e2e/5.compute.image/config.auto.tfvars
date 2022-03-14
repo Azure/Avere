@@ -4,15 +4,7 @@ resourceGroupName = "AzureRender.Image"
 imageGalleryName = "Gallery"
 imageDefinitions = [
   {
-    name       = "LinuxFarm"
-    type       = "Linux"
-    generation = "V2"
-    publisher  = "OpenLogic"
-    offer      = "CentOS"
-    sku        = "7_8-Gen2"
-  },
-  {
-    name       = "LinuxWorkstation"
+    name       = "Linux"
     type       = "Linux"
     generation = "V2"
     publisher  = "OpenLogic"
@@ -20,7 +12,7 @@ imageDefinitions = [
     sku        = "7_9-Gen2"
   },
   {
-    name       = "WindowsScheduler"
+    name       = "WinScheduler"
     type       = "Windows"
     generation = "V2"
     publisher  = "MicrosoftWindowsServer"
@@ -28,7 +20,7 @@ imageDefinitions = [
     sku        = "2022-Datacenter-G2"
   },
   {
-    name       = "WindowsFarm"
+    name       = "WinFarm"
     type       = "Windows"
     generation = "V2"
     publisher  = "MicrosoftWindowsDesktop"
@@ -36,7 +28,7 @@ imageDefinitions = [
     sku        = "Win10-21H2-Pro-G2"
   },
   {
-    name       = "WindowsWorkstation"
+    name       = "WinArtist"
     type       = "Windows"
     generation = "V2"
     publisher  = "MicrosoftWindowsDesktop"
@@ -48,149 +40,185 @@ imageDefinitions = [
 # Image Builder (https://docs.microsoft.com/en-us/azure/virtual-machines/image-builder-overview)
 imageTemplates = [
   {
-    name = "LinuxScheduler"
+    name = "LnxScheduler"
     image = {
-      definitionName = "LinuxFarm"
+      definitionName = "Linux"
       sourceType     = "PlatformImage"
       customScript   = "customize.sh"
       inputVersion   = "Latest"
     }
     build = {
-      userName       = "dbuser"
+      runElevated    = false
       subnetName     = "Scheduler"
-      machineSize    = "Standard_D8s_v5" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 0                 // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 120               // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineSize    = "Standard_D16s_v5" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 120                // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       renderEngines  = ""
       outputVersion  = "10.0.0"
     }
   },
   {
-    name = "LinuxFarm"
+    name = "LnxFarm"
     image = {
-      definitionName = "LinuxFarm"
+      definitionName = "Linux"
       sourceType     = "PlatformImage"
       customScript   = "customize.sh"
       inputVersion   = "Latest"
     }
     build = {
-      userName       = "azuser"
+      runElevated    = false
       subnetName     = "Farm"
       machineSize    = "Standard_HB120rs_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 100                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
       timeoutMinutes = 120                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      renderEngines  = "Blender"             // Blender,Maya,Unreal
+      renderEngines  = "Blender"
       outputVersion  = "1.0.0"
     }
   },
   {
-    name = "LinuxWorkstationV3"
+    name = "LnxArtistV3"
     image = {
-      definitionName = "LinuxWorkstation"
+      definitionName = "Linux"
       sourceType     = "PlatformImage"
       customScript   = "customize.sh"
       inputVersion   = "Latest"
     }
     build = {
-      userName       = "azuser"
+      runElevated    = false
       subnetName     = "Workstation"
-      machineSize    = "Standard_NV48s_v3"   // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 100                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 120                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      renderEngines  = "Blender"             // Blender,Maya,Unreal
+      machineSize    = "Standard_NV48s_v3" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+      osDiskSizeGB   = 100                 // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 120                 // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      renderEngines  = "Blender"
       outputVersion  = "3.0.0"
     }
   },
   {
-    name = "LinuxWorkstationV4"
+    name = "LnxArtistV4"
     image = {
-      definitionName = "LinuxWorkstation"
+      definitionName = "Linux"
       sourceType     = "PlatformImage"
       customScript   = "customize.sh"
       inputVersion   = "Latest"
     }
     build = {
-      userName       = "azuser"
+      runElevated    = false
       subnetName     = "Workstation"
-      machineSize    = "Standard_NV32as_v4"  // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 100                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 120                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      renderEngines  = "Blender"             // Blender,Maya,Unreal
+      machineSize    = "Standard_NV32as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+      osDiskSizeGB   = 100                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 120                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      renderEngines  = "Blender"
       outputVersion  = "4.0.0"
     }
   },
+  # {
+  #   name = "LnxArtistV5"
+  #   image = {
+  #     definitionName = "Linux"
+  #     sourceType     = "PlatformImage"
+  #     customScript   = "customize.sh"
+  #     inputVersion   = "Latest"
+  #   }
+  #   build = {
+  #     runElevated    = false
+  #     subnetName     = "Workstation"
+  #     machineSize    = "Standard_NV36ads_A10_v5" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+  #     osDiskSizeGB   = 100                       // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+  #     timeoutMinutes = 120                       // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+  #     renderEngines  = "Blender"
+  #     outputVersion  = "5.0.0"
+  #   }
+  # },
   {
-    name = "WindowsScheduler"
+    name = "WinScheduler"
     image = {
-      definitionName = "WindowsScheduler"
+      definitionName = "WinScheduler"
       sourceType     = "PlatformImage"
       customScript   = "customize.ps1"
       inputVersion   = "Latest"
     }
     build = {
-      userName       = "dbuser"
+      runElevated    = true
       subnetName     = "Scheduler"
-      machineSize    = "Standard_D8s_v5" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 0                 // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 240               // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineSize    = "Standard_D16s_v5" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 240                // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       renderEngines  = ""
       outputVersion  = "10.0.0"
     }
   },
   {
-    name = "WindowsFarm"
+    name = "WinFarm"
     image = {
-      definitionName = "WindowsFarm"
+      definitionName = "WinFarm"
       sourceType     = "PlatformImage"
       customScript   = "customize.ps1"
       inputVersion   = "Latest"
     }
     build = {
-      userName       = "azuser"
+      runElevated    = false
       subnetName     = "Farm"
       machineSize    = "Standard_HB120rs_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 0                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
       timeoutMinutes = 240                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      renderEngines  = "Blender"             // Blender,Maya,Unreal
+      renderEngines  = "Blender"
       outputVersion  = "1.0.0"
     }
   },
   {
-    name = "WindowsWorkstationV3"
+    name = "WinArtistV3"
     image = {
-      definitionName = "WindowsWorkstation"
+      definitionName = "WinArtist"
       sourceType     = "PlatformImage"
       customScript   = "customize.ps1"
       inputVersion   = "Latest"
     }
     build = {
-      userName       = "azuser"
+      runElevated    = false
       subnetName     = "Workstation"
       machineSize    = "Standard_NV48s_v3"   // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 0                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
       timeoutMinutes = 240                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      renderEngines  = "Blender"             // Blender,Maya,Unreal
+      renderEngines  = "Blender"
       outputVersion  = "3.0.0"
     }
   },
   {
-    name = "WindowsWorkstationV4"
+    name = "WinArtistV4"
     image = {
-      definitionName = "WindowsWorkstation"
+      definitionName = "WinArtist"
       sourceType     = "PlatformImage"
       customScript   = "customize.ps1"
       inputVersion   = "Latest"
     }
     build = {
-      userName       = "azuser"
+      runElevated    = false
       subnetName     = "Workstation"
-      machineSize    = "Standard_NV32as_v4"  // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 0                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 240                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      renderEngines  = "Blender"             // Blender,Maya,Unreal
+      machineSize    = "Standard_NV32as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                    // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 240                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      renderEngines  = "Blender"
       outputVersion  = "4.0.0"
     }
-  }
+  },
+  # {
+  #   name = "WinArtistV5"
+  #   image = {
+  #     definitionName = "WinArtist"
+  #     sourceType     = "PlatformImage"
+  #     customScript   = "customize.ps1"
+  #     inputVersion   = "Latest"
+  #   }
+  #   build = {
+  #     runElevated    = false
+  #     subnetName     = "Workstation"
+  #     machineSize    = "Standard_NV36ads_A10_v5" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+  #     osDiskSizeGB   = 0                         // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+  #     timeoutMinutes = 240                       // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+  #     renderEngines  = "Blender"
+  #     outputVersion  = "4.0.0"
+  #   }
+  # }
 ]
 
 # Virtual Network (https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview)

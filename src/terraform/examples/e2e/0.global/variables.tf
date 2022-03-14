@@ -30,14 +30,6 @@ variable "keyVaultSecretNameAdminPassword" {
   default = "AdminPassword"
 }
 
-# KeyVault certificate names
-variable "keyVaultCertificateNameDeadlineClient" {
-  default = "DeadlineClient"
-}
-variable "keyVaultCertificateNameDeadlineServer" {
-  default = "DeadlineServer"
-}
-
 # KeyVault key names
 variable "keyVaultKeyNameCacheEncryption" {
   default = "CacheEncryption"
@@ -74,13 +66,6 @@ output "keyVaultSecretNameGatewayConnection" {
 }
 output "keyVaultSecretNameAdminPassword" {
   value = var.keyVaultSecretNameAdminPassword
-}
-
-output "keyVaultCertificateNameDeadlineClient" {
-  value = var.keyVaultCertificateNameDeadlineClient
-}
-output "keyVaultCertificateNameDeadlineServer" {
-  value = var.keyVaultCertificateNameDeadlineServer
 }
 
 output "keyVaultKeyNameCacheEncryption" {

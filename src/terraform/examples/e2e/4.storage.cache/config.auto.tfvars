@@ -47,15 +47,16 @@ vfxtCache = {
 
 storageTargetsNfs = [
   {
-    name            = "" // RenderFarm
-    fqdnOrIpAddress = [""]
+    name        = "" // "RenderFarm"
+    storageHost = ""
     hpcCache = {
       usageModel = "WRITE_AROUND" // https://docs.microsoft.com/en-us/azure/hpc-cache/cache-usage-models
     }
     vfxtCache = {
-      cachePolicy      = "Clients Bypassing the Cluster"
-      filerConnections = 4
-      customSettings   = []
+      cachePolicy    = "Clients Bypassing the Cluster"
+      nfsConnections = 4
+      customSettings = [
+      ]
     }
     namespaceJunctions = [
       {
@@ -66,15 +67,16 @@ storageTargetsNfs = [
     ]
   },
   {
-    name            = "" // ArtistWorkstation 
-    fqdnOrIpAddress = [""]
+    name        = "" // "ArtistWorkstation"
+    storageHost = ""
     hpcCache = {
       usageModel = "WRITE_WORKLOAD_CLOUDWS" // https://docs.microsoft.com/en-us/azure/hpc-cache/cache-usage-models
     }
     vfxtCache = {
-      cachePolicy      = "Collaborating Cloud Workstation"
-      filerConnections = 4
-      customSettings   = []
+      cachePolicy    = "Collaborating Cloud Workstation"
+      nfsConnections = 4
+      customSettings = [        
+      ]
     }
     namespaceJunctions = [
       {
@@ -88,7 +90,7 @@ storageTargetsNfs = [
 
 storageTargetsNfsBlob = [
   {
-    name          = "" // RenderFarm
+    name          = "" // "RenderFarm"
     usageModel    = "WRITE_AROUND"
     namespacePath = "/mnt/farm"
     storage = {
@@ -98,7 +100,7 @@ storageTargetsNfsBlob = [
     }
   },
   {
-    name          = "" // ArtistWorkstation
+    name          = "" // "ArtistWorkstation"
     usageModel    = "WRITE_WORKLOAD_CLOUDWS"
     namespacePath = "/mnt/workstation"
     storage = {

@@ -1,19 +1,19 @@
+$ErrorActionPreference = "Stop"
+
+%{ if teradiciLicenseKey != "" }
+  $agentFile = "C:\Program Files\Teradici\PCoIP Agent\pcoip-register-host.ps1"
+  Start-Process -FilePath "PowerShell.exe" -ArgumentList "-ExecutionPolicy Unrestricted -File ""$agentFile"" -RegistrationCode ${teradiciLicenseKey}" -RedirectStandardOutput "$agentFile.output.txt" -RedirectStandardError "$agentFile.error.txt"
+%{ endif }
+
 $mountFile = "C:\Windows\Temp\mounts.bat"
-New-Item -Path $mountFile -ItemType File
+New-Item -ItemType File -Path $mountFile
 %{ for fsMount in fileSystemMounts }
   Add-Content -Path $mountFile -Value "${fsMount}"
 %{ endfor }
-Add-Content -Path $mountFile -Value "net stop Deadline10LauncherService"
-Add-Content -Path $mountFile -Value "net start Deadline10LauncherService"
 
 $taskName = "AAA Storage Mounts"
 $taskAction = New-ScheduledTaskAction -Execute $mountFile
 $taskTrigger = New-ScheduledTaskTrigger -AtStartup
-Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System
-Start-Process -FilePath $mountFile -Wait -RedirectStandardError $mountFile.Replace(".bat", "-error.txt") -RedirectStandardOutput $mountFile.Replace(".bat", "-output.txt")
+Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
 
-%{ if teradiciLicenseKey != "" }
-  Set-Location -Path "C:\Program Files\Teradici\PCoIP Agent"
-  & .\pcoip-register-host.ps1 -RegistrationCode ${teradiciLicenseKey}
-  Restart-Service -Name "PCoIPAgent"
-%{ endif }
+Start-Process -FilePath $mountFile -Wait -RedirectStandardOutput "$mountFile.output.txt" -RedirectStandardError "$mountFile.error.txt"

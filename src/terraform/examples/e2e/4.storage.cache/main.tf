@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.1.6"
+  required_version = ">= 1.1.7"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.98.0"
+      version = "~>2.99.0"
     }
     avere = {
       source  = "hashicorp/avere"
@@ -16,7 +16,11 @@ terraform {
 }
 
 provider "azurerm" {
-  features {}
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+  }
 }
 
 module "global" {
@@ -76,8 +80,8 @@ variable "storageTargetsNfs" {
   type = list(
     object(
       {
-        name            = string
-        fqdnOrIpAddress = list(string)
+        name        = string
+        storageHost = string
         hpcCache = object(
           {
             usageModel = string
@@ -85,9 +89,9 @@ variable "storageTargetsNfs" {
         )
         vfxtCache = object(
           {
-            cachePolicy      = string
-            filerConnections = number
-            customSettings   = list(string)
+            cachePolicy    = string
+            nfsConnections = number
+            customSettings = list(string)
           }
         )
         namespaceJunctions = list(
@@ -185,6 +189,15 @@ resource "azurerm_hpc_cache" "cache" {
   sku_name            = var.hpcCache.throughput
   cache_size_in_gb    = var.hpcCache.size
   subnet_id           = data.azurerm_subnet.cache.id
+  default_access_policy {
+    access_rule {
+      scope                   = "default"
+      access                  = "rw"
+      suid_enabled            = false
+      submount_access_enabled = false
+      root_squash_enabled     = false
+    }
+  }
 }
 
 resource "azurerm_hpc_cache_nfs_target" "storage" {
@@ -194,7 +207,7 @@ resource "azurerm_hpc_cache_nfs_target" "storage" {
   name                = each.value.name
   resource_group_name = azurerm_resource_group.cache.name
   cache_name          = azurerm_hpc_cache.cache[0].name
-  target_host_name    = each.value.fqdnOrIpAddress[0]
+  target_host_name    = each.value.storageHost
   usage_model         = each.value.hpcCache.usageModel
   dynamic "namespace_junction" {
     for_each = each.value.namespaceJunctions
@@ -278,9 +291,9 @@ resource "avere_vfxt" "cache" {
     }
     content {
       name                      = core_filer.value["name"]
-      fqdn_or_primary_ip        = join(core_filer.value["fqdnOrIpAddress"], " ")
+      fqdn_or_primary_ip        = core_filer.value["storageHost"]
       cache_policy              = core_filer.value["vfxtCache"].cachePolicy
-      nfs_connection_multiplier = core_filer.value["vfxtCache"].filerConnections
+      nfs_connection_multiplier = core_filer.value["vfxtCache"].nfsConnections
       custom_settings           = core_filer.value["vfxtCache"].customSettings
       dynamic "junction" {
         for_each = core_filer.value["namespaceJunctions"]

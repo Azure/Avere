@@ -3,9 +3,9 @@ resourceGroupName = "AzureRender.Scheduler"
 # Virtual Machines (https://docs.microsoft.com/en-us/azure/virtual-machines)
 virtualMachines = [
   {
-    name        = "LinuxScheduler"
-    imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/AzureRender.Image/providers/Microsoft.Compute/galleries/Gallery/images/LinuxFarm/versions/10.0.0"
-    machineSize = "Standard_D8s_v5" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+    name        = "LnxScheduler"
+    imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/AzureRender.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/10.0.0"
+    machineSize = "Standard_D16s_v5" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Linux"
       disk = {
@@ -30,7 +30,7 @@ virtualMachines = [
         autoScale = {
           enable                   = false
           fileName                 = "scale.sh"
-          scaleSetName             = "LinuxFarm"
+          scaleSetName             = "LnxFarm1"
           resourceGroupName        = "AzureRender.Farm"
           detectionIntervalSeconds = 60
           workerIdleSecondsDelete  = 3600
@@ -42,9 +42,9 @@ virtualMachines = [
     }
   },
   {
-    name        = ""
-    imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/AzureRender.Image/providers/Microsoft.Compute/galleries/Gallery/images/WindowsScheduler/versions/10.0.0"
-    machineSize = "Standard_D8s_v5" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+    name        = "" // "WinScheduler"
+    imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/AzureRender.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinScheduler/versions/10.0.0"
+    machineSize = "Standard_D16s_v5" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Windows"
       disk = {
@@ -69,7 +69,7 @@ virtualMachines = [
         autoScale = {
           enable                   = false
           fileName                 = "scale.ps1"
-          scaleSetName             = "WindowsFarm"
+          scaleSetName             = "WinFarm1"
           resourceGroupName        = "AzureRender.Farm"
           detectionIntervalSeconds = 60
           workerIdleSecondsDelete  = 3600
