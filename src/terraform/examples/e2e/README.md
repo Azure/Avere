@@ -8,7 +8,7 @@ The following core principles are implemented throughout this Azure rendering so
 * Any software in a [Compute Gallery](https://docs.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries) image is supported, including render managers, engines, etc.
 
 | Module | Required? | Description |
-| :----- | :-------- | ------------|
+| ------ | --------- | ----------- |
 | [0 Global](#0-global) | Yes | Defines global variables and Terraform backend configuration for the solution. |
 | [1 Security](#1-security) | Yes | Deploys [Managed Identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://docs.microsoft.com/en-us/azure/key-vault/general/overview) and [Blob Storage](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction) for Terraform state files. |
 | [2 Network](#2-network) | Yes, if [Virtual Network](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) not<br/>deployed. Otherwise, No | Deploys [Virtual Network](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) with [VPN](https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways) hybrid networking services. |
