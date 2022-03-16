@@ -50,7 +50,7 @@
     "avereNamespacePath": {
       "type": "string",
       "metadata": {
-        "description": "The Avere vFXT namespace path. (example: /msazure)"
+        "description": "The Avere vFXT namespace path."
       }
     }
   },
@@ -67,7 +67,7 @@
     "publicIPAddressName": "[concat('publicip-',variables('uniqueName'))]",
     "vmName": "[concat('vm-',variables('uniqueName'))]",
     "imageReference": {
-      "publisher": "microsoftvisualstudio",
+      "publisher": "MicrosoftVisualStudio",
       "offer": "Windows",
       "sku": "Windows-10-N-x64",
       "version": "latest"
@@ -80,7 +80,7 @@
   "resources": [
     {
       "apiVersion": "2018-02-01",
-      "name": "pid-7a86fa6c-a5c7-4f21-b9fa-efa3dcbfbb86",
+      "name": "pid-221d543a-3ef8-4c1f-8159-d58841f8fd32-partnercenter",
       "type": "Microsoft.Resources/deployments",
       "properties": {
         "mode": "Incremental",
