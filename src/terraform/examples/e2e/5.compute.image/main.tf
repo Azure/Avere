@@ -69,8 +69,8 @@ variable "imageTemplates" {
             machineSize    = string
             osDiskSizeGB   = number
             timeoutMinutes = number
-            renderEngines  = string
             outputVersion  = string
+            renderEngines  = list(string)
           }
         )
       }
@@ -268,7 +268,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               ],
               "output": {
                 "type": "string",
-                "value": "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('scriptFileName')), concat(replace(replace(replace(replace(string(parameters('scriptParameters')), ',\"', ' '), '\":', '='), '{\"', ''), '}', '')))]"
+                "value": "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('scriptFileName')), concat('buildJsonEncoded=', base64(string(parameters('scriptParameters')))))]"
               }
             },
             "GetExecuteCommandWindows": {
@@ -288,7 +288,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               ],
               "output": {
                 "type": "string",
-                "value": "[format('{0} {1}', concat(parameters('scriptFilePath'), parameters('scriptFileName')), concat(replace(replace(replace(replace(string(parameters('scriptParameters')), ',\"', ' -'), '\":', ' '), '{\"', '-'), '}', '')))]"
+                "value": "[format('{0} {1}', concat(parameters('scriptFilePath'), parameters('scriptFileName')), concat('-buildJsonEncoded ', base64(string(parameters('scriptParameters')))))]"
               }
             }
           }

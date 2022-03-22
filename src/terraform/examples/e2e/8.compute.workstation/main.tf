@@ -73,11 +73,6 @@ variable "virtualMachines" {
             )
           }
         )
-        bootDiagnostics = object(
-          {
-            storageAccountUri = string
-          }
-        )
       }
     )
   )
@@ -173,9 +168,6 @@ resource "azurerm_linux_virtual_machine" "workstation" {
     type         = "UserAssigned"
     identity_ids = [data.azurerm_user_assigned_identity.identity.id]
   }
-  boot_diagnostics {
-    storage_account_uri = each.value.bootDiagnostics.storageAccountUri
-  }
   dynamic "admin_ssh_key" {
     for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1] 
     content {
@@ -229,9 +221,6 @@ resource "azurerm_windows_virtual_machine" "workstation" {
   identity {
     type         = "UserAssigned"
     identity_ids = [data.azurerm_user_assigned_identity.identity.id]
-  }
-  boot_diagnostics {
-    storage_account_uri = each.value.bootDiagnostics.storageAccountUri
   }
   depends_on = [
     azurerm_network_interface.workstation

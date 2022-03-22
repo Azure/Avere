@@ -1,5 +1,19 @@
 #!/bin/bash -ex
 
+yum -y install nfs-utils
+yum -y install epel-release
+yum -y install jq
+
+echo "Customize (Start): Build Parameters"
+buildJson=$(echo $buildJsonEncoded | base64 -d)
+subnetName=$(echo $buildJson | jq -r .subnetName)
+echo "Subnet Name: $subnetName"
+machineSize=$(echo $buildJson | jq -r .machineSize)
+echo "Machine Size: $machineSize"
+renderEngines=$(echo $buildJson | jq -c .renderEngines)
+echo "Render Engines: $renderEngines"
+echo "Customize (End): Build Parameters"
+
 binDirectory="/usr/local/bin"
 cd $binDirectory
 
@@ -45,12 +59,6 @@ if [[ $machineSize == Standard_NV* && $machineSize == *_v5 ]]; then
   echo "Customize (End): GPU Driver (NVv5)"
 fi
 
-echo "Customize (Start): Core Utilities"
-yum -y install nfs-utils
-yum -y install epel-release
-yum -y install jq
-echo "Customize (End): Core Utilities"
-
 if [ $subnetName == "Scheduler" ]; then
   echo "Customize (Start): NFS Server"
   systemctl --now enable nfs-server
@@ -69,8 +77,8 @@ if [ $subnetName == "Scheduler" ]; then
   echo "Customize (End): Azure CLI"
 fi
 
-storageContainerUrl="https://az0.blob.core.windows.net/bin"
-storageContainerSas="?sv=2020-08-04&st=2021-11-07T18%3A19%3A06Z&se=2222-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=b4TcohYc%2FInzvG%2FQSxApyIaZlLT8Cl8ychUqZx6zNsg%3D"
+storageContainerUrl="https://azmedia0.blob.core.windows.net/bin"
+storageContainerSas="?sv=2020-10-02&st=2022-01-01T00%3A00%3A00Z&se=2222-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=piox4MEZyuln9BV6vcxhXuAUbSa7bYaECAMy4Z83qJk%3D"
 
 schedulerVersion="10.1.20.2"
 schedulerLicense="LicenseFree"
@@ -86,6 +94,7 @@ rendererPathMaya="/usr/autodesk/maya2022/bin"
 rendererPathNuke="/usr/local/nuke13"
 rendererPathUnreal="/usr/local/unreal5"
 rendererPathBlender="/usr/local/blender3"
+rendererPathHoudini="/usr/local/houdini19"
 if [[ $renderEngines == *Maya* ]]; then
   rendererPaths="$rendererPaths:$rendererPathMaya"
 fi
@@ -97,6 +106,9 @@ if [[ $renderEngines == *Unreal* ]]; then
 fi
 if [[ $renderEngines == *Blender* ]]; then
   rendererPaths="$rendererPaths:$rendererPathBlender"
+fi
+if [[ $renderEngines == *Houdini* ]]; then
+  rendererPaths="$rendererPaths:$rendererPathHoudini/bin"
 fi
 echo "PATH=$PATH:$schedulerPath$rendererPaths" >> /etc/profile.d/aaa.sh
 
@@ -155,14 +167,14 @@ if [[ $renderEngines == *Maya* ]]; then
   yum -y install libXtst
   yum -y install libxkbcommon
   yum -y install fontconfig
-  fileVersion="2022_1"
+  fileVersion="2022_3"
   installFile="Autodesk_Maya_${fileVersion}_ML_Linux_64bit.tgz"
   downloadUrl="$storageContainerUrl/Maya/$fileVersion/$installFile$storageContainerSas"
   curl -L -o $installFile $downloadUrl
-  localDirectory="maya"
-  mkdir $localDirectory
-  tar --directory=$localDirectory -xzf $installFile
-  cd $localDirectory/Packages
+  mayaDirectory="Maya"
+  mkdir $mayaDirectory
+  tar --directory=$mayaDirectory -xzf $installFile
+  cd $mayaDirectory/Packages
   rpm -i Maya2022*
   rpm -i MayaUSD*
   rpm -i Pymel*
@@ -201,6 +213,32 @@ if [[ $renderEngines == *Unreal* ]]; then
   echo "Customize (End): Unreal"
 fi
 
+if [[ $renderEngines == *Houdini* ]]; then
+  echo "Customize (Start): Houdini"
+  yum -y install libGL
+  yum -y install libXi
+  yum -y install libXtst
+  yum -y install libXrender
+  yum -y install libXrandr
+  yum -y install libXcursor
+  yum -y install libXcomposite
+  yum -y install libXScrnSaver
+  yum -y install libxkbcommon
+  yum -y install fontconfig
+  fileVersion="19.0.561"
+  eulaVersion="2021-10-13"
+  installFile="houdini-$fileVersion-linux_x86_64_gcc9.3.tar.gz"
+  downloadUrl="$storageContainerUrl/Houdini/$fileVersion/$installFile$storageContainerSas"
+  curl -L -o $installFile $downloadUrl
+  tar -xf $installFile
+  [[ $renderEngines == *Maya* ]] && mayaPlugIn=--install-engine-maya || mayaPlugIn=--no-install-engine-maya
+  [[ $renderEngines == *Unreal* ]] && unrealPlugIn=--install-engine-unreal || unrealPlugIn=--no-install-engine-unreal
+  cd houdini*
+  ./houdini.install --auto-install --make-dir --accept-EULA $eulaVersion $mayaPlugIn $unrealPlugIn $rendererPathHoudini
+  cd $binDirectory
+  echo "Customize (End): Houdini"
+fi
+
 if [[ $renderEngines == *Blender* ]]; then
   echo "Customize (Start): Blender"
   yum -y install libXi
@@ -218,6 +256,11 @@ if [[ $renderEngines == *Blender* ]]; then
   mv * $rendererPathBlender
   cd $binDirectory
   echo "Customize (End): Blender"
+fi
+
+if [[ $renderEngines == *PBRT* ]]; then
+  echo "Customize (Start): PBRT"
+  echo "Customize (End): PBRT"
 fi
 
 if [ $subnetName == "Workstation" ]; then

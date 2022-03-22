@@ -97,9 +97,9 @@ variable "storageTargetsNfs" {
         namespaceJunctions = list(
           object(
             {
-              namespacePath = string
-              nfsExport     = string
-              targetPath    = string
+              storageExport = string
+              storagePath   = string
+              clientPath    = string
             }
           )
         )
@@ -112,9 +112,9 @@ variable "storageTargetsNfsBlob" {
   type = list(
     object(
       {
-        name          = string
-        usageModel    = string
-        namespacePath = string
+        name       = string
+        clientPath = string
+        usageModel = string
         storage = object(
           {
             resourceGroupName = string
@@ -203,9 +203,9 @@ resource "azurerm_hpc_cache_nfs_target" "storage" {
   dynamic "namespace_junction" {
     for_each = each.value.namespaceJunctions
     content {
-      nfs_export     = namespace_junction.value["nfsExport"]
-      namespace_path = namespace_junction.value["namespacePath"]
-      target_path    = namespace_junction.value["targetPath"]
+      nfs_export     = namespace_junction.value["storageExport"]
+      target_path    = namespace_junction.value["storagePath"]
+      namespace_path = namespace_junction.value["clientPath"]
     }
   }
 }
@@ -219,7 +219,7 @@ resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
   cache_name           = azurerm_hpc_cache.cache[0].name
   storage_container_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}/blobServices/default/containers/${each.value.storage.containerName}"
   usage_model          = each.value.usageModel
-  namespace_path       = each.value.namespacePath
+  namespace_path       = each.value.clientPath
 }
 
 ######################################################################################
@@ -289,9 +289,9 @@ resource "avere_vfxt" "cache" {
       dynamic "junction" {
         for_each = core_filer.value["namespaceJunctions"]
         content {
-          core_filer_export   = junction.value["nfsExport"]
-          namespace_path      = junction.value["namespacePath"]
-          export_subdirectory = junction.value["targetPath"]
+          core_filer_export   = junction.value["storageExport"]
+          export_subdirectory = junction.value["storagePath"]
+          namespace_path      = junction.value["clientPath"]
         }
       }
     }

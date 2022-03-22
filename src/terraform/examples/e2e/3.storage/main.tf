@@ -41,8 +41,9 @@ variable "storageAccounts" {
         blobContainers = list(
           object(
             {
-              name   = string
-              access = string
+              name             = string
+              accessType       = string
+              localDirectories = list(string)
             }
           )
         )
@@ -155,20 +156,33 @@ locals {
   blobContainers = flatten([
     for storageAccount in var.storageAccounts : [
       for blobContainer in storageAccount.blobContainers : {
-        blobContainerName   = blobContainer.name
-        blobContainerAccess = blobContainer.access
-        storageAccountName  = storageAccount.name
+        blobContainerName       = blobContainer.name
+        blobContainerAccessType = blobContainer.accessType
+        storageAccountName      = storageAccount.name
       }
     ] if storageAccount.name != ""
   ])
-  blobs = flatten([
+  blobRootFiles = flatten([
     for storageAccount in var.storageAccounts : [
       for blobContainer in storageAccount.blobContainers : [
-        for blob in fileset(blobContainer.name, "**") : {
+        for blob in fileset(blobContainer.name, "*") : {
           blobName           = blob
           blobContainerName  = blobContainer.name
           storageAccountName = storageAccount.name
         }
+      ]
+    ] if storageAccount.name != ""
+  ])
+  blobDirectoryFiles = flatten([
+    for storageAccount in var.storageAccounts : [
+      for blobContainer in storageAccount.blobContainers : [
+        for blobDirectory in blobContainer.localDirectories : [
+          for blob in fileset(blobContainer.name, "/${blobDirectory}/**") : {
+            blobName           = blob
+            blobContainerName  = blobContainer.name
+            storageAccountName = storageAccount.name
+          }
+        ]
       ]
     ] if storageAccount.name != ""
   ])
@@ -331,7 +345,7 @@ resource "azurerm_storage_container" "containers" {
     for x in local.blobContainers : "${x.storageAccountName}.${x.blobContainerName}" => x
   }
   name                  = each.value.blobContainerName
-  container_access_type = each.value.blobContainerAccess
+  container_access_type = each.value.blobContainerAccessType
   storage_account_name  = each.value.storageAccountName
   depends_on = [
     azurerm_storage_account.storage
@@ -340,7 +354,7 @@ resource "azurerm_storage_container" "containers" {
 
 resource "azurerm_storage_blob" "blobs" {
   for_each = {
-    for x in local.blobs : "${x.storageAccountName}.${x.blobName}" => x
+    for x in setunion(local.blobRootFiles, local.blobDirectoryFiles) : "${x.storageAccountName}.${x.blobName}" => x
   }
   name                   = each.value.blobName
   storage_account_name   = each.value.storageAccountName
@@ -364,12 +378,6 @@ resource "azurerm_storage_share" "shares" {
     azurerm_storage_account.storage
   ]
 }
-
-#######################################################################################################
-# Hammerspace (https://azuremarketplace.microsoft.com/en-us/marketplace/apps/hammerspace.hammerspace) #
-#######################################################################################################
-
-# TBD
 
 ############################################################################################################
 # NetApp Files (https://docs.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-introduction) #

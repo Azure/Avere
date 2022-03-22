@@ -1,10 +1,20 @@
 param (
-  [string] $subnetName,
-  [string] $machineSize,
-  [string] $renderEngines
+  [string] $buildJsonEncoded
 )
 
 $ErrorActionPreference = "Stop"
+
+Write-Host "Customize (Start): Build Parameters"
+$buildJsonBytes = [System.Convert]::FromBase64String($buildJsonEncoded)
+$buildJson = [System.Text.Encoding]::UTF8.GetString($buildJsonBytes)
+$build = $buildJson | ConvertFrom-Json
+$subnetName = $build.subnetName
+Write-Host "Subnet Name: $subnetName"
+$machineSize = $build.machineSize
+Write-Host "Machine Size: $machineSize"
+$renderEngines = $build.renderEngines -join ","
+Write-Host "Render Engines: $renderEngines"
+Write-Host "Customize (End): Build Parameters"
 
 $binDirectory = "C:\Users\Public\Downloads"
 Set-Location -Path $binDirectory
@@ -64,8 +74,8 @@ if ($subnetName -eq "Scheduler") {
   Write-Host "Customize (End): NFS Client"
 }
 
-$storageContainerUrl = "https://az0.blob.core.windows.net/bin"
-$storageContainerSas = "?sv=2020-08-04&st=2021-11-07T18%3A19%3A06Z&se=2222-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=b4TcohYc%2FInzvG%2FQSxApyIaZlLT8Cl8ychUqZx6zNsg%3D"
+$storageContainerUrl = "https://azmedia0.blob.core.windows.net/bin"
+$storageContainerSas = "?sv=2020-10-02&st=2022-01-01T00%3A00%3A00Z&se=2222-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=piox4MEZyuln9BV6vcxhXuAUbSa7bYaECAMy4Z83qJk%3D"
 
 $schedulerVersion = "10.1.20.2"
 $schedulerLicense = "LicenseFree"
@@ -82,6 +92,7 @@ $rendererPathMaya = "C:\Program Files\Autodesk\Maya2022"
 $rendererPathNuke = "C:\Program Files\Foundry\Nuke13"
 $rendererPathUnreal = "C:\Program Files\Epic Games\Unreal5"
 $rendererPathBlender = "C:\Program Files\Blender Foundation\Blender3"
+$rendererPathHoudini = "C:\Program Files\Side Effects Software\Houdini19"
 if ($renderEngines -like "*3DS*") {
   $rendererPaths += ";$rendererPath3DS"
 }
@@ -96,6 +107,9 @@ if ($renderEngines -like "*Unreal*") {
 }
 if ($renderEngines -like "*Blender*") {
   $rendererPaths += ";$rendererPathBlender"
+}
+if ($renderEngines -like "*Houdini*") {
+  $rendererPaths += ";$rendererPathHoudini\bin"
 }
 setx PATH "$env:PATH;$schedulerPath$rendererPaths" /m
 
@@ -148,23 +162,25 @@ Write-Host "Customize (End): Deadline Client"
 
 if ($renderEngines -like "*3DS*") {
   Write-Host "Customize (Start): 3DS Max"
-  $fileVersion = "2022"
-  $installFile = "Autodesk_3ds_Max_${fileVersion}_EFGJKPS_Win_64bit_ML_setup_webinstall.exe"
+  $fileVersion = "2022_3"
+  $installFile = "Autodesk_3ds_Max_${fileVersion}_EFGJKPS_Win_64bit.zip"
   $downloadUrl = "$storageContainerUrl/3DS/$fileVersion/$installFile$storageContainerSas"
   Invoke-WebRequest $downloadUrl -OutFile $installFile
-  Start-Process -FilePath .\$installFile -ArgumentList "--silent" -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-  Start-Sleep -Seconds 600 # Temp workaround for 3DS Max web installer not exiting from a waiting process
+  Expand-Archive -Path $installFile
+  Start-Process -FilePath ".\Autodesk_3ds_Max*\Setup.exe" -ArgumentList "--silent" -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Start-Sleep -Seconds 360
   Write-Host "Customize (End): 3DS Max"
 }
 
 if ($renderEngines -like "*Maya*") {
   Write-Host "Customize (Start): Maya"
   $fileVersion = "2022_3"
-  $installFile = "Autodesk_Maya_${fileVersion}_ML_Windows_64bit_di_ML_setup_webinstall.exe"
+  $installFile = "Autodesk_Maya_${fileVersion}_ML_Windows_64bit.zip"
   $downloadUrl = "$storageContainerUrl/Maya/$fileVersion/$installFile$storageContainerSas"
   Invoke-WebRequest $downloadUrl -OutFile $installFile
-  Start-Process -FilePath .\$installFile -ArgumentList "--silent" -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-  Start-Sleep -Seconds 600 # Temp workaround for Maya web installer not exiting from a waiting process
+  Expand-Archive -Path $installFile
+  Start-Process -FilePath ".\Autodesk_Maya*\Setup.exe" -ArgumentList "--silent" -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Start-Sleep -Seconds 360
   Write-Host "Customize (End): Maya"
 }
 
@@ -202,6 +218,31 @@ if ($renderEngines -like "*Unreal*") {
   Write-Host "Customize (End): Unreal"
 }
 
+if ($renderEngines -like "*Houdini*") {
+  Write-Host "Customize (Start): Houdini"
+  $fileVersion = "19.0.561"
+  $eulaVersion = "2021-10-13"
+  $installFile = "houdini-$fileVersion-win64-vc142.exe"
+  $downloadUrl = "$storageContainerUrl/Houdini/$fileVersion/$installFile$storageContainerSas"
+  Invoke-WebRequest $downloadUrl -OutFile $installFile
+  if ($subnetName -eq "Workstation") {
+    $installArgs = "/MainApp=Yes"
+  } else {
+    $installArgs = "/HoudiniEngineOnly=Yes"
+  }
+  if ($renderEngines -like "*3DS*") {
+    $installArgs += " /Engine3dsMax=Yes"
+  }
+  if ($renderEngines -like "*Maya*") {
+    $installArgs += " /EngineMaya=Yes"
+  }
+  if ($renderEngines -like "*Unreal*") {
+    $installArgs += " /EngineUnreal=Yes"
+  }
+  Start-Process -FilePath .\$installFile -ArgumentList "/S /AcceptEULA=$eulaVersion /InstallDir=$rendererPathHoudini $installArgs" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Write-Host "Customize (End): Houdini"
+}
+
 if ($renderEngines -like "*Blender*") {
   Write-Host "Customize (Start): Blender"
   $fileVersion = "3.1.0"
@@ -210,6 +251,11 @@ if ($renderEngines -like "*Blender*") {
   Invoke-WebRequest $downloadUrl -OutFile $installFile
   Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $rendererPathBlender + '" /quiet /norestart') -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
   Write-Host "Customize (End): Blender"
+}
+
+if ($renderEngines -like "*PBRT*") {
+  Write-Host "Customize (Start): PBRT"
+  Write-Host "Customize (End): PBRT"
 }
 
 if ($subnetName -eq "Farm") {

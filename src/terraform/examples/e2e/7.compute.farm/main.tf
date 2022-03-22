@@ -96,11 +96,6 @@ variable "virtualMachineScaleSets" {
             eventHandler = string
           }
         )
-        bootDiagnostics = object(
-          {
-            storageAccountUri = string
-          }
-        )
       }
     )
   )
@@ -259,9 +254,6 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       timeout = each.value.terminateNotification.timeoutDelay
     }
   }
-  boot_diagnostics {
-    storage_account_uri = each.value.bootDiagnostics.storageAccountUri
-  }
 }
 
 resource "azurerm_windows_virtual_machine_scale_set" "farm" {
@@ -345,9 +337,6 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       enabled = each.value.terminateNotification.enable
       timeout = each.value.terminateNotification.timeoutDelay
     }
-  }
-  boot_diagnostics {
-    storage_account_uri = each.value.bootDiagnostics.storageAccountUri
   }
 }
 

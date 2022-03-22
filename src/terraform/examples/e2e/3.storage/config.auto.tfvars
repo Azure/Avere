@@ -15,8 +15,12 @@ storageAccounts = [
     ]
     blobContainers = [                  // https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction
       {
-        name   = "show"
-        access = "private"
+        name       = "show"
+        accessType = "private"
+        localDirectories = [
+          "blender",
+          # "pbrt"
+        ]
       }
     ]
     fileShares = [                      // https://docs.microsoft.com/en-us/azure/storage/files/storage-files-introduction

@@ -26,14 +26,11 @@ virtualMachines = [
       fileName = "initialize.sh"
       parameters = {
         fileSystemMounts = [
-          "cache.media.studio:/mnt/workstation /mnt/show nfs hard,proto=tcp,mountproto=tcp,retry=30 0 0",
+          "cache.media.studio:/mnt/workstation /mnt/show nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0",
           "scheduler.media.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0"
         ]
         teradiciLicenseKey = ""
       }
-    }
-    bootDiagnostics = {
-      storageAccountUri = ""
     }
   },
   {
@@ -59,14 +56,11 @@ virtualMachines = [
       fileName = "initialize.sh"
       parameters = {
         fileSystemMounts = [
-          "cache.media.studio:/mnt/workstation /mnt/show nfs hard,proto=tcp,mountproto=tcp,retry=30 0 0",
+          "cache.media.studio:/mnt/workstation /mnt/show nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0",
           "scheduler.media.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0"
         ]
         teradiciLicenseKey = ""
       }
-    }
-    bootDiagnostics = {
-      storageAccountUri = ""
     }
   },
   {
@@ -92,14 +86,11 @@ virtualMachines = [
       fileName = "initialize.sh"
       parameters = {
         fileSystemMounts = [
-          "cache.media.studio:/mnt/workstation /mnt/show nfs hard,proto=tcp,mountproto=tcp,retry=30 0 0",
+          "cache.media.studio:/mnt/workstation /mnt/show nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0",
           "scheduler.media.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0"
         ]
         teradiciLicenseKey = ""
       }
-    }
-    bootDiagnostics = {
-      storageAccountUri = ""
     }
   },
   {
@@ -125,14 +116,11 @@ virtualMachines = [
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMounts = [
-          "mount -o anon \\\\cache.media.studio\\mnt\\workstation W:",
+          "mount -o anon nolock \\\\cache.media.studio\\mnt\\workstation W:",
           "mount -o anon \\\\scheduler.media.studio\\DeadlineRepository S:"
         ]
         teradiciLicenseKey = ""
       }
-    }
-    bootDiagnostics = {
-      storageAccountUri = ""
     }
   },
   {
@@ -158,14 +146,11 @@ virtualMachines = [
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMounts = [
-          "mount -o anon \\\\cache.media.studio\\mnt\\workstation W:",
+          "mount -o anon nolock \\\\cache.media.studio\\mnt\\workstation W:",
           "mount -o anon \\\\scheduler.media.studio\\DeadlineRepository S:"
         ]
         teradiciLicenseKey = ""
       }
-    }
-    bootDiagnostics = {
-      storageAccountUri = ""
     }
   },
   {
@@ -191,14 +176,11 @@ virtualMachines = [
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMounts = [
-          "mount -o anon \\\\cache.media.studio\\mnt\\workstation W:",
+          "mount -o anon nolock \\\\cache.media.studio\\mnt\\workstation W:",
           "mount -o anon \\\\scheduler.media.studio\\DeadlineRepository S:"
         ]
         teradiciLicenseKey = ""
       }
-    }
-    bootDiagnostics = {
-      storageAccountUri = ""
     }
   }
 ]

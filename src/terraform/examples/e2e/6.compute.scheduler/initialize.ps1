@@ -46,3 +46,7 @@ $taskTrigger = New-ScheduledTaskTrigger -AtStartup
 Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
 
 Start-Process -FilePath $mountFile -Wait -RedirectStandardOutput "$mountFile.output.txt" -RedirectStandardError "$mountFile.error.txt"
+
+# $filePath = "S:\$(hostname).txt"
+# Set-Content -Path $filePath -Value "AAA"
+# Get-Content -Path $filePath

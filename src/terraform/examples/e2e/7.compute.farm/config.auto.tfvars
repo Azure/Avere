@@ -29,7 +29,7 @@ virtualMachineScaleSets = [
       fileName = "initialize.sh"
       parameters = {
         fileSystemMounts = [
-          "cache.media.studio:/mnt/farm /mnt/show/read nfs hard,proto=tcp,mountproto=tcp,retry=30 0 0",
+          "cache.media.studio:/mnt/farm /mnt/show/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0",
           "azmedia1.blob.core.windows.net:/azmedia1/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0",
           "scheduler.media.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0"
         ]
@@ -46,9 +46,6 @@ virtualMachineScaleSets = [
       enable       = true
       timeoutDelay = "PT5M"
       eventHandler = "terminate.sh"
-    }
-    bootDiagnostics = {
-      storageAccountUri = ""
     }
   },
   {
@@ -78,7 +75,7 @@ virtualMachineScaleSets = [
       fileName = "initialize.sh"
       parameters = {
         fileSystemMounts = [
-          "cache.media.studio:/mnt/farm /mnt/show/read nfs hard,proto=tcp,mountproto=tcp,retry=30 0 0",
+          "cache.media.studio:/mnt/farm /mnt/show/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0",
           "azmedia1.blob.core.windows.net:/azmedia1/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0",
           "scheduler.media.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0"
         ]
@@ -95,9 +92,6 @@ virtualMachineScaleSets = [
       enable       = true
       timeoutDelay = "PT5M"
       eventHandler = "terminate.sh"
-    }
-    bootDiagnostics = {
-      storageAccountUri = ""
     }
   },
   {
@@ -127,7 +121,7 @@ virtualMachineScaleSets = [
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMounts = [
-          "mount -o anon \\\\cache.media.studio\\mnt\\farm R:",
+          "mount -o anon nolock \\\\cache.media.studio\\mnt\\farm R:",
           "mount -o anon nolock \\\\azmedia1.blob.core.windows.net\\azmedia1\\show W:",
           "mount -o anon \\\\scheduler.media.studio\\DeadlineRepository S:"
         ]
@@ -144,9 +138,6 @@ virtualMachineScaleSets = [
       enable       = true
       timeoutDelay = "PT5M"
       eventHandler = "terminate.ps1"
-    }
-    bootDiagnostics = {
-      storageAccountUri = ""
     }
   }
 ]

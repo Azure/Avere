@@ -5,14 +5,14 @@ This folder contains the end-to-end modular framework for automated deployment o
 The following core principles are implemented throughout this Azure rendering solution framework.
 * Incorporation of security best practices ([Managed Identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://docs.microsoft.com/en-us/azure/key-vault/general/overview), [Private Endpoints](https://docs.microsoft.com/en-us/azure/private-link/private-endpoint-overview), etc.) 
 * Separation of module deployment configuration (**config.auto.tfvars**) and code (**main.tf**) files.
-* Any software in a [Compute Gallery](https://docs.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries) image is supported, including render managers, engines, etc.
+* Any software in a [Compute Gallery](https://docs.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries) image is supported, including render manager, engines, etc.
 
 | Module | Required? | Description |
 | ------ | --------- | ----------- |
 | [0 Global](#0-global) | Yes | Defines global variables and Terraform backend configuration for the solution. |
 | [1 Security](#1-security) | Yes | Deploys [Managed Identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://docs.microsoft.com/en-us/azure/key-vault/general/overview) and [Blob Storage](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction) for Terraform state files. |
 | [2 Network](#2-network) | Yes, if [Virtual Network](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) not<br/>deployed. Otherwise, No | Deploys [Virtual Network](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) with [VPN](https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways) hybrid networking services. |
-| [3 Storage](#3-storage) | No | Deploys [Storage Accounts](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview) (Blob or File), [NetApp Files](https://docs.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-introduction) or [Hammerspace](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/hammerspace.hammerspace) storage. |
+| [3 Storage](#3-storage) | No | Deploys [Storage Accounts](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview) (Blob and/or File) or [NetApp Files](https://docs.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-introduction) storage services. |
 | [4 Storage Cache](#4-storage-cache) | Yes | Deploys [HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-overview) for highly-available and scalable file caching. |
 | [5 Compute Image](#5-compute-image) | No | Deploys [Compute Gallery](https://docs.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries) images that are custom built via [Image Builder](https://docs.microsoft.com/en-us/azure/virtual-machines/image-builder-overview) service. |
 | [6 Compute Scheduler](#6-compute-scheduler) | No | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines) for distributed job scheduling across render farms. |
@@ -24,24 +24,16 @@ The following core principles are implemented throughout this Azure rendering so
 To manage deployment of the Azure Artist Anywhere solution from your local workstation, the following prerequisite steps are required.
 1. Make sure the [Terraform CLI](https://learn.hashicorp.com/tutorials/terraform/install-cli) (v1.1.7 or higher) is downloaded locally and accessible in your path environment variable.
 1. Make sure the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) is installed locally and accessible in your path environment variable.
-1. Make sure [Git](https://git-scm.com/downloads) is installed locally.
 1. Run `az account show` to ensure that your current Azure subscription session context is set appropriately. To change your current Azure subscription session context, run `az account set --subscription YOUR_SUBSCRIPTION_ID`
-1. Download the Azure rendering solution Terraform examples GitHub repository via the following commands.
-   ```
-   mkdir tf
-   cd tf
-   git init
-   git remote add origin -f https://github.com/Azure/Avere.git
-   git config core.sparsecheckout true
-   echo "src/terraform/*" >> .git/info/sparse-checkout
-   git pull origin main
-   ```
+1. Download the Azure rendering end-to-end solution example source files from the following GitHub repository directory
+   * https://downgit.github.io/#/home?url=https://github.com/Azure/Avere/tree/main/src/terraform/examples/e2e
+   * Unzip the downloaded *e2e.zip* file to your local home directory (`~/`). Local file references below will use `~/e2e/`
 
 ## 0 Global
 
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
-1. Run `cd ~/tf/src/terraform/examples/e2e/0.global`
+1. Run `cd ~/e2e/0.global`
 1. Review and edit the config values in `variables.tf` for your deployment
 1. Review and edit the config values in `backend.config` for your deployment
 
@@ -54,7 +46,7 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
-1. Run `cd ~/tf/src/terraform/examples/e2e/1.security`
+1. Run `cd ~/e2e/1.security`
 1. Review and edit the config values in `config.auto.tfvars` for your deployment
 1. Run `terraform init` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
@@ -65,7 +57,7 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
-1. Run `cd ~/tf/src/terraform/examples/e2e/2.network`
+1. Run `cd ~/e2e/2.network`
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
@@ -75,7 +67,7 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
-1. Run `cd ~/tf/src/terraform/examples/e2e/3.storage`
+1. Run `cd ~/e2e/3.storage`
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
@@ -110,9 +102,9 @@ Set-Location ~/
 
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
-1. Run `cd ~/tf/src/terraform/examples/e2e/4.storage.cache`
+1. Run `cd ~/e2e/4.storage.cache`
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
-1. *For Avere vFXT deployment only*,
+1. For [Avere vFXT](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-overview) deployment only,
    * Make sure the [Avere vFXT image terms have been accepted](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs#accept-software-terms) (only required once per Azure subscription)
    * Make sure you have at least 96 (32 x 3) cores quota available for [Esv3](https://docs.microsoft.com/en-us/azure/virtual-machines/ev3-esv3-series#esv3-series) machines in your Azure subscription.
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
@@ -123,7 +115,7 @@ Set-Location ~/
 
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
-1. Run `cd ~/tf/src/terraform/examples/e2e/5.compute.image`
+1. Run `cd ~/e2e/5.compute.image`
 1. Review and edit the config values in `config.auto.tfvars` for your deployment. Make sure you have sufficient compute cores quota available on your Azure subscription for each configured virtual machine size.
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
@@ -134,7 +126,7 @@ Set-Location ~/
 
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
-1. Run `cd ~/tf/src/terraform/examples/e2e/6.compute.scheduler`
+1. Run `cd ~/e2e/6.compute.scheduler`
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
    * Make sure you have sufficient compute cores quota available in your Azure subscription.
    * Make sure the "imageId" config has the correct value for an image in your Azure subscription.
@@ -146,7 +138,7 @@ Set-Location ~/
 
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
-1. Run `cd ~/tf/src/terraform/examples/e2e/7.compute.farm`
+1. Run `cd ~/e2e/7.compute.farm`
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
    * Make sure you have sufficient compute (*Spot*) cores quota available in your Azure subscription.
    * Make sure the "imageId" config has the correct value for an image in your Azure subscription.
@@ -160,7 +152,7 @@ Set-Location ~/
 
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
-1. Run `cd ~/tf/src/terraform/examples/e2e/8.compute.workstation`
+1. Run `cd ~/e2e/8.compute.workstation`
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
    * Make sure you have sufficient compute cores quota available in your Azure subscription.
    * Make sure the "imageId" config has the correct value for an image in your Azure subscription.
@@ -174,7 +166,7 @@ Set-Location ~/
 
 ### Deployment Steps (*via a local Bash or PowerShell command shell*)
 
-1. Run `cd ~/tf/src/terraform/examples/e2e/9.monitor`
+1. Run `cd ~/e2e/9.monitor`
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)

@@ -47,7 +47,7 @@ vfxtCache = {
 
 storageTargetsNfs = [
   {
-    name        = "" // "RenderFarm"
+    name        = ""
     storageHost = ""
     hpcCache = {
       usageModel = "WRITE_AROUND" // https://docs.microsoft.com/en-us/azure/hpc-cache/cache-usage-models
@@ -60,17 +60,17 @@ storageTargetsNfs = [
     }
     namespaceJunctions = [
       {
-        nfsExport     = "/show"
-        namespacePath = "/mnt/farm"
-        targetPath    = ""
+        storageExport = ""
+        storagePath   = ""
+        clientPath    = ""
       }
     ]
   },
   {
-    name        = "" // "ArtistWorkstation"
+    name        = ""
     storageHost = ""
     hpcCache = {
-      usageModel = "WRITE_WORKLOAD_CLOUDWS" // https://docs.microsoft.com/en-us/azure/hpc-cache/cache-usage-models
+      usageModel = "WRITE_WORKLOAD_15" // https://docs.microsoft.com/en-us/azure/hpc-cache/cache-usage-models
     }
     vfxtCache = {
       cachePolicy    = "Collaborating Cloud Workstation"
@@ -80,9 +80,9 @@ storageTargetsNfs = [
     }
     namespaceJunctions = [
       {
-        nfsExport     = "/show"
-        namespacePath = "/mnt/workstation"
-        targetPath    = ""
+        storageExport = ""
+        storagePath   = ""
+        clientPath    = ""
       }
     ]
   }
@@ -90,9 +90,9 @@ storageTargetsNfs = [
 
 storageTargetsNfsBlob = [
   {
-    name          = "" // "RenderFarm"
-    usageModel    = "WRITE_AROUND"
-    namespacePath = "/mnt/farm"
+    name       = "" // "RenderFarm"
+    clientPath = "/mnt/farm"
+    usageModel = "WRITE_AROUND"
     storage = {
       resourceGroupName = "AzureRender.Storage"
       accountName       = "azmedia1"
@@ -100,9 +100,9 @@ storageTargetsNfsBlob = [
     }
   },
   {
-    name          = "" // "ArtistWorkstation"
-    usageModel    = "WRITE_WORKLOAD_CLOUDWS"
-    namespacePath = "/mnt/workstation"
+    name       = "" // "ArtistWorkstation"
+    clientPath = "/mnt/workstation"
+    usageModel = "WRITE_WORKLOAD_15"
     storage = {
       resourceGroupName = "AzureRender.Storage"
       accountName       = "azmedia1"
