@@ -53,9 +53,6 @@ storageAccounts = [
   }
 ]
 
-# Hammerspace (https://azuremarketplace.microsoft.com/en-us/marketplace/apps/hammerspace.hammerspace)
-# TBD
-
 # NetApp Files (https://docs.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-introduction)
 netAppAccounts = [
   {
