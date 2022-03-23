@@ -85,6 +85,7 @@ variable "virtualMachineScaleSets" {
         )
         spot = object(
           {
+            enable          = bool
             evictionPolicy  = string
             machineMaxPrice = number
           }
@@ -177,9 +178,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   admin_username                  = each.value.adminLogin.userName
   admin_password                  = data.azurerm_key_vault_secret.admin_password.value
   disable_password_authentication = each.value.adminLogin.disablePasswordAuthentication
-  priority                        = each.value.spot.evictionPolicy != "" ? "Spot" : "Regular"
-  eviction_policy                 = each.value.spot.evictionPolicy != "" ? each.value.spot.evictionPolicy : null
-  max_bid_price                   = each.value.spot.evictionPolicy != "" ? each.value.spot.machineMaxPrice : -1
+  priority                        = each.value.spot.enable ? "Spot" : "Regular"
+  eviction_policy                 = each.value.spot.enable ? each.value.spot.evictionPolicy : null
+  max_bid_price                   = each.value.spot.enable ? each.value.spot.machineMaxPrice : -1
   single_placement_group          = false
   overprovision                   = false
   custom_data = base64gzip(
@@ -268,9 +269,9 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   instances              = each.value.machine.count
   admin_username         = each.value.adminLogin.userName
   admin_password         = data.azurerm_key_vault_secret.admin_password.value
-  priority               = each.value.spot.evictionPolicy != "" ? "Spot" : "Regular"
-  eviction_policy        = each.value.spot.evictionPolicy != "" ? each.value.spot.evictionPolicy : null
-  max_bid_price          = each.value.spot.evictionPolicy != "" ? each.value.spot.machineMaxPrice : -1
+  priority               = each.value.spot.enable ? "Spot" : "Regular"
+  eviction_policy        = each.value.spot.enable ? each.value.spot.evictionPolicy : null
+  max_bid_price          = each.value.spot.enable ? each.value.spot.machineMaxPrice : -1
   single_placement_group = false
   overprovision          = false
   custom_data = base64gzip(

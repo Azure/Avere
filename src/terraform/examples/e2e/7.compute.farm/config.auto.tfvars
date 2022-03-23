@@ -38,7 +38,8 @@ virtualMachineScaleSets = [
     monitorExtension = {
       enable = false
     }
-    spot = {                     // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot
+    spot = {
+      enable = true              // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot
       evictionPolicy  = "Delete" // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#eviction-policy
       machineMaxPrice = -1       // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#pricing
     }
@@ -84,7 +85,8 @@ virtualMachineScaleSets = [
     monitorExtension = {
       enable = false
     }
-    spot = {                     // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot
+    spot = {
+      enable = true              // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot
       evictionPolicy  = "Delete" // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#eviction-policy
       machineMaxPrice = -1       // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#pricing
     }
@@ -130,7 +132,8 @@ virtualMachineScaleSets = [
     monitorExtension = {
       enable = false
     }
-    spot = {                     // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot
+    spot = {
+      enable = true              // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot
       evictionPolicy  = "Delete" // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#eviction-policy
       machineMaxPrice = -1       // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#pricing
     }
