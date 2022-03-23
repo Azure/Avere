@@ -15,9 +15,9 @@ The following core principles are implemented throughout this Azure rendering so
 | [3 Storage](#3-storage) | No | Yes | Deploys [Storage Accounts](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview) (Blob and/or File) or [NetApp Files](https://docs.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-introduction) storage services. |
 | [4 Storage Cache](#4-storage-cache) | Yes | Maybe, depends on your<br>scale requirements | Deploys [HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-overview) for highly-available and scalable file caching. |
 | [5 Compute Image](#5-compute-image) | No, use custom image reference (imageId) [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L7) | No, use custom image reference (imageId) [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L7) | Deploys [Compute Gallery](https://docs.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries) images that are built via the [Image Builder](https://docs.microsoft.com/en-us/azure/virtual-machines/image-builder-overview) service. |
-| [<nobr>6 Compute Scheduler</nobr>](#6-compute-scheduler) | No | Yes | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines) for job and task scheduling across render farms. |
+| [6 Compute Scheduler](#6-compute-scheduler) | No | Yes | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines) for job and task scheduling across render farms. |
 | [7 Compute Farm](#7-compute-farm) | Yes, choose [VM Sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes) for<br>your Azure render farm | Yes, choose [VM Sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes) for<br>your Azure render farm | Deploys [Virtual Machine Scale Sets](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview) for [Linux](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) and/or [Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) render farms. |
-| [<nobr>8 Compute Workstation</nobr>](#8-compute-workstation) | No | Yes | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines) for [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) remote artist workstations. |
+| [8&#160;Compute&#160;Workstation](#8-compute-workstation) | No | Yes | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines) for [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) remote artist workstations. |
 | [9 Monitor](#9-monitor) | No | No | Deploys [Monitor Private Link](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/private-link-security) with [Private DNS](https://docs.microsoft.com/en-us/azure/dns/private-dns-overview) and [Private Endpoint](https://docs.microsoft.com/en-us/azure/private-link/private-endpoint-overview) integration. |
 | [10 Render](#10-render) | No | No | Submit render farm jobs from [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) remote artist workstations. |
 
@@ -80,26 +80,26 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 ### Bash / Linux
 
 <code>
-latestVersion=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name)
-downloadUrl=https://github.com/Azure/Avere/releases/download/$latestVersion/terraform-provider-avere
-localDirectory=~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/${latestVersion:1}/linux_amd64
-mkdir -p $localDirectory
-cd $localDirectory
-curl -L $downloadUrl -o terraform-provider-avere_$latestVersion
-chmod 755 terraform-provider-avere_$latestVersion
-cd ~/
+latestVersion=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name)<br>
+downloadUrl=https://github.com/Azure/Avere/releases/download/$latestVersion/terraform-provider-avere<br>
+localDirectory=~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/${latestVersion:1}/linux_amd64<br>
+mkdir -p $localDirectory<br>
+cd $localDirectory<br>
+curl -L $downloadUrl -o terraform-provider-avere_$latestVersion<br>
+chmod 755 terraform-provider-avere_$latestVersion<br>
+cd ~/<br>
 </code>
 
 ### PowerShell / Windows
 
 <code>
-$latestVersion = (Invoke-WebRequest -Uri https://api.github.com/repos/Azure/Avere/releases/latest | ConvertFrom-Json).tag_name
-$downloadUrl = "https://github.com/Azure/Avere/releases/download/$latestVersion/terraform-provider-avere.exe"
-$localDirectory = "$Env:AppData\terraform.d\plugins\registry.terraform.io\hashicorp\avere\$($latestVersion.Substring(1))\windows_amd64"
-New-Item -ItemType Directory -Path $localDirectory -Force
-Set-Location $localDirectory
-Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.exe
-Set-Location ~/
+$latestVersion = (Invoke-WebRequest -Uri https://api.github.com/repos/Azure/Avere/releases/latest | ConvertFrom-Json).tag_name<br>
+$downloadUrl = "https://github.com/Azure/Avere/releases/download/$latestVersion/terraform-provider-avere.exe"<br>
+$localDirectory = "$Env:AppData\terraform.d\plugins\registry.terraform.io\hashicorp\avere\$($latestVersion.Substring(1))\windows_amd64"<br>
+New-Item -ItemType Directory -Path $localDirectory -Force<br>
+Set-Location $localDirectory<br>
+Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.exe<br>
+Set-Location ~/<br>
 </code>
 
 ### Deployment Steps
@@ -181,29 +181,21 @@ Now that deployment of the Azure Artist Anywhere solution is complete, this sect
 ### Linux Render Farm (*the following example jobs can be submitted from a Linux or Windows workstation*)
 
 <code>
-deadlinecommand -SubmitCommandLineJob -name ellie -executable blender -arguments "-b -y /mnt/show/read/blender/ellie/3.0.blend --render-output /mnt/show/write/blender/ellie/output/ --render-frame <STARTFRAME>..<ENDFRAME>"
-</code>
+deadlinecommand -SubmitCommandLineJob -name ellie -executable blender -arguments "-b -y /mnt/show/read/blender/ellie/3.0.blend --render-output /mnt/show/write/blender/ellie/output/ --render-frame <STARTFRAME>..<ENDFRAME>"<br><br>
 
-<code>
-deadlinecommand -SubmitCommandLineJob -name amy.frames -executable blender -arguments "-b -y /mnt/show/read/blender/amy/rain_restaurant.blend --render-output /mnt/show/write/blender/amy/output/ --engine CYCLES --render-frame <STARTFRAME>..<ENDFRAME>" -frames 100-280 -chunksize 19
-</code>
+deadlinecommand -SubmitCommandLineJob -name amy.frames -executable blender -arguments "-b -y /mnt/show/read/blender/amy/rain_restaurant.blend --render-output /mnt/show/write/blender/amy/output/ --engine CYCLES --render-frame <STARTFRAME>..<ENDFRAME>" -frames 100-280 -chunksize 19<br><br>
 
-<code>
-deadlinecommand -SubmitCommandLineJob -name amy.video -executable blender -arguments "-b -y /mnt/show/read/blender/amy/rain_restaurant.blend --render-output /mnt/show/write/blender/amy/output/ --engine CYCLES --render-format FFMPEG --render-anim" -frames 100-280 -chunksize 19
+deadlinecommand -SubmitCommandLineJob -name amy.video -executable blender -arguments "-b -y /mnt/show/read/blender/amy/rain_restaurant.blend --render-output /mnt/show/write/blender/amy/output/ --engine CYCLES --render-format FFMPEG --render-anim" -frames 100-280 -chunksize 19<br><br>
 </code>
 
 ### Windows Render Farm (*the following example jobs can be submitted from a Linux or Windows workstation*)
 
 <code>
-deadlinecommand -SubmitCommandLineJob -name ellie -executable blender.exe -arguments "-b -y R:\blender\ellie\3.0.blend --render-output W:\blender\ellie\output\ --render-frame <STARTFRAME>..<ENDFRAME>"
-</code>
+deadlinecommand -SubmitCommandLineJob -name ellie -executable blender.exe -arguments "-b -y R:\blender\ellie\3.0.blend --render-output W:\blender\ellie\output\ --render-frame <STARTFRAME>..<ENDFRAME>"<br><br>
 
-<code>
-deadlinecommand -SubmitCommandLineJob -name amy.frames -executable blender.exe -arguments "-b -y R:\blender\amy\rain_restaurant.blend --render-output W:\blender\amy\output\ --engine CYCLES --render-frame <STARTFRAME>..<ENDFRAME>" -frames 100-280 -chunksize 19
-</code>
+deadlinecommand -SubmitCommandLineJob -name amy.frames -executable blender.exe -arguments "-b -y R:\blender\amy\rain_restaurant.blend --render-output W:\blender\amy\output\ --engine CYCLES --render-frame <STARTFRAME>..<ENDFRAME>" -frames 100-280 -chunksize 19<br><br>
 
-<code>
-deadlinecommand -SubmitCommandLineJob -name amy.video -executable blender.exe -arguments "-b -y R:\blender\amy\rain_restaurant.blend --render-output W:\blender\amy\output\ --engine CYCLES --render-format FFMPEG --render-anim" -frames 100-280 -chunksize 19
+deadlinecommand -SubmitCommandLineJob -name amy.video -executable blender.exe -arguments "-b -y R:\blender\amy\rain_restaurant.blend --render-output W:\blender\amy\output\ --engine CYCLES --render-format FFMPEG --render-anim" -frames 100-280 -chunksize 19<br><br>
 </code>
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com
