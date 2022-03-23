@@ -13,7 +13,7 @@ The following core principles are implemented throughout this Azure rendering so
 | [1 Security](#1-security) | Yes | Yes | Deploys [Managed Identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://docs.microsoft.com/en-us/azure/key-vault/general/overview) and [Blob Storage](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction) for Terraform state files. |
 | [2 Network](#2-network) | Yes, if [Virtual Network](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No | Yes, if [Virtual Network](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No | Deploys [Virtual Network](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) with [VPN](https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways) hybrid networking services. |
 | [3 Storage](#3-storage) | No | Yes | Deploys [Storage Accounts](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview) (Blob and/or File) or [NetApp Files](https://docs.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-introduction) storage services. |
-| [4 Storage Cache](#4-storage-cache) | Yes | Maybe, depends on your<br>scale requirements | Deploys [HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-overview) for highly-available and scalable file caching. |
+| [4 Storage Cache](#4-storage-cache) | Yes | Maybe, depends on your<br>render scale requirements | Deploys [HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-overview) for highly-available and scalable file caching. |
 | [5 Compute Image](#5-compute-image) | No, use custom image reference (imageId) [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L7) | No, use custom image reference (imageId) [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L7) | Deploys [Compute Gallery](https://docs.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries) images that are built via the [Image Builder](https://docs.microsoft.com/en-us/azure/virtual-machines/image-builder-overview) service. |
 | [6 Compute Scheduler](#6-compute-scheduler) | No | Yes | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines) for job and task scheduling across render farms. |
 | [7 Compute Farm](#7-compute-farm) | Yes, choose [VM Sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes) for<br>your Azure render farm | Yes, choose [VM Sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes) for<br>your Azure render farm | Deploys [Virtual Machine Scale Sets](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview) for [Linux](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) and/or [Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) render farms. |
@@ -181,21 +181,41 @@ Now that deployment of the Azure Artist Anywhere solution is complete, this sect
 ### Linux Render Farm (*the following example jobs can be submitted from a Linux or Windows workstation*)
 
 <code>
-deadlinecommand -SubmitCommandLineJob -name ellie -executable blender -arguments "-b -y /mnt/show/read/blender/ellie/3.0.blend --render-output /mnt/show/write/blender/ellie/output/ --render-frame <STARTFRAME>..<ENDFRAME>"<br><br>
-
-deadlinecommand -SubmitCommandLineJob -name amy.frames -executable blender -arguments "-b -y /mnt/show/read/blender/amy/rain_restaurant.blend --render-output /mnt/show/write/blender/amy/output/ --engine CYCLES --render-frame <STARTFRAME>..<ENDFRAME>" -frames 100-280 -chunksize 19<br><br>
-
-deadlinecommand -SubmitCommandLineJob -name amy.video -executable blender -arguments "-b -y /mnt/show/read/blender/amy/rain_restaurant.blend --render-output /mnt/show/write/blender/amy/output/ --engine CYCLES --render-format FFMPEG --render-anim" -frames 100-280 -chunksize 19<br><br>
+deadlinecommand -SubmitCommandLineJob -name ellie -executable blender -arguments "-b -y /mnt/show/read/blender/ellie/3.0.blend --render-output /mnt/show/write/blender/ellie/output/ --render-frame <STARTFRAME>..<ENDFRAME>"
 </code>
+
+<br><br>
+
+<code>
+deadlinecommand -SubmitCommandLineJob -name amy.frames -executable blender -arguments "-b -y /mnt/show/read/blender/amy/rain_restaurant.blend --render-output /mnt/show/write/blender/amy/output/ --engine CYCLES --render-frame <STARTFRAME>..<ENDFRAME>" -frames 100-280 -chunksize 19
+</code>
+
+<br><br>
+
+<code>
+deadlinecommand -SubmitCommandLineJob -name amy.video -executable blender -arguments "-b -y /mnt/show/read/blender/amy/rain_restaurant.blend --render-output /mnt/show/write/blender/amy/output/ --engine CYCLES --render-format FFMPEG --render-anim" -frames 100-280 -chunksize 19
+</code>
+
+<br><br>
 
 ### Windows Render Farm (*the following example jobs can be submitted from a Linux or Windows workstation*)
 
 <code>
-deadlinecommand -SubmitCommandLineJob -name ellie -executable blender.exe -arguments "-b -y R:\blender\ellie\3.0.blend --render-output W:\blender\ellie\output\ --render-frame <STARTFRAME>..<ENDFRAME>"<br><br>
-
-deadlinecommand -SubmitCommandLineJob -name amy.frames -executable blender.exe -arguments "-b -y R:\blender\amy\rain_restaurant.blend --render-output W:\blender\amy\output\ --engine CYCLES --render-frame <STARTFRAME>..<ENDFRAME>" -frames 100-280 -chunksize 19<br><br>
-
-deadlinecommand -SubmitCommandLineJob -name amy.video -executable blender.exe -arguments "-b -y R:\blender\amy\rain_restaurant.blend --render-output W:\blender\amy\output\ --engine CYCLES --render-format FFMPEG --render-anim" -frames 100-280 -chunksize 19<br><br>
+deadlinecommand -SubmitCommandLineJob -name ellie -executable blender.exe -arguments "-b -y R:\blender\ellie\3.0.blend --render-output W:\blender\ellie\output\ --render-frame <STARTFRAME>..<ENDFRAME>"
 </code>
+
+<br><br>
+
+<code>
+deadlinecommand -SubmitCommandLineJob -name amy.frames -executable blender.exe -arguments "-b -y R:\blender\amy\rain_restaurant.blend --render-output W:\blender\amy\output\ --engine CYCLES --render-frame <STARTFRAME>..<ENDFRAME>" -frames 100-280 -chunksize 19<br><br>
+</code>
+
+<br><br>
+
+<code>
+deadlinecommand -SubmitCommandLineJob -name amy.video -executable blender.exe -arguments "-b -y R:\blender\amy\rain_restaurant.blend --render-output W:\blender\amy\output\ --engine CYCLES --render-format FFMPEG --render-anim" -frames 100-280 -chunksize 19
+</code>
+
+<br><br>
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com
