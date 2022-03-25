@@ -1,10 +1,10 @@
 # Azure Artist Anywhere (AAA) Solution Deployment Framework
 
-This folder contains the end-to-end modular framework for automated deployment of the [Azure Artist Anywhere (AAA) rendering architecture](https://github.com/Azure/Avere/blob/main/src/terraform/burstrenderarchitecture.png). By extending your rendering pipeline with [Azure HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview), you can enable remote artists across [Azure Regions](https://azure.microsoft.com/en-us/global-infrastructure/geographies) and scale your Azure render farm. You can choose to connect your on-premises asset storage via [Azure Hybrid Networking](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/hybrid-networking) and/or deploy Azure (multi-regional) storage.
+AAA is a *modular framework* for the *automated deployment* of the [Azure rendering solution architecture](https://github.com/Azure/Avere/blob/main/src/terraform/burstrenderarchitecture.png). By extending your content creation pipeline with [Azure HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview), you can [globally enable](https://azure.microsoft.com/en-us/global-infrastructure/geographies) remote artists with render farm compute scale across any [Azure virtual machine size](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes).
 
-The following core principles are implemented throughout this Azure rendering solution framework.
-* Incorporation of security best practices ([Managed Identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://docs.microsoft.com/en-us/azure/key-vault/general/overview), [Private Endpoints](https://docs.microsoft.com/en-us/azure/private-link/private-endpoint-overview), etc).
-* Separation of module deployment configuration (**config.auto.tfvars**) and code (**main.tf**) files.
+The following *core principles* are implemented throughout the AAA solution deployment framework.
+* Integration of security best practices, including [Managed Identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://docs.microsoft.com/en-us/azure/key-vault/general/overview), [Private Endpoints](https://docs.microsoft.com/en-us/azure/private-link/private-endpoint-overview).
+* Separation of module deployment configuration files (*config.auto.tfvars*) and code files (*main.tf*).
 * Any software (render manager, renderers, etc) in a [Compute Gallery](https://docs.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries) custom image is supported.
 
 | Module Name | Module Description | Required for<br>Compute Burst? | Required for<br>All Cloud? |
@@ -12,11 +12,11 @@ The following core principles are implemented throughout this Azure rendering so
 | [0 Global](#0-global) | Defines global variables and Terraform backend configuration for the solution. | Yes | Yes |
 | [1 Security](#1-security) | Deploys [Managed Identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://docs.microsoft.com/en-us/azure/key-vault/general/overview) and [Blob Storage](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction) for Terraform state files. | Yes | Yes |
 | [2 Network](#2-network) | Deploys [Virtual Network](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) with [VPN](https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways) hybrid networking services. | Yes, if [Virtual Network](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No | Yes, if [Virtual Network](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No |
-| [3 Storage](#3-storage) | Deploys [Storage Account](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview) types with native NFS support enabled. | No | Yes |
+| [3 Storage](#3-storage) | Deploys [Storage Account](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview) with native NFS support and sample asset files uploaded. | No | Yes |
 | [4 Storage Cache](#4-storage-cache) | Deploys [HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-overview) for highly-available and scalable file caching. | Yes | Maybe, depends on your<br>render scale requirements |
 | [5 Compute Image](#5-compute-image) | Deploys [Compute Gallery](https://docs.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries) images that are built via the [Image Builder](https://docs.microsoft.com/en-us/azure/virtual-machines/image-builder-overview) service. | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L7) | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L7) |
 | [6 Compute Scheduler](#6-compute-scheduler) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines) for job and task scheduling across render farms. | No | Yes |
-| [7 Compute Farm](#7-compute-farm) | Deploys [Virtual Machine Scale Sets](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview) for [Linux](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) and/or [Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) render farms. | Yes, choose [VM Sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes) for<br>your render farm nodes | Yes, choose [VM Sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes) for<br>your render farm nodes |
+| [7 Compute Farm](#7-compute-farm) | Deploys [Virtual Machine Scale Sets](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview) for [Linux](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) and/or [Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) render farms. | Yes | Yes |
 | [8&#160;Compute&#160;Workstation](#8-compute-workstation) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines) for [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) remote artist workstations. | No | Yes |
 | [9 Monitor](#9-monitor) | Deploys [Monitor Private Link](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/private-link-security) with [Private DNS](https://docs.microsoft.com/en-us/azure/dns/private-dns-overview) and [Private Endpoint](https://docs.microsoft.com/en-us/azure/private-link/private-endpoint-overview) integration. | No | No |
 | [10 Render](#10-render) | Submit render farm jobs from [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
@@ -184,19 +184,19 @@ Now that deployment of the Azure Artist Anywhere solution is complete, this sect
 deadlinecommand -SubmitCommandLineJob -name ellie -executable blender -arguments "-b -y /mnt/show/read/blender/ellie/3.0.blend --render-output /mnt/show/write/blender/ellie/output/ --render-frame <STARTFRAME>..<ENDFRAME>"
 </code>
 
-<br><br>
+<p></p>
 
 <code>
 deadlinecommand -SubmitCommandLineJob -name amy.frames -executable blender -arguments "-b -y /mnt/show/read/blender/amy/rain_restaurant.blend --render-output /mnt/show/write/blender/amy/output/ --engine CYCLES --render-frame <STARTFRAME>..<ENDFRAME>" -frames 100-280 -chunksize 19
 </code>
 
-<br><br>
+<p></p>
 
 <code>
 deadlinecommand -SubmitCommandLineJob -name amy.video -executable blender -arguments "-b -y /mnt/show/read/blender/amy/rain_restaurant.blend --render-output /mnt/show/write/blender/amy/output/ --engine CYCLES --render-format FFMPEG --render-anim" -frames 100-280 -chunksize 19
 </code>
 
-<br><br>
+<p></p>
 
 ### Windows Render Farm (*the following example jobs can be submitted from a Linux or Windows workstation*)
 
@@ -204,18 +204,26 @@ deadlinecommand -SubmitCommandLineJob -name amy.video -executable blender -argum
 deadlinecommand -SubmitCommandLineJob -name ellie -executable blender.exe -arguments "-b -y R:\blender\ellie\3.0.blend --render-output W:\blender\ellie\output\ --render-frame <STARTFRAME>..<ENDFRAME>"
 </code>
 
-<br><br>
+<p></p>
 
 <code>
 deadlinecommand -SubmitCommandLineJob -name amy.frames -executable blender.exe -arguments "-b -y R:\blender\amy\rain_restaurant.blend --render-output W:\blender\amy\output\ --engine CYCLES --render-frame <STARTFRAME>..<ENDFRAME>" -frames 100-280 -chunksize 19
 </code>
 
-<br><br>
+<p></p>
 
 <code>
 deadlinecommand -SubmitCommandLineJob -name amy.video -executable blender.exe -arguments "-b -y R:\blender\amy\rain_restaurant.blend --render-output W:\blender\amy\output\ --engine CYCLES --render-format FFMPEG --render-anim" -frames 100-280 -chunksize 19
 </code>
 
-<br><br>
+<p></p>
+
+## Roadmap
+
+The following list highlights a few AAA roadmap items under consideration.
+
+1. [Hammerspace](https://hammerspace.com/) integration
+1. [Unreal Engine 5](https://www.unrealengine.com/en-US/unreal-engine-5) integration
+1. [Azure CycleCloud](https://docs.microsoft.com/en-us/azure/cyclecloud/overview) integration
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com
