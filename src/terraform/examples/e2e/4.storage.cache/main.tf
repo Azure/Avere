@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.99.0"
+      version = "~>3.0.2"
     }
     avere = {
       source  = "hashicorp/avere"
@@ -140,7 +140,7 @@ variable "virtualNetwork" {
 data "azurerm_client_config" "current" {}
 
 data "terraform_remote_state" "network" {
-  count   = var.virtualNetwork.name == "" ? 1 : 0
+  count   = var.virtualNetwork.name != "" ? 0 : 1
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -151,19 +151,19 @@ data "terraform_remote_state" "network" {
 }
 
 data "azurerm_virtual_network" "network" {
-  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
-  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
+  name                 = var.virtualNetwork.name != "" ? var.virtualNetwork.name : data.terraform_remote_state.network[0].outputs.virtualNetwork.name
+  resource_group_name  = var.virtualNetwork.name != "" ? var.virtualNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
 }
 
 data "azurerm_subnet" "cache" {
-  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.cache].name : var.virtualNetwork.subnetName
-  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
-  virtual_network_name = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
+  name                 = var.virtualNetwork.name != "" ? var.virtualNetwork.subnetName : data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.cache].name
+  resource_group_name  = var.virtualNetwork.name != "" ? var.virtualNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
+  virtual_network_name = var.virtualNetwork.name != "" ? var.virtualNetwork.name : data.terraform_remote_state.network[0].outputs.virtualNetwork.name
 }
 
 data "azurerm_private_dns_zone" "network" {
-  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetworkPrivateDns.zoneName : var.virtualNetwork.privateDnsZoneName
-  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
+  name                 = var.virtualNetwork.name != "" ? var.virtualNetwork.privateDnsZoneName : data.terraform_remote_state.network[0].outputs.virtualNetworkPrivateDns.zoneName
+  resource_group_name  = var.virtualNetwork.name != "" ? var.virtualNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
 }
 
 locals {
@@ -271,8 +271,8 @@ resource "avere_vfxt" "cache" {
   vfxt_admin_password             = data.azurerm_key_vault_secret.admin_password.value
   vfxt_ssh_key_data               = var.vfxtCache.cluster.sshPublicKey != "" ? var.vfxtCache.cluster.sshPublicKey : null
   support_uploads_company_name    = var.vfxtCache.support.companyName
-  enable_support_uploads          = var.vfxtCache.support.companyName == "" ? false : true
-  enable_secure_proactive_support = var.vfxtCache.support.companyName == "" ? "Disabled" : "Support"
+  enable_support_uploads          = var.vfxtCache.support.companyName != "" ? true : false
+  enable_secure_proactive_support = var.vfxtCache.support.companyName != "" ? "Support" : "Disabled"
   global_custom_settings          = var.vfxtCache.cluster.customSettings
   vserver_first_ip                = local.vfxtVServerFirstAddress
   vserver_ip_count                = local.vfxtVServerAddressCount

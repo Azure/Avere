@@ -40,7 +40,3 @@ fi
   echo "${fsMount}" >> /etc/fstab
 %{ endfor }
 mount -a
-
-# filePath="/mnt/scheduler/$(hostname).txt"
-# echo "AAA" > $filePath
-# cat $filePath

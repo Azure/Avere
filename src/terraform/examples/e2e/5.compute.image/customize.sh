@@ -77,8 +77,8 @@ if [ $subnetName == "Scheduler" ]; then
   echo "Customize (End): Azure CLI"
 fi
 
-storageContainerUrl="https://azmedia0.blob.core.windows.net/bin"
-storageContainerSas="?sv=2020-10-02&st=2022-01-01T00%3A00%3A00Z&se=2222-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=piox4MEZyuln9BV6vcxhXuAUbSa7bYaECAMy4Z83qJk%3D"
+storageContainerUrl="https://azartist.blob.core.windows.net/bin"
+storageContainerSas="?sv=2020-10-02&st=2022-01-01T00%3A00%3A00Z&se=2222-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=4N8gUHTPNOG%2BlgEPvQljsRPCOsRD3ZWfiBKl%2BRxl9S8%3D"
 
 schedulerVersion="10.1.20.2"
 schedulerLicense="LicenseFree"
@@ -149,6 +149,56 @@ deadlineCommandName="ChangeRepositorySkipValidation"
 $schedulerPath/deadlinecommand -$deadlineCommandName Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate "" &> $deadlineCommandName.txt
 echo "Customize (End): Deadline Client"
 
+if [[ $renderEngines == *PBRT* ]]; then
+  echo "Customize (Start): PBRT"
+  echo "Customize (End): PBRT"
+fi
+
+if [[ $renderEngines == *Blender* ]]; then
+  echo "Customize (Start): Blender"
+  yum -y install libXi
+  yum -y install libXxf86vm
+  yum -y install libXfixes
+  yum -y install libXrender
+  yum -y install libGL
+  fileVersion="3.1.0"
+  installFile="blender-$fileVersion-linux-x64.tar.xz"
+  downloadUrl="$storageContainerUrl/Blender/$fileVersion/$installFile$storageContainerSas"
+  curl -L -o $installFile $downloadUrl
+  tar -xJf $installFile
+  mkdir -p $rendererPathBlender
+  cd blender*
+  mv * $rendererPathBlender
+  cd $binDirectory
+  echo "Customize (End): Blender"
+fi
+
+if [[ $renderEngines == *Houdini* ]]; then
+  echo "Customize (Start): Houdini"
+  yum -y install libGL
+  yum -y install libXi
+  yum -y install libXtst
+  yum -y install libXrender
+  yum -y install libXrandr
+  yum -y install libXcursor
+  yum -y install libXcomposite
+  yum -y install libXScrnSaver
+  yum -y install libxkbcommon
+  yum -y install fontconfig
+  fileVersion="19.0.561"
+  eulaVersion="2021-10-13"
+  installFile="houdini-$fileVersion-linux_x86_64_gcc9.3.tar.gz"
+  downloadUrl="$storageContainerUrl/Houdini/$fileVersion/$installFile$storageContainerSas"
+  curl -L -o $installFile $downloadUrl
+  tar -xf $installFile
+  [[ $renderEngines == *Maya* ]] && mayaPlugIn=--install-engine-maya || mayaPlugIn=--no-install-engine-maya
+  [[ $renderEngines == *Unreal* ]] && unrealPlugIn=--install-engine-unreal || unrealPlugIn=--no-install-engine-unreal
+  cd houdini*
+  ./houdini.install --auto-install --make-dir --accept-EULA $eulaVersion $mayaPlugIn $unrealPlugIn $rendererPathHoudini
+  cd $binDirectory
+  echo "Customize (End): Houdini"
+fi
+
 if [[ $renderEngines == *Maya* ]]; then
   echo "Customize (Start): Maya"
   yum -y install libGL
@@ -211,56 +261,6 @@ if [[ $renderEngines == *Unreal* ]]; then
   $rendererPathUnreal/Setup.sh
   cd $binDirectory
   echo "Customize (End): Unreal"
-fi
-
-if [[ $renderEngines == *Houdini* ]]; then
-  echo "Customize (Start): Houdini"
-  yum -y install libGL
-  yum -y install libXi
-  yum -y install libXtst
-  yum -y install libXrender
-  yum -y install libXrandr
-  yum -y install libXcursor
-  yum -y install libXcomposite
-  yum -y install libXScrnSaver
-  yum -y install libxkbcommon
-  yum -y install fontconfig
-  fileVersion="19.0.561"
-  eulaVersion="2021-10-13"
-  installFile="houdini-$fileVersion-linux_x86_64_gcc9.3.tar.gz"
-  downloadUrl="$storageContainerUrl/Houdini/$fileVersion/$installFile$storageContainerSas"
-  curl -L -o $installFile $downloadUrl
-  tar -xf $installFile
-  [[ $renderEngines == *Maya* ]] && mayaPlugIn=--install-engine-maya || mayaPlugIn=--no-install-engine-maya
-  [[ $renderEngines == *Unreal* ]] && unrealPlugIn=--install-engine-unreal || unrealPlugIn=--no-install-engine-unreal
-  cd houdini*
-  ./houdini.install --auto-install --make-dir --accept-EULA $eulaVersion $mayaPlugIn $unrealPlugIn $rendererPathHoudini
-  cd $binDirectory
-  echo "Customize (End): Houdini"
-fi
-
-if [[ $renderEngines == *Blender* ]]; then
-  echo "Customize (Start): Blender"
-  yum -y install libXi
-  yum -y install libXxf86vm
-  yum -y install libXfixes
-  yum -y install libXrender
-  yum -y install libGL
-  fileVersion="3.1.0"
-  installFile="blender-$fileVersion-linux-x64.tar.xz"
-  downloadUrl="$storageContainerUrl/Blender/$fileVersion/$installFile$storageContainerSas"
-  curl -L -o $installFile $downloadUrl
-  tar -xJf $installFile
-  mkdir -p $rendererPathBlender
-  cd blender*
-  mv * $rendererPathBlender
-  cd $binDirectory
-  echo "Customize (End): Blender"
-fi
-
-if [[ $renderEngines == *PBRT* ]]; then
-  echo "Customize (Start): PBRT"
-  echo "Customize (End): PBRT"
 fi
 
 if [ $subnetName == "Workstation" ]; then

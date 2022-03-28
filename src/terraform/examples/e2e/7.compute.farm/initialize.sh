@@ -34,10 +34,6 @@ systemctl --now enable terminate.timer
   echo "${fsMount}" >> /etc/fstab
 %{ endfor }
 mount -a
-
-# filePath="/mnt/show/write/$(hostname).txt"
-# echo "AAA" > $filePath
-# cat $filePath
-
-# filePath="/mnt/show/read/$(hostname).txt"
-# cat $filePath
+%{ for fsPermission in fileSystemPermissions }
+  ${fsPermission}
+%{ endfor }

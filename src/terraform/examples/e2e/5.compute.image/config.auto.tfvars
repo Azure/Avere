@@ -1,4 +1,4 @@
-resourceGroupName = "AzureRender.Image"
+resourceGroupName = "ArtistAnywhere.Image"
 
 # Compute Gallery (https://docs.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries)
 imageGalleryName = "Gallery"
@@ -73,13 +73,13 @@ imageTemplates = [
       timeoutMinutes = 120                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "1.0.0"
       renderEngines  = [
-        # "3DS",
-        # "Maya",
-        # "Nuke",
-        # "Unreal",
-        # "Houdini",
+        "PBRT",
         "Blender",
-        "PBRT"
+        # "Houdini",
+        # "Maya",
+        # "3DS",
+        # "Nuke",
+        # "Unreal"
       ]
     }
   },
@@ -99,13 +99,13 @@ imageTemplates = [
       timeoutMinutes = 150                 // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "3.0.0"
       renderEngines  = [
-        # "3DS",
-        # "Maya",
-        # "Nuke",
-        # "Unreal",
-        # "Houdini",
+        "PBRT",
         "Blender",
-        "PBRT"
+        # "Houdini",
+        # "Maya",
+        # "3DS",
+        # "Nuke",
+        # "Unreal"
       ]
     }
   },
@@ -125,13 +125,13 @@ imageTemplates = [
       timeoutMinutes = 150                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "4.0.0"
       renderEngines  = [
-        # "3DS",
-        # "Maya",
-        # "Nuke",
-        # "Unreal",
-        # "Houdini",
+        "PBRT",
         "Blender",
-        "PBRT"
+        # "Houdini",
+        # "Maya",
+        # "3DS",
+        # "Nuke",
+        # "Unreal"
       ]
     }
   },
@@ -151,13 +151,13 @@ imageTemplates = [
   #     timeoutMinutes = 120                       // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
   #     outputVersion  = "5.0.0"
   #     renderEngines  = [
-  #       # "3DS",
-  #       # "Maya",
-  #       # "Nuke",
-  #       # "Unreal",
-  #       # "Houdini",
-  #       "Blender",
   #       "PBRT"
+  #       "Blender",
+  #       # "Houdini",
+  #       # "Maya",
+  #       # "3DS",
+  #       # "Nuke",
+  #       # "Unreal"
   #     ]
   #   }
   # },
@@ -195,13 +195,13 @@ imageTemplates = [
       timeoutMinutes = 240                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "1.0.0"
       renderEngines  = [
-        # "3DS",
-        # "Maya",
-        # "Nuke",
-        # "Unreal",
-        # "Houdini",
+        "PBRT",
         "Blender",
-        "PBRT"
+        # "Houdini",
+        # "Maya",
+        # "3DS",
+        # "Nuke",
+        # "Unreal"
       ]
     }
   },
@@ -221,13 +221,13 @@ imageTemplates = [
       timeoutMinutes = 240                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "3.0.0"
       renderEngines  = [
-        # "3DS",
-        # "Maya",
-        # "Nuke",
-        # "Unreal",
-        # "Houdini",
+        "PBRT",
         "Blender",
-        "PBRT"
+        # "Houdini",
+        # "Maya",
+        # "3DS",
+        # "Nuke",
+        # "Unreal"
       ]
     }
   },
@@ -247,13 +247,13 @@ imageTemplates = [
       timeoutMinutes = 240                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "4.0.0"
       renderEngines  = [
-        # "3DS",
-        # "Maya",
-        # "Nuke",
-        # "Unreal",
-        # "Houdini",
+        "PBRT",
         "Blender",
-        "PBRT"
+        # "Houdini",
+        # "Maya",
+        # "3DS",
+        # "Nuke",
+        # "Unreal"
       ]
     }
   },
@@ -273,13 +273,13 @@ imageTemplates = [
   #     timeoutMinutes = 240                       // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
   #     outputVersion  = "4.0.0"
   #     renderEngines  = [
-  #       # "3DS",
-  #       # "Maya",
-  #       # "Nuke",
-  #       # "Unreal",
-  #       # "Houdini",
-  #       "Blender",
   #       "PBRT"
+  #       "Blender",
+  #       # "Houdini",
+  #       # "Maya",
+  #       # "3DS",
+  #       # "Nuke",
+  #       # "Unreal"
   #     ]
   #   }
   # }

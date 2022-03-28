@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.99.0"
+      version = "~>3.0.2"
     }
   }
   backend "azurerm" {
@@ -82,7 +82,7 @@ data "azurerm_private_dns_zone" "blob" {
 }
 
 locals {
-  blobStorageDeployed  = try(contains(data.terraform_remote_state.storage.outputs.privateEndpoints, "blob"), false)
+  blobStorageDeployed  = try(contains(data.terraform_remote_state.storage.outputs.privateEndpointTypes, "blob"), false)
   blobPrivateDnsZoneId = local.blobStorageDeployed ? data.azurerm_private_dns_zone.blob[0].id : azurerm_private_dns_zone.blob[0].id
 }
 

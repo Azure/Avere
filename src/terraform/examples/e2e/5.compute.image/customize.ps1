@@ -74,8 +74,8 @@ if ($subnetName -eq "Scheduler") {
   Write-Host "Customize (End): NFS Client"
 }
 
-$storageContainerUrl = "https://azmedia0.blob.core.windows.net/bin"
-$storageContainerSas = "?sv=2020-10-02&st=2022-01-01T00%3A00%3A00Z&se=2222-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=piox4MEZyuln9BV6vcxhXuAUbSa7bYaECAMy4Z83qJk%3D"
+$storageContainerUrl = "https://azartist.blob.core.windows.net/bin"
+$storageContainerSas = "?sv=2020-10-02&st=2022-01-01T00%3A00%3A00Z&se=2222-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=4N8gUHTPNOG%2BlgEPvQljsRPCOsRD3ZWfiBKl%2BRxl9S8%3D"
 
 $schedulerVersion = "10.1.20.2"
 $schedulerLicense = "LicenseFree"
@@ -160,16 +160,44 @@ Start-Process -FilePath "$schedulerPath\deadlinecommand.exe" -ArgumentList "-$de
 Set-Location -Path $binDirectory
 Write-Host "Customize (End): Deadline Client"
 
-if ($renderEngines -like "*3DS*") {
-  Write-Host "Customize (Start): 3DS Max"
-  $fileVersion = "2022_3"
-  $installFile = "Autodesk_3ds_Max_${fileVersion}_EFGJKPS_Win_64bit.zip"
-  $downloadUrl = "$storageContainerUrl/3DS/$fileVersion/$installFile$storageContainerSas"
+if ($renderEngines -like "*PBRT*") {
+  Write-Host "Customize (Start): PBRT"
+  Write-Host "Customize (End): PBRT"
+}
+
+if ($renderEngines -like "*Blender*") {
+  Write-Host "Customize (Start): Blender"
+  $fileVersion = "3.1.0"
+  $installFile = "blender-$fileVersion-windows-x64.msi"
+  $downloadUrl = "$storageContainerUrl/Blender/$fileVersion/$installFile$storageContainerSas"
   Invoke-WebRequest $downloadUrl -OutFile $installFile
-  Expand-Archive -Path $installFile
-  Start-Process -FilePath ".\Autodesk_3ds_Max*\Setup.exe" -ArgumentList "--silent" -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-  Start-Sleep -Seconds 360
-  Write-Host "Customize (End): 3DS Max"
+  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $rendererPathBlender + '" /quiet /norestart') -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Write-Host "Customize (End): Blender"
+}
+
+if ($renderEngines -like "*Houdini*") {
+  Write-Host "Customize (Start): Houdini"
+  $fileVersion = "19.0.561"
+  $eulaVersion = "2021-10-13"
+  $installFile = "houdini-$fileVersion-win64-vc142.exe"
+  $downloadUrl = "$storageContainerUrl/Houdini/$fileVersion/$installFile$storageContainerSas"
+  Invoke-WebRequest $downloadUrl -OutFile $installFile
+  if ($subnetName -eq "Workstation") {
+    $installArgs = "/MainApp=Yes"
+  } else {
+    $installArgs = "/HoudiniEngineOnly=Yes"
+  }
+  if ($renderEngines -like "*3DS*") {
+    $installArgs += " /Engine3dsMax=Yes"
+  }
+  if ($renderEngines -like "*Maya*") {
+    $installArgs += " /EngineMaya=Yes"
+  }
+  if ($renderEngines -like "*Unreal*") {
+    $installArgs += " /EngineUnreal=Yes"
+  }
+  Start-Process -FilePath .\$installFile -ArgumentList "/S /AcceptEULA=$eulaVersion /InstallDir=$rendererPathHoudini $installArgs" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Write-Host "Customize (End): Houdini"
 }
 
 if ($renderEngines -like "*Maya*") {
@@ -182,6 +210,18 @@ if ($renderEngines -like "*Maya*") {
   Start-Process -FilePath ".\Autodesk_Maya*\Setup.exe" -ArgumentList "--silent" -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
   Start-Sleep -Seconds 360
   Write-Host "Customize (End): Maya"
+}
+
+if ($renderEngines -like "*3DS*") {
+  Write-Host "Customize (Start): 3DS Max"
+  $fileVersion = "2022_3"
+  $installFile = "Autodesk_3ds_Max_${fileVersion}_EFGJKPS_Win_64bit.zip"
+  $downloadUrl = "$storageContainerUrl/3DS/$fileVersion/$installFile$storageContainerSas"
+  Invoke-WebRequest $downloadUrl -OutFile $installFile
+  Expand-Archive -Path $installFile
+  Start-Process -FilePath ".\Autodesk_3ds_Max*\Setup.exe" -ArgumentList "--silent" -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Start-Sleep -Seconds 360
+  Write-Host "Customize (End): 3DS Max"
 }
 
 if ($renderEngines -like "*Nuke*") {
@@ -216,46 +256,6 @@ if ($renderEngines -like "*Unreal*") {
   Set-Content -Path $installFile -Value $setupScript
   Start-Process -FilePath .\$installFile -ArgumentList "--force" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
   Write-Host "Customize (End): Unreal"
-}
-
-if ($renderEngines -like "*Houdini*") {
-  Write-Host "Customize (Start): Houdini"
-  $fileVersion = "19.0.561"
-  $eulaVersion = "2021-10-13"
-  $installFile = "houdini-$fileVersion-win64-vc142.exe"
-  $downloadUrl = "$storageContainerUrl/Houdini/$fileVersion/$installFile$storageContainerSas"
-  Invoke-WebRequest $downloadUrl -OutFile $installFile
-  if ($subnetName -eq "Workstation") {
-    $installArgs = "/MainApp=Yes"
-  } else {
-    $installArgs = "/HoudiniEngineOnly=Yes"
-  }
-  if ($renderEngines -like "*3DS*") {
-    $installArgs += " /Engine3dsMax=Yes"
-  }
-  if ($renderEngines -like "*Maya*") {
-    $installArgs += " /EngineMaya=Yes"
-  }
-  if ($renderEngines -like "*Unreal*") {
-    $installArgs += " /EngineUnreal=Yes"
-  }
-  Start-Process -FilePath .\$installFile -ArgumentList "/S /AcceptEULA=$eulaVersion /InstallDir=$rendererPathHoudini $installArgs" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-  Write-Host "Customize (End): Houdini"
-}
-
-if ($renderEngines -like "*Blender*") {
-  Write-Host "Customize (Start): Blender"
-  $fileVersion = "3.1.0"
-  $installFile = "blender-$fileVersion-windows-x64.msi"
-  $downloadUrl = "$storageContainerUrl/Blender/$fileVersion/$installFile$storageContainerSas"
-  Invoke-WebRequest $downloadUrl -OutFile $installFile
-  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $rendererPathBlender + '" /quiet /norestart') -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-  Write-Host "Customize (End): Blender"
-}
-
-if ($renderEngines -like "*PBRT*") {
-  Write-Host "Customize (Start): PBRT"
-  Write-Host "Customize (End): PBRT"
 }
 
 if ($subnetName -eq "Farm") {

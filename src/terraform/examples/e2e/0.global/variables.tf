@@ -3,10 +3,10 @@ variable "regionName" {
 }
 
 variable "securityResourceGroupName" {
-  default = "AzureRender" // Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
+  default = "ArtistAnywhere" // Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 }
 variable "securityStorageAccountName" {
-  default = "azrender" // Set to a globally unique name (lowercase alphanumeric)
+  default = "azartist0" // Set to a globally unique name (lowercase alphanumeric)
 }
 variable "terraformStorageContainerName" {
   default = "terraform"
@@ -14,12 +14,12 @@ variable "terraformStorageContainerName" {
 
 # Managed Identity (https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview)
 variable "managedIdentityName" {
-  default = "AzRender" // Alphanumeric, underscores and hyphens are allowed
+  default = "AzArtist" // Alphanumeric, underscores and hyphens are allowed
 }
 
 # Key Vault (https://docs.microsoft.com/en-us/azure/key-vault/general/overview)
 variable "keyVaultName" {
-  default = "AzRender" // Set to a globally unique name (alphanumeric, hyphens)
+  default = "AzArtist" // Set to a globally unique name (alphanumeric, hyphens)
 }
 
 # KeyVault secret names
@@ -36,7 +36,7 @@ variable "keyVaultKeyNameCacheEncryption" {
 }
 
 variable "monitorWorkspaceName" {
-  default = "AzRender"
+  default = "AzArtist"
 }
 
 output "regionName" {

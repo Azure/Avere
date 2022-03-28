@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.99.0"
+      version = "~>3.0.2"
     }
   }
   backend "azurerm" {
@@ -39,7 +39,6 @@ variable "virtualNetwork" {
             name              = string
             addressSpace      = list(string)
             serviceEndpoints  = list(string)
-            serviceDelegation = string
           }
         )
       )
@@ -157,24 +156,11 @@ resource "azurerm_subnet" "network" {
   service_endpoints    = each.value.serviceEndpoints
   enforce_private_link_endpoint_network_policies = each.value.name != "GatewaySubnet"
   enforce_private_link_service_network_policies  = each.value.name != "GatewaySubnet"
-  dynamic "delegation" {
-    for_each = each.value.serviceDelegation != "" ? [1] : [] 
-    content {
-      name = "serviceDelegation"
-      service_delegation {
-        name    = each.value.serviceDelegation
-        actions = [
-          "Microsoft.Network/networkinterfaces/*",
-          "Microsoft.Network/virtualNetworks/subnets/join/action"
-        ]
-      }
-    }
-  }
 }
 
 resource "azurerm_network_security_group" "network" {
   for_each = {
-    for x in var.virtualNetwork.subnets : x.name => x if x.name != "GatewaySubnet" && x.serviceDelegation == ""
+    for x in var.virtualNetwork.subnets : x.name => x if x.name != "GatewaySubnet"
   }
   name                = "${var.virtualNetwork.name}.${each.value.name}"
   resource_group_name = azurerm_resource_group.network.name
@@ -184,7 +170,7 @@ resource "azurerm_network_security_group" "network" {
     priority                   = 2000
     direction                  = "Inbound"
     access                     = "Allow"
-    protocol                   = "TCP"
+    protocol                   = "Tcp"
     source_address_prefix      = "GatewayManager"
     source_port_range          = "*"
     destination_address_prefix = "*"
@@ -195,7 +181,7 @@ resource "azurerm_network_security_group" "network" {
     priority                   = 2001
     direction                  = "Inbound"
     access                     = "Allow"
-    protocol                   = "TCP"
+    protocol                   = "Tcp"
     source_address_prefix      = "GatewayManager"
     source_port_range          = "*"
     destination_address_prefix = "*"
@@ -205,7 +191,7 @@ resource "azurerm_network_security_group" "network" {
 
 resource "azurerm_subnet_network_security_group_association" "network" {
   for_each = {
-    for x in var.virtualNetwork.subnets : x.name => x if x.name != "GatewaySubnet" && x.serviceDelegation == ""
+    for x in var.virtualNetwork.subnets : x.name => x if x.name != "GatewaySubnet"
   }
   subnet_id                 = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${var.virtualNetwork.name}/subnets/${each.value.name}"
   network_security_group_id = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/networkSecurityGroups/${var.virtualNetwork.name}.${each.value.name}"
@@ -246,7 +232,7 @@ resource "azurerm_public_ip" "address1" {
 }
 
 resource "azurerm_public_ip" "address2" {
-  count               = var.hybridNetwork.type == "VPN" && var.vpnGateway.activeActive ? 1 : 0
+  count               = var.hybridNetwork.type == "Vpn" && var.vpnGateway.activeActive ? 1 : 0
   name                = "${var.virtualNetwork.name}2"
   resource_group_name = azurerm_resource_group.network.name
   location            = azurerm_resource_group.network.location
@@ -269,7 +255,7 @@ data "azurerm_key_vault_secret" "gateway_connection" {
 }
 
 resource "azurerm_virtual_network_gateway" "vpn" {
-  count               = var.hybridNetwork.type == "VPN" ? 1 : 0
+  count               = var.hybridNetwork.type == "Vpn" ? 1 : 0
   name                = var.virtualNetwork.name
   resource_group_name = azurerm_resource_group.network.name
   location            = azurerm_resource_group.network.location
@@ -308,7 +294,7 @@ resource "azurerm_virtual_network_gateway" "vpn" {
 }
 
 resource "azurerm_local_network_gateway" "vpn" {
-  count               = var.hybridNetwork.type == "VPN" && (var.vpnGatewayLocal.fqdn != "" || var.vpnGatewayLocal.address != "") ? 1 : 0
+  count               = var.hybridNetwork.type == "Vpn" && (var.vpnGatewayLocal.fqdn != "" || var.vpnGatewayLocal.address != "") ? 1 : 0
   name                = var.virtualNetwork.name
   resource_group_name = azurerm_resource_group.network.name
   location            = azurerm_resource_group.network.location
@@ -326,7 +312,7 @@ resource "azurerm_local_network_gateway" "vpn" {
 }
 
 resource "azurerm_virtual_network_gateway_connection" "vpn" {
-  count                      = var.hybridNetwork.type == "VPN" && (var.vpnGatewayLocal.fqdn != "" || var.vpnGatewayLocal.address != "") ? 1 : 0
+  count                      = var.hybridNetwork.type == "Vpn" && (var.vpnGatewayLocal.fqdn != "" || var.vpnGatewayLocal.address != "") ? 1 : 0
   name                       = var.virtualNetwork.name
   resource_group_name        = azurerm_resource_group.network.name
   location                   = azurerm_resource_group.network.location

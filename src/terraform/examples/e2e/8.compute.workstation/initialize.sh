@@ -12,7 +12,3 @@ source /etc/profile.d/aaa.sh # https://github.com/Azure/WALinuxAgent/issues/1561
   echo "${fsMount}" >> /etc/fstab
 %{ endfor }
 mount -a
-
-# filePath="/mnt/show/$(hostname).txt"
-# echo "AAA" > $filePath
-# cat $filePath
