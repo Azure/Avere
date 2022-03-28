@@ -213,22 +213,22 @@ Now that deployment of the AAA solution is complete, this section provides rende
 *The following job commands can be submitted from a **Linux** or **Windows** artist workstation*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender -arguments "-b -y /mnt/show/read/blender/3.0/splash-screen.blend --render-output /mnt/show/write/blender/3.0/ --render-frame <STARTFRAME>..<ENDFRAME>"
+deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender -arguments "-b -y /mnt/show/read/blender/3.0/splash-screen.blend --render-output /mnt/show/write/blender/3.0/ --render-frame &lt;STARTFRAME&gt;..&lt;ENDFRAME&gt;"
 </code></p>
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name Secret-Deer -executable blender -arguments "-b -y /mnt/show/read/blender/3.1/splash-screen.blend --render-output /mnt/show/write/blender/3.1/ --render-frame <STARTFRAME>..<ENDFRAME>"
+deadlinecommand -SubmitCommandLineJob -name Secret-Deer -executable blender -arguments "-b -y /mnt/show/read/blender/3.1/splash-screen.blend --render-output /mnt/show/write/blender/3.1/ --render-frame &lt;STARTFRAME&gt;..&lt;ENDFRAME&gt;"
 </code></p>
 
 #### Windows Render Farm
 *The following job commands can be submitted from a **Linux** or **Windows** artist workstation*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name Ellie -executable blender.exe -arguments "-b -y R:\blender\3.0\splash-screen.blend --render-output W:\blender\3.0\ --render-frame <STARTFRAME>..<ENDFRAME>"
+deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender.exe -arguments "-b -y R:\blender\3.0\splash-screen.blend --render-output W:\blender\3.0\ --render-frame &lt;STARTFRAME&gt;..&lt;ENDFRAME&gt;"
 </code></p>
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name Ellie -executable blender.exe -arguments "-b -y R:\blender\3.1\splash-screen.blend --render-output W:\blender\3.1\ --render-frame <STARTFRAME>..<ENDFRAME>"
+deadlinecommand -SubmitCommandLineJob -name Secret-Deer -executable blender.exe -arguments "-b -y R:\blender\3.1\splash-screen.blend --render-output W:\blender\3.1\ --render-frame &lt;STARTFRAME&gt;..&lt;ENDFRAME&gt;"
 </code></p>
 
 ### 10.2 [Physically-Based Rendering Toolkit (PBRT)](https://pbrt.org)
