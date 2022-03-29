@@ -55,7 +55,8 @@ virtualNetworkSubnetIndex = {
 #################################################################################
 
 virtualNetworkPrivateDns = {
-  zoneName = "artist.studio"
+  zoneName               = "artist.studio"
+  enableAutoRegistration = true
 }
 
 ########################################

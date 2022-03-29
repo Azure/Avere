@@ -17,6 +17,8 @@ enableHpcCache = true    // Set to false for Avere vFXT cache deployment
 hpcCache = {
   throughput = "Standard_2G"
   size       = 3072
+  mtuSize    = 1500
+  ntpHost    = "time.windows.com"
 }
 
 ######################################################################################
@@ -106,8 +108,11 @@ storageTargetsNfsBlob = [
 ######################################################################################################
 
 virtualNetwork = {
-  name               = ""
-  subnetName         = ""
-  resourceGroupName  = ""
-  privateDnsZoneName = ""
+  name              = ""
+  subnetName        = ""
+  resourceGroupName = ""
+  privateDns = {
+    zoneName               = ""
+    enableAutoRegistration = false
+  }
 }

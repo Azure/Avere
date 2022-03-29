@@ -97,7 +97,7 @@ mkdir -p $localDirectory
 cd $localDirectory
 </code></p>
 <p><code>
-curl -L $downloadUrl -o terraform-provider-avere_$latestVersion
+curl -o terraform-provider-avere_$latestVersion -L $downloadUrl
 </code></p>
 <p><code>
 chmod 755 terraform-provider-avere_$latestVersion

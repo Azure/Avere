@@ -26,7 +26,7 @@ if [[ ($machineSize == Standard_NV* && $machineSize == *_v3) ||
   yum -y install "kernel-devel-$(uname --kernel-release)"
   installFile="nvidia-gpu-nv3.run"
   downloadUrl="https://go.microsoft.com/fwlink/?linkid=874272"
-  curl -L -o $installFile $downloadUrl
+  curl -o $installFile -L $downloadUrl
   chmod +x $installFile
   ./$installFile --silent &> $installFile.txt
   echo "Customize (End): GPU Driver (NVv3)"
@@ -37,7 +37,7 @@ if [[ $machineSize == Standard_NV* && $machineSize == *_v4 ]]; then
   echo "Customize (Start): GPU Driver (NVv4)"
   installFile="amd-gpu-nv4.tar.xz"
   downloadUrl="https://download.microsoft.com/download/3/6/6/366e3bb8-cc4f-48ba-aae3-52bd096f816d/amdgpu-pro-21.10-1262503-rhel-7.9.tar.xz"
-  curl -L -o $installFile $downloadUrl
+  curl -o $installFile -L $downloadUrl
   tar -xJf $installFile
   cd amdgpu*
   installFile="amdgpu-pro-install"
@@ -53,7 +53,7 @@ if [[ $machineSize == Standard_NV* && $machineSize == *_v5 ]]; then
   yum -y install "kernel-devel-$(uname --kernel-release)"
   installFile="nvidia-gpu-nv5.run"
   downloadUrl="https://download.microsoft.com/download/4/3/9/439aea00-a02d-4875-8712-d1ab46cf6a73/NVIDIA-Linux-x86_64-510.47.03-grid-azure.run"
-  curl -L -o $installFile $downloadUrl
+  curl -o $installFile -L $downloadUrl
   chmod +x $installFile
   ./$installFile --silent &> $installFile.txt
   echo "Customize (End): GPU Driver (NVv5)"
@@ -115,7 +115,7 @@ echo "PATH=$PATH:$schedulerPath$rendererPaths" >> /etc/profile.d/aaa.sh
 echo "Customize (Start): Deadline Download"
 installFile="Deadline-$schedulerVersion-linux-installers.tar"
 downloadUrl="$storageContainerUrl/Deadline/$schedulerVersion/$installFile$storageContainerSas"
-curl -L -o $installFile $downloadUrl
+curl -o $installFile -L $downloadUrl
 tar -xf $installFile
 echo "Customize (End): Deadline Download"
 
@@ -164,7 +164,7 @@ if [[ $renderEngines == *Blender* ]]; then
   fileVersion="3.1.0"
   installFile="blender-$fileVersion-linux-x64.tar.xz"
   downloadUrl="$storageContainerUrl/Blender/$fileVersion/$installFile$storageContainerSas"
-  curl -L -o $installFile $downloadUrl
+  curl -o $installFile -L $downloadUrl
   tar -xJf $installFile
   mkdir -p $rendererPathBlender
   cd blender*
@@ -189,7 +189,7 @@ if [[ $renderEngines == *Houdini* ]]; then
   eulaVersion="2021-10-13"
   installFile="houdini-$fileVersion-linux_x86_64_gcc9.3.tar.gz"
   downloadUrl="$storageContainerUrl/Houdini/$fileVersion/$installFile$storageContainerSas"
-  curl -L -o $installFile $downloadUrl
+  curl -o $installFile -L $downloadUrl
   tar -xf $installFile
   [[ $renderEngines == *Maya* ]] && mayaPlugIn=--install-engine-maya || mayaPlugIn=--no-install-engine-maya
   [[ $renderEngines == *Unreal* ]] && unrealPlugIn=--install-engine-unreal || unrealPlugIn=--no-install-engine-unreal
@@ -220,7 +220,7 @@ if [[ $renderEngines == *Maya* ]]; then
   fileVersion="2022_3"
   installFile="Autodesk_Maya_${fileVersion}_ML_Linux_64bit.tgz"
   downloadUrl="$storageContainerUrl/Maya/$fileVersion/$installFile$storageContainerSas"
-  curl -L -o $installFile $downloadUrl
+  curl -o $installFile -L $downloadUrl
   mayaDirectory="Maya"
   mkdir $mayaDirectory
   tar --directory=$mayaDirectory -xzf $installFile
@@ -240,7 +240,7 @@ if [[ $renderEngines == *Nuke* ]]; then
   fileVersion="13.1v2"
   installFile="Nuke$fileVersion-linux-x86_64.tgz"
   downloadUrl="$storageContainerUrl/Nuke/$fileVersion/$installFile$storageContainerSas"
-  curl -L -o $installFile $downloadUrl
+  curl -o $installFile -L $downloadUrl
   tar -xzf $installFile
   mkdir -p $rendererPathNuke
   ./Nuke*.run --accept-foundry-eula --prefix=$rendererPathNuke --exclude-subdir
@@ -253,7 +253,7 @@ if [[ $renderEngines == *Unreal* ]]; then
   fileVersion="5.0.0"
   installFile="UnrealEngine-$fileVersion-early-access-2.tar.gz"
   downloadUrl="$storageContainerUrl/Unreal/$fileVersion/$installFile$storageContainerSas"
-  curl -L -o $installFile $downloadUrl
+  curl -o $installFile -L $downloadUrl
   tar -xf $installFile
   cd UnrealEngine*
   mkdir -p $rendererPathUnreal
@@ -272,7 +272,7 @@ if [ $subnetName == "Workstation" ]; then
   fileVersion="22.01.1"
   installFile="teradici-pcoip-agent_rpm.sh"
   downloadUrl="$storageContainerUrl/Teradici/$fileVersion/$installFile$storageContainerSas"
-  curl -L -o $installFile $downloadUrl
+  curl -o $installFile -L $downloadUrl
   chmod +x $installFile
   ./$installFile &> $installFile.txt
   yum -y install epel-release

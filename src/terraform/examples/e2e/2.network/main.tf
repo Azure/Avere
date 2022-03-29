@@ -61,7 +61,8 @@ variable "virtualNetworkSubnetIndex" {
 variable "virtualNetworkPrivateDns" {
   type = object(
     {
-      zoneName = string
+      zoneName               = string
+      enableAutoRegistration = bool
     }
   )
 }
@@ -206,16 +207,17 @@ resource "azurerm_subnet_network_security_group_association" "network" {
 ################################################################################# 
 
 resource "azurerm_private_dns_zone" "network" {
+  count               = var.virtualNetworkPrivateDns.zoneName != "" ? 1 : 0
   name                = var.virtualNetworkPrivateDns.zoneName
   resource_group_name = azurerm_resource_group.network.name
 }
 
-resource "azurerm_private_dns_zone_virtual_network_link" "custom" {
-  count                 = var.virtualNetwork.name == "" ? 0 : 1
+resource "azurerm_private_dns_zone_virtual_network_link" "network" {
   name                  = var.virtualNetwork.name
   resource_group_name   = azurerm_resource_group.network.name
-  private_dns_zone_name = azurerm_private_dns_zone.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.network[0].name
   virtual_network_id    = azurerm_virtual_network.network.id
+  registration_enabled  = var.virtualNetworkPrivateDns.enableAutoRegistration
 }
 
 ########################################
