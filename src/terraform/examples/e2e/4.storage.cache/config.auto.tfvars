@@ -49,7 +49,7 @@ vfxtCache = {
 
 storageTargetsNfs = [
   {
-    name        = ""
+    name        = "" // "RenderFarm"
     storageHost = ""
     hpcCache = {
       usageModel = "WRITE_AROUND" // https://docs.microsoft.com/en-us/azure/hpc-cache/cache-usage-models
@@ -58,26 +58,6 @@ storageTargetsNfs = [
       cachePolicy    = "Clients Bypassing the Cluster"
       nfsConnections = 4
       customSettings = [
-      ]
-    }
-    namespaceJunctions = [
-      {
-        storageExport = ""
-        storagePath   = ""
-        clientPath    = ""
-      }
-    ]
-  },
-  {
-    name        = ""
-    storageHost = ""
-    hpcCache = {
-      usageModel = "WRITE_WORKLOAD_15" // https://docs.microsoft.com/en-us/azure/hpc-cache/cache-usage-models
-    }
-    vfxtCache = {
-      cachePolicy    = "Collaborating Cloud Workstation"
-      nfsConnections = 4
-      customSettings = [        
       ]
     }
     namespaceJunctions = [
