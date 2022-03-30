@@ -4,12 +4,14 @@ Azure Artist Anywhere is a modular set of parameterized [Azure Resource Manager 
 
 As a simple example, the following image was rendered in Azure via [Azure HPC Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-hpc) in an [Azure Virtual Machine Scale Set (VMSS)](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview).
 
+<!-- markdown-link-check-disable-next-line -->
 ![](https://bit1.blob.core.windows.net/doc/AzureArtistAnywhere/SuspensionBridge.jpg?sv=2020-04-08&st=2021-05-29T22%3A07%3A54Z&se=2222-05-30T22%3A07%3A00Z&sr=c&sp=rl&sig=0BEFPK7gDh3D57FW6FTdOb8l6bISbtjPBUm3asmzGQs%3D)
 
 ## Solution Architecture
 
 The following overview diagram depicts the Azure Artist Anywhere solution architecture, including multiple options for asset storage.
 
+<!-- markdown-link-check-disable-next-line -->
 ![](https://bit1.blob.core.windows.net/doc/AzureArtistAnywhere/SolutionArchitecture.png?sv=2020-04-08&st=2021-05-29T22%3A07%3A54Z&se=2222-05-30T22%3A07%3A00Z&sr=c&sp=rl&sig=0BEFPK7gDh3D57FW6FTdOb8l6bISbtjPBUm3asmzGQs%3D)
 
 The integration of the following Microsoft Azure services and 3rd-party software enables the Azure Artist Anywhere rendering solution.
