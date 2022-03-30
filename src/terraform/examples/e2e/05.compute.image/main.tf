@@ -7,7 +7,7 @@ terraform {
     }
   }
   backend "azurerm" {
-    key = "5.compute.image"
+    key = "05.compute.image"
   }
 }
 
@@ -23,7 +23,7 @@ provider "azurerm" {
 }
 
 module "global" {
-  source = "../0.global"
+  source = "../00.global"
 }
 
 variable "resourceGroupName" {

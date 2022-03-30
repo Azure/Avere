@@ -7,7 +7,7 @@ terraform {
     }
   }
   backend "azurerm" {
-    key = "2.network"
+    key = "02.network"
   }
 }
 
@@ -20,7 +20,7 @@ provider "azurerm" {
 }
 
 module "global" {
-  source = "../0.global"
+  source = "../00.global"
 }
 
 variable "resourceGroupName" {

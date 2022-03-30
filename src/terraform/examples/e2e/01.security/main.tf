@@ -24,7 +24,7 @@ provider "azurerm" {
 }
 
 module "global" {
-  source = "../0.global"
+  source = "../00.global"
 }
 
 variable "storage" {

@@ -11,7 +11,7 @@ terraform {
     }
   }
   backend "azurerm" {
-    key = "4.storage.cache"
+    key = "04.storage.cache"
   }
 }
 
@@ -24,7 +24,7 @@ provider "azurerm" {
 }
 
 module "global" {
-  source = "../0.global"
+  source = "../00.global"
 }
 
 variable "resourceGroupName" {

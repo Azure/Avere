@@ -7,7 +7,7 @@ terraform {
     }
   }
   backend "azurerm" {
-    key = "7.compute.farm"
+    key = "07.compute.farm"
   }
 }
 
@@ -25,7 +25,7 @@ provider "azurerm" {
 }
 
 module "global" {
-  source = "../0.global"
+  source = "../00.global"
 }
 
 variable "resourceGroupName" {

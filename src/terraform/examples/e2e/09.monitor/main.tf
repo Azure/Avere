@@ -7,7 +7,7 @@ terraform {
     }
   }
   backend "azurerm" {
-    key = "9.monitor"
+    key = "09.monitor"
   }
 }
 
@@ -20,7 +20,7 @@ provider "azurerm" {
 }
 
 module "global" {
-  source = "../0.global"
+  source = "../00.global"
 }
 
 variable "resourceGroupName" {
