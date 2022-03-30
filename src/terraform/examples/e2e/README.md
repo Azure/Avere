@@ -23,8 +23,8 @@ The following *core principles* are implemented throughout the AAA solution depl
 
 For example, the following sample output assets were rendering in Azure via the AAA solution deployment framework.
 <p align="center">
-  <img src="10.render/blender3.0.png" width=480 />
-  <img src="10.render/blender3.1.jpg" width=480 />
+  <img src="10.render/blender3.0.png" alt="Sprite Fright" width=480 />
+  <img src="10.render/blender3.1.jpg" alt="Secret Dear" width=480 />
 </p>
 
 ## Deployment Prerequisites
@@ -215,6 +215,12 @@ Now that deployment of the AAA solution is complete, this section provides rende
 
 ### 10.1 [Blender](https://www.blender.org)
 
+For example, the following sample Blender output assets were rendering in Azure via the AAA solution deployment framework.
+<p align="center">
+  <img src="10.render/blender3.0.png" alt="Sprite Fright" width=480 />
+  <img src="10.render/blender3.1.jpg" alt="Secret Dear" width=480 />
+</p>
+
 #### Linux Render Farm
 *The following job commands can be submitted from a **Linux** or **Windows** artist workstation.*
 
@@ -233,13 +239,9 @@ deadlinecommand -SubmitCommandLineJob -name Secret-Deer -executable blender -arg
 deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender.exe -arguments "-b -y R:\blender\3.0\splash-screen.blend --render-output W:\blender\3.0\ --render-frame &lt;STARTFRAME&gt;..&lt;ENDFRAME&gt;"
 </code></p>
 
-<img src="10.render/blender3.0.png" width=480 />
-
 <p><code>
 deadlinecommand -SubmitCommandLineJob -name Secret-Deer -executable blender.exe -arguments "-b -y R:\blender\3.1\splash-screen.blend --render-output W:\blender\3.1\ --render-frame &lt;STARTFRAME&gt;..&lt;ENDFRAME&gt;"
 </code></p>
-
-<img src="10.render/blender3.1.jpg" width=480 />
 
 ### 10.2 [Physically-Based Rendering Toolkit (PBRT)](https://pbrt.org)
 
