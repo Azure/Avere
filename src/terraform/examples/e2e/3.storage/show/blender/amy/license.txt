@@ -1,3 +1,0 @@
-LICENSE
-
-CC-BY - cloud.blender.org
