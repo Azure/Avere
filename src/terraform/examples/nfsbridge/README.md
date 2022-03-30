@@ -30,7 +30,7 @@ git pull origin main
 9. execute `terraform apply -auto-approve` to deploy the centos. The deployment requires access to the internet to download the Nvidia Grid, Gnome, and Teradici software and takes about 30 minutes to install.
 
 After you have deployed run you can do either of the following:
-1. [Capture the VM to an Image](../centos#next-steps-image-capture), 
+1. [Capture the VM to an Image](../centos-legacy#next-steps-image-capture), 
 2. or ssh to the box, and register the the Teradici license with the following command: 
 
 ```bash

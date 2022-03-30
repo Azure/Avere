@@ -29,7 +29,7 @@ Here are the important tips to follow when building the image:
 SEARCH="rendering.com artists.rendering.com"
 ```
 
-* a search domain may also be added through cloud-init or custom script extension using a script similar to the below.  An example of this is shown in [main.tf](main.tf):
+* a search domain may also be added through cloud-init or custom script extension using a script similar to the below.
 ```bash
 function update_search_domain() {
     if [[ ! -z "$SEARCH_DOMAIN" ]]; then
