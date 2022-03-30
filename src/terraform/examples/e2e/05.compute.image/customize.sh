@@ -161,7 +161,7 @@ if [[ $renderEngines == *Blender* ]]; then
   yum -y install libXfixes
   yum -y install libXrender
   yum -y install libGL
-  fileVersion="3.1.0"
+  fileVersion="3.0.1"
   installFile="blender-$fileVersion-linux-x64.tar.xz"
   downloadUrl="$storageContainerUrl/Blender/$fileVersion/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl

@@ -50,7 +50,7 @@ data "terraform_remote_state" "network" {
     resource_group_name  = module.global.securityResourceGroupName
     storage_account_name = module.global.securityStorageAccountName
     container_name       = module.global.terraformStorageContainerName
-    key                  = "2.network"
+    key                  = "02.network"
   }
 }
 
@@ -60,7 +60,7 @@ data "terraform_remote_state" "storage" {
     resource_group_name  = module.global.securityResourceGroupName
     storage_account_name = module.global.securityStorageAccountName
     container_name       = module.global.terraformStorageContainerName
-    key                  = "3.storage"
+    key                  = "03.storage"
   }
 }
 

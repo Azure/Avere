@@ -167,7 +167,7 @@ if ($renderEngines -like "*PBRT*") {
 
 if ($renderEngines -like "*Blender*") {
   Write-Host "Customize (Start): Blender"
-  $fileVersion = "3.1.0"
+  $fileVersion = "3.0.1"
   $installFile = "blender-$fileVersion-windows-x64.msi"
   $downloadUrl = "$storageContainerUrl/Blender/$fileVersion/$installFile$storageContainerSas"
   Invoke-WebRequest $downloadUrl -OutFile $installFile
