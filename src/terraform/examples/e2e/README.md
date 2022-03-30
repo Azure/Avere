@@ -24,7 +24,7 @@ The following *core principles* are implemented throughout the AAA solution depl
 For example, the following sample output assets were rendering in Azure via the AAA solution deployment framework.
 <p align="center">
   <img src="10.render/blender3.0.png" alt="Sprite Fright" width=480 />
-  <img src="10.render/blender3.1.jpg" alt="Secret Dear" width=480 />
+  <img src="10.render/blender3.1.jpg" alt="Secret Deer" width=480 />
 </p>
 
 ## Deployment Prerequisites
@@ -211,14 +211,14 @@ Set-Location ~/
 
 ## 10 Render
 
-Now that deployment of the AAA solution is complete, this section provides render job submission examples via the general-purpose Deadline [SubmitCommandLineJob](https://docs.thinkboxsoftware.com/products/deadline/10.1/1_User%20Manual/manual/command-line-arguments-jobs.html#submitcommandlinejob) API.
+Now that deployment of the AAA solution framework is complete, this section provides render job submission examples via the general-purpose **Deadline** [SubmitCommandLineJob](https://docs.thinkboxsoftware.com/products/deadline/10.1/1_User%20Manual/manual/command-line-arguments-jobs.html#submitcommandlinejob) API.
 
 ### 10.1 [Blender](https://www.blender.org)
 
-For example, the following sample Blender output assets were rendering in Azure via the AAA solution deployment framework.
+For example, the following sample **Blender** output assets were rendering in Azure via the **Deadline** job submission commands below.
 <p align="center">
   <img src="10.render/blender3.0.png" alt="Sprite Fright" width=480 />
-  <img src="10.render/blender3.1.jpg" alt="Secret Dear" width=480 />
+  <img src="10.render/blender3.1.jpg" alt="Secret Deer" width=480 />
 </p>
 
 #### Linux Render Farm
