@@ -15,11 +15,16 @@ The following *core principles* are implemented throughout the AAA solution depl
 | [3 Storage](#3-storage) | Deploys [Storage Account](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview) with native NFS support and sample asset files uploaded. | No | Yes |
 | [4 Storage Cache](#4-storage-cache) | Deploys [HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-overview) for highly-available and scalable file caching. | Yes | Maybe, depends on your<br>render scale requirements |
 | [5 Compute Image](#5-compute-image) | Deploys [Compute Gallery](https://docs.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries) images that are built via the managed [Image Builder](https://docs.microsoft.com/en-us/azure/virtual-machines/image-builder-overview) service. | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L7) | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L7) |
-| [6 Compute Scheduler](#6-compute-scheduler) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines) for job and task scheduling across render farms. | No, use your current render job scheduler | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.compute.scheduler/config.auto.tfvars#L7) |
+| [6 Compute Scheduler](#6-compute-scheduler) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines) for job and task scheduling across render farms. | No, continue to use your current job scheduler | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.compute.scheduler/config.auto.tfvars#L7) |
 | [7 Compute Farm](#7-compute-farm) | Deploys [Virtual Machine Scale Sets](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview) for [Linux](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) and/or [Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) render farms. | Yes | Yes |
 | [8&#160;Compute&#160;Workstation](#8-compute-workstation) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines) for [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) remote artist workstations. | No | Yes |
 | [9 Monitor](#9-monitor) | Deploys [Monitor Private Link](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/private-link-security) with [Private DNS](https://docs.microsoft.com/en-us/azure/dns/private-dns-overview) and [Private Endpoint](https://docs.microsoft.com/en-us/azure/private-link/private-endpoint-overview) integration. | No | No |
 | [10 Render](#10-render) | Submit render farm jobs from [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
+
+For example, the following sample output assets were rendering in Azure via the AAA solution deployment framework.
+
+<img src="10.render/blender3.0.png" width=480>
+<img src="10.render/blender3.1.jpg" width=480>
 
 ## Deployment Prerequisites
 
@@ -210,7 +215,7 @@ Now that deployment of the AAA solution is complete, this section provides rende
 ### 10.1 [Blender](https://www.blender.org)
 
 #### Linux Render Farm
-*The following job commands can be submitted from a **Linux** or **Windows** artist workstation*
+*The following job commands can be submitted from a **Linux** or **Windows** artist workstation.*
 
 <p><code>
 deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender -arguments "-b -y /mnt/show/read/blender/3.0/splash-screen.blend --render-output /mnt/show/write/blender/3.0/ --render-frame &lt;STARTFRAME&gt;..&lt;ENDFRAME&gt;"
@@ -221,15 +226,19 @@ deadlinecommand -SubmitCommandLineJob -name Secret-Deer -executable blender -arg
 </code></p>
 
 #### Windows Render Farm
-*The following job commands can be submitted from a **Linux** or **Windows** artist workstation*
+*The following job commands can be submitted from a **Linux** or **Windows** artist workstation.*
 
 <p><code>
 deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender.exe -arguments "-b -y R:\blender\3.0\splash-screen.blend --render-output W:\blender\3.0\ --render-frame &lt;STARTFRAME&gt;..&lt;ENDFRAME&gt;"
 </code></p>
 
+<img src="10.render/blender3.0.png" width=480>
+
 <p><code>
 deadlinecommand -SubmitCommandLineJob -name Secret-Deer -executable blender.exe -arguments "-b -y R:\blender\3.1\splash-screen.blend --render-output W:\blender\3.1\ --render-frame &lt;STARTFRAME&gt;..&lt;ENDFRAME&gt;"
 </code></p>
+
+<img src="10.render/blender3.1.jpg" width=480>
 
 ### 10.2 [Physically-Based Rendering Toolkit (PBRT)](https://pbrt.org)
 
