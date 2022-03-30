@@ -57,8 +57,8 @@ The keyvault stores all the secrets used in this example.  Be sure to configure 
 * `AvereCache` - this configures the secret to be used with the Avere Cache
 
 The tfstate files contain secrets, so it is recommended to use a protected backend for storing of these files.  For this example, an Azure Storage Account is deployed and used to store the tfstate files.  Here are good articles related to terraform backends:
-1. **Backends** - https://www.terraform.io/docs/language/settings/backends/index.html
-1. **AzureRM Backend** - https://www.terraform.io/docs/language/settings/backends/azurerm.html
+1. **Backends** - https://www.terraform.io/language/settings/backends
+1. **AzureRM Backend** - https://www.terraform.io/language/settings/backends/azurerm
 
 ### Steps to Deploy
 

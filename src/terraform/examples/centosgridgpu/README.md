@@ -45,7 +45,7 @@ pcoip-register-host --registration-code='REPLACE_WITH_LICENSE_KEY'
 
 ## Capture Image
 
-After you have deployed and configured your VM you can [capture the VM to an image](../centos#next-steps-image-capture).  In summary, the steps are:
+After you have deployed and configured your VM you can [capture the VM to an image](../centos-legacy#next-steps-image-capture).  In summary, the steps are:
 1. prepare vm by running `sudo waagent -deprovision+user`.
 2. In the Portal, on the page for the VM, Click the "Capture" button.
 
@@ -62,5 +62,5 @@ Next, you can deploy using the script under the winimage directory:
 4. execute `terraform apply -auto-approve` to deploy the windows. The deployment requires access to the internet to download the Nvidia Grid, and Teradici software, and domain registrations and takes about 10 minutes to install.
 
 After you have deployed run you can do either of the following:
-1. [Capture the VM to an Image](../centos#next-steps-image-capture), 
+1. [Capture the VM to an Image](../centos-legacy#next-steps-image-capture), 
 2. or ssh to the box, and register the the Teradici license with the following command: 

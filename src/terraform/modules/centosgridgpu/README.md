@@ -5,7 +5,7 @@ This Terraform module deploys an Azure virtual machine that installs Gnome + Nvi
 The [centosgridgpu](../../examples/centosgridgpu) example shows how to deploy this module using Terraform.  The deployment requires access to the internet to download the Nvidia Grid, Gnome, and Teradici software and takes about 30 minutes to install.
 
 After you have deployed run you can do either of the following:
-1. [Capture the VM to an Image](../../examples/centos#next-steps-image-capture), 
+1. [Capture the VM to an Image](../../examples/centos-legacy#next-steps-image-capture), 
 2. or register the the Teradici license with the following command: 
 
 ```bash
