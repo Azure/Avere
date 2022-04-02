@@ -38,9 +38,12 @@ vfxtCache = {
     adminUsername = "azadmin"
     sshPublicKey  = ""
   }
-  support = {
-    companyName = "" // Set to your company name to authorize automated support data upload
-  }                  // per the https://privacy.microsoft.com/en-us/privacystatement policy
+  support = {                      // https://privacy.microsoft.com/en-us/privacystatement
+    companyName        = ""        // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#support_uploads_company_name
+    enableProactive    = "Support" // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#enable_secure_proactive_support
+    enableLogUpload    = true      // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#enable_support_uploads
+    enableRollingTrace = false     // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#enable_rolling_trace_data
+  }
 }
 
 ############################################################################################

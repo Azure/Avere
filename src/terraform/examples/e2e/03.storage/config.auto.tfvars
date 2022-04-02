@@ -9,6 +9,7 @@ storageAccounts = [
     redundancy           = "LRS"       // https://docs.microsoft.com/en-us/azure/storage/common/storage-redundancy
     enableBlobNfsV3      = true        // https://docs.microsoft.com/en-us/azure/storage/blobs/network-file-system-protocol-support
     enableLargeFileShare = false       // https://docs.microsoft.com/en-us/azure/storage/files/storage-how-to-create-file-share?#advanced
+    enableSecureTransfer = true        // https://docs.microsoft.com/en-us/azure/storage/common/storage-require-secure-transfer
     privateEndpointTypes = [           // https://docs.microsoft.com/en-us/azure/storage/common/storage-private-endpoints
       "blob",
       "file"
@@ -37,6 +38,7 @@ storageAccounts = [
     redundancy           = "LRS"         // https://docs.microsoft.com/en-us/azure/storage/common/storage-redundancy
     enableBlobNfsV3      = false         // https://docs.microsoft.com/en-us/azure/storage/blobs/network-file-system-protocol-support
     enableLargeFileShare = true          // https://docs.microsoft.com/en-us/azure/storage/files/storage-how-to-create-file-share?#advanced
+    enableSecureTransfer = false         // https://docs.microsoft.com/en-us/azure/storage/common/storage-require-secure-transfer
     privateEndpointTypes = [             // https://docs.microsoft.com/en-us/azure/storage/common/storage-private-endpoints
       "file"
     ]

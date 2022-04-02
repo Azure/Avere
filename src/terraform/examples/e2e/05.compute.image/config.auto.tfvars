@@ -74,12 +74,7 @@ imageTemplates = [
       outputVersion  = "1.0.0"
       renderEngines  = [
         "PBRT",
-        "Blender",
-        # "Houdini",
-        # "Maya",
-        # "3DS",
-        # "Nuke",
-        # "Unreal"
+        "Blender"
       ]
     }
   },
@@ -100,12 +95,7 @@ imageTemplates = [
       outputVersion  = "3.0.0"
       renderEngines  = [
         "PBRT",
-        "Blender",
-        # "Houdini",
-        # "Maya",
-        # "3DS",
-        # "Nuke",
-        # "Unreal"
+        "Blender"
       ]
     }
   },
@@ -126,12 +116,7 @@ imageTemplates = [
       outputVersion  = "4.0.0"
       renderEngines  = [
         "PBRT",
-        "Blender",
-        # "Houdini",
-        # "Maya",
-        # "3DS",
-        # "Nuke",
-        # "Unreal"
+        "Blender"
       ]
     }
   },
@@ -152,12 +137,7 @@ imageTemplates = [
   #     outputVersion  = "5.0.0"
   #     renderEngines  = [
   #       "PBRT"
-  #       "Blender",
-  #       # "Houdini",
-  #       # "Maya",
-  #       # "3DS",
-  #       # "Nuke",
-  #       # "Unreal"
+  #       "Blender"
   #     ]
   #   }
   # },
@@ -196,12 +176,7 @@ imageTemplates = [
       outputVersion  = "1.0.0"
       renderEngines  = [
         "PBRT",
-        "Blender",
-        # "Houdini",
-        # "Maya",
-        # "3DS",
-        # "Nuke",
-        # "Unreal"
+        "Blender"
       ]
     }
   },
@@ -222,12 +197,7 @@ imageTemplates = [
       outputVersion  = "3.0.0"
       renderEngines  = [
         "PBRT",
-        "Blender",
-        # "Houdini",
-        # "Maya",
-        # "3DS",
-        # "Nuke",
-        # "Unreal"
+        "Blender"
       ]
     }
   },
@@ -248,12 +218,7 @@ imageTemplates = [
       outputVersion  = "4.0.0"
       renderEngines  = [
         "PBRT",
-        "Blender",
-        # "Houdini",
-        # "Maya",
-        # "3DS",
-        # "Nuke",
-        # "Unreal"
+        "Blender"
       ]
     }
   },
@@ -274,12 +239,7 @@ imageTemplates = [
   #     outputVersion  = "4.0.0"
   #     renderEngines  = [
   #       "PBRT"
-  #       "Blender",
-  #       # "Houdini",
-  #       # "Maya",
-  #       # "3DS",
-  #       # "Nuke",
-  #       # "Unreal"
+  #       "Blender"
   #     ]
   #   }
   # }

@@ -23,8 +23,10 @@ The following *core principles* are implemented throughout the AAA solution depl
 
 For example, the following sample output assets were rendering in Azure via the AAA solution deployment framework.
 <p align="center">
-  <img src="10.render/blender3.0.png" alt="Sprite Fright" width=480 />
-  <img src="10.render/blender3.1.jpg" alt="Secret Deer" width=480 />
+  <img src="10.render/sprite-fright.png" alt="Sprite Fright" width="1024" />
+</p>
+<p align="center">
+  <img src="10.render/moana-island.png" alt="Moana Island" width="1024" />
 </p>
 
 ## Deployment Prerequisites
@@ -215,36 +217,44 @@ Now that deployment of the AAA solution framework is complete, this section prov
 
 ### 10.1 [Blender](https://www.blender.org)
 
-For example, the following sample **Blender** output assets were rendering in Azure via the **Deadline** job submission commands below.
+For example, the following sample **Blender** output asset was rendering in Azure via the **Deadline** job submission command below.
 <p align="center">
-  <img src="10.render/blender3.0.png" alt="Sprite Fright" width=480 />
-  <img src="10.render/blender3.1.jpg" alt="Secret Deer" width=480 />
+  <img src="10.render/sprite-fright.png" alt="Sprite Fright" width="1024" />
 </p>
 
 #### Linux Render Farm
-*The following job commands can be submitted from a **Linux** or **Windows** artist workstation.*
+*The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender -arguments "-b -y /mnt/show/read/blender/3.0/splash-screen.blend --render-output /mnt/show/write/blender/3.0/ --render-frame &lt;STARTFRAME&gt;..&lt;ENDFRAME&gt;"
-</code></p>
-
-<p><code>
-deadlinecommand -SubmitCommandLineJob -name Secret-Deer -executable blender -arguments "-b -y /mnt/show/read/blender/3.1/splash-screen.blend --render-output /mnt/show/write/blender/3.1/ --render-frame &lt;STARTFRAME&gt;..&lt;ENDFRAME&gt;"
+deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender -arguments "-b -y -noaudio /mnt/show/read/blender/3.0/splash.blend --render-output /mnt/show/write/blender/3.0/splash.png --render-frame 1"
 </code></p>
 
 #### Windows Render Farm
-*The following job commands can be submitted from a **Linux** or **Windows** artist workstation.*
+*The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender.exe -arguments "-b -y R:\blender\3.0\splash-screen.blend --render-output W:\blender\3.0\ --render-frame &lt;STARTFRAME&gt;..&lt;ENDFRAME&gt;"
-</code></p>
-
-<p><code>
-deadlinecommand -SubmitCommandLineJob -name Secret-Deer -executable blender.exe -arguments "-b -y R:\blender\3.1\splash-screen.blend --render-output W:\blender\3.1\ --render-frame &lt;STARTFRAME&gt;..&lt;ENDFRAME&gt;"
+deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender.exe -arguments "-b -y -noaudio R:\blender\3.0\splash.blend --render-output W:\blender\3.0\splash.png --render-frame 1"
 </code></p>
 
 ### 10.2 [Physically-Based Rendering Toolkit (PBRT)](https://pbrt.org)
 
-TBD
+For example, the following sample **PBRT** output asset was rendering in Azure via the **Deadline** job submission command below.
+<p align="center">
+  <img src="10.render/moana-island.png" alt="Moana Island" width="1024" />
+</p>
+
+#### Linux Render Farm
+*The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
+
+<p><code>
+deadlinecommand -SubmitCommandLineJob -name Moana-Island -executable pbrt -arguments "--outfile /mnt/show/write/pbrt/moana/island.png /mnt/show/read/pbrt/moana/island.pbrt"
+</code></p>
+
+#### Windows Render Farm
+*The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
+
+<p><code>
+deadlinecommand -SubmitCommandLineJob -name Moana-Island -executable pbrt.exe -arguments "--outfile W:\pbrt\moana\island.png R:\pbrt\moana\island.pbrt"
+</code></p>
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com
