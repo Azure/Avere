@@ -226,14 +226,14 @@ For example, the following sample **Blender** output asset was rendering in Azur
 *The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender -arguments "-b -y -noaudio /mnt/show/read/blender/3.0/splash.blend --render-output /mnt/show/write/blender/3.0/splash.png --render-frame 1"
+deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender -arguments "-b -y -noaudio /mnt/show/read/blender/3.0/splash.blend --render-output /mnt/show/write/blender/3.0/splash####.png --render-frame 1"
 </code></p>
 
 #### Windows Render Farm
 *The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender.exe -arguments "-b -y -noaudio R:\blender\3.0\splash.blend --render-output W:\blender\3.0\splash.png --render-frame 1"
+deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender.exe -arguments "-b -y -noaudio R:\blender\3.0\splash.blend --render-output W:\blender\3.0\splash####.png --render-frame 1"
 </code></p>
 
 ### 10.2 [Physically-Based Rendering Toolkit (PBRT)](https://pbrt.org)
@@ -247,14 +247,14 @@ For example, the following sample **PBRT** output asset was rendering in Azure v
 *The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name Moana-Island -executable pbrt -arguments "--outfile /mnt/show/write/pbrt/moana/island.png /mnt/show/read/pbrt/moana/island.pbrt"
+deadlinecommand -SubmitCommandLineJob -name Moana-Island -executable pbrt -arguments "--outfile /mnt/show/write/pbrt/moana/island.png /mnt/show/read/pbrt/moana/pbrt/island.pbrt"
 </code></p>
 
 #### Windows Render Farm
 *The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name Moana-Island -executable pbrt.exe -arguments "--outfile W:\pbrt\moana\island.png R:\pbrt\moana\island.pbrt"
+deadlinecommand -SubmitCommandLineJob -name Moana-Island -executable pbrt.exe -arguments "--outfile W:\pbrt\moana\island.png R:\pbrt\moana\pbrt\island.pbrt"
 </code></p>
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com
