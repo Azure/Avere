@@ -10,11 +10,16 @@ Set-Location -Path $binDirectory
 $storageContainerUrl = "https://azartist.blob.core.windows.net/bin"
 $storageContainerSas = "?sv=2020-10-02&st=2022-01-01T00%3A00%3A00Z&se=2222-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=4N8gUHTPNOG%2BlgEPvQljsRPCOsRD3ZWfiBKl%2BRxl9S8%3D"
 
-Write-Host "Customize (Start): Common Utilities"
+Write-Host "Customize (Start): Dev Platform"
 $installFile = "vs_BuildTools.exe"
 $downloadUrl = "https://aka.ms/vs/17/release/$installFile"
 Invoke-WebRequest $downloadUrl -OutFile $installFile
 Start-Process -FilePath .\$installFile -ArgumentList "--quiet --norestart --add Microsoft.VisualStudio.Workload.VCTools;includeRecommended --add Microsoft.VisualStudio.Workload.AzureBuildTools;includeRecommended" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+$versionInfo = "3.10.4"
+$installFile = "python-$versionInfo-amd64.exe"
+$downloadUrl = "https://www.python.org/ftp/python/$versionInfo/$installFile"
+Invoke-WebRequest $downloadUrl -OutFile $installFile
+Start-Process -FilePath .\$installFile -ArgumentList "/quiet" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
 $versionInfo = "2.35.1.2"
 $installFile = "Git-$versionInfo-64-bit.exe"
 $downloadUrl = "$storageContainerUrl/Win/$installFile$storageContainerSas"
@@ -24,7 +29,7 @@ $installFile = "Chocolatey.ps1"
 $downloadUrl = "$storageContainerUrl/Win/$installFile$storageContainerSas"
 Invoke-WebRequest $downloadUrl -OutFile $installFile
 Start-Process -FilePath "PowerShell.exe" -ArgumentList "-ExecutionPolicy Unrestricted -File $installFile" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-Write-Host "Customize (End): Common Utilities"
+Write-Host "Customize (End): Dev Platform"
 
 Write-Host "Customize (Start): Build Parameters"
 $buildJsonBytes = [System.Convert]::FromBase64String($buildJsonEncoded)

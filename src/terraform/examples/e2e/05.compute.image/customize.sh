@@ -6,13 +6,40 @@ cd $binDirectory
 storageContainerUrl="https://azartist.blob.core.windows.net/bin"
 storageContainerSas="?sv=2020-10-02&st=2022-01-01T00%3A00%3A00Z&se=2222-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=4N8gUHTPNOG%2BlgEPvQljsRPCOsRD3ZWfiBKl%2BRxl9S8%3D"
 
-echo "Customize (Start): Common Utilities"
+echo "Customize (Start): Dev Platform"
 yum -y group install "Development Tools"
+versionInfo="1.1.1n"
+installFile="openssl-$versionInfo.tar.gz"
+downloadUrl="https://www.openssl.org/source/$installFile"
+curl -o $installFile -L $downloadUrl
+tar -xf $installFile
+cd openssl*
+./config
+make
+make install
+export LD_LIBRARY_PATH=/usr/local/lib64:/usr/lib64
+echo "/usr/local/lib64" > /etc/ld.so.conf.d/openssl-$versionInfo.conf
+sslProfile="/etc/profile.d/openssl.sh"
+echo 'OPENSSL_PATH="/usr/local/bin"' > $sslProfile
+echo 'export OPENSSL_PATH' >> $sslProfile
+echo 'PATH=$PATH:$OPENSSL_PATH' >> $sslProfile
+echo 'export PATH' >> $sslProfile
+source $sslProfile
+cd $binDirectory
+versionInfo="3.10.4"
+installFile="Python-$versionInfo.tar.xz"
+downloadUrl="https://www.python.org/ftp/python/$versionInfo/$installFile"
+curl -o $installFile -L $downloadUrl
+tar -xJf $installFile
+cd Python*
+./configure --enable-optimizations
+make altinstall
+cd $binDirectory
 yum -y install epel-release
 yum -y install python-pip
 yum -y install nfs-utils
 yum -y install jq
-echo "Customize (End): Common Utilities"
+echo "Customize (End): Dev Platform"
 
 echo "Customize (Start): Build Parameters"
 buildJson=$(echo $buildJsonEncoded | base64 -d)
