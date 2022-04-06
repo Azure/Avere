@@ -237,23 +237,23 @@ if ($renderEngines -like "*Nuke*") {
 }
 
 if ($renderEngines -like "*Unreal*") {
-  Write-Host "Customize (Start): Unreal"
+  Write-Host "Customize (Start): Unreal Engine"
   $installFile = "dism.exe"
   $featureName = "NetFX3"
   Start-Process -FilePath $installFile -ArgumentList "/Enable-Feature /FeatureName:$featureName /Online /All /NoRestart" -Wait -Verb RunAs
   $versionInfo = "5.0.0"
-  $installFile = "UnrealEngine-$versionInfo-early-access-2.zip"
+  $installFile = "UnrealEngine-$versionInfo-release.zip"
   $downloadUrl = "$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
   Invoke-WebRequest $downloadUrl -OutFile $installFile
   Expand-Archive -Path $installFile -DestinationPath $rendererPathUnreal
-  Move-Item -Path "$rendererPathUnreal\UnrealEngine*\*" -Destination $rendererPathUnreal
+  Move-Item -Path "$rendererPathUnreal\Unreal*\*" -Destination "$rendererPathUnreal"
   $installFile = "$rendererPathUnreal\Setup.bat"
   $setupScript = Get-Content -Path $installFile
   $setupScript = $setupScript.Replace("/register", "/register /unattended")
   $setupScript = $setupScript.Replace("pause", "rem pause")
   Set-Content -Path $installFile -Value $setupScript
-  Start-Process -FilePath .\$installFile -ArgumentList "--force" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-  Write-Host "Customize (End): Unreal"
+  Start-Process -FilePath "$installFile" -ArgumentList "--force" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Write-Host "Customize (End): Unreal Engine"
 }
 
 if ($renderEngines -like "*Blender*") {

@@ -206,7 +206,7 @@ if [[ $renderEngines == *Maya* ]]; then
   curl -o $installFile -L $downloadUrl
   mayaDirectory="Maya"
   mkdir $mayaDirectory
-  tar --directory=$mayaDirectory -xzf $installFile
+  tar -xzf $installFile -C $mayaDirectory
   cd $mayaDirectory/Packages
   rpm -i Maya2022*
   rpm -i MayaUSD*
@@ -245,18 +245,17 @@ if [[ $renderEngines == *Nuke* ]]; then
 fi
 
 if [[ $renderEngines == *Unreal* ]]; then
-  echo "Customize (Start): Unreal"
+  echo "Customize (Start): Unreal Engine"
   versionInfo="5.0.0"
-  installFile="UnrealEngine-$versionInfo-early-access-2.tar.gz"
+  installFile="UnrealEngine-$versionInfo-release.tar.gz"
   downloadUrl="$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
-  tar -xf $installFile
-  cd UnrealEngine*
   mkdir -p $rendererPathUnreal
-  mv * $rendererPathUnreal
+  tar -xf $installFile -C $rendererPathUnreal
+  mv $rendererPathUnreal/Unreal*/* $rendererPathUnreal
   $rendererPathUnreal/Setup.sh
   cd $binDirectory
-  echo "Customize (End): Unreal"
+  echo "Customize (End): Unreal Engine"
 fi
 
 if [[ $renderEngines == *Blender* ]]; then
