@@ -139,6 +139,7 @@ if ($renderEngines -like "*Houdini*") {
 setx PATH "$env:PATH;$schedulerPath$rendererPaths" /m
 
 $toolPathGit = "C:\Program Files\Git\bin"
+$toolPathVSIX = "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE"
 $toolPathCMake = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
 $toolPathMSBuild = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin"
 
@@ -254,6 +255,23 @@ if ($renderEngines -like "*Unreal*") {
   Set-Content -Path $installFile -Value $setupScript
   Start-Process -FilePath "$installFile" -ArgumentList "--force" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
   Write-Host "Customize (End): Unreal Engine"
+  if ($subnetName -eq "Workstation") {
+    Write-Host "Customize (Start): Epic Games Launcher"
+    $versionInfo = "13.3.0"
+    $installFile = "EpicInstaller-$versionInfo.msi"
+    $downloadUrl = "$storageContainerUrl/Unreal/$installFile$storageContainerSas"
+    Invoke-WebRequest $downloadUrl -OutFile $installFile
+    Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+    Write-Host "Customize (End): Epic Games Launcher"
+    Write-Host "Customize (Start): Visual Studio"
+    $installFile = "VisualStudioSetup.exe"
+    $downloadUrl = "$storageContainerUrl/Win/$installFile$storageContainerSas"
+    Invoke-WebRequest $downloadUrl -OutFile $installFile
+    Start-Process -FilePath .\$installFile -ArgumentList "--quiet --norestart" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+    $installFile = "UnrealVS.vsix"
+    Start-Process -FilePath "$toolPathVSIX\VSIXInstaller.exe" -ArgumentList "/quiet /admin ""$rendererPathUnreal\Engine\Extras\UnrealVS\$installFile""" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+    Write-Host "Customize (End): Visual Studio"
+  }
 }
 
 if ($renderEngines -like "*Blender*") {
