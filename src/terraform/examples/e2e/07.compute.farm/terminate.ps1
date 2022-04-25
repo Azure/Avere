@@ -1,5 +1,3 @@
-$ErrorActionPreference = "Stop"
-
 $scheduledEvents = (Invoke-RestMethod -Headers @{"Metadata"="true"} -Method Get -Uri "http://169.254.169.254/metadata/scheduledevents?api-version=2020-07-01").Events
 foreach ($scheduledEvent in $scheduledEvents) {
   $eventType = $scheduledEvent.EventType

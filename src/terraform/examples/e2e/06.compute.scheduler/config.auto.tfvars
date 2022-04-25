@@ -33,7 +33,8 @@ virtualMachines = [
           scaleSetName             = "LnxFarm1"
           resourceGroupName        = "ArtistAnywhere.Farm"
           detectionIntervalSeconds = 60
-          workerIdleSecondsDelete  = 3600
+          jobWaitThresholdSeconds  = 300
+          workerIdleDeleteSeconds  = 3600
         }
       }
     }
@@ -72,7 +73,8 @@ virtualMachines = [
           scaleSetName             = "WinFarm1"
           resourceGroupName        = "ArtistAnywhere.Farm"
           detectionIntervalSeconds = 60
-          workerIdleSecondsDelete  = 3600
+          jobWaitThresholdSeconds  = 300
+          workerIdleDeleteSeconds  = 3600
         }
       }
     }

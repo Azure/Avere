@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.1.7"
+  required_version = ">= 1.1.9"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.0.2"
+      version = "~>3.3.0"
     }
   }
   backend "azurerm" {
@@ -243,7 +243,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
       },
       "variables": {
         "imageBuilderApiVersion": "2021-10-01",
-        "imageGalleryApiVersion": "2021-07-01",
+        "imageGalleryApiVersion": "2022-01-03",
         "localDownloadPathLinux": "/tmp/",
         "localDownloadPathWindows": "/Windows/Temp/"
       },
@@ -251,44 +251,94 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
         {
           "namespace": "fx",
           "members": {
-            "GetExecuteCommandLinux": {
+            "GetMachineRenameCommands": {
               "parameters": [
                 {
-                  "name": "scriptFilePath",
+                  "name": "osType",
                   "type": "string"
                 },
                 {
-                  "name": "scriptFileName",
-                  "type": "string"
-                },
-                {
-                  "name": "scriptParameters",
+                  "name": "imageTemplate",
                   "type": "object"
                 }
               ],
               "output": {
-                "type": "string",
-                "value": "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('scriptFileName')), concat('buildJsonEncoded=', base64(string(parameters('scriptParameters')))))]"
+                "type": "array",
+                "value": [
+                  {
+                    "type": "[if(equals(parameters('osType'), 'Windows'), 'PowerShell', 'Shell')]",
+                    "inline": "[createArray(if(equals(parameters('osType'), 'Windows'), concat('Rename-Computer -NewName ', parameters('imageTemplate').name), concat('hostname ', parameters('imageTemplate').name)))]"
+                  },
+                  {
+                    "type": "[if(equals(parameters('osType'), 'Windows'), 'WindowsRestart', 'Shell')]",
+                    "inline": "[if(equals(parameters('osType'), 'Windows'), json('null'), createArray(':'))]"
+                  }
+                ]
               }
             },
-            "GetExecuteCommandWindows": {
+            "GetCustomizeCommandsLinux": {
               "parameters": [
+                {
+                  "name": "imageScriptContainer",
+                  "type": "string"
+                },
+                {
+                  "name": "imageTemplate",
+                  "type": "object"
+                },
                 {
                   "name": "scriptFilePath",
                   "type": "string"
-                },
-                {
-                  "name": "scriptFileName",
-                  "type": "string"
-                },
-                {
-                  "name": "scriptParameters",
-                  "type": "object"
                 }
               ],
               "output": {
-                "type": "string",
-                "value": "[format('{0} {1}', concat(parameters('scriptFilePath'), parameters('scriptFileName')), concat('-buildJsonEncoded ', base64(string(parameters('scriptParameters')))))]"
+                "type": "array",
+                "value": [
+                  {
+                    "type": "File",
+                    "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.customScript)]",
+                    "destination": "[concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customScript)]"
+                  },
+                  {
+                    "type": "Shell",
+                    "inline": [
+                      "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customScript), concat('buildJsonEncoded=', base64(string(parameters('imageTemplate').build))))]"
+                    ]
+                  }
+                ]
+              }
+            },
+            "GetCustomizeCommandsWindows": {
+              "parameters": [
+                {
+                  "name": "imageScriptContainer",
+                  "type": "string"
+                },
+                {
+                  "name": "imageTemplate",
+                  "type": "object"
+                },
+                {
+                  "name": "scriptFilePath",
+                  "type": "string"
+                }
+              ],
+              "output": {
+                "type": "array",
+                "value": [
+                  {
+                    "type": "File",
+                    "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.customScript)]",
+                    "destination": "[concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customScript)]"
+                  },
+                  {
+                    "type": "PowerShell",
+                    "inline": [
+                      "[format('{0} {1}', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customScript), concat('-buildJsonEncoded ', base64(string(parameters('imageTemplate').build))))]"
+                    ],
+                    "runElevated": "[parameters('imageTemplate').build.runElevated]"
+                  }
+                ]
               }
             }
           }
@@ -322,30 +372,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.sku]",
               "version": "[parameters('imageTemplates')[copyIndex()].image.inputVersion]"
             },
-            "customize": [
-              {
-                "type": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), 'PowerShell', 'Shell')]",
-                "inline": "[createArray(if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), concat('Rename-Computer -NewName ', parameters('imageTemplates')[copyIndex()].name), concat('hostname ', parameters('imageTemplates')[copyIndex()].name)))]"
-              },
-              {
-                "type": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), 'WindowsRestart', 'Shell')]",
-                "inline": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), json('null'), createArray(':'))]"
-              },
-              {
-                "type": "File",
-                "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()].image.customScript)]",
-                "destination": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), concat(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.customScript), concat(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.customScript))]"
-              },
-              {
-                "type": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), 'PowerShell', 'Shell')]",
-                "inline": "[createArray(if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetExecuteCommandWindows(variables('localDownloadPathWindows'), parameters('imageTemplates')[copyIndex()].image.customScript, parameters('imageTemplates')[copyIndex()].build), fx.GetExecuteCommandLinux(variables('localDownloadPathLinux'), parameters('imageTemplates')[copyIndex()].image.customScript, parameters('imageTemplates')[copyIndex()].build)))]",
-                "runElevated": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), if(parameters('imageTemplates')[copyIndex()].build.runElevated, true(), false()), json('null'))]"
-              },
-              {
-                "type": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), 'WindowsRestart', 'Shell')]",
-                "inline": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), json('null'), createArray(':'))]"
-              }
-            ],
+            "customize": "[concat(if(equals(parameters('imageTemplates')[copyIndex()].build.subnetName, 'Scheduler'), fx.GetMachineRenameCommands(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, parameters('imageTemplates')[copyIndex()]), createArray()), if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathWindows')), fx.GetCustomizeCommandsLinux(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathLinux'))))]",
             "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].build.timeoutMinutes]",
             "distribute": [
               {

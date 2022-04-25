@@ -69,13 +69,15 @@ imageTemplates = [
       runElevated    = false
       subnetName     = "Farm"
       machineSize    = "Standard_HB120rs_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 100                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 120                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      osDiskSizeGB   = 500                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 240                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "1.0.0"
       renderEngines  = [
-        "PBRT",
-        "Unreal",
-        "Blender"
+        "Blender",
+        "PBRTv3",
+        # "Unreal",
+        # "Maya",
+        # "Houdini"
       ]
     }
   },
@@ -91,13 +93,15 @@ imageTemplates = [
       runElevated    = false
       subnetName     = "Workstation"
       machineSize    = "Standard_NC64as_T4_v3" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 100                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 150                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      osDiskSizeGB   = 500                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 240                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "3.0.0"
       renderEngines  = [
-        "PBRT",
-        "Unreal",
-        "Blender"
+        "Blender",
+        "PBRTv3",
+        # "Unreal",
+        # "Maya",
+        # "Houdini"
       ]
     }
   },
@@ -113,13 +117,15 @@ imageTemplates = [
       runElevated    = false
       subnetName     = "Workstation"
       machineSize    = "Standard_NV32as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 100                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 150                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      osDiskSizeGB   = 500                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 240                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "4.0.0"
       renderEngines  = [
-        "PBRT",
-        "Unreal",
-        "Blender"
+        "Blender",
+        "PBRTv3",
+        # "Unreal",
+        # "Maya",
+        # "Houdini"
       ]
     }
   },
@@ -135,13 +141,15 @@ imageTemplates = [
   #     runElevated    = false
   #     subnetName     = "Workstation"
   #     machineSize    = "Standard_NV36ads_A10_v5" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-  #     osDiskSizeGB   = 100                       // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-  #     timeoutMinutes = 120                       // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+  #     osDiskSizeGB   = 500                       // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+  #     timeoutMinutes = 240                       // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
   #     outputVersion  = "5.0.0"
   #     renderEngines  = [
-  #       "PBRT"
-  #       "Unreal",
-  #       "Blender"
+  #       "Blender",
+  #       "PBRTv3",
+  #       # "Unreal",
+  #       # "Maya",
+  #       # "Houdini"
   #     ]
   #   }
   # },
@@ -158,7 +166,7 @@ imageTemplates = [
       subnetName     = "Scheduler"
       machineSize    = "Standard_D16s_v5" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
       osDiskSizeGB   = 0                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 240                // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      timeoutMinutes = 180                // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "10.0.0"
       renderEngines  = []
     }
@@ -175,13 +183,16 @@ imageTemplates = [
       runElevated    = false
       subnetName     = "Farm"
       machineSize    = "Standard_HB120rs_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 0                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 240                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      osDiskSizeGB   = 500                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 300                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "1.0.0"
       renderEngines  = [
-        "PBRT",
-        "Unreal",
-        "Blender"
+        "Blender",
+        "PBRTv3",
+        # "Unreal",
+        # "Maya",
+        # "3DSMax",
+        # "Houdini"
       ]
     }
   },
@@ -197,13 +208,16 @@ imageTemplates = [
       runElevated    = false
       subnetName     = "Workstation"
       machineSize    = "Standard_NC64as_T4_v3" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 0                       // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 240                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      osDiskSizeGB   = 500                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 300                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "3.0.0"
       renderEngines  = [
-        "PBRT",
-        "Unreal",
-        "Blender"
+        "Blender",
+        "PBRTv3",
+        # "Unreal",
+        # "Maya",
+        # "3DSMax",
+        # "Houdini"
       ]
     }
   },
@@ -219,13 +233,16 @@ imageTemplates = [
       runElevated    = false
       subnetName     = "Workstation"
       machineSize    = "Standard_NV32as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 0                    // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 240                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      osDiskSizeGB   = 500                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 300                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "4.0.0"
       renderEngines  = [
-        "PBRT",
-        "Unreal",
-        "Blender"
+        "Blender",
+        "PBRTv3",
+        # "Unreal",
+        # "Maya",
+        # "3DSMax",
+        # "Houdini"
       ]
     }
   },
@@ -241,13 +258,16 @@ imageTemplates = [
   #     runElevated    = false
   #     subnetName     = "Workstation"
   #     machineSize    = "Standard_NV36ads_A10_v5" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-  #     osDiskSizeGB   = 0                         // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-  #     timeoutMinutes = 240                       // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+  #     osDiskSizeGB   = 500                       // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+  #     timeoutMinutes = 300                       // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
   #     outputVersion  = "4.0.0"
   #     renderEngines  = [
-  #       "PBRT"
-  #       "Unreal",
-  #       "Blender"
+  #       "Blender",
+  #       "PBRTv3",
+  #       # "Unreal",
+  #       # "Maya",
+  #       # "3DSMax",
+  #       # "Houdini"
   #     ]
   #   }
   # }

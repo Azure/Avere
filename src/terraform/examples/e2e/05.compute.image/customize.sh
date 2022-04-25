@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -x
 
 binDirectory="/usr/local/bin"
 cd $binDirectory
@@ -6,8 +6,28 @@ cd $binDirectory
 storageContainerUrl="https://azartist.blob.core.windows.net/bin"
 storageContainerSas="?sv=2020-10-02&st=2022-01-01T00%3A00%3A00Z&se=2222-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=4N8gUHTPNOG%2BlgEPvQljsRPCOsRD3ZWfiBKl%2BRxl9S8%3D"
 
-echo "Customize (Start): Dev Platform"
+echo "Customize (Start): Platform Utilities"
+yum -y install epel-release
+yum -y install python-pip
+yum -y install nfs-utils
+yum -y install jq
+echo "Customize (End): Platform Utilities"
+
+echo "Customize (Start): Image Build Parameters"
+buildJson=$(echo $buildJsonEncoded | base64 -d)
+subnetName=$(echo $buildJson | jq -r .subnetName)
+echo "Subnet Name: $subnetName"
+machineSize=$(echo $buildJson | jq -r .machineSize)
+echo "Machine Size: $machineSize"
+renderEngines=$(echo $buildJson | jq -c .renderEngines)
+echo "Render Engines: $renderEngines"
+echo "Customize (End): Image Build Parameters"
+
+echo "Customize (Start): Dev Tools"
 yum -y group install "Development Tools"
+echo "Customize (End): Dev Tools"
+
+echo "Customize (Start): OpenSSL"
 versionInfo="1.1.1n"
 installFile="openssl-$versionInfo.tar.gz"
 downloadUrl="https://www.openssl.org/source/$installFile"
@@ -26,30 +46,19 @@ echo 'PATH=$PATH:$OPENSSL_PATH' >> $sslProfile
 echo 'export PATH' >> $sslProfile
 source $sslProfile
 cd $binDirectory
-versionInfo="3.10.4"
-installFile="Python-$versionInfo.tar.xz"
-downloadUrl="https://www.python.org/ftp/python/$versionInfo/$installFile"
-curl -o $installFile -L $downloadUrl
-tar -xJf $installFile
-cd Python*
-./configure --enable-optimizations
-make altinstall
-cd $binDirectory
-yum -y install epel-release
-yum -y install python-pip
-yum -y install nfs-utils
-yum -y install jq
-echo "Customize (End): Dev Platform"
+echo "Customize (End): OpenSSL"
 
-echo "Customize (Start): Build Parameters"
-buildJson=$(echo $buildJsonEncoded | base64 -d)
-subnetName=$(echo $buildJson | jq -r .subnetName)
-echo "Subnet Name: $subnetName"
-machineSize=$(echo $buildJson | jq -r .machineSize)
-echo "Machine Size: $machineSize"
-renderEngines=$(echo $buildJson | jq -c .renderEngines)
-echo "Render Engines: $renderEngines"
-echo "Customize (End): Build Parameters"
+echo "Customize (Start): Azure CLI"
+rpm --import https://packages.microsoft.com/keys/microsoft.asc
+repoFile="/etc/yum.repos.d/azure-cli.repo"
+echo "[azure-cli]" > $repoFile
+echo "name=AzureCLI" >> $repoFile
+echo "baseurl=https://packages.microsoft.com/yumrepos/azure-cli" >> $repoFile
+echo "enabled=1" >> $repoFile
+echo "gpgcheck=1" >> $repoFile
+echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $repoFile
+yum -y install azure-cli
+echo "Customize (End): Azure CLI"
 
 #   NVv3 (https://docs.microsoft.com/en-us/azure/virtual-machines/nvv3-series)
 # NCT4v3 (https://docs.microsoft.com/en-us/azure/virtual-machines/nct4-v3-series)
@@ -95,22 +104,11 @@ if [ $subnetName == "Scheduler" ]; then
   echo "Customize (Start): NFS Server"
   systemctl --now enable nfs-server
   echo "Customize (End): NFS Server"
-
-  echo "Customize (Start): Azure CLI"
-  rpm --import https://packages.microsoft.com/keys/microsoft.asc
-  repoFile="/etc/yum.repos.d/azure-cli.repo"
-  echo "[azure-cli]" > $repoFile
-  echo "name=AzureCLI" >> $repoFile
-  echo "baseurl=https://packages.microsoft.com/yumrepos/azure-cli" >> $repoFile
-  echo "enabled=1" >> $repoFile
-  echo "gpgcheck=1" >> $repoFile
-  echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $repoFile
-  yum -y install azure-cli
-  echo "Customize (End): Azure CLI"
 fi
 
 schedulerVersion="10.1.20.2"
 schedulerLicense="LicenseFree"
+schedulerPath="/opt/Thinkbox/Deadline10/bin"
 schedulerDatabasePath="/DeadlineDatabase"
 schedulerRepositoryPath="/DeadlineRepository"
 schedulerCertificateFile="Deadline10Client.pfx"
@@ -118,32 +116,31 @@ schedulerRepositoryLocalMount="/mnt/scheduler"
 schedulerRepositoryCertificate="$schedulerRepositoryLocalMount/$schedulerCertificateFile"
 
 rendererPaths=""
-schedulerPath="/opt/Thinkbox/Deadline10/bin"
-rendererPathMaya="/usr/autodesk/maya2022/bin"
-rendererPathPBRT="/usr/local/pbrt3"
-rendererPathNuke="/usr/local/nuke13"
-rendererPathUnreal="/usr/local/unreal5"
 rendererPathBlender="/usr/local/blender3"
+rendererPathPBRTv3="/usr/local/pbrt3"
+rendererPathPBRTv4="/usr/local/pbrt4"
+rendererPathUnreal="/usr/local/unreal5"
+rendererPathMaya="/usr/autodesk/maya2023/bin"
 rendererPathHoudini="/usr/local/houdini19"
-if [[ $renderEngines == *Maya* ]]; then
-  rendererPaths="$rendererPaths:$rendererPathMaya"
+if [[ $renderEngines == *Blender* ]]; then
+  rendererPaths="$rendererPaths:$rendererPathBlender"
 fi
-if [[ $renderEngines == *PBRT* ]]; then
-  rendererPaths="$rendererPaths:$rendererPathPBRT"
+if [[ $renderEngines == *PBRTv3* ]]; then
+  rendererPaths="$rendererPaths:$rendererPathPBRTv3"
 fi
-if [[ $renderEngines == *Nuke* ]]; then
-  rendererPaths="$rendererPaths:$rendererPathNuke"
+if [[ $renderEngines == *PBRTv4* ]]; then
+  rendererPaths="$rendererPaths:$rendererPathPBRTv4"
 fi
 if [[ $renderEngines == *Unreal* ]]; then
   rendererPaths="$rendererPaths:$rendererPathUnreal"
 fi
-if [[ $renderEngines == *Blender* ]]; then
-  rendererPaths="$rendererPaths:$rendererPathBlender"
+if [[ $renderEngines == *Maya* ]]; then
+  rendererPaths="$rendererPaths:$rendererPathMaya"
 fi
 if [[ $renderEngines == *Houdini* ]]; then
   rendererPaths="$rendererPaths:$rendererPathHoudini/bin"
 fi
-echo "PATH=$PATH:$schedulerPath$rendererPaths" >> /etc/profile.d/aaa.sh
+echo "PATH=$PATH:$schedulerPath$rendererPaths" > /etc/profile.d/aaa.sh
 
 echo "Customize (Start): Deadline Download"
 installFile="Deadline-$schedulerVersion-linux-installers.tar"
@@ -182,82 +179,6 @@ deadlineCommandName="ChangeRepositorySkipValidation"
 $schedulerPath/deadlinecommand -$deadlineCommandName Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate "" &> $deadlineCommandName.txt
 echo "Customize (End): Deadline Client"
 
-if [[ $renderEngines == *Maya* ]]; then
-  echo "Customize (Start): Maya"
-  yum -y install libGL
-  yum -y install libGLU
-  yum -y install libjpeg
-  yum -y install libtiff
-  yum -y install libXp
-  yum -y install libXmu
-  yum -y install libXpm
-  yum -y install libXi
-  yum -y install libXinerama
-  yum -y install libXrender
-  yum -y install libXrandr
-  yum -y install libXcomposite
-  yum -y install libXcursor
-  yum -y install libXtst
-  yum -y install libxkbcommon
-  yum -y install fontconfig
-  versionInfo="2022_3"
-  installFile="Autodesk_Maya_${versionInfo}_ML_Linux_64bit.tgz"
-  downloadUrl="$storageContainerUrl/Maya/$versionInfo/$installFile$storageContainerSas"
-  curl -o $installFile -L $downloadUrl
-  mayaDirectory="Maya"
-  mkdir $mayaDirectory
-  tar -xzf $installFile -C $mayaDirectory
-  cd $mayaDirectory/Packages
-  rpm -i Maya2022*
-  rpm -i MayaUSD*
-  rpm -i Pymel*
-  rpm -i Rokoko*
-  rpm -i Bifrost*
-  rpm -i Substance*
-  cd $binDirectory
-  echo "Customize (End): Maya"
-fi
-
-if [[ $renderEngines == *PBRT* ]]; then
-  echo "Customize (Start): PBRT"
-  pip install cmake
-  versionInfo="v3"
-  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git
-  mkdir -p $rendererPathPBRT
-  cd $rendererPathPBRT
-  cmake $binDirectory/pbrt-$versionInfo/
-  make
-  cd $binDirectory
-  echo "Customize (End): PBRT"
-fi
-
-if [[ $renderEngines == *Nuke* ]]; then
-  echo "Customize (Start): Nuke"
-  versionInfo="13.1v2"
-  installFile="Nuke$versionInfo-linux-x86_64.tgz"
-  downloadUrl="$storageContainerUrl/Nuke/$versionInfo/$installFile$storageContainerSas"
-  curl -o $installFile -L $downloadUrl
-  tar -xzf $installFile
-  mkdir -p $rendererPathNuke
-  ./Nuke*.run --accept-foundry-eula --prefix=$rendererPathNuke --exclude-subdir
-  cd $binDirectory
-  echo "Customize (End): Nuke"
-fi
-
-if [[ $renderEngines == *Unreal* ]]; then
-  echo "Customize (Start): Unreal Engine"
-  versionInfo="5.0.0"
-  installFile="UnrealEngine-$versionInfo-release.tar.gz"
-  downloadUrl="$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
-  curl -o $installFile -L $downloadUrl
-  mkdir -p $rendererPathUnreal
-  tar -xf $installFile -C $rendererPathUnreal
-  mv $rendererPathUnreal/Unreal*/* $rendererPathUnreal
-  $rendererPathUnreal/Setup.sh
-  cd $binDirectory
-  echo "Customize (End): Unreal Engine"
-fi
-
 if [[ $renderEngines == *Blender* ]]; then
   echo "Customize (Start): Blender"
   yum -y install libXi
@@ -275,6 +196,80 @@ if [[ $renderEngines == *Blender* ]]; then
   mv * $rendererPathBlender
   cd $binDirectory
   echo "Customize (End): Blender"
+fi
+
+if [[ $renderEngines == *PBRTv3* ]]; then
+  echo "Customize (Start): PBRT v3"
+  pip install cmake
+  versionInfo="v3"
+  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git
+  mkdir -p $rendererPathPBRTv3
+  cd $rendererPathPBRTv3
+  cmake $binDirectory/pbrt-$versionInfo/
+  make
+  cd $binDirectory
+  echo "Customize (End): PBRT v3"
+fi
+
+if [[ $renderEngines == *PBRTv4* ]]; then
+  echo "Customize (Start): PBRT v4"
+  pip install cmake
+  versionInfo="v4"
+  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git
+  mkdir -p $rendererPathPBRTv4
+  cd $rendererPathPBRTv4
+  cmake $binDirectory/pbrt-$versionInfo/
+  make
+  cd $binDirectory
+  echo "Customize (End): PBRT v4"
+fi
+
+if [[ $renderEngines == *Unreal* ]]; then
+  echo "Customize (Start): Unreal Engine"
+  versionInfo="5.0.1"
+  installFile="UnrealEngine-$versionInfo-release.tar.gz"
+  downloadUrl="$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
+  curl -o $installFile -L $downloadUrl
+  mkdir -p $rendererPathUnreal
+  tar -xf $installFile -C $rendererPathUnreal
+  mv $rendererPathUnreal/Unreal*/* $rendererPathUnreal
+  $rendererPathUnreal/Setup.sh
+  cd $binDirectory
+  echo "Customize (End): Unreal Engine"
+fi
+
+if [[ $renderEngines == *Maya* ]]; then
+  echo "Customize (Start): Maya"
+  yum -y install libGL
+  yum -y install libGLU
+  yum -y install libjpeg
+  yum -y install libtiff
+  yum -y install libXmu
+  yum -y install libXpm
+  yum -y install libXi
+  yum -y install libXinerama
+  yum -y install libXrender
+  yum -y install libXrandr
+  yum -y install libXcomposite
+  yum -y install libXcursor
+  yum -y install libXtst
+  yum -y install libxkbcommon
+  yum -y install fontconfig
+  versionInfo="2023"
+  installFile="Autodesk_Maya_${versionInfo}_ML_Linux_64bit.tgz"
+  downloadUrl="$storageContainerUrl/Maya/$versionInfo/$installFile$storageContainerSas"
+  curl -o $installFile -L $downloadUrl
+  mayaDirectory="Maya"
+  mkdir $mayaDirectory
+  tar -xzf $installFile -C $mayaDirectory
+  cd $mayaDirectory/Packages
+  rpm -i Maya202*.rpm
+  rpm -i MayaUSD*.rpm
+  rpm -i Pymel*.rpm
+  rpm -i Bifrost*.rpm
+  rpm -i *Substance*.rpm
+  cd $binDirectory
+  echo "Customize (End): Maya"
 fi
 
 if [[ $renderEngines == *Houdini* ]]; then

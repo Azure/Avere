@@ -1,5 +1,3 @@
-$ErrorActionPreference = "Stop"
-
 $databaseFile = "C:\Windows\Temp\database.ps1"
 New-Item -ItemType File -Path $databaseFile
 Add-Content -Path $databaseFile -Value '$serviceName = "Deadline10DatabaseService"'
@@ -23,7 +21,7 @@ Out-File -InputObject $streamReader.ReadToEnd() -FilePath $customDataOutput
 $taskName = "AAA Render Farm Scaler"
 $taskStart = Get-Date
 $taskInterval = New-TimeSpan -Seconds ${autoScale.detectionIntervalSeconds}
-$taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File $customDataOutput -resourceGroupName ${autoScale.resourceGroupName} -scaleSetName ${autoScale.scaleSetName} -workerIdleSecondsDelete ${autoScale.workerIdleSecondsDelete}"
+$taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File $customDataOutput -resourceGroupName ${autoScale.resourceGroupName} -scaleSetName ${autoScale.scaleSetName} -jobWaitThresholdSeconds ${autoScale.jobWaitThresholdSeconds} -workerIdleDeleteSeconds ${autoScale.workerIdleDeleteSeconds}"
 $taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval $taskInterval -At $taskStart -Once
 Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
 

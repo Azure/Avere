@@ -1,5 +1,3 @@
-$ErrorActionPreference = "Stop"
-
 %{ if teradiciLicenseKey != "" }
   $agentFile = "C:\Program Files\Teradici\PCoIP Agent\pcoip-register-host.ps1"
   Start-Process -FilePath "PowerShell.exe" -ArgumentList "-ExecutionPolicy Unrestricted -File ""$agentFile"" -RegistrationCode ${teradiciLicenseKey}" -Wait -RedirectStandardOutput "$agentFile.output.txt" -RedirectStandardError "$agentFile.error.txt"

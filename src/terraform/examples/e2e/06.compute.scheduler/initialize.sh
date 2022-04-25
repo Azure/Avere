@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -x
 
 source /etc/profile.d/aaa.sh # https://github.com/Azure/WALinuxAgent/issues/1561
 
@@ -15,7 +15,8 @@ echo "[Service]" >> $servicePath
 echo "Environment=PATH=$schedulerPath:$PATH" >> $servicePath
 echo "Environment=scaleSetName=${autoScale.scaleSetName}" >> $servicePath
 echo "Environment=resourceGroupName=${autoScale.resourceGroupName}" >> $servicePath
-echo "Environment=workerIdleSecondsDelete=${autoScale.workerIdleSecondsDelete}" >> $servicePath
+echo "Environment=jobWaitThresholdSeconds=${autoScale.jobWaitThresholdSeconds}" >> $servicePath
+echo "Environment=workerIdleDeleteSeconds=${autoScale.workerIdleDeleteSeconds}" >> $servicePath
 echo "ExecStart=/bin/bash $customDataOutput" >> $servicePath
 echo "" >> $servicePath
 timerPath="/etc/systemd/system/scale.timer"

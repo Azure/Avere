@@ -9,7 +9,7 @@ The following *core principles* are implemented throughout the AAA solution depl
 
 | **Module Name** | **Module Description** | **Required for<br>Compute Burst?** | **Required for<br>All Cloud?** |
 | --------------- | ---------------------- | ---------------------------------- | ------------------------------ |
-| [00 Global](#00-global) | Defines global variables and Terraform backend configuration for the solution. | Yes | Yes |
+| [00 Global](#00-global) | Defines global variables and Terraform backend state file storage configuration. | Yes | Yes |
 | [01 Security](#01-security) | Deploys [Managed Identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://docs.microsoft.com/en-us/azure/key-vault/general/overview) and [Blob Storage](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction) for Terraform state files. | Yes | Yes |
 | [02 Network](#02-network) | Deploys [Virtual Network](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) with [VPN](https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways) hybrid networking services. | Yes, if [Virtual Network](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No | Yes, if [Virtual Network](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No |
 | [03 Storage](#03-storage) | Deploys [Storage Account](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview) with native NFS support and sample asset files uploaded. | No | Yes |
@@ -132,7 +132,7 @@ New-Item -ItemType Directory -Path $localDirectory -Force
 Set-Location $localDirectory
 </code></p>
 <p><code>
-Invoke-WebRequest $downloadUrl -OutFile terraform-provider-avere_$latestVersion.exe
+Invoke-WebRequest -OutFile terraform-provider-avere_$latestVersion.exe -Uri $downloadUrl
 </code></p>
 <p><code>
 Set-Location ~/

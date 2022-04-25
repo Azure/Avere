@@ -19,7 +19,8 @@ storageAccounts = [
         name       = "show"
         accessType = "private"
         localDirectories = [
-          "blender"
+          "blender",
+          "unreal"
         ]
       }
     ]
