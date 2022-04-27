@@ -27,7 +27,9 @@ for jobId in $(echo $activeJobIds); do
 done
 
 if [ $queuedTasks -gt 0 ]; then # Scale Up
-  az vmss scale --resource-group $resourceGroupName --name $scaleSetName --new-capacity $queuedTasks 
+  nodeCount=$(az vmss show --resource-group $resourceGroupName --name $scaleSetName --query "sku.capacity")
+  nodeCount=$(($nodeCount + $queuedTasks))
+  az vmss scale --resource-group $resourceGroupName --name $scaleSetName --new-capacity $nodeCount
 else # Scale Down
   workerNames=$(deadlinecommand -GetSlaveNames)
   for workerName in $(echo $workerNames); do
