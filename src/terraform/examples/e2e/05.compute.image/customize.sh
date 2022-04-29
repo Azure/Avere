@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash -ex
 
 binDirectory="/usr/local/bin"
 cd $binDirectory
@@ -106,7 +106,7 @@ if [ $subnetName == "Scheduler" ]; then
   echo "Customize (End): NFS Server"
 fi
 
-schedulerVersion="10.1.20.2"
+schedulerVersion="10.1.21.4"
 schedulerLicense="LicenseFree"
 schedulerPath="/opt/Thinkbox/Deadline10/bin"
 schedulerDatabasePath="/DeadlineDatabase"
@@ -165,16 +165,15 @@ fi
 
 echo "Customize (Start): Deadline Client"
 installFile="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
+installArgs="--mode unattended --licensemode $schedulerLicense"
 if [ $subnetName == "Scheduler" ]; then
-  clientArgs="--slavestartup false --launcherdaemon false"
+  installArgs="$installArgs --slavestartup false --launcherdaemon false"
 else
   [ $subnetName == "Farm" ] && workerStartup=true || workerStartup=false
-  clientArgs="--slavestartup $workerStartup --launcherdaemon true"
+  installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
 fi
-./$installFile --mode unattended $clientArgs &> $installFile.txt
+./$installFile $installArgs &> $installFile.txt
 cp /tmp/bitrock_installer.log $binDirectory/bitrock_installer_client.log
-deadlineCommandName="ChangeLicenseMode"
-$schedulerPath/deadlinecommand -$deadlineCommandName $schedulerLicense &> $deadlineCommandName.txt
 deadlineCommandName="ChangeRepositorySkipValidation"
 $schedulerPath/deadlinecommand -$deadlineCommandName Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate "" &> $deadlineCommandName.txt
 echo "Customize (End): Deadline Client"
@@ -304,7 +303,7 @@ if [ $subnetName == "Workstation" ]; then
   echo "Customize (End): Workstation Desktop"
 
   echo "Customize (Start): Teradici PCoIP Agent"
-  versionInfo="22.01.1"
+  versionInfo="22.04.0"
   installFile="teradici-pcoip-agent_rpm.sh"
   downloadUrl="$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl

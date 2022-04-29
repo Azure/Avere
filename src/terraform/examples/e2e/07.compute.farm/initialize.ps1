@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 $customDataInput = "C:\AzureData\CustomData.bin"
 $customDataOutput = "C:\AzureData\Terminate.ps1"
 $fileStream = New-Object System.IO.FileStream($customDataInput, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read)

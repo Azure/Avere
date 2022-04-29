@@ -2,6 +2,8 @@ param (
   [string] $buildJsonEncoded
 )
 
+$ErrorActionPreference = "Stop"
+
 $binDirectory = "C:\Users\Public\Downloads"
 Set-Location -Path $binDirectory
 
@@ -20,12 +22,24 @@ $renderEngines = $build.renderEngines -join ","
 Write-Host "Render Engines: $renderEngines"
 Write-Host "Customize (End): Image Build Parameters"
 
-Write-Host "Customize (Start): Visual Studio Build Tools"
-$installFile = "vs_BuildTools.exe"
-$downloadUrl = "https://aka.ms/vs/17/release/$installFile"
+Write-Host "Customize (Start): Visual Studio"
+if ($subnetName -eq "Workstation") {
+  $installFile = "VisualStudioSetup.exe"
+  $downloadUrl = "$storageContainerUrl/Win/$installFile$storageContainerSas"
+  $workloadIds = "--add Microsoft.VisualStudio.Workload.NativeDesktop;includeRecommended"
+  $toolPathVSIX = "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE"
+  $toolPathCMake = "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
+  $toolPathMSBuild = "C:\Program Files\Microsoft Visual Studio\2022\Community\Msbuild\Current\Bin"
+} else {
+  $installFile = "vs_BuildTools.exe"
+  $downloadUrl = "https://aka.ms/vs/17/release/$installFile"
+  $workloadIds = "--add Microsoft.VisualStudio.Workload.VCTools;includeRecommended"
+  $toolPathCMake = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
+  $toolPathMSBuild = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin"
+}
 Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-Start-Process -FilePath .\$installFile -ArgumentList "--quiet --norestart --add Microsoft.VisualStudio.Workload.VCTools;includeRecommended --add Microsoft.VisualStudio.Workload.AzureBuildTools;includeRecommended" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-Write-Host "Customize (End): Visual Studio Build Tools"
+Start-Process -FilePath .\$installFile -ArgumentList "--quiet --norestart $workloadIds" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+Write-Host "Customize (End): Visual Studio"
 
 Write-Host "Customize (Start): Git"
 $versionInfo = "2.35.1.2"
@@ -33,6 +47,7 @@ $installFile = "Git-$versionInfo-64-bit.exe"
 $downloadUrl = "$storageContainerUrl/Win/$installFile$storageContainerSas"
 Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
 Start-Process -FilePath .\$installFile -ArgumentList "/SILENT /NORESTART" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+$toolPathGit = "C:\Program Files\Git\bin"
 Write-Host "Customize (End): Git"
 
 Write-Host "Customize (Start): Azure CLI"
@@ -89,7 +104,7 @@ if ($subnetName -eq "Scheduler") {
   Write-Host "Customize (End): NFS Client"
 }
 
-$schedulerVersion = "10.1.20.2"
+$schedulerVersion = "10.1.21.4"
 $schedulerLicense = "LicenseFree"
 $schedulerPath = "C:\Program Files\Thinkbox\Deadline10\bin"
 $schedulerDatabasePath = "C:\DeadlineDatabase"
@@ -129,11 +144,6 @@ if ($renderEngines -like "*Houdini*") {
 }
 setx PATH "$env:PATH;$schedulerPath$rendererPaths" /m
 
-$toolPathGit = "C:\Program Files\Git\bin"
-$toolPathVSIX = "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE"
-$toolPathCMake = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
-$toolPathMSBuild = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin"
-
 Write-Host "Customize (Start): Deadline Download"
 $installFile = "Deadline-$schedulerVersion-windows-installers.zip"
 $downloadUrl = "$storageContainerUrl/Deadline/$schedulerVersion/$installFile$storageContainerSas"
@@ -162,20 +172,19 @@ netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=
 netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$schedulerPath\deadlinelauncher.exe"
 Set-Location -Path "Deadline*"
 $installFile = "DeadlineClient-$schedulerVersion-windows-installer.exe"
+$installArgs = "--mode unattended --licensemode $schedulerLicense"
 if ($subnetName -eq "Scheduler") {
-  $clientArgs = "--slavestartup false --launcherservice false"
+  $installArgs = "$installArgs --slavestartup false --launcherservice false"
 } else {
   if ($subnetName -eq "Farm") {
     $workerStartup = "true"
   } else {
     $workerStartup = "false"
   }
-  $clientArgs = "--slavestartup $workerStartup --launcherservice true"
+  $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
 }
-Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended $clientArgs" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+Start-Process -FilePath .\$installFile -ArgumentList $installArgs -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
 Copy-Item -Path $env:TMP\bitrock_installer.log -Destination $binDirectory\bitrock_installer_client.log
-$deadlineCommandName = "ChangeLicenseMode"
-Start-Process -FilePath "$schedulerPath\deadlinecommand.exe" -ArgumentList "-$deadlineCommandName $schedulerLicense" -Wait -RedirectStandardOutput "$deadlineCommandName-output.txt" -RedirectStandardError "$deadlineCommandName-error.txt"
 $deadlineCommandName = "ChangeRepositorySkipValidation"
 Start-Process -FilePath "$schedulerPath\deadlinecommand.exe" -ArgumentList "-$deadlineCommandName Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ''" -Wait -RedirectStandardOutput "$deadlineCommandName-output.txt" -RedirectStandardError "$deadlineCommandName-error.txt"
 Set-Location -Path $binDirectory
@@ -235,14 +244,19 @@ if ($renderEngines -like "*Unreal*") {
     Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
     Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
     Write-Host "Customize (End): Epic Games Launcher"
-    Write-Host "Customize (Start): Visual Studio"
-    $installFile = "VisualStudioSetup.exe"
-    $downloadUrl = "$storageContainerUrl/Win/$installFile$storageContainerSas"
-    Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-    Start-Process -FilePath .\$installFile -ArgumentList "--quiet --norestart" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+    Write-Host "Customize (Start): Visual Studio Plugin"
     $installFile = "UnrealVS.vsix"
     Start-Process -FilePath "$toolPathVSIX\VSIXInstaller.exe" -ArgumentList "/quiet /admin ""$rendererPathUnreal\Engine\Extras\UnrealVS\$installFile""" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-    Write-Host "Customize (End): Visual Studio"
+    Write-Host "Customize (End): Visual Studio Plugin"
+    Write-Host "Customize (Start): Unreal Editor Shortcut"
+    $shortcutPath = "$env:AllUsersProfile\Desktop\Unreal Editor.lnk"
+    $scriptShell = New-Object -ComObject WScript.Shell
+    $shortcut = $scriptShell.CreateShortcut($shortcutPath)
+    $unrealEditorPath = "$rendererPathUnreal\Engine\Binaries\Win64"
+    $shortcut.WorkingDirectory = "$unrealEditorPath"
+    $shortcut.TargetPath = "$unrealEditorPath\UnrealEditor.exe"
+    $shortcut.Save()
+    Write-Host "Customize (End): Unreal Editor Shortcut"  
   }
 }
 
@@ -304,8 +318,17 @@ if ($subnetName -eq "Farm") {
 }
 
 if ($subnetName -eq "Workstation") {
+  Write-Host "Customize (Start): Deadline Monitor Shortcut"
+  $shortcutPath = "$env:AllUsersProfile\Desktop\Deadline Monitor.lnk"
+  $scriptShell = New-Object -ComObject WScript.Shell
+  $shortcut = $scriptShell.CreateShortcut($shortcutPath)
+  $shortcut.WorkingDirectory = $schedulerPath
+  $shortcut.TargetPath = "$schedulerPath\deadlinemonitor.exe"
+  $shortcut.Save()
+  Write-Host "Customize (End): Deadline Monitor Shortcut"
+
   Write-Host "Customize (Start): Teradici PCoIP Agent"
-  $versionInfo = "22.01.1"
+  $versionInfo = "22.04.0"
   $installFile = "pcoip-agent-graphics_$versionInfo.exe"
   $downloadUrl = "$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl

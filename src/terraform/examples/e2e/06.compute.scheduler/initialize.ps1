@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 $databaseFile = "C:\Windows\Temp\database.ps1"
 New-Item -ItemType File -Path $databaseFile
 Add-Content -Path $databaseFile -Value '$serviceName = "Deadline10DatabaseService"'
