@@ -4,6 +4,10 @@ param (
 
 $ErrorActionPreference = "Stop"
 
+$osDriveLetter = "C"
+$partitionSize = Get-PartitionSupportedSize -DriveLetter $osDriveLetter
+Resize-Partition -DriveLetter $osDriveLetter -Size $partitionSize.SizeMax
+
 $binDirectory = "C:\Users\Public\Downloads"
 Set-Location -Path $binDirectory
 
@@ -23,39 +27,25 @@ Write-Host "Render Engines: $renderEngines"
 Write-Host "Customize (End): Image Build Parameters"
 
 Write-Host "Customize (Start): Visual Studio"
-if ($subnetName -eq "Workstation") {
-  $installFile = "VisualStudioSetup.exe"
-  $downloadUrl = "$storageContainerUrl/Win/$installFile$storageContainerSas"
-  $workloadIds = "--add Microsoft.VisualStudio.Workload.NativeDesktop;includeRecommended"
-  $toolPathVSIX = "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE"
-  $toolPathCMake = "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
-  $toolPathMSBuild = "C:\Program Files\Microsoft Visual Studio\2022\Community\Msbuild\Current\Bin"
-} else {
-  $installFile = "vs_BuildTools.exe"
-  $downloadUrl = "https://aka.ms/vs/17/release/$installFile"
-  $workloadIds = "--add Microsoft.VisualStudio.Workload.VCTools;includeRecommended"
-  $toolPathCMake = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
-  $toolPathMSBuild = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin"
-}
+$versionInfo = "2022"
+$installFile = "VisualStudioSetup.exe"
+$downloadUrl = "https://c2rsetup.officeapps.live.com/c2r/downloadVS.aspx?sku=community&channel=Release&version=VS$versionInfo&includeRecommended=true"
+$workloadIds = "--add Microsoft.VisualStudio.Workload.ManagedDesktop;includeRecommended --add Microsoft.VisualStudio.Workload.NativeDesktop;includeRecommended --add Microsoft.VisualStudio.Workload.NativeGame;includeRecommended --add Microsoft.NetCore.Component.Runtime.3.1 --add Component.Unreal"
+$toolPathVSIX = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Common7\IDE"
+$toolPathCMake = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
+$toolPathMSBuild = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Msbuild\Current\Bin"
 Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
 Start-Process -FilePath .\$installFile -ArgumentList "--quiet --norestart $workloadIds" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
 Write-Host "Customize (End): Visual Studio"
 
 Write-Host "Customize (Start): Git"
-$versionInfo = "2.35.1.2"
+$versionInfo = "2.36.0"
 $installFile = "Git-$versionInfo-64-bit.exe"
-$downloadUrl = "$storageContainerUrl/Win/$installFile$storageContainerSas"
+$downloadUrl = "https://github.com/git-for-windows/git/releases/download/v$versionInfo.windows.1/$installFile"
 Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
 Start-Process -FilePath .\$installFile -ArgumentList "/SILENT /NORESTART" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
 $toolPathGit = "C:\Program Files\Git\bin"
 Write-Host "Customize (End): Git"
-
-Write-Host "Customize (Start): Azure CLI"
-$installFile = "az-cli.msi"
-$downloadUrl = "https://aka.ms/installazurecliwindows"
-Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-Write-Host "Customize (End): Azure CLI"
 
 #   NVv3 (https://docs.microsoft.com/en-us/azure/virtual-machines/nvv3-series)
 # NCT4v3 (https://docs.microsoft.com/en-us/azure/virtual-machines/nct4-v3-series)
@@ -89,6 +79,13 @@ if ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v5")) {
   Write-Host "Customize (End): GPU Driver (NVv5)"
 }
 
+Write-Host "Customize (Start): Azure CLI"
+$installFile = "az-cli.msi"
+$downloadUrl = "https://aka.ms/installazurecliwindows"
+Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+Write-Host "Customize (End): Azure CLI"
+
 if ($subnetName -eq "Scheduler") {
   Write-Host "Customize (Start): NFS Server"
   Install-WindowsFeature -Name "FS-NFS-Service"
@@ -115,8 +112,7 @@ $schedulerRepositoryCertificate = "$schedulerRepositoryLocalMount$schedulerCerti
 
 $rendererPaths = ""
 $rendererPathBlender = "C:\Program Files\Blender Foundation\Blender3"
-$rendererPathPBRTv3 = "C:\Program Files\PBRT3"
-$rendererPathPBRTv4 = "C:\Program Files\PBRT4"
+$rendererPathPBRT = "C:\Program Files\PBRT3"
 $rendererPathUnreal = "C:\Program Files\Epic Games\Unreal5"
 $rendererPathMaya = "C:\Program Files\Autodesk\Maya2023"
 $rendererPath3DSMax = "C:\Program Files\Autodesk\3ds Max 2023"
@@ -124,11 +120,8 @@ $rendererPathHoudini = "C:\Program Files\Side Effects Software\Houdini19"
 if ($renderEngines -like "*Blender*") {
   $rendererPaths += ";$rendererPathBlender"
 }
-if ($renderEngines -like "*PBRTv3*") {
-  $rendererPaths += ";$rendererPathPBRTv3\Release"
-}
-if ($renderEngines -like "*PBRTv4*") {
-  $rendererPaths += ";$rendererPathPBRTv4\Release"
+if ($renderEngines -like "*PBRT*") {
+  $rendererPaths += ";$rendererPathPBRT\Release"
 }
 if ($renderEngines -like "*Unreal*") {
   $rendererPaths += ";$rendererPathUnreal"
@@ -185,6 +178,8 @@ if ($subnetName -eq "Scheduler") {
 }
 Start-Process -FilePath .\$installFile -ArgumentList $installArgs -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
 Copy-Item -Path $env:TMP\bitrock_installer.log -Destination $binDirectory\bitrock_installer_client.log
+$deadlineCommandName = "ChangeLicenseMode"
+Start-Process -FilePath "$schedulerPath\deadlinecommand.exe" -ArgumentList "-$deadlineCommandName $schedulerLicense" -Wait -RedirectStandardOutput "$deadlineCommandName-output.txt" -RedirectStandardError "$deadlineCommandName-error.txt"
 $deadlineCommandName = "ChangeRepositorySkipValidation"
 Start-Process -FilePath "$schedulerPath\deadlinecommand.exe" -ArgumentList "-$deadlineCommandName Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ''" -Wait -RedirectStandardOutput "$deadlineCommandName-output.txt" -RedirectStandardError "$deadlineCommandName-error.txt"
 Set-Location -Path $binDirectory
@@ -200,22 +195,13 @@ if ($renderEngines -like "*Blender*") {
   Write-Host "Customize (End): Blender"
 }
 
-if ($renderEngines -like "*PBRTv3*") {
-  Write-Host "Customize (Start): PBRT v3"
+if ($renderEngines -like "*PBRT*") {
+  Write-Host "Customize (Start): PBRT"
   $versionInfo = "v3"
   Start-Process -FilePath "$toolPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait
-  Start-Process -FilePath "$toolPathCMake\cmake.exe" -ArgumentList "-S $binDirectory\pbrt-$versionInfo -B ""$rendererPathPBRTv3""" -Wait -RedirectStandardOutput "cmake-pbrt-$versionInfo.output.txt" -RedirectStandardError "cmake-pbrt-$versionInfo.error.txt"
-  Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRTv3\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "msbuild-pbrt-$versionInfo.output.txt" -RedirectStandardError "msbuild-pbrt-$versionInfo.error.txt"
-  Write-Host "Customize (End): PBRT v3"
-}
-
-if ($renderEngines -like "*PBRTv4*") {
-  Write-Host "Customize (Start): PBRT v4"
-  $versionInfo = "v4"
-  Start-Process -FilePath "$toolPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait
-  Start-Process -FilePath "$toolPathCMake\cmake.exe" -ArgumentList "-S $binDirectory\pbrt-$versionInfo -B ""$rendererPathPBRTv4""" -Wait -RedirectStandardOutput "cmake-pbrt-$versionInfo.output.txt" -RedirectStandardError "cmake-pbrt-$versionInfo.error.txt"
-  Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRTv4\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "msbuild-pbrt-$versionInfo.output.txt" -RedirectStandardError "msbuild-pbrt-$versionInfo.error.txt"
-  Write-Host "Customize (End): PBRT v4"
+  Start-Process -FilePath "$toolPathCMake\cmake.exe" -ArgumentList "-S $binDirectory\pbrt-$versionInfo -B ""$rendererPathPBRT""" -Wait -RedirectStandardOutput "cmake-pbrt-$versionInfo.output.txt" -RedirectStandardError "cmake-pbrt-$versionInfo.error.txt"
+  Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRT\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "msbuild-pbrt-$versionInfo.output.txt" -RedirectStandardError "msbuild-pbrt-$versionInfo.error.txt"
+  Write-Host "Customize (End): PBRT"
 }
 
 if ($renderEngines -like "*Unreal*") {
@@ -234,16 +220,12 @@ if ($renderEngines -like "*Unreal*") {
   $setupScript = $setupScript.Replace("/register", "/register /unattended")
   $setupScript = $setupScript.Replace("pause", "rem pause")
   Set-Content -Path $installFile -Value $setupScript
-  Start-Process -FilePath "$installFile" -ArgumentList "--force" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  & "$rendererPathUnreal\GenerateProjectFiles.bat"
+  [System.Environment]::SetEnvironmentVariable("PATH", "$env:PATH;C:\Program Files\dotnet")
+  Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList "-restore -p:Platform=Win64 -p:Configuration=""Development Editor"" ""$rendererPathUnreal\UE5.sln""" -Wait -RedirectStandardOutput "msbuild-ue5.output.txt" -RedirectStandardError "msbuild-ue5.error.txt"
   Write-Host "Customize (End): Unreal Engine"
   if ($subnetName -eq "Workstation") {
-    Write-Host "Customize (Start): Epic Games Launcher"
-    $versionInfo = "13.3.0"
-    $installFile = "EpicInstaller-$versionInfo.msi"
-    $downloadUrl = "$storageContainerUrl/Unreal/$installFile$storageContainerSas"
-    Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-    Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-    Write-Host "Customize (End): Epic Games Launcher"
     Write-Host "Customize (Start): Visual Studio Plugin"
     $installFile = "UnrealVS.vsix"
     Start-Process -FilePath "$toolPathVSIX\VSIXInstaller.exe" -ArgumentList "/quiet /admin ""$rendererPathUnreal\Engine\Extras\UnrealVS\$installFile""" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"

@@ -27,39 +27,6 @@ echo "Customize (Start): Dev Tools"
 yum -y group install "Development Tools"
 echo "Customize (End): Dev Tools"
 
-echo "Customize (Start): OpenSSL"
-versionInfo="1.1.1n"
-installFile="openssl-$versionInfo.tar.gz"
-downloadUrl="https://www.openssl.org/source/$installFile"
-curl -o $installFile -L $downloadUrl
-tar -xf $installFile
-cd openssl*
-./config
-make
-make install
-export LD_LIBRARY_PATH=/usr/local/lib64:/usr/lib64
-echo "/usr/local/lib64" > /etc/ld.so.conf.d/openssl-$versionInfo.conf
-sslProfile="/etc/profile.d/openssl.sh"
-echo 'OPENSSL_PATH="/usr/local/bin"' > $sslProfile
-echo 'export OPENSSL_PATH' >> $sslProfile
-echo 'PATH=$PATH:$OPENSSL_PATH' >> $sslProfile
-echo 'export PATH' >> $sslProfile
-source $sslProfile
-cd $binDirectory
-echo "Customize (End): OpenSSL"
-
-echo "Customize (Start): Azure CLI"
-rpm --import https://packages.microsoft.com/keys/microsoft.asc
-repoFile="/etc/yum.repos.d/azure-cli.repo"
-echo "[azure-cli]" > $repoFile
-echo "name=AzureCLI" >> $repoFile
-echo "baseurl=https://packages.microsoft.com/yumrepos/azure-cli" >> $repoFile
-echo "enabled=1" >> $repoFile
-echo "gpgcheck=1" >> $repoFile
-echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $repoFile
-yum -y install azure-cli
-echo "Customize (End): Azure CLI"
-
 #   NVv3 (https://docs.microsoft.com/en-us/azure/virtual-machines/nvv3-series)
 # NCT4v3 (https://docs.microsoft.com/en-us/azure/virtual-machines/nct4-v3-series)
 if [[ ($machineSize == Standard_NV* && $machineSize == *_v3) ||
@@ -81,10 +48,8 @@ if [[ $machineSize == Standard_NV* && $machineSize == *_v4 ]]; then
   downloadUrl="https://download.microsoft.com/download/3/6/6/366e3bb8-cc4f-48ba-aae3-52bd096f816d/amdgpu-pro-21.10-1262503-rhel-7.9.tar.xz"
   curl -o $installFile -L $downloadUrl
   tar -xJf $installFile
-  cd amdgpu*
   installFile="amdgpu-pro-install"
-  ./$installFile -y --opencl=legacy,pal &> $installFile.txt
-  cd $binDirectory
+  ./amdgpu*/$installFile -y --opencl=legacy,pal &> $installFile.txt
   echo "Customize (End): GPU Driver (NVv4)"
 fi
 
@@ -99,6 +64,18 @@ if [[ $machineSize == Standard_NV* && $machineSize == *_v5 ]]; then
   ./$installFile --silent &> $installFile.txt
   echo "Customize (End): GPU Driver (NVv5)"
 fi
+
+echo "Customize (Start): Azure CLI"
+rpm --import https://packages.microsoft.com/keys/microsoft.asc
+repoFile="/etc/yum.repos.d/azure-cli.repo"
+echo "[azure-cli]" > $repoFile
+echo "name=AzureCLI" >> $repoFile
+echo "baseurl=https://packages.microsoft.com/yumrepos/azure-cli" >> $repoFile
+echo "enabled=1" >> $repoFile
+echo "gpgcheck=1" >> $repoFile
+echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $repoFile
+yum -y install azure-cli
+echo "Customize (End): Azure CLI"
 
 if [ $subnetName == "Scheduler" ]; then
   echo "Customize (Start): NFS Server"
@@ -117,19 +94,15 @@ schedulerRepositoryCertificate="$schedulerRepositoryLocalMount/$schedulerCertifi
 
 rendererPaths=""
 rendererPathBlender="/usr/local/blender3"
-rendererPathPBRTv3="/usr/local/pbrt3"
-rendererPathPBRTv4="/usr/local/pbrt4"
+rendererPathPBRT="/usr/local/pbrt3"
 rendererPathUnreal="/usr/local/unreal5"
 rendererPathMaya="/usr/autodesk/maya2023/bin"
 rendererPathHoudini="/usr/local/houdini19"
 if [[ $renderEngines == *Blender* ]]; then
   rendererPaths="$rendererPaths:$rendererPathBlender"
 fi
-if [[ $renderEngines == *PBRTv3* ]]; then
-  rendererPaths="$rendererPaths:$rendererPathPBRTv3"
-fi
-if [[ $renderEngines == *PBRTv4* ]]; then
-  rendererPaths="$rendererPaths:$rendererPathPBRTv4"
+if [[ $renderEngines == *PBRT* ]]; then
+  rendererPaths="$rendererPaths:$rendererPathPBRT"
 fi
 if [[ $renderEngines == *Unreal* ]]; then
   rendererPaths="$rendererPaths:$rendererPathUnreal"
@@ -174,6 +147,8 @@ else
 fi
 ./$installFile $installArgs &> $installFile.txt
 cp /tmp/bitrock_installer.log $binDirectory/bitrock_installer_client.log
+deadlineCommandName="ChangeLicenseMode"
+$schedulerPath/deadlinecommand -$deadlineCommandName $schedulerLicense &> $deadlineCommandName.txt
 deadlineCommandName="ChangeRepositorySkipValidation"
 $schedulerPath/deadlinecommand -$deadlineCommandName Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate "" &> $deadlineCommandName.txt
 echo "Customize (End): Deadline Client"
@@ -191,40 +166,24 @@ if [[ $renderEngines == *Blender* ]]; then
   curl -o $installFile -L $downloadUrl
   tar -xJf $installFile
   mkdir -p $rendererPathBlender
-  cd blender*
-  mv * $rendererPathBlender
-  cd $binDirectory
+  mv blender*/* $rendererPathBlender
   echo "Customize (End): Blender"
 fi
 
-if [[ $renderEngines == *PBRTv3* ]]; then
-  echo "Customize (Start): PBRT v3"
+if [[ $renderEngines == *PBRT* ]]; then
+  echo "Customize (Start): PBRT"
   pip install cmake
   versionInfo="v3"
   git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git
-  mkdir -p $rendererPathPBRTv3
-  cd $rendererPathPBRTv3
-  cmake $binDirectory/pbrt-$versionInfo/
-  make
-  cd $binDirectory
-  echo "Customize (End): PBRT v3"
-fi
-
-if [[ $renderEngines == *PBRTv4* ]]; then
-  echo "Customize (Start): PBRT v4"
-  pip install cmake
-  versionInfo="v4"
-  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git
-  mkdir -p $rendererPathPBRTv4
-  cd $rendererPathPBRTv4
-  cmake $binDirectory/pbrt-$versionInfo/
-  make
-  cd $binDirectory
-  echo "Customize (End): PBRT v4"
+  mkdir -p $rendererPathPBRT
+  cmake -B $rendererPathPBRT -S $binDirectory/pbrt-$versionInfo/
+  make -C $rendererPathPBRT
+  echo "Customize (End): PBRT"
 fi
 
 if [[ $renderEngines == *Unreal* ]]; then
   echo "Customize (Start): Unreal Engine"
+  yum -y install libicu
   versionInfo="5.0.1"
   installFile="UnrealEngine-$versionInfo-release.tar.gz"
   downloadUrl="$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
@@ -233,7 +192,8 @@ if [[ $renderEngines == *Unreal* ]]; then
   tar -xf $installFile -C $rendererPathUnreal
   mv $rendererPathUnreal/Unreal*/* $rendererPathUnreal
   $rendererPathUnreal/Setup.sh
-  cd $binDirectory
+  $rendererPathUnreal/GenerateProjectFiles.sh
+  make -C $rendererPathUnreal
   echo "Customize (End): Unreal Engine"
 fi
 
@@ -260,14 +220,12 @@ if [[ $renderEngines == *Maya* ]]; then
   curl -o $installFile -L $downloadUrl
   mayaDirectory="Maya"
   mkdir $mayaDirectory
-  tar -xzf $installFile -C $mayaDirectory
-  cd $mayaDirectory/Packages
-  rpm -i Maya202*.rpm
-  rpm -i MayaUSD*.rpm
-  rpm -i Pymel*.rpm
-  rpm -i Bifrost*.rpm
-  rpm -i *Substance*.rpm
-  cd $binDirectory
+  tar -C $mayaDirectory -xzf $installFile
+  rpm -i $mayaDirectory/Packages/Maya202*.rpm
+  rpm -i $mayaDirectory/Packages/MayaUSD*.rpm
+  rpm -i $mayaDirectory/Packages/Pymel*.rpm
+  rpm -i $mayaDirectory/Packages/Bifrost*.rpm
+  rpm -i $mayaDirectory/Packages/*Substance*.rpm
   echo "Customize (End): Maya"
 fi
 
@@ -291,9 +249,7 @@ if [[ $renderEngines == *Houdini* ]]; then
   tar -xf $installFile
   [[ $renderEngines == *Maya* ]] && mayaPlugIn=--install-engine-maya || mayaPlugIn=--no-install-engine-maya
   [[ $renderEngines == *Unreal* ]] && unrealPlugIn=--install-engine-unreal || unrealPlugIn=--no-install-engine-unreal
-  cd houdini*
-  ./houdini.install --auto-install --make-dir --accept-EULA $versionEULA $mayaPlugIn $unrealPlugIn $rendererPathHoudini
-  cd $binDirectory
+  ./houdini*/houdini.install --auto-install --make-dir --accept-EULA $versionEULA $mayaPlugIn $unrealPlugIn $rendererPathHoudini
   echo "Customize (End): Houdini"
 fi
 

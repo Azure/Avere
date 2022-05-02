@@ -74,8 +74,8 @@ imageTemplates = [
       outputVersion  = "1.0.0"
       renderEngines  = [
         "Blender",
-        "PBRTv3",
-        # "Unreal",
+        "PBRT",
+        "Unreal",
         # "Maya",
         # "Houdini"
       ]
@@ -98,8 +98,8 @@ imageTemplates = [
       outputVersion  = "3.0.0"
       renderEngines  = [
         "Blender",
-        "PBRTv3",
-        # "Unreal",
+        "PBRT",
+        "Unreal",
         # "Maya",
         # "Houdini"
       ]
@@ -122,8 +122,8 @@ imageTemplates = [
       outputVersion  = "4.0.0"
       renderEngines  = [
         "Blender",
-        "PBRTv3",
-        # "Unreal",
+        "PBRT",
+        "Unreal",
         # "Maya",
         # "Houdini"
       ]
@@ -146,8 +146,8 @@ imageTemplates = [
   #     outputVersion  = "5.0.0"
   #     renderEngines  = [
   #       "Blender",
-  #       "PBRTv3",
-  #       # "Unreal",
+  #       "PBRT",
+  #       "Unreal",
   #       # "Maya",
   #       # "Houdini"
   #     ]
@@ -188,8 +188,8 @@ imageTemplates = [
       outputVersion  = "1.0.0"
       renderEngines  = [
         "Blender",
-        "PBRTv3",
-        # "Unreal",
+        "PBRT",
+        "Unreal",
         # "Maya",
         # "3DSMax",
         # "Houdini"
@@ -213,8 +213,8 @@ imageTemplates = [
       outputVersion  = "3.0.0"
       renderEngines  = [
         "Blender",
-        "PBRTv3",
-        # "Unreal",
+        "PBRT",
+        "Unreal",
         # "Maya",
         # "3DSMax",
         # "Houdini"
@@ -238,8 +238,8 @@ imageTemplates = [
       outputVersion  = "4.0.0"
       renderEngines  = [
         "Blender",
-        "PBRTv3",
-        # "Unreal",
+        "PBRT",
+        "Unreal",
         # "Maya",
         # "3DSMax",
         # "Houdini"
@@ -263,8 +263,8 @@ imageTemplates = [
   #     outputVersion  = "4.0.0"
   #     renderEngines  = [
   #       "Blender",
-  #       "PBRTv3",
-  #       # "Unreal",
+  #       "PBRT",
+  #       "Unreal",
   #       # "Maya",
   #       # "3DSMax",
   #       # "Houdini"

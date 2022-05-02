@@ -46,7 +46,7 @@ virtualMachineScaleSets = [
       evictionPolicy  = "Delete" // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#eviction-policy
       machineMaxPrice = -1       // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#pricing
     }
-    terminateNotification = {    // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
+    terminationNotification = {  // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
       enable       = true
       timeoutDelay = "PT5M"
       eventHandler = "terminate.sh"
@@ -96,7 +96,7 @@ virtualMachineScaleSets = [
       evictionPolicy  = "Delete" // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#eviction-policy
       machineMaxPrice = -1       // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#pricing
     }
-    terminateNotification = {    // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
+    terminationNotification = {  // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
       enable       = true
       timeoutDelay = "PT5M"
       eventHandler = "terminate.ps1"

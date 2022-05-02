@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.3.0"
+      version = "~>3.4.0"
     }
   }
   backend "azurerm" {
@@ -91,7 +91,7 @@ variable "virtualMachineScaleSets" {
             machineMaxPrice = number
           }
         )
-        terminateNotification = object(
+        terminationNotification = object(
           {
             enable       = bool
             timeoutDelay = string
@@ -185,7 +185,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   single_placement_group          = false
   overprovision                   = false
   custom_data = base64gzip(
-    templatefile(each.value.terminateNotification.eventHandler, {})
+    templatefile(each.value.terminationNotification.eventHandler, {})
   )
   network_interface {
     name    = each.value.name
@@ -249,11 +249,11 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       })
     }
   }
-  dynamic "terminate_notification" {
-    for_each = each.value.terminateNotification.enable ? [1] : [] 
+  dynamic "termination_notification" {
+    for_each = each.value.terminationNotification.enable ? [1] : [] 
     content {
-      enabled = each.value.terminateNotification.enable
-      timeout = each.value.terminateNotification.timeoutDelay
+      enabled = each.value.terminationNotification.enable
+      timeout = each.value.terminationNotification.timeoutDelay
     }
   }
 }
@@ -276,7 +276,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   single_placement_group = false
   overprovision          = false
   custom_data = base64gzip(
-    templatefile(each.value.terminateNotification.eventHandler, {})
+    templatefile(each.value.terminationNotification.eventHandler, {})
   )
   network_interface {
     name    = each.value.name
@@ -333,11 +333,11 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       })
     }
   }
-  dynamic "terminate_notification" {
-    for_each = each.value.terminateNotification.enable ? [1] : [] 
+  dynamic "termination_notification" {
+    for_each = each.value.terminationNotification.enable ? [1] : [] 
     content {
-      enabled = each.value.terminateNotification.enable
-      timeout = each.value.terminateNotification.timeoutDelay
+      enabled = each.value.terminationNotification.enable
+      timeout = each.value.terminationNotification.timeoutDelay
     }
   }
 }
