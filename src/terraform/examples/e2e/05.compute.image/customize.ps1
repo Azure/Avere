@@ -4,15 +4,17 @@ param (
 
 $ErrorActionPreference = "Stop"
 
-$osDriveLetter = "C"
-$partitionSize = Get-PartitionSupportedSize -DriveLetter $osDriveLetter
-Resize-Partition -DriveLetter $osDriveLetter -Size $partitionSize.SizeMax
-
 $binDirectory = "C:\Users\Public\Downloads"
 Set-Location -Path $binDirectory
 
 $storageContainerUrl = "https://azartist.blob.core.windows.net/bin"
 $storageContainerSas = "?sv=2020-10-02&st=2022-01-01T00%3A00%3A00Z&se=2222-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=4N8gUHTPNOG%2BlgEPvQljsRPCOsRD3ZWfiBKl%2BRxl9S8%3D"
+
+Write-Host "Customize (Start): Resize OS Disk"
+$osDriveLetter = "C"
+$partitionSize = Get-PartitionSupportedSize -DriveLetter $osDriveLetter
+Resize-Partition -DriveLetter $osDriveLetter -Size $partitionSize.SizeMax
+Write-Host "Customize (End): Resize OS Disk"
 
 Write-Host "Customize (Start): Image Build Parameters"
 $buildJsonBytes = [System.Convert]::FromBase64String($buildJsonEncoded)
@@ -231,7 +233,7 @@ if ($renderEngines -like "*Unreal*") {
     Start-Process -FilePath "$toolPathVSIX\VSIXInstaller.exe" -ArgumentList "/quiet /admin ""$rendererPathUnreal\Engine\Extras\UnrealVS\$installFile""" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
     Write-Host "Customize (End): Visual Studio Plugin"
     Write-Host "Customize (Start): Unreal Editor Shortcut"
-    $shortcutPath = "$env:AllUsersProfile\Desktop\Unreal Editor.lnk"
+    $shortcutPath = "$env:AllUsersProfile\Desktop\Epic Unreal Editor.lnk"
     $scriptShell = New-Object -ComObject WScript.Shell
     $shortcut = $scriptShell.CreateShortcut($shortcutPath)
     $unrealEditorPath = "$rendererPathUnreal\Engine\Binaries\Win64"
