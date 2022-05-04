@@ -116,6 +116,7 @@ $rendererPaths = ""
 $rendererPathBlender = "C:\Program Files\Blender Foundation\Blender3"
 $rendererPathPBRT = "C:\Program Files\PBRT3"
 $rendererPathUnreal = "C:\Program Files\Epic Games\Unreal5"
+$rendererPathUnrealEditor = "$rendererPathUnreal\Engine\Binaries\Win64"
 $rendererPathMaya = "C:\Program Files\Autodesk\Maya2023"
 $rendererPath3DSMax = "C:\Program Files\Autodesk\3ds Max 2023"
 $rendererPathHoudini = "C:\Program Files\Side Effects Software\Houdini19"
@@ -126,7 +127,7 @@ if ($renderEngines -like "*PBRT*") {
   $rendererPaths += ";$rendererPathPBRT\Release"
 }
 if ($renderEngines -like "*Unreal*") {
-  $rendererPaths += ";$rendererPathUnreal"
+  $rendererPaths += ";$rendererPathUnrealEditor"
 }
 if ($renderEngines -like "*Maya*") {
   $rendererPaths += ";$rendererPathMaya"
@@ -208,6 +209,7 @@ if ($renderEngines -like "*PBRT*") {
 
 if ($renderEngines -like "*Unreal*") {
   Write-Host "Customize (Start): Unreal Engine"
+  netsh advfirewall firewall add rule name="Allow Unreal Editor" dir=in action=allow program="$rendererPathUnrealEditor\UnrealEditor.exe"
   $installFile = "dism.exe"
   $featureName = "NetFX3"
   Start-Process -FilePath $installFile -ArgumentList "/Enable-Feature /FeatureName:$featureName /Online /All /NoRestart" -Wait -Verb RunAs
@@ -236,11 +238,10 @@ if ($renderEngines -like "*Unreal*") {
     $shortcutPath = "$env:AllUsersProfile\Desktop\Epic Unreal Editor.lnk"
     $scriptShell = New-Object -ComObject WScript.Shell
     $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-    $unrealEditorPath = "$rendererPathUnreal\Engine\Binaries\Win64"
-    $shortcut.WorkingDirectory = "$unrealEditorPath"
-    $shortcut.TargetPath = "$unrealEditorPath\UnrealEditor.exe"
+    $shortcut.WorkingDirectory = "$rendererPathUnrealEditor"
+    $shortcut.TargetPath = "$rendererPathUnrealEditor\UnrealEditor.exe"
     $shortcut.Save()
-    Write-Host "Customize (End): Unreal Editor Shortcut"  
+    Write-Host "Customize (End): Unreal Editor Shortcut"
   }
 }
 
