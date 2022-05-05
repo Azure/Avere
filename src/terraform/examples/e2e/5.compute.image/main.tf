@@ -7,7 +7,7 @@ terraform {
     }
   }
   backend "azurerm" {
-    key = "05.compute.image"
+    key = "5.compute.image"
   }
 }
 
@@ -23,7 +23,7 @@ provider "azurerm" {
 }
 
 module "global" {
-  source = "../00.global"
+  source = "../0.global"
 }
 
 variable "resourceGroupName" {
@@ -94,7 +94,7 @@ data "terraform_remote_state" "network" {
     resource_group_name  = module.global.securityResourceGroupName
     storage_account_name = module.global.securityStorageAccountName
     container_name       = module.global.terraformStorageContainerName
-    key                  = "02.network"
+    key                  = "2.network"
   }
 }
 

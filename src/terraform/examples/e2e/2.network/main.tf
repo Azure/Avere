@@ -7,7 +7,7 @@ terraform {
     }
   }
   backend "azurerm" {
-    key = "02.network"
+    key = "2.network"
   }
 }
 
@@ -20,7 +20,7 @@ provider "azurerm" {
 }
 
 module "global" {
-  source = "../00.global"
+  source = "../0.global"
 }
 
 variable "resourceGroupName" {
@@ -125,6 +125,14 @@ variable "expressRoute" {
   )
 }
 
+variable "monitor" {
+  type = object(
+    {
+      enablePrivateLink = bool
+    }
+  )
+}
+
 data "azurerm_resource_group" "security" {
   name = module.global.securityResourceGroupName
 }
@@ -220,6 +228,76 @@ resource "azurerm_private_dns_zone_virtual_network_link" "network" {
   registration_enabled  = var.virtualNetworkPrivateDns.enableAutoRegistration
 }
 
+resource "azurerm_private_dns_zone" "monitor" {
+  count               = var.monitor.enablePrivateLink ? 1 : 0
+  name                = "privatelink.monitor.azure.com"
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_private_dns_zone" "opinsights_oms" {
+  count               = var.monitor.enablePrivateLink ? 1 : 0
+  name                = "privatelink.oms.opinsights.azure.com"
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_private_dns_zone" "opinsights_ods" {
+  count               = var.monitor.enablePrivateLink ? 1 : 0
+  name                = "privatelink.ods.opinsights.azure.com"
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_private_dns_zone" "automation" {
+  count               = var.monitor.enablePrivateLink ? 1 : 0
+  name                = "privatelink.agentsvc.azure-automation.net"
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_private_dns_zone" "blob" {
+  count               = var.monitor.enablePrivateLink ? 1 : 0
+  name                = "privatelink.blob.core.windows.net"
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "monitor" {
+  count                 = var.monitor.enablePrivateLink ? 1 : 0
+  name                  = "monitor"
+  resource_group_name   = azurerm_resource_group.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.monitor[0].name
+  virtual_network_id    = azurerm_virtual_network.network.id
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "opinsights_oms" {
+  count                 = var.monitor.enablePrivateLink ? 1 : 0
+  name                  = "opinsights_oms"
+  resource_group_name   = azurerm_resource_group.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.opinsights_oms[0].name
+  virtual_network_id    = azurerm_virtual_network.network.id
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "opinsights_ods" {
+  count                 = var.monitor.enablePrivateLink ? 1 : 0
+  name                  = "opinsights_ods"
+  resource_group_name   = azurerm_resource_group.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.opinsights_ods[0].name
+  virtual_network_id    = azurerm_virtual_network.network.id
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "automation" {
+  count                 = var.monitor.enablePrivateLink ? 1 : 0
+  name                  = "automation"
+  resource_group_name   = azurerm_resource_group.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.automation[0].name
+  virtual_network_id    = azurerm_virtual_network.network.id
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "blob" {
+  count                 = var.monitor.enablePrivateLink ? 1 : 0
+  name                  = "blob"
+  resource_group_name   = azurerm_resource_group.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.blob[0].name
+  virtual_network_id    = azurerm_virtual_network.network.id
+}
+
 ########################################
 # Hybrid Network (VPN or ExpressRoute) #
 ########################################
@@ -254,6 +332,11 @@ data "azurerm_key_vault" "vault" {
 data "azurerm_key_vault_secret" "gateway_connection" {
   name         = module.global.keyVaultSecretNameGatewayConnection
   key_vault_id = data.azurerm_key_vault.vault.id
+}
+
+data "azurerm_log_analytics_workspace" "monitor" {
+  name                = module.global.monitorWorkspaceName
+  resource_group_name = module.global.securityResourceGroupName
 }
 
 resource "azurerm_virtual_network_gateway" "vpn" {
@@ -354,6 +437,50 @@ resource "azurerm_virtual_network_gateway_connection" "express_route" {
   virtual_network_gateway_id   = azurerm_virtual_network_gateway.express_route[count.index].id
   express_route_circuit_id     = var.expressRoute.circuitId
   express_route_gateway_bypass = var.expressRoute.connectionFastPath
+}
+
+########################
+# Monitor Private Link #
+########################
+
+resource "azurerm_monitor_private_link_scope" "monitor" {
+  count               = var.monitor.enablePrivateLink ? 1 : 0
+  name                = module.global.monitorWorkspaceName
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_monitor_private_link_scoped_service" "monitor" {
+  count               = var.monitor.enablePrivateLink ? 1 : 0
+  name                = module.global.monitorWorkspaceName
+  resource_group_name = azurerm_resource_group.network.name
+  linked_resource_id  = data.azurerm_log_analytics_workspace.monitor.id
+  scope_name          = azurerm_monitor_private_link_scope.monitor[0].name
+}
+
+resource "azurerm_private_endpoint" "monitor_farm" {
+  count               = var.monitor.enablePrivateLink ? 1 : 0
+  name                = "Monitor.Farm"
+  resource_group_name = azurerm_resource_group.network.name
+  location            = azurerm_resource_group.network.location
+  subnet_id           = "${azurerm_virtual_network.network.id}/subnets/${var.virtualNetwork.subnets[var.virtualNetworkSubnetIndex.farm]}"
+  private_service_connection {
+    name                           = "Monitor.Farm"
+    private_connection_resource_id = azurerm_monitor_private_link_scope.monitor[0].id
+    is_manual_connection           = false
+    subresource_names = [
+      "azuremonitor"
+    ]
+  }
+  private_dns_zone_group {
+    name = "Monitor.Farm"
+    private_dns_zone_ids = [
+      azurerm_private_dns_zone.monitor[0].id,
+      azurerm_private_dns_zone.opinsights_oms[0].id,
+      azurerm_private_dns_zone.opinsights_ods[0].id,
+      azurerm_private_dns_zone.automation[0].id,
+      azurerm_private_dns_zone.blob[0].id
+    ]
+  }
 }
 
 output "regionName" {

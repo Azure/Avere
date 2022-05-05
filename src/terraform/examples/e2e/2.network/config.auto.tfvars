@@ -64,6 +64,7 @@ virtualNetworkPrivateDns = {
 ########################################
 
 hybridNetwork = {
+  //type = ""
   type = "Vpn"          // https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways
   //type = "ExpressRoute" // https://docs.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways
   address = {
@@ -108,4 +109,12 @@ expressRoute = {
   circuitId          = ""         // Expected format is "/subscriptions/[subscription_id]/resourceGroups/[resource_group_name]/providers/Microsoft.Network/expressRouteCircuits/[circuit_name]"
   gatewaySku         = "Standard" // https://docs.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways#gwsku
   connectionFastPath = false      // https://docs.microsoft.com/en-us/azure/expressroute/about-fastpath
+}
+
+###########################################################################
+# Monitor (https://docs.microsoft.com/en-us/azure/azure-monitor/overview) #
+###########################################################################
+
+monitor = {
+  enablePrivateLink = false // https://docs.microsoft.com/en-us/azure/azure-monitor/logs/private-link-security
 }
