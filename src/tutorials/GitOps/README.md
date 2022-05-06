@@ -8,8 +8,8 @@
 
 ![](Images/GitHubPullRequestCommentTerraformApply.png)
 
-### GitHub App Dev - https://developer.github.com/apps/
+### GitHub App Dev - https://docs.github.com/en/developers/apps
 
-### GitHub App Checks - https://developer.github.com/v3/checks/
+### GitHub App Checks - https://docs.github.com/en/rest/checks
 
 ### GitHub App Actions - https://github.com/features/actions
