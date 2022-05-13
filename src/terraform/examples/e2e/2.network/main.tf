@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.4.0"
+      version = "~>3.5.0"
     }
   }
   backend "azurerm" {
@@ -39,6 +39,7 @@ variable "virtualNetwork" {
             name              = string
             addressSpace      = list(string)
             serviceEndpoints  = list(string)
+            serviceDelegation = string
           }
         )
       )
@@ -49,11 +50,14 @@ variable "virtualNetwork" {
 variable "virtualNetworkSubnetIndex" {
   type = object(
     {
-      farm        = number
-      workstation = number
-      scheduler   = number
-      storage     = number
-      cache       = number
+      farm                 = number
+      workstation          = number
+      scheduler            = number
+      storage              = number
+      storageNetApp        = number
+      storageHammerspace   = number
+      storageHammerspaceHA = number
+      cache                = number
     }
   )
 }
@@ -153,11 +157,24 @@ resource "azurerm_subnet" "network" {
   service_endpoints    = each.value.serviceEndpoints
   enforce_private_link_endpoint_network_policies = each.value.name != "GatewaySubnet"
   enforce_private_link_service_network_policies  = each.value.name != "GatewaySubnet"
+  dynamic "delegation" {
+    for_each = each.value.serviceDelegation != "" ? [1] : []
+    content {
+      name = "serviceDelegation"
+      service_delegation {
+        name = each.value.serviceDelegation
+        actions = [
+          "Microsoft.Network/networkinterfaces/*",
+          "Microsoft.Network/virtualNetworks/subnets/join/action"
+        ]
+      }
+    }
+  }
 }
 
 resource "azurerm_network_security_group" "network" {
   for_each = {
-    for x in var.virtualNetwork.subnets : x.name => x if x.name != "GatewaySubnet"
+    for x in var.virtualNetwork.subnets : x.name => x if x.name != "GatewaySubnet" && x.serviceDelegation == ""
   }
   name                = "${var.virtualNetwork.name}.${each.value.name}"
   resource_group_name = azurerm_resource_group.network.name
@@ -188,7 +205,7 @@ resource "azurerm_network_security_group" "network" {
 
 resource "azurerm_subnet_network_security_group_association" "network" {
   for_each = {
-    for x in var.virtualNetwork.subnets : x.name => x if x.name != "GatewaySubnet"
+    for x in var.virtualNetwork.subnets : x.name => x if x.name != "GatewaySubnet" && x.serviceDelegation == ""
   }
   subnet_id                 = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${var.virtualNetwork.name}/subnets/${each.value.name}"
   network_security_group_id = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/networkSecurityGroups/${var.virtualNetwork.name}.${each.value.name}"

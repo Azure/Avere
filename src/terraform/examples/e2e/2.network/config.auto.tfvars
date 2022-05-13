@@ -12,42 +12,69 @@ virtualNetwork = {
     {
       name              = "Farm"
       addressSpace      = ["10.0.0.0/17"]
-      serviceEndpoints  = []
+      serviceEndpoints  = [],
+      serviceDelegation = ""
     },
     {
       name              = "Workstation"
       addressSpace      = ["10.0.128.0/18"]
       serviceEndpoints  = []
+      serviceDelegation = ""
     },
     {
       name              = "Scheduler"
-      addressSpace      = ["10.0.252.0/24"]
+      addressSpace      = ["10.0.192.0/24"]
       serviceEndpoints  = []
+      serviceDelegation = ""
     },
     {
       name              = "Storage"
-      addressSpace      = ["10.0.253.0/24"]
+      addressSpace      = ["10.0.193.0/24"]
       serviceEndpoints  = ["Microsoft.Storage"]
+      serviceDelegation = ""
     },
+    # {
+    #   name              = "StorageNetApp"
+    #   addressSpace      = ["10.0.194.0/24"]
+    #   serviceEndpoints  = []
+    #   serviceDelegation = "Microsoft.Netapp/volumes"
+    # },
+    # {
+    #   name              = "StorageHammerspace"
+    #   addressSpace      = ["10.0.195.0/25"]
+    #   serviceEndpoints  = []
+    #   serviceDelegation = ""
+    # },
+    # {
+    #   name              = "StorageHammerspaceHA"
+    #   addressSpace      = ["10.0.195.128/25"]
+    #   serviceEndpoints  = []
+    #   serviceDelegation = ""
+    # },
     {
       name              = "Cache"
-      addressSpace      = ["10.0.254.0/24"]
+      addressSpace      = ["10.0.196.0/24"]
       serviceEndpoints  = ["Microsoft.Storage"]
+      serviceDelegation = ""
     },
     {
       name              = "GatewaySubnet"
       addressSpace      = ["10.0.255.0/24"]
       serviceEndpoints  = []
+      serviceDelegation = ""
     }
   ]
 }
 
 virtualNetworkSubnetIndex = {
-  farm        = 0
-  workstation = 1
-  scheduler   = 2
-  storage     = 3
-  cache       = 4
+  farm                 = 0
+  workstation          = 1
+  scheduler            = 2
+  storage              = 3
+  storageNetApp        = 4
+  storageHammerspace   = 5
+  storageHammerspaceHA = 6
+  cache                = 7
 }
 
 #################################################################################

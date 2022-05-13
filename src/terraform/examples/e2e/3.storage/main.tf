@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.4.0"
+      version = "~>3.5.0"
     }
   }
   backend "azurerm" {
@@ -62,6 +62,48 @@ variable "storageAccounts" {
   )
 }
 
+variable "netAppAccounts" {
+  type = list(
+    object(
+      {
+        name = string
+        capacityPools = list(
+          object(
+            {
+              name         = string
+              sizeTiB      = number
+              serviceLevel = string
+              volumes = list(
+                object(
+                  {
+                    name         = string
+                    sizeGiB      = number
+                    serviceLevel = string
+                    mountPath    = string
+                    protocols    = list(string)
+                    exportPolicies = list(
+                      object(
+                        {
+                          ruleIndex      = number
+                          readOnly       = bool
+                          readWrite      = bool
+                          rootAccess     = bool
+                          protocols      = list(string)
+                          allowedClients = list(string)
+                        }
+                      )
+                    )
+                  }
+                )
+              )
+            }
+          )
+        )
+      }
+    )
+  )
+}
+
 variable "virtualNetwork" {
   type = object(
     {
@@ -95,11 +137,14 @@ data "azurerm_subnet" "storage" {
   virtual_network_name = var.virtualNetwork.name != "" ? var.virtualNetwork.name : data.terraform_remote_state.network[0].outputs.virtualNetwork.name
 }
 
-data "http" "current_ip_address" {
-  url = "https://ifconfig.co/json"
-  request_headers = {
-    Accept = "application/json"
-  }
+data "azurerm_subnet" "storage_netapp" {
+  name                 = var.virtualNetwork.name != "" ? var.virtualNetwork.subnetNameStorage : data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.storageNetApp].name
+  resource_group_name  = var.virtualNetwork.name != "" ? var.virtualNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
+  virtual_network_name = var.virtualNetwork.name != "" ? var.virtualNetwork.name : data.terraform_remote_state.network[0].outputs.virtualNetwork.name
+}
+
+data "http" "current_host" {
+  url = "https://api.ipify.org/?format=json"
 }
 
 locals {
@@ -166,6 +211,25 @@ locals {
       }
     ] if storageAccount.name != ""
   ])
+  netAppCapacityPools = flatten([
+    for netAppAccount in var.netAppAccounts : [
+      for capacityPool in netAppAccount.capacityPools : {
+        netAppAccountName = netAppAccount.name
+        capacityPool      = capacityPool
+      } if capacityPool.name != ""
+    ] if netAppAccount.name != ""
+  ])
+  netAppVolumes = flatten([
+    for netAppAccount in var.netAppAccounts : [
+      for capacityPool in netAppAccount.capacityPools : [
+        for volume in capacityPool.volumes : {
+          netAppAccountName = netAppAccount.name
+          capacityPoolName  = capacityPool.name
+          volume            = volume
+        } if volume.name != ""
+      ] if capacityPool.name != ""
+    ] if netAppAccount.name != ""
+  ])
   hpcCachePrincipalId = "831d4223-7a3c-4121-a445-1e423591e57b"
 }
 
@@ -200,7 +264,7 @@ resource "azurerm_storage_account" "storage" {
         for x in local.serviceEndpointSubnets : "${data.azurerm_virtual_network.network.id}/subnets/${x}"
       ]
       ip_rules = [
-        jsondecode(data.http.current_ip_address.body).ip
+        jsondecode(data.http.current_host.body).ip
       ]
     }
   }
@@ -320,6 +384,64 @@ resource "azurerm_storage_share" "shares" {
   ]
 }
 
+############################################################################################################
+# NetApp Files (https://docs.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-introduction) #
+############################################################################################################
+
+resource "azurerm_netapp_account" "storage" {
+  for_each = {
+    for x in var.netAppAccounts : x.name => x if x.name != ""
+  }
+  name                = each.value.name
+  resource_group_name = azurerm_resource_group.storage.name
+  location            = azurerm_resource_group.storage.location
+}
+
+resource "azurerm_netapp_pool" "storage" {
+  for_each = {
+    for x in local.netAppCapacityPools : "${x.netAppAccountName}.${x.capacityPool.name}" => x
+  }
+  name                = each.value.capacityPool.name
+  resource_group_name = azurerm_resource_group.storage.name
+  location            = azurerm_resource_group.storage.location
+  size_in_tb          = each.value.capacityPool.sizeTiB
+  service_level       = each.value.capacityPool.serviceLevel
+  account_name        = each.value.netAppAccountName
+  depends_on = [
+    azurerm_netapp_account.storage
+  ]
+}
+
+resource "azurerm_netapp_volume" "storage" {
+  for_each = {
+    for x in local.netAppVolumes : "${x.netAppAccountName}.${x.capacityPoolName}.${x.volume.name}" => x
+  }
+  name                = each.value.volume.name
+  resource_group_name = azurerm_resource_group.storage.name
+  location            = azurerm_resource_group.storage.location
+  storage_quota_in_gb = each.value.volume.sizeGiB
+  service_level       = each.value.volume.serviceLevel
+  volume_path         = each.value.volume.mountPath
+  protocols           = each.value.volume.protocols
+  pool_name           = each.value.capacityPoolName
+  account_name        = each.value.netAppAccountName
+  subnet_id           = data.azurerm_subnet.storage_netapp.id
+  dynamic "export_policy_rule" {
+    for_each = each.value.volume.exportPolicies 
+    content {
+      rule_index          = export_policy_rule.value["ruleIndex"]
+      unix_read_only      = export_policy_rule.value["readOnly"]
+      unix_read_write     = export_policy_rule.value["readWrite"]
+      root_access_enabled = export_policy_rule.value["rootAccess"]
+      protocols_enabled   = export_policy_rule.value["protocols"]
+      allowed_clients     = export_policy_rule.value["allowedClients"]
+    }
+  }
+  depends_on = [
+    azurerm_netapp_pool.storage
+  ]
+}
+
 output "regionName" {
   value = module.global.regionName
 }
@@ -332,8 +454,6 @@ output "storageAccounts" {
   value = var.storageAccounts
 }
 
-output "privateEndpointTypes" {
-  value = distinct(flatten([
-    for storageAccount in var.storageAccounts : storageAccount.privateEndpointTypes if storageAccount.name != ""
-  ]))
+output "netAppAccounts" {
+  value = var.netAppAccounts
 }

@@ -55,6 +55,45 @@ storageAccounts = [
   }
 ]
 
+# NetApp Files (https://docs.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-introduction)
+netAppAccounts = [
+  {
+    name = ""
+    capacityPools = [
+      {
+        name         = "CapacityPool"
+        sizeTiB      = 4
+        serviceLevel = "Standard"
+        volumes = [
+          {
+            name         = "Show"
+            sizeGiB      = 4096
+            serviceLevel = "Standard"
+            mountPath    = "show"
+            protocols = [
+              "NFSv3"
+            ]
+            exportPolicies = [
+              {
+                ruleIndex  = 1
+                readOnly   = false
+                readWrite  = true
+                rootAccess = true
+                protocols = [
+                  "NFSv3"
+                ]
+                allowedClients = [
+                  "0.0.0.0/0"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
+
 # Virtual Network (https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview)
 virtualNetwork = {
   name              = ""
