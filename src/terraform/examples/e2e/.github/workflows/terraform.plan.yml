@@ -1,0 +1,70 @@
+name: Terraform Plan
+
+on:
+  workflow_dispatch:
+    inputs:
+      solutionModule:
+        description: 'Solution Module'
+        type: choice
+        options:
+        - 1.security
+        - 2.network
+        - 3.storage
+        - 4.storage.cache
+        - 5.compute.image
+        - 6.compute.scheduler
+        - 7.compute.farm
+        - 8.compute.workstation
+        required: true
+      logLevel:
+        description: 'Log Level'
+        type: choice
+        options:
+        - Error
+        - Warn
+        - Info
+        - Debug
+        - Trace
+        required: true
+      destroyMode:
+        description: 'Destroy Mode'
+        type: boolean
+        required: false
+        
+env:
+  ARM_TENANT_ID: ${{secrets.ARM_TENANT_ID}}
+  ARM_SUBSCRIPTION_ID: ${{secrets.ARM_SUBSCRIPTION_ID}}
+  ARM_CLIENT_ID: ${{secrets.ARM_CLIENT_ID}}
+  ARM_CLIENT_SECRET: ${{secrets.ARM_CLIENT_SECRET}}
+  TF_LOG: ${{github.event.inputs.logLevel}}
+  
+jobs:
+  terraformPlan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.1.9
+          
+      - if: startsWith(github.event.inputs.solutionModule, 4)
+        run: |
+          latestVersion=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name)
+          downloadUrl=https://github.com/Azure/Avere/releases/download/$latestVersion/terraform-provider-avere
+          localDirectory=~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/${latestVersion:1}/linux_amd64
+          mkdir -p $localDirectory
+          curl -o $localDirectory/terraform-provider-avere_$latestVersion -L $downloadUrl
+          chmod 755 $localDirectory/terraform-provider-avere_$latestVersion
+          
+      - if: startsWith(github.event.inputs.solutionModule, 1)
+        run: terraform -chdir=$(pwd)/${{github.event.inputs.solutionModule}} init -upgrade
+      
+      - if: "!startsWith(github.event.inputs.solutionModule, 1)"
+        run: terraform -chdir=$(pwd)/${{github.event.inputs.solutionModule}} init -upgrade -backend-config ../0.global/backend.config
+        
+      - if: github.event.inputs.destroyMode != 'true'
+        run: terraform -chdir=$(pwd)/${{github.event.inputs.solutionModule}} plan
+      
+      - if: github.event.inputs.destroyMode == 'true'
+        run: terraform -chdir=$(pwd)/${{github.event.inputs.solutionModule}} plan -destroy

@@ -101,16 +101,10 @@ localDirectory=~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/${la
 mkdir -p $localDirectory
 </code></p>
 <p><code>
-cd $localDirectory
+curl -o $localDirectory/terraform-provider-avere_$latestVersion -L $downloadUrl
 </code></p>
 <p><code>
-curl -o terraform-provider-avere_$latestVersion -L $downloadUrl
-</code></p>
-<p><code>
-chmod 755 terraform-provider-avere_$latestVersion
-</code></p>
-<p><code>
-cd ~/
+chmod 755 $localDirectory/terraform-provider-avere_$latestVersion
 </code></p>
 
 ### Windows / PowerShell
@@ -128,13 +122,7 @@ $localDirectory = "$Env:AppData\terraform.d\plugins\registry.terraform.io\hashic
 New-Item -ItemType Directory -Path $localDirectory -Force
 </code></p>
 <p><code>
-Set-Location $localDirectory
-</code></p>
-<p><code>
-Invoke-WebRequest -OutFile terraform-provider-avere_$latestVersion.exe -Uri $downloadUrl
-</code></p>
-<p><code>
-Set-Location ~/
+Invoke-WebRequest -OutFile $localDirectory\terraform-provider-avere_$latestVersion.exe -Uri $downloadUrl
 </code></p>
 
 ### Deployment Steps
