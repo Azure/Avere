@@ -19,21 +19,21 @@ storageAccounts = [
         name       = "show"
         accessType = "private"
         localDirectories = [
-          "blender",
-          "unreal"
+          "blender"
         ]
       }
     ]
     fileShares = [                     // https://docs.microsoft.com/en-us/azure/storage/files/storage-files-introduction
       {
         name     = "show"
+        tier     = "TransactionOptimized"
         sizeGiB  = 5120
         protocol = "SMB"
       }
     ]
   },
   {
-    name                 = "azartist2"   // Name must be globally unique (lowercase alphanumeric)
+    name                 = ""            // Name must be globally unique (lowercase alphanumeric)
     type                 = "FileStorage" // https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview
     tier                 = "Premium"     // https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview#performance-tiers
     redundancy           = "LRS"         // https://docs.microsoft.com/en-us/azure/storage/common/storage-redundancy
@@ -48,6 +48,7 @@ storageAccounts = [
     fileShares = [                       // https://docs.microsoft.com/en-us/azure/storage/files/storage-files-introduction
       {
         name     = "show"
+        tier     = "Premium"
         sizeGiB  = 5120
         protocol = "NFS"
       }

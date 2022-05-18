@@ -52,6 +52,7 @@ variable "storageAccounts" {
           object(
             {
               name     = string
+              tier     = string
               sizeGiB  = number
               protocol = string
             }
@@ -205,6 +206,7 @@ locals {
     for storageAccount in var.storageAccounts : [
       for fileShare in storageAccount.fileShares : {
         fileShareName      = fileShare.name
+        fileShareTier      = fileShare.tier
         fileShareSize      = fileShare.sizeGiB
         fileAccessProtocol = fileShare.protocol
         storageAccountName = storageAccount.name
@@ -376,6 +378,7 @@ resource "azurerm_storage_share" "shares" {
     for x in local.fileShares : "${x.storageAccountName}.${x.fileShareName}" => x
   }
   name                 = each.value.fileShareName
+  access_tier          = each.value.fileShareTier
   storage_account_name = each.value.storageAccountName
   enabled_protocol     = each.value.fileAccessProtocol
   quota                = each.value.fileShareSize

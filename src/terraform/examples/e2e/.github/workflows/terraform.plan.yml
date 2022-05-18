@@ -1,6 +1,8 @@
 name: Terraform Plan
 
 on:
+  pull_request:
+    types: [opened, reopened, synchronize]
   workflow_dispatch:
     inputs:
       solutionModule:
@@ -38,6 +40,10 @@ env:
   ARM_CLIENT_SECRET: ${{secrets.ARM_CLIENT_SECRET}}
   TF_LOG: ${{github.event.inputs.logLevel}}
   
+permissions:
+  contents: read
+  pull-requests: read
+  
 jobs:
   terraformPlan:
     runs-on: ubuntu-latest
@@ -48,7 +54,19 @@ jobs:
         with:
           terraform_version: 1.1.9
           
-      - if: startsWith(github.event.inputs.solutionModule, 4)
+      - if: github.event_name == 'pull_request'
+        run: |
+          echo ${{secrets.GITHUB_TOKEN}} | gh auth login --with-token
+          solutionModule=$(gh pr view ${{github.event.pull_request.number}} --json files --jq '.files.[].path')
+          readarray -d / -t solutionModule <<< $solutionModule
+          echo "solutionModule=$solutionModule" >> $GITHUB_ENV
+          
+      - if: github.event_name != 'pull_request'
+        run: |
+          solutionModule=${{github.event.inputs.solutionModule}}
+          echo "solutionModule=$solutionModule" >> $GITHUB_ENV
+        
+      - if: startsWith(env.solutionModule, 4)
         run: |
           latestVersion=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name)
           downloadUrl=https://github.com/Azure/Avere/releases/download/$latestVersion/terraform-provider-avere
@@ -57,14 +75,14 @@ jobs:
           curl -o $localDirectory/terraform-provider-avere_$latestVersion -L $downloadUrl
           chmod 755 $localDirectory/terraform-provider-avere_$latestVersion
           
-      - if: startsWith(github.event.inputs.solutionModule, 1)
-        run: terraform -chdir=$(pwd)/${{github.event.inputs.solutionModule}} init -upgrade
+      - if: startsWith(env.solutionModule, 1)
+        run: terraform -chdir=$(pwd)/${{env.solutionModule}} init -upgrade
       
-      - if: "!startsWith(github.event.inputs.solutionModule, 1)"
-        run: terraform -chdir=$(pwd)/${{github.event.inputs.solutionModule}} init -upgrade -backend-config ../0.global/backend.config
+      - if: "!startsWith(env.solutionModule, 1)"
+        run: terraform -chdir=$(pwd)/${{env.solutionModule}} init -upgrade -backend-config ../0.global/backend.config
         
       - if: github.event.inputs.destroyMode != 'true'
-        run: terraform -chdir=$(pwd)/${{github.event.inputs.solutionModule}} plan
+        run: terraform -chdir=$(pwd)/${{env.solutionModule}} plan
       
       - if: github.event.inputs.destroyMode == 'true'
-        run: terraform -chdir=$(pwd)/${{github.event.inputs.solutionModule}} plan -destroy
+        run: terraform -chdir=$(pwd)/${{env.solutionModule}} plan -destroy
