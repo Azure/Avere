@@ -42,7 +42,7 @@ env:
   
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: write
   
 jobs:
   terraformPlan:
@@ -81,8 +81,20 @@ jobs:
       - if: "!startsWith(env.solutionModule, 1)"
         run: terraform -chdir=$(pwd)/${{env.solutionModule}} init -upgrade -backend-config ../0.global/backend.config
         
-      - if: github.event.inputs.destroyMode != 'true'
-        run: terraform -chdir=$(pwd)/${{env.solutionModule}} plan
+      - id: plan
+        if: github.event.inputs.destroyMode != 'true'
+        run: terraform -chdir=$(pwd)/${{env.solutionModule}} plan -no-color
       
       - if: github.event.inputs.destroyMode == 'true'
         run: terraform -chdir=$(pwd)/${{env.solutionModule}} plan -destroy
+        
+      - if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `${{steps.plan.outputs.stdout}}`
+            })
