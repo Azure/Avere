@@ -42,26 +42,26 @@ env:
   
 permissions:
   contents: read
-  pull-requests: read
-
+  pull-requests: write
+  
 jobs:
   terraformApply:
     if: github.event.pull_request.merged
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{github.head_ref}}
-          
       - uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.1.9
+          
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{github.head_ref}}
           
       - if: github.event_name == 'pull_request'
         run: |
           echo ${{secrets.GITHUB_TOKEN}} | gh auth login --with-token
           solutionModule=$(gh pr view ${{github.event.pull_request.number}} --json files)
-          solutionModule=$(echo $solutionModule | jq -r .files[1].path)
+          solutionModule=$(echo $solutionModule | jq -r .files[].path)
           readarray -d / -t solutionModule <<< $solutionModule
           echo "solutionModule=$solutionModule" >> $GITHUB_ENV
           
@@ -81,17 +81,29 @@ jobs:
           
       - if: startsWith(env.solutionModule, 1)
         run: terraform -chdir=$(pwd)/${{env.solutionModule}} init -upgrade
-      
+        
       - if: "!startsWith(env.solutionModule, 1)"
         run: terraform -chdir=$(pwd)/${{env.solutionModule}} init -upgrade -backend-config ../0.global/backend.config
         
-      - if: github.event_name == 'pull_request'
+      - id: apply
+        if: github.event_name == 'pull_request'
         run: |
-         tfPlan=$(pwd)/.github/terraform.plan
-         terraform -chdir=$(pwd)/${{env.solutionModule}} apply -auto-approve $tfPlan
+         tfPlan=$(pwd)/${{env.solutionModule}}/terraform.plan
+         terraform -chdir=$(pwd)/${{env.solutionModule}} apply -auto-approve -no-color $tfPlan
         
       - if: github.event_name != 'pull_request' && github.event.inputs.destroyMode != 'true'
         run: terraform -chdir=$(pwd)/${{env.solutionModule}} apply -auto-approve
-      
+        
       - if: github.event_name != 'pull_request' && github.event.inputs.destroyMode == 'true'
         run: terraform -chdir=$(pwd)/${{env.solutionModule}} apply -auto-approve -destroy
+        
+      - if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `${{steps.apply.outputs.stdout}}`
+            })

@@ -2,7 +2,7 @@ name: Terraform Plan
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened,reopened,synchronize]
   workflow_dispatch:
     inputs:
       solutionModule:
@@ -48,13 +48,13 @@ jobs:
   terraformPlan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{github.head_ref}}
-
       - uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.1.9
+          
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{github.head_ref}}
           
       - if: github.event_name == 'pull_request'
         run: |
@@ -68,7 +68,7 @@ jobs:
         run: |
           solutionModule=${{github.event.inputs.solutionModule}}
           echo "solutionModule=$solutionModule" >> $GITHUB_ENV
-        
+          
       - if: startsWith(env.solutionModule, 4)
         run: |
           latestVersion=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name)
@@ -80,19 +80,19 @@ jobs:
           
       - if: startsWith(env.solutionModule, 1)
         run: terraform -chdir=$(pwd)/${{env.solutionModule}} init -upgrade
-      
+        
       - if: "!startsWith(env.solutionModule, 1)"
         run: terraform -chdir=$(pwd)/${{env.solutionModule}} init -upgrade -backend-config ../0.global/backend.config
         
       - id: plan
         if: github.event.inputs.destroyMode != 'true'
         run: |
-          tfPlan=$(pwd)/.github/terraform.plan
+          tfPlan=$(pwd)/${{env.solutionModule}}/terraform.plan
           terraform -chdir=$(pwd)/${{env.solutionModule}} plan -no-color -out $tfPlan
           git config user.name "$(git log -n 1 --pretty=format:%an)"
           git config user.email "$(git log -n 1 --pretty=format:%ae)"
           git add $tfPlan
-          git commit -m 'Terraform Plan'
+          git commit -m $GITHUB_REF
           git push
           
       - if: github.event.inputs.destroyMode == 'true'
