@@ -41,7 +41,7 @@ env:
   TF_LOG: ${{github.event.inputs.logLevel}}
   
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
   
 jobs:
@@ -49,7 +49,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+        with:
+          ref: ${{github.head_ref}}
+
       - uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.1.9
@@ -57,7 +59,8 @@ jobs:
       - if: github.event_name == 'pull_request'
         run: |
           echo ${{secrets.GITHUB_TOKEN}} | gh auth login --with-token
-          solutionModule=$(gh pr view ${{github.event.pull_request.number}} --json files --jq '.files.[].path')
+          solutionModule=$(gh pr view ${{github.event.pull_request.number}} --json files)
+          solutionModule=$(echo $solutionModule | jq -r .files[].path)
           readarray -d / -t solutionModule <<< $solutionModule
           echo "solutionModule=$solutionModule" >> $GITHUB_ENV
           
@@ -83,8 +86,15 @@ jobs:
         
       - id: plan
         if: github.event.inputs.destroyMode != 'true'
-        run: terraform -chdir=$(pwd)/${{env.solutionModule}} plan -no-color
-      
+        run: |
+          tfPlan=$(pwd)/.github/terraform.plan
+          terraform -chdir=$(pwd)/${{env.solutionModule}} plan -no-color -out $tfPlan
+          git config user.name "$(git log -n 1 --pretty=format:%an)"
+          git config user.email "$(git log -n 1 --pretty=format:%ae)"
+          git add $tfPlan
+          git commit -m 'Terraform Plan'
+          git push
+          
       - if: github.event.inputs.destroyMode == 'true'
         run: terraform -chdir=$(pwd)/${{env.solutionModule}} plan -destroy
         
