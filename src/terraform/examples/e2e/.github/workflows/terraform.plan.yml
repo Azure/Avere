@@ -89,11 +89,13 @@ jobs:
         run: |
           tfPlan=$(pwd)/${{env.solutionModule}}/terraform.plan
           terraform -chdir=$(pwd)/${{env.solutionModule}} plan -no-color -out $tfPlan
-          git config user.name "$(git log -n 1 --pretty=format:%an)"
-          git config user.email "$(git log -n 1 --pretty=format:%ae)"
-          git add $tfPlan
-          git commit -m $GITHUB_REF
-          git push
+          if [ ${{github.event_name}} == 'pull_request' ]; then
+            git config user.name "$(git log -n 1 --pretty=format:%an)"
+            git config user.email "$(git log -n 1 --pretty=format:%ae)"
+            git add $tfPlan
+            git commit -m $GITHUB_REF
+            git push
+          fi
           
       - if: github.event.inputs.destroyMode == 'true'
         run: terraform -chdir=$(pwd)/${{env.solutionModule}} plan -destroy
@@ -106,5 +108,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `${{steps.plan.outputs.stdout}}`
+              body: `Terraform Plan (${{env.solutionModule}})\n\n${{steps.plan.outputs.stdout}}`
             })

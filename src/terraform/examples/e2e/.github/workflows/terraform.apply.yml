@@ -105,5 +105,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `${{steps.apply.outputs.stdout}}`
+              body: `Terraform Apply (${{env.solutionModule}})\n\n${{steps.apply.outputs.stdout}}`
             })
