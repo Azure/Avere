@@ -19,6 +19,7 @@ The following *core principles* are implemented throughout the AAA solution depl
 | [7 Compute Farm](#7-compute-farm) | Deploys [Virtual Machine Scale Sets](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview) for [Linux](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) and/or [Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) render farms. | Yes | Yes |
 | [8&#160;Compute&#160;Workstation](#8-compute-workstation) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines) for [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) remote artist workstations. | No | Yes |
 | [9 Render](#9-render) | Submit render farm jobs from [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
+| [10 GitOps](#10-gitops) | Enables [Terraform Plan](https://www.terraform.io/cli/commands/plan) and [Apply](https://www.terraform.io/cli/commands/apply) workflows via [GitHub Actions](https://github.com/features/actions) triggered by Pull Requests. | No | No |
 
 For example, the following sample output assets were rendering in Azure via the AAA solution deployment framework.
 <p align="center">
@@ -59,7 +60,7 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 1. Review and edit the config values in `config.auto.tfvars` for your deployment
 1. Run `terraform init` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
+1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
 1. Use the [Azure portal to update your Key Vault secret values](https://docs.microsoft.com/en-us/azure/key-vault/secrets/quick-create-portal) (`GatewayConnection`, `AdminPassword`)
 
 ## 2 Network
@@ -70,7 +71,7 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
+1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
 
 ## 3 Storage
 
@@ -80,7 +81,7 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
+1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
 
 ## 4 Storage Cache
 
@@ -134,7 +135,7 @@ Invoke-WebRequest -OutFile $localDirectory\terraform-provider-avere_$latestVersi
    * Make sure you have at least 96 (32 x 3) cores quota available for [Esv3](https://docs.microsoft.com/en-us/azure/virtual-machines/ev3-esv3-series#esv3-series) machines in your Azure subscription.
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
+1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
 
 ## 5 Compute Image
 
@@ -144,7 +145,7 @@ Invoke-WebRequest -OutFile $localDirectory\terraform-provider-avere_$latestVersi
 1. Review and edit the config values in `config.auto.tfvars` for your deployment. Make sure you have sufficient compute cores quota available on your Azure subscription for each configured virtual machine size.
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
+1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
 1. After image template deployment, use the Azure portal or [Image Builder CLI](https://docs.microsoft.com/en-us/cli/azure/image/builder?#az-image-builder-run) to start image build runs
 
 ## 6 Compute Scheduler
@@ -157,7 +158,7 @@ Invoke-WebRequest -OutFile $localDirectory\terraform-provider-avere_$latestVersi
    * Make sure the **imageId** config references the correct custom image in your Azure subscription.
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
+1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
 
 ## 7 Compute Farm
 
@@ -172,7 +173,7 @@ Invoke-WebRequest -OutFile $localDirectory\terraform-provider-avere_$latestVersi
    * Make sure the **fileSystemPermissions** config has the appropriate value for your environment.
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
+1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
 
 ## 8 Compute Workstation
 
@@ -186,7 +187,7 @@ Invoke-WebRequest -OutFile $localDirectory\terraform-provider-avere_$latestVersi
        * If your config includes cache mounting, which is the default config, make sure [4 Storage Cache](#4-storage-cache) is deployed and *running* before deploying this module.
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the displayed Terraform deployment plan (add, change and/or destroy Azure resources)
+1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
 
 ## 9 Render
 
@@ -233,5 +234,13 @@ deadlinecommand -SubmitCommandLineJob -name Moana-Island -executable pbrt -argum
 <p><code>
 deadlinecommand -SubmitCommandLineJob -name Moana-Island -executable pbrt.exe -arguments "--outfile W:\pbrt\moana\island.png R:\pbrt\moana\pbrt\island.pbrt"
 </code></p>
+
+## 10 GitOps
+
+The following [GitHub Actions](https://github.com/features/actions) workflow files can optionally be leveraged to enable a Pull Request-driven automated deployment worklow. Both Terraform Plan and Terraform Apply outputs are captured with each Pull Request as Comments.
+
+* [Terraform Plan](.github/workflows/terraform.plan.yml) - Automatically triggered when a Pull Request is created with a commit in its own branch. May also be triggered manually via the GitHub Actions user interface.
+
+* [Terraform Apply](.github/workflows/terraform.apply.yml) - Automatically triggerd when an open Pull Request is merged. May also be triggered manually via the GitHub Actions user interface.
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com
