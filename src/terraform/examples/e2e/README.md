@@ -1,25 +1,25 @@
 # Azure Artist Anywhere (AAA) Solution Deployment Framework
 
-AAA is a *modular and customizable [infrastructure-as-code](https://docs.microsoft.com/en-us/devops/deliver/what-is-infrastructure-as-code) framework* for *automated deployment* of the [Azure rendering solution architecture](https://github.com/Azure/Avere/blob/main/src/terraform/burstrenderarchitecture.png). By securely extending your content creation pipeline via the [Azure HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) managed service, you can [globally enable](https://azure.microsoft.com/en-us/global-infrastructure/geographies) remote artists with highly scalable render farm compute using any [Azure virtual machine size](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes), including [Azure HPC Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-hpc) and [Azure GPU Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-gpu).
+AAA is a *modular and customizable [infrastructure-as-code](https://docs.microsoft.com/devops/deliver/what-is-infrastructure-as-code) framework* for *automated deployment* of the [Azure rendering solution architecture](https://github.com/Azure/Avere/blob/main/src/terraform/burstrenderarchitecture.png). By securely extending your content creation pipeline via the [Azure HPC Cache](https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) managed service, you can [globally enable](https://azure.microsoft.com/global-infrastructure/geographies) remote artists with highly scalable render farm compute using any [Azure virtual machine size](https://docs.microsoft.com/azure/virtual-machines/sizes), including [Azure HPC Virtual Machines](https://docs.microsoft.com/azure/virtual-machines/sizes-hpc) and [Azure GPU Virtual Machines](https://docs.microsoft.com/azure/virtual-machines/sizes-gpu).
 
 The following *core principles* are implemented throughout the AAA solution deployment framework.
-* Integration of security best practices, including [Managed Identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://docs.microsoft.com/en-us/azure/key-vault/general/overview), [Private Endpoints](https://docs.microsoft.com/en-us/azure/private-link/private-endpoint-overview).
+* Integration of security best practices, including [Managed Identity](https://docs.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://docs.microsoft.com/azure/key-vault/general/overview), [Private Endpoints](https://docs.microsoft.com/azure/private-link/private-endpoint-overview).
 * Separation of module deployment configuration files (*config.auto.tfvars*) and code files (*main.tf*).
-* Any software (render manager, renderers, etc) in a [Compute Gallery](https://docs.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries) custom image is supported.
+* Any software (render manager, renderers, etc) in a [Compute Gallery](https://docs.microsoft.com/azure/virtual-machines/shared-image-galleries) custom image is supported.
 
 | **Module Name** | **Module Description** | **Required for<br>Compute Burst?** | **Required for<br>All Cloud?** |
 | --------------- | ---------------------- | ---------------------------------- | ------------------------------ |
 | [0 Global](#0-global) | Defines global variables and Terraform backend state file storage configuration. | Yes | Yes |
-| [1 Security](#1-security) | Deploys [Managed Identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://docs.microsoft.com/en-us/azure/key-vault/general/overview) and [Blob Storage](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction) for Terraform state file management. | Yes | Yes |
-| [2 Network](#2-network) | Deploys [Virtual Network](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) with [VPN](https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways) hybrid networking services. | Yes, if [Virtual Network](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No | Yes, if [Virtual Network](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No |
-| [3 Storage](#3-storage) | Deploys [Blob (NFS v3 with sample content)](https://docs.microsoft.com/en-us/azure/storage/blobs/network-file-system-protocol-support), [Files](https://docs.microsoft.com/en-us/azure/storage/files/storage-files-introduction), [NetApp Files](https://docs.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-introduction) or [Hammerspace](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/hammerspace.hammerspace_4_6_5) storage. | No | Yes |
-| [4 Storage Cache](#4-storage-cache) | Deploys [HPC Cache](https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-overview) for highly-available and scalable file caching. | Yes | Maybe, depends on your<br>render scale requirements |
-| [5 Compute Image](#5-compute-image) | Deploys [Compute Gallery](https://docs.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries) images that are built via the managed [Image Builder](https://docs.microsoft.com/en-us/azure/virtual-machines/image-builder-overview) service. | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L7) | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L7) |
-| [6 Compute Scheduler](#6-compute-scheduler) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines) for job and task scheduling across render farms. | No, continue to use your current job scheduler | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.compute.scheduler/config.auto.tfvars#L7) |
-| [7 Compute Farm](#7-compute-farm) | Deploys [Virtual Machine Scale Sets](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview) for [Linux](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) and/or [Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) render farms. | Yes | Yes |
-| [8&#160;Compute&#160;Workstation](#8-compute-workstation) | Deploys [Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines) for [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) remote artist workstations. | No | Yes |
-| [9 Render](#9-render) | Submit render farm jobs from [Linux](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
-| [10 GitOps](#10-gitops) | Enables [Terraform Plan](https://www.terraform.io/cli/commands/plan) and [Apply](https://www.terraform.io/cli/commands/apply) workflows via [GitHub Actions](https://github.com/features/actions) triggered by Pull Requests. | No | No |
+| [1 Security](#1-security) | Deploys [Managed Identity](https://docs.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://docs.microsoft.com/azure/key-vault/general/overview) and [Blob Storage](https://docs.microsoft.com/azure/storage/blobs/storage-blobs-introduction) for Terraform state file management. | Yes | Yes |
+| [2 Network](#2-network) | Deploys [Virtual Network](https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview) with [VPN](https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://docs.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways) hybrid networking services. | Yes, if [Virtual Network](https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No | Yes, if [Virtual Network](https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No |
+| [3 Storage](#3-storage) | Deploys [Blob (NFS v3 with sample content)](https://docs.microsoft.com/azure/storage/blobs/network-file-system-protocol-support), [Files](https://docs.microsoft.com/azure/storage/files/storage-files-introduction), [NetApp Files](https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) or [Hammerspace](https://azuremarketplace.microsoft.com/marketplace/apps/hammerspace.hammerspace_4_6_5) storage. | No | Yes |
+| [4 Storage Cache](#4-storage-cache) | Deploys [HPC Cache](https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) for highly-available and scalable file caching. | Yes | Maybe, depends on your<br>render scale requirements |
+| [5 Compute Image](#5-compute-image) | Deploys [Compute Gallery](https://docs.microsoft.com/azure/virtual-machines/shared-image-galleries) images that are built via the managed [Image Builder](https://docs.microsoft.com/azure/virtual-machines/image-builder-overview) service. | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L7) | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L7) |
+| [6 Compute Scheduler](#6-compute-scheduler) | Deploys [Virtual Machines](https://docs.microsoft.com/azure/virtual-machines) for job and task scheduling across render farms. | No, continue to use your current job scheduler | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.compute.scheduler/config.auto.tfvars#L7) |
+| [7 Compute Farm](#7-compute-farm) | Deploys [Virtual Machine Scale Sets](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) for [Linux](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) and/or [Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) render farms. | Yes | Yes |
+| [8&#160;Compute&#160;Workstation](#8-compute-workstation) | Deploys [Virtual Machines](https://docs.microsoft.com/azure/virtual-machines) for [Linux](https://docs.microsoft.com/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | Yes |
+| [9 Render](#9-render) | Submit render farm jobs from [Linux](https://docs.microsoft.com/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
+| [10 GitOps](#10-gitops) | Enables [Terraform Plan](https://www.terraform.io/cli/commands/plan) and [Apply](https://www.terraform.io/cli/commands/apply) workflows via [GitHub Actions](https://docs.github.com/actions) triggered by [Pull Requests](https://docs.github.com/pull-requests). | No | No |
 
 For example, the following sample output assets were rendering in Azure via the AAA solution deployment framework.
 <p align="center">
@@ -32,7 +32,7 @@ For example, the following sample output assets were rendering in Azure via the 
 ## Deployment Prerequisites
 
 To manage deployment of the AAA solution from your local workstation, the following prerequisite setup steps are required.
-1. Make sure the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) is installed locally and accessible in your path environment variable.
+1. Make sure the [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli) is installed locally and accessible in your path environment variable.
 1. Make sure the [Terraform CLI](https://learn.hashicorp.com/tutorials/terraform/install-cli) is installed locally and accessible in your path environment variable.
 1. Download the AAA end-to-end (e2e) solution source files via the following GitHub directory link.
    * https://downgit.github.io/#/home?url=https://github.com/Azure/Avere/tree/main/src/terraform/examples/e2e
@@ -49,10 +49,10 @@ To manage deployment of the AAA solution from your local workstation, the follow
 
 ## 1 Security
 
-*Before deploying the Security module*, the following built-in [Azure Role-Based Access Control (RBAC)](https://docs.microsoft.com/en-us/azure/role-based-access-control/overview) role *is required for the current user* to enable creation of Azure Key Vault secrets, certificates and keys.
-* *Key Vault Administartor* (https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#key-vault-administrator)
+*Before deploying the Security module*, the following built-in [Azure Role-Based Access Control (RBAC)](https://docs.microsoft.com/azure/role-based-access-control/overview) role *is required for the current user* to enable creation of Azure Key Vault secrets, certificates and keys.
+* *Key Vault Administartor* (https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-administrator)
 
-For Azure role assignment instructions, refer to either the Azure [portal](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal), [CLI](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-cli) or [PowerShell](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-powershell) documents.
+For Azure role assignment instructions, refer to either the Azure [portal](https://docs.microsoft.com/azure/role-based-access-control/role-assignments-portal), [CLI](https://docs.microsoft.com/azure/role-based-access-control/role-assignments-cli) or [PowerShell](https://docs.microsoft.com/azure/role-based-access-control/role-assignments-powershell) documents.
 
 ### Deployment Steps
 
@@ -61,7 +61,7 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 1. Run `terraform init` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
-1. Use the [Azure portal to update your Key Vault secret values](https://docs.microsoft.com/en-us/azure/key-vault/secrets/quick-create-portal) (`GatewayConnection`, `AdminPassword`)
+1. Use the [Azure portal to update your Key Vault secret values](https://docs.microsoft.com/azure/key-vault/secrets/quick-create-portal) (`GatewayConnection`, `AdminPassword`)
 
 ## 2 Network
 
@@ -130,9 +130,9 @@ Invoke-WebRequest -OutFile $localDirectory\terraform-provider-avere_$latestVersi
 
 1. Run `cd ~/e2e/4.storage.cache` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
-1. For [Avere vFXT](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-overview) deployment only,
-   * Make sure the [Avere vFXT image terms have been accepted](https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-prereqs#accept-software-terms) (only required once per Azure subscription)
-   * Make sure you have at least 96 (32 x 3) cores quota available for [Esv3](https://docs.microsoft.com/en-us/azure/virtual-machines/ev3-esv3-series#esv3-series) machines in your Azure subscription.
+1. For [Avere vFXT](https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) deployment only,
+   * Make sure the [Avere vFXT image terms have been accepted](https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-prereqs#accept-software-terms) (only required once per Azure subscription)
+   * Make sure you have at least 96 (32 x 3) cores quota available for [Esv3](https://docs.microsoft.com/azure/virtual-machines/ev3-esv3-series#esv3-series) machines in your Azure subscription.
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
@@ -146,7 +146,7 @@ Invoke-WebRequest -OutFile $localDirectory\terraform-provider-avere_$latestVersi
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
-1. After image template deployment, use the Azure portal or [Image Builder CLI](https://docs.microsoft.com/en-us/cli/azure/image/builder?#az-image-builder-run) to start image build runs
+1. After image template deployment, use the Azure portal or [Image Builder CLI](https://docs.microsoft.com/cli/azure/image/builder?#az-image-builder-run) to start image build runs
 
 ## 6 Compute Scheduler
 
