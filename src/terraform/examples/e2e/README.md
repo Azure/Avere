@@ -9,24 +9,24 @@ The following *core principles* are implemented throughout the AAA solution depl
 
 | **Module Name** | **Module Description** | **Required for<br>Compute Burst?** | **Required for<br>All Cloud?** |
 | --------------- | ---------------------- | ---------------------------------- | ------------------------------ |
-| [0 Global](#0-global) | Defines global variables and Terraform backend state file storage configuration. | Yes | Yes |
-| [1 Security](#1-security) | Deploys [Managed Identity](https://docs.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://docs.microsoft.com/azure/key-vault/general/overview) and [Blob Storage](https://docs.microsoft.com/azure/storage/blobs/storage-blobs-introduction) for Terraform state file management. | Yes | Yes |
-| [2 Network](#2-network) | Deploys [Virtual Network](https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview) with [VPN](https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://docs.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways) hybrid networking services. | Yes, if [Virtual Network](https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No | Yes, if [Virtual Network](https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No |
-| [3 Storage](#3-storage) | Deploys [Blob (NFS v3 with sample content)](https://docs.microsoft.com/azure/storage/blobs/network-file-system-protocol-support), [Files](https://docs.microsoft.com/azure/storage/files/storage-files-introduction), [NetApp Files](https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) or [Hammerspace](https://azuremarketplace.microsoft.com/marketplace/apps/hammerspace.hammerspace_4_6_5) storage. | No | Yes |
-| [4 Storage Cache](#4-storage-cache) | Deploys [HPC Cache](https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) for highly-available and scalable file caching. | Yes | Maybe, depends on your<br>render scale requirements |
-| [5 Compute Image](#5-compute-image) | Deploys [Compute Gallery](https://docs.microsoft.com/azure/virtual-machines/shared-image-galleries) images that are built via the managed [Image Builder](https://docs.microsoft.com/azure/virtual-machines/image-builder-overview) service. | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L7) | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L7) |
-| [6 Compute Scheduler](#6-compute-scheduler) | Deploys [Virtual Machines](https://docs.microsoft.com/azure/virtual-machines) for job and task scheduling across render farms. | No, continue to use your current job scheduler | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.compute.scheduler/config.auto.tfvars#L7) |
-| [7 Compute Farm](#7-compute-farm) | Deploys [Virtual Machine Scale Sets](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) for [Linux](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) and/or [Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) render farms. | Yes | Yes |
-| [8&#160;Compute&#160;Workstation](#8-compute-workstation) | Deploys [Virtual Machines](https://docs.microsoft.com/azure/virtual-machines) for [Linux](https://docs.microsoft.com/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | Yes |
-| [9 Render](#9-render) | Submit render farm jobs from [Linux](https://docs.microsoft.com/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
-| [10 GitOps](#10-gitops) | Enables [Terraform Plan](https://www.terraform.io/cli/commands/plan) and [Apply](https://www.terraform.io/cli/commands/apply) workflows via [GitHub Actions](https://docs.github.com/actions) triggered by [Pull Requests](https://docs.github.com/pull-requests). | No | No |
+| [0 Global](#0-global) | Define global variables and Terraform backend state file storage configuration. | Yes | Yes |
+| [1 Security](#1-security) | Deploy [Managed Identity](https://docs.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://docs.microsoft.com/azure/key-vault/general/overview) and [Blob Storage](https://docs.microsoft.com/azure/storage/blobs/storage-blobs-introduction) for Terraform state file management. | Yes | Yes |
+| [2 Network](#2-network) | Deploy [Virtual Network](https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview) with [VPN](https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://docs.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways) hybrid networking services. | Yes, if [Virtual Network](https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No | Yes, if [Virtual Network](https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No |
+| [3 Storage](#3-storage) | Deploy [Blob (NFS v3 with sample content)](https://docs.microsoft.com/azure/storage/blobs/network-file-system-protocol-support), [Files](https://docs.microsoft.com/azure/storage/files/storage-files-introduction), [NetApp Files](https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) or [Hammerspace](https://azuremarketplace.microsoft.com/marketplace/apps/hammerspace.hammerspace_4_6_5) storage. | No | Yes |
+| [4 Storage Cache](#4-storage-cache) | Deploy [HPC Cache](https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) for highly-available and scalable file caching. | Yes | Maybe, depends on your<br>render scale requirements |
+| [5 Compute Image](#5-compute-image) | Deploy [Compute Gallery](https://docs.microsoft.com/azure/virtual-machines/shared-image-galleries) images that are built via the managed [Image Builder](https://docs.microsoft.com/azure/virtual-machines/image-builder-overview) service. | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L7) | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L7) |
+| [6 Compute Scheduler](#6-compute-scheduler) | Deploy [Virtual Machines](https://docs.microsoft.com/azure/virtual-machines) for job and task scheduling across render farms. | No, continue to use your current job scheduler | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.compute.scheduler/config.auto.tfvars#L7) |
+| [7 Compute Farm](#7-compute-farm) | Deploy [Virtual Machine Scale Sets](https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) for [Linux](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) and/or [Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) render farms. | Yes | Yes |
+| [8&#160;Compute&#160;Workstation](#8-compute-workstation) | Deploy [Virtual Machines](https://docs.microsoft.com/azure/virtual-machines) for [Linux](https://docs.microsoft.com/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | Yes |
+| [9 GitOps](#9-gitops) | Enable [Terraform Plan](https://www.terraform.io/cli/commands/plan) and [Apply](https://www.terraform.io/cli/commands/apply) workflows via [GitHub Actions](https://docs.github.com/actions) triggered by [Pull Requests](https://docs.github.com/pull-requests). | No | No |
+| [10 Render](#10-render) | Submit render farm jobs from [Linux](https://docs.microsoft.com/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
 
 For example, the following sample output assets were rendering in Azure via the AAA solution deployment framework.
 <p align="center">
-  <img src="9.render/sprite-fright.png" alt="Sprite Fright" width="1024" />
+  <img src=".github/sprite-fright.png" alt="Sprite Fright" width="1024" />
 </p>
 <p align="center">
-  <img src="9.render/moana-island.png" alt="Moana Island" width="1024" />
+  <img src=".github/moana-island.png" alt="Moana Island" width="1024" />
 </p>
 
 ## Deployment Prerequisites
@@ -189,15 +189,23 @@ Invoke-WebRequest -OutFile $localDirectory\terraform-provider-avere_$latestVersi
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
 
-## 9 Render
+## 9 GitOps
+
+The following [GitHub Actions](https://github.com/features/actions) workflow files can optionally be leveraged to enable a Pull Request-driven automated deployment worklow. Both Terraform Plan and Terraform Apply command outputs are captured as Comments in each Pull Request.
+
+* [Terraform Plan](.github/workflows/terraform.plan.yml) - Automatically triggered when a Pull Request is created with a commit in its own branch. May also be triggered manually via the GitHub Actions user interface.
+
+* [Terraform Apply](.github/workflows/terraform.apply.yml) - Automatically triggerd when an open Pull Request is merged. May also be triggered manually via the GitHub Actions user interface.
+
+## 10 Render
 
 Now that deployment of the AAA solution framework is complete, this section provides render job submission examples via the general-purpose **Deadline** [SubmitCommandLineJob](https://docs.thinkboxsoftware.com/products/deadline/10.1/1_User%20Manual/manual/command-line-arguments-jobs.html#submitcommandlinejob) API.
 
-### 9.1 [Blender](https://www.blender.org)
+### 10.1 [Blender](https://www.blender.org)
 
 For example, the following sample **Blender** output asset was rendering in Azure via the **Deadline** job submission command below.
 <p align="center">
-  <img src="9.render/sprite-fright.png" alt="Sprite Fright" width="1024" />
+  <img src=".github/sprite-fright.png" alt="Sprite Fright" width="1024" />
 </p>
 
 #### Linux Render Farm
@@ -214,11 +222,11 @@ deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender -a
 deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender.exe -arguments "-b -y -noaudio R:\blender\3.0\splash.blend --render-output W:\blender\3.0\splash####.png --render-frame 1"
 </code></p>
 
-### 9.2 [Physically-Based Rendering Toolkit (PBRT)](https://pbrt.org)
+### 10.2 [Physically-Based Rendering Toolkit (PBRT)](https://pbrt.org)
 
 For example, the following sample **PBRT** output asset was rendering in Azure via the **Deadline** job submission command below.
 <p align="center">
-  <img src="9.render/moana-island.png" alt="Moana Island" width="1024" />
+  <img src=".github/moana-island.png" alt="Moana Island" width="1024" />
 </p>
 
 #### Linux Render Farm
@@ -234,13 +242,5 @@ deadlinecommand -SubmitCommandLineJob -name Moana-Island -executable pbrt -argum
 <p><code>
 deadlinecommand -SubmitCommandLineJob -name Moana-Island -executable pbrt.exe -arguments "--outfile W:\pbrt\moana\island.png R:\pbrt\moana\pbrt\island.pbrt"
 </code></p>
-
-## 10 GitOps
-
-The following [GitHub Actions](https://github.com/features/actions) workflow files can optionally be leveraged to enable a Pull Request-driven automated deployment worklow. Both Terraform Plan and Terraform Apply outputs are captured with each Pull Request as Comments.
-
-* [Terraform Plan](.github/workflows/terraform.plan.yml) - Automatically triggered when a Pull Request is created with a commit in its own branch. May also be triggered manually via the GitHub Actions user interface.
-
-* [Terraform Apply](.github/workflows/terraform.apply.yml) - Automatically triggerd when an open Pull Request is merged. May also be triggered manually via the GitHub Actions user interface.
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com
