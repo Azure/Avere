@@ -21,7 +21,7 @@ The following *core principles* are implemented throughout the AAA solution depl
 | [9 GitOps](#9-gitops) | Enable [Terraform Plan](https://www.terraform.io/cli/commands/plan) and [Apply](https://www.terraform.io/cli/commands/apply) workflows via [GitHub Actions](https://docs.github.com/actions) triggered by [Pull Requests](https://docs.github.com/pull-requests). | No | No |
 | [10 Render](#10-render) | Submit render farm jobs from [Linux](https://docs.microsoft.com/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
 
-For example, the following sample output assets were rendering in Azure via the AAA solution deployment framework.
+For example, the following sample output images were rendering in Azure via the AAA solution deployment framework.
 <p align="center">
   <img src=".github/sprite-fright.png" alt="Sprite Fright" width="1024" />
 </p>
@@ -31,7 +31,7 @@ For example, the following sample output assets were rendering in Azure via the 
 
 ## Deployment Prerequisites
 
-To manage deployment of the AAA solution from your local workstation, the following prerequisite setup steps are required.
+To manage deployment of the AAA solution from your local workstation, the following prerequisite setup steps are required. As an alternative deployment management approach, [GitOps](#9-gitops) enablement is also provided. 
 1. Make sure the [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli) is installed locally and accessible in your path environment variable.
 1. Make sure the [Terraform CLI](https://learn.hashicorp.com/tutorials/terraform/install-cli) is installed locally and accessible in your path environment variable.
 1. Download the AAA end-to-end (e2e) solution source files via the following GitHub directory link.
@@ -197,13 +197,35 @@ The following [GitHub Actions](https://github.com/features/actions) workflow fil
 
 * [Terraform Apply](.github/workflows/terraform.apply.yml) - Automatically triggerd when an open Pull Request is merged. May also be triggered manually via the GitHub Actions user interface.
 
+To enable GitHub Actions to manage resource deployment within your Azure subscription, the following [GitHub Secrets (via Settings --> Security --> Secrets --> Actions)](https://docs.github.com/en/github-ae@latest/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-a-repository) are required on your GitHub repository.
+
+* ARM_TENANT_ID
+* ARM_SUBSCRIPTION_ID
+* ARM_CLIENT_ID
+* ARM_CLIENT_SECRET
+
+To generate new ARM_CLIENT_ID and ARM_CLIENT_SECRET values, the following Azure CLI command can be used.
+
+<p><code>
+&nbsp;&nbsp;&nbsp;$servicePrincipalName  = "Azure Artist Anywhere"
+</code></p>
+<p><code>
+&nbsp;&nbsp;&nbsp;$servicePrincipalRole  = "Contributor"
+</code></p>
+<p><code>
+&nbsp;&nbsp;&nbsp;$servicePrincipalScope = "/subscriptions/&lt;SUBSCRIPTION_ID&gt;"
+</code></p>
+<p><code>
+&nbsp;&nbsp;&nbsp;az ad sp create-for-rbac --name $servicePrincipalName --role $servicePrincipalRole --scope $servicePrincipalScope
+</code></p>
+
 ## 10 Render
 
 Now that deployment of the AAA solution framework is complete, this section provides render job submission examples via the general-purpose **Deadline** [SubmitCommandLineJob](https://docs.thinkboxsoftware.com/products/deadline/10.1/1_User%20Manual/manual/command-line-arguments-jobs.html#submitcommandlinejob) API.
 
 ### 10.1 [Blender](https://www.blender.org)
 
-For example, the following sample **Blender** output asset was rendering in Azure via the **Deadline** job submission command below.
+For example, the following sample **Blender** output image was rendering in Azure via the **Deadline** job submission command below.
 <p align="center">
   <img src=".github/sprite-fright.png" alt="Sprite Fright" width="1024" />
 </p>
@@ -224,7 +246,7 @@ deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender.ex
 
 ### 10.2 [Physically-Based Rendering Toolkit (PBRT)](https://pbrt.org)
 
-For example, the following sample **PBRT** output asset was rendering in Azure via the **Deadline** job submission command below.
+For example, the following sample **PBRT** output image was rendering in Azure via the **Deadline** job submission command below.
 <p align="center">
   <img src=".github/moana-island.png" alt="Moana Island" width="1024" />
 </p>
