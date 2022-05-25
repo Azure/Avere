@@ -151,7 +151,7 @@ steps:
       --query 'value[0].message' --output tsv |& tee ${cmdlog}
     grep -q ${cmdokmsg} ${cmdlog} || check_rc.sh 1 "Run azcopy .tar to storage account"
 
-    az resource lock delete -n DO_NOT_DELETE --resource ${STOR_ACCT_RESOURCE_ID}
+    az resource lock delete --name DO_NOT_DELETE --resource ${STOR_ACCT_RESOURCE_ID} --namespace Micosoft.Storage
     check_rc.sh $rc "Delete Lock on storage account" || exit 0
 
     # Private endpoint removal needed so terraform destory will work.
@@ -171,7 +171,7 @@ steps:
       grep -q "remove the lock" ${cmdlog}
       if [ $? -eq 0 ]; then
         echo "Delete Lock"
-        az resource lock delete -n DO_NOT_DELETE --resource ${STOR_ACCT_RESOURCE_ID}
+        az resource lock delete --name DO_NOT_DELETE --resource ${STOR_ACCT_RESOURCE_ID} --namespace Micosoft.Storage
         check_rc.sh $rc "Delete Lock on storage account" || exit 0
         continue
       else
@@ -181,7 +181,7 @@ steps:
     done
 
     az resource lock create --lock-type CanNotDelete \
-      -n DO_NOT_DELETE \
+      --name DO_NOT_DELETE \
       --resource ${STOR_ACCT_RESOURCE_ID} \
       --notes "Delete created by Pipeline BuildID: ${BUILD_BUILDID}"
     check_rc.sh $? "Create Lock on storage account" || exit 0
