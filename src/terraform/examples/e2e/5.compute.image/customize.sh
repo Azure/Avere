@@ -27,8 +27,8 @@ echo "Customize (Start): Dev Tools"
 yum -y group install "Development Tools"
 echo "Customize (End): Dev Tools"
 
-#   NVv3 (https://docs.microsoft.com/en-us/azure/virtual-machines/nvv3-series)
-# NCT4v3 (https://docs.microsoft.com/en-us/azure/virtual-machines/nct4-v3-series)
+#   NVv3 (https://docs.microsoft.com/azure/virtual-machines/nvv3-series)
+# NCT4v3 (https://docs.microsoft.com/azure/virtual-machines/nct4-v3-series)
 if [[ ($machineSize == Standard_NV* && $machineSize == *_v3) ||
       ($machineSize == Standard_NC* && $machineSize == *T4_v3) ]]; then
   echo "Customize (Start): GPU Driver (NVv3)"
@@ -41,7 +41,7 @@ if [[ ($machineSize == Standard_NV* && $machineSize == *_v3) ||
   echo "Customize (End): GPU Driver (NVv3)"
 fi
 
-# NVv4 (https://docs.microsoft.com/en-us/azure/virtual-machines/nvv4-series)
+# NVv4 (https://docs.microsoft.com/azure/virtual-machines/nvv4-series)
 if [[ $machineSize == Standard_NV* && $machineSize == *_v4 ]]; then
   echo "Customize (Start): GPU Driver (NVv4)"
   installFile="amd-gpu-nv4.tar.xz"
@@ -53,7 +53,7 @@ if [[ $machineSize == Standard_NV* && $machineSize == *_v4 ]]; then
   echo "Customize (End): GPU Driver (NVv4)"
 fi
 
-# NVv5 (https://docs.microsoft.com/en-us/azure/virtual-machines/nva10v5-series)
+# NVv5 (https://docs.microsoft.com/azure/virtual-machines/nva10v5-series)
 if [[ $machineSize == Standard_NV* && $machineSize == *_v5 ]]; then
   echo "Customize (Start): GPU Driver (NVv5)"
   yum -y install "kernel-devel-$(uname --kernel-release)"
@@ -184,7 +184,7 @@ fi
 if [[ $renderEngines == *Unreal* ]]; then
   echo "Customize (Start): Unreal Engine"
   yum -y install libicu
-  versionInfo="5.0.1"
+  versionInfo="5.0.2"
   installFile="UnrealEngine-$versionInfo-release.tar.gz"
   downloadUrl="$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl

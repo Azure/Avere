@@ -134,9 +134,9 @@ resource "azurerm_resource_group" "network" {
   location = module.global.regionName
 }
 
-######################################################################################################
-# Virtual Network (https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) #
-######################################################################################################
+################################################################################################
+# Virtual Network (https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview) #
+################################################################################################
 
 resource "azurerm_virtual_network" "network" {
   name                = var.virtualNetwork.name
@@ -215,9 +215,9 @@ resource "azurerm_subnet_network_security_group_association" "network" {
   ]
 }
 
-################################################################################# 
-# Private DNS (https://docs.microsoft.com/en-us/azure/dns/private-dns-overview) #
-################################################################################# 
+########################################################################### 
+# Private DNS (https://docs.microsoft.com/azure/dns/private-dns-overview) #
+########################################################################### 
 
 resource "azurerm_private_dns_zone" "network" {
   count               = var.virtualNetworkPrivateDns.zoneName != "" ? 1 : 0

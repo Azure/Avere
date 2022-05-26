@@ -1,16 +1,16 @@
 resourceGroupName = "ArtistAnywhere.Scheduler"
 
-# Virtual Machines (https://docs.microsoft.com/en-us/azure/virtual-machines)
+# Virtual Machines (https://docs.microsoft.com/azure/virtual-machines)
 virtualMachines = [
   {
     name        = "LnxScheduler"
     imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/10.0.0"
-    machineSize = "Standard_D16s_v5" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+    machineSize = "Standard_D8s_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Linux"
       disk = {
-        storageType = "Standard_LRS"
-        cachingType = "ReadOnly"
+        storageType = "Premium_LRS"
+        cachingType = "ReadWrite"
       }
     }
     networkInterface = {
@@ -36,6 +36,15 @@ virtualMachines = [
           jobWaitThresholdSeconds  = 300
           workerIdleDeleteSeconds  = 3600
         }
+        cycleCloud = { // https://docs.microsoft.com/azure/cyclecloud/overview
+          enable = false
+          storageAccount = {
+            name       = ""
+            type       = "StorageV2"
+            tier       = "Standard"
+            redundancy = "LRS"
+          }
+        }
       }
     }
     monitorExtension = {
@@ -45,12 +54,12 @@ virtualMachines = [
   {
     name        = "" // "WinScheduler"
     imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinScheduler/versions/10.0.0"
-    machineSize = "Standard_D16s_v5" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+    machineSize = "Standard_D8s_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Windows"
       disk = {
-        storageType = "Standard_LRS"
-        cachingType = "ReadOnly"
+        storageType = "Premium_LRS"
+        cachingType = "ReadWrite"
       }
     }
     networkInterface = {
@@ -76,6 +85,15 @@ virtualMachines = [
           jobWaitThresholdSeconds  = 300
           workerIdleDeleteSeconds  = 3600
         }
+        cycleCloud = { // https://docs.microsoft.com/azure/cyclecloud/overview
+          enable = false
+          storageAccount = {
+            name       = ""
+            type       = "StorageV2"
+            tier       = "Standard"
+            redundancy = "LRS"
+          }
+        }
       }
     }
     monitorExtension = {
@@ -84,7 +102,7 @@ virtualMachines = [
   }
 ]
 
-# Virtual Network (https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview)
+# Virtual Network (https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview)
 virtualNetwork = {
   name               = ""
   subnetName         = ""

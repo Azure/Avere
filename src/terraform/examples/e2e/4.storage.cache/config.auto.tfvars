@@ -3,9 +3,9 @@ resourceGroupName = "ArtistAnywhere.Cache"
 cacheName      = "cache" // Set to a uniquely identifiable cache name
 enableHpcCache = true    // Set to false for Avere vFXT cache deployment
 
-###################################################################################
-# HPC Cache (https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) #
-###################################################################################
+#############################################################################
+# HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) #
+#############################################################################
 
 // HPC Cache throughput / size (GBs) options
 //   Standard_L4_5G - 21623                Read Only
@@ -21,9 +21,9 @@ hpcCache = {
   ntpHost    = "time.windows.com"
 }
 
-######################################################################################
-# Avere vFXT (https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-overview) #
-######################################################################################
+################################################################################
+# Avere vFXT (https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) #
+################################################################################
 
 vfxtCache = {
   cluster = {
@@ -38,7 +38,7 @@ vfxtCache = {
     adminUsername = "azadmin"
     sshPublicKey  = ""
   }
-  support = {                      // https://privacy.microsoft.com/en-us/privacystatement
+  support = {                      // https://privacy.microsoft.com/privacystatement
     companyName        = ""        // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#support_uploads_company_name
     enableProactive    = "Support" // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#enable_secure_proactive_support
     enableLogUpload    = true      // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#enable_support_uploads
@@ -46,16 +46,16 @@ vfxtCache = {
   }
 }
 
-############################################################################################
-# Storage Targets (https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-add-storage) #
-############################################################################################
+######################################################################################
+# Storage Targets (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-add-storage) #
+######################################################################################
 
 storageTargetsNfs = [
   {
     name        = "" // "RenderFarm"
     storageHost = ""
     hpcCache = {
-      usageModel = "WRITE_AROUND" // https://docs.microsoft.com/en-us/azure/hpc-cache/cache-usage-models
+      usageModel = "WRITE_AROUND" // https://docs.microsoft.com/azure/hpc-cache/cache-usage-models
     }
     vfxtCache = {
       cachePolicy    = "Clients Bypassing the Cluster"
@@ -86,9 +86,9 @@ storageTargetsNfsBlob = [
   }
 ]
 
-######################################################################################################
-# Virtual Network (https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview) #
-######################################################################################################
+################################################################################################
+# Virtual Network (https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview) #
+################################################################################################
 
 virtualNetwork = {
   name              = ""

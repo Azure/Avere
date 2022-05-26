@@ -1,6 +1,6 @@
 resourceGroupName = "ArtistAnywhere.Image"
 
-# Compute Gallery (https://docs.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries)
+# Compute Gallery (https://docs.microsoft.com/azure/virtual-machines/shared-image-galleries)
 imageGalleryName = "Gallery"
 imageDefinitions = [
   {
@@ -37,7 +37,7 @@ imageDefinitions = [
   }
 ]
 
-# Image Builder (https://docs.microsoft.com/en-us/azure/virtual-machines/image-builder-overview)
+# Image Builder (https://docs.microsoft.com/azure/virtual-machines/image-builder-overview)
 imageTemplates = [
   {
     name = "LnxScheduler"
@@ -50,9 +50,9 @@ imageTemplates = [
     build = {
       runElevated    = false
       subnetName     = "Scheduler"
-      machineSize    = "Standard_D16s_v5" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 0                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 120                // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineSize    = "Standard_D8s_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                 // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 120               // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "10.0.0"
       renderEngines  = []
     }
@@ -68,9 +68,9 @@ imageTemplates = [
     build = {
       runElevated    = false
       subnetName     = "Farm"
-      machineSize    = "Standard_HB120rs_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 480                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 240                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineSize    = "Standard_HB120rs_v2" // https://docs.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 480                   // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 240                   // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "1.0.0"
       renderEngines  = [
         "Blender",
@@ -92,9 +92,9 @@ imageTemplates = [
     build = {
       runElevated    = false
       subnetName     = "Workstation"
-      machineSize    = "Standard_NC64as_T4_v3" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 480                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 240                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineSize    = "Standard_NC64as_T4_v3" // https://docs.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 480                     // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 240                     // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "3.0.0"
       renderEngines  = [
         "Blender",
@@ -116,9 +116,9 @@ imageTemplates = [
     build = {
       runElevated    = false
       subnetName     = "Workstation"
-      machineSize    = "Standard_NV32as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 480                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 240                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineSize    = "Standard_NV32as_v4" // https://docs.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 480                  // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 240                  // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "4.0.0"
       renderEngines  = [
         "Blender",
@@ -140,9 +140,9 @@ imageTemplates = [
   #   build = {
   #     runElevated    = false
   #     subnetName     = "Workstation"
-  #     machineSize    = "Standard_NV36ads_A10_v5" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-  #     osDiskSizeGB   = 480                       // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-  #     timeoutMinutes = 240                       // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+  #     machineSize    = "Standard_NV36ads_A10_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
+  #     osDiskSizeGB   = 480                       // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+  #     timeoutMinutes = 240                       // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
   #     outputVersion  = "5.0.0"
   #     renderEngines  = [
   #       "Blender",
@@ -164,9 +164,9 @@ imageTemplates = [
     build = {
       runElevated    = true
       subnetName     = "Scheduler"
-      machineSize    = "Standard_D16s_v5" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 0                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 180                // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineSize    = "Standard_D8s_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                 // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 180               // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "10.0.0"
       renderEngines  = []
     }
@@ -182,9 +182,9 @@ imageTemplates = [
     build = {
       runElevated    = false
       subnetName     = "Farm"
-      machineSize    = "Standard_HB120rs_v2" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 480                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 480                   // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineSize    = "Standard_HB120rs_v2" // https://docs.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 480                   // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 480                   // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "1.0.0"
       renderEngines  = [
         "Blender",
@@ -207,9 +207,9 @@ imageTemplates = [
     build = {
       runElevated    = false
       subnetName     = "Workstation"
-      machineSize    = "Standard_NC64as_T4_v3" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 480                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 480                     // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineSize    = "Standard_NC64as_T4_v3" // https://docs.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 480                     // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 480                     // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "3.0.0"
       renderEngines  = [
         "Blender",
@@ -232,9 +232,9 @@ imageTemplates = [
     build = {
       runElevated    = false
       subnetName     = "Workstation"
-      machineSize    = "Standard_NV32as_v4" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-      osDiskSizeGB   = 480                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 480                  // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineSize    = "Standard_NV32as_v4" // https://docs.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 480                  // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 480                  // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "4.0.0"
       renderEngines  = [
         "Blender",
@@ -257,9 +257,9 @@ imageTemplates = [
   #   build = {
   #     runElevated    = false
   #     subnetName     = "Workstation"
-  #     machineSize    = "Standard_NV36ads_A10_v5" // https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
-  #     osDiskSizeGB   = 480                       // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-  #     timeoutMinutes = 480                       // https://docs.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+  #     machineSize    = "Standard_NV36ads_A10_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
+  #     osDiskSizeGB   = 480                       // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+  #     timeoutMinutes = 480                       // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
   #     outputVersion  = "4.0.0"
   #     renderEngines  = [
   #       "Blender",
@@ -273,7 +273,7 @@ imageTemplates = [
   # }
 ]
 
-# Virtual Network (https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview)
+# Virtual Network (https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview)
 virtualNetwork = {
   name              = ""
   resourceGroupName = ""

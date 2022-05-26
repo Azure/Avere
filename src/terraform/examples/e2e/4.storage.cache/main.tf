@@ -192,9 +192,9 @@ resource "azurerm_resource_group" "cache" {
   location = module.global.regionName
 }
 
-###################################################################################
-# HPC Cache (https://docs.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) #
-###################################################################################
+#############################################################################
+# HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) #
+#############################################################################
 
 resource "azurerm_hpc_cache" "cache" {
   count               = var.enableHpcCache ? 1 : 0
@@ -239,9 +239,9 @@ resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
   namespace_path       = each.value.clientPath
 }
 
-######################################################################################
-# Avere vFXT (https://docs.microsoft.com/en-us/azure/avere-vfxt/avere-vfxt-overview) #
-######################################################################################
+################################################################################
+# Avere vFXT (https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) #
+################################################################################
 
 data "azurerm_key_vault" "vault" {
   name                = module.global.keyVaultName
@@ -319,9 +319,9 @@ resource "avere_vfxt" "cache" {
   ]
 }
 
-################################################################################# 
-# Private DNS (https://docs.microsoft.com/en-us/azure/dns/private-dns-overview) #
-################################################################################# 
+########################################################################### 
+# Private DNS (https://docs.microsoft.com/azure/dns/private-dns-overview) #
+########################################################################### 
 
 resource "azurerm_private_dns_zone" "network" {
   count               = local.deployPrivateDnsZone

@@ -1,6 +1,6 @@
 resourceGroupName = "ArtistAnywhere.Farm"
 
-# Virtual Machine Scale Sets (https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview)
+# Virtual Machine Scale Sets (https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview)
 virtualMachineScaleSets = [
   {
     name    = "LnxFarm"
@@ -12,9 +12,9 @@ virtualMachineScaleSets = [
     operatingSystem = {
       type = "Linux"
       disk = {
-        storageType = "Standard_LRS"
-        cachingType = "ReadOnly"
-        ephemeralEnable = true // https://docs.microsoft.com/en-us/azure/virtual-machines/ephemeral-os-disks
+        storageType = "Premium_LRS"
+        cachingType = "ReadWrite"
+        ephemeralEnable = true // https://docs.microsoft.com/azure/virtual-machines/ephemeral-os-disks
       }
     }
     networkInterface = {
@@ -42,11 +42,11 @@ virtualMachineScaleSets = [
       enable = false
     }
     spot = {
-      enable = true              // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot
-      evictionPolicy  = "Delete" // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#eviction-policy
-      machineMaxPrice = -1       // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#pricing
+      enable = true              // https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot
+      evictionPolicy  = "Delete" // https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
+      machineMaxPrice = -1       // https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot#pricing
     }
-    terminationNotification = {  // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
+    terminationNotification = {  // https://docs.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
       enable       = true
       timeoutDelay = "PT5M"
       eventHandler = "terminate.sh"
@@ -62,9 +62,9 @@ virtualMachineScaleSets = [
     operatingSystem = {
       type = "Windows"
       disk = {
-        storageType = "Standard_LRS"
-        cachingType = "ReadOnly"
-        ephemeralEnable = true // https://docs.microsoft.com/en-us/azure/virtual-machines/ephemeral-os-disks
+        storageType = "Premium_LRS"
+        cachingType = "ReadWrite"
+        ephemeralEnable = true // https://docs.microsoft.com/azure/virtual-machines/ephemeral-os-disks
       }
     }
     networkInterface = {
@@ -92,11 +92,11 @@ virtualMachineScaleSets = [
       enable = false
     }
     spot = {
-      enable = true              // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot
-      evictionPolicy  = "Delete" // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#eviction-policy
-      machineMaxPrice = -1       // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/use-spot#pricing
+      enable = true              // https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot
+      evictionPolicy  = "Delete" // https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
+      machineMaxPrice = -1       // https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot#pricing
     }
-    terminationNotification = {  // https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
+    terminationNotification = {  // https://docs.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
       enable       = true
       timeoutDelay = "PT5M"
       eventHandler = "terminate.ps1"
@@ -104,7 +104,7 @@ virtualMachineScaleSets = [
   }
 ]
 
-# Virtual Network (https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview)
+# Virtual Network (https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview)
 virtualNetwork = {
   name              = ""
   subnetName        = ""

@@ -79,6 +79,19 @@ variable "virtualMachines" {
                     workerIdleDeleteSeconds  = number
                   }
                 )
+                cycleCloud = object(
+                  {
+                    enable = bool
+                    storageAccount = object(
+                      {
+                        name       = string
+                        type       = string
+                        tier       = string
+                        redundancy = string
+                      }
+                    )
+                  }
+                )
               }
             )
           }
@@ -103,6 +116,8 @@ variable "virtualNetwork" {
     }
   )
 }
+
+data "azurerm_client_config" "current" {}
 
 data "terraform_remote_state" "network" {
   count   = var.virtualNetwork.name == "" ? 1 : 0
@@ -334,6 +349,27 @@ resource "azurerm_private_dns_a_record" "scheduler" {
   zone_name           = data.azurerm_private_dns_zone.network.name
   records             = [azurerm_network_interface.scheduler[local.schedulerMachineNames[0]].private_ip_address]
   ttl                 = 300
+}
+
+resource "azurerm_storage_account" "cycle_cloud" {
+  for_each = {
+    for x in var.virtualMachines : x.name => x if x.customExtension.parameters.cycleCloud.enable
+  }
+  name                     = each.value.customExtension.parameters.cycleCloud.storageAccount.name
+  resource_group_name      = azurerm_resource_group.scheduler.name
+  location                 = azurerm_resource_group.scheduler.location
+  account_kind             = each.value.customExtension.parameters.cycleCloud.storageAccount.type
+  account_tier             = each.value.customExtension.parameters.cycleCloud.storageAccount.tier
+  account_replication_type = each.value.customExtension.parameters.cycleCloud.storageAccount.redundancy
+}
+
+resource "azurerm_role_assignment" "cycle_cloud" {
+  for_each = {
+    for x in var.virtualMachines : x.name => x if x.customExtension.parameters.cycleCloud.enable
+  }
+  role_definition_name = "Contributor"
+  principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
+  scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}"
 }
 
 output "regionName" {

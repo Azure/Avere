@@ -49,8 +49,8 @@ Start-Process -FilePath .\$installFile -ArgumentList "/SILENT /NORESTART" -Wait 
 $toolPathGit = "C:\Program Files\Git\bin"
 Write-Host "Customize (End): Git"
 
-#   NVv3 (https://docs.microsoft.com/en-us/azure/virtual-machines/nvv3-series)
-# NCT4v3 (https://docs.microsoft.com/en-us/azure/virtual-machines/nct4-v3-series)
+#   NVv3 (https://docs.microsoft.com/azure/virtual-machines/nvv3-series)
+# NCT4v3 (https://docs.microsoft.com/azure/virtual-machines/nct4-v3-series)
 if (($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v3")) -or
     ($machineSize.StartsWith("Standard_NC") -and $machineSize.EndsWith("T4_v3"))) {
   Write-Host "Customize (Start): GPU Driver (NVv3)"
@@ -61,7 +61,7 @@ if (($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v3")) -
   Write-Host "Customize (End): GPU Driver (NVv3)"
 }
 
-# NVv4 (https://docs.microsoft.com/en-us/azure/virtual-machines/nvv4-series)
+# NVv4 (https://docs.microsoft.com/azure/virtual-machines/nvv4-series)
 if ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v4")) {
   Write-Host "Customize (Start): GPU Driver (NVv4)"
   $installFile = "amd-gpu-nv4.exe"
@@ -71,7 +71,7 @@ if ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v4")) {
   Write-Host "Customize (End): GPU Driver (NVv4)"
 }
 
-# NVv5 (https://docs.microsoft.com/en-us/azure/virtual-machines/nva10v5-series)
+# NVv5 (https://docs.microsoft.com/azure/virtual-machines/nva10v5-series)
 if ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v5")) {
   Write-Host "Customize (Start): GPU Driver (NVv5)"
   $installFile = "nvidia-gpu-nv5.exe"
@@ -213,7 +213,7 @@ if ($renderEngines -like "*Unreal*") {
   $installFile = "dism.exe"
   $featureName = "NetFX3"
   Start-Process -FilePath $installFile -ArgumentList "/Enable-Feature /FeatureName:$featureName /Online /All /NoRestart" -Wait -Verb RunAs
-  $versionInfo = "5.0.1"
+  $versionInfo = "5.0.2"
   $installFile = "UnrealEngine-$versionInfo-release.zip"
   $downloadUrl = "$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl

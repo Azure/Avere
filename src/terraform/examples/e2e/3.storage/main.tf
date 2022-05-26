@@ -240,9 +240,9 @@ resource "azurerm_resource_group" "storage" {
   location = module.global.regionName
 }
 
-########################################################################################
-# Storage (https://docs.microsoft.com/en-us/azure/storage/common/storage-introduction) #
-########################################################################################
+##################################################################################
+# Storage (https://docs.microsoft.com/azure/storage/common/storage-introduction) #
+##################################################################################
 
 resource "azurerm_storage_account" "storage" {
   for_each = {
@@ -321,7 +321,7 @@ resource "azurerm_private_endpoint" "storage" {
   ]
 }
 
-# https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage-account-contributor
+# https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#storage-account-contributor
 resource "azurerm_role_assignment" "storage_account_contributor" {
   for_each = {
     for x in var.storageAccounts : x.name => x if x.enableBlobNfsV3 && x.name != "" 
@@ -334,7 +334,7 @@ resource "azurerm_role_assignment" "storage_account_contributor" {
   ]
 }
 
-# https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor
+# https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor
 resource "azurerm_role_assignment" "storage_blob_data_contributor" {
   for_each = {
     for x in var.storageAccounts : x.name => x if x.enableBlobNfsV3 && x.name != "" 
@@ -387,9 +387,9 @@ resource "azurerm_storage_share" "shares" {
   ]
 }
 
-############################################################################################################
-# NetApp Files (https://docs.microsoft.com/en-us/azure/azure-netapp-files/azure-netapp-files-introduction) #
-############################################################################################################
+######################################################################################################
+# NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) #
+######################################################################################################
 
 resource "azurerm_netapp_account" "storage" {
   for_each = {
