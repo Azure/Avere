@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.1.9"
+  required_version = ">= 1.2.2"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.6.0"
+      version = "~>3.9.0"
     }
   }
   backend "azurerm" {
@@ -52,12 +52,11 @@ variable "virtualNetworkSubnetIndex" {
     {
       farm                 = number
       workstation          = number
-      scheduler            = number
+      cache                = number
       storage              = number
       storageNetApp        = number
       storageHammerspace   = number
       storageHammerspaceHA = number
-      cache                = number
     }
   )
 }

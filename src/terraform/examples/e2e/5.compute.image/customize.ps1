@@ -21,10 +21,12 @@ $buildJsonBytes = [System.Convert]::FromBase64String($buildJsonEncoded)
 $buildJson = [System.Text.Encoding]::UTF8.GetString($buildJsonBytes)
 $build = $buildJson | ConvertFrom-Json
 $subnetName = $build.subnetName
-Write-Host "Subnet Name: $subnetName"
 $machineSize = $build.machineSize
-Write-Host "Machine Size: $machineSize"
+$outputVersion = $build.outputVersion
 $renderEngines = $build.renderEngines -join ","
+Write-Host "Subnet Name: $subnetName"
+Write-Host "Machine Size: $machineSize"
+Write-Host "Output Version: $outputVersion"
 Write-Host "Render Engines: $renderEngines"
 Write-Host "Customize (End): Image Build Parameters"
 
@@ -88,7 +90,7 @@ Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
 Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
 Write-Host "Customize (End): Azure CLI"
 
-if ($subnetName -eq "Scheduler") {
+if ($outputVersion -eq "0.0.0") {
   Write-Host "Customize (Start): NFS Server"
   Install-WindowsFeature -Name "FS-NFS-Service"
   Write-Host "Customize (End): NFS Server"
@@ -147,7 +149,7 @@ Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
 Expand-Archive -Path $installFile
 Write-Host "Customize (End): Deadline Download"
 
-if ($subnetName -eq "Scheduler") {
+if ($outputVersion -eq "0.0.0") {
   Write-Host "Customize (Start): Deadline Repository"
   netsh advfirewall firewall add rule name="Allow Mongo Database" dir=in action=allow protocol=TCP localport=27100
   Set-Location -Path "Deadline*"
@@ -169,7 +171,7 @@ netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action
 Set-Location -Path "Deadline*"
 $installFile = "DeadlineClient-$schedulerVersion-windows-installer.exe"
 $installArgs = "--mode unattended --licensemode $schedulerLicense"
-if ($subnetName -eq "Scheduler") {
+if ($outputVersion -eq "0.0.0") {
   $installArgs = "$installArgs --slavestartup false --launcherservice false"
 } else {
   if ($subnetName -eq "Farm") {

@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.1.9"
+  required_version = ">= 1.2.2"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.6.0"
+      version = "~>3.9.0"
     }
   }
   backend "azurerm" {
@@ -64,12 +64,12 @@ variable "imageTemplates" {
         )
         build = object(
           {
-            runElevated    = bool
             subnetName     = string
             machineSize    = string
             osDiskSizeGB   = number
             timeoutMinutes = number
             outputVersion  = string
+            runElevated    = bool
             renderEngines  = list(string)
           }
         )
@@ -115,6 +115,16 @@ data "azurerm_user_assigned_identity" "identity" {
 data "azurerm_storage_account" "storage" {
   name                = module.global.securityStorageAccountName
   resource_group_name = module.global.securityResourceGroupName
+}
+
+data "azurerm_key_vault" "vault" {
+  name                = module.global.keyVaultName
+  resource_group_name = module.global.securityResourceGroupName
+}
+
+data "azurerm_key_vault_secret" "admin_password" {
+  name         = module.global.keyVaultSecretNameAdminPassword
+  key_vault_id = data.azurerm_key_vault.vault.id
 }
 
 locals {
@@ -212,6 +222,9 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
     },
     "virtualNetworkResourceGroupName" = {
       value = data.azurerm_virtual_network.network.resource_group_name
+    },
+    "keyVaultSecretAdminPassword" = {
+      value = data.azurerm_key_vault_secret.admin_password.value
     }
   })
   template_content = <<TEMPLATE
@@ -238,6 +251,9 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
           "type": "string"
         },
         "virtualNetworkResourceGroupName": {
+          "type": "string"
+        },
+        "keyVaultSecretAdminPassword": {
           "type": "string"
         }
       },
@@ -289,6 +305,10 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                 {
                   "name": "scriptFilePath",
                   "type": "string"
+                },
+                {
+                  "name": "adminPassword",
+                  "type": "string"
                 }
               ],
               "output": {
@@ -302,7 +322,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   {
                     "type": "Shell",
                     "inline": [
-                      "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customScript), concat('buildJsonEncoded=', base64(string(parameters('imageTemplate').build))))]"
+                      "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customScript), concat('buildJsonEncoded=', base64(string(union(parameters('imageTemplate').build, createObject('adminPassword', parameters('adminPassword')))))))]"
                     ]
                   }
                 ]
@@ -372,7 +392,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.sku]",
               "version": "[parameters('imageTemplates')[copyIndex()].image.inputVersion]"
             },
-            "customize": "[concat(if(equals(parameters('imageTemplates')[copyIndex()].build.subnetName, 'Scheduler'), fx.GetMachineRenameCommands(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, parameters('imageTemplates')[copyIndex()]), createArray()), if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathWindows')), fx.GetCustomizeCommandsLinux(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathLinux'))))]",
+            "customize": "[concat(if(equals(parameters('imageTemplates')[copyIndex()].build.outputVersion, '0.0.0'), fx.GetMachineRenameCommands(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, parameters('imageTemplates')[copyIndex()]), createArray()), if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathWindows')), fx.GetCustomizeCommandsLinux(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathLinux'), parameters('keyVaultSecretAdminPassword'))))]",
             "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].build.timeoutMinutes]",
             "distribute": [
               {

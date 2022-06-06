@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.1.9"
+  required_version = ">= 1.2.2"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.6.0"
+      version = "~>3.9.0"
     }
   }
   backend "azurerm" {
@@ -130,6 +130,16 @@ data "terraform_remote_state" "network" {
   }
 }
 
+data "terraform_remote_state" "image" {
+  backend = "azurerm"
+  config = {
+    resource_group_name  = module.global.securityResourceGroupName
+    storage_account_name = module.global.securityStorageAccountName
+    container_name       = module.global.terraformStorageContainerName
+    key                  = "5.compute.image"
+  }
+}
+
 data "azurerm_virtual_network" "network" {
   name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
   resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
@@ -141,7 +151,7 @@ data "azurerm_private_dns_zone" "network" {
 }
 
 data "azurerm_subnet" "scheduler" {
-  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.scheduler].name : var.virtualNetwork.subnetName
+  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.farm].name : var.virtualNetwork.subnetName
   resource_group_name  = data.azurerm_virtual_network.network.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.network.name
 }
@@ -167,6 +177,9 @@ data "azurerm_log_analytics_workspace" "monitor" {
 }
 
 locals {
+  imageResourceGroupName = try(data.terraform_remote_state.image.outputs.resourceGroupName, "")
+  imageGalleryName = try(data.terraform_remote_state.image.outputs.imageGalleryName, "")
+  imageIdFarm = local.imageResourceGroupName != "" ? "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${local.imageResourceGroupName}/providers/Microsoft.Compute/galleries/${local.imageGalleryName}/images/Linux/versions/1.0.0" : ""
   schedulerMachineNames = [
     for virtualMachine in var.virtualMachines : virtualMachine.name if virtualMachine.name != ""
   ]
@@ -242,7 +255,21 @@ resource "azurerm_virtual_machine_extension" "custom_linux" {
   virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     script: "${base64encode(
-      templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
+      templatefile(each.value.customExtension.fileName,
+        merge(
+          each.value.customExtension.parameters,
+          { tenantId = data.azurerm_client_config.current.tenant_id },
+          { subscriptionId = data.azurerm_client_config.current.subscription_id },
+          { regionName = module.global.regionName },
+          { networkResourceGroupName = data.azurerm_virtual_network.network.resource_group_name },
+          { networkName = data.azurerm_virtual_network.network.name },
+          { networkSubnetName = data.azurerm_subnet.scheduler.name },
+          { imageResourceGroupName = local.imageResourceGroupName },
+          { imageGalleryName = local.imageGalleryName },
+          { imageIdFarm = local.imageIdFarm },
+          { adminPassword = data.azurerm_key_vault_secret.admin_password.value }
+        )
+      )
     )}"
   })
   depends_on = [

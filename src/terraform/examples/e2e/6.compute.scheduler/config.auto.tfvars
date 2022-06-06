@@ -4,7 +4,7 @@ resourceGroupName = "ArtistAnywhere.Scheduler"
 virtualMachines = [
   {
     name        = "LnxScheduler"
-    imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/10.0.0"
+    imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/0.0.0"
     machineSize = "Standard_D8s_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Linux"
@@ -37,9 +37,9 @@ virtualMachines = [
           workerIdleDeleteSeconds  = 3600
         }
         cycleCloud = { // https://docs.microsoft.com/azure/cyclecloud/overview
-          enable = false
+          enable = true
           storageAccount = {
-            name       = ""
+            name       = "azartistcc"
             type       = "StorageV2"
             tier       = "Standard"
             redundancy = "LRS"
@@ -53,7 +53,7 @@ virtualMachines = [
   },
   {
     name        = "" // "WinScheduler"
-    imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinScheduler/versions/10.0.0"
+    imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinScheduler/versions/0.0.0"
     machineSize = "Standard_D8s_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Windows"

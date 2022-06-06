@@ -16,10 +16,13 @@ echo "Customize (End): Platform Utilities"
 echo "Customize (Start): Image Build Parameters"
 buildJson=$(echo $buildJsonEncoded | base64 -d)
 subnetName=$(echo $buildJson | jq -r .subnetName)
-echo "Subnet Name: $subnetName"
 machineSize=$(echo $buildJson | jq -r .machineSize)
-echo "Machine Size: $machineSize"
+outputVersion=$(echo $buildJson | jq -r .outputVersion)
 renderEngines=$(echo $buildJson | jq -c .renderEngines)
+adminPassword=$(echo $buildJson | jq -r .adminPassword)
+echo "Subnet Name: $subnetName"
+echo "Machine Size: $machineSize"
+echo "Output Version: $outputVersion"
 echo "Render Engines: $renderEngines"
 echo "Customize (End): Image Build Parameters"
 
@@ -77,10 +80,54 @@ echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $repoFile
 yum -y install azure-cli
 echo "Customize (End): Azure CLI"
 
-if [ $subnetName == "Scheduler" ]; then
+if [ $outputVersion == "0.0.0" ]; then
   echo "Customize (Start): NFS Server"
   systemctl --now enable nfs-server
   echo "Customize (End): NFS Server"
+
+  echo "Customize (Start): CycleCloud"
+  cycleCloudPath="/etc/yum.repos.d/cyclecloud.repo"
+  echo "[cyclecloud]" > $cycleCloudPath
+  echo "name=cyclecloud" >> $cycleCloudPath
+  echo "baseurl=https://packages.microsoft.com/yumrepos/cyclecloud" >> $cycleCloudPath
+  echo "gpgcheck=1" >> $cycleCloudPath
+  echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $cycleCloudPath
+  yum -y install cyclecloud8
+  cd /opt/cycle_server
+  unzip ./tools/cyclecloud-cli.zip
+  ./cyclecloud-cli-installer/install.sh --installdir /usr/local/cyclecloud
+  cycleAdminAccountName="cc_admin"
+  cycleInitializeFile="cycle_initialize.json"
+  echo "[" > $cycleInitializeFile
+  echo "{" >> $cycleInitializeFile
+  echo "\"AdType\": \"Application.Setting\"," >> $cycleInitializeFile
+  echo "\"Name\": \"cycleserver.installation.initial_user\"," >> $cycleInitializeFile
+  echo "\"Value\": \"$cycleAdminAccountName\"" >> $cycleInitializeFile
+  echo "}," >> $cycleInitializeFile
+  echo "{" >> $cycleInitializeFile
+  echo "\"AdType\": \"Application.Setting\"," >> $cycleInitializeFile
+  echo "\"Name\": \"distribution_method\"," >> $cycleInitializeFile
+  echo "\"Category\": \"system\"," >> $cycleInitializeFile
+  echo "\"Status\": \"internal\"," >> $cycleInitializeFile
+  echo "\"Value\": \"manual\"" >> $cycleInitializeFile
+  echo "}," >> $cycleInitializeFile
+  echo "{" >> $cycleInitializeFile
+  echo "\"AdType\": \"Application.Setting\"," >> $cycleInitializeFile
+  echo "\"Name\": \"cycleserver.installation.complete\"," >> $cycleInitializeFile
+  echo "\"Value\": true" >> $cycleInitializeFile
+  echo "}," >> $cycleInitializeFile
+  echo "{" >> $cycleInitializeFile
+  echo "\"AdType\": \"AuthenticatedUser\"," >> $cycleInitializeFile
+  echo "\"Name\": \"$cycleAdminAccountName\"," >> $cycleInitializeFile
+  echo "\"RawPassword\": \"$adminPassword\"," >> $cycleInitializeFile
+  echo "\"Superuser\": true" >> $cycleInitializeFile
+  echo "}" >> $cycleInitializeFile
+  echo "]" >> $cycleInitializeFile
+  mv $cycleInitializeFile /opt/cycle_server/config/data/
+  installFile="cluster_template.txt"
+  downloadUrl="$storageContainerUrl/CycleCloud/$installFile$storageContainerSas"
+  curl -o $installFile -L $downloadUrl
+  echo "Customize (End): CycleCloud"
 fi
 
 schedulerVersion="10.1.21.4"
@@ -113,7 +160,7 @@ fi
 if [[ $renderEngines == *Houdini* ]]; then
   rendererPaths="$rendererPaths:$rendererPathHoudini/bin"
 fi
-echo "PATH=$PATH:$schedulerPath$rendererPaths" > /etc/profile.d/aaa.sh
+echo "PATH=$PATH:$schedulerPath$rendererPaths:/usr/local/cyclecloud/bin" > /etc/profile.d/aaa.sh
 
 echo "Customize (Start): Deadline Download"
 installFile="Deadline-$schedulerVersion-linux-installers.tar"
@@ -122,7 +169,7 @@ curl -o $installFile -L $downloadUrl
 tar -xf $installFile
 echo "Customize (End): Deadline Download"
 
-if [ $subnetName == "Scheduler" ]; then
+if [ $outputVersion == "0.0.0" ]; then
   echo "Customize (Start): Deadline Repository"
   installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
   ./$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath &> $installFile.txt
@@ -139,7 +186,7 @@ fi
 echo "Customize (Start): Deadline Client"
 installFile="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
 installArgs="--mode unattended --licensemode $schedulerLicense"
-if [ $subnetName == "Scheduler" ]; then
+if [ $outputVersion == "0.0.0" ]; then
   installArgs="$installArgs --slavestartup false --launcherdaemon false"
 else
   [ $subnetName == "Farm" ] && workerStartup=true || workerStartup=false

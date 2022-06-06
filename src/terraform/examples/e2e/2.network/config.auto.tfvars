@@ -22,38 +22,32 @@ virtualNetwork = {
       serviceDelegation = ""
     },
     {
-      name              = "Scheduler"
-      addressSpace      = ["10.0.192.0/24"]
-      serviceEndpoints  = []
-      serviceDelegation = ""
-    },
-    {
       name              = "Cache"
-      addressSpace      = ["10.0.193.0/24"]
+      addressSpace      = ["10.0.192.0/24"]
       serviceEndpoints  = ["Microsoft.Storage"]
       serviceDelegation = ""
     },
     {
       name              = "Storage"
-      addressSpace      = ["10.0.194.0/24"]
+      addressSpace      = ["10.0.193.0/24"]
       serviceEndpoints  = ["Microsoft.Storage"]
       serviceDelegation = ""
     },
     {
       name              = "StorageNetApp"
-      addressSpace      = ["10.0.195.0/24"]
+      addressSpace      = ["10.0.194.0/24"]
       serviceEndpoints  = []
       serviceDelegation = "Microsoft.Netapp/volumes"
     },
     {
       name              = "StorageHammerspace"
-      addressSpace      = ["10.0.196.0/25"]
+      addressSpace      = ["10.0.195.0/25"]
       serviceEndpoints  = []
       serviceDelegation = ""
     },
     {
       name              = "StorageHammerspaceHA"
-      addressSpace      = ["10.0.196.128/25"]
+      addressSpace      = ["10.0.195.128/25"]
       serviceEndpoints  = []
       serviceDelegation = ""
     },
@@ -69,12 +63,11 @@ virtualNetwork = {
 virtualNetworkSubnetIndex = {
   farm                 = 0
   workstation          = 1
-  scheduler            = 2
-  cache                = 3
-  storage              = 4
-  storageNetApp        = 5
-  storageHammerspace   = 6
-  storageHammerspaceHA = 7
+  cache                = 2
+  storage              = 3
+  storageNetApp        = 4
+  storageHammerspace   = 5
+  storageHammerspaceHA = 6
 }
 
 ###########################################################################

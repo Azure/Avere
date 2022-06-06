@@ -13,17 +13,17 @@ $taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-Exec
 $taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval $taskInterval -At $taskStart -Once
 Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
 
-$customDataInput = "C:\AzureData\CustomData.bin"
-$customDataOutput = "C:\AzureData\Scale.ps1"
-$fileStream = New-Object System.IO.FileStream($customDataInput, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read)
+$customDataInputFile = "C:\AzureData\CustomData.bin"
+$customDataOutputFile = "C:\AzureData\Scale.ps1"
+$fileStream = New-Object System.IO.FileStream($customDataInputFile, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read)
 $gZipStream = New-Object System.IO.Compression.GZipStream($fileStream, [System.IO.Compression.CompressionMode]::Decompress)
 $streamReader = New-Object System.IO.StreamReader($gZipStream)
-Out-File -InputObject $streamReader.ReadToEnd() -FilePath $customDataOutput
+Out-File -InputObject $streamReader.ReadToEnd() -FilePath $customDataOutputFile
 
 $taskName = "AAA Render Farm Scaler"
 $taskStart = Get-Date
 $taskInterval = New-TimeSpan -Seconds ${autoScale.detectionIntervalSeconds}
-$taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File $customDataOutput -resourceGroupName ${autoScale.resourceGroupName} -scaleSetName ${autoScale.scaleSetName} -jobWaitThresholdSeconds ${autoScale.jobWaitThresholdSeconds} -workerIdleDeleteSeconds ${autoScale.workerIdleDeleteSeconds}"
+$taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File $customDataOutputFile -resourceGroupName ${autoScale.resourceGroupName} -scaleSetName ${autoScale.scaleSetName} -jobWaitThresholdSeconds ${autoScale.jobWaitThresholdSeconds} -workerIdleDeleteSeconds ${autoScale.workerIdleDeleteSeconds}"
 $taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval $taskInterval -At $taskStart -Once
 Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
 
