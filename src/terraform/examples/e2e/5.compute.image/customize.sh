@@ -94,6 +94,7 @@ if [ $outputVersion == "0.0.0" ]; then
   echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $cycleCloudPath
   yum -y install cyclecloud8
   cd /opt/cycle_server
+  sed -i 's/webServerEnableHttps=false/webServerEnableHttps=true/' config/cycle_server.properties
   unzip ./tools/cyclecloud-cli.zip
   ./cyclecloud-cli-installer/install.sh --installdir /usr/local/cyclecloud
   cycleAdminAccountName="cc_admin"

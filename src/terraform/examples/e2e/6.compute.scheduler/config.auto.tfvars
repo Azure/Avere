@@ -37,9 +37,9 @@ virtualMachines = [
           workerIdleDeleteSeconds  = 3600
         }
         cycleCloud = { // https://docs.microsoft.com/azure/cyclecloud/overview
-          enable = true
+          enable = false
           storageAccount = {
-            name       = "azartistcc"
+            name       = ""
             type       = "StorageV2"
             tier       = "Standard"
             redundancy = "LRS"
