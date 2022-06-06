@@ -85,14 +85,19 @@ if [ ${cycleCloud.enable} == true ]; then
   echo 'Autoscale = $autoScale' >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "[[node defaults]]" >> $clusterTemplateFile
+  echo 'KeyPairLocation = ~/.ssh/cyclecloud.pem' >> $clusterTemplateFile
   echo 'Credentials = $credentials' >> $clusterTemplateFile
   echo 'Region = $regionName' >> $clusterTemplateFile
   echo 'SubnetId = $subnetId' >> $clusterTemplateFile
-  echo 'ImageName = $imageId' >> $clusterTemplateFile
-  echo 'MachineType = $machineType' >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "[[nodearray Render Farm]]" >> $clusterTemplateFile
+  echo 'ImageName = $imageId' >> $clusterTemplateFile
   echo 'InitialCount = $initialNodeCount' >> $clusterTemplateFile
+  echo 'MachineType = $machineType' >> $clusterTemplateFile
+  echo 'Interruptible = $useSpotVM' >> $clusterTemplateFile
+  echo 'EphemeralOSDisk = $useEphemeralOSDisk' >> $clusterTemplateFile
+  echo 'ComputerNamePrefix = $machineNamePrefix' >> $clusterTemplateFile
+  echo 'Azure.MaxScaleSetSize = $maxScaleSetSize' >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "[parameters Required]" >> $clusterTemplateFile
   echo "Order = 1" >> $clusterTemplateFile
@@ -122,6 +127,13 @@ if [ ${cycleCloud.enable} == true ]; then
   echo "DefaultValue = ${imageIdFarm}" >> $clusterTemplateFile
   echo "Required = true" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
+  echo "[[[parameter initialNodeCount]]]" >> $clusterTemplateFile
+  echo "Label = Node Count" >> $clusterTemplateFile
+  echo "Config.Plugin = pico.form.NumberTextBox" >> $clusterTemplateFile
+  echo "Config.IntegerOnly = true" >> $clusterTemplateFile
+  echo "DefaultValue = 10" >> $clusterTemplateFile
+  echo "Required = true" >> $clusterTemplateFile
+  echo "" >> $clusterTemplateFile
   echo "[[[parameter machineType]]]" >> $clusterTemplateFile
   echo "Label = Node Type" >> $clusterTemplateFile
   echo "ParameterType = Cloud.MachineType" >> $clusterTemplateFile
@@ -129,14 +141,32 @@ if [ ${cycleCloud.enable} == true ]; then
   echo "Config.Multiselect = true" >> $clusterTemplateFile
   echo "Required = true" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
-  echo "[[[parameter initialNodeCount]]]" >> $clusterTemplateFile
-  echo "Label = Node Count" >> $clusterTemplateFile
-  echo "DefaultValue = 10" >> $clusterTemplateFile
-  echo "Required = true" >> $clusterTemplateFile
+  echo "[[[parameter useSpotVM]]]" >> $clusterTemplateFile
+  echo "Label = " >> $clusterTemplateFile
+  echo "Widget.Label = Use Spot VM Capacity" >> $clusterTemplateFile
+  echo "Widget.Plugin = pico.form.BooleanCheckBox" >> $clusterTemplateFile
+  echo "DefaultValue = true" >> $clusterTemplateFile
+  echo "" >> $clusterTemplateFile
+  echo "[[[parameter useEphemeralOSDisk]]]" >> $clusterTemplateFile
+  echo "Label = " >> $clusterTemplateFile
+  echo "Widget.Label = Use Ephemeral OS Disk" >> $clusterTemplateFile
+  echo "Widget.Plugin = pico.form.BooleanCheckBox" >> $clusterTemplateFile
+  echo "DefaultValue = true" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "[parameters Advanced]" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
-  echo "[[parameters Scale]]" >> $clusterTemplateFile
+  echo "[[parameters Render Nodes]]" >> $clusterTemplateFile
+  echo "" >> $clusterTemplateFile
+  echo "[[[parameter machineNamePrefix]]]" >> $clusterTemplateFile
+  echo "Label = Machine Name Prefix" >> $clusterTemplateFile
+  echo "ParameterType = String" >> $clusterTemplateFile
+  echo "" >> $clusterTemplateFile
+  echo "[[[parameter maxScaleSetSize]]]" >> $clusterTemplateFile
+  echo "Label = Max Scale Set Size" >> $clusterTemplateFile
+  echo "Config.Plugin = pico.form.NumberTextBox" >> $clusterTemplateFile
+  echo "Config.IntegerOnly = true" >> $clusterTemplateFile
+  echo "Config.MaxValue = 1000" >> $clusterTemplateFile
+  echo "DefaultValue = 40" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "[[[parameter autoScale]]]" >> $clusterTemplateFile
   echo "Label = Auto Scale" >> $clusterTemplateFile
