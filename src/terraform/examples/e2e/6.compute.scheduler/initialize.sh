@@ -62,7 +62,9 @@ if [ ${cycleCloud.enable} == true ]; then
     done
   done
   imageList="$imageList}"
+
   cd /opt/cycle_server
+
   cycleAccountFile="cycle_account.json"
   echo "{" > $cycleAccountFile
   echo "\"Name\": \"Azure\"," >> $cycleAccountFile
@@ -77,12 +79,12 @@ if [ ${cycleCloud.enable} == true ]; then
   echo "\"RMStorageAccount\": \"${cycleCloud.storageAccount.name}\"," >> $cycleAccountFile
   echo "\"RMStorageContainer\": \"cyclecloud\"" >> $cycleAccountFile
   echo "}" >> $cycleAccountFile
+
   clusterTemplateFile="cluster_template.txt"
   echo "[cluster Render Farm]" > $clusterTemplateFile
   echo "Category = Schedulers" >> $clusterTemplateFile
   echo "IconUrl = https://azartist.blob.core.windows.net/bin/render.png?sv=2020-10-02&st=2022-01-01T00%3A00%3A00Z&se=2222-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=4N8gUHTPNOG%2BlgEPvQljsRPCOsRD3ZWfiBKl%2BRxl9S8%3D" >> $clusterTemplateFile
   echo "FormLayout = SelectionPanel" >> $clusterTemplateFile
-  echo 'Autoscale = $autoScale' >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "[[node defaults]]" >> $clusterTemplateFile
   echo 'KeyPairLocation = ~/.ssh/cyclecloud.pem' >> $clusterTemplateFile
@@ -121,7 +123,6 @@ if [ ${cycleCloud.enable} == true ]; then
   echo "" >> $clusterTemplateFile
   echo "[[[parameter imageId]]]" >> $clusterTemplateFile
   echo "Label = Node Image" >> $clusterTemplateFile
-  echo "ParameterType = StringList" >> $clusterTemplateFile
   echo "Config.Plugin = pico.form.Dropdown" >> $clusterTemplateFile
   echo "Config.Entries := $imageList" >> $clusterTemplateFile
   echo "DefaultValue = ${imageIdFarm}" >> $clusterTemplateFile
@@ -168,16 +169,21 @@ if [ ${cycleCloud.enable} == true ]; then
   echo "Config.MaxValue = 1000" >> $clusterTemplateFile
   echo "DefaultValue = 40" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
-  echo "[[[parameter autoScale]]]" >> $clusterTemplateFile
-  echo "Label = Auto Scale" >> $clusterTemplateFile
-  echo "ParameterType = Boolean" >> $clusterTemplateFile
-  echo "" >> $clusterTemplateFile
   echo "[[parameters Security]]" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "[[[parameter credentials]]]" >> $clusterTemplateFile
   echo "Label = Credentials" >> $clusterTemplateFile
   echo "ParameterType = Cloud.Credentials" >> $clusterTemplateFile
-  cyclecloud initialize --url=http://localhost:8080 --username=cc_admin --password="${adminPassword}" --batch
+  cyclecloud initialize --url=https://localhost:8443 --username=cc_admin --password="${adminPassword}" --batch --verify-ssl=false
   cyclecloud account create -f $cycleAccountFile
   cyclecloud import_template -f $clusterTemplateFile
+
+  installFile="scaleLib.tar.gz"
+  downloadUrl="https://github.com/Azure/cyclecloud-scalelib/archive/refs/tags/0.2.7.tar.gz"
+  curl -o $installFile -L $downloadUrl
+  tar -xf $installFile
+  pip3 install ./tools/cyclecloud_api*.whl
+  cd cyclecloud-scalelib*
+  pip3 install -r dev-requirements.txt
+  python3 setup.py build
 fi
