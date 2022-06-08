@@ -42,10 +42,11 @@ imageTemplates = [
   {
     name = "LnxScheduler"
     image = {
-      definitionName = "Linux"
-      sourceType     = "PlatformImage"
-      customScript   = "customize.sh"
-      inputVersion   = "Latest"
+      definitionName  = "Linux"
+      sourceType      = "PlatformImage"
+      customizeScript = "customize.sh"
+      terminateScript = ""
+      inputVersion    = "Latest"
     }
     build = {
       subnetName     = "Farm"
@@ -60,10 +61,11 @@ imageTemplates = [
   {
     name = "LnxFarm"
     image = {
-      definitionName = "Linux"
-      sourceType     = "PlatformImage"
-      customScript   = "customize.sh"
-      inputVersion   = "Latest"
+      definitionName  = "Linux"
+      sourceType      = "PlatformImage"
+      customizeScript = "customize.sh"
+      terminateScript = "terminate.sh"
+      inputVersion    = "Latest"
     }
     build = {
       subnetName     = "Farm"
@@ -84,10 +86,11 @@ imageTemplates = [
   {
     name = "LnxArtistV3"
     image = {
-      definitionName = "Linux"
-      sourceType     = "PlatformImage"
-      customScript   = "customize.sh"
-      inputVersion   = "Latest"
+      definitionName  = "Linux"
+      sourceType      = "PlatformImage"
+      customizeScript = "customize.sh"
+      terminateScript = ""
+      inputVersion    = "Latest"
     }
     build = {
       subnetName     = "Workstation"
@@ -108,10 +111,11 @@ imageTemplates = [
   {
     name = "LnxArtistV4"
     image = {
-      definitionName = "Linux"
-      sourceType     = "PlatformImage"
-      customScript   = "customize.sh"
-      inputVersion   = "Latest"
+      definitionName  = "Linux"
+      sourceType      = "PlatformImage"
+      customizeScript = "customize.sh"
+      terminateScript = ""
+      inputVersion    = "Latest"
     }
     build = {
       subnetName     = "Workstation"
@@ -132,10 +136,11 @@ imageTemplates = [
   # {
   #   name = "LnxArtistV5"
   #   image = {
-  #     definitionName = "Linux"
-  #     sourceType     = "PlatformImage"
-  #     customScript   = "customize.sh"
-  #     inputVersion   = "Latest"
+  #     definitionName  = "Linux"
+  #     sourceType      = "PlatformImage"
+  #     customizeScript = "customize.ps1"
+  #     terminateScript = ""
+  #     inputVersion    = "Latest"
   #   }
   #   build = {
   #     subnetName     = "Workstation"
@@ -156,10 +161,11 @@ imageTemplates = [
   {
     name = "WinScheduler"
     image = {
-      definitionName = "WinScheduler"
-      sourceType     = "PlatformImage"
-      customScript   = "customize.ps1"
-      inputVersion   = "Latest"
+      definitionName  = "WinScheduler"
+      sourceType      = "PlatformImage"
+      customizeScript = "customize.ps1"
+      terminateScript = ""
+      inputVersion    = "Latest"
     }
     build = {
       subnetName     = "Farm"
@@ -174,10 +180,11 @@ imageTemplates = [
   {
     name = "WinFarm"
     image = {
-      definitionName = "WinFarm"
-      sourceType     = "PlatformImage"
-      customScript   = "customize.ps1"
-      inputVersion   = "Latest"
+      definitionName  = "WinFarm"
+      sourceType      = "PlatformImage"
+      customizeScript = "customize.ps1"
+      terminateScript = "terminate.ps1"
+      inputVersion    = "Latest"
     }
     build = {
       subnetName     = "Farm"
@@ -199,10 +206,11 @@ imageTemplates = [
   {
     name = "WinArtistV3"
     image = {
-      definitionName = "WinArtist"
-      sourceType     = "PlatformImage"
-      customScript   = "customize.ps1"
-      inputVersion   = "Latest"
+      definitionName  = "WinArtist"
+      sourceType      = "PlatformImage"
+      customizeScript = "customize.ps1"
+      terminateScript = ""
+      inputVersion    = "Latest"
     }
     build = {
       subnetName     = "Workstation"
@@ -224,10 +232,11 @@ imageTemplates = [
   {
     name = "WinArtistV4"
     image = {
-      definitionName = "WinArtist"
-      sourceType     = "PlatformImage"
-      customScript   = "customize.ps1"
-      inputVersion   = "Latest"
+      definitionName  = "WinArtist"
+      sourceType      = "PlatformImage"
+      customizeScript = "customize.ps1"
+      terminateScript = ""
+      inputVersion    = "Latest"
     }
     build = {
       subnetName     = "Workstation"
@@ -249,10 +258,11 @@ imageTemplates = [
   # {
   #   name = "WinArtistV5"
   #   image = {
-  #     definitionName = "WinArtist"
-  #     sourceType     = "PlatformImage"
-  #     customScript   = "customize.ps1"
-  #     inputVersion   = "Latest"
+  #     definitionName  = "WinArtist"
+  #     sourceType      = "PlatformImage"
+  #     customizeScript = "customize.ps1"
+  #     terminateScript = ""
+  #     inputVersion    = "Latest"
   #   }
   #   build = {
   #     subnetName     = "Workstation"

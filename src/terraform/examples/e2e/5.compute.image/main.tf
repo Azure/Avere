@@ -56,10 +56,11 @@ variable "imageTemplates" {
         name = string
         image = object(
           {
-            definitionName = string
-            sourceType     = string
-            customScript   = string
-            inputVersion   = string
+            definitionName  = string
+            sourceType      = string
+            customizeScript = string
+            terminateScript = string
+            inputVersion    = string
           }
         )
         build = object(
@@ -128,8 +129,10 @@ data "azurerm_key_vault_secret" "admin_password" {
 }
 
 locals {
-  customScriptLinux   = "customize.sh"
-  customScriptWindows = "customize.ps1"
+  customizeScriptLinux   = "customize.sh"
+  customizeScriptWindows = "customize.ps1"
+  terminateScriptLinux   = "terminate.sh"
+  terminateScriptWindows = "terminate.ps1"
 }
 
 resource "azurerm_resource_group" "image" {
@@ -160,19 +163,35 @@ resource "azurerm_storage_container" "container" {
   storage_account_name = data.azurerm_storage_account.storage.name
 }
 
-resource "azurerm_storage_blob" "custom_script_linux" {
-  name                   = local.customScriptLinux
+resource "azurerm_storage_blob" "customize_script_linux" {
+  name                   = local.customizeScriptLinux
   storage_account_name   = data.azurerm_storage_account.storage.name
   storage_container_name = azurerm_storage_container.container.name
-  source                 = local.customScriptLinux
+  source                 = local.customizeScriptLinux
   type                   = "Block"
 }
 
-resource "azurerm_storage_blob" "custom_script_windows" {
-  name                   = local.customScriptWindows
+resource "azurerm_storage_blob" "customize_script_windows" {
+  name                   = local.customizeScriptWindows
   storage_account_name   = data.azurerm_storage_account.storage.name
   storage_container_name = azurerm_storage_container.container.name
-  source                 = local.customScriptWindows
+  source                 = local.customizeScriptWindows
+  type                   = "Block"
+}
+
+resource "azurerm_storage_blob" "terminate_script_linux" {
+  name                   = local.terminateScriptLinux
+  storage_account_name   = data.azurerm_storage_account.storage.name
+  storage_container_name = azurerm_storage_container.container.name
+  source                 = local.terminateScriptLinux
+  type                   = "Block"
+}
+
+resource "azurerm_storage_blob" "terminate_script_windows" {
+  name                   = local.terminateScriptWindows
+  storage_account_name   = data.azurerm_storage_account.storage.name
+  storage_container_name = azurerm_storage_container.container.name
+  source                 = local.terminateScriptWindows
   type                   = "Block"
 }
 
@@ -258,7 +277,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
         }
       },
       "variables": {
-        "imageBuilderApiVersion": "2021-10-01",
+        "imageBuilderApiVersion": "2022-02-14",
         "imageGalleryApiVersion": "2022-01-03",
         "localDownloadPathLinux": "/tmp/",
         "localDownloadPathWindows": "/Windows/Temp/"
@@ -316,13 +335,18 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                 "value": [
                   {
                     "type": "File",
-                    "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.customScript)]",
-                    "destination": "[concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customScript)]"
+                    "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.customizeScript)]",
+                    "destination": "[concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript)]"
+                  },
+                  {
+                    "type": "File",
+                    "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.terminateScript)]",
+                    "destination": "[concat(parameters('scriptFilePath'), parameters('imageTemplate').image.terminateScript)]"
                   },
                   {
                     "type": "Shell",
                     "inline": [
-                      "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customScript), concat('buildJsonEncoded=', base64(string(union(parameters('imageTemplate').build, createObject('adminPassword', parameters('adminPassword')))))))]"
+                      "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript), concat('buildJsonEncoded=', base64(string(union(parameters('imageTemplate').build, createObject('adminPassword', parameters('adminPassword')))))))]"
                     ]
                   }
                 ]
@@ -348,13 +372,18 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                 "value": [
                   {
                     "type": "File",
-                    "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.customScript)]",
-                    "destination": "[concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customScript)]"
+                    "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.customizeScript)]",
+                    "destination": "[concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript)]"
+                  },
+                  {
+                    "type": "File",
+                    "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.terminateScript)]",
+                    "destination": "[concat(parameters('scriptFilePath'), parameters('imageTemplate').image.terminateScript)]"
                   },
                   {
                     "type": "PowerShell",
                     "inline": [
-                      "[format('{0} {1}', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customScript), concat('-buildJsonEncoded ', base64(string(parameters('imageTemplate').build))))]"
+                      "[format('{0} {1}', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript), concat('-buildJsonEncoded ', base64(string(parameters('imageTemplate').build))))]"
                     ],
                     "runElevated": "[parameters('imageTemplate').build.runElevated]"
                   }
@@ -420,8 +449,10 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
   TEMPLATE
   depends_on = [
     azurerm_shared_image.definitions,
-    azurerm_storage_blob.custom_script_linux,
-    azurerm_storage_blob.custom_script_windows
+    azurerm_storage_blob.customize_script_linux,
+    azurerm_storage_blob.customize_script_windows,
+    azurerm_storage_blob.terminate_script_linux,
+    azurerm_storage_blob.terminate_script_windows
   ]
 }
 

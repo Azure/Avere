@@ -101,10 +101,14 @@ if [ ${cycleCloud.enable} == true ]; then
   echo 'ComputerNamePrefix = $machineNamePrefix' >> $clusterTemplateFile
   echo 'Azure.MaxScaleSetSize = $maxScaleSetSize' >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
+  echo "[[[configuration]]]" >> $clusterTemplateFile
+  echo "cyclecloud.monitor_scheduled_events = true" >> $clusterTemplateFile
+  echo "" >> $clusterTemplateFile
   echo "[parameters Required]" >> $clusterTemplateFile
   echo "Order = 1" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "[[parameters Virtual Network]]" >> $clusterTemplateFile
+  echo "Order = 10" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "[[[parameter regionName]]]" >> $clusterTemplateFile
   echo "Label = Region" >> $clusterTemplateFile
@@ -120,6 +124,7 @@ if [ ${cycleCloud.enable} == true ]; then
   echo "Required = true" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "[[parameters Virtual Machine]]" >> $clusterTemplateFile
+  echo "Order = 11" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "[[[parameter imageId]]]" >> $clusterTemplateFile
   echo "Label = Node Image" >> $clusterTemplateFile
@@ -156,7 +161,8 @@ if [ ${cycleCloud.enable} == true ]; then
   echo "" >> $clusterTemplateFile
   echo "[parameters Advanced]" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
-  echo "[[parameters Render Nodes]]" >> $clusterTemplateFile
+  echo "[[parameters Nodes]]" >> $clusterTemplateFile
+  echo "Order = 20" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "[[[parameter machineNamePrefix]]]" >> $clusterTemplateFile
   echo "Label = Machine Name Prefix" >> $clusterTemplateFile
@@ -170,10 +176,12 @@ if [ ${cycleCloud.enable} == true ]; then
   echo "DefaultValue = 40" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "[[parameters Security]]" >> $clusterTemplateFile
+  echo "Order = 21" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "[[[parameter credentials]]]" >> $clusterTemplateFile
   echo "Label = Credentials" >> $clusterTemplateFile
   echo "ParameterType = Cloud.Credentials" >> $clusterTemplateFile
+  echo "" >> $clusterTemplateFile
   cyclecloud initialize --url=https://localhost:8443 --username=cc_admin --password="${adminPassword}" --batch --verify-ssl=false
   cyclecloud account create -f $cycleAccountFile
   cyclecloud import_template -f $clusterTemplateFile

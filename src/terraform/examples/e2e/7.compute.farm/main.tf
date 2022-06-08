@@ -95,7 +95,6 @@ variable "virtualMachineScaleSets" {
           {
             enable       = bool
             timeoutDelay = string
-            eventHandler = string
           }
         )
       }
@@ -184,9 +183,6 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   max_bid_price                   = each.value.spot.enable ? each.value.spot.machineMaxPrice : -1
   single_placement_group          = false
   overprovision                   = false
-  custom_data = base64gzip(
-    templatefile(each.value.terminationNotification.eventHandler, {})
-  )
   network_interface {
     name    = each.value.name
     primary = true
@@ -275,9 +271,6 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   max_bid_price          = each.value.spot.enable ? each.value.spot.machineMaxPrice : -1
   single_placement_group = false
   overprovision          = false
-  custom_data = base64gzip(
-    templatefile(each.value.terminationNotification.eventHandler, {})
-  )
   network_interface {
     name    = each.value.name
     primary = true

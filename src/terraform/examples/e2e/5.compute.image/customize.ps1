@@ -297,6 +297,13 @@ if ($renderEngines -like "*Houdini*") {
 }
 
 if ($subnetName -eq "Farm") {
+  if (Test-Path -Path "C:\Windows\Temp\terminate.ps1") {
+    Write-Host "Customize (Start): Scheduled Event Handler"
+    New-Item -ItemType Directory -Path "C:\cycle\jetpack\scripts" -Force
+    Copy-Item -Path "C:\Windows\Temp\terminate.ps1" -Destination "C:\cycle\jetpack\scripts\onPreempt.ps1"
+    Copy-Item -Path "C:\Windows\Temp\terminate.ps1" -Destination "C:\cycle\jetpack\scripts\onTerminate.ps1"
+    Write-Host "Customize (End): Scheduled Event Handler"
+  }
   Write-Host "Customize (Start): Privacy Experience"
   $registryKeyPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE"
   New-Item -ItemType Directory -Path $registryKeyPath -Force

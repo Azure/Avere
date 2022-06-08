@@ -301,6 +301,16 @@ if [[ $renderEngines == *Houdini* ]]; then
   echo "Customize (End): Houdini"
 fi
 
+if [ $subnetName == "Farm" ]; then
+  if [ -f /tmp/terminate.sh ]; then
+    echo "Customize (Start): Scheduled Event Handler"
+    mkdir -p /opt/cycle/jetpack/scripts
+    cp /tmp/terminate.sh /opt/cycle/jetpack/scripts/onPreempt.sh
+    cp /tmp/terminate.sh /opt/cycle/jetpack/scripts/onTerminate.sh
+    echo "Customize (End): Scheduled Event Handler"
+  fi
+fi
+
 if [ $subnetName == "Workstation" ]; then
   echo "Customize (Start): Workstation Desktop"
   yum -y groups install "KDE Plasma Workspaces"
