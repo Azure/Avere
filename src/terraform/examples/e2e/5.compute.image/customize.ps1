@@ -192,7 +192,7 @@ Write-Host "Customize (End): Deadline Client"
 
 if ($renderEngines -like "*Blender*") {
   Write-Host "Customize (Start): Blender"
-  $versionInfo = "3.1.2"
+  $versionInfo = "3.2.0"
   $installFile = "blender-$versionInfo-windows-x64.msi"
   $downloadUrl = "$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
@@ -297,11 +297,11 @@ if ($renderEngines -like "*Houdini*") {
 }
 
 if ($subnetName -eq "Farm") {
-  if (Test-Path -Path "C:\Windows\Temp\terminate.ps1") {
+  if (Test-Path -Path "C:\Windows\Temp\onTerminate.ps1") {
     Write-Host "Customize (Start): Scheduled Event Handler"
     New-Item -ItemType Directory -Path "C:\cycle\jetpack\scripts" -Force
-    Copy-Item -Path "C:\Windows\Temp\terminate.ps1" -Destination "C:\cycle\jetpack\scripts\onPreempt.ps1"
-    Copy-Item -Path "C:\Windows\Temp\terminate.ps1" -Destination "C:\cycle\jetpack\scripts\onTerminate.ps1"
+    Copy-Item -Path "C:\Windows\Temp\onTerminate.ps1" -Destination "C:\cycle\jetpack\scripts\onPreempt.ps1"
+    Copy-Item -Path "C:\Windows\Temp\onTerminate.ps1" -Destination "C:\cycle\jetpack\scripts\onTerminate.ps1"
     Write-Host "Customize (End): Scheduled Event Handler"
   }
   Write-Host "Customize (Start): Privacy Experience"

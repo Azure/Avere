@@ -12,8 +12,8 @@ virtualMachineScaleSets = [
     operatingSystem = {
       type = "Linux"
       disk = {
-        storageType = "Premium_LRS"
-        cachingType = "ReadWrite"
+        storageType = "Standard_LRS"
+        cachingType = "ReadOnly"
         ephemeralEnable = true // https://docs.microsoft.com/azure/virtual-machines/ephemeral-os-disks
       }
     }
@@ -49,7 +49,6 @@ virtualMachineScaleSets = [
     terminationNotification = {  // https://docs.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
       enable       = true
       timeoutDelay = "PT5M"
-      eventHandler = "terminate.sh"
     }
   },
   {
@@ -62,8 +61,8 @@ virtualMachineScaleSets = [
     operatingSystem = {
       type = "Windows"
       disk = {
-        storageType = "Premium_LRS"
-        cachingType = "ReadWrite"
+        storageType = "Standard_LRS"
+        cachingType = "ReadOnly"
         ephemeralEnable = true // https://docs.microsoft.com/azure/virtual-machines/ephemeral-os-disks
       }
     }
@@ -99,7 +98,6 @@ virtualMachineScaleSets = [
     terminationNotification = {  // https://docs.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
       enable       = true
       timeoutDelay = "PT5M"
-      eventHandler = "terminate.ps1"
     }
   }
 ]

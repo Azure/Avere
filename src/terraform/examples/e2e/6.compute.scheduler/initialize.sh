@@ -100,6 +100,21 @@ if [ ${cycleCloud.enable} == true ]; then
   echo 'EphemeralOSDisk = $useEphemeralOSDisk' >> $clusterTemplateFile
   echo 'ComputerNamePrefix = $machineNamePrefix' >> $clusterTemplateFile
   echo 'Azure.MaxScaleSetSize = $maxScaleSetSize' >> $clusterTemplateFile
+  echo 'EnableTerminateNotification = true' >> $clusterTemplateFile
+  echo "CloudInit = '''#!/bin/bash -ex" >> $clusterTemplateFile
+  echo "" >> $clusterTemplateFile
+  echo "mkdir -p /mnt/scheduler" >> $clusterTemplateFile
+  echo "mkdir -p /mnt/show/write" >> $clusterTemplateFile
+  echo "mkdir -p /mnt/show/read" >> $clusterTemplateFile
+  echo "" >> $clusterTemplateFile
+  echo "echo 'scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0' >> /etc/fstab" >> $clusterTemplateFile
+  echo "echo 'azartist1.blob.core.windows.net:/azartist1/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0' >> /etc/fstab" >> $clusterTemplateFile
+  echo "echo 'cache.artist.studio:/mnt/show /mnt/show/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0' >> /etc/fstab" >> $clusterTemplateFile
+  echo "" >> $clusterTemplateFile
+  echo "mount -a" >> $clusterTemplateFile
+  echo "" >> $clusterTemplateFile
+  echo "chmod 777 /mnt/show/write" >> $clusterTemplateFile
+  echo "'''" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "[[[configuration]]]" >> $clusterTemplateFile
   echo "cyclecloud.monitor_scheduled_events = true" >> $clusterTemplateFile

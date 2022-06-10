@@ -56,11 +56,12 @@ variable "imageTemplates" {
         name = string
         image = object(
           {
-            definitionName  = string
-            sourceType      = string
-            customizeScript = string
-            terminateScript = string
-            inputVersion    = string
+            definitionName   = string
+            sourceType       = string
+            customizeScript  = string
+            terminateScript1 = string
+            terminateScript2 = string
+            inputVersion     = string
           }
         )
         build = object(
@@ -129,10 +130,12 @@ data "azurerm_key_vault_secret" "admin_password" {
 }
 
 locals {
-  customizeScriptLinux   = "customize.sh"
-  customizeScriptWindows = "customize.ps1"
-  terminateScriptLinux   = "terminate.sh"
-  terminateScriptWindows = "terminate.ps1"
+  customizeScriptLinux    = "customize.sh"
+  customizeScriptWindows  = "customize.ps1"
+  terminateScript1Linux   = "terminate.sh"
+  terminateScript1Windows = "terminate.ps1"
+  terminateScript2Linux   = "onTerminate.sh"
+  terminateScript2Windows = "onTerminate.ps1"
 }
 
 resource "azurerm_resource_group" "image" {
@@ -179,19 +182,35 @@ resource "azurerm_storage_blob" "customize_script_windows" {
   type                   = "Block"
 }
 
-resource "azurerm_storage_blob" "terminate_script_linux" {
-  name                   = local.terminateScriptLinux
+resource "azurerm_storage_blob" "terminate_script1_linux" {
+  name                   = local.terminateScript1Linux
   storage_account_name   = data.azurerm_storage_account.storage.name
   storage_container_name = azurerm_storage_container.container.name
-  source                 = local.terminateScriptLinux
+  source                 = local.terminateScript1Linux
   type                   = "Block"
 }
 
-resource "azurerm_storage_blob" "terminate_script_windows" {
-  name                   = local.terminateScriptWindows
+resource "azurerm_storage_blob" "terminate_script1_windows" {
+  name                   = local.terminateScript1Windows
   storage_account_name   = data.azurerm_storage_account.storage.name
   storage_container_name = azurerm_storage_container.container.name
-  source                 = local.terminateScriptWindows
+  source                 = local.terminateScript1Windows
+  type                   = "Block"
+}
+
+resource "azurerm_storage_blob" "terminate_script2_linux" {
+  name                   = local.terminateScript2Linux
+  storage_account_name   = data.azurerm_storage_account.storage.name
+  storage_container_name = azurerm_storage_container.container.name
+  source                 = local.terminateScript2Linux
+  type                   = "Block"
+}
+
+resource "azurerm_storage_blob" "terminate_script2_windows" {
+  name                   = local.terminateScript2Windows
+  storage_account_name   = data.azurerm_storage_account.storage.name
+  storage_container_name = azurerm_storage_container.container.name
+  source                 = local.terminateScript2Windows
   type                   = "Block"
 }
 
@@ -340,8 +359,13 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   },
                   {
                     "type": "File",
-                    "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.terminateScript)]",
-                    "destination": "[concat(parameters('scriptFilePath'), parameters('imageTemplate').image.terminateScript)]"
+                    "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.terminateScript1)]",
+                    "destination": "[concat(parameters('scriptFilePath'), parameters('imageTemplate').image.terminateScript1)]"
+                  },
+                  {
+                    "type": "File",
+                    "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.terminateScript2)]",
+                    "destination": "[concat(parameters('scriptFilePath'), parameters('imageTemplate').image.terminateScript2)]"
                   },
                   {
                     "type": "Shell",
@@ -377,8 +401,13 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   },
                   {
                     "type": "File",
-                    "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.terminateScript)]",
-                    "destination": "[concat(parameters('scriptFilePath'), parameters('imageTemplate').image.terminateScript)]"
+                    "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.terminateScript1)]",
+                    "destination": "[concat(parameters('scriptFilePath'), parameters('imageTemplate').image.terminateScript1)]"
+                  },
+                  {
+                    "type": "File",
+                    "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.terminateScript2)]",
+                    "destination": "[concat(parameters('scriptFilePath'), parameters('imageTemplate').image.terminateScript2)]"
                   },
                   {
                     "type": "PowerShell",
@@ -451,8 +480,10 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
     azurerm_shared_image.definitions,
     azurerm_storage_blob.customize_script_linux,
     azurerm_storage_blob.customize_script_windows,
-    azurerm_storage_blob.terminate_script_linux,
-    azurerm_storage_blob.terminate_script_windows
+    azurerm_storage_blob.terminate_script1_linux,
+    azurerm_storage_blob.terminate_script1_windows,
+    azurerm_storage_blob.terminate_script2_linux,
+    azurerm_storage_blob.terminate_script2_windows
   ]
 }
 

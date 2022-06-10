@@ -208,7 +208,7 @@ if [[ $renderEngines == *Blender* ]]; then
   yum -y install libXfixes
   yum -y install libXrender
   yum -y install libGL
-  versionInfo="3.1.2"
+  versionInfo="3.2.0"
   installFile="blender-$versionInfo-linux-x64.tar.xz"
   downloadUrl="$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
@@ -302,11 +302,11 @@ if [[ $renderEngines == *Houdini* ]]; then
 fi
 
 if [ $subnetName == "Farm" ]; then
-  if [ -f /tmp/terminate.sh ]; then
+  if [ -f /tmp/onTerminate.sh ]; then
     echo "Customize (Start): Scheduled Event Handler"
     mkdir -p /opt/cycle/jetpack/scripts
-    cp /tmp/terminate.sh /opt/cycle/jetpack/scripts/onPreempt.sh
-    cp /tmp/terminate.sh /opt/cycle/jetpack/scripts/onTerminate.sh
+    cp /tmp/onTerminate.sh /opt/cycle/jetpack/scripts/onPreempt.sh
+    cp /tmp/onTerminate.sh /opt/cycle/jetpack/scripts/onTerminate.sh
     echo "Customize (End): Scheduled Event Handler"
   fi
 fi

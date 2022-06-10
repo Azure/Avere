@@ -4,8 +4,8 @@ AAA is a *modular and customizable [infrastructure-as-code](https://docs.microso
 
 The following *core principles* are implemented throughout the AAA solution deployment framework.
 * Integration of security best practices, including [Managed Identity](https://docs.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://docs.microsoft.com/azure/key-vault/general/overview), [Private Endpoints](https://docs.microsoft.com/azure/private-link/private-endpoint-overview).
+* Any software (render manager, renderer, etc) in a [Compute Gallery](https://docs.microsoft.com/azure/virtual-machines/shared-image-galleries) custom image is supported.
 * Separation of module deployment configuration files (*config.auto.tfvars*) and code files (*main.tf*).
-* Any software (render manager, renderers, etc) in a [Compute Gallery](https://docs.microsoft.com/azure/virtual-machines/shared-image-galleries) custom image is supported.
 
 | **Module Name** | **Module Description** | **Required for<br>Compute Burst?** | **Required for<br>All Cloud?** |
 | --------------- | ---------------------- | ---------------------------------- | ------------------------------ |
@@ -22,9 +22,18 @@ The following *core principles* are implemented throughout the AAA solution depl
 | [10 Render](#10-render) | Submit render farm jobs from [Linux](https://docs.microsoft.com/azure/virtual-machines/linux/overview) and/or [Windows](https://docs.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
 
 For example, the following sample output images were rendering in Azure via the AAA solution deployment framework.
+
+[Sprite Fright](#sprite-fright)
 <p align="center">
   <img src=".github/sprite-fright.png" alt="Sprite Fright" width="1024" />
 </p>
+
+[White Lands](#white-lands)
+<p align="center">
+  <img src=".github/white-lands.png" alt="White Lands" width="1024" />
+</p>
+
+[Moana Island](#moana-island)
 <p align="center">
   <img src=".github/moana-island.png" alt="Moana Island" width="1024" />
 </p>
@@ -225,7 +234,10 @@ Now that deployment of the AAA solution framework is complete, this section prov
 
 ### 10.1 [Blender](https://www.blender.org)
 
-For example, the following sample **Blender** output image was rendering in Azure via the **Deadline** job submission command below.
+For example, the following sample **Blender** output images were rendering in Azure via the **Deadline** job submission commands below.
+
+#### Sprite Fright
+
 <p align="center">
   <img src=".github/sprite-fright.png" alt="Sprite Fright" width="1024" />
 </p>
@@ -244,9 +256,32 @@ deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender -a
 deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender.exe -arguments "-b -y -noaudio R:\blender\3.0\splash.blend --render-output W:\blender\3.0\splash####.png --render-frame 1"
 </code></p>
 
+#### White Lands
+
+<p align="center">
+  <img src=".github/white-lands.png" alt="White Lands" width="1024" />
+</p>
+
+#### Linux Render Farm
+*The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
+
+<p><code>
+deadlinecommand -SubmitCommandLineJob -name White-Lands -executable blender -arguments "-b -y -noaudio /mnt/show/read/blender/3.2/splash.blend --render-output /mnt/show/write/blender/3.2/splash####.png --render-frame 1"
+</code></p>
+
+#### Windows Render Farm
+*The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
+
+<p><code>
+deadlinecommand -SubmitCommandLineJob -name White-Lands -executable blender.exe -arguments "-b -y -noaudio R:\blender\3.2\splash.blend --render-output W:\blender\3.2\splash####.png --render-frame 1"
+</code></p>
+
 ### 10.2 [Physically-Based Rendering Toolkit (PBRT)](https://pbrt.org)
 
 For example, the following sample **PBRT** output image was rendering in Azure via the **Deadline** job submission command below.
+
+#### Moana Island
+
 <p align="center">
   <img src=".github/moana-island.png" alt="Moana Island" width="1024" />
 </p>

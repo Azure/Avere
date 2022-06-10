@@ -42,11 +42,12 @@ imageTemplates = [
   {
     name = "LnxScheduler"
     image = {
-      definitionName  = "Linux"
-      sourceType      = "PlatformImage"
-      customizeScript = "customize.sh"
-      terminateScript = ""
-      inputVersion    = "Latest"
+      definitionName   = "Linux"
+      sourceType       = "PlatformImage"
+      customizeScript  = "customize.sh"
+      terminateScript1 = "terminate.sh"
+      terminateScript2 = "onTerminate.sh"
+      inputVersion     = "Latest"
     }
     build = {
       subnetName     = "Farm"
@@ -61,11 +62,12 @@ imageTemplates = [
   {
     name = "LnxFarm"
     image = {
-      definitionName  = "Linux"
-      sourceType      = "PlatformImage"
-      customizeScript = "customize.sh"
-      terminateScript = "terminate.sh"
-      inputVersion    = "Latest"
+      definitionName   = "Linux"
+      sourceType       = "PlatformImage"
+      customizeScript  = "customize.sh"
+      terminateScript1 = "terminate.sh"
+      terminateScript2 = "onTerminate.sh"
+      inputVersion     = "Latest"
     }
     build = {
       subnetName     = "Farm"
@@ -86,11 +88,12 @@ imageTemplates = [
   {
     name = "LnxArtistV3"
     image = {
-      definitionName  = "Linux"
-      sourceType      = "PlatformImage"
-      customizeScript = "customize.sh"
-      terminateScript = ""
-      inputVersion    = "Latest"
+      definitionName   = "Linux"
+      sourceType       = "PlatformImage"
+      customizeScript  = "customize.sh"
+      terminateScript1 = "terminate.sh"
+      terminateScript2 = "onTerminate.sh"
+      inputVersion     = "Latest"
     }
     build = {
       subnetName     = "Workstation"
@@ -111,11 +114,12 @@ imageTemplates = [
   {
     name = "LnxArtistV4"
     image = {
-      definitionName  = "Linux"
-      sourceType      = "PlatformImage"
-      customizeScript = "customize.sh"
-      terminateScript = ""
-      inputVersion    = "Latest"
+      definitionName   = "Linux"
+      sourceType       = "PlatformImage"
+      customizeScript  = "customize.sh"
+      terminateScript1 = "terminate.sh"
+      terminateScript2 = "onTerminate.sh"
+      inputVersion     = "Latest"
     }
     build = {
       subnetName     = "Workstation"
@@ -136,11 +140,12 @@ imageTemplates = [
   # {
   #   name = "LnxArtistV5"
   #   image = {
-  #     definitionName  = "Linux"
-  #     sourceType      = "PlatformImage"
-  #     customizeScript = "customize.ps1"
-  #     terminateScript = ""
-  #     inputVersion    = "Latest"
+  #     definitionName   = "Linux"
+  #     sourceType       = "PlatformImage"
+  #     customizeScript  = "customize.ps1"
+  #     terminateScript1 = "terminate.sh"
+  #     terminateScript2 = "onTerminate.sh"
+  #     inputVersion     = "Latest"
   #   }
   #   build = {
   #     subnetName     = "Workstation"
@@ -161,11 +166,12 @@ imageTemplates = [
   {
     name = "WinScheduler"
     image = {
-      definitionName  = "WinScheduler"
-      sourceType      = "PlatformImage"
-      customizeScript = "customize.ps1"
-      terminateScript = ""
-      inputVersion    = "Latest"
+      definitionName   = "WinScheduler"
+      sourceType       = "PlatformImage"
+      customizeScript  = "customize.ps1"
+      terminateScript1 = "terminate.ps1"
+      terminateScript2 = "onTerminate.ps1"
+      inputVersion     = "Latest"
     }
     build = {
       subnetName     = "Farm"
@@ -180,11 +186,12 @@ imageTemplates = [
   {
     name = "WinFarm"
     image = {
-      definitionName  = "WinFarm"
-      sourceType      = "PlatformImage"
-      customizeScript = "customize.ps1"
-      terminateScript = "terminate.ps1"
-      inputVersion    = "Latest"
+      definitionName   = "WinFarm"
+      sourceType       = "PlatformImage"
+      customizeScript  = "customize.ps1"
+      terminateScript1 = "terminate.ps1"
+      terminateScript2 = "onTerminate.ps1"
+      inputVersion     = "Latest"
     }
     build = {
       subnetName     = "Farm"
@@ -206,11 +213,12 @@ imageTemplates = [
   {
     name = "WinArtistV3"
     image = {
-      definitionName  = "WinArtist"
-      sourceType      = "PlatformImage"
-      customizeScript = "customize.ps1"
-      terminateScript = ""
-      inputVersion    = "Latest"
+      definitionName   = "WinArtist"
+      sourceType       = "PlatformImage"
+      customizeScript  = "customize.ps1"
+      terminateScript1 = "terminate.ps1"
+      terminateScript2 = "onTerminate.ps1"
+      inputVersion     = "Latest"
     }
     build = {
       subnetName     = "Workstation"
@@ -232,11 +240,12 @@ imageTemplates = [
   {
     name = "WinArtistV4"
     image = {
-      definitionName  = "WinArtist"
-      sourceType      = "PlatformImage"
-      customizeScript = "customize.ps1"
-      terminateScript = ""
-      inputVersion    = "Latest"
+      definitionName   = "WinArtist"
+      sourceType       = "PlatformImage"
+      customizeScript  = "customize.ps1"
+      terminateScript1 = "terminate.ps1"
+      terminateScript2 = "onTerminate.ps1"
+      inputVersion     = "Latest"
     }
     build = {
       subnetName     = "Workstation"
@@ -258,11 +267,12 @@ imageTemplates = [
   # {
   #   name = "WinArtistV5"
   #   image = {
-  #     definitionName  = "WinArtist"
-  #     sourceType      = "PlatformImage"
-  #     customizeScript = "customize.ps1"
-  #     terminateScript = ""
-  #     inputVersion    = "Latest"
+  #     definitionName   = "WinArtist"
+  #     sourceType       = "PlatformImage"
+  #     customizeScript  = "customize.ps1"
+  #     terminateScript1 = "terminate.ps1"
+  #     terminateScript2 = "onTerminate.ps1"
+  #     inputVersion     = "Latest"
   #   }
   #   build = {
   #     subnetName     = "Workstation"
