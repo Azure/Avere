@@ -9,7 +9,7 @@ The following *core principles* are implemented throughout the AAA solution depl
 
 | **Module Name** | **Module Description** | **Required for<br>Compute Burst?** | **Required for<br>All Cloud?** |
 | --------------- | ---------------------- | ---------------------------------- | ------------------------------ |
-| [0 Global](#0-global) | Define global variables and Terraform backend state file storage configuration. | Yes | Yes |
+| [0 Global](#0-global) | Define global variables (e.g., region name) and Terraform backend state file storage config. | Yes | Yes |
 | [1 Security](#1-security) | Deploy [Managed Identity](https://docs.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://docs.microsoft.com/azure/key-vault/general/overview) and [Blob Storage](https://docs.microsoft.com/azure/storage/blobs/storage-blobs-introduction) for Terraform state file management. | Yes | Yes |
 | [2 Network](#2-network) | Deploy [Virtual Network](https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview) with [VPN](https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://docs.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways) hybrid networking services. | Yes, if [Virtual Network](https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No | Yes, if [Virtual Network](https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No |
 | [3 Storage](#3-storage) | Deploy [Blob (NFS v3 with sample content)](https://docs.microsoft.com/azure/storage/blobs/network-file-system-protocol-support), [Files](https://docs.microsoft.com/azure/storage/files/storage-files-introduction), [NetApp Files](https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) or [Hammerspace](https://azuremarketplace.microsoft.com/marketplace/apps/hammerspace.hammerspace_4_6_5) storage. | No | Yes |
@@ -285,6 +285,13 @@ For example, the following sample **PBRT** output image was rendering in Azure v
 <p align="center">
   <img src=".github/moana-island.png" alt="Moana Island" width="1024" />
 </p>
+
+> ######
+> Unlike the Blender splash screen data that is included in the AAA GitHub repository within the Storage module, the following PBRT Moana Island data must be downloaded, decompressed and uploaded into your storage system *before* the following Deadline job command is submitted.
+>
+> * **Base Package** - https://azartist.blob.core.windows.net/bin/pbrt/moana/island-basepackage-v1.1.tgz
+>
+> * **PBRT Package** - https://azartist.blob.core.windows.net/bin/pbrt/moana/island-pbrt-v1.1.tgz
 
 #### Linux Render Farm
 *The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
