@@ -287,7 +287,7 @@ For example, the following sample **PBRT** output image was rendering in Azure v
 </p>
 
 > ######
-> Unlike the Blender splash screen data that is included in the AAA GitHub repository within the Storage module, the following PBRT Moana Island data must be downloaded, decompressed and uploaded into your storage system *before* the following Deadline job command is submitted.
+> Unlike the Blender splash screen data that is included in the AAA GitHub repository within the Storage module, the following PBRT Moana Island data must be downloaded, decompressed and uploaded into your storage system *before* the following job command is submitted.
 >
 > * **Base Package** - https://azartist.blob.core.windows.net/bin/pbrt/moana/island-basepackage-v1.1.tgz
 >
