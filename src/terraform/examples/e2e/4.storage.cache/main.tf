@@ -182,7 +182,7 @@ locals {
   useRemoteStateNetwork   = var.virtualNetwork.name != "" ? 0 : 1
   vfxtControllerAddress   = var.virtualNetwork.name != "" ? "" : cidrhost(data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.cache].addressSpace[0], 39)
   vfxtVServerFirstAddress = var.virtualNetwork.name != "" ? "" : cidrhost(data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.cache].addressSpace[0], 40)
-  vfxtVServerAddressCount = 16
+  vfxtVServerAddressCount = 12
   deployPrivateDnsZone    = var.virtualNetwork.privateDns.zoneName != "" ? 1 : 0
   updatePrivateDnsZone    = var.virtualNetwork.privateDns.zoneName != "" ? 1 : local.useRemoteStateNetwork
 }

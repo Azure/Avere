@@ -167,7 +167,7 @@ echo "Customize (Start): Deadline Download"
 installFile="Deadline-$schedulerVersion-linux-installers.tar"
 downloadUrl="$storageContainerUrl/Deadline/$schedulerVersion/$installFile$storageContainerSas"
 curl -o $installFile -L $downloadUrl
-tar -xf $installFile
+tar -xzf $installFile
 echo "Customize (End): Deadline Download"
 
 if [ $outputVersion == "0.0.0" ]; then
@@ -237,7 +237,7 @@ if [[ $renderEngines == *Unreal* ]]; then
   downloadUrl="$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
   mkdir -p $rendererPathUnreal
-  tar -xf $installFile -C $rendererPathUnreal
+  tar -xzf $installFile -C $rendererPathUnreal
   mv $rendererPathUnreal/Unreal*/* $rendererPathUnreal
   $rendererPathUnreal/Setup.sh
   $rendererPathUnreal/GenerateProjectFiles.sh
@@ -294,7 +294,7 @@ if [[ $renderEngines == *Houdini* ]]; then
   installFile="houdini-$versionInfo-linux_x86_64_gcc9.3.tar.gz"
   downloadUrl="$storageContainerUrl/Houdini/$versionInfo/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
-  tar -xf $installFile
+  tar -xzf $installFile
   [[ $renderEngines == *Maya* ]] && mayaPlugIn=--install-engine-maya || mayaPlugIn=--no-install-engine-maya
   [[ $renderEngines == *Unreal* ]] && unrealPlugIn=--install-engine-unreal || unrealPlugIn=--no-install-engine-unreal
   ./houdini*/houdini.install --auto-install --make-dir --accept-EULA $versionEULA $mayaPlugIn $unrealPlugIn $rendererPathHoudini
