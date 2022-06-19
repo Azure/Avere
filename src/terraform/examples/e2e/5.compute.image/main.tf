@@ -297,7 +297,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
       },
       "variables": {
         "imageBuilderApiVersion": "2022-02-14",
-        "imageGalleryApiVersion": "2022-01-03",
+        "imageGalleryApiVersion": "2022-03-03",
         "localDownloadPathLinux": "/tmp/",
         "localDownloadPathWindows": "/Windows/Temp/"
       },

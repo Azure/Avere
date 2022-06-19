@@ -328,3 +328,22 @@ if [ $subnetName == "Workstation" ]; then
   yum -y install pcoip-agent-graphics
   echo "Customize (End): Teradici PCoIP Agent"
 fi
+
+echo "Customize (Start): VRay Benchmark"
+versionInfo="5.02.00"
+installFile="vray-benchmark-$versionInfo"
+downloadUrl="$storageContainerUrl/VRay/Benchmark/$installFile$storageContainerSas"
+curl -o $installFile -L $downloadUrl
+chmod +x $installFile
+echo "Customize (End): VRay Benchmark"
+
+echo "Customize (Start): NVIDIA OptiX SDK"
+versionInfo="7.5.0"
+installFile="NVIDIA-OptiX-SDK-$versionInfo-linux64-x86_64.sh"
+downloadUrl="$storageContainerUrl/NVIDIA/OptiX/$installFile$storageContainerSas"
+curl -o $installFile -L $downloadUrl
+chmod +x $installFile
+localDirectory="NVIDIA-OptiX"
+mkdir $localDirectory
+./$installFile --prefix=$localDirectory --skip-license
+echo "Customize (End): NVIDIA OptiX SDK"

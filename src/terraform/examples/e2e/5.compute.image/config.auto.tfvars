@@ -97,7 +97,7 @@ imageTemplates = [
     }
     build = {
       subnetName     = "Workstation"
-      machineSize    = "Standard_NC64as_T4_v3" // https://docs.microsoft.com/azure/virtual-machines/sizes
+      machineSize    = "Standard_NC16as_T4_v3" // https://docs.microsoft.com/azure/virtual-machines/sizes
       osDiskSizeGB   = 480                     // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
       timeoutMinutes = 240                     // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "3.0.0"
@@ -222,7 +222,7 @@ imageTemplates = [
     }
     build = {
       subnetName     = "Workstation"
-      machineSize    = "Standard_NC64as_T4_v3" // https://docs.microsoft.com/azure/virtual-machines/sizes
+      machineSize    = "Standard_NC16as_T4_v3" // https://docs.microsoft.com/azure/virtual-machines/sizes
       osDiskSizeGB   = 480                     // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
       timeoutMinutes = 480                     // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "3.0.0"

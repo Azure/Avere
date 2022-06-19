@@ -329,3 +329,21 @@ if ($subnetName -eq "Workstation") {
   Start-Process -FilePath .\$installFile -ArgumentList "/S /NoPostReboot /Force" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
   Write-Host "Customize (End): Teradici PCoIP Agent"
 }
+
+Write-Host "Customize (Start): VRay Benchmark"
+$versionInfo = "5.02.00"
+$installFile = "vray-benchmark-$versionInfo.exe"
+$downloadUrl = "$storageContainerUrl/VRay/Benchmark/$installFile$storageContainerSas"
+Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+$installFile = "vray-benchmark-$versionInfo-cli.exe"
+$downloadUrl = "$storageContainerUrl/VRay/Benchmark/$installFile$storageContainerSas"
+Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+Write-Host "Customize (End): VRay Benchmark"
+
+Write-Host "Customize (Start): NVIDIA OptiX SDK"
+$versionInfo = "7.5.0"
+$installFile = "NVIDIA-OptiX-SDK-$versionInfo-win64.exe"
+$downloadUrl = "$storageContainerUrl/NVIDIA/OptiX/$installFile$storageContainerSas"
+Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+Start-Process -FilePath .\$installFile -ArgumentList "/S" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+Write-Host "Customize (End): NVIDIA OptiX SDK"

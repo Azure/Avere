@@ -201,15 +201,15 @@ if [ ${cycleCloud.enable} == true ]; then
   cyclecloud account create -f $cycleAccountFile
   cyclecloud import_template -f $clusterTemplateFile
 
-  versionInfo="3.7.13"
+  versionInfo="3.9.13"
   installFile="Python-$versionInfo.tgz"
   downloadUrl="https://www.python.org/ftp/python/$versionInfo/$installFile"
   curl -o $installFile -L $downloadUrl
   tar -xzf $installFile
-  cd Python*
   yum -y install zlib-devel
   yum -y install libffi-devel
   yum -y install openssl-devel
+  cd Python*
   ./configure --enable-optimizations
   make altinstall
   cd ..
@@ -220,6 +220,6 @@ if [ ${cycleCloud.enable} == true ]; then
   tar -xzf $installFile
   pip3 install ./tools/cyclecloud_api*.whl
   cd cyclecloud-scalelib*
-  /usr/local/bin/python3.7 -m pip install -r dev-requirements.txt
-  /usr/local/bin/python3.7 setup.py build
+  /usr/local/bin/python3.9 -m pip install -r dev-requirements.txt
+  /usr/local/bin/python3.9 setup.py build
 fi
