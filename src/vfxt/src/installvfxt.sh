@@ -240,7 +240,7 @@ function main() {
     print_vfxt_vars
 
     # ensure waagent upgrade can proceed
-    retrycmd_if_failure 240 5 apt-mark unhold walinuxagent
+    retrycmd_if_failure 300 15 apt-mark unhold walinuxagent
 
     echo "installation complete"
 }

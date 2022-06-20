@@ -6,7 +6,7 @@ import json
 import os
 import shutil
 import subprocess
-import StringIO
+import io
 import sys
 
 
@@ -14,14 +14,14 @@ def buildb64GzipStringFromFile(file):
     # read the script file
     with open(file) as f:
         content = f.read()
-    compressedbuffer=StringIO.StringIO()
+    compressedbuffer=io.BytesIO()
 
     # gzip the script file
     # mtime=0 sets a fixed timestamp in GZip header to the Epoch which is January 1st, 1970
     # Make sure it doens't change unless the stream changes
     with gzip.GzipFile(fileobj=compressedbuffer, mode='wb', mtime=0) as f:
-        f.write(content)
-    b64GzipStream=base64.b64encode(compressedbuffer.getvalue())
+        f.write(content.encode())
+    b64GzipStream=base64.b64encode(compressedbuffer.getvalue()).decode()
 
     return b64GzipStream
 
@@ -29,7 +29,7 @@ def buildb64GzipStringFromFile(file):
 # and embeds it in a Yaml file as a base-64 enconded string to be
 # executed later by template
 def buildYamlFileWithWriteFiles(files):
-    gzipBuffer=StringIO.StringIO()
+    gzipBuffer=io.StringIO()
 
     clusterYamlFile="""#cloud-config
 
@@ -74,12 +74,12 @@ def processBaseTemplate(baseTemplatePath,
     # Make sure the final string is valid JSON
     try:
         json_object = json.loads(armTemplate)
-    except ValueError, e:
-        print e
+    except ValueError as e:
+        print(e)
         errorFileName = baseTemplatePath + ".err"
         with open(errorFileName, "w") as f:
             f.write(armTemplate)
-        print "Invalid armTemplate saved to: " + errorFileName
+        print(f"Invalid armTemplate saved to: {errorFileName}")
         raise
 
     return armTemplate;
