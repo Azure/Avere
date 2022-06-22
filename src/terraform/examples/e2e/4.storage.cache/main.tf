@@ -71,10 +71,10 @@ variable "vfxtCache" {
       )
       support = object(
         {
-          companyName        = string
-          enableProactive    = string
-          enableLogUpload    = bool
-          enableRollingTrace = bool
+          companyName      = string
+          enableLogUpload  = bool
+          enableProactive  = string
+          rollingTraceFlag = string
         }
       )
     }
@@ -288,9 +288,10 @@ resource "avere_vfxt" "cache" {
   vfxt_admin_password             = data.azurerm_key_vault_secret.admin_password.value
   vfxt_ssh_key_data               = var.vfxtCache.cluster.sshPublicKey != "" ? var.vfxtCache.cluster.sshPublicKey : null
   support_uploads_company_name    = var.vfxtCache.support.companyName
-  enable_secure_proactive_support = var.vfxtCache.support.enableProactive
   enable_support_uploads          = var.vfxtCache.support.enableLogUpload
-  enable_rolling_trace_data       = var.vfxtCache.support.enableRollingTrace
+  enable_secure_proactive_support = var.vfxtCache.support.enableProactive
+  enable_rolling_trace_data       = var.vfxtCache.support.rollingTraceFlag != ""
+  rolling_trace_flag              = var.vfxtCache.support.rollingTraceFlag
   global_custom_settings          = var.vfxtCache.cluster.customSettings
   vserver_first_ip                = local.vfxtVServerFirstAddress
   vserver_ip_count                = local.vfxtVServerAddressCount

@@ -38,11 +38,11 @@ vfxtCache = {
     adminUsername = "azadmin"
     sshPublicKey  = ""
   }
-  support = {                      // https://privacy.microsoft.com/privacystatement
-    companyName        = ""        // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#support_uploads_company_name
-    enableProactive    = "Support" // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#enable_secure_proactive_support
-    enableLogUpload    = true      // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#enable_support_uploads
-    enableRollingTrace = false     // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#enable_rolling_trace_data
+  support = {                    // https://privacy.microsoft.com/privacystatement
+    companyName      = ""        // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#support_uploads_company_name
+    enableLogUpload  = true      // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#enable_support_uploads
+    enableProactive  = "Support" // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#enable_secure_proactive_support
+    rollingTraceFlag = "0xe4001" // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#rolling_trace_flag
   }
 }
 
