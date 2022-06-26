@@ -150,6 +150,11 @@ variable "virtualNetwork" {
 
 data "azurerm_client_config" "current" {}
 
+data "azurerm_user_assigned_identity" "identity" {
+  name                = module.global.managedIdentityName
+  resource_group_name = module.global.securityResourceGroupName
+}
+
 data "terraform_remote_state" "network" {
   count   = local.useRemoteStateNetwork
   backend = "azurerm"
@@ -159,6 +164,14 @@ data "terraform_remote_state" "network" {
     container_name       = module.global.terraformStorageContainerName
     key                  = "2.network"
   }
+}
+
+data "azurerm_resource_group" "identity" {
+  name = module.global.securityResourceGroupName
+}
+
+data "azurerm_resource_group" "network" {
+  name = data.azurerm_virtual_network.network.resource_group_name
 }
 
 data "azurerm_virtual_network" "network" {
@@ -253,21 +266,50 @@ data "azurerm_key_vault_secret" "admin_password" {
   key_vault_id = data.azurerm_key_vault.vault.id
 }
 
+resource "azurerm_role_assignment" "identity" {
+  role_definition_name = "Managed Identity Operator" // https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#managed-identity-operator
+  principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
+  scope                = data.azurerm_resource_group.identity.id
+}
+
+resource "azurerm_role_assignment" "network" {
+  role_definition_name = "Avere Contributor" // https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#avere-contributor
+  principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
+  scope                = data.azurerm_resource_group.network.id
+}
+
+resource "azurerm_role_assignment" "cache_identity" {
+  role_definition_name = "Managed Identity Operator" // https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#managed-identity-operator
+  principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
+  scope                = azurerm_resource_group.cache.id
+}
+
+resource "azurerm_role_assignment" "cache_contributor" {
+  role_definition_name = "Avere Contributor" // https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#avere-contributor
+  principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
+  scope                = azurerm_resource_group.cache.id
+}
+
 module "vfxt_controller" {
-  count                          = var.enableHpcCache ? 0 : 1
-  source                         = "github.com/Azure/Avere/src/terraform/modules/controller3"
-  create_resource_group          = false
-  resource_group_name            = var.resourceGroupName
-  location                       = module.global.regionName
-  admin_username                 = var.vfxtCache.controller.adminUsername
-  admin_password                 = data.azurerm_key_vault_secret.admin_password.value
-  ssh_key_data                   = var.vfxtCache.controller.sshPublicKey != "" ? var.vfxtCache.controller.sshPublicKey : null
-  virtual_network_name           = data.azurerm_virtual_network.network.name
-  virtual_network_resource_group = data.azurerm_virtual_network.network.resource_group_name
-  virtual_network_subnet_name    = data.azurerm_subnet.cache.name
-  static_ip_address              = local.vfxtControllerAddress
+  count                             = var.enableHpcCache ? 0 : 1
+  source                            = "github.com/Azure/Avere/src/terraform/modules/controller3"
+  create_resource_group             = false
+  resource_group_name               = var.resourceGroupName
+  location                          = module.global.regionName
+  admin_username                    = var.vfxtCache.controller.adminUsername
+  admin_password                    = data.azurerm_key_vault_secret.admin_password.value
+  ssh_key_data                      = var.vfxtCache.controller.sshPublicKey != "" ? var.vfxtCache.controller.sshPublicKey : null
+  virtual_network_name              = data.azurerm_virtual_network.network.name
+  virtual_network_resource_group    = data.azurerm_virtual_network.network.resource_group_name
+  virtual_network_subnet_name       = data.azurerm_subnet.cache.name
+  static_ip_address                 = local.vfxtControllerAddress
+  user_assigned_managed_identity_id = data.azurerm_user_assigned_identity.identity.id
   depends_on = [
-    azurerm_resource_group.cache
+    azurerm_resource_group.cache,
+    azurerm_role_assignment.identity,
+    azurerm_role_assignment.network,
+    azurerm_role_assignment.cache_identity,
+    azurerm_role_assignment.cache_contributor
   ]
 }
 
@@ -295,6 +337,7 @@ resource "avere_vfxt" "cache" {
   global_custom_settings          = var.vfxtCache.cluster.customSettings
   vserver_first_ip                = local.vfxtVServerFirstAddress
   vserver_ip_count                = local.vfxtVServerAddressCount
+  user_assigned_managed_identity  = data.azurerm_user_assigned_identity.identity.id
   dynamic "core_filer" {
     for_each = {
       for x in var.storageTargetsNfs : x.name => x if x.name != ""

@@ -119,6 +119,26 @@ variable "virtualNetwork" {
 
 data "azurerm_client_config" "current" {}
 
+data "azurerm_user_assigned_identity" "identity" {
+  name                = module.global.managedIdentityName
+  resource_group_name = module.global.securityResourceGroupName
+}
+
+data "azurerm_key_vault" "vault" {
+  name                = module.global.keyVaultName
+  resource_group_name = module.global.securityResourceGroupName
+}
+
+data "azurerm_key_vault_secret" "admin_password" {
+  name         = module.global.keyVaultSecretNameAdminPassword
+  key_vault_id = data.azurerm_key_vault.vault.id
+}
+
+data "azurerm_log_analytics_workspace" "monitor" {
+  name                = module.global.monitorWorkspaceName
+  resource_group_name = module.global.securityResourceGroupName
+}
+
 data "terraform_remote_state" "network" {
   count   = var.virtualNetwork.name == "" ? 1 : 0
   backend = "azurerm"
@@ -154,26 +174,6 @@ data "azurerm_subnet" "scheduler" {
   name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.farm].name : var.virtualNetwork.subnetName
   resource_group_name  = data.azurerm_virtual_network.network.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.network.name
-}
-
-data "azurerm_user_assigned_identity" "identity" {
-  name                = module.global.managedIdentityName
-  resource_group_name = module.global.securityResourceGroupName
-}
-
-data "azurerm_key_vault" "vault" {
-  name                = module.global.keyVaultName
-  resource_group_name = module.global.securityResourceGroupName
-}
-
-data "azurerm_key_vault_secret" "admin_password" {
-  name         = module.global.keyVaultSecretNameAdminPassword
-  key_vault_id = data.azurerm_key_vault.vault.id
-}
-
-data "azurerm_log_analytics_workspace" "monitor" {
-  name                = module.global.monitorWorkspaceName
-  resource_group_name = module.global.securityResourceGroupName
 }
 
 locals {
@@ -230,6 +230,9 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
   identity {
     type         = "UserAssigned"
     identity_ids = [data.azurerm_user_assigned_identity.identity.id]
+  }
+  boot_diagnostics {
+    storage_account_uri = null
   }
   dynamic "admin_ssh_key" {
     for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1] 
@@ -322,6 +325,9 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
   identity {
     type         = "UserAssigned"
     identity_ids = [data.azurerm_user_assigned_identity.identity.id]
+  }
+  boot_diagnostics {
+    storage_account_uri = null
   }
   depends_on = [
     azurerm_network_interface.scheduler

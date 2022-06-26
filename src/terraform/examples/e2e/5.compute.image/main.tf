@@ -89,33 +89,8 @@ variable "virtualNetwork" {
   )
 }
 
-data "terraform_remote_state" "network" {
-  count   = var.virtualNetwork.name == "" ? 1 : 0
-  backend = "azurerm"
-  config = {
-    resource_group_name  = module.global.securityResourceGroupName
-    storage_account_name = module.global.securityStorageAccountName
-    container_name       = module.global.terraformStorageContainerName
-    key                  = "2.network"
-  }
-}
-
-data "azurerm_virtual_network" "network" {
-  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
-  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
-}
-
-data "azurerm_resource_group" "network" {
-  name = data.azurerm_virtual_network.network.resource_group_name
-}
-
 data "azurerm_user_assigned_identity" "identity" {
   name                = module.global.managedIdentityName
-  resource_group_name = module.global.securityResourceGroupName
-}
-
-data "azurerm_storage_account" "storage" {
-  name                = module.global.securityStorageAccountName
   resource_group_name = module.global.securityResourceGroupName
 }
 
@@ -127,6 +102,31 @@ data "azurerm_key_vault" "vault" {
 data "azurerm_key_vault_secret" "admin_password" {
   name         = module.global.keyVaultSecretNameAdminPassword
   key_vault_id = data.azurerm_key_vault.vault.id
+}
+
+data "terraform_remote_state" "network" {
+  count   = var.virtualNetwork.name == "" ? 1 : 0
+  backend = "azurerm"
+  config = {
+    resource_group_name  = module.global.securityResourceGroupName
+    storage_account_name = module.global.securityStorageAccountName
+    container_name       = module.global.terraformStorageContainerName
+    key                  = "2.network"
+  }
+}
+
+data "azurerm_resource_group" "network" {
+  name = data.azurerm_virtual_network.network.resource_group_name
+}
+
+data "azurerm_virtual_network" "network" {
+  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
+  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
+}
+
+data "azurerm_storage_account" "storage" {
+  name                = module.global.securityStorageAccountName
+  resource_group_name = module.global.securityResourceGroupName
 }
 
 locals {
