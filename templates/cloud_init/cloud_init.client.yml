@@ -53,30 +53,57 @@ write_files:
       chmod 755 /usr/local/bin/terraform
       [ $? -ne 0 ] && error "chmod terraform executable - setup step"
 
-      echo "Get the version of Azure/Avere repo"
-      re="[0-9]+\.[0-9]+\.[0-9]"
-      version=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name | sed -e 's/[^0-9]*\([0-9].*\)$/\1/')
-      [[ $version =~ $re ]] || error "Unexpected version format: $version"
-
-      echo "browser_download"
-      browser_download_url=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .assets[].browser_download_url | grep -e "terraform-provider-avere$")
-      [ $? -ne 0 ] && error "browser_download_url for terraform-provider-avere - setup step"
-
       echo "mkdir terraform avere linux dir"
-      mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64
+      mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/1.3.2/linux_amd64
       [ $? -ne 0 ] && error "mkdir terraform avere linux dir - setup step"
 
-      echo "wget terraform-provider-avere"
-      wget -O ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version $browser_download_url
-      [ $? -ne 0 ] && error "wget terraform-provider-avere - setup step"
+      echo "cloning Azure/Avere"
+      git clone https://github.com/Azure/Avere.git /root/Avere
+      [ $? -ne 0 ] && error "clone Azure/Avere - setup step"
+
+      echo "cd'ing into avere"
+      cd /root/Avere
+      [ $? -ne 0 ] && error "cd into clone Avere repo - setup step"
+
+      echo "checking out my branch"
+      git checkout -b personal/anlatsko/update-all-terraform-deps origin/personal/anlatsko/update-all-terraform-deps
+      [ $? -ne 0 ] && error "checking out anlatsko branch - setup step"
+
+      echo "setting the GO_DL file"
+      GO_DL_FILE=go1.16.6.linux-amd64.tar.gz
+
+      echo "doing a wget of the go file"
+      wget --tries=12 --wait=5 https://dl.google.com/go/$GO_DL_FILE
+      [ $? -ne 0 ] && error "getting the go tarball $GO_DL_FILE - setup step"
+
+      echo "Untarring it"
+      tar -C /usr/local -xzf $GO_DL_FILE
+      [ $? -ne 0 ] && error "untarring the go tarball - setup step"
+
+      echo "removing the file"
+      rm -f $GO_DL_FILE
+      [ $? -ne 0 ] && error "removing the go tarball - setup step"
+
+      echo "building terraform-provider-avere"
+      export HOME=/root
+      export GOPATH=/root/go
+      export GOCACHE=/root/.cache/go-build
+      export XDG_CACHE_HOME=/root/.cache
+
+      cd /root/Avere/src/terraform/providers/terraform-provider-avere && /usr/local/go/bin/go build
+      [ $? -ne 0 ] && error "building terraform-provider-avere - setup step"
+
+      echo "cp'ing terraform-provider-avere to the terraform plugin directory"
+      cp terraform-provider-avere ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/1.3.2/linux_amd64/terraform-provider-avere_v1.3.2
+      [ $? -ne 0 ] && error "cp'ing terraform-provider-avere to the terraform plugin directory - setup step"
 
       echo "chmod terraform provider avere"
-      chmod 755 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/$version/linux_amd64/terraform-provider-avere_v$version
+      chmod 755 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/1.3.2/linux_amd64/terraform-provider-avere_v1.3.2
       [ $? -ne 0 ] && error "chmod terraform provider avere - setup step"
 
-      echo "mkdir tf && cd tf"
-      mkdir tf && cd tf
-      [ $? -ne 0 ] && error "mkdir tf && cd tf - setup step"
+      echo "mkdir /tf && cd /tf"
+      mkdir /tf && cd /tf
+      [ $? -ne 0 ] && error "mkdir /tf && cd /tf - setup step"
 
       echo "git init"
       git init
@@ -113,6 +140,10 @@ write_files:
       echo "Add comment to SSH public key"
       sshkey="<ssh_key> azureuser@linuxvm"
       [ $? -ne 0 ] && error "Add comment to sshkey."
+
+      echo "az login and account set"
+      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID &&
+      az account set -s $ARM_SUBSCRIPTION_ID
 
       echo "sed command for initial main.tf setup"
       sed -i -E -e "s:vm_ssh_key_data = null:vm_ssh_key_data = \"${sshkey}\":" \
