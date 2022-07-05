@@ -5,6 +5,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"hash/crc32"
 	"log"
 	"net"
 	"regexp"
@@ -12,14 +13,35 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/validate"
-	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"golang.org/x/crypto/ssh"
 )
+
+// from here: https://github.com/hashicorp/terraform-provider-azurerm/blob/v1.44.0/azurerm/utils/common_marshal.go#L3
+func ExpandStringSlice(input []interface{}) *[]string {
+	result := make([]string, 0)
+	for _, item := range input {
+		if item != nil {
+			result = append(result, item.(string))
+		} else {
+			result = append(result, "")
+		}
+	}
+	return &result
+}
+
+// Hash a string to a unique hashcode, cast it to
+// a nonnegative integer (crc32 returns a uint32)
+// from here: https://www.terraform.io/plugin/sdkv2/guides/v2-upgrade-guide#removal-of-helper-hashcode-package
+func String(s string) int {
+	v := int(crc32.ChecksumIEEE([]byte(s)))
+	if v < 0 {
+		return -v
+	}
+	return v
+}
 
 func resourceVfxt() *schema.Resource {
 	return &schema.Resource{
@@ -580,7 +602,7 @@ func resourceVfxt() *schema.Resource {
 						container_name: {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validate.StorageContainerName,
+							ValidateFunc: ValidateContainerName,
 						},
 						ordinal: {
 							Type:     schema.TypeInt,
@@ -1291,8 +1313,8 @@ func fillAvereVfxt(d *schema.ResourceData) (*AvereVfxt, error) {
 		d.Get(cluster_proxy_uri).(string),
 		d.Get(image_id).(string),
 		managementIP,
-		utils.ExpandStringSlice(vServerIPAddressesRaw),
-		utils.ExpandStringSlice(nodeNamesRaw),
+		ExpandStringSlice(vServerIPAddressesRaw),
+		ExpandStringSlice(nodeNamesRaw),
 	)
 
 	if avereVfxt.AvereVfxtSupportName, err = iaasPlatform.GetSupportName(avereVfxt, d.Get(support_uploads_company_name).(string)); err != nil {
@@ -2185,7 +2207,7 @@ func resourceAvereUserReferenceHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
 	}
-	return hashcode.String(buf.String())
+	return String(buf.String())
 }
 
 func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
@@ -2247,7 +2269,7 @@ func resourceAvereVfxtCoreFilerReferenceHash(v interface{}) int {
 			}
 		}
 	}
-	return hashcode.String(buf.String())
+	return String(buf.String())
 }
 
 func resourceAvereVfxtAzureStorageCoreFilerReferenceHash(v interface{}) int {
@@ -2285,7 +2307,7 @@ func resourceAvereVfxtAzureStorageCoreFilerReferenceHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%s;", v.(string)))
 		}
 	}
-	return hashcode.String(buf.String())
+	return String(buf.String())
 }
 
 func validateSchemaforOnlyAscii(d *schema.ResourceData) error {
@@ -2461,6 +2483,15 @@ func ValidateExportSubdirectory(v interface{}, _ string) (warnings []string, err
 		errors = append(errors, fmt.Errorf("%s (%s) must not begin with a '/'", export_subdirectory, input))
 	}
 
+	return warnings, errors
+}
+
+func ValidateContainerName(v interface{}, _ string) (warnings []string, errors []error) {
+	input := v.(string)
+
+	if len(input) < 3 || len(input) > 63 || !regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`).MatchString(input) {
+		errors = append(errors, fmt.Errorf("name (%q) must contain only dashes, lowercase letters, or numbers; all dashes must be immediately preceded and succeeded by a letter or number; the string must be between 3 and 63 characters long", input))
+	}
 	return warnings, errors
 }
 
