@@ -2,7 +2,7 @@
 [![Build Status - Terraform](https://dev.azure.com/averevfxt/vfxt-github/_apis/build/status/Terraform%20vFXT?branchName=main)](https://dev.azure.com/averevfxt/vfxt-github/_build/latest?definitionId=3&branchName=main)
 <img src="docs/images/avere_vfxt.png">
 
-# Avere vFXT  
+# Avere vFXT
 
 The Avere vFXT is an enterprise-scale clustered file system built for the cloud. It provides scalability, flexibility, and easy access to data stored in the cloud, in a datacenter, or both. High-performance computing workloads are supported with automatic hot data caching close to Azure Compute resources.  To learn more please visit the [Avere vFXT documentation page](http://aka.ms/averedocs).
 
@@ -19,13 +19,13 @@ These tutorials help you understand cluster performance testing and common use-c
   * [Best Practices for Improving Azure Virtual Machine (VM) Boot Time](docs/azure_vm_provision_best_practices.md) - The Avere vFXT is commonly used with burstable compute workloads. We hear from our customers that it is very challenging to boot thousands of Azure virtual machines quickly. This article describes best practices for booting thousands of VMs in the fastest possible time.
   * [Windows 10 workstation for Avere vFXT](docs/windows_10_avere_vfxt_mounted_workstation.md) - Creates a Windows workstation within the same VNET as the Avere vFXT and automatically mounts the vFXT cluster and installs various Azure tools for debugging.
   * [Transfer Custom VM Image from GCE to Azure](docs/customImageTransfer_GCE2Azure.md) - A guide on directly transferring your custom VM image from GCE to Azure.
-  
+
 ## Resources
   * [vFXT guides](https://azure.github.io/Avere/#vfxt) - Additional documentation about Avere vFXT clusters
-  * [vfxt.py usage](https://github.com/Azure/AvereSDK/blob/master/docs/README.md) - Usage guide for the vfxt.py script  
+  * [vfxt.py usage](https://github.com/Azure/AvereSDK/blob/master/docs/README.md) - Usage guide for the vfxt.py script
   * [Azure FXT Edge Filer documentation](https://docs.microsoft.com/en-us/azure/fxt-edge-filer/) - Information about the Azure FXT Edge Filer hybrid storage cache (released July 2019)
-  * [FXT Cluster Creation Guide](https://azure.github.io/Avere/#fxt_cluster) - Although this guide is for creating clusters of physical FXT appliances, some configuration information is relevant for vFXT clusters as well. 
-  * [Cluster Configuration Guide](https://azure.github.io/Avere/#operations) - A conceptual guide and complete settings reference for administering an Avere cluster. 
+  * [FXT Cluster Creation Guide](https://azure.github.io/Avere/#fxt_cluster) - Although this guide is for creating clusters of physical FXT appliances, some configuration information is relevant for vFXT clusters as well.
+  * [Cluster Configuration Guide](https://azure.github.io/Avere/#operations) - A conceptual guide and complete settings reference for administering an Avere cluster.
   * [Dashboard Guide](https://azure.github.io/Avere/#operations) - How to use the cluster monitoring features of the Avere Control Panel.
 
 ### Legal Notices
@@ -40,7 +40,7 @@ may be either trademarks or registered trademarks of Microsoft in the United Sta
 The licenses for this project do not grant you rights to use any Microsoft names, logos, or trademarks.
 Microsoft's general trademark guidelines can be found at http://go.microsoft.com/fwlink/?LinkID=254653.
 
-Privacy information can be found at https://privacy.microsoft.com/en-us/
+Privacy information can be found at https://privacy.microsoft.com/en-us/privacystatement
 
 Microsoft and any contributors reserve all others rights, whether under their respective copyrights, patents,
 or trademarks, whether by implication, estoppel or otherwise.

@@ -38,7 +38,7 @@ vfxtCache = {
     adminUsername = "azadmin"
     sshPublicKey  = ""
   }
-  support = {                    // https://privacy.microsoft.com/privacystatement
+  support = {                    // https://privacy.microsoft.com/en-us/privacystatement
     companyName      = ""        // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#support_uploads_company_name
     enableLogUpload  = true      // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#enable_support_uploads
     enableProactive  = "Support" // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#enable_secure_proactive_support
