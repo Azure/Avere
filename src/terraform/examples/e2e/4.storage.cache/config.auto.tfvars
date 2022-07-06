@@ -15,8 +15,8 @@ enableHpcCache = true    // Set to false for Avere vFXT cache deployment
 //      Standard_4G - 6144, 12288, 24576   Read Write
 //      Standard_8G - 12288, 24576, 49152  Read Write
 hpcCache = {
-  throughput = "Standard_L4_5G"
-  size       = 21623
+  throughput = "Standard_2G"
+  size       = 3072
   mtuSize    = 1500
   ntpHost    = "time.windows.com"
 }
@@ -38,7 +38,7 @@ vfxtCache = {
     adminUsername = "azadmin"
     sshPublicKey  = ""
   }
-  support = {                    // https://privacy.microsoft.com/en-us/privacystatement
+  support = {                    // https://privacy.microsoft.com/privacystatement
     companyName      = ""        // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#support_uploads_company_name
     enableLogUpload  = true      // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#enable_support_uploads
     enableProactive  = "Support" // https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#enable_secure_proactive_support
@@ -76,8 +76,18 @@ storageTargetsNfs = [
 storageTargetsNfsBlob = [
   {
     name       = "" // "RenderFarm"
-    clientPath = "/mnt/show"
+    clientPath = "/mnt/show/farm"
     usageModel = "WRITE_AROUND"
+    storage = {
+      resourceGroupName = "ArtistAnywhere.Storage"
+      accountName       = "azartist1"
+      containerName     = "show"
+    }
+  },
+  {
+    name       = "" // "ArtistWorkstation"
+    clientPath = "/mnt/show/workstation"
+    usageModel = "WRITE_WORKLOAD_CLOUDWS"
     storage = {
       resourceGroupName = "ArtistAnywhere.Storage"
       accountName       = "azartist1"

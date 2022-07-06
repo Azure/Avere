@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.2.2"
+  required_version = ">= 1.2.4"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.9.0"
+      version = "~>3.12.0"
     }
     avere = {
       source  = "hashicorp/avere"
@@ -267,25 +267,25 @@ data "azurerm_key_vault_secret" "admin_password" {
 }
 
 resource "azurerm_role_assignment" "identity" {
-  role_definition_name = "Managed Identity Operator" // https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#managed-identity-operator
+  role_definition_name = "Managed Identity Operator" // https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#managed-identity-operator
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = data.azurerm_resource_group.identity.id
 }
 
 resource "azurerm_role_assignment" "network" {
-  role_definition_name = "Avere Contributor" // https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#avere-contributor
+  role_definition_name = "Avere Contributor" // https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#avere-contributor
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = data.azurerm_resource_group.network.id
 }
 
 resource "azurerm_role_assignment" "cache_identity" {
-  role_definition_name = "Managed Identity Operator" // https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#managed-identity-operator
+  role_definition_name = "Managed Identity Operator" // https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#managed-identity-operator
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = azurerm_resource_group.cache.id
 }
 
 resource "azurerm_role_assignment" "cache_contributor" {
-  role_definition_name = "Avere Contributor" // https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#avere-contributor
+  role_definition_name = "Avere Contributor" // https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#avere-contributor
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = azurerm_resource_group.cache.id
 }

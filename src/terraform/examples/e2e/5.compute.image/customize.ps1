@@ -105,7 +105,7 @@ if ($outputVersion -eq "0.0.0") {
   Write-Host "Customize (End): NFS Client"
 }
 
-$schedulerVersion = "10.1.21.4"
+$schedulerVersion = "10.1.22.4"
 $schedulerLicense = "LicenseFree"
 $schedulerPath = "C:\Program Files\Thinkbox\Deadline10\bin"
 $schedulerDatabasePath = "C:\DeadlineDatabase"

@@ -131,7 +131,7 @@ if [ $outputVersion == "0.0.0" ]; then
   echo "Customize (End): CycleCloud"
 fi
 
-schedulerVersion="10.1.21.4"
+schedulerVersion="10.1.22.4"
 schedulerLicense="LicenseFree"
 schedulerPath="/opt/Thinkbox/Deadline10/bin"
 schedulerDatabasePath="/DeadlineDatabase"

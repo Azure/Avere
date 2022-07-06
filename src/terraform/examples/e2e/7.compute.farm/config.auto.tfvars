@@ -31,7 +31,7 @@ virtualMachineScaleSets = [
         fileSystemMounts = [
           "scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0",
           "azartist1.blob.core.windows.net:/azartist1/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0",
-          "cache.artist.studio:/mnt/show /mnt/show/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+          "cache.artist.studio:/mnt/show/farm /mnt/show/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
         fileSystemPermissions = [
           "chmod 777 /mnt/show/write"

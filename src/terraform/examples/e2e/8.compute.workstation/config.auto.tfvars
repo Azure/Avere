@@ -27,7 +27,7 @@ virtualMachines = [
       parameters = {
         fileSystemMounts = [
           "scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0",
-          "azartist1.blob.core.windows.net:/azartist1/show /mnt/show nfs sec=sys,vers=3,proto=tcp,nolock 0 0"
+          "cache.artist.studio:/mnt/show/workstation /mnt/show nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
         teradiciLicenseKey = ""
       }
@@ -57,7 +57,7 @@ virtualMachines = [
       parameters = {
         fileSystemMounts = [
           "scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0",
-          "azartist1.blob.core.windows.net:/azartist1/show /mnt/show nfs sec=sys,vers=3,proto=tcp,nolock 0 0"
+          "cache.artist.studio:/mnt/show/workstation /mnt/show nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
         teradiciLicenseKey = ""
       }
@@ -87,7 +87,7 @@ virtualMachines = [
       parameters = {
         fileSystemMounts = [
           "scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0",
-          "azartist1.blob.core.windows.net:/azartist1/show /mnt/show nfs sec=sys,vers=3,proto=tcp,nolock 0 0"
+          "cache.artist.studio:/mnt/show/workstation /mnt/show nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
         teradiciLicenseKey = ""
       }
@@ -117,7 +117,7 @@ virtualMachines = [
       parameters = {
         fileSystemMounts = [
           "mount -o anon \\\\scheduler.artist.studio\\DeadlineRepository S:",
-          "mount -o anon nolock \\\\azartist1.blob.core.windows.net\\azartist1\\show W:"
+          "mount -o anon nolock \\\\cache.artist.studio\\mnt\\workstation W:"
         ]
         teradiciLicenseKey = ""
       }
@@ -147,7 +147,7 @@ virtualMachines = [
       parameters = {
         fileSystemMounts = [
           "mount -o anon \\\\scheduler.artist.studio\\DeadlineRepository S:",
-          "mount -o anon nolock \\\\azartist1.blob.core.windows.net\\azartist1\\show W:"
+          "mount -o anon nolock \\\\cache.artist.studio\\mnt\\workstation W:"
         ]
         teradiciLicenseKey = ""
       }
@@ -177,7 +177,7 @@ virtualMachines = [
       parameters = {
         fileSystemMounts = [
           "mount -o anon \\\\scheduler.artist.studio\\DeadlineRepository S:",
-          "mount -o anon nolock \\\\azartist1.blob.core.windows.net\\azartist1\\show W:"
+          "mount -o anon nolock \\\\cache.artist.studio\\mnt\\workstation W:"
         ]
         teradiciLicenseKey = ""
       }
