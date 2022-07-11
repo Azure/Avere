@@ -192,7 +192,7 @@ Write-Host "Customize (End): Deadline Client"
 
 if ($renderEngines -like "*Blender*") {
   Write-Host "Customize (Start): Blender"
-  $versionInfo = "3.2.0"
+  $versionInfo = "3.2.1"
   $installFile = "blender-$versionInfo-windows-x64.msi"
   $downloadUrl = "$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl

@@ -57,9 +57,9 @@ variable "vfxtCache" {
         {
           nodeSize       = number
           nodeCount      = number
-          nodeImageId    = string
           adminUsername  = string
           sshPublicKey   = string
+          imageId        = string
           customSettings = list(string)
         }
       )
@@ -67,6 +67,7 @@ variable "vfxtCache" {
         {
           adminUsername = string
           sshPublicKey  = string
+          imageId       = string
         }
       )
       support = object(
@@ -304,6 +305,7 @@ module "vfxt_controller" {
   virtual_network_subnet_name       = data.azurerm_subnet.cache.name
   static_ip_address                 = local.vfxtControllerAddress
   user_assigned_managed_identity_id = data.azurerm_user_assigned_identity.identity.id
+  image_id                          = var.vfxtCache.controller.imageId
   depends_on = [
     azurerm_resource_group.cache,
     azurerm_role_assignment.identity,
@@ -318,9 +320,9 @@ resource "avere_vfxt" "cache" {
   vfxt_cluster_name               = lower(var.cacheName)
   azure_resource_group            = var.resourceGroupName
   location                        = module.global.regionName
+  image_id                        = var.vfxtCache.cluster.imageId
   node_cache_size                 = var.vfxtCache.cluster.nodeSize
   vfxt_node_count                 = var.vfxtCache.cluster.nodeCount
-  image_id                        = var.vfxtCache.cluster.nodeImageId
   azure_network_name              = data.azurerm_virtual_network.network.name
   azure_network_resource_group    = data.azurerm_virtual_network.network.resource_group_name
   azure_subnet_name               = data.azurerm_subnet.cache.name
