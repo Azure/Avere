@@ -251,7 +251,7 @@
       "name": "[variables('vmName')]",
       "location": "[variables('location')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
       ],
       "properties": {
         "hardwareProfile": {
@@ -273,7 +273,7 @@
       "name": "[variables('createRoleAssignmentId')]",
       "type": "Microsoft.Authorization/roleAssignments",
       "dependsOn": [
-        "[resourceId('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+        "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
       ],
       "properties": {
         "roleDefinitionId": "[variables('avereCreateClusterRoleFullyQualifiedId')]",
@@ -287,7 +287,7 @@
       "name": "[variables('userAdminRoleAssignmentId')]",
       "type": "Microsoft.Authorization/roleAssignments",
       "dependsOn": [
-        "[resourceId('Microsoft.Authorization/roleAssignments/', variables('createRoleAssignmentId'))]"
+        "[concat('Microsoft.Authorization/roleAssignments/', variables('createRoleAssignmentId'))]"
       ],
       "properties": {
         "roleDefinitionId": "[variables('userAdminClusterRoleFullyQualifiedId')]",
@@ -301,7 +301,7 @@
       "name": "[variables('vnetAssignRoleName')]",
       "type": "Microsoft.Resources/deployments",
       "dependsOn": [
-        "[resourceId('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
+        "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
       ],
       "resourceGroup": "[variables('virtualNetworkResourceGroup')]",
       "properties": {
@@ -326,7 +326,7 @@
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2018-09-01-preview",
               "dependsOn": [
-                "[resourceId('Microsoft.Authorization/roleAssignments/', variables('createVNETRoleAssignmentId'))]"
+                "[concat('Microsoft.Authorization/roleAssignments/', variables('createVNETRoleAssignmentId'))]"
               ],
               "properties": {
                 "roleDefinitionId": "[variables('userAdminClusterRoleFullyQualifiedId')]",
@@ -346,7 +346,7 @@
       "location": "[variables('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Authorization/roleAssignments', variables('userAdminRoleAssignmentId'))]",
-        "[resourceId('Microsoft.Resources/deployments/', variables('vnetAssignRoleName'))]"
+        "[concat('Microsoft.Resources/deployments/', variables('vnetAssignRoleName'))]"
       ],
       "properties": {
         "publisher": "Microsoft.Azure.Extensions",
