@@ -48,6 +48,7 @@
             "confirmPassword": "Confirm password",
             "sshPublicKey": "SSH public key"
           },
+          "toolTip": "Administrative SSH public key for the cluster controller.",
           "constraints": {
             "required": true,
             "customPasswordRegex": "^(?=.*[A-Za-z])(?=.*\\d).{12,}$",
