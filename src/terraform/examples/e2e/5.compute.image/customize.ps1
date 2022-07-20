@@ -105,7 +105,7 @@ if ($outputVersion -eq "0.0.0") {
   Write-Host "Customize (End): NFS Client"
 }
 
-$schedulerVersion = "10.1.22.4"
+$schedulerVersion = "10.1.22.5"
 $schedulerLicense = "LicenseFree"
 $schedulerPath = "C:\Program Files\Thinkbox\Deadline10\bin"
 $schedulerDatabasePath = "C:\DeadlineDatabase"
@@ -215,7 +215,7 @@ if ($renderEngines -like "*Unreal*") {
   $installFile = "dism.exe"
   $featureName = "NetFX3"
   Start-Process -FilePath $installFile -ArgumentList "/Enable-Feature /FeatureName:$featureName /Online /All /NoRestart" -Wait -Verb RunAs
-  $versionInfo = "5.0.2"
+  $versionInfo = "5.0.3"
   $installFile = "UnrealEngine-$versionInfo-release.zip"
   $downloadUrl = "$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl

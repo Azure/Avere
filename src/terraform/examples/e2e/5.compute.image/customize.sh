@@ -131,7 +131,7 @@ if [ $outputVersion == "0.0.0" ]; then
   echo "Customize (End): CycleCloud"
 fi
 
-schedulerVersion="10.1.22.4"
+schedulerVersion="10.1.22.5"
 schedulerLicense="LicenseFree"
 schedulerPath="/opt/Thinkbox/Deadline10/bin"
 schedulerDatabasePath="/DeadlineDatabase"
@@ -232,7 +232,7 @@ fi
 if [[ $renderEngines == *Unreal* ]]; then
   echo "Customize (Start): Unreal Engine"
   yum -y install libicu
-  versionInfo="5.0.2"
+  versionInfo="5.0.3"
   installFile="UnrealEngine-$versionInfo-release.tar.gz"
   downloadUrl="$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
