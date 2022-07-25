@@ -13,7 +13,7 @@ parameters:
     - "microsoft-avere:vfxt-preview:avere-vfxt-node:latest"
     - "microsoft-avere:vfxt:avere-vfxt-node:15.2.1"
     - "microsoft-avere:vfxt:avere-vfxt-node:14.1.1"
-    - "microsoft-avere:vfxt:avere-vfxt-node:11.1.0"
+    - "microsoft-avere-preview:vfxt-preview:avere-vfxt-node:11.1.0"
     - "microsoft-avere:vfxt:avere-vfxt-node:5.3.4.3"
     - "microsoft-avere:vfxt:avere-vfxt-node:5.3.12.1"
 - name: controller_image
