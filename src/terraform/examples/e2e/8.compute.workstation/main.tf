@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.2.4"
+  required_version = ">= 1.2.6"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.12.0"
+      version = "~>3.17.0"
     }
   }
   backend "azurerm" {
@@ -50,16 +50,11 @@ variable "virtualMachines" {
             )
           }
         )
-        networkInterface = object(
-          {
-            enableAcceleratedNetworking = bool
-          }
-        )
         adminLogin = object(
           {
-            userName     = string
-            sshPublicKey = string
-            disablePasswordAuthentication = bool
+            userName            = string
+            sshPublicKey        = string
+            disablePasswordAuth = bool
           }
         )
         customExtension = object(
@@ -142,7 +137,6 @@ resource "azurerm_network_interface" "workstation" {
     subnet_id                     = data.azurerm_subnet.workstation.id
     private_ip_address_allocation = "Dynamic"
   }
-  enable_accelerated_networking = each.value.networkInterface.enableAcceleratedNetworking
 }
 
 resource "azurerm_linux_virtual_machine" "workstation" {
@@ -156,7 +150,7 @@ resource "azurerm_linux_virtual_machine" "workstation" {
   size                            = each.value.machineSize
   admin_username                  = each.value.adminLogin.userName
   admin_password                  = data.azurerm_key_vault_secret.admin_password.value
-  disable_password_authentication = each.value.adminLogin.disablePasswordAuthentication
+  disable_password_authentication = each.value.adminLogin.disablePasswordAuth
   network_interface_ids = [
     "${azurerm_resource_group.workstation.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
   ]
@@ -194,7 +188,7 @@ resource "azurerm_virtual_machine_extension" "workstation_linux" {
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
-    script: "${base64encode(
+    "script": "${base64encode(
       templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
     )}"
   })
@@ -244,7 +238,7 @@ resource "azurerm_virtual_machine_extension" "workstation_windows" {
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
-    commandToExecute: "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
+    "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
       templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters), "UTF-16LE"
     )}"
   })

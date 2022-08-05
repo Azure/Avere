@@ -77,7 +77,7 @@ if ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v4")) {
 if ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v5")) {
   Write-Host "Customize (Start): GPU Driver (NVv5)"
   $installFile = "nvidia-gpu-nv5.exe"
-  $downloadUrl = "https://download.microsoft.com/download/8/d/2/8d228f28-56e2-4e60-bdde-a1dccfe94869/511.65_grid_win10_win11_server2016_server2019_server2022_64bit_Azure_swl.exe"
+  $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=874181"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
   Start-Process -FilePath .\$installFile -ArgumentList "/s /noreboot" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
   Write-Host "Customize (End): GPU Driver (NVv5)"
@@ -105,7 +105,7 @@ if ($outputVersion -eq "0.0.0") {
   Write-Host "Customize (End): NFS Client"
 }
 
-$schedulerVersion = "10.1.22.5"
+$schedulerVersion = "10.1.23.6"
 $schedulerLicense = "LicenseFree"
 $schedulerPath = "C:\Program Files\Thinkbox\Deadline10\bin"
 $schedulerDatabasePath = "C:\DeadlineDatabase"
@@ -192,7 +192,7 @@ Write-Host "Customize (End): Deadline Client"
 
 if ($renderEngines -like "*Blender*") {
   Write-Host "Customize (Start): Blender"
-  $versionInfo = "3.2.1"
+  $versionInfo = "3.2.2"
   $installFile = "blender-$versionInfo-windows-x64.msi"
   $downloadUrl = "$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl

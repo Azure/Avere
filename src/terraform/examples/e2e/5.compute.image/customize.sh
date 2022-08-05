@@ -61,7 +61,7 @@ if [[ $machineSize == Standard_NV* && $machineSize == *_v5 ]]; then
   echo "Customize (Start): GPU Driver (NVv5)"
   yum -y install "kernel-devel-$(uname --kernel-release)"
   installFile="nvidia-gpu-nv5.run"
-  downloadUrl="https://download.microsoft.com/download/4/3/9/439aea00-a02d-4875-8712-d1ab46cf6a73/NVIDIA-Linux-x86_64-510.47.03-grid-azure.run"
+  downloadUrl="https://go.microsoft.com/fwlink/?linkid=874272"
   curl -o $installFile -L $downloadUrl
   chmod +x $installFile
   ./$installFile --silent &> $installFile.txt
@@ -131,7 +131,7 @@ if [ $outputVersion == "0.0.0" ]; then
   echo "Customize (End): CycleCloud"
 fi
 
-schedulerVersion="10.1.22.5"
+schedulerVersion="10.1.23.6"
 schedulerLicense="LicenseFree"
 schedulerPath="/opt/Thinkbox/Deadline10/bin"
 schedulerDatabasePath="/DeadlineDatabase"
@@ -208,7 +208,7 @@ if [[ $renderEngines == *Blender* ]]; then
   yum -y install libXfixes
   yum -y install libXrender
   yum -y install libGL
-  versionInfo="3.2.1"
+  versionInfo="3.2.2"
   installFile="blender-$versionInfo-linux-x64.tar.xz"
   downloadUrl="$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl

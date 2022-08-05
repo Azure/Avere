@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.2.4"
+  required_version = ">= 1.2.6"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.12.0"
+      version = "~>3.17.0"
     }
   }
   backend "azurerm" {
@@ -50,16 +50,11 @@ variable "virtualMachines" {
             )
           }
         )
-        networkInterface = object(
-          {
-            enableAcceleratedNetworking = bool
-          }
-        )
         adminLogin = object(
           {
-            userName     = string
-            sshPublicKey = string
-            disablePasswordAuthentication = bool
+            userName            = string
+            sshPublicKey        = string
+            disablePasswordAuth = bool
           }
         )
         customExtension = object(
@@ -202,7 +197,6 @@ resource "azurerm_network_interface" "scheduler" {
     subnet_id                     = data.azurerm_subnet.scheduler.id
     private_ip_address_allocation = "Dynamic"
   }
-  enable_accelerated_networking = each.value.networkInterface.enableAcceleratedNetworking
 }
 
 resource "azurerm_linux_virtual_machine" "scheduler" {
@@ -216,8 +210,8 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
   size                            = each.value.machineSize
   admin_username                  = each.value.adminLogin.userName
   admin_password                  = data.azurerm_key_vault_secret.admin_password.value
-  disable_password_authentication = each.value.adminLogin.disablePasswordAuthentication
-  custom_data = base64gzip(
+  disable_password_authentication = each.value.adminLogin.disablePasswordAuth
+  custom_data = base64encode(
     templatefile(each.value.customExtension.parameters.autoScale.fileName, each.value.customExtension.parameters)
   )
   network_interface_ids = [
@@ -257,7 +251,7 @@ resource "azurerm_virtual_machine_extension" "custom_linux" {
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
-    script: "${base64encode(
+    "script": "${base64encode(
       templatefile(each.value.customExtension.fileName,
         merge(
           each.value.customExtension.parameters,
@@ -291,10 +285,10 @@ resource "azurerm_virtual_machine_extension" "monitor_linux" {
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
-    workspaceId: data.azurerm_log_analytics_workspace.monitor.workspace_id
+    "workspaceId": data.azurerm_log_analytics_workspace.monitor.workspace_id
   })
   protected_settings = jsonencode({
-    workspaceKey: data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+    "workspaceKey": data.azurerm_log_analytics_workspace.monitor.primary_shared_key
   })
   depends_on = [
     azurerm_linux_virtual_machine.scheduler
@@ -312,7 +306,7 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
   size                = each.value.machineSize
   admin_username      = each.value.adminLogin.userName
   admin_password      = data.azurerm_key_vault_secret.admin_password.value
-  custom_data = base64gzip(
+  custom_data = base64encode(
     templatefile(each.value.customExtension.parameters.autoScale.fileName, each.value.customExtension.parameters)
   )
   network_interface_ids = [
@@ -345,7 +339,7 @@ resource "azurerm_virtual_machine_extension" "custom_windows" {
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
-    commandToExecute: "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
+    "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
       templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters), "UTF-16LE"
     )}"
   })
@@ -365,10 +359,10 @@ resource "azurerm_virtual_machine_extension" "monitor_windows" {
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
-    workspaceId: data.azurerm_log_analytics_workspace.monitor.workspace_id
+    "workspaceId": data.azurerm_log_analytics_workspace.monitor.workspace_id
   })
   protected_settings = jsonencode({
-    workspaceKey: data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+    "workspaceKey": data.azurerm_log_analytics_workspace.monitor.primary_shared_key
   })
   depends_on = [
     azurerm_windows_virtual_machine.scheduler

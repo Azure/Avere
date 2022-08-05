@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.2.4"
+  required_version = ">= 1.2.6"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.12.0"
+      version = "~>3.17.0"
     }
   }
   backend "azurerm" {
@@ -56,16 +56,11 @@ variable "virtualMachineScaleSets" {
             )
           }
         )
-        networkInterface = object(
-          {
-            enableAcceleratedNetworking = bool
-          }
-        )
         adminLogin = object(
           {
-            userName     = string
-            sshPublicKey = string
-            disablePasswordAuthentication = bool
+            userName            = string
+            sshPublicKey        = string
+            disablePasswordAuth = bool
           }
         )
         customExtension = object(
@@ -177,7 +172,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   instances                       = each.value.machine.count
   admin_username                  = each.value.adminLogin.userName
   admin_password                  = data.azurerm_key_vault_secret.admin_password.value
-  disable_password_authentication = each.value.adminLogin.disablePasswordAuthentication
+  disable_password_authentication = each.value.adminLogin.disablePasswordAuth
   priority                        = each.value.spot.enable ? "Spot" : "Regular"
   eviction_policy                 = each.value.spot.enable ? each.value.spot.evictionPolicy : null
   max_bid_price                   = each.value.spot.enable ? each.value.spot.machineMaxPrice : -1
@@ -226,7 +221,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       type_handler_version       = "2.1"
       auto_upgrade_minor_version = true
       settings = jsonencode({
-        script: "${base64encode(
+        "script": "${base64encode(
           templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
         )}"
       })
@@ -241,10 +236,10 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       type_handler_version       = "1.13"
       auto_upgrade_minor_version = true
       settings = jsonencode({
-        workspaceId: data.azurerm_log_analytics_workspace.monitor.workspace_id
+        "workspaceId": data.azurerm_log_analytics_workspace.monitor.workspace_id
       })
       protected_settings = jsonencode({
-        workspaceKey: data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+        "workspaceKey": data.azurerm_log_analytics_workspace.monitor.primary_shared_key
       })
     }
   }
@@ -282,7 +277,6 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       primary   = true
       subnet_id = data.azurerm_subnet.farm.id
     }
-    enable_accelerated_networking = each.value.networkInterface.enableAcceleratedNetworking
   }
   os_disk {
     storage_account_type = each.value.operatingSystem.disk.storageType
@@ -310,7 +304,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       type_handler_version       = "1.10"
       auto_upgrade_minor_version = true
       settings = jsonencode({
-        commandToExecute: "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
+        "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
           templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters), "UTF-16LE"
         )}"
       })
@@ -325,10 +319,10 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       type_handler_version       = "1.0"
       auto_upgrade_minor_version = true
       settings = jsonencode({
-        workspaceId: data.azurerm_log_analytics_workspace.monitor.workspace_id
+        "workspaceId": data.azurerm_log_analytics_workspace.monitor.workspace_id
       })
       protected_settings = jsonencode({
-        workspaceKey: data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+        "workspaceKey": data.azurerm_log_analytics_workspace.monitor.primary_shared_key
       })
     }
   }

@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.2.4"
+  required_version = ">= 1.2.6"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.12.0"
+      version = "~>3.17.0"
     }
   }
   backend "azurerm" {
@@ -63,6 +63,73 @@ variable "storageAccounts" {
   )
 }
 
+variable "hammerspace" {
+  type = object(
+    {
+      namePrefix = string
+      domainName = string
+      anvilNode = object(
+        {
+          namePrefix = string
+          size       = string
+          count      = number
+          osDisk = object(
+            {
+              sizeGB      = number
+              storageType = string
+              cachingType = string
+            }
+          )
+          dataDisk = object(
+            {
+              sizeGB      = number
+              storageType = string
+              cachingType = string
+            }
+          )
+          adminLogin = object(
+            {
+              userName            = string
+              sshPublicKey        = string
+              disablePasswordAuth = bool
+            }
+          )
+        }
+      )
+      dsxNode = object(
+        {
+          namePrefix = string
+          size       = string
+          count      = number
+          osDisk = object(
+            {
+              sizeGB      = number
+              storageType = string
+              cachingType = string
+            }
+          )
+          dataDisk = object(
+            {
+              count       = number
+              sizeGB      = number
+              enableRaid0 = bool
+              storageType = string
+              cachingType = string
+            }
+          )
+          adminLogin = object(
+            {
+              userName            = string
+              sshPublicKey        = string
+              disablePasswordAuth = bool
+            }
+          )
+        }
+      )
+    }
+  )
+}
+
 variable "netAppAccounts" {
   type = list(
     object(
@@ -108,12 +175,23 @@ variable "netAppAccounts" {
 variable "virtualNetwork" {
   type = object(
     {
-      name              = string
-      resourceGroupName = string
-      subnetNameStorage = string
-      subnetNameCache   = string
+      name                = string
+      resourceGroupName   = string
+      subnetNameStorage   = string
+      subnetNameStorageHA = string
+      subnetNameCache     = string
     }
   )
+}
+
+data "azurerm_key_vault" "vault" {
+  name                = module.global.keyVaultName
+  resource_group_name = module.global.securityResourceGroupName
+}
+
+data "azurerm_key_vault_secret" "admin_password" {
+  name         = module.global.keyVaultSecretNameAdminPassword
+  key_vault_id = data.azurerm_key_vault.vault.id
 }
 
 data "terraform_remote_state" "network" {
@@ -140,6 +218,12 @@ data "azurerm_subnet" "storage" {
 
 data "azurerm_subnet" "storage_netapp" {
   name                 = var.virtualNetwork.name != "" ? var.virtualNetwork.subnetNameStorage : data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.storageNetApp].name
+  resource_group_name  = var.virtualNetwork.name != "" ? var.virtualNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
+  virtual_network_name = var.virtualNetwork.name != "" ? var.virtualNetwork.name : data.terraform_remote_state.network[0].outputs.virtualNetwork.name
+}
+
+data "azurerm_subnet" "storage_ha" {
+  name                 = var.virtualNetwork.name != "" ? var.virtualNetwork.subnetNameStorageHA : data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.storageHA].name
   resource_group_name  = var.virtualNetwork.name != "" ? var.virtualNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
   virtual_network_name = var.virtualNetwork.name != "" ? var.virtualNetwork.name : data.terraform_remote_state.network[0].outputs.virtualNetwork.name
 }
@@ -213,6 +297,59 @@ locals {
       }
     ] if storageAccount.name != ""
   ])
+  hammerspaceImagePublisher = "hammerspace"
+  hammerspaceImageProduct   = "hammerspace-4-6-5-byol"
+  hammerspaceImageName      = "planformacc-byol"
+  hammerspaceImageVersion   = "latest"
+  hammerspaceNodesAnvil = [
+   for i in range(var.hammerspace.anvilNode.count) : merge({index = i}, {name = "${var.hammerspace.namePrefix}${var.hammerspace.anvilNode.namePrefix}${i + 1}"}, var.hammerspace.anvilNode) if var.hammerspace.namePrefix != ""
+  ]
+  hammerspaceNodesDsx = [
+   for i in range(var.hammerspace.dsxNode.count) : merge({index = i}, {name = "${var.hammerspace.namePrefix}${var.hammerspace.dsxNode.namePrefix}${i + 1}"}, var.hammerspace.dsxNode) if var.hammerspace.namePrefix != ""
+  ]
+  hammerspaceDisksDsx = [
+   for i in range(var.hammerspace.dsxNode.count * var.hammerspace.dsxNode.dataDisk.count) : merge({index = i % var.hammerspace.dsxNode.dataDisk.count + 1}, {machineName = "${var.hammerspace.namePrefix}${var.hammerspace.dsxNode.namePrefix}${floor(i / var.hammerspace.dsxNode.dataDisk.count) + 1}"}, {name = "${var.hammerspace.namePrefix}${var.hammerspace.dsxNode.namePrefix}${floor(i / var.hammerspace.dsxNode.dataDisk.count) + 1}DataDisk${i % var.hammerspace.dsxNode.dataDisk.count + 1}"}, var.hammerspace.dsxNode) if var.hammerspace.namePrefix != ""
+  ]
+  hammerspaceCustomDataAnvil = {
+    "cluster": {
+      "domainname": var.hammerspace.domainName == "" ? "${var.hammerspace.namePrefix}.azure" : var.hammerspace.domainName
+    },
+    "node": {
+      "hostname": "@HOSTNAME@",
+      "ha_mode": "@HA_MODE@",
+      "networks": {
+        "eth0": {
+          "cluster_ips": [
+            "@ANVILIP@/${reverse(split("/", data.azurerm_subnet.storage.address_prefixes[0]))[0]}"
+          ]
+        },
+        "eth1": {
+          "dhcp": true
+        }
+      }
+    }
+  }
+  hammerspaceCustomDataDsx = {
+    "cluster": {
+      "domainname": var.hammerspace.domainName == "" ? "${var.hammerspace.namePrefix}.azure" : var.hammerspace.domainName
+      "metadata": {
+        "ips": [
+          "@ANVILIP@/${reverse(split("/", data.azurerm_subnet.storage.address_prefixes[0]))[0]}"
+        ]
+      }
+    },
+    "node": {
+      "features": [
+        "portal",
+        "storage"
+      ],
+      "add_volumes": true,
+      "storage": {
+        "options": var.hammerspace.dsxNode.dataDisk.enableRaid0 ? ["raid0"] : []
+      },
+      "hostname": "@HOSTNAME@"
+    }
+  }
   netAppCapacityPools = flatten([
     for netAppAccount in var.netAppAccounts : [
       for capacityPool in netAppAccount.capacityPools : {
@@ -355,7 +492,7 @@ resource "azurerm_storage_container" "containers" {
   container_access_type = each.value.blobContainerAccessType
   storage_account_name  = each.value.storageAccountName
   depends_on = [
-    azurerm_storage_account.storage
+    azurerm_private_endpoint.storage
   ]
 }
 
@@ -383,7 +520,288 @@ resource "azurerm_storage_share" "shares" {
   enabled_protocol     = each.value.fileAccessProtocol
   quota                = each.value.fileShareSize
   depends_on = [
-    azurerm_storage_account.storage
+    azurerm_private_endpoint.storage
+  ]
+}
+
+#############################################################################################################
+# Hammerspace (https://azuremarketplace.microsoft.com/en-US/marketplace/apps/hammerspace.hammerspace_4_6_5) #
+#############################################################################################################
+
+resource "azurerm_availability_set" "storage_anvil" {
+  count               = var.hammerspace.namePrefix != "" ? 1 : 0
+  name                = "${var.hammerspace.namePrefix}Anvil"
+  resource_group_name = azurerm_resource_group.storage.name
+  location            = azurerm_resource_group.storage.location
+}
+
+resource "azurerm_availability_set" "storage_dsx" {
+  count               = var.hammerspace.namePrefix != "" ? 1 : 0
+  name                = "${var.hammerspace.namePrefix}DSX"
+  resource_group_name = azurerm_resource_group.storage.name
+  location            = azurerm_resource_group.storage.location
+}
+
+resource "azurerm_lb" "storage" {
+  count               = var.hammerspace.namePrefix != "" ? 1 : 0
+  name                = "${var.hammerspace.namePrefix}LB"
+  resource_group_name = azurerm_resource_group.storage.name
+  location            = azurerm_resource_group.storage.location
+  sku                 = "Standard"
+  frontend_ip_configuration {
+    name      = "FrontendConfig"
+    subnet_id = data.azurerm_subnet.storage.id
+  }
+}
+
+resource "azurerm_lb_backend_address_pool" "storage" {
+  count           = var.hammerspace.namePrefix != "" ? 1 : 0
+  name            = "BackendPool"
+  loadbalancer_id = azurerm_lb.storage[0].id
+}
+
+resource "azurerm_network_interface_backend_address_pool_association" "storage_anvil" {
+  for_each = {
+    for x in local.hammerspaceNodesAnvil : x.name => x
+  }
+  backend_address_pool_id = azurerm_lb_backend_address_pool.storage[0].id
+  network_interface_id    = "${azurerm_resource_group.storage.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
+  ip_configuration_name   = "ipConfig"
+  depends_on = [
+    azurerm_network_interface.storage_anvil
+  ]
+}
+
+resource "azurerm_lb_rule" "storage" {
+  count                          = var.hammerspace.namePrefix != "" ? 1 : 0
+  name                           = "Rule"
+  loadbalancer_id                = azurerm_lb.storage[0].id
+  frontend_ip_configuration_name = azurerm_lb.storage[0].frontend_ip_configuration[0].name
+  probe_id                       = azurerm_lb_probe.storage[0].id
+  enable_floating_ip             = true
+  protocol                       = "All"
+  frontend_port                  = 0
+  backend_port                   = 0
+  backend_address_pool_ids = [
+    azurerm_lb_backend_address_pool.storage[0].id
+  ]
+}
+
+resource "azurerm_lb_probe" "storage" {
+  count           = var.hammerspace.namePrefix != "" ? 1 : 0
+  name            = "Probe"
+  loadbalancer_id = azurerm_lb.storage[0].id
+  protocol        = "Tcp"
+  port            = 4505
+}
+
+resource "azurerm_network_interface" "storage_anvil" {
+  for_each = {
+    for x in local.hammerspaceNodesAnvil : x.name => x
+  }
+  name                = each.value.name
+  resource_group_name = azurerm_resource_group.storage.name
+  location            = azurerm_resource_group.storage.location
+  ip_configuration {
+    name                          = "ipConfig"
+    subnet_id                     = data.azurerm_subnet.storage.id
+    private_ip_address_allocation = "Dynamic"
+  }
+}
+
+resource "azurerm_network_interface" "storage_anvil_ha" {
+  for_each = {
+    for x in local.hammerspaceNodesAnvil : x.name => x
+  }
+  name                = "${each.value.name}HA"
+  resource_group_name = azurerm_resource_group.storage.name
+  location            = azurerm_resource_group.storage.location
+  ip_configuration {
+    name                          = "ipConfig"
+    subnet_id                     = data.azurerm_subnet.storage_ha.id
+    private_ip_address_allocation = "Dynamic"
+  }
+}
+
+resource "azurerm_linux_virtual_machine" "storage_anvil" {
+  for_each = {
+    for x in local.hammerspaceNodesAnvil : x.name => x
+  }
+  name                            = each.value.name
+  resource_group_name             = azurerm_resource_group.storage.name
+  location                        = azurerm_resource_group.storage.location
+  size                            = var.hammerspace.anvilNode.size
+  admin_username                  = var.hammerspace.anvilNode.adminLogin.userName
+  admin_password                  = data.azurerm_key_vault_secret.admin_password.value
+  disable_password_authentication = var.hammerspace.anvilNode.adminLogin.disablePasswordAuth
+  availability_set_id             = azurerm_availability_set.storage_anvil[0].id
+  custom_data = base64encode(
+    replace(replace(replace(jsonencode(local.hammerspaceCustomDataAnvil), "@ANVILIP@", azurerm_lb.storage[0].frontend_ip_configuration[0].private_ip_address), "@HA_MODE@", each.value.index == 0 ? "Primary" : "Secondary"), "@HOSTNAME@", each.value.name)
+  )
+  network_interface_ids = [
+    "${azurerm_resource_group.storage.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}",
+    "${azurerm_resource_group.storage.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}HA"
+  ]
+  os_disk {
+    disk_size_gb         = var.hammerspace.anvilNode.osDisk.sizeGB
+    storage_account_type = var.hammerspace.anvilNode.osDisk.storageType
+    caching              = var.hammerspace.anvilNode.osDisk.cachingType
+  }
+  plan {
+    publisher = local.hammerspaceImagePublisher
+    product   = local.hammerspaceImageProduct
+    name      = local.hammerspaceImageName
+  }
+  source_image_reference {
+    publisher = local.hammerspaceImagePublisher
+    offer     = local.hammerspaceImageProduct
+    sku       = local.hammerspaceImageName
+    version   = local.hammerspaceImageVersion
+  }
+  depends_on = [
+    azurerm_network_interface.storage_anvil,
+    azurerm_network_interface.storage_anvil_ha
+  ]
+}
+
+resource "azurerm_managed_disk" "storage_anvil" {
+  for_each = {
+    for x in local.hammerspaceNodesAnvil : x.name => x
+  }
+  name                 = each.value.name
+  resource_group_name  = azurerm_resource_group.storage.name
+  location             = azurerm_resource_group.storage.location
+  storage_account_type = each.value.dataDisk.storageType
+  disk_size_gb         = each.value.dataDisk.sizeGB
+  create_option        = "Empty"
+}
+
+resource "azurerm_virtual_machine_data_disk_attachment" "storage_anvil" {
+  for_each = {
+    for x in local.hammerspaceNodesAnvil : x.name => x
+  }
+  virtual_machine_id = "${azurerm_resource_group.storage.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
+  managed_disk_id    = "${azurerm_resource_group.storage.id}/providers/Microsoft.Compute/disks/${each.value.name}"
+  caching            = each.value.dataDisk.cachingType
+  lun                = each.value.index
+  depends_on = [
+    azurerm_linux_virtual_machine.storage_anvil,
+    azurerm_managed_disk.storage_anvil
+  ]
+}
+
+resource "azurerm_virtual_machine_extension" "storage_anvil" {
+  for_each = {
+    for x in local.hammerspaceNodesAnvil : x.name => x
+  }
+  name                       = "SetAdminPassword"
+  type                       = "CustomScript"
+  publisher                  = "Microsoft.Azure.Extensions"
+  type_handler_version       = "2.1"
+  auto_upgrade_minor_version = true
+  virtual_machine_id         = "${azurerm_resource_group.storage.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
+  protected_settings = jsonencode({
+    "commandToExecute": "ADMIN_PASSWORD='${data.azurerm_key_vault_secret.admin_password.value}' /usr/bin/hs-init-admin-pw"
+  })
+  depends_on = [
+    azurerm_linux_virtual_machine.storage_anvil
+  ]
+}
+
+resource "azurerm_network_interface" "storage_dsx" {
+  for_each = {
+    for x in local.hammerspaceNodesDsx : x.name => x
+  }
+  name                = each.value.name
+  resource_group_name = azurerm_resource_group.storage.name
+  location            = azurerm_resource_group.storage.location
+  ip_configuration {
+    name                          = "ipConfig"
+    subnet_id                     = data.azurerm_subnet.storage.id
+    private_ip_address_allocation = "Dynamic"
+  }
+}
+
+resource "azurerm_linux_virtual_machine" "storage_dsx" {
+  for_each = {
+    for x in local.hammerspaceNodesDsx : x.name => x
+  }
+  name                            = each.value.name
+  resource_group_name             = azurerm_resource_group.storage.name
+  location                        = azurerm_resource_group.storage.location
+  size                            = each.value.size
+  admin_username                  = each.value.adminLogin.userName
+  admin_password                  = data.azurerm_key_vault_secret.admin_password.value
+  disable_password_authentication = each.value.adminLogin.disablePasswordAuth
+  availability_set_id             = azurerm_availability_set.storage_dsx[0].id
+  custom_data = base64encode(
+    replace(replace(jsonencode(local.hammerspaceCustomDataDsx), "@ANVILIP@", azurerm_lb.storage[0].frontend_ip_configuration[0].private_ip_address), "@HOSTNAME@", each.value.name)
+  )
+  network_interface_ids = [
+    "${azurerm_resource_group.storage.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
+  ]
+  os_disk {
+    disk_size_gb         = each.value.osDisk.sizeGB
+    storage_account_type = each.value.osDisk.storageType
+    caching              = each.value.osDisk.cachingType
+  }
+  plan {
+    publisher = local.hammerspaceImagePublisher
+    product   = local.hammerspaceImageProduct
+    name      = local.hammerspaceImageName
+  }
+  source_image_reference {
+    publisher = local.hammerspaceImagePublisher
+    offer     = local.hammerspaceImageProduct
+    sku       = local.hammerspaceImageName
+    version   = local.hammerspaceImageVersion
+  }
+  depends_on = [
+    azurerm_network_interface.storage_dsx
+  ]
+}
+
+resource "azurerm_managed_disk" "storage_dsx" {
+  for_each = {
+    for x in local.hammerspaceDisksDsx : x.name => x
+  }
+  name                 = each.value.name
+  resource_group_name  = azurerm_resource_group.storage.name
+  location             = azurerm_resource_group.storage.location
+  storage_account_type = each.value.dataDisk.storageType
+  disk_size_gb         = each.value.dataDisk.sizeGB
+  create_option        = "Empty"
+}
+
+resource "azurerm_virtual_machine_data_disk_attachment" "storage_dsx" {
+  for_each = {
+    for x in local.hammerspaceDisksDsx : x.name => x
+  }
+  virtual_machine_id = "${azurerm_resource_group.storage.id}/providers/Microsoft.Compute/virtualMachines/${each.value.machineName}"
+  managed_disk_id    = "${azurerm_resource_group.storage.id}/providers/Microsoft.Compute/disks/${each.value.name}"
+  caching            = each.value.dataDisk.cachingType
+  lun                = each.value.index
+  depends_on = [
+    azurerm_linux_virtual_machine.storage_dsx,
+    azurerm_managed_disk.storage_dsx
+  ]
+}
+
+resource "azurerm_virtual_machine_extension" "storage_dsx" {
+  for_each = {
+    for x in local.hammerspaceNodesDsx : x.name => x
+  }
+  name                       = "SetAdminPassword"
+  type                       = "CustomScript"
+  publisher                  = "Microsoft.Azure.Extensions"
+  type_handler_version       = "2.1"
+  auto_upgrade_minor_version = true
+  virtual_machine_id         = "${azurerm_resource_group.storage.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
+  protected_settings = jsonencode({
+    "commandToExecute": "ADMIN_PASSWORD='${data.azurerm_key_vault_secret.admin_password.value}' /usr/bin/hs-init-admin-pw"
+  })
+  depends_on = [
+    azurerm_linux_virtual_machine.storage_dsx
   ]
 }
 

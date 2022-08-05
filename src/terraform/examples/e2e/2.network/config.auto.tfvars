@@ -1,4 +1,4 @@
-resourceGroupName = "ArtistAnywhere.Network"
+resourceGroupName = "AzureArtistAnywhere.Network"
 
 ################################################################################################
 # Virtual Network (https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview) #
@@ -40,14 +40,8 @@ virtualNetwork = {
       serviceDelegation = "Microsoft.Netapp/volumes"
     },
     {
-      name              = "StorageHammerspace"
-      addressSpace      = ["10.0.195.0/25"]
-      serviceEndpoints  = []
-      serviceDelegation = ""
-    },
-    {
-      name              = "StorageHammerspaceHA"
-      addressSpace      = ["10.0.195.128/25"]
+      name              = "StorageHA"
+      addressSpace      = ["10.0.195.0/29"]
       serviceEndpoints  = []
       serviceDelegation = ""
     },
@@ -61,13 +55,12 @@ virtualNetwork = {
 }
 
 virtualNetworkSubnetIndex = {
-  farm                 = 0
-  workstation          = 1
-  cache                = 2
-  storage              = 3
-  storageNetApp        = 4
-  storageHammerspace   = 5
-  storageHammerspaceHA = 6
+  farm          = 0
+  workstation   = 1
+  cache         = 2
+  storage       = 3
+  storageNetApp = 4
+  storageHA     = 5
 }
 
 ###########################################################################
