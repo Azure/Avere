@@ -44,7 +44,7 @@ keyVault = {
 
 # Monitor (https://docs.microsoft.com/azure/azure-monitor/overview)
 monitorWorkspace = {
-  name               = "AzArtist"
+  name               = "AzRender"
   sku                = "PerGB2018"
   retentionDays      = 90
   publicIngestEnable = false

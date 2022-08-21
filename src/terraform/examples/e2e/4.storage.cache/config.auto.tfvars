@@ -81,7 +81,7 @@ storageTargetsNfsBlob = [
     usageModel = "WRITE_AROUND"
     storage = {
       resourceGroupName = "AzureArtistAnywhere.Storage"
-      accountName       = "azartist1"
+      accountName       = "azrender1"
       containerName     = "show"
     }
   },
@@ -91,7 +91,7 @@ storageTargetsNfsBlob = [
     usageModel = "WRITE_WORKLOAD_CLOUDWS"
     storage = {
       resourceGroupName = "AzureArtistAnywhere.Storage"
-      accountName       = "azartist1"
+      accountName       = "azrender1"
       containerName     = "show"
     }
   }

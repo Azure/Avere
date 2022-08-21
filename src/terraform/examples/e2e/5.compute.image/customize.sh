@@ -3,8 +3,8 @@
 binDirectory="/usr/local/bin"
 cd $binDirectory
 
-storageContainerUrl="https://azartist.blob.core.windows.net/bin"
-storageContainerSas="?sv=2020-10-02&st=2022-01-01T00%3A00%3A00Z&se=2222-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=4N8gUHTPNOG%2BlgEPvQljsRPCOsRD3ZWfiBKl%2BRxl9S8%3D"
+storageContainerUrl="https://azrender.blob.core.windows.net/bin"
+storageContainerSas="?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D"
 
 echo "Customize (Start): Platform Utilities"
 yum -y install epel-release
@@ -329,21 +329,29 @@ if [ $subnetName == "Workstation" ]; then
   echo "Customize (End): Teradici PCoIP Agent"
 fi
 
+echo "Customize (Start): Cinebench"
+versionInfo="R23"
+installFile="Cinebench$versionInfo.zip"
+downloadUrl="$storageContainerUrl/Cinebench/$versionInfo/$installFile$storageContainerSas"
+curl -o $installFile -L $downloadUrl
+unzip $installFile
+echo "Customize (End): Cinebench"
+
 echo "Customize (Start): VRay Benchmark"
 versionInfo="5.02.00"
 installFile="vray-benchmark-$versionInfo"
-downloadUrl="$storageContainerUrl/VRay/Benchmark/$installFile$storageContainerSas"
+downloadUrl="$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
 curl -o $installFile -L $downloadUrl
 chmod +x $installFile
 echo "Customize (End): VRay Benchmark"
 
-echo "Customize (Start): NVIDIA OptiX SDK"
-versionInfo="7.5.0"
-installFile="NVIDIA-OptiX-SDK-$versionInfo-linux64-x86_64.sh"
-downloadUrl="$storageContainerUrl/NVIDIA/OptiX/$installFile$storageContainerSas"
-curl -o $installFile -L $downloadUrl
-chmod +x $installFile
-localDirectory="NVIDIA-OptiX"
-mkdir $localDirectory
-./$installFile --prefix=$localDirectory --skip-license
-echo "Customize (End): NVIDIA OptiX SDK"
+# echo "Customize (Start): NVIDIA OptiX SDK"
+# versionInfo="7.5.0"
+# installFile="NVIDIA-OptiX-SDK-$versionInfo-linux64-x86_64.sh"
+# downloadUrl="$storageContainerUrl/NVIDIA/OptiX/$installFile$storageContainerSas"
+# curl -o $installFile -L $downloadUrl
+# chmod +x $installFile
+# localDirectory="NVIDIA-OptiX"
+# mkdir $localDirectory
+# ./$installFile --prefix=$localDirectory --skip-license
+# echo "Customize (End): NVIDIA OptiX SDK"

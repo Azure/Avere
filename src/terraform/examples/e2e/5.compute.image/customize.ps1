@@ -7,8 +7,8 @@ $ErrorActionPreference = "Stop"
 $binDirectory = "C:\Users\Public\Downloads"
 Set-Location -Path $binDirectory
 
-$storageContainerUrl = "https://azartist.blob.core.windows.net/bin"
-$storageContainerSas = "?sv=2020-10-02&st=2022-01-01T00%3A00%3A00Z&se=2222-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=4N8gUHTPNOG%2BlgEPvQljsRPCOsRD3ZWfiBKl%2BRxl9S8%3D"
+$storageContainerUrl = "https://azrender.blob.core.windows.net/bin"
+$storageContainerSas = "?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D"
 
 Write-Host "Customize (Start): Resize OS Disk"
 $osDriveLetter = "C"
@@ -330,20 +330,28 @@ if ($subnetName -eq "Workstation") {
   Write-Host "Customize (End): Teradici PCoIP Agent"
 }
 
+Write-Host "Customize (Start): Cinebench"
+$versionInfo = "R23"
+$installFile = "Cinebench$versionInfo.zip"
+$downloadUrl = "$storageContainerUrl/Cinebench/$versionInfo/$installFile$storageContainerSas"
+Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+Expand-Archive -Path $installFile
+Write-Host "Customize (End): Cinebench"
+
 Write-Host "Customize (Start): VRay Benchmark"
 $versionInfo = "5.02.00"
 $installFile = "vray-benchmark-$versionInfo.exe"
-$downloadUrl = "$storageContainerUrl/VRay/Benchmark/$installFile$storageContainerSas"
+$downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
 Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
 $installFile = "vray-benchmark-$versionInfo-cli.exe"
 $downloadUrl = "$storageContainerUrl/VRay/Benchmark/$installFile$storageContainerSas"
 Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
 Write-Host "Customize (End): VRay Benchmark"
 
-Write-Host "Customize (Start): NVIDIA OptiX SDK"
-$versionInfo = "7.5.0"
-$installFile = "NVIDIA-OptiX-SDK-$versionInfo-win64.exe"
-$downloadUrl = "$storageContainerUrl/NVIDIA/OptiX/$installFile$storageContainerSas"
-Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-Start-Process -FilePath .\$installFile -ArgumentList "/S" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-Write-Host "Customize (End): NVIDIA OptiX SDK"
+# Write-Host "Customize (Start): NVIDIA OptiX SDK"
+# $versionInfo = "7.5.0"
+# $installFile = "NVIDIA-OptiX-SDK-$versionInfo-win64.exe"
+# $downloadUrl = "$storageContainerUrl/NVIDIA/OptiX/$installFile$storageContainerSas"
+# Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+# Start-Process -FilePath .\$installFile -ArgumentList "/S" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+# Write-Host "Customize (End): NVIDIA OptiX SDK"

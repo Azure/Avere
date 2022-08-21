@@ -83,7 +83,7 @@ if [ ${cycleCloud.enable} == true ]; then
   clusterTemplateFile="cluster_template.txt"
   echo "[cluster Render Farm]" > $clusterTemplateFile
   echo "Category = Schedulers" >> $clusterTemplateFile
-  echo "IconUrl = https://azartist.blob.core.windows.net/bin/render.png?sv=2020-10-02&st=2022-01-01T00%3A00%3A00Z&se=2222-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=4N8gUHTPNOG%2BlgEPvQljsRPCOsRD3ZWfiBKl%2BRxl9S8%3D" >> $clusterTemplateFile
+  echo "IconUrl = https://azrender.blob.core.windows.net/bin/icon.png?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D" >> $clusterTemplateFile
   echo "FormLayout = SelectionPanel" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "[[node defaults]]" >> $clusterTemplateFile
@@ -108,7 +108,7 @@ if [ ${cycleCloud.enable} == true ]; then
   echo "mkdir -p /mnt/show/read" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "echo 'scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0' >> /etc/fstab" >> $clusterTemplateFile
-  echo "echo 'azartist1.blob.core.windows.net:/azartist1/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0' >> /etc/fstab" >> $clusterTemplateFile
+  echo "echo 'azrender1.blob.core.windows.net:/azrender1/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0' >> /etc/fstab" >> $clusterTemplateFile
   echo "echo 'cache.artist.studio:/mnt/show/farm /mnt/show/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0' >> /etc/fstab" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "mount -a" >> $clusterTemplateFile

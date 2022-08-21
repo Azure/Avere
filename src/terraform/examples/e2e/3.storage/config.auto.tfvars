@@ -3,7 +3,7 @@ resourceGroupName = "AzureArtistAnywhere.Storage"
 # Storage (https://docs.microsoft.com/azure/storage/common/storage-introduction)
 storageAccounts = [
   {
-    name                 = "azartist1" // Name must be globally unique (lowercase alphanumeric)
+    name                 = "azrender1" // Name must be globally unique (lowercase alphanumeric)
     type                 = "StorageV2" // https://docs.microsoft.com/azure/storage/common/storage-account-overview
     tier                 = "Standard"  // https://docs.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
     redundancy           = "LRS"       // https://docs.microsoft.com/azure/storage/common/storage-redundancy
