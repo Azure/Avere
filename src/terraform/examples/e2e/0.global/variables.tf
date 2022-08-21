@@ -3,7 +3,7 @@ variable "regionName" {
 }
 
 variable "securityResourceGroupName" {
-  default = "AzureArtistAnywhere" // Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
+  default = "ArtistAnywhere" // Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 }
 variable "securityStorageAccountName" {
   default = "azrender0" // Set to a globally unique name (lowercase alphanumeric)

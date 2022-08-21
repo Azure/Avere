@@ -1,4 +1,4 @@
-resourceGroupName = "AzureArtistAnywhere.Storage"
+resourceGroupName = "ArtistAnywhere.Storage"
 
 # Storage (https://docs.microsoft.com/azure/storage/common/storage-introduction)
 storageAccounts = [

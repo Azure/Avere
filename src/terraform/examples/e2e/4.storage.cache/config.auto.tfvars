@@ -1,4 +1,4 @@
-resourceGroupName = "AzureArtistAnywhere.Cache"
+resourceGroupName = "ArtistAnywhere.Cache"
 
 cacheName      = "cache" // Set to a uniquely identifiable cache name
 enableHpcCache = true    // Set to false for Avere vFXT cache deployment
@@ -80,7 +80,7 @@ storageTargetsNfsBlob = [
     clientPath = "/mnt/show/farm"
     usageModel = "WRITE_AROUND"
     storage = {
-      resourceGroupName = "AzureArtistAnywhere.Storage"
+      resourceGroupName = "ArtistAnywhere.Storage"
       accountName       = "azrender1"
       containerName     = "show"
     }
@@ -90,7 +90,7 @@ storageTargetsNfsBlob = [
     clientPath = "/mnt/show/workstation"
     usageModel = "WRITE_WORKLOAD_CLOUDWS"
     storage = {
-      resourceGroupName = "AzureArtistAnywhere.Storage"
+      resourceGroupName = "ArtistAnywhere.Storage"
       accountName       = "azrender1"
       containerName     = "show"
     }

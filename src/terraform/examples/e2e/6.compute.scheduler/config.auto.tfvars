@@ -1,10 +1,10 @@
-resourceGroupName = "AzureArtistAnywhere.Scheduler"
+resourceGroupName = "ArtistAnywhere.Scheduler"
 
 # Virtual Machines (https://docs.microsoft.com/azure/virtual-machines)
 virtualMachines = [
   {
     name        = "LnxScheduler"
-    imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/AzureArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/0.0.0"
+    imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/0.0.0"
     machineSize = "Standard_D8s_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Linux"
@@ -28,7 +28,7 @@ virtualMachines = [
           enable                   = false
           fileName                 = "scale.sh"
           scaleSetName             = "LnxFarm"
-          resourceGroupName        = "AzureArtistAnywhere.Farm"
+          resourceGroupName        = "ArtistAnywhere.Farm"
           detectionIntervalSeconds = 60
           jobWaitThresholdSeconds  = 300
           workerIdleDeleteSeconds  = 3600
@@ -50,7 +50,7 @@ virtualMachines = [
   },
   {
     name        = "" // "WinScheduler"
-    imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/AzureArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinScheduler/versions/0.0.0"
+    imageId     = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinScheduler/versions/0.0.0"
     machineSize = "Standard_D8s_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Windows"
@@ -74,7 +74,7 @@ virtualMachines = [
           enable                   = false
           fileName                 = "scale.ps1"
           scaleSetName             = "WinFarm"
-          resourceGroupName        = "AzureArtistAnywhere.Farm"
+          resourceGroupName        = "ArtistAnywhere.Farm"
           detectionIntervalSeconds = 60
           jobWaitThresholdSeconds  = 300
           workerIdleDeleteSeconds  = 3600

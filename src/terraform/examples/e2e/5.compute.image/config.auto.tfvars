@@ -1,4 +1,4 @@
-resourceGroupName = "AzureArtistAnywhere.Image"
+resourceGroupName = "ArtistAnywhere.Image"
 
 # Compute Gallery (https://docs.microsoft.com/azure/virtual-machines/shared-image-galleries)
 imageGalleryName = "Gallery"
