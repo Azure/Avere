@@ -12,7 +12,9 @@ storage = {
 
 # Key Vault (https://docs.microsoft.com/azure/key-vault/general/overview)
 keyVault = {
-  type = "standard"
+  type                    = "standard"
+  enablePurgeProtection   = false
+  softDeleteRetentionDays = 90
   secrets = [
     {
       name  = "GatewayConnection"

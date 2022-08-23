@@ -4,7 +4,7 @@ resourceGroupName = "ArtistAnywhere.Farm"
 virtualMachineScaleSets = [
   {
     name    = "LnxFarm"
-    imageId = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/1.0.0"
+    imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/1.0.0"
     machine = {
       size  = "Standard_HB120rs_v2"
       count = 10
@@ -50,7 +50,7 @@ virtualMachineScaleSets = [
   },
   {
     name    = "" // WinFarm
-    imageId = "/subscriptions/3d07cfbc-17aa-41b4-baa1-488fef85a1d3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinFarm/versions/1.0.0"
+    imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinFarm/versions/1.0.0"
     machine = {
       size  = "Standard_HB120rs_v2"
       count = 10

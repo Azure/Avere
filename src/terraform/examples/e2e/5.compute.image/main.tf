@@ -370,7 +370,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   {
                     "type": "Shell",
                     "inline": [
-                      "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript), concat('buildJsonEncoded=', base64(string(union(parameters('imageTemplate').build, createObject('adminPassword', parameters('adminPassword')))))))]"
+                      "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript), concat('buildConfigEncoded=', base64(string(union(parameters('imageTemplate').build, createObject('adminPassword', parameters('adminPassword')))))))]"
                     ]
                   }
                 ]
@@ -412,7 +412,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   {
                     "type": "PowerShell",
                     "inline": [
-                      "[format('{0} {1}', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript), concat('-buildJsonEncoded ', base64(string(parameters('imageTemplate').build))))]"
+                      "[format('{0} {1}', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript), concat('-buildConfigEncoded ', base64(string(parameters('imageTemplate').build))))]"
                     ],
                     "runElevated": "[parameters('imageTemplate').build.runElevated]"
                   }

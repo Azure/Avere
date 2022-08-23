@@ -40,7 +40,9 @@ variable "storage" {
 variable "keyVault" {
   type = object(
     {
-      type = string
+      type                    = string
+      enablePurgeProtection   = bool
+      softDeleteRetentionDays = number
       secrets = list(
         object(
           {
@@ -123,12 +125,14 @@ resource "azurerm_storage_container" "container" {
 }
 
 resource "azurerm_key_vault" "vault" {
-  name                      = module.global.keyVaultName
-  resource_group_name       = azurerm_resource_group.security.name
-  location                  = azurerm_resource_group.security.location
-  tenant_id                 = data.azurerm_client_config.current.tenant_id
-  sku_name                  = var.keyVault.type
-  enable_rbac_authorization = true
+  name                       = module.global.keyVaultName
+  resource_group_name        = azurerm_resource_group.security.name
+  location                   = azurerm_resource_group.security.location
+  tenant_id                  = data.azurerm_client_config.current.tenant_id
+  sku_name                   = var.keyVault.type
+  purge_protection_enabled   = var.keyVault.enablePurgeProtection
+  soft_delete_retention_days = var.keyVault.softDeleteRetentionDays
+  enable_rbac_authorization  = true
 }
 
 resource "azurerm_key_vault_secret" "secrets" {

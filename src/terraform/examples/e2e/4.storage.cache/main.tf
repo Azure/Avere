@@ -46,6 +46,12 @@ variable "hpcCache" {
       size       = number
       mtuSize    = number
       ntpHost    = string
+      encryption = object(
+        {
+          enabled   = bool
+          rotateKey = bool
+        }
+      )
     }
   )
 }
@@ -156,6 +162,16 @@ data "azurerm_user_assigned_identity" "identity" {
   resource_group_name = module.global.securityResourceGroupName
 }
 
+data "azurerm_key_vault" "vault" {
+  name                = module.global.keyVaultName
+  resource_group_name = module.global.securityResourceGroupName
+}
+
+data "azurerm_key_vault_key" "cache_encryption" {
+  name         = module.global.keyVaultKeyNameCacheEncryption
+  key_vault_id = data.azurerm_key_vault.vault.id
+}
+
 data "terraform_remote_state" "network" {
   count   = local.useRemoteStateNetwork
   backend = "azurerm"
@@ -220,6 +236,14 @@ resource "azurerm_hpc_cache" "cache" {
   cache_size_in_gb    = var.hpcCache.size
   mtu                 = var.hpcCache.mtuSize
   ntp_server          = var.hpcCache.ntpHost
+  identity {
+    type = "UserAssigned"
+    identity_ids = [
+      data.azurerm_user_assigned_identity.identity.id
+    ]
+  }
+  key_vault_key_id                           = var.hpcCache.encryption.enabled ? data.azurerm_key_vault_key.cache_encryption.id : null
+  automatically_rotate_key_to_latest_enabled = var.hpcCache.encryption.enabled ? var.hpcCache.encryption.rotateKey : null
 }
 
 resource "azurerm_hpc_cache_nfs_target" "storage" {
@@ -256,11 +280,6 @@ resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
 ################################################################################
 # Avere vFXT (https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) #
 ################################################################################
-
-data "azurerm_key_vault" "vault" {
-  name                = module.global.keyVaultName
-  resource_group_name = module.global.securityResourceGroupName
-}
 
 data "azurerm_key_vault_secret" "admin_password" {
   name         = module.global.keyVaultSecretNameAdminPassword

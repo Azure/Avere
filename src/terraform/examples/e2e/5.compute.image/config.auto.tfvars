@@ -51,9 +51,9 @@ imageTemplates = [
     }
     build = {
       subnetName     = "Farm"
-      machineSize    = "Standard_D8s_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 0                 // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 120               // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineSize    = "Standard_D8as_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                  // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 120                // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "0.0.0"
       runElevated    = false
       renderEngines  = []
@@ -175,9 +175,9 @@ imageTemplates = [
     }
     build = {
       subnetName     = "Farm"
-      machineSize    = "Standard_D8s_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 0                 // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 180               // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineSize    = "Standard_D8as_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                  // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 180                // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "0.0.0"
       runElevated    = true
       renderEngines  = []

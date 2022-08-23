@@ -1,5 +1,5 @@
 param (
-  [string] $buildJsonEncoded
+  [string] $buildConfigEncoded
 )
 
 $ErrorActionPreference = "Stop"
@@ -17,13 +17,12 @@ Resize-Partition -DriveLetter $osDriveLetter -Size $partitionSize.SizeMax
 Write-Host "Customize (End): Resize OS Disk"
 
 Write-Host "Customize (Start): Image Build Parameters"
-$buildJsonBytes = [System.Convert]::FromBase64String($buildJsonEncoded)
-$buildJson = [System.Text.Encoding]::UTF8.GetString($buildJsonBytes)
-$build = $buildJson | ConvertFrom-Json
-$subnetName = $build.subnetName
-$machineSize = $build.machineSize
-$outputVersion = $build.outputVersion
-$renderEngines = $build.renderEngines -join ","
+$buildConfigBytes = [System.Convert]::FromBase64String($buildConfigEncoded)
+$buildConfig = [System.Text.Encoding]::UTF8.GetString($buildConfigBytes) | ConvertFrom-Json
+$subnetName = $buildConfig.subnetName
+$machineSize = $buildConfig.machineSize
+$outputVersion = $buildConfig.outputVersion
+$renderEngines = $buildConfig.renderEngines -join ","
 Write-Host "Subnet Name: $subnetName"
 Write-Host "Machine Size: $machineSize"
 Write-Host "Output Version: $outputVersion"

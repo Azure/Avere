@@ -14,12 +14,12 @@ yum -y install jq
 echo "Customize (End): Platform Utilities"
 
 echo "Customize (Start): Image Build Parameters"
-buildJson=$(echo $buildJsonEncoded | base64 -d)
-subnetName=$(echo $buildJson | jq -r .subnetName)
-machineSize=$(echo $buildJson | jq -r .machineSize)
-outputVersion=$(echo $buildJson | jq -r .outputVersion)
-renderEngines=$(echo $buildJson | jq -c .renderEngines)
-adminPassword=$(echo $buildJson | jq -r .adminPassword)
+buildConfig=$(echo $buildConfigEncoded | base64 -d)
+subnetName=$(echo $buildConfig | jq -r .subnetName)
+machineSize=$(echo $buildConfig | jq -r .machineSize)
+outputVersion=$(echo $buildConfig | jq -r .outputVersion)
+renderEngines=$(echo $buildConfig | jq -c .renderEngines)
+adminPassword=$(echo $buildConfig | jq -r .adminPassword)
 echo "Subnet Name: $subnetName"
 echo "Machine Size: $machineSize"
 echo "Output Version: $outputVersion"

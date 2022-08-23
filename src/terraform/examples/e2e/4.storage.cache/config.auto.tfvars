@@ -15,10 +15,14 @@ enableHpcCache = true    // Set to false for Avere vFXT cache deployment
 //      Standard_4G - 6144, 12288, 24576   Read Write
 //      Standard_8G - 12288, 24576, 49152  Read Write
 hpcCache = {
-  throughput = "Standard_2G"
-  size       = 3072
+  throughput = "Standard_L4_5G"
+  size       = 21623
   mtuSize    = 1500
   ntpHost    = "time.windows.com"
+  encryption = {
+    enabled   = false
+    rotateKey = false
+  }
 }
 
 ################################################################################

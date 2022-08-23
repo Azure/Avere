@@ -5,6 +5,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~>3.19.1"
     }
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~>2.27.0"
+    }
   }
   backend "azurerm" {
     key = "3.storage"
@@ -228,6 +232,10 @@ data "azurerm_subnet" "storage_ha" {
   virtual_network_name = var.virtualNetwork.name != "" ? var.virtualNetwork.name : data.terraform_remote_state.network[0].outputs.virtualNetwork.name
 }
 
+data "azuread_service_principal" "hpc_cache" {
+  display_name = "HPC Cache Resource Provider"
+}
+
 data "http" "current_host" {
   url = "https://api.ipify.org/?format=json"
 }
@@ -369,7 +377,6 @@ locals {
       ] if capacityPool.name != ""
     ] if netAppAccount.name != ""
   ])
-  hpcCachePrincipalId = "831d4223-7a3c-4121-a445-1e423591e57b"
 }
 
 resource "azurerm_resource_group" "storage" {
@@ -403,7 +410,7 @@ resource "azurerm_storage_account" "storage" {
         for x in local.serviceEndpointSubnets : "${data.azurerm_virtual_network.network.id}/subnets/${x}"
       ]
       ip_rules = [
-        jsondecode(data.http.current_host.body).ip
+        jsondecode(data.http.current_host.response_body).ip
       ]
     }
   }
@@ -458,26 +465,24 @@ resource "azurerm_private_endpoint" "storage" {
   ]
 }
 
-# https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#storage-account-contributor
-resource "azurerm_role_assignment" "storage_account_contributor" {
+resource "azurerm_role_assignment" "storage_account_contributor" { # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#storage-account-contributor
   for_each = {
     for x in var.storageAccounts : x.name => x if x.enableBlobNfsV3 && x.name != "" 
   }
   role_definition_name = "Storage Account Contributor"
-  principal_id         = local.hpcCachePrincipalId
+  principal_id         = data.azuread_service_principal.hpc_cache.object_id
   scope                = "${azurerm_resource_group.storage.id}/providers/Microsoft.Storage/storageAccounts/${each.value.name}"
   depends_on = [
     azurerm_storage_account.storage
   ]
 }
 
-# https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor
-resource "azurerm_role_assignment" "storage_blob_data_contributor" {
+resource "azurerm_role_assignment" "storage_blob_data_contributor" { # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor
   for_each = {
     for x in var.storageAccounts : x.name => x if x.enableBlobNfsV3 && x.name != "" 
   }
   role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = local.hpcCachePrincipalId
+  principal_id         = data.azuread_service_principal.hpc_cache.object_id
   scope                = "${azurerm_resource_group.storage.id}/providers/Microsoft.Storage/storageAccounts/${each.value.name}"
   depends_on = [
     azurerm_storage_account.storage
