@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.2.7"
+  required_version = ">= 1.2.8"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.19.1"
+      version = "~>3.20.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
@@ -392,16 +392,17 @@ resource "azurerm_storage_account" "storage" {
   for_each = {
     for x in var.storageAccounts : x.name => x if x.name != ""
   }
-  name                      = each.value.name
-  resource_group_name       = azurerm_resource_group.storage.name
-  location                  = azurerm_resource_group.storage.location
-  account_kind              = each.value.type
-  account_tier              = each.value.tier
-  account_replication_type  = each.value.redundancy
-  is_hns_enabled            = each.value.enableBlobNfsV3
-  nfsv3_enabled             = each.value.enableBlobNfsV3
-  large_file_share_enabled  = each.value.enableLargeFileShare ? true : null
-  enable_https_traffic_only = each.value.enableSecureTransfer
+  name                            = each.value.name
+  resource_group_name             = azurerm_resource_group.storage.name
+  location                        = azurerm_resource_group.storage.location
+  account_kind                    = each.value.type
+  account_tier                    = each.value.tier
+  account_replication_type        = each.value.redundancy
+  is_hns_enabled                  = each.value.enableBlobNfsV3
+  nfsv3_enabled                   = each.value.enableBlobNfsV3
+  large_file_share_enabled        = each.value.enableLargeFileShare ? true : null
+  enable_https_traffic_only       = each.value.enableSecureTransfer
+  allow_nested_items_to_be_public = false
   dynamic "network_rules" {
     for_each = each.value.enableBlobNfsV3 ? [1] : [] 
     content {

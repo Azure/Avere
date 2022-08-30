@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.2.7"
+  required_version = ">= 1.2.8"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.19.1"
+      version = "~>3.20.0"
     }
   }
   backend "azurerm" {
@@ -148,13 +148,13 @@ resource "azurerm_subnet" "network" {
   for_each = {
     for x in var.virtualNetwork.subnets : x.name => x
   }
-  name                 = each.value.name
-  resource_group_name  = azurerm_resource_group.network.name
-  virtual_network_name = azurerm_virtual_network.network.name
-  address_prefixes     = each.value.addressSpace
-  service_endpoints    = each.value.serviceEndpoints
-  enforce_private_link_endpoint_network_policies = each.value.name != "GatewaySubnet"
-  enforce_private_link_service_network_policies  = each.value.name != "GatewaySubnet"
+  name                                          = each.value.name
+  resource_group_name                           = azurerm_resource_group.network.name
+  virtual_network_name                          = azurerm_virtual_network.network.name
+  address_prefixes                              = each.value.addressSpace
+  service_endpoints                             = each.value.serviceEndpoints
+  private_endpoint_network_policies_enabled     = each.value.name == "GatewaySubnet"
+  private_link_service_network_policies_enabled = each.value.name == "GatewaySubnet"
   dynamic "delegation" {
     for_each = each.value.serviceDelegation != "" ? [1] : []
     content {

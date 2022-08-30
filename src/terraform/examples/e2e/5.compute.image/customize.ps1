@@ -16,6 +16,15 @@ $partitionSize = Get-PartitionSupportedSize -DriveLetter $osDriveLetter
 Resize-Partition -DriveLetter $osDriveLetter -Size $partitionSize.SizeMax
 Write-Host "Customize (End): Resize OS Disk"
 
+Write-Host "Customize (Start): Git"
+$versionInfo = "2.37.2.windows.2"
+$installFile = "Git-$versionInfo-64-bit.exe" -replace ".windows", ""
+$downloadUrl = "https://github.com/git-for-windows/git/releases/download/v$versionInfo/$installFile"
+Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+Start-Process -FilePath .\$installFile -ArgumentList "/SILENT /NORESTART" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+$toolPathGit = "C:\Program Files\Git\bin"
+Write-Host "Customize (End): Git"
+
 Write-Host "Customize (Start): Image Build Parameters"
 $buildConfigBytes = [System.Convert]::FromBase64String($buildConfigEncoded)
 $buildConfig = [System.Text.Encoding]::UTF8.GetString($buildConfigBytes) | ConvertFrom-Json
@@ -29,57 +38,18 @@ Write-Host "Output Version: $outputVersion"
 Write-Host "Render Engines: $renderEngines"
 Write-Host "Customize (End): Image Build Parameters"
 
-Write-Host "Customize (Start): Visual Studio"
-$versionInfo = "2022"
-$installFile = "VisualStudioSetup.exe"
-$downloadUrl = "https://c2rsetup.officeapps.live.com/c2r/downloadVS.aspx?sku=community&channel=Release&version=VS$versionInfo&includeRecommended=true"
-$workloadIds = "--add Microsoft.VisualStudio.Workload.ManagedDesktop;includeRecommended --add Microsoft.VisualStudio.Workload.NativeDesktop;includeRecommended --add Microsoft.VisualStudio.Workload.NativeGame;includeRecommended --add Microsoft.NetCore.Component.Runtime.3.1 --add Component.Unreal"
-$toolPathVSIX = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Common7\IDE"
-$toolPathCMake = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
-$toolPathMSBuild = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Msbuild\Current\Bin"
-Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-Start-Process -FilePath .\$installFile -ArgumentList "--quiet --norestart $workloadIds" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-Write-Host "Customize (End): Visual Studio"
-
-Write-Host "Customize (Start): Git"
-$versionInfo = "2.36.0"
-$installFile = "Git-$versionInfo-64-bit.exe"
-$downloadUrl = "https://github.com/git-for-windows/git/releases/download/v$versionInfo.windows.1/$installFile"
-Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-Start-Process -FilePath .\$installFile -ArgumentList "/SILENT /NORESTART" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-$toolPathGit = "C:\Program Files\Git\bin"
-Write-Host "Customize (End): Git"
-
 #   NVv3 (https://docs.microsoft.com/azure/virtual-machines/nvv3-series)
 # NCT4v3 (https://docs.microsoft.com/azure/virtual-machines/nct4-v3-series)
+#   NVv5 (https://docs.microsoft.com/azure/virtual-machines/nva10v5-series)
 if (($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v3")) -or
-    ($machineSize.StartsWith("Standard_NC") -and $machineSize.EndsWith("T4_v3"))) {
-  Write-Host "Customize (Start): GPU Driver (NVv3)"
-  $installFile = "nvidia-gpu-nv3.exe"
+    ($machineSize.StartsWith("Standard_NC") -and $machineSize.EndsWith("_T4_v3")) -or
+    ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v5"))) {
+  Write-Host "Customize (Start): NVIDIA GPU GRID Driver"
+  $installFile = "nvidia-gpu-grid.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=874181"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
   Start-Process -FilePath .\$installFile -ArgumentList "/s /noreboot" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-  Write-Host "Customize (End): GPU Driver (NVv3)"
-}
-
-# NVv4 (https://docs.microsoft.com/azure/virtual-machines/nvv4-series)
-if ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v4")) {
-  Write-Host "Customize (Start): GPU Driver (NVv4)"
-  $installFile = "amd-gpu-nv4.exe"
-  $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=2175154"
-  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-  Start-Process -FilePath .\$installFile -ArgumentList "/S" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-  Write-Host "Customize (End): GPU Driver (NVv4)"
-}
-
-# NVv5 (https://docs.microsoft.com/azure/virtual-machines/nva10v5-series)
-if ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v5")) {
-  Write-Host "Customize (Start): GPU Driver (NVv5)"
-  $installFile = "nvidia-gpu-nv5.exe"
-  $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=874181"
-  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-  Start-Process -FilePath .\$installFile -ArgumentList "/s /noreboot" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-  Write-Host "Customize (End): GPU Driver (NVv5)"
+  Write-Host "Customize (End): NVIDIA GPU GRID Driver"
 }
 
 Write-Host "Customize (Start): Azure CLI"
@@ -89,7 +59,17 @@ Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
 Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
 Write-Host "Customize (End): Azure CLI"
 
-if ($outputVersion -eq "0.0.0") {
+if ($subnetName -eq "Workstation") {
+  Write-Host "Customize (Start): NodeJS"
+  $versionInfo="16.17.0"
+  $installFile="node-v$versionInfo-x64.msi"
+  $downloadUrl="https://nodejs.org/dist/v$versionInfo/$installFile"
+  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Write-Host "Customize (End): NodeJS"
+}
+
+if ($outputVersion -eq "0.0.0") { # Scheduler
   Write-Host "Customize (Start): NFS Server"
   Install-WindowsFeature -Name "FS-NFS-Service"
   Write-Host "Customize (End): NFS Server"
@@ -105,7 +85,6 @@ if ($outputVersion -eq "0.0.0") {
 }
 
 $schedulerVersion = "10.1.23.6"
-$schedulerLicense = "LicenseFree"
 $schedulerPath = "C:\Program Files\Thinkbox\Deadline10\bin"
 $schedulerDatabasePath = "C:\DeadlineDatabase"
 $schedulerRepositoryPath = "C:\DeadlineRepository"
@@ -148,7 +127,7 @@ Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
 Expand-Archive -Path $installFile
 Write-Host "Customize (End): Deadline Download"
 
-if ($outputVersion -eq "0.0.0") {
+if ($outputVersion -eq "0.0.0") { # Scheduler
   Write-Host "Customize (Start): Deadline Repository"
   netsh advfirewall firewall add rule name="Allow Mongo Database" dir=in action=allow protocol=TCP localport=27100
   Set-Location -Path "Deadline*"
@@ -169,8 +148,8 @@ netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=
 netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$schedulerPath\deadlinelauncher.exe"
 Set-Location -Path "Deadline*"
 $installFile = "DeadlineClient-$schedulerVersion-windows-installer.exe"
-$installArgs = "--mode unattended --licensemode $schedulerLicense"
-if ($outputVersion -eq "0.0.0") {
+$installArgs = "--mode unattended"
+if ($outputVersion -eq "0.0.0") { # Scheduler
   $installArgs = "$installArgs --slavestartup false --launcherservice false"
 } else {
   if ($subnetName -eq "Farm") {
@@ -182,8 +161,6 @@ if ($outputVersion -eq "0.0.0") {
 }
 Start-Process -FilePath .\$installFile -ArgumentList $installArgs -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
 Copy-Item -Path $env:TMP\bitrock_installer.log -Destination $binDirectory\bitrock_installer_client.log
-$deadlineCommandName = "ChangeLicenseMode"
-Start-Process -FilePath "$schedulerPath\deadlinecommand.exe" -ArgumentList "-$deadlineCommandName $schedulerLicense" -Wait -RedirectStandardOutput "$deadlineCommandName-output.txt" -RedirectStandardError "$deadlineCommandName-error.txt"
 $deadlineCommandName = "ChangeRepositorySkipValidation"
 Start-Process -FilePath "$schedulerPath\deadlinecommand.exe" -ArgumentList "-$deadlineCommandName Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ''" -Wait -RedirectStandardOutput "$deadlineCommandName-output.txt" -RedirectStandardError "$deadlineCommandName-error.txt"
 Set-Location -Path $binDirectory
@@ -226,11 +203,21 @@ if ($renderEngines -like "*Unreal*") {
   $setupScript = $setupScript.Replace("pause", "rem pause")
   Set-Content -Path $installFile -Value $setupScript
   Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-  & "$rendererPathUnreal\GenerateProjectFiles.bat"
-  [System.Environment]::SetEnvironmentVariable("PATH", "$env:PATH;C:\Program Files\dotnet")
-  Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList "-restore -p:Platform=Win64 -p:Configuration=""Development Editor"" ""$rendererPathUnreal\UE5.sln""" -Wait -RedirectStandardOutput "msbuild-ue5.output.txt" -RedirectStandardError "msbuild-ue5.error.txt"
-  Write-Host "Customize (End): Unreal Engine"
   if ($subnetName -eq "Workstation") {
+    Write-Host "Customize (Start): Visual Studio"
+    $versionInfo = "2022"
+    $installFile = "VisualStudioSetup.exe"
+    $downloadUrl = "https://c2rsetup.officeapps.live.com/c2r/downloadVS.aspx?sku=community&channel=Release&version=VS$versionInfo&includeRecommended=true"
+    $workloadIds = "--add Microsoft.VisualStudio.Workload.ManagedDesktop;includeRecommended --add Microsoft.VisualStudio.Workload.NativeDesktop;includeRecommended --add Microsoft.VisualStudio.Workload.NativeGame;includeRecommended --add Microsoft.NetCore.Component.Runtime.3.1 --add Component.Unreal"
+    $toolPathVSIX = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Common7\IDE"
+    $toolPathCMake = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
+    $toolPathMSBuild = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Msbuild\Current\Bin"
+    Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+    Start-Process -FilePath .\$installFile -ArgumentList "--quiet --norestart $workloadIds" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+    Write-Host "Customize (End): Visual Studio"
+    & "$rendererPathUnreal\GenerateProjectFiles.bat"
+    [System.Environment]::SetEnvironmentVariable("PATH", "$env:PATH;C:\Program Files\dotnet")
+    Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList "-restore -p:Platform=Win64 -p:Configuration=""Development Editor"" ""$rendererPathUnreal\UE5.sln""" -Wait -RedirectStandardOutput "msbuild-ue5.output.txt" -RedirectStandardError "msbuild-ue5.error.txt"
     Write-Host "Customize (Start): Visual Studio Plugin"
     $installFile = "UnrealVS.vsix"
     Start-Process -FilePath "$toolPathVSIX\VSIXInstaller.exe" -ArgumentList "/quiet /admin ""$rendererPathUnreal\Engine\Extras\UnrealVS\$installFile""" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
@@ -244,6 +231,7 @@ if ($renderEngines -like "*Unreal*") {
     $shortcut.Save()
     Write-Host "Customize (End): Unreal Editor Shortcut"
   }
+  Write-Host "Customize (End): Unreal Engine"
 }
 
 if ($renderEngines -like "*Maya*") {

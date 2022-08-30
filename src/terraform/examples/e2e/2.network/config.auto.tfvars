@@ -109,9 +109,9 @@ vpnGatewayLocal = {
 
 # Point-to-Site Client (https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-howto-point-to-site-rm-ps)
 vpnGatewayClient = {
-  addressSpace    = []
-  certificateName = ""
-  certificateData = ""
+  addressSpace    = ["10.1.0.0/24"]
+  certificateName = "ArtistAnywhere"
+  certificateData = "MIIC+zCCAeOgAwIBAgIQTqu79ljR4qxCxD5rjl+TejANBgkqhkiG9w0BAQsFADAgMR4wHAYDVQQDDBVBenVyZSBBcnRpc3QgQW55d2hlcmUwHhcNMjIwODI3MjI0NzI3WhcNMjMwODI3MjMwNzI3WjAgMR4wHAYDVQQDDBVBenVyZSBBcnRpc3QgQW55d2hlcmUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDJ4sr7GGOa+V3b4XSE3zizm7TcDJzuFeG2X+3xsUTxhe+E84b+noKA1zVgmc91oU/vB+R7f3IJ6U34iqFve2wz693SabfjOkYZOGp+ijZKnsDF+rLM2RUJAAtJ1zAucbjfHWdRYBFlFwCoKmdKd6zk8puy7V6Do3gsStjBMDVdTWVTwbgp1wF4GQLJZG/xe79F75j9LcFDA/VWIInHP1jiicmxarCKQuoXUAzoSp0nLix0G8O8HZdJGoew5XiBqXRlcjN8QcTrYQRWKzPTtd0mbKBYjFVf9XI9IFzvWrEUi0zfVgu1BVL8U3n111AL3W/BP2XU66PJzGn8GCdnTZlRAgMBAAGjMTAvMA4GA1UdDwEB/wQEAwICBDAdBgNVHQ4EFgQUDtJW8sQXKLlRDad4Yr4piTTQOPwwDQYJKoZIhvcNAQELBQADggEBAKRKD2kYyeOPyKcklvHmJoBPXgGnVUI7UtR9Pp/oGIciNvz9TmfVg2xapj2uiHyN4lD7+xPCeiH9p7OvSAeM4PjQYxWr9H5XOcUgH4cGbcAMlD3n4ACX4OpxKIgf0/9ZIE2q9NHu/slxDNKjseLe5uytk0qysD/vZ7Zx7I/z+qBjg/jtEMs1Z+zvQ/9IMqzUPo1TOsGjPxNfQDkMo5Md1qXkulWpMPbej7RKdUeb04UMbXTtVfTKfDVQzwOkyMKOLaism4JSa2hRAUMLZVidB1q+MIzK5LiYjQh4hxrH5EXhPoC/xXiAtgQ6ghbKyPRcsT+gvnPqHx7o8Bi7y1Z+sLc="
 }
 
 ######################################################################################################################################

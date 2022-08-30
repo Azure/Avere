@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.2.7"
+  required_version = ">= 1.2.8"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.19.1"
+      version = "~>3.20.0"
     }
   }
 }
@@ -111,12 +111,13 @@ resource "azurerm_user_assigned_identity" "identity" {
 }
 
 resource "azurerm_storage_account" "storage" {
-  name                     = module.global.securityStorageAccountName
-  resource_group_name      = azurerm_resource_group.security.name
-  location                 = azurerm_resource_group.security.location
-  account_kind             = var.storage.accountType
-  account_replication_type = var.storage.accountRedundancy
-  account_tier             = var.storage.accountPerformance
+  name                            = module.global.securityStorageAccountName
+  resource_group_name             = azurerm_resource_group.security.name
+  location                        = azurerm_resource_group.security.location
+  account_kind                    = var.storage.accountType
+  account_replication_type        = var.storage.accountRedundancy
+  account_tier                    = var.storage.accountPerformance
+  allow_nested_items_to_be_public = false
 }
 
 resource "azurerm_storage_container" "container" {

@@ -10,6 +10,8 @@ echo "Customize (Start): Platform Utilities"
 yum -y install epel-release
 yum -y install python-pip
 yum -y install nfs-utils
+yum -y install gcc
+yum -y install git
 yum -y install jq
 echo "Customize (End): Platform Utilities"
 
@@ -26,46 +28,20 @@ echo "Output Version: $outputVersion"
 echo "Render Engines: $renderEngines"
 echo "Customize (End): Image Build Parameters"
 
-echo "Customize (Start): Dev Tools"
-yum -y group install "Development Tools"
-echo "Customize (End): Dev Tools"
-
 #   NVv3 (https://docs.microsoft.com/azure/virtual-machines/nvv3-series)
 # NCT4v3 (https://docs.microsoft.com/azure/virtual-machines/nct4-v3-series)
+#   NVv5 (https://docs.microsoft.com/azure/virtual-machines/nva10v5-series)
 if [[ ($machineSize == Standard_NV* && $machineSize == *_v3) ||
-      ($machineSize == Standard_NC* && $machineSize == *T4_v3) ]]; then
-  echo "Customize (Start): GPU Driver (NVv3)"
+      ($machineSize == Standard_NC* && $machineSize == *_T4_v3) ||
+      ($machineSize == Standard_NV* && $machineSize == *_v5) ]]; then
+  echo "Customize (Start): NVIDIA GPU GRID Driver"
   yum -y install "kernel-devel-$(uname --kernel-release)"
-  installFile="nvidia-gpu-nv3.run"
+  installFile="nvidia-gpu-grid.run"
   downloadUrl="https://go.microsoft.com/fwlink/?linkid=874272"
   curl -o $installFile -L $downloadUrl
   chmod +x $installFile
   ./$installFile --silent &> $installFile.txt
-  echo "Customize (End): GPU Driver (NVv3)"
-fi
-
-# NVv4 (https://docs.microsoft.com/azure/virtual-machines/nvv4-series)
-if [[ $machineSize == Standard_NV* && $machineSize == *_v4 ]]; then
-  echo "Customize (Start): GPU Driver (NVv4)"
-  installFile="amd-gpu-nv4.tar.xz"
-  downloadUrl="https://download.microsoft.com/download/3/6/6/366e3bb8-cc4f-48ba-aae3-52bd096f816d/amdgpu-pro-21.10-1262503-rhel-7.9.tar.xz"
-  curl -o $installFile -L $downloadUrl
-  tar -xJf $installFile
-  installFile="amdgpu-pro-install"
-  ./amdgpu*/$installFile -y --opencl=legacy,pal &> $installFile.txt
-  echo "Customize (End): GPU Driver (NVv4)"
-fi
-
-# NVv5 (https://docs.microsoft.com/azure/virtual-machines/nva10v5-series)
-if [[ $machineSize == Standard_NV* && $machineSize == *_v5 ]]; then
-  echo "Customize (Start): GPU Driver (NVv5)"
-  yum -y install "kernel-devel-$(uname --kernel-release)"
-  installFile="nvidia-gpu-nv5.run"
-  downloadUrl="https://go.microsoft.com/fwlink/?linkid=874272"
-  curl -o $installFile -L $downloadUrl
-  chmod +x $installFile
-  ./$installFile --silent &> $installFile.txt
-  echo "Customize (End): GPU Driver (NVv5)"
+  echo "Customize (End): NVIDIA GPU GRID Driver"
 fi
 
 echo "Customize (Start): Azure CLI"
@@ -80,59 +56,70 @@ echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $repoFile
 yum -y install azure-cli
 echo "Customize (End): Azure CLI"
 
-if [ $outputVersion == "0.0.0" ]; then
+if [ $subnetName == "Workstation" ]; then
+  echo "Customize (Start): NodeJS"
+  nodeDirectory="$binDiretory/nodejs"
+  versionInfo="16.17.0"
+  installFile="node-v$versionInfo.tar.gz"
+  downloadUrl="https://nodejs.org/dist/v$versionInfo/$installFile"
+  curl -o $installFile -L $downloadUrl
+  tar -xzf $installFile
+  cd node*
+  mkdir -p $nodeDirectory
+  mv * $nodeDirectory
+  cd $binDirectory
+  echo "Customize (End): NodeJS"
+fi
+
+if [ $outputVersion == "0.0.0" ]; then # Scheduler
   echo "Customize (Start): NFS Server"
   systemctl --now enable nfs-server
   echo "Customize (End): NFS Server"
 
   echo "Customize (Start): CycleCloud"
-  cycleCloudPath="/etc/yum.repos.d/cyclecloud.repo"
-  echo "[cyclecloud]" > $cycleCloudPath
-  echo "name=cyclecloud" >> $cycleCloudPath
-  echo "baseurl=https://packages.microsoft.com/yumrepos/cyclecloud" >> $cycleCloudPath
-  echo "gpgcheck=1" >> $cycleCloudPath
-  echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $cycleCloudPath
+  cycleCloudRepoPath="/etc/yum.repos.d/cyclecloud.repo"
+  echo "[cyclecloud]" > $cycleCloudRepoPath
+  echo "name=cyclecloud" >> $cycleCloudRepoPath
+  echo "baseurl=https://packages.microsoft.com/yumrepos/cyclecloud" >> $cycleCloudRepoPath
+  echo "gpgcheck=1" >> $cycleCloudRepoPath
+  echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $cycleCloudRepoPath
   yum -y install cyclecloud8
   cd /opt/cycle_server
   sed -i 's/webServerEnableHttps=false/webServerEnableHttps=true/' ./config/cycle_server.properties
   unzip ./tools/cyclecloud-cli.zip
   ./cyclecloud-cli-installer/install.sh --installdir /usr/local/cyclecloud
-  cycleAdminAccountName="cc_admin"
-  cycleInitializeFile="cycle_initialize.json"
-  echo "[" > $cycleInitializeFile
-  echo "{" >> $cycleInitializeFile
-  echo "\"AdType\": \"Application.Setting\"," >> $cycleInitializeFile
-  echo "\"Name\": \"cycleserver.installation.initial_user\"," >> $cycleInitializeFile
-  echo "\"Value\": \"$cycleAdminAccountName\"" >> $cycleInitializeFile
-  echo "}," >> $cycleInitializeFile
-  echo "{" >> $cycleInitializeFile
-  echo "\"AdType\": \"Application.Setting\"," >> $cycleInitializeFile
-  echo "\"Name\": \"distribution_method\"," >> $cycleInitializeFile
-  echo "\"Category\": \"system\"," >> $cycleInitializeFile
-  echo "\"Status\": \"internal\"," >> $cycleInitializeFile
-  echo "\"Value\": \"manual\"" >> $cycleInitializeFile
-  echo "}," >> $cycleInitializeFile
-  echo "{" >> $cycleInitializeFile
-  echo "\"AdType\": \"Application.Setting\"," >> $cycleInitializeFile
-  echo "\"Name\": \"cycleserver.installation.complete\"," >> $cycleInitializeFile
-  echo "\"Value\": true" >> $cycleInitializeFile
-  echo "}," >> $cycleInitializeFile
-  echo "{" >> $cycleInitializeFile
-  echo "\"AdType\": \"AuthenticatedUser\"," >> $cycleInitializeFile
-  echo "\"Name\": \"$cycleAdminAccountName\"," >> $cycleInitializeFile
-  echo "\"RawPassword\": \"$adminPassword\"," >> $cycleInitializeFile
-  echo "\"Superuser\": true" >> $cycleInitializeFile
-  echo "}" >> $cycleInitializeFile
-  echo "]" >> $cycleInitializeFile
-  mv $cycleInitializeFile /opt/cycle_server/config/data/
-  installFile="cluster_template.txt"
-  downloadUrl="$storageContainerUrl/CycleCloud/$installFile$storageContainerSas"
-  curl -o $installFile -L $downloadUrl
+  cycleCloudAdminName="cc_admin"
+  cycleCloudInitFile="cycle_initialize.json"
+  echo "[" > $cycleCloudInitFile
+  echo "{" >> $cycleCloudInitFile
+  echo "\"AdType\": \"Application.Setting\"," >> $cycleCloudInitFile
+  echo "\"Name\": \"cycleserver.installation.initial_user\"," >> $cycleCloudInitFile
+  echo "\"Value\": \"$cycleCloudAdminName\"" >> $cycleCloudInitFile
+  echo "}," >> $cycleCloudInitFile
+  echo "{" >> $cycleCloudInitFile
+  echo "\"AdType\": \"Application.Setting\"," >> $cycleCloudInitFile
+  echo "\"Name\": \"distribution_method\"," >> $cycleCloudInitFile
+  echo "\"Category\": \"system\"," >> $cycleCloudInitFile
+  echo "\"Status\": \"internal\"," >> $cycleCloudInitFile
+  echo "\"Value\": \"manual\"" >> $cycleCloudInitFile
+  echo "}," >> $cycleCloudInitFile
+  echo "{" >> $cycleCloudInitFile
+  echo "\"AdType\": \"Application.Setting\"," >> $cycleCloudInitFile
+  echo "\"Name\": \"cycleserver.installation.complete\"," >> $cycleCloudInitFile
+  echo "\"Value\": true" >> $cycleCloudInitFile
+  echo "}," >> $cycleCloudInitFile
+  echo "{" >> $cycleCloudInitFile
+  echo "\"AdType\": \"AuthenticatedUser\"," >> $cycleCloudInitFile
+  echo "\"Name\": \"$cycleCloudAdminName\"," >> $cycleCloudInitFile
+  echo "\"RawPassword\": \"$adminPassword\"," >> $cycleCloudInitFile
+  echo "\"Superuser\": true" >> $cycleCloudInitFile
+  echo "}" >> $cycleCloudInitFile
+  echo "]" >> $cycleCloudInitFile
+  mv $cycleCloudInitFile /opt/cycle_server/config/data/
   echo "Customize (End): CycleCloud"
 fi
 
 schedulerVersion="10.1.23.6"
-schedulerLicense="LicenseFree"
 schedulerPath="/opt/Thinkbox/Deadline10/bin"
 schedulerDatabasePath="/DeadlineDatabase"
 schedulerRepositoryPath="/DeadlineRepository"
@@ -161,7 +148,7 @@ fi
 if [[ $renderEngines == *Houdini* ]]; then
   rendererPaths="$rendererPaths:$rendererPathHoudini/bin"
 fi
-echo "PATH=$PATH:$schedulerPath$rendererPaths:/usr/local/cyclecloud/bin" > /etc/profile.d/aaa.sh
+echo "PATH=$PATH:$schedulerPath$rendererPaths:$nodeDirectory:/usr/local/cyclecloud/bin" > /etc/profile.d/aaa.sh
 
 echo "Customize (Start): Deadline Download"
 installFile="Deadline-$schedulerVersion-linux-installers.tar"
@@ -170,7 +157,7 @@ curl -o $installFile -L $downloadUrl
 tar -xzf $installFile
 echo "Customize (End): Deadline Download"
 
-if [ $outputVersion == "0.0.0" ]; then
+if [ $outputVersion == "0.0.0" ]; then # Scheduler
   echo "Customize (Start): Deadline Repository"
   installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
   ./$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath &> $installFile.txt
@@ -186,8 +173,8 @@ fi
 
 echo "Customize (Start): Deadline Client"
 installFile="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
-installArgs="--mode unattended --licensemode $schedulerLicense"
-if [ $outputVersion == "0.0.0" ]; then
+installArgs="--mode unattended"
+if [ $outputVersion == "0.0.0" ]; then # Scheduler
   installArgs="$installArgs --slavestartup false --launcherdaemon false"
 else
   [ $subnetName == "Farm" ] && workerStartup=true || workerStartup=false
@@ -195,8 +182,6 @@ else
 fi
 ./$installFile $installArgs &> $installFile.txt
 cp /tmp/bitrock_installer.log $binDirectory/bitrock_installer_client.log
-deadlineCommandName="ChangeLicenseMode"
-$schedulerPath/deadlinecommand -$deadlineCommandName $schedulerLicense &> $deadlineCommandName.txt
 deadlineCommandName="ChangeRepositorySkipValidation"
 $schedulerPath/deadlinecommand -$deadlineCommandName Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate "" &> $deadlineCommandName.txt
 echo "Customize (End): Deadline Client"
@@ -230,6 +215,27 @@ if [[ $renderEngines == *PBRT* ]]; then
 fi
 
 if [[ $renderEngines == *Unreal* ]]; then
+  echo "Customize (Start): OpenSSL"
+  versionInfo="1.1.1q"
+  installFile="openssl-$versionInfo.tar.gz"
+  downloadUrl="https://www.openssl.org/source/$installFile"
+  curl -o $installFile -L $downloadUrl
+  tar -xzf $installFile
+  cd openssl*
+  ./config
+  make
+  make install
+  export LD_LIBRARY_PATH=/usr/local/lib64:/usr/lib64
+  echo "/usr/local/lib64" > /etc/ld.so.conf.d/openssl-$versionInfo.conf
+  sslProfile="/etc/profile.d/openssl.sh"
+  echo "OPENSSL_PATH=/usr/local/bin" > $sslProfile
+  echo "export OPENSSL_PATH" >> $sslProfile
+  echo 'PATH=$OPENSSL_PATH:$PATH' >> $sslProfile
+  echo "export PATH" >> $sslProfile
+  source $sslProfile
+  cd $binDirectory
+  echo "Customize (End): OpenSSL"
+
   echo "Customize (Start): Unreal Engine"
   yum -y install libicu
   versionInfo="5.0.3"

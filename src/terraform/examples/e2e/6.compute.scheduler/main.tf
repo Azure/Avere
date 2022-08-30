@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.2.7"
+  required_version = ">= 1.2.8"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.19.1"
+      version = "~>3.20.0"
     }
   }
   backend "azurerm" {
@@ -382,12 +382,13 @@ resource "azurerm_storage_account" "cycle_cloud" {
   for_each = {
     for x in var.virtualMachines : x.name => x if x.customExtension.parameters.cycleCloud.enable
   }
-  name                     = each.value.customExtension.parameters.cycleCloud.storageAccount.name
-  resource_group_name      = azurerm_resource_group.scheduler.name
-  location                 = azurerm_resource_group.scheduler.location
-  account_kind             = each.value.customExtension.parameters.cycleCloud.storageAccount.type
-  account_tier             = each.value.customExtension.parameters.cycleCloud.storageAccount.tier
-  account_replication_type = each.value.customExtension.parameters.cycleCloud.storageAccount.redundancy
+  name                            = each.value.customExtension.parameters.cycleCloud.storageAccount.name
+  resource_group_name             = azurerm_resource_group.scheduler.name
+  location                        = azurerm_resource_group.scheduler.location
+  account_kind                    = each.value.customExtension.parameters.cycleCloud.storageAccount.type
+  account_tier                    = each.value.customExtension.parameters.cycleCloud.storageAccount.tier
+  account_replication_type        = each.value.customExtension.parameters.cycleCloud.storageAccount.redundancy
+  allow_nested_items_to_be_public = false
 }
 
 resource "azurerm_role_assignment" "cycle_cloud" {
