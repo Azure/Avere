@@ -65,6 +65,7 @@ variable "virtualMachineScaleSets" {
         )
         customExtension = object(
           {
+            enabled  = bool
             fileName = string
             parameters = object(
               {
@@ -76,19 +77,19 @@ variable "virtualMachineScaleSets" {
         )
         monitorExtension = object(
           {
-            enable = bool
+            enabled = bool
           }
         )
         spot = object(
           {
-            enable          = bool
+            enabled         = bool
             evictionPolicy  = string
             machineMaxPrice = number
           }
         )
         terminationNotification = object(
           {
-            enable       = bool
+            enabled      = bool
             timeoutDelay = string
           }
         )
@@ -173,9 +174,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   admin_username                  = each.value.adminLogin.userName
   admin_password                  = data.azurerm_key_vault_secret.admin_password.value
   disable_password_authentication = each.value.adminLogin.disablePasswordAuth
-  priority                        = each.value.spot.enable ? "Spot" : "Regular"
-  eviction_policy                 = each.value.spot.enable ? each.value.spot.evictionPolicy : null
-  max_bid_price                   = each.value.spot.enable ? each.value.spot.machineMaxPrice : -1
+  priority                        = each.value.spot.enabled ? "Spot" : "Regular"
+  eviction_policy                 = each.value.spot.enabled ? each.value.spot.evictionPolicy : null
+  max_bid_price                   = each.value.spot.enabled ? each.value.spot.machineMaxPrice : -1
   single_placement_group          = false
   overprovision                   = false
   network_interface {
@@ -228,7 +229,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic "extension" {
-    for_each = each.value.monitorExtension.enable ? [1] : []
+    for_each = each.value.monitorExtension.enabled ? [1] : []
     content {
       name                       = "Monitor"
       type                       = "OmsAgentForLinux"
@@ -244,9 +245,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic "termination_notification" {
-    for_each = each.value.terminationNotification.enable ? [1] : []
+    for_each = each.value.terminationNotification.enabled ? [1] : []
     content {
-      enabled = each.value.terminationNotification.enable
+      enabled = each.value.terminationNotification.enabled
       timeout = each.value.terminationNotification.timeoutDelay
     }
   }
@@ -264,9 +265,9 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   instances              = each.value.machine.count
   admin_username         = each.value.adminLogin.userName
   admin_password         = data.azurerm_key_vault_secret.admin_password.value
-  priority               = each.value.spot.enable ? "Spot" : "Regular"
-  eviction_policy        = each.value.spot.enable ? each.value.spot.evictionPolicy : null
-  max_bid_price          = each.value.spot.enable ? each.value.spot.machineMaxPrice : -1
+  priority               = each.value.spot.enabled ? "Spot" : "Regular"
+  eviction_policy        = each.value.spot.enabled ? each.value.spot.evictionPolicy : null
+  max_bid_price          = each.value.spot.enabled ? each.value.spot.machineMaxPrice : -1
   single_placement_group = false
   overprovision          = false
   network_interface {
@@ -296,7 +297,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     storage_account_uri = null
   }
   dynamic "extension" {
-    for_each = each.value.customExtension.fileName != "" ? [1] : []
+    for_each = each.value.customExtension.enabled ? [1] : []
     content {
       name                       = "Custom"
       type                       = "CustomScriptExtension"
@@ -311,7 +312,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic "extension" {
-    for_each = each.value.monitorExtension.enable ? [1] : []
+    for_each = each.value.monitorExtension.enabled ? [1] : []
     content {
       name                       = "Monitor"
       type                       = "MicrosoftMonitoringAgent"
@@ -327,9 +328,9 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic "termination_notification" {
-    for_each = each.value.terminationNotification.enable ? [1] : []
+    for_each = each.value.terminationNotification.enabled ? [1] : []
     content {
-      enabled = each.value.terminationNotification.enable
+      enabled = each.value.terminationNotification.enabled
       timeout = each.value.terminationNotification.timeoutDelay
     }
   }

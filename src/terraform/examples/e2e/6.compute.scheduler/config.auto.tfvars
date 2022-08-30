@@ -19,13 +19,14 @@ virtualMachines = [
       disablePasswordAuth = false
     }
     customExtension = {
+      enabled  = true
       fileName = "initialize.sh"
       parameters = {
         fileSystemMounts = [
           "scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0"
         ]
         autoScale = {
-          enable                   = false
+          enabled                  = false
           fileName                 = "scale.sh"
           scaleSetName             = "LnxFarm"
           resourceGroupName        = "ArtistAnywhere.Farm"
@@ -34,7 +35,7 @@ virtualMachines = [
           workerIdleDeleteSeconds  = 3600
         }
         cycleCloud = { // https://docs.microsoft.com/azure/cyclecloud/overview
-          enable = false
+          enabled = false
           storageAccount = {
             name       = ""
             type       = "StorageV2"
@@ -45,7 +46,7 @@ virtualMachines = [
       }
     }
     monitorExtension = {
-      enable = false
+      enabled = false
     }
   },
   {
@@ -65,13 +66,14 @@ virtualMachines = [
       disablePasswordAuth = false
     }
     customExtension = {
+      enabled  = true
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMounts = [
           "mount -o anon \\\\scheduler.artist.studio\\DeadlineRepository S:"
         ]
         autoScale = {
-          enable                   = false
+          enabled                  = false
           fileName                 = "scale.ps1"
           scaleSetName             = "WinFarm"
           resourceGroupName        = "ArtistAnywhere.Farm"
@@ -80,7 +82,7 @@ virtualMachines = [
           workerIdleDeleteSeconds  = 3600
         }
         cycleCloud = { // https://docs.microsoft.com/azure/cyclecloud/overview
-          enable = false
+          enabled = false
           storageAccount = {
             name       = ""
             type       = "StorageV2"
@@ -91,7 +93,7 @@ virtualMachines = [
       }
     }
     monitorExtension = {
-      enable = false
+      enabled = false
     }
   }
 ]

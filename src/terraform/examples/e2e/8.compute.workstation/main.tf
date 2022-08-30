@@ -59,6 +59,7 @@ variable "virtualMachines" {
         )
         customExtension = object(
           {
+            enabled  = bool
             fileName = string
             parameters = object(
               {
@@ -179,7 +180,7 @@ resource "azurerm_linux_virtual_machine" "workstation" {
 
 resource "azurerm_virtual_machine_extension" "workstation_linux" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.fileName != "" && x.operatingSystem.type == "Linux"
+    for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.enabled && x.operatingSystem.type == "Linux"
   }
   name                       = "Custom"
   type                       = "CustomScript"
@@ -229,7 +230,7 @@ resource "azurerm_windows_virtual_machine" "workstation" {
 
 resource "azurerm_virtual_machine_extension" "workstation_windows" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.fileName != "" && x.operatingSystem.type == "Windows"
+    for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.enabled && x.operatingSystem.type == "Windows"
   }
   name                       = "Custom"
   type                       = "CustomScriptExtension"

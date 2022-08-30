@@ -23,6 +23,7 @@ virtualMachineScaleSets = [
       disablePasswordAuth = false
     }
     customExtension = {
+      enabled  = true
       fileName = "initialize.sh"
       parameters = {
         fileSystemMounts = [
@@ -36,15 +37,15 @@ virtualMachineScaleSets = [
       }
     }
     monitorExtension = {
-      enable = false
+      enabled = false
     }
     spot = {
-      enable = true              // https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot
+      enabled         = true     // https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot
       evictionPolicy  = "Delete" // https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
       machineMaxPrice = -1       // https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot#pricing
     }
     terminationNotification = {  // https://docs.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
-      enable       = true
+      enabled      = true
       timeoutDelay = "PT5M"
     }
   },
@@ -69,6 +70,7 @@ virtualMachineScaleSets = [
       disablePasswordAuth = false
     }
     customExtension = {
+      enabled  = true
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMounts = [
@@ -82,15 +84,15 @@ virtualMachineScaleSets = [
       }
     }
     monitorExtension = {
-      enable = false
+      enabled = false
     }
     spot = {
-      enable = true              // https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot
+      enabled         = true     // https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot
       evictionPolicy  = "Delete" // https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
       machineMaxPrice = -1       // https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot#pricing
     }
     terminationNotification = {  // https://docs.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
-      enable       = true
+      enabled      = true
       timeoutDelay = "PT5M"
     }
   }

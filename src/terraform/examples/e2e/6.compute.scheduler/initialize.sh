@@ -31,7 +31,7 @@ echo "" >> $scaleTimerPath
 echo "[Install]" >> $scaleTimerPath
 echo "WantedBy=timers.target" >> $scaleTimerPath
 
-if [ ${autoScale.enable} == true ]; then
+if [ ${autoScale.enabled} == true ]; then
   systemctl --now enable scale.timer
 fi
 
@@ -42,7 +42,7 @@ fi
 %{ endfor }
 mount -a
 
-if [ ${cycleCloud.enable} == true ]; then
+if [ ${cycleCloud.enabled} == true ]; then
   az login --identity
   imageList="{"
   imageDefinitions=$(az sig image-definition list --resource-group ${imageResourceGroupName} --gallery-name ${imageGalleryName})

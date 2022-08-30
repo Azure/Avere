@@ -59,13 +59,14 @@ variable "virtualMachines" {
         )
         customExtension = object(
           {
+            enabled  = bool
             fileName = string
             parameters = object(
               {
                 fileSystemMounts = list(string)
                 autoScale = object(
                   {
-                    enable                   = bool
+                    enabled                  = bool
                     fileName                 = string
                     scaleSetName             = string
                     resourceGroupName        = string
@@ -76,7 +77,7 @@ variable "virtualMachines" {
                 )
                 cycleCloud = object(
                   {
-                    enable = bool
+                    enabled = bool
                     storageAccount = object(
                       {
                         name       = string
@@ -93,7 +94,7 @@ variable "virtualMachines" {
         )
         monitorExtension = object(
           {
-            enable = bool
+            enabled = bool
           }
         )
       }
@@ -242,7 +243,7 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
 
 resource "azurerm_virtual_machine_extension" "custom_linux" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.fileName != "" && x.operatingSystem.type == "Linux"
+    for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.enabled && x.operatingSystem.type == "Linux"
   }
   name                       = "Custom"
   type                       = "CustomScript"
@@ -276,7 +277,7 @@ resource "azurerm_virtual_machine_extension" "custom_linux" {
 
 resource "azurerm_virtual_machine_extension" "monitor_linux" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.monitorExtension.enable && x.operatingSystem.type == "Linux"
+    for x in var.virtualMachines : x.name => x if x.name != "" && x.monitorExtension.enabled && x.operatingSystem.type == "Linux"
   }
   name                       = "Monitor"
   type                       = "OmsAgentForLinux"
@@ -330,7 +331,7 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
 
 resource "azurerm_virtual_machine_extension" "custom_windows" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.fileName != "" && x.operatingSystem.type == "Windows"
+    for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.enabled && x.operatingSystem.type == "Windows"
   }
   name                       = "Custom"
   type                       = "CustomScriptExtension"
@@ -350,7 +351,7 @@ resource "azurerm_virtual_machine_extension" "custom_windows" {
 
 resource "azurerm_virtual_machine_extension" "monitor_windows" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.monitorExtension.enable && x.operatingSystem.type == "Windows"
+    for x in var.virtualMachines : x.name => x if x.name != "" && x.monitorExtension.enabled && x.operatingSystem.type == "Windows"
   }
   name                       = "Monitor"
   type                       = "MicrosoftMonitoringAgent"
@@ -380,7 +381,7 @@ resource "azurerm_private_dns_a_record" "scheduler" {
 
 resource "azurerm_storage_account" "cycle_cloud" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.customExtension.parameters.cycleCloud.enable
+    for x in var.virtualMachines : x.name => x if x.customExtension.parameters.cycleCloud.enabled
   }
   name                            = each.value.customExtension.parameters.cycleCloud.storageAccount.name
   resource_group_name             = azurerm_resource_group.scheduler.name
@@ -393,7 +394,7 @@ resource "azurerm_storage_account" "cycle_cloud" {
 
 resource "azurerm_role_assignment" "cycle_cloud" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.customExtension.parameters.cycleCloud.enable
+    for x in var.virtualMachines : x.name => x if x.customExtension.parameters.cycleCloud.enabled
   }
   role_definition_name = "Contributor"
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
