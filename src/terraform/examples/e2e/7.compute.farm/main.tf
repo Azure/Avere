@@ -20,7 +20,7 @@ provider "azurerm" {
       force_delete                  = false
       roll_instances_when_required  = true
       scale_to_zero_before_deletion = true
-    }    
+    }
   }
 }
 
@@ -192,7 +192,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     storage_account_type = each.value.operatingSystem.disk.storageType
     caching              = each.value.operatingSystem.disk.cachingType
     dynamic "diff_disk_settings" {
-      for_each = each.value.operatingSystem.disk.ephemeralEnable ? [1] : [] 
+      for_each = each.value.operatingSystem.disk.ephemeralEnable ? [1] : []
       content {
         option = "Local"
       }
@@ -206,7 +206,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     storage_account_uri = null
   }
   dynamic "admin_ssh_key" {
-    for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1] 
+    for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1]
     content {
       username   = each.value.adminLogin.userName
       public_key = each.value.adminLogin.sshPublicKey
@@ -228,7 +228,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic "extension" {
-    for_each = each.value.monitorExtension.enable ? [1] : [] 
+    for_each = each.value.monitorExtension.enable ? [1] : []
     content {
       name                       = "Monitor"
       type                       = "OmsAgentForLinux"
@@ -244,7 +244,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic "termination_notification" {
-    for_each = each.value.terminationNotification.enable ? [1] : [] 
+    for_each = each.value.terminationNotification.enable ? [1] : []
     content {
       enabled = each.value.terminationNotification.enable
       timeout = each.value.terminationNotification.timeoutDelay
@@ -282,7 +282,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     storage_account_type = each.value.operatingSystem.disk.storageType
     caching              = each.value.operatingSystem.disk.cachingType
     dynamic "diff_disk_settings" {
-      for_each = each.value.operatingSystem.disk.ephemeralEnable ? [1] : [] 
+      for_each = each.value.operatingSystem.disk.ephemeralEnable ? [1] : []
       content {
         option = "Local"
       }
@@ -296,7 +296,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     storage_account_uri = null
   }
   dynamic "extension" {
-    for_each = each.value.customExtension.fileName != "" ? [1] : [] 
+    for_each = each.value.customExtension.fileName != "" ? [1] : []
     content {
       name                       = "Custom"
       type                       = "CustomScriptExtension"
@@ -311,7 +311,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic "extension" {
-    for_each = each.value.monitorExtension.enable ? [1] : [] 
+    for_each = each.value.monitorExtension.enable ? [1] : []
     content {
       name                       = "Monitor"
       type                       = "MicrosoftMonitoringAgent"
@@ -327,7 +327,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic "termination_notification" {
-    for_each = each.value.terminationNotification.enable ? [1] : [] 
+    for_each = each.value.terminationNotification.enable ? [1] : []
     content {
       enabled = each.value.terminationNotification.enable
       timeout = each.value.terminationNotification.timeoutDelay

@@ -295,7 +295,7 @@ if ($subnetName -eq "Farm") {
   $registryKeyPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE"
   New-Item -ItemType Directory -Path $registryKeyPath -Force
   New-ItemProperty -Path $registryKeyPath -PropertyType DWORD -Name "DisablePrivacyExperience" -Value 1 -Force
-  Write-Host "Customize (End): Privacy Experience"   
+  Write-Host "Customize (End): Privacy Experience"
 }
 
 if ($subnetName -eq "Workstation") {

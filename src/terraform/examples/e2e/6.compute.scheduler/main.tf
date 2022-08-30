@@ -20,7 +20,7 @@ provider "azurerm" {
       delete_os_disk_on_deletion     = true
       graceful_shutdown              = false
       skip_shutdown_and_force_delete = false
-    }    
+    }
   }
 }
 
@@ -229,7 +229,7 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
     storage_account_uri = null
   }
   dynamic "admin_ssh_key" {
-    for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1] 
+    for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1]
     content {
       username   = each.value.adminLogin.userName
       public_key = each.value.adminLogin.sshPublicKey
@@ -242,7 +242,7 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
 
 resource "azurerm_virtual_machine_extension" "custom_linux" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.fileName != "" && x.operatingSystem.type == "Linux" 
+    for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.fileName != "" && x.operatingSystem.type == "Linux"
   }
   name                       = "Custom"
   type                       = "CustomScript"
@@ -276,7 +276,7 @@ resource "azurerm_virtual_machine_extension" "custom_linux" {
 
 resource "azurerm_virtual_machine_extension" "monitor_linux" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.monitorExtension.enable && x.operatingSystem.type == "Linux" 
+    for x in var.virtualMachines : x.name => x if x.name != "" && x.monitorExtension.enable && x.operatingSystem.type == "Linux"
   }
   name                       = "Monitor"
   type                       = "OmsAgentForLinux"
@@ -297,7 +297,7 @@ resource "azurerm_virtual_machine_extension" "monitor_linux" {
 
 resource "azurerm_windows_virtual_machine" "scheduler" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.operatingSystem.type == "Windows" 
+    for x in var.virtualMachines : x.name => x if x.name != "" && x.operatingSystem.type == "Windows"
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.scheduler.name
@@ -330,7 +330,7 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
 
 resource "azurerm_virtual_machine_extension" "custom_windows" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.fileName != "" && x.operatingSystem.type == "Windows" 
+    for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.fileName != "" && x.operatingSystem.type == "Windows"
   }
   name                       = "Custom"
   type                       = "CustomScriptExtension"
@@ -350,7 +350,7 @@ resource "azurerm_virtual_machine_extension" "custom_windows" {
 
 resource "azurerm_virtual_machine_extension" "monitor_windows" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.monitorExtension.enable && x.operatingSystem.type == "Windows" 
+    for x in var.virtualMachines : x.name => x if x.name != "" && x.monitorExtension.enable && x.operatingSystem.type == "Windows"
   }
   name                       = "Monitor"
   type                       = "MicrosoftMonitoringAgent"

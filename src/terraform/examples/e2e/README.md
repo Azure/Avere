@@ -40,7 +40,7 @@ For example, the following sample output images were rendering in Azure via the 
 
 ## Deployment Prerequisites
 
-To manage deployment of the AAA solution from your local workstation, the following prerequisite setup steps are required. As an alternative deployment management approach, [GitOps](#9-gitops) enablement is also provided. 
+To manage deployment of the AAA solution from your local workstation, the following prerequisite setup steps are required. As an alternative deployment management approach, [GitOps](#9-gitops) enablement is also provided.
 1. Make sure the [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli) is installed locally and accessible in your path environment variable.
 1. Make sure the [Terraform CLI](https://learn.hashicorp.com/tutorials/terraform/install-cli) is installed locally and accessible in your path environment variable.
 1. Download the AAA end-to-end (e2e) solution source files via the following GitHub download link.

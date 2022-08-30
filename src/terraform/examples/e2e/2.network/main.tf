@@ -213,9 +213,9 @@ resource "azurerm_subnet_network_security_group_association" "network" {
   ]
 }
 
-########################################################################### 
+###########################################################################
 # Private DNS (https://docs.microsoft.com/azure/dns/private-dns-overview) #
-########################################################################### 
+###########################################################################
 
 resource "azurerm_private_dns_zone" "network" {
   count               = var.virtualNetworkPrivateDns.zoneName != "" ? 1 : 0
@@ -289,7 +289,7 @@ resource "azurerm_virtual_network_gateway" "vpn" {
     subnet_id            = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${var.virtualNetwork.name}/subnets/GatewaySubnet"
   }
   dynamic "ip_configuration" {
-    for_each = var.vpnGateway.activeActive ? [1] : [] 
+    for_each = var.vpnGateway.activeActive ? [1] : []
     content {
       name                 = "ipConfig2"
       public_ip_address_id = azurerm_public_ip.address2[count.index].id
@@ -297,7 +297,7 @@ resource "azurerm_virtual_network_gateway" "vpn" {
     }
   }
   dynamic "vpn_client_configuration" {
-    for_each = length(var.vpnGatewayClient.addressSpace) > 0 ? [1] : [] 
+    for_each = length(var.vpnGatewayClient.addressSpace) > 0 ? [1] : []
     content {
       address_space = var.vpnGatewayClient.addressSpace
       root_certificate {

@@ -148,7 +148,7 @@ variable "virtualNetwork" {
       privateDns = object(
         {
           zoneName               = string
-          enableAutoRegistration = bool 
+          enableAutoRegistration = bool
         }
       )
     }
@@ -384,9 +384,9 @@ resource "avere_vfxt" "cache" {
   ]
 }
 
-########################################################################### 
+###########################################################################
 # Private DNS (https://docs.microsoft.com/azure/dns/private-dns-overview) #
-########################################################################### 
+###########################################################################
 
 resource "azurerm_private_dns_zone" "network" {
   count               = local.deployPrivateDnsZone

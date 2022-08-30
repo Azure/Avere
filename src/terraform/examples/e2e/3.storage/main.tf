@@ -404,7 +404,7 @@ resource "azurerm_storage_account" "storage" {
   enable_https_traffic_only       = each.value.enableSecureTransfer
   allow_nested_items_to_be_public = false
   dynamic "network_rules" {
-    for_each = each.value.enableBlobNfsV3 ? [1] : [] 
+    for_each = each.value.enableBlobNfsV3 ? [1] : []
     content {
       default_action = "Deny"
       virtual_network_subnet_ids = [
@@ -468,7 +468,7 @@ resource "azurerm_private_endpoint" "storage" {
 
 resource "azurerm_role_assignment" "storage_account_contributor" { # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#storage-account-contributor
   for_each = {
-    for x in var.storageAccounts : x.name => x if x.enableBlobNfsV3 && x.name != "" 
+    for x in var.storageAccounts : x.name => x if x.enableBlobNfsV3 && x.name != ""
   }
   role_definition_name = "Storage Account Contributor"
   principal_id         = data.azuread_service_principal.hpc_cache.object_id
@@ -480,7 +480,7 @@ resource "azurerm_role_assignment" "storage_account_contributor" { # https://doc
 
 resource "azurerm_role_assignment" "storage_blob_data_contributor" { # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor
   for_each = {
-    for x in var.storageAccounts : x.name => x if x.enableBlobNfsV3 && x.name != "" 
+    for x in var.storageAccounts : x.name => x if x.enableBlobNfsV3 && x.name != ""
   }
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = data.azuread_service_principal.hpc_cache.object_id
@@ -854,7 +854,7 @@ resource "azurerm_netapp_volume" "storage" {
   account_name        = each.value.netAppAccountName
   subnet_id           = data.azurerm_subnet.storage_netapp.id
   dynamic "export_policy_rule" {
-    for_each = each.value.volume.exportPolicies 
+    for_each = each.value.volume.exportPolicies
     content {
       rule_index          = export_policy_rule.value["ruleIndex"]
       unix_read_only      = export_policy_rule.value["readOnly"]

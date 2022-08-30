@@ -32,18 +32,18 @@ on:
         description: 'Destroy Mode'
         type: boolean
         required: false
-        
+
 env:
   ARM_TENANT_ID: ${{secrets.ARM_TENANT_ID}}
   ARM_SUBSCRIPTION_ID: ${{secrets.ARM_SUBSCRIPTION_ID}}
   ARM_CLIENT_ID: ${{secrets.ARM_CLIENT_ID}}
   ARM_CLIENT_SECRET: ${{secrets.ARM_CLIENT_SECRET}}
   TF_LOG: ${{github.event.inputs.logLevel}}
-  
+
 permissions:
   contents: read
   pull-requests: write
-  
+
 jobs:
   terraformApply:
     if: github.event.pull_request.merged
@@ -52,11 +52,11 @@ jobs:
       - uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.2.8
-          
+
       - uses: actions/checkout@v3
         with:
           ref: ${{github.head_ref}}
-          
+
       - if: github.event_name == 'pull_request'
         run: |
           echo ${{secrets.GITHUB_TOKEN}} | gh auth login --with-token
@@ -64,12 +64,12 @@ jobs:
           solutionModule=$(echo $solutionModule | jq -r .files[].path)
           readarray -d / -t solutionModule <<< $solutionModule
           echo "solutionModule=$solutionModule" >> $GITHUB_ENV
-          
+
       - if: github.event_name != 'pull_request'
         run: |
           solutionModule=${{github.event.inputs.solutionModule}}
           echo "solutionModule=$solutionModule" >> $GITHUB_ENV
-          
+
       - if: startsWith(env.solutionModule, 4)
         run: |
           latestVersion=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name)
@@ -78,25 +78,25 @@ jobs:
           mkdir -p $localDirectory
           curl -o $localDirectory/terraform-provider-avere_$latestVersion -L $downloadUrl
           chmod 755 $localDirectory/terraform-provider-avere_$latestVersion
-          
+
       - if: startsWith(env.solutionModule, 1)
         run: terraform -chdir=$(pwd)/${{env.solutionModule}} init -upgrade
-        
+
       - if: "!startsWith(env.solutionModule, 1)"
         run: terraform -chdir=$(pwd)/${{env.solutionModule}} init -upgrade -backend-config ../0.global/backend.config
-        
+
       - id: apply
         if: github.event_name == 'pull_request'
         run: |
          tfPlan=$(pwd)/${{env.solutionModule}}/terraform.plan
          terraform -chdir=$(pwd)/${{env.solutionModule}} apply -auto-approve -no-color $tfPlan
-        
+
       - if: github.event_name != 'pull_request' && github.event.inputs.destroyMode != 'true'
         run: terraform -chdir=$(pwd)/${{env.solutionModule}} apply -auto-approve
-        
+
       - if: github.event_name != 'pull_request' && github.event.inputs.destroyMode == 'true'
         run: terraform -chdir=$(pwd)/${{env.solutionModule}} apply -auto-approve -destroy
-        
+
       - if: github.event_name == 'pull_request'
         uses: actions/github-script@v6
         with:
