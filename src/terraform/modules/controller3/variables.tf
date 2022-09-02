@@ -89,5 +89,10 @@ variable "static_ip_address" {
 
 variable "tags" {
   description = "specifies key value pairs of tags"
-  default     = null
+  default     = {"azsecpack": "nonprod"}
+}
+
+variable "azsecpack_resource_group" {
+  description = "specifies the name of the azsecpack resource group"
+  default     = "AzSecPackAutoConfigRG"
 }

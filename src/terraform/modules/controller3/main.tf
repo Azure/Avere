@@ -19,6 +19,8 @@ locals {
   user_access_administrator_role = "User Access Administrator"
   # needed for creating various compute resources
   create_compute_role = "Virtual Machine Contributor"
+  # needed for azsecpack
+  azsecpack_managed_identity_operator_role = "Managed Identity Operator"
 
   # publisher / offer / sku
   image_parts     = var.image_id == null ? [] : split(":", var.image_id)
@@ -151,6 +153,7 @@ locals {
   )
 
   create_compute_rgs = var.user_assigned_managed_identity_id != null ? [] : [var.resource_group_name]
+  azsecpack_managed_operator_rgs = var.user_assigned_managed_identity_id != null ? [] : [var.azsecpack_resource_group]
 }
 
 resource "azurerm_role_assignment" "avere_create_cluster_role" {
@@ -187,6 +190,19 @@ resource "azurerm_role_assignment" "create_compute" {
 
   depends_on = [
     azurerm_role_assignment.user_access_administrator_role,
+  ]
+}
+
+// make sure controller can add managed identities to VMs (for azsecpack)
+resource "azurerm_role_assignment" "azsecpack_managed_identity_operator" {
+  count                            = var.deploy_controller ? length(local.azsecpack_managed_operator_rgs) : 0
+  scope                            = "${data.azurerm_subscription.primary.id}/resourceGroups/${local.azsecpack_managed_operator_rgs[count.index]}"
+  role_definition_name             = local.azsecpack_managed_identity_operator_role
+  principal_id                     = azurerm_linux_virtual_machine.vm[0].identity[0].principal_id
+  skip_service_principal_aad_check = true
+
+  depends_on = [
+    azurerm_role_assignment.create_compute,
   ]
 }
 
