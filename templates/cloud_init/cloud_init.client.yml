@@ -33,6 +33,7 @@ write_files:
       export VNET_NAME='<vnet_name>'
       export TF_VFXT_CONFIG='<terraform_file_config>'
       export BUILD_SOURCE_BRANCH='<build_sourcebranch>'
+      export ORIGINAL_NODE_COUNT='<original_node_count>'
 
       apt-get update
       apt install azure-cli -y
@@ -147,6 +148,7 @@ write_files:
       [ $? -ne 0 ] && error "git checkout source branch"
 
       echo "cd to file path"
+      echo "${TF_VFXT_CONFIG}"
       cd src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
       [ $? -ne 0 ] && error "cd to directory: $TF_VFXT_CONFIG"
 
@@ -213,6 +215,8 @@ write_files:
       export ARM_CLIENT_SECRET='<arm_client_scrt>'
       export ARM_TENANT_ID='<arm_tenant_id>'
       export TF_VFXT_CONFIG='<terraform_file_config>'
+      export ORIGINAL_NODE_COUNT='<original_node_count>'
+      export NEW_NODE_COUNT='<new_node_count>'
 
       echo "to file path for scaleup"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
