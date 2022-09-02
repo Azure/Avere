@@ -85,7 +85,6 @@ steps:
       -e "s/<terraform_file_config>/$TF_VFXT_CONFIG/" \
       -e "s,<ssh_key>,$(cat ~/.ssh/id_rsa.pub)," \
       -e "s/<vm_admin_user>/azureuser/" \
-      -e "s/<controller_image>/${{ parameters.controller_image }}/" \
       -e "s/<vfxt_image>/${{ parameters.image }}/" \
       -e "s/<original_node_count>/${{ parameters.original_node_count }}/" \
       -e "s/<new_node_count>/$new_node_count/" \
