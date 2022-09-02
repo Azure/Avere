@@ -102,7 +102,7 @@ resource "azurerm_storage_account" "storage" {
 
 // the vfxt controller
 module "vfxtcontroller" {
-  source                      = "github.com/Azure/Avere/src/terraform/modules/controller3"
+  source                      = "git::https://github.com/Azure/Avere.git//src/terraform/modules/controller3?ref=personal/anlatsko/add-azsecpack-rg-uami-perms"
   resource_group_name         = local.vfxt_resource_group_name
   location                    = local.location
   admin_username              = local.vm_admin_username
